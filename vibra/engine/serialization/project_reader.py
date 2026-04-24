@@ -33,6 +33,7 @@ from vibra.engine.solution import (
     ModalSolution,
     Solution,
 )
+from vibra.engine.solution.lazy_harmonic_solution import LazyHarmonicSolution
 from vibra.engine.solvers import HarmonicSolver, ModalSolver
 from vibra.project_files.lazy_hdf5_matrix import LazyHDF5MatrixLoader
 
@@ -368,18 +369,7 @@ class ProjectReader:
         if not self.project_paths.harmonic_solution_filepath.exists():
             return None
 
-        analysis_id = self.read_current_analysis_id()
-
-        with h5py.File(self.project_paths.harmonic_solution_filepath, "r") as file:
-            file: h5py.File
-
-            return HarmonicSolution(
-                analysis_id=analysis_id,
-                frequencies=file["frequencies"],
-                nodal_solution=file["solution"],
-                status=file["solution_status"],
-                displacement_dof=file.get("displacement_dof"),
-            )
+        return LazyHarmonicSolution(self.project_paths)
 
     def read_modal_solution(self) -> Optional[ModalSolution]:
         if not self.project_paths.modal_solution_filepath.exists():
@@ -391,12 +381,12 @@ class ProjectReader:
             file: h5py.File
 
             return ModalSolution(
-                analysis_id = analysis_id,
-                natural_frequencies = file["frequencies"],
-                modal_shapes = file["solution"],
-                displacement_dof = file.get("displacement_dof"),
-                complex_natural_frequencies = file.get("complex_natural_frequencies"),
-                )
+                analysis_id=analysis_id,
+                natural_frequencies=file["frequencies"],
+                modal_shapes=file["solution"],
+                displacement_dof=file.get("displacement_dof"),
+                complex_natural_frequencies=file.get("complex_natural_frequencies"),
+            )
 
     def read_assembler_and_solver(self, model: Model) -> tuple[AcousticAssembler | StructuralAssembler | None, HarmonicSolver | ModalSolver | None]:
 
