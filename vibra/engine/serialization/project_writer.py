@@ -353,6 +353,7 @@ class ProjectWriter:
 
         self.project_paths.results_data_filepath.unlink(missing_ok=True)
         self.project_paths.harmonic_solution_filepath.unlink(missing_ok=True)
+        self.project_paths.modal_solution_filepath.unlink(missing_ok=True)
         self._remove_hash(HashEnum.HARMONIC_SOLUTION)
         self._remove_hash(HashEnum.MODAL_SOLUTION)
 
