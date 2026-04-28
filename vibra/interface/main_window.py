@@ -131,6 +131,7 @@ class MainWindow(MainWindow_UI):
 
         self.analysis_toolbar.setDisabled(True)
         self.renderer_toolbar.setDisabled(True)
+        self.workspaces_toolbar.setDisabled(True)
         self.animation_toolbar.setDisabled(True)
         self.action_export_element_transfer_data.setDisabled(True)
 
@@ -569,6 +570,7 @@ class MainWindow(MainWindow_UI):
 
         self.analysis_toolbar.setDisabled(True)
         self.renderer_toolbar.setDisabled(True)
+        self.workspaces_toolbar.setDisabled(True)
         self.animation_toolbar.setDisabled(True)
         self.action_export_element_transfer_data.setDisabled(True)
 
@@ -911,6 +913,7 @@ class MainWindow(MainWindow_UI):
         self.update_geometry_information()
         self.update_toolbar_and_menu_items_after_load_project()
         self.renderer_toolbar.setDisabled(False)
+        self.workspaces_toolbar.setDisabled(False)
         self.analysis_toolbar.setDisabled(False)
         self.action_model_workspace_callback()
 
@@ -929,6 +932,7 @@ class MainWindow(MainWindow_UI):
         self.update_geometry_information()
         self.update_toolbar_and_menu_items_after_load_project()
         self.renderer_toolbar.setDisabled(False)
+        self.workspaces_toolbar.setDisabled(False)
         self.analysis_toolbar.setDisabled(False)
         self.action_mesh_workspace_callback()
 
@@ -963,6 +967,7 @@ class MainWindow(MainWindow_UI):
         self.model_setup_widget.model_setup_items.hide_model_setup_top_items()
 
         self.renderer_toolbar.setEnabled(True)
+        self.workspaces_toolbar.setEnabled(True)
         self.analysis_toolbar.setEnabled(True)
         self.update_toolbar_and_menu_items_after_load_project()
         self.analysis_toolbar.check_analysis_setup_callback()

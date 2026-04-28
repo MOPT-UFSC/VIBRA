@@ -1,6 +1,5 @@
 from cad_widgets.enums import ViewDirection
 from molde.render_widgets import CommonRenderWidget
-
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QStackedWidget, QToolBar
 
@@ -78,15 +77,6 @@ class CameraToolbar(QToolBar):
     def _configure_appearance(self):
         self.setMovable(True)
         self.setFloatable(True)
-        self.setStyleSheet(
-            """
-            QToolBar {
-                border-style: solid;
-                border-width: 1px;
-                border-color: #888888;
-            }
-            """
-        )
 
     def _current_render_widget(self):
         return self.render_widget_stack.currentWidget()
