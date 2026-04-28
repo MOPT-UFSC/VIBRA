@@ -358,8 +358,7 @@ class Project:
         else:
             raise ValueError(f"Unsupported analysis method: {analysis_method}")
 
-        if self.solver.project_paths is None:
-            self.project_writer.write_harmonic_solution(self.model.solution)
+        self.project_writer.write_harmonic_solution(self.model.solution)
         self.mark_project_as_modified()
 
         dt = perf_counter() - t0
