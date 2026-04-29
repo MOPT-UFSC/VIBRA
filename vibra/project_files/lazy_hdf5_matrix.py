@@ -31,8 +31,8 @@ class LazyHDF5MatrixWriter:
             self.status = self.file[HDF5_SOLUTION_STATUS_KEY]
             self.frequencies = self.file[HDF5_FREQ_KEY]
         else:
-            chunk_rows = min(num_rows, 2**13)
-            chunk_cols = min(num_cols, 2**7)
+            chunk_rows = min(num_rows, 2**20)
+            chunk_cols = 1
 
             self.solution = self.file.create_dataset(
                 HDF5_SOLUTION_FREQ_KEY,
