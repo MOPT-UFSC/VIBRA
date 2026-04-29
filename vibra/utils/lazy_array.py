@@ -1,3 +1,4 @@
+import h5py
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -27,6 +28,9 @@ class LazyArray(LazyArrayTypeHints):
     def __init__(self, file_path: Path, internal_name: str):
         self.file_path = file_path
         self.internal_name = internal_name
+    
+    def is_valid(self) -> bool:
+        return h5py.is_hdf5(self.file_path)
 
     def __getattr__(self, attribute: str):
         with h5py.File(self.file_path, "r") as f:

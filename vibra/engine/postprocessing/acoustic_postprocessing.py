@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import logging
 from functools import cache
+from time import perf_counter
 from typing import Literal
 
 import numpy as np
-from time import perf_counter
 
 from vibra.engine.model import Model
+from vibra.utils.lazy_array import LazyArray
 
 AcousticPlotTypes = Literal[
     "absolute_animation",
@@ -32,7 +33,7 @@ class AcousticPostprocessing:
     @property
     def solution(self):
         return self.model.solution
-    
+
     @property
     def acoustic_element_2d(self):
         if self.model.acoustic_element_2d is None:
@@ -44,7 +45,6 @@ class AcousticPostprocessing:
         if self.model.acoustic_element_3d is None:
             self.model.set_acoustic_elements()
         return self.model.acoustic_element_3d
-
 
     @cache
     def get_min_max_values_of_pressures(self, column: int, plot_type: str, is_modal: bool = False):
@@ -63,9 +63,14 @@ class AcousticPostprocessing:
         """
 
         if is_modal:
-            data = self.solution.modal_shapes[:, column]
+            nodal_solution = self.solution.modal_shapes
         else:
-            data = self.solution.nodal_solution[:, column]
+            nodal_solution = self.solution.nodal_solution
+
+        if isinstance(nodal_solution, LazyArray) and not nodal_solution.is_valid():
+            return None
+
+        data = nodal_solution[:, column]
 
         amplitudes = np.abs(data)
         phases = np.angle(data)
@@ -109,7 +114,6 @@ class AcousticPostprocessing:
 
         return p_min, p_max
 
-
     def compute_acoustic_pressure_field(
         self,
         index: int,
@@ -121,6 +125,9 @@ class AcousticPostprocessing:
             nodal_solution = self.solution.modal_shapes
         else:
             nodal_solution = self.solution.nodal_solution
+
+        if isinstance(nodal_solution, LazyArray) and not nodal_solution.is_valid():
+            return None
 
         if not nodal_solution.any():
             return None
@@ -146,7 +153,6 @@ class AcousticPostprocessing:
         min_value, max_value = self.get_min_max_values_of_pressures(index, plot_type, is_modal)
 
         return acoustic_pressures, min_value, max_value, np.imag(_nodal_solution).any()
-
 
     def compute_particle_velocity(
         self,
@@ -180,7 +186,6 @@ class AcousticPostprocessing:
         else:
             array_particle_velocities_Vj = np.array(list(particle_velocities_Vj.values()), dtype=complex)
             return np.average(array_particle_velocities_Vj, axis=0)
-
 
     def compute_acoustic_impedance(
         self,
@@ -226,13 +231,12 @@ class AcousticPostprocessing:
             surface_impedance = pressures / array_particle_velocities_Vj
             return np.average(surface_impedance, axis=0)
 
-
     def compute_surface_absorption_coefficient(
         self,
         surface_id: int | None = None,
         volume_id: int | None = None,
     ):
-        
+
         frequencies = self.model.frequencies
         aux_zeros = np.zeros_like(frequencies, dtype=complex)
 
@@ -254,7 +258,6 @@ class AcousticPostprocessing:
         alpha = 1 - (np.abs(R)) ** 2
 
         return alpha
-
 
     def get_particle_velocity_from_surface(
         self,
@@ -297,9 +300,7 @@ class AcousticPostprocessing:
             volume_id,
         )
 
-        map_elements_to_nodes, filtered_nodes = self.mesh.get_solid_elements_connected_to_nodes(
-            surface_id=surface_id, return_nodes=True
-        )
+        map_elements_to_nodes, filtered_nodes = self.mesh.get_solid_elements_connected_to_nodes(surface_id=surface_id, return_nodes=True)
 
         # Load all frequency solutions to optimize multiple load on the `process_particle_velocity` method below.
         node_to_index = dict(zip(filtered_nodes, np.arange(filtered_nodes.size, dtype=int)))
@@ -360,7 +361,6 @@ class AcousticPostprocessing:
         # np.savetxt(fname, output_data, fmt=["%i", "%.16f", "%.16f", "%.16f"], delimiter=",", header=header)
 
         return particle_velocities
-
 
     def compute_transmission_loss(
         self,
@@ -513,7 +513,6 @@ class AcousticPostprocessing:
 
         return frequencies, transmission_loss
 
-
     def integrate_surface_sound_power(
         self, surface_id: int, pressures: np.ndarray, particle_velocities: np.ndarray, dB_scale: bool = True
     ) -> np.ndarray:
@@ -564,7 +563,6 @@ class AcousticPostprocessing:
             return 10 * np.log10(sound_power / 1e-12)
 
         return sound_power
-
 
     def compute_noise_reduction(self, input_surface_id: int, output_surface_id: int):
         """

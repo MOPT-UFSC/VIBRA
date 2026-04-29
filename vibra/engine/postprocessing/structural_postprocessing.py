@@ -6,6 +6,7 @@ from typing import Literal
 import numpy as np
 
 from vibra.engine.model import Model
+from vibra.utils.lazy_array import LazyArray
 
 DisplacementTypes = Literal["u_sum", "u_x", "u_y", "u_z"]
 
@@ -24,7 +25,7 @@ class StructuralPostprocessing:
     @property
     def solution(self):
         return self.model.solution
-    
+
     @property
     def acoustic_element_2d(self):
         if self.model.acoustic_element_2d is None:
@@ -36,7 +37,6 @@ class StructuralPostprocessing:
         if self.model.acoustic_element_3d is None:
             self.model.set_acoustic_elements()
         return self.model.acoustic_element_3d
-
 
     @cache
     def get_max_min_values_of_displacements(self, column: int, disp_type: str, is_modal: bool = False):
@@ -57,6 +57,9 @@ class StructuralPostprocessing:
             nodal_solution = self.solution.nodal_displacements
         else:
             nodal_solution = self.solution.nodal_displacements
+
+        if isinstance(nodal_solution, LazyArray) and not nodal_solution.is_valid():
+            return None
 
         if not nodal_solution.any():
             return
@@ -103,19 +106,21 @@ class StructuralPostprocessing:
 
         return r_min, r_max
 
-
     def compute_structural_displacement_field(
-            self, 
-            column: int,
-            phase_rad: float, 
-            displacement_type: DisplacementTypes, 
-            is_modal: bool = False,
-            ):
+        self,
+        column: int,
+        phase_rad: float,
+        displacement_type: DisplacementTypes,
+        is_modal: bool = False,
+    ):
 
         if is_modal:
             nodal_solution = self.solution.nodal_displacements
         else:
             nodal_solution = self.solution.nodal_displacements
+
+        if isinstance(nodal_solution, LazyArray) and not nodal_solution.is_valid():
+            return None
 
         if not nodal_solution.any():
             return
