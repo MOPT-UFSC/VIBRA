@@ -683,7 +683,22 @@ class MainWindow(MainWindow_UI):
             self.try_to_open_argv_path()
 
     def new_project_dialog(self):
-        self.reset_temporary_vibra_folder()
+
+        if app().project.needs_saving:
+            msg_box_save = QMessageBox.question(
+                self,
+                "QUIT",
+                "Would you like to save the project data before starting a new project?",
+                QMessageBox.Cancel | QMessageBox.Discard | QMessageBox.Save,
+            )
+
+            if msg_box_save == QMessageBox.Cancel:
+                return
+
+            elif msg_box_save == QMessageBox.Save:
+                if not self.save_project_dialog():
+                    return
+
         msg_box = QMessageBox(self)
         msg_box.setWindowTitle("Getting geometry")
         msg_box.setText("Would you like to draw or import a geometry file?")
@@ -698,6 +713,7 @@ class MainWindow(MainWindow_UI):
         if msg_box.clickedButton() == cancel_button:
             return
 
+        self.reset_temporary_vibra_folder()
         if msg_box.clickedButton() == import_button:
             if self.import_geometry_or_mesh_dialog():
                 return
