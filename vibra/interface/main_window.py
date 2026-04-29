@@ -687,7 +687,7 @@ class MainWindow(MainWindow_UI):
         if app().project.needs_saving:
             msg_box_save = QMessageBox.question(
                 self,
-                "QUIT",
+                "Unsaved project data",
                 "Would you like to save the project data before starting a new project?",
                 QMessageBox.Cancel | QMessageBox.Discard | QMessageBox.Save,
             )
@@ -713,7 +713,6 @@ class MainWindow(MainWindow_UI):
         if msg_box.clickedButton() == cancel_button:
             return
 
-        self.reset_temporary_vibra_folder()
         if msg_box.clickedButton() == import_button:
             if self.import_geometry_or_mesh_dialog():
                 return
@@ -721,6 +720,8 @@ class MainWindow(MainWindow_UI):
         if msg_box.clickedButton() == draw_button:
             self.render_widgets_stack.setCurrentWidget(self.cad_render_widget)
             return
+        
+        self.render_tools_toolbar.setVisible(True)
 
     def import_geometry_or_mesh_dialog(self):
         self.close_dialogs()
@@ -755,6 +756,8 @@ class MainWindow(MainWindow_UI):
             load_path,
         )
 
+        self.setWindowTitle("New project")
+        self.reset_temporary_vibra_folder()
         self._import_geometry_or_mesh(load_path)
 
     def _import_geometry_or_mesh(self, load_path: Path):
@@ -988,6 +991,7 @@ class MainWindow(MainWindow_UI):
 
         self.action_model_workspace_callback()
         self.camera_toolbar.set_front_view()
+        self.render_tools_toolbar.setVisible(True)
 
         if app().project.can_resume_solution:
             window_title = "Acoustic Harmonic results"
