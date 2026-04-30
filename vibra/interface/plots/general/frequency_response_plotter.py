@@ -353,7 +353,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
         self.legend = data.get("legend")
         self.linestyle = data.get("linestyle")
 
-    def get_scaled_data(self, data):
+    def get_scaled_data(self, data: np.ndarray):
         if self.comboBox_data_format.currentIndex() != DataFormat.DECIBEL_SCALE:
             return data
 
@@ -364,7 +364,6 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
         self.x_data = self.x_data[shift:]
         data2 = np.real(data[shift:]*np.conjugate(data[shift:]))
 
-        # if "Pa" in self.unit:
         if self.unit == "Pa":
             return 10*np.log10(data2/((2e-5)**2))
 
@@ -373,6 +372,9 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
     def get_y_axis_data(self, data: np.ndarray | None):
         if data is None:
             return None
+
+        if self.decibel_data:
+            return data
 
         dif_data = self.process_differentiation(data)
         data_format_index = self.comboBox_data_format.currentIndex()
