@@ -1,4 +1,3 @@
-import h5py
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -28,7 +27,8 @@ class LazyArray(LazyArrayTypeHints):
     def __init__(self, file_path: Path, internal_name: str):
         self.file_path = file_path
         self.internal_name = internal_name
-    
+        self._cached_array: np.ndarray | None = None
+
     def is_valid(self) -> bool:
         return h5py.is_hdf5(self.file_path)
 
@@ -39,8 +39,10 @@ class LazyArray(LazyArrayTypeHints):
             if hasattr(dataset, attribute):
                 return getattr(dataset, attribute)
             else:
-                array = np.array(dataset)
-                return getattr(array, attribute)
+                if self._cached_array is None:
+                    self._cached_array = np.array(dataset)
+                    self._cached_array.setflags(write=False)
+                return getattr(self._cached_array, attribute)
 
     def __getitem__(self, *args, **kwargs):
         with h5py.File(self.file_path, "r") as f:
@@ -52,82 +54,85 @@ class LazyArray(LazyArrayTypeHints):
             return f[self.internal_name].len()
 
     def __array__(self):
-        return self[:]
+        if self._cached_array is None:
+            self._cached_array = np.array(self[:])
+            self._cached_array.setflags(write=False)
+        return self._cached_array
 
     def __add__(self, other):
-        return self[:] + other
+        return np.array(self) + other
 
     def __radd__(self, other):
-        return other + self[:]
+        return other + np.array(self)
 
     def __sub__(self, other):
-        return self[:] - other
+        return np.array(self) - other
 
     def __rsub__(self, other):
-        return other - self[:]
+        return other - np.array(self)
 
     def __mul__(self, other):
-        return self[:] * other
+        return np.array(self) * other
 
     def __rmul__(self, other):
-        return other * self[:]
+        return other * np.array(self)
 
     def __truediv__(self, other):
-        return self[:] / other
+        return np.array(self) / other
 
     def __rtruediv__(self, other):
-        return other / self[:]
+        return other / np.array(self)
 
     def __floordiv__(self, other):
-        return self[:] // other
+        return np.array(self) // other
 
     def __rfloordiv__(self, other):
-        return other // self[:]
+        return other // np.array(self)
 
     def __mod__(self, other):
-        return self[:] % other
+        return np.array(self) % other
 
     def __rmod__(self, other):
-        return other % self[:]
+        return other % np.array(self)
 
     def __pow__(self, other):
-        return self[:] ** other
+        return np.array(self) ** other
 
     def __rpow__(self, other):
-        return other ** self[:]
+        return other ** np.array(self)
 
     def __neg__(self):
-        return -self[:]
+        return -np.array(self)
 
     def __pos__(self):
-        return +self[:]
+        return +np.array(self)
 
     def __abs__(self):
-        return abs(self[:])
+        return abs(np.array(self))
 
     def __eq__(self, other):
-        return (self[:] == other).all()
+        return (np.array(self) == other).all()
 
     def __ne__(self, other):
-        return (self[:] != other).any()
+        return (np.array(self) != other).any()
 
     def __lt__(self, other):
-        return self[:] < other
+        return np.array(self) < other
 
     def __le__(self, other):
-        return self[:] <= other
+        return np.array(self) <= other
 
     def __gt__(self, other):
-        return self[:] > other
+        return np.array(self) > other
 
     def __ge__(self, other):
-        return self[:] >= other
+        return np.array(self) >= other
 
     def __contains__(self, item):
-        return item in self[:]
+        return item in np.array(self)
 
     def __round__(self, ndigits=None):
-        return np.round(self[:], ndigits)
+        return np.round(np.array(self), ndigits)
 
     def __hash__(self):
-        return hash(self[:])
+        return hash(np.array(self))

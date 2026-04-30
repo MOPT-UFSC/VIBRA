@@ -6,7 +6,7 @@ from typing import Literal
 import numpy as np
 
 from vibra.engine.model import Model
-from vibra.utils.lazy_array import LazyArray
+from vibra.engine.solution import HarmonicSolution, LazyHarmonicSolution, ModalSolution
 
 DisplacementTypes = Literal["u_sum", "u_x", "u_y", "u_z"]
 
@@ -52,19 +52,13 @@ class StructuralPostprocessing:
         u_min, u_max: float values for minimum and maximum displacements,
 
         """
-
-        if is_modal:
-            nodal_solution = self.solution.nodal_displacements
-        else:
-            nodal_solution = self.solution.nodal_displacements
-
-        if isinstance(nodal_solution, LazyArray) and not nodal_solution.is_valid():
-            return None
-
-        if not nodal_solution.any():
+        if not isinstance(self.solution, ModalSolution | HarmonicSolution):
             return
 
-        data = nodal_solution[:, column]
+        if isinstance(self.solution, LazyHarmonicSolution) and not self.solution.is_valid():
+            return
+
+        data = self.solution.get_nodal_displacement_at_column(column)
 
         amplitudes = np.abs(data)
         phases = np.angle(data)
@@ -113,19 +107,13 @@ class StructuralPostprocessing:
         displacement_type: DisplacementTypes,
         is_modal: bool = False,
     ):
-
-        if is_modal:
-            nodal_solution = self.solution.nodal_displacements
-        else:
-            nodal_solution = self.solution.nodal_displacements
-
-        if isinstance(nodal_solution, LazyArray) and not nodal_solution.is_valid():
-            return None
-
-        if not nodal_solution.any():
+        if not isinstance(self.solution, ModalSolution | HarmonicSolution):
             return
 
-        displacements_complex: np.ndarray = nodal_solution[:, column]
+        if isinstance(self.solution, LazyHarmonicSolution) and not self.solution.is_valid():
+            return
+
+        displacements_complex = self.solution.get_nodal_displacement_at_column(column)
 
         amplitudes = np.abs(displacements_complex)
         phases = np.angle(displacements_complex)

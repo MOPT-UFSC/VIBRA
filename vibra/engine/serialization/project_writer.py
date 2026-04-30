@@ -22,8 +22,7 @@ from vibra.engine.properties.model_properties import ModelProperties
 from vibra.engine.serialization.file_helpers import read_json, update_json, write_image, write_json
 from vibra.engine.solution import HarmonicSolution, ModalSolution
 from vibra.engine.solution.lazy_harmonic_solution import LazyHarmonicSolution
-from vibra.engine.solvers import HarmonicSolver, ModalSolver
-from vibra.project_files.lazy_hdf5_matrix import LazyHDF5MatrixLoader, LazyHDF5MatrixWriter
+from vibra.project_files.lazy_hdf5_matrix import LazyHDF5MatrixWriter
 
 from .project_hasher import HashEnum, ProjectHasher
 from .project_paths import ProjectPaths
@@ -292,12 +291,9 @@ class ProjectWriter:
             # H5PY recommends chunks of at most 1mb for large files.
             # https://docs.h5py.org/en/stable/high/dataset.html#chunked-storage
 
-            # Since our example models have about 10k nodes and 100 frequencies,
-            # this seems to be a good chunk size, so it fits small models entirelly
-            # in memory and allows for fast row and column retrieval.
             rows, cols = solution.nodal_solution.shape
-            chunk_rows = min(rows, 2**13)
-            chunk_cols = min(cols, 2**7)
+            chunk_rows = min(rows, 2**20)
+            chunk_cols = 1
 
             # This dataset may be very big, so it is important to carefully
             # configure its parameters for better performance.

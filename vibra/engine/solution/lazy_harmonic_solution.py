@@ -39,6 +39,24 @@ class LazyHarmonicSolution(HarmonicSolution):
 
         return LazyArray(hs, "displacement_dof")
 
+    def get_nodal_displacement_at_column(self, column_index: int):
+        """
+        It is VERY important to get the columns first.
+        Otherwise the whole file will be loaded to extract a single column.  
+        """
+        col = self.get_column(column_index)
+        return col[self.displacement_dof]
+
+    def is_valid(self) -> bool:
+        for i in (self.frequencies, self.nodal_solution, self.status):
+            if not i.is_valid():
+                return False
+
+        if isinstance(self.displacement_dof, LazyArray) and not self.displacement_dof.is_valid():
+            return False
+
+        return True
+
     def copy(self) -> HarmonicSolution:
         disp = self.displacement_dof
         if disp is not None:
