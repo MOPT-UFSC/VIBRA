@@ -1,20 +1,19 @@
-from PySide6.QtWidgets import QAbstractItemView, QLineEdit, QTreeWidgetItem
-from PySide6.QtCore import Qt, QPoint, QItemSelectionModel
+import numpy as np
+from PySide6.QtCore import QItemSelectionModel, QPoint, Qt
 from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import QAbstractItemView, QLineEdit, QTreeWidgetItem
 
 from vibra import app
+from vibra.interface import error_title
 from vibra.interface.common.common_interface import update_analysis_setup_in_file
 from vibra.interface.data.data_manager import get_spectral_data_from_array
-from vibra.interface.ui_generated.model.acoustic.acoustic_pressure_inputs_ui import AcousticPressureInputs_UI
+from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.model_inputs.acoustic.definitions.enums import StandardTabType
-
-import os
-import numpy as np
-
-error_title = "Error"
+from vibra.interface.ui_generated.model.acoustic.acoustic_pressure_inputs_ui import (
+    AcousticPressureInputs_UI,
+)
 
 
 class AcousticPressureInputs(AcousticPressureInputs_UI):
@@ -24,7 +23,6 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
 
-        self.project = app().project
         self.model = app().project.model
         self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
@@ -398,7 +396,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         for table_name in table_names:
             self.properties.remove_imported_tables("acoustic", table_name)
         if table_names:
-            app().file.write_imported_table_data_in_file()
+            app().project.update_model_properties_file()
 
     def remove_conflicting_excitations(self, surface_ids: int | list):
 
@@ -472,22 +470,21 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         self.load_model_info()
         self.check_model_frequency_controls()
         app().main_window.update_info_text()
-        app().file.write_model_properties_in_file()
-        app().file.write_imported_table_data_in_file()
+        app().project.update_model_properties_file()
         app().main_window.update_symbols()
 
     def check_model_frequency_controls(self):
-
         for key, data in self.properties.surface_properties.items():
             property, _ = key
             if property in ["acoustic_pressure", "surface_velocity", "specific_impedance", "reciprocating_compressor_excitation"]:
                 if "table_names" in data.keys():
                     return
 
-        analysis_setup = app().project.model.analysis_setup
-        if analysis_setup:
-            app().project.model.set_analysis_setup(analysis_setup)
-            app().file.write_analysis_setup_in_file(analysis_setup)
+        # I am not sure what it is suposed to do.
+        app().project.configure_analysis(
+            app().project.model.analysis_id,
+            app().project.model.analysis_setup,
+        )
 
     def reset_input_fields(self):
         self.lineEdit_real_value.setText("")

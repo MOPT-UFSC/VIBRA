@@ -2,7 +2,7 @@
 from vibra import PROJECT_DIR
 from vibra.engine.mesher.mesh import Mesh
 
-from vibra.engine.mesher.element_type import (
+from vibra.engine.mesher.element_setup import (
     HEXAHEDRON_8,
     HEXAHEDRON_20,
     TETRAHEDRON_4,

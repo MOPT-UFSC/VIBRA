@@ -3,13 +3,10 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
+from vibra.interface import error_title
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.ui_generated.model.structural.surface_thickness_inputs_ui import SurfaceThicknessInputs_UI
-
-
-window_title_1 = "Error"
-window_title_2 = "Warning"
 
 
 class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
@@ -19,7 +16,6 @@ class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
 
-        self.project = app().project
         self.model = app().project.model
         self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
@@ -173,19 +169,19 @@ class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
 
                 if value < 0:
                     message = f"You cannot input a negative value to the {label}."
-                    PrintMessageInput([window_title_1, title, message])
+                    PrintMessageInput([error_title, title, message])
                     return None
                 else:
                     return value
 
             except Exception:
                 message = f"You have typed an invalid value to the {label}."
-                PrintMessageInput([window_title_1, title, message])
+                PrintMessageInput([error_title, title, message])
                 return None
 
         else:
             message = f"None value has been typed to the {label}."
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             return None
 
     def remove_callback(self):
@@ -225,8 +221,7 @@ class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
     def actions_to_finalize(self):
         self.load_model_info()
         app().main_window.update_info_text()
-        app().file.write_model_properties_in_file()
-        app().file.write_imported_table_data_in_file()
+        app().project.update_model_properties_file()
         app().main_window.update_symbols()
         app().main_window.update_symbols()
 

@@ -1,24 +1,13 @@
-from PySide6.QtWidgets import QDialog, QComboBox, QFrame, QGridLayout, QLineEdit, QPushButton, QScrollArea, QTableWidget
+from PySide6.QtWidgets import QGridLayout
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtCore import Qt
 
 from vibra import app
 from vibra.interface.ui_generated.model.fluid.simplified_fluid_inputs_ui import SimplifiedFluidInputs_UI
 from vibra.interface.model_inputs.general.fluid.fluid_widget import FluidWidget
-from vibra.interface.general.print_message_input import PrintMessageInput
-
-window_title_1 = "Error"
-window_title_2 = "Warning"
-
-def getColorRGB(color):
-    color = color.replace(" ", "")
-    if ("[" or "(") in color:
-        color = color[1:-1]
-    tokens = color.split(',')
-    return list(map(int, tokens))
 
 
-class SimplifiedFluidInputs(SimplifiedFluidInputs_UI):
+class SetFluidInputsSimplified(SimplifiedFluidInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__()
 
@@ -29,14 +18,15 @@ class SimplifiedFluidInputs(SimplifiedFluidInputs_UI):
         if self.update_workspace:
             app().main_window.workspace_updating_for_model_setup()
 
-        self.project = app().project
-        self.model = app().project.model
-        self.properties = app().project.model.properties
-
-        self._config_window()
         self._initialize()
-        self._configure_qt_variables()
+        self._config_window()
+        self._add_fluid_widget()
         self._create_connections()
+
+    def _initialize(self):
+        self.fluid = None
+        self.complete = False
+        self.keep_window_open = True
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -44,30 +34,16 @@ class SimplifiedFluidInputs(SimplifiedFluidInputs_UI):
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Vibra")
 
-    def _initialize(self):
-        self.fluid = None
-        self.selected_column = None
-        self.complete = False
-        self.keep_window_open = True
-
-    def _configure_qt_variables(self):
-        self.grid_layout = QGridLayout()
-        self.grid_layout.setContentsMargins(0,0,0,0)
-
-        self.scrollArea_table_of_fluids.setLayout(self.grid_layout)
-        self._add_fluid_widget()
-        # self.frame_main_widget.adjustSize()
-
-        self.pushButton_attribute = self.fluid_widget.pushButton_attribute
-  
-        self.tableWidget_fluid_data = self.fluid_widget.tableWidget_fluid_data
-
     def _create_connections(self):
         self.fluid_widget.pushButton_exit.clicked.connect(self.close)
-        self.tableWidget_fluid_data.currentCellChanged.connect(self.current_cell_changed)
+        self.fluid_widget.tableWidget_fluid_data.currentCellChanged.connect(self.current_cell_changed)
 
     def _add_fluid_widget(self):
-        self.fluid_widget = FluidWidget(dialog=self)
+        self.grid_layout = QGridLayout()
+        self.grid_layout.setContentsMargins(0,0,0,0)
+        self.scrollArea_table_of_fluids.setLayout(self.grid_layout)
+
+        self.fluid_widget = FluidWidget()
         self.grid_layout.addWidget(self.fluid_widget)
         self.fluid_widget.pushButton_remove_column.clicked.connect(self.reset_selected_fluid_lineEdit)
 
@@ -79,28 +55,26 @@ class SimplifiedFluidInputs(SimplifiedFluidInputs_UI):
         self.lineEdit_selected_fluid_name.setText("")
 
     def current_cell_changed(self, current_row, current_col, previous_row, previous_col):
-        self.selected_column = current_col
-        self.update_fluid_selection()
+        self.update_fluid_selection(current_col)
 
-    def update_fluid_selection(self):
+    def update_fluid_selection(self, selected_column: int):
 
-        if self.selected_column is None:
+        if not isinstance(selected_column, int):
             return
 
-        item_0 = self.tableWidget_fluid_data.item(0, self.selected_column)
+        item_0 = self.fluid_widget.tableWidget_fluid_data.item(0, selected_column)
         if item_0 is None:
             return
-        else:
-            fluid_name = item_0.text()
         
-        item_1 = self.tableWidget_fluid_data.item(1, self.selected_column)
+        item_1 = self.fluid_widget.tableWidget_fluid_data.item(1, selected_column)
         if item_1 is None:
             return
-        else:
-            fluid_identifier = item_1.text()
 
-        self.lineEdit_selected_fluid_name.setText("")
-        self.lineEdit_fluid_identifier.setText("")
+        fluid_name = item_0.text()
+        fluid_identifier = item_1.text()
+
+        self.lineEdit_fluid_identifier.clear()
+        self.lineEdit_selected_fluid_name.clear()
 
         if fluid_name != "":
             self.lineEdit_selected_fluid_name.setText(fluid_name)

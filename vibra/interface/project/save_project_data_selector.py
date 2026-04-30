@@ -7,10 +7,6 @@ from vibra import app, TEMP_PROJECT_DIR
 from vibra.interface.ui_generated.project.save_project_data_selector_ui import SaveProjectDataSelector_UI
 
 
-window_title_1 = "Error"
-window_title_2 = "Warning"
-
-
 class SaveProjectDataSelector(SaveProjectDataSelector_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

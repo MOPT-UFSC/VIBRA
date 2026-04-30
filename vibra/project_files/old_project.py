@@ -21,7 +21,7 @@ import logging
 from time import sleep, time
 
 
-class Project(QObject):
+class OldProject(QObject):
 
     can_resume_solution_changed = Signal(bool)
 
@@ -53,8 +53,8 @@ class Project(QObject):
         self.model = Model(disable_resume_callback)
         self.acoustic_assembler = AcousticAssembler(self.model)
         self.structural_assembler = StructuralAssembler(self.model)
-        self.acoustic_postprocessing = AcousticPostprocessing(self)
-        self.structural_postprocessing = StructuralPostprocessing(self)
+        self.acoustic_postprocessing = AcousticPostprocessing(self.model)
+        self.structural_postprocessing = StructuralPostprocessing(self.model)
 
         self.static_solver = None
         self.acoustic_modal_solver = None
@@ -81,7 +81,7 @@ class Project(QObject):
         if self.structural_harmonic_solver is not None:
             self.structural_harmonic_solver.reset_variables()
 
-        if not self.model.analysis_setup:
+        if not self.model.old_analysis_setup:
             return
 
         self.create_solver()
@@ -125,7 +125,7 @@ class Project(QObject):
     def create_solver(self):
         """ """
 
-        data = self.model.analysis_setup
+        data = self.model.old_analysis_setup
         if "analysis_id" in data.keys():
 
             # structural harmonic analysis (both methods)
@@ -210,8 +210,8 @@ class Project(QObject):
         app().main_window.action_export_element_transfer_data.setDisabled(False)
 
     def solve_structural_harmonic_analysis(self):
-        analisys_id = self.model.analysis_setup.get("analysis_id")
-        analysis_method = self.model.analysis_setup.get("analysis_method")
+        analisys_id = self.model.old_analysis_setup.get("analysis_id")
+        analysis_method = self.model.old_analysis_setup.get("analysis_method")
         if analisys_id != AnalysisID.STRUCTURAL_HARMONIC:
             return
 
@@ -236,14 +236,14 @@ class Project(QObject):
             if not obj.complete:
                 return True
 
-        if len(self.model.analysis_setup) == 0:
+        if len(self.model.old_analysis_setup) == 0:
             return True
 
         analysis = ProcessAnalysis()
-        analysis_id = self.model.analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
+        analysis_id = self.model.old_analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
 
         checker = AnalysisRequirementsChecker()
-        interrupt_function = app().project.model.toggle_processing_callback
+        interrupt_function = app().old_project.model.toggle_processing_callback
 
         if analysis_id == AnalysisID.STRUCTURAL_HARMONIC:
             if checker.check_structural_harmonic_analysis():

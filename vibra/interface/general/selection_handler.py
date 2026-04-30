@@ -1,6 +1,6 @@
 from PySide6.QtCore import Signal, QObject
 
-from vibra.project_files.project import Project
+from vibra.engine.project import Project
 
 class SelectionHandler(QObject):
     selection_changed = Signal()

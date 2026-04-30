@@ -3,6 +3,7 @@ from PySide6.QtGui import QCloseEvent
 
 from vibra import app
 from vibra.engine import AnalysisID
+from vibra.interface import error_title
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
@@ -12,8 +13,6 @@ from vibra.interface.ui_generated.plots.acoustic.surface_absorption_coefficient_
 import logging
 import numpy as np
 
-error_title = "Error"
-
 
 class SurfaceAbsorptionCoefficientInputs(SurfaceAbsorptionCoefficientInputs_UI):
     def __init__(self, *args, **kwargs):
@@ -21,23 +20,37 @@ class SurfaceAbsorptionCoefficientInputs(SurfaceAbsorptionCoefficientInputs_UI):
 
         app().main_window.show_geometry_render_widget()
 
-        self.project = app().project
-        self.model = app().project.model
-        self.mesh = app().project.model.mesh
-        self.acoustic_post = self.project.acoustic_postprocessing
-
         self._config_window()
         self._reset_variables()
         self._create_connections()
         self._load_analysis_setup_and_solution()
 
+    @property
+    def model(self):
+        return app().project.model
+
+    @property
+    def mesh(self):
+        return app().project.model.mesh
+
+    @property
+    def properties(self):
+        return app().project.model.properties
+
+    @property
+    def solution(self):
+        return app().project.model.solution
+
+    @property
+    def acoustic_post(self):
+        return app().project.get_acoustic_postprocessing()
+
     def _load_analysis_setup_and_solution(self):
         self.analysis_method = ""
-        if self.project.model.analysis_setup.get("analysis_id") == AnalysisID.ACOUSTIC_HARMONIC:
+        if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
             self.analysis_method = "Direct method"
 
         self.frequencies = app().project.model.frequencies
-        self.solution = self.project.acoustic_harmonic_solver.solution
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -85,7 +98,7 @@ class SurfaceAbsorptionCoefficientInputs(SurfaceAbsorptionCoefficientInputs_UI):
             if len(volumes) == 1:
                 try:
                     self.comboBox_volumes.setCurrentText(f"{list(volumes)[0]}")
-                except:
+                except Exception:
                     pass
             return
 

@@ -3,6 +3,7 @@ from PySide6.QtGui import QCloseEvent, QIcon
 from PySide6.QtWidgets import QDialog, QLineEdit, QToolButton, QVBoxLayout
 
 from vibra import app, ICON_DIR
+from vibra.interface import error_title
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.data_handler.import_data_to_compare import ImportDataToCompare
 from vibra.interface.formatters import icons
@@ -45,8 +46,6 @@ class CursorIndex(IntEnum):
     DISABLED = 0
     CROSS = 1
     HARMONIC = 2
-
-error_title = "Error"
 
 
 class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
@@ -286,10 +285,10 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
             output_value = float(input_value)
 
             if output_value <= 0:
-                message = f"Enter a positive non-zero value in the 'Frequency (1x)' input field."
+                message = "Enter a positive non-zero value in the 'Frequency (1x)' input field."
 
         except Exception as error_log:
-            message = f"You have typed an invalid value in the 'Frequency (1x)' input field.\n\n"
+            message = "You have typed an invalid value in the 'Frequency (1x)' input field.\n\n"
             message += str(error_log)
 
         if message != "":
@@ -354,7 +353,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
         self.legend = data.get("legend")
         self.linestyle = data.get("linestyle")
 
-    def get_scaled_data(self, data):
+    def get_scaled_data(self, data: np.ndarray):
         if self.comboBox_data_format.currentIndex() != DataFormat.DECIBEL_SCALE:
             return data
 
@@ -365,7 +364,6 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
         self.x_data = self.x_data[shift:]
         data2 = np.real(data[shift:]*np.conjugate(data[shift:]))
 
-        # if "Pa" in self.unit:
         if self.unit == "Pa":
             return 10*np.log10(data2/((2e-5)**2))
 
@@ -374,6 +372,9 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
     def get_y_axis_data(self, data: np.ndarray | None):
         if data is None:
             return None
+
+        if self.decibel_data:
+            return data
 
         dif_data = self.process_differentiation(data)
         data_format_index = self.comboBox_data_format.currentIndex()

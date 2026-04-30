@@ -3,14 +3,15 @@ from PySide6.QtGui import QCloseEvent
 from PySide6.QtCore import Qt, QPoint, QItemSelectionModel
 
 from vibra import app, USER_PATH, SUPPORTED_OUTPUT_DATA_EXTENSIONS
+from vibra.interface import error_title
 from vibra.interface.common.common_interface import update_analysis_setup_in_file
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
+from vibra.interface.common.common_interface import mesher_interface_callback
 from vibra.interface.model_inputs.general.fluid.set_fluid_inputs import SetFluidInputs
-from vibra.interface.model_inputs.general.fluid.simplified_fluid_inputs import SimplifiedFluidInputs
+from vibra.interface.model_inputs.general.fluid.set_fluid_inputs_simplified import SetFluidInputsSimplified
 from vibra.interface.ui_generated.model.acoustic.reciprocating_compressor_inputs_ui import ReciprocatingCompressorInputs_UI
 from vibra.interface.model_inputs.acoustic.definitions.enums import *
 
@@ -20,9 +21,6 @@ from vibra.model.machines.reciprocating_compressor_model import ReciprocatingCom
 import numpy as np
 from os.path import dirname
 from pathlib import Path
-
-window_title_1 = "Error"
-window_title_2 = "Warning"
 
 psi_to_Pa = (0.45359237 * 9.80665) / ((0.0254)**2)
 kgf_cm2_to_Pa = 9.80665e4
@@ -330,7 +328,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
         if state_properties:
             self.hide()
-            self.fluid_dialog = SimplifiedFluidInputs(state_properties = state_properties)
+            self.fluid_dialog = SetFluidInputsSimplified(state_properties = state_properties)
             self.fluid_dialog.fluid_widget.pushButton_attribute.setText("Select fluid")
             self.fluid_dialog.pushButton_attribute.clicked.connect(self.get_selected_fluid)
             self.fluid_dialog.exec_and_keep_window_open()
@@ -487,10 +485,8 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.spinBox_capacity.setValue(100)
 
     def generate_mesh(self):
-        if not app().project.model.generated_mesh:
-            mesher = MesherSetupInputs(close_after_generate=True)
-            if not mesher.complete:
-                return True
+        if not app().project.model.is_there_a_valid_mesh():
+            return mesher_interface_callback(self, close_after_generate=True)
 
     def check_input_surfaces(self):
 
@@ -515,7 +511,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             message = "The selected surface does not correspond to the piping endings. "
             message += "It is necessary to change the selection to proceed with the "
             message += "compressor excitation attribution."
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             self.clear_line_edit_selection_id()
             return None
 
@@ -539,18 +535,18 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
                 if value < 0:
                     message = f"You cannot input a negative value to the {label}."
-                    PrintMessageInput([window_title_1, title, message])
+                    PrintMessageInput([error_title, title, message])
                     return True
                 else:
                     self.value = value
 
             except Exception:
                 message = f"You have typed an invalid value to the {label}."
-                PrintMessageInput([window_title_1, title, message])
+                PrintMessageInput([error_title, title, message])
                 return True
         else:
             message = f"None value has been typed to the {label}."
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             return True
         return False
 
@@ -718,7 +714,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             message += "different from the others already imported ones. The current "
             message += "project frequency setup is not going to be modified."
             message += f"\n\n{table_name}"
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             return True
 
         update_analysis_setup_in_file(frequencies)
@@ -749,7 +745,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             else:
                 self.lineEdit_pressure_at_discharge.setText(f"{discharge_pressure : .6f}")
 
-        except:
+        except Exception:
             return
 
         try:
@@ -764,7 +760,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
             self.lineEdit_temperature_at_discharge.setText(f"{discharge_temperature : .6f}")
 
-        except:
+        except Exception:
             return
 
     def attribute_callback(self):
@@ -860,8 +856,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
     def actions_to_finalize(self):
         self.load_compressor_excitation_info()
-        app().file.write_model_properties_in_file()
-        app().file.write_imported_table_data_in_file()
+        app().project.update_model_properties_file()
         app().main_window.selection.set_geometry_selection()
         app().main_window.update_symbols()
 
@@ -869,7 +864,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         for table_name in table_names:
             self.properties.remove_imported_tables("acoustic", table_name)
         if table_names:
-            app().file.write_imported_table_data_in_file()
+            app().project.update_model_properties_file()
 
     def remove_conflicting_excitations(self, surface_id: int):
 
@@ -1225,7 +1220,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
     def is_file_path_valid(self, file_path: str):
         if Path(dirname(file_path)).exists():
-            ext = file_path.split(".")[-1]
+            ext = file_path.split(".")[-1].lower()
             if ext in SUPPORTED_OUTPUT_DATA_EXTENSIONS:
                 return True
         return False

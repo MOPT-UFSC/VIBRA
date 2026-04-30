@@ -1,15 +1,18 @@
+import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QTreeWidgetItem
 
 from vibra import app
+from vibra.engine.solution import ModalSolution
+from vibra.engine.solvers import ModalSolver
 from vibra.interface.common.common_interface import export_modal_analysis_results
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.loading_window import LoadingWindow
-from vibra.interface.ui_generated.plots.acoustic.acoustic_mode_shape_inputs_ui import AcousticModeShapeInputs_UI
+from vibra.interface.ui_generated.plots.acoustic.acoustic_mode_shape_inputs_ui import (
+    AcousticModeShapeInputs_UI,
+)
 from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
-
-import numpy as np
 
 
 class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
@@ -52,11 +55,14 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
     def _configure_qt_variables(self):
         #
         self.frame_transparency.setVisible(False)
-        #
         self.lineEdit_natural_frequency.setDisabled(True)
         self.lineEdit_natural_frequency.setProperty("status", "information")
-        #
-        if app().project.acoustic_modal_solver.complex_natural_frequencies.size:
+
+        solution = app().project.model.solution
+        if not isinstance(solution, ModalSolution):
+            return
+
+        if isinstance(solution.complex_natural_frequencies, np.ndarray) and solution.complex_natural_frequencies.size:
             widths = [60, 160]
             headers = ["Mode", "Damped frequency [Hz]", "Damping ratio [--]"]
 
@@ -81,7 +87,7 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
 
         icon_color = None
         theme = app().config.user_preferences.interface_theme
-        from vibra import LIGHT_ICON_COLOR, DARK_ICON_COLOR
+        from vibra import DARK_ICON_COLOR, LIGHT_ICON_COLOR
         if theme == "dark":
             icon_color = DARK_ICON_COLOR.to_qt()
         else:
@@ -150,17 +156,16 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
         return plot_types[index]
 
     def load_natural_frequencies(self):
-        if app().project.acoustic_modal_solver is None:
+        solution = app().project.model.solution
+        if not isinstance(solution, ModalSolution):
             return
 
         self._configure_qt_variables()
 
-        if len(app().project.acoustic_modal_solver.complex_natural_frequencies):
-            self.natural_frequencies = list(
-                app().project.acoustic_modal_solver.complex_natural_frequencies
-            )
+        if isinstance(solution.complex_natural_frequencies, np.ndarray) and solution.complex_natural_frequencies.size:
+            self.natural_frequencies = list(solution.complex_natural_frequencies)
         else:
-            self.natural_frequencies = list(app().project.acoustic_modal_solver.natural_frequencies)
+            self.natural_frequencies = list(solution.natural_frequencies)
 
         modes = np.arange(1, len(self.natural_frequencies) + 1, 1)
         self.modes_to_frequencies = dict(zip(modes, self.natural_frequencies))

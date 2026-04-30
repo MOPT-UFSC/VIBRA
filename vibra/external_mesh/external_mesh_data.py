@@ -35,7 +35,7 @@ class ExternalMeshData():
             path = Path(path)
 
         self.file_path = path
-        with open(self.file_path, 'r') as self.file:
+        with open(self.file_path, "r", encoding="latin-1") as self.file:
             self.lines = self.file.readlines()
 
 

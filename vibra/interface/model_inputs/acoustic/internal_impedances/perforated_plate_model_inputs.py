@@ -1,8 +1,28 @@
-from PySide6.QtWidgets import QHeaderView, QLineEdit, QTreeWidgetItem, QTableWidgetItem, QAbstractItemView
-from PySide6.QtCore import Qt, QPoint, QItemSelectionModel
+import logging
+import warnings
+from collections import defaultdict
+from copy import deepcopy
+from enum import IntEnum
+from pathlib import Path
+from typing import Dict, List
+
+import numpy as np
+from PySide6.QtCore import QItemSelectionModel, QPoint, Qt
 from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import (
+    QAbstractItemView,
+    QHeaderView,
+    QLineEdit,
+    QTableWidgetItem,
+    QTreeWidgetItem,
+)
 
 from vibra import app
+from vibra.engine.properties.fluid import Fluid
+from vibra.engine.transfer_impedances.perforated_plate_models import (
+    PerforatedPlateModels,
+)
+from vibra.interface import error_title
 from vibra.interface.common.common_interface import update_analysis_setup_in_file
 from vibra.interface.data.data_manager import get_spectral_data_from_array
 from vibra.interface.data_handler.data_importer import DataImporter
@@ -10,28 +30,21 @@ from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
-from vibra.interface.model_inputs.general.fluid.simplified_fluid_inputs import SimplifiedFluidInputs
-from vibra.interface.model_inputs.acoustic.internal_impedances.perforated_plate_data import PerforatedPlateData
-from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
-from vibra.interface.ui_generated.model.acoustic.perforated_plate_model_inputs_ui import PerforatedPlateModelInputs_UI
 from vibra.interface.model_inputs.acoustic.definitions.enums import SetupTabType
-
-from vibra.engine.properties.fluid import Fluid
-from vibra.engine.transfer_impedances.perforated_plate_models import PerforatedPlateModels
-
+from vibra.interface.model_inputs.acoustic.internal_impedances.perforated_plate_data import (
+    PerforatedPlateData,
+)
+from vibra.interface.model_inputs.general.fluid.set_fluid_inputs_simplified import (
+    SetFluidInputsSimplified,
+)
+from vibra.interface.plots.general.frequency_response_plotter import (
+    FrequencyResponsePlotter,
+)
+from vibra.interface.ui_generated.model.acoustic.perforated_plate_model_inputs_ui import (
+    PerforatedPlateModelInputs_UI,
+)
 from vibra.utils.bidict import bidict
 
-from pathlib import Path
-from collections import defaultdict
-from copy import deepcopy
-from typing import Dict, List
-
-import logging, warnings
-import numpy as np
-from enum import IntEnum
-
-error_title = "Error"
-warning_title = "Warning"
 
 class PPMMainTabType(IntEnum):
     SETUP = SetupTabType.SETUP
@@ -56,11 +69,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
- 
-        self.project = app().project
-        self.model = app().project.model
-        self.mesh = app().project.model.mesh
-        self.properties = app().project.model.properties
 
         self.model_setup_workspace()
         self._initialize()
@@ -72,6 +80,18 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
         while self.keep_window_open:
             self.exec()
+    
+    @property
+    def model(self):
+        return app().project.model
+
+    @property
+    def mesh(self):
+        return app().project.model.mesh
+
+    @property
+    def properties(self):
+        return app().project.model.properties
 
     def model_setup_workspace(self):
         mesh_workspace = app().main_window.action_mesh_workspace.isChecked()
@@ -305,7 +325,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
     def _paint_icons(self):
         icon_color = None
         theme = app().config.user_preferences.interface_theme
-        from vibra import LIGHT_ICON_COLOR, DARK_ICON_COLOR
+        from vibra import DARK_ICON_COLOR, LIGHT_ICON_COLOR
         if theme == "dark":
             icon_color = DARK_ICON_COLOR.to_qt()
         else:
@@ -538,9 +558,9 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             self.lineEdit_user_defined_transfer_impedance_path.clear()
             app().main_window.results_viewer_widget.plot_acoustic_harmonic._initialize()
 
-        app().file.write_model_properties_in_file()
+        app().project.update_model_properties_file()
         if row == 12:
-            app().file.write_imported_table_data_in_file()
+            app().project.update_model_properties_file()
 
         self.load_model_info()
 
@@ -558,7 +578,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                 new_item_value = None
                 unnaceptable_value_error = True
 
-        except:
+        except Exception:
             unnaceptable_value_error = True
 
         model = self.map_model_id_to_model[model_id]
@@ -576,7 +596,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         for surface_id in surfaces_ids:
             self.properties._set_property("perforated_plate_model", model.get_data(), surface=surface_id)
 
-        app().file.write_model_properties_in_file()
+        app().project.update_model_properties_file()
         self.load_model_info()
     
     def update_tabs_visibility(self):
@@ -825,7 +845,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         for table_name in table_names:
             self.properties.remove_imported_tables("acoustic", table_name)
         if table_names:
-            app().file.write_imported_table_data_in_file()
+            app().project.update_model_properties_file()
 
     def remove_conflicting_excitations(self, surface_ids: int | list[int]):
 
@@ -963,19 +983,16 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             self.load_model_info()
 
             logging.info("Processing the post-assignment actions... [20/100]")
-            app().project.reset_solutions()
+            app().project.reset_solution()
 
             logging.info("Processing the post-assignment actions... [30/100]")
-            app().file.remove_mesh_data_from_project_file()
-
-            logging.info("Processing the post-assignment actions... [40/100]")
-            app().file.remove_results_data_from_project_file()
+            app().project.project_writer.delete_mesh_data()
 
             logging.info("Processing the post-assignment actions... [50/100]")
-            app().file.write_model_properties_in_file()
+            app().project.update_model_properties_file()
 
             logging.info("Processing the post-assignment actions... [60/100]")
-            app().file.write_imported_table_data_in_file()
+            app().project.update_model_properties_file()
 
             logging.info("Processing the post-assignment actions... [70/100]")
             app().main_window.recompute_hidden_volumes()
@@ -999,14 +1016,11 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             self.model.process_degrees_of_freedom_decoupling()
 
             logging.info("Processing degress of freedom decoupling... [70/100]")
-            app().file.write_mesh_data_in_file()
-            
-            logging.info("Processing degress of freedom decoupling... [75/100]")
-            app().file.write_geometry_data_in_file()
+            app().project.write_to_working_dir()
 
             # the degrees of freedom modifies the surfaces properties
             logging.info("Processing degress of freedom decoupling... [80/100]")
-            app().file.write_model_properties_in_file()
+            app().project.update_model_properties_file()
 
             logging.info("Processing degress of freedom decoupling... [85/100]")
             app().main_window.update_mesh_information()
@@ -1071,9 +1085,9 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
     def get_fluid_callback(self):
         self.hide()
-        self.fluid_dialog = SimplifiedFluidInputs()
+        self.fluid_dialog = SetFluidInputsSimplified()
         self.fluid_dialog.fluid_widget.pushButton_attribute.setText("Select fluid")
-        self.fluid_dialog.pushButton_attribute.clicked.connect(self.get_selected_fluid)
+        self.fluid_dialog.fluid_widget.pushButton_attribute.clicked.connect(self.get_selected_fluid)
         self.fluid_dialog.exec()
         app().main_window.set_input_widget(self)
 
@@ -1091,7 +1105,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
         warnings.filterwarnings('ignore')
 
-        frequencies = app().project.model.analysis_setup.get("frequencies")
+        frequencies = app().project.model.frequencies
         if frequencies is None:
             df = 5
             f_min = 5
@@ -1189,7 +1203,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         if not self.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
             return False
 
-        if not app().project.model.generated_mesh:
+        if not app().project.model.is_there_a_valid_mesh():
             self.hide()
             app().main_window.input_ui.mesh_setup()
             app().main_window.set_input_widget(self)

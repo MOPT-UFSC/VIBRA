@@ -1,17 +1,27 @@
+from enum import IntEnum
+
+import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
-from vibra.engine import AnalysisID
 from vibra import app
-from vibra.interface.ui_generated.plots.acoustic.acoustic_pressure_frequency_response_inputs_ui import AcousticPressureFrequencyResponseInputs_UI
-from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.engine import AnalysisID
 from vibra.interface.data_handler.export_model_results import ExportModelResults
-from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
+from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.plots.general.frequency_response_plotter import (
+    FrequencyResponsePlotter,
+)
+from vibra.interface.ui_generated.plots.acoustic.acoustic_pressure_frequency_response_inputs_ui import (
+    AcousticPressureFrequencyResponseInputs_UI,
+)
 
-import numpy as np
 
-window_title1 = "Error"
-window_title2 = "Warning"
+class SelectionType(IntEnum):
+    SURFACES = 0
+    LINES = 1
+    POINTS = 2
+    NODES = 3
+
 
 class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseInputs_UI):
     def __init__(self, *args, **kwargs):
@@ -19,28 +29,38 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
 
         app().main_window.show_geometry_render_widget()
 
-        self.project = app().project
-        self.model = app().project.model
-        self.mesh = app().project.model.mesh
-        self.properties = app().project.model.properties
-
         self._reset_variables()
         self._create_connections()
 
         self._load_analysis_setup_and_solution()
         self.geometry_selection_callback()
-    
+
+    @property
+    def model(self):
+        return app().project.model
+
+    @property
+    def mesh(self):
+        return app().project.model.mesh
+
+    @property
+    def properties(self):
+        return app().project.model.properties
+
+    @property
+    def nodal_solution(self):
+        return app().project.model.solution.nodal_solution
+
     def showEvent(self, event):
         super().showEvent(event)
         self.update_render_according_to_selector()
 
     def _load_analysis_setup_and_solution(self):
         self.analysis_method = ""
-        if self.project.model.analysis_setup.get("analysis_id") == AnalysisID.ACOUSTIC_HARMONIC:
+        if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
             self.analysis_method = "Direct method"
 
         self.frequencies = app().project.model.frequencies
-        self.solution = self.project.acoustic_harmonic_solver.solution
 
     def _reset_variables(self):
         self.exporter = None
@@ -68,19 +88,19 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
         nodes = app().main_window.selection.mesh_nodes
 
         index = self.comboBox_selector_filter.currentIndex()
-        if surfaces and index == 0:
+        if surfaces and index == SelectionType.SURFACES:
             text = ", ".join([str(i) for i in surfaces])
             self.lineEdit_selection_id.setText(text)
 
-        elif lines and index == 1:
+        elif lines and index == SelectionType.LINES:
             text = ", ".join([str(i) for i in lines])
             self.lineEdit_selection_id.setText(text)
 
-        elif points and index == 2:
+        elif points and index == SelectionType.POINTS:
             text = ", ".join([str(i) for i in points])
             self.lineEdit_selection_id.setText(text)
 
-        elif nodes and index == 3:
+        elif nodes and index == SelectionType.NODES:
             text = ", ".join([str(i) for i in nodes])
             self.lineEdit_selection_id.setText(text)
 
@@ -103,10 +123,10 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
 
         input_ids = self.lineEdit_selection_id.text()
         self.selected_ids, error_data = self.mesh.check_selected_ids(
-                                                                    input_ids, 
-                                                                    selection = selection, 
-                                                                    single_id = False
-                                                                    )
+            input_ids,
+            selection = selection,
+            single_id = False,
+            )
 
         if error_data is not None:
             self.lineEdit_selection_id.setFocus()
@@ -135,19 +155,21 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
 
         index = self.comboBox_selector_filter.currentIndex()
 
-        if index == 0:
+        if index == SelectionType.SURFACES:
             rows = self.mesh.get_nodes_from_surface(selected_id)
-        elif index == 1:
+        elif index == SelectionType.LINES:
             rows = self.mesh.get_nodes_from_line(selected_id)
-        elif index == 2:
+        elif index == SelectionType.POINTS:
             rows = self.mesh.nodes_from_points.get(selected_id)
-        else:
+        elif index == SelectionType.NODES:
             rows = selected_id
+        else:
+            return None
 
         if isinstance(rows, int):
-            response = self.solution[rows,:]
+            response = self.nodal_solution[rows,:]
         else:
-            response = np.average(self.solution[rows,:], axis=0)
+            response = np.average(self.nodal_solution[rows,:], axis=0)
 
         if complex(0) in response:
             response += 1e-12
@@ -157,8 +179,8 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
 
     def join_model_data(self):
 
-        current_text = self.comboBox_selector_filter.currentText()
-        selection_type = current_text.lower()[:-1]
+        index = self.comboBox_selector_filter.currentIndex()
+        selection_type = self.selection_types[index][:-1]
 
         self.model_results = dict()
         self.title = "Acoustic frequency response"
@@ -169,30 +191,21 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
             legend_label = f"Acoustic pressure at {selection_type} [{selected_id}]"
 
             y_data = self.get_response(selected_id)
+            if y_data is None:
+                continue
 
             self.model_results[key] = { 
-                                        "x_data" : self.frequencies,
-                                        "y_data" : y_data,
-                                        "x_label" : "Frequency [Hz]",
-                                        "y_label" : "Acoustic pressure",
-                                        "title" : self.title,
-                                        "data_type" : "acoustic pressure",
-                                        "legend" : legend_label,
-                                        "unit" : self.unit_label,
-                                        "color" : self.get_color(i),
-                                        "linestyle" : "-"  
-                                      }
-
-    def get_color(self, index):
-
-        colors = [  (0,0,1), (0,0,0), (1,0,0),
-                    (0,1,1), (1,0,1), (1,1,0),
-                    (0.25,0.25,0.25)  ]
-        
-        if index <= 6:
-            return colors[index]
-        else:
-            return tuple(np.random.randint(0, 255, size=3) / 255)
+                "x_data" : self.frequencies,
+                "y_data" : y_data,
+                "x_label" : "Frequency [Hz]",
+                "y_label" : "Acoustic pressure",
+                "title" : self.title,
+                "data_type" : "acoustic pressure",
+                "legend" : legend_label,
+                "unit" : self.unit_label,
+                "color" : get_color(i),
+                "linestyle" : "-",
+                }
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
@@ -207,3 +220,20 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
             self.plotter.close()
 
         return super().closeEvent(a0)
+
+def get_color(index: int):
+
+    colors = [  
+        (0,0,1), 
+        (0,0,0), 
+        (1,0,0),
+        (0,1,1), 
+        (1,0,1), 
+        (1,1,0),
+        (0.25,0.25,0.25),
+        ]
+
+    if index <= 6:
+        return colors[index]
+    else:
+        return tuple(np.random.randint(0, 255, size=3) / 255)

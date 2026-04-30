@@ -22,7 +22,6 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
 
-        self.project = app().project
         self.model = app().project.model
         self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
@@ -232,19 +231,13 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
             self.load_model_info()
 
             logging.info("Processing the post-assignment actions... [20/100]")
-            app().project.reset_solutions()
+            app().project.reset_solution()
 
             logging.info("Processing the post-assignment actions... [30/100]")
-            app().file.remove_mesh_data_from_project_file()
-
-            logging.info("Processing the post-assignment actions... [40/100]")
-            app().file.remove_results_data_from_project_file()
-
-            logging.info("Processing the post-assignment actions... [50/100]")
-            app().file.write_model_properties_in_file()
+            app().project.project_writer.delete_mesh_data()
 
             logging.info("Processing the post-assignment actions... [60/100]")
-            app().file.write_imported_table_data_in_file()
+            app().project.update_model_properties_file()
 
             logging.info("Processing the post-assignment actions... [70/100]")
             app().main_window.recompute_hidden_volumes()
@@ -270,14 +263,7 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
             self.model.process_degrees_of_freedom_decoupling()
 
             logging.info("Processing degress of freedom decoupling... [70/100]")
-            app().file.write_mesh_data_in_file()
-            
-            logging.info("Processing degress of freedom decoupling... [75/100]")
-            app().file.write_geometry_data_in_file()
-
-            # the degrees of freedom modifies the surfaces properties
-            logging.info("Processing degress of freedom decoupling... [80/100]")
-            app().file.write_model_properties_in_file()
+            app().project.write_to_working_dir()
 
             logging.info("Processing degress of freedom decoupling... [85/100]")
             app().main_window.update_mesh_information()
@@ -291,8 +277,7 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
         LoadingWindow(callback).run()
 
     def restore_mesh_data_modified_by_decoupling(self):
-
-        if self.mesh.cache_nodal_coordinates is None:
+        if not self.mesh.has_decoupling():
             return
 
         self.mesh.restore_data_from_cache()
@@ -364,18 +349,17 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
             return
 
     def process_degress_of_freedom_decoupling(self):
-
         if not self.assignment_complete:
             return False
 
         if not self.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
             return False
 
-        if not app().project.model.generated_mesh:
+        if not app().project.model.is_there_a_valid_mesh():
             self.hide()
             app().main_window.input_ui.mesh_setup()
             app().main_window.set_input_widget(self)
-            if not app().project.model.generated_mesh:
+            if not app().project.model.is_there_a_valid_mesh():
                 return True
             else:
                 return False
