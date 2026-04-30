@@ -24,8 +24,8 @@ class Ui_Dialog(object):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
         Dialog.setWindowModality(Qt.WindowModality.ApplicationModal)
-        Dialog.resize(320, 300)
-        Dialog.setMinimumSize(QSize(200, 200))
+        Dialog.resize(320, 240)
+        Dialog.setMinimumSize(QSize(240, 240))
         Dialog.setMaximumSize(QSize(600, 600))
         Dialog.setModal(True)
         self.verticalLayout = QVBoxLayout(Dialog)

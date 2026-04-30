@@ -286,16 +286,10 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.status_bar)
         self.renderer_toolbar = QToolBar(MainWindow)
         self.renderer_toolbar.setObjectName(u"renderer_toolbar")
-        self.renderer_toolbar.setStyleSheet(u"\n"
-"            QToolBar {\n"
-"                border-style: solid;\n"
-"                border-width: 1px;\n"
-"                border-color: #888888;\n"
-"            }")
         MainWindow.addToolBar(Qt.ToolBarArea.TopToolBarArea, self.renderer_toolbar)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 1056, 33))
+        self.menubar.setGeometry(QRect(0, 0, 1056, 24))
         self.menu_project = QMenu(self.menubar)
         self.menu_project.setObjectName(u"menu_project")
         self.menu_settings = QMenu(self.menubar)
@@ -313,6 +307,10 @@ class Ui_MainWindow(object):
         self.menu_mesh_select_all = QMenu(self.menu_selection)
         self.menu_mesh_select_all.setObjectName(u"menu_mesh_select_all")
         MainWindow.setMenuBar(self.menubar)
+        self.workspaces_toolbar = QToolBar(MainWindow)
+        self.workspaces_toolbar.setObjectName(u"workspaces_toolbar")
+        self.workspaces_toolbar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+        MainWindow.addToolBar(Qt.ToolBarArea.TopToolBarArea, self.workspaces_toolbar)
 
         self.renderer_toolbar.addSeparator()
         self.renderer_toolbar.addAction(self.action_new_project)
@@ -333,9 +331,6 @@ class Ui_MainWindow(object):
         self.renderer_toolbar.addAction(self.action_hide_selection)
         self.renderer_toolbar.addAction(self.action_unhide_all)
         self.renderer_toolbar.addSeparator()
-        self.renderer_toolbar.addAction(self.action_model_workspace)
-        self.renderer_toolbar.addAction(self.action_mesh_workspace)
-        self.renderer_toolbar.addAction(self.action_results_workspace)
         self.menubar.addAction(self.menu_project.menuAction())
         self.menubar.addAction(self.menu_settings.menuAction())
         self.menubar.addAction(self.menu_selection.menuAction())
@@ -377,6 +372,9 @@ class Ui_MainWindow(object):
         self.menu_mesh_select_all.addAction(self.action_surface_elements)
         self.menu_mesh_select_all.addAction(self.action_solid_elements)
         self.menu_mesh_select_all.addAction(self.action_all_entities_mesh)
+        self.workspaces_toolbar.addAction(self.action_model_workspace)
+        self.workspaces_toolbar.addAction(self.action_mesh_workspace)
+        self.workspaces_toolbar.addAction(self.action_results_workspace)
 
         self.retranslateUi(MainWindow)
 
@@ -426,9 +424,12 @@ class Ui_MainWindow(object):
         self.action_export_element_transfer_data.setText(QCoreApplication.translate("MainWindow", u"Export element transfer data", None))
         self.action_generate_mesh.setText(QCoreApplication.translate("MainWindow", u"Generate Mesh", None))
         self.action_theme.setText(QCoreApplication.translate("MainWindow", u"Theme", None))
-        self.action_model_workspace.setText(QCoreApplication.translate("MainWindow", u"Model Workspace", None))
-        self.action_mesh_workspace.setText(QCoreApplication.translate("MainWindow", u"Mesh Workspace", None))
-        self.action_results_workspace.setText(QCoreApplication.translate("MainWindow", u"Results Workspace", None))
+        self.action_model_workspace.setText(QCoreApplication.translate("MainWindow", u"Model", None))
+#if QT_CONFIG(tooltip)
+        self.action_model_workspace.setToolTip(QCoreApplication.translate("MainWindow", u"Model", None))
+#endif // QT_CONFIG(tooltip)
+        self.action_mesh_workspace.setText(QCoreApplication.translate("MainWindow", u"Mesh", None))
+        self.action_results_workspace.setText(QCoreApplication.translate("MainWindow", u"Results", None))
         self.action_user_preferences.setText(QCoreApplication.translate("MainWindow", u"User Preferences", None))
         self.action_show_materials.setText(QCoreApplication.translate("MainWindow", u"Show Materials", None))
         self.action_show_fluids.setText(QCoreApplication.translate("MainWindow", u"Show Fluids", None))
@@ -457,6 +458,7 @@ class Ui_MainWindow(object):
         self.menu_selection.setTitle(QCoreApplication.translate("MainWindow", u"Selection", None))
         self.menu_geometry_select_all.setTitle(QCoreApplication.translate("MainWindow", u"Geometry", None))
         self.menu_mesh_select_all.setTitle(QCoreApplication.translate("MainWindow", u"Mesh", None))
+        self.workspaces_toolbar.setWindowTitle(QCoreApplication.translate("MainWindow", u"toolBar", None))
     # retranslateUi
 
 
@@ -485,6 +487,7 @@ class MainWindow_UI(QMainWindow, Ui_MainWindow):
             - menu_selection: QMenu
                 - menu_geometry_select_all: QMenu
                 - menu_mesh_select_all: QMenu
+        - workspaces_toolbar: QToolBar
     """
 
     def __init__(self, *args, **kwargs):
