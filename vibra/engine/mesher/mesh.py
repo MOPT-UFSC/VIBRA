@@ -39,7 +39,7 @@ MeshQualityParams = Literal["gamma", "volume", "minSJ", "aspectRatio"]
 
 class Mesh:
     def __init__(self, **kwargs):
-        self.length_unit = kwargs.get("length_unit", "milimeter")
+        self.length_unit = kwargs.get("length_unit", "millimeter")
         self.geometry_qf = kwargs.get("geometry_qf", 1.0)
 
         self.geometry_setup = None
@@ -188,11 +188,11 @@ class Mesh:
     def all_solid_ids(self) -> set[int]:
         return set(self.geometry_information.get("volumes", set()))
 
-    def set_length_unit(self, length_unit: str = "milimeter"):
+    def set_length_unit(self, length_unit: str = "millimeter"):
         self.length_unit = length_unit
 
     def get_length_unit_factor(self):
-        if self.length_unit == "milimeter":
+        if self.length_unit == "millimeter":
             return 1e-3
         elif self.length_unit == "inch":
             return 0.0254

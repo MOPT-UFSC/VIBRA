@@ -4,13 +4,13 @@ import numpy as np
 
 def initialize_gmsh_and_create_meshed_cube():
 
-    # length dimension in milimeters
+    # length dimension in millimeters
     length = 2000
 
-    # base dimension in milimeters
+    # base dimension in millimeters
     base = 200
 
-    # height dimension in milimeters
+    # height dimension in millimeters
     height = 300
 
     gmsh.initialize()
