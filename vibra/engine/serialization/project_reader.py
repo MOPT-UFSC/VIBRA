@@ -193,14 +193,14 @@ class ProjectReader:
             mesh.faces_connectivity = np.array(file["connectivity/faces_connectivity"])
             mesh.solids_connectivity = np.array(file["connectivity/solids_connectivity"])
 
-            curvatures = file["curvatures"]
+            curvatures = file.get("curvatures", dict())
             for key, value in curvatures.get("curvatures_surface", dict()).items():
                 mesh.curvatures_surface[int(key)] = value[:]
-            
-            normals = file["normals"]
+
+            normals = file.get("normals", dict())
             for key, value in normals.get("normals_surface", dict()).items():
                 mesh.normals_surface[int(key)] = value[:]
-            
+
             if all(key in file for key in cache_paths):
                 mesh.cache_nodal_coordinates = np.array(file["nodal_data/cache_nodal_coordinates"])
                 mesh.cache_lines_connectivity = np.array(file["connectivity/cache_lines_connectivity"])
