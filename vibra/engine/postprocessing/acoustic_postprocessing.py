@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 from functools import cache
-from time import perf_counter
 from typing import Literal
 
 import numpy as np
@@ -400,13 +399,8 @@ class AcousticPostprocessing:
         nodes_output = np.sort(self.mesh.get_nodes_from_surface(output_surface_id))
 
         logging.info("Processing the transmission loss... [20/100]")
-        t0 = perf_counter()
         # P_in = self.solution.nodal_solution[nodes_input, :]
         P_out = self.solution.nodal_solution[nodes_output, :]
-        dt = perf_counter() - t0
-
-        # TODO: remove this printout when possible
-        print(f"Time to load solution data for TL calculation: {dt} s")
 
         logging.info("Processing the transmission loss... [40/100]")
 

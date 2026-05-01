@@ -183,7 +183,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
 
         if len(input_surface_candidate) == 1:
             self.lineEdit_input_surface_id.setText(str(input_surface_candidate[0]))
-    
+
         if len(output_surface_candidate) == 1:
             self.lineEdit_output_surface_id.setText(str(output_surface_candidate[0]))
 
