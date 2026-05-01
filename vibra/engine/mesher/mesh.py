@@ -31,13 +31,15 @@ from vibra.engine.mesher.element_setup import (
 )
 from vibra.engine.mesher.mesh_setup import MeshRefinementSetup, MeshSetup
 from vibra.errors import MeshingAlgorithmError
+from vibra.interface.numeric_checks.unit_utilities import convert_length_unit
+
 
 MeshQualityParams = Literal["gamma", "volume", "minSJ", "aspectRatio"]
 
 
 class Mesh:
     def __init__(self, **kwargs):
-        self.length_unit = kwargs.get("length_unit", "millimeter")
+        self.length_unit = kwargs.get("length_unit", "milimeter")
         self.geometry_qf = kwargs.get("geometry_qf", 1.0)
 
         self.geometry_setup = None
@@ -186,11 +188,11 @@ class Mesh:
     def all_solid_ids(self) -> set[int]:
         return set(self.geometry_information.get("volumes", set()))
 
-    def set_length_unit(self, length_unit: str = "millimeter"):
+    def set_length_unit(self, length_unit: str = "milimeter"):
         self.length_unit = length_unit
 
     def get_length_unit_factor(self):
-        if self.length_unit == "millimeter":
+        if self.length_unit == "milimeter":
             return 1e-3
         elif self.length_unit == "inch":
             return 0.0254
@@ -1146,7 +1148,8 @@ class Mesh:
         curvatures_surface = gmsh.model.getCurvature(2, tag, param)
         sorted_indexes = np.argsort(node_tags)
         self.normals_surface[tag] = normals_surface[sorted_indexes, :]
-        self.curvatures_surface[tag] = curvatures_surface[sorted_indexes]
+        factor = convert_length_unit(1.0, self.length_unit, "meter")
+        self.curvatures_surface[tag] = curvatures_surface[sorted_indexes] / factor
 
     def post_process_mesh_data(self):
         """This method processes the nodal coordinates, connectivities
@@ -1219,6 +1222,11 @@ class Mesh:
                 connectivity_dim3[dim, tag] = elements_data
 
         logging.info("Post-processing mesh... [65/100]")
+
+        # for k, val in self.curvatures_surface.items():
+        #     avg_val = np.average(val)
+        #     if np.allclose(val, avg_val, atol=1e-6):
+        #         print(k, avg_val)
 
         self.lines_connectivity, self.map_line_elements = self._get_connectivity_array(connectivity_dim1)
         self.faces_connectivity, self.map_face_elements = self._get_connectivity_array(connectivity_dim2)

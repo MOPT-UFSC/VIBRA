@@ -30,8 +30,8 @@ class Ui_Dialog(object):
         self.gridLayout.setContentsMargins(4, 4, 4, 4)
         self.frame_2 = QFrame(Dialog)
         self.frame_2.setObjectName(u"frame_2")
-        self.frame_2.setFrameShape(QFrame.Box)
-        self.frame_2.setFrameShadow(QFrame.Raised)
+        self.frame_2.setFrameShape(QFrame.Shape.Box)
+        self.frame_2.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_4 = QGridLayout(self.frame_2)
         self.gridLayout_4.setObjectName(u"gridLayout_4")
         self.comboBox_length_units = QComboBox(self.frame_2)
@@ -56,7 +56,7 @@ class Ui_Dialog(object):
         self.label_2.setMinimumSize(QSize(0, 26))
         self.label_2.setMaximumSize(QSize(16777215, 26))
         self.label_2.setFont(font)
-        self.label_2.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.label_2.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_4.addWidget(self.label_2, 0, 1, 1, 1)
 
@@ -69,7 +69,7 @@ class Ui_Dialog(object):
         self.label_3.setMinimumSize(QSize(0, 26))
         self.label_3.setMaximumSize(QSize(16777215, 26))
         self.label_3.setFont(font)
-        self.label_3.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.label_3.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_4.addWidget(self.label_3, 1, 1, 1, 1)
 
@@ -91,8 +91,8 @@ class Ui_Dialog(object):
         self.frame.setObjectName(u"frame")
         self.frame.setMinimumSize(QSize(0, 48))
         self.frame.setMaximumSize(QSize(16777215, 48))
-        self.frame.setFrameShape(QFrame.Box)
-        self.frame.setFrameShadow(QFrame.Raised)
+        self.frame.setFrameShape(QFrame.Shape.Box)
+        self.frame.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_2 = QGridLayout(self.frame)
         self.gridLayout_2.setObjectName(u"gridLayout_2")
         self.label = QLabel(self.frame)
@@ -100,7 +100,7 @@ class Ui_Dialog(object):
         font1 = QFont()
         font1.setPointSize(11)
         self.label.setFont(font1)
-        self.label.setAlignment(Qt.AlignCenter)
+        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout_2.addWidget(self.label, 0, 0, 1, 1)
 
@@ -111,8 +111,8 @@ class Ui_Dialog(object):
         self.frame_3.setObjectName(u"frame_3")
         self.frame_3.setMinimumSize(QSize(0, 48))
         self.frame_3.setMaximumSize(QSize(16777215, 48))
-        self.frame_3.setFrameShape(QFrame.NoFrame)
-        self.frame_3.setFrameShadow(QFrame.Raised)
+        self.frame_3.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_3.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_3 = QGridLayout(self.frame_3)
         self.gridLayout_3.setSpacing(4)
         self.gridLayout_3.setObjectName(u"gridLayout_3")
@@ -151,7 +151,7 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"Dialog", None))
-        self.comboBox_length_units.setItemText(0, QCoreApplication.translate("Dialog", u"millimeter", None))
+        self.comboBox_length_units.setItemText(0, QCoreApplication.translate("Dialog", u"milimeter", None))
         self.comboBox_length_units.setItemText(1, QCoreApplication.translate("Dialog", u"meter", None))
         self.comboBox_length_units.setItemText(2, QCoreApplication.translate("Dialog", u"inch", None))
 

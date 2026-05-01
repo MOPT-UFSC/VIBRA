@@ -56,13 +56,15 @@ class RenderToolsToolbar(QToolBar):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.sizePolicy().hasHeightForWidth())
         self.setSizePolicy(sizePolicy)
-        self.setStyleSheet(u"\n"
-                                                "            QToolBar {\n"
-                                                "                border-style: solid;\n"
-                                                "                border-width: 1px;\n"
-                                                "                border-color: #888888;\n"
-                                                "                spacing: 10px;\n"
-                                                "            }")
+        self.setStyleSheet(
+            "\n"
+            "            QToolBar {\n"
+            "                border-style: solid;\n"
+            "                border-width: 1px;\n"
+            "                border-color: #888888;\n"
+            "                spacing: 10px;\n"
+            "            }"
+        )
 
     def _configure_widgets(self):
         for action in self.actions():
