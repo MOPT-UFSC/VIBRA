@@ -1,7 +1,7 @@
 import logging
 from enum import IntEnum
-# from time import perf_counter
 
+# from time import perf_counter
 import numpy as np
 from PySide6.QtCore import QEvent, QObject, Qt, Signal
 from PySide6.QtGui import QCloseEvent
@@ -15,12 +15,8 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
 from vibra.interface.numeric_checks.unit_utilities import convert_length_unit, units_abreviations
-from vibra.interface.plots.general.frequency_response_plotter import (
-    FrequencyResponsePlotter,
-)
-from vibra.interface.ui_generated.plots.acoustic.transmission_loss_inputs_ui import (
-    TransmissionLossInputs_UI,
-)
+from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
+from vibra.interface.ui_generated.plots.acoustic.transmission_loss_inputs_ui import TransmissionLossInputs_UI
 
 
 class DataType(IntEnum):

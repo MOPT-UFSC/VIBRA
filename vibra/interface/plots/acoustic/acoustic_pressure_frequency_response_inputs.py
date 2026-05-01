@@ -11,12 +11,8 @@ from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
 from vibra.interface.numeric_checks.unit_utilities import convert_length_unit, units_abreviations
-from vibra.interface.plots.general.frequency_response_plotter import (
-    FrequencyResponsePlotter,
-)
-from vibra.interface.ui_generated.plots.acoustic.acoustic_pressure_frequency_response_inputs_ui import (
-    AcousticPressureFrequencyResponseInputs_UI,
-)
+from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
+from vibra.interface.ui_generated.plots.acoustic.acoustic_pressure_frequency_response_inputs_ui import AcousticPressureFrequencyResponseInputs_UI
 
 
 class SelectionType(IntEnum):

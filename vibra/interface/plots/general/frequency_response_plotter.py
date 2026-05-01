@@ -1,21 +1,20 @@
+from enum import IntEnum
+
+import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent, QIcon
 from PySide6.QtWidgets import QDialog, QLineEdit, QToolButton, QVBoxLayout
 
-from vibra import app, ICON_DIR
+from vibra import ICON_DIR, app
 from vibra.interface import error_title
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.data_handler.import_data_to_compare import ImportDataToCompare
 from vibra.interface.formatters import icons
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
-from vibra.interface.plots.general.advanced_cursor import AdvancedCursor
-from vibra.interface.ui_generated.plots.general.frequency_response_plotter_ui import (
-    FrequencyResponsePlotter_UI,
-)
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.plots.general.advanced_cursor import AdvancedCursor
+from vibra.interface.ui_generated.plots.general.frequency_response_plotter_ui import FrequencyResponsePlotter_UI
 
-from enum import IntEnum
-import numpy as np
 
 class DataFormat(IntEnum):
     ABSOLUTE = 0
@@ -146,7 +145,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
         icon_color = None
         theme = app().config.user_preferences.interface_theme
 
-        from vibra import LIGHT_ICON_COLOR, DARK_ICON_COLOR
+        from vibra import DARK_ICON_COLOR, LIGHT_ICON_COLOR
         if theme == "dark":
             icon_color = DARK_ICON_COLOR.to_qt()
         else:
@@ -435,7 +434,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
         toolbar = self.findChild(CustomNavigationToolbar)
         if toolbar is None:
             return
-        from vibra import LIGHT_ICON_COLOR, DARK_ICON_COLOR
+        from vibra import DARK_ICON_COLOR, LIGHT_ICON_COLOR
         if app().config.user_preferences.interface_theme == "dark":
             color = DARK_ICON_COLOR.to_qt()
         else:
