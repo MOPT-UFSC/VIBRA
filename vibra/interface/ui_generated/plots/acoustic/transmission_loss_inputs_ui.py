@@ -134,6 +134,9 @@ class Ui_Form(object):
         self.label_unit_line_edit.setObjectName(u"label_unit_line_edit")
         self.label_unit_line_edit.setMinimumSize(QSize(40, 30))
         self.label_unit_line_edit.setMaximumSize(QSize(40, 30))
+        font3 = QFont()
+        font3.setPointSize(10)
+        self.label_unit_line_edit.setFont(font3)
 
         self.gridLayout.addWidget(self.label_unit_line_edit, 6, 3, 1, 1)
 
@@ -154,8 +157,6 @@ class Ui_Form(object):
         self.label_integration_method.setObjectName(u"label_integration_method")
         self.label_integration_method.setMinimumSize(QSize(120, 30))
         self.label_integration_method.setMaximumSize(QSize(120, 30))
-        font3 = QFont()
-        font3.setPointSize(10)
         self.label_integration_method.setFont(font3)
         self.label_integration_method.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
@@ -303,6 +304,7 @@ class Ui_Form(object):
         self.label_unit_combo_box.setObjectName(u"label_unit_combo_box")
         self.label_unit_combo_box.setMinimumSize(QSize(40, 30))
         self.label_unit_combo_box.setMaximumSize(QSize(40, 30))
+        self.label_unit_combo_box.setFont(font3)
 
         self.gridLayout.addWidget(self.label_unit_combo_box, 5, 3, 1, 1)
 

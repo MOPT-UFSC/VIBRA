@@ -321,6 +321,11 @@
              <height>30</height>
             </size>
            </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
            <property name="text">
             <string>[Hz]</string>
            </property>
@@ -824,6 +829,11 @@
              <width>40</width>
              <height>30</height>
             </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
            </property>
            <property name="text">
             <string>[mm]</string>

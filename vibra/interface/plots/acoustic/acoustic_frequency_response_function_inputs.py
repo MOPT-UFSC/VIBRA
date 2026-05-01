@@ -1,17 +1,28 @@
+from enum import IntEnum
+
 import numpy as np
 from PySide6.QtCore import QEvent, QObject, Qt, Signal
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
 from vibra.engine import AnalysisID
+from vibra.engine.properties.fluid import Fluid
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
+from vibra.interface.numeric_checks.unit_utilities import convert_length_unit, units_abreviations
 from vibra.interface.plots.general.frequency_response_plotter import (
     FrequencyResponsePlotter,
 )
 from vibra.interface.ui_generated.plots.acoustic.acoustic_pressure_frequency_response_function_inputs_ui import (
     AcousticPressureFrequencyResponseFunctionInputs_UI,
 )
+
+
+class CutoffFrequency(IntEnum):
+    DISABLED = 0
+    USER_DEFINED = 1
+    AUTOMATIC = 2
 
 
 class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyResponseFunctionInputs_UI):
@@ -21,7 +32,8 @@ class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyR
         app().main_window.show_geometry_render_widget()
 
         self._initialize()
-        self._configure_qt_variables()
+        self._config_widgets()
+        self._configure_validator()
         self._create_connections()
 
         self._load_analysis_setup_and_solution()
@@ -53,12 +65,20 @@ class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyR
         self.unit_label = "Pa/Pa"
         self.selection_types = ["surfaces", "lines", "points", "nodes"]
 
-    def _configure_qt_variables(self):
+    def _config_widgets(self):
         self.current_lineEdit = self.lineEdit_output_selected_id
+        #
+        unit = units_abreviations.get(self.mesh.length_unit)
+        self.label_unit_combo_box.setText(f"[{unit}]")
+
+    def _configure_validator(self):
+        self.lineEdit_cutoff_frequency.setValidator(StrictDoubleValidator(0, 1e8, 6))
 
     def _create_connections(self):
         #
         self.comboBox_selector_filter.currentIndexChanged.connect(self.update_render_according_to_selector)
+        self.comboBox_cutoff_frequency.currentIndexChanged.connect(self.compute_pipe_cutoff_frequency_callback)
+        self.comboBox_cutoff_frequency_options.currentIndexChanged.connect(self.cutoff_frequency_options_callback)
         #
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
         self.pushButton_flip_selection.clicked.connect(self.flip_nodes)
@@ -70,6 +90,7 @@ class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyR
         self.clickable(self.lineEdit_output_selected_id).connect(self.lineEdit_output_clicked)
         #
         self.lineEdit_output_clicked()
+        self.update_cutoff_related_widgets_visibility()
 
     def update_render_according_to_selector(self):
 
@@ -191,6 +212,12 @@ class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyR
 
         self.join_model_data()
         self.plotter = FrequencyResponsePlotter(close_dialogs=True)
+
+        f_cut = None
+        if self.comboBox_cutoff_frequency_options.currentIndex() != CutoffFrequency.DISABLED:
+            f_cut = float(self.lineEdit_cutoff_frequency.text()) 
+
+        self.plotter.set_cutoff_frequency(f_cut)
         self.plotter._set_model_results_data_to_plot(self.model_results)
 
     def export_data_callback(self):
@@ -231,6 +258,12 @@ class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyR
             PrintMessageInput(error_data)
             return True
 
+        if self.comboBox_cutoff_frequency_options.currentIndex() != CutoffFrequency.DISABLED:
+            line_edit = self.lineEdit_cutoff_frequency
+            if line_edit.text() == "":
+                line_edit.setFocus()
+                return True
+
     def get_response(self):
 
         index = self.comboBox_selector_filter.currentIndex()
@@ -266,6 +299,86 @@ class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyR
 
         return response
 
+    def update_cutoff_related_widgets_visibility(self):
+        index = self.comboBox_cutoff_frequency_options.currentIndex()
+        user_defined = index == CutoffFrequency.USER_DEFINED
+        self.lineEdit_cutoff_frequency.setEnabled(user_defined)
+
+        automatic = index == CutoffFrequency.AUTOMATIC
+        self.comboBox_cutoff_frequency.setVisible(automatic)
+        self.label_fc_combo_box.setVisible(automatic)
+        self.label_unit_combo_box.setVisible(automatic)
+
+    def cutoff_frequency_options_callback(self):
+        index = self.comboBox_cutoff_frequency_options.currentIndex()
+        self.update_cutoff_related_widgets_visibility()
+
+        if index == CutoffFrequency.DISABLED:
+            self.lineEdit_cutoff_frequency.clear()
+
+        elif index == CutoffFrequency.AUTOMATIC:
+            self.map_cylindrical_surfaces_to_fluids()
+            self.compute_pipe_cutoff_frequency_callback()
+
+    def map_cylindrical_surfaces_to_fluids(self):
+
+        self.map_curvatures_to_fluid = dict()
+        self.comboBox_cutoff_frequency.clear()
+        self.comboBox_cutoff_frequency.blockSignals(True)
+
+        for surface_id, diameter in self.mesh.cylindrical_surfaces_data.items():
+
+            d_in = convert_length_unit(diameter, "meter", self.mesh.length_unit)
+            dr_in = round(d_in, 4)
+
+            fluid = self.properties._get_property("fluid", surface=surface_id)
+            if isinstance(fluid, Fluid):
+                if (dr_in, fluid) not in self.map_curvatures_to_fluid.values():
+                    self.map_curvatures_to_fluid[dr_in] = (dr_in, fluid)
+
+            elif isinstance(fluid, list) and len(fluid) == 2:
+                for _fluid in fluid:
+                    if not isinstance(_fluid, Fluid):
+                        continue
+
+                    if (dr_in, _fluid) not in self.map_curvatures_to_fluid.values():
+                        self.map_curvatures_to_fluid[dr_in] = (dr_in, _fluid)
+
+        for (_d_in, fluid) in self.map_curvatures_to_fluid.values():
+            self.comboBox_cutoff_frequency.addItem(str(_d_in))
+
+        max_din = max(self.map_curvatures_to_fluid.keys())
+        self.comboBox_cutoff_frequency.setCurrentText(str(max_din))
+        self.comboBox_cutoff_frequency.blockSignals(False)
+
+    def compute_pipe_cutoff_frequency_callback(self):
+        if self.comboBox_cutoff_frequency.currentText() == "":
+            return None
+        
+        if not self.map_curvatures_to_fluid:
+            return None
+        
+        key = float(self.comboBox_cutoff_frequency.currentText())
+        data = self.map_curvatures_to_fluid.get(key)
+        if data is None:
+            return None
+
+        d_in, fluid = data
+        if not isinstance(fluid, Fluid):
+            return None
+
+        if d_in == 0:
+            return None
+
+        # speed of sound in m/s
+        Co = fluid.speed_of_sound
+
+        # cut-off frequency of a circular pipe
+        d_in = convert_length_unit(d_in, self.mesh.length_unit, "meter")
+        f_cut = round(1.8412 * Co / (np.pi * d_in), 4)
+
+        self.lineEdit_cutoff_frequency.setText(str(f_cut))
+
     def join_model_data(self):
 
         current_text = self.comboBox_selector_filter.currentText()
@@ -277,41 +390,22 @@ class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyR
             return
 
         title = "Acoustic frequency response function"
-        legend_label = "Acoustic FRF between {}s [{}] and [{}]".format(  selection_type, 
-                                                                    self.output_selection_id, 
-                                                                    self.input_selection_id  )
+        legend_label = "Acoustic FRF between {}s [{}] and [{}]".format(selection_type, self.output_selection_id, self.input_selection_id)
 
         key = (selection_type, (self.input_selection_id, self.output_selection_id))
 
-        self.model_results[key] = { 
-                                    "x_data" : self.frequencies,
-                                    "y_data" : y_data,
-                                    "x_label" : "Frequency [Hz]",
-                                    "y_label" : "Acoustic pressures ratio",
-                                    "title" : title,
-                                    "data_type" : "acoustic pressures ratio",
-                                    "legend" : legend_label,
-                                    "unit" : self.unit_label,
-                                    "color" : [0,0,1],
-                                    "linestyle" : "-"
-                                   }
-
-    def get_color(self, index: int):
-
-        colors = [  
-                  (0, 0, 1), 
-                  (0, 0, 0), 
-                  (1, 0, 0),
-                  (1, 1, 0), 
-                  (1, 0, 1), 
-                  (0, 1, 1),
-                  (0.25, 0.25, 0.25)
-                  ]
-
-        if index <= 6:
-            return colors[index]
-        else:
-            return tuple(np.random.randint(0, 255, size=3))
+        self.model_results[key] = {
+            "x_data": self.frequencies,
+            "y_data": y_data,
+            "x_label": "Frequency [Hz]",
+            "y_label": "Acoustic pressures ratio",
+            "title": title,
+            "data_type": "acoustic pressures ratio",
+            "legend": legend_label,
+            "unit": self.unit_label,
+            "color": [0, 0, 1],
+            "linestyle": "-",
+        }
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
