@@ -73,6 +73,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
         self._layout = None
         self.x_data = None
         self.y_data = None
+        self.f_cut = None
 
         self.importer = None
         self.exporter = None
@@ -503,10 +504,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
                     self.plots.append(_plot)
 
         if self.plots:
-
-            if self.checkBox_legends.isChecked():
-                self.ax.legend(handles=self.plots, labels=self.legends)
-                
+               
             self.call_cursor()
             self.ax.set_xlabel(self.x_label, fontsize = 10, fontweight = self.font_weight)
             self.ax.set_ylabel(self.y_label, fontsize = 10, fontweight = self.font_weight)
@@ -516,6 +514,15 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
 
             if self.checkBox_grid.isChecked():
                 self.ax.grid()
+
+            if isinstance(self.f_cut, float):
+                f_cut = round(self.f_cut, 4)
+                _plot = self.ax.axvline(x=f_cut, color=(0.9, 0.4, 0), visible=True, linestyle="--", linewidth=1)
+                self.plots.append(_plot)
+                self.legends.append(f'Pipe cut-off frequency $f_c$ = {f_cut} [Hz]')
+
+            if self.checkBox_legends.isChecked():
+                self.ax.legend(handles=self.plots, labels=self.legends, fontsize=9)
 
             self.mpl_canvas_frequency_plot.draw()
 
@@ -629,6 +636,9 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
     def reset_imported_results_data_to_plot(self):
         self.imported_results_data = dict()
         self.plot_data_in_freq_domain()
+
+    def set_cutoff_frequency(self, f_cut: float):
+        self.f_cut = f_cut
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Escape:

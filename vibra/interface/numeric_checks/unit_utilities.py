@@ -56,6 +56,15 @@ volume_units_labels = [
     "L",
 ]
 
+units_abreviations = {
+    "millimeter" : "mm",
+    "millimeters" : "mm",
+    "meter" : "m",
+    "meters" : "m",
+    "inch" : "in",
+    "inches" : "in",
+}
+
 # instantiate the unit registry
 u_reg = UnitRegistry()
 
@@ -203,7 +212,7 @@ def convert_length_unit(value: float, input_unit: str, output_unit: str | None=N
 
     input_unit: str 
     The input length unit. Allowable units: m, meter, cm, centimeter, 
-    mm, millimiter, um, micrometer, in, inch, ft, feet, yd, yard.
+    mm, millimeter, um, micrometer, in, inch, ft, feet, yd, yard.
 
     output_unit: str or None, optional
     The output length unit. Allowable units: same as input.
