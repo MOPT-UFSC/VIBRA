@@ -2,12 +2,12 @@ import logging
 import os
 import sys
 import traceback
-import warnings
 from collections import defaultdict
 from copy import deepcopy
 from itertools import permutations
 from pathlib import Path
 from typing import Literal
+# from time import perf_counter
 
 import gmsh
 import numpy as np
@@ -123,6 +123,7 @@ class Mesh:
         self.nodal_normals_data = dict()
         self.solid_elements_center = dict()
         self.surface_area_from_element_integration = dict()
+        self.cylindrical_surfaces_data = dict()
 
         self.nodal_area = defaultdict(list)
 
@@ -329,7 +330,7 @@ class Mesh:
 
             self.reset_error_data()
 
-        except:
+        except Exception:
             gmsh.finalize()
 
             exc_type, exc_value, exc_traceback = sys.exc_info()
@@ -1148,8 +1149,43 @@ class Mesh:
         curvatures_surface = gmsh.model.getCurvature(2, tag, param)
         sorted_indexes = np.argsort(node_tags)
         self.normals_surface[tag] = normals_surface[sorted_indexes, :]
-        factor = convert_length_unit(1.0, self.length_unit, "meter")
-        self.curvatures_surface[tag] = curvatures_surface[sorted_indexes] / factor
+
+        # processs the unit length factor to curvatures
+        conv_factor = convert_length_unit(1.0, self.length_unit, "meter")
+
+        # convert the curvature unit to 1/m
+        self.curvatures_surface[tag] = curvatures_surface[sorted_indexes] / conv_factor
+
+    def process_cylindrical_surfaces(self):
+
+        # t0 = perf_counter()
+        self.cylindrical_surfaces_data.clear()
+        for surface_id, curvatures in self.curvatures_surface.items():
+
+            avg_curvature = np.average(curvatures)
+            if not np.all(curvatures - avg_curvature < 1e-5):
+                continue
+
+            if not avg_curvature:
+                continue
+            
+            # surface normals
+            normals_surface = self.normals_surface.get(surface_id)
+
+            # solve the SVD problem to find the axis
+            _, _, vh = np.linalg.svd(normals_surface)
+
+            # define the last vector as the axis_candidate
+            axis_candidate = vh[-1]
+            dot_products = np.abs(np.dot(normals_surface, axis_candidate))
+
+            # chech if all normals is perpendicular to axis_candidate
+            if np.all(dot_products < 1e-3):
+                # print(f"The surface {surface_id} is cylindrical.")
+                self.cylindrical_surfaces_data[surface_id] = 2 / avg_curvature
+
+        # dt = perf_counter() - t0
+        # print(f"Time to process cylindrical surfaces: {dt} [s]")
 
     def post_process_mesh_data(self):
         """This method processes the nodal coordinates, connectivities
@@ -1222,11 +1258,7 @@ class Mesh:
                 connectivity_dim3[dim, tag] = elements_data
 
         logging.info("Post-processing mesh... [65/100]")
-
-        # for k, val in self.curvatures_surface.items():
-        #     avg_val = np.average(val)
-        #     if np.allclose(val, avg_val, atol=1e-6):
-        #         print(k, avg_val)
+        self.process_cylindrical_surfaces()
 
         self.lines_connectivity, self.map_line_elements = self._get_connectivity_array(connectivity_dim1)
         self.faces_connectivity, self.map_face_elements = self._get_connectivity_array(connectivity_dim2)

@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QToolBar, QSizePolicy
 from PySide6.QtGui import QAction, QIcon
 from PySide6.QtCore import Qt, Signal
 
-from vibra import ICON_DIR
+# from vibra import ICON_DIR
 from vibra.interface.viewer_3d.render_tools import (
     RenderTool,
     RotationTool,

@@ -207,6 +207,8 @@ class ProjectReader:
                 mesh.cache_faces_connectivity = np.array(file["connectivity/cache_faces_connectivity"])
                 mesh.cache_solids_connectivity = np.array(file["connectivity/cache_solids_connectivity"])
 
+            mesh.process_cylindrical_surfaces()
+
         logging.info("Reading Geometry related Mesh informations")
         with h5py.File(geometry_data_path, "r") as file:
             for key, value in file.get("entities", dict()).items():
