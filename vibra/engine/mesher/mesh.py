@@ -1171,12 +1171,14 @@ class Mesh:
             
             # surface normals
             normals_surface = self.normals_surface.get(surface_id)
+            if normals_surface is None:
+                continue
 
             # solve the SVD problem to find the axis
-            _, _, vh = np.linalg.svd(normals_surface)
+            _, _, Vh = np.linalg.svd(normals_surface)
 
             # define the last vector as the axis_candidate
-            axis_candidate = vh[-1]
+            axis_candidate = Vh[-1]
             dot_products = np.abs(np.dot(normals_surface, axis_candidate))
 
             # chech if all normals is perpendicular to axis_candidate
