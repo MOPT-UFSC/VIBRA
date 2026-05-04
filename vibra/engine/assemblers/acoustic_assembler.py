@@ -571,7 +571,7 @@ class AcousticAssembler:
         ----------
         value: float or np.ndarray
             The input value to be converted in array with
-            the same lenght as the frequencies vector.
+            the same length as the frequencies vector.
         
         flatten: bool, optional
             Controls whether the output vector will be flattened or not.
