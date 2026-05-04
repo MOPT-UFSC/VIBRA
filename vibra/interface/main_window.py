@@ -745,7 +745,7 @@ class MainWindow(MainWindow_UI):
         )
 
         if not check:
-            return
+            return True
 
         app().config.write_last_folder_path_in_file(
             "geometry_mesh_folder",
@@ -776,8 +776,7 @@ class MainWindow(MainWindow_UI):
         )
 
         ext_filter = (
-            ";;Geometry Files ({geo})"
-            ";;All Files (*)"
+            "Geometry Files ({geo});; All Files (*)"
         ).format(
             geo=qt_extensions(SUPPORTED_GEOMETRY_EXTENSIONS),
         )  # fmt: skip
@@ -802,8 +801,7 @@ class MainWindow(MainWindow_UI):
         )
 
         ext_filter = (
-            ";;Mesh Files ({mesh})"
-            ";;All Files (*)"
+            "Mesh Files ({mesh});; All Files (*)"
         ).format(
             mesh=qt_extensions(SUPPORTED_MESH_EXTENSIONS),
         )  # fmt: skip
