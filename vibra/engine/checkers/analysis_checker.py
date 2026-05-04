@@ -193,15 +193,15 @@ class AnalysisChecker:
             )  # fmt: skip
 
     def check_acoustic_harmonic_excitations(self):
-        if self._any_property_attributed("reciprocating_compressor_excitation"):
-            return
-
         if self._any_true_property_attributed(
             "acoustic_pressure",
             "surface_velocity",
             "mass_flow_rate",
             "incident_plane_wave",
             "mass_source",
+            "compressor_excitation_spectrum",
+            "compressor_excitation_waveform",
+            "reciprocating_compressor_excitation",
         ):
             return
 
@@ -244,7 +244,15 @@ class AnalysisChecker:
             if prop_label not in property_names:
                 continue
 
-            values = [isinstance(value, Number) and value != 0 for value in data["values"]]
+            if not isinstance(data, dict):
+                continue
+
+            values = list()
+            for value in data.get("values", list()):
+                if isinstance(value, Number):
+                    values.append(value != 0)
+                elif isinstance(value, np.ndarray):
+                    values.append(np.any(value))
 
             if np.sum(values):
                 return True
