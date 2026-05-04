@@ -134,6 +134,7 @@ class MainWindow(MainWindow_UI):
         self.workspaces_toolbar.setDisabled(True)
         self.animation_toolbar.setDisabled(True)
         self.action_export_element_transfer_data.setDisabled(True)
+        self.camera_toolbar.setDisabled(True)
 
         self.splitter.setSizes([100, 400])
         self.splitter.widget(0).setVisible(False)
@@ -573,6 +574,7 @@ class MainWindow(MainWindow_UI):
         self.workspaces_toolbar.setDisabled(True)
         self.animation_toolbar.setDisabled(True)
         self.action_export_element_transfer_data.setDisabled(True)
+        self.camera_toolbar.setDisabled(True)
 
     def action_import_mesh_callback(self):
         self.import_mesh_dialog()
@@ -934,6 +936,7 @@ class MainWindow(MainWindow_UI):
         self.renderer_toolbar.setDisabled(False)
         self.workspaces_toolbar.setDisabled(False)
         self.analysis_toolbar.setDisabled(False)
+        self.camera_toolbar.setDisabled(False)
         self.action_model_workspace_callback()
 
     def import_mesh(self, path: Path | str):
@@ -953,6 +956,7 @@ class MainWindow(MainWindow_UI):
         self.renderer_toolbar.setDisabled(False)
         self.workspaces_toolbar.setDisabled(False)
         self.analysis_toolbar.setDisabled(False)
+        self.camera_toolbar.setDisabled(False)
         self.action_mesh_workspace_callback()
 
     def open_project(self, project_path: str | Path | None = None):
@@ -988,6 +992,7 @@ class MainWindow(MainWindow_UI):
         self.renderer_toolbar.setEnabled(True)
         self.workspaces_toolbar.setEnabled(True)
         self.analysis_toolbar.setEnabled(True)
+        self.camera_toolbar.setEnabled(True)
         self.update_toolbar_and_menu_items_after_load_project()
         self.analysis_toolbar.check_analysis_setup_callback()
 
