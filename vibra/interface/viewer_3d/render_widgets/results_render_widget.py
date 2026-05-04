@@ -236,12 +236,11 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if not self.actors_exists():
             return
 
-        if clear_cache:
-            self.clear_cache()
-
-        # NOTE: temporary solution
         if app().project.model.solution is None:
             return
+
+        if clear_cache:
+            self.clear_cache()
 
         animation_toolbar = app().main_window.animation_toolbar
         magnification_factor = animation_toolbar.magnification_factor_slider.value() / 16
