@@ -159,14 +159,15 @@ class AcousticPostprocessing:
         node_id: int | None = None,
         surface_id: int | None = None,
         volume_id: int | None = None,
-    ):
+    ) -> np.ndarray:
+
         frequencies = self.model.frequencies
         zeros = np.zeros_like(frequencies, dtype=complex)
 
         if isinstance(node_id, int):
             surface_ids = self.mesh.get_surfaces_from_node(node_id)
-            if np.unique(surface_ids).size != 1:
-                return zeros, None
+            # if np.unique(surface_ids).size != 1:
+            #     print(f"The surfaces {surface_ids} contains the node: {node_id}")
 
             surface_id = surface_ids[0]
 
@@ -177,7 +178,7 @@ class AcousticPostprocessing:
 
         particle_velocities_Vj = particle_velocities_data.get(component_label)
         if not isinstance(particle_velocities_Vj, dict):
-            return zeros, None
+            return zeros
 
         if isinstance(node_id, int):
             return particle_velocities_Vj.get(node_id)
