@@ -714,6 +714,7 @@ class MainWindow(MainWindow_UI):
                 return
 
         if msg_box.clickedButton() == draw_button:
+            self.camera_toolbar.setEnabled(True)
             self.render_widgets_stack.setCurrentWidget(self.cad_render_widget)
             return
         
