@@ -260,7 +260,7 @@ class Geometry:
         return sum(self._solids_volumes[volume_id] for volume_id in volume_ids)
 
     def _process_geometry_information(self):
-        """Process and store geometry information (lenghts, areas, volumes, centers, etc.) from the Gmsh model."""
+        """Process and store geometry information (length, areas, volumes, centers, etc.) from the Gmsh model."""
         self.clear()
 
         for dim, tag in gmsh.model.getEntities():
