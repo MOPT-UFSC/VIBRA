@@ -239,6 +239,10 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if clear_cache:
             self.clear_cache()
 
+        # NOTE: temporary solution
+        if app().project.model.solution is None:
+            return
+
         animation_toolbar = app().main_window.animation_toolbar
         magnification_factor = animation_toolbar.magnification_factor_slider.value() / 16
 
