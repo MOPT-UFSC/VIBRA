@@ -51,10 +51,8 @@ class AllowablePulsationsForScrewCompressorInputs(AllowablePulsationsForScrewCom
 
     def _load_analysis_setup_and_solution(self):
         self.analysis_method = ""
-        if self.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
+        if self.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
             self.analysis_method = "Direct method"
-
-        self.frequencies = self.frequencies
 
     def _reset_variables(self):
 
@@ -316,7 +314,7 @@ class AllowablePulsationsForScrewCompressorInputs(AllowablePulsationsForScrewCom
 
             acoustic_pressure = self.get_response(index, selected_id)
             time_vector, acoustic_pressure = process_ifft_from_one_sided_spectrum_signal(
-                self.frequencies, 
+                self.model.frequencies, 
                 acoustic_pressure, 
                 dc_included=False
                 )
