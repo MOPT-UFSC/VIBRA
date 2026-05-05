@@ -20,6 +20,8 @@ from vibra.interface.ui_generated.analysis.user_defined_solution_steps_by_manual
     UserDefinedSolutionStepsByManualInput_UI,
 )
 
+from vibra.engine.analysis_info import HarmonicAnalysisSetup
+
 
 class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInput_UI):
     def __init__(self, *args, **kwargs):
@@ -36,6 +38,14 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
 
         while self.keep_window_open:
             self.exec()
+
+    @property
+    def model(self):
+        return app().project.model
+
+    @property
+    def analysis_setup(self):
+        return app().project.model.analysis_setup
 
     def _initialize(self):
         self.setup_defined = False
@@ -59,6 +69,8 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
         self.pushButton_reset.clicked.connect(self.reset_callback)
         #
         app().main_window.theme_changed.connect(self._paint_icons)
+        #
+        self.reset_table()
 
     def _paint_icons(self):
         icon_color = None
@@ -99,12 +111,16 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
         
         self.index_to_push_buttons.clear()
 
-        if app().project.model.properties.check_if_there_are_tables_at_the_model():
+        if self.model.properties.check_if_there_are_tables_at_the_model():
+            return
+        
+        if not isinstance(self.analysis_setup, HarmonicAnalysisSetup):
             return
 
-        frequencies = app().project.model.analysis_setup.frequencies
+        frequencies = self.analysis_setup.frequencies
         if isinstance(frequencies, np.ndarray):
             self.user_defined_solution_steps = list(frequencies)
+
         elif isinstance(frequencies, list):
             self.user_defined_solution_steps = frequencies
 
@@ -120,7 +136,7 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
         self.reset_table()
 
         if not self.user_defined_solution_steps:
-            if app().project.model.frequencies is None:
+            if self.model.frequencies is None:
                 return
 
         self.tableWidget_frequencies.setRowCount(len(self.user_defined_solution_steps))
