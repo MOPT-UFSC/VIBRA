@@ -8,7 +8,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from molde.colors import Color, color_names
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QIcon, QKeyEvent
+from PySide6.QtGui import QColor, QIcon, QKeyEvent
 from PySide6.QtWidgets import QTableWidgetItem, QVBoxLayout
 
 from vibra import ICON_DIR, app
@@ -388,7 +388,9 @@ class MesherSetupInputs(MesherSetupInputs_UI):
                 self.tableWidget_mesh_quality.setItem(row, col, item)
 
         if has_bad_elements:
-            self.tabWidget_main.tabBar().setTabTextColor(2, color_names.YELLOW.to_qt())
+            self.tabWidget_main.tabBar().setTabTextColor(2, color_names.RED.to_qt())
+        else:
+            self.tabWidget_main.tabBar().setTabTextColor(2, QColor())
 
     def _show_quality_table(self, show=True):
         self.tabWidget_main.setTabVisible(2, show)
