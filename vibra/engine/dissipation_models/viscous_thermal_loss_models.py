@@ -228,6 +228,35 @@ class ViscousThermalLossModels:
         G_bulk = radius * np.sqrt(-1j * omega * rho_0 * Pr / mu)
         # G_bulk = radius * Pr * np.sqrt(-1j * omega * rho_0 / mu)
 
+        invalid_values = False
+
+        array_r0 = jv(0, G_rho)
+        if (0 in array_r0) or np.isnan(array_r0).any() or np.isinf(array_r0).any():
+            invalid_values = True
+
+        array_r1 = jv(1, G_rho)
+        if np.isnan(array_r1).any() or np.isinf(array_r1).any():
+            invalid_values = True
+
+        array_b0 = jv(0, G_bulk)
+        if (0 in array_b0) or np.isnan(array_b0).any() or np.isinf(array_b0).any():
+            invalid_values = True
+
+        array_b1 = jv(1, G_bulk)
+        if np.isnan(array_b1).any() or np.isinf(array_b1).any():
+            invalid_values = True
+
+        if invalid_values:
+            print("\nInvalid values were found during the calculation of the Bessel function 'jv' \n" \
+            "for the effective properties of the circular section using the Stinson model. The \n" \
+            "viscous-thermal effect will be disabled.\n")
+
+            aux_ones = np.ones_like(omega, dtype=float)
+            rho_eff = rho_0 * aux_ones
+            C_eff = C_0 * aux_ones
+
+            return rho_eff, C_eff
+
         # Effective complex density (viscous-thermal losses in duct)
         rho_eff = rho_0 / (1 - (2 / G_rho) * (jv(1, G_rho) / jv(0, G_rho)))
 
@@ -268,6 +297,35 @@ class ViscousThermalLossModels:
 
         G_rho = s * ((1j)**(3/2))
         G_bulk = s * ((1j)**(3/2)) * np.sqrt(Pr) 
+
+        invalid_values = False
+
+        array_r2 = jv(2, G_rho)
+        if (0 in array_r2) or np.isnan(array_r2).any() or np.isinf(array_r2).any():
+            invalid_values = True
+
+        array_r0 = jv(0, G_rho)
+        if np.isnan(array_r0).any() or np.isinf(array_r0).any():
+            invalid_values = True
+
+        array_b0 = jv(0, G_bulk)
+        if (0 in array_b0) or np.isnan(array_b0).any() or np.isinf(array_b0).any():
+            invalid_values = True
+
+        array_b2 = jv(2, G_bulk)
+        if np.isnan(array_b2).any() or np.isinf(array_b2).any():
+            invalid_values = True
+
+        if invalid_values:
+            print("\nInvalid values were found during the calculation of the Bessel function 'jv' \n" \
+            "for the effective properties of the circular section using the LRF model. The \n" \
+            "viscous-thermal effect will be disabled.\n")
+
+            aux_ones = np.ones_like(omega, dtype=float)
+            rho_eff = rho_0 * aux_ones
+            C_eff = C_0 * aux_ones
+
+            return rho_eff, C_eff
 
         # Effective complex density (viscous-thermal losses in duct)
         rho_eff = - rho_0 * (jv(0, G_rho)) / (jv(2, G_rho))
