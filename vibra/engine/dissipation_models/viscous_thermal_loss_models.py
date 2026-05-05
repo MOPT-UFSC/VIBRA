@@ -251,8 +251,8 @@ class ViscousThermalLossModels:
 
         if invalid_values:
             message = "\nInvalid values were found during the calculation of the Bessel function 'jv' for the \n" \
-            "effective properties of the circular section using the Stinson model. The viscous-thermal effect \n" \
-            "will be disabled, and the normal fluid properties will be used instead.\n"
+            "effective properties of the circular section using the Stinson model. The viscous-thermal \n" \
+            "effect will be disabled, and the normal fluid properties will be used instead.\n"
 
             logging.info(message)
             print(message)
@@ -324,8 +324,8 @@ class ViscousThermalLossModels:
 
         if invalid_values:
             message = "\nInvalid values were found during the calculation of the Bessel function 'jv' for the \n" \
-            "effective properties of the circular section using the LRF model. The viscous-thermal effect \n" \
-            "will be disabled, and the normal fluid properties will be used instead.\n"
+            "effective properties of the circular section using the LRF model. The viscous-thermal \n" \
+            "effect will be disabled, and the normal fluid properties will be used instead.\n"
 
             logging.info(message)
             print(message)
