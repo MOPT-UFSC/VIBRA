@@ -328,6 +328,8 @@ class Project:
         self.project_writer.write_modal_solution(self.model.solution)
         self.mark_project_as_modified()
         dt = perf_counter() - t0
+
+        print(f"Elapsed time to solve structural modal analysis: {dt: .6f} [s]")
         logging.info(f"Elapsed time to solve structural modal analysis: {dt: .6f} [s]")
 
         return self.model.solution
@@ -362,7 +364,9 @@ class Project:
         self.mark_project_as_modified()
 
         dt = perf_counter() - t0
-        logging.info(f"Elapsed time to solve harmonic analysis: {dt: .6f} [s]")
+
+        print(f"Elapsed time to solve structural harmonic analysis: {dt: .6f} [s]")
+        logging.info(f"Elapsed time to solve structural harmonic analysis: {dt: .6f} [s]")
 
         return self.model.solution
 
@@ -384,11 +388,14 @@ class Project:
         self.project_writer.write_modal_solution(self.model.solution)
         self.mark_project_as_modified()
         dt = perf_counter() - t0
-        logging.info(f"Elapsed time to solve modal analysis: {dt: .6f} [s]")
+
+        print(f"Elapsed time to solve acoustic modal analysis: {dt: .6f} [s]")
+        logging.info(f"Elapsed time to solve acoustic modal analysis: {dt: .6f} [s]")
 
         return self.model.solution
 
     def solve_acoustic_harmonic_analysis(self) -> HarmonicSolution:
+        print("solve_acoustic_harmonic_analysis")
         self.model.analysis_id = AnalysisID.ACOUSTIC_HARMONIC
         self.update_project_setup_file()
 
@@ -417,10 +424,12 @@ class Project:
 
         if self.solver.project_paths is None:
             self.project_writer.write_harmonic_solution(self.model.solution)
+
         self.mark_project_as_modified()
 
         dt = perf_counter() - t0
-        logging.info(f"Elapsed time to solve harmonic analysis: {dt: .6f} [s]")
+        print(f"Elapsed time to solve acoustic harmonic analysis: {dt: .6f} [s]")
+        logging.info(f"Elapsed time to solve acoustic harmonic analysis: {dt: .6f} [s]")
 
         return self.model.solution
 
