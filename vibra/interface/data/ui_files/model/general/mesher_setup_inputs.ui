@@ -77,37 +77,6 @@
          <property name="horizontalSpacing">
           <number>6</number>
          </property>
-         <item row="2" column="2">
-          <widget class="QComboBox" name="comboBox_mesh_quality_metrics">
-           <property name="minimumSize">
-            <size>
-             <width>120</width>
-             <height>28</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>140</width>
-             <height>16777215</height>
-            </size>
-           </property>
-           <property name="font">
-            <font>
-             <pointsize>10</pointsize>
-            </font>
-           </property>
-           <item>
-            <property name="text">
-             <string>Disabled</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Enabled</string>
-            </property>
-           </item>
-          </widget>
-         </item>
          <item row="3" column="1">
           <widget class="QLabel" name="label_20">
            <property name="minimumSize">
@@ -421,37 +390,6 @@
            </property>
           </widget>
          </item>
-         <item row="2" column="2">
-          <widget class="QComboBox" name="comboBox_mesh_quality_metrics">
-           <property name="minimumSize">
-            <size>
-             <width>120</width>
-             <height>28</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>140</width>
-             <height>16777215</height>
-            </size>
-           </property>
-           <property name="font">
-            <font>
-             <pointsize>10</pointsize>
-            </font>
-           </property>
-           <item>
-            <property name="text">
-             <string>Disabled</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Enabled</string>
-            </property>
-           </item>
-          </widget>
-         </item>
          <item row="3" column="2">
           <widget class="QComboBox" name="comboBox_volumes_interface_behavior">
            <property name="minimumSize">
@@ -485,6 +423,37 @@
            <item>
             <property name="text">
              <string>Merge nodes</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item row="2" column="2">
+          <widget class="QComboBox" name="comboBox_mesh_quality_metrics">
+           <property name="minimumSize">
+            <size>
+             <width>120</width>
+             <height>28</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>140</width>
+             <height>16777215</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
+           <item>
+            <property name="text">
+             <string>Disabled</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Enabled</string>
             </property>
            </item>
           </widget>
@@ -995,7 +964,7 @@
                       <x>0</x>
                       <y>0</y>
                       <width>530</width>
-                      <height>247</height>
+                      <height>245</height>
                      </rect>
                     </property>
                     <layout class="QGridLayout" name="gridLayout_17">
@@ -2033,7 +2002,6 @@
  <tabstops>
   <tabstop>comboBox_element_type</tabstop>
   <tabstop>comboBox_shape_function</tabstop>
-  <tabstop>comboBox_mesh_quality_metrics</tabstop>
   <tabstop>comboBox_volumes_interface_behavior</tabstop>
   <tabstop>tabWidget_main</tabstop>
   <tabstop>tabWidget_global_settings</tabstop>
@@ -2059,7 +2027,6 @@
   <tabstop>tableWidget_mesh_quality</tabstop>
   <tabstop>pushButton_plot_histogram</tabstop>
   <tabstop>pushButton_show_bad_elements</tabstop>
-  <tabstop>comboBox_mesh_quality_metrics</tabstop>
   <tabstop>comboBox_volumes_interface_behavior</tabstop>
  </tabstops>
  <resources>
