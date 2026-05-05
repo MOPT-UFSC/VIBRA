@@ -395,7 +395,6 @@ class Project:
         return self.model.solution
 
     def solve_acoustic_harmonic_analysis(self) -> HarmonicSolution:
-        print("solve_acoustic_harmonic_analysis")
         self.model.analysis_id = AnalysisID.ACOUSTIC_HARMONIC
         self.update_project_setup_file()
 

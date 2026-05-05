@@ -147,7 +147,7 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
 
         self.reset_table()
 
-        if not self.user_defined_solution_steps:
+        if len(self.user_defined_solution_steps) == 0:
             return
 
         self.tableWidget_frequencies.setRowCount(len(self.user_defined_solution_steps))
@@ -267,7 +267,7 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
 
     def confirm_callback(self):
 
-        if not self.user_defined_solution_steps:
+        if len(self.user_defined_solution_steps) == 0:
             self.hide()
             title = "No solution step was selected"
             message = "Select at least one solution step to proceed "
