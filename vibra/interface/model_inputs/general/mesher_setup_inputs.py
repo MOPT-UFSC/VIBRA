@@ -358,7 +358,9 @@ class MesherSetupInputs(MesherSetupInputs_UI):
                 return
 
             bad_elements = mesh.mesh_quality_data.get("bad_elements", dict())
-            has_bad_elements = has_bad_elements or bool(bad_elements)
+            for metric in bad_elements.values():
+                broken = metric.size != 0
+                has_bad_elements = has_bad_elements or broken
 
             worst, mean, std = statistics
             high, low = mesh.quality_bins[gmsh_label]
