@@ -353,7 +353,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             smaller_is_better = row is QualityTableRows.ASPECT_RATIO
 
             statistics = mesh_statistics.get(gmsh_label)
-            if not statistics:
+            if not any(statistics):
                 self._show_quality_table(False)
                 return
 

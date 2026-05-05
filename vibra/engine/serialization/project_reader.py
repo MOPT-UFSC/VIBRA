@@ -236,8 +236,35 @@ class ProjectReader:
 
         mesh.process_upwards_adjacencies_from_entities()
         mesh.process_mesh_related_mappings()
+        mesh.mesh_quality_data = self.read_mesh_quality_metrics()
 
         return mesh
+
+    def read_mesh_quality_metrics(self):
+        tmp = read_json(self.project_paths.mesh_quality_data_filepath)
+
+        if tmp is None:
+            return dict()
+
+        mesh_quality_data = dict()
+        for key, value in tmp.items():
+            tmp_dict = dict()
+
+            for metric, data in value.items():
+                if key == "histograms_data":
+                    hist, bin_edges, percentile_5, percentile_95 = data
+                    tmp_dict[metric] = [
+                        np.array(hist),
+                        np.array(bin_edges),
+                        percentile_5,
+                        percentile_95,
+                    ]
+                else:
+                    tmp_dict[metric] = np.array(data)
+
+            mesh_quality_data[key] = tmp_dict
+
+        return mesh_quality_data
 
     def read_model_properties(self, model_properties: Optional[ModelProperties] = None) -> ModelProperties:
         if model_properties is None:
