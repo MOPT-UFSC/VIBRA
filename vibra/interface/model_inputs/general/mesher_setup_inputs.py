@@ -152,6 +152,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
         if mesh_setup is None:
             self._load_initial_element_size()
+            self.tab_mesh_quality.hide()
             return
 
         self.tmp_refinement_parameters = deepcopy(mesh_setup.refinement_parameters)
