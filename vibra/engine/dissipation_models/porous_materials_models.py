@@ -22,19 +22,26 @@ class PorousMaterialModels:
 
     def process_effective_properties(self, frequencies: np.ndarray | None = None):
 
+        self.effective_properties.clear()
+        if not self.properties.is_the_volume_property_present_in_the_model("porous_material_model"):
+            return
+
         if frequencies is None:
             frequencies = self.model.frequencies
 
-        self.effective_properties = dict()
+        if frequencies is None:
+            return
+        
+        if isinstance(frequencies, list | np.ndarray):
+            if len(frequencies) == 0:
+                return
+
         if frequencies[0] == 0:
             freq = frequencies[1:]
         else:
             freq = frequencies
 
         omega = 2 * np.pi * freq
-
-        if not self.properties.is_the_volume_property_present_in_the_model("porous_material_model"):
-            return
 
         for key, data in self.properties.volume_properties.items():
             property, volume_id = key
