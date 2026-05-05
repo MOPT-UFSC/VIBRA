@@ -1,12 +1,15 @@
-from vibra.engine.properties.fluid import Fluid
-from vibra.interface.model_inputs.acoustic.dissipation_models.rectangular_duct_data import RectangularDuctData
-from vibra.interface.model_inputs.acoustic.dissipation_models.circular_duct_data import CircularDuctData
-
+import logging
 from typing import TYPE_CHECKING
+
+from vibra.engine.properties.fluid import Fluid
+from vibra.interface.model_inputs.acoustic.dissipation_models.circular_duct_data import CircularDuctData
+from vibra.interface.model_inputs.acoustic.dissipation_models.rectangular_duct_data import RectangularDuctData
+
 if TYPE_CHECKING:
     from vibra.engine.model import Model
 
 from collections import defaultdict
+
 import numpy as np
 from scipy.special import jv
 
@@ -247,9 +250,12 @@ class ViscousThermalLossModels:
             invalid_values = True
 
         if invalid_values:
-            print("\nInvalid values were found during the calculation of the Bessel function 'jv' \n" \
-            "for the effective properties of the circular section using the Stinson model. The \n" \
-            "viscous-thermal effect will be disabled.\n")
+            message = "\nInvalid values were found during the calculation of the Bessel function 'jv' for the \n" \
+            "effective properties of the circular section using the Stinson model. The viscous-thermal effect \n" \
+            "will be disabled, and the normal fluid properties will be used instead.\n"
+
+            logging.info(message)
+            print(message)
 
             aux_ones = np.ones_like(omega, dtype=float)
             rho_eff = rho_0 * aux_ones
@@ -317,9 +323,12 @@ class ViscousThermalLossModels:
             invalid_values = True
 
         if invalid_values:
-            print("\nInvalid values were found during the calculation of the Bessel function 'jv' \n" \
-            "for the effective properties of the circular section using the LRF model. The \n" \
-            "viscous-thermal effect will be disabled.\n")
+            message = "\nInvalid values were found during the calculation of the Bessel function 'jv' for the \n" \
+            "effective properties of the circular section using the LRF model. The viscous-thermal effect \n" \
+            "will be disabled, and the normal fluid properties will be used instead.\n"
+
+            logging.info(message)
+            print(message)
 
             aux_ones = np.ones_like(omega, dtype=float)
             rho_eff = rho_0 * aux_ones
