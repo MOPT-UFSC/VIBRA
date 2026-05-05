@@ -32,9 +32,11 @@ class PorousMaterialModels:
         if frequencies is None:
             return
         
-        if isinstance(frequencies, list | np.ndarray):
-            if len(frequencies) == 0:
-                return
+        if isinstance(frequencies, list):
+            frequencies = np.array(frequencies, dtype=float)
+
+        if len(frequencies) == 0:
+            return
 
         if frequencies[0] == 0:
             freq = frequencies[1:]
