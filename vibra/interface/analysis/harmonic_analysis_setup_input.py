@@ -156,7 +156,9 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         if self.table_exists:
             self.ud_interface = UserDefinedSolutionStepsFromTabularDataInput()
         else:
-            self.ud_interface = UserDefinedSolutionStepsByManualInput()
+            self.ud_interface = UserDefinedSolutionStepsByManualInput(
+                current_solution_steps=self.user_defined_solution_steps,
+            )
 
         if self.ud_interface.setup_defined:
             self.user_defined_solution_steps = self.ud_interface.user_defined_solution_steps
@@ -222,7 +224,8 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
             return
         
         if not self.ud_interface.setup_defined:
-            return
+            if not self.user_defined_solution_steps:
+                return
 
         if self.setup_defined:
             return

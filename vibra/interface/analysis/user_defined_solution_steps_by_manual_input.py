@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 import numpy as np
 from PySide6.QtGui import QIcon, Qt
 from PySide6.QtWidgets import (
@@ -9,6 +11,7 @@ from PySide6.QtWidgets import (
 )
 
 from vibra import ICON_DIR, app
+from vibra.engine.analysis_info import HarmonicAnalysisSetup
 from vibra.interface import error_title, warning_title
 from vibra.interface.formatters.icons import (
     change_icon_color,
@@ -20,14 +23,13 @@ from vibra.interface.ui_generated.analysis.user_defined_solution_steps_by_manual
     UserDefinedSolutionStepsByManualInput_UI,
 )
 
-from vibra.engine.analysis_info import HarmonicAnalysisSetup
-
 
 class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInput_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args)
 
         # app().main_window.set_input_widget(self)
+        self.current_solution_steps = kwargs.get("current_solution_steps", list())
 
         self._initialize()
         self._config_window()
@@ -114,10 +116,10 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
         if self.model.properties.check_if_there_are_tables_at_the_model():
             return
         
-        if not isinstance(self.analysis_setup, HarmonicAnalysisSetup):
+        frequencies = self.get_solution_steps()
+        if len(frequencies) == 0:
             return
 
-        frequencies = self.analysis_setup.frequencies
         if isinstance(frequencies, np.ndarray):
             self.user_defined_solution_steps = list(frequencies)
 
@@ -125,6 +127,16 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
             self.user_defined_solution_steps = frequencies
 
         self.update_solution_steps_table()
+
+    def get_solution_steps(self) -> list:
+        solution_steps = list()
+        if isinstance(self.analysis_setup, HarmonicAnalysisSetup):
+            solution_steps = self.model.frequencies
+        else:
+            if self.current_solution_steps:
+                solution_steps = deepcopy(self.current_solution_steps)
+
+        return solution_steps
 
     def reset_table(self):
         self.tableWidget_frequencies.clearContents()
@@ -136,8 +148,7 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
         self.reset_table()
 
         if not self.user_defined_solution_steps:
-            if self.model.frequencies is None:
-                return
+            return
 
         self.tableWidget_frequencies.setRowCount(len(self.user_defined_solution_steps))
 
