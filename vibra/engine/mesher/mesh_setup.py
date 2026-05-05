@@ -72,12 +72,12 @@ class MeshSetup:
 @dataclass
 class MeshRefinementSetup:
     entity_type: Literal["lines", "surfaces", "volumes"]
-    entity_ids: list[int]
     element_size: float
+    entity_ids: list[int]
 
     def as_dict(self) -> dict:
         return {
             "entity_type": self.entity_type,
-            "entity_ids": self.entity_ids,
             "element_size": self.element_size,
+            "entity_ids": self.entity_ids,
         }

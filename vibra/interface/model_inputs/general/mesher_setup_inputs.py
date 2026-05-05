@@ -259,8 +259,8 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
         setup = MeshRefinementSetup(
             selected_type,
-            selected_ids,
             refined_size,
+            selected_ids,
         )
         self.tmp_refinement_parameters.append(setup)
         self.update_mesh_refinement_table()

@@ -18,7 +18,7 @@ from vibra.engine.analysis_info import (
 )
 from vibra.engine.assemblers import AcousticAssembler, StructuralAssembler
 from vibra.engine.mesher.mesh import Mesh
-from vibra.engine.mesher.mesh_setup import MeshSetup
+from vibra.engine.mesher.mesh_setup import MeshRefinementSetup, MeshSetup
 from vibra.engine.model import Model
 from vibra.engine.properties import (
     Fluid,
@@ -145,6 +145,8 @@ class ProjectReader:
         mesh_setup = MeshSetup()
         for key, value in mesh_setup_dict.items():
             setattr(mesh_setup, key, value)
+
+        mesh_setup.refinement_parameters = [MeshRefinementSetup(*refinement) for refinement in mesh_setup_dict["mesh_refinement_parameters"]]
 
         return mesh_setup
 
