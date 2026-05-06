@@ -53,12 +53,15 @@ class MeshSetup:
                 raise NotImplementedError("Invalid element type or shape function!")
 
     def as_dict(self) -> dict:
+        element_setup = self.element_setup
+
         return {
             "element_type": self.element_type,
             "shape_function": self.shape_function,
             "minimum_element_size": self.minimum_element_size,
             "maximum_element_size": self.maximum_element_size,
             "geometry_tolerance": self.geometry_tolerance,
+            "algorithm_3d": element_setup.algorithm_3d,
             "mesh_connections": self.mesh_connections,
             "mesh_quality_metrics": self.mesh_quality_metrics,
             "mesh_refinement_parameters": [
