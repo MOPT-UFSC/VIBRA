@@ -379,13 +379,10 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
                 dc_included=False
                 )
 
-            # key = ("unfiltered_criterion", (None))
-            # legend_label = "Pulsation criteria"
+            y_axis_label = "bar (a)"
 
             key = ("pressure", (selected_id))
             legend_label = f"Acoustic pressure at {selection_type} [{selected_id}]"
-
-            y_axis_label = "bar (a)"
 
             self.model_results[key] = { 
                 "x_data" : time_vector,
@@ -406,7 +403,7 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
                 return True
 
             # allowable peak-to-peak pulsation levels in bar(a) at cylinder flanges
-            unfiltered_criterion = min(3*pressure_ratio, 7) / 100
+            unfiltered_criterion = min(3 * pressure_ratio, 7) / 100
 
             key = ("allowable pulsation limits (upper)", (None))
             legend_label_upper = "Allowable pulsation (upper bound)"
