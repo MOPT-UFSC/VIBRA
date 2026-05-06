@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QTreeWidgetItem
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
-from vibra import app, UI_DIR
+from vibra import app
 from vibra.interface.ui_generated.model.acoustic.degrees_of_freedom_decoupling_inputs_ui import DegreesOfFreedomDecouplingInputs_UI
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -283,8 +283,8 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
         self.mesh.restore_data_from_cache()
         self.mesh.process_upwards_adjacencies_from_entities()
 
-        if self.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
-            self.mesh.cache_mesh_information()
+        # if self.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
+        #     self.mesh.cache_mesh_information()
 
         self.process_decoupling_actions()
 
@@ -365,11 +365,13 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
                 return False
 
         if self.mesh.cache_nodal_coordinates is None:
-            self.mesh.cache_mesh_information()
+            # self.mesh.cache_mesh_information()
+            pass
+
         else:
             self.mesh.restore_data_from_cache()
             self.mesh.process_upwards_adjacencies_from_entities()
-            self.mesh.cache_mesh_information()
+            # self.mesh.cache_mesh_information()
 
         self.process_decoupling_actions()
 

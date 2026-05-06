@@ -110,6 +110,10 @@ def faces_info_text():
             tree.add_item("Thickness", surface_data["surface_thickness"], "m")
             tree.add_item("Offset", surface_data["thickness_offset"])
 
+        diameter = app().project.model.mesh.cylindrical_surfaces_data.get(surface_ids[0])
+        if isinstance(diameter, float):
+            tree.add_item("Diameter", f"{diameter : .6e}", "m")
+
     else:
         sequence = ", ".join(str(i) for i in surface_ids)
         if len(sequence) > 20:

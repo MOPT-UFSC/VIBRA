@@ -22,7 +22,7 @@ from vibra.interface.analysis.user_defined_solution_steps_by_manual_input import
 from vibra.interface.analysis.user_defined_solution_steps_from_tabular_data_input import (
     UserDefinedSolutionStepsFromTabularDataInput,
 )
-from vibra.interface.common.common_interface import check_mesh_related_issues, mesher_interface_callback
+from vibra.interface.common.common_interface import check_mesh_related_issues#, mesher_interface_callback
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -70,6 +70,10 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
     @property
     def model(self):
         return app().project.model
+
+    @property
+    def analysis_setup(self):
+        return app().project.model.analysis_setup
 
     def _initialize(self):
         self.ud_interface = None
@@ -156,7 +160,9 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         if self.table_exists:
             self.ud_interface = UserDefinedSolutionStepsFromTabularDataInput()
         else:
-            self.ud_interface = UserDefinedSolutionStepsByManualInput()
+            self.ud_interface = UserDefinedSolutionStepsByManualInput(
+                current_solution_steps=self.user_defined_solution_steps,
+            )
 
         if self.ud_interface.setup_defined:
             self.user_defined_solution_steps = self.ud_interface.user_defined_solution_steps
@@ -198,10 +204,9 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
             self.lineEdit_modes_to_expand.clear()
             return
 
-        analysis_setup = self.model.analysis_setup
         if AnalysisID(self.analysis_id).is_harmonic_structural():
-            if analysis_setup.analysis_method == AnalysisMethod.MODE_SUPERPOSITION:
-                modes_to_expand = analysis_setup.modes_number
+            if self.analysis_setup.analysis_method == AnalysisMethod.MODE_SUPERPOSITION:
+                modes_to_expand = self.analysis_setup.modes_number
                 self.lineEdit_modes_to_expand.setText(f"{modes_to_expand}")
         else:
             self.lineEdit_modes_to_expand.clear()
@@ -222,7 +227,8 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
             return
         
         if not self.ud_interface.setup_defined:
-            return
+            if len(self.user_defined_solution_steps) == 0:
+                return
 
         if self.setup_defined:
             return
@@ -277,10 +283,10 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         self.load_damping_inputs()
         self.reset_frequency_inputs()
 
-        if not isinstance(self.model.analysis_setup, HarmonicAnalysisSetup):
+        if not isinstance(self.analysis_setup, HarmonicAnalysisSetup):
             return
     
-        frequency_spacing = self.model.analysis_setup.frequency_spacing
+        frequency_spacing = self.analysis_setup.frequency_spacing
 
         if frequency_spacing == FrequencySpacing.USER_DEFINED:
             self.comboBox_frequency_spacing.setCurrentText("User-defined")
@@ -295,13 +301,11 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         f_max = 600
         f_step = 5
 
-        analysis_setup = self.model.analysis_setup
-
-        if isinstance(analysis_setup, HarmonicAnalysisSetup):
-            if analysis_setup.frequency_spacing == FrequencySpacing.EQUALLY_DISTRIBUTED:
-                f_min = analysis_setup.f_min
-                f_max = analysis_setup.f_max
-                f_step = analysis_setup.f_step
+        if isinstance(self.analysis_setup, HarmonicAnalysisSetup):
+            if self.analysis_setup.frequency_spacing == FrequencySpacing.EQUALLY_DISTRIBUTED:
+                f_min = self.analysis_setup.f_min
+                f_max = self.analysis_setup.f_max
+                f_step = self.analysis_setup.f_step
 
         else:
             if self.table_exists:
@@ -311,7 +315,6 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         self.load_frequency_setup_inputs(f_min, f_max, f_step)
 
     def load_analysis_type(self):
-        analysis_setup = self.model.analysis_setup
         self.comboBox_method.blockSignals(True)
 
         if self.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
@@ -319,8 +322,8 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
             self.tabWidget_main.setTabVisible(TabType.DAMPING_SETUP, False)
 
         elif AnalysisID(self.analysis_id).is_harmonic_structural():
-            if isinstance(analysis_setup, HarmonicAnalysisSetup):
-                if analysis_setup.analysis_method == AnalysisMethod.DIRECT:
+            if isinstance(self.analysis_setup, HarmonicAnalysisSetup):
+                if self.analysis_setup.analysis_method == AnalysisMethod.DIRECT:
                     self.comboBox_method.setCurrentIndex(AnalysisMethodIndex.DIRECT)
                 else:
                     self.comboBox_method.setCurrentIndex(AnalysisMethodIndex.MODE_SUPERPOSITION)
@@ -504,15 +507,15 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
 
             if frequency_spacing == FrequencySpacing.USER_DEFINED:
                 if len(self.user_defined_solution_steps) == 0:
-                    if isinstance(self.model.analysis_setup, HarmonicAnalysisSetup):
-                        if self.model.analysis_setup.frequency_spacing == FrequencySpacing.USER_DEFINED:
-                            self.user_defined_solution_steps = self.model.analysis_setup.frequencies
+                    if isinstance(self.analysis_setup, HarmonicAnalysisSetup):
+                        if self.analysis_setup.frequency_spacing == FrequencySpacing.USER_DEFINED:
+                            self.user_defined_solution_steps = self.model.frequencies
 
                 analysis_setup_data.update(
                     {"frequencies" : np.array(self.user_defined_solution_steps, dtype=float)}
                     )
 
-            if not self.user_defined_solution_steps:
+            if len(self.user_defined_solution_steps) == 0:
                 freq_data = self.check_frequencies_inputs()
                 if not isinstance(freq_data, dict):
                     return True

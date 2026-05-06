@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 import numpy as np
 from PySide6.QtGui import QIcon, Qt
 from PySide6.QtWidgets import (
@@ -9,6 +11,7 @@ from PySide6.QtWidgets import (
 )
 
 from vibra import ICON_DIR, app
+from vibra.engine.analysis_info import HarmonicAnalysisSetup
 from vibra.interface import error_title, warning_title
 from vibra.interface.formatters.icons import (
     change_icon_color,
@@ -26,6 +29,7 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
         super().__init__(*args)
 
         # app().main_window.set_input_widget(self)
+        self.current_solution_steps = kwargs.get("current_solution_steps", list())
 
         self._initialize()
         self._config_window()
@@ -36,6 +40,14 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
 
         while self.keep_window_open:
             self.exec()
+
+    @property
+    def model(self):
+        return app().project.model
+
+    @property
+    def analysis_setup(self):
+        return app().project.model.analysis_setup
 
     def _initialize(self):
         self.setup_defined = False
@@ -59,6 +71,8 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
         self.pushButton_reset.clicked.connect(self.reset_callback)
         #
         app().main_window.theme_changed.connect(self._paint_icons)
+        #
+        self.reset_table()
 
     def _paint_icons(self):
         icon_color = None
@@ -99,16 +113,30 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
         
         self.index_to_push_buttons.clear()
 
-        if app().project.model.properties.check_if_there_are_tables_at_the_model():
+        if self.model.properties.check_if_there_are_tables_at_the_model():
+            return
+        
+        frequencies = self.get_solution_steps()
+        if len(frequencies) == 0:
             return
 
-        frequencies = app().project.model.analysis_setup.frequencies
         if isinstance(frequencies, np.ndarray):
             self.user_defined_solution_steps = list(frequencies)
+
         elif isinstance(frequencies, list):
             self.user_defined_solution_steps = frequencies
 
         self.update_solution_steps_table()
+
+    def get_solution_steps(self) -> list:
+        solution_steps = list()
+        if isinstance(self.analysis_setup, HarmonicAnalysisSetup):
+            solution_steps = self.model.frequencies
+        else:
+            if self.current_solution_steps:
+                solution_steps = deepcopy(self.current_solution_steps)
+
+        return solution_steps
 
     def reset_table(self):
         self.tableWidget_frequencies.clearContents()
@@ -119,9 +147,8 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
 
         self.reset_table()
 
-        if not self.user_defined_solution_steps:
-            if app().project.model.frequencies is None:
-                return
+        if len(self.user_defined_solution_steps) == 0:
+            return
 
         self.tableWidget_frequencies.setRowCount(len(self.user_defined_solution_steps))
 
@@ -240,7 +267,7 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
 
     def confirm_callback(self):
 
-        if not self.user_defined_solution_steps:
+        if len(self.user_defined_solution_steps) == 0:
             self.hide()
             title = "No solution step was selected"
             message = "Select at least one solution step to proceed "

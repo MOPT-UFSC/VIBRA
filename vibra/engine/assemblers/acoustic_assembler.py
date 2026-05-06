@@ -571,7 +571,7 @@ class AcousticAssembler:
         ----------
         value: float or np.ndarray
             The input value to be converted in array with
-            the same lenght as the frequencies vector.
+            the same length as the frequencies vector.
         
         flatten: bool, optional
             Controls whether the output vector will be flattened or not.
@@ -1183,9 +1183,6 @@ class AcousticAssembler:
 
         self.Qms1_1d = Q_ms1[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
         self.Qms2_1d = Q_ms2[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
-
-        data = np.array([self.ind_rows_Qmsf_1d, self.ind_cols_Qmsf_1d, data_Qms1.flatten(), data_Qms2.flatten()]).T
-        np.savetxt("Qms1_data.dat", data, delimiter=",", fmt=["%i", "%i", "%.16e", "%.16e"])
 
 
     def assemble_mass_source_matrices_from_surfaces(self, index: int = 0):

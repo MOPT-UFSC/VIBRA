@@ -236,6 +236,9 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if not self.actors_exists():
             return
 
+        if app().project.model.solution is None:
+            return
+
         if clear_cache:
             self.clear_cache()
 

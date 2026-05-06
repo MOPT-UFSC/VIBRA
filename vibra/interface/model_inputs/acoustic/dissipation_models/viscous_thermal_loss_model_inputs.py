@@ -47,10 +47,6 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         app().main_window.workspace_updating_for_model_setup()
         app().main_window.selection.volume_selection_mode = True
 
-        self.model = app().project.model
-        self.mesh = app().project.model.mesh
-        self.properties = app().project.model.properties
-
         self._initialize()
         self._config_window()
         self._create_connections()
@@ -58,6 +54,18 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
         while self.keep_window_open:
             self.exec()
+
+    @property
+    def model(self):
+        return app().project.model
+
+    @property
+    def mesh(self):
+        return app().project.model.mesh
+
+    @property
+    def properties(self):
+        return app().project.model.properties
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -103,6 +111,25 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         self.geometry_selection_callback()
         self.attribution_type_callback()
         self.update_plot_buttons_access()
+
+    def geometry_selection_callback(self):
+        if self.tabWidget_main.currentIndex() == TabType.LIST:
+            self.verify_if_selected_volumes_are_in_tree_widget_viscous_thermal_model()
+            return
+
+        volumes = app().main_window.selection.geometry_volumes
+        if not volumes:
+            return
+
+        text = ", ".join([str(i) for i in volumes])
+        self.lineEdit_selection_id.setText(text)
+        if self.comboBox_attribution_type.currentIndex() != AttributionBodiesType.SELECTED_BODIES:
+            self.comboBox_attribution_type.setCurrentIndex(AttributionBodiesType.SELECTED_BODIES)
+
+        if self.tabWidget_main.currentIndex() != TabType.CIRCULAR:
+            return
+        
+        self.load_diameter_from_selected_volumes(volumes)
 
     def actions_to_finalize(self):
         app().main_window.update_symbols()
@@ -193,6 +220,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                 self.models = list()
                 app().project.update_model_properties_file()
                 self.load_info()
+
         self.actions_to_finalize()
 
     def tab_event_callback(self):
@@ -218,6 +246,12 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             self.treeWidget_viscous_thermal_model.clearSelection()
 
         else:
+
+            if self.tabWidget_main.currentIndex() == TabType.CIRCULAR:
+                volumes = app().main_window.selection.geometry_volumes
+                if volumes:
+                    self.load_diameter_from_selected_volumes(volumes)
+
             current_index = self.comboBox_attribution_type.currentIndex()
             self.comboBox_attribution_type.currentIndexChanged.emit(current_index)
 
@@ -520,18 +554,44 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         self.tabWidget_main.setTabVisible(TabType.EDIT, False)
         self.tabWidget_main.setCurrentIndex(TabType.RECTANGULAR)
 
-    def geometry_selection_callback(self):
-        if self.tabWidget_main.currentIndex() == TabType.LIST:
-            self.verify_if_selected_volumes_are_in_tree_widget_viscous_thermal_model()
+    def load_diameter_from_selected_volumes(self, volume_ids: list[int]):
+        if not volume_ids:
             return
 
-        volumes = app().main_window.selection.geometry_volumes
+        surfaces_from_volumes = self.get_surfaces_from_selected_volumes(volume_ids)
+        diameters = self.get_diameters_from_surfaces(surfaces_from_volumes)
 
-        if volumes:
-            text = ", ".join([str(i) for i in volumes])
-            self.lineEdit_selection_id.setText(text)
-            if self.comboBox_attribution_type.currentIndex() != AttributionBodiesType.SELECTED_BODIES:
-                self.comboBox_attribution_type.setCurrentIndex(AttributionBodiesType.SELECTED_BODIES)
+        if len(diameters) == 1:
+            self.lineEdit_diameter_circular.setText(f"{diameters[0]}")
+
+    def get_surfaces_from_selected_volumes(self, volume_ids: list[int]):
+        surfaces_from_volumes = list()
+        for volume_id in volume_ids:
+            for surface_id in self.mesh.surfaces_from_volume.get(volume_id):
+                if surface_id is None:
+                    continue
+
+                if surface_id in surfaces_from_volumes:
+                    continue
+
+                surfaces_from_volumes.append(surface_id)
+        
+        return surfaces_from_volumes
+
+    def get_diameters_from_surfaces(self, surface_ids: list[int]):
+        diameters = list()
+        for surface_id in surface_ids:
+            diameter = self.mesh.cylindrical_surfaces_data.get(surface_id)
+            if diameter is None:
+                continue
+            
+            _diameter = round(diameter, 6)
+            if _diameter in diameters:
+                continue
+
+            diameters.append(_diameter)
+
+        return diameters
 
     def verify_if_selected_volumes_are_in_tree_widget_viscous_thermal_model(self):
         if self.tree_item_clicked:

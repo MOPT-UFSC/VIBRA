@@ -129,10 +129,7 @@ class MainWindow(MainWindow_UI):
         for render in self.get_renderer_widgets():
             self.render_tools_toolbar.render_tool_changed.connect(render.add_render_tool)
 
-        self.analysis_toolbar.setDisabled(True)
-        self.renderer_toolbar.setDisabled(True)
-        self.workspaces_toolbar.setDisabled(True)
-        self.animation_toolbar.setDisabled(True)
+        self.set_toolbars_enabled(False)
         self.action_export_element_transfer_data.setDisabled(True)
 
         self.splitter.setSizes([100, 400])
@@ -568,10 +565,7 @@ class MainWindow(MainWindow_UI):
         app().project.clear_working_directory()
         self.action_unhide_all_callback()
 
-        self.analysis_toolbar.setDisabled(True)
-        self.renderer_toolbar.setDisabled(True)
-        self.workspaces_toolbar.setDisabled(True)
-        self.animation_toolbar.setDisabled(True)
+        self.set_toolbars_enabled(False)
         self.action_export_element_transfer_data.setDisabled(True)
 
     def action_import_mesh_callback(self):
@@ -720,6 +714,7 @@ class MainWindow(MainWindow_UI):
                 return
 
         if msg_box.clickedButton() == draw_button:
+            self.camera_toolbar.setEnabled(True)
             self.render_widgets_stack.setCurrentWidget(self.cad_render_widget)
             return
         
@@ -751,7 +746,7 @@ class MainWindow(MainWindow_UI):
         )
 
         if not check:
-            return
+            return True
 
         app().config.write_last_folder_path_in_file(
             "geometry_mesh_folder",
@@ -782,8 +777,7 @@ class MainWindow(MainWindow_UI):
         )
 
         ext_filter = (
-            ";;Geometry Files ({geo})"
-            ";;All Files (*)"
+            "Geometry Files ({geo});; All Files (*)"
         ).format(
             geo=qt_extensions(SUPPORTED_GEOMETRY_EXTENSIONS),
         )  # fmt: skip
@@ -808,8 +802,7 @@ class MainWindow(MainWindow_UI):
         )
 
         ext_filter = (
-            ";;Mesh Files ({mesh})"
-            ";;All Files (*)"
+            "Mesh Files ({mesh});; All Files (*)"
         ).format(
             mesh=qt_extensions(SUPPORTED_MESH_EXTENSIONS),
         )  # fmt: skip
@@ -931,9 +924,7 @@ class MainWindow(MainWindow_UI):
         LoadingWindow(self.geometry_widget.update_plot).run()
         self.update_geometry_information()
         self.update_toolbar_and_menu_items_after_load_project()
-        self.renderer_toolbar.setDisabled(False)
-        self.workspaces_toolbar.setDisabled(False)
-        self.analysis_toolbar.setDisabled(False)
+        self.set_toolbars_enabled(True)
         self.action_model_workspace_callback()
 
     def import_mesh(self, path: Path | str):
@@ -950,9 +941,7 @@ class MainWindow(MainWindow_UI):
         LoadingWindow(self.mesh_widget.update_plot).run()
         self.update_geometry_information()
         self.update_toolbar_and_menu_items_after_load_project()
-        self.renderer_toolbar.setDisabled(False)
-        self.workspaces_toolbar.setDisabled(False)
-        self.analysis_toolbar.setDisabled(False)
+        self.set_toolbars_enabled(True)
         self.action_mesh_workspace_callback()
 
     def open_project(self, project_path: str | Path | None = None):
@@ -985,9 +974,7 @@ class MainWindow(MainWindow_UI):
 
         self.model_setup_widget.model_setup_items.hide_model_setup_top_items()
 
-        self.renderer_toolbar.setEnabled(True)
-        self.workspaces_toolbar.setEnabled(True)
-        self.analysis_toolbar.setEnabled(True)
+        self.set_toolbars_enabled(True)
         self.update_toolbar_and_menu_items_after_load_project()
         self.analysis_toolbar.check_analysis_setup_callback()
 
@@ -1003,6 +990,13 @@ class MainWindow(MainWindow_UI):
             title = "Missing solution frequency records"
             message = 'Click on the "Resume the analysis" button to solve remaining frequencies'
             PrintMessageInput([window_title, title, message])
+
+    def set_toolbars_enabled(self, state: bool):
+        self.analysis_toolbar.setEnabled(state)
+        self.animation_toolbar.setEnabled(state)
+        self.camera_toolbar.setEnabled(state)
+        self.renderer_toolbar.setEnabled(state)
+        self.workspaces_toolbar.setEnabled(state)
 
     def update_toolbar_and_menu_items_after_load_project(self):
         self.model_setup_widget.model_setup_items.filter_available_items_and_analyzes_according_to_geometry_information()

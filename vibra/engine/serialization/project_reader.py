@@ -193,11 +193,21 @@ class ProjectReader:
             mesh.faces_connectivity = np.array(file["connectivity/faces_connectivity"])
             mesh.solids_connectivity = np.array(file["connectivity/solids_connectivity"])
 
+            curvatures = file.get("curvatures", dict())
+            for key, value in curvatures.get("curvatures_surface", dict()).items():
+                mesh.curvatures_surface[int(key)] = value[:]
+
+            normals = file.get("normals", dict())
+            for key, value in normals.get("normals_surface", dict()).items():
+                mesh.normals_surface[int(key)] = value[:]
+
             if all(key in file for key in cache_paths):
                 mesh.cache_nodal_coordinates = np.array(file["nodal_data/cache_nodal_coordinates"])
                 mesh.cache_lines_connectivity = np.array(file["connectivity/cache_lines_connectivity"])
                 mesh.cache_faces_connectivity = np.array(file["connectivity/cache_faces_connectivity"])
                 mesh.cache_solids_connectivity = np.array(file["connectivity/cache_solids_connectivity"])
+
+            mesh.process_cylindrical_surfaces()
 
         logging.info("Reading Geometry related Mesh informations")
         with h5py.File(geometry_data_path, "r") as file:
