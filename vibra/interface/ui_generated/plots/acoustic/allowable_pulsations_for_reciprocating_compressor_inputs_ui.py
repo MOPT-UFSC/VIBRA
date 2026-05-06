@@ -643,7 +643,7 @@ class Ui_Form(object):
         self.label_5.setText(QCoreApplication.translate("Form", u"[m/s]", None))
         self.lineEdit_speed_of_sound.setText("")
 #if QT_CONFIG(tooltip)
-        self.pushButton_get_internal_diameter_from_selection.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Get the internal diameter from selected surface</p></body></html>", None))
+        self.pushButton_get_internal_diameter_from_selection.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Get the internal diameter of the selected surface</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButton_get_internal_diameter_from_selection.setText("")
         self.lineEdit_inside_diameter.setText("")
