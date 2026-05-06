@@ -1008,6 +1008,7 @@ class Model:
         if not self.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
             return
 
+        self.mesh.cache_mesh_information()
         self.dof_decoupling = DegreesOfFreedomDecoupling(self)
         self.dof_decoupling.process_degrees_of_freedom_decoupling()
 

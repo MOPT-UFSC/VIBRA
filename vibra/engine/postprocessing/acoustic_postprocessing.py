@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import logging
 from functools import cache
-from time import perf_counter
 from typing import Literal
 
 import numpy as np
@@ -129,7 +128,7 @@ class AcousticPostprocessing:
         if isinstance(nodal_solution, LazyArray) and not nodal_solution.is_valid():
             return None
 
-        if not nodal_solution.any():
+        if nodal_solution.shape[1] < index:
             return None
 
         # selected nodal solution
@@ -160,14 +159,15 @@ class AcousticPostprocessing:
         node_id: int | None = None,
         surface_id: int | None = None,
         volume_id: int | None = None,
-    ):
+    ) -> np.ndarray:
+
         frequencies = self.model.frequencies
         zeros = np.zeros_like(frequencies, dtype=complex)
 
         if isinstance(node_id, int):
             surface_ids = self.mesh.get_surfaces_from_node(node_id)
-            if np.unique(surface_ids).size != 1:
-                return zeros, None
+            # if np.unique(surface_ids).size != 1:
+            #     print(f"The surfaces {surface_ids} contains the node: {node_id}")
 
             surface_id = surface_ids[0]
 
@@ -178,7 +178,7 @@ class AcousticPostprocessing:
 
         particle_velocities_Vj = particle_velocities_data.get(component_label)
         if not isinstance(particle_velocities_Vj, dict):
-            return zeros, None
+            return zeros
 
         if isinstance(node_id, int):
             return particle_velocities_Vj.get(node_id)
@@ -400,13 +400,8 @@ class AcousticPostprocessing:
         nodes_output = np.sort(self.mesh.get_nodes_from_surface(output_surface_id))
 
         logging.info("Processing the transmission loss... [20/100]")
-        t0 = perf_counter()
         # P_in = self.solution.nodal_solution[nodes_input, :]
         P_out = self.solution.nodal_solution[nodes_output, :]
-        dt = perf_counter() - t0
-
-        # TODO: remove this printout when possible
-        print(f"Time to load solution data for TL calculation: {dt} s")
 
         logging.info("Processing the transmission loss... [40/100]")
 

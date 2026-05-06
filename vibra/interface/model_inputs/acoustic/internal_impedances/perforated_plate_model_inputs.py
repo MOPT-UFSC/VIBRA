@@ -1042,8 +1042,8 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         self.mesh.restore_data_from_cache()
         self.mesh.process_upwards_adjacencies_from_entities()
 
-        if self.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
-            self.mesh.cache_mesh_information()
+        # if self.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
+        #     self.mesh.cache_mesh_information()
 
         self.process_decoupling_actions()
 
@@ -1210,11 +1210,13 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             return False
 
         if self.mesh.cache_nodal_coordinates is None:
-            self.mesh.cache_mesh_information()
+            # self.mesh.cache_mesh_information()
+            pass
+
         else:
             self.mesh.restore_data_from_cache()
             self.mesh.process_upwards_adjacencies_from_entities()
-            self.mesh.cache_mesh_information()
+            # self.mesh.cache_mesh_information()
 
         self.process_decoupling_actions()
 

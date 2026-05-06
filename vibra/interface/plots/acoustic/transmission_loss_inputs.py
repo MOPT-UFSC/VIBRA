@@ -1,22 +1,23 @@
 import logging
 from enum import IntEnum
-from time import perf_counter
 
+# from time import perf_counter
+import numpy as np
 from PySide6.QtCore import QEvent, QObject, Qt, Signal
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
 from vibra.engine import AnalysisID
+from vibra.engine.properties.fluid import Fluid
 from vibra.interface import error_title
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
-from vibra.interface.plots.general.frequency_response_plotter import (
-    FrequencyResponsePlotter,
-)
-from vibra.interface.ui_generated.plots.acoustic.transmission_loss_inputs_ui import (
-    TransmissionLossInputs_UI,
-)
+from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
+from vibra.interface.numeric_checks.unit_utilities import convert_length_unit, units_abreviations
+from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
+from vibra.interface.ui_generated.plots.acoustic.transmission_loss_inputs_ui import TransmissionLossInputs_UI
+
 
 class DataType(IntEnum):
     TRANSMISSION_LOSS = 0
@@ -28,6 +29,12 @@ class TLCalculation(IntEnum):
     SURFACE_INTEGRATION = 1
 
 
+class CutoffFrequency(IntEnum):
+    DISABLED = 0
+    USER_DEFINED = 1
+    AUTOMATIC = 2
+
+
 class TransmissionLossInputs(TransmissionLossInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -36,6 +43,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
 
         self._initialize()
         self._config_widgets()
+        self._configure_validator()
         self._create_connections()
         self._load_analysis_setup()
 
@@ -64,6 +72,12 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
     def _config_widgets(self):
         self.current_lineEdit = self.lineEdit_output_surface_id
         self.lineEdit_input_surface_id.setFocus()
+        #
+        unit = units_abreviations.get(self.mesh.length_unit)
+        self.label_unit_combo_box.setText(f"[{unit}]")
+
+    def _configure_validator(self):
+        self.lineEdit_cutoff_frequency.setValidator(StrictDoubleValidator(0, 1e8, 6))
 
     def showEvent(self, event):
         super().showEvent(event)
@@ -77,6 +91,8 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
     def _create_connections(self):
         #
         self.comboBox_processing_selector.currentIndexChanged.connect(self.processing_selector_callback)
+        self.comboBox_cutoff_frequency.currentIndexChanged.connect(self.compute_pipe_cutoff_frequency_callback)
+        self.comboBox_cutoff_frequency_options.currentIndexChanged.connect(self.cutoff_frequency_options_callback)
         #
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
         self.pushButton_flip_selection.clicked.connect(self.invert_selection)
@@ -88,6 +104,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
         self.clickable(self.lineEdit_output_surface_id).connect(self.lineEdit_output_clicked)
         #
         self.lineEdit_output_clicked()
+        self.update_cutoff_related_widgets_visibility()
 
     def clickable(self, widget):
         class Filter(QObject):
@@ -141,31 +158,34 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
         _faces = [str(i) for i in faces]
         self.current_lineEdit.setText(_faces[0])
 
-
     def load_input_surface_id(self):
 
         input_surface_candidate = list()
         output_surface_candidate = list()
 
         for (property, surf_id) in self.properties.surface_properties.keys():
-            if property in ["surface_velocity", "incident_plane_wave"]:
-                if id not in input_surface_candidate:
+            if property == "incident_plane_wave":
+                if surf_id not in input_surface_candidate:
                     input_surface_candidate.append(surf_id)
 
-            if property in ["specific_impedance"]:
-                if surf_id in input_surface_candidate:
-                    continue
-                if id not in output_surface_candidate:
-                    output_surface_candidate.append(surf_id)
+            elif property == "specific_impedance":
+                surface_velocity = self.properties._get_property("surface_velocity", surface=surf_id)
+                if surface_velocity is None:
+                    if surf_id not in output_surface_candidate:
+                        output_surface_candidate.append(surf_id)
+
+                elif surf_id not in input_surface_candidate:
+                    input_surface_candidate.append(surf_id)
 
         if len(input_surface_candidate) == 1:
             self.lineEdit_input_surface_id.setText(str(input_surface_candidate[0]))
-    
+
         if len(output_surface_candidate) == 1:
             self.lineEdit_output_surface_id.setText(str(output_surface_candidate[0]))
 
         if input_surface_candidate:
             self.lineEdit_output_surface_id.setFocus()
+
         elif output_surface_candidate:
             self.lineEdit_input_surface_id.setFocus()
 
@@ -206,7 +226,14 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
 
         self.plotter = FrequencyResponsePlotter(close_dialogs=True)
         self.plotter.imported_real_data(decibel_data=True)
+
+        f_cut = None
+        if self.comboBox_cutoff_frequency_options.currentIndex() != CutoffFrequency.DISABLED:
+            f_cut = float(self.lineEdit_cutoff_frequency.text()) 
+
+        self.plotter.set_cutoff_frequency(f_cut)
         self.plotter._set_model_results_data_to_plot(self.model_results)
+
         app().main_window.update_symbols()
 
     def export_data_callback(self):
@@ -223,11 +250,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
     def check_inputs(self):
 
         input_surface_id = self.lineEdit_input_surface_id.text()
-        self.input_surface_id, error_data = self.mesh.check_selected_ids(   
-                                                                         input_surface_id, 
-                                                                         selection = "surfaces", 
-                                                                         single_id = True
-                                                                         )
+        self.input_surface_id, error_data = self.mesh.check_selected_ids(input_surface_id, selection="surfaces", single_id=True)
 
         if error_data is not None:
             self.lineEdit_input_surface_id.setFocus()
@@ -235,11 +258,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
             return True
 
         output_surface_id = self.lineEdit_output_surface_id.text()
-        self.output_surface_id, error_data = self.mesh.check_selected_ids(   
-                                                                          output_surface_id, 
-                                                                          selection = "surfaces", 
-                                                                          single_id = True
-                                                                          )
+        self.output_surface_id, error_data = self.mesh.check_selected_ids(output_surface_id, selection="surfaces", single_id=True)
 
         if error_data is not None:
             self.lineEdit_output_surface_id.setFocus()
@@ -253,6 +272,92 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
             message += "proceed with the transmission loss or noise reduction calculation."
             PrintMessageInput([error_title, title, message])
             return True
+
+        if self.comboBox_cutoff_frequency_options.currentIndex() != CutoffFrequency.DISABLED:
+            line_edit = self.lineEdit_cutoff_frequency
+            if line_edit.text() == "":
+                line_edit.setFocus()
+                return True
+
+    def update_cutoff_related_widgets_visibility(self):
+        index = self.comboBox_cutoff_frequency_options.currentIndex()
+        user_defined = index == CutoffFrequency.USER_DEFINED
+        self.lineEdit_cutoff_frequency.setEnabled(user_defined)
+
+        automatic = index == CutoffFrequency.AUTOMATIC
+        self.comboBox_cutoff_frequency.setVisible(automatic)
+        self.label_fc_combo_box.setVisible(automatic)
+        self.label_unit_combo_box.setVisible(automatic)
+
+    def cutoff_frequency_options_callback(self):
+        index = self.comboBox_cutoff_frequency_options.currentIndex()
+        self.update_cutoff_related_widgets_visibility()
+
+        if index == CutoffFrequency.DISABLED:
+            self.lineEdit_cutoff_frequency.clear()
+
+        elif index == CutoffFrequency.AUTOMATIC:
+            self.map_cylindrical_surfaces_to_fluids()
+            self.compute_pipe_cutoff_frequency_callback()
+
+    def map_cylindrical_surfaces_to_fluids(self):
+
+        self.map_curvatures_to_fluid = dict()
+        self.comboBox_cutoff_frequency.clear()
+        self.comboBox_cutoff_frequency.blockSignals(True)
+
+        for surface_id, diameter in self.mesh.cylindrical_surfaces_data.items():
+
+            d_in = convert_length_unit(diameter, "meter", self.mesh.length_unit)
+            dr_in = round(d_in, 4)
+
+            fluid = self.properties._get_property("fluid", surface=surface_id)
+            if isinstance(fluid, Fluid):
+                if (dr_in, fluid) not in self.map_curvatures_to_fluid.values():
+                    self.map_curvatures_to_fluid[dr_in] = (dr_in, fluid)
+
+            elif isinstance(fluid, list) and len(fluid) == 2:
+                for _fluid in fluid:
+                    if not isinstance(_fluid, Fluid):
+                        continue
+
+                    if (dr_in, _fluid) not in self.map_curvatures_to_fluid.values():
+                        self.map_curvatures_to_fluid[dr_in] = (dr_in, _fluid)
+
+        for (_d_in, fluid) in self.map_curvatures_to_fluid.values():
+            self.comboBox_cutoff_frequency.addItem(str(_d_in))
+
+        max_din = max(self.map_curvatures_to_fluid.keys())
+        self.comboBox_cutoff_frequency.setCurrentText(str(max_din))
+        self.comboBox_cutoff_frequency.blockSignals(False)
+
+    def compute_pipe_cutoff_frequency_callback(self):
+        if self.comboBox_cutoff_frequency.currentText() == "":
+            return None
+        
+        if not self.map_curvatures_to_fluid:
+            return None
+        
+        key = float(self.comboBox_cutoff_frequency.currentText())
+        data = self.map_curvatures_to_fluid.get(key)
+        if data is None:
+            return None
+
+        d_in, fluid = data
+        if not isinstance(fluid, Fluid):
+            return None
+
+        if d_in == 0:
+            return None
+
+        # speed of sound in m/s
+        Co = fluid.speed_of_sound
+
+        # cut-off frequency of a circular pipe
+        d_in = convert_length_unit(d_in, self.mesh.length_unit, "meter")
+        f_cut = round(1.8412 * Co / (np.pi * d_in), 4)
+
+        self.lineEdit_cutoff_frequency.setText(str(f_cut))
 
     def join_model_data(self):
 
@@ -279,7 +384,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
                     logging.info("Processing the transmission loss... [20/100]")
                     self.mesh.compute_nodal_areas()
 
-                t0 = perf_counter()
+                # t0 = perf_counter()
 
                 x_data, y_data = self.acoustic_post.compute_transmission_loss(
                     self.input_surface_id,
@@ -287,8 +392,8 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
                     surface_integration = surface_integration,
                     )
 
-                dt = perf_counter() - t0
-                print(f"Time to process TL: {dt}s")
+                # dt = perf_counter() - t0
+                # print(f"Time to process TL: {dt}s")
 
                 return x_data, y_data
 

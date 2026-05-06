@@ -160,7 +160,7 @@ class UserDefinedSolutionStepsFromTabularDataInput(UserDefinedSolutionStepsFromT
 
             self.user_defined_solution_steps.append(self.table_frequencies[index])
 
-        if not self.user_defined_solution_steps:
+        if len(self.user_defined_solution_steps) == 0:
             self.hide()
             title = "No solution step was selected"
             message = "Select at least one solution step to proceed "

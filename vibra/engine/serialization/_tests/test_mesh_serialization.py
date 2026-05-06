@@ -65,7 +65,7 @@ def test_compare_interface_based_mesh_project():
 
     # It is not ideal to have two functions setting a single property
     project_cli.model.properties._set_property("degrees_of_freedom_decoupling", data={"volume_to_decouple": 1}, surface=6)
-    project_cli.mesh.cache_mesh_information()
+    # project_cli.mesh.cache_mesh_information()
     project_cli.model.process_degrees_of_freedom_decoupling()
 
     ## Define the analysis frequency setup

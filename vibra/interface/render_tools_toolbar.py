@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QToolBar, QSizePolicy
 from PySide6.QtGui import QAction, QIcon
 from PySide6.QtCore import Qt, Signal
 
-from vibra import ICON_DIR
+# from vibra import ICON_DIR
 from vibra.interface.viewer_3d.render_tools import (
     RenderTool,
     RotationTool,
@@ -56,13 +56,15 @@ class RenderToolsToolbar(QToolBar):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.sizePolicy().hasHeightForWidth())
         self.setSizePolicy(sizePolicy)
-        self.setStyleSheet(u"\n"
-                                                "            QToolBar {\n"
-                                                "                border-style: solid;\n"
-                                                "                border-width: 1px;\n"
-                                                "                border-color: #888888;\n"
-                                                "                spacing: 10px;\n"
-                                                "            }")
+        self.setStyleSheet(
+            "\n"
+            "            QToolBar {\n"
+            "                border-style: solid;\n"
+            "                border-width: 1px;\n"
+            "                border-color: #888888;\n"
+            "                spacing: 10px;\n"
+            "            }"
+        )
 
     def _configure_widgets(self):
         for action in self.actions():

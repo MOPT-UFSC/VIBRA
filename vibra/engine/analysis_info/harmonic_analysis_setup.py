@@ -33,6 +33,9 @@ class HarmonicAnalysisSetup:
 
     def get_frequencies(self) -> np.ndarray:
         if self.frequency_spacing == FrequencySpacing.USER_DEFINED:
+            if isinstance(self.frequencies, list):
+                return np.array(self.frequencies, dtype=float)
+
             return self.frequencies
 
         frequencies = np.arange(
