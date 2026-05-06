@@ -1156,10 +1156,15 @@ class MainWindow(MainWindow_UI):
         ExportElementTransferDataInputs()
 
     def update_hidden_plots(self):
-        for i in range(self.render_widgets_stack.count()):
-            widget = self.render_widgets_stack.widget(i)
-            if hasattr(widget, "update_hidden_plot"):
-                widget.update_hidden_plot()
+        def update_plot_callback():
+            N = self.render_widgets_stack.count()
+            for i in range(self.render_widgets_stack.count()):
+                widget = self.render_widgets_stack.widget(i)
+                if hasattr(widget, "update_hidden_plot"):
+                    logging.info(f"Updating render... [{i+1}/{N}]")
+                    widget.update_hidden_plot()
+
+        LoadingWindow(update_plot_callback).run()
 
     def eventFilter(self, obj, event: QEvent):
         modifiers = app().keyboardModifiers()
