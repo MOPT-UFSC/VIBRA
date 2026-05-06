@@ -148,7 +148,7 @@ class ProjectReader:
             for refinement in mesh_setup_dict["mesh_refinement_parameters"]
         ]  # fmt: skip
 
-        custom_element = mesh_setup_dict["custom_element_setup"]
+        custom_element = mesh_setup_dict.get("custom_element_setup")
         if custom_element is not None:
             mesh_setup_dict["custom_element_setup"] = ElementSetup(**custom_element)
 
