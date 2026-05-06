@@ -146,6 +146,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.pushButton_generate_mesh.setAutoDefault(False)
         #
         self.lineEdit_selected_ids.setDisabled(True)
+        self.pushButton_plot_histogram.setDisabled(True)
 
     def _load_current_mesh_setup(self):
         mesh_setup = app().project.model.mesh_setup
