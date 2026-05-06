@@ -17,6 +17,7 @@ from vibra.engine.analysis_info import (
     ModalAnalysisSetup,
 )
 from vibra.engine.assemblers import AcousticAssembler, StructuralAssembler
+from vibra.engine.mesher.element_setup import ElementSetup
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.mesh_setup import MeshRefinementSetup, MeshSetup
 from vibra.engine.model import Model
@@ -142,11 +143,18 @@ class ProjectReader:
         if not mesh_setup_dict:
             return None
 
+        mesh_setup_dict["mesh_refinement_parameters"] = [
+            MeshRefinementSetup(*refinement) 
+            for refinement in mesh_setup_dict["mesh_refinement_parameters"]
+        ]  # fmt: skip
+
+        custom_element = mesh_setup_dict["custom_element_setup"]
+        if custom_element is not None:
+            mesh_setup_dict["custom_element_setup"] = ElementSetup(**custom_element)
+
         mesh_setup = MeshSetup()
         for key, value in mesh_setup_dict.items():
             setattr(mesh_setup, key, value)
-
-        mesh_setup.refinement_parameters = [MeshRefinementSetup(*refinement) for refinement in mesh_setup_dict["mesh_refinement_parameters"]]
 
         return mesh_setup
 
