@@ -128,7 +128,7 @@ class AcousticPostprocessing:
         if isinstance(nodal_solution, LazyArray) and not nodal_solution.is_valid():
             return None
 
-        if not nodal_solution.any():
+        if nodal_solution.shape[1] < index:
             return None
 
         # selected nodal solution
