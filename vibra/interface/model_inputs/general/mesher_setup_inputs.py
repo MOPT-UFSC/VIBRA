@@ -19,6 +19,8 @@ from vibra.engine.mesher.element_setup import (
     TETRAHEDRON_4,
     TETRAHEDRON_10,
     ElementSetup,
+    MeshAlgorithms3D,
+    SubdivisionAlgorithms,
 )
 from vibra.engine.mesher.mesh_setup import MeshRefinementSetup, MeshSetup
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
@@ -271,27 +273,28 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.tmp_refinement_parameters.pop(current_row)
         self.update_mesh_refinement_table()
 
-    def update_element_type(self, ElementType: ElementSetup):
-        # TODO: consider custom algorithms
+    def update_element_type(self, element_setup: ElementSetup):
+        match element_setup.element_order:
+            case 1:
+                self.comboBox_shape_function.setCurrentText("Linear")
+            case 2:
+                self.comboBox_shape_function.setCurrentText("Quadratic")
+            case _:
+                raise NotImplementedError("Invalid element order")
 
-        if ElementType == TETRAHEDRON_4:
-            self.comboBox_element_type.setCurrentText("Tetrahedral")
-            self.comboBox_shape_function.setCurrentText("Linear")
+        match element_setup.subdivision_algorithm:
+            case SubdivisionAlgorithms.NO_SUBDIVISION:
+                self.comboBox_element_type.setCurrentText("Tetrahedral")
+            case SubdivisionAlgorithms.ALL_HEXAHEDRA_SUBDIVISION:
+                self.comboBox_element_type.setCurrentText("Hexahedral")
 
-        elif ElementType == TETRAHEDRON_10:
-            self.comboBox_element_type.setCurrentText("Tetrahedral")
-            self.comboBox_shape_function.setCurrentText("Quadratic")
-
-        elif ElementType == HEXAHEDRON_8:
-            self.comboBox_element_type.setCurrentText("Hexahedral")
-            self.comboBox_shape_function.setCurrentText("Linear")
-
-        elif ElementType == HEXAHEDRON_20:
-            self.comboBox_element_type.setCurrentText("Hexahedral")
-            self.comboBox_shape_function.setCurrentText("Quadratic")
-
-        else:
-            NotImplementedError()
+        match element_setup.algorithm_3d:
+            case MeshAlgorithms3D.DELAUNAY_3D:
+                self.comboBox_3d_algorithm.setCurrentIndex(GMSHAlgorithms_3D.DELAUNAY_3D)
+            case MeshAlgorithms3D.FRONTAL_3D:
+                self.comboBox_3d_algorithm.setCurrentIndex(GMSHAlgorithms_3D.FRONTAL_3D)
+            case MeshAlgorithms3D.HXT_3D:
+                self.comboBox_3d_algorithm.setCurrentIndex(GMSHAlgorithms_3D.HXT_3D)
 
     def generate_mesh_callback(self):
 
@@ -528,7 +531,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             self.comboBox_shape_function.removeItem(1)
 
     def update_advanced_gmsh_controls(self):
-        element_type = self.get_element_type()
+        element_type = self._get_custom_element_setup()
         if element_type not in [None, TETRAHEDRON_4, TETRAHEDRON_10]:
             self.comboBox_mesh_quality_metrics.setCurrentText("Disabled")
             self.comboBox_mesh_quality_metrics.setDisabled(True)
