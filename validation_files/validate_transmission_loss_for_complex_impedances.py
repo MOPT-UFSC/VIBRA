@@ -511,6 +511,8 @@ def process_external_TL(model: "Model", ext_data: LoadExternalData):
                 return None, None
 
         specific_impedance = model.properties._get_property("specific_impedance", surface=input_surface_id)
+        anechoic_termination = model.properties._get_property("anechoic_termination", surface=input_surface_id)
+
         if isinstance(specific_impedance, dict):
             if "real_values" in specific_impedance.keys():
                 real_values = np.array(specific_impedance["real_values"])
@@ -539,8 +541,7 @@ def process_external_TL(model: "Model", ext_data: LoadExternalData):
             else:
                 Zo_in = specific_impedance["values"]
 
-        anechoic_termination = model.properties._get_property("anechoic_termination", surface=input_surface_id)
-        if isinstance(anechoic_termination, dict):
+        elif isinstance(anechoic_termination, dict):
 
             rho_eff_pm, C_eff_pm = model.get_porous_material_model_effective_properties(input_surface_id)
             rho_eff_tv, C_eff_tv = model.get_viscous_thermal_model_effective_properties(input_surface_id)
