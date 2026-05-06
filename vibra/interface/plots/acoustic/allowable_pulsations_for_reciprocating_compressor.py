@@ -1,19 +1,27 @@
-from PySide6.QtWidgets import QDialog, QLineEdit
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QCloseEvent
-
-from vibra.engine import AnalysisID
-from vibra import app
-from vibra.engine.properties.fluid import Fluid
-
-from vibra.interface import error_title
-from vibra.interface.ui_generated.plots.acoustic.allowable_pulsations_for_reciprocating_compressor_inputs_ui import AllowablePulsationsForReciprocatingCompressorInputs_UI
-from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.data_handler.export_model_results import ExportModelResults
-from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
-from vibra.interface.model_inputs.general.fluid.set_fluid_inputs_simplified import SetFluidInputsSimplified
+from enum import IntEnum
 
 import numpy as np
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import QDialog, QLineEdit
+
+from vibra import app
+from vibra.engine import AnalysisID
+from vibra.engine.properties.fluid import Fluid
+from vibra.interface import error_title
+from vibra.interface.data_handler.export_model_results import ExportModelResults
+from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.model_inputs.general.fluid.set_fluid_inputs_simplified import SetFluidInputsSimplified
+from vibra.interface.plots.general.frequency_response_plotter import DataFormat, FrequencyResponsePlotter
+from vibra.interface.ui_generated.plots.acoustic.allowable_pulsations_for_reciprocating_compressor_inputs_ui import (
+    AllowablePulsationsForReciprocatingCompressorInputs_UI,
+)
+from vibra.utils.signal_processing import process_ifft_from_one_sided_spectrum_signal
+
+
+class PulsationCriteria(IntEnum):
+    UNFILTERED = 0
+    FILTERED = 1
 
 
 class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsForReciprocatingCompressorInputs_UI):
@@ -58,6 +66,8 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
         self.fluid_dialog = None
         self.selected_fluid = None
 
+        self.model_results = dict()
+
         self.unit_label = "Pa"
         self.selection_types = ["surfaces", "lines", "points", "nodes"]
 
@@ -65,7 +75,7 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
         #
         self.comboBox_selector_filter.currentIndexChanged.connect(self.selection_filter_callback)
         #
-        self.lineEdit_pressure_ratio.textChanged.connect(self.process_unfiltered_criteria)
+        self.lineEdit_pressure_ratio.textChanged.connect(self.process_unfiltered_criterion)
         #
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
         self.pushButton_get_fluid.clicked.connect(self.get_fluid_callback)
@@ -117,7 +127,7 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
                 if fluid_A == fluid_B:
                     self.get_selected_fluid(selected_fluid=fluid_A)
 
-            if self.tabWidget_main.currentIndex() == 1:
+            if self.tabWidget_main.currentIndex() == PulsationCriteria.FILTERED:
                 return
 
             data = self.properties._get_property("reciprocating_compressor_excitation", surface=surface_id)
@@ -133,7 +143,7 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
                 pressure_ratio = parameters.get("pressure_ratio")
                 self.lineEdit_pressure_ratio.setText(f"{pressure_ratio : .6f}")
 
-    def process_unfiltered_criteria(self):
+    def process_unfiltered_criterion(self):
 
         str_pressure_ratio = self.lineEdit_pressure_ratio.text()
         if str_pressure_ratio == "":
@@ -141,14 +151,14 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
 
         try:
             pressure_ratio = float(str_pressure_ratio)     
-            unfiltered_criteria = min(3*pressure_ratio, 7)
+            unfiltered_criterion = min(3*pressure_ratio, 7)
 
         except Exception:
-            self.lineEdit_unfiltered_criteria.setFocus()
-            self.lineEdit_unfiltered_criteria.selectAll()
+            self.lineEdit_unfiltered_criterion.setFocus()
+            self.lineEdit_unfiltered_criterion.selectAll()
             return
 
-        self.lineEdit_unfiltered_criteria.setText(f"{unfiltered_criteria : .6f}")
+        self.lineEdit_unfiltered_criterion.setText(f"{unfiltered_criterion : .6f}")
 
     def selection_filter_callback(self):
 
@@ -184,6 +194,11 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
             return
 
         self.plotter = FrequencyResponsePlotter(close_dialogs=True)
+
+        if self.tabWidget_main.currentIndex() == PulsationCriteria.UNFILTERED:
+            self.plotter.comboBox_data_format.setCurrentIndex(DataFormat.REAL)
+            self.plotter.data_format_changed_callback()
+
         self.plotter._set_model_results_data_to_plot(self.model_results)
 
     def export_data_callback(self):
@@ -264,11 +279,8 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
             return out
 
     def join_model_data(self):
-        
-        # absolute average line pressure P_L in bar(a) and speed of sound C_0 in m/s
-        P_L = self.get_fluid_property("pressure")
-        if P_L is None:
-            return True
+
+        self.model_results.clear()
 
         # define the frequency vector for filtered pulsation criteria
 
@@ -279,58 +291,47 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
         index = self.comboBox_selector_filter.currentIndex()
         selection_type = self.selection_types[index]
 
-        if self.tabWidget_main.currentIndex() == 0:
+        if self.tabWidget_main.currentIndex() == PulsationCriteria.UNFILTERED:
             title = "Maximum Allowable Pressure Pulsation at Compressor \nCylinder Flanges"  
         else:
             title = "Allowable Pulsation Levels at and Beyond Line-side \nConnections of Pulsation Suppression Devices"
 
-        self.model_results = dict()
-        for i, selected_id in enumerate(self.selected_ids):
+        filtered_criterion = self.tabWidget_main.currentIndex() == PulsationCriteria.FILTERED
 
-            key = ("pressure_ratio", (selected_id))
-            legend_label = f"Acoustic pressure at {selection_type} [{selected_id}]"
+        if filtered_criterion:
 
-            acoustic_pressure = self.get_response(index, selected_id)
+            for i, selected_id in enumerate(self.selected_ids):
 
-            # express the absolute pressure in bar units and in peak-to-peak scale
-            pulsation_pp = 100 * (2 * acoustic_pressure / 1e5) / P_L
+                # absolute average line pressure P_L in bar(a)
+                P_L = self.get_fluid_property("pressure")
+                if P_L is None:
+                    return True
 
-            self.model_results[key] = { 
-                                       "x_data" : self.frequencies,
-                                       "y_data" : pulsation_pp * (P_L / 100),
-                                       "x_label" : "Frequency [Hz]",
-                                       "y_label" : "Pressure ratio",
-                                       "title" : title,
-                                       "data_information" : legend_label,
-                                       "legend" : legend_label,
-                                       "unit" : "bar (a) (peak-to-peak)",
-                                       "color" : self.get_color(i),
-                                       "linestyle" : "-" 
-                                       }
+                # speed of sound C_0 in m/s
+                C_0 = self.get_fluid_property("speed_of_sound")
+                if C_0 is None:
+                    return True
 
-        factor = 1.0
+                key = ("pressure_ratio", (selected_id))
+                legend_label = f"Acoustic pressure at {selection_type} [{selected_id}]"
 
-        if self.tabWidget_main.currentIndex() == 0:
+                acoustic_pressure = self.get_response(index, selected_id)
 
-            # inside diameter in millimeters
-            pressure_ratio = self.check_inputs(self.lineEdit_pressure_ratio, "Pressure ratio")
-            if pressure_ratio is None:
-                return True
+                # express the absolute pressure in bar units and in peak-to-peak scale
+                pulsation_pp = 100 * (2 * acoustic_pressure / 1e5) / P_L
 
-            # allowable peak-to-peak pulsation levels in bar(a) at cylinder flanges
-
-            pulsation_criteria = min(3*pressure_ratio, 7)
-            pulsation_criteria *= np.ones_like(freq, dtype=float)
-
-            key = ("unfiltered_criteria", (None))
-            legend_label = "Pulsation criteria"
-
-        else:
-
-            # speed of sound C_0 in m/s
-            C_0 = self.get_fluid_property("speed_of_sound")
-            if C_0 is None:
-                return True
+                self.model_results[key] = {
+                    "x_data": self.frequencies,
+                    "y_data": pulsation_pp * (P_L / 100),
+                    "x_label": "Frequency [Hz]",
+                    "y_label": "Pressure ratio",
+                    "title": title,
+                    "data_information": legend_label,
+                    "legend": legend_label,
+                    "unit": "bar (a) (peak-to-peak)",
+                    "color": get_color(i),
+                    "linestyle": "-",
+                }
 
             # inside diameter in millimeters
             inside_diameter = self.check_inputs(self.lineEdit_inside_diameter, "Inside diameter")
@@ -338,42 +339,115 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
                 return True
 
             # allowable peak-to-peak pulsation levels in bar(a) as percentage of the average mean line pressure
-            pulsation_criteria = 400 * ((C_0 / (350 * P_L * inside_diameter * freq))**(1/2))
+            pulsation_criterion = 400 * ((C_0 / (350 * P_L * inside_diameter * freq))**(1/2))
 
-            if self.checkBox_pre_study_analysis.isChecked():
-                factor = 0.7
+            factor = 0.7 if self.checkBox_pre_study_analysis.isChecked() else 1.0
 
-            key = ("filtered_criteria", (None))
+            key = ("filtered_criterion", (None))
             legend_label = "Pulsation criteria"
 
-        self.model_results[key] = { 
-                                   "x_data" : freq,
-                                   "y_data" : factor * pulsation_criteria * (P_L / 100),
-                                   "x_label" : "Frequency [Hz]",
-                                   "y_label" : "Acoustic pressure",
-                                   "title" : title,
-                                   "data_information" : legend_label,
-                                   "legend" : legend_label,
-                                   "unit" : "bar (a) (peak-to-peak)",
-                                   "color" : [1, 0, 0],
-                                   "linestyle" : "-"  
-                                   }
+            self.model_results[key] = {
+                "x_data": freq,
+                "y_data": factor * pulsation_criterion * (P_L / 100),
+                "x_label": "Frequency [Hz]",
+                "y_label": "Acoustic pressure",
+                "title": title,
+                "data_information": legend_label,
+                "legend": legend_label,
+                "unit": "bar (a) (peak-to-peak)",
+                "color": [1, 0, 0],
+                "linestyle": "-",
+            }
 
-    def get_color(self, index):
-
-        colors = [  
-                  (0,0,1),
-                  (0,0,0),
-                  (0,1,1),
-                  (1,0,1),
-                  (1,1,0),
-                  (0.25,0.25,0.25),
-                  ]
-
-        if index <= 5:
-            return colors[index]
         else:
-            return tuple(np.random.randint(0, 255, size=3) / 255)
+
+            if len(self.selected_ids) != 1:
+                title = "Invalid selection"
+                message = "Select the surface where the compressor excitation has been "
+                message += "applied to process the pulsation criterion properly. "
+                message += "This pulsation criterion should be evaluated in surfaces near "
+                message += "the compressor cylinder flange."
+                PrintMessageInput([error_title, title, message])
+                return True
+
+            selected_id = self.selected_ids[0]
+            acoustic_pressure = self.get_response(index, selected_id)
+
+            time_vector, acoustic_pressure = process_ifft_from_one_sided_spectrum_signal(
+                self.model.frequencies, 
+                acoustic_pressure, 
+                dc_included=False
+                )
+
+            # key = ("unfiltered_criterion", (None))
+            # legend_label = "Pulsation criteria"
+
+            key = ("pressure", (selected_id))
+            legend_label = f"Acoustic pressure at {selection_type} [{selected_id}]"
+
+            y_axis_label = "bar (a)"
+
+            self.model_results[key] = { 
+                "x_data" : time_vector,
+                "y_data" : acoustic_pressure / 1e5,
+                "x_label" : "Time [s]",
+                "y_label" : "Acoustic pressure",
+                "title" : title,
+                "data_information" : legend_label,
+                "legend" : legend_label,
+                "unit" : y_axis_label,
+                "color" : [0, 0, 1],
+                "linestyle" : "-" 
+                }
+
+            # inside diameter in millimeters
+            pressure_ratio = self.check_inputs(self.lineEdit_pressure_ratio, "Pressure ratio")
+            if pressure_ratio is None:
+                return True
+
+            # allowable peak-to-peak pulsation levels in bar(a) at cylinder flanges
+            unfiltered_criterion = min(3*pressure_ratio, 7) / 100
+
+            key = ("allowable pulsation limits (upper)", (None))
+            legend_label_upper = "Allowable pulsation (upper bound)"
+            
+            if not isinstance(self.selected_fluid, Fluid):
+                return True
+
+            # mean line fluid pressure in Pa (a)
+            P_L = self.selected_fluid.pressure
+
+            # pulsation recommended limits in bar (a)
+            pulsation_criterion_peak = unfiltered_criterion * (P_L / 1e5) * (1 / 2)
+
+            self.model_results[key] = { 
+                "x_data" : time_vector,
+                "y_data" : pulsation_criterion_peak,
+                "x_label" : "Time [s]",
+                "y_label" : "Acoustic pressure",
+                "title" : title,
+                "data_information" : legend_label_upper,
+                "legend" : legend_label_upper,
+                "unit" : y_axis_label,
+                "color" : [0.7, 0, 0],
+                "linestyle" : "-",
+                }
+
+            key = ("allowable pulsation limits (lower)", (None))
+            legend_label_lower = "Allowable pulsation (lower bound)"
+
+            self.model_results[key] = { 
+                "x_data" : time_vector,
+                "y_data" : -pulsation_criterion_peak,
+                "x_label" : "Time [s]",
+                "y_label" : "Acoustic pressure",
+                "title" : title,
+                "data_information" : legend_label_lower,
+                "legend" : legend_label_lower,
+                "unit" : y_axis_label,
+                "color" : [1, 0, 0],
+                "linestyle" : "-"  
+                }
 
     def get_fluid_callback(self):
         self.fluid_dialog = SetFluidInputsSimplified(update_workspace = False)
@@ -428,3 +502,19 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
             self.plotter.close()
 
         return super().closeEvent(a0)
+
+def get_color(index: int):
+
+    colors = [  
+                (0,0,1),
+                (0,0,0),
+                (0,1,1),
+                (1,0,1),
+                (1,1,0),
+                (0.25,0.25,0.25),
+                ]
+
+    if index <= 5:
+        return colors[index]
+    else:
+        return tuple(np.random.randint(0, 255, size=3) / 255)
