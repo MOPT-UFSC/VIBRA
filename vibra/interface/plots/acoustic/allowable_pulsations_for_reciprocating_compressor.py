@@ -17,6 +17,7 @@ from vibra.interface.ui_generated.plots.acoustic.allowable_pulsations_for_recipr
     AllowablePulsationsForReciprocatingCompressorInputs_UI,
 )
 from vibra.utils.signal_processing import process_ifft_from_one_sided_spectrum_signal
+from vibra.interface.numeric_checks.unit_utilities import convert_pressure_unit
 
 
 class PulsationCriteria(IntEnum):
@@ -234,19 +235,6 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
 
         return response
     
-    def get_fluid_property(self, fluid_property: str):
-
-        if self.selected_fluid is None:
-            self.get_fluid_callback()
-
-        if isinstance(self.selected_fluid, Fluid):
-            if fluid_property == "pressure":
-                return self.selected_fluid.pressure / 1e5
-            elif fluid_property == "speed_of_sound":
-                return self.selected_fluid.speed_of_sound
-
-        return None
-
     def check_inputs(self, line_edit: QLineEdit, label, only_positive: bool = True):
 
         message = ""
@@ -282,14 +270,8 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
 
         self.model_results.clear()
 
-        # define the frequency vector for filtered pulsation criteria
-
-        df = 0.5
-        f_max = self.frequencies[-1]
-        freq = np.arange(df, f_max + df, df)
-
         index = self.comboBox_selector_filter.currentIndex()
-        selection_type = self.selection_types[index]
+        selection_type = self.selection_types.get(index)
 
         if self.tabWidget_main.currentIndex() == PulsationCriteria.UNFILTERED:
             title = "Maximum Allowable Pressure Pulsation at Compressor \nCylinder Flanges"  
@@ -298,19 +280,20 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
 
         filtered_criterion = self.tabWidget_main.currentIndex() == PulsationCriteria.FILTERED
 
+        if not isinstance(self.selected_fluid, Fluid):
+            self.get_fluid_callback()
+            return True
+
+        # absolute average line fluid pressure in bar (a)
+        P_L = convert_pressure_unit(self.selected_fluid.pressure, "Pa (a)", "bar (a)")
+        print(P_L)
+
+        # speed of sound C_0 in m/s
+        C_0 = self.selected_fluid.speed_of_sound
+
         if filtered_criterion:
 
             for i, selected_id in enumerate(self.selected_ids):
-
-                # absolute average line pressure P_L in bar(a)
-                P_L = self.get_fluid_property("pressure")
-                if P_L is None:
-                    return True
-
-                # speed of sound C_0 in m/s
-                C_0 = self.get_fluid_property("speed_of_sound")
-                if C_0 is None:
-                    return True
 
                 key = ("acoustic_pressure", (selected_id))
                 legend_label = f"Acoustic pressure at {selection_type} [{selected_id}]"
@@ -318,11 +301,11 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
                 acoustic_pressure_pp = 2 * self.get_response(index, selected_id)
 
                 # express the absolute pressure in bar units and in peak-to-peak scale
-                pulsation_pp = acoustic_pressure_pp / 1e5
+                acoustic_pressure_pp_conv = convert_pressure_unit(acoustic_pressure_pp, "Pa (a)", "bar (a)")
 
                 self.model_results[key] = {
                     "x_data": self.frequencies,
-                    "y_data": pulsation_pp,
+                    "y_data": acoustic_pressure_pp_conv,
                     "x_label": "Frequency [Hz]",
                     "y_label": "Pressure ratio",
                     "title": title,
@@ -338,17 +321,24 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
             if inside_diameter is None:
                 return True
 
+            # define the frequency vector for filtered pulsation criteria
+            df = 0.5
+            f_max = self.frequencies[-1]
+            freq = np.arange(df, f_max + df, df)
+
             # allowable peak-to-peak pulsation levels in bar(a) as percentage of the average mean line pressure
-            pulsation_criterion = 400 * ((C_0 / (350 * P_L * inside_diameter * freq))**(1/2))
+            P_1 = 400 * ((C_0 / (350 * P_L * inside_diameter * freq))**(1/2))
 
             factor = 0.7 if self.checkBox_prestudy_analysis.isChecked() else 1.0
+
+            print(P_1)
 
             key = ("filtered_criterion", (None))
             legend_label = "Pulsation criteria"
 
             self.model_results[key] = {
                 "x_data": freq,
-                "y_data": factor * pulsation_criterion * (P_L / 100),
+                "y_data": factor * P_1 * (P_L / 100),
                 "x_label": "Frequency [Hz]",
                 "y_label": "Acoustic pressure",
                 "title": title,
@@ -378,15 +368,16 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
                 acoustic_pressure, 
                 dc_included=False
                 )
-
+            
             y_axis_label = "bar (a)"
+            acoustic_pressure_conv = convert_pressure_unit(acoustic_pressure, "Pa (a)", "bar (a)")
 
             key = ("pressure", (selected_id))
             legend_label = f"Acoustic pressure at {selection_type} [{selected_id}]"
 
             self.model_results[key] = { 
                 "x_data" : time_vector,
-                "y_data" : acoustic_pressure / 1e5,
+                "y_data" : acoustic_pressure_conv,
                 "x_label" : "Time [s]",
                 "y_label" : "Acoustic pressure",
                 "title" : title,
@@ -403,7 +394,7 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
                 return True
 
             # allowable peak-to-peak pulsation levels in bar(a) at cylinder flanges
-            unfiltered_criterion = min(3 * pressure_ratio, 7) / 100
+            P_cf = min(3 * pressure_ratio, 7) / 100
 
             key = ("allowable pulsation limits (upper)", (None))
             legend_label_upper = "Allowable pulsation (upper bound)"
@@ -412,10 +403,10 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
                 return True
 
             # mean line fluid pressure in Pa (a)
-            P_L = self.selected_fluid.pressure
+            P_L = convert_pressure_unit(self.selected_fluid.pressure, "Pa (a)", "bar (a)")
 
             # pulsation recommended limits in bar (a)
-            pulsation_criterion_peak = unfiltered_criterion * (P_L / 1e5) * (1 / 2)
+            pulsation_criterion_peak = P_cf * (P_L / 2)
 
             self.model_results[key] = { 
                 "x_data" : time_vector,
