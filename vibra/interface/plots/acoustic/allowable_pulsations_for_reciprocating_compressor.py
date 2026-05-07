@@ -286,7 +286,6 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
 
         # absolute average line fluid pressure in bar (a)
         P_L = convert_pressure_unit(self.selected_fluid.pressure, "Pa (a)", "bar (a)")
-        print(P_L)
 
         # speed of sound C_0 in m/s
         C_0 = self.selected_fluid.speed_of_sound
@@ -330,8 +329,6 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
             P_1 = 400 * ((C_0 / (350 * P_L * inside_diameter * freq))**(1/2))
 
             factor = 0.7 if self.checkBox_prestudy_analysis.isChecked() else 1.0
-
-            print(P_1)
 
             key = ("filtered_criterion", (None))
             legend_label = "Pulsation criteria"
