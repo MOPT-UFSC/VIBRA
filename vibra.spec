@@ -1,35 +1,39 @@
 # -*- mode: python ; coding: utf-8 -*-
 
-import sys
 import platform
-from PyInstaller.utils.hooks import collect_data_files
+import sys
+
+from PyInstaller.utils.hooks import collect_all, collect_data_files, copy_metadata
 
 os = platform.system()
 
 if os == "Windows":
-    current_system_binaries = [
-        (f"{sys.prefix}/Library/bin/*.dll", "./Library/bin/")
-    ]
+    current_system_binaries = [(f"{sys.prefix}/Library/bin/*.dll", "./Library/bin/")]
 elif os == "Linux":
-    current_system_binaries = [
-        (f"{sys.prefix}/lib/*.so*", "./lib/")
-    ]
+    current_system_binaries = [(f"{sys.prefix}/lib/*.so*", "./lib/")]
 else:
     current_system_binaries = []
+
 
 datas = [
     ("vibra/interface/data/", "vibra/interface/data/"),
 ]
-datas += collect_data_files('molde')
+datas += collect_data_files("molde")
+datas += copy_metadata("cad-widgets")
+
+hidden_imports = ["vtk", "cadquery-ocp-novtk", "cadquery-ocp-stubs"]
+
+datas_ocp, binaries_ocp, hidden_ocp = collect_all("OCP")
+current_system_binaries += binaries_ocp
+datas += datas_ocp
+hidden_imports += hidden_ocp
 
 a = Analysis(
-    ['vibra/launch.py'],
+    ["vibra/launch.py"],
     pathex=[],
     binaries=current_system_binaries,
     datas=datas,
-    hiddenimports=[
-        "vtk"
-    ],
+    hiddenimports=hidden_imports,
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
@@ -45,18 +49,18 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='vibra.exe',
+    name="vibra.exe",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
-    console=False,
+    console=True,
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['vibra.ico'],
+    icon=["vibra.ico"],
 )
 
 
@@ -67,5 +71,5 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='Vibra',
+    name="Vibra",
 )
