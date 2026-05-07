@@ -15,7 +15,7 @@ dependencies = [
     "mkl (>=2025.1.0,<2026.0.0)",
     "intel-openmp (>=2025.1.1,<2026.0.0)",
     "h5py (>=3.13.0,<4.0.0)",
-    "moviepy (>=1.0.3,<2.0.0)",
+    "moviepy==1.0.3",
     "pypardiso-mopt (>=0.1.0,<0.2.0)",
     "fileboxes (>=0.1.4,<0.2.0)",
     "pyside6 (==6.9.2)",
@@ -28,6 +28,8 @@ dependencies = [
     "xxhash>=3.6.0",
     "pint>=0.24.4",
     "cad-widgets",
+    "cadquery-ocp-novtk>=7.9.3.1",
+    "cadquery-ocp-stubs>=7.9.3.1",
 ]
 
 [dependency-groups]
