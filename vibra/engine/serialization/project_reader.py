@@ -143,18 +143,25 @@ class ProjectReader:
         if not mesh_setup_dict:
             return None
 
-        mesh_setup_dict["mesh_refinement_parameters"] = [
-            MeshRefinementSetup(*refinement) 
-            for refinement in mesh_setup_dict["mesh_refinement_parameters"]
-        ]  # fmt: skip
+        refinement_parameters = [MeshRefinementSetup(*refinement) for refinement in mesh_setup_dict["mesh_refinement_parameters"]]
 
         custom_element = mesh_setup_dict.get("custom_element_setup")
         if custom_element is not None:
-            mesh_setup_dict["custom_element_setup"] = ElementSetup(**custom_element)
+            custom_element = ElementSetup(**custom_element)
 
-        mesh_setup = MeshSetup()
-        for key, value in mesh_setup_dict.items():
-            setattr(mesh_setup, key, value)
+        mesh_setup = MeshSetup(
+            minimum_element_size=mesh_setup_dict.get("minimum_element_size", 0),
+            maximum_element_size=mesh_setup_dict.get("maximum_element_size", float("inf")),
+            geometry_tolerance=mesh_setup_dict.get("geometry_tolerance", 1e-6),
+            size_factor=mesh_setup_dict.get("size_factor", 1),
+            element_type=mesh_setup_dict.get("element_type", "tetrahedral"),
+            shape_function=mesh_setup_dict.get("shape_function","linear"),
+            compute_quality_metrics=mesh_setup_dict.get("compute_quality_metrics", False),
+            merge_connected_volumes=mesh_setup_dict.get("merge_connected_volumes", False),
+            refinement_parameters=refinement_parameters,
+            custom_element_setup=custom_element,
+            random_seed=mesh_setup_dict.get("random_seed", 1234),
+        )
 
         return mesh_setup
 
