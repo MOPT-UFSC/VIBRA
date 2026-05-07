@@ -17,8 +17,9 @@ from vibra.engine.analysis_info import (
     ModalAnalysisSetup,
 )
 from vibra.engine.assemblers import AcousticAssembler, StructuralAssembler
+from vibra.engine.mesher.element_setup import ElementSetup
 from vibra.engine.mesher.mesh import Mesh
-from vibra.engine.mesher.mesh_setup import MeshSetup
+from vibra.engine.mesher.mesh_setup import MeshRefinementSetup, MeshSetup
 from vibra.engine.model import Model
 from vibra.engine.properties import (
     Fluid,
@@ -142,9 +143,25 @@ class ProjectReader:
         if not mesh_setup_dict:
             return None
 
-        mesh_setup = MeshSetup()
-        for key, value in mesh_setup_dict.items():
-            setattr(mesh_setup, key, value)
+        refinement_parameters = [MeshRefinementSetup(*refinement) for refinement in mesh_setup_dict["mesh_refinement_parameters"]]
+
+        custom_element = mesh_setup_dict.get("custom_element_setup")
+        if custom_element is not None:
+            custom_element = ElementSetup(**custom_element)
+
+        mesh_setup = MeshSetup(
+            minimum_element_size=mesh_setup_dict.get("minimum_element_size", 0),
+            maximum_element_size=mesh_setup_dict.get("maximum_element_size", float("inf")),
+            geometry_tolerance=mesh_setup_dict.get("geometry_tolerance", 1e-6),
+            size_factor=mesh_setup_dict.get("size_factor", 1),
+            element_type=mesh_setup_dict.get("element_type", "tetrahedral"),
+            shape_function=mesh_setup_dict.get("shape_function","linear"),
+            compute_quality_metrics=mesh_setup_dict.get("compute_quality_metrics", False),
+            merge_connected_volumes=mesh_setup_dict.get("merge_connected_volumes", False),
+            refinement_parameters=refinement_parameters,
+            custom_element_setup=custom_element,
+            random_seed=mesh_setup_dict.get("random_seed", 1234),
+        )
 
         return mesh_setup
 
@@ -246,8 +263,35 @@ class ProjectReader:
 
         mesh.process_upwards_adjacencies_from_entities()
         mesh.process_mesh_related_mappings()
+        mesh.mesh_quality_data = self.read_mesh_quality_metrics()
 
         return mesh
+
+    def read_mesh_quality_metrics(self):
+        tmp = read_json(self.project_paths.mesh_quality_data_filepath)
+
+        if tmp is None:
+            return dict()
+
+        mesh_quality_data = dict()
+        for key, value in tmp.items():
+            tmp_dict = dict()
+
+            for metric, data in value.items():
+                if key == "histograms_data":
+                    hist, bin_edges, percentile_5, percentile_95 = data
+                    tmp_dict[metric] = [
+                        np.array(hist),
+                        np.array(bin_edges),
+                        percentile_5,
+                        percentile_95,
+                    ]
+                else:
+                    tmp_dict[metric] = np.array(data)
+
+            mesh_quality_data[key] = tmp_dict
+
+        return mesh_quality_data
 
     def read_model_properties(self, model_properties: Optional[ModelProperties] = None) -> ModelProperties:
         if model_properties is None:
