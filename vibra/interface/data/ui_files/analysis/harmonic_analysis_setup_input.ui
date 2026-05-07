@@ -3,7 +3,7 @@
  <class>Dialog</class>
  <widget class="QDialog" name="Dialog">
   <property name="windowModality">
-   <enum>Qt::NonModal</enum>
+   <enum>Qt::WindowModality::NonModal</enum>
   </property>
   <property name="geometry">
    <rect>
@@ -32,7 +32,7 @@
    </size>
   </property>
   <property name="contextMenuPolicy">
-   <enum>Qt::DefaultContextMenu</enum>
+   <enum>Qt::ContextMenuPolicy::DefaultContextMenu</enum>
   </property>
   <property name="windowTitle">
    <string>Harmonic analysis setup</string>
@@ -71,10 +71,10 @@
       </size>
      </property>
      <property name="frameShape">
-      <enum>QFrame::Box</enum>
+      <enum>QFrame::Shape::Box</enum>
      </property>
      <property name="frameShadow">
-      <enum>QFrame::Raised</enum>
+      <enum>QFrame::Shadow::Raised</enum>
      </property>
      <property name="lineWidth">
       <number>1</number>
@@ -101,7 +101,6 @@
          <font>
           <family>MS Shell Dlg 2</family>
           <pointsize>11</pointsize>
-          <weight>50</weight>
           <italic>false</italic>
           <bold>false</bold>
          </font>
@@ -110,10 +109,10 @@
          <string>Harmonic analysis setup</string>
         </property>
         <property name="textFormat">
-         <enum>Qt::AutoText</enum>
+         <enum>Qt::TextFormat::AutoText</enum>
         </property>
         <property name="alignment">
-         <set>Qt::AlignCenter</set>
+         <set>Qt::AlignmentFlag::AlignCenter</set>
         </property>
        </widget>
       </item>
@@ -129,10 +128,10 @@
       </size>
      </property>
      <property name="frameShape">
-      <enum>QFrame::Box</enum>
+      <enum>QFrame::Shape::Box</enum>
      </property>
      <property name="frameShadow">
-      <enum>QFrame::Raised</enum>
+      <enum>QFrame::Shadow::Raised</enum>
      </property>
      <layout class="QGridLayout" name="gridLayout_9">
       <property name="leftMargin">
@@ -168,10 +167,10 @@
          </size>
         </property>
         <property name="frameShape">
-         <enum>QFrame::NoFrame</enum>
+         <enum>QFrame::Shape::NoFrame</enum>
         </property>
         <property name="frameShadow">
-         <enum>QFrame::Raised</enum>
+         <enum>QFrame::Shadow::Raised</enum>
         </property>
         <layout class="QGridLayout" name="gridLayout_7">
          <property name="leftMargin">
@@ -244,7 +243,6 @@
             <font>
              <family>MS Shell Dlg 2</family>
              <pointsize>10</pointsize>
-             <weight>50</weight>
              <bold>false</bold>
             </font>
            </property>
@@ -252,7 +250,7 @@
             <string>Method:</string>
            </property>
            <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
            </property>
           </widget>
          </item>
@@ -274,7 +272,6 @@
             <font>
              <family>MS Shell Dlg 2</family>
              <pointsize>10</pointsize>
-             <weight>50</weight>
              <italic>false</italic>
              <bold>false</bold>
             </font>
@@ -283,7 +280,7 @@
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select the analysis method&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="insertPolicy">
-            <enum>QComboBox::NoInsert</enum>
+            <enum>QComboBox::InsertPolicy::NoInsert</enum>
            </property>
            <item>
             <property name="text">
@@ -315,7 +312,6 @@
             <font>
              <family>MS Shell Dlg 2</family>
              <pointsize>10</pointsize>
-             <weight>50</weight>
              <italic>false</italic>
              <bold>false</bold>
             </font>
@@ -324,7 +320,7 @@
             <string>Modes to expand:</string>
            </property>
            <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
            </property>
           </widget>
          </item>
@@ -346,7 +342,6 @@
             <font>
              <family>MS Shell Dlg 2</family>
              <pointsize>10</pointsize>
-             <weight>50</weight>
              <bold>false</bold>
             </font>
            </property>
@@ -354,7 +349,7 @@
             <string>Frequency spacing:</string>
            </property>
            <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+            <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
            </property>
           </widget>
          </item>
@@ -376,7 +371,6 @@
             <font>
              <family>MS Shell Dlg 2</family>
              <pointsize>10</pointsize>
-             <weight>50</weight>
              <italic>false</italic>
              <bold>false</bold>
             </font>
@@ -385,7 +379,7 @@
             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Define the frequency spacing type&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="insertPolicy">
-            <enum>QComboBox::NoInsert</enum>
+            <enum>QComboBox::InsertPolicy::NoInsert</enum>
            </property>
            <item>
             <property name="text">
@@ -417,7 +411,6 @@
             <font>
              <family>MS Shell Dlg 2</family>
              <pointsize>10</pointsize>
-             <weight>50</weight>
              <italic>false</italic>
              <bold>false</bold>
             </font>
@@ -426,14 +419,14 @@
             <string notr="true"/>
            </property>
            <property name="alignment">
-            <set>Qt::AlignCenter</set>
+            <set>Qt::AlignmentFlag::AlignCenter</set>
            </property>
           </widget>
          </item>
          <item row="1" column="4">
           <spacer name="horizontalSpacer_8">
            <property name="orientation">
-            <enum>Qt::Horizontal</enum>
+            <enum>Qt::Orientation::Horizontal</enum>
            </property>
            <property name="sizeHint" stdset="0">
             <size>
@@ -446,7 +439,7 @@
          <item row="1" column="0">
           <spacer name="horizontalSpacer_7">
            <property name="orientation">
-            <enum>Qt::Horizontal</enum>
+            <enum>Qt::Orientation::Horizontal</enum>
            </property>
            <property name="sizeHint" stdset="0">
             <size>
@@ -477,7 +470,6 @@
          <font>
           <family>MS Shell Dlg 2</family>
           <pointsize>10</pointsize>
-          <weight>50</weight>
           <italic>false</italic>
           <bold>false</bold>
          </font>
@@ -517,10 +509,10 @@
              </size>
             </property>
             <property name="frameShape">
-             <enum>QFrame::NoFrame</enum>
+             <enum>QFrame::Shape::NoFrame</enum>
             </property>
             <property name="frameShadow">
-             <enum>QFrame::Raised</enum>
+             <enum>QFrame::Shadow::Raised</enum>
             </property>
             <layout class="QGridLayout" name="gridLayout_10">
              <property name="leftMargin">
@@ -553,7 +545,6 @@
                 <font>
                  <family>MS Shell Dlg 2</family>
                  <pointsize>10</pointsize>
-                 <weight>50</weight>
                  <italic>false</italic>
                  <bold>false</bold>
                 </font>
@@ -585,10 +576,10 @@
           <item row="0" column="0" colspan="2">
            <widget class="QFrame" name="frame_equally_distributed">
             <property name="frameShape">
-             <enum>QFrame::NoFrame</enum>
+             <enum>QFrame::Shape::NoFrame</enum>
             </property>
             <property name="frameShadow">
-             <enum>QFrame::Raised</enum>
+             <enum>QFrame::Shadow::Raised</enum>
             </property>
             <layout class="QGridLayout" name="gridLayout_8">
              <property name="leftMargin">
@@ -619,8 +610,10 @@
                </property>
                <property name="font">
                 <font>
+                 <family>MS Shell Dlg 2</family>
                  <pointsize>10</pointsize>
                  <italic>false</italic>
+                 <bold>false</bold>
                  <kerning>false</kerning>
                 </font>
                </property>
@@ -628,7 +621,7 @@
                 <string>Freq. min:</string>
                </property>
                <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                </property>
               </widget>
              </item>
@@ -650,7 +643,6 @@
                 <font>
                  <family>MS Shell Dlg 2</family>
                  <pointsize>10</pointsize>
-                 <weight>50</weight>
                  <italic>false</italic>
                  <bold>false</bold>
                 </font>
@@ -659,7 +651,7 @@
                 <string notr="true"/>
                </property>
                <property name="alignment">
-                <set>Qt::AlignCenter</set>
+                <set>Qt::AlignmentFlag::AlignCenter</set>
                </property>
               </widget>
              </item>
@@ -679,15 +671,17 @@
                </property>
                <property name="font">
                 <font>
+                 <family>MS Shell Dlg 2</family>
                  <pointsize>10</pointsize>
                  <italic>false</italic>
+                 <bold>false</bold>
                 </font>
                </property>
                <property name="text">
                 <string>[Hz]</string>
                </property>
                <property name="alignment">
-                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
                </property>
               </widget>
              </item>
@@ -709,7 +703,6 @@
                 <font>
                  <family>MS Shell Dlg 2</family>
                  <pointsize>10</pointsize>
-                 <weight>50</weight>
                  <italic>false</italic>
                  <bold>false</bold>
                 </font>
@@ -718,7 +711,7 @@
                 <string notr="true"/>
                </property>
                <property name="alignment">
-                <set>Qt::AlignCenter</set>
+                <set>Qt::AlignmentFlag::AlignCenter</set>
                </property>
               </widget>
              </item>
@@ -767,15 +760,17 @@
                </property>
                <property name="font">
                 <font>
+                 <family>MS Shell Dlg 2</family>
                  <pointsize>10</pointsize>
                  <italic>false</italic>
+                 <bold>false</bold>
                 </font>
                </property>
                <property name="text">
                 <string>[Hz]</string>
                </property>
                <property name="alignment">
-                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
                </property>
               </widget>
              </item>
@@ -795,15 +790,17 @@
                </property>
                <property name="font">
                 <font>
+                 <family>MS Shell Dlg 2</family>
                  <pointsize>10</pointsize>
                  <italic>false</italic>
+                 <bold>false</bold>
                 </font>
                </property>
                <property name="text">
                 <string>[Hz]</string>
                </property>
                <property name="alignment">
-                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
                </property>
               </widget>
              </item>
@@ -825,7 +822,6 @@
                 <font>
                  <family>MS Shell Dlg 2</family>
                  <pointsize>10</pointsize>
-                 <weight>50</weight>
                  <italic>false</italic>
                  <bold>false</bold>
                 </font>
@@ -834,7 +830,7 @@
                 <string notr="true"/>
                </property>
                <property name="alignment">
-                <set>Qt::AlignCenter</set>
+                <set>Qt::AlignmentFlag::AlignCenter</set>
                </property>
               </widget>
              </item>
@@ -854,8 +850,10 @@
                </property>
                <property name="font">
                 <font>
+                 <family>MS Shell Dlg 2</family>
                  <pointsize>10</pointsize>
                  <italic>false</italic>
+                 <bold>false</bold>
                  <kerning>false</kerning>
                 </font>
                </property>
@@ -863,7 +861,7 @@
                 <string>Freq. max:</string>
                </property>
                <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                </property>
               </widget>
              </item>
@@ -883,8 +881,10 @@
                </property>
                <property name="font">
                 <font>
+                 <family>MS Shell Dlg 2</family>
                  <pointsize>10</pointsize>
                  <italic>false</italic>
+                 <bold>false</bold>
                  <kerning>false</kerning>
                 </font>
                </property>
@@ -892,14 +892,14 @@
                 <string>Freq. step:</string>
                </property>
                <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                </property>
               </widget>
              </item>
              <item row="0" column="0">
               <spacer name="horizontalSpacer_3">
                <property name="orientation">
-                <enum>Qt::Horizontal</enum>
+                <enum>Qt::Orientation::Horizontal</enum>
                </property>
                <property name="sizeHint" stdset="0">
                 <size>
@@ -912,7 +912,7 @@
              <item row="0" column="5">
               <spacer name="horizontalSpacer_4">
                <property name="orientation">
-                <enum>Qt::Horizontal</enum>
+                <enum>Qt::Orientation::Horizontal</enum>
                </property>
                <property name="sizeHint" stdset="0">
                 <size>
@@ -938,8 +938,10 @@
                </property>
                <property name="font">
                 <font>
+                 <family>MS Shell Dlg 2</family>
                  <pointsize>10</pointsize>
                  <italic>false</italic>
+                 <bold>false</bold>
                  <kerning>false</kerning>
                 </font>
                </property>
@@ -947,7 +949,7 @@
                 <string>Freq. step:</string>
                </property>
                <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                </property>
               </widget>
              </item>
@@ -967,15 +969,17 @@
                </property>
                <property name="font">
                 <font>
+                 <family>MS Shell Dlg 2</family>
                  <pointsize>10</pointsize>
                  <italic>false</italic>
+                 <bold>false</bold>
                 </font>
                </property>
                <property name="text">
                 <string>[Hz]</string>
                </property>
                <property name="alignment">
-                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
                </property>
               </widget>
              </item>
@@ -1020,10 +1024,10 @@
           <item row="0" column="0">
            <widget class="QFrame" name="frame_dampings">
             <property name="frameShape">
-             <enum>QFrame::NoFrame</enum>
+             <enum>QFrame::Shape::NoFrame</enum>
             </property>
             <property name="frameShadow">
-             <enum>QFrame::Raised</enum>
+             <enum>QFrame::Shadow::Raised</enum>
             </property>
             <layout class="QGridLayout" name="gridLayout_6">
              <property name="leftMargin">
@@ -1056,7 +1060,6 @@
                 <font>
                  <family>MS Shell Dlg 2</family>
                  <pointsize>10</pointsize>
-                 <weight>50</weight>
                  <italic>false</italic>
                  <bold>false</bold>
                 </font>
@@ -1065,7 +1068,7 @@
                 <string>[--]</string>
                </property>
                <property name="alignment">
-                <set>Qt::AlignCenter</set>
+                <set>Qt::AlignmentFlag::AlignCenter</set>
                </property>
               </widget>
              </item>
@@ -1085,8 +1088,8 @@
                </property>
                <property name="font">
                 <font>
+                 <family>MS Shell Dlg 2</family>
                  <pointsize>10</pointsize>
-                 <weight>50</weight>
                  <italic>false</italic>
                  <bold>false</bold>
                 </font>
@@ -1095,7 +1098,7 @@
                 <string notr="true"/>
                </property>
                <property name="alignment">
-                <set>Qt::AlignCenter</set>
+                <set>Qt::AlignmentFlag::AlignCenter</set>
                </property>
               </widget>
              </item>
@@ -1109,8 +1112,8 @@
                </property>
                <property name="font">
                 <font>
+                 <family>MS Shell Dlg 2</family>
                  <pointsize>10</pointsize>
-                 <weight>50</weight>
                  <italic>false</italic>
                  <bold>false</bold>
                 </font>
@@ -1119,7 +1122,7 @@
                 <string>Constant structural damping coefficient</string>
                </property>
                <property name="alignment">
-                <set>Qt::AlignCenter</set>
+                <set>Qt::AlignmentFlag::AlignCenter</set>
                </property>
                <property name="wordWrap">
                 <bool>true</bool>
@@ -1129,7 +1132,7 @@
              <item row="0" column="5">
               <spacer name="horizontalSpacer">
                <property name="orientation">
-                <enum>Qt::Horizontal</enum>
+                <enum>Qt::Orientation::Horizontal</enum>
                </property>
                <property name="sizeHint" stdset="0">
                 <size>
@@ -1155,8 +1158,8 @@
                </property>
                <property name="font">
                 <font>
+                 <family>MS Shell Dlg 2</family>
                  <pointsize>10</pointsize>
-                 <weight>50</weight>
                  <italic>false</italic>
                  <bold>false</bold>
                 </font>
@@ -1165,7 +1168,7 @@
                 <string notr="true"/>
                </property>
                <property name="alignment">
-                <set>Qt::AlignCenter</set>
+                <set>Qt::AlignmentFlag::AlignCenter</set>
                </property>
               </widget>
              </item>
@@ -1179,8 +1182,8 @@
                </property>
                <property name="font">
                 <font>
+                 <family>MS Shell Dlg 2</family>
                  <pointsize>10</pointsize>
-                 <weight>50</weight>
                  <italic>false</italic>
                  <bold>false</bold>
                 </font>
@@ -1189,7 +1192,7 @@
                 <string>Stiffness matrix multiplier</string>
                </property>
                <property name="alignment">
-                <set>Qt::AlignCenter</set>
+                <set>Qt::AlignmentFlag::AlignCenter</set>
                </property>
                <property name="wordWrap">
                 <bool>true</bool>
@@ -1214,7 +1217,6 @@
                 <font>
                  <family>Arial</family>
                  <pointsize>11</pointsize>
-                 <weight>50</weight>
                  <italic>false</italic>
                  <bold>false</bold>
                 </font>
@@ -1223,7 +1225,7 @@
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;β:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                </property>
               </widget>
              </item>
@@ -1245,7 +1247,6 @@
                 <font>
                  <family>MS Shell Dlg 2</family>
                  <pointsize>10</pointsize>
-                 <weight>50</weight>
                  <italic>false</italic>
                  <bold>false</bold>
                 </font>
@@ -1254,7 +1255,7 @@
                 <string>[s]</string>
                </property>
                <property name="alignment">
-                <set>Qt::AlignCenter</set>
+                <set>Qt::AlignmentFlag::AlignCenter</set>
                </property>
               </widget>
              </item>
@@ -1274,8 +1275,8 @@
                </property>
                <property name="font">
                 <font>
+                 <family>MS Shell Dlg 2</family>
                  <pointsize>10</pointsize>
-                 <weight>50</weight>
                  <italic>false</italic>
                  <bold>false</bold>
                 </font>
@@ -1284,7 +1285,7 @@
                 <string notr="true"/>
                </property>
                <property name="alignment">
-                <set>Qt::AlignCenter</set>
+                <set>Qt::AlignmentFlag::AlignCenter</set>
                </property>
               </widget>
              </item>
@@ -1306,7 +1307,6 @@
                 <font>
                  <family>Arial</family>
                  <pointsize>11</pointsize>
-                 <weight>50</weight>
                  <italic>false</italic>
                  <bold>false</bold>
                 </font>
@@ -1315,7 +1315,7 @@
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;α:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                </property>
               </widget>
              </item>
@@ -1329,8 +1329,8 @@
                </property>
                <property name="font">
                 <font>
+                 <family>MS Shell Dlg 2</family>
                  <pointsize>10</pointsize>
-                 <weight>50</weight>
                  <italic>false</italic>
                  <bold>false</bold>
                 </font>
@@ -1339,7 +1339,7 @@
                 <string>Mass matrix multiplier</string>
                </property>
                <property name="alignment">
-                <set>Qt::AlignCenter</set>
+                <set>Qt::AlignmentFlag::AlignCenter</set>
                </property>
                <property name="wordWrap">
                 <bool>true</bool>
@@ -1364,7 +1364,6 @@
                 <font>
                  <family>MS Shell Dlg 2</family>
                  <pointsize>10</pointsize>
-                 <weight>50</weight>
                  <italic>false</italic>
                  <bold>false</bold>
                 </font>
@@ -1373,7 +1372,7 @@
                 <string>[1/s]</string>
                </property>
                <property name="alignment">
-                <set>Qt::AlignCenter</set>
+                <set>Qt::AlignmentFlag::AlignCenter</set>
                </property>
               </widget>
              </item>
@@ -1395,7 +1394,6 @@
                 <font>
                  <family>Arial</family>
                  <pointsize>11</pointsize>
-                 <weight>50</weight>
                  <italic>false</italic>
                  <bold>false</bold>
                 </font>
@@ -1404,14 +1402,14 @@
                 <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;right&quot;&gt;η:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                </property>
                <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                </property>
               </widget>
              </item>
              <item row="0" column="0">
               <spacer name="horizontalSpacer_2">
                <property name="orientation">
-                <enum>Qt::Horizontal</enum>
+                <enum>Qt::Orientation::Horizontal</enum>
                </property>
                <property name="sizeHint" stdset="0">
                 <size>
@@ -1458,10 +1456,10 @@
       </size>
      </property>
      <property name="frameShape">
-      <enum>QFrame::NoFrame</enum>
+      <enum>QFrame::Shape::NoFrame</enum>
      </property>
      <property name="frameShadow">
-      <enum>QFrame::Raised</enum>
+      <enum>QFrame::Shadow::Raised</enum>
      </property>
      <layout class="QGridLayout" name="gridLayout_3">
       <property name="leftMargin">
@@ -1500,7 +1498,6 @@
          <font>
           <family>MS Shell Dlg 2</family>
           <pointsize>10</pointsize>
-          <weight>50</weight>
           <italic>false</italic>
           <bold>false</bold>
          </font>
@@ -1544,7 +1541,6 @@
          <font>
           <family>MS Shell Dlg 2</family>
           <pointsize>10</pointsize>
-          <weight>50</weight>
           <italic>false</italic>
           <bold>false</bold>
          </font>
@@ -1588,7 +1584,6 @@
          <font>
           <family>MS Shell Dlg 2</family>
           <pointsize>10</pointsize>
-          <weight>50</weight>
           <italic>false</italic>
           <bold>false</bold>
          </font>
@@ -1617,7 +1612,7 @@
       <item row="0" column="1">
        <spacer name="horizontalSpacer_5">
         <property name="orientation">
-         <enum>Qt::Horizontal</enum>
+         <enum>Qt::Orientation::Horizontal</enum>
         </property>
         <property name="sizeHint" stdset="0">
          <size>
@@ -1633,9 +1628,23 @@
   </layout>
  </widget>
  <tabstops>
+  <tabstop>comboBox_method</tabstop>
+  <tabstop>comboBox_frequency_spacing</tabstop>
+  <tabstop>pushButton_show_solution_steps_table</tabstop>
+  <tabstop>lineEdit_modes_to_expand</tabstop>
   <tabstop>tabWidget_main</tabstop>
+  <tabstop>lineEdit_fmin</tabstop>
+  <tabstop>lineEdit_fmax</tabstop>
+  <tabstop>lineEdit_fstep</tabstop>
+  <tabstop>comboBox_fstep</tabstop>
+  <tabstop>pushButton_solution_steps_configurator</tabstop>
+  <tabstop>pushButton_reset_frequency_settings</tabstop>
+  <tabstop>lineEdit_mass_multiplier</tabstop>
+  <tabstop>lineEdit_stiffness_multiplier</tabstop>
+  <tabstop>lineEdit_constant_structural_coefficient</tabstop>
   <tabstop>pushButton_enter_setup</tabstop>
   <tabstop>pushButton_run_analysis</tabstop>
+  <tabstop>pushButton_exit</tabstop>
  </tabstops>
  <resources>
   <include location="../../icons/resources.qrc"/>
