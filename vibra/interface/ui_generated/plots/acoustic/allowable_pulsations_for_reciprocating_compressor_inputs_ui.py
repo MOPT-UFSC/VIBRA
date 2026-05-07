@@ -581,10 +581,10 @@ class Ui_Form(object):
 
         self.gridLayout_16.addItem(self.horizontalSpacer_17, 0, 0, 1, 1)
 
-        self.checkBox_pre_study_analysis = QCheckBox(self.frame_14)
-        self.checkBox_pre_study_analysis.setObjectName(u"checkBox_pre_study_analysis")
+        self.checkBox_prestudy_analysis = QCheckBox(self.frame_14)
+        self.checkBox_prestudy_analysis.setObjectName(u"checkBox_prestudy_analysis")
 
-        self.gridLayout_16.addWidget(self.checkBox_pre_study_analysis, 0, 1, 1, 1)
+        self.gridLayout_16.addWidget(self.checkBox_prestudy_analysis, 0, 1, 1, 1)
 
 
         self.gridLayout_10.addWidget(self.frame_14, 7, 0, 1, 1)
@@ -650,7 +650,7 @@ class Ui_Form(object):
         self.label_4.setText(QCoreApplication.translate("Form", u"[mm]", None))
         self.label_33.setText(QCoreApplication.translate("Form", u"<html><head/><body><p align=\"right\">Inside diameter D<span style=\" vertical-align:sub;\">in</span>:</p></body></html>", None))
         self.label_12.setText(QCoreApplication.translate("Form", u"<html><head/><body><p>P<span style=\" vertical-align:sub;\">1</span> = (400 * C<span style=\" vertical-align:sub;\">0</span><span style=\" vertical-align:super;\">\u00bd</span>) / (350 * P<span style=\" vertical-align:sub;\">L </span>* D<span style=\" vertical-align:sub;\">in</span> * F<span style=\" vertical-align:sub;\">n</span>)<span style=\" vertical-align:super;\">\u00bd</span></p></body></html>", None))
-        self.checkBox_pre_study_analysis.setText(QCoreApplication.translate("Form", u"Prestudy analysis", None))
+        self.checkBox_prestudy_analysis.setText(QCoreApplication.translate("Form", u"Prestudy analysis", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_filtered_criteria), QCoreApplication.translate("Form", u"At and beyond line-side of PSD", None))
     # retranslateUi
 
@@ -725,7 +725,7 @@ class AllowablePulsationsForReciprocatingCompressorInputs_UI(QWidget, Ui_Form):
                                                         - label_12: QLabel
                                             - frame_14: QFrame
                                                 - (Layout): QGridLayout
-                                                        - checkBox_pre_study_analysis: QCheckBox
+                                                        - checkBox_prestudy_analysis: QCheckBox
     """
 
     def __init__(self, *args, **kwargs):

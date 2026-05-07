@@ -1572,7 +1572,7 @@
               </spacer>
              </item>
              <item row="0" column="1">
-              <widget class="QCheckBox" name="checkBox_pre_study_analysis">
+              <widget class="QCheckBox" name="checkBox_prestudy_analysis">
                <property name="text">
                 <string>Prestudy analysis</string>
                </property>

@@ -312,17 +312,17 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
                 if C_0 is None:
                     return True
 
-                key = ("pressure_ratio", (selected_id))
+                key = ("acoustic_pressure", (selected_id))
                 legend_label = f"Acoustic pressure at {selection_type} [{selected_id}]"
 
-                acoustic_pressure = self.get_response(index, selected_id)
+                acoustic_pressure_pp = 2 * self.get_response(index, selected_id)
 
                 # express the absolute pressure in bar units and in peak-to-peak scale
-                pulsation_pp = 100 * (2 * acoustic_pressure / 1e5) / P_L
+                pulsation_pp = acoustic_pressure_pp / 1e5
 
                 self.model_results[key] = {
                     "x_data": self.frequencies,
-                    "y_data": pulsation_pp * (P_L / 100),
+                    "y_data": pulsation_pp,
                     "x_label": "Frequency [Hz]",
                     "y_label": "Pressure ratio",
                     "title": title,
@@ -341,7 +341,7 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
             # allowable peak-to-peak pulsation levels in bar(a) as percentage of the average mean line pressure
             pulsation_criterion = 400 * ((C_0 / (350 * P_L * inside_diameter * freq))**(1/2))
 
-            factor = 0.7 if self.checkBox_pre_study_analysis.isChecked() else 1.0
+            factor = 0.7 if self.checkBox_prestudy_analysis.isChecked() else 1.0
 
             key = ("filtered_criterion", (None))
             legend_label = "Pulsation criteria"
