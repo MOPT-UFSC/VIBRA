@@ -226,12 +226,13 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         if not isinstance(row, int):
             return
 
-        if self.tableWidget_refining_mesh_data.item(row, 0).text() != "":
-            element_size = float(self.tableWidget_refining_mesh_data.item(row, 0).text())
-            self.doubleSpinBox_refined_element_size.setValue(element_size)
-
+        str_element_size = self.tableWidget_refining_mesh_data.item(row, 0).text()
         selection_type = self.tableWidget_refining_mesh_data.item(row, 1).text()
         str_selected_ids = self.tableWidget_refining_mesh_data.item(row, 2).text()
+
+        if str_element_size != "":
+            element_size = float(str_element_size)
+            self.doubleSpinBox_refined_element_size.setValue(element_size)
 
         selected_ids = [int(_id) for _id in str_selected_ids.split(",")]
         if not selected_ids:
