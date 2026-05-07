@@ -271,7 +271,7 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
         self.model_results.clear()
 
         index = self.comboBox_selector_filter.currentIndex()
-        selection_type = self.selection_types.get(index)
+        selection_type = self.selection_types[index]
 
         if self.tabWidget_main.currentIndex() == PulsationCriteria.UNFILTERED:
             title = "Maximum Allowable Pressure Pulsation at Compressor \nCylinder Flanges"  
