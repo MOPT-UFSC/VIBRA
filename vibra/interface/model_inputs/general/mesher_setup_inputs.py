@@ -221,17 +221,26 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         mesh_quality_tab = self.tabWidget_main.currentIndex() == 2
         self.pushButton_generate_mesh.setDisabled(mesh_quality_tab)
 
-    def mesh_refinement_item_clicked_callback(self, item):
+    def mesh_refinement_item_clicked_callback(self, item: QTableWidgetItem):
         row = item.row()
+        if not isinstance(row, int):
+            return
+
+        if self.tableWidget_refining_mesh_data.item(row, 0).text() != "":
+            element_size = float(self.tableWidget_refining_mesh_data.item(row, 0).text())
+            self.doubleSpinBox_refined_element_size.setValue(element_size)
+
         selection_type = self.tableWidget_refining_mesh_data.item(row, 1).text()
         str_selected_ids = self.tableWidget_refining_mesh_data.item(row, 2).text()
-        selected_ids = [int(_id) for _id in str_selected_ids.split(",")]
 
-        if selected_ids:
-            if selection_type == "volumes":
-                app().main_window.selection.set_geometry_selection(volumes=selected_ids)
-            else:
-                app().main_window.selection.set_geometry_selection(surfaces=selected_ids)
+        selected_ids = [int(_id) for _id in str_selected_ids.split(",")]
+        if not selected_ids:
+            return
+
+        if selection_type == "volumes":
+            app().main_window.selection.set_geometry_selection(volumes=selected_ids)
+        else:
+            app().main_window.selection.set_geometry_selection(surfaces=selected_ids)
 
     def get_selected_ids(self):
         selected_ids = list()
