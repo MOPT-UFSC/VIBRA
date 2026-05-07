@@ -1,12 +1,11 @@
 from PySide6.QtWidgets import QFileDialog, QPushButton
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor
 
 from vibra import app
 from vibra.interface.ui_generated.data_handler.export_mesh_ui import ExportMesh_UI
-from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
+from vibra.interface.common.common_interface import mesher_interface_callback
 
 import os
 from pathlib import Path
@@ -18,9 +17,8 @@ class ExportMeshData(ExportMesh_UI):
 
         app().main_window.set_input_widget(self)
         
-        self.project = app().project
-        self.model = self.project.model
-        self.mesh = self.project.model.mesh
+        self.model = app().project.model
+        self.mesh = app().project.model.mesh
         self.properties = self.model.properties
 
         if self.mesh is None:
@@ -55,7 +53,7 @@ class ExportMeshData(ExportMesh_UI):
         app().main_window.theme_changed.connect(self.update_icons_color)
 
     def search_folder(self):
-        self.folder_path = QFileDialog.getExistingDirectory(None, 'Choose a folder to export the mesh data', self.temp_path)
+        self.folder_path = QFileDialog.getExistingDirectory(None, 'Choose a folder to export the mesh data', str(self.temp_path))
         self.lineEdit_folder_path.setText(str(self.folder_path))
         if self.folder_path == "":
             return True
@@ -65,7 +63,7 @@ class ExportMeshData(ExportMesh_UI):
 
     def export_mesh_data(self):
 
-        if self.generate_mesh():
+        if mesher_interface_callback(self, close_after_generate=True):
             return
 
         if not os.path.exists(self.folder_path):
@@ -96,13 +94,6 @@ class ExportMeshData(ExportMesh_UI):
             PrintMessageInput([window_title, title, message], auto_close=True)
         else:
             return
-
-    def generate_mesh(self):
-        if not app().project.model.generated_mesh:
-            self.mesher = MesherSetupInputs(close_after_generate=True)
-            if not self.mesher.complete:
-                self.mesher = None
-                return True
             
     def check_data_to_export(self):
         if self.checkBox_nodal_coordinates.isChecked():

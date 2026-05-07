@@ -3,7 +3,7 @@ from PySide6.QtGui import QCloseEvent
 from PySide6.QtCore import Qt
 
 from vibra import app
-from vibra.interface.ui_generated.model.setup.fluid.load_fluid_composition_ui import LoadFluidComposition_UI
+from vibra.interface.ui_generated.model.fluid.load_fluid_composition_ui import LoadFluidComposition_UI
 from vibra.interface.general.print_message_input import PrintMessageInput
 
 import os
@@ -58,14 +58,16 @@ class LoadFluidCompositionInputs(LoadFluidComposition_UI):
 
         last_geometry_file = app().config.get_last_folder_for("fluid_composition_folder")
         if last_geometry_file is None:
-            inital_path = self.desktop_path
+            initial_path = self.desktop_path
         else:
-            inital_path = last_geometry_file
+            initial_path = last_geometry_file
 
-        file_path, check = QFileDialog.getOpenFileName( None,
-                                                        'Open file',
-                                                        inital_path,
-                                                        'Files (*.xlsx *.xls)')
+        file_path, check = QFileDialog.getOpenFileName(
+            None,
+            "Open file",
+            str(initial_path),
+            "Files (*.xlsx *.xls)",
+        )
 
         if not check:
             return True
@@ -85,7 +87,7 @@ class LoadFluidCompositionInputs(LoadFluidComposition_UI):
         self.imported_data = dict()
         self.comboBox_sheet_names.clear()
 
-        from pandas import read_excel
+        from polars import read_excel
         from openpyxl import load_workbook
 
         wb = load_workbook(self.file_path)
@@ -96,8 +98,7 @@ class LoadFluidCompositionInputs(LoadFluidComposition_UI):
                 sheet_data = read_excel(
                                         self.file_path, 
                                         sheet_name = sheetname, 
-                                        header = 0, 
-                                        usecols = [0,1,2,3]
+                                        columns = [0,1,2,3]
                                         ).to_numpy()
                 
                 self.imported_data[sheetname] = sheet_data

@@ -12,7 +12,8 @@ from traceback import format_tb
 class ExceptionMessage(ExceptionMessage_UI):
     def __init__(self, exception: Exception, stack_trace = None):
         super().__init__()
-        self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, True)
+
+        self._config_window()
 
         if isinstance(exception, Warning):
             self.setWindowIcon(get_warning_icon())
@@ -20,7 +21,6 @@ class ExceptionMessage(ExceptionMessage_UI):
         else:
             self.setWindowIcon(get_error_icon(QColor(255, 0, 0, 200)))
             self.setWindowTitle("Error")
-
 
         if stack_trace is None:
             self.stack_trace_text_browser.hide()
@@ -40,3 +40,8 @@ class ExceptionMessage(ExceptionMessage_UI):
         self.error_message.setText(message)
         
         self.ok_button.clicked.connect(self.close)
+        self.adjustSize()
+
+    def _config_window(self):
+        self.setWindowFlags(Qt.WindowStaysOnTopHint)
+        self.setWindowModality(Qt.WindowModal)

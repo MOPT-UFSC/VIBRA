@@ -6,8 +6,8 @@ if TYPE_CHECKING:
 
 from pathlib import Path
 
-from PySide6.QtWidgets import QApplication
 from molde import Color
+from PySide6.QtWidgets import QApplication
 
 __version__ = "0.4.0"
 __release_date__ = "October 27th 2025"
@@ -18,7 +18,7 @@ APP_ID = f"mopt.vibra.{VERSION}"
 VIBRA_DIR = Path(__file__).parent
 PROJECT_DIR = Path(__file__).parents[1]
 
-DEVELOPER_MODE = False
+DEVELOPER_MODE = True
 
 ICON_DIR = VIBRA_DIR / "interface/data/icons/"
 TEXTURE_DIR = VIBRA_DIR / "interface/data/textures/"
@@ -31,20 +31,15 @@ TEMP_PROJECT_DIR = USER_PATH / "temp_vibra"
 
 SUPPORTED_GEOMETRY_EXTENSIONS = [
     "iges",
-    "IGES",
     "igs",
-    "IGS",
     "step",
-    "STEP",
     "stp",
-    "STP",
 ]
 
 SUPPORTED_MESH_EXTENSIONS = [
+    "msh",
     "bdf",
-    "BDF",
     "nas",
-    "NAS",
 ]
 
 SUPPORTED_OUTPUT_DATA_EXTENSIONS = [

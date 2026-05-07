@@ -1,7 +1,6 @@
 import logging
 
 from molde import Color
-from molde.interactor_styles import BoxSelectionInteractorStyle
 from molde.render_widgets import CommonRenderWidget
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
@@ -19,6 +18,7 @@ from ..actors.symbols_actor_acoustic import SymbolsActorAcoustic
 from ..actors.symbols_actor_acoustic_fixed_size import SymbolsActorAcousticFixedSize
 from ..actors.symbols_actor_structural import SymbolsActorStructural
 from ..selection.geometry_selection import GeometrySelection
+from ..render_tools.selection_tool import SelectionTool
 from .model_info_text import (
     acoustic_boundary_conditions_info_text,
     faces_info_text,
@@ -39,14 +39,13 @@ from .model_info_text import (
 class GeometryRenderWidget(CommonRenderWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.set_interactor_style(BoxSelectionInteractorStyle())
 
         self.geometry_selection = GeometrySelection(self)
         self.mouse_click = (0, 0)
 
         self.left_clicked.connect(self.click_callback)
         self.left_released.connect(self.selection_callback)
-        app().main_window.selection_changed.connect(self.update_selection)
+        app().main_window.selection.selection_changed.connect(self.update_selection)
         app().main_window.section_plane.value_changed.connect(self.update_section_plane)
         app().main_window.theme_changed.connect(self.update_theme)
         app().main_window.visualization_changed.connect(self.visualization_changed_callback)
@@ -54,6 +53,8 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.selection_faces_color = app().config.user_preferences.selection_faces_color
         self.selection_nodes_points_color = app().config.user_preferences.selection_nodes_points_color
         self.selection_lines_color = app().config.user_preferences.selection_lines_color
+
+        self.set_default_render_tool()
 
         # The fast area selection just works if it is on
         self.renderer.GetActiveCamera().ParallelProjectionOn()
@@ -184,11 +185,11 @@ class GeometryRenderWidget(CommonRenderWidget):
         logging.info("Updating the geometry render... [95/100]")
         self.update()
 
-        if app().project.thumbnail is None:
+        if app().project.model.thumbnail is None:
             self.save_thumbnail()
 
     def save_thumbnail(self):
-        thumbnail = app().project.thumbnail
+        thumbnail = app().project.model.thumbnail
 
         self.render_interactor.GetRenderWindow().OffScreenRenderingOn()
 
@@ -199,7 +200,8 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         self.disable_scale_bar()
         thumbnail = self.get_thumbnail()
-        app().project.thumbnail = removes_image_background(thumbnail)
+        thumbnail = removes_image_background(thumbnail)
+        app().project.set_thumbnail(thumbnail)
 
         if app().config.user_preferences.show_reference_scale_bar:
             self.enable_scale_bar()
@@ -217,7 +219,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         try:
             physical_domain = app().main_window.analysis_toolbar.combo_box_physical_domain.currentText()
         except Exception:
-            _, physical_domain = app().project.get_analysis_type_and_physical_domain()
+            physical_domain = app().project.get_physical_domain()
 
         self.symbols_actor_structural.SetVisibility(visualization.symbols and (physical_domain == "Structural"))
         self.symbols_actor_acoustic.SetVisibility(visualization.symbols and (physical_domain == "Acoustic"))
@@ -288,6 +290,12 @@ class GeometryRenderWidget(CommonRenderWidget):
     def selection_callback(self, x, y):
         if not self.actors_exists():
             return
+    
+        if not isinstance(self.interactor_style, SelectionTool):
+            return
+        
+        if not self.interactor_style.is_selecting:
+            return
 
         section_plane_widget = app().main_window.section_plane
         if section_plane_widget.cutting:
@@ -323,10 +331,10 @@ class GeometryRenderWidget(CommonRenderWidget):
         shift_pressed = modifiers & Qt.ShiftModifier
         alt_pressed = modifiers & Qt.AltModifier
 
-        if not (shift_pressed or app().main_window.volume_selection_mode):
+        if not (shift_pressed or app().main_window.selection.volume_selection_mode):
             picked_volumes.clear()
 
-        app().main_window.set_geometry_selection(
+        app().main_window.selection.set_geometry_selection(
             points=picked_points,
             lines=picked_lines,
             surfaces=picked_surfaces,
@@ -340,14 +348,14 @@ class GeometryRenderWidget(CommonRenderWidget):
     def update_selection(self):
         if not self.actors_exists():
             return
-
+        
         self.points_actor.clear_colors()
         self.lines_actor.clear_colors()
         self.multimaterial.clear_colors()
 
-        points = app().main_window.selected_geometry_points
-        lines = app().main_window.selected_geometry_lines
-        surfaces = app().main_window.selected_geometry_surfaces
+        points = app().main_window.selection.geometry_points
+        lines = app().main_window.selection.geometry_lines
+        surfaces = app().main_window.selection.geometry_surfaces
 
         self.points_actor.paint_points(self.selection_nodes_points_color, points)
         self.lines_actor.paint_lines(self.selection_lines_color, lines)
@@ -445,7 +453,8 @@ class GeometryRenderWidget(CommonRenderWidget):
             analysis_type = analysis_toolbar.combo_box_analysis_type.currentText()
             physical_domain = analysis_toolbar.combo_box_physical_domain.currentText()
         except Exception:
-            analysis_type, physical_domain = app().project.get_analysis_type_and_physical_domain()
+            analysis_type = app().project.get_analysis_type()
+            physical_domain = app().project.get_physical_domain()
 
         analysis_type = analysis_type.lower()
         physical_domain = physical_domain.lower()
@@ -476,3 +485,11 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         self.set_info_text(text)
         self.update()
+    
+    def set_default_render_tool(self):
+        tool = SelectionTool()
+        self.set_interactor_style(tool)
+        tool.update_mouse_cursor_in_render_widgets(tool.current_cursor)
+        
+
+

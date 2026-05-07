@@ -1,22 +1,22 @@
-from PySide6.QtWidgets import QCheckBox, QHBoxLayout, QTreeWidgetItem, QWidget
-from PySide6.QtGui import QCloseEvent
+from typing import TYPE_CHECKING, List
+
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import QCheckBox, QHBoxLayout, QTreeWidgetItem, QWidget
 
 from vibra import app
-from vibra.interface.ui_generated.data_handler.import_data_to_compare_ui import ImportDataToCompare_UI
-from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.data_handler.imported_data import ImportedData
+from vibra.interface.ui_generated.data_handler.import_data_to_compare_ui import (
+    ImportDataToCompare_UI,
+)
 
-from typing import List, TYPE_CHECKING
 if TYPE_CHECKING:
-    from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
+    from vibra.interface.plots.general.frequency_response_plotter import (
+        FrequencyResponsePlotter,
+    )
 
 import numpy as np
-
-
-window_title_1 = "Error"
-window_title_2 = "Warning"
 
 
 class ImportDataToCompare(ImportDataToCompare_UI):
@@ -112,8 +112,8 @@ class ImportDataToCompare(ImportDataToCompare_UI):
                 # Creates the QCheckButtons to control data to be plotted
                 self.ids_to_checkBox[id] = QCheckBox()
 
-                checkbox_conteiner = QWidget()
-                cointeiner_layout = QHBoxLayout(checkbox_conteiner)
+                checkbox_container = QWidget()
+                cointeiner_layout = QHBoxLayout(checkbox_container)
                 cointeiner_layout.addStretch()
                 cointeiner_layout.addWidget(self.ids_to_checkBox[id])
                 cointeiner_layout.addStretch()
@@ -125,13 +125,13 @@ class ImportDataToCompare(ImportDataToCompare_UI):
                 if "sheetname" in data.keys():
                     _item = QTreeWidgetItem([str(data["filename"]), str(data["sheetname"])])
                     self.treeWidget_import_sheet_files.addTopLevelItem(_item)
-                    self.treeWidget_import_sheet_files.setItemWidget(_item, 2, checkbox_conteiner)
+                    self.treeWidget_import_sheet_files.setItemWidget(_item, 2, checkbox_container)
 
                     _item.setTextAlignment(2, Qt.AlignCenter)
                 else:
                     _item = QTreeWidgetItem([str(data["filename"])])
                     self.treeWidget_import_text_files.addTopLevelItem(_item)
-                    self.treeWidget_import_text_files.setItemWidget(_item, 1, checkbox_conteiner)
+                    self.treeWidget_import_text_files.setItemWidget(_item, 1, checkbox_container)
 
                 for i in range(5):
                     _item.setTextAlignment(i, Qt.AlignCenter)

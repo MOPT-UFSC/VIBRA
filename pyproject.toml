@@ -2,42 +2,47 @@
 name = "vibra"
 version = "0.4.0"
 description = ""
-authors = [
-    {name = "Your Name",email = "you@example.com"}
-]
-readme = "README.md"
+authors = [{ name = "Your Name", email = "you@example.com" }]
 requires-python = ">=3.10,<3.14"
+readme = "README.md"
 dependencies = [
     "numpy (>=2.2.6,<3.0.0)",
     "vtk (>=9.4.2,<9.5)",
     "gmsh (>=4.13.1,<5.0.0)",
     "ctrefprop (>=0.10.5,<0.11.0)",
     "scipy (>=1.15.3,<2.0.0)",
-    "pandas (>=2.2.3,<3.0.0)",
     "openpyxl (>=3.1.5,<4.0.0)",
     "mkl (>=2025.1.0,<2026.0.0)",
     "intel-openmp (>=2025.1.1,<2026.0.0)",
     "h5py (>=3.13.0,<4.0.0)",
-    "moviepy (>=1.0.3,<2.0.0)",
+    "moviepy==1.0.3",
     "pypardiso-mopt (>=0.1.0,<0.2.0)",
     "fileboxes (>=0.1.4,<0.2.0)",
-    "molde (>=0.1.16,<0.2.0)",
     "pyside6 (==6.9.2)",
+    "sounddevice (>=0.5.3,<0.6.0)",
+    "molde (>=0.1.18,<0.2.0)",
+    "polars>=1.37.1",
+    "pyarrow>=22.0.0",
+    "fastexcel>=0.18.0",
+    "pandas>=2.3.3",
+    "xxhash>=3.6.0",
+    "pint>=0.24.4",
+    "cad-widgets",
+    "cadquery-ocp-novtk>=7.9.3.1",
+    "cadquery-ocp-stubs>=7.9.3.1",
 ]
 
+[dependency-groups]
+dev = [
+    "pytest>=8.3.5,<9",
+    "pytest-datadir>=1.7.2,<2",
+    "invoke>=2.2.0,<3",
+    "pyinstaller>=6.20.0",
+]
 
-[tool.poetry]
-
-[tool.poetry.group.dev.dependencies]
-ruff = "^0.11.10"
-pytest = "^8.3.5"
-pytest-datadir = "^1.7.2"
-pyinstaller = "^6.13.0"
-tuna = "^0.5.11"
-invoke = "^2.2.0"
-
-[tool.poetry.scripts]
-vibra = "vibra.launch:main"
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.pytest.ini_options]
 markers = [
@@ -45,6 +50,6 @@ markers = [
     "serial",
 ]
 
-[build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
-build-backend = "poetry.core.masonry.api"
+[tool.ruff]
+exclude = ["__pycache__", "vibra/interface/ui_generated"]
+line-length = 150

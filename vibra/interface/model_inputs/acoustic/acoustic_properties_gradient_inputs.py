@@ -1,17 +1,18 @@
-from PySide6.QtWidgets import QLineEdit
-from PySide6.QtCore import Qt, QEvent, QObject, Signal
+import numpy as np
+from PySide6.QtCore import QEvent, QObject, Qt, Signal
 from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import QLineEdit
 
 from vibra import app
-from vibra.interface.ui_generated.model.setup.acoustic.acoustic_properties_gradient_inputs_ui import AcousticPropertiesGradientInputs_UI
-from vibra.interface.model_inputs.general.fluid.simplified_fluid_inputs import SimplifiedFluidInputs
 from vibra.engine.properties.fluid import Fluid
+# from vibra.interface import error_title, warning_title
+from vibra.interface.model_inputs.general.fluid.set_fluid_inputs_simplified import (
+    SetFluidInputsSimplified,
+)
+from vibra.interface.ui_generated.model.acoustic.acoustic_properties_gradient_inputs_ui import (
+    AcousticPropertiesGradientInputs_UI,
+)
 
-import warnings
-import numpy as np
-
-error_title = "Error"
-warning_title = "Warning"
 
 class AcousticPropertiesGradientInputs(AcousticPropertiesGradientInputs_UI):
     def __init__(self, *args, **kwargs):
@@ -20,7 +21,6 @@ class AcousticPropertiesGradientInputs(AcousticPropertiesGradientInputs_UI):
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
 
-        self.project = app().project
         self.model = app().project.model
         self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
@@ -65,7 +65,7 @@ class AcousticPropertiesGradientInputs(AcousticPropertiesGradientInputs_UI):
         self.treeWidget_viscous_thermal_model.itemClicked.connect(self.on_click_item)
         self.treeWidget_viscous_thermal_model.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         #
         self.clickable(self.lineEdit_selection_id).connect(self.lineEdit_selection_id_clicked)
         self.clickable(self.lineEdit_start_coords).connect(self.lineEdit_start_coords_clicked)
@@ -76,11 +76,11 @@ class AcousticPropertiesGradientInputs(AcousticPropertiesGradientInputs_UI):
 
     def geometry_selection_callback(self):
 
-        nodes = app().main_window.selected_mesh_nodes
-        points = app().main_window.selected_geometry_points
-        lines = app().main_window.selected_geometry_lines
-        surfaces = app().main_window.selected_geometry_surfaces
-        volumes = app().main_window.selected_geometry_volumes
+        nodes = app().main_window.selection.mesh_nodes
+        points = app().main_window.selection.geometry_points
+        lines = app().main_window.selection.geometry_lines
+        surfaces = app().main_window.selection.geometry_surfaces
+        volumes = app().main_window.selection.geometry_volumes
 
         if self.current_line_edit == self.lineEdit_selection_id:
             if volumes:
@@ -147,17 +147,17 @@ class AcousticPropertiesGradientInputs(AcousticPropertiesGradientInputs_UI):
         return filter.clicked
 
     def lineEdit_selection_id_clicked(self):
-        app().main_window.set_geometry_selection()
+        app().main_window.selection.set_geometry_selection()
         self.current_line_edit = self.lineEdit_selection_id
         self.highlight_line_edit()
 
     def lineEdit_start_coords_clicked(self):
-        app().main_window.set_geometry_selection()
+        app().main_window.selection.set_geometry_selection()
         self.current_line_edit = self.lineEdit_start_coords
         self.highlight_line_edit()
 
     def lineEdit_end_coords_clicked(self):
-        app().main_window.set_geometry_selection()
+        app().main_window.selection.set_geometry_selection()
         self.current_line_edit = self.lineEdit_end_coords
         self.highlight_line_edit()
 
@@ -184,7 +184,7 @@ class AcousticPropertiesGradientInputs(AcousticPropertiesGradientInputs_UI):
 
         else:
             self.lineEdit_selection_id_clicked()
-            volumes = app().main_window.selected_geometry_volumes
+            volumes = app().main_window.selection.geometry_volumes
             if not volumes:
                 self.lineEdit_selection_id.setText("")
 
@@ -196,9 +196,9 @@ class AcousticPropertiesGradientInputs(AcousticPropertiesGradientInputs_UI):
 
     def get_fluid_callback(self):
         self.hide()
-        self.fluid_dialog = SimplifiedFluidInputs()
+        self.fluid_dialog = SetFluidInputsSimplified()
         self.fluid_dialog.fluid_widget.pushButton_attribute.setText("Select fluid")
-        self.fluid_dialog.pushButton_attribute.clicked.connect(self.get_selected_fluid)
+        self.fluid_dialog.fluid_widget.pushButton_attribute.clicked.connect(self.get_selected_fluid)
         self.fluid_dialog.exec()
         app().main_window.set_input_widget(self)
 
@@ -256,7 +256,7 @@ class AcousticPropertiesGradientInputs(AcousticPropertiesGradientInputs_UI):
         key = f"{item.text(0)} - {item.text(1)}"
         if item.text(0) == "Volume":
             volume_id = int(item.text(1))
-            app().main_window.set_geometry_selection(volumes=[volume_id])
+            app().main_window.selection.set_geometry_selection(volumes=[volume_id])
 
         self.lineEdit_selection_id.setText(key)
         self.pushButton_remove.setEnabled(True)
@@ -268,5 +268,5 @@ class AcousticPropertiesGradientInputs(AcousticPropertiesGradientInputs_UI):
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
-        app().main_window.selection_changed.disconnect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
         return super().closeEvent(a0)

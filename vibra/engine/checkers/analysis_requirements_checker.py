@@ -1,14 +1,13 @@
 
 from vibra import app
+from vibra.engine.analysis_info import HarmonicAnalysisSetup
+# from vibra.engine.properties.fluid import Fluid
+# from vibra.engine.properties.material import Material
+from vibra.interface import error_title
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
-from vibra.engine.properties.fluid import Fluid
-from vibra.engine.properties.material import Material
 
 import numpy as np
-
-error_title = "Error"
-warning_title = "Warning"
 
 
 class AnalysisRequirementsChecker:
@@ -29,7 +28,7 @@ class AnalysisRequirementsChecker:
                 message = f"You should assign one material for volumes {volumes_without_material} "
                 message += "to proceed with the analysis solution."
                 app().main_window.workspace_updating_for_model_setup()
-                app().main_window.set_geometry_selection(volumes=volumes_without_material)
+                app().main_window.selection.set_geometry_selection(volumes=volumes_without_material)
                 PrintMessageInput([error_title, title, message])
                 return True
 
@@ -40,7 +39,7 @@ class AnalysisRequirementsChecker:
                 message = f"You should assign one material for surfaces {surfaces_without_material} "
                 message += "to proceed with the analysis solution."
                 app().main_window.workspace_updating_for_model_setup()
-                app().main_window.set_geometry_selection(surfaces=surfaces_without_material)
+                app().main_window.selection.set_geometry_selection(surfaces=surfaces_without_material)
                 PrintMessageInput([error_title, title, message])
                 return True
 
@@ -50,7 +49,7 @@ class AnalysisRequirementsChecker:
                 message = f"You should assign the surface thickness for surfaces {surfaces_without_thickness} "
                 message += "to proceed with the analysis solution."
                 app().main_window.workspace_updating_for_model_setup()
-                app().main_window.set_geometry_selection(surfaces=surfaces_without_thickness)
+                app().main_window.selection.set_geometry_selection(surfaces=surfaces_without_thickness)
                 PrintMessageInput([error_title, title, message])
                 return True
 
@@ -63,7 +62,7 @@ class AnalysisRequirementsChecker:
 
         if not self.volume_ids:
             title = "Invalid geometry for acoustic analysis"
-            message = f"The selected geometry file does not contain "
+            message = "The selected geometry file does not contain "
             message += "volumes, therefore, it is invalid for acoustic analysis."
             PrintMessageInput([error_title, title, message])
             return True
@@ -73,7 +72,7 @@ class AnalysisRequirementsChecker:
             message = f"You should assign one fluid for volumes {volumes_without_fluid} "
             message += "to proceed with the analysis solution."
             app().main_window.action_model_workspace_callback()
-            app().main_window.set_geometry_selection(volumes=volumes_without_fluid)
+            app().main_window.selection.set_geometry_selection(volumes=volumes_without_fluid)
             PrintMessageInput([error_title, title, message])
             return True
 
@@ -83,7 +82,7 @@ class AnalysisRequirementsChecker:
                 message = f"You should assign one fluid for surfaces {surfaces_without_fluid} "
                 message += "to proceed with the analysis solution."
                 app().main_window.action_model_workspace_callback()
-                app().main_window.set_geometry_selection(surfaces=surfaces_without_fluid)
+                app().main_window.selection.set_geometry_selection(surfaces=surfaces_without_fluid)
                 PrintMessageInput([error_title, title, message])
                 return True
 
@@ -107,10 +106,11 @@ class AnalysisRequirementsChecker:
     def check_acoustic_harmonic_excitations(self):
 
         prop_labels = [
-                       "acoustic_pressure", 
+                       "acoustic_pressure",
                        "surface_velocity",
-                       "mass_flow_rate",
                        "incident_plane_wave",
+                       "compressor_excitation_spectrum",
+                       "compressor_excitation_waveform",
                        "reciprocating_compressor_excitation",
                        "mass_source",
                        ]
@@ -204,7 +204,10 @@ class AnalysisRequirementsChecker:
         if self.check_structural_harmonic_excitations():
             return True
 
-        if self.model.analysis_setup.get("analysis_method") == "mode_superposition":
+        if not isinstance(self.model.analysis_setup, HarmonicAnalysisSetup):
+            return True
+
+        if self.model.analysis_setup.analysis_method == "mode_superposition":
             if self.check_mode_superposition_prescribed_dof_criterion():
                 return True
 
@@ -254,4 +257,4 @@ class AnalysisRequirementsChecker:
             analysis_setup.pop("modes_number")
 
             app().file.write_analysis_setup_in_file(analysis_setup)
-            app().project.set_analysis_setup(analysis_setup)
+            app().old_project.model.old_set_analysis_setup(analysis_setup)

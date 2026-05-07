@@ -1,20 +1,20 @@
-from PySide6.QtWidgets import QFileDialog
-from PySide6.QtCore import Qt, QEvent, QObject, Signal
-from PySide6.QtGui import QCloseEvent
-
-from vibra.engine import AnalysisID
-from vibra import app
-from vibra.interface.ui_generated.data_handler.export_element_transfer_data_inputs_ui import ExportElementTransferDataInputs_UI
-from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.data_handler.export_model_results import ExportModelResults
-from vibra.interface.loading_window import LoadingWindow
-
 import logging
-import numpy as np
 from pathlib import Path
 
-window_title_1 = "Error"
-window_title_2 = "Warning"
+import numpy as np
+from PySide6.QtCore import QEvent, QObject, Qt, Signal
+from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import QFileDialog
+
+from vibra import app
+from vibra.engine import AnalysisID
+from vibra.interface import error_title
+from vibra.interface.data_handler.export_model_results import ExportModelResults
+from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.loading_window import LoadingWindow
+from vibra.interface.ui_generated.data_handler.export_element_transfer_data_inputs_ui import (
+    ExportElementTransferDataInputs_UI,
+)
 
 
 class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
@@ -23,11 +23,6 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
 
         app().main_window.set_input_widget(self)
         app().main_window.action_model_workspace_callback()
-
-        self.project = app().project
-        self.model = app().project.model
-        self.mesh = app().project.model.mesh
-        self.properties = app().project.model.properties
 
         self._config_window()
         self._reset_variables()
@@ -40,15 +35,28 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
         while self.keep_window_open:
             self.exec()
 
+    @property
+    def model(self):
+        return app().project.model
+
+    @property
+    def mesh(self):
+        return app().project.model.mesh
+
+    @property
+    def properties(self):
+        return app().project.model.properties
+
+    @property
+    def nodal_solution(self):
+        return app().project.model.solution.nodal_solution
+
     def _load_analysis_setup_and_solution(self):
         self.analysis_method = ""
-        analysis_setup = self.project.analysis_setup
-        if "analysis_id" in analysis_setup.keys():
-            if analysis_setup["analysis_id"] == AnalysisID.ACOUSTIC_HARMONIC:
-                self.analysis_method = "Direct method"
+        if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
+            self.analysis_method = "Direct method"
 
         self.frequencies = app().project.model.frequencies
-        self.solution = self.project.acoustic_harmonic_solver.solution
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -72,7 +80,7 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
         self.pushButton_invert_selection.clicked.connect(self.invert_selection_callback)
         self.pushButton_search.clicked.connect(self.search_callback)
         #
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         #
         self.clickable(self.lineEdit_input_selected_id).connect(self.lineEdit_1_clicked)
         self.clickable(self.lineEdit_output_selected_id).connect(self.lineEdit_2_clicked)
@@ -81,7 +89,7 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
 
     def geometry_selection_callback(self):
 
-        selected_faces = app().main_window.selected_geometry_surfaces
+        selected_faces = app().main_window.selection.geometry_surfaces
 
         if selected_faces:
 
@@ -131,15 +139,16 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
 
     def search_callback(self):
 
-        last_path = app().config.get_last_folder_for("imported_table_folder")
-        if last_path is None:
-            last_path = str(Path().home())
+        last_path = app().config.get_last_folder_for(
+            "imported_table_folder",
+            default=Path().home(),
+        )
 
         caption = "Choose a file to import element transfer data"
         path, check = QFileDialog.getOpenFileName(
             self,
             caption,
-            last_path,
+            str(last_path),
             "Table File (*.xls; *.xlsx;)",
         )
 
@@ -220,7 +229,7 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
             message = f"The surface velocity associated to the surface #{surface_id} has not been found. "
             message += "It is recommended to check the acoustic model excitations and change the excitation "
             message += "surface ID to proceed with the transfer function data exportation."
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             app().main_window.set_input_widget(self)
             return None
 
@@ -228,7 +237,7 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
         volume_velocity = -surface_velocity * area
 
         node_ids = np.sort(surface_nodes)
-        pressures = self.solution[node_ids, :]
+        pressures = self.nodal_solution[node_ids, :]
         avg_pressure = np.average(pressures, axis=0)
 
         return avg_pressure / volume_velocity

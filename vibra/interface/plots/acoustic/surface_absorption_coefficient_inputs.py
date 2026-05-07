@@ -3,6 +3,7 @@ from PySide6.QtGui import QCloseEvent
 
 from vibra import app
 from vibra.engine import AnalysisID
+from vibra.interface import error_title
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
@@ -12,8 +13,6 @@ from vibra.interface.ui_generated.plots.acoustic.surface_absorption_coefficient_
 import logging
 import numpy as np
 
-error_title = "Error"
-
 
 class SurfaceAbsorptionCoefficientInputs(SurfaceAbsorptionCoefficientInputs_UI):
     def __init__(self, *args, **kwargs):
@@ -21,25 +20,37 @@ class SurfaceAbsorptionCoefficientInputs(SurfaceAbsorptionCoefficientInputs_UI):
 
         app().main_window.show_geometry_render_widget()
 
-        self.project = app().project
-        self.model = app().project.model
-        self.mesh = app().project.model.mesh
-        self.acoustic_post = self.project.acoustic_postprocessing
-
         self._config_window()
         self._reset_variables()
         self._create_connections()
         self._load_analysis_setup_and_solution()
 
+    @property
+    def model(self):
+        return app().project.model
+
+    @property
+    def mesh(self):
+        return app().project.model.mesh
+
+    @property
+    def properties(self):
+        return app().project.model.properties
+
+    @property
+    def solution(self):
+        return app().project.model.solution
+
+    @property
+    def acoustic_post(self):
+        return app().project.get_acoustic_postprocessing()
+
     def _load_analysis_setup_and_solution(self):
         self.analysis_method = ""
-        analysis_setup = self.project.analysis_setup
-        if "analysis_id" in analysis_setup.keys():
-            if analysis_setup["analysis_id"] == AnalysisID.ACOUSTIC_HARMONIC:
-                self.analysis_method = "Direct method"
+        if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
+            self.analysis_method = "Direct method"
 
         self.frequencies = app().project.model.frequencies
-        self.solution = self.project.acoustic_harmonic_solver.solution
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -61,14 +72,14 @@ class SurfaceAbsorptionCoefficientInputs(SurfaceAbsorptionCoefficientInputs_UI):
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
         #
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         #
         self.geometry_selection_callback()
 
     def volume_selector_callback(self):
         if self.comboBox_volumes.currentText() != "":
             volume_id = int(self.comboBox_volumes.currentText())
-            app().main_window.set_geometry_selection(volumes=[volume_id])
+            app().main_window.selection.set_geometry_selection(volumes=[volume_id])
 
     def toggle_nodal_normals_symbols_visibility(self):
         show_normals = (self.comboBox_nodal_normals.currentText() == "Show")
@@ -77,14 +88,17 @@ class SurfaceAbsorptionCoefficientInputs(SurfaceAbsorptionCoefficientInputs_UI):
 
     def geometry_selection_callback(self):
 
-        volumes = app().main_window.selected_geometry_volumes
-        surfaces = app().main_window.selected_geometry_surfaces
+        if not app().main_window.action_results_workspace.isChecked():
+            return
+
+        volumes = app().main_window.selection.geometry_volumes
+        surfaces = app().main_window.selection.geometry_surfaces
 
         if volumes:
             if len(volumes) == 1:
                 try:
                     self.comboBox_volumes.setCurrentText(f"{list(volumes)[0]}")
-                except:
+                except Exception:
                     pass
             return
 
@@ -115,7 +129,7 @@ class SurfaceAbsorptionCoefficientInputs(SurfaceAbsorptionCoefficientInputs_UI):
         self.comboBox_volumes.clear()
         if external_surfaces_map and internal_surfaces_map:
             self.lineEdit_selection_id.setText("")
-            app().main_window.set_geometry_selection()
+            app().main_window.selection.set_geometry_selection()
             app().processEvents()
 
             title = "Invalid selection"

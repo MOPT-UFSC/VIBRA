@@ -6,14 +6,14 @@ import numpy as np
 
 from vibra.utils.bidict import bidict
 
-LengthUnits = Literal["milimeter", "inch"]
+LengthUnits = Literal["millimeter", "inch"]
 
 
 class Geometry:
     def __init__(
         self,
         path: str | Path | None = None,
-        length_unit: LengthUnits = "milimeter",
+        length_unit: LengthUnits = "millimeter",
     ):
         self._solids_to_surfaces = bidict()
         self._surfaces_to_curves = bidict()
@@ -260,7 +260,7 @@ class Geometry:
         return sum(self._solids_volumes[volume_id] for volume_id in volume_ids)
 
     def _process_geometry_information(self):
-        """Process and store geometry information (lenghts, areas, volumes, centers, etc.) from the Gmsh model."""
+        """Process and store geometry information (length, areas, volumes, centers, etc.) from the Gmsh model."""
         self.clear()
 
         for dim, tag in gmsh.model.getEntities():
@@ -354,7 +354,7 @@ class Geometry:
         return center, uv_mid
 
     def _get_length_unit_factor(self, length_unit: LengthUnits) -> float:
-        if length_unit == "milimeter":
+        if length_unit == "millimeter":
             return 1e-3
         elif length_unit == "inch":
             return 0.0254
