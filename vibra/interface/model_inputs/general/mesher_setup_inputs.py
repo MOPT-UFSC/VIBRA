@@ -265,6 +265,17 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             refined_size,
             selected_ids,
         )
+
+        
+        new_refinement = []
+        for refinement in self.tmp_refinement_parameters:
+            refinement.remove_ids(selected_ids, selected_type)
+
+            if not refinement.is_empty():
+                new_refinement.append(refinement)
+        
+        self.tmp_refinement_parameters = new_refinement
+
         self.tmp_refinement_parameters.append(setup)
         self.update_mesh_refinement_table()
 

@@ -84,3 +84,11 @@ class MeshRefinementSetup:
             "element_size": self.element_size,
             "entity_ids": self.entity_ids,
         }
+    
+    def remove_ids(self, ids: list[int], entity_type: str):
+        if entity_type == self.entity_type:
+            self.entity_ids = list(set(self.entity_ids) - set(ids))
+    
+    def is_empty(self) -> bool:
+        return len(self.entity_ids) == 0
+
