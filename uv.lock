@@ -1777,6 +1777,8 @@ version = "0.4.0"
 source = { editable = "." }
 dependencies = [
     { name = "cad-widgets" },
+    { name = "cadquery-ocp-novtk" },
+    { name = "cadquery-ocp-stubs" },
     { name = "ctrefprop" },
     { name = "fastexcel" },
     { name = "fileboxes" },
@@ -1814,6 +1816,8 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "cad-widgets" },
+    { name = "cadquery-ocp-novtk", specifier = ">=7.9.3.1" },
+    { name = "cadquery-ocp-stubs", specifier = ">=7.9.3.1" },
     { name = "ctrefprop", specifier = ">=0.10.5,<0.11.0" },
     { name = "fastexcel", specifier = ">=0.18.0" },
     { name = "fileboxes", specifier = ">=0.1.4,<0.2.0" },
@@ -1822,7 +1826,7 @@ requires-dist = [
     { name = "intel-openmp", specifier = ">=2025.1.1,<2026.0.0" },
     { name = "mkl", specifier = ">=2025.1.0,<2026.0.0" },
     { name = "molde", specifier = ">=0.1.18,<0.2.0" },
-    { name = "moviepy", specifier = ">=1.0.3,<2.0.0" },
+    { name = "moviepy", specifier = "==1.0.3" },
     { name = "numpy", specifier = ">=2.2.6,<3.0.0" },
     { name = "openpyxl", specifier = ">=3.1.5,<4.0.0" },
     { name = "pandas", specifier = ">=2.3.3" },
