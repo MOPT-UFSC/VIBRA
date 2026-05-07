@@ -149,17 +149,6 @@ class Ui_Dialog(object):
 
         self.gridLayout_2.addWidget(self.label_161, 0, 1, 1, 1)
 
-        self.comboBox_volumes_interface_behavior1 = QComboBox(self.frame_element_formulation)
-        self.comboBox_volumes_interface_behavior1.addItem("")
-        self.comboBox_volumes_interface_behavior1.addItem("")
-        self.comboBox_volumes_interface_behavior1.setObjectName(u"comboBox_volumes_interface_behavior1")
-        self.comboBox_volumes_interface_behavior1.setMinimumSize(QSize(120, 28))
-        self.comboBox_volumes_interface_behavior1.setMaximumSize(QSize(140, 16777215))
-        self.comboBox_volumes_interface_behavior1.setFont(font)
-        self.comboBox_volumes_interface_behavior1.setMinimumContentsLength(0)
-
-        self.gridLayout_2.addWidget(self.comboBox_volumes_interface_behavior1, 3, 2, 1, 1)
-
         self.comboBox_mesh_quality_metrics = QComboBox(self.frame_element_formulation)
         self.comboBox_mesh_quality_metrics.addItem("")
         self.comboBox_mesh_quality_metrics.addItem("")
@@ -352,7 +341,7 @@ class Ui_Dialog(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 530, 245))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 526, 243))
         self.gridLayout_17 = QGridLayout(self.scrollAreaWidgetContents)
         self.gridLayout_17.setObjectName(u"gridLayout_17")
         self.label_15 = QLabel(self.scrollAreaWidgetContents)
@@ -767,7 +756,6 @@ class Ui_Dialog(object):
         self.retranslateUi(Dialog)
 
         self.comboBox_volumes_interface_behavior.setCurrentIndex(1)
-        self.comboBox_volumes_interface_behavior1.setCurrentIndex(1)
         self.tabWidget_main.setCurrentIndex(0)
         self.tabWidget_global_settings.setCurrentIndex(0)
         self.comboBox_3d_algorithm.setCurrentIndex(0)
@@ -795,9 +783,6 @@ class Ui_Dialog(object):
 
         self.label_201.setText(QCoreApplication.translate("Dialog", u"Volumes interface behavior:", None))
         self.label_161.setText(QCoreApplication.translate("Dialog", u"Element type:", None))
-        self.comboBox_volumes_interface_behavior1.setItemText(0, QCoreApplication.translate("Dialog", u"Disconnect nodes", None))
-        self.comboBox_volumes_interface_behavior1.setItemText(1, QCoreApplication.translate("Dialog", u"Merge nodes", None))
-
         self.comboBox_mesh_quality_metrics.setItemText(0, QCoreApplication.translate("Dialog", u"Disabled", None))
         self.comboBox_mesh_quality_metrics.setItemText(1, QCoreApplication.translate("Dialog", u"Enabled", None))
 
@@ -905,7 +890,6 @@ class MesherSetupInputs_UI(QDialog, Ui_Dialog):
                                         - comboBox_shape_function: QComboBox
                                         - label_20: QLabel
                                         - label_16: QLabel
-                                        - comboBox_volumes_interface_behavior: QComboBox
                                         - comboBox_mesh_quality_metrics: QComboBox
                             - frame_tab_widgets: QFrame
                                 - (Layout): QGridLayout
