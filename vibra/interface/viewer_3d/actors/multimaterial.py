@@ -26,13 +26,13 @@ from vtkmodules.vtkRenderingCore import (
 
 from vibra import TEXTURE_DIR, app
 from vibra.engine.mesher.mesh import Mesh
-from vibra.utils.interface_utils import ColorMode
+from vibra.utils.interface_utils import GeometryColorMode
 from vibra.utils.vtk_utils import fill_array, read_texture
 
 
 def get_first_visible_volume(volumes):
     for volume in volumes:
-        if volume not in app().main_window.hidden_volumes:
+        if volume not in app().main_window.selection.hidden_volumes:
             return volume
 
 
@@ -71,7 +71,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         properties = app().project.model.properties
         color_mode = app().main_window.visualization_filter.color_mode
 
-        if color_mode == ColorMode.EMPTY:
+        if color_mode == GeometryColorMode.EMPTY:
             self.reload_composition()
             return self.set_color(color_names.WHITE)
 
@@ -114,10 +114,10 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         color_mode = app().main_window.visualization_filter.color_mode
         surfaces = mesh.lines_from_surface.keys()  # We don't have just "surfaces" yet
 
-        if color_mode == ColorMode.EMPTY:
+        if color_mode == GeometryColorMode.EMPTY:
             self.clear_composition()
             self.default_actor.VisibilityOn()
-            hidden_surfaces = app().main_window.hidden_surfaces
+            hidden_surfaces = app().main_window.selection.hidden_surfaces
             visible_surfaces = set(surfaces) - hidden_surfaces
             self.configure_composition("default", visible_surfaces)
             return
@@ -130,7 +130,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
             volumes = mesh.volumes_from_surface.get(surface, ())
             volume = get_first_visible_volume(volumes)
 
-            if surface in app().main_window.hidden_surfaces:
+            if surface in app().main_window.selection.hidden_surfaces:
                 continue
             else:
                 composition_to_surfaces["default"].append(surface)
@@ -227,7 +227,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
     def _create_surfaces(self):
         combined_surfaces = vtkAppendPolyData()
         for surface, elements in self.mesh.elements_from_surface.items():
-            if surface in app().main_window.hidden_surfaces:
+            if surface in app().main_window.selection.hidden_surfaces:
                 continue
 
             coords, connect = self._reduce_connectivity(

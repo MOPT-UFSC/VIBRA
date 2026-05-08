@@ -24,32 +24,22 @@ If you are using Windows, we highly recommend you to mark the option "Add python
 
 You might need to restart your computer.
 
-## Poetry
-The dependencies and environments in this project are managed mainly using Poetry.
-If you do not have poetry installed, you can install it running:
-```
-pip install poetry -U
-```
-*Note that poetry versions bellow 2.x.x are not supported*
+## UV
+The dependencies and environment in this project are managed using UV.
+If you do not have it installed, follow [these instructions](https://docs.astral.sh/uv/getting-started/installation/), according
+to your OS.
 
-To download and install all dependencies in a local environment run:
+To run the project use:
 ```
-poetry install
+uv run vibra
 ```
-This command is also usefull to reinstall the packages if some dependency changed.
+
+The venv and all the dependencies will be automatically created or updated if needed.
+For more information about uv check out [their website](https://docs.astral.sh/uv/).
 
 If you are using vscode, you may want to change the virtual environment to the local `.venv` directory.
 Usually this option is offered in a notification which can be safely accepted.
 
-When the dependencies are installed in a local virtual environment, poetry can run commands inside this environment as follows: 
-```
-poetry run <you command here>
-```
-For example, to run VIBRA the following command is required:
-```
-poetry run python -m vibra
-```
-For more information check out [poetry documentation](https://python-poetry.org/docs/).
 
 
 ## Conda forge
@@ -58,7 +48,7 @@ only available through repositories such as conda forge.
 
 Download and install [conda-forge](https://conda-forge.org/download/).
 It is recommended to check the option *Add Miniforge3 to my PATH environment variable* in the program installation setup.
-Once conda-forge was installed, it is possible to enable the MUMPS solver in Vibra. To enable this solver we need to use conda instead of poetry.
+Once conda-forge was installed, it is possible to enable the MUMPS solver in Vibra. To enable this solver we need to use conda instead of uv.
 To generate the conda environment, just run:
 ```
 conda env create -f environment.yml
@@ -93,7 +83,7 @@ Broader tests, that depend on the interpretation of the developer, are located i
 
 To run automated tests execute: 
 ```
-poetry run pytest
+uv run pytest
 ```
 For more information check out [pytest documentation](https://docs.pytest.org/en/stable/).
 
@@ -101,7 +91,7 @@ For more information check out [pytest documentation](https://docs.pytest.org/en
 The interfaces depend on `.ui` files that are created using Qt Designer.
 Qt Designer is a tool that is installed with PySide6, and can be started with: 
 ```
-poetry run pyside6-designer
+uv run pyside6-designer
 ```
 
 After the `.ui` files are created they are compiled to `*_UI.py` files containing the classes 
@@ -109,7 +99,7 @@ that represent each QWidget. These classes can be then specialized inside the so
 
 The compilation process is executed with: 
 ```
-poetry run invoke ui-compile
+uv run invoke ui-compile
 ```
 
 
@@ -120,7 +110,7 @@ Pyinstaller is used to create executables.
 In linux run the following command to create a folder containing 
 a executable and its dependencies.
 ```
-poetry run pyinstaller vibra.spec
+uvx pyinstaller vibra.spec --noconfirm
 ```
 
 ## Windows
@@ -129,7 +119,7 @@ into a single executable installer.
 Given that InnoSetup is correctly installed and set to path, 
 to create a installer in windows run:
 ```
-poetry run pyinstaller vibra.spec --noconfirm
+uvx pyinstaller vibra.spec --noconfirm
 ISCC.exe /O"dist" /F"vibra-setup" "vibra.iss"
 ```
 

@@ -3,14 +3,10 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
-from vibra.interface.ui_generated.model.setup.structural.surface_thickness_inputs_ui import SurfaceThicknessInputs_UI
-from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
+from vibra.interface import error_title
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-
-
-window_title_1 = "Error"
-window_title_2 = "Warning"
+from vibra.interface.ui_generated.model.structural.surface_thickness_inputs_ui import SurfaceThicknessInputs_UI
 
 
 class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
@@ -20,7 +16,6 @@ class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
 
-        self.project = app().project
         self.model = app().project.model
         self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
@@ -60,11 +55,11 @@ class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
         self.treeWidget_surface_thickness.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
         self.attribution_type_callback()
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
     def geometry_selection_callback(self):
 
-        faces = app().main_window.selected_geometry_surfaces
+        faces = app().main_window.selection.geometry_surfaces
 
         if faces:
 
@@ -174,19 +169,19 @@ class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
 
                 if value < 0:
                     message = f"You cannot input a negative value to the {label}."
-                    PrintMessageInput([window_title_1, title, message])
+                    PrintMessageInput([error_title, title, message])
                     return None
                 else:
                     return value
 
             except Exception:
                 message = f"You have typed an invalid value to the {label}."
-                PrintMessageInput([window_title_1, title, message])
+                PrintMessageInput([error_title, title, message])
                 return None
 
         else:
             message = f"None value has been typed to the {label}."
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             return None
 
     def remove_callback(self):
@@ -226,8 +221,7 @@ class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
     def actions_to_finalize(self):
         self.load_model_info()
         app().main_window.update_info_text()
-        app().file.write_model_properties_in_file()
-        app().file.write_imported_table_data_in_file()
+        app().project.update_model_properties_file()
         app().main_window.update_symbols()
         app().main_window.update_symbols()
 
@@ -247,7 +241,7 @@ class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
         if item.text(0) != "":
             surface_id = int(item.text(0))
             self.lineEdit_selection_id.setText(item.text(0))
-            app().main_window.set_geometry_selection(surfaces=[surface_id])
+            app().main_window.selection.set_geometry_selection(surfaces=[surface_id])
 
     def on_doubleclick_item(self, item):
         self.on_click_item(item)
@@ -285,7 +279,7 @@ class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
                 return
 
             for _surface_id in surfaces_to_hide:
-                app().main_window.hidden_surfaces.add(_surface_id)
+                app().main_window.selection.hidden_surfaces.add(_surface_id)
     
             app().main_window.update_hidden_plots()
 

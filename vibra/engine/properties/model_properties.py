@@ -1,13 +1,11 @@
+import json
 from typing import Callable, Optional
 
+import numpy as np
+
+from vibra.engine.properties import FluidLibrary, MaterialLibrary
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
-
-import json
-import numpy as np
-import os
-from dataclasses import dataclass
-
 
 DEFAULT_MATERIAL = Material(
     name="Steel",
@@ -57,10 +55,11 @@ class ModelProperties:
 
     def __init__(self, disable_resume_callback: Optional[Callable] = None):
         self.disable_resume_callback = disable_resume_callback
-
         self._reset_variables()
 
     def _reset_variables(self):
+        self.material_library = MaterialLibrary.default()
+        self.fluid_library = FluidLibrary.default()
 
         self.acoustic_imported_tables = dict()
         self.structural_imported_tables = dict()
@@ -81,80 +80,90 @@ class ModelProperties:
         rho_0 = fluid.fluid_density
         if proportional_damping is None:
             return rho_0
-        else:
-            factor = proportional_damping.get("fluid_density_factor", 0)
-            return (1 + factor * 1j) * rho_0
+
+        factor = proportional_damping.get("fluid_density_factor", 0)
+        return (1 + factor * 1j) * rho_0
 
     def get_speed_of_sound(self, fluid: Fluid, proportional_damping: dict | None) -> float | complex:
         c_0 = fluid.speed_of_sound
         if proportional_damping is None:
             return c_0
-        else:
-            factor = proportional_damping.get("speed_of_sound_factor", 0)
-            return (1 + factor * 1j) * c_0
+
+        factor = proportional_damping.get("speed_of_sound_factor", 0)
+        return (1 + factor * 1j) * c_0
 
     def _set_property(
-                      self, 
-                      property: str, 
-                      data: dict | Fluid | Material, 
-                      node: int | None = None, 
-                      element: int | None = None, 
-                      point: int | None = None, 
-                      line: int | None = None, 
-                      surface: int | tuple[int] | None = None, 
-                      volume: int | None = None, 
-                      group: int | None = None
-                      ):
+        self,
+        property: str,
+        data: dict | Fluid | Material,
+        node: int | None = None,
+        element: int | None = None,
+        point: int | None = None,
+        line: int | None = None,
+        surface: int | tuple[int] | None = None,
+        volume: int | None = None,
+        group: int | None = None,
+    ):
         """
         This method sets a data to a property by node, element, line, surface or volume
         if any of these exists. Otherwise sets the property as global.
 
         """
-
         if isinstance(data, dict):
 
-            tables_values = list()
+            values_list = list()
             group_label = self.get_data_group_label(property)
 
             if "real_values" in data.keys() and "imag_values" in data.keys():
                 for i, a in enumerate(data["real_values"]):
 
                     if a is None:
-                        tables_values.append(None)
+                        values_list.append(None)
 
                     else:
                         b = data["imag_values"][i]  
                         if b is None:
-                            tables_values.append(a)
+                            values_list.append(a)
                         else:
-                            tables_values.append(a + 1j*b)
-
-            elif "values" in data.keys():
-                tables_values = data["values"]
+                            values_list.append(a + 1j*b)
 
             elif "table_names" in data.keys():
-
                 if group_label == "acoustic":
                     imported_tables = self.acoustic_imported_tables
                 else:
                     imported_tables = self.structural_imported_tables
 
+                frequencies_list = list()
                 for i, table_name in enumerate(data["table_names"]):
-
                     if table_name is None:
-                        tables_values.append(None)
+                        values_list.append(None)
                         continue
 
                     if table_name in imported_tables.keys():
                         data_array = imported_tables[table_name]
+
+                        table_frequencies = [float(freq) for freq in data_array[:, 0]]
+                        frequencies_list.append(table_frequencies)
+
                         if data_array.shape[1] >= 3:
                             values = data_array[:, 1] + 1j * data_array[:, 2]
                         else:
                             values = data_array[:, 1]
 
-                        tables_values.append(values)
+                        values_list.append(values)
 
-            data["values"] = tables_values
+                data["tables_frequencies"] = frequencies_list
+
+            elif "values" in data.keys():
+                values_list = data["values"]
+
+            data["values"] =  values_list
+
+        elif isinstance(data, Material) and (data not in self.material_library):
+            self.material_library.add(data)
+
+        elif isinstance(data, Fluid) and (data not in self.fluid_library):
+            self.fluid_library.add(data)
 
         if node is not None:
             self.nodal_properties[property, node] = data
@@ -179,7 +188,7 @@ class ModelProperties:
 
         else:
             self.global_properties[property, "global"] = data
-        
+
         if self.disable_resume_callback is not None:
             self.disable_resume_callback()
 
@@ -268,6 +277,34 @@ class ModelProperties:
         if self.disable_resume_callback is not None:
             self.disable_resume_callback()
 
+    def remove_material(self, material: Material):
+        self.material_library.pop(material)
+        to_remove = list()
+        for entity_name, property_name, tags, value in self.iterate_properties():
+            if value == material:
+                to_remove.append((entity_name, tags))
+
+        for entity_name, tags in to_remove:
+            match entity_name:
+                case "volume":
+                    self._remove_volume_property("material", tags)
+                case "surface":
+                    self._remove_surface_property("material", tags)
+
+    def remove_fluid(self, fluid: Fluid):
+        self.fluid_library.pop(fluid)
+        to_remove = list()
+        for entity_name, property_name, tags, value in self.iterate_properties():
+            if value == fluid:
+                to_remove.append((entity_name, tags))
+
+        for entity_name, tags in to_remove:
+            match entity_name:
+                case "volume":
+                    self._remove_volume_property("fluid", tags)
+                case "surface":
+                    self._remove_surface_property("fluid", tags)
+
     def _remove_nodal_property(self, property: str, nodal_id: int):
         """Remove a nodal property at specific nodal_id."""
         key = (property, nodal_id)
@@ -334,14 +371,14 @@ class ModelProperties:
         acoustic_labels = [ 
                            "acoustic_pressure",
                            "surface_velocity",
-                           "mass_flow_rate",
                            "incident_plane_wave",
                            "specific_impedance",
                            "transfer_impedance",
                            "absorption_surface",
                            "perforated_plate_model",
+                           "compressor_excitation_spectrum",
+                           "compressor_excitation_waveform",
                            "reciprocating_compressor_excitation",
-                           "reciprocating_pump_excitation",
                            "acoustic_transfer_element",
                            "mass_source",
                            ]
@@ -385,6 +422,43 @@ class ModelProperties:
                         table_names.append(table_name)
 
         return table_names
+    
+    def process_all_tables_frequencies_vectors(self) -> list:
+        """
+        This method process the frequencies vectors from all imported tables.
+        """
+        properties = [  
+            self.volume_properties,
+            self.surface_properties,
+            self.line_properties,
+            self.point_properties,
+            self.group_properties,
+            self.global_properties,
+            self.nodal_properties,
+            self.element_properties,
+            ]
+
+        frequencies_from_tables = list()
+
+        for _property in properties:
+            for (prop_label, *_), prop_data in _property.items():
+                if not isinstance(prop_data, dict):
+                    continue
+
+                tables_frequencies = prop_data.get("tables_frequencies")
+                if tables_frequencies is None:
+                    continue
+
+                if not isinstance(tables_frequencies, list):
+                    continue
+
+                for frequencies in tables_frequencies:
+                    if frequencies in frequencies_from_tables:
+                        continue
+
+                    frequencies_from_tables.append(frequencies)
+
+        return frequencies_from_tables
 
     def is_the_volume_property_present_in_the_model(self, property_to_check: str):
 
@@ -421,6 +495,23 @@ class ModelProperties:
                     entities_without_property.append(surface_id)
     
         return entities_without_property
+    
+    def iterate_properties(self):
+        property_dicts = {
+            "global": self.global_properties,
+            "group": self.group_properties,
+            "volume": self.volume_properties,
+            "surface": self.surface_properties,
+            "line": self.line_properties,
+            "point": self.point_properties,
+            "element": self.element_properties,
+            "node": self.nodal_properties,
+        }
+
+        for entity_name, property_dict in property_dicts.items():
+            for key, value in property_dict.items():
+                property_name, tags = key
+                yield entity_name, property_name, tags, value
 
 
 if __name__ == "__main__":

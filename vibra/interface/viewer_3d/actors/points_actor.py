@@ -1,17 +1,20 @@
-from vtkmodules.vtkCommonCore import vtkPoints, vtkUnsignedCharArray
-from vtkmodules.vtkCommonDataModel import VTK_VERTEX, vtkPlane, vtkPolyData
-from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper
+from __future__ import annotations
 
-from vibra import app
-from molde import Color
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from vibra.engine.mesher.mesh import Mesh
 
+from molde import Color
+from vtkmodules.vtkCommonCore import vtkPoints, vtkUnsignedCharArray
+from vtkmodules.vtkCommonDataModel import VTK_VERTEX, vtkPlane, vtkPolyData
+from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper
+
+from vibra import app
+
 
 class PointsActor(vtkActor):
-    def __init__(self, mesh: "Mesh"):
+    def __init__(self, mesh: Mesh):
         self.mesh = mesh
         self.point_to_cell = dict()
 

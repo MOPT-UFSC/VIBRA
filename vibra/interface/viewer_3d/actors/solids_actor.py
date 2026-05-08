@@ -21,7 +21,7 @@ from vtkmodules.vtkFiltersExtraction import vtkExtractGeometry
 from vtkmodules.vtkRenderingCore import vtkActor, vtkDataSetMapper
 
 from vibra import app
-from vibra.engine.mesher.element_type import (
+from vibra.engine.mesher.element_setup import (
     TETRAHEDRON_4,
     TETRAHEDRON_10,
     HEXAHEDRON_8,
@@ -58,7 +58,6 @@ class SolidsActor(vtkActor):
     def create_geometry(self):
         data = vtkUnstructuredGrid()
         points = vtkPoints()
-        mapper = vtkDataSetMapper()
         point_colors = vtkFloatArray()
         cell_colors = vtkUnsignedCharArray()
         solid_indexes = vtkIntArray()
@@ -102,7 +101,7 @@ class SolidsActor(vtkActor):
         coordinates = self.get_coordinates()
         points.SetData(numpy_to_vtk(coordinates))
 
-        hidden_volumes = app().main_window.hidden_volumes if self.allow_hidding else set()
+        hidden_volumes = app().main_window.selection.hidden_volumes if self.allow_hidding else set()
         self.visible_indexes = dict()
 
         for i, volume, _, _, *nodes in nodes_connectivity:
@@ -132,9 +131,11 @@ class SolidsActor(vtkActor):
         self.clipper.ExtractInsideOff()
         self.clipper.Update()
 
-        mapper.InterpolateScalarsBeforeMappingOn()
-        mapper.SetInputConnection(self.clipper.GetOutputPort())
-        self.SetMapper(mapper)
+        self.clipper_mapper = vtkDataSetMapper()
+        self.clipper_mapper.InterpolateScalarsBeforeMappingOn()
+        self.clipper_mapper.SetInputConnection(self.clipper.GetOutputPort())
+
+        self.SetMapper(self.clipper_mapper)
 
     def update_coordinates(self, coordinates):
         points = self.data.GetPoints()

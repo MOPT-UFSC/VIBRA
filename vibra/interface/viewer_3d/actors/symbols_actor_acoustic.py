@@ -13,6 +13,8 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
         self.configure_appearance()
         self.build()
         self.set_zbuffer_offsets(1, -6600)
+        # as the symbols do not change size when zooming, this is needed for reset_camera to work properly
+        self.UseBoundsOff()
 
     def configure_appearance(self):
         self.GetProperty().SetAmbient(0.5)
@@ -23,7 +25,6 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
             "surface_velocity": self._build_surface_velocity,
             "specific_impedance": self._build_specific_impedance,
             "transfer_impedance": self._build_transfer_impedance,
-            "mass_flow_rate": self._build_mass_flow_rate,
             "degrees_of_freedom_decoupling": self._build_dof_decoupling,
             "absorption_surface": self._build_absorption_surface,
             "acoustic_pressure": self._build_acoustic_pressure,
@@ -79,7 +80,7 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
             avg_normal = np.average(surface_normals, axis=0).round(6)
 
         curvatures_surface = mesh.curvatures_surface.get(surface_id)
-        contains_curvature = (curvatures_surface is not None) and np.any(curvatures_surface)
+        contains_curvature = (curvatures_surface is not None) and (np.average(curvatures_surface) > 1e-4)
         center_coords = np.average(surface_coordinates, axis=0)
 
         if contains_curvature:

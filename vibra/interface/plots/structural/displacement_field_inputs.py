@@ -27,9 +27,10 @@ class PlotDisplacementFieldInputs(DisplacementFieldInputs_UI):
         app().main_window.render_widget_changed.emit()
 
         app().main_window.animation_toolbar.setDisabled(False)
+        app().main_window.render_tools_toolbar.hide_selection_tool()
 
     def _initialize(self):
-        self.frequency_index = None
+        self.selected_frequency_index = None
 
     def _configure_qt_variables(self):
         #
@@ -104,16 +105,20 @@ class PlotDisplacementFieldInputs(DisplacementFieldInputs_UI):
             return
         
         frequency_selected = float(self.lineEdit_selected_frequency.text())
-        self.frequency_index = self.frequency_to_index.get(frequency_selected)
+        selector_mask = np.abs(self.frequencies - frequency_selected) < 1e-6
 
-        if self.frequency_index is None:
+        if selector_mask.any():
+            self.selected_frequency_index = self.indexes[selector_mask][0]
+
+        if self.selected_frequency_index is None:
             return
 
         LoadingWindow(app().main_window.results_widget.update_plot).run()
 
-    def current_frequency_index(self):
-        if self.frequency_index is not None:
-            return self.frequency_index
+    def get_selected_frequency_index(self):
+        if self.selected_frequency_index is not None:
+            return self.selected_frequency_index
+
         return 0
 
     def get_colormap(self) -> str:
@@ -125,19 +130,20 @@ class PlotDisplacementFieldInputs(DisplacementFieldInputs_UI):
     def load_frequencies(self):
         self.treeWidget_frequencies.setDisabled(False)
         if isinstance(app().project.model.frequencies, np.ndarray):
-            self.frequencies = list(app().project.model.frequencies)
+            self.frequencies = app().project.model.frequencies
         else:
             return
 
-        self.frequency_to_index = dict(
-            zip(self.frequencies, np.arange(len(self.frequencies), dtype=int))
-        )
+        self.indexes = np.arange(len(self.frequencies), dtype=int)
 
         self.treeWidget_frequencies.clear()
         for index, frequency in enumerate(self.frequencies):
-            item = QTreeWidgetItem([str(index + 1), str(frequency)])
+            round_freq = round(frequency, 12)
+            item = QTreeWidgetItem([str(index + 1), f"{round_freq}"])
+
             for i in range(2):
                 item.setTextAlignment(i, Qt.AlignCenter)
+
             self.treeWidget_frequencies.addTopLevelItem(item)
 
         first_item = self.treeWidget_frequencies.topLevelItem(0)

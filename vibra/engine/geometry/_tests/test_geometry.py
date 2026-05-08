@@ -93,7 +93,7 @@ def test_convert_all_length_units(geometry: Geometry):
 
     geometry.set_length_unit("inch")
 
-    scale = geometry._get_length_unit_factor("milimeter") / geometry._get_length_unit_factor("inch")
+    scale = geometry._get_length_unit_factor("millimeter") / geometry._get_length_unit_factor("inch")
     assert np.allclose(geometry._solids_centers[1], np.array([10.0, 0.0, 0.0]) * scale)
     assert np.allclose(geometry._surfaces_centers[1], np.array([0.0, 20.0, 0.0]) * scale)
     assert np.allclose(geometry._curves_centers[1], np.array([0.0, 0.0, 30.0]) * scale)
