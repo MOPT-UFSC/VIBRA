@@ -9,8 +9,8 @@ from pathlib import Path
 from molde import Color
 from PySide6.QtWidgets import QApplication
 
-__version__ = "0.4.0"
-__release_date__ = "October 27th 2025"
+__version__ = "0.5.0"
+__release_date__ = "May 2026"
 
 VERSION = __version__
 APP_ID = f"mopt.vibra.{VERSION}"
