@@ -12,7 +12,7 @@ def test_reordering_approach_for_frequency_dependent_acoustic_assembler(viscous_
 
     assembler = AcousticAssembler(viscous_thermal_acoustic_model)
 
-    assembler.process_assemble()
+    assembler.assemble_global_matrices_and_excitations()
     # Enforce assembly with reordering
     reordering = matrix_helper.get_reordering_indexes(assembler.ind_rows, assembler.ind_cols)
     factor_K, factor_M, _, _ = assembler.compute_global_matrices_factors(1)

@@ -361,7 +361,7 @@ class ReciprocatingCompressorModel:
         output[N-index:] = data[:index]
         return output
 
-    def process_head_end_volumes_and_pressures(self, tdc=None, capacity=None, export_data=True):
+    def process_head_end_volumes_and_pressures(self, tdc: float|None = None, capacity: float|None = None, export_data: bool = True):
 
         V0, A, h0 = self.get_clearance_data("HE")
 
@@ -509,7 +509,7 @@ class ReciprocatingCompressorModel:
             fname_log = f"temporary_data\\log_info_head_end_{self.crank_angle}_cap_{capacity}.txt"
 
             if not os.path.exists(os.path.dirname(fname)):
-                os.mkdir("temporary_data")
+                Path("temporary_data").mkdir(exist_ok=True)
 
             header = "Index, Time [s], Angle [deg], Velocity [m/s], Volumes [m³], Pressures [Pa], Suction valve open [bool], Discharge valve open [bool]\n\n"
             header += f"V1 = {V1}\n"
@@ -686,7 +686,7 @@ class ReciprocatingCompressorModel:
             fname_log = f"temporary_data\\log_info_crank_end_{self.crank_angle}_cap_{capacity}.txt"
 
             if not os.path.exists(os.path.dirname(fname)):
-                os.mkdir("temporary_data")
+                Path("temporary_data").mkdir(exist_ok=True)
 
             header = "Index, Time [s], Angle [deg], Velocity [m/s], Volumes [m³], Pressures [Pa], Suction valve open [bool], Discharge valve open [bool]\n\n"
             header += f"V1 = {V1}\n"
@@ -695,14 +695,16 @@ class ReciprocatingCompressorModel:
             header += f"V4 = {V4}\n"
 
             indexes = np.arange(N)
-            data = np.array([   indexes,
-                                time,
-                                angle,
-                                v_piston,
-                                volumes,
-                                pressures,
-                                open_suc,
-                                open_disc   ])
+            data = np.array([
+                indexes,
+                time,
+                angle,
+                v_piston,
+                volumes,
+                pressures,
+                open_suc,
+                open_disc
+                ])
 
             np.savetxt(fname, data.T, delimiter=",", header=header, fmt="%i, %.14e, %.14e, %.14e, %.14e, %.14e, %i, %i")
    
@@ -788,18 +790,21 @@ class ReciprocatingCompressorModel:
         f_ce = np.sum(self.mass_flow_crank_end())/N
         return f_he + f_ce
 
-    def process_sum_of_volumetric_flow_rate(self, key: str, capacity=None, smooth_data=False):
+    def process_sum_of_volumetric_flow_rate(self, flow_type: str, capacity=None, smooth_data=False):
         try:
 
             if self.acting_head == 'both_ends':
-                flow_rate = self.flow_crank_end(tdc=self.tdc_crank_angle, capacity=capacity)[key] / self.valves_per_head
-                flow_rate += self.flow_head_end(tdc=self.tdc_crank_angle, capacity=capacity)[key] / self.valves_per_head
+                flow_rate_ce = self.flow_crank_end(tdc=self.tdc_crank_angle, capacity=capacity)
+                flow_rate_he = self.flow_head_end(tdc=self.tdc_crank_angle, capacity=capacity)
+                flow_rate_cyl = (flow_rate_ce.get(flow_type, 0.) + flow_rate_he.get(flow_type, 0.)) / self.valves_per_head
 
             elif self.acting_head == 'head_end':
-                flow_rate = self.flow_head_end(tdc=self.tdc_crank_angle, capacity=capacity)[key] / self.valves_per_head
+                flow_rate_he = self.flow_head_end(tdc=self.tdc_crank_angle, capacity=capacity)
+                flow_rate_cyl = flow_rate_he.get(flow_type, 0.) / self.valves_per_head
 
             elif self.acting_head == 'crank_end':
-                flow_rate = self.flow_crank_end(tdc=self.tdc_crank_angle, capacity=capacity)[key] / self.valves_per_head
+                flow_rate_ce = self.flow_crank_end(tdc=self.tdc_crank_angle, capacity=capacity)
+                flow_rate_cyl = flow_rate_ce.get(flow_type, 0.) / self.valves_per_head
 
         except Exception as error:
             print(str(error))
@@ -807,16 +812,16 @@ class ReciprocatingCompressorModel:
 
         if smooth_data:
     
-            N = len(flow_rate)
+            N = len(flow_rate_cyl)
             fs = N * (self.rpm / 60)
 
-            flow_rate_ext = np.append(flow_rate[:-1], flow_rate)
-            flow_rate_ext = np.append(flow_rate_ext, flow_rate[1:])
+            flow_rate_ext = np.append(flow_rate_cyl[:-1], flow_rate_cyl)
+            flow_rate_ext = np.append(flow_rate_ext, flow_rate_cyl[1:])
 
             b, a = butter(1, fs/15, btype='low', fs=fs,  output='ba')
-            flow_rate = filtfilt(b, a, flow_rate_ext)[N-1 : 2*N-1]
+            flow_rate_cyl = filtfilt(b, a, flow_rate_ext)[N-1 : 2*N-1]
 
-        return flow_rate
+        return flow_rate_cyl
 
     def get_in_mass_flow(self, capacity=None):
         in_flow = self.process_sum_of_volumetric_flow_rate('in_flow', capacity=capacity)
@@ -965,16 +970,32 @@ class ReciprocatingCompressorModel:
         return frequencies, X_f
 
 
-    def process_FFT_of_volumetric_flow_rate(self, revolutions, key):
+    def process_FFT_of_volumetric_flow_rate(self, revolutions: int, flow_type: str, zero_frequency: bool=False):
 
-        flow_rate = self.process_sum_of_volumetric_flow_rate(key)
+        flow_rate = self.process_sum_of_volumetric_flow_rate(flow_type)
 
         if flow_rate is None:
             return None, None
         
         freq, flow_rate = self.process_FFT_from_extended_signal(flow_rate, revolutions)
-        freq = freq[freq <= self.max_frequency]
-        flow_rate = flow_rate[:len(freq)]
+
+        # high-pass frequency mask
+        if zero_frequency:
+            mask_hpf = freq >= 0
+        else:
+            mask_hpf = freq > 0   
+
+        # low-pass frequency mask
+        mask_lpf = freq <= self.max_frequency
+
+        # band-pass frequency mask
+        mask_bpf = mask_hpf * mask_lpf
+        
+        # filter the frequencies vector
+        freq = freq[mask_bpf]
+
+        # filter the flow rate spectrum vector
+        flow_rate = flow_rate[mask_bpf]
 
         return freq, flow_rate
 
@@ -1344,249 +1365,6 @@ class ReciprocatingCompressorModel:
             data[basename] = np.loadtxt(path, delimiter=";", skiprows=10)
         
         return data
-
-    # def apply_tdc_phase_correction(self, data, tdc):
-
-    #     if tdc in [0, 2*pi]:
-    #         return data
-    #     else:
-
-    #         if tdc > 2*pi:
-    #             tdc -= 2*pi
-
-    #         N = len(data)
-    #         index = round(tdc/(2*pi/(N-1)))
-
-    #         output_data = np.zeros(N)
-    #         output_data[0:N-index] = data[index:N]
-    #         output_data[N-index:] = data[1:index+1]
-    #         return output_data
-
-    # def p_head_end( self,
-    #                 label = "HE",
-    #                 tdc=None, 
-    #                 capacity=None, 
-    #                 aux_process=False):
-
-    #     N = self.number_points + 1
-    #     # ang = np.linspace(0, 2*pi, N)
-
-    #     if tdc is None:
-    #         tdc = self.tdc_crank_angle
-                
-    #     if capacity is None:
-    #         if self.cap is None:
-    #             self.cap = self.process_capacity(capacity = self.capacity)
-    #         capacity = self.cap
-
-    #     open_suc = [False]*N
-    #     open_disch = [False]*N
-
-    #     if self.acting_head not in ['head_end', 'both_ends'] and not aux_process:
-    #         p = np.zeros(N) 
-    #         print('Cylinder does not have head end pressure.')
-    #     else:
-    #         theta, x = self.recip_x(tdc=0)
-    #         p, vol = [], []
-    #         p0 = self.p_ratio
-    #         p_aux = p0
-
-    #         if label == "HE":
-    #             l0 = self.c_HE*(2*self.r) # clearance height head end
-    #         elif label == "CE":
-    #             l0 = self.c_CE*(2*self.r) # clearance height crank end
-    #         else:
-    #             l0 = ((self.c_HE+self.c_CE)/2)*(2*self.r) # average clearance height
-
-    #         i = 0
-    #         #EXPANSION CYCLE
-    #         while p_aux > 1 and i < N:
-    #             p_aux = p0*(l0 / (l0 + (x[0] - x[i])))**self.k
-    #             if p_aux < 1:
-    #                 p_aux = 1
-    #                 open_suc[i] = True
-    #             p.append(p_aux*self.P_suction)
-    #             vol.append(self.area_head_end*(l0 + (x[0] - x[i])))
-    #             i += 1
-
-    #         if i < N:
-    #             #SUCTION CYCLE
-    #             while i <= (N-1)/2:
-    #                 p.append(1*self.P_suction)
-    #                 vol.append(self.area_head_end*(l0 + (x[0] - x[i])))
-    #                 open_suc[i] = True
-    #                 i += 1
-
-    #             #COMPRESSION CYCLE
-    #             p0 = 1
-    #             i0 = i
-    #             while p_aux < self.p_ratio and i < N:
-    #                 vol.append(self.area_head_end*(l0 + (x[0] - x[i])))
-    #                 if (2*pi-theta[i])/pi > capacity:
-    #                     p_aux = 1
-    #                     open_suc[i] = True
-    #                     i0 = i
-    #                 else:
-    #                     p_aux = p0*((l0 + (x[0] - x[i0]))/(l0 + (x[0] - x[i])))**self.k
-    #                 if p_aux > self.p_ratio:
-    #                     p_aux = self.p_ratio
-    #                     open_disch[i] = True
-    #                 i += 1
-    #                 p.append(p_aux*self.P_suction)
-
-    #             #DISCHARGE CYCLE
-    #             while i < N:
-    #                 p.append(self.p_ratio*self.P_suction)
-    #                 vol.append(self.area_head_end*(l0 + (x[0] - x[i])))
-    #                 open_disch[i] = True
-    #                 i += 1
-
-    #     p = offset_to_tdc(p, tdc)
-    #     vol = offset_to_tdc(vol, tdc)
-    #     open_suc = offset_to_tdc(open_suc, tdc)
-    #     open_disch = offset_to_tdc(open_disch, tdc)
-
-    #     return vol, p, open_suc, open_disch
-
-    # TODO: Remove as soon as possible
-    # for i, V_i in enumerate(volumes):
-
-        #     # Expasion cycle (1) -> (2)
-        #     if (V1 < round(V_i,8) <= round(V2,8)) and (round(v_piston[i],8) < 0):
-        #         P_i = ((V1/V_i)**(self.k))*self.P_discharge
-        #         if round(V_i,8) == round(V2,8):
-        #             open_suc[i] = True
-        #         stage_log += f"Expansion: {i} {round(angle[i],1)} {round(V_i,8)} {round(P_i,1)}"
-
-        #     # Suction cycle (2) -> (3)
-        #     elif (V2 < round(V_i,8) <= round(V3c,8)) and (round(v_piston[i],8) <= 0):
-        #         P_i = self.P_suction
-        #         if round(V_i,8) == round(V3c,8):
-        #             if capacity == 1:
-        #                 open_suc[i] = True
-        #             else:
-        #                 # the suction valve remains open if the capacity < 1
-        #                 open_suc[i] = True
-        #         else:
-        #             open_suc[i] = True
-        #         stage_log += f"Suction: {i} {round(angle[i],1)} {round(V_i,8)} {round(P_i,1)}"
-            
-        #     # Compression cycle (3) -> (4)
-        #     elif (V3c > round(V_i,8) >= round(V4c,8)) and (round(v_piston[i],8) > 0):
-        #         # the compressor mass flow capacity control is obtained by letting 
-        #         # the suction valve oppened at the begning of compression cycle
-        #         cap_param = round((theta_4i-theta[i])/(theta_4i-theta_3i), 3)
-        #         if (theta_4i-theta[i])/(theta_4i-theta_3i) > capacity:
-        #             P_i = self.P_suction
-        #             open_suc[i] = True
-        #             V3c = (h0 - x_piston[i])*A
-        #             V4c = V3c*(1/self.p_ratio)**(1/self.k)
-        #             stage_log += f"Compression (null): {i} {round(angle[i],1)} {round(V_i,8)} {round(P_i,1)} {V3c} {V4c} {cap_param}"
-        #         else:
-        #             P_i = ((V3c/V_i)**(self.k))*self.P_suction
-        #             stage_log += f"Compression: {i} {round(angle[i],1)} {round(V_i,8)} {round(P_i,1)} {cap_param}"
-
-        #         if round(V_i,8) == round(V4c,8):
-        #             open_disc[i] = True
-
-        #     # Discharge cycle (4) -> (1)
-        #     elif (V4c > round(V_i,8) >= round(V1,8)) and (round(v_piston[i],8) >= 0):
-        #         P_i = self.P_discharge
-        #         if round(V_i,8) == round(V1,8):
-        #             open_disc[i] = True
-        #         else:
-        #             open_disc[i] = True
-        #         stage_log += f"Discharge: {i} {round(angle[i],1)} {round(V_i,8)} {round(P_i,1)}"
-
-        #     # compression - not full capacity
-        #     elif (V3c < round(V_i,8) <= round(V3,8)):
-        #         P_i = self.P_suction
-        #         if round(V_i,8) != round(V3,8):
-        #             open_suc[i] = True
-        #         stage_log += f"Compression (null): {i} {round(angle[i],1)} {round(V_i,8)} {round(P_i,1)}"
-
-        #     else:
-        #         stage_log += f"Undefined stage: {i} {round(angle[i],1)} {round(V_i,8)} {round(P_i,1)}"
-        #         message = f"The {i} point with volume {round(V_i,8)} and pressure {round(P_i,1)} "
-        #         message += "are not recognized as a thermodynamic stage."
-
-        #     stage_log += "\n"
-
-        #     if message != "":
-        #         return None, None, None
-        
-        #     pressures[i] = P_i
-
-    # for i, V_i in enumerate(volumes):
-
-        #     # Expasion cycle (1) -> (2)
-        #     if (V1 < round(V_i,8) <= round(V2,8)) and (round(v_piston[i],8) < 0):
-        #         P_i = ((V1/V_i)**(self.k))*self.P_discharge
-        #         if round(V_i,8) == round(V2,8):
-        #             open_suc[i] = True
-        #         stage_log += f"Expansion: {i} {round(angle[i],1)} {round(V_i,8)} {round(P_i,1)}"
-
-        #     # Suction cycle (2) -> (3)
-        #     elif (V2 < round(V_i,8) <= round(V3c,8)) and (round(v_piston[i],8) <= 0):
-        #         P_i = self.P_suction
-        #         if round(V_i,8) == round(V3c,8):
-        #             if capacity == 1:
-        #                 open_suc[i] = True
-        #             else:
-        #                 # the suction valve remains open if the capacity < 1
-        #                 open_suc[i] = True
-        #         else:
-        #             open_suc[i] = True
-        #         stage_log += f"Suction: {i} {round(angle[i],1)} {round(V_i,8)} {round(P_i,1)}"
-            
-        #     # Compression cycle (3) -> (4)
-        #     elif (V3c > round(V_i,8) >= round(V4c,8)) and (round(v_piston[i],8) > 0):
-        #         # the compressor mass flow capacity control is obtained by letting 
-        #         # the suction valve oppened at the begning of compression cycle
-        #         cap_param = round((theta_4i-theta[i])/(theta_4i-theta_3i), 3)
-        #         # if capacity != 1:
-        #         # print(angle[i], theta[i], theta_3, theta_4)
-        #         # print(f"Compression (null): {i} {round(angle[i],1)} {round(V_i,8)} {round(P_i,1)} {V3c} {V4c} {cap_param}")
-        #         if (theta_4i-theta[i])/(theta_4i-theta_3i) > capacity:
-        #             P_i = self.P_suction
-        #             open_suc[i] = True
-        #             V3c = (h0 + 2*self.r + x_piston[i])*A
-        #             V4c = V3c*(1/self.p_ratio)**(1/self.k)
-        #             stage_log += f"Compression (null): {i} {round(angle[i],1)} {round(V_i,8)} {round(P_i,1)} {V3c} {V4c} {cap_param}"
-        #         else:
-        #             P_i = ((V3c/V_i)**(self.k))*self.P_suction
-        #             stage_log += f"Compression: {i} {round(angle[i],1)} {round(V_i,8)} {round(P_i,1)} {cap_param}"
-
-        #         if round(V_i,8) == round(V4c,8):
-        #             open_disc[i] = True
-
-        #     # Discharge cycle (4) -> (1)
-        #     elif (V4c > round(V_i,8) >= round(V1,8)) and (round(v_piston[i],8) >= 0):
-        #         P_i = self.P_discharge
-        #         if round(V_i,8) == round(V1,8):
-        #             open_disc[i] = True
-        #         else:
-        #             open_disc[i] = True
-        #         stage_log += f"Discharge: {i} {round(angle[i],1)} {round(V_i,8)} {round(P_i,1)}"
-
-        #     # compression - not full capacity
-        #     elif (V3c < round(V_i,8) <= round(V3,8)):
-        #         P_i = self.P_suction
-        #         if round(V_i,8) != round(V3,8):
-        #             open_suc[i] = True
-        #         stage_log += f"Compression (null): {i} {round(angle[i],1)} {round(V_i,8)} {round(P_i,1)}"
-
-        #     else:
-        #         stage_log += f"Undefined stage: {i} {round(angle[i],1)} {round(V_i,8)} {round(P_i,1)}"
-        #         message = f"The {i} point with volume {round(V_i,8)} and pressure {round(P_i,1)} "
-        #         message += "are not recognized as a thermodynamic stage."
-
-        #     stage_log += "\n"
-
-        #     if message != "":
-        #         return None, None, None
-            
-        #     pressures[i] = P_i
 
 
 if __name__ == "__main__":

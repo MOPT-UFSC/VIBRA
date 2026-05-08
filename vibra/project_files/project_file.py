@@ -6,20 +6,18 @@ from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
 from vibra.interface.general.print_message_input import PrintMessageInput
 
-import os
 import h5py
 import numpy as np
 
 from copy import deepcopy
 from pathlib import Path
 
-from vibra.project_files.file_helpers import read_json, write_json, read_config, write_config, read_image, write_image
+from vibra.interface import error_title
+from vibra.engine.serialization.file_helpers import read_json, write_json, read_config, write_config, read_image, write_image
 from vibra.project_files.lazy_hdf5_matrix import LazyHDF5MatrixWriter, LazyHDF5MatrixLoader
 
 from vibra.utils.utils import get_color_rgb, get_list_of_values_from_string
 
-window_title_1 = "Error"
-window_title_2 = "Warning"
 
 
 class ProjectFile:
@@ -39,6 +37,7 @@ class ProjectFile:
         self.model_properties_filepath = self.path / "model_properties.json"
         self.mesh_data_filepath = self.path / "mesh_data.hdf5"
         self.mesh_quality_data_filepath = self.path / "mesh_quality_data.json"
+        self.errors_data_filepath = self.path / "errors_data.json"
         self.imported_table_data_filepath = self.path / "imported_tables_data.hdf5"
         self.results_data_filepath = self.path / "results_data.hdf5"
         self.thumbnail_filepath = self.path / "thumbnail.png"
@@ -94,7 +93,7 @@ class ProjectFile:
 
     def write_geometry_data_in_file(self):
 
-        mesh = app().project.model.mesh
+        mesh = app().old_project.model.mesh
 
         geometry_data = dict(
             geometry_info = mesh.geometry_information,
@@ -106,7 +105,7 @@ class ProjectFile:
             points_from_line = mesh.points_from_line,
         )
 
-        if app().project.model.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
+        if app().old_project.model.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
 
             geometry_data.update(dict(
                 cache_surfaces_from_volume = mesh.cache_surfaces_from_volume,
@@ -189,7 +188,7 @@ class ProjectFile:
                         try:
                             geometry_data[key] = np.array(values)
 
-                        except:
+                        except Exception:
                             geometry_data[key] = int(values)
 
         except Exception as error_log:
@@ -209,7 +208,7 @@ class ProjectFile:
         app().main_window.project_data_modified = True
 
     def write_mesh_quality_data_in_file(self):
-        mesh_quality_data = app().project.model.mesh.mesh_quality_data
+        mesh_quality_data = app().old_project.model.mesh.mesh_quality_data
         if not mesh_quality_data:
             return
         
@@ -255,7 +254,7 @@ class ProjectFile:
         return mesh_setup
 
     def write_mesh_data_in_file(self):
-        mesh = app().project.model.mesh
+        mesh = app().old_project.model.mesh
 
         mesh_data = dict(
             nodal_coordinates = mesh.nodal_coordinates,
@@ -267,7 +266,7 @@ class ProjectFile:
             curvatures_surface = mesh.curvatures_surface,
         )
 
-        if app().project.model.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
+        if app().old_project.model.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
 
             mesh_data.update(dict(
                 cache_nodal_coordinates = mesh.cache_nodal_coordinates,
@@ -326,7 +325,7 @@ class ProjectFile:
                         try:
                             mesh_data[key] = np.array(values)
 
-                        except:
+                        except Exception:
                             mesh_data[key] = int(values)
 
         except Exception as error_log:
@@ -336,18 +335,20 @@ class ProjectFile:
 
         return mesh_data
 
-
     def write_analysis_setup_in_file(self, analysis_setup: dict):
         project_setup = read_json(self.project_setup_filepath)
         if project_setup is None:
-            return   
-
+            return
+        
         aux = dict()
         for key, data in analysis_setup.items():
-            if key == "frequencies":
-                continue
-            # if isinstance(data, np.ndarray):
-            #     data = list(data)
+
+            if isinstance(data, np.ndarray):
+                if data.size == 0:
+                    continue
+
+                data = list(data)
+
             aux[key] = data
 
         project_setup["analysis_setup"] = aux         
@@ -355,16 +356,11 @@ class ProjectFile:
         app().main_window.project_data_modified = True
 
     def read_analysis_setup_from_file(self):
-        analysis_setup = None
         project_setup = read_json(self.project_setup_filepath)
+        if not isinstance(project_setup, dict):
+            return dict()
 
-        if project_setup is None:
-            return
-
-        if "analysis_setup" in project_setup.keys():
-            analysis_setup = project_setup["analysis_setup"]
-
-        return analysis_setup
+        return project_setup.get("analysis_setup", dict)
 
     def write_model_setup_in_file(self, project_setup : dict):
         write_json(self.project_setup_filepath, project_setup)
@@ -411,13 +407,16 @@ class ProjectFile:
                     elif isinstance(tags, int):
                         key = f"{property} {tags}"
 
+                    elif isinstance(tags, str):
+                        key = property
+
                     else:
                         continue
 
                     aux = dict()
                     if isinstance(data, dict):
                         for _key, _data in data.items():
-                            if _key in ["values"]:
+                            if _key in ["values", "tables_frequencies"]:
                                 continue
                             elif isinstance(_data, Fluid):
                                 aux[_key] = _data.get_data()
@@ -439,10 +438,10 @@ class ProjectFile:
 
                 return output
 
-            properties = app().project.model.properties
+            properties = app().old_project.model.properties
 
             data = dict(
-                        # global_properties = normalize(properties.global_properties),
+                        global_properties = normalize(properties.global_properties),
                         volume_properties = normalize(properties.volume_properties),
                         surface_properties = normalize(properties.surface_properties),
                         line_properties = normalize(properties.line_properties),
@@ -459,7 +458,7 @@ class ProjectFile:
 
             title = "Error while exporting model properties"
             message = str(error_log)
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
 
     def read_model_properties_from_file(self):
 
@@ -493,7 +492,7 @@ class ProjectFile:
             return dict()
 
         model_properties = dict(
-                                # global_properties = denormalize(data.get(""global_properties")),
+                                global_properties = denormalize(data.get("global_properties")),
                                 volume_properties = denormalize(data.get("volume_properties")),
                                 surface_properties = denormalize(data.get("surface_properties")),
                                 line_properties = denormalize(data.get("line_properties")),
@@ -508,8 +507,8 @@ class ProjectFile:
     def write_imported_table_data_in_file(self):
 
         self.remove_table_data_from_project_file()
-        acoustic_imported_tables = app().project.model.properties.acoustic_imported_tables
-        structural_imported_tables = app().project.model.properties.structural_imported_tables
+        acoustic_imported_tables = app().old_project.model.properties.acoustic_imported_tables
+        structural_imported_tables = app().old_project.model.properties.structural_imported_tables
 
         if acoustic_imported_tables or structural_imported_tables:
 
@@ -547,19 +546,19 @@ class ProjectFile:
 
                         try:
                             aux[key] = np.array(values)
-                        except:
+                        except Exception:
                             continue
 
                     if aux:
                         tables_data[group] = aux
 
-        except:
+        except Exception:
             return dict()
 
         return tables_data
 
     def write_thumbnail(self):
-        thumbnail = app().project.thumbnail
+        thumbnail = app().old_project.thumbnail
         if thumbnail is None:
             return
         write_image(self.thumbnail_filepath, thumbnail)
@@ -569,8 +568,8 @@ class ProjectFile:
         return read_image(self.thumbnail_filepath)
     
     def write_results_data_in_file(self):
-        acoustic_harmonic_solver = app().project.acoustic_harmonic_solver
-        structural_harmonic_solver = app().project.structural_harmonic_solver
+        acoustic_harmonic_solver = app().old_project.acoustic_harmonic_solver
+        structural_harmonic_solver = app().old_project.structural_harmonic_solver
 
         if acoustic_harmonic_solver is not None and acoustic_harmonic_solver.project_file is not None:
             return
@@ -580,7 +579,7 @@ class ProjectFile:
 
         with h5py.File(self.results_data_filepath, "w") as f:
 
-            acoustic_modal_solver = app().project.acoustic_modal_solver
+            acoustic_modal_solver = app().old_project.acoustic_modal_solver
             if acoustic_modal_solver is not None:
                 if acoustic_modal_solver.solution is not None:
                     modal_shapes = acoustic_modal_solver.solution
@@ -592,7 +591,7 @@ class ProjectFile:
                         f.create_dataset("modal_acoustic/natural_frequencies", data=natural_frequencies, dtype=float)
                     f.create_dataset("modal_acoustic/solution", data=modal_shapes, dtype=complex)
 
-            structural_modal_solver = app().project.structural_modal_solver
+            structural_modal_solver = app().old_project.structural_modal_solver
             if structural_modal_solver is not None:
                 if structural_modal_solver.solution is not None:
                     natural_frequencies = structural_modal_solver.natural_frequencies
@@ -602,18 +601,18 @@ class ProjectFile:
                     f.create_dataset("modal_structural/solution", data=solution_full, dtype=complex)
                     f.create_dataset("modal_structural/displacement_dof", data=displacement_dof, dtype=int)
 
-            acoustic_harmonic_solver = app().project.acoustic_harmonic_solver
+            acoustic_harmonic_solver = app().old_project.acoustic_harmonic_solver
             if acoustic_harmonic_solver is not None:
                 if acoustic_harmonic_solver.solution is not None:
-                    frequencies = app().project.model.frequencies
+                    frequencies = app().old_project.model.frequencies
                     solution = acoustic_harmonic_solver.solution
                     f.create_dataset("harmonic_acoustic/frequencies", data=frequencies, dtype=float)
                     f.create_dataset("harmonic_acoustic/solution", data=solution, dtype=complex)
 
-            structural_harmonic_solver = app().project.structural_harmonic_solver
+            structural_harmonic_solver = app().old_project.structural_harmonic_solver
             if structural_harmonic_solver is not None:
                 if structural_harmonic_solver.solution is not None:
-                    frequencies = app().project.model.frequencies
+                    frequencies = app().old_project.model.frequencies
                     solution = structural_harmonic_solver.solution
                     displacement_dof = structural_harmonic_solver.displacement_dof
                     f.create_dataset("harmonic_structural/frequencies", data=frequencies, dtype=float)
@@ -680,13 +679,13 @@ class ProjectFile:
 
                         try:
                             aux[key] = np.array(values)
-                        except:
+                        except Exception:
                             continue
 
                     if aux:
                         results_data[group] = aux
 
-        except:
+        except Exception:
             return dict()
 
         return results_data
@@ -699,6 +698,17 @@ class ProjectFile:
 
     def remove_mesh_data_from_project_file(self):
         self.mesh_data_filepath.unlink(missing_ok=True)
+
+    def remove_mesh_error_data_from_project_file(self):
+        errors_data = self.read_errors_data_from_file()
+        if "mesh_error" in errors_data.keys():
+            errors_data.pop("mesh_error")
+            write_json(self.errors_data_filepath, errors_data)
+
+        if not errors_data:
+            self.errors_data_filepath.unlink(missing_ok=True)
+
+        app().main_window.project_data_modified = True
 
     def remove_mesh_quality_data_from_project_file(self):
         self.mesh_quality_data_filepath.unlink(missing_ok=True)
@@ -720,6 +730,36 @@ class ProjectFile:
     def extract_project(self, path: Path):
         with zipfile.ZipFile(path, 'r') as zipf:
             zipf.extractall(path=self.path)
+
+    def read_errors_data_from_file(self):
+        errors_data = read_json(self.errors_data_filepath)
+        if errors_data is None:
+            return dict()
+
+        return errors_data
+
+    def read_mesh_error_data_from_file(self):
+        errors_data = self.read_errors_data_from_file()
+        return errors_data.get("mesh_error")  
+
+    def write_mesh_error_data_in_file(self):
+        mesh_error = dict()
+        mesh = app().old_project.model.mesh
+        errors_data = self.read_errors_data_from_file()
+
+        if mesh.disconnected_nodes_data:
+            mesh_error["disconnected_nodes_data"] = mesh.disconnected_nodes_data
+
+        if mesh.collapsed_elements_data:
+            mesh_error["collapsed_elements_data"] = mesh.collapsed_elements_data
+
+        if not mesh_error:
+            return
+
+        errors_data["mesh_error"] = mesh_error
+
+        write_json(self.errors_data_filepath, errors_data)
+        app().main_window.project_data_modified = True
 
     def backward_compatibility_for_fluids_data_file(self):
         path = deepcopy(str(self.fluid_library_filepath))

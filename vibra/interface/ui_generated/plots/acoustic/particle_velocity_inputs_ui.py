@@ -15,15 +15,15 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QComboBox, QFrame, QGridLayout,
-    QLabel, QLineEdit, QPushButton, QSizePolicy,
-    QSpacerItem, QWidget)
+from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFrame,
+    QGridLayout, QLabel, QLineEdit, QPushButton,
+    QSizePolicy, QSpacerItem, QWidget)
 
 class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(360, 380)
+        Form.resize(405, 432)
         self.gridLayout_4 = QGridLayout(Form)
         self.gridLayout_4.setObjectName(u"gridLayout_4")
         self.gridLayout_4.setVerticalSpacing(4)
@@ -67,6 +67,108 @@ class Ui_Form(object):
         self.gridLayout_3.setSpacing(4)
         self.gridLayout_3.setObjectName(u"gridLayout_3")
         self.gridLayout_3.setContentsMargins(4, 4, 4, 4)
+        self.frame_8 = QFrame(self.frame_2)
+        self.frame_8.setObjectName(u"frame_8")
+        self.frame_8.setMinimumSize(QSize(0, 48))
+        self.frame_8.setMaximumSize(QSize(16777215, 48))
+        self.frame_8.setFrameShape(QFrame.NoFrame)
+        self.frame_8.setFrameShadow(QFrame.Raised)
+        self.gridLayout_9 = QGridLayout(self.frame_8)
+        self.gridLayout_9.setObjectName(u"gridLayout_9")
+        self.gridLayout_9.setHorizontalSpacing(6)
+        self.gridLayout_9.setVerticalSpacing(2)
+        self.gridLayout_9.setContentsMargins(2, 2, 2, 2)
+        self.horizontalSpacer_9 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_9.addItem(self.horizontalSpacer_9, 0, 0, 1, 1)
+
+        self.horizontalSpacer_10 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_9.addItem(self.horizontalSpacer_10, 0, 4, 1, 1)
+
+        self.frame_11 = QFrame(self.frame_8)
+        self.frame_11.setObjectName(u"frame_11")
+        self.frame_11.setMinimumSize(QSize(40, 30))
+        self.frame_11.setMaximumSize(QSize(40, 30))
+        self.frame_11.setFrameShape(QFrame.NoFrame)
+        self.frame_11.setFrameShadow(QFrame.Raised)
+
+        self.gridLayout_9.addWidget(self.frame_11, 0, 3, 1, 1)
+
+        self.label_5 = QLabel(self.frame_8)
+        self.label_5.setObjectName(u"label_5")
+        self.label_5.setMinimumSize(QSize(110, 30))
+        self.label_5.setMaximumSize(QSize(110, 30))
+        font1 = QFont()
+        font1.setPointSize(10)
+        self.label_5.setFont(font1)
+        self.label_5.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+
+        self.gridLayout_9.addWidget(self.label_5, 0, 1, 1, 1)
+
+        self.comboBox_nodal_normals = QComboBox(self.frame_8)
+        self.comboBox_nodal_normals.addItem("")
+        self.comboBox_nodal_normals.addItem("")
+        self.comboBox_nodal_normals.setObjectName(u"comboBox_nodal_normals")
+        self.comboBox_nodal_normals.setMinimumSize(QSize(140, 30))
+        self.comboBox_nodal_normals.setMaximumSize(QSize(140, 30))
+        self.comboBox_nodal_normals.setFont(font1)
+        self.comboBox_nodal_normals.setStyleSheet(u"")
+
+        self.gridLayout_9.addWidget(self.comboBox_nodal_normals, 0, 2, 1, 1)
+
+
+        self.gridLayout_3.addWidget(self.frame_8, 4, 0, 1, 1)
+
+        self.frame_volumes_selector = QFrame(self.frame_2)
+        self.frame_volumes_selector.setObjectName(u"frame_volumes_selector")
+        self.frame_volumes_selector.setMinimumSize(QSize(0, 48))
+        self.frame_volumes_selector.setMaximumSize(QSize(16777215, 48))
+        self.frame_volumes_selector.setFrameShape(QFrame.NoFrame)
+        self.frame_volumes_selector.setFrameShadow(QFrame.Raised)
+        self.gridLayout_7 = QGridLayout(self.frame_volumes_selector)
+        self.gridLayout_7.setObjectName(u"gridLayout_7")
+        self.gridLayout_7.setHorizontalSpacing(6)
+        self.gridLayout_7.setVerticalSpacing(2)
+        self.gridLayout_7.setContentsMargins(2, 2, 2, 2)
+        self.label_3 = QLabel(self.frame_volumes_selector)
+        self.label_3.setObjectName(u"label_3")
+        self.label_3.setMinimumSize(QSize(110, 30))
+        self.label_3.setMaximumSize(QSize(110, 30))
+        self.label_3.setFont(font1)
+        self.label_3.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+
+        self.gridLayout_7.addWidget(self.label_3, 0, 1, 1, 1)
+
+        self.comboBox_volumes = QComboBox(self.frame_volumes_selector)
+        self.comboBox_volumes.setObjectName(u"comboBox_volumes")
+        self.comboBox_volumes.setMinimumSize(QSize(140, 30))
+        self.comboBox_volumes.setMaximumSize(QSize(140, 30))
+        self.comboBox_volumes.setFont(font1)
+        self.comboBox_volumes.setStyleSheet(u"")
+
+        self.gridLayout_7.addWidget(self.comboBox_volumes, 0, 2, 1, 1)
+
+        self.frame_10 = QFrame(self.frame_volumes_selector)
+        self.frame_10.setObjectName(u"frame_10")
+        self.frame_10.setMinimumSize(QSize(40, 30))
+        self.frame_10.setMaximumSize(QSize(40, 30))
+        self.frame_10.setFrameShape(QFrame.NoFrame)
+        self.frame_10.setFrameShadow(QFrame.Raised)
+
+        self.gridLayout_7.addWidget(self.frame_10, 0, 3, 1, 1)
+
+        self.horizontalSpacer_5 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_7.addItem(self.horizontalSpacer_5, 0, 0, 1, 1)
+
+        self.horizontalSpacer_6 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_7.addItem(self.horizontalSpacer_6, 0, 4, 1, 1)
+
+
+        self.gridLayout_3.addWidget(self.frame_volumes_selector, 3, 0, 1, 1)
+
         self.frame_5 = QFrame(self.frame_2)
         self.frame_5.setObjectName(u"frame_5")
         self.frame_5.setMinimumSize(QSize(0, 48))
@@ -82,8 +184,6 @@ class Ui_Form(object):
         self.label_2.setObjectName(u"label_2")
         self.label_2.setMinimumSize(QSize(110, 30))
         self.label_2.setMaximumSize(QSize(110, 30))
-        font1 = QFont()
-        font1.setPointSize(10)
         self.label_2.setFont(font1)
         self.label_2.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
 
@@ -93,8 +193,8 @@ class Ui_Form(object):
         self.comboBox_selector_filter.addItem("")
         self.comboBox_selector_filter.addItem("")
         self.comboBox_selector_filter.setObjectName(u"comboBox_selector_filter")
-        self.comboBox_selector_filter.setMinimumSize(QSize(110, 30))
-        self.comboBox_selector_filter.setMaximumSize(QSize(110, 30))
+        self.comboBox_selector_filter.setMinimumSize(QSize(140, 30))
+        self.comboBox_selector_filter.setMaximumSize(QSize(140, 30))
         self.comboBox_selector_filter.setFont(font1)
         self.comboBox_selector_filter.setStyleSheet(u"")
 
@@ -146,8 +246,8 @@ class Ui_Form(object):
         self.comboBox_component_selector.addItem("")
         self.comboBox_component_selector.addItem("")
         self.comboBox_component_selector.setObjectName(u"comboBox_component_selector")
-        self.comboBox_component_selector.setMinimumSize(QSize(110, 30))
-        self.comboBox_component_selector.setMaximumSize(QSize(110, 30))
+        self.comboBox_component_selector.setMinimumSize(QSize(140, 30))
+        self.comboBox_component_selector.setMaximumSize(QSize(140, 30))
         self.comboBox_component_selector.setFont(font1)
         self.comboBox_component_selector.setStyleSheet(u"")
 
@@ -171,7 +271,7 @@ class Ui_Form(object):
         self.gridLayout_8.addItem(self.horizontalSpacer_8, 0, 4, 1, 1)
 
 
-        self.gridLayout_3.addWidget(self.frame_7, 4, 0, 1, 1)
+        self.gridLayout_3.addWidget(self.frame_7, 5, 0, 1, 1)
 
         self.frame_4 = QFrame(self.frame_2)
         self.frame_4.setObjectName(u"frame_4")
@@ -200,8 +300,8 @@ class Ui_Form(object):
 
         self.lineEdit_selection_id = QLineEdit(self.frame_4)
         self.lineEdit_selection_id.setObjectName(u"lineEdit_selection_id")
-        self.lineEdit_selection_id.setMinimumSize(QSize(110, 30))
-        self.lineEdit_selection_id.setMaximumSize(QSize(110, 30))
+        self.lineEdit_selection_id.setMinimumSize(QSize(140, 30))
+        self.lineEdit_selection_id.setMaximumSize(QSize(140, 30))
         self.lineEdit_selection_id.setFont(font1)
         self.lineEdit_selection_id.setStyleSheet(u"")
         self.lineEdit_selection_id.setAlignment(Qt.AlignCenter)
@@ -259,107 +359,36 @@ class Ui_Form(object):
         self.gridLayout_47.addWidget(self.pushButton_plot_data, 0, 0, 1, 1)
 
 
-        self.gridLayout_3.addWidget(self.frame_3, 5, 0, 1, 1)
+        self.gridLayout_3.addWidget(self.frame_3, 7, 0, 1, 1)
 
-        self.frame_volumes_selector = QFrame(self.frame_2)
-        self.frame_volumes_selector.setObjectName(u"frame_volumes_selector")
-        self.frame_volumes_selector.setMinimumSize(QSize(0, 48))
-        self.frame_volumes_selector.setMaximumSize(QSize(16777215, 48))
-        self.frame_volumes_selector.setFrameShape(QFrame.NoFrame)
-        self.frame_volumes_selector.setFrameShadow(QFrame.Raised)
-        self.gridLayout_7 = QGridLayout(self.frame_volumes_selector)
-        self.gridLayout_7.setObjectName(u"gridLayout_7")
-        self.gridLayout_7.setHorizontalSpacing(6)
-        self.gridLayout_7.setVerticalSpacing(2)
-        self.gridLayout_7.setContentsMargins(2, 2, 2, 2)
-        self.label_3 = QLabel(self.frame_volumes_selector)
-        self.label_3.setObjectName(u"label_3")
-        self.label_3.setMinimumSize(QSize(110, 30))
-        self.label_3.setMaximumSize(QSize(110, 30))
-        self.label_3.setFont(font1)
-        self.label_3.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.frame_convert_data = QFrame(self.frame_2)
+        self.frame_convert_data.setObjectName(u"frame_convert_data")
+        self.frame_convert_data.setMinimumSize(QSize(0, 48))
+        self.frame_convert_data.setMaximumSize(QSize(16777215, 48))
+        self.frame_convert_data.setFrameShape(QFrame.NoFrame)
+        self.frame_convert_data.setFrameShadow(QFrame.Raised)
+        self.gridLayout_10 = QGridLayout(self.frame_convert_data)
+        self.gridLayout_10.setObjectName(u"gridLayout_10")
+        self.gridLayout_10.setHorizontalSpacing(6)
+        self.gridLayout_10.setVerticalSpacing(2)
+        self.gridLayout_10.setContentsMargins(2, 2, 2, 2)
+        self.horizontalSpacer_11 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gridLayout_7.addWidget(self.label_3, 0, 1, 1, 1)
+        self.gridLayout_10.addItem(self.horizontalSpacer_11, 0, 0, 1, 1)
 
-        self.comboBox_volumes = QComboBox(self.frame_volumes_selector)
-        self.comboBox_volumes.setObjectName(u"comboBox_volumes")
-        self.comboBox_volumes.setMinimumSize(QSize(110, 30))
-        self.comboBox_volumes.setMaximumSize(QSize(110, 30))
-        self.comboBox_volumes.setFont(font1)
-        self.comboBox_volumes.setStyleSheet(u"")
+        self.horizontalSpacer_12 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gridLayout_7.addWidget(self.comboBox_volumes, 0, 2, 1, 1)
+        self.gridLayout_10.addItem(self.horizontalSpacer_12, 0, 2, 1, 1)
 
-        self.frame_10 = QFrame(self.frame_volumes_selector)
-        self.frame_10.setObjectName(u"frame_10")
-        self.frame_10.setMinimumSize(QSize(40, 30))
-        self.frame_10.setMaximumSize(QSize(40, 30))
-        self.frame_10.setFrameShape(QFrame.NoFrame)
-        self.frame_10.setFrameShadow(QFrame.Raised)
+        self.checkBox_convert_to_volume_velocity = QCheckBox(self.frame_convert_data)
+        self.checkBox_convert_to_volume_velocity.setObjectName(u"checkBox_convert_to_volume_velocity")
+        self.checkBox_convert_to_volume_velocity.setMinimumSize(QSize(200, 0))
+        self.checkBox_convert_to_volume_velocity.setFont(font1)
 
-        self.gridLayout_7.addWidget(self.frame_10, 0, 3, 1, 1)
-
-        self.horizontalSpacer_5 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_7.addItem(self.horizontalSpacer_5, 0, 0, 1, 1)
-
-        self.horizontalSpacer_6 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_7.addItem(self.horizontalSpacer_6, 0, 4, 1, 1)
+        self.gridLayout_10.addWidget(self.checkBox_convert_to_volume_velocity, 0, 1, 1, 1)
 
 
-        self.gridLayout_3.addWidget(self.frame_volumes_selector, 2, 0, 1, 1)
-
-        self.frame_8 = QFrame(self.frame_2)
-        self.frame_8.setObjectName(u"frame_8")
-        self.frame_8.setMinimumSize(QSize(0, 48))
-        self.frame_8.setMaximumSize(QSize(16777215, 48))
-        self.frame_8.setFrameShape(QFrame.NoFrame)
-        self.frame_8.setFrameShadow(QFrame.Raised)
-        self.gridLayout_9 = QGridLayout(self.frame_8)
-        self.gridLayout_9.setObjectName(u"gridLayout_9")
-        self.gridLayout_9.setHorizontalSpacing(6)
-        self.gridLayout_9.setVerticalSpacing(2)
-        self.gridLayout_9.setContentsMargins(2, 2, 2, 2)
-        self.label_5 = QLabel(self.frame_8)
-        self.label_5.setObjectName(u"label_5")
-        self.label_5.setMinimumSize(QSize(110, 30))
-        self.label_5.setMaximumSize(QSize(110, 30))
-        self.label_5.setFont(font1)
-        self.label_5.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
-
-        self.gridLayout_9.addWidget(self.label_5, 0, 1, 1, 1)
-
-        self.comboBox_nodal_normals = QComboBox(self.frame_8)
-        self.comboBox_nodal_normals.addItem("")
-        self.comboBox_nodal_normals.addItem("")
-        self.comboBox_nodal_normals.setObjectName(u"comboBox_nodal_normals")
-        self.comboBox_nodal_normals.setMinimumSize(QSize(110, 30))
-        self.comboBox_nodal_normals.setMaximumSize(QSize(110, 30))
-        self.comboBox_nodal_normals.setFont(font1)
-        self.comboBox_nodal_normals.setStyleSheet(u"")
-
-        self.gridLayout_9.addWidget(self.comboBox_nodal_normals, 0, 2, 1, 1)
-
-        self.frame_11 = QFrame(self.frame_8)
-        self.frame_11.setObjectName(u"frame_11")
-        self.frame_11.setMinimumSize(QSize(40, 30))
-        self.frame_11.setMaximumSize(QSize(40, 30))
-        self.frame_11.setFrameShape(QFrame.NoFrame)
-        self.frame_11.setFrameShadow(QFrame.Raised)
-
-        self.gridLayout_9.addWidget(self.frame_11, 0, 3, 1, 1)
-
-        self.horizontalSpacer_9 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_9.addItem(self.horizontalSpacer_9, 0, 0, 1, 1)
-
-        self.horizontalSpacer_10 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_9.addItem(self.horizontalSpacer_10, 0, 4, 1, 1)
-
-
-        self.gridLayout_3.addWidget(self.frame_8, 3, 0, 1, 1)
+        self.gridLayout_3.addWidget(self.frame_convert_data, 6, 0, 1, 1)
 
 
         self.gridLayout_4.addWidget(self.frame_2, 1, 0, 1, 1)
@@ -367,10 +396,10 @@ class Ui_Form(object):
 
         self.retranslateUi(Form)
 
+        self.comboBox_nodal_normals.setCurrentIndex(0)
+        self.comboBox_volumes.setCurrentIndex(-1)
         self.comboBox_selector_filter.setCurrentIndex(0)
         self.comboBox_component_selector.setCurrentIndex(0)
-        self.comboBox_volumes.setCurrentIndex(-1)
-        self.comboBox_nodal_normals.setCurrentIndex(0)
 
 
         QMetaObject.connectSlotsByName(Form)
@@ -379,15 +408,20 @@ class Ui_Form(object):
     def retranslateUi(self, Form):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Plot particle velocity", None))
         self.label.setText(QCoreApplication.translate("Form", u"Plot particle velocity frequency response", None))
+        self.label_5.setText(QCoreApplication.translate("Form", u"Nodal normals: ", None))
+        self.comboBox_nodal_normals.setItemText(0, QCoreApplication.translate("Form", u"Hide", None))
+        self.comboBox_nodal_normals.setItemText(1, QCoreApplication.translate("Form", u"Show", None))
+
+        self.label_3.setText(QCoreApplication.translate("Form", u"Volume ID: ", None))
         self.label_2.setText(QCoreApplication.translate("Form", u"Selector filter: ", None))
         self.comboBox_selector_filter.setItemText(0, QCoreApplication.translate("Form", u"Surfaces", None))
         self.comboBox_selector_filter.setItemText(1, QCoreApplication.translate("Form", u"Nodes", None))
 
         self.label_4.setText(QCoreApplication.translate("Form", u"Component: ", None))
-        self.comboBox_component_selector.setItemText(0, QCoreApplication.translate("Form", u"   x-axis", None))
-        self.comboBox_component_selector.setItemText(1, QCoreApplication.translate("Form", u"   y-axis", None))
-        self.comboBox_component_selector.setItemText(2, QCoreApplication.translate("Form", u"   z-axis", None))
-        self.comboBox_component_selector.setItemText(3, QCoreApplication.translate("Form", u"  normal", None))
+        self.comboBox_component_selector.setItemText(0, QCoreApplication.translate("Form", u"x-axis", None))
+        self.comboBox_component_selector.setItemText(1, QCoreApplication.translate("Form", u"y-axis", None))
+        self.comboBox_component_selector.setItemText(2, QCoreApplication.translate("Form", u" z-axis", None))
+        self.comboBox_component_selector.setItemText(3, QCoreApplication.translate("Form", u"normal", None))
 
         self.label_10.setText(QCoreApplication.translate("Form", u"Selected ID: ", None))
         self.lineEdit_selection_id.setText("")
@@ -396,11 +430,7 @@ class Ui_Form(object):
 #endif // QT_CONFIG(tooltip)
         self.pushButton_export_data.setText("")
         self.pushButton_plot_data.setText(QCoreApplication.translate("Form", u"Plot data", None))
-        self.label_3.setText(QCoreApplication.translate("Form", u"Volume ID: ", None))
-        self.label_5.setText(QCoreApplication.translate("Form", u"Nodal normals: ", None))
-        self.comboBox_nodal_normals.setItemText(0, QCoreApplication.translate("Form", u"Hide", None))
-        self.comboBox_nodal_normals.setItemText(1, QCoreApplication.translate("Form", u"Show", None))
-
+        self.checkBox_convert_to_volume_velocity.setText(QCoreApplication.translate("Form", u"Convert to volume velocity", None))
     # retranslateUi
 
 
@@ -415,6 +445,16 @@ class ParticleVelocityInputs_UI(QWidget, Ui_Form):
                             - label: QLabel
                 - frame_2: QFrame
                     - (Layout): QGridLayout
+                            - frame_8: QFrame
+                                - (Layout): QGridLayout
+                                        - frame_11: QFrame
+                                        - label_5: QLabel
+                                        - comboBox_nodal_normals: QComboBox
+                            - frame_volumes_selector: QFrame
+                                - (Layout): QGridLayout
+                                        - label_3: QLabel
+                                        - comboBox_volumes: QComboBox
+                                        - frame_10: QFrame
                             - frame_5: QFrame
                                 - (Layout): QGridLayout
                                         - label_2: QLabel
@@ -433,16 +473,9 @@ class ParticleVelocityInputs_UI(QWidget, Ui_Form):
                             - frame_3: QFrame
                                 - (Layout): QGridLayout
                                         - pushButton_plot_data: QPushButton
-                            - frame_volumes_selector: QFrame
+                            - frame_convert_data: QFrame
                                 - (Layout): QGridLayout
-                                        - label_3: QLabel
-                                        - comboBox_volumes: QComboBox
-                                        - frame_10: QFrame
-                            - frame_8: QFrame
-                                - (Layout): QGridLayout
-                                        - label_5: QLabel
-                                        - comboBox_nodal_normals: QComboBox
-                                        - frame_11: QFrame
+                                        - checkBox_convert_to_volume_velocity: QCheckBox
     """
 
     def __init__(self, *args, **kwargs):

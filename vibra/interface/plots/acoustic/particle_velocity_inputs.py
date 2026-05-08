@@ -1,18 +1,21 @@
+import logging
+
+import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
 from vibra.engine import AnalysisID
+from vibra.interface import error_title
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
-from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
-from vibra.interface.ui_generated.plots.acoustic.particle_velocity_inputs_ui import ParticleVelocityInputs_UI
-
-import logging
-import numpy as np
-
-error_title = "Error"
+from vibra.interface.plots.general.frequency_response_plotter import (
+    FrequencyResponsePlotter,
+)
+from vibra.interface.ui_generated.plots.acoustic.particle_velocity_inputs_ui import (
+    ParticleVelocityInputs_UI,
+)
 
 
 class ParticleVelocityInputs(ParticleVelocityInputs_UI):
@@ -21,26 +24,33 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
 
         app().main_window.show_geometry_render_widget()
 
-        self.project = app().project
-        self.model = app().project.model
-        self.mesh = app().project.model.mesh
-
-        self.acoustic_post = self.project.acoustic_postprocessing
-
         self._config_window()
-        self._reset_variables()
+        self._initialize()
         self._create_connections()
         self._load_analysis_setup_and_solution()
 
-    def _load_analysis_setup_and_solution(self):
-        self.analysis_method = ""
-        analysis_setup = self.project.analysis_setup
-        if "analysis_id" in analysis_setup.keys():
-            if analysis_setup["analysis_id"] == AnalysisID.ACOUSTIC_HARMONIC:
-                self.analysis_method = "Direct method"
+    @property
+    def model(self):
+        return app().project.model
 
-        self.frequencies = app().project.model.frequencies
-        self.solution = self.project.acoustic_harmonic_solver.solution
+    @property
+    def mesh(self):
+        return app().project.model.mesh
+
+    @property
+    def properties(self):
+        return app().project.model.properties
+
+    @property
+    def acoustic_post(self):
+        return app().project.get_acoustic_postprocessing()
+
+    def _initialize(self):
+        self.keep_window_open = True
+        self.exporter = None
+        self.plotter = None
+
+        self.model_results = dict()
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -48,13 +58,9 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Vibra")
 
-    def _reset_variables(self):
-        self.unit_label = "m/s"
-        self.keep_window_open = True
-        self.exporter = None
-        self.plotter = None
-
     def _create_connections(self):
+        #
+        self.checkBox_convert_to_volume_velocity.stateChanged.connect(self.convert_to_volume_velocity_callback)
         #
         self.comboBox_selector_filter.currentIndexChanged.connect(self.update_render_according_to_selector)
         self.comboBox_volumes.currentIndexChanged.connect(self.volume_selector_callback)
@@ -63,11 +69,29 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
         #
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         #
         self.geometry_selection_callback()
 
+    def _load_analysis_setup_and_solution(self):
+        self.analysis_method = ""
+        if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
+            self.analysis_method = "Direct method"
+
+        self.frequencies = app().project.model.frequencies
+
+    def convert_to_volume_velocity_callback(self):
+        volume_velocity = False
+        if self.checkBox_convert_to_volume_velocity.isEnabled():
+            volume_velocity = self.checkBox_convert_to_volume_velocity.isChecked()
+            self.comboBox_component_selector.setCurrentText("normal")
+
+        self.comboBox_component_selector.setDisabled(volume_velocity)
+
     def update_render_according_to_selector(self):
+        surface_selector = self.comboBox_selector_filter.currentText() == "Surfaces"
+        self.checkBox_convert_to_volume_velocity.setEnabled(surface_selector)
+
         self.geometry_selection_callback()
         if self.comboBox_selector_filter.currentIndex() == 0:
             app().main_window.show_geometry_render_widget()
@@ -77,7 +101,7 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
     def volume_selector_callback(self):
         if self.comboBox_volumes.currentText() != "":
             volume_id = int(self.comboBox_volumes.currentText())
-            app().main_window.set_geometry_selection(volumes=[volume_id])
+            app().main_window.selection.set_geometry_selection(volumes=[volume_id])
 
     def toggle_nodal_normals_symbols_visibility(self):
         show_normals = (self.comboBox_nodal_normals.currentText() == "Show")
@@ -86,15 +110,18 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
 
     def geometry_selection_callback(self):
 
-        volumes = app().main_window.selected_geometry_volumes
-        surfaces = app().main_window.selected_geometry_surfaces
-        nodes = app().main_window.selected_mesh_nodes
+        if not app().main_window.action_results_workspace.isChecked():
+            return
+
+        volumes = app().main_window.selection.geometry_volumes
+        surfaces = app().main_window.selection.geometry_surfaces
+        nodes = app().main_window.selection.mesh_nodes
 
         if volumes:
             if len(volumes) == 1:
                 try:
                     self.comboBox_volumes.setCurrentText(f"{list(volumes)[0]}")
-                except:
+                except Exception:
                     pass
             return
 
@@ -141,7 +168,7 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
         self.comboBox_volumes.clear()
         if external_surfaces_map and internal_surfaces_map:
             self.lineEdit_selection_id.setText("")
-            app().main_window.set_geometry_selection()
+            app().main_window.selection.set_geometry_selection()
             app().processEvents()
 
             title = "Invalid selection"
@@ -256,41 +283,51 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
 
     def join_model_data(self):
 
+        self.model_results.clear()
         component_label = self.get_component_label()
         selection_type = self.comboBox_selector_filter.currentText().lower()
 
-        self.model_results = dict()
-        self.title = "Particle velocity frequency response"
-
         for i, selected_id in enumerate(self.selected_ids):
 
+            factor = 1.0
+            unit_label = "m/s"
+            data_type = "Particle velocity"
+
+            if self.checkBox_convert_to_volume_velocity.isEnabled():
+                if self.checkBox_convert_to_volume_velocity.isChecked():
+                    unit_label = "m³/s"
+                    data_type = "Volume velocity"
+                    self.mesh.process_face_elements_connected_to_nodes(selected_id)
+                    factor = self.mesh.surface_area_from_element_integration[selected_id]
+
             key = (selection_type, (selected_id))
-            legend_label = f"Particle velocity at {selection_type} [{selected_id}]"
+            y_data = self.get_response(selection_type, selected_id)
+            legend_label = f"{data_type} at {selection_type[:-1]} [{selected_id}]"
 
             self.model_results[key] = { 
-                                        "x_data" : self.frequencies,
-                                        "y_data" : self.get_response(selection_type, selected_id),
-                                        "x_label" : "Frequency [Hz]",
-                                        "y_label" : f"Particle velocity {component_label}",
-                                        "title" : self.title,
-                                        "data_type" : "particle velocity",
-                                        "legend" : legend_label,
-                                        "unit" : self.unit_label,
-                                        "color" : self.get_color(i),
-                                        "linestyle" : "-"  
-                                      }
+                "x_data" : self.frequencies,
+                "y_data" : y_data * factor,
+                "x_label" : "Frequency [Hz]",
+                "y_label" : f"{data_type} {component_label}",
+                "title" : f"{data_type} frequency response",
+                "data_type" : data_type.lower(),
+                "legend" : legend_label,
+                "unit" : unit_label,
+                "color" : self.get_color(i),
+                "linestyle" : "-"  
+                }
 
     def get_color(self, index):
 
         colors = [  
-                  (0,0,1), 
-                  (0,0,0), 
-                  (1,0,0),
-                  (0,1,1), 
-                  (1,0,1), 
-                  (1,1,0),
-                  (0.25,0.25,0.25)
-                  ]
+            (0,0,1),
+            (0,0,0),
+            (1,0,0),
+            (0,1,1),
+            (1,0,1),
+            (1,1,0),
+            (0.25,0.25,0.25),
+            ]
 
         if index <= 6:
             return colors[index]

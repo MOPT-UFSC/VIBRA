@@ -180,18 +180,20 @@ class ChildTreeWidgetItem(QTreeWidgetItem):
             self.setData(0, Qt.ForegroundRole, None)  # reset color
             self.setData(0, Qt.DecorationRole, None)
 
-    def set_icon(self, visible: bool = True):
+    def set_icon(self, file_name: str = "", visible: bool = True):
+        # to set an alternative icon
+        file_name = file_name if file_name != "" else self.property_name
+
         if visible:
-            icon_name = str(self.property_name + ".png")
-            path_image = str(Path((ICON_DIR / "model_setup_items" / icon_name)))
+            path_image = str(Path((ICON_DIR / "model_setup_items" / str(file_name + ".png"))))
             self.setIcon(0, QIcon(path_image))
         else:
             self.setIcon(0, QIcon())
     
-    def set_tool_tip(self, requirement: bool = False, message_requirement: str = ""):
+    def set_tool_tip(self, property_name: str = "", requirement: bool = False, message_requirement: str = ""):
         if requirement and message_requirement == "":
             message_requirement = "<b style='color:red'>Required for the selected configuration.</b>"
         
-        tool_tip = self.tool_tips.get_tooltip_QTextEdit(self.property_name)
+        tool_tip = self.tool_tips.get_tooltip_QTextEdit(property_name)
         if tool_tip is not None:
             self.setToolTip(0, message_requirement + tool_tip.toHtml())

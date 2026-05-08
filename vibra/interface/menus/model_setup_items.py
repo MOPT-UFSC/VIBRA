@@ -4,7 +4,7 @@ from PySide6.QtCore import QTimer, Qt
 from PySide6.QtWidgets import QToolTip
 
 from vibra import app, DEVELOPER_MODE, ICON_DIR
-from vibra.interface.menus.common_menu_items import CommonMenuItems
+from vibra.interface.menus.common_menu_items import ChildTreeWidgetItem, CommonMenuItems
 
 from molde import Color
 
@@ -19,8 +19,6 @@ class ModelSetupItems(CommonMenuItems):
     def __init__(self):
         super().__init__()
 
-        self.project = app().project
-
         self._create_items()
         self._create_connections()
         self._initial_configuration()
@@ -33,6 +31,7 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_material = self.add_item("Material")
         self.item_child_fluid = self.add_item('Fluid')
         self.item_child_mesh_setup = self.add_item("Mesh Setup")
+        self.item_child_element_options = self.add_item("Element Options")
         self.item_child_degrees_of_freedom_decoupling = self.add_item("DOF Decoupling")
 
         self.item_top_structural_model_setup = self.add_top_item('Structural Model Setup (Beta)')
@@ -55,25 +54,32 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_normal_pressure_load = self.add_item("Normal Pressure Load")
     
         self.item_top_acoustic_model_setup = self.add_top_item('Acoustic Model Setup')
+        # acoustic model excitations
         self.item_child_acoustic_pressure = self.add_item('Acoustic Pressure')
-        # self.item_child_mass_flow_rate = self.add_item("Mass Flow Rate")
         self.item_child_mass_source = self.add_item("Mass Source")
         self.item_child_surface_velocity = self.add_item("Surface Velocity")
         self.item_child_incident_plane_wave = self.add_item("Incident Plane Wave")
+        self.item_child_compressor_excitation_spectrum = self.add_item("Compressor Excitation (spectrum)")
+        self.item_child_compressor_excitation_waveform = self.add_item("Compressor Excitation (waveform)")
+        self.item_child_reciprocating_compressor_excitation = self.add_item("Reciprocating Compressor Excitation")
+        # external impedances
         self.item_child_anechoic_termination = self.add_item("Anechoic Termination")
         self.item_child_absorption_surface = self.add_item("Absorption Surface")
         self.item_child_specific_impedance = self.add_item("Specific Impedance")
+        self.item_child_anechoic_termination.setToolTip(0, "equivalent to the long pipe boundary condition")
+        # internal impedances
         self.item_child_transfer_impedance = self.add_item("Transfer Impedance")
         self.item_child_perforated_plate_model = self.add_item("Perforated Plate Model")
+        # dissipation models
         self.item_child_proportional_damping = self.add_item("Proportional Damping")
         self.item_child_porous_material_model = self.add_item("Porous Material Model")
         self.item_child_viscous_thermal_model = self.add_item("Viscous-thermal Loss Model")
+        # other features
         self.item_child_acoustic_properties_gradient = self.add_item("Acoustic Properties Gradient")
-        self.item_child_reciprocating_compressor_excitation = self.add_item("Reciprocating Compressor Excitation")
         self.item_child_acoustic_transfer_element_setup = self.add_item("Acoustic Transfer Element Data")
-        
-        self.item_child_anechoic_termination.setToolTip(0, "equivalent to the long pipe boundary condition")
+
         # self.item_child_acoustic_properties_gradient.setHidden(True)
+        # self.item_child_compressor_excitation_spectrum.setHidden(True)
 
         self.top_level_items = [
             self.item_top_general_settings,
@@ -86,6 +92,7 @@ class ModelSetupItems(CommonMenuItems):
             "item_child_material": "material",
             "item_child_fluid": "fluid",
             "item_child_mesh_setup": "mesh_setup",
+            "item_child_element_options": "element_options",
             "item_child_degrees_of_freedom_decoupling": "degrees_of_freedom_decoupling",
             "item_child_surface_thickness": "surface_thickness",
             "item_child_prescribed_dof": "prescribed_dof",
@@ -106,6 +113,8 @@ class ModelSetupItems(CommonMenuItems):
             "item_child_viscous_thermal_model": "viscous_thermal_model",
             "item_child_acoustic_properties_gradient": "acoustic_properties_gradient",
             "item_child_reciprocating_compressor_excitation": "reciprocating_compressor_excitation",
+            "item_child_compressor_excitation_waveform": "compressor_excitation_waveform",
+            "item_child_compressor_excitation_spectrum": "compressor_excitation_spectrum",
             "item_child_acoustic_transfer_element_setup": "acoustic_transfer_element_setup",
         }
 
@@ -120,12 +129,12 @@ class ModelSetupItems(CommonMenuItems):
 
         for top_level_items in self.top_level_items:
             for index in range(top_level_items.childCount()):
-                item_child = top_level_items.child(index)
+                item_child: ChildTreeWidgetItem = top_level_items.child(index)
                 item_child_name = self._find_qtree_widget_item_name(item_child)
 
                 if item_child_name is None:
                     continue
-                
+
                 item_child.set_property_name(self.property_names[item_child_name])
                 
                 function_name = item_child_name + "_callback"
@@ -145,6 +154,7 @@ class ModelSetupItems(CommonMenuItems):
         self.item_top_acoustic_model_setup.setHidden(True)
 
         self.item_child_mesh_setup.setDisabled(True)
+        self.item_child_element_options.setDisabled(True)
         self.item_child_material.setDisabled(True)
         self.item_child_fluid.setDisabled(True)
 
@@ -153,12 +163,16 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_acoustic_properties_gradient.setHidden(not DEVELOPER_MODE)
         self.item_child_acoustic_transfer_element_setup.setHidden(not DEVELOPER_MODE)
 
-    def _find_qtree_widget_item_name(self, qtree_widet_item):
+        # TODO: remove when possible
+        self.item_child_incident_plane_wave.setHidden(True)
+        self.item_child_acoustic_properties_gradient.setHidden(True)
+
+    def _find_qtree_widget_item_name(self, qtree_widet_item) -> str | None:
         for attr_name, attr_value in self.__dict__.items():
             if attr_value == qtree_widet_item:
                 return attr_name
     
-    def _contains_property(self, property_name: str):
+    def _contains_property(self, property_name: str) -> bool:
 
         model = app().project.model
         mesh = app().project.model.mesh
@@ -175,7 +189,7 @@ class ModelSetupItems(CommonMenuItems):
             properties.point_properties,
             properties.element_properties,
             properties.nodal_properties,
-            ]
+        ]
 
         if property_name == "material":
             if mesh.are_there_volumes_in_geometry():
@@ -199,10 +213,11 @@ class ModelSetupItems(CommonMenuItems):
 
         # test for mesh. Not ideal, but it works. Since the mesh config is not part of the properties, the necessary check is performed here
         if property_name == "mesh_setup":
-            disconnected_nodes = bool(mesh.disconnected_nodes)
-            collapsed_elements = bool(mesh.collapsed_3d_elements or mesh.collapsed_2d_elements or mesh.collapsed_1d_elements)
+            disconnected_nodes = bool(mesh.disconnected_nodes_data)
+            collapsed_elements = bool(mesh.collapsed_elements_data)
             if collapsed_elements or disconnected_nodes:
                 return False
+
             return model.mesh_setup is not None
 
         # verify if there are surface thickness in all surfaces before changing the icon
@@ -240,11 +255,15 @@ class ModelSetupItems(CommonMenuItems):
                         if isinstance(pp_data, dict):
                             continue
 
+                        ti_data = properties._get_property("transfer_impedance", surface=key[1])
+                        if isinstance(ti_data, dict):
+                            continue
+
                     return True
 
         return False
 
-    def _needs_property(self, property_name: str, analysis_type: str | None = None, physical_domain: str | None = None):
+    def _needs_property(self, property_name: str, analysis_type: str | None = None, physical_domain: str | None = None) -> bool:
         if property_name == "mesh_setup":
             return True
 
@@ -290,9 +309,9 @@ class ModelSetupItems(CommonMenuItems):
                 toolbar.combo_box_physical_domain.setCurrentIndex(0)
                 return
 
-        _, physical_domain = app().project.get_analysis_type_and_physical_domain()
-        if physical_domain == "":
+        if app().project.get_physical_domain() == "":
             toolbar.combo_box_physical_domain.setCurrentIndex(1)
+            toolbar.check_analysis_setup_callback()
         else:
             toolbar.update_analysis_combo_boxes(block_signals=True)
 
@@ -311,25 +330,35 @@ class ModelSetupItems(CommonMenuItems):
 
         self.item_top_general_settings.setHidden(False)
 
-        if physical_domain == "structural":
-            self.item_child_fluid.setHidden(True)
-            self.item_child_material.setHidden(False)
-            self.item_top_acoustic_model_setup.setHidden(True)
-            self.item_top_structural_model_setup.setHidden(False)
-
-        elif physical_domain == "acoustic":
+        if physical_domain == "acoustic":
             self.item_child_fluid.setHidden(False)
             self.item_child_material.setHidden(True)
             self.item_top_acoustic_model_setup.setHidden(False)
             self.item_top_structural_model_setup.setHidden(True)
 
-    def _are_there_collapsed_elements(self, item_child):
+        else:
+            self.item_child_fluid.setHidden(True)
+            self.item_child_material.setHidden(False)
+            self.item_top_acoustic_model_setup.setHidden(True)
+            self.item_top_structural_model_setup.setHidden(False)
+
+    def _are_there_collapsed_elements(self, item_child) -> bool:
         if item_child.property_name == "mesh_setup":
             mesh = app().project.model.mesh
             if mesh is not None:
-                collapsed = (mesh.collapsed_3d_elements or mesh.collapsed_2d_elements or mesh.collapsed_1d_elements)
-                item_child.set_error(bool(collapsed))
-                if collapsed:
+                collapsed_elements = bool(mesh.collapsed_elements_data)
+                item_child.set_error(collapsed_elements)
+                if collapsed_elements:
+                    return True
+        return False
+
+    def _are_there_disconnected_nodes(self, item_child):
+        if item_child.property_name == "mesh_setup":
+            mesh = app().project.model.mesh
+            if mesh is not None:
+                disconnected_nodes = bool(mesh.disconnected_nodes_data)
+                item_child.set_error(disconnected_nodes)
+                if disconnected_nodes:
                     return True
         return False
 
@@ -341,7 +370,8 @@ class ModelSetupItems(CommonMenuItems):
             analysis_type = app().main_window.analysis_toolbar.combo_box_analysis_type.currentText()
             physical_domain = app().main_window.analysis_toolbar.combo_box_physical_domain.currentText()
         except Exception:
-            analysis_type, physical_domain = app().project.get_analysis_type_and_physical_domain()
+            analysis_type = app().project.get_analysis_type()
+            physical_domain = app().project.get_physical_domain()
 
         analysis_type = analysis_type.lower()
         physical_domain = physical_domain.lower()
@@ -349,27 +379,57 @@ class ModelSetupItems(CommonMenuItems):
 
         for top_level_items in self.top_level_items:
             for index in range(top_level_items.childCount()):
-                item_child = top_level_items.child(index)
+                item_child: ChildTreeWidgetItem = top_level_items.child(index)
                 item_child_name = self._find_qtree_widget_item_name(item_child)
 
                 if item_child_name is None:
                     continue
 
                 item_child.set_warning(False)
-                item_child.set_tool_tip()
+                item_child.set_tool_tip(item_child.property_name)
                 
                 if item_child.isDisabled():
                     continue
 
                 if self._are_there_collapsed_elements(item_child):
                     continue
+                    
+                if self._are_there_disconnected_nodes(item_child):
+                    continue
 
                 if self._contains_property(item_child.property_name):
                     item_child.set_icon()
+
+                    # special treatment for compressors
+                    if item_child.property_name == "compressor_excitation_waveform":
+                        surface_properties = app().project.model.properties.surface_properties
+                        for key in surface_properties.items():
+                            if key[0][0] == "compressor_excitation_waveform":
+                                # compressor_type = property_data.get("compressor_type", "reciprocating")
+                                compressor_type = key[1].get("compressor_type")
+                                if compressor_type == "screw":
+                                    item_child.set_icon("screw_compressor")
+                                elif compressor_type == "reciprocating":
+                                    item_child.set_icon("reciprocating_compressor_excitation")
+                                else:
+                                    item_child.set_icon("other_compressor")
                     
+                    if item_child.property_name == "compressor_excitation_spectrum":
+                        surface_properties = app().project.model.properties.surface_properties
+                        for key in surface_properties.items():
+                            if key[0][0] == "compressor_excitation_spectrum":
+                                # compressor_type = property_data.get("compressor_type", "reciprocating")
+                                compressor_type = key[1].get("compressor_type")
+                                if compressor_type == "screw":
+                                    item_child.set_icon("screw_compressor")
+                                elif compressor_type == "reciprocating":
+                                    item_child.set_icon("reciprocating_compressor_excitation")
+                                else:
+                                    item_child.set_icon("other_compressor")
+
                 elif self._needs_property(item_child.property_name, analysis_type, physical_domain):
                     item_child.set_warning(True)
-                    item_child.set_tool_tip(requirement=True)
+                    item_child.set_tool_tip(item_child.property_name, requirement=True)
 
                 else:
                     item_child.set_icon(visible=False)
@@ -377,7 +437,7 @@ class ModelSetupItems(CommonMenuItems):
     def reset_items_appearance(self):
         for top_level_items in self.top_level_items:
             for index in range(top_level_items.childCount()):
-                item_child = top_level_items.child(index)
+                item_child: ChildTreeWidgetItem = top_level_items.child(index)
                 item_child.set_icon(visible=False)
                 item_child.set_warning(False)
                 item_child.set_tool_tip()
@@ -391,6 +451,9 @@ class ModelSetupItems(CommonMenuItems):
 
     def item_child_mesh_setup_callback(self):
         app().main_window.input_ui.mesh_setup()
+
+    def item_child_element_options_callback(self):
+        app().main_window.input_ui.advanced_element_options()
 
     def item_child_surface_thickness_callback(self):
         app().main_window.input_ui.set_surface_thickness()
@@ -410,8 +473,14 @@ class ModelSetupItems(CommonMenuItems):
     def item_child_acoustic_pressure_callback(self):
         app().main_window.input_ui.set_acoustic_pressure()
     
-    def item_child_mass_flow_rate_callback(self):
-        app().main_window.input_ui.set_mass_flow_rate()
+    def item_child_compressor_excitation_waveform_callback(self):
+        app().main_window.input_ui.compressor_excitation_waveform()
+
+    def item_child_compressor_excitation_spectrum_callback(self):
+        app().main_window.input_ui.compressor_excitation_spectrum()
+
+    def item_child_reciprocating_compressor_excitation_callback(self):
+        app().main_window.input_ui.add_reciprocating_compressor_excitation()
 
     def item_child_mass_source_callback(self):
         app().main_window.input_ui.set_mass_source()
@@ -449,9 +518,6 @@ class ModelSetupItems(CommonMenuItems):
     def item_child_perforated_plate_model_callback(self):
         app().main_window.input_ui.set_perforated_plate_model()
 
-    def item_child_reciprocating_compressor_excitation_callback(self):
-        app().main_window.input_ui.add_reciprocating_compressor_excitation()
-    
     def item_child_acoustic_properties_gradient_callback(self):
         app().main_window.input_ui.set_acoustic_properties_grandient()
     
@@ -459,8 +525,9 @@ class ModelSetupItems(CommonMenuItems):
         app().main_window.input_ui.set_acoustic_transfer_element_setup()
 
     def modify_general_settings_items_access(self, key: bool):
-        imported_geometry = app().project.model.mesh.geometry_imported
+        imported_geometry = app().project.model.is_there_a_geometry_imported()
         self.item_child_mesh_setup.setDisabled(not imported_geometry)
+        self.item_child_element_options.setDisabled(not imported_geometry)
         self.item_child_material.setDisabled(key)
         self.item_child_fluid.setDisabled(key)
 
@@ -473,10 +540,12 @@ class ModelSetupItems(CommonMenuItems):
 
     def modify_acoustic_model_setup_items_acces(self, key: bool):
         self.item_child_acoustic_pressure.setDisabled(key)
-        # self.item_child_mass_flow_rate.setDisabled(key)
         self.item_child_mass_source.setDisabled(key)
         self.item_child_surface_velocity.setDisabled(key)
         self.item_child_incident_plane_wave.setDisabled(key)
+        self.item_child_compressor_excitation_spectrum.setDisabled(key)
+        self.item_child_compressor_excitation_waveform.setDisabled(key)
+        self.item_child_reciprocating_compressor_excitation.setDisabled(key)
         self.item_child_specific_impedance.setDisabled(key)
         self.item_child_anechoic_termination.setDisabled(key)
         self.item_child_absorption_surface.setDisabled(key)
@@ -487,7 +556,6 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_perforated_plate_model.setDisabled(key)
         self.item_child_degrees_of_freedom_decoupling.setDisabled(key)
         self.item_child_acoustic_properties_gradient.setDisabled(key)
-        self.item_child_reciprocating_compressor_excitation.setDisabled(key)
         self.item_child_acoustic_transfer_element_setup.setDisabled(key)
 
     def hide_all_top_items(self):

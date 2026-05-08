@@ -4,21 +4,18 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
+from vibra.interface import error_title
+from vibra.interface.common.common_interface import update_analysis_setup_in_file
 from vibra.interface.data_handler.data_importer import DataImporter
-from vibra.interface.ui_generated.model.setup.structural.dof_prescription_inputs_ui import DofPrescriptionInputs_UI
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
-from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.utils.utils import are_there_values_different_from_zero
+# from vibra.utils.utils import are_there_values_different_from_zero
+from vibra.interface.ui_generated.model.structural.dof_prescription_inputs_ui import DofPrescriptionInputs_UI
 
 import numpy as np
 from enum import IntEnum
 from os.path import basename
 from collections import defaultdict
-
-
-error_title = "Error"
-warning_title = "Warning"
 
 
 class ElementFormulation(IntEnum):
@@ -46,7 +43,6 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
 
-        self.project = app().project
         self.model = app().project.model
         self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
@@ -175,7 +171,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         self.treeWidget_prescribed_dof.itemClicked.connect(self.on_click_item)
         self.treeWidget_prescribed_dof.itemDoubleClicked.connect(self.on_double_click_item)
         #
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         #
         self.geometry_selection_callback()
         self.update_element_type_based_on_geometry_information()
@@ -290,10 +286,10 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
     def geometry_selection_callback(self):
 
-        surfaces = app().main_window.selected_geometry_surfaces
-        lines = app().main_window.selected_geometry_lines
-        points = app().main_window.selected_geometry_points
-        nodes = app().main_window.selected_mesh_nodes
+        surfaces = app().main_window.selection.geometry_surfaces
+        lines = app().main_window.selection.geometry_lines
+        points = app().main_window.selection.geometry_points
+        nodes = app().main_window.selection.mesh_nodes
 
         if surfaces:
 
@@ -447,8 +443,8 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         if (_real, _imag).count(None) == 2:
             if line_edit_real.isEnabled() and line_edit_imag.isEnabled():
                 self.hide()
-                title = f"Empty fields detected"
-                message = f"Enter a value in the real and/or imaginary "
+                title = "Empty fields detected"
+                message = "Enter a value in the real and/or imaginary "
                 message += "part input field to proceed."
                 PrintMessageInput([error_title, title, message])
                 return True, None
@@ -565,7 +561,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                     return None, None
 
                 imported_table_path = lineEdit.text()
-                imported_file = DataImporter.read_data_in_file(imported_table_path).data
+                imported_file = DataImporter.read_data_in_file(imported_table_path)[0].data
             else:
                 imported_data = DataImporter.import_single_file("imported_table_folder",
                     ["csv", "dat", "txt", "xlsx", "xls"], f"Choose a table to import the {dof_label} data")
@@ -628,23 +624,6 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         if self.rz_table_path is None:
             self.lineEdit_reset(self.lineEdit_path_table_rz)
 
-    def update_analysis_setup_in_file(self, frequencies: np.ndarray):
-
-        analysis_setup = app().file.read_analysis_setup_from_file()
-        if analysis_setup is None:
-            analysis_setup = dict()
-
-        f_min = frequencies[0]
-        f_max = frequencies[-1]
-        f_step = frequencies[1] - frequencies[0] 
-
-        analysis_setup["f_min"] = float(f_min)
-        analysis_setup["f_max"] = float(f_max)
-        analysis_setup["f_step"] = float(f_step)
-
-        app().project.set_analysis_setup(analysis_setup)
-        app().file.write_analysis_setup_in_file(analysis_setup)
-
     def integrate_and_save_table_files(self, dof_label: str, selected_id: int, selection: str, values: np.ndarray, linear=False, angular=False):
 
         if self.frequencies[0] == 0:
@@ -669,7 +648,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
             self.lineEdit_reset(lineEdit)
 
             title = "Project frequency setup cannot be modified"
-            message = f"The following imported table of values has a frequency setup "
+            message = "The following imported table of values has a frequency setup "
             message += "different from the others already imported ones. The current "
             message += "project frequency setup is not going to be modified."
             message += f"\n\nFile name: {imported_filename}"
@@ -683,8 +662,8 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         imag_values = np.imag(values)
         data = np.array([self.frequencies, real_values, imag_values], dtype=float).T
 
+        update_analysis_setup_in_file(self.frequencies)
         self.properties.add_imported_tables("structural", table_name, data)
-        self.update_analysis_setup_in_file(self.frequencies)
 
         return table_name, data
 
@@ -986,7 +965,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         self.tabWidget_main.setCurrentIndex(0)
 
         self.tabWidget_main.setTabVisible(2, False)
-        app().main_window.set_geometry_selection()
+        app().main_window.selection.set_geometry_selection()
 
     def tab_event_callback(self):
 
@@ -1015,16 +994,16 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
             selected_id = int(_selected_id)
 
             if selection == "Surface":
-                app().main_window.set_geometry_selection(surfaces = [int(selected_id)])
+                app().main_window.selection.set_geometry_selection(surfaces = [int(selected_id)])
 
             elif selection == "Line":
-                app().main_window.set_geometry_selection(lines = [int(selected_id)])
+                app().main_window.selection.set_geometry_selection(lines = [int(selected_id)])
 
             elif selection == "Point":
-                app().main_window.set_geometry_selection(points = [int(selected_id)])
+                app().main_window.selection.set_geometry_selection(points = [int(selected_id)])
 
             elif selection == "Node":
-                app().main_window.set_mesh_selection(nodes=[int(selected_id)])
+                app().main_window.selection.set_mesh_selection(nodes=[int(selected_id)])
 
             if selection == "Node":
                 app().main_window.action_mesh_workspace_callback()
@@ -1045,7 +1024,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         for table_name in table_names:
             self.properties.remove_imported_tables("structural", table_name)
 
-        app().file.write_imported_table_data_in_file()
+        app().project.update_model_properties_file()
 
     def remove_conflicting_excitations(self, selected_ids: int | list, selection: str, all_dof_free: bool=False):
 
@@ -1099,8 +1078,8 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
             self.remove_property_from("prescribed_dof", selected_id, selection)
             self.actions_to_finalize()
 
-            app().main_window.set_geometry_selection()
-            app().main_window.set_mesh_selection()
+            app().main_window.selection.set_geometry_selection()
+            app().main_window.selection.set_mesh_selection()
 
     def reset_callback(self):
 
@@ -1141,23 +1120,15 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
             self.properties._reset_property("prescribed_dof")
             self.actions_to_finalize()
 
-            app().main_window.set_geometry_selection()
-            app().main_window.set_mesh_selection()
+            app().main_window.selection.set_geometry_selection()
+            app().main_window.selection.set_mesh_selection()
 
     def actions_to_finalize(self):
         self.load_model_info()
         self.reset_input_fields(reset_all=True)
         app().main_window.update_info_text()
-        app().file.write_model_properties_in_file()
-        app().file.write_imported_table_data_in_file()
+        app().project.update_model_properties_file()
         app().main_window.update_symbols()
-
-    def change_frequency_setup(self):
-        if self.imported_values is not None:
-            self.hide()
-            obj = ChangeFrequencyDataRangeInput(self.imported_values)
-            if obj.filter_data is not None:
-                self.imported_values = obj.filter_data
 
     def check_model_frequency_controls(self):
 
@@ -1167,10 +1138,11 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                 if "table_names" in data.keys():
                     return
 
-        if isinstance(self.project.analysis_setup, dict):
-            analysis_setup = self.project.analysis_setup
-            self.project.set_analysis_setup(analysis_setup)
-            app().file.write_analysis_setup_in_file(analysis_setup)
+        # No idea of what it does
+        app().project.configure_analysis(
+            app().project.model.analysis_id,
+            app().project.model.analysis_setup,
+        )
 
     def reset_input_fields(self, reset_all=False):
 

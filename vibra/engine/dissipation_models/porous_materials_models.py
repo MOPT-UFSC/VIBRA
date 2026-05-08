@@ -22,10 +22,22 @@ class PorousMaterialModels:
 
     def process_effective_properties(self, frequencies: np.ndarray | None = None):
 
+        self.effective_properties.clear()
+        if not self.properties.is_the_volume_property_present_in_the_model("porous_material_model"):
+            return
+
         if frequencies is None:
             frequencies = self.model.frequencies
 
-        self.effective_properties = dict()
+        if frequencies is None:
+            return
+        
+        if isinstance(frequencies, list):
+            frequencies = np.array(frequencies, dtype=float)
+
+        if len(frequencies) == 0:
+            return
+
         if frequencies[0] == 0:
             freq = frequencies[1:]
         else:
@@ -33,14 +45,10 @@ class PorousMaterialModels:
 
         omega = 2 * np.pi * freq
 
-        if not self.properties.is_the_volume_property_present_in_the_model("porous_material_model"):
-            return
-
         for key, data in self.properties.volume_properties.items():
             property, volume_id = key
             if property == "porous_material_model":
 
-                # surfaces_from_volume = self.project.model.mesh.surfaces_from_volume[volume_id]
                 fluid = self.properties._get_property("fluid", volume = volume_id)
 
                 if data["model"] in ["Delany-Bazley", "Delany-Bazley-Miki"]:

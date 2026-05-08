@@ -1,21 +1,19 @@
-
-from PySide6.QtWidgets import QDialog, QFileDialog, QLineEdit, QTreeWidgetItem
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QCloseEvent
-
-from vibra import app
-from vibra.interface.data_handler.data_importer import DataImporter
-from vibra.interface.ui_generated.model.setup.structural.normal_pressure_load_inputs_ui import NormalPressureLoadInputs_UI
-from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
-from vibra.interface.model_inputs.data_filter.change_frequency_data_handler import ChangeFrequencyDataRangeInput
-from vibra.interface.general.print_message_input import PrintMessageInput
+from os.path import basename
 
 import numpy as np
-from os.path import basename
-from pathlib import Path
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
 
-window_title_1 = "Error"
-window_title_2 = "Warning"
+from vibra import app
+from vibra.interface import error_title
+from vibra.interface.common.common_interface import update_analysis_setup_in_file
+from vibra.interface.data_handler.data_importer import DataImporter
+from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
+from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.ui_generated.model.structural.normal_pressure_load_inputs_ui import (
+    NormalPressureLoadInputs_UI,
+)
 
 
 class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
@@ -79,12 +77,12 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         self.treeWidget_normal_pressure_loads.itemClicked.connect(self.on_click_item)
         self.treeWidget_normal_pressure_loads.itemDoubleClicked.connect(self.on_double_click_item)
         #
-        app().main_window.selection_changed.connect(self.geometry_selection_callback)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         self.update_element_type_based_on_geometry_information()
 
     def geometry_selection_callback(self):
 
-        faces = app().main_window.selected_geometry_surfaces
+        faces = app().main_window.selection.geometry_surfaces
 
         if faces:
 
@@ -144,7 +142,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
                 self.hide()
                 title = f"Invalid entry to the {label}"
                 message = f"Wrong input for real part of {label}."
-                PrintMessageInput([window_title_1, title, message])
+                PrintMessageInput([error_title, title, message])
                 return True, None
 
         _imag = None
@@ -156,7 +154,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
                 self.hide()
                 title = f"Invalid entry to the {label}"
                 message = f"Wrong input for imaginary part of {label}."
-                PrintMessageInput([window_title_1, title, message])
+                PrintMessageInput([error_title, title, message])
                 return True, None
 
         if _real is None and _imag is None:
@@ -210,7 +208,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
             title = "Additional inputs required"
             message = "It is necessary to enter at least one prescribed dof "
             message += "before confirming the property assignment."
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             return
 
         real_values = [value if value is None else np.real(value) for value in pressure_load]
@@ -240,7 +238,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
                     return None, None
 
                 imported_table_path = lineEdit.text()
-                imported_file = DataImporter.read_data_in_file(imported_table_path).data
+                imported_file = DataImporter.read_data_in_file(imported_table_path)[0].data
 
             else:
 
@@ -257,7 +255,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
             if imported_file.shape[1] < 3:
                 message = "The imported table has insufficient number of columns. The spectrum "
                 message += "data must have frequencies, real and imaginary columns."
-                PrintMessageInput([window_title_1, title, message])
+                PrintMessageInput([error_title, title, message])
                 lineEdit.setFocus()
                 return None, None
 
@@ -268,7 +266,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
 
         except Exception as log_error:
             message = str(log_error)
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             lineEdit.setFocus()
             return None, None
 
@@ -280,23 +278,6 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         self.pressure_table_values, self.pressure_table_path = self.load_table(self.lineEdit_table_path, "Pressure load")
         if  self.pressure_table_path is None:
             self.lineEdit_reset(self.lineEdit_table_path)
-
-    def update_analysis_setup_in_file(self, frequencies: np.ndarray):
-
-        analysis_setup = app().file.read_analysis_setup_from_file()
-        if analysis_setup is None:
-            analysis_setup = dict()
-
-        f_min = frequencies[0]
-        f_max = frequencies[-1]
-        f_step = frequencies[1] - frequencies[0] 
-
-        analysis_setup["f_min"] = float(f_min)
-        analysis_setup["f_max"] = float(f_max)
-        analysis_setup["f_step"] = float(f_step)
-
-        app().project.set_analysis_setup(analysis_setup)
-        app().file.write_analysis_setup_in_file(analysis_setup)
 
     def save_table_files(self, selected_id: int, values: np.ndarray):
 
@@ -314,11 +295,11 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
             self.lineEdit_reset(lineEdit)
 
             title = "Project frequency setup cannot be modified"
-            message = f"The following imported table of values has a frequency setup "
+            message = "The following imported table of values has a frequency setup "
             message += "different from the others already imported ones. The current "
             message += "project frequency setup is not going to be modified."
             message += f"\n\nFile name: {imported_filename}"
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
 
             return None, None
 
@@ -328,8 +309,8 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         imag_values = np.imag(values)
         data = np.array([self.frequencies, real_values, imag_values], dtype=float).T
 
+        update_analysis_setup_in_file(self.frequencies)
         self.properties.add_imported_tables("structural", table_name, data)
-        self.update_analysis_setup_in_file(self.frequencies)
 
         return table_name, data
 
@@ -374,7 +355,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
                 title = "Additional inputs required"
                 message = "It is necessary to enter at least one normal pressure load "
                 message += "before confirming the property assignment."
-                PrintMessageInput([window_title_1, title, message]) 
+                PrintMessageInput([error_title, title, message]) 
                 return
 
             data = {
@@ -441,7 +422,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         self.tabWidget_main.setTabVisible(2, False)
         self.tabWidget_main.setCurrentIndex(0)
         self.lineEdit_real_value.setFocus()
-        app().main_window.set_geometry_selection()
+        app().main_window.selection.set_geometry_selection()
 
     def tab_event_callback(self):
 
@@ -471,7 +452,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
             text = f"{selection} - {selected_id}"
 
             if selection == "Surface":
-                app().main_window.set_geometry_selection(surfaces = [int(selected_id)])
+                app().main_window.selection.set_geometry_selection(surfaces = [int(selected_id)])
 
             else:
                 return
@@ -489,7 +470,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         for table_name in table_names:
             self.properties.remove_imported_tables("structural", table_name)
 
-        app().file.write_imported_table_data_in_file()
+        app().project.update_model_properties_file()
 
     def remove_conflicting_excitations(self, selected_ids: int | list, selection: str):
 
@@ -529,8 +510,8 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
             self.remove_table_files_from(selected_id, f"{selection.lower()}s")
             self.actions_to_finalize()
 
-            app().main_window.set_geometry_selection()
-            app().main_window.set_mesh_selection()
+            app().main_window.selection.set_geometry_selection()
+            app().main_window.selection.set_mesh_selection()
 
     def reset_callback(self):
 
@@ -554,23 +535,15 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
             self.properties._reset_property("normal_pressure_load")
             self.actions_to_finalize()
 
-            app().main_window.set_geometry_selection()
-            app().main_window.set_mesh_selection()
+            app().main_window.selection.set_geometry_selection()
+            app().main_window.selection.set_mesh_selection()
 
     def actions_to_finalize(self):
         self.load_model_info()
         self.reset_input_fields()
         app().main_window.update_info_text()
-        app().file.write_model_properties_in_file()
-        app().file.write_imported_table_data_in_file()
+        app().project.update_model_properties_file()
         app().main_window.update_symbols()
-
-    def change_frequency_setup(self):
-        if self.imported_values is not None:
-            self.hide()
-            obj = ChangeFrequencyDataRangeInput(self.imported_values)
-            if obj.filter_data is not None:
-                self.imported_values = obj.filter_data
 
     def check_model_frequency_controls(self):
 
@@ -580,10 +553,11 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
                 if "table_names" in data.keys():
                     return
 
-        if isinstance(app().project.analysis_setup, dict):
-            analysis_setup = app().project.analysis_setup
-            app().project.set_analysis_setup(analysis_setup)
-            app().file.write_analysis_setup_in_file(analysis_setup)
+        # No idea of what it does
+        app().project.configure_analysis(
+            app().project.model.analysis_id,
+            app().project.model.analysis_setup,
+        )
 
     def reset_input_fields(self):
         self.lineEdit_selection_id.setText("")

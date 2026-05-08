@@ -1,4 +1,6 @@
 
+from vibra.engine.analysis_info import HarmonicAnalysisSetup
+
 from vibra.engine.model import Model
 from vibra.engine.properties.material import Material
 
@@ -42,11 +44,15 @@ class StructuralAssembler:
 
 
     def update_number_of_frequencies(self):
-        self.frequencies = self.model.frequencies
-        if self.frequencies is None:
-            self.number_frequencies = 1
-        else:
+        analysis_setup = self.model.analysis_setup
+
+        if isinstance(analysis_setup, HarmonicAnalysisSetup):
+            self.frequencies = analysis_setup.get_frequencies()
             self.number_frequencies = len(self.frequencies)
+
+        else:
+            self.frequencies = None
+            self.number_frequencies = 1
 
 
     def is_assembled(self):
@@ -230,27 +236,33 @@ class StructuralAssembler:
 
         try:
 
-            loads_list = list()
+            values_list = list()
             aux_ones = np.ones(number_frequencies, dtype=complex)
             aux_zeros = np.zeros(number_frequencies, dtype=complex)
 
             for value in structural_loads:
 
                 if value is None:
-                    loads_list.append(aux_zeros)
+                    values_list.append(aux_zeros)
 
                 elif isinstance(value, complex):
-                    loads_list.append(aux_ones * value)
+                    values_list.append(aux_ones * value)
 
                 elif isinstance(value, np.ndarray):
-                    loads_list.append(value[0:number_frequencies])
+                    values_list.append(value[:number_frequencies])
 
         except Exception as _error_log:
             print(str(_error_log))
             # TODO: check matrix dimensions for compatibility
             return aux_ones
+        
+        array_of_values = np.array(values_list, dtype=complex)
 
-        return np.array(loads_list, dtype=complex)
+        # filter values based on frequency mask
+        if array_of_values.shape[1] - self.frequencies.size:
+            return array_of_values[self.model.solution_steps_mask, :]
+        else:
+            return array_of_values
 
 
     def process_distributed_loads(self):
@@ -464,7 +476,10 @@ class StructuralAssembler:
         self.mass_matrix_r = _mass_matrix_full[:, self.prescribed_dof_indexes]
 
 
-    def process_assemble(self, reorder: bool=True, stacked_matrices: bool=True, **kwargs):
+    def assemble_global_matrices(self, reorder: bool=True, **kwargs):
+        """
+        This method assembles the global matrices of the structural model.
+        """
 
         logging.info("Gathering data to assemble global matrices... [10/100]")
         self.define_structural_elements()
@@ -493,10 +508,22 @@ class StructuralAssembler:
         dt = time() - t0
         print(f"Elapsed time to assemble the global mass matrix: {dt : .6f} [s]")
 
+    
+    def assemble_model_excitations(self):
+        """
+        This method assembles the excitations of the structural model.
+        """
         A = self.process_structural_nodal_loads()
         B = self.process_distributed_loads()
-
         self.structural_loads = A + B
+
+
+    def assemble_global_matrices_and_excitations(self, reorder: bool=True, **kwargs):
+        """
+        This method assembles the global matrices and excitations of the structural model.
+        """
+        self.assemble_global_matrices(reorder = reorder)
+        self.assemble_model_excitations()
 
 
     def reinsert_the_prescribed_dof(self, solution, modal_analysis=False):
@@ -563,11 +590,13 @@ class StructuralAssembler:
         if np.sum(self.array_prescribed_values) == 0:
             return 0.
 
-        alpha, beta, eta = self.model.analysis_setup.get("global_damping", (0, 0, 0))
+        analysis_setup = self.model.analysis_setup
+        assert isinstance(analysis_setup, HarmonicAnalysisSetup)
 
-        frequencies = self.model.frequencies
+        alpha, beta, eta = self.model.global_damping
+        frequencies = analysis_setup.get_frequencies()
+
         omega = 2 * np.pi * frequencies[index]
-
         values = self.array_prescribed_values[:, index]
 
         self.Kr = self.stiffness_matrix_r
@@ -596,9 +625,10 @@ class StructuralAssembler:
         if np.sum(self.array_prescribed_values) == 0:
             return 0.
 
-        global_damping = self.model.analysis_setup.get("global_damping", (0, 0, 0, 0))
-        alpha_v, beta_v, alpha_h, beta_h = global_damping
+        analysis_setup = self.model.analysis_setup
+        assert isinstance(analysis_setup, HarmonicAnalysisSetup)
 
+        alpha, beta, eta = self.model.global_damping
         frequencies = self.model.frequencies
 
         unprescribed_indexes = self.unprescribed_dof_indexes
@@ -627,7 +657,7 @@ class StructuralAssembler:
             omega = 2 * np.pi * freq
             f_Kadd = Kr_add
             f_Madd = -(omega**2) * Mr_add
-            f_Cadd = 1j * ((beta_h + omega * beta_v) * Kr_add + (alpha_h + omega * alpha_v) * Mr_add)
+            f_Cadd = 1j * ((eta + omega * beta) * Kr_add + (omega * alpha) * Mr_add)
             f_eq[:, i] = f_Madd + f_Cadd + f_Kadd
 
         logging.info("Processing prescribed dof model excitation... [100/100]")
@@ -645,16 +675,18 @@ class StructuralAssembler:
         return f
 
 
-    def build_harmonic_system(self, freq, i):
+    def build_harmonic_system(self, freq: float, index: int):
         omega = 2 * np.pi * freq
 
-        global_damping = self.model.analysis_setup.get("global_damping", (0, 0, 0))
-        alpha, beta, eta = global_damping
+        analysis_setup = self.model.analysis_setup
+        assert isinstance(analysis_setup, HarmonicAnalysisSetup)
+
+        alpha, beta, eta = self.model.global_damping
 
         M = self.mass_matrix
         K = self.stiffness_matrix
 
-        f = self.get_combined_nodal_loads_vector(index=i)
+        f = self.get_combined_nodal_loads_vector(index=index)
 
         A = (-(omega**2) + 1j*(omega * alpha)) * M + (1 + 1j*(eta + omega * beta)) * K
 
