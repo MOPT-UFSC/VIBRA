@@ -552,7 +552,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             self.comboBox_shape_function.removeItem(1)
 
     def update_advanced_gmsh_controls(self):
-        element_type = self._get_custom_element_setup()
+        element_type = self.get_element_type()
         if element_type not in [None, TETRAHEDRON_4, TETRAHEDRON_10]:
             self.comboBox_mesh_quality_metrics.setCurrentText("Disabled")
             self.comboBox_mesh_quality_metrics.setDisabled(True)
