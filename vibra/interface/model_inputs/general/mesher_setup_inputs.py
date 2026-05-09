@@ -143,7 +143,6 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.comboBox_subdivision_algorithm.setDisabled(True)
         self.comboBox_second_order_incomplete.setDisabled(True)
         self.comboBox_recombine_all.setDisabled(True)
-        self.comboBox_mesh_quality_metrics.setEnabled(True)
         #
         self.pushButton_show_bad_elements.setDisabled(True)
         self.pushButton_generate_mesh.setAutoDefault(False)
@@ -551,10 +550,18 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         if not mesh.are_there_volumes_in_geometry():
             self.comboBox_element_type.removeItem(1)
             self.comboBox_shape_function.removeItem(1)
-            self.comboBox_mesh_quality_metrics.setDisabled(True)
         
     def update_advanced_gmsh_controls(self):
+        mesh = app().project.model.mesh
+        if mesh is None:
+            return
+
+        volume_exists = mesh.are_there_volumes_in_geometry()
         element_type = self.get_element_type()
+
+        enable_mesh_metrics = volume_exists and element_type in [None, TETRAHEDRON_4, TETRAHEDRON_10]
+        self.comboBox_mesh_quality_metrics.setEnabled(enable_mesh_metrics)
+
         if element_type not in [None, TETRAHEDRON_4, TETRAHEDRON_10]:
             self.comboBox_mesh_quality_metrics.setCurrentText("Disabled")
             self.comboBox_mesh_quality_metrics.setDisabled(True)
@@ -563,12 +570,6 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
         self.comboBox_2d_algorithm.setCurrentIndex(map_algorithms_2d[element_type.algorithm_2d])
         self.comboBox_3d_algorithm.setCurrentIndex(map_algorithms_3d[element_type.algorithm_3d])
-
-        self.comboBox_recombination_algorithm.setCurrentIndex(element_type.recombination_algorithm)
-        self.comboBox_subdivision_algorithm.setCurrentIndex(element_type.subdivision_algorithm)
-        self.comboBox_recombine_all.setCurrentIndex(int(element_type.recombine_all))
-        self.comboBox_second_order_incomplete.setCurrentIndex(int(element_type.second_order_incomplete))
-
     def mesh_quality_item_clicked_callback(self, item):
         self.pushButton_show_bad_elements.setEnabled(False)
 
