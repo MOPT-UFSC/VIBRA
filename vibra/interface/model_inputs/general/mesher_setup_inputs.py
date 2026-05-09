@@ -143,6 +143,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.comboBox_subdivision_algorithm.setDisabled(True)
         self.comboBox_second_order_incomplete.setDisabled(True)
         self.comboBox_recombine_all.setDisabled(True)
+        self.comboBox_mesh_quality_metrics.setEnabled(True)
         #
         self.pushButton_show_bad_elements.setDisabled(True)
         self.pushButton_generate_mesh.setAutoDefault(False)
@@ -550,7 +551,8 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         if not mesh.are_there_volumes_in_geometry():
             self.comboBox_element_type.removeItem(1)
             self.comboBox_shape_function.removeItem(1)
-
+            self.comboBox_mesh_quality_metrics.setDisabled(True)
+        
     def update_advanced_gmsh_controls(self):
         element_type = self.get_element_type()
         if element_type not in [None, TETRAHEDRON_4, TETRAHEDRON_10]:
@@ -558,8 +560,6 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             self.comboBox_mesh_quality_metrics.setDisabled(True)
             if element_type is None:
                 return
-        else:
-            self.comboBox_mesh_quality_metrics.setEnabled(True)
 
         self.comboBox_2d_algorithm.setCurrentIndex(map_algorithms_2d[element_type.algorithm_2d])
         self.comboBox_3d_algorithm.setCurrentIndex(map_algorithms_3d[element_type.algorithm_3d])
