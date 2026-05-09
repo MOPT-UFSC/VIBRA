@@ -2,8 +2,8 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "Vibra"
-#define MyAppVersion "0.4.0"
-#define MyAppPublisher "Multidisciplinary Optimization Group"
+#define MyAppVersion "0.5.1"
+#define MyAppPublisher "MOPT - Multidisciplinary Optimization Group"
 #define MyAppURL "https://mopt.paginas.ufsc.br/"
 #define MyAppExeName "vibra.exe"
 #define MyAppAssocName MyAppName + " File"
@@ -33,9 +33,8 @@ ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 ChangesAssociations=yes
 DisableProgramGroupPage=yes
-; Uncomment the following line to run in non administrative install mode (install for current user only).
-;PrivilegesRequired=lowest
-PrivilegesRequiredOverridesAllowed=commandline
+; Remove the following line to run in administrative install mode (install for all users).
+PrivilegesRequired=lowest
 OutputBaseFilename=mysetup
 SolidCompression=yes
 WizardStyle=modern
