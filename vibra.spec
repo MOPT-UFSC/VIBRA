@@ -8,11 +8,11 @@ from PyInstaller.utils.hooks import collect_all, collect_data_files, copy_metada
 os = platform.system()
 
 if os == "Windows":
-    current_system_binaries = [(f"{sys.prefix}/Library/bin/*.dll", "./Library/bin/")]
+    binaries = [(f"{sys.prefix}/Library/bin/*.dll", "./Library/bin/")]
 elif os == "Linux":
-    current_system_binaries = [(f"{sys.prefix}/lib/*.so*", "./lib/")]
+    binaries = [(f"{sys.prefix}/lib/*.so*", "./lib/")]
 else:
-    current_system_binaries = []
+    binaries = []
 
 
 datas = [
@@ -24,14 +24,16 @@ datas += copy_metadata("cad-widgets")
 hidden_imports = ["vtk", "cadquery-ocp-novtk", "cadquery-ocp-stubs"]
 
 datas_ocp, binaries_ocp, hidden_ocp = collect_all("OCP")
-current_system_binaries += binaries_ocp
-datas += datas_ocp
-hidden_imports += hidden_ocp
+datas_fastexcel, binaries_fastexcel, hidden_fastexcel = collect_all("fastexcel")
+
+datas += datas_ocp + datas_fastexcel
+binaries += binaries_ocp + binaries_fastexcel
+hidden_imports += hidden_ocp + hidden_ocp
 
 a = Analysis(
     ["vibra/launch.py"],
     pathex=[],
-    binaries=current_system_binaries,
+    binaries=binaries,
     datas=datas,
     hiddenimports=hidden_imports,
     hookspath=[],
