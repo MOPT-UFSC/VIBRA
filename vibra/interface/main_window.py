@@ -119,12 +119,12 @@ class MainWindow(MainWindow_UI):
         self.stacked_setup.addWidget(self.results_viewer_widget)
 
         self.addToolBar(self.camera_toolbar)
+        self.addToolBar(self.render_tools_toolbar)
+
         self.addToolBar(self.analysis_toolbar)
         self.insertToolBarBreak(self.analysis_toolbar)
         self.addToolBar(self.animation_toolbar)
         self.insertToolBarBreak(self.animation_toolbar)
-        self.render_tools_toolbar.setVisible(False)
-        self.addToolBar(Qt.ToolBarArea.RightToolBarArea, self.render_tools_toolbar)
 
         for render in self.get_renderer_widgets():
             self.render_tools_toolbar.render_tool_changed.connect(render.add_render_tool)
@@ -995,6 +995,7 @@ class MainWindow(MainWindow_UI):
         self.analysis_toolbar.setEnabled(state)
         self.animation_toolbar.setEnabled(state)
         self.camera_toolbar.setEnabled(state)
+        self.render_tools_toolbar.setEnabled(state)
         self.renderer_toolbar.setEnabled(state)
         self.workspaces_toolbar.setEnabled(state)
 
