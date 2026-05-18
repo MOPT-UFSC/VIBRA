@@ -44,8 +44,8 @@ class Plot2DSimplified(Plot2dDialog_UI):
     def _config_window(self) -> None:
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
-        self.setWindowIcon(app().main_window.pulse_icon)
-        self.setWindowTitle("OpenPulse")
+        self.setWindowIcon(app().main_window.vibra_icon)
+        self.setWindowTitle("Vibra")
 
     def _create_connections(self) -> None:
         self.pushButton_exit.clicked.connect(self.close)

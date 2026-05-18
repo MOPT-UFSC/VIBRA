@@ -33,7 +33,8 @@ class CustomNavigationToolbar(NavigationToolbar2QT):
     
     def _paint_toolbar_icons(self):
 
-        if app().main_window.interface_theme == "dark":
+        theme = app().config.user_preferences.interface_theme
+        if theme == "dark":
             color = QColor("#5f9af4")
         else:
             color = QColor("#1a73e8")
