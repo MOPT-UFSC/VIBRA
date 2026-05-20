@@ -109,7 +109,7 @@ class MainWindow(MainWindow_UI):
         self.render_widgets_stack.addWidget(self.cad_render_widget)
         self.view_toolbar = ViewToolbar(self.render_widgets_stack)
 
-        self.view_toolbar.setVisible(False)
+        self.set_toolbars_visible(False)
 
         self.render_widgets_stack.currentChanged.connect(self.render_changed_callback)
         self.visualization_changed.connect(self.update_visualization_filter)
@@ -548,8 +548,7 @@ class MainWindow(MainWindow_UI):
 
         self.setWindowTitle("Vibra")
         self.stacked_setup.setVisible(False)
-        self.status_bar.setVisible(False)
-        self.view_toolbar.setVisible(False)
+        self.set_toolbars_visible(False)
         self.results_viewer_widget.hide_bottom_widget()
         self.welcome_widget.update_recent_projects()
         self.model_setup_widget.model_setup_items.reset_items_appearance()
@@ -984,8 +983,7 @@ class MainWindow(MainWindow_UI):
 
         self.action_model_workspace_callback()
 
-        self.view_toolbar.setVisible(True)
-        self.view_toolbar.show_render_tools()
+        self.set_toolbars_visible(True)
         self.view_toolbar.set_front_view()
 
         if app().project.can_resume_solution:
@@ -993,6 +991,14 @@ class MainWindow(MainWindow_UI):
             title = "Missing solution frequency records"
             message = 'Click on the "Resume the analysis" button to solve remaining frequencies'
             PrintMessageInput([window_title, title, message])
+
+    def set_toolbars_visible(self, state: bool):
+        self.analysis_toolbar.setVisible(state)
+        self.animation_toolbar.setVisible(state)
+        self.view_toolbar.setVisible(state)
+        self.renderer_toolbar.setVisible(state)
+        self.workspaces_toolbar.setVisible(state)
+        self.status_bar.setVisible(state)
 
     def set_toolbars_enabled(self, state: bool):
         self.analysis_toolbar.setEnabled(state)
