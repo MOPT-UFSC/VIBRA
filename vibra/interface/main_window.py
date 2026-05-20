@@ -311,7 +311,6 @@ class MainWindow(MainWindow_UI):
             # if last_widget is not a valid render the operation will be ignored
 
         if new_widget is self.cad_render_widget:
-            self.view_toolbar.setVisible(False)
             self.stacked_setup.setVisible(False)
 
         self.last_render_index = new_index
@@ -713,6 +712,7 @@ class MainWindow(MainWindow_UI):
                 return
 
         self.view_toolbar.setVisible(True)
+        self.view_toolbar.setEnabled(True)
 
         if msg_box.clickedButton() == draw_button:
             self.render_widgets_stack.setCurrentWidget(self.cad_render_widget)
