@@ -211,6 +211,14 @@ class AnimationToolbar(QToolBar):
         for widget in widgets:
             widget.setFont(font)
 
+    def hide_content(self):
+        for action in self.actions():
+            action.setVisible(False)
+
+    def show_content(self):
+        for action in self.actions():
+            action.setVisible(True)
+
     def frames_value_changed(self):
         self.frames = self.spinBox_frames.value()
         self.update_phase_slider_steps()

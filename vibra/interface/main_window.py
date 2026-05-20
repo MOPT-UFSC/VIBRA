@@ -495,7 +495,7 @@ class MainWindow(MainWindow_UI):
 
         self.splitter.widget(0).setVisible(True)
         self.animation_toolbar.pause_animation()
-        self.animation_toolbar.setVisible(False)
+        self.animation_toolbar.hide_content()
 
         if self.visualization_filter.normal_symbols:
             self.visualization_filter.normal_symbols = False
@@ -519,7 +519,7 @@ class MainWindow(MainWindow_UI):
 
         self.splitter.widget(0).setVisible(True)
         self.animation_toolbar.pause_animation()
-        self.animation_toolbar.setVisible(False)
+        self.animation_toolbar.hide_content()
 
     def action_results_workspace_callback(self):
         if not app().project.is_there_a_valid_solution():
@@ -535,8 +535,10 @@ class MainWindow(MainWindow_UI):
         self.results_viewer_widget.results_viewer_items.update_items()
         self.analysis_toolbar.update_analysis_combo_boxes()
 
-        is_animatable = self.results_viewer_widget.current_widget_is_animatable()
-        self.animation_toolbar.setVisible(is_animatable)
+        if self.results_viewer_widget.current_widget_is_animatable():
+            self.animation_toolbar.show_content()
+        else:
+            self.animation_toolbar.hide_content()
 
     def action_new_project_callback(self):
         self.new_project_dialog()
@@ -929,7 +931,7 @@ class MainWindow(MainWindow_UI):
         self.update_toolbar_and_menu_items_after_load_project()
         self.set_toolbars_visible(True)
         self.view_toolbar.show_render_tools()
-        self.animation_toolbar.setVisible(False)
+        self.animation_toolbar.hide_content()
         self.set_toolbars_enabled(True)
         self.action_model_workspace_callback()
 
@@ -949,7 +951,7 @@ class MainWindow(MainWindow_UI):
         self.update_toolbar_and_menu_items_after_load_project()
         self.set_toolbars_visible(True)
         self.view_toolbar.show_render_tools()
-        self.animation_toolbar.setVisible(False)
+        self.animation_toolbar.hide_content()
         self.set_toolbars_enabled(True)
         self.action_mesh_workspace_callback()
 
@@ -993,7 +995,7 @@ class MainWindow(MainWindow_UI):
         self.action_model_workspace_callback()
 
         self.set_toolbars_visible(True)
-        self.animation_toolbar.setVisible(False)
+        self.animation_toolbar.hide_content()
         self.view_toolbar.set_front_view()
 
         if app().project.can_resume_solution:

@@ -82,7 +82,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.current_widget = self.plot_structural_modal
         self.add_widget(self.plot_structural_modal)
 
-        app().main_window.animation_toolbar.setVisible(True)
+        app().main_window.animation_toolbar.show_content()
 
     def add_structural_harmonic_widget(self):
         self.plot_structural_harmonic.load_frequencies()
@@ -90,7 +90,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.current_widget = self.plot_structural_harmonic
         self.add_widget(self.plot_structural_harmonic)
 
-        app().main_window.animation_toolbar.setVisible(True)
+        app().main_window.animation_toolbar.show_content()
 
     def add_acoustic_modal_widget(self):
         self.plot_acoustic_modal.load_natural_frequencies()
@@ -98,7 +98,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.current_widget = self.plot_acoustic_modal
         self.add_widget(self.plot_acoustic_modal)
 
-        app().main_window.animation_toolbar.setVisible(True)
+        app().main_window.animation_toolbar.show_content()
 
     def add_acoustic_harmonic_widget(self):
         self.plot_acoustic_harmonic.load_frequencies()
@@ -106,7 +106,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.current_widget = self.plot_acoustic_harmonic
         self.add_widget(self.plot_acoustic_harmonic)
 
-        app().main_window.animation_toolbar.setVisible(True)
+        app().main_window.animation_toolbar.show_content()
 
     def add_structural_frequency_response_widget(self):
         self.current_widget = app().main_window.input_ui.plot_structural_frequency_response()
@@ -114,7 +114,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
         
-        app().main_window.animation_toolbar.setVisible(False)
+        app().main_window.animation_toolbar.hide_content()
 
         self.add_widget(self.current_widget)
 
@@ -124,7 +124,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
 
-        app().main_window.animation_toolbar.setVisible(False)
+        app().main_window.animation_toolbar.hide_content()
 
         self.add_widget(self.current_widget)
     
@@ -134,7 +134,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
 
-        app().main_window.animation_toolbar.setVisible(False)
+        app().main_window.animation_toolbar.hide_content()
 
         self.add_widget(self.current_widget)
 
@@ -144,7 +144,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
 
-        app().main_window.animation_toolbar.setVisible(False)
+        app().main_window.animation_toolbar.hide_content()
 
         self.add_widget(self.current_widget)
 
@@ -154,7 +154,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
 
-        app().main_window.animation_toolbar.setVisible(False)
+        app().main_window.animation_toolbar.hide_content()
 
         self.add_widget(self.current_widget)
 
@@ -164,7 +164,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
 
-        app().main_window.animation_toolbar.setVisible(False)
+        app().main_window.animation_toolbar.hide_content()
 
         self.add_widget(self.current_widget)
 
@@ -174,7 +174,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
         
-        app().main_window.animation_toolbar.setVisible(False)
+        app().main_window.animation_toolbar.hide_content()
 
         self.add_widget(self.current_widget)
 
@@ -184,7 +184,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
         
-        app().main_window.animation_toolbar.setVisible(False)
+        app().main_window.animation_toolbar.hide_content()
 
         self.add_widget(self.current_widget)
 
@@ -194,7 +194,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
 
-        app().main_window.animation_toolbar.setVisible(False)
+        app().main_window.animation_toolbar.hide_content()
 
         self.add_widget(self.current_widget)
 
@@ -204,7 +204,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
 
-        app().main_window.animation_toolbar.setVisible(False)
+        app().main_window.animation_toolbar.hide_content()
 
         self.add_widget(self.current_widget)
 
