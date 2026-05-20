@@ -715,8 +715,11 @@ class MainWindow(MainWindow_UI):
         self.view_toolbar.setEnabled(True)
 
         if msg_box.clickedButton() == draw_button:
+            self.view_toolbar.hide_render_tools()
             self.render_widgets_stack.setCurrentWidget(self.cad_render_widget)
             return
+
+        self.view_toolbar.show_render_tools()
 
     def import_geometry_or_mesh_dialog(self):
         self.close_dialogs()
@@ -982,6 +985,7 @@ class MainWindow(MainWindow_UI):
         self.action_model_workspace_callback()
 
         self.view_toolbar.setVisible(True)
+        self.view_toolbar.show_render_tools()
         self.view_toolbar.set_front_view()
 
         if app().project.can_resume_solution:

@@ -220,3 +220,11 @@ class ViewToolbar(QToolBar):
 
     def hide_selection_tool(self):
         self.action_selection_tool.setVisible(False)
+
+    def show_render_tools(self):
+        for action in self._render_tool_actions:
+            action.setVisible(True)
+
+    def hide_render_tools(self):
+        for action in self._render_tool_actions:
+            action.setVisible(False)
