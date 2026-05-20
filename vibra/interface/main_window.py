@@ -17,7 +17,7 @@ from vibra.engine.assemblers import AcousticAssembler
 from vibra.engine.solvers import HarmonicSolver
 from vibra.interface.analysis_toolbar import AnalysisToolbar
 from vibra.interface.animation_toolbar import AnimationToolbar
-from vibra.interface.camera_toolbar import CameraToolbar
+from vibra.interface.view_toolbar import ViewToolbar
 from vibra.interface.data_handler.export_mesh_data import ExportMeshData
 from vibra.interface.formatters.icons import change_icon_color_for_widgets, get_vibra_icon
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -28,7 +28,6 @@ from vibra.interface.menus.model_setup_widget import ModelSetupWidget
 from vibra.interface.menus.results_viewer_widget import ResultsViewerWidget
 from vibra.interface.plots.acoustic.export_element_transfer_data_inputs import ExportElementTransferDataInputs
 from vibra.interface.project.save_project_data_selector import SaveProjectDataSelector
-from vibra.interface.render_tools_toolbar import RenderToolsToolbar
 from vibra.interface.section_plane_widget import SectionPlaneWidget
 from vibra.interface.status_bar import StatusBar
 from vibra.interface.ui_generated.main_window_ui import MainWindow_UI
@@ -97,7 +96,6 @@ class MainWindow(MainWindow_UI):
         self.status_bar = StatusBar(self)
         self.analysis_toolbar = AnalysisToolbar()
         self.animation_toolbar = AnimationToolbar()
-        self.render_tools_toolbar = RenderToolsToolbar(self)
 
         self.create_recents_menu()
         self.create_status_bar()
@@ -109,7 +107,9 @@ class MainWindow(MainWindow_UI):
         self.render_widgets_stack.addWidget(self.help_widget)
         self.render_widgets_stack.addWidget(self.welcome_widget)
         self.render_widgets_stack.addWidget(self.cad_render_widget)
-        self.camera_toolbar = CameraToolbar(self.render_widgets_stack)
+        self.view_toolbar = ViewToolbar(self.render_widgets_stack)
+
+        self.view_toolbar.setVisible(False)
 
         self.render_widgets_stack.currentChanged.connect(self.render_changed_callback)
         self.visualization_changed.connect(self.update_visualization_filter)
@@ -118,16 +118,15 @@ class MainWindow(MainWindow_UI):
         self.stacked_setup.addWidget(self.model_setup_widget)
         self.stacked_setup.addWidget(self.results_viewer_widget)
 
-        self.addToolBar(self.camera_toolbar)
-        self.addToolBar(self.render_tools_toolbar)
-
         self.addToolBar(self.analysis_toolbar)
         self.insertToolBarBreak(self.analysis_toolbar)
         self.addToolBar(self.animation_toolbar)
         self.insertToolBarBreak(self.animation_toolbar)
 
+        self.addToolBar(Qt.ToolBarArea.RightToolBarArea, self.view_toolbar)
+
         for render in self.get_renderer_widgets():
-            self.render_tools_toolbar.render_tool_changed.connect(render.add_render_tool)
+            self.view_toolbar.render_tool_changed.connect(render.add_render_tool)
 
         self.set_toolbars_enabled(False)
         self.action_export_element_transfer_data.setDisabled(True)
@@ -312,7 +311,7 @@ class MainWindow(MainWindow_UI):
             # if last_widget is not a valid render the operation will be ignored
 
         if new_widget is self.cad_render_widget:
-            self.render_tools_toolbar.setVisible(False)
+            self.view_toolbar.setVisible(False)
             self.stacked_setup.setVisible(False)
 
         self.last_render_index = new_index
@@ -430,11 +429,11 @@ class MainWindow(MainWindow_UI):
 
     def show_geometry_render_widget(self):
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
-        self.render_tools_toolbar.show_selection_tool()
+        self.view_toolbar.show_selection_tool()
 
     def show_mesh_render_widget(self):
         self.render_widgets_stack.setCurrentWidget(self.mesh_widget)
-        self.render_tools_toolbar.show_selection_tool()
+        self.view_toolbar.show_selection_tool()
 
     def clear_render_widgets_stack(self):
         for _ in range(self.render_widgets_stack.count()):
@@ -486,7 +485,7 @@ class MainWindow(MainWindow_UI):
         self.action_mesh_workspace.setChecked(False)
         self.action_results_workspace.setChecked(False)
 
-        self.render_tools_toolbar.show_selection_tool()
+        self.view_toolbar.show_selection_tool()
 
         valid_solution = app().project.is_there_a_valid_solution()
         self.action_results_workspace.setEnabled(valid_solution)
@@ -509,7 +508,7 @@ class MainWindow(MainWindow_UI):
         self.action_model_workspace.setChecked(False)
         self.action_results_workspace.setChecked(False)
 
-        self.render_tools_toolbar.show_selection_tool()
+        self.view_toolbar.show_selection_tool()
 
         valid_solution = app().project.is_there_a_valid_solution()
         self.action_results_workspace.setEnabled(valid_solution)
@@ -551,7 +550,7 @@ class MainWindow(MainWindow_UI):
         self.setWindowTitle("Vibra")
         self.stacked_setup.setVisible(False)
         self.status_bar.setVisible(False)
-        self.render_tools_toolbar.setVisible(False)
+        self.view_toolbar.setVisible(False)
         self.results_viewer_widget.hide_bottom_widget()
         self.welcome_widget.update_recent_projects()
         self.model_setup_widget.model_setup_items.reset_items_appearance()
@@ -713,12 +712,11 @@ class MainWindow(MainWindow_UI):
             if self.import_geometry_or_mesh_dialog():
                 return
 
+        self.view_toolbar.setVisible(True)
+
         if msg_box.clickedButton() == draw_button:
-            self.camera_toolbar.setEnabled(True)
             self.render_widgets_stack.setCurrentWidget(self.cad_render_widget)
             return
-        
-        self.render_tools_toolbar.setVisible(True)
 
     def import_geometry_or_mesh_dialog(self):
         self.close_dialogs()
@@ -967,7 +965,7 @@ class MainWindow(MainWindow_UI):
         # Interface update
         self.update_recents_menu()
         self.setWindowTitle(project.model.name)
-        self.camera_toolbar.set_front_view()
+        self.view_toolbar.set_front_view()
 
         self.status_bar.update_geometry_information()
         self.status_bar.update_mesh_information()
@@ -982,8 +980,9 @@ class MainWindow(MainWindow_UI):
         LoadingWindow(self.mesh_widget.update_plot).run()
 
         self.action_model_workspace_callback()
-        self.camera_toolbar.set_front_view()
-        self.render_tools_toolbar.setVisible(True)
+
+        self.view_toolbar.setVisible(True)
+        self.view_toolbar.set_front_view()
 
         if app().project.can_resume_solution:
             window_title = "Acoustic Harmonic results"
@@ -994,8 +993,7 @@ class MainWindow(MainWindow_UI):
     def set_toolbars_enabled(self, state: bool):
         self.analysis_toolbar.setEnabled(state)
         self.animation_toolbar.setEnabled(state)
-        self.camera_toolbar.setEnabled(state)
-        self.render_tools_toolbar.setEnabled(state)
+        self.view_toolbar.setEnabled(state)
         self.renderer_toolbar.setEnabled(state)
         self.workspaces_toolbar.setEnabled(state)
 
