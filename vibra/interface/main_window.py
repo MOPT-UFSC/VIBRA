@@ -494,8 +494,8 @@ class MainWindow(MainWindow_UI):
         self.model_setup_widget.model_setup_items.enable_and_expand_menu_items()
 
         self.splitter.widget(0).setVisible(True)
-        self.animation_toolbar.setDisabled(True)
         self.animation_toolbar.pause_animation()
+        self.animation_toolbar.setVisible(False)
 
         if self.visualization_filter.normal_symbols:
             self.visualization_filter.normal_symbols = False
@@ -518,8 +518,8 @@ class MainWindow(MainWindow_UI):
         self.model_setup_widget.model_setup_items.enable_and_expand_menu_items()
 
         self.splitter.widget(0).setVisible(True)
-        self.animation_toolbar.setDisabled(True)
         self.animation_toolbar.pause_animation()
+        self.animation_toolbar.setVisible(False)
 
     def action_results_workspace_callback(self):
         if not app().project.is_there_a_valid_solution():
@@ -984,6 +984,7 @@ class MainWindow(MainWindow_UI):
         self.action_model_workspace_callback()
 
         self.set_toolbars_visible(True)
+        self.animation_toolbar.setVisible(False)
         self.view_toolbar.set_front_view()
 
         if app().project.can_resume_solution:

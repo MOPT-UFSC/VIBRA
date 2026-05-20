@@ -73,20 +73,28 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.plot_structural_modal.load_user_preference_colormap()
         self.add_widget(self.plot_structural_modal)
 
+        app().main_window.animation_toolbar.setVisible(True)
+
     def add_structural_harmonic_widget(self):
         self.plot_structural_harmonic.load_frequencies()
         self.plot_structural_harmonic.load_user_preference_colormap()
         self.add_widget(self.plot_structural_harmonic)
+
+        app().main_window.animation_toolbar.setVisible(True)
 
     def add_acoustic_modal_widget(self):
         self.plot_acoustic_modal.load_natural_frequencies()
         self.plot_acoustic_modal.load_user_preference_colormap()
         self.add_widget(self.plot_acoustic_modal)
 
+        app().main_window.animation_toolbar.setVisible(True)
+
     def add_acoustic_harmonic_widget(self):
         self.plot_acoustic_harmonic.load_frequencies()
         self.plot_acoustic_harmonic.load_user_preference_colormap()
         self.add_widget(self.plot_acoustic_harmonic)
+
+        app().main_window.animation_toolbar.setVisible(True)
 
     def add_structural_frequency_response_widget(self):
         self.current_widget = app().main_window.input_ui.plot_structural_frequency_response()
@@ -94,7 +102,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
         
-        app().main_window.animation_toolbar.setDisabled(True)
+        app().main_window.animation_toolbar.setVisible(False)
 
         self.add_widget(self.current_widget)
 
@@ -104,7 +112,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
 
-        app().main_window.animation_toolbar.setDisabled(True)
+        app().main_window.animation_toolbar.setVisible(False)
 
         self.add_widget(self.current_widget)
     
@@ -114,6 +122,8 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
 
+        app().main_window.animation_toolbar.setVisible(False)
+
         self.add_widget(self.current_widget)
 
     def add_allowable_pulsations_for_reciprocating_compressor_widget(self):
@@ -121,6 +131,8 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
 
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
+
+        app().main_window.animation_toolbar.setVisible(False)
 
         self.add_widget(self.current_widget)
 
@@ -130,6 +142,8 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
 
+        app().main_window.animation_toolbar.setVisible(False)
+
         self.add_widget(self.current_widget)
 
     def add_acoustic_pressure_waveform_widget(self):
@@ -138,7 +152,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
 
-        app().main_window.animation_toolbar.setDisabled(True)
+        app().main_window.animation_toolbar.setVisible(False)
 
         self.add_widget(self.current_widget)
 
@@ -148,7 +162,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
         
-        app().main_window.animation_toolbar.setDisabled(True)
+        app().main_window.animation_toolbar.setVisible(False)
 
         self.add_widget(self.current_widget)
 
@@ -158,7 +172,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
         
-        app().main_window.animation_toolbar.setDisabled(True)
+        app().main_window.animation_toolbar.setVisible(False)
 
         self.add_widget(self.current_widget)
 
@@ -168,7 +182,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
 
-        app().main_window.animation_toolbar.setDisabled(True)
+        app().main_window.animation_toolbar.setVisible(False)
 
         self.add_widget(self.current_widget)
 
@@ -178,7 +192,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
 
-        app().main_window.animation_toolbar.setDisabled(True)
+        app().main_window.animation_toolbar.setVisible(False)
 
         self.add_widget(self.current_widget)
 
