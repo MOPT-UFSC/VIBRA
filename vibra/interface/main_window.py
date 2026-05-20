@@ -535,6 +535,9 @@ class MainWindow(MainWindow_UI):
         self.results_viewer_widget.results_viewer_items.update_items()
         self.analysis_toolbar.update_analysis_combo_boxes()
 
+        is_animatable = self.results_viewer_widget.current_widget_is_animatable()
+        self.animation_toolbar.setVisible(is_animatable)
+
     def action_new_project_callback(self):
         self.new_project_dialog()
 
