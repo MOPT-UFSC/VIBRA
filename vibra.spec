@@ -20,6 +20,7 @@ datas = [
 ]
 datas += collect_data_files("molde")
 datas += copy_metadata("cad-widgets")
+datas += copy_metadata('imageio')
 
 hidden_imports = ["vtk", "cadquery-ocp-novtk", "cadquery-ocp-stubs"]
 
