@@ -124,6 +124,16 @@ class ViewToolbar(QToolBar):
         self.setOrientation(Qt.Vertical)
         self.setFloatable(True)
 
+        self.setStyleSheet(
+            """
+            QToolBar {
+                border-style: solid;
+                border-width: 0.5px;
+                border-color: #888888;
+            }
+            """
+        )
+
     def _current_render_widget(self):
         return self.render_widget_stack.currentWidget()
 
