@@ -92,6 +92,11 @@ class ViewToolbar(QToolBar):
         self.action_zoom_tool.triggered.connect(self.action_zoom_tool_callback)
 
     def _configure_layout(self):
+        self.addAction(self.action_selection_tool)
+        self.addAction(self.action_grab_tool)
+        self.addAction(self.action_rotation_tool)
+        self.addAction(self.action_zoom_tool)
+
         self.addAction(self.action_top_view)
         self.addAction(self.action_bottom_view)
         self.addAction(self.action_right_view)
@@ -100,13 +105,6 @@ class ViewToolbar(QToolBar):
         self.addAction(self.action_back_view)
         self.addAction(self.action_isometric_view)
         self.addAction(self.action_zoom_to_fit)
-
-        self.addSeparator()
-
-        self.addAction(self.action_selection_tool)
-        self.addAction(self.action_grab_tool)
-        self.addAction(self.action_rotation_tool)
-        self.addAction(self.action_zoom_tool)
     
     def _configure_actions(self):
         self._render_tool_actions = [
