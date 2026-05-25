@@ -97,6 +97,8 @@ class ViewToolbar(QToolBar):
         self.addAction(self.action_rotation_tool)
         self.addAction(self.action_zoom_tool)
 
+        self.addSeparator()
+
         self.addAction(self.action_top_view)
         self.addAction(self.action_bottom_view)
         self.addAction(self.action_right_view)

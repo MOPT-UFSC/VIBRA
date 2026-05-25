@@ -109,7 +109,7 @@ class MainWindow(MainWindow_UI):
         self.render_widgets_stack.addWidget(self.cad_render_widget)
         self.view_toolbar = ViewToolbar(self.render_widgets_stack)
 
-        self.view_toolbar.setVisible(False)
+        self.set_toolbars_visible(False)
 
         self.render_widgets_stack.currentChanged.connect(self.render_changed_callback)
         self.visualization_changed.connect(self.update_visualization_filter)
@@ -494,8 +494,8 @@ class MainWindow(MainWindow_UI):
         self.model_setup_widget.model_setup_items.enable_and_expand_menu_items()
 
         self.splitter.widget(0).setVisible(True)
-        self.animation_toolbar.setDisabled(True)
         self.animation_toolbar.pause_animation()
+        self.animation_toolbar.set_visible(False)
 
         if self.visualization_filter.normal_symbols:
             self.visualization_filter.normal_symbols = False
@@ -518,8 +518,8 @@ class MainWindow(MainWindow_UI):
         self.model_setup_widget.model_setup_items.enable_and_expand_menu_items()
 
         self.splitter.widget(0).setVisible(True)
-        self.animation_toolbar.setDisabled(True)
         self.animation_toolbar.pause_animation()
+        self.animation_toolbar.set_visible(False)
 
     def action_results_workspace_callback(self):
         if not app().project.is_there_a_valid_solution():
@@ -535,6 +535,11 @@ class MainWindow(MainWindow_UI):
         self.results_viewer_widget.results_viewer_items.update_items()
         self.analysis_toolbar.update_analysis_combo_boxes()
 
+        if self.results_viewer_widget.current_widget_is_animatable():
+            self.animation_toolbar.set_visible(True)
+        else:
+            self.animation_toolbar.set_visible(False)
+
     def action_new_project_callback(self):
         self.new_project_dialog()
 
@@ -548,8 +553,7 @@ class MainWindow(MainWindow_UI):
 
         self.setWindowTitle("Vibra")
         self.stacked_setup.setVisible(False)
-        self.status_bar.setVisible(False)
-        self.view_toolbar.setVisible(False)
+        self.set_toolbars_visible(False)
         self.results_viewer_widget.hide_bottom_widget()
         self.welcome_widget.update_recent_projects()
         self.model_setup_widget.model_setup_items.reset_items_appearance()
@@ -925,6 +929,9 @@ class MainWindow(MainWindow_UI):
         LoadingWindow(self.geometry_widget.update_plot).run()
         self.update_geometry_information()
         self.update_toolbar_and_menu_items_after_load_project()
+        self.set_toolbars_visible(True)
+        self.view_toolbar.show_render_tools()
+        self.animation_toolbar.set_visible(False)
         self.set_toolbars_enabled(True)
         self.action_model_workspace_callback()
 
@@ -942,6 +949,9 @@ class MainWindow(MainWindow_UI):
         LoadingWindow(self.mesh_widget.update_plot).run()
         self.update_geometry_information()
         self.update_toolbar_and_menu_items_after_load_project()
+        self.set_toolbars_visible(True)
+        self.view_toolbar.show_render_tools()
+        self.animation_toolbar.set_visible(False)
         self.set_toolbars_enabled(True)
         self.action_mesh_workspace_callback()
 
@@ -984,8 +994,8 @@ class MainWindow(MainWindow_UI):
 
         self.action_model_workspace_callback()
 
-        self.view_toolbar.setVisible(True)
-        self.view_toolbar.show_render_tools()
+        self.set_toolbars_visible(True)
+        self.animation_toolbar.set_visible(False)
         self.view_toolbar.set_front_view()
 
         if app().project.can_resume_solution:
@@ -993,6 +1003,14 @@ class MainWindow(MainWindow_UI):
             title = "Missing solution frequency records"
             message = 'Click on the "Resume the analysis" button to solve remaining frequencies'
             PrintMessageInput([window_title, title, message])
+
+    def set_toolbars_visible(self, state: bool):
+        self.analysis_toolbar.setVisible(state)
+        self.animation_toolbar.setVisible(state)
+        self.view_toolbar.setVisible(state)
+        self.renderer_toolbar.setVisible(state)
+        self.workspaces_toolbar.setVisible(state)
+        self.status_bar.setVisible(state)
 
     def set_toolbars_enabled(self, state: bool):
         self.analysis_toolbar.setEnabled(state)
