@@ -22,14 +22,12 @@ datas += collect_data_files("molde")
 datas += copy_metadata("cad-widgets")
 datas += copy_metadata('imageio')
 
-hidden_imports = ["vtk", "cadquery-ocp-novtk", "cadquery-ocp-stubs"]
-
-datas_ocp, binaries_ocp, hidden_ocp = collect_all("OCP")
+hidden_imports = ["vtk"]
 datas_fastexcel, binaries_fastexcel, hidden_fastexcel = collect_all("fastexcel")
 
-datas += datas_ocp + datas_fastexcel
-binaries += binaries_ocp + binaries_fastexcel
-hidden_imports += hidden_ocp + hidden_fastexcel
+datas += datas_fastexcel
+binaries += binaries_fastexcel
+hidden_imports += hidden_fastexcel
 
 a = Analysis(
     ["vibra/launch.py"],
