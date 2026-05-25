@@ -26,6 +26,7 @@ from vibra.interface.help_widget import HelpWidget
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.menus.model_setup_widget import ModelSetupWidget
 from vibra.interface.menus.results_viewer_widget import ResultsViewerWidget
+from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
 from vibra.interface.plots.acoustic.export_element_transfer_data_inputs import ExportElementTransferDataInputs
 from vibra.interface.project.save_project_data_selector import SaveProjectDataSelector
 from vibra.interface.render_tools_toolbar import RenderToolsToolbar
@@ -510,6 +511,12 @@ class MainWindow(MainWindow_UI):
         self.action_results_workspace.setChecked(False)
 
         self.render_tools_toolbar.show_selection_tool()
+
+        if app().project.model.is_the_mesh_setup_defined():
+            obj = MesherSetupInputs(close_after_generate=True)
+            if not obj.complete:
+                self.action_model_workspace_callback()
+                return
 
         valid_solution = app().project.is_there_a_valid_solution()
         self.action_results_workspace.setEnabled(valid_solution)
