@@ -1,12 +1,22 @@
 from molde.render_widgets import CommonRenderWidget
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QStackedWidget, QToolBar
+from PySide6.QtCore import Qt, Signal
 
 from vibra import LIGHT_ICON_COLOR
 from vibra.utils.icons import load_icon
+from vibra.interface.viewer_3d.render_tools import (
+    RenderTool,
+    RotationTool,
+    GrabTool,
+    ZoomTool,
+    SelectionTool
+)
 
 
-class CameraToolbar(QToolBar):
+class ViewToolbar(QToolBar):
+    render_tool_changed = Signal(RenderTool)
+
     def __init__(self, render_widget_stack: QStackedWidget):
         super().__init__()
         self.render_widget_stack = render_widget_stack
@@ -14,9 +24,10 @@ class CameraToolbar(QToolBar):
         self._load_icons()
         self._create_actions()
         self._configure_layout()
+        self._configure_actions()
         self._configure_appearance()
 
-        self.setWindowTitle("Camera toolbar")
+        self.setWindowTitle("View toolbar")
 
     def _load_icons(self):
         color = LIGHT_ICON_COLOR.to_qt()
@@ -29,6 +40,10 @@ class CameraToolbar(QToolBar):
         self.back_icon = load_icon(":/icons/views/back.png", color)
         self.isometric_icon = load_icon(":/icons/views/orthogonal.png", color)
         self.zoom_to_fit_icon = load_icon(":/icons/views/zoom_icon.png", color)
+        self.selection_tool_icon = load_icon(":/icons/selection_icon.png", color)
+        self.grab_tool_icon = load_icon(":/icons/grab_icon.png", color)
+        self.rotation_tool_icon = load_icon(":/icons/rotation_icon.png", color)
+        self.zoom_tool_icon = load_icon(":/icons/zoom_icon.png", color)
 
     def _create_actions(self):
         self.action_top_view = QAction(self.top_icon, "Top View", self)
@@ -62,7 +77,24 @@ class CameraToolbar(QToolBar):
         self.action_zoom_to_fit = QAction(self.zoom_to_fit_icon, "Zoom To Fit", self)
         self.action_zoom_to_fit.triggered.connect(self.zoom_to_fit)
 
+        self.action_selection_tool = QAction(self.selection_tool_icon, "Selection Tool", self)
+        self.action_selection_tool.triggered.connect(self.action_selection_tool_callback)
+
+        self.action_grab_tool = QAction(self.grab_tool_icon, "Grab Tool", self)
+        self.action_grab_tool.triggered.connect(self.action_grab_tool_callback)
+
+        self.action_rotation_tool = QAction(self.rotation_tool_icon, "Rotation Tool", self)
+        self.action_rotation_tool.triggered.connect(self.action_rotation_tool_callback)
+
+        self.action_zoom_tool = QAction(self.zoom_tool_icon, "Zoom Tool", self)
+        self.action_zoom_tool.triggered.connect(self.action_zoom_tool_callback)
+
     def _configure_layout(self):
+        self.addAction(self.action_selection_tool)
+        self.addAction(self.action_grab_tool)
+        self.addAction(self.action_rotation_tool)
+        self.addAction(self.action_zoom_tool)
+        # self.addSeparator()
         self.addAction(self.action_top_view)
         self.addAction(self.action_bottom_view)
         self.addAction(self.action_right_view)
@@ -72,9 +104,31 @@ class CameraToolbar(QToolBar):
         self.addAction(self.action_isometric_view)
         self.addAction(self.action_zoom_to_fit)
 
+    def _configure_actions(self):
+        self._render_tool_actions = [
+            self.action_selection_tool, self.action_grab_tool,
+            self.action_rotation_tool, self.action_zoom_tool,
+        ]
+
+        for action in self._render_tool_actions:
+            action.setCheckable(True)
+
+        self.action_selection_tool.setChecked(True)
+
     def _configure_appearance(self):
         self.setMovable(True)
+        self.setOrientation(Qt.Vertical)
         self.setFloatable(True)
+
+        self.setStyleSheet(
+            """
+            QToolBar {
+                border-style: solid;
+                border-width: 0.5px;
+                border-color: #888888;
+            }
+            """
+        )
 
     def _current_render_widget(self):
         return self.render_widget_stack.currentWidget()
@@ -119,3 +173,48 @@ class CameraToolbar(QToolBar):
         if isinstance(widget, CommonRenderWidget):
             widget.renderer.ResetCamera()
             widget.update()
+        
+    def action_grab_tool_callback(self):
+        if self.action_grab_tool.isChecked():
+            self.discheck_all_actions_of_render_tools_toolbar_except(self.action_grab_tool)
+            self.render_tool_changed.emit(GrabTool)
+        else:
+            self.action_selection_tool_callback()
+
+    def action_selection_tool_callback(self):
+        self.discheck_all_actions_of_render_tools_toolbar_except(self.action_selection_tool)
+        self.render_tool_changed.emit(SelectionTool)
+
+    def action_rotation_tool_callback(self):
+        if self.action_rotation_tool.isChecked():
+            self.discheck_all_actions_of_render_tools_toolbar_except(self.action_rotation_tool)
+            self.render_tool_changed.emit(RotationTool)
+        else:
+            self.action_selection_tool_callback()
+
+    def action_zoom_tool_callback(self):
+        if self.action_zoom_tool.isChecked():
+            self.discheck_all_actions_of_render_tools_toolbar_except(self.action_zoom_tool)
+            self.render_tool_changed.emit(ZoomTool)
+        else:
+            self.action_selection_tool_callback()
+
+    def discheck_all_actions_of_render_tools_toolbar_except(self, action: QAction):
+        for _action in self._render_tool_actions:
+            _action.setChecked(False)
+
+        action.setChecked(True)
+    
+    def enable_selection_tool(self):
+        self.action_selection_tool.setEnabled(True)
+
+    def disable_selection_tool(self):
+        self.action_selection_tool.setEnabled(False)
+
+    def show_render_tools(self):
+        for action in self._render_tool_actions:
+            action.setVisible(True)
+
+    def hide_render_tools(self):
+        for action in self._render_tool_actions:
+            action.setVisible(False)

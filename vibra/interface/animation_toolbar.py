@@ -187,8 +187,8 @@ class AnimationToolbar(QToolBar):
         self.setMinimumHeight(40)
         self.setMovable(True)
         self.setFloatable(True)
-        self.setStyleSheet(
-            """
+
+        self.stylesheet =  """
             QToolBar {
                 border-style: solid;
                 border-width: 1px;
@@ -199,7 +199,8 @@ class AnimationToolbar(QToolBar):
             width: 1px;
             }
             """
-        )
+
+        self.setStyleSheet(self.stylesheet)
 
         font = QFont()
         font.setPointSize(10)
@@ -210,6 +211,14 @@ class AnimationToolbar(QToolBar):
 
         for widget in widgets:
             widget.setFont(font)
+
+    def set_visible(self, visible: bool):
+        for action in self.actions():
+            action.setVisible(visible)
+
+        stylesheet = self.stylesheet if visible else "QToolBar { border: none; }"
+        self.setStyleSheet(stylesheet)
+        self.setMovable(visible)
 
     def frames_value_changed(self):
         self.frames = self.spinBox_frames.value()

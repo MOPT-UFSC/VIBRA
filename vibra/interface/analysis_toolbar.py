@@ -92,7 +92,7 @@ class AnalysisToolbar(QToolBar):
             """
             QToolBar {
                 border-style: solid;
-                border-width: 1px;
+                border-width: 0.5px;
                 border-color: #888888;
             }
             """
