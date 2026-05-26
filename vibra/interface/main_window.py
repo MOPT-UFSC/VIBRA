@@ -422,11 +422,11 @@ class MainWindow(MainWindow_UI):
 
     def show_geometry_render_widget(self):
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
-        self.view_toolbar.show_selection_tool()
+        self.view_toolbar.enable_selection_tool()
 
     def show_mesh_render_widget(self):
         self.render_widgets_stack.setCurrentWidget(self.mesh_widget)
-        self.view_toolbar.show_selection_tool()
+        self.view_toolbar.enable_selection_tool()
 
     def clear_render_widgets_stack(self):
         for _ in range(self.render_widgets_stack.count()):
@@ -478,7 +478,7 @@ class MainWindow(MainWindow_UI):
         self.action_mesh_workspace.setChecked(False)
         self.action_results_workspace.setChecked(False)
 
-        self.view_toolbar.show_selection_tool()
+        self.view_toolbar.enable_selection_tool()
 
         valid_solution = app().project.is_there_a_valid_solution()
         self.action_results_workspace.setEnabled(valid_solution)
@@ -501,7 +501,7 @@ class MainWindow(MainWindow_UI):
         self.action_model_workspace.setChecked(False)
         self.action_results_workspace.setChecked(False)
 
-        self.view_toolbar.show_selection_tool()
+        self.view_toolbar.enable_selection_tool()
 
         if app().project.model.is_the_mesh_setup_defined():
             obj = MesherSetupInputs(close_after_generate=True)
