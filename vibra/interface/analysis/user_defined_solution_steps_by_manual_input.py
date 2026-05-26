@@ -1,24 +1,35 @@
-from PySide6.QtWidgets import QHBoxLayout, QHeaderView, QLineEdit, QPushButton, QTableWidgetItem, QWidget
-from PySide6.QtGui import Qt, QIcon
-
-from vibra import app, ICON_DIR
-from vibra.interface.formatters.icons import change_icon_color_for_widgets, change_icon_color
-from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
-from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.ui_generated.analysis.user_defined_solution_steps_by_manual_input_ui import UserDefinedSolutionStepsByManualInput_UI
+from copy import deepcopy
 
 import numpy as np
+from PySide6.QtGui import QIcon, Qt
+from PySide6.QtWidgets import (
+    QHBoxLayout,
+    QHeaderView,
+    QPushButton,
+    QTableWidgetItem,
+    QWidget,
+)
 
-error_title = "Error"
-warning_title = "Warning"
+from vibra import ICON_DIR, app
+from vibra.engine.analysis_info import HarmonicAnalysisSetup
+from vibra.interface import error_title, warning_title
+from vibra.interface.formatters.icons import (
+    change_icon_color,
+    change_icon_color_for_widgets,
+)
+from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
+from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.ui_generated.analysis.user_defined_solution_steps_by_manual_input_ui import (
+    UserDefinedSolutionStepsByManualInput_UI,
+)
 
 
 class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInput_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args)
 
-        # app().main_window.close_dialogs()
         # app().main_window.set_input_widget(self)
+        self.current_solution_steps = kwargs.get("current_solution_steps", list())
 
         self._initialize()
         self._config_window()
@@ -29,6 +40,14 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
 
         while self.keep_window_open:
             self.exec()
+
+    @property
+    def model(self):
+        return app().project.model
+
+    @property
+    def analysis_setup(self):
+        return app().project.model.analysis_setup
 
     def _initialize(self):
         self.setup_defined = False
@@ -52,12 +71,14 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
         self.pushButton_reset.clicked.connect(self.reset_callback)
         #
         app().main_window.theme_changed.connect(self._paint_icons)
+        #
+        self.reset_table()
 
     def _paint_icons(self):
         icon_color = None
         theme = app().config.user_preferences.interface_theme
         
-        from vibra import LIGHT_ICON_COLOR, DARK_ICON_COLOR
+        from vibra import DARK_ICON_COLOR, LIGHT_ICON_COLOR
         if theme == "dark":
             icon_color = DARK_ICON_COLOR.to_qt()
         else:
@@ -92,16 +113,30 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
         
         self.index_to_push_buttons.clear()
 
-        if app().project.model.properties.check_if_there_are_tables_at_the_model():
+        if self.model.properties.check_if_there_are_tables_at_the_model():
+            return
+        
+        frequencies = self.get_solution_steps()
+        if len(frequencies) == 0:
             return
 
-        frequencies = app().project.model.analysis_setup.get("frequencies")
         if isinstance(frequencies, np.ndarray):
             self.user_defined_solution_steps = list(frequencies)
+
         elif isinstance(frequencies, list):
             self.user_defined_solution_steps = frequencies
 
         self.update_solution_steps_table()
+
+    def get_solution_steps(self) -> list:
+        solution_steps = list()
+        if isinstance(self.analysis_setup, HarmonicAnalysisSetup):
+            solution_steps = self.model.frequencies
+        else:
+            if self.current_solution_steps:
+                solution_steps = deepcopy(self.current_solution_steps)
+
+        return solution_steps
 
     def reset_table(self):
         self.tableWidget_frequencies.clearContents()
@@ -112,9 +147,8 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
 
         self.reset_table()
 
-        if not self.user_defined_solution_steps:
-            if app().project.model.frequencies is None:
-                return
+        if len(self.user_defined_solution_steps) == 0:
+            return
 
         self.tableWidget_frequencies.setRowCount(len(self.user_defined_solution_steps))
 
@@ -233,7 +267,7 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
 
     def confirm_callback(self):
 
-        if not self.user_defined_solution_steps:
+        if len(self.user_defined_solution_steps) == 0:
             self.hide()
             title = "No solution step was selected"
             message = "Select at least one solution step to proceed "

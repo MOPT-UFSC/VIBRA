@@ -132,12 +132,14 @@ class ExportModelResults(QFileDialog):
             kwargs = dict()
             if platform.system() == "Linux":
                 kwargs["options"] = QFileDialog.Option.DontUseNativeDialog
-            file_path, selected_filter = self.getSaveFileName(app().main_window, 
-                                                    caption, 
-                                                    str(directory_path), 
-                                                    filter = _filter,
-                                                    **kwargs)
-            
+            file_path, selected_filter = self.getSaveFileName(
+                app().main_window,
+                caption,
+                str(directory_path),
+                filter=_filter,
+                **kwargs,
+            )
+
             if not file_path:
                 return
             

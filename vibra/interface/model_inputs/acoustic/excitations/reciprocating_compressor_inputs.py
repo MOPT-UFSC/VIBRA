@@ -3,14 +3,16 @@ from PySide6.QtGui import QCloseEvent
 from PySide6.QtCore import Qt, QPoint, QItemSelectionModel
 
 from vibra import app, USER_PATH, SUPPORTED_OUTPUT_DATA_EXTENSIONS
+from vibra.interface import error_title
 from vibra.interface.common.common_interface import update_analysis_setup_in_file
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
+from vibra.interface.common.common_interface import mesher_interface_callback
 from vibra.interface.model_inputs.general.fluid.set_fluid_inputs import SetFluidInputs
-from vibra.interface.model_inputs.general.fluid.simplified_fluid_inputs import SimplifiedFluidInputs
+from vibra.interface.model_inputs.general.fluid.set_fluid_inputs_simplified import SetFluidInputsSimplified
+from vibra.interface.plots.general.plot_2d_simplified import Plot2DSimplified
 from vibra.interface.ui_generated.model.acoustic.reciprocating_compressor_inputs_ui import ReciprocatingCompressorInputs_UI
 from vibra.interface.model_inputs.acoustic.definitions.enums import *
 
@@ -20,9 +22,6 @@ from vibra.model.machines.reciprocating_compressor_model import ReciprocatingCom
 import numpy as np
 from os.path import dirname
 from pathlib import Path
-
-window_title_1 = "Error"
-window_title_2 = "Warning"
 
 psi_to_Pa = (0.45359237 * 9.80665) / ((0.0254)**2)
 kgf_cm2_to_Pa = 9.80665e4
@@ -330,7 +329,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
         if state_properties:
             self.hide()
-            self.fluid_dialog = SimplifiedFluidInputs(state_properties = state_properties)
+            self.fluid_dialog = SetFluidInputsSimplified(state_properties = state_properties)
             self.fluid_dialog.fluid_widget.pushButton_attribute.setText("Select fluid")
             self.fluid_dialog.pushButton_attribute.clicked.connect(self.get_selected_fluid)
             self.fluid_dialog.exec_and_keep_window_open()
@@ -487,10 +486,8 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.spinBox_capacity.setValue(100)
 
     def generate_mesh(self):
-        if not app().project.model.generated_mesh:
-            mesher = MesherSetupInputs(close_after_generate=True)
-            if not mesher.complete:
-                return True
+        if not app().project.model.is_there_a_valid_mesh():
+            return mesher_interface_callback(self, close_after_generate=True)
 
     def check_input_surfaces(self):
 
@@ -515,7 +512,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             message = "The selected surface does not correspond to the piping endings. "
             message += "It is necessary to change the selection to proceed with the "
             message += "compressor excitation attribution."
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             self.clear_line_edit_selection_id()
             return None
 
@@ -539,18 +536,18 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
                 if value < 0:
                     message = f"You cannot input a negative value to the {label}."
-                    PrintMessageInput([window_title_1, title, message])
+                    PrintMessageInput([error_title, title, message])
                     return True
                 else:
                     self.value = value
 
             except Exception:
                 message = f"You have typed an invalid value to the {label}."
-                PrintMessageInput([window_title_1, title, message])
+                PrintMessageInput([error_title, title, message])
                 return True
         else:
             message = f"None value has been typed to the {label}."
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             return True
         return False
 
@@ -718,7 +715,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             message += "different from the others already imported ones. The current "
             message += "project frequency setup is not going to be modified."
             message += f"\n\n{table_name}"
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             return True
 
         update_analysis_setup_in_file(frequencies)
@@ -749,7 +746,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             else:
                 self.lineEdit_pressure_at_discharge.setText(f"{discharge_pressure : .6f}")
 
-        except:
+        except Exception:
             return
 
         try:
@@ -764,7 +761,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
             self.lineEdit_temperature_at_discharge.setText(f"{discharge_temperature : .6f}")
 
-        except:
+        except Exception:
             return
 
     def attribute_callback(self):
@@ -860,8 +857,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
     def actions_to_finalize(self):
         self.load_compressor_excitation_info()
-        app().file.write_model_properties_in_file()
-        app().file.write_imported_table_data_in_file()
+        app().project.update_model_properties_file()
         app().main_window.selection.set_geometry_selection()
         app().main_window.update_symbols()
 
@@ -869,7 +865,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         for table_name in table_names:
             self.properties.remove_imported_tables("acoustic", table_name)
         if table_names:
-            app().file.write_imported_table_data_in_file()
+            app().project.update_model_properties_file()
 
     def remove_conflicting_excitations(self, surface_id: int):
 
@@ -1045,113 +1041,278 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             return
         N = self.spinBox_number_of_points.value()
         self.compressor.number_points = N
-        self.compressor.plot_PV_diagram_head_end()
+
+        volume_HE, pressure_HE = self.compressor.get_PV_diagram_head_end_data()
+        if volume_HE is None:
+            return
+
+        plotter = Plot2DSimplified(
+            x_label="Volume [m³]",
+            y_left_label=f"Pressure [{self.compressor.pressure_unit}]",
+            title="P-V diagram (head end)",
+        )
+        plotter.set_plot_data(volume_HE, pressure_HE)
+        plotter.show()
 
     def plot_PV_diagram_crank_end(self):
         if self.check_all_parameters():
             return
         N = self.spinBox_number_of_points.value()
         self.compressor.number_points = N
-        self.compressor.plot_PV_diagram_crank_end()
+
+        volume_CE, pressure_CE = self.compressor.get_PV_diagram_crank_end_data()
+        if volume_CE is None:
+            return
+
+        plotter = Plot2DSimplified(
+            x_label="Volume [m³]",
+            y_left_label=f"Pressure [{self.compressor.pressure_unit}]",
+            title="P-V diagram (crank end)",
+        )
+        plotter.set_plot_data(volume_CE, pressure_CE)
+        plotter.show()
 
     def plot_PV_diagram_both_ends(self):
         if self.check_all_parameters():
             return
         N = self.spinBox_number_of_points.value()
         self.compressor.number_points = N
-        self.compressor.plot_PV_diagram_both_ends()
+
+        volume_HE, pressure_HE, volume_CE, pressure_CE = self.compressor.get_PV_diagram_both_ends_data()
+        if volume_HE is None:
+            return
+
+        plotter = Plot2DSimplified(
+            x_label="Volume [m³]",
+            y_left_label=f"Pressure [{self.compressor.pressure_unit}]",
+            title="P-V RECIPROCATING COMPRESSOR DIAGRAM",
+        )
+        plotter.set_plot_data(volume_HE, pressure_HE, label="Head End", color=(1, 0, 0))
+        plotter.set_plot_data(volume_CE, pressure_CE, label="Crank End", color=(0, 0, 1), line_style="--")
+        plotter.show()
 
     def plot_pressure_time(self):
         if self.check_all_parameters():
             return
         N = self.spinBox_number_of_points.value()
         self.compressor.number_points = N
-        self.compressor.plot_pressure_vs_time()
-        return
+
+        time, pressure_HE, pressure_CE = self.compressor.get_pressure_vs_time_data()
+        if pressure_HE is None:
+            return
+
+        plotter = Plot2DSimplified(
+            x_label="Time [s]",
+            y_left_label=f"Pressure [{self.compressor.pressure_unit}]",
+            title="PRESSURES vs TIME PLOT",
+        )
+        plotter.set_plot_data(time, pressure_HE, label="Head End", color=(1, 0, 0))
+        plotter.set_plot_data(time, pressure_CE, label="Crank End", color=(0, 0, 1), line_style="--")
+        plotter.show()
 
     def plot_volume_time(self):
         if self.check_all_parameters():
             return
         N = self.spinBox_number_of_points.value()
         self.compressor.number_points = N
-        self.compressor.plot_volume_vs_time()
-        return
+
+        time, volume_HE, volume_CE = self.compressor.get_volume_vs_time_data()
+
+        plotter = Plot2DSimplified(
+            x_label="Time [s]",
+            y_left_label="Volume [m³]",
+            title="VOLUMES vs TIME PLOT",
+        )
+        plotter.set_plot_data(time, volume_HE, label="Head End", color=(1, 0, 0))
+        plotter.set_plot_data(time, volume_CE, label="Crank End", color=(0, 0, 1), line_style="--")
+        plotter.show()
     
     def plot_volumetric_flow_rate_at_suction_time(self):
         if self.check_all_parameters():
             return
         N = self.spinBox_number_of_points.value()
         self.compressor.number_points = N
-        self.compressor.plot_volumetric_flow_rate_at_suction_time()
-        return
+
+        time, flow_rate = self.compressor.get_volumetric_flow_rate_at_suction_time_data()
+        if flow_rate is None:
+            return
+
+        plotter = Plot2DSimplified(
+            x_label="Time [s]",
+            y_left_label="Volume [m³/s]",
+            title="Volumetric flow rate at suction",
+        )
+        plotter.set_plot_data(time, flow_rate)
+        plotter.show()
 
     def plot_volumetric_flow_rate_at_discharge_time(self):
         if self.check_all_parameters():
             return
         N = self.spinBox_number_of_points.value()
         self.compressor.number_points = N
-        self.compressor.plot_volumetric_flow_rate_at_discharge_time()
-        return
+
+        time, flow_rate = self.compressor.get_volumetric_flow_rate_at_discharge_time_data()
+        if flow_rate is None:
+            return
+
+        plotter = Plot2DSimplified(
+            x_label="Time [s]",
+            y_left_label="Volume [m³/s]",
+            title="Volumetric flow rate at discharge",
+        )
+        plotter.set_plot_data(time, flow_rate)
+        plotter.show()
     
     def plot_rod_pressure_load_frequency(self):
         self.process_aquisition_parameters()
-        self.compressor.plot_rod_pressure_load_frequency(self.N_rev)
-        return
+
+        freq, rod_pressure_load = self.compressor.get_rod_pressure_load_frequency_data(self.N_rev)
+
+        plotter = Plot2DSimplified(
+            x_label="Frequency [Hz]",
+            y_left_label="Rod pressure load [kN]",
+            title="Rod pressure load",
+        )
+        plotter.set_plot_data(freq, rod_pressure_load, absolute_value=True)
+        plotter.show()
 
     def plot_rod_pressure_load_time(self):
         self.process_aquisition_parameters()
-        self.compressor.plot_rod_pressure_load_time()
-        return
+
+        time, rod_pressure_load_time = self.compressor.get_rod_pressure_load_time_data()
+
+        plotter = Plot2DSimplified(
+            x_label="Time [s]",
+            y_left_label="Rod pressure load [kN]",
+            title="Rod pressure load",
+        )
+
+        plotter.set_plot_data(time, rod_pressure_load_time, absolute_value=True)
+        plotter.show()
     
     def plot_piston_position_and_velocity_time(self):
         self.process_aquisition_parameters()
-        self.compressor.plot_piston_position_and_velocity(domain="time")
+
+        x_data, position, velocity = self.compressor.get_piston_position_and_velocity_data(domain="time")
+
+        plotter = Plot2DSimplified(
+            x_label="Time [s]",
+            y_left_label="Piston relative displacement [m]",
+            y_right_label="Piston velocity [m/s]",
+            title="Piston displacement and velocity during a complete cycle",
+        )
+        plotter.set_plot_data(x_data, position, label="Piston position", color=(0, 0, 0), line_width=2)
+        plotter.set_plot_data(x_data, velocity, label="Piston velocity", color=(0, 0, 1), line_width=2, y_label_position="right")
+        plotter.show()
 
     def plot_piston_position_and_velocity_angle(self):
         self.process_aquisition_parameters()
-        self.compressor.plot_piston_position_and_velocity(domain="angle")
+
+        x_data, position, velocity = self.compressor.get_piston_position_and_velocity_data(domain="angle")
+
+        plotter = Plot2DSimplified(
+            x_label="Angle [deg]",
+            y_left_label="Piston relative displacement [m]",
+            y_right_label="Piston velocity [m/s]",
+            title="Piston displacement and velocity during a complete cycle",
+        )
+        plotter.set_plot_data(x_data, position, label="Piston position", color=(0, 0, 0), line_width=2)
+        plotter.set_plot_data(x_data, velocity, label="Piston velocity", color=(0, 0, 1), line_width=2, y_label_position="right")
+        plotter.show()
 
     def plot_volumetric_flow_rate_at_suction_frequency(self):
         self.process_aquisition_parameters()
-        self.compressor.plot_volumetric_flow_rate_at_suction_frequency(self.N_rev)
-        return
+
+        freq, flow_rate = self.compressor.get_volumetric_flow_rate_at_suction_frequency_data(self.N_rev)
+        if flow_rate is None:
+            return
+
+        plotter = Plot2DSimplified(
+            x_label="Frequency [Hz]",
+            y_left_label="Volumetric head flow rate [m³/s]",
+            title="Volumetric flow rate at suction",
+        )
+        plotter.set_plot_data(freq, flow_rate, absolute_value=True)
+        plotter.show()
 
     def plot_volumetric_flow_rate_at_discharge_frequency(self):
         self.process_aquisition_parameters()
-        self.compressor.plot_volumetric_flow_rate_at_discharge_frequency(self.N_rev)
-        return
+
+        freq, flow_rate = self.compressor.get_volumetric_flow_rate_at_discharge_frequency_data(self.N_rev)
+        if flow_rate is None:
+            return
+
+        plotter = Plot2DSimplified(
+            x_label="Frequency [Hz]",
+            y_left_label="Volumetric crank flow rate [m³/s]",
+            title="Volumetric flow rate at discharge",
+        )
+        plotter.set_plot_data(freq, flow_rate, absolute_value=True)
+        plotter.show()
 
     def plot_pressure_head_end_angle(self):
         if self.check_all_parameters():
             return
         N = self.spinBox_number_of_points.value()
         self.compressor.number_points = N
-        self.compressor.plot_head_end_pressure_vs_angle()
-        return
+
+        angle, pressure_HE = self.compressor.get_head_end_pressure_vs_angle_data()
+
+        plotter = Plot2DSimplified(
+            x_label="Crank angle [degree]",
+            y_left_label=f"Pressure [{self.compressor.pressure_unit}]",
+            title="Head end pressure vs Angle",
+        )
+        plotter.set_plot_data(angle, pressure_HE)
+        plotter.show()
 
     def plot_volume_head_end_angle(self):
         if self.check_all_parameters():
             return
         N = self.spinBox_number_of_points.value()
         self.compressor.number_points = N
-        self.compressor.plot_head_end_volume_vs_angle()
-        return
+
+        angle, volume_HE = self.compressor.get_head_end_volume_vs_angle_data()
+
+        plotter = Plot2DSimplified(
+            x_label="Crank angle [degree]",
+            y_left_label="Volume [m³]",
+            title="Head end volume vs Angle",
+        )
+        plotter.set_plot_data(angle, volume_HE)
+        plotter.show()
 
     def plot_pressure_crank_end_angle(self):
         if self.check_all_parameters():
             return
         N = self.spinBox_number_of_points.value()
         self.compressor.number_points = N
-        self.compressor.plot_crank_end_pressure_vs_angle()
-        return
+
+        angle, pressure_CE = self.compressor.get_crank_end_pressure_vs_angle_data()
+
+        plotter = Plot2DSimplified(
+            x_label="Crank angle [degree]",
+            y_left_label=f"Pressure [{self.compressor.pressure_unit}]",
+            title="Crank end pressure vs Angle",
+        )
+        plotter.set_plot_data(angle, pressure_CE)
+        plotter.show()
 
     def plot_volume_crank_end_angle(self):
         if self.check_all_parameters():
             return
         N = self.spinBox_number_of_points.value()
         self.compressor.number_points = N
-        self.compressor.plot_crank_end_volume_vs_angle()
-        return
+
+        angle, volume_CE = self.compressor.get_crank_end_volume_vs_angle_data()
+
+        plotter = Plot2DSimplified(
+            x_label="Crank angle [degree]",
+            y_left_label="Volume [m³]",
+            title="Crank end volume vs Angle",
+        )
+        plotter.set_plot_data(angle, volume_CE)
+        plotter.show()
 
     def export_path_callback(self):
 
@@ -1225,7 +1386,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
     def is_file_path_valid(self, file_path: str):
         if Path(dirname(file_path)).exists():
-            ext = file_path.split(".")[-1]
+            ext = file_path.split(".")[-1].lower()
             if ext in SUPPORTED_OUTPUT_DATA_EXTENSIONS:
                 return True
         return False

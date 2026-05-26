@@ -1,28 +1,75 @@
-from PySide6.QtWidgets import QDialog, QFileDialog, QWidget
+from pathlib import Path
+
+import numpy as np
+from PySide6.QtWidgets import QDialog, QFileDialog, QPushButton, QWidget
 
 from vibra import app
-
-from pathlib import Path
-import numpy as np
+from vibra.engine.analysis_info import FrequencySpacing
+from vibra.interface.data.data_manager import is_frequencies_vector_equally_distributed
+from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
 
 
 def update_analysis_setup_in_file(frequencies: np.ndarray):
 
-    analysis_setup = app().file.read_analysis_setup_from_file()
+    equally_distributed = is_frequencies_vector_equally_distributed(frequencies)
 
-    analysis_setup.update(
-        {
-        "frequency_spacing" : "tabular",
-        "f_min" : float(frequencies[0]),
-        "f_max" : float(frequencies[-1]),
-        "f_step" : float(frequencies[1] - frequencies[0]),
-        "frequencies" : None,
-        "solution_steps_mask" : list(),
-        }
+    if equally_distributed:
+        frequency_spacing = FrequencySpacing.EQUALLY_DISTRIBUTED
+        f_min = frequencies[0]
+        f_max = frequencies[-1]
+        f_step = frequencies[1] - frequencies[0]
+        frequencies = None
+
+    else:
+        f_min = f_max = f_step = None
+        frequency_spacing = FrequencySpacing.USER_DEFINED
+        frequencies = frequencies
+
+    analysis_setup = app().project.model.get_harmonic_analysis_setup(
+        frequency_spacing = frequency_spacing,
+        f_min = f_min,
+        f_max = f_max,
+        f_step = f_step,
+        frequencies = frequencies,
         )
 
-    app().project.model.set_analysis_setup(analysis_setup)
-    app().file.write_analysis_setup_in_file(analysis_setup)
+    app().project.configure_analysis(
+        app().project.model.analysis_id,
+        analysis_setup,
+    )
+
+def check_mesh_related_issues(push_button: QPushButton):
+
+    # disable run_analysis button if there are disconnected nodes or collapsed elements
+    mesh = app().project.model.mesh
+    disconnected_nodes = bool(mesh.disconnected_nodes_data)
+    collapsed_elements = bool(mesh.collapsed_elements_data)
+
+    text = ""
+    if collapsed_elements:
+        text = "Collapsed elements have been detected during the mesh post-processing. \n"
+        text += "The model solution will stay deactivated until the collapsed-related \n"
+        text += "issues have been addressed."
+
+    if disconnected_nodes:
+        text += "Disconnected nodes have been detected during the mesh post-processing. \n"
+        text += "The model solution will stay deactivated until the meshing-related issues \n"
+        text += "have been addressed."
+
+    push_button.setToolTip(text)
+    push_button.setDisabled(collapsed_elements or disconnected_nodes)
+
+    app().main_window.analysis_toolbar.pushButton_run_analysis.setToolTip(text)
+    app().main_window.analysis_toolbar.pushButton_run_analysis.setDisabled(collapsed_elements or disconnected_nodes)
+
+def mesher_interface_callback(parent: QDialog, close_after_generate: bool = False):
+    parent.hide()
+    obj = MesherSetupInputs(close_after_generate=close_after_generate)
+    if not obj.complete:
+        app().main_window.set_input_widget(parent)
+        return True
+
+    app().main_window.update_plots()
 
 def export_modal_analysis_results(parent: QDialog | QWidget, modes_to_frequencies: dict, physical_domain: str):
 
@@ -36,9 +83,9 @@ def export_modal_analysis_results(parent: QDialog | QWidget, modes_to_frequencie
     export_path, extension = QFileDialog.getSaveFileName(
         parent,
         caption,
-        last_path,
-        filter = _filter,
-        )
+        str(last_path),
+        filter=_filter,
+    )
 
     if not extension:
         return
@@ -46,9 +93,9 @@ def export_modal_analysis_results(parent: QDialog | QWidget, modes_to_frequencie
     app().config.write_last_folder_path_in_file("exported_table_folder", export_path)
 
     if physical_domain == "acoustic":
-        complex_natural_frequencies = app().project.acoustic_modal_solver.complex_natural_frequencies
+        complex_natural_frequencies = app().project.solver.complex_natural_frequencies
     else:
-        complex_natural_frequencies = app().project.structural_modal_solver.complex_natural_frequencies
+        complex_natural_frequencies = app().project.solver.complex_natural_frequencies
 
     if complex_natural_frequencies.size:
         cols = 3
@@ -73,7 +120,7 @@ def export_modal_analysis_results(parent: QDialog | QWidget, modes_to_frequencie
             modal_data_to_export[i, :] = [mode, value]
 
     if "Text file" in extension:
-        np.savetxt(export_path, modal_data_to_export, fmt=fmt, delimiter=',', header=header)
+        np.savetxt(export_path, modal_data_to_export, fmt=fmt, delimiter=",", header=header)
 
     else:
         from pandas import ExcelWriter

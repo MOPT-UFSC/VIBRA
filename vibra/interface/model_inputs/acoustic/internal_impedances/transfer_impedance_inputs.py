@@ -1,26 +1,26 @@
-from PySide6.QtWidgets import QHeaderView, QLineEdit, QTreeWidgetItem, QAbstractItemView
-from PySide6.QtCore import Qt, QPoint, QItemSelectionModel
+import logging
+import warnings
+from copy import deepcopy
+
+import numpy as np
+from PySide6.QtCore import QItemSelectionModel, QPoint, Qt
 from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QLineEdit, QTreeWidgetItem
 
 from vibra import app
+from vibra.interface import error_title
 from vibra.interface.common.common_interface import update_analysis_setup_in_file
 from vibra.interface.data.data_manager import get_spectral_data_from_array
-from vibra.utils.bidict import bidict
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
-from vibra.interface.ui_generated.model.acoustic.transfer_impedance_inputs_ui import TransferImpedanceInputs_UI
 from vibra.interface.model_inputs.acoustic.definitions.enums import StandardTabType
-
-from copy import deepcopy
-
-import logging, os, warnings
-import numpy as np
-
-error_title = "Error"
-warning_title = "Warning"
+from vibra.interface.ui_generated.model.acoustic.transfer_impedance_inputs_ui import (
+    TransferImpedanceInputs_UI,
+)
+from vibra.utils.bidict import bidict
 
 
 class TransferImpedanceInputs(TransferImpedanceInputs_UI):
@@ -30,7 +30,6 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
 
-        self.project = app().project
         self.model = app().project.model
         self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
@@ -88,7 +87,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
     def _paint_icons(self):
         icon_color = None
         theme = app().config.user_preferences.interface_theme
-        from vibra import LIGHT_ICON_COLOR, DARK_ICON_COLOR
+        from vibra import DARK_ICON_COLOR, LIGHT_ICON_COLOR
         if theme == "dark":
             icon_color = DARK_ICON_COLOR.to_qt()
         else:
@@ -364,16 +363,6 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         self.hide()
         self.actions_to_finalize()
 
-    def process_table_file_removal(self, table_names: list):
-        for table_name in table_names:
-            self.properties.remove_imported_tables("acoustic", table_name)
-        if table_names:
-            app().file.write_imported_table_data_in_file()
-
-    def remove_table_files_from_surfaces(self, surface_id : list):
-        table_names = self.properties.get_property_related_table_names("transfer_impedance", surface_id, "surfaces")
-        self.process_table_file_removal(table_names)
-
     def tab_event_callback(self):
         current_tab = self.tabWidget_main.currentIndex()
         tab_list = current_tab == StandardTabType.LIST
@@ -540,7 +529,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         for table_name in table_names:
             self.properties.remove_imported_tables("acoustic", table_name)
         if table_names:
-            app().file.write_imported_table_data_in_file()
+            app().project.update_model_properties_file()
 
     def remove_conflicting_excitations(self, surface_ids: int | list[int]):
 
@@ -619,8 +608,8 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
                 self.properties._remove_surface_property("degrees_of_freedom_decoupling", surface_id)
 
-                app().file.remove_mesh_data_from_project_file()
-                app().file.remove_results_data_from_project_file()
+                app().project.project_writer.delete_mesh_data()
+                app().project.project_writer.delete_results_data()
                 # self.restore_mesh_data_modified_by_decoupling()
                 
         self.clear_line_edit_selection_id()
@@ -680,19 +669,16 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
             self.load_model_info()
 
             logging.info("Processing the post-assignment actions... [20/100]")
-            app().project.reset_solutions()
+            app().project.reset_solution()
 
             logging.info("Processing the post-assignment actions... [30/100]")
-            app().file.remove_mesh_data_from_project_file()
-
-            logging.info("Processing the post-assignment actions... [40/100]")
-            app().file.remove_results_data_from_project_file()
+            app().project.project_writer.delete_mesh_data()
 
             logging.info("Processing the post-assignment actions... [50/100]")
-            app().file.write_model_properties_in_file()
+            app().project.update_model_properties_file()
 
             logging.info("Processing the post-assignment actions... [60/100]")
-            app().file.write_imported_table_data_in_file()
+            app().project.update_model_properties_file()
 
             logging.info("Processing the post-assignment actions... [70/100]")
             app().main_window.recompute_hidden_volumes()
@@ -718,14 +704,11 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
             self.model.process_degrees_of_freedom_decoupling()
 
             logging.info("Processing degress of freedom decoupling... [70/100]")
-            app().file.write_mesh_data_in_file()
-            
-            logging.info("Processing degress of freedom decoupling... [75/100]")
-            app().file.write_geometry_data_in_file()
+            app().project.write_to_working_dir()
 
             # the degrees of freedom modifies the surfaces properties
             logging.info("Processing degress of freedom decoupling... [80/100]")
-            app().file.write_model_properties_in_file()
+            app().project.update_model_properties_file()
 
             logging.info("Processing degress of freedom decoupling... [85/100]")
             app().main_window.update_mesh_information()
@@ -746,8 +729,8 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         self.mesh.restore_data_from_cache()
         self.mesh.process_upwards_adjacencies_from_entities()
 
-        if self.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
-            self.mesh.cache_mesh_information()
+        # if self.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
+        #     self.mesh.cache_mesh_information()
 
         self.process_decoupling_actions()
 
@@ -791,18 +774,20 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         if not self.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
             return False
 
-        if not app().project.model.generated_mesh:
+        if not app().project.model.is_there_a_valid_mesh():
             self.hide()
             app().main_window.input_ui.mesh_setup()
             app().main_window.set_input_widget(self)
             return False
 
         if self.mesh.cache_nodal_coordinates is None:
-            self.mesh.cache_mesh_information()
+            # self.mesh.cache_mesh_information()
+            pass
+
         else:
             self.mesh.restore_data_from_cache()
             self.mesh.process_upwards_adjacencies_from_entities()
-            self.mesh.cache_mesh_information()
+            # self.mesh.cache_mesh_information()
 
         self.process_decoupling_actions()
 

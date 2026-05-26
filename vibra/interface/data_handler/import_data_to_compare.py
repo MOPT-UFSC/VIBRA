@@ -1,22 +1,22 @@
-from PySide6.QtWidgets import QCheckBox, QHBoxLayout, QTreeWidgetItem, QWidget
-from PySide6.QtGui import QCloseEvent
+from typing import TYPE_CHECKING, List
+
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import QCheckBox, QHBoxLayout, QTreeWidgetItem, QWidget
 
 from vibra import app
-from vibra.interface.ui_generated.data_handler.import_data_to_compare_ui import ImportDataToCompare_UI
-from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.data_handler.imported_data import ImportedData
+from vibra.interface.ui_generated.data_handler.import_data_to_compare_ui import (
+    ImportDataToCompare_UI,
+)
 
-from typing import List, TYPE_CHECKING
 if TYPE_CHECKING:
-    from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
+    from vibra.interface.plots.general.frequency_response_plotter import (
+        FrequencyResponsePlotter,
+    )
 
 import numpy as np
-
-
-window_title_1 = "Error"
-window_title_2 = "Warning"
 
 
 class ImportDataToCompare(ImportDataToCompare_UI):

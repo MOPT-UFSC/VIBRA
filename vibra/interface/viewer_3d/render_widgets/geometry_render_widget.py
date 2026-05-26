@@ -185,11 +185,11 @@ class GeometryRenderWidget(CommonRenderWidget):
         logging.info("Updating the geometry render... [95/100]")
         self.update()
 
-        if app().project.thumbnail is None:
+        if app().project.model.thumbnail is None:
             self.save_thumbnail()
 
     def save_thumbnail(self):
-        thumbnail = app().project.thumbnail
+        thumbnail = app().project.model.thumbnail
 
         self.render_interactor.GetRenderWindow().OffScreenRenderingOn()
 
@@ -200,7 +200,8 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         self.disable_scale_bar()
         thumbnail = self.get_thumbnail()
-        app().project.thumbnail = removes_image_background(thumbnail)
+        thumbnail = removes_image_background(thumbnail)
+        app().project.set_thumbnail(thumbnail)
 
         if app().config.user_preferences.show_reference_scale_bar:
             self.enable_scale_bar()
@@ -218,7 +219,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         try:
             physical_domain = app().main_window.analysis_toolbar.combo_box_physical_domain.currentText()
         except Exception:
-            _, physical_domain = app().project.get_analysis_type_and_physical_domain()
+            physical_domain = app().project.get_physical_domain()
 
         self.symbols_actor_structural.SetVisibility(visualization.symbols and (physical_domain == "Structural"))
         self.symbols_actor_acoustic.SetVisibility(visualization.symbols and (physical_domain == "Acoustic"))
@@ -452,7 +453,8 @@ class GeometryRenderWidget(CommonRenderWidget):
             analysis_type = analysis_toolbar.combo_box_analysis_type.currentText()
             physical_domain = analysis_toolbar.combo_box_physical_domain.currentText()
         except Exception:
-            analysis_type, physical_domain = app().project.get_analysis_type_and_physical_domain()
+            analysis_type = app().project.get_analysis_type()
+            physical_domain = app().project.get_physical_domain()
 
         analysis_type = analysis_type.lower()
         physical_domain = physical_domain.lower()

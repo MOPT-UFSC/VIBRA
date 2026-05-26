@@ -1,11 +1,9 @@
-from enum import IntEnum
+from .analysis_info.analysis_id import AnalysisID
+from .analysis_info.harmonic_analysis_setup import HarmonicAnalysisSetup
+from .analysis_info.modal_analysis_setup import ModalAnalysisSetup
 
-
-class AnalysisID(IntEnum):
-    NO_ANALYSIS = -1
-    STRUCTURAL_MODAL = 0
-    STRUCTURAL_HARMONIC = 1
-    ACOUSTIC_MODAL = 2
-    ACOUSTIC_HARMONIC = 3
-    COUPLED_HARMONIC = 4
-    STRUCTURAL_STATIC = 5
+__all__ = [
+    "AnalysisID",
+    "HarmonicAnalysisSetup",
+    "ModalAnalysisSetup",
+]

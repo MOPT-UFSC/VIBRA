@@ -1,12 +1,12 @@
-from vibra.engine.solvers.linear_solver import SolverType, initialize_solver
+import logging
+
+import numpy as np
+from scipy.sparse.linalg import eigs
 
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
-
-import logging
-import numpy as np
-
-from scipy.sparse.linalg import eigs
+from vibra.engine.solution import ModalSolution
+from vibra.engine.solvers.linear_solver import SolverType, initialize_solver
 
 
 class ModalSolver:
@@ -15,19 +15,21 @@ class ModalSolver:
         self.reset_variables()
 
     def reset_variables(self):
-        self.solution = None
+        self.solution: ModalSolution | None = None
+        self.nodal_solution: np.ndarray | None = None
         self.natural_frequencies = np.array([])
         self.complex_natural_frequencies = np.array([])
-        self.displacement_dof = None
+        self.displacement_dof: np.ndarray | None = None
 
-    def solve(self, which="LM", full_solution: bool = True):
-        """ This method solves the acoustic modal analysis for both damped and undamped problems.
+    def solve(self, which="LM", full_solution: bool = True) -> ModalSolution:
+        """
+        This method solves the acoustic modal analysis for both damped and undamped problems.
         """
 
         self.reset_variables()
 
-        n_modes = self.assembler.model.analysis_setup.get("modes_number", 40)
-        sigma = self.assembler.model.analysis_setup.get("sigma_factor", 0.01)
+        n_modes = self.assembler.model.analysis_setup.modes_number
+        sigma = self.assembler.model.analysis_setup.sigma_factor
 
         logging.info("Solving the eigenproblem... [75/100]")
 
@@ -45,6 +47,7 @@ class ModalSolver:
 
         except Exception as error_log:
             from traceback import print_exception
+
             print_exception(error_log)
             eigenvalues, eigenvectors = eigs(A, M=B, k=n_modes, sigma=sigma, which=which)
 
@@ -72,7 +75,7 @@ class ModalSolver:
             mask_dmp = np.round(np.abs(damping_ratio), 6) < 1
             damping_ratio = damping_ratio[mask_dmp]
             self.natural_frequencies = natural_frequencies[mask_dmp]
-            self.solution = eigenvectors[:n_dof, index_order][:, mask_dmp]
+            nodal_solution = eigenvectors[:n_dof, index_order][:, mask_dmp]
             self.complex_natural_frequencies = complex_natural_frequencies[mask_dmp]
 
         else:
@@ -84,12 +87,27 @@ class ModalSolver:
             # reordering the eigenvalues and eigenvectors founded
             index_order = np.argsort(natural_frequencies)
             self.natural_frequencies = natural_frequencies[index_order]
-            self.solution = eigenvectors[:, index_order]
+            nodal_solution = eigenvectors[:, index_order]
 
         if full_solution:
-            self.solution = self.assembler.reinsert_the_prescribed_dof(self.solution)
+            self.nodal_solution = self.assembler.reinsert_the_prescribed_dof(nodal_solution)
+        else:
+            self.nodal_solution = nodal_solution
+
+        if self.complex_natural_frequencies.size:
+            cnf = self.complex_natural_frequencies
+        else:
+            cnf = None
 
         if isinstance(self.assembler, StructuralAssembler):
             self.displacement_dof = self.assembler.displacement_dof
 
-        return self.natural_frequencies, self.solution
+        self.solution = ModalSolution(
+            analysis_id = self.assembler.model.analysis_id,
+            natural_frequencies = self.natural_frequencies,
+            modal_shapes = self.nodal_solution,
+            displacement_dof = self.displacement_dof,
+            complex_natural_frequencies = cnf,
+        )
+
+        return self.solution

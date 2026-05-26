@@ -3,17 +3,23 @@ from pathlib import Path
 
 from molde.render_widgets.animated_render_widget import AnimatedRenderWidget
 from PySide6.QtCore import QSize, Qt
-from PySide6.QtGui import QColor, QFont
-from PySide6.QtWidgets import QFileDialog, QLabel, QPushButton, QSlider, QSpinBox, QToolBar, QWidget
+from PySide6.QtGui import QFont
+from PySide6.QtWidgets import (
+    QFileDialog,
+    QLabel,
+    QPushButton,
+    QSlider,
+    QSpinBox,
+    QToolBar,
+    QWidget,
+)
 
-from vibra import ICON_DIR, app, LIGHT_ICON_COLOR
+from vibra import ICON_DIR, LIGHT_ICON_COLOR, app
+from vibra.interface import error_title
 from vibra.interface.formatters import icons
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 from vibra.utils.icons import load_icon
-
-window_title_1 = "Error"
-window_title_2 = "Warning"
 
 
 class AnimationToolbar(QToolBar):
@@ -181,8 +187,8 @@ class AnimationToolbar(QToolBar):
         self.setMinimumHeight(40)
         self.setMovable(True)
         self.setFloatable(True)
-        self.setStyleSheet(
-            """
+
+        self.stylesheet =  """
             QToolBar {
                 border-style: solid;
                 border-width: 1px;
@@ -193,7 +199,8 @@ class AnimationToolbar(QToolBar):
             width: 1px;
             }
             """
-        )
+
+        self.setStyleSheet(self.stylesheet)
 
         font = QFont()
         font.setPointSize(10)
@@ -204,6 +211,14 @@ class AnimationToolbar(QToolBar):
 
         for widget in widgets:
             widget.setFont(font)
+
+    def set_visible(self, visible: bool):
+        for action in self.actions():
+            action.setVisible(visible)
+
+        stylesheet = self.stylesheet if visible else "QToolBar { border: none; }"
+        self.setStyleSheet(stylesheet)
+        self.setMovable(visible)
 
     def frames_value_changed(self):
         self.frames = self.spinBox_frames.value()
@@ -254,7 +269,7 @@ class AnimationToolbar(QToolBar):
 
         theme = app().config.user_preferences.interface_theme
 
-        from vibra import LIGHT_ICON_COLOR, DARK_ICON_COLOR
+        from vibra import DARK_ICON_COLOR, LIGHT_ICON_COLOR
         if theme == "dark":
             icon_color = DARK_ICON_COLOR.to_qt()
         elif theme == "light":
@@ -321,4 +336,4 @@ class AnimationToolbar(QToolBar):
             title = "Error while exporting animation"
             message = "An error has occured while exporting the animation file.\n"
             message += str(error_log)
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])

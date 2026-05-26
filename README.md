@@ -3,7 +3,7 @@
 
 
 # Vibra: Vibroacoustic Analysis using FEM
-*V0.4.0 October 2025*
+*V0.5.2 May 2026*
 
 Vibra is an open-source software developed in Python for modeling vibroacoustic problems using the Finite Element Method (FEM). In its current version, the software has been validated for performing modal analysis, complex modal analysis, and time-harmonic analysis of linear acoustic problems. Built-in support for Gmsh functions enables the generation of high-quality meshes, ensuring continuity between regions and allowing for local refinements. Typical acoustic boundary conditions—Dirichlet, Neumann, and Robin—are implemented, as well as transfer impedance conditions between media, which can be used, for example, to model perforated panels. Porous material models are also available, including Delany-Bazley, Delany-Bazley-Miki, JCA, and JCAL. The software is integrated with the NIST REPROP library, which can be adopted for determining the properties of working fluid mixtures (if you use this feature, you need a license from NIST). The acoustic analyses are validated through comparisons with commercial softwares. VIBRA already includes structural elements (solid and DKT plate), but the structural analysis is still under validation. In our upcoming versions, we will have the structural analysis validated and also include fluid–structure interaction analyses.
 
@@ -21,6 +21,22 @@ Vibra is an open-source software developed in Python for modeling vibroacoustic 
 - New interface and visualization tools (enhanced symbols for boundary condition, excitation, etc).
 - Project file management improvements: structural and acoustic results can now be saved and retrieved.
 - Enhanced animation of results (real and imaginary parts, phase monitoring, etc).
+
+## Instalation
+
+To install the latest stable version of VIBRA, go to the Releases page on GitHub:
+
+https://github.com/MOPT-UFSC/VIBRA/releases
+
+Then:
+
+- Select the most recent release.
+
+- Download the executable file for your operating system.
+
+- Extract the files (if needed) and run the installation setup (.exe).
+
+That’s it! VIBRA is now ready to use.
 
 ## Documentation
 
@@ -46,7 +62,8 @@ The authors are members of [MOPT - Multidisciplinary Modeling and Optimization](
    - [Guilherme Pierri](https://www.linkedin.com/in/guilherme-pierri-4487a4271/) - Computer Scientist;
    - [Gustavo Martins](https://www.linkedin.com/in/gustavo-martins/) - Engineer and Data Scientist;   
    - [Gildean Almeida](https://www.linkedin.com/in/gildean-almeida-708862298/) - Validation;
-   - [Leornardo R. Galibern](https://www.linkedin.com/in/leonardo-rosa-galibern-04a1b2304/) - Plate Elements.
+   - [Leornardo R. Galibern](https://www.linkedin.com/in/leonardo-rosa-galibern-04a1b2304/) - Plate Elements;
+   - [Taiana Barbosa Farias](https://www.linkedin.com/in/taiana-barbosa-farias-82740339a/) - Front-end.
 
 
 <p align="center">

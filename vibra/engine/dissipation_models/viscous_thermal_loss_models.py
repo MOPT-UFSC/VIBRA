@@ -1,12 +1,15 @@
-from vibra.engine.properties.fluid import Fluid
-from vibra.interface.model_inputs.acoustic.dissipation_models.rectangular_duct_data import RectangularDuctData
-from vibra.interface.model_inputs.acoustic.dissipation_models.circular_duct_data import CircularDuctData
-
+import logging
 from typing import TYPE_CHECKING
+
+from vibra.engine.properties.fluid import Fluid
+from vibra.interface.model_inputs.acoustic.dissipation_models.circular_duct_data import CircularDuctData
+from vibra.interface.model_inputs.acoustic.dissipation_models.rectangular_duct_data import RectangularDuctData
+
 if TYPE_CHECKING:
     from vibra.engine.model import Model
 
 from collections import defaultdict
+
 import numpy as np
 from scipy.special import jv
 
@@ -26,10 +29,22 @@ class ViscousThermalLossModels:
 
     def process_effective_properties(self, frequencies: np.ndarray | None = None):
 
+        self.effective_properties.clear()
+        if not self.properties.is_the_volume_property_present_in_the_model("viscous_thermal_model"):
+            return
+
         if frequencies is None:
             frequencies = self.model.frequencies
 
-        self.effective_properties = dict()
+        if frequencies is None:
+            return
+
+        if isinstance(frequencies, list):
+            frequencies = np.array(frequencies, dtype=float)
+
+        if len(frequencies) == 0:
+            return
+
         if frequencies[0] == 0:
             freq = frequencies[1:]
         else:
@@ -37,17 +52,15 @@ class ViscousThermalLossModels:
 
         omega = 2 * np.pi * freq
 
-        if not self.properties.is_the_volume_property_present_in_the_model("viscous_thermal_model"):
-            return
-        
         self.map_existing_viscous_thermal_loss_models()
         map_volumes_to_effective_properties = defaultdict()
 
         for model_id, volume_ids in self.map_model_id_to_volumes.items():
             for volume_id in volume_ids:
+                data = self.map_model_id_to_models.get(model_id)
+                if data is None:
+                    continue
 
-                # surfaces_from_volume = self.project.model.mesh.surfaces_from_volume[volume_id]
-                data = self.map_model_id_to_models[model_id]
                 fluid: Fluid = self.properties._get_property("fluid", volume = volume_id)
                 section_type = data.section_type
                 formulation = data.formulation
@@ -75,10 +88,10 @@ class ViscousThermalLossModels:
 
                 map_volumes_to_effective_properties[key] = (rho_eff, C_eff)
 
-                self.effective_properties[volume_id] = {   
+                self.effective_properties[volume_id] = {
                     "section_type" : section_type,
                     "rho_eff" : rho_eff,
-                    "C_eff" : C_eff   
+                    "C_eff" : C_eff,
                 }
 
     def get_rectangular_section_effective_properties(self, omega: np.ndarray, fluid: Fluid, data: RectangularDuctData, fast_integration: bool=True):
@@ -158,7 +171,7 @@ class ViscousThermalLossModels:
         return rho_eff, C_eff
 
 
-    def get_narrow_slit_section_effective_properties(self, omega, fluid, data: RectangularDuctData):
+    def get_narrow_slit_section_effective_properties(self, omega: np.ndarray, fluid: Fluid, data: RectangularDuctData):
 
         P_0 = fluid.pressure
         rho_0 = fluid.fluid_density
@@ -196,8 +209,7 @@ class ViscousThermalLossModels:
 
         return rho_eff, C_eff
 
-
-    def get_circular_section_effective_properties_for_Stinson_model(self, omega, fluid, data: CircularDuctData):
+    def get_circular_section_effective_properties_for_Stinson_model(self, omega: np.ndarray, fluid: Fluid, data: CircularDuctData):
 
         P_0 = fluid.pressure
         rho_0 = fluid.fluid_density
@@ -221,6 +233,38 @@ class ViscousThermalLossModels:
         G_bulk = radius * np.sqrt(-1j * omega * rho_0 * Pr / mu)
         # G_bulk = radius * Pr * np.sqrt(-1j * omega * rho_0 / mu)
 
+        invalid_values = False
+
+        array_r0 = jv(0, G_rho)
+        if (0 in array_r0) or np.isnan(array_r0).any() or np.isinf(array_r0).any():
+            invalid_values = True
+
+        array_r1 = jv(1, G_rho)
+        if np.isnan(array_r1).any() or np.isinf(array_r1).any():
+            invalid_values = True
+
+        array_b0 = jv(0, G_bulk)
+        if (0 in array_b0) or np.isnan(array_b0).any() or np.isinf(array_b0).any():
+            invalid_values = True
+
+        array_b1 = jv(1, G_bulk)
+        if np.isnan(array_b1).any() or np.isinf(array_b1).any():
+            invalid_values = True
+
+        if invalid_values:
+            message = "\nInvalid values were found during the calculation of the Bessel function 'jv' for the \n" \
+            "effective properties of the circular section using the Stinson model. The viscous-thermal \n" \
+            "effect will be disabled, and the normal fluid properties will be used instead.\n"
+
+            logging.info(message)
+            print(message)
+
+            aux_ones = np.ones_like(omega, dtype=float)
+            rho_eff = rho_0 * aux_ones
+            C_eff = C_0 * aux_ones
+
+            return rho_eff, C_eff
+
         # Effective complex density (viscous-thermal losses in duct)
         rho_eff = rho_0 / (1 - (2 / G_rho) * (jv(1, G_rho) / jv(0, G_rho)))
 
@@ -239,7 +283,7 @@ class ViscousThermalLossModels:
         return rho_eff, C_eff
 
 
-    def get_circular_section_effective_properties_for_LRF_model(self, omega, fluid, data: CircularDuctData):
+    def get_circular_section_effective_properties_for_LRF_model(self, omega: np.ndarray, fluid: Fluid, data: CircularDuctData):
 
         P_0 = fluid.pressure
         rho_0 = fluid.fluid_density
@@ -261,6 +305,38 @@ class ViscousThermalLossModels:
 
         G_rho = s * ((1j)**(3/2))
         G_bulk = s * ((1j)**(3/2)) * np.sqrt(Pr) 
+
+        invalid_values = False
+
+        array_r2 = jv(2, G_rho)
+        if (0 in array_r2) or np.isnan(array_r2).any() or np.isinf(array_r2).any():
+            invalid_values = True
+
+        array_r0 = jv(0, G_rho)
+        if np.isnan(array_r0).any() or np.isinf(array_r0).any():
+            invalid_values = True
+
+        array_b0 = jv(0, G_bulk)
+        if (0 in array_b0) or np.isnan(array_b0).any() or np.isinf(array_b0).any():
+            invalid_values = True
+
+        array_b2 = jv(2, G_bulk)
+        if np.isnan(array_b2).any() or np.isinf(array_b2).any():
+            invalid_values = True
+
+        if invalid_values:
+            message = "\nInvalid values were found during the calculation of the Bessel function 'jv' for the \n" \
+            "effective properties of the circular section using the LRF model. The viscous-thermal \n" \
+            "effect will be disabled, and the normal fluid properties will be used instead.\n"
+
+            logging.info(message)
+            print(message)
+
+            aux_ones = np.ones_like(omega, dtype=float)
+            rho_eff = rho_0 * aux_ones
+            C_eff = C_0 * aux_ones
+
+            return rho_eff, C_eff
 
         # Effective complex density (viscous-thermal losses in duct)
         rho_eff = - rho_0 * (jv(0, G_rho)) / (jv(2, G_rho))

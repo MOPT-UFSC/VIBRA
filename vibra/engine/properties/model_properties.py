@@ -1,13 +1,11 @@
+import json
 from typing import Callable, Optional
 
+import numpy as np
+
+from vibra.engine.properties import FluidLibrary, MaterialLibrary
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
-
-import json
-import numpy as np
-import os
-from dataclasses import dataclass
-
 
 DEFAULT_MATERIAL = Material(
     name="Steel",
@@ -57,10 +55,11 @@ class ModelProperties:
 
     def __init__(self, disable_resume_callback: Optional[Callable] = None):
         self.disable_resume_callback = disable_resume_callback
-
         self._reset_variables()
     
     def _reset_variables(self):
+        self.material_library = MaterialLibrary.default()
+        self.fluid_library = FluidLibrary.default()
 
         self.acoustic_imported_tables = dict()
         self.structural_imported_tables = dict()
@@ -94,23 +93,22 @@ class ModelProperties:
         return (1 + factor * 1j) * c_0
 
     def _set_property(
-                      self, 
-                      property: str, 
-                      data: dict | Fluid | Material, 
-                      node: int | None = None, 
-                      element: int | None = None, 
-                      point: int | None = None, 
-                      line: int | None = None, 
-                      surface: int | tuple[int] | None = None, 
-                      volume: int | None = None, 
-                      group: int | None = None
-                      ):
+        self,
+        property: str,
+        data: dict | Fluid | Material,
+        node: int | None = None,
+        element: int | None = None,
+        point: int | None = None,
+        line: int | None = None,
+        surface: int | tuple[int] | None = None,
+        volume: int | None = None,
+        group: int | None = None,
+    ):
         """
         This method sets a data to a property by node, element, line, surface or volume
         if any of these exists. Otherwise sets the property as global.
 
         """
-
         if isinstance(data, dict):
 
             values_list = list()
@@ -161,6 +159,12 @@ class ModelProperties:
 
             data["values"] =  values_list
 
+        elif isinstance(data, Material) and (data not in self.material_library):
+            self.material_library.add(data)
+
+        elif isinstance(data, Fluid) and (data not in self.fluid_library):
+            self.fluid_library.add(data)
+
         if node is not None:
             self.nodal_properties[property, node] = data
 
@@ -184,7 +188,7 @@ class ModelProperties:
 
         else:
             self.global_properties[property, "global"] = data
-        
+
         if self.disable_resume_callback is not None:
             self.disable_resume_callback()
 
@@ -272,6 +276,34 @@ class ModelProperties:
 
         if self.disable_resume_callback is not None:
             self.disable_resume_callback()
+
+    def remove_material(self, material: Material):
+        self.material_library.pop(material)
+        to_remove = list()
+        for entity_name, property_name, tags, value in self.iterate_properties():
+            if value == material:
+                to_remove.append((entity_name, tags))
+
+        for entity_name, tags in to_remove:
+            match entity_name:
+                case "volume":
+                    self._remove_volume_property("material", tags)
+                case "surface":
+                    self._remove_surface_property("material", tags)
+
+    def remove_fluid(self, fluid: Fluid):
+        self.fluid_library.pop(fluid)
+        to_remove = list()
+        for entity_name, property_name, tags, value in self.iterate_properties():
+            if value == fluid:
+                to_remove.append((entity_name, tags))
+
+        for entity_name, tags in to_remove:
+            match entity_name:
+                case "volume":
+                    self._remove_volume_property("fluid", tags)
+                case "surface":
+                    self._remove_surface_property("fluid", tags)
 
     def _remove_nodal_property(self, property: str, nodal_id: int):
         """Remove a nodal property at specific nodal_id."""
@@ -492,6 +524,23 @@ class ModelProperties:
                     entities_without_property.append(surface_id)
     
         return entities_without_property
+    
+    def iterate_properties(self):
+        property_dicts = {
+            "global": self.global_properties,
+            "group": self.group_properties,
+            "volume": self.volume_properties,
+            "surface": self.surface_properties,
+            "line": self.line_properties,
+            "point": self.point_properties,
+            "element": self.element_properties,
+            "node": self.nodal_properties,
+        }
+
+        for entity_name, property_dict in property_dicts.items():
+            for key, value in property_dict.items():
+                property_name, tags = key
+                yield entity_name, property_name, tags, value
 
     def get_properties_from_points(self, point_ids: set[int]) -> list[tuple[str, int]]:
         return self._get_properties_from_entities(point_ids, self.point_properties)

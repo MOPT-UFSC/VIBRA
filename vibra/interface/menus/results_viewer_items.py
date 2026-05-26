@@ -1,4 +1,4 @@
-from PySide6.QtGui import QColor, QPen
+from PySide6.QtGui import QPen
 from PySide6.QtCore import Qt
 
 from vibra import app
@@ -107,13 +107,17 @@ class ResultsViewerItems(CommonMenuItems):
         self.item_child_particle_velocity.setDisabled(key)
         self.item_child_acoustic_impedance.setDisabled(key)
         self.item_child_absorption_coefficient.setDisabled(key)
+        # self.item_child_acoustic_pressure_waveform.setDisabled(key)
 
-        # only allow waveform plots for equally distributed solution steps with a compressor as the main excitation source
-        cond_A = self.project.model.has_spectral_content_been_modified()
-        cond_B = not self.project.model.is_there_a_compressor_excitation_in_model()
+        if AnalysisID(app().project.model.analysis_id).is_modal():
+            self.item_child_acoustic_pressure_waveform.setHidden(True)
 
-        self.item_child_acoustic_pressure_waveform.setHidden(cond_A or cond_B)
-        self.item_child_acoustic_pressure_waveform.setDisabled(key)
+        elif app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
+            # only allow waveform plots for equally distributed solution steps 
+            # with a compressor as the main excitation source
+            cond_A = self.project.model.has_spectral_content_been_modified()
+            cond_B = not self.project.model.is_there_a_compressor_excitation_in_model()
+            self.item_child_acoustic_pressure_waveform.setHidden(cond_A or cond_B)
 
     def modify_structural_results_viewer_items(self, key: bool):
         self.item_top_results_viewer_structural.setHidden(key)
@@ -142,25 +146,20 @@ class ResultsViewerItems(CommonMenuItems):
         self.modify_acoustic_results_viewer_items(True)
         self.modify_structural_results_viewer_items(True)
 
-        if not app().project.model.analysis_setup:
+        analysis_id = app().project.model.analysis_id
+        if analysis_id == AnalysisID.NO_ANALYSIS:
             return
 
-        analysis_setup = app().file.read_analysis_setup_from_file()
-        if not isinstance(analysis_setup, dict):
-            return
-
-        analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
-
-        if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.STRUCTURAL_MODAL]:
+        if analysis_id.is_structural():
             self.update_structural_analysis_visibility_items()
-        
-        elif analysis_id in [AnalysisID.ACOUSTIC_HARMONIC, AnalysisID.ACOUSTIC_MODAL]:
+
+        elif analysis_id.is_acoustic():
             self.update_acoustic_analysis_visibility_items()
-        
-        elif analysis_id == AnalysisID.COUPLED_HARMONIC:    
+
+        elif analysis_id.is_coupled():    
             self.update_coupled_analysis_visibility_items()
 
-        if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC]:
+        if analysis_id == AnalysisID.STRUCTURAL_HARMONIC:
             self.item_child_structural_frequency_response.setDisabled(False)
             self.item_child_displacement_field.setDisabled(False)
             # self.item_child_reaction_frequency_response.setDisabled(False)
@@ -174,8 +173,7 @@ class ResultsViewerItems(CommonMenuItems):
             self.item_child_acoustic_mode_shapes.setDisabled(False)
         
         elif analysis_id in [AnalysisID.ACOUSTIC_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
-
-            if analysis_id != AnalysisID.ACOUSTIC_HARMONIC:
+            if analysis_id == AnalysisID.COUPLED_HARMONIC:
                 self.item_child_displacement_field.setDisabled(False)
                 self.item_child_structural_frequency_response.setDisabled(False)
                 # self.item_child_stress_field.setDisabled(False)
@@ -220,7 +218,7 @@ class ResultsViewerItems(CommonMenuItems):
         """ Expands and collapses the Top Level Items on 
             the menu after the solution is done.
         """
-        analysis_id = app().project.model.analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
+        analysis_id = app().project.model.analysis_id
 
         if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.STRUCTURAL_MODAL]:
             self.expandItem(self.item_top_results_viewer_structural)

@@ -1,10 +1,11 @@
 from pathlib import Path
-import numpy as np
-import h5py
 
-HDF5_SOLUTION_FREQ_KEY = 'solution'
-HDF5_SOLUTION_STATUS_KEY = 'solution_status'
-HDF5_FREQ_KEY = 'frequencies'
+import h5py
+import numpy as np
+
+HDF5_SOLUTION_FREQ_KEY = "solution"
+HDF5_SOLUTION_STATUS_KEY = "solution_status"
+HDF5_FREQ_KEY = "frequencies"
 
 COL_ERROR_MESSAGE_FORMAT = "Column '{0}' not filled."
 COLS_EMPTY_ERROR_MESSAGE = "Input 'cols' cannot be empty."
@@ -15,11 +16,13 @@ class LazyHDF5MatrixWriter:
     def __init__(self, filepath: Path, num_rows: int, cols: list, dtype, is_resume: bool = False):
         if len(cols) == 0:
             raise ValueError(COLS_EMPTY_ERROR_MESSAGE)
+
         if num_rows == 0:
             raise ValueError(NUM_ROWS_ZERO_ERROR_MESSAGE)
+
         num_cols = len(cols)
         self.filepath = filepath
-        file_mode = 'a' if is_resume else 'w'
+        file_mode = "a" if is_resume else "w"
         self.file = h5py.File(self.filepath, file_mode)
         self.shape = (num_rows, num_cols)
 
@@ -28,22 +31,25 @@ class LazyHDF5MatrixWriter:
             self.status = self.file[HDF5_SOLUTION_STATUS_KEY]
             self.frequencies = self.file[HDF5_FREQ_KEY]
         else:
+            chunk_rows = min(num_rows, 2**20)
+            chunk_cols = 1
+
             self.solution = self.file.create_dataset(
                 HDF5_SOLUTION_FREQ_KEY,
                 shape=(num_rows, num_cols),
-                chunks=(num_rows, 1), # This is important for efficient read/load large matrices.
-                dtype=dtype
+                chunks=(chunk_rows, chunk_cols),  # This is important for efficient read/load large matrices.
+                dtype=dtype,
             )
             self.frequencies = self.file.create_dataset(
                 HDF5_FREQ_KEY,
                 shape=(num_cols,),
                 dtype=type(cols[0]),
-                data=cols
+                data=cols,
             )
             self.status = self.file.create_dataset(
                 HDF5_SOLUTION_STATUS_KEY,
                 shape=(num_cols,),
-                dtype=bool
+                dtype=bool,
             )
             self.status[:] = False
 
@@ -69,13 +75,13 @@ class LazyHDF5MatrixWriter:
         self.solution[:, index] = column
         self.status[index] = True
         self.file.flush()
-    
+
     def save_extra_data(self, key: str, data, dtype=None):
         self.file.create_dataset(key, data=data, dtype=dtype if dtype else None)
         self.file.flush()
 
     def close(self):
-        if hasattr(self, 'file') and self.file is not None:
+        if hasattr(self, "file") and self.file is not None:
             self.file.close()
 
     def __del__(self):
@@ -87,8 +93,13 @@ class LazyHDF5MatrixLoader:
         self.filepath = filepath
         self._solution_cache = {}
 
+    @property
+    def size(self) -> int:
+        with h5py.File(self.filepath, "r") as f:
+            return f[HDF5_SOLUTION_FREQ_KEY].size
+
     def __getitem__(self, key):
-        with h5py.File(self.filepath, 'r') as f:
+        with h5py.File(self.filepath, "r") as f:
             solution = f[HDF5_SOLUTION_FREQ_KEY]
             status = f[HDF5_SOLUTION_STATUS_KEY]
             shape = solution.shape
@@ -100,7 +111,6 @@ class LazyHDF5MatrixLoader:
                     raise ValueError(COL_ERROR_MESSAGE_FORMAT.format(col_idx))
                 self._solution_cache[col_idx] = solution[:, col_idx]
                 return self._solution_cache[col_idx]
-
 
             if isinstance(key, tuple):
                 row_idx, col_idx = key
@@ -122,17 +132,18 @@ class LazyHDF5MatrixLoader:
                     raise ValueError(COL_ERROR_MESSAGE_FORMAT.format(col_idx))
 
             return np.stack([_get_column_data(i)[row_idx] for i in cols], axis=-1)
-    
+
     def has_partial_solutions(self):
         if not self.filepath.exists():
             return False
-        with h5py.File(self.filepath, 'r') as f:
+
+        with h5py.File(self.filepath, "r") as f:
             status = f[HDF5_SOLUTION_STATUS_KEY][()]
-        
+
         return not all(status)
-    
+
     def get_extra_data(self, key: str):
-        with h5py.File(self.filepath, 'r') as f:
+        with h5py.File(self.filepath, "r") as f:
             if key not in f:
                 raise KeyError(f"Dataset '{key}' not found in file.")
             return f[key][()]

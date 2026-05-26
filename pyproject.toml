@@ -1,6 +1,6 @@
 [project]
 name = "vibra"
-version = "0.4.0"
+version = "0.5.2"
 description = ""
 authors = [{ name = "Your Name", email = "you@example.com" }]
 requires-python = ">=3.10,<3.14"
@@ -15,7 +15,7 @@ dependencies = [
     "mkl (>=2025.1.0,<2026.0.0)",
     "intel-openmp (>=2025.1.1,<2026.0.0)",
     "h5py (>=3.13.0,<4.0.0)",
-    "moviepy (>=1.0.3,<2.0.0)",
+    "moviepy==1.0.3",
     "pypardiso-mopt (>=0.1.0,<0.2.0)",
     "fileboxes (>=0.1.4,<0.2.0)",
     "pyside6 (==6.9.2)",
@@ -25,6 +25,8 @@ dependencies = [
     "pyarrow>=22.0.0",
     "fastexcel>=0.18.0",
     "pandas>=2.3.3",
+    "xxhash>=3.6.0",
+    "pint>=0.24.4",
 ]
 
 [dependency-groups]
@@ -32,6 +34,7 @@ dev = [
     "pytest>=8.3.5,<9",
     "pytest-datadir>=1.7.2,<2",
     "invoke>=2.2.0,<3",
+    "pyinstaller>=6.20.0",
 ]
 
 [build-system]
@@ -43,3 +46,7 @@ markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "serial",
 ]
+
+[tool.ruff]
+exclude = ["__pycache__", "vibra/interface/ui_generated"]
+line-length = 150

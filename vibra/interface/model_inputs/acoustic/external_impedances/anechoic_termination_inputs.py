@@ -5,13 +5,11 @@ from PySide6.QtCore import Qt, QPoint, QItemSelectionModel
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
+from vibra.interface import warning_title
 from vibra.interface.ui_generated.model.acoustic.anechoic_termination_inputs_ui import AnechoicTerminationInputs_UI
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.acoustic.definitions.enums import SetupTabType
-
-window_title_1 = "Error"
-window_title_2 = "Warning"
 
 
 class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
@@ -21,7 +19,6 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
 
-        self.project = app().project
         self.model = app().project.model
         self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
@@ -211,7 +208,7 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
                 message = "The multiple selection of faces related to more than one volume is not allowed. "
                 message += "In this case, it is necessary to select the Face ID and the respective Volume ID "
                 message += "to proceed."
-                PrintMessageInput([window_title_2, title, message])
+                PrintMessageInput([warning_title, title, message])
 
                 return
 
@@ -241,7 +238,7 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
         for table_name in table_names:
             self.properties.remove_imported_tables("acoustic", table_name)
         if table_names:
-            app().file.write_imported_table_data_in_file()
+            app().project.update_model_properties_file()
 
     def remove_conflicting_excitations(self, surface_ids: int | list):
 
@@ -311,8 +308,7 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
         self.load_model_info()
         self.check_model_frequency_controls()
         app().main_window.update_info_text()
-        app().file.write_model_properties_in_file()
-        app().file.write_imported_table_data_in_file()
+        app().project.update_model_properties_file()
         app().main_window.update_symbols()
 
     def check_model_frequency_controls(self):
@@ -323,10 +319,11 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
                 if "table_names" in data.keys():
                     return
 
-        analysis_setup = app().project.model.analysis_setup
-        if analysis_setup:
-            app().project.model.set_analysis_setup(analysis_setup)
-            app().file.write_analysis_setup_in_file(analysis_setup)
+        # No idea of what it does
+        app().project.configure_analysis(
+            app().project.model.analysis_id,
+            app().project.model.analysis_setup,
+        )
 
     def update_tabs_visibility(self):
 

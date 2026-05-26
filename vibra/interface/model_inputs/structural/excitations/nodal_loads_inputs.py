@@ -1,9 +1,10 @@
 
-from PySide6.QtWidgets import QFileDialog, QLineEdit, QTreeWidgetItem
+from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
+from vibra.interface import error_title
 from vibra.interface.common.common_interface import update_analysis_setup_in_file
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
@@ -14,10 +15,6 @@ import numpy as np
 from enum import IntEnum
 from os.path import basename
 from collections import defaultdict
-
-
-error_title = "Error"
-warning_title = "Warning"
 
 
 class ElementFormulation(IntEnum):
@@ -467,24 +464,12 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                 self.lineEdit_reset(lineEdit)
 
                 title = "Project frequency setup cannot be modified"
-                message = f"The following imported table of values has a frequency setup\n"
-                message += "different from the others already imported ones. The current\n"
+                message = "The following imported table of values has a frequency setup "
+                message += "different from the others already imported ones. The current "
                 message += "project frequency setup is not going to be modified."
                 message += f"\n\n{imported_filename}"
                 PrintMessageInput([error_title, title, message])
                 return None, None
-
-            # else:
-
-            #     f_min = self.frequencies[0]
-            #     f_max = self.frequencies[-1]
-            #     f_step = self.frequencies[1] - self.frequencies[0] 
-
-            #     frequency_setup = { "f_min" : f_min,
-            #                         "f_max" : f_max,
-            #                         "f_step" : f_step }
-
-            #     app().project.model.set_analysis_setup(frequency_setup)
 
             return imported_values, imported_table_path
 
@@ -529,7 +514,6 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             self.lineEdit_reset(self.lineEdit_path_table_Mz)
 
     def save_table_files(self, load_label: str, selected_id: int, selection: str, values: np.ndarray):
-
         if self.frequencies[0] == 0:
             self.frequencies[0] = float(1e-6)
 
@@ -544,7 +528,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             self.lineEdit_reset(lineEdit)
 
             title = "Project frequency setup cannot be modified"
-            message = f"The following imported table of values has a frequency setup "
+            message = "The following imported table of values has a frequency setup "
             message += "different from the others already imported ones. The current "
             message += "project frequency setup is not going to be modified."
             message += f"\n\nFile name: {imported_filename}"
@@ -928,7 +912,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         for table_name in table_names:
             self.properties.remove_imported_tables("structural", table_name)
 
-        app().file.write_imported_table_data_in_file()
+        app().project.update_model_properties_file()
 
     def remove_conflicting_excitations(self, selected_ids: int | list, selection: str):
 
@@ -1028,8 +1012,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         self.load_model_info()
         self.reset_input_fields(reset_all=True)
         app().main_window.update_info_text()
-        app().file.write_model_properties_in_file()
-        app().file.write_imported_table_data_in_file()
+        app().project.update_model_properties_file()
         app().main_window.update_symbols()
 
     def check_model_frequency_controls(self):
@@ -1040,10 +1023,11 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                 if "table_names" in data.keys():
                     return
 
-        analysis_setup = app().project.model.analysis_setup
-        if analysis_setup:
-            app().project.model.set_analysis_setup(analysis_setup)
-            app().file.write_analysis_setup_in_file(analysis_setup)
+        # No idea of what it does
+        app().project.configure_analysis(
+            app().project.model.analysis_id,
+            app().project.model.analysis_setup,
+        )
 
     def reset_input_fields(self, reset_all=False):
 

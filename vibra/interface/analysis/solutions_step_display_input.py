@@ -1,18 +1,15 @@
-from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QTableWidgetItem
+import numpy as np
 from PySide6.QtGui import Qt
+from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QTableWidgetItem
 
 from vibra import app
+from vibra.engine.analysis_info import HarmonicAnalysisSetup
 from vibra.interface.ui_generated.analysis.solution_steps_display_input_ui import SolutionStepsDisplayInput_UI
-
-import numpy as np
 
 
 class SolutionStepsDisplayInput(SolutionStepsDisplayInput_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args)
-
-        self.project = app().project
-        self.model = app().project.model
 
         self._initialize()
         self._config_window()
@@ -22,6 +19,14 @@ class SolutionStepsDisplayInput(SolutionStepsDisplayInput_UI):
 
         while self.keep_window_open:
             self.exec()
+
+    @property
+    def model(self):
+        return app().project.model
+    
+    @property
+    def analysis_setup(self):
+        return app().project.model.analysis_setup
 
     def _initialize(self):
         self.setup_defined = False
@@ -50,9 +55,12 @@ class SolutionStepsDisplayInput(SolutionStepsDisplayInput_UI):
         if frequencies is None:
             return
                 
-        if isinstance(frequencies, np.ndarray):
-            self.tableWidget_solution_steps.setRowCount(frequencies.size)
-            frequency_spacing = self.model.analysis_setup.get("frequency_spacing", "--")
+        if isinstance(frequencies, np.ndarray | list):
+            self.tableWidget_solution_steps.setRowCount(len(frequencies))
+            if not isinstance(self.analysis_setup, HarmonicAnalysisSetup):
+                return
+
+            frequency_spacing = self.analysis_setup.frequency_spacing
 
             for index, freq in enumerate(frequencies):
                 self.tableWidget_solution_steps.setItem(index, 0, QTableWidgetItem(str(index+1)))

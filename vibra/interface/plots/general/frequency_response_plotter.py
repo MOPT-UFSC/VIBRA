@@ -1,20 +1,20 @@
+from enum import IntEnum
+
+import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent, QIcon
 from PySide6.QtWidgets import QDialog, QLineEdit, QToolButton, QVBoxLayout
 
-from vibra import app, ICON_DIR
+from vibra import ICON_DIR, app
+from vibra.interface import error_title
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.data_handler.import_data_to_compare import ImportDataToCompare
 from vibra.interface.formatters import icons
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
-from vibra.interface.plots.general.advanced_cursor import AdvancedCursor
-from vibra.interface.ui_generated.plots.general.frequency_response_plotter_ui import (
-    FrequencyResponsePlotter_UI,
-)
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.plots.general.advanced_cursor import AdvancedCursor
+from vibra.interface.ui_generated.plots.general.frequency_response_plotter_ui import FrequencyResponsePlotter_UI
 
-from enum import IntEnum
-import numpy as np
 
 class DataFormat(IntEnum):
     ABSOLUTE = 0
@@ -46,8 +46,6 @@ class CursorIndex(IntEnum):
     CROSS = 1
     HARMONIC = 2
 
-error_title = "Error"
-
 
 class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
     def __init__(self, *args, **kwargs):
@@ -74,6 +72,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
         self._layout = None
         self.x_data = None
         self.y_data = None
+        self.f_cut = None
 
         self.importer = None
         self.exporter = None
@@ -146,7 +145,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
         icon_color = None
         theme = app().config.user_preferences.interface_theme
 
-        from vibra import LIGHT_ICON_COLOR, DARK_ICON_COLOR
+        from vibra import DARK_ICON_COLOR, LIGHT_ICON_COLOR
         if theme == "dark":
             icon_color = DARK_ICON_COLOR.to_qt()
         else:
@@ -286,10 +285,10 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
             output_value = float(input_value)
 
             if output_value <= 0:
-                message = f"Enter a positive non-zero value in the 'Frequency (1x)' input field."
+                message = "Enter a positive non-zero value in the 'Frequency (1x)' input field."
 
         except Exception as error_log:
-            message = f"You have typed an invalid value in the 'Frequency (1x)' input field.\n\n"
+            message = "You have typed an invalid value in the 'Frequency (1x)' input field.\n\n"
             message += str(error_log)
 
         if message != "":
@@ -328,11 +327,16 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
 
     def imported_real_data(self, decibel_data: bool=False):
         self.decibel_data = decibel_data
-        self.comboBox_plot_type.setCurrentIndex(PlotType.LIN_LIN)
+
         self.comboBox_plot_type.setDisabled(True)
-        self.comboBox_data_format.setCurrentIndex(DataFormat.DECIBEL_SCALE)
         self.comboBox_data_format.setDisabled(True)
         self.comboBox_differentiate_data.setDisabled(True)
+
+        self.comboBox_plot_type.setCurrentIndex(PlotType.LIN_LIN)
+        if decibel_data:
+            self.comboBox_data_format.setCurrentIndex(DataFormat.DECIBEL_SCALE)
+        else:
+            self.comboBox_data_format.setCurrentIndex(DataFormat.REAL)
 
     def load_data_to_plot(self, data: dict):
 
@@ -349,7 +353,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
         self.legend = data.get("legend")
         self.linestyle = data.get("linestyle")
 
-    def get_scaled_data(self, data):
+    def get_scaled_data(self, data: np.ndarray):
         if self.comboBox_data_format.currentIndex() != DataFormat.DECIBEL_SCALE:
             return data
 
@@ -360,7 +364,6 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
         self.x_data = self.x_data[shift:]
         data2 = np.real(data[shift:]*np.conjugate(data[shift:]))
 
-        # if "Pa" in self.unit:
         if self.unit == "Pa":
             return 10*np.log10(data2/((2e-5)**2))
 
@@ -369,6 +372,9 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
     def get_y_axis_data(self, data: np.ndarray | None):
         if data is None:
             return None
+
+        if self.decibel_data:
+            return data
 
         dif_data = self.process_differentiation(data)
         data_format_index = self.comboBox_data_format.currentIndex()
@@ -428,7 +434,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
         toolbar = self.findChild(CustomNavigationToolbar)
         if toolbar is None:
             return
-        from vibra import LIGHT_ICON_COLOR, DARK_ICON_COLOR
+        from vibra import DARK_ICON_COLOR, LIGHT_ICON_COLOR
         if app().config.user_preferences.interface_theme == "dark":
             color = DARK_ICON_COLOR.to_qt()
         else:
@@ -497,10 +503,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
                     self.plots.append(_plot)
 
         if self.plots:
-
-            if self.checkBox_legends.isChecked():
-                self.ax.legend(handles=self.plots, labels=self.legends)
-                
+               
             self.call_cursor()
             self.ax.set_xlabel(self.x_label, fontsize = 10, fontweight = self.font_weight)
             self.ax.set_ylabel(self.y_label, fontsize = 10, fontweight = self.font_weight)
@@ -510,6 +513,15 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
 
             if self.checkBox_grid.isChecked():
                 self.ax.grid()
+
+            if isinstance(self.f_cut, float):
+                f_cut = round(self.f_cut, 4)
+                _plot = self.ax.axvline(x=f_cut, color=(0.9, 0.4, 0), visible=True, linestyle="--", linewidth=1)
+                self.plots.append(_plot)
+                self.legends.append(f'Pipe cut-off frequency $f_c$ = {f_cut} [Hz]')
+
+            if self.checkBox_legends.isChecked():
+                self.ax.legend(handles=self.plots, labels=self.legends, fontsize=9)
 
             self.mpl_canvas_frequency_plot.draw()
 
@@ -623,6 +635,9 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
     def reset_imported_results_data_to_plot(self):
         self.imported_results_data = dict()
         self.plot_data_in_freq_domain()
+
+    def set_cutoff_frequency(self, f_cut: float):
+        self.f_cut = f_cut
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Escape:

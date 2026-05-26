@@ -55,7 +55,7 @@ class DataImporter:
             imported_paths, file_extension = QFileDialog.getOpenFileNames(
                 None,
                 caption,
-                folder_path,
+                str(folder_path),
                 str_extensions,
                 **kwargs
                 )
@@ -64,7 +64,7 @@ class DataImporter:
             imported_paths, file_extension = QFileDialog.getOpenFileName(
                 None,
                 caption,
-                folder_path,
+                str(folder_path),
                 str_extensions,
                 **kwargs
                 )
@@ -104,10 +104,10 @@ class DataImporter:
             if sufix in [".txt", ".dat", ".csv"]:
                 try:
                     loaded_data = np.loadtxt(file_path, delimiter = ",")
-                except:
+                except Exception:
                     loaded_data = DataImporter.__load_text_file_data(file_path)
 
-                loaded_data = DataImporter.__remove_unnecesary_header_in_data(loaded_data)
+                loaded_data = DataImporter.__remove_unnecesary_header_from_data(loaded_data)
                 output_data.append(ImportedData(loaded_data, filename, sufix, path=file_path))
                 
             elif sufix in [".xls", ".xlsx"]:
@@ -119,20 +119,27 @@ class DataImporter:
                 
                 for sheetname in wb.sheetnames:
                     for cols in [(0, 1, 2), (0, 1)]:
+
                         try:
                             sheet_data = read_excel(
                                                     file_path, 
                                                     sheet_name = sheetname,  
                                                     columns = cols,
                                                     engine = "openpyxl",
-                                                    has_header=False,
-                                                    infer_schema_length=100
+                                                    has_header = False,
+                                                    infer_schema_length = 100,
                                                     ).to_numpy()
                             break
-                        except:
+
+                        except Exception:
                             pass
-                    
-                    sheet_data = DataImporter.__remove_unnecesary_header_in_data(sheet_data)
+
+                    sheet_data = DataImporter.__remove_unnecesary_header_from_data(sheet_data)
+
+                    # filter columns with at least one np.nan value
+                    col_filter = np.isnan(sheet_data).any(axis=0)
+                    sheet_data = sheet_data[:, ~col_filter]
+
                     output_data.append(ImportedData(sheet_data, filename, sufix, sheetname, file_path))
                     if use_first_sheet:
                         break
@@ -140,10 +147,10 @@ class DataImporter:
             return output_data
 
     @staticmethod                      
-    def __remove_unnecesary_header_in_data(data: np.ndarray) -> np.ndarray:
+    def __remove_unnecesary_header_from_data(data: np.ndarray) -> np.ndarray:
         filtered_data = [row for row in data if DataImporter.is_valid_row(row)]
         return np.array(filtered_data, dtype=float)
-
+    
     @staticmethod
     def __load_text_file_data(path: str):
 
@@ -156,7 +163,7 @@ class DataImporter:
                 try:
                     modif_line = line.replace(",", " ").strip().split(" ")
                     line_values = [float(value) for value in modif_line if value != ""]
-                except:
+                except Exception:
                     continue
 
                 output_data.append(line_values)
@@ -220,20 +227,20 @@ class DataImporter:
                                         path, 
                                         sheet_name = sheetname, 
                                         columns = [0, 1, 2],
-                                        has_header=False,
-                                        infer_schema_length=100
+                                        has_header = False,
+                                        infer_schema_length = 100
                                         ).to_numpy()
 
-            except:
+            except Exception:
                 sheet_data = read_excel(
                                         path, 
                                         sheet_name = sheetname, 
                                         columns = [0, 1],
-                                        has_header=False,
-                                        infer_schema_length=100
+                                        has_header = False,
+                                        infer_schema_length = 100
                                         ).to_numpy()
-                            
-            sheet_data = DataImporter.__remove_unnecesary_header_in_data(sheet_data)
+
+            sheet_data = DataImporter.__remove_unnecesary_header_from_data(sheet_data)
             imported_results[sheetname] = sheet_data
 
         return imported_results
