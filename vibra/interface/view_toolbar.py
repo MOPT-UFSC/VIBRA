@@ -94,9 +94,7 @@ class ViewToolbar(QToolBar):
         self.addAction(self.action_grab_tool)
         self.addAction(self.action_rotation_tool)
         self.addAction(self.action_zoom_tool)
-
-        self.addSeparator()
-
+        # self.addSeparator()
         self.addAction(self.action_top_view)
         self.addAction(self.action_bottom_view)
         self.addAction(self.action_right_view)
@@ -105,7 +103,7 @@ class ViewToolbar(QToolBar):
         self.addAction(self.action_back_view)
         self.addAction(self.action_isometric_view)
         self.addAction(self.action_zoom_to_fit)
-    
+
     def _configure_actions(self):
         self._render_tool_actions = [
             self.action_selection_tool, self.action_grab_tool,
