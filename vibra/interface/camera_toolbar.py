@@ -1,10 +1,8 @@
-from cad_widgets.enums import ViewDirection
 from molde.render_widgets import CommonRenderWidget
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QStackedWidget, QToolBar
 
 from vibra import LIGHT_ICON_COLOR
-from vibra.interface.viewer_3d.render_widgets.cad_render_widget import CADRenderWidget
 from vibra.utils.icons import load_icon
 
 
@@ -85,55 +83,39 @@ class CameraToolbar(QToolBar):
         widget = self._current_render_widget()
         if isinstance(widget, CommonRenderWidget):
             widget.set_top_view()
-        elif isinstance(widget, CADRenderWidget):
-            widget.viewer.set_projection(ViewDirection.TOP)
 
     def set_bottom_view(self):
         widget = self._current_render_widget()
         if isinstance(widget, CommonRenderWidget):
             widget.set_bottom_view()
-        elif isinstance(widget, CADRenderWidget):
-            widget.viewer.set_projection(ViewDirection.BOTTOM)
 
     def set_right_view(self):
         widget = self._current_render_widget()
         if isinstance(widget, CommonRenderWidget):
             widget.set_right_view()
-        elif isinstance(widget, CADRenderWidget):
-            widget.viewer.set_projection(ViewDirection.RIGHT)
 
     def set_left_view(self):
         widget = self._current_render_widget()
         if isinstance(widget, CommonRenderWidget):
             widget.set_left_view()
-        elif isinstance(widget, CADRenderWidget):
-            widget.viewer.set_projection(ViewDirection.LEFT)
 
     def set_front_view(self):
         widget = self._current_render_widget()
         if isinstance(widget, CommonRenderWidget):
             widget.set_front_view()
-        elif isinstance(widget, CADRenderWidget):
-            widget.viewer.set_projection(ViewDirection.FRONT)
 
     def set_back_view(self):
         widget = self._current_render_widget()
         if isinstance(widget, CommonRenderWidget):
             widget.set_back_view()
-        elif isinstance(widget, CADRenderWidget):
-            widget.viewer.set_projection(ViewDirection.BACK)
 
     def set_isometric_view(self):
         widget = self._current_render_widget()
         if isinstance(widget, CommonRenderWidget):
             widget.set_isometric_view()
-        elif isinstance(widget, CADRenderWidget):
-            widget.viewer.set_projection(ViewDirection.ISO)
 
     def zoom_to_fit(self):
         widget = self._current_render_widget()
         if isinstance(widget, CommonRenderWidget):
             widget.renderer.ResetCamera()
             widget.update()
-        elif isinstance(widget, CADRenderWidget):
-            widget.viewer.fit_all()

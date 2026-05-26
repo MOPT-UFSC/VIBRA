@@ -27,9 +27,6 @@ dependencies = [
     "pandas>=2.3.3",
     "xxhash>=3.6.0",
     "pint>=0.24.4",
-    "cad-widgets",
-    "cadquery-ocp-novtk>=7.9.3.1",
-    "cadquery-ocp-stubs>=7.9.3.1",
 ]
 
 [dependency-groups]

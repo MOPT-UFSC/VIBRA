@@ -26,6 +26,7 @@ from vibra.interface.help_widget import HelpWidget
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.menus.model_setup_widget import ModelSetupWidget
 from vibra.interface.menus.results_viewer_widget import ResultsViewerWidget
+from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
 from vibra.interface.plots.acoustic.export_element_transfer_data_inputs import ExportElementTransferDataInputs
 from vibra.interface.project.save_project_data_selector import SaveProjectDataSelector
 from vibra.interface.render_tools_toolbar import RenderToolsToolbar
@@ -39,7 +40,6 @@ from vibra.interface.viewer_3d.render_widgets import (
     MeshRenderWidget,
     ResultsRenderWidget,
 )
-from vibra.interface.viewer_3d.render_widgets.cad_render_widget import CADRenderWidget
 from vibra.interface.welcome_widget import WelcomeWidget
 from vibra.utils.icons import load_icon
 from vibra.utils.interface_utils import GeometryColorMode, VisualizationFilter, qt_extensions
@@ -108,7 +108,6 @@ class MainWindow(MainWindow_UI):
         self.render_widgets_stack.addWidget(self.results_widget)
         self.render_widgets_stack.addWidget(self.help_widget)
         self.render_widgets_stack.addWidget(self.welcome_widget)
-        self.render_widgets_stack.addWidget(self.cad_render_widget)
         self.camera_toolbar = CameraToolbar(self.render_widgets_stack)
 
         self.render_widgets_stack.currentChanged.connect(self.render_changed_callback)
@@ -265,8 +264,6 @@ class MainWindow(MainWindow_UI):
 
         self.welcome_widget = WelcomeWidget()
         self.help_widget = HelpWidget()
-        self.cad_render_widget = CADRenderWidget()
-        self.cad_render_widget.on_shapes_exported.connect(self._import_geometry_or_mesh)
 
     def _load_menu_widgets(self):
         self.results_viewer_widget = ResultsViewerWidget()
@@ -310,10 +307,6 @@ class MainWindow(MainWindow_UI):
             last_widget = self.render_widgets_stack.widget(self.last_render_index)
             new_widget.copy_camera_from(last_widget)
             # if last_widget is not a valid render the operation will be ignored
-
-        if new_widget is self.cad_render_widget:
-            self.render_tools_toolbar.setVisible(False)
-            self.stacked_setup.setVisible(False)
 
         self.last_render_index = new_index
 
@@ -511,6 +504,12 @@ class MainWindow(MainWindow_UI):
 
         self.render_tools_toolbar.show_selection_tool()
 
+        if app().project.model.is_the_mesh_setup_defined():
+            obj = MesherSetupInputs(close_after_generate=True)
+            if not obj.complete:
+                self.action_model_workspace_callback()
+                return
+
         valid_solution = app().project.is_there_a_valid_solution()
         self.action_results_workspace.setEnabled(valid_solution)
 
@@ -679,47 +678,9 @@ class MainWindow(MainWindow_UI):
             self.try_to_open_argv_path()
 
     def new_project_dialog(self):
-
-        if app().project.needs_saving:
-            msg_box_save = QMessageBox.question(
-                self,
-                "Unsaved project data",
-                "Would you like to save the project data before starting a new project?",
-                QMessageBox.Cancel | QMessageBox.Discard | QMessageBox.Save,
-            )
-
-            if msg_box_save == QMessageBox.Cancel:
-                return
-
-            elif msg_box_save == QMessageBox.Save:
-                if not self.save_project_dialog():
-                    return
-
-        msg_box = QMessageBox(self)
-        msg_box.setWindowTitle("Getting geometry")
-        msg_box.setText("Would you like to draw or import a geometry file?")
-
-        cancel_button = msg_box.addButton("Cancel", QMessageBox.ButtonRole.RejectRole)
-        draw_button = msg_box.addButton("Draw", QMessageBox.ButtonRole.AcceptRole)
-        import_button = msg_box.addButton("Import", QMessageBox.ButtonRole.AcceptRole)
-        import_button.setDefault(True)
-
-        msg_box.exec()
-
-        if msg_box.clickedButton() == cancel_button:
+        if self.import_geometry_or_mesh_dialog():
             return
-
-        if msg_box.clickedButton() == import_button:
-            if self.import_geometry_or_mesh_dialog():
-                return
-
-        if msg_box.clickedButton() == draw_button:
-            self.camera_toolbar.setEnabled(True)
-            self.render_widgets_stack.setCurrentWidget(self.cad_render_widget)
-            return
-        
-        self.render_tools_toolbar.setVisible(True)
-
+            
     def import_geometry_or_mesh_dialog(self):
         self.close_dialogs()
 
