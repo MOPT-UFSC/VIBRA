@@ -271,8 +271,7 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
 
     def actions_to_finalize(self):
         app().main_window.update_info_text()
-        app().file.write_model_properties_in_file()
-        app().file.write_imported_table_data_in_file()
+        app().project.update_model_properties_file()
         app().main_window.update_symbols()
 
     def cancel_callback(self):
