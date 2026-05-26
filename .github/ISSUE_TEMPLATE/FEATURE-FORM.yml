@@ -11,14 +11,6 @@ body:
     validations:
       required: true
 
-  - type: upload
-    id: screenshots
-    attributes:
-      label: Mockups / Examples
-      description: If applicable, add screenshots or drawings to illustrate the feature.
-    validations:
-      required: false
-
   - type: input
     id: contact
     attributes:
