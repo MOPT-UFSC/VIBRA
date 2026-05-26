@@ -299,6 +299,14 @@ class Model:
         cond_B = len(self.solution_steps_mask) != int(sum(self.solution_steps_mask))
         return cond_A or cond_B
 
+    def is_the_mesh_setup_defined(self):
+        if isinstance(self.geometry_path, str | Path):
+            if self.is_there_a_geometry_imported():
+                if not isinstance(self.mesh_setup, MeshSetup):
+                    return True
+
+        return False
+
     def is_there_a_valid_mesh(self):
 
         if isinstance(self.geometry_path, str | Path):
