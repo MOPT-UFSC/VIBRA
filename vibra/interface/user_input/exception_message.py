@@ -25,13 +25,10 @@ class ExceptionMessage(ExceptionMessage_UI):
         if stack_trace is None:
             self.stack_trace_text_browser.hide()
         else:
-            traceback_lines = format_tb(stack_trace)[-5:]
-            traceback = "\n".join(traceback_lines)
+            traceback = "\n".join(format_tb(stack_trace, limit=-5))
             self.stack_trace_text_browser.setText(
-                "<code>"
-                + "Traceback (most recent call last):\n"
+                "Traceback (most recent call last):\n"
                 + traceback
-                + "</code>"
             )
 
         title = pascal_to_spaced_case(exception.__class__.__name__)
