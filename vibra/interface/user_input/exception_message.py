@@ -25,7 +25,8 @@ class ExceptionMessage(ExceptionMessage_UI):
         if stack_trace is None:
             self.stack_trace_text_browser.hide()
         else:
-            traceback = "\n".join(format_tb(stack_trace, limit=2))
+            traceback_lines = format_tb(stack_trace)[-5:]
+            traceback = "\n".join(traceback_lines)
             self.stack_trace_text_browser.setText(
                 "<code>"
                 + "Traceback (most recent call last):\n"
