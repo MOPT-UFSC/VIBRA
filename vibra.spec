@@ -19,7 +19,6 @@ datas = [
     ("vibra/interface/data/", "vibra/interface/data/"),
 ]
 datas += collect_data_files("molde")
-datas += copy_metadata("cad-widgets")
 datas += copy_metadata('imageio')
 
 hidden_imports = ["vtk"]
