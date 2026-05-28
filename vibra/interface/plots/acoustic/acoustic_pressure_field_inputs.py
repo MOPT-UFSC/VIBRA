@@ -1,12 +1,12 @@
+import numpy as np
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import QTreeWidgetItem
+from PySide6.QtWidgets import QGridLayout, QTreeWidgetItem
 
 from vibra import app
 from vibra.interface.loading_window import LoadingWindow
+from vibra.interface.plots.general.animation_widget import AnimationWidget
 from vibra.interface.ui_generated.plots.acoustic.acoustic_pressure_field_inputs_ui import AcousticPressureFieldInputs_UI
 from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
-
-import numpy as np
 
 
 class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
@@ -16,8 +16,11 @@ class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
         super().__init__(*args, **kwargs)
 
         self._initialize()
-        self._configure_qt_variables()
+        self._configure_widgets()
         self._create_connections()
+        self.add_animation_widget()
+
+        self.load_user_preference_colormap()
         self.load_frequencies()
         self.load_user_preference_colormap()
 
@@ -27,14 +30,12 @@ class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
         render_widget = app().main_window.results_widget
         app().main_window.render_widgets_stack.setCurrentWidget(render_widget)
         app().main_window.render_widget_changed.emit()
-
-        app().main_window.animation_toolbar.setDisabled(False)
         app().main_window.view_toolbar.disable_selection_tool()
 
     def _initialize(self):
         self.selected_frequency_index = None
 
-    def _configure_qt_variables(self):
+    def _configure_widgets(self):
         #
         self.frame_button.setVisible(False)
         self.frame_transparency.setVisible(False)
@@ -57,15 +58,23 @@ class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
         #
         self.treeWidget_frequencies.itemClicked.connect(self.on_click_item)
         self.treeWidget_frequencies.itemDoubleClicked.connect(self.on_doubleclick_item)
-        #
-        self.load_user_preference_colormap()
+
+    def add_animation_widget(self):
+
+        self.grid_layout = QGridLayout()
+        self.grid_layout.setContentsMargins(0, 0, 0, 0)
+        self.frame_animation.setLayout(self.grid_layout)
+
+        self.animation_widget = AnimationWidget()
+        self.grid_layout.addWidget(self.animation_widget)
+        self.frame_animation.adjustSize()
 
     def update_animation_widget_visibility(self):
         index = self.comboBox_plot_type.currentIndex()
         if index >= 2:
-            app().main_window.animation_toolbar.setDisabled(True)
+            self.animation_widget.setDisabled(True)
         else:
-            app().main_window.animation_toolbar.setDisabled(False)
+            self.animation_widget.setDisabled(False)
 
     def load_user_preference_colormap(self):
         try:
@@ -80,7 +89,7 @@ class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
         app().config.user_preferences.color_map = self.get_colormap()
         app().config.update_config_file()
         try:
-            app().main_window.results_widget.update_color_and_deformation()
+            self.animation_widget.update_color_and_deformation()
         except AttributeError:
             pass
 
@@ -103,6 +112,7 @@ class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
         if self.selected_frequency_index is None:
             return
 
+        self.animation_widget.reset_sliders()
         LoadingWindow(app().main_window.results_widget.update_plot).run()
 
     def get_colormap(self) -> str:
