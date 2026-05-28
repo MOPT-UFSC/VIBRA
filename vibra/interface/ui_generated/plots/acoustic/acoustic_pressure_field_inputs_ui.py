@@ -16,7 +16,7 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QComboBox, QFrame, QGridLayout,
-    QHeaderView, QLabel, QLineEdit, QPushButton,
+    QHeaderView, QLabel, QLineEdit, QScrollArea,
     QSizePolicy, QSlider, QSpacerItem, QTreeWidget,
     QTreeWidgetItem, QWidget)
 
@@ -24,15 +24,26 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(358, 587)
+        Form.resize(376, 723)
         self.gridLayout_2 = QGridLayout(Form)
-        self.gridLayout_2.setSpacing(4)
+        self.gridLayout_2.setSpacing(2)
         self.gridLayout_2.setObjectName(u"gridLayout_2")
-        self.gridLayout_2.setContentsMargins(1, 4, 1, 4)
-        self.frame = QFrame(Form)
+        self.gridLayout_2.setContentsMargins(2, 2, 2, 2)
+        self.scrollArea = QScrollArea(Form)
+        self.scrollArea.setObjectName(u"scrollArea")
+        self.scrollArea.setFrameShape(QFrame.Shape.NoFrame)
+        self.scrollArea.setWidgetResizable(True)
+        self.scrollAreaWidgetContents_2 = QWidget()
+        self.scrollAreaWidgetContents_2.setObjectName(u"scrollAreaWidgetContents_2")
+        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, 0, 372, 719))
+        self.gridLayout_6 = QGridLayout(self.scrollAreaWidgetContents_2)
+        self.gridLayout_6.setSpacing(2)
+        self.gridLayout_6.setObjectName(u"gridLayout_6")
+        self.gridLayout_6.setContentsMargins(0, 0, 0, 0)
+        self.frame = QFrame(self.scrollAreaWidgetContents_2)
         self.frame.setObjectName(u"frame")
-        self.frame.setMinimumSize(QSize(0, 48))
-        self.frame.setMaximumSize(QSize(16777215, 48))
+        self.frame.setMinimumSize(QSize(0, 40))
+        self.frame.setMaximumSize(QSize(16777215, 40))
         self.frame.setFrameShape(QFrame.Shape.Box)
         self.frame.setFrameShadow(QFrame.Shadow.Raised)
         self.frame.setLineWidth(1)
@@ -58,81 +69,19 @@ class Ui_Form(object):
         self.gridLayout.addWidget(self.label, 0, 0, 1, 1)
 
 
-        self.gridLayout_2.addWidget(self.frame, 0, 0, 1, 1)
+        self.gridLayout_6.addWidget(self.frame, 0, 0, 1, 1)
 
-        self.frame_2 = QFrame(Form)
+        self.frame_2 = QFrame(self.scrollAreaWidgetContents_2)
         self.frame_2.setObjectName(u"frame_2")
-        self.frame_2.setSizeIncrement(QSize(400, 0))
-        self.frame_2.setBaseSize(QSize(400, 0))
+        self.frame_2.setMaximumSize(QSize(16777215, 460))
+        self.frame_2.setSizeIncrement(QSize(0, 0))
+        self.frame_2.setBaseSize(QSize(0, 0))
         self.frame_2.setFrameShape(QFrame.Shape.Box)
         self.frame_2.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_5 = QGridLayout(self.frame_2)
         self.gridLayout_5.setSpacing(4)
         self.gridLayout_5.setObjectName(u"gridLayout_5")
         self.gridLayout_5.setContentsMargins(4, 4, 4, 4)
-        self.frame_4 = QFrame(self.frame_2)
-        self.frame_4.setObjectName(u"frame_4")
-        self.frame_4.setMinimumSize(QSize(0, 40))
-        self.frame_4.setMaximumSize(QSize(16777215, 40))
-        self.frame_4.setFrameShape(QFrame.Shape.NoFrame)
-        self.frame_4.setFrameShadow(QFrame.Shadow.Raised)
-        self.gridLayout_13 = QGridLayout(self.frame_4)
-        self.gridLayout_13.setObjectName(u"gridLayout_13")
-        self.gridLayout_13.setContentsMargins(0, 0, 0, 0)
-        self.frame_7 = QFrame(self.frame_4)
-        self.frame_7.setObjectName(u"frame_7")
-        self.frame_7.setMinimumSize(QSize(176, 0))
-        self.frame_7.setMaximumSize(QSize(176, 16777215))
-        self.frame_7.setFrameShape(QFrame.Shape.NoFrame)
-        self.frame_7.setFrameShadow(QFrame.Shadow.Raised)
-        self.gridLayout_14 = QGridLayout(self.frame_7)
-        self.gridLayout_14.setSpacing(0)
-        self.gridLayout_14.setObjectName(u"gridLayout_14")
-        self.gridLayout_14.setContentsMargins(0, 0, 0, 0)
-        self.comboBox_colormaps = QComboBox(self.frame_7)
-        self.comboBox_colormaps.addItem("")
-        self.comboBox_colormaps.addItem("")
-        self.comboBox_colormaps.addItem("")
-        self.comboBox_colormaps.addItem("")
-        self.comboBox_colormaps.addItem("")
-        self.comboBox_colormaps.addItem("")
-        self.comboBox_colormaps.addItem("")
-        self.comboBox_colormaps.addItem("")
-        self.comboBox_colormaps.addItem("")
-        self.comboBox_colormaps.addItem("")
-        self.comboBox_colormaps.addItem("")
-        self.comboBox_colormaps.setObjectName(u"comboBox_colormaps")
-        self.comboBox_colormaps.setMinimumSize(QSize(120, 26))
-        self.comboBox_colormaps.setMaximumSize(QSize(200, 26))
-        font1 = QFont()
-        font1.setPointSize(10)
-        self.comboBox_colormaps.setFont(font1)
-
-        self.gridLayout_14.addWidget(self.comboBox_colormaps, 0, 0, 1, 1)
-
-
-        self.gridLayout_13.addWidget(self.frame_7, 0, 2, 1, 1)
-
-        self.horizontalSpacer_12 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_13.addItem(self.horizontalSpacer_12, 0, 3, 1, 1)
-
-        self.label_6 = QLabel(self.frame_4)
-        self.label_6.setObjectName(u"label_6")
-        self.label_6.setMinimumSize(QSize(90, 26))
-        self.label_6.setMaximumSize(QSize(90, 26))
-        self.label_6.setFont(font1)
-        self.label_6.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
-
-        self.gridLayout_13.addWidget(self.label_6, 0, 1, 1, 1)
-
-        self.horizontalSpacer_13 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_13.addItem(self.horizontalSpacer_13, 0, 0, 1, 1)
-
-
-        self.gridLayout_5.addWidget(self.frame_4, 2, 0, 1, 1)
-
         self.frame_3 = QFrame(self.frame_2)
         self.frame_3.setObjectName(u"frame_3")
         self.frame_3.setMinimumSize(QSize(0, 40))
@@ -148,6 +97,8 @@ class Ui_Form(object):
         self.label_color_scalling.setObjectName(u"label_color_scalling")
         self.label_color_scalling.setMinimumSize(QSize(90, 26))
         self.label_color_scalling.setMaximumSize(QSize(90, 26))
+        font1 = QFont()
+        font1.setPointSize(10)
         self.label_color_scalling.setFont(font1)
         self.label_color_scalling.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
@@ -176,115 +127,6 @@ class Ui_Form(object):
 
 
         self.gridLayout_5.addWidget(self.frame_3, 4, 0, 1, 1)
-
-        self.frame_button = QFrame(self.frame_2)
-        self.frame_button.setObjectName(u"frame_button")
-        self.frame_button.setMinimumSize(QSize(0, 40))
-        self.frame_button.setMaximumSize(QSize(16777215, 40))
-        self.frame_button.setFrameShape(QFrame.Shape.NoFrame)
-        self.frame_button.setFrameShadow(QFrame.Shadow.Raised)
-        self.gridLayout_10 = QGridLayout(self.frame_button)
-        self.gridLayout_10.setSpacing(0)
-        self.gridLayout_10.setObjectName(u"gridLayout_10")
-        self.gridLayout_10.setContentsMargins(0, 0, 0, 0)
-        self.pushButton_plot = QPushButton(self.frame_button)
-        self.pushButton_plot.setObjectName(u"pushButton_plot")
-        self.pushButton_plot.setMinimumSize(QSize(160, 30))
-        self.pushButton_plot.setMaximumSize(QSize(160, 30))
-        font2 = QFont()
-        font2.setFamilies([u"MS Shell Dlg 2"])
-        font2.setPointSize(10)
-        font2.setBold(False)
-        font2.setItalic(False)
-        self.pushButton_plot.setFont(font2)
-        self.pushButton_plot.setStyleSheet(u"")
-
-        self.gridLayout_10.addWidget(self.pushButton_plot, 0, 0, 1, 1)
-
-
-        self.gridLayout_5.addWidget(self.frame_button, 5, 0, 1, 1)
-
-        self.frame_selector = QFrame(self.frame_2)
-        self.frame_selector.setObjectName(u"frame_selector")
-        self.frame_selector.setMinimumSize(QSize(0, 40))
-        self.frame_selector.setMaximumSize(QSize(16777215, 40))
-        self.frame_selector.setFrameShape(QFrame.Shape.NoFrame)
-        self.frame_selector.setFrameShadow(QFrame.Shadow.Raised)
-        self.gridLayout_4 = QGridLayout(self.frame_selector)
-        self.gridLayout_4.setObjectName(u"gridLayout_4")
-        self.gridLayout_4.setHorizontalSpacing(6)
-        self.gridLayout_4.setVerticalSpacing(0)
-        self.gridLayout_4.setContentsMargins(0, 0, 0, 0)
-        self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_4.addItem(self.horizontalSpacer_4, 0, 4, 1, 1)
-
-        self.lineEdit_selected_frequency = QLineEdit(self.frame_selector)
-        self.lineEdit_selected_frequency.setObjectName(u"lineEdit_selected_frequency")
-        self.lineEdit_selected_frequency.setEnabled(False)
-        self.lineEdit_selected_frequency.setMinimumSize(QSize(160, 28))
-        self.lineEdit_selected_frequency.setMaximumSize(QSize(180, 28))
-        self.lineEdit_selected_frequency.setFont(font2)
-        self.lineEdit_selected_frequency.setStyleSheet(u"")
-        self.lineEdit_selected_frequency.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.gridLayout_4.addWidget(self.lineEdit_selected_frequency, 0, 2, 1, 1)
-
-        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_4.addItem(self.horizontalSpacer_3, 0, 0, 1, 1)
-
-        self.label_4 = QLabel(self.frame_selector)
-        self.label_4.setObjectName(u"label_4")
-        self.label_4.setMinimumSize(QSize(0, 28))
-        self.label_4.setMaximumSize(QSize(16777215, 28))
-        self.label_4.setFont(font1)
-        self.label_4.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.gridLayout_4.addWidget(self.label_4, 0, 1, 1, 1)
-
-        self.label_5 = QLabel(self.frame_selector)
-        self.label_5.setObjectName(u"label_5")
-        self.label_5.setMinimumSize(QSize(0, 28))
-        self.label_5.setMaximumSize(QSize(16777215, 28))
-        self.label_5.setFont(font1)
-        self.label_5.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.gridLayout_4.addWidget(self.label_5, 0, 3, 1, 1)
-
-
-        self.gridLayout_5.addWidget(self.frame_selector, 0, 0, 1, 1)
-
-        self.frame_treeWidget = QFrame(self.frame_2)
-        self.frame_treeWidget.setObjectName(u"frame_treeWidget")
-        self.frame_treeWidget.setFrameShape(QFrame.Shape.NoFrame)
-        self.frame_treeWidget.setFrameShadow(QFrame.Shadow.Raised)
-        self.gridLayout_3 = QGridLayout(self.frame_treeWidget)
-        self.gridLayout_3.setSpacing(0)
-        self.gridLayout_3.setObjectName(u"gridLayout_3")
-        self.gridLayout_3.setContentsMargins(0, 0, 0, 0)
-        self.treeWidget_frequencies = QTreeWidget(self.frame_treeWidget)
-        font3 = QFont()
-        font3.setFamilies([u"MS Shell Dlg 2"])
-        font3.setPointSize(10)
-        __qtreewidgetitem = QTreeWidgetItem()
-        __qtreewidgetitem.setText(1, u"Frequency [Hz]");
-        __qtreewidgetitem.setTextAlignment(1, Qt.AlignCenter);
-        __qtreewidgetitem.setFont(1, font2);
-        __qtreewidgetitem.setTextAlignment(0, Qt.AlignCenter);
-        __qtreewidgetitem.setFont(0, font3);
-        self.treeWidget_frequencies.setHeaderItem(__qtreewidgetitem)
-        self.treeWidget_frequencies.setObjectName(u"treeWidget_frequencies")
-        self.treeWidget_frequencies.setMinimumSize(QSize(260, 0))
-        self.treeWidget_frequencies.setMaximumSize(QSize(260, 420))
-        self.treeWidget_frequencies.setFont(font2)
-        self.treeWidget_frequencies.setAlternatingRowColors(True)
-        self.treeWidget_frequencies.setIndentation(0)
-
-        self.gridLayout_3.addWidget(self.treeWidget_frequencies, 0, 0, 1, 1)
-
-
-        self.gridLayout_5.addWidget(self.frame_treeWidget, 1, 0, 1, 1)
 
         self.frame_transparency = QFrame(self.frame_2)
         self.frame_transparency.setObjectName(u"frame_transparency")
@@ -323,26 +165,176 @@ class Ui_Form(object):
 
         self.gridLayout_5.addWidget(self.frame_transparency, 3, 0, 1, 1)
 
+        self.frame_4 = QFrame(self.frame_2)
+        self.frame_4.setObjectName(u"frame_4")
+        self.frame_4.setMinimumSize(QSize(0, 40))
+        self.frame_4.setMaximumSize(QSize(16777215, 40))
+        self.frame_4.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_4.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_13 = QGridLayout(self.frame_4)
+        self.gridLayout_13.setObjectName(u"gridLayout_13")
+        self.gridLayout_13.setContentsMargins(0, 0, 0, 0)
+        self.frame_7 = QFrame(self.frame_4)
+        self.frame_7.setObjectName(u"frame_7")
+        self.frame_7.setMinimumSize(QSize(176, 0))
+        self.frame_7.setMaximumSize(QSize(176, 16777215))
+        self.frame_7.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_7.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_14 = QGridLayout(self.frame_7)
+        self.gridLayout_14.setSpacing(0)
+        self.gridLayout_14.setObjectName(u"gridLayout_14")
+        self.gridLayout_14.setContentsMargins(0, 0, 0, 0)
+        self.comboBox_colormaps = QComboBox(self.frame_7)
+        self.comboBox_colormaps.addItem("")
+        self.comboBox_colormaps.addItem("")
+        self.comboBox_colormaps.addItem("")
+        self.comboBox_colormaps.addItem("")
+        self.comboBox_colormaps.addItem("")
+        self.comboBox_colormaps.addItem("")
+        self.comboBox_colormaps.addItem("")
+        self.comboBox_colormaps.addItem("")
+        self.comboBox_colormaps.addItem("")
+        self.comboBox_colormaps.addItem("")
+        self.comboBox_colormaps.addItem("")
+        self.comboBox_colormaps.setObjectName(u"comboBox_colormaps")
+        self.comboBox_colormaps.setMinimumSize(QSize(120, 26))
+        self.comboBox_colormaps.setMaximumSize(QSize(200, 26))
+        self.comboBox_colormaps.setFont(font1)
 
-        self.gridLayout_2.addWidget(self.frame_2, 1, 0, 1, 1)
+        self.gridLayout_14.addWidget(self.comboBox_colormaps, 0, 0, 1, 1)
 
-        self.frame_animation = QFrame(Form)
+
+        self.gridLayout_13.addWidget(self.frame_7, 0, 2, 1, 1)
+
+        self.horizontalSpacer_12 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_13.addItem(self.horizontalSpacer_12, 0, 3, 1, 1)
+
+        self.label_6 = QLabel(self.frame_4)
+        self.label_6.setObjectName(u"label_6")
+        self.label_6.setMinimumSize(QSize(90, 26))
+        self.label_6.setMaximumSize(QSize(90, 26))
+        self.label_6.setFont(font1)
+        self.label_6.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+
+        self.gridLayout_13.addWidget(self.label_6, 0, 1, 1, 1)
+
+        self.horizontalSpacer_13 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_13.addItem(self.horizontalSpacer_13, 0, 0, 1, 1)
+
+
+        self.gridLayout_5.addWidget(self.frame_4, 2, 0, 1, 1)
+
+        self.frame_selector = QFrame(self.frame_2)
+        self.frame_selector.setObjectName(u"frame_selector")
+        self.frame_selector.setMinimumSize(QSize(0, 40))
+        self.frame_selector.setMaximumSize(QSize(16777215, 40))
+        self.frame_selector.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_selector.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_4 = QGridLayout(self.frame_selector)
+        self.gridLayout_4.setObjectName(u"gridLayout_4")
+        self.gridLayout_4.setHorizontalSpacing(6)
+        self.gridLayout_4.setVerticalSpacing(0)
+        self.gridLayout_4.setContentsMargins(0, 0, 0, 0)
+        self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_4.addItem(self.horizontalSpacer_4, 0, 4, 1, 1)
+
+        self.lineEdit_selected_frequency = QLineEdit(self.frame_selector)
+        self.lineEdit_selected_frequency.setObjectName(u"lineEdit_selected_frequency")
+        self.lineEdit_selected_frequency.setEnabled(False)
+        self.lineEdit_selected_frequency.setMinimumSize(QSize(160, 28))
+        self.lineEdit_selected_frequency.setMaximumSize(QSize(180, 28))
+        font2 = QFont()
+        font2.setFamilies([u"MS Shell Dlg 2"])
+        font2.setPointSize(10)
+        font2.setBold(False)
+        font2.setItalic(False)
+        self.lineEdit_selected_frequency.setFont(font2)
+        self.lineEdit_selected_frequency.setStyleSheet(u"")
+        self.lineEdit_selected_frequency.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_4.addWidget(self.lineEdit_selected_frequency, 0, 2, 1, 1)
+
+        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_4.addItem(self.horizontalSpacer_3, 0, 0, 1, 1)
+
+        self.label_4 = QLabel(self.frame_selector)
+        self.label_4.setObjectName(u"label_4")
+        self.label_4.setMinimumSize(QSize(0, 28))
+        self.label_4.setMaximumSize(QSize(16777215, 28))
+        self.label_4.setFont(font1)
+        self.label_4.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_4.addWidget(self.label_4, 0, 1, 1, 1)
+
+        self.label_5 = QLabel(self.frame_selector)
+        self.label_5.setObjectName(u"label_5")
+        self.label_5.setMinimumSize(QSize(0, 28))
+        self.label_5.setMaximumSize(QSize(16777215, 28))
+        self.label_5.setFont(font1)
+        self.label_5.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_4.addWidget(self.label_5, 0, 3, 1, 1)
+
+
+        self.gridLayout_5.addWidget(self.frame_selector, 0, 0, 1, 1)
+
+        self.frame_treeWidget = QFrame(self.frame_2)
+        self.frame_treeWidget.setObjectName(u"frame_treeWidget")
+        self.frame_treeWidget.setMinimumSize(QSize(0, 160))
+        self.frame_treeWidget.setMaximumSize(QSize(16777215, 250))
+        self.frame_treeWidget.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_treeWidget.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_3 = QGridLayout(self.frame_treeWidget)
+        self.gridLayout_3.setSpacing(0)
+        self.gridLayout_3.setObjectName(u"gridLayout_3")
+        self.gridLayout_3.setContentsMargins(0, 0, 0, 0)
+        self.treeWidget_frequencies = QTreeWidget(self.frame_treeWidget)
+        font3 = QFont()
+        font3.setFamilies([u"MS Shell Dlg 2"])
+        font3.setPointSize(10)
+        __qtreewidgetitem = QTreeWidgetItem()
+        __qtreewidgetitem.setText(1, u"Frequency [Hz]");
+        __qtreewidgetitem.setTextAlignment(1, Qt.AlignCenter);
+        __qtreewidgetitem.setFont(1, font2);
+        __qtreewidgetitem.setTextAlignment(0, Qt.AlignCenter);
+        __qtreewidgetitem.setFont(0, font3);
+        self.treeWidget_frequencies.setHeaderItem(__qtreewidgetitem)
+        self.treeWidget_frequencies.setObjectName(u"treeWidget_frequencies")
+        self.treeWidget_frequencies.setMinimumSize(QSize(260, 160))
+        self.treeWidget_frequencies.setMaximumSize(QSize(260, 240))
+        self.treeWidget_frequencies.setFont(font2)
+        self.treeWidget_frequencies.setAlternatingRowColors(True)
+        self.treeWidget_frequencies.setIndentation(0)
+
+        self.gridLayout_3.addWidget(self.treeWidget_frequencies, 0, 0, 1, 1)
+
+
+        self.gridLayout_5.addWidget(self.frame_treeWidget, 1, 0, 1, 1)
+
+
+        self.gridLayout_6.addWidget(self.frame_2, 1, 0, 1, 1)
+
+        self.frame_animation = QFrame(self.scrollAreaWidgetContents_2)
         self.frame_animation.setObjectName(u"frame_animation")
-        self.frame_animation.setMinimumSize(QSize(0, 120))
-        self.frame_animation.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_animation.setMinimumSize(QSize(0, 228))
+        self.frame_animation.setFrameShape(QFrame.Shape.Box)
         self.frame_animation.setFrameShadow(QFrame.Shadow.Raised)
 
-        self.gridLayout_2.addWidget(self.frame_animation, 2, 0, 1, 1)
+        self.gridLayout_6.addWidget(self.frame_animation, 2, 0, 1, 1)
+
+        self.scrollArea.setWidget(self.scrollAreaWidgetContents_2)
+
+        self.gridLayout_2.addWidget(self.scrollArea, 0, 0, 1, 1)
 
         QWidget.setTabOrder(self.lineEdit_selected_frequency, self.treeWidget_frequencies)
         QWidget.setTabOrder(self.treeWidget_frequencies, self.comboBox_colormaps)
         QWidget.setTabOrder(self.comboBox_colormaps, self.slider_transparency)
-        QWidget.setTabOrder(self.slider_transparency, self.pushButton_plot)
 
         self.retranslateUi(Form)
-
-        self.pushButton_plot.setDefault(True)
-
 
         QMetaObject.connectSlotsByName(Form)
     # setupUi
@@ -350,6 +342,14 @@ class Ui_Form(object):
     def retranslateUi(self, Form):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Plot pressure field", None))
         self.label.setText(QCoreApplication.translate("Form", u"Select the frequency to be plotted", None))
+        self.label_color_scalling.setText(QCoreApplication.translate("Form", u"Plot type:", None))
+        self.comboBox_plot_type.setItemText(0, QCoreApplication.translate("Form", u"Absolute (animation)", None))
+        self.comboBox_plot_type.setItemText(1, QCoreApplication.translate("Form", u"Non-absolute (animation)", None))
+        self.comboBox_plot_type.setItemText(2, QCoreApplication.translate("Form", u"Absolute values", None))
+        self.comboBox_plot_type.setItemText(3, QCoreApplication.translate("Form", u"Real values", None))
+        self.comboBox_plot_type.setItemText(4, QCoreApplication.translate("Form", u"Imag values", None))
+
+        self.label_3.setText(QCoreApplication.translate("Form", u"Transparency:", None))
         self.comboBox_colormaps.setItemText(0, QCoreApplication.translate("Form", u" Jet scale", None))
         self.comboBox_colormaps.setItemText(1, QCoreApplication.translate("Form", u" Viridis scale", None))
         self.comboBox_colormaps.setItemText(2, QCoreApplication.translate("Form", u" Inferno scale", None))
@@ -363,20 +363,11 @@ class Ui_Form(object):
         self.comboBox_colormaps.setItemText(10, QCoreApplication.translate("Form", u" Grayscale", None))
 
         self.label_6.setText(QCoreApplication.translate("Form", u"Colormaps:", None))
-        self.label_color_scalling.setText(QCoreApplication.translate("Form", u"Plot type:", None))
-        self.comboBox_plot_type.setItemText(0, QCoreApplication.translate("Form", u"Absolute (animation)", None))
-        self.comboBox_plot_type.setItemText(1, QCoreApplication.translate("Form", u"Non-absolute (animation)", None))
-        self.comboBox_plot_type.setItemText(2, QCoreApplication.translate("Form", u"Absolute values", None))
-        self.comboBox_plot_type.setItemText(3, QCoreApplication.translate("Form", u"Real values", None))
-        self.comboBox_plot_type.setItemText(4, QCoreApplication.translate("Form", u"Imag values", None))
-
-        self.pushButton_plot.setText(QCoreApplication.translate("Form", u"Plot pressure field", None))
         self.lineEdit_selected_frequency.setText("")
         self.label_4.setText(QCoreApplication.translate("Form", u"Frequency:", None))
         self.label_5.setText(QCoreApplication.translate("Form", u"[Hz]", None))
         ___qtreewidgetitem = self.treeWidget_frequencies.headerItem()
         ___qtreewidgetitem.setText(0, QCoreApplication.translate("Form", u"Index", None));
-        self.label_3.setText(QCoreApplication.translate("Form", u"Transparency:", None))
     # retranslateUi
 
 
@@ -386,37 +377,37 @@ class AcousticPressureFieldInputs_UI(QWidget, Ui_Form):
     Component Hierarchy:
     - Form: QWidget
         - (Layout): QGridLayout
-                - frame: QFrame
-                    - (Layout): QGridLayout
-                            - label: QLabel
-                - frame_2: QFrame
-                    - (Layout): QGridLayout
-                            - frame_4: QFrame
-                                - (Layout): QGridLayout
-                                        - frame_7: QFrame
-                                            - (Layout): QGridLayout
-                                                    - comboBox_colormaps: QComboBox
-                                        - label_6: QLabel
-                            - frame_3: QFrame
-                                - (Layout): QGridLayout
-                                        - label_color_scalling: QLabel
-                                        - comboBox_plot_type: QComboBox
-                            - frame_button: QFrame
-                                - (Layout): QGridLayout
-                                        - pushButton_plot: QPushButton
-                            - frame_selector: QFrame
-                                - (Layout): QGridLayout
-                                        - lineEdit_selected_frequency: QLineEdit
-                                        - label_4: QLabel
-                                        - label_5: QLabel
-                            - frame_treeWidget: QFrame
-                                - (Layout): QGridLayout
-                                        - treeWidget_frequencies: QTreeWidget
-                            - frame_transparency: QFrame
-                                - (Layout): QGridLayout
-                                        - label_3: QLabel
-                                        - slider_transparency: QSlider
-                - frame_animation: QFrame
+                - scrollArea: QScrollArea
+                    - scrollAreaWidgetContents_2: QWidget
+                        - (Layout): QGridLayout
+                                - frame: QFrame
+                                    - (Layout): QGridLayout
+                                            - label: QLabel
+                                - frame_2: QFrame
+                                    - (Layout): QGridLayout
+                                            - frame_3: QFrame
+                                                - (Layout): QGridLayout
+                                                        - label_color_scalling: QLabel
+                                                        - comboBox_plot_type: QComboBox
+                                            - frame_transparency: QFrame
+                                                - (Layout): QGridLayout
+                                                        - label_3: QLabel
+                                                        - slider_transparency: QSlider
+                                            - frame_4: QFrame
+                                                - (Layout): QGridLayout
+                                                        - frame_7: QFrame
+                                                            - (Layout): QGridLayout
+                                                                    - comboBox_colormaps: QComboBox
+                                                        - label_6: QLabel
+                                            - frame_selector: QFrame
+                                                - (Layout): QGridLayout
+                                                        - lineEdit_selected_frequency: QLineEdit
+                                                        - label_4: QLabel
+                                                        - label_5: QLabel
+                                            - frame_treeWidget: QFrame
+                                                - (Layout): QGridLayout
+                                                        - treeWidget_frequencies: QTreeWidget
+                                - frame_animation: QFrame
     """
 
     def __init__(self, *args, **kwargs):
