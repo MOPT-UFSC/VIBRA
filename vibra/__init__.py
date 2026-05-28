@@ -9,7 +9,7 @@ from pathlib import Path
 from molde import Color
 from PySide6.QtWidgets import QApplication
 
-__version__ = "0.5.2"
+__version__ = "0.5.3"
 __release_date__ = "May 2026"
 
 VERSION = __version__
