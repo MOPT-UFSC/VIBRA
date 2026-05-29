@@ -23,17 +23,19 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(360, 328)
+        Form.resize(360, 320)
+        Form.setMinimumSize(QSize(0, 320))
+        Form.setMaximumSize(QSize(16777215, 320))
         self.gridLayout_4 = QGridLayout(Form)
         self.gridLayout_4.setObjectName(u"gridLayout_4")
         self.gridLayout_4.setVerticalSpacing(4)
         self.gridLayout_4.setContentsMargins(4, 4, 4, 4)
         self.frame = QFrame(Form)
         self.frame.setObjectName(u"frame")
-        self.frame.setMinimumSize(QSize(0, 48))
-        self.frame.setMaximumSize(QSize(520, 48))
-        self.frame.setFrameShape(QFrame.Box)
-        self.frame.setFrameShadow(QFrame.Raised)
+        self.frame.setMinimumSize(QSize(0, 40))
+        self.frame.setMaximumSize(QSize(520, 40))
+        self.frame.setFrameShape(QFrame.Shape.Box)
+        self.frame.setFrameShadow(QFrame.Shadow.Raised)
         self.frame.setLineWidth(1)
         self.gridLayout_2 = QGridLayout(self.frame)
         self.gridLayout_2.setSpacing(0)
@@ -49,8 +51,8 @@ class Ui_Form(object):
         font.setBold(False)
         font.setItalic(False)
         self.label.setFont(font)
-        self.label.setTextFormat(Qt.AutoText)
-        self.label.setAlignment(Qt.AlignCenter)
+        self.label.setTextFormat(Qt.TextFormat.AutoText)
+        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout_2.addWidget(self.label, 0, 0, 1, 1)
 
@@ -61,8 +63,8 @@ class Ui_Form(object):
         self.frame_2.setObjectName(u"frame_2")
         self.frame_2.setMinimumSize(QSize(0, 0))
         self.frame_2.setMaximumSize(QSize(520, 460))
-        self.frame_2.setFrameShape(QFrame.Box)
-        self.frame_2.setFrameShadow(QFrame.Raised)
+        self.frame_2.setFrameShape(QFrame.Shape.Box)
+        self.frame_2.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_3 = QGridLayout(self.frame_2)
         self.gridLayout_3.setSpacing(4)
         self.gridLayout_3.setObjectName(u"gridLayout_3")
@@ -71,8 +73,8 @@ class Ui_Form(object):
         self.frame_volume_selector.setObjectName(u"frame_volume_selector")
         self.frame_volume_selector.setMinimumSize(QSize(0, 48))
         self.frame_volume_selector.setMaximumSize(QSize(16777215, 48))
-        self.frame_volume_selector.setFrameShape(QFrame.NoFrame)
-        self.frame_volume_selector.setFrameShadow(QFrame.Raised)
+        self.frame_volume_selector.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_volume_selector.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_7 = QGridLayout(self.frame_volume_selector)
         self.gridLayout_7.setObjectName(u"gridLayout_7")
         self.gridLayout_7.setHorizontalSpacing(6)
@@ -85,7 +87,7 @@ class Ui_Form(object):
         font1 = QFont()
         font1.setPointSize(10)
         self.label_3.setFont(font1)
-        self.label_3.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.label_3.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_7.addWidget(self.label_3, 0, 1, 1, 1)
 
@@ -102,8 +104,8 @@ class Ui_Form(object):
         self.frame_10.setObjectName(u"frame_10")
         self.frame_10.setMinimumSize(QSize(40, 30))
         self.frame_10.setMaximumSize(QSize(40, 30))
-        self.frame_10.setFrameShape(QFrame.NoFrame)
-        self.frame_10.setFrameShadow(QFrame.Raised)
+        self.frame_10.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_10.setFrameShadow(QFrame.Shadow.Raised)
 
         self.gridLayout_7.addWidget(self.frame_10, 0, 3, 1, 1)
 
@@ -122,8 +124,8 @@ class Ui_Form(object):
         self.frame_3.setObjectName(u"frame_3")
         self.frame_3.setMinimumSize(QSize(0, 48))
         self.frame_3.setMaximumSize(QSize(16777215, 48))
-        self.frame_3.setFrameShape(QFrame.NoFrame)
-        self.frame_3.setFrameShadow(QFrame.Raised)
+        self.frame_3.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_3.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_47 = QGridLayout(self.frame_3)
         self.gridLayout_47.setSpacing(2)
         self.gridLayout_47.setObjectName(u"gridLayout_47")
@@ -146,8 +148,8 @@ class Ui_Form(object):
         self.frame_4.setObjectName(u"frame_4")
         self.frame_4.setMinimumSize(QSize(0, 48))
         self.frame_4.setMaximumSize(QSize(16777215, 48))
-        self.frame_4.setFrameShape(QFrame.NoFrame)
-        self.frame_4.setFrameShadow(QFrame.Raised)
+        self.frame_4.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_4.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout = QGridLayout(self.frame_4)
         self.gridLayout.setObjectName(u"gridLayout")
         self.gridLayout.setHorizontalSpacing(6)
@@ -163,7 +165,7 @@ class Ui_Form(object):
         font2.setBold(False)
         font2.setItalic(False)
         self.label_10.setFont(font2)
-        self.label_10.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.label_10.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout.addWidget(self.label_10, 0, 1, 1, 1)
 
@@ -173,7 +175,7 @@ class Ui_Form(object):
         self.lineEdit_selection_id.setMaximumSize(QSize(110, 30))
         self.lineEdit_selection_id.setFont(font1)
         self.lineEdit_selection_id.setStyleSheet(u"")
-        self.lineEdit_selection_id.setAlignment(Qt.AlignCenter)
+        self.lineEdit_selection_id.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout.addWidget(self.lineEdit_selection_id, 0, 2, 1, 1)
 
@@ -211,8 +213,8 @@ class Ui_Form(object):
         self.frame_5.setObjectName(u"frame_5")
         self.frame_5.setMinimumSize(QSize(0, 48))
         self.frame_5.setMaximumSize(QSize(16777215, 48))
-        self.frame_5.setFrameShape(QFrame.NoFrame)
-        self.frame_5.setFrameShadow(QFrame.Raised)
+        self.frame_5.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_5.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_6 = QGridLayout(self.frame_5)
         self.gridLayout_6.setObjectName(u"gridLayout_6")
         self.gridLayout_6.setHorizontalSpacing(6)
@@ -223,7 +225,7 @@ class Ui_Form(object):
         self.label_2.setMinimumSize(QSize(110, 30))
         self.label_2.setMaximumSize(QSize(110, 30))
         self.label_2.setFont(font1)
-        self.label_2.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.label_2.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_6.addWidget(self.label_2, 0, 1, 1, 1)
 
@@ -241,8 +243,8 @@ class Ui_Form(object):
         self.frame_6.setObjectName(u"frame_6")
         self.frame_6.setMinimumSize(QSize(40, 30))
         self.frame_6.setMaximumSize(QSize(40, 30))
-        self.frame_6.setFrameShape(QFrame.NoFrame)
-        self.frame_6.setFrameShadow(QFrame.Raised)
+        self.frame_6.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_6.setFrameShadow(QFrame.Shadow.Raised)
 
         self.gridLayout_6.addWidget(self.frame_6, 0, 3, 1, 1)
 
@@ -261,8 +263,8 @@ class Ui_Form(object):
         self.frame_7.setObjectName(u"frame_7")
         self.frame_7.setMinimumSize(QSize(0, 48))
         self.frame_7.setMaximumSize(QSize(16777215, 48))
-        self.frame_7.setFrameShape(QFrame.NoFrame)
-        self.frame_7.setFrameShadow(QFrame.Raised)
+        self.frame_7.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_7.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_8 = QGridLayout(self.frame_7)
         self.gridLayout_8.setObjectName(u"gridLayout_8")
         self.gridLayout_8.setHorizontalSpacing(6)
@@ -273,7 +275,7 @@ class Ui_Form(object):
         self.label_4.setMinimumSize(QSize(110, 30))
         self.label_4.setMaximumSize(QSize(110, 30))
         self.label_4.setFont(font1)
-        self.label_4.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.label_4.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_8.addWidget(self.label_4, 0, 1, 1, 1)
 
@@ -292,8 +294,8 @@ class Ui_Form(object):
         self.frame_8.setObjectName(u"frame_8")
         self.frame_8.setMinimumSize(QSize(40, 30))
         self.frame_8.setMaximumSize(QSize(40, 30))
-        self.frame_8.setFrameShape(QFrame.NoFrame)
-        self.frame_8.setFrameShadow(QFrame.Raised)
+        self.frame_8.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_8.setFrameShadow(QFrame.Shadow.Raised)
 
         self.gridLayout_8.addWidget(self.frame_8, 0, 3, 1, 1)
 

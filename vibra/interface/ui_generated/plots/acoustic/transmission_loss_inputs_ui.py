@@ -23,7 +23,9 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(400, 417)
+        Form.resize(400, 380)
+        Form.setMinimumSize(QSize(0, 380))
+        Form.setMaximumSize(QSize(16777215, 380))
         self.gridLayout_2 = QGridLayout(Form)
         self.gridLayout_2.setObjectName(u"gridLayout_2")
         self.gridLayout_2.setHorizontalSpacing(6)
@@ -31,8 +33,8 @@ class Ui_Form(object):
         self.gridLayout_2.setContentsMargins(4, 4, 4, 4)
         self.frame = QFrame(Form)
         self.frame.setObjectName(u"frame")
-        self.frame.setMinimumSize(QSize(0, 48))
-        self.frame.setMaximumSize(QSize(16777215, 48))
+        self.frame.setMinimumSize(QSize(0, 40))
+        self.frame.setMaximumSize(QSize(16777215, 40))
         self.frame.setFrameShape(QFrame.Shape.Box)
         self.frame.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_4 = QGridLayout(self.frame)
