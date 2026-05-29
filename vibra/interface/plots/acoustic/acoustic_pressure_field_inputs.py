@@ -37,7 +37,6 @@ class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
 
     def _configure_widgets(self):
         #
-        self.frame_button.setVisible(False)
         self.frame_transparency.setVisible(False)
         #
         self.lineEdit_selected_frequency.setDisabled(True)
@@ -52,12 +51,10 @@ class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
         self.comboBox_colormaps.currentIndexChanged.connect(self.update_colormap_type)
         self.comboBox_plot_type.currentIndexChanged.connect(self.update_plot)
         #
-        self.pushButton_plot.clicked.connect(self.update_plot)
-        #
         self.slider_transparency.valueChanged.connect(self.update_transparency_callback)
         #
         self.treeWidget_frequencies.itemClicked.connect(self.on_click_item)
-        self.treeWidget_frequencies.itemDoubleClicked.connect(self.on_doubleclick_item)
+        self.treeWidget_frequencies.itemDoubleClicked.connect(self.on_click_item)
 
     def add_animation_widget(self):
 
@@ -155,16 +152,12 @@ class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
         self.treeWidget_frequencies.itemClicked.emit(first_item, 0)
 
     def get_selected_frequency_index(self):
-        if self.selected_frequency_index is not None:
-            return self.selected_frequency_index
+        if self.selected_frequency_index is None:
+            return 0
 
-        return 0
+        return self.selected_frequency_index
 
-    def on_click_item(self, item):
-        self.lineEdit_selected_frequency.setText(item.text(1))
-        self.update_plot()
-
-    def on_doubleclick_item(self, item):
+    def on_click_item(self, item: QTreeWidgetItem):
         self.lineEdit_selected_frequency.setText(item.text(1))
         self.update_plot()
 

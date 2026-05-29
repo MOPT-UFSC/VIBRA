@@ -184,7 +184,7 @@ class PlotStructuralModeShapeInputs(StructuralModeShapeInputs_UI):
         first_item.setSelected(True)
         self.treeWidget_frequencies.itemClicked.emit(first_item, 0)
 
-    def on_click_item(self, item):
+    def on_click_item(self, item: QTreeWidgetItem):
         self.selected_natural_frequency = self.modes_to_frequencies[int(item.text(0))]
         self.lineEdit_natural_frequency.setText(str(round(self.selected_natural_frequency, 4)))
         self.update_plot()

@@ -45,7 +45,7 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
         self.slider_transparency.valueChanged.connect(self.update_transparency_callback)
         #
         self.treeWidget_frequencies.itemClicked.connect(self.on_click_item)
-        self.treeWidget_frequencies.itemDoubleClicked.connect(self.on_doubleclick_item)
+        self.treeWidget_frequencies.itemDoubleClicked.connect(self.on_click_item)
         #
         app().main_window.theme_changed.connect(self._paint_icons)
         #
@@ -213,7 +213,7 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
             return self.mode_index
         return 0
 
-    def on_click_item(self, item):
+    def on_click_item(self, item: QTreeWidgetItem):
         selected_frequency = self.modes_to_frequencies[int(item.text(0))]
 
         if isinstance(selected_frequency, complex):
@@ -225,9 +225,6 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
 
         self.selected_natural_frequency = selected_frequency
         self.update_plot()
-
-    def on_doubleclick_item(self, item):
-        self.on_click_item(item)
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:

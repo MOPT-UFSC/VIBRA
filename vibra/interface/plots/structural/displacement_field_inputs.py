@@ -34,7 +34,6 @@ class PlotDisplacementFieldInputs(DisplacementFieldInputs_UI):
 
     def _configure_widgets(self):
         #
-        self.frame_button.setVisible(False)
         self.frame_transparency.setVisible(False)
         #
         self.lineEdit_selected_frequency.setDisabled(True)
@@ -49,12 +48,10 @@ class PlotDisplacementFieldInputs(DisplacementFieldInputs_UI):
         self.comboBox_colormaps.currentIndexChanged.connect(self.update_colormap_type)
         self.comboBox_plot_type.currentIndexChanged.connect(self.update_plot)
         #
-        self.pushButton_plot.clicked.connect(self.update_plot)
-        #
         self.slider_transparency.valueChanged.connect(self.update_transparency_callback)
         #
         self.treeWidget_frequencies.itemClicked.connect(self.on_click_item)
-        self.treeWidget_frequencies.itemDoubleClicked.connect(self.on_doubleclick_item)
+        self.treeWidget_frequencies.itemDoubleClicked.connect(self.on_click_item)
         #
         self.update_animation_widget_visibility()
         self.load_user_preference_colormap()
@@ -76,6 +73,7 @@ class PlotDisplacementFieldInputs(DisplacementFieldInputs_UI):
             self.animation_widget.setDisabled(True)
         else:
             self.animation_widget.setDisabled(False)
+
     def load_user_preference_colormap(self):
         try:
             colormap = app().config.user_preferences.color_map
@@ -112,7 +110,7 @@ class PlotDisplacementFieldInputs(DisplacementFieldInputs_UI):
         self.update_animation_widget_visibility()
         if self.lineEdit_selected_frequency.text() == "":
             return
-        
+
         frequency_selected = float(self.lineEdit_selected_frequency.text())
         selector_mask = np.abs(self.frequencies - frequency_selected) < 1e-6
 
@@ -121,7 +119,7 @@ class PlotDisplacementFieldInputs(DisplacementFieldInputs_UI):
 
         if self.selected_frequency_index is None:
             return
-        
+
         self.animation_widget.reset_sliders()
         LoadingWindow(app().main_window.results_widget.update_plot).run()
 
@@ -135,6 +133,7 @@ class PlotDisplacementFieldInputs(DisplacementFieldInputs_UI):
         index = self.comboBox_colormaps.currentIndex()
         if not (0 <= index < len(COLORMAP_NAMES)):
             return "jet"
+
         return COLORMAP_NAMES[index]
 
     def load_frequencies(self):
@@ -160,11 +159,7 @@ class PlotDisplacementFieldInputs(DisplacementFieldInputs_UI):
         first_item.setSelected(True)
         self.treeWidget_frequencies.itemClicked.emit(first_item, 0)
 
-    def on_click_item(self, item):
-        self.lineEdit_selected_frequency.setText(item.text(1))
-        self.update_plot()
-
-    def on_doubleclick_item(self, item):
+    def on_click_item(self, item: QTreeWidgetItem):
         self.lineEdit_selected_frequency.setText(item.text(1))
         self.update_plot()
 
