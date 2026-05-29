@@ -2,6 +2,7 @@ import re
 import subprocess
 from argparse import ArgumentParser
 from dataclasses import dataclass
+from datetime import date
 from importlib.metadata import version
 from pathlib import Path
 from typing import Self
@@ -34,6 +35,14 @@ class Version:
         return f"{self.major}.{self.minor}.{self.patch}"
 
 
+def release_date() -> str:
+    months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+    today = date.today()
+    current_month = months[today.month - 1]
+    current_year = today.year
+    return f"{current_month} {current_year}"
+
+
 def green_text(txt: str) -> str:
     return "\033[32m" + txt + "\033[0m"
 
@@ -45,13 +54,11 @@ def replace_in_file(path: Path, pattern: str, replacement: str):
         replacement,
         current_text,
     )
-    if new_text == current_text:
-        print(f'File "{path}" was not modified')
-    else:
-        path.write_text(new_text)
+    path.write_text(new_text)
 
 
 def update_version(new_version: Version):
+    # Update version
     replace_in_file(
         Path("vibra.iss"),
         r'#define\s+MyAppVersion\s+"\d\.\d\.\d"',
@@ -73,6 +80,22 @@ def update_version(new_version: Version):
         f"*v{new_version}",
     )
 
+    # Update release date
+    date_regex = r"((Jan)|(Feb)|(Mar)|(Apr)|(May)|(Jun)|(Jul)|(Aug)|(Sep)|(Oct)|(Nov)|(Dec))\s+\d{4}"
+    current_date = release_date()
+
+    replace_in_file(
+        Path("README.md"),
+        date_regex,
+        current_date,
+    )
+    replace_in_file(
+        Path("vibra/__init__.py"),
+        date_regex,
+        current_date,
+    )
+
+    # Sync uv
     try:
         subprocess.run(["uv", "sync"], capture_output=True, text=True, check=True)
     except subprocess.CalledProcessError:
