@@ -16,7 +16,6 @@ from vibra import LIGHT_ICON_COLOR, SUPPORTED_GEOMETRY_EXTENSIONS, SUPPORTED_MES
 from vibra.engine.assemblers import AcousticAssembler
 from vibra.engine.solvers import HarmonicSolver
 from vibra.interface.analysis_toolbar import AnalysisToolbar
-from vibra.interface.animation_toolbar import AnimationToolbar
 from vibra.interface.view_toolbar import ViewToolbar
 from vibra.interface.data_handler.export_mesh_data import ExportMeshData
 from vibra.interface.formatters.icons import change_icon_color_for_widgets, get_vibra_icon
@@ -95,7 +94,6 @@ class MainWindow(MainWindow_UI):
     def _create_basic_layout(self):
         self.status_bar = StatusBar(self)
         self.analysis_toolbar = AnalysisToolbar()
-        self.animation_toolbar = AnimationToolbar()
 
         self.create_recents_menu()
         self.create_status_bar()
@@ -119,8 +117,6 @@ class MainWindow(MainWindow_UI):
 
         self.addToolBar(self.analysis_toolbar)
         self.insertToolBarBreak(self.analysis_toolbar)
-        self.addToolBar(self.animation_toolbar)
-        self.insertToolBarBreak(self.animation_toolbar)
 
         self.addToolBar(Qt.ToolBarArea.RightToolBarArea, self.view_toolbar)
 
@@ -418,8 +414,6 @@ class MainWindow(MainWindow_UI):
         self.action_mesh_workspace.setChecked(False)
         self.action_model_workspace.setChecked(False)
 
-        self.animation_toolbar.setEnabled(False)
-
     def show_geometry_render_widget(self):
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
         self.view_toolbar.enable_selection_tool()
@@ -488,8 +482,6 @@ class MainWindow(MainWindow_UI):
         self.model_setup_widget.model_setup_items.enable_and_expand_menu_items()
 
         self.splitter.widget(0).setVisible(True)
-        self.animation_toolbar.pause_animation()
-        self.animation_toolbar.set_visible(False)
 
         if self.visualization_filter.normal_symbols:
             self.visualization_filter.normal_symbols = False
@@ -518,8 +510,6 @@ class MainWindow(MainWindow_UI):
         self.model_setup_widget.model_setup_items.enable_and_expand_menu_items()
 
         self.splitter.widget(0).setVisible(True)
-        self.animation_toolbar.pause_animation()
-        self.animation_toolbar.set_visible(False)
 
     def action_results_workspace_callback(self):
         if not app().project.is_there_a_valid_solution():
@@ -534,11 +524,6 @@ class MainWindow(MainWindow_UI):
         self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
         self.results_viewer_widget.results_viewer_items.update_items()
         self.analysis_toolbar.update_analysis_combo_boxes()
-
-        if self.results_viewer_widget.current_widget_is_animatable():
-            self.animation_toolbar.set_visible(True)
-        else:
-            self.animation_toolbar.set_visible(False)
 
     def action_new_project_callback(self):
         self.new_project_dialog()
@@ -890,7 +875,6 @@ class MainWindow(MainWindow_UI):
         self.update_toolbar_and_menu_items_after_load_project()
         self.set_toolbars_visible(True)
         self.view_toolbar.show_render_tools()
-        self.animation_toolbar.set_visible(False)
         self.set_toolbars_enabled(True)
         self.action_model_workspace_callback()
 
@@ -910,7 +894,6 @@ class MainWindow(MainWindow_UI):
         self.update_toolbar_and_menu_items_after_load_project()
         self.set_toolbars_visible(True)
         self.view_toolbar.show_render_tools()
-        self.animation_toolbar.set_visible(False)
         self.set_toolbars_enabled(True)
         self.action_mesh_workspace_callback()
 
@@ -954,7 +937,6 @@ class MainWindow(MainWindow_UI):
         self.action_model_workspace_callback()
 
         self.set_toolbars_visible(True)
-        self.animation_toolbar.set_visible(False)
         self.view_toolbar.set_front_view()
 
         if app().project.can_resume_solution:
@@ -965,7 +947,6 @@ class MainWindow(MainWindow_UI):
 
     def set_toolbars_visible(self, state: bool):
         self.analysis_toolbar.setVisible(state)
-        self.animation_toolbar.setVisible(state)
         self.view_toolbar.setVisible(state)
         self.renderer_toolbar.setVisible(state)
         self.workspaces_toolbar.setVisible(state)
@@ -973,7 +954,6 @@ class MainWindow(MainWindow_UI):
 
     def set_toolbars_enabled(self, state: bool):
         self.analysis_toolbar.setEnabled(state)
-        self.animation_toolbar.setEnabled(state)
         self.view_toolbar.setEnabled(state)
         self.renderer_toolbar.setEnabled(state)
         self.workspaces_toolbar.setEnabled(state)
