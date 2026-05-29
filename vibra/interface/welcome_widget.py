@@ -1,19 +1,15 @@
 
-from PySide6.QtCore import QSize, Qt, Signal, QByteArray
-from PySide6.QtGui import QIcon, QImage, QPixmap
-from PySide6.QtWidgets import QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget, QBoxLayout
-from fileboxes import Filebox
-
-from vibra import app, EXAMPLES_DIR, ICON_DIR
-
-import numpy as np
 import io
-from PIL import Image, ImageDraw, ImageFont
-
 from functools import partial
 from pathlib import Path
-from PIL import Image
 
+from fileboxes import Filebox
+from PIL import Image, ImageDraw, ImageFont
+from PySide6.QtCore import QByteArray, QSize, Qt, Signal
+from PySide6.QtGui import QIcon, QImage, QPixmap
+from PySide6.QtWidgets import QBoxLayout, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
+
+from vibra import EXAMPLES_DIR, ICON_DIR, app
 
 
 class WelcomeWidget(QWidget):
@@ -21,6 +17,8 @@ class WelcomeWidget(QWidget):
         super().__init__()
 
         self.widget_layout = QVBoxLayout(self)
+        self.widget_layout.addSpacing(40)
+
         self.setLayout(self.widget_layout)
         self.setup_image(self.widget_layout)
         self.setup_labels(self.widget_layout)
