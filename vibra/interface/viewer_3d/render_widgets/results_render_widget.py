@@ -15,6 +15,9 @@ from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.viewer_3d.render_tools import RenderTool, SelectionTool
 from vibra.utils.math_functions import lerp
 
+from vibra.interface.plots.general.animation_widget import AnimationWidget
+
+
 from ..actors import (
     AnalysisActor,
     EdgesActor,
@@ -86,11 +89,11 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.scale_bar_actor.GetLegendTitleProperty().SetColor(font_color.to_rgb_f())
             self.scale_bar_actor.GetLegendLabelProperty().SetColor(font_color.to_rgb_f())
 
-    def update_plot(self, reset_camera=False):
+    def update_plot(self, reset_camera: bool=False):
         mesh = app().project.model.mesh
         if mesh is None:
             return
-        
+
         if app().project.solver is None:
             return
 
@@ -184,7 +187,12 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         phase = lerp(0, 2 * np.pi, t)
 
         with self.update_lock:
-            self.update_color_and_deformation(phase, clear_cache=False)
+            animation_widget = app().main_window.results_viewer_widget.get_animation_widget()
+            self.update_color_and_deformation(
+                phase=phase,
+                magnification_factor=animation_widget.magnification_factor,
+                clear_cache=False,
+            )
 
         point_data = vtkPointData()
         point_position = vtkPoints()
@@ -202,8 +210,9 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         super().start_animation(*args, **kwargs)
 
     def stop_animation(self, *args, **kwargs):
-        app().main_window.animation_toolbar.pushButton_animate.setChecked(False)
-        app().main_window.animation_toolbar.update_animate_button_icons(False)
+        animation_widget = app().main_window.results_viewer_widget.get_animation_widget()
+        animation_widget.pushButton_animate.setChecked(False)
+        animation_widget.update_animate_button_icons(False)
         super().stop_animation(*args, **kwargs)
 
     def update_animation(self, frame):
@@ -232,7 +241,13 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             logging.warning(f"Cache miss on update_animation function for frame {frame}")
             self.cache_frame(frame)
 
-    def update_color_and_deformation(self, phase=None, clear_cache=True):
+    def update_color_and_deformation(
+            self,
+            phase: float = 0.0,
+            magnification_factor: float = 1.0,
+            clear_cache: bool = True,
+            ):
+
         if not self.actors_exists():
             return
 
@@ -242,15 +257,14 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if clear_cache:
             self.clear_cache()
 
-        animation_toolbar = app().main_window.animation_toolbar
-        magnification_factor = animation_toolbar.magnification_factor_slider.value() / 16
+        # magnification_factor = animation_widget.magnification_factor_slider.value() / 16
 
         displacements = None
         colormap = app().config.user_preferences.color_map
         analysis_id = app().project.model.analysis_id
 
-        if phase is None:
-            phase = np.radians(animation_toolbar.phase_slider.value())
+        # if phase is None:
+        #     phase = np.radians(animation_widget.phase_slider.value())
 
         if analysis_id == AnalysisID.NO_ANALYSIS:
             return
@@ -349,7 +363,10 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             raise ValueError(f"Unknown analysis: {analysis_id}")
 
         if displacements is not None:
-            app().main_window.animation_toolbar.update_factor_label(max_value=max_value)
+            animation_widget = app().main_window.results_viewer_widget.get_animation_widget()
+            if isinstance(animation_widget, AnimationWidget):
+                animation_widget.update_factor_label(max_value=max_value)
+
             self.analysis_actor.apply_deformation(
                 displacements,
                 magnification_factor,

@@ -15,32 +15,36 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QGridLayout, QSizePolicy, QSpacerItem,
+from PySide6.QtWidgets import (QApplication, QFrame, QGridLayout, QSizePolicy,
     QWidget)
 
 class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(400, 283)
+        Form.resize(400, 569)
         self.gridLayout = QGridLayout(Form)
         self.gridLayout.setObjectName(u"gridLayout")
         self.gridLayout.setContentsMargins(2, 2, 2, 2)
+        self.top_widget = QWidget(Form)
+        self.top_widget.setObjectName(u"top_widget")
+        self.top_widget.setMinimumSize(QSize(0, 80))
+        self.top_widget.setMaximumSize(QSize(16777215, 220))
+
+        self.gridLayout.addWidget(self.top_widget, 0, 0, 1, 1)
+
         self.bottom_widget = QWidget(Form)
         self.bottom_widget.setObjectName(u"bottom_widget")
         self.bottom_widget.setMinimumSize(QSize(0, 80))
 
         self.gridLayout.addWidget(self.bottom_widget, 1, 0, 1, 1)
 
-        self.top_widget = QWidget(Form)
-        self.top_widget.setObjectName(u"top_widget")
-        self.top_widget.setMinimumSize(QSize(0, 80))
+        self.frame = QFrame(Form)
+        self.frame.setObjectName(u"frame")
+        self.frame.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame.setFrameShadow(QFrame.Shadow.Raised)
 
-        self.gridLayout.addWidget(self.top_widget, 0, 0, 1, 1)
-
-        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-
-        self.gridLayout.addItem(self.verticalSpacer, 2, 0, 1, 1)
+        self.gridLayout.addWidget(self.frame, 2, 0, 1, 1)
 
 
         self.retranslateUi(Form)
@@ -59,8 +63,9 @@ class LeftMenuWidget_UI(QWidget, Ui_Form):
     Component Hierarchy:
     - Form: QWidget
         - (Layout): QGridLayout
-                - bottom_widget: QWidget
                 - top_widget: QWidget
+                - bottom_widget: QWidget
+                - frame: QFrame
     """
 
     def __init__(self, *args, **kwargs):
