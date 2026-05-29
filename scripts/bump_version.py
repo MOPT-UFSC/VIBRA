@@ -58,7 +58,9 @@ def replace_in_file(path: Path, pattern: str, replacement: str):
 
 
 def update_version(new_version: Version):
-    # Update version
+    date_regex = r"((Jan)|(Feb)|(Mar)|(Apr)|(May)|(Jun)|(Jul)|(Aug)|(Sep)|(Oct)|(Nov)|(Dec))\s+\d{4}"
+    current_date = release_date()
+
     replace_in_file(
         Path("vibra.iss"),
         r'#define\s+MyAppVersion\s+"\d\.\d\.\d"',
@@ -70,36 +72,20 @@ def update_version(new_version: Version):
         f'__version__ = "{new_version}"',
     )
     replace_in_file(
+        Path("vibra/__init__.py"),
+        date_regex,
+        current_date,
+    )
+    replace_in_file(
         Path("pyproject.toml"),
         r'version\s+=\s+"\d\.\d\.\d"',
         f'version = "{new_version}"',
     )
     replace_in_file(
         Path("README.md"),
-        r"\*\s*[vV]\d\.\d\.\d",
-        f"*v{new_version}",
+        r"\*\s*[vV]\d\.\d\.\d\s+" + date_regex,
+        f"*v{new_version} {current_date}",
     )
-
-    # Update release date
-    date_regex = r"((Jan)|(Feb)|(Mar)|(Apr)|(May)|(Jun)|(Jul)|(Aug)|(Sep)|(Oct)|(Nov)|(Dec))\s+\d{4}"
-    current_date = release_date()
-
-    replace_in_file(
-        Path("README.md"),
-        date_regex,
-        current_date,
-    )
-    replace_in_file(
-        Path("vibra/__init__.py"),
-        date_regex,
-        current_date,
-    )
-
-    # Sync uv
-    try:
-        subprocess.run(["uv", "sync"], capture_output=True, text=True, check=True)
-    except subprocess.CalledProcessError:
-        print('Problem while running "uv sync"')
 
 
 def main():
