@@ -69,7 +69,7 @@ def update_version(new_version: Version):
     )
     replace_in_file(
         Path("README.md"),
-        r"\*\s*v\d\.\d\.\d",
+        r"\*\s*[vV]\d\.\d\.\d",
         f"*v{new_version}",
     )
 
