@@ -24,7 +24,7 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(376, 723)
+        Form.resize(375, 721)
         self.gridLayout_2 = QGridLayout(Form)
         self.gridLayout_2.setSpacing(2)
         self.gridLayout_2.setObjectName(u"gridLayout_2")
@@ -35,7 +35,7 @@ class Ui_Form(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents_2 = QWidget()
         self.scrollAreaWidgetContents_2.setObjectName(u"scrollAreaWidgetContents_2")
-        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, 0, 372, 719))
+        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, 0, 371, 717))
         self.gridLayout_6 = QGridLayout(self.scrollAreaWidgetContents_2)
         self.gridLayout_6.setObjectName(u"gridLayout_6")
         self.gridLayout_6.setHorizontalSpacing(2)
@@ -57,8 +57,8 @@ class Ui_Form(object):
         self.label.setMinimumSize(QSize(0, 0))
         self.label.setMaximumSize(QSize(16777215, 16777215))
         font = QFont()
-        font.setFamilies([u"MS Shell Dlg 2"])
-        font.setPointSize(11)
+        font.setFamilies([u"Segoe UI"])
+        font.setPointSize(10)
         font.setBold(False)
         font.setItalic(False)
         self.label.setFont(font)

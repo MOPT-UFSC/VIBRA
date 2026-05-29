@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>376</width>
-    <height>723</height>
+    <width>375</width>
+    <height>721</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -42,8 +42,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>372</width>
-        <height>719</height>
+        <width>371</width>
+        <height>717</height>
        </rect>
       </property>
       <layout class="QGridLayout" name="gridLayout_6">
@@ -117,8 +117,8 @@
             </property>
             <property name="font">
              <font>
-              <family>MS Shell Dlg 2</family>
-              <pointsize>11</pointsize>
+              <family>Segoe UI</family>
+              <pointsize>10</pointsize>
               <italic>false</italic>
               <bold>false</bold>
              </font>

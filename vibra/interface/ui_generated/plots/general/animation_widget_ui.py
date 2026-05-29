@@ -28,7 +28,7 @@ class Ui_Form(object):
         self.gridLayout = QGridLayout(Form)
         self.gridLayout.setObjectName(u"gridLayout")
         self.gridLayout.setVerticalSpacing(2)
-        self.gridLayout.setContentsMargins(2, 8, 2, 2)
+        self.gridLayout.setContentsMargins(2, 8, 2, 4)
         self.frame_bottom = QFrame(Form)
         self.frame_bottom.setObjectName(u"frame_bottom")
         self.frame_bottom.setMinimumSize(QSize(0, 48))
@@ -67,7 +67,8 @@ class Ui_Form(object):
         self.gridLayout_3.setContentsMargins(6, 2, 6, 2)
         self.label_phase_angle = QLabel(self.frame_middle)
         self.label_phase_angle.setObjectName(u"label_phase_angle")
-        self.label_phase_angle.setMinimumSize(QSize(60, 30))
+        self.label_phase_angle.setMinimumSize(QSize(60, 26))
+        self.label_phase_angle.setMaximumSize(QSize(16777215, 26))
 
         self.gridLayout_3.addWidget(self.label_phase_angle, 1, 2, 1, 1)
 
@@ -82,13 +83,15 @@ class Ui_Form(object):
 
         self.label_factor = QLabel(self.frame_middle)
         self.label_factor.setObjectName(u"label_factor")
-        self.label_factor.setMinimumSize(QSize(60, 30))
+        self.label_factor.setMinimumSize(QSize(60, 26))
+        self.label_factor.setMaximumSize(QSize(16777215, 26))
 
         self.gridLayout_3.addWidget(self.label_factor, 2, 2, 1, 1)
 
         self.label_animation_phase = QLabel(self.frame_middle)
         self.label_animation_phase.setObjectName(u"label_animation_phase")
-        self.label_animation_phase.setMinimumSize(QSize(0, 30))
+        self.label_animation_phase.setMinimumSize(QSize(0, 26))
+        self.label_animation_phase.setMaximumSize(QSize(16777215, 26))
         self.label_animation_phase.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_3.addWidget(self.label_animation_phase, 1, 0, 1, 1)
@@ -102,7 +105,8 @@ class Ui_Form(object):
 
         self.label_magnification_factor = QLabel(self.frame_middle)
         self.label_magnification_factor.setObjectName(u"label_magnification_factor")
-        self.label_magnification_factor.setMinimumSize(QSize(0, 30))
+        self.label_magnification_factor.setMinimumSize(QSize(0, 26))
+        self.label_magnification_factor.setMaximumSize(QSize(16777215, 26))
         self.label_magnification_factor.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_3.addWidget(self.label_magnification_factor, 2, 0, 1, 1)
@@ -123,16 +127,16 @@ class Ui_Form(object):
 
         self.label_frames_cycle = QLabel(self.frame_top)
         self.label_frames_cycle.setObjectName(u"label_frames_cycle")
-        self.label_frames_cycle.setMinimumSize(QSize(0, 28))
-        self.label_frames_cycle.setMaximumSize(QSize(16777215, 28))
+        self.label_frames_cycle.setMinimumSize(QSize(0, 26))
+        self.label_frames_cycle.setMaximumSize(QSize(16777215, 26))
         self.label_frames_cycle.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_4.addWidget(self.label_frames_cycle, 0, 1, 1, 1)
 
         self.spinBox_frames = QSpinBox(self.frame_top)
         self.spinBox_frames.setObjectName(u"spinBox_frames")
-        self.spinBox_frames.setMinimumSize(QSize(46, 28))
-        self.spinBox_frames.setMaximumSize(QSize(16777215, 28))
+        self.spinBox_frames.setMinimumSize(QSize(46, 26))
+        self.spinBox_frames.setMaximumSize(QSize(16777215, 26))
         self.spinBox_frames.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.spinBox_frames.setMinimum(20)
         self.spinBox_frames.setMaximum(60)
@@ -147,16 +151,16 @@ class Ui_Form(object):
 
         self.label_animation_cycles = QLabel(self.frame_top)
         self.label_animation_cycles.setObjectName(u"label_animation_cycles")
-        self.label_animation_cycles.setMinimumSize(QSize(0, 28))
-        self.label_animation_cycles.setMaximumSize(QSize(16777215, 28))
+        self.label_animation_cycles.setMinimumSize(QSize(0, 26))
+        self.label_animation_cycles.setMaximumSize(QSize(16777215, 26))
         self.label_animation_cycles.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_4.addWidget(self.label_animation_cycles, 1, 1, 1, 1)
 
         self.spinBox_cycles = QSpinBox(self.frame_top)
         self.spinBox_cycles.setObjectName(u"spinBox_cycles")
-        self.spinBox_cycles.setMinimumSize(QSize(46, 28))
-        self.spinBox_cycles.setMaximumSize(QSize(16777215, 28))
+        self.spinBox_cycles.setMinimumSize(QSize(46, 26))
+        self.spinBox_cycles.setMaximumSize(QSize(16777215, 26))
         self.spinBox_cycles.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.spinBox_cycles.setMaximum(20)
         self.spinBox_cycles.setValue(5)

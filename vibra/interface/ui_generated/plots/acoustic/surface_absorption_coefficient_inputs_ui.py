@@ -23,9 +23,9 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(360, 260)
+        Form.resize(360, 272)
         Form.setMinimumSize(QSize(0, 260))
-        Form.setMaximumSize(QSize(16777215, 260))
+        Form.setMaximumSize(QSize(16777215, 272))
         self.gridLayout_4 = QGridLayout(Form)
         self.gridLayout_4.setObjectName(u"gridLayout_4")
         self.gridLayout_4.setVerticalSpacing(4)
@@ -46,8 +46,8 @@ class Ui_Form(object):
         self.label.setMinimumSize(QSize(0, 30))
         self.label.setMaximumSize(QSize(452, 30))
         font = QFont()
-        font.setFamilies([u"MS Shell Dlg 2"])
-        font.setPointSize(11)
+        font.setFamilies([u"Segoe UI"])
+        font.setPointSize(10)
         font.setBold(False)
         font.setItalic(False)
         self.label.setFont(font)

@@ -120,8 +120,8 @@
             </property>
             <property name="font">
              <font>
-              <family>MS Shell Dlg 2</family>
-              <pointsize>11</pointsize>
+              <family>Segoe UI</family>
+              <pointsize>10</pointsize>
               <italic>false</italic>
               <bold>false</bold>
              </font>

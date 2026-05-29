@@ -30,7 +30,7 @@
     <number>2</number>
    </property>
    <property name="bottomMargin">
-    <number>2</number>
+    <number>4</number>
    </property>
    <property name="verticalSpacing">
     <number>2</number>
@@ -153,7 +153,13 @@
         <property name="minimumSize">
          <size>
           <width>60</width>
-          <height>30</height>
+          <height>26</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>26</height>
          </size>
         </property>
         <property name="text">
@@ -185,7 +191,13 @@
         <property name="minimumSize">
          <size>
           <width>60</width>
-          <height>30</height>
+          <height>26</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>26</height>
          </size>
         </property>
         <property name="text">
@@ -198,7 +210,13 @@
         <property name="minimumSize">
          <size>
           <width>0</width>
-          <height>30</height>
+          <height>26</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>26</height>
          </size>
         </property>
         <property name="text">
@@ -227,7 +245,13 @@
         <property name="minimumSize">
          <size>
           <width>0</width>
-          <height>30</height>
+          <height>26</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>16777215</width>
+          <height>26</height>
          </size>
         </property>
         <property name="text">
@@ -280,13 +304,13 @@
         <property name="minimumSize">
          <size>
           <width>0</width>
-          <height>28</height>
+          <height>26</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
           <width>16777215</width>
-          <height>28</height>
+          <height>26</height>
          </size>
         </property>
         <property name="text">
@@ -302,13 +326,13 @@
         <property name="minimumSize">
          <size>
           <width>46</width>
-          <height>28</height>
+          <height>26</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
           <width>16777215</width>
-          <height>28</height>
+          <height>26</height>
          </size>
         </property>
         <property name="alignment">
@@ -346,13 +370,13 @@
         <property name="minimumSize">
          <size>
           <width>0</width>
-          <height>28</height>
+          <height>26</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
           <width>16777215</width>
-          <height>28</height>
+          <height>26</height>
          </size>
         </property>
         <property name="text">
@@ -368,13 +392,13 @@
         <property name="minimumSize">
          <size>
           <width>46</width>
-          <height>28</height>
+          <height>26</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
           <width>16777215</width>
-          <height>28</height>
+          <height>26</height>
          </size>
         </property>
         <property name="alignment">
