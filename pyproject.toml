@@ -50,3 +50,6 @@ markers = [
 [tool.ruff]
 exclude = ["__pycache__", "vibra/interface/ui_generated"]
 line-length = 150
+
+[project.scripts]
+bump = "scripts.bump_version:main"
