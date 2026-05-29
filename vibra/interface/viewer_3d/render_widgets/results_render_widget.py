@@ -187,7 +187,12 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         phase = lerp(0, 2 * np.pi, t)
 
         with self.update_lock:
-            self.update_color_and_deformation(phase, clear_cache=False)
+            animation_widget = app().main_window.results_viewer_widget.get_animation_widget()
+            self.update_color_and_deformation(
+                phase=phase,
+                magnification_factor=animation_widget.magnification_factor,
+                clear_cache=False,
+            )
 
         point_data = vtkPointData()
         point_position = vtkPoints()
@@ -206,7 +211,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
     def stop_animation(self, *args, **kwargs):
         animation_widget = app().main_window.results_viewer_widget.get_animation_widget()
-        animation_widget.pushButton_play_animation.setChecked(False)
+        animation_widget.pushButton_animate.setChecked(False)
         animation_widget.update_animate_button_icons(False)
         super().stop_animation(*args, **kwargs)
 

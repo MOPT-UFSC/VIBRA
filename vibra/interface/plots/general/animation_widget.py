@@ -16,8 +16,6 @@ from vibra import DARK_ICON_COLOR, ICON_DIR, LIGHT_ICON_COLOR, app
 from vibra.engine.analysis_info import PhysicalDomain
 from vibra.interface import error_title
 
-# from vibra.interface.formatters import icons
-# from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.ui_generated.plots.general.animation_widget_ui import AnimationWidget_UI
@@ -59,28 +57,26 @@ class AnimationWidget(AnimationWidget_UI):
         self.label_factor.setFixedWidth(72)
 
         # QPushButton
-        # self.pushButton_play_animation.setFixedSize(50, 30)
-        self.pushButton_play_animation.setIcon(self.play_icon)
-        self.pushButton_play_animation.setIconSize(QSize(20, 20))
-        self.pushButton_play_animation.setCursor(Qt.PointingHandCursor)
-        self.pushButton_play_animation.setToolTip("Play/Pause the animation")
-        self.pushButton_play_animation.setCheckable(True)
+        # self.pushButton_animate.setFixedSize(50, 30)
+        self.pushButton_animate.setIcon(self.play_icon)
+        self.pushButton_animate.setIconSize(QSize(20, 20))
+        self.pushButton_animate.setCursor(Qt.PointingHandCursor)
+        self.pushButton_animate.setToolTip("Play/Pause the animation")
+        self.pushButton_animate.setCheckable(True)
 
-        # self.pushButton_export_animation.setFixedSize(50, 30)
-        self.pushButton_export_animation.setIcon(self.save_animation_icon)
-        self.pushButton_export_animation.setIconSize(QSize(20, 20))
-        self.pushButton_export_animation.setCursor(Qt.PointingHandCursor)
-        self.pushButton_export_animation.setToolTip("Save animation")
+        # self.pushButton_export_video.setFixedSize(50, 30)
+        self.pushButton_export_video.setIcon(self.save_animation_icon)
+        self.pushButton_export_video.setIconSize(QSize(20, 20))
+        self.pushButton_export_video.setCursor(Qt.PointingHandCursor)
+        self.pushButton_export_video.setToolTip("Save animation")
 
         # QSlider
         self.phase_slider.setOrientation(Qt.Orientation.Horizontal)
-        # self.phase_slider.setMaximumWidth(160)
         self.phase_slider.setCursor(Qt.PointingHandCursor)
         self.phase_slider.setMinimum(0)
         self.phase_slider.setMaximum(360)
 
         self.magnification_factor_slider.setOrientation(Qt.Orientation.Horizontal)
-        # self.magnification_factor_slider.setMaximumWidth(160)
         self.magnification_factor_slider.setCursor(Qt.PointingHandCursor)
         self.magnification_factor_slider.setMinimum(0)
         self.magnification_factor_slider.setMaximum(32)
@@ -91,8 +87,8 @@ class AnimationWidget(AnimationWidget_UI):
         self.spinBox_cycles.setMinimum(0)
         self.spinBox_cycles.setMaximum(10)
         self.spinBox_cycles.setSingleStep(1)
-        self.spinBox_cycles.setValue(5)
-        # self.spinBox_cycles.setFixedSize(70, 28)
+        self.spinBox_cycles.setValue(0)
+        self.spinBox_cycles.setFixedSize(60, 30)
         self.spinBox_cycles.setAlignment(Qt.AlignHCenter)
         self.spinBox_cycles.setCursor(Qt.PointingHandCursor)
 
@@ -100,7 +96,7 @@ class AnimationWidget(AnimationWidget_UI):
         self.spinBox_frames.setMaximum(60)
         self.spinBox_frames.setSingleStep(10)
         self.spinBox_frames.setValue(40)
-        # self.spinBox_frames.setFixedSize(70, 28)
+        self.spinBox_frames.setFixedSize(60, 30)
         self.spinBox_frames.setAlignment(Qt.AlignHCenter)
         self.spinBox_frames.setCursor(Qt.PointingHandCursor)
         self.update_phase_slider_steps()
@@ -113,8 +109,8 @@ class AnimationWidget(AnimationWidget_UI):
         self.magnification_factor_slider.sliderPressed.connect(self.pause_animation)
         self.magnification_factor_slider.valueChanged.connect(self.magnification_factor_slider_callback)
 
-        self.pushButton_play_animation.clicked.connect(self.process_animation)
-        self.pushButton_export_animation.clicked.connect(self.save_animation)
+        self.pushButton_animate.clicked.connect(self.process_animation)
+        self.pushButton_export_video.clicked.connect(self.save_animation)
 
         app().main_window.render_widget_changed.connect(self.update_current_render_widget)
         app().main_window.render_widget_changed.connect(self.update_toolbar)
@@ -147,14 +143,14 @@ class AnimationWidget(AnimationWidget_UI):
         self.setStyleSheet(self.stylesheet)
 
         font = QFont()
-        font.setPointSize(9)
-
-        widgets = list()
         for widget in [QLabel, QPushButton, QSpinBox]:
-            widgets += self.findChildren(widget)
+            for _widget in self.findChildren(widget):
+                if _widget in [self.label_factor, self.label_phase_angle]:
+                    font.setPointSize(8)
+                else:
+                    font.setPointSize(10)
 
-        for widget in widgets:
-            widget.setFont(font)
+                _widget.setFont(font)
 
     def set_visible(self, visible: bool):
         for action in self.actions():
@@ -200,22 +196,18 @@ class AnimationWidget(AnimationWidget_UI):
             )
 
     def reset_sliders(self):
-        # block the sliders signals to avoid multiple render updates
+        # block the slider signal to avoid multiple render updates
         self.phase_slider.blockSignals(True)
-        self.magnification_factor_slider.blockSignals(True)
-        
-        # reset the sliders values
+
+        # reset the phase slider value
         self.phase_slider.setValue(0)
-        self.magnification_factor_slider.setValue(1)
 
         # update labels
         self.update_degree_label()
-        self.update_factor_label()
 
-        # unblocking the sliders signals
+        # unblocking the slider signals
         self.phase_slider.blockSignals(False)
-        self.magnification_factor_slider.blockSignals(False)
-        
+
     def pause_animation(self):
         self.update_animate_button_icons(False)
 
@@ -239,9 +231,9 @@ class AnimationWidget(AnimationWidget_UI):
         
     def update_animate_button_icons(self, state: bool):
         if state:
-            self.pushButton_play_animation.setIcon(self.pause_icon)
+            self.pushButton_animate.setIcon(self.pause_icon)
         else:
-            self.pushButton_play_animation.setIcon(self.play_icon)
+            self.pushButton_animate.setIcon(self.play_icon)
 
     def update_animation_settings(self):
         self.frames = self.spinBox_frames.value()
@@ -249,13 +241,13 @@ class AnimationWidget(AnimationWidget_UI):
 
     def update_degree_label(self):
         value = self.phase_slider.value()
-        self.label_phase_angle.setText(f"({value}°)")
+        self.label_phase_angle.setText(f"{value}°")
 
     def update_factor_label(self, max_value=None):
         value = self.magnification_factor_slider.value() / 16
         if isinstance(max_value, float | int):
             value /= (10 * max_value)
-        self.label_factor.setText(f"({value : .2e}x)")
+        self.label_factor.setText(f"{value : .2e}x")
 
     def update_phase_slider_steps(self):
         frames = self.spinBox_frames.value()
