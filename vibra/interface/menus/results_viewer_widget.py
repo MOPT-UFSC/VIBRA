@@ -1,12 +1,13 @@
-from PySide6.QtWidgets import QFrame, QWidget
+from PySide6.QtWidgets import QFrame, QGridLayout, QWidget
 
 from vibra import app
-from vibra.interface.ui_generated.menu.left_menu_widget_ui import LeftMenuWidget_UI
 from vibra.interface.menus.results_viewer_items import ResultsViewerItems
 from vibra.interface.plots.acoustic.acoustic_mode_shape_inputs import AcousticModeShapeInputs
 from vibra.interface.plots.acoustic.acoustic_pressure_field_inputs import AcousticPressureFieldInputs
+from vibra.interface.plots.general.animation_widget import AnimationWidget
 from vibra.interface.plots.structural.displacement_field_inputs import PlotDisplacementFieldInputs
 from vibra.interface.plots.structural.structural_mode_shape_inputs import PlotStructuralModeShapeInputs
+from vibra.interface.ui_generated.menu.left_menu_widget_ui import LeftMenuWidget_UI
 
 
 class ResultsViewerWidget(LeftMenuWidget_UI):
@@ -28,6 +29,14 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
     def hide_bottom_widget(self):
         self.bottom_widget.hide()
 
+    def current_widget_is_animatable(self) -> bool:
+        return isinstance(self.current_widget, (
+            PlotStructuralModeShapeInputs,
+            PlotDisplacementFieldInputs,
+            AcousticModeShapeInputs,
+            AcousticPressureFieldInputs,
+        ))
+
     def clear_treeWidgets_of_frequencies(self):
         self.plot_structural_modal.treeWidget_frequencies.clear()
         self.plot_structural_harmonic.treeWidget_frequencies.clear()
@@ -37,10 +46,14 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
     def _define_qt_variables(self):
         self.main_frame = QFrame()
         self.results_viewer_items = ResultsViewerItems()
-        
-        self.layout().replaceWidget(self.top_widget, self.results_viewer_items)
-        self.adjustSize()
-    
+
+        self.grid_layout = QGridLayout()
+        self.grid_layout.setContentsMargins(0, 0, 0, 0)
+        self.top_widget.setLayout(self.grid_layout)
+
+        self.grid_layout.addWidget(self.results_viewer_items)
+        self.top_widget.adjustSize()
+
     def _create_connections(self):
 
         # Structural
@@ -68,22 +81,36 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.results_viewer_items._update_items()
         self.results_viewer_items.update_tree_visibility_after_solution()
 
+    def get_animation_widget(self) -> AnimationWidget | None:
+        if self.current_widget_is_animatable():
+            return self.current_widget.animation_widget
+
+        return None
+
     def add_structural_modal_widget(self):
+        self.top_widget.setFixedHeight(120)
+        self.current_widget = self.plot_structural_modal
         self.plot_structural_modal.load_natural_frequencies()
         self.plot_structural_modal.load_user_preference_colormap()
         self.add_widget(self.plot_structural_modal)
 
     def add_structural_harmonic_widget(self):
+        self.top_widget.setFixedHeight(120)
+        self.current_widget = self.plot_structural_harmonic
         self.plot_structural_harmonic.load_frequencies()
         self.plot_structural_harmonic.load_user_preference_colormap()
         self.add_widget(self.plot_structural_harmonic)
 
     def add_acoustic_modal_widget(self):
+        self.top_widget.setFixedHeight(220)
+        self.current_widget = self.plot_acoustic_modal
         self.plot_acoustic_modal.load_natural_frequencies()
         self.plot_acoustic_modal.load_user_preference_colormap()
         self.add_widget(self.plot_acoustic_modal)
 
     def add_acoustic_harmonic_widget(self):
+        self.top_widget.setFixedHeight(220)
+        self.current_widget = self.plot_acoustic_harmonic
         self.plot_acoustic_harmonic.load_frequencies()
         self.plot_acoustic_harmonic.load_user_preference_colormap()
         self.add_widget(self.plot_acoustic_harmonic)
@@ -93,8 +120,6 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
 
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
-        
-        app().main_window.animation_toolbar.setDisabled(True)
 
         self.add_widget(self.current_widget)
 
@@ -103,8 +128,6 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
-
-        app().main_window.animation_toolbar.setDisabled(True)
 
         self.add_widget(self.current_widget)
     
@@ -138,8 +161,6 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
 
-        app().main_window.animation_toolbar.setDisabled(True)
-
         self.add_widget(self.current_widget)
 
     def add_TL_NR_widget(self):
@@ -147,8 +168,6 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
 
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
-        
-        app().main_window.animation_toolbar.setDisabled(True)
 
         self.add_widget(self.current_widget)
 
@@ -157,8 +176,6 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
 
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
-        
-        app().main_window.animation_toolbar.setDisabled(True)
 
         self.add_widget(self.current_widget)
 
@@ -168,8 +185,6 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
 
-        app().main_window.animation_toolbar.setDisabled(True)
-
         self.add_widget(self.current_widget)
 
     def add_absorption_coefficient_plot_widget(self):
@@ -177,8 +192,6 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
 
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
-
-        app().main_window.animation_toolbar.setDisabled(True)
 
         self.add_widget(self.current_widget)
 

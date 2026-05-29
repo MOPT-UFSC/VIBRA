@@ -1,6 +1,7 @@
 import platform
 from pathlib import Path
 
+import numpy as np
 from molde.render_widgets.animated_render_widget import AnimatedRenderWidget
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QFont
@@ -8,30 +9,27 @@ from PySide6.QtWidgets import (
     QFileDialog,
     QLabel,
     QPushButton,
-    QSlider,
     QSpinBox,
-    QToolBar,
-    QWidget,
 )
 
-from vibra import ICON_DIR, LIGHT_ICON_COLOR, app
+from vibra import DARK_ICON_COLOR, ICON_DIR, LIGHT_ICON_COLOR, app
+from vibra.engine.analysis_info import PhysicalDomain
 from vibra.interface import error_title
-from vibra.interface.formatters import icons
+
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
+from vibra.interface.ui_generated.plots.general.animation_widget_ui import AnimationWidget_UI
 from vibra.utils.icons import load_icon
 
 
-class AnimationToolbar(QToolBar):
+class AnimationWidget(AnimationWidget_UI):
     def __init__(self):
         super().__init__()
 
         self._initialize()
-        self._load_icons()
-        self._define_qt_variables()
+        self._configure_icons()
         self._config_widgets()
         self._create_connections()
-        self._configure_layout()
         self._configure_appearance()
 
         self.setWindowTitle("Animation toolbar")
@@ -40,63 +38,45 @@ class AnimationToolbar(QToolBar):
         self.animating = False
         self.current_render_widget = None
 
-    def _load_icons(self):
-        color = LIGHT_ICON_COLOR.to_qt()
+    def _configure_icons(self):
+        icon_color = None
+        theme = app().config.user_preferences.interface_theme
+        if theme == "dark":
+            icon_color = DARK_ICON_COLOR.to_qt()
+        else:
+            icon_color = LIGHT_ICON_COLOR.to_qt()
 
-        self.play_icon = load_icon(ICON_DIR / "play.png", color)
-        self.pause_icon = load_icon(ICON_DIR / "pause.png", color)
-        self.save_animation_icon = load_icon(ICON_DIR / "create_video_icon.png", color)
-
-    def _define_qt_variables(self):
-        # QLabel
-        self.label_cycles = QLabel("Animation cycles:")
-        self.label_frames = QLabel("Frames per cycle:")
-        self.label_phase = QLabel("Animation phase [deg]:")
-        self.label_degrees = QLabel("(0°)")
-        self.label_magnification_factor = QLabel("Magnification factor:")
-        self.label_factor = QLabel("(1.0x)")
-
-        # QPushButton
-        self.pushButton_animate = QPushButton(self)
-        self.pushButton_save_animation = QPushButton(self)
-
-        # QSlider
-        self.phase_slider = QSlider(self)
-        self.magnification_factor_slider = QSlider(self)
-
-        # QSpinBox
-        self.spinBox_frames = QSpinBox(self)
-        self.spinBox_cycles = QSpinBox(self)
+        self.play_icon = load_icon(ICON_DIR / "play.png", icon_color)
+        self.pause_icon = load_icon(ICON_DIR / "pause.png", icon_color)
+        self.save_animation_icon = load_icon(ICON_DIR / "create_video_icon.png", icon_color)
 
     def _config_widgets(self):
 
         # QLabel
-        self.label_degrees.setFixedWidth(60)
-        self.label_factor.setFixedWidth(100)
+        self.label_phase_angle.setFixedWidth(72)
+        self.label_factor.setFixedWidth(72)
 
         # QPushButton
-        self.pushButton_animate.setFixedSize(50, 30)
+        # self.pushButton_animate.setFixedSize(50, 30)
         self.pushButton_animate.setIcon(self.play_icon)
         self.pushButton_animate.setIconSize(QSize(20, 20))
         self.pushButton_animate.setCursor(Qt.PointingHandCursor)
         self.pushButton_animate.setToolTip("Play/Pause the animation")
         self.pushButton_animate.setCheckable(True)
 
-        self.pushButton_save_animation.setFixedSize(50, 30)
-        self.pushButton_save_animation.setIcon(self.save_animation_icon)
-        self.pushButton_save_animation.setIconSize(QSize(20, 20))
-        self.pushButton_save_animation.setCursor(Qt.PointingHandCursor)
-        self.pushButton_save_animation.setToolTip("Save animation")
+        # self.pushButton_export_video.setFixedSize(50, 30)
+        self.pushButton_export_video.setIcon(self.save_animation_icon)
+        self.pushButton_export_video.setIconSize(QSize(20, 20))
+        self.pushButton_export_video.setCursor(Qt.PointingHandCursor)
+        self.pushButton_export_video.setToolTip("Save animation")
 
         # QSlider
         self.phase_slider.setOrientation(Qt.Orientation.Horizontal)
-        self.phase_slider.setMaximumWidth(160)
         self.phase_slider.setCursor(Qt.PointingHandCursor)
         self.phase_slider.setMinimum(0)
         self.phase_slider.setMaximum(360)
 
         self.magnification_factor_slider.setOrientation(Qt.Orientation.Horizontal)
-        self.magnification_factor_slider.setMaximumWidth(160)
         self.magnification_factor_slider.setCursor(Qt.PointingHandCursor)
         self.magnification_factor_slider.setMinimum(0)
         self.magnification_factor_slider.setMaximum(32)
@@ -107,8 +87,8 @@ class AnimationToolbar(QToolBar):
         self.spinBox_cycles.setMinimum(0)
         self.spinBox_cycles.setMaximum(10)
         self.spinBox_cycles.setSingleStep(1)
-        self.spinBox_cycles.setValue(3)
-        self.spinBox_cycles.setFixedSize(70, 28)
+        self.spinBox_cycles.setValue(0)
+        self.spinBox_cycles.setFixedSize(60, 30)
         self.spinBox_cycles.setAlignment(Qt.AlignHCenter)
         self.spinBox_cycles.setCursor(Qt.PointingHandCursor)
 
@@ -116,9 +96,10 @@ class AnimationToolbar(QToolBar):
         self.spinBox_frames.setMaximum(60)
         self.spinBox_frames.setSingleStep(10)
         self.spinBox_frames.setValue(40)
-        self.spinBox_frames.setFixedSize(70, 28)
+        self.spinBox_frames.setFixedSize(60, 30)
         self.spinBox_frames.setAlignment(Qt.AlignHCenter)
         self.spinBox_frames.setCursor(Qt.PointingHandCursor)
+        self.update_phase_slider_steps()
 
     def _create_connections(self):
         self.spinBox_frames.valueChanged.connect(self.frames_value_changed)
@@ -129,64 +110,23 @@ class AnimationToolbar(QToolBar):
         self.magnification_factor_slider.valueChanged.connect(self.magnification_factor_slider_callback)
 
         self.pushButton_animate.clicked.connect(self.process_animation)
-        self.pushButton_save_animation.clicked.connect(self.save_animation)
+        self.pushButton_export_video.clicked.connect(self.save_animation)
 
         app().main_window.render_widget_changed.connect(self.update_current_render_widget)
         app().main_window.render_widget_changed.connect(self.update_toolbar)
-
-        self.update_phase_slider_steps()
+        app().main_window.theme_changed.connect(self._configure_icons)
 
     def update_toolbar(self):
-        if app().main_window.analysis_toolbar.combo_box_physical_domain.currentIndex() == 1:
-            self.magnification_factor_slider.setDisabled(True)
-            self.label_magnification_factor.setDisabled(True)
-            self.label_factor.setDisabled(True)
-        else:
-            self.magnification_factor_slider.setDisabled(False)
-            self.label_magnification_factor.setDisabled(False)
-            self.label_factor.setDisabled(False)
+        current_domain = app().main_window.analysis_toolbar.combo_box_physical_domain.currentText()
+        structural_domain = current_domain.lower() == PhysicalDomain.STRUCTURAL
+        self.magnification_factor_slider.setEnabled(structural_domain)
+        self.label_magnification_factor.setEnabled(structural_domain)
+        self.label_factor.setEnabled(structural_domain)
 
     def update_current_render_widget(self):
         self.current_render_widget = app().main_window.render_widgets_stack.currentWidget()
 
-    def get_spacer(self):
-        spacer = QWidget()
-        spacer.setFixedWidth(8)
-        return spacer
-
-    def _configure_layout(self):
-        #
-        self.addSeparator()
-        self.addWidget(self.label_frames)
-        self.addWidget(self.spinBox_frames)
-        self.addWidget(self.get_spacer())
-        #
-        self.addWidget(self.label_cycles)
-        self.addWidget(self.spinBox_cycles)
-        self.addWidget(self.get_spacer())
-        #
-        self.addWidget(self.label_phase)
-        self.addWidget(self.phase_slider)
-        self.addWidget(self.label_degrees)
-        self.addWidget(self.get_spacer())
-        #
-        self.addWidget(self.label_magnification_factor)
-        self.addWidget(self.magnification_factor_slider)
-        self.addWidget(self.label_factor)
-        self.addWidget(self.get_spacer())
-        #
-        self.addSeparator()
-        self.addWidget(self.get_spacer())
-        self.addWidget(self.pushButton_animate)
-        self.addWidget(self.get_spacer())
-        self.addWidget(self.get_spacer())
-        self.addWidget(self.pushButton_save_animation)
-        #
-
     def _configure_appearance(self):
-        self.setMinimumHeight(40)
-        self.setMovable(True)
-        self.setFloatable(True)
 
         self.stylesheet =  """
             QToolBar {
@@ -203,14 +143,14 @@ class AnimationToolbar(QToolBar):
         self.setStyleSheet(self.stylesheet)
 
         font = QFont()
-        font.setPointSize(10)
-
-        widgets = list()
         for widget in [QLabel, QPushButton, QSpinBox]:
-            widgets += self.findChildren(widget)
+            for _widget in self.findChildren(widget):
+                if _widget in [self.label_factor, self.label_phase_angle]:
+                    font.setPointSize(8)
+                else:
+                    font.setPointSize(10)
 
-        for widget in widgets:
-            widget.setFont(font)
+                _widget.setFont(font)
 
     def set_visible(self, visible: bool):
         for action in self.actions():
@@ -229,16 +169,44 @@ class AnimationToolbar(QToolBar):
     def cycles_value_changed(self):
         self.cycles = self.spinBox_cycles.value()
 
+    @property
+    def phase_in_radians(self):
+        return np.radians(self.phase_slider.value())
+
+    @property
+    def magnification_factor(self):
+        return self.magnification_factor_slider.value() / 16
+
     def phase_slider_callback(self, value: int):
         self.update_degree_label()
-        app().main_window.results_widget.update_color_and_deformation(clear_cache=False)
+        self.update_color_and_deformation(clear_cache=False)
 
     def magnification_factor_slider_callback(self, value: int):
         self.update_factor_label()
-        app().main_window.results_widget.update_color_and_deformation()
+        self.update_color_and_deformation()
 
         if hasattr(self.current_render_widget, "update_deformations"):
             self.current_render_widget.update_deformations()
+
+    def update_color_and_deformation(self, clear_cache: bool = True):
+        app().main_window.results_widget.update_color_and_deformation(
+            phase=self.phase_in_radians, 
+            magnification_factor=self.magnification_factor,
+            clear_cache=clear_cache,
+            )
+
+    def reset_sliders(self):
+        # block the slider signal to avoid multiple render updates
+        self.phase_slider.blockSignals(True)
+
+        # reset the phase slider value
+        self.phase_slider.setValue(0)
+
+        # update labels
+        self.update_degree_label()
+
+        # unblocking the slider signals
+        self.phase_slider.blockSignals(False)
 
     def pause_animation(self):
         self.update_animate_button_icons(False)
@@ -267,30 +235,19 @@ class AnimationToolbar(QToolBar):
         else:
             self.pushButton_animate.setIcon(self.play_icon)
 
-        theme = app().config.user_preferences.interface_theme
-
-        from vibra import DARK_ICON_COLOR, LIGHT_ICON_COLOR
-        if theme == "dark":
-            icon_color = DARK_ICON_COLOR.to_qt()
-        elif theme == "light":
-            icon_color = LIGHT_ICON_COLOR.to_qt()
-
-        widgets = self.findChildren((QPushButton))
-        icons.change_icon_color_for_widgets(widgets, icon_color)
-
     def update_animation_settings(self):
         self.frames = self.spinBox_frames.value()
         self.cycles = self.spinBox_cycles.value()
 
     def update_degree_label(self):
         value = self.phase_slider.value()
-        self.label_degrees.setText(f"({value}°)")
+        self.label_phase_angle.setText(f"{value}°")
 
     def update_factor_label(self, max_value=None):
         value = self.magnification_factor_slider.value() / 16
         if isinstance(max_value, float | int):
             value /= (10 * max_value)
-        self.label_factor.setText(f"({value : .4e}x)")
+        self.label_factor.setText(f"{value : .2e}x")
 
     def update_phase_slider_steps(self):
         frames = self.spinBox_frames.value()
