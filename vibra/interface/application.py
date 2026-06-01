@@ -1,4 +1,3 @@
-from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QApplication
 
 from vibra import TEMP_PROJECT_DIR
@@ -6,8 +5,6 @@ from vibra.interface.splash_screen import SplashScreen
 
 
 class Application(QApplication):
-    selection_changed = Signal()
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
