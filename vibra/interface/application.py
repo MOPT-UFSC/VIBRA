@@ -1,13 +1,8 @@
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QApplication
 
 from vibra import TEMP_PROJECT_DIR
-from vibra.engine.project import Project
-from vibra.interface.config import Config
-from vibra.interface.main_window import MainWindow
 from vibra.interface.splash_screen import SplashScreen
-
-QApplication.setAttribute(Qt.AA_ShareOpenGLContexts)
 
 
 class Application(QApplication):
@@ -22,10 +17,17 @@ class Application(QApplication):
         self.processEvents()
 
         # global params
+        from vibra.interface.config import Config
+
         self.config = Config()
+
+        from vibra.engine.project import Project
+
         self.project = Project(TEMP_PROJECT_DIR)
 
         # gui
+        from vibra.interface.main_window import MainWindow
+
         self.main_window = MainWindow()
         self.main_window.configure_main_window()
         self.filter_tab_scroll_by_wheel()
