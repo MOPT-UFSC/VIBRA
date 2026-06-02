@@ -232,8 +232,14 @@ class AnalysisToolbar(QToolBar):
     def check_analysis_setup_callback(self):
         app().main_window.update_symbols()
         app().main_window.update_info_text()
+    
+    def run_analysis(self, is_resume: bool = True):
+        if app().config.user_preferences.run_analysis_in_subprocess:
+            self.run_analysis_in_subprocess()
+        else:
+            self.run_analysis_in_current_process(is_resume)
 
-    def run_analysis(self, is_resume: bool = False):
+    def run_analysis_in_current_process(self, is_resume: bool = False):
         if self.model.analysis_setup is None:
             self.configure_analysis()
             if not self.solve_analysis:
@@ -278,7 +284,7 @@ class AnalysisToolbar(QToolBar):
 
         app().project.write_to_working_dir()
 
-        subprocess_status = SubProcessHandler().run_analysis_in_subprocess()
+        subprocess_status = SubProcessHandler("utils/subprocess/analysis_subprocess.py").run_analysis_in_subprocess()
         if subprocess_status != SubProcessStatus.SUCCESS:
             app().project.reset_solution()
             return False
@@ -348,12 +354,8 @@ class AnalysisToolbar(QToolBar):
         self.solve_analysis = harmonic.solve_analysis
 
         if self.solve_analysis:
-            if app().config.user_preferences.run_analysis_in_subprocess:
-                if self.run_analysis_in_subprocess():
-                    app().main_window.update_symbols()
-            else:
-                self.run_analysis()
-                app().main_window.update_symbols()
+            self.run_analysis()
+            app().main_window.update_symbols()
 
     def harmonic_acoustic(self):
         analysis_id = AnalysisID.ACOUSTIC_HARMONIC
@@ -361,10 +363,7 @@ class AnalysisToolbar(QToolBar):
         self.solve_analysis = harmonic.solve_analysis
 
         if self.solve_analysis:
-            if app().config.user_preferences.run_analysis_in_subprocess:
-                self.run_analysis_in_subprocess()
-            else:
-                self.run_analysis()
+            self.run_analysis()
 
     def modal_structural(self):
         analysis_id = AnalysisID.STRUCTURAL_MODAL
@@ -378,10 +377,7 @@ class AnalysisToolbar(QToolBar):
             )
 
         if self.solve_analysis:
-            if app().config.user_preferences.run_analysis_in_subprocess:
-                self.run_analysis_in_subprocess()
-            else:
-                self.run_analysis()
+            self.run_analysis()
 
     def modal_acoustic(self):
         analysis_id = AnalysisID.ACOUSTIC_MODAL
@@ -395,7 +391,4 @@ class AnalysisToolbar(QToolBar):
             )
 
         if self.solve_analysis:
-            if app().config.user_preferences.run_analysis_in_subprocess:
-                self.run_analysis_in_subprocess()
-            else:
-                self.run_analysis()
+            self.run_analysis()
