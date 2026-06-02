@@ -9,7 +9,7 @@ from PySide6.QtWidgets import QApplication
 
 from vibra import VIBRA_DIR
 from vibra.interface.loading_window import LoadingWindow
-from vibra.utils.subprocess.solver_subprocess_error import SolverSubprocessError
+from vibra.errors import SolverSubprocessError
 
 
 class SubProcessStatus(Enum):
