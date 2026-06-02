@@ -1,3 +1,4 @@
+import logging
 from enum import IntEnum
 
 from PySide6.QtCore import Qt
@@ -13,6 +14,7 @@ from vibra.engine.properties.fluid import Fluid
 from vibra.interface import error_title, warning_title
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.model_inputs.general.fluid.load_fluid_composition_inputs import (
     LoadFluidCompositionInputs,
 )
@@ -49,7 +51,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             self.check_state_properties(self.state_properties)
 
         self.update_remainig_composition()
-        if self.initialize_refprop_interface():
+        if LoadingWindow(self.initialize_refprop_interface).run():
             return
 
         self.update_selected_fluid(fluid_to_edit = self.fluid_to_edit)
@@ -85,15 +87,19 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         self.composition_file_path = ""
 
     def initialize_refprop_interface(self):
+        logging.info("Loading REFPROP interface [10%]")
         self.refprop_interface = RefpropInterface()
+
         if self.refprop_interface.initialize_REFPROP():
             return True
-
+        
+        logging.info("Loading REFPROP interface [80%]")
         self.refprop = self.refprop_interface.refprop
         self.load_default_gases_info(self.refprop_interface.refprop_fluids)
 
+        logging.info("Loading REFPROP interface [95%]")
         version = self.refprop_interface.get_REFPROP_version()
-        self.setWindowTitle(f"Vibra (REFPROP v{version})")
+        self.setWindowTitle(f"OpenPulse (REFPROP v{version})")
 
     def _create_connections(self):
         #
