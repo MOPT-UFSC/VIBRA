@@ -24,8 +24,8 @@ class SubProcessHandler:
         self.process_script = VIBRA_DIR / "utils/subprocess/analysis_subprocess.py"
 
     def run_analysis_in_subprocess(self) -> SubProcessStatus:
-        self._subprocess = None
-        self._interrupted = False
+        self._subprocess: subprocess.Popen | None = None
+        self._interrupted: bool = False
         return LoadingWindow(self._run_subprocess, self._interrupt_subprocess).run()
 
     def _interrupt_subprocess(self, by_user=True):
