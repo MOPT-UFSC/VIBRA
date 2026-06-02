@@ -6,6 +6,7 @@ from enum import Enum, auto
 from queue import Empty, Queue
 from threading import Thread
 from time import sleep
+from typing import IO
 
 from PySide6.QtWidgets import QApplication
 
@@ -106,7 +107,7 @@ class SubProcessHandler:
 
         return SubProcessStatus.SUCCESS
 
-    def _read_pipe_lines(self, pipe, line_queue: Queue[str]):
+    def _read_pipe_lines(self, pipe: IO, line_queue: Queue[str]):
         try:
             for line in pipe:
                 line_queue.put(line.rstrip())
