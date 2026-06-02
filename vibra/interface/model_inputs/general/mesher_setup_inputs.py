@@ -73,6 +73,12 @@ class RefinementTableColumns(IntEnum):
     SELECTION_TYPE = 1
     SELECTION_IDS = 2
 
+class MeshSetupTabs(IntEnum):
+    GLOBAL_SETTINGS = 0
+    LOCAL_REFINING = 1
+    ADVANCED_CONTROLS = 2
+    MESH_QUALITY = 3
+
 
 class MesherSetupInputs(MesherSetupInputs_UI):
     def __init__(self, close_after_generate: bool = False, **kwargs):
@@ -218,7 +224,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             self.lineEdit_selected_ids.setText(text)
 
     def tab_event_callback(self):
-        mesh_quality_tab = self.tabWidget_main.currentIndex() == 3
+        mesh_quality_tab = self.tabWidget_main.currentIndex() == MeshSetupTabs.MESH_QUALITY
         self.pushButton_generate_mesh.setDisabled(mesh_quality_tab)
 
     def mesh_refinement_item_clicked_callback(self, item: QTableWidgetItem):
@@ -226,9 +232,9 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         if not isinstance(row, int):
             return
 
-        str_element_size = self.tableWidget_refining_mesh_data.item(row, 0).text()
-        selection_type = self.tableWidget_refining_mesh_data.item(row, 1).text()
-        str_selected_ids = self.tableWidget_refining_mesh_data.item(row, 2).text()
+        str_element_size = self.tableWidget_refining_mesh_data.item(row, RefinementTableColumns.ELEMENT_SIZE).text()
+        selection_type = self.tableWidget_refining_mesh_data.item(row, RefinementTableColumns.SELECTION_TYPE).text()
+        str_selected_ids = self.tableWidget_refining_mesh_data.item(row, RefinementTableColumns.SELECTION_IDS).text()
 
         if str_element_size != "":
             element_size = float(str_element_size)
@@ -413,12 +419,12 @@ class MesherSetupInputs(MesherSetupInputs_UI):
                 self.tableWidget_mesh_quality.setItem(row, col, item)
 
         if has_bad_elements:
-            self.tabWidget_main.tabBar().setTabTextColor(3, color_names.RED.to_qt())
+            self.tabWidget_main.tabBar().setTabTextColor(MeshSetupTabs.MESH_QUALITY, color_names.RED.to_qt())
         else:
-            self.tabWidget_main.tabBar().setTabTextColor(3, QColor())
+            self.tabWidget_main.tabBar().setTabTextColor(MeshSetupTabs.MESH_QUALITY, QColor())
 
     def _show_quality_table(self, show=True):
-        self.tabWidget_main.setTabVisible(3, show)
+        self.tabWidget_main.setTabVisible(MeshSetupTabs.MESH_QUALITY, show)
 
     def _item(self, value: str, color: Color | None = None):
         item = QTableWidgetItem()
