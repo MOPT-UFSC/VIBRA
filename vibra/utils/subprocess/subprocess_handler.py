@@ -40,7 +40,7 @@ class SubProcessHandler:
 
         self.process_script = process_script
 
-    def run_analysis_in_subprocess(self) -> SubProcessStatus:
+    def run(self) -> SubProcessStatus:
         self._subprocess: subprocess.Popen | None = None
         self._interrupted: bool = False
         return LoadingWindow(self._run_subprocess, self._interrupt_subprocess).run()
