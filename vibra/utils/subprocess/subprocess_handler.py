@@ -22,23 +22,23 @@ class SubProcessHandler:
     """Run the configured project analysis in a separate Python process."""
 
     def __init__(self, path: Path | str):
-        # process_script = Path(path).expanduser()
-        #
-        # if not process_script.is_absolute():
-        #     process_script = VIBRA_DIR / process_script
-        #
-        # process_script = process_script.resolve(strict=False)
-        #
-        # if not process_script.exists():
-        #     raise FileNotFoundError(f"Subprocess script path does not exist: {process_script}")
-        #
-        # if not process_script.is_file():
-        #     raise IsADirectoryError(f"Subprocess script path is not a file: {process_script}")
-        #
-        # if process_script.suffix != ".py":
-        #     raise ValueError(f"Subprocess script path must point to a Python file: {process_script}")
+        process_script = Path(path).expanduser()
 
-        self.process_script = VIBRA_DIR / path
+        if not process_script.is_absolute():
+            process_script = VIBRA_DIR / process_script
+
+        process_script = process_script.resolve(strict=False)
+
+        if not process_script.exists():
+            raise FileNotFoundError(f"Subprocess script path does not exist: {process_script}")
+
+        if not process_script.is_file():
+            raise IsADirectoryError(f"Subprocess script path is not a file: {process_script}")
+
+        if process_script.suffix != ".py":
+            raise ValueError(f"Subprocess script path must point to a Python file: {process_script}")
+
+        self.process_script = process_script
 
     def run_analysis_in_subprocess(self) -> SubProcessStatus:
         self._subprocess: subprocess.Popen | None = None
