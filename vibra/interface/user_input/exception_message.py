@@ -26,6 +26,12 @@ class ExceptionMessage(ExceptionMessage_UI):
             self.stack_trace_text_browser.hide()
         else:
             traceback = "\n".join(format_tb(stack_trace, limit=-5))
+            if stderr := getattr(exception, "stderr", ""):
+                traceback = (
+                    f"{traceback}\n"
+                    f"{stderr}"
+                )
+
             self.stack_trace_text_browser.setText(
                 "Traceback (most recent call last):\n"
                 + traceback
@@ -43,3 +49,7 @@ class ExceptionMessage(ExceptionMessage_UI):
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
+
+    def move_stacktrace_to_bottom(self):
+        v_scrollbar = self.stack_trace_text_browser.verticalScrollBar()
+        v_scrollbar.setValue(v_scrollbar.maximum())
