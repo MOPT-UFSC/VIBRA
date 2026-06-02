@@ -5,6 +5,7 @@ import sys
 from enum import Enum, auto
 from queue import Empty, Queue
 from threading import Thread
+from time import sleep
 
 from PySide6.QtWidgets import QApplication
 
@@ -86,6 +87,7 @@ class SubProcessHandler:
         while self._subprocess.poll() is None:
             self._drain_log_stdout_queue(stdout_queue)
             QApplication.processEvents()
+            sleep(0.05)
 
         stdout_reader.join(1)
         self._drain_log_stdout_queue(stdout_queue)
