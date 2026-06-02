@@ -2,7 +2,6 @@ from copy import deepcopy
 from pathlib import Path
 
 import numpy as np
-import sounddevice as sd
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
@@ -956,6 +955,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         self.waveform_plotter._set_model_results_data_to_plot(self.model_results)
 
     def reproduce_audio_callback(self):
+        import sounddevice as sd
 
         if self.x_data is None:
             return
