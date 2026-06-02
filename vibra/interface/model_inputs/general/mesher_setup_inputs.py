@@ -218,7 +218,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             self.lineEdit_selected_ids.setText(text)
 
     def tab_event_callback(self):
-        mesh_quality_tab = self.tabWidget_main.currentIndex() == 2
+        mesh_quality_tab = self.tabWidget_main.currentIndex() == 3
         self.pushButton_generate_mesh.setDisabled(mesh_quality_tab)
 
     def mesh_refinement_item_clicked_callback(self, item: QTableWidgetItem):
@@ -413,12 +413,12 @@ class MesherSetupInputs(MesherSetupInputs_UI):
                 self.tableWidget_mesh_quality.setItem(row, col, item)
 
         if has_bad_elements:
-            self.tabWidget_main.tabBar().setTabTextColor(2, color_names.RED.to_qt())
+            self.tabWidget_main.tabBar().setTabTextColor(3, color_names.RED.to_qt())
         else:
-            self.tabWidget_main.tabBar().setTabTextColor(2, QColor())
+            self.tabWidget_main.tabBar().setTabTextColor(3, QColor())
 
     def _show_quality_table(self, show=True):
-        self.tabWidget_main.setTabVisible(2, show)
+        self.tabWidget_main.setTabVisible(3, show)
 
     def _item(self, value: str, color: Color | None = None):
         item = QTableWidgetItem()
