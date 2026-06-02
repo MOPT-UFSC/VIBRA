@@ -11,6 +11,7 @@ from vibra.interface.analysis.harmonic_analysis_setup_input import HarmonicAnaly
 from vibra.interface.analysis.modal_analysis_input import ModalAnalysisInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.loading_window import LoadingWindow
+from vibra.utils.subprocess.subprocess_handler import SubProcessHandler, SubProcessStatus
 
 
 class AnalysisToolbar(QToolBar):
@@ -268,6 +269,28 @@ class AnalysisToolbar(QToolBar):
 
         LoadingWindow(self.post_processing_analysis).run()
 
+    def run_analysis_in_subprocess(self) -> bool:
+        if app().main_window.action_results_workspace.isChecked():
+            app().main_window.action_model_workspace_callback()
+
+        app().main_window.action_results_workspace.setDisabled(True)
+        app().main_window.results_viewer_widget.clear_treeWidgets_of_frequencies()
+
+        app().project.write_to_working_dir()
+
+        subprocess_status = SubProcessHandler().run_analysis_in_subprocess()
+        if subprocess_status != SubProcessStatus.SUCCESS:
+            app().project.reset_solution()
+            return False
+
+        app().project.reload_solution_from_working_dir()
+
+        app().main_window.configure_results_render_widget()
+        app().main_window.results_viewer_widget.results_viewer_items.update_items()
+
+        LoadingWindow(self.post_processing_analysis).run()
+        return True
+
     def post_processing_analysis(self):
         logging.info("Post-processing results... [10/100]")
         self.set_pushbutton_reset_solution_enabled()
@@ -325,8 +348,12 @@ class AnalysisToolbar(QToolBar):
         self.solve_analysis = harmonic.solve_analysis
 
         if self.solve_analysis:
-            self.run_analysis()
-            app().main_window.update_symbols()
+            if app().config.user_preferences.run_analysis_in_subprocess:
+                if self.run_analysis_in_subprocess():
+                    app().main_window.update_symbols()
+            else:
+                self.run_analysis()
+                app().main_window.update_symbols()
 
     def harmonic_acoustic(self):
         analysis_id = AnalysisID.ACOUSTIC_HARMONIC
@@ -334,7 +361,10 @@ class AnalysisToolbar(QToolBar):
         self.solve_analysis = harmonic.solve_analysis
 
         if self.solve_analysis:
-            self.run_analysis()
+            if app().config.user_preferences.run_analysis_in_subprocess:
+                self.run_analysis_in_subprocess()
+            else:
+                self.run_analysis()
 
     def modal_structural(self):
         analysis_id = AnalysisID.STRUCTURAL_MODAL
@@ -348,7 +378,10 @@ class AnalysisToolbar(QToolBar):
             )
 
         if self.solve_analysis:
-            self.run_analysis()
+            if app().config.user_preferences.run_analysis_in_subprocess:
+                self.run_analysis_in_subprocess()
+            else:
+                self.run_analysis()
 
     def modal_acoustic(self):
         analysis_id = AnalysisID.ACOUSTIC_MODAL
@@ -362,4 +395,7 @@ class AnalysisToolbar(QToolBar):
             )
 
         if self.solve_analysis:
-            self.run_analysis()
+            if app().config.user_preferences.run_analysis_in_subprocess:
+                self.run_analysis_in_subprocess()
+            else:
+                self.run_analysis()

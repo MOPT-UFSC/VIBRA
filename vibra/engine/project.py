@@ -162,6 +162,14 @@ class Project:
         self.model = self.project_reader.read_model(self.model)
         return self
 
+    def reload_solution_from_working_dir(self):
+        """
+        Reload solution data written by another process.
+        """
+        self.model.solution = self.project_reader.read_solution(self.model)
+        self.assembler, self.solver = self.project_reader.read_assembler_and_solver(self.model)
+        self.update_post_processing()
+
     def write_to_working_dir(self):
         """
         Writes project data to the working directory.
