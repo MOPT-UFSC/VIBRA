@@ -40,7 +40,7 @@ from vibra.interface.viewer_3d.render_widgets import (
 )
 from vibra.interface.welcome_widget import WelcomeWidget
 from vibra.utils.icons import load_icon
-from vibra.utils.interface_utils import GeometryColorMode, VisualizationFilter, qt_extensions
+from vibra.utils.interface_utils import GeometryColorMode, VisualizationFilter, block_signals, qt_extensions
 
 
 class MainWindow(MainWindow_UI):
@@ -483,6 +483,8 @@ class MainWindow(MainWindow_UI):
 
         self.splitter.widget(0).setVisible(True)
 
+        self.reload_visualization_filter()
+
         if self.visualization_filter.normal_symbols:
             self.visualization_filter.normal_symbols = False
             self.update_symbols()
@@ -511,6 +513,8 @@ class MainWindow(MainWindow_UI):
 
         self.splitter.widget(0).setVisible(True)
 
+        self.reload_visualization_filter()
+
     def action_results_workspace_callback(self):
         if not app().project.is_there_a_valid_solution():
             return
@@ -524,6 +528,8 @@ class MainWindow(MainWindow_UI):
         self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
         self.results_viewer_widget.results_viewer_items.update_items()
         self.analysis_toolbar.update_analysis_combo_boxes()
+
+        self.reload_visualization_filter()
 
     def action_new_project_callback(self):
         self.new_project_dialog()
@@ -998,23 +1004,49 @@ class MainWindow(MainWindow_UI):
         self.close_app()
 
     def action_face_view_callback(self, clicked: bool):
-        self.visualization_filter.faces = clicked
-        self.visualization_filter.solids = clicked
-        self.visualization_changed.emit()
+        self.visualization_changed_callback()
 
     def action_line_view_callback(self, clicked: bool):
-        self.visualization_filter.lines = clicked
-        self.visualization_changed.emit()
+        self.visualization_changed_callback()
 
     def action_node_view_callback(self, clicked: bool):
-        self.visualization_filter.points = clicked
-        self.visualization_changed.emit()
+        self.visualization_changed_callback()
 
     def action_ghost_view_callback(self, clicked: bool):
         self.visualization_filter.ghost = clicked
         self.visualization_changed.emit()
 
+    def get_current_render_widget(self) -> CommonRenderWidget | None:
+        return self.render_widgets_stack.currentWidget()
+
+    def visualization_changed_callback(self):
+        render_widget = self.get_current_render_widget()
+        if not hasattr(render_widget, "visualization_filter"):
+            return
+        self.update_visualization_filter(render_widget.visualization_filter)
+        self.visualization_changed.emit()
+
+    def apply_visualization_filter(self, filter: VisualizationFilter):
+        with block_signals(self):
+            self.action_node_view.setChecked(filter.points)
+            self.action_line_view.setChecked(filter.lines)
+            self.action_face_view.setChecked(filter.faces or filter.solids)
+            self.action_ghost_view.setChecked(filter.ghost)
+
+    def update_visualization_filter(self, filter: VisualizationFilter):
+        filter.points = self.action_node_view.isChecked()
+        filter.lines = self.action_line_view.isChecked()
+        filter.faces = self.action_face_view.isChecked()
+        filter.solids = self.action_face_view.isChecked()
+        filter.ghost = self.action_ghost_view.isChecked()
+
     def reload_visualization_filter(self):
+        render_widget = self.get_current_render_widget()
+        if not hasattr(render_widget, "visualization_filter"):
+            return
+        self.apply_visualization_filter(render_widget.visualization_filter)
+
+        return
         self.blockSignals(True)
         self.action_node_view.setChecked(self.visualization_filter.points)
         self.action_line_view.setChecked(self.visualization_filter.lines)

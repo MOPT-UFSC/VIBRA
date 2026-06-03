@@ -1,3 +1,4 @@
+from vibra.utils.interface_utils import VisualizationFilter
 import logging
 
 from molde.colors import Color, color_names
@@ -30,6 +31,13 @@ from .model_info_text import (
 class MeshRenderWidget(CommonRenderWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
+
+        self.visualization_filter = VisualizationFilter(
+            lines=True,
+            faces=True,
+            solids=True,
+            symbols=True,
+        )
 
         self.mesh_selection = MeshSelection(self)
         self.selection_color = (20, 106, 245)
@@ -150,7 +158,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self._cache_hollow_solids_actor: HollowSolidsActor | None = self.solids_actor
         self._cache_full_solids_actor: SolidsActor | None = None
 
-        visualization = app().main_window.visualization_filter
+        visualization = self.visualization_filter
         self.ghost_actor = GhostActor(mesh)
         self.ghost_actor.SetVisibility(
             visualization.ghost and app().main_window.has_hidden_part()
@@ -191,7 +199,7 @@ class MeshRenderWidget(CommonRenderWidget):
         mesh = app().project.model.mesh
         mesh_error = mesh.collapsed_elements_data or mesh.disconnected_nodes_data
         
-        visualization = app().main_window.visualization_filter
+        visualization = self.visualization_filter
         self.edges_actor.SetVisibility(visualization.lines)
         self.faces_actor.SetVisibility(visualization.faces and not mesh_error)
         self.solids_actor.SetVisibility(visualization.solids and not mesh_error)
@@ -412,7 +420,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.edges_actor.apply_cut(xyz, normal)
 
         logging.info("Updating visualization... [80/100]")
-        visualization = app().main_window.visualization_filter
+        visualization = self.visualization_filter
         self.ghost_actor.SetVisibility(visualization.ghost)
         self.plane_actor.SetVisibility(show_plane)
         self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
@@ -422,7 +430,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.update()
 
     def _disable_section_plane(self):
-        visualization = app().main_window.visualization_filter
+        visualization = self.visualization_filter
         self.ghost_actor.SetVisibility(
             visualization.ghost and app().main_window.has_hidden_part()
         )

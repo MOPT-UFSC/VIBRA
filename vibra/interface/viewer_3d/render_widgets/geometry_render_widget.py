@@ -1,3 +1,4 @@
+from vibra.utils.interface_utils import VisualizationFilter
 import logging
 
 from molde import Color
@@ -66,6 +67,14 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.renderer.SetMaximumNumberOfPeels(1)
         self.renderer.SetOcclusionRatio(0.9)
         self.render_interactor.GetRenderWindow().SetMultiSamples(0)
+
+        self.visualization_filter = VisualizationFilter(
+            points=True,
+            lines=True,
+            faces=True,
+            solids=True,
+            symbols=True,
+        )
 
         self.remove_all_actors()
         self.create_logos()
@@ -213,7 +222,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         if not self.actors_exists():
             return
 
-        visualization = app().main_window.visualization_filter
+        visualization = self.visualization_filter
 
         # It may happen that the analysis toolbar has not been created yet. If so, retrieve the analysis type and physical domain from the project
         try:
@@ -254,7 +263,7 @@ class GeometryRenderWidget(CommonRenderWidget):
             self.update_plot()
             return
 
-        visualization = app().main_window.visualization_filter
+        visualization = self.visualization_filter
         self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
 
         self.remove_actors(self.multimaterial)
@@ -271,15 +280,11 @@ class GeometryRenderWidget(CommonRenderWidget):
         # self.symbols_actor.build() should be enough
         # but for some reason that I can't understand
         # it causes segmentation fault
-        self.remove_actors(
-            self.symbols_actor_structural, self.symbols_actor_acoustic, self.symbols_actor_acoustic_fixed_size
-        )
+        self.remove_actors(self.symbols_actor_structural, self.symbols_actor_acoustic, self.symbols_actor_acoustic_fixed_size)
         self.symbols_actor_structural = SymbolsActorStructural(self.renderer)
         self.symbols_actor_acoustic = SymbolsActorAcoustic(self.renderer)
         self.symbols_actor_acoustic_fixed_size = SymbolsActorAcousticFixedSize(self.renderer)
-        self.add_actors(
-            self.symbols_actor_structural, self.symbols_actor_acoustic, self.symbols_actor_acoustic_fixed_size
-        )
+        self.add_actors(self.symbols_actor_structural, self.symbols_actor_acoustic, self.symbols_actor_acoustic_fixed_size)
         self.visualization_changed_callback()
         self.update()
 
@@ -290,10 +295,10 @@ class GeometryRenderWidget(CommonRenderWidget):
     def selection_callback(self, x, y):
         if not self.actors_exists():
             return
-    
+
         if not isinstance(self.interactor_style, SelectionTool):
             return
-        
+
         if not self.interactor_style.is_selecting:
             return
 
@@ -348,7 +353,7 @@ class GeometryRenderWidget(CommonRenderWidget):
     def update_selection(self):
         if not self.actors_exists():
             return
-        
+
         self.points_actor.clear_colors()
         self.lines_actor.clear_colors()
         self.multimaterial.clear_colors()
@@ -405,7 +410,7 @@ class GeometryRenderWidget(CommonRenderWidget):
             self._apply_section_plane(position, rotation, inverted, show_plane)
 
     def _disable_section_plane(self):
-        visualization = app().main_window.visualization_filter
+        visualization = self.visualization_filter
         self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
         self.plane_actor.VisibilityOff()
         self.points_actor.disable_cut()
@@ -424,7 +429,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.multimaterial.apply_cut(xyz, normal)
         self.lines_actor.apply_cut(xyz, normal)
 
-        visualization = app().main_window.visualization_filter
+        visualization = self.visualization_filter
         self.ghost_actor.SetVisibility(visualization.ghost)
         self.plane_actor.SetVisibility(show_plane)
         self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
@@ -485,11 +490,8 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         self.set_info_text(text)
         self.update()
-    
+
     def set_default_render_tool(self):
         tool = SelectionTool()
         self.set_interactor_style(tool)
         tool.update_mouse_cursor_in_render_widgets(tool.current_cursor)
-        
-
-
