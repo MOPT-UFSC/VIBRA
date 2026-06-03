@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>531</width>
-    <height>446</height>
+    <height>451</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -44,10 +44,10 @@
       </size>
      </property>
      <property name="frameShape">
-      <enum>QFrame::Box</enum>
+      <enum>QFrame::Shape::Box</enum>
      </property>
      <property name="frameShadow">
-      <enum>QFrame::Raised</enum>
+      <enum>QFrame::Shadow::Raised</enum>
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
       <item row="0" column="0">
@@ -58,10 +58,10 @@
          </font>
         </property>
         <property name="text">
-         <string>Set the porous material model</string>
+         <string>Configure the porous material model</string>
         </property>
         <property name="alignment">
-         <set>Qt::AlignCenter</set>
+         <set>Qt::AlignmentFlag::AlignCenter</set>
         </property>
        </widget>
       </item>
@@ -71,10 +71,10 @@
    <item row="1" column="0">
     <widget class="QFrame" name="frame_main">
      <property name="frameShape">
-      <enum>QFrame::Box</enum>
+      <enum>QFrame::Shape::Box</enum>
      </property>
      <property name="frameShadow">
-      <enum>QFrame::Raised</enum>
+      <enum>QFrame::Shadow::Raised</enum>
      </property>
      <layout class="QGridLayout" name="gridLayout_3">
       <property name="leftMargin">
@@ -107,10 +107,10 @@
          </size>
         </property>
         <property name="frameShape">
-         <enum>QFrame::NoFrame</enum>
+         <enum>QFrame::Shape::NoFrame</enum>
         </property>
         <property name="frameShadow">
-         <enum>QFrame::Raised</enum>
+         <enum>QFrame::Shadow::Raised</enum>
         </property>
         <property name="lineWidth">
          <number>1</number>
@@ -128,6 +128,51 @@
          <property name="bottomMargin">
           <number>6</number>
          </property>
+         <item row="0" column="1">
+          <widget class="QLabel" name="label_12">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>28</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>120</width>
+             <height>28</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <family>MS Shell Dlg 2</family>
+             <pointsize>10</pointsize>
+             <bold>false</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Selected bodies:</string>
+           </property>
+           <property name="textFormat">
+            <enum>Qt::TextFormat::AutoText</enum>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <spacer name="horizontalSpacer_7">
+           <property name="orientation">
+            <enum>Qt::Orientation::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
          <item row="0" column="3">
           <widget class="QComboBox" name="comboBox_attribution_type">
            <property name="minimumSize">
@@ -159,65 +204,6 @@
            </item>
           </widget>
          </item>
-         <item row="0" column="4">
-          <spacer name="horizontalSpacer_6">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item row="0" column="0">
-          <spacer name="horizontalSpacer_7">
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item row="0" column="1">
-          <widget class="QLabel" name="label_12">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>28</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>120</width>
-             <height>28</height>
-            </size>
-           </property>
-           <property name="font">
-            <font>
-             <family>MS Shell Dlg 2</family>
-             <pointsize>10</pointsize>
-             <weight>50</weight>
-             <bold>false</bold>
-            </font>
-           </property>
-           <property name="text">
-            <string>Selected bodies:</string>
-           </property>
-           <property name="textFormat">
-            <enum>Qt::AutoText</enum>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-           </property>
-          </widget>
-         </item>
          <item row="0" column="2">
           <widget class="QLineEdit" name="lineEdit_selection_id">
            <property name="enabled">
@@ -241,15 +227,28 @@
             </font>
            </property>
            <property name="focusPolicy">
-            <enum>Qt::ClickFocus</enum>
+            <enum>Qt::FocusPolicy::ClickFocus</enum>
            </property>
            <property name="text">
             <string/>
            </property>
            <property name="alignment">
-            <set>Qt::AlignCenter</set>
+            <set>Qt::AlignmentFlag::AlignCenter</set>
            </property>
           </widget>
+         </item>
+         <item row="0" column="4">
+          <spacer name="horizontalSpacer_6">
+           <property name="orientation">
+            <enum>Qt::Orientation::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
          </item>
         </layout>
        </widget>
@@ -257,7 +256,7 @@
       <item row="1" column="0">
        <widget class="QScrollArea" name="scrollArea">
         <property name="frameShape">
-         <enum>QFrame::NoFrame</enum>
+         <enum>QFrame::Shape::NoFrame</enum>
         </property>
         <property name="widgetResizable">
          <bool>true</bool>
@@ -303,16 +302,16 @@
             <property name="tabBarAutoHide">
              <bool>false</bool>
             </property>
-            <widget class="QWidget" name="tab_Delany_Bazley">
+            <widget class="QWidget" name="tab_DBM">
              <attribute name="title">
-              <string>Delany-Bazley</string>
+              <string>DBM models</string>
              </attribute>
              <layout class="QGridLayout" name="gridLayout_5">
               <property name="leftMargin">
                <number>4</number>
               </property>
               <property name="topMargin">
-               <number>4</number>
+               <number>8</number>
               </property>
               <property name="rightMargin">
                <number>4</number>
@@ -323,13 +322,13 @@
               <property name="spacing">
                <number>4</number>
               </property>
-              <item row="0" column="0">
+              <item row="1" column="0">
                <widget class="QFrame" name="frame_4">
                 <property name="frameShape">
-                 <enum>QFrame::NoFrame</enum>
+                 <enum>QFrame::Shape::NoFrame</enum>
                 </property>
                 <property name="frameShadow">
-                 <enum>QFrame::Raised</enum>
+                 <enum>QFrame::Shadow::Raised</enum>
                 </property>
                 <layout class="QGridLayout" name="gridLayout_6">
                  <property name="leftMargin">
@@ -358,7 +357,7 @@
                     <string>C7:</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                    <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -373,14 +372,14 @@
                     <string>C6:</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                    <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                    </property>
                   </widget>
                  </item>
                  <item row="0" column="0">
                   <spacer name="horizontalSpacer_3">
                    <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
+                    <enum>Qt::Orientation::Horizontal</enum>
                    </property>
                    <property name="sizeHint" stdset="0">
                     <size>
@@ -401,12 +400,15 @@
                     <string>C2:</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                    <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                    </property>
                   </widget>
                  </item>
                  <item row="3" column="2">
-                  <widget class="QDoubleSpinBox" name="doubleSpinBox_C4_DB">
+                  <widget class="QDoubleSpinBox" name="doubleSpinBox_C4_DBM">
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
                    <property name="minimumSize">
                     <size>
                      <width>100</width>
@@ -420,7 +422,7 @@
                     </size>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignCenter</set>
+                    <set>Qt::AlignmentFlag::AlignCenter</set>
                    </property>
                    <property name="decimals">
                     <number>4</number>
@@ -447,12 +449,15 @@
                     <string>C5:</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                    <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                    </property>
                   </widget>
                  </item>
                  <item row="0" column="5">
-                  <widget class="QDoubleSpinBox" name="doubleSpinBox_C5_DB">
+                  <widget class="QDoubleSpinBox" name="doubleSpinBox_C5_DBM">
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
                    <property name="minimumSize">
                     <size>
                      <width>100</width>
@@ -466,7 +471,7 @@
                     </size>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignCenter</set>
+                    <set>Qt::AlignmentFlag::AlignCenter</set>
                    </property>
                    <property name="decimals">
                     <number>4</number>
@@ -483,7 +488,10 @@
                   </widget>
                  </item>
                  <item row="1" column="5">
-                  <widget class="QDoubleSpinBox" name="doubleSpinBox_C6_DB">
+                  <widget class="QDoubleSpinBox" name="doubleSpinBox_C6_DBM">
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
                    <property name="minimumSize">
                     <size>
                      <width>100</width>
@@ -497,7 +505,7 @@
                     </size>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignCenter</set>
+                    <set>Qt::AlignmentFlag::AlignCenter</set>
                    </property>
                    <property name="decimals">
                     <number>4</number>
@@ -514,7 +522,10 @@
                   </widget>
                  </item>
                  <item row="2" column="5">
-                  <widget class="QDoubleSpinBox" name="doubleSpinBox_C7_DB">
+                  <widget class="QDoubleSpinBox" name="doubleSpinBox_C7_DBM">
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
                    <property name="minimumSize">
                     <size>
                      <width>100</width>
@@ -528,7 +539,7 @@
                     </size>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignCenter</set>
+                    <set>Qt::AlignmentFlag::AlignCenter</set>
                    </property>
                    <property name="decimals">
                     <number>4</number>
@@ -547,7 +558,7 @@
                  <item row="0" column="6">
                   <spacer name="horizontalSpacer">
                    <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
+                    <enum>Qt::Orientation::Horizontal</enum>
                    </property>
                    <property name="sizeHint" stdset="0">
                     <size>
@@ -568,12 +579,15 @@
                     <string>C8:</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                    <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                    </property>
                   </widget>
                  </item>
                  <item row="3" column="5">
-                  <widget class="QDoubleSpinBox" name="doubleSpinBox_C8_DB">
+                  <widget class="QDoubleSpinBox" name="doubleSpinBox_C8_DBM">
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
                    <property name="minimumSize">
                     <size>
                      <width>100</width>
@@ -587,7 +601,7 @@
                     </size>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignCenter</set>
+                    <set>Qt::AlignmentFlag::AlignCenter</set>
                    </property>
                    <property name="decimals">
                     <number>4</number>
@@ -614,7 +628,7 @@
                     <string>C4:</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                    <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -629,12 +643,15 @@
                     <string>C3:</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                    <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                    </property>
                   </widget>
                  </item>
                  <item row="2" column="2">
-                  <widget class="QDoubleSpinBox" name="doubleSpinBox_C3_DB">
+                  <widget class="QDoubleSpinBox" name="doubleSpinBox_C3_DBM">
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
                    <property name="minimumSize">
                     <size>
                      <width>100</width>
@@ -648,7 +665,7 @@
                     </size>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignCenter</set>
+                    <set>Qt::AlignmentFlag::AlignCenter</set>
                    </property>
                    <property name="decimals">
                     <number>4</number>
@@ -675,12 +692,15 @@
                     <string>C1:</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                    <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                    </property>
                   </widget>
                  </item>
                  <item row="0" column="2">
-                  <widget class="QDoubleSpinBox" name="doubleSpinBox_C1_DB">
+                  <widget class="QDoubleSpinBox" name="doubleSpinBox_C1_DBM">
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
                    <property name="minimumSize">
                     <size>
                      <width>100</width>
@@ -694,7 +714,7 @@
                     </size>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignCenter</set>
+                    <set>Qt::AlignmentFlag::AlignCenter</set>
                    </property>
                    <property name="decimals">
                     <number>4</number>
@@ -711,7 +731,10 @@
                   </widget>
                  </item>
                  <item row="1" column="2">
-                  <widget class="QDoubleSpinBox" name="doubleSpinBox_C2_DB">
+                  <widget class="QDoubleSpinBox" name="doubleSpinBox_C2_DBM">
+                   <property name="enabled">
+                    <bool>false</bool>
+                   </property>
                    <property name="minimumSize">
                     <size>
                      <width>100</width>
@@ -725,7 +748,7 @@
                     </size>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignCenter</set>
+                    <set>Qt::AlignmentFlag::AlignCenter</set>
                    </property>
                    <property name="decimals">
                     <number>4</number>
@@ -767,7 +790,7 @@
                     <string/>
                    </property>
                    <property name="icon">
-                    <iconset resource="../../../../../icons/resources.qrc">
+                    <iconset resource="../../../../icons/resources.qrc">
                      <normaloff>:/icons/help.png</normaloff>:/icons/help.png</iconset>
                    </property>
                    <property name="iconSize">
@@ -781,7 +804,7 @@
                 </layout>
                </widget>
               </item>
-              <item row="1" column="0">
+              <item row="2" column="0">
                <widget class="QFrame" name="frame_5">
                 <property name="minimumSize">
                  <size>
@@ -796,10 +819,10 @@
                  </size>
                 </property>
                 <property name="frameShape">
-                 <enum>QFrame::NoFrame</enum>
+                 <enum>QFrame::Shape::NoFrame</enum>
                 </property>
                 <property name="frameShadow">
-                 <enum>QFrame::Raised</enum>
+                 <enum>QFrame::Shadow::Raised</enum>
                 </property>
                 <layout class="QGridLayout" name="gridLayout_7">
                  <property name="leftMargin">
@@ -820,7 +843,7 @@
                  <item row="0" column="4">
                   <spacer name="horizontalSpacer_5">
                    <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
+                    <enum>Qt::Orientation::Horizontal</enum>
                    </property>
                    <property name="sizeHint" stdset="0">
                     <size>
@@ -833,7 +856,7 @@
                  <item row="0" column="0">
                   <spacer name="horizontalSpacer_4">
                    <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
+                    <enum>Qt::Orientation::Horizontal</enum>
                    </property>
                    <property name="sizeHint" stdset="0">
                     <size>
@@ -856,7 +879,7 @@
                   </widget>
                  </item>
                  <item row="0" column="2">
-                  <widget class="QDoubleSpinBox" name="doubleSpinBox_flow_resistivity_DB">
+                  <widget class="QDoubleSpinBox" name="doubleSpinBox_flow_resistivity_DBM">
                    <property name="minimumSize">
                     <size>
                      <width>100</width>
@@ -870,7 +893,7 @@
                     </size>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignCenter</set>
+                    <set>Qt::AlignmentFlag::AlignCenter</set>
                    </property>
                    <property name="decimals">
                     <number>4</number>
@@ -898,526 +921,77 @@
                 </layout>
                </widget>
               </item>
-             </layout>
-            </widget>
-            <widget class="QWidget" name="tab_Delany_Bazley_Miki">
-             <attribute name="title">
-              <string>Delany-Bazley-Miki</string>
-             </attribute>
-             <layout class="QGridLayout" name="gridLayout_17">
-              <property name="leftMargin">
-               <number>4</number>
-              </property>
-              <property name="topMargin">
-               <number>4</number>
-              </property>
-              <property name="rightMargin">
-               <number>4</number>
-              </property>
-              <property name="bottomMargin">
-               <number>4</number>
-              </property>
-              <property name="spacing">
-               <number>4</number>
-              </property>
               <item row="0" column="0">
-               <widget class="QFrame" name="frame_8">
+               <widget class="QFrame" name="frame">
                 <property name="frameShape">
-                 <enum>QFrame::NoFrame</enum>
+                 <enum>QFrame::Shape::NoFrame</enum>
                 </property>
                 <property name="frameShadow">
-                 <enum>QFrame::Raised</enum>
+                 <enum>QFrame::Shadow::Raised</enum>
                 </property>
-                <layout class="QGridLayout" name="gridLayout_10">
+                <layout class="QGridLayout" name="gridLayout_24">
                  <property name="leftMargin">
-                  <number>6</number>
+                  <number>2</number>
                  </property>
                  <property name="topMargin">
-                  <number>6</number>
+                  <number>2</number>
                  </property>
                  <property name="rightMargin">
-                  <number>6</number>
+                  <number>2</number>
                  </property>
                  <property name="bottomMargin">
-                  <number>6</number>
+                  <number>2</number>
                  </property>
-                 <property name="spacing">
-                  <number>6</number>
-                 </property>
-                 <item row="3" column="2">
-                  <widget class="QDoubleSpinBox" name="doubleSpinBox_C4_DBM">
-                   <property name="minimumSize">
-                    <size>
-                     <width>100</width>
-                     <height>28</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>100</width>
-                     <height>28</height>
-                    </size>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignCenter</set>
-                   </property>
-                   <property name="decimals">
-                    <number>4</number>
-                   </property>
-                   <property name="minimum">
-                    <double>-100.000000000000000</double>
-                   </property>
-                   <property name="maximum">
-                    <double>100.000000000000000</double>
-                   </property>
-                   <property name="value">
-                    <double>0.618000000000000</double>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="5">
-                  <widget class="QDoubleSpinBox" name="doubleSpinBox_C5_DBM">
-                   <property name="minimumSize">
-                    <size>
-                     <width>100</width>
-                     <height>28</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>100</width>
-                     <height>28</height>
-                    </size>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignCenter</set>
-                   </property>
-                   <property name="decimals">
-                    <number>4</number>
-                   </property>
-                   <property name="minimum">
-                    <double>-100.000000000000000</double>
-                   </property>
-                   <property name="maximum">
-                    <double>100.000000000000000</double>
-                   </property>
-                   <property name="value">
-                    <double>0.069900000000000</double>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="6">
-                  <spacer name="horizontalSpacer_2">
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>40</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                  </spacer>
-                 </item>
-                 <item row="0" column="4">
-                  <widget class="QLabel" name="label_39">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="text">
-                    <string>C5:</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="2" column="5">
-                  <widget class="QDoubleSpinBox" name="doubleSpinBox_C7_DBM">
-                   <property name="minimumSize">
-                    <size>
-                     <width>100</width>
-                     <height>28</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>100</width>
-                     <height>28</height>
-                    </size>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignCenter</set>
-                   </property>
-                   <property name="decimals">
-                    <number>4</number>
-                   </property>
-                   <property name="minimum">
-                    <double>-100.000000000000000</double>
-                   </property>
-                   <property name="maximum">
-                    <double>100.000000000000000</double>
-                   </property>
-                   <property name="value">
-                    <double>0.107000000000000</double>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="3" column="4">
-                  <widget class="QLabel" name="label_40">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="text">
-                    <string>C8:</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="3" column="5">
-                  <widget class="QDoubleSpinBox" name="doubleSpinBox_C8_DBM">
-                   <property name="minimumSize">
-                    <size>
-                     <width>100</width>
-                     <height>28</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>100</width>
-                     <height>28</height>
-                    </size>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignCenter</set>
-                   </property>
-                   <property name="decimals">
-                    <number>4</number>
-                   </property>
-                   <property name="minimum">
-                    <double>-100.000000000000000</double>
-                   </property>
-                   <property name="maximum">
-                    <double>100.000000000000000</double>
-                   </property>
-                   <property name="value">
-                    <double>0.632000000000000</double>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="2" column="2">
-                  <widget class="QDoubleSpinBox" name="doubleSpinBox_C3_DBM">
-                   <property name="minimumSize">
-                    <size>
-                     <width>100</width>
-                     <height>28</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>100</width>
-                     <height>28</height>
-                    </size>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignCenter</set>
-                   </property>
-                   <property name="decimals">
-                    <number>4</number>
-                   </property>
-                   <property name="minimum">
-                    <double>-100.000000000000000</double>
-                   </property>
-                   <property name="maximum">
-                    <double>100.000000000000000</double>
-                   </property>
-                   <property name="value">
-                    <double>0.160000000000000</double>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="3" column="1">
-                  <widget class="QLabel" name="label_41">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="text">
-                    <string>C4:</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                   </property>
-                  </widget>
-                 </item>
                  <item row="0" column="1">
-                  <widget class="QLabel" name="label_42">
+                  <widget class="QLabel" name="label_51">
                    <property name="font">
                     <font>
                      <pointsize>10</pointsize>
                     </font>
                    </property>
                    <property name="text">
-                    <string>C1:</string>
+                    <string>Constants from:</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="2" column="1">
-                  <widget class="QLabel" name="label_43">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="text">
-                    <string>C3:</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                    <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                    </property>
                   </widget>
                  </item>
                  <item row="0" column="2">
-                  <widget class="QDoubleSpinBox" name="doubleSpinBox_C1_DBM">
+                  <widget class="QComboBox" name="comboBox_DBM_constants">
                    <property name="minimumSize">
                     <size>
-                     <width>100</width>
-                     <height>28</height>
+                     <width>160</width>
+                     <height>0</height>
                     </size>
                    </property>
                    <property name="maximumSize">
                     <size>
-                     <width>100</width>
-                     <height>28</height>
+                     <width>16777215</width>
+                     <height>16777215</height>
                     </size>
                    </property>
-                   <property name="alignment">
-                    <set>Qt::AlignCenter</set>
-                   </property>
-                   <property name="decimals">
-                    <number>4</number>
-                   </property>
-                   <property name="minimum">
-                    <double>-100.000000000000000</double>
-                   </property>
-                   <property name="maximum">
-                    <double>100.000000000000000</double>
-                   </property>
-                   <property name="value">
-                    <double>0.109000000000000</double>
-                   </property>
+                   <item>
+                    <property name="text">
+                     <string>Delany-Bazley</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Delany-Bazley-Miki</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>User-defined</string>
+                    </property>
+                   </item>
                   </widget>
-                 </item>
-                 <item row="1" column="2">
-                  <widget class="QDoubleSpinBox" name="doubleSpinBox_C2_DBM">
-                   <property name="minimumSize">
-                    <size>
-                     <width>100</width>
-                     <height>28</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>100</width>
-                     <height>28</height>
-                    </size>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignCenter</set>
-                   </property>
-                   <property name="decimals">
-                    <number>4</number>
-                   </property>
-                   <property name="minimum">
-                    <double>-100.000000000000000</double>
-                   </property>
-                   <property name="maximum">
-                    <double>100.000000000000000</double>
-                   </property>
-                   <property name="value">
-                    <double>0.618000000000000</double>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="1">
-                  <widget class="QLabel" name="label_44">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="text">
-                    <string>C2:</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="2" column="4">
-                  <widget class="QLabel" name="label_19">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="text">
-                    <string>C7:</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="4">
-                  <widget class="QLabel" name="label_20">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="text">
-                    <string>C6:</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="5">
-                  <widget class="QDoubleSpinBox" name="doubleSpinBox_C6_DBM">
-                   <property name="minimumSize">
-                    <size>
-                     <width>100</width>
-                     <height>28</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>100</width>
-                     <height>28</height>
-                    </size>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignCenter</set>
-                   </property>
-                   <property name="decimals">
-                    <number>4</number>
-                   </property>
-                   <property name="minimum">
-                    <double>-100.000000000000000</double>
-                   </property>
-                   <property name="maximum">
-                    <double>100.000000000000000</double>
-                   </property>
-                   <property name="value">
-                    <double>0.632000000000000</double>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="0">
-                  <spacer name="horizontalSpacer_11">
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>40</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                  </spacer>
                  </item>
                  <item row="0" column="3">
-                  <widget class="QPushButton" name="pushButton_DBM_equations">
-                   <property name="minimumSize">
-                    <size>
-                     <width>40</width>
-                     <height>28</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>100</width>
-                     <height>28</height>
-                    </size>
-                   </property>
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="toolTip">
-                    <string>See the equations for Delany-Bazley-Miki porous material model.</string>
-                   </property>
-                   <property name="text">
-                    <string/>
-                   </property>
-                   <property name="icon">
-                    <iconset resource="../../../../../icons/resources.qrc">
-                     <normaloff>:/icons/help.png</normaloff>:/icons/help.png</iconset>
-                   </property>
-                   <property name="iconSize">
-                    <size>
-                     <width>18</width>
-                     <height>18</height>
-                    </size>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </widget>
-              </item>
-              <item row="1" column="0">
-               <widget class="QFrame" name="frame_9">
-                <property name="minimumSize">
-                 <size>
-                  <width>0</width>
-                  <height>48</height>
-                 </size>
-                </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>16777215</width>
-                  <height>48</height>
-                 </size>
-                </property>
-                <property name="frameShape">
-                 <enum>QFrame::NoFrame</enum>
-                </property>
-                <property name="frameShadow">
-                 <enum>QFrame::Raised</enum>
-                </property>
-                <layout class="QGridLayout" name="gridLayout_12">
-                 <property name="leftMargin">
-                  <number>6</number>
-                 </property>
-                 <property name="topMargin">
-                  <number>6</number>
-                 </property>
-                 <property name="rightMargin">
-                  <number>6</number>
-                 </property>
-                 <property name="bottomMargin">
-                  <number>6</number>
-                 </property>
-                 <property name="spacing">
-                  <number>6</number>
-                 </property>
-                 <item row="0" column="4">
-                  <spacer name="horizontalSpacer_12">
+                  <spacer name="horizontalSpacer_21">
                    <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
+                    <enum>Qt::Orientation::Horizontal</enum>
                    </property>
                    <property name="sizeHint" stdset="0">
                     <size>
@@ -1428,9 +1002,9 @@
                   </spacer>
                  </item>
                  <item row="0" column="0">
-                  <spacer name="horizontalSpacer_13">
+                  <spacer name="horizontalSpacer_22">
                    <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
+                    <enum>Qt::Orientation::Horizontal</enum>
                    </property>
                    <property name="sizeHint" stdset="0">
                     <size>
@@ -1439,422 +1013,6 @@
                     </size>
                    </property>
                   </spacer>
-                 </item>
-                 <item row="0" column="1">
-                  <widget class="QLabel" name="label_45">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="text">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Flow resistivity σ:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="2">
-                  <widget class="QDoubleSpinBox" name="doubleSpinBox_flow_resistivity_DBM">
-                   <property name="minimumSize">
-                    <size>
-                     <width>100</width>
-                     <height>28</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>100</width>
-                     <height>28</height>
-                    </size>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignCenter</set>
-                   </property>
-                   <property name="decimals">
-                    <number>4</number>
-                   </property>
-                   <property name="maximum">
-                    <double>100000.000000000000000</double>
-                   </property>
-                   <property name="value">
-                    <double>1518.506599999999935</double>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="3">
-                  <widget class="QLabel" name="label_46">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="text">
-                    <string>[kg/m³.s]</string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </widget>
-              </item>
-             </layout>
-            </widget>
-            <widget class="QWidget" name="tab_JCA">
-             <attribute name="title">
-              <string>JCA</string>
-             </attribute>
-             <layout class="QGridLayout" name="gridLayout_11">
-              <property name="leftMargin">
-               <number>4</number>
-              </property>
-              <property name="topMargin">
-               <number>4</number>
-              </property>
-              <property name="rightMargin">
-               <number>4</number>
-              </property>
-              <property name="bottomMargin">
-               <number>4</number>
-              </property>
-              <property name="spacing">
-               <number>4</number>
-              </property>
-              <item row="0" column="0">
-               <widget class="QFrame" name="frame_7">
-                <property name="frameShape">
-                 <enum>QFrame::NoFrame</enum>
-                </property>
-                <property name="frameShadow">
-                 <enum>QFrame::Raised</enum>
-                </property>
-                <layout class="QGridLayout" name="gridLayout_9">
-                 <property name="leftMargin">
-                  <number>6</number>
-                 </property>
-                 <property name="topMargin">
-                  <number>6</number>
-                 </property>
-                 <property name="rightMargin">
-                  <number>6</number>
-                 </property>
-                 <property name="bottomMargin">
-                  <number>6</number>
-                 </property>
-                 <property name="spacing">
-                  <number>6</number>
-                 </property>
-                 <item row="1" column="2">
-                  <widget class="QDoubleSpinBox" name="doubleSpinBox_tortuosity_JCA">
-                   <property name="minimumSize">
-                    <size>
-                     <width>100</width>
-                     <height>28</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>100</width>
-                     <height>28</height>
-                    </size>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignCenter</set>
-                   </property>
-                   <property name="decimals">
-                    <number>4</number>
-                   </property>
-                   <property name="minimum">
-                    <double>0.000000000000000</double>
-                   </property>
-                   <property name="maximum">
-                    <double>100.000000000000000</double>
-                   </property>
-                   <property name="value">
-                    <double>1.000000000000000</double>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="3">
-                  <widget class="QLabel" name="label_30">
-                   <property name="text">
-                    <string>[--]</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="3" column="3">
-                  <widget class="QLabel" name="label_34">
-                   <property name="text">
-                    <string>[m]</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="4">
-                  <spacer name="horizontalSpacer_8">
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>40</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                  </spacer>
-                 </item>
-                 <item row="0" column="3">
-                  <widget class="QLabel" name="label_29">
-                   <property name="text">
-                    <string>[--]</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="3" column="1">
-                  <widget class="QLabel" name="label_23">
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>28</height>
-                    </size>
-                   </property>
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="text">
-                    <string>Thermal characteristic length:</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="1">
-                  <widget class="QLabel" name="label_14">
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>28</height>
-                    </size>
-                   </property>
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="text">
-                    <string>Porosity:</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="5" column="2">
-                  <widget class="QDoubleSpinBox" name="doubleSpinBox_flow_resistivity_JCA">
-                   <property name="minimumSize">
-                    <size>
-                     <width>100</width>
-                     <height>28</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>100</width>
-                     <height>28</height>
-                    </size>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignCenter</set>
-                   </property>
-                   <property name="decimals">
-                    <number>4</number>
-                   </property>
-                   <property name="maximum">
-                    <double>100000.000000000000000</double>
-                   </property>
-                   <property name="value">
-                    <double>1518.506599999999935</double>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="5">
-                  <spacer name="horizontalSpacer_9">
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>40</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                  </spacer>
-                 </item>
-                 <item row="5" column="3">
-                  <widget class="QLabel" name="label_22">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="text">
-                    <string>[kg/m³.s]</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="1">
-                  <widget class="QLabel" name="label_13">
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>28</height>
-                    </size>
-                   </property>
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="text">
-                    <string>Tortuosity:</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="0">
-                  <spacer name="horizontalSpacer_10">
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>40</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                  </spacer>
-                 </item>
-                 <item row="0" column="2">
-                  <widget class="QDoubleSpinBox" name="doubleSpinBox_porosity_JCA">
-                   <property name="minimumSize">
-                    <size>
-                     <width>100</width>
-                     <height>28</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>100</width>
-                     <height>28</height>
-                    </size>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignCenter</set>
-                   </property>
-                   <property name="decimals">
-                    <number>4</number>
-                   </property>
-                   <property name="minimum">
-                    <double>0.000000000000000</double>
-                   </property>
-                   <property name="maximum">
-                    <double>1.000000000000000</double>
-                   </property>
-                   <property name="singleStep">
-                    <double>0.100000000000000</double>
-                   </property>
-                   <property name="value">
-                    <double>0.900000000000000</double>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="5" column="1">
-                  <widget class="QLabel" name="label_21">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="text">
-                    <string>Flow resistivity:</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="3" column="2">
-                  <widget class="QLineEdit" name="lineEdit_thermal_characteristic_length_JCA">
-                   <property name="minimumSize">
-                    <size>
-                     <width>100</width>
-                     <height>28</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>100</width>
-                     <height>28</height>
-                    </size>
-                   </property>
-                   <property name="text">
-                    <string>159e-6</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignCenter</set>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="2" column="1">
-                  <widget class="QLabel" name="label_24">
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>28</height>
-                    </size>
-                   </property>
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="text">
-                    <string>Viscous characteristic length:</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="2" column="2">
-                  <widget class="QLineEdit" name="lineEdit_viscous_characteristic_length_JCA">
-                   <property name="minimumSize">
-                    <size>
-                     <width>100</width>
-                     <height>28</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>100</width>
-                     <height>28</height>
-                    </size>
-                   </property>
-                   <property name="text">
-                    <string>77e-6</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignCenter</set>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="2" column="3">
-                  <widget class="QLabel" name="label_33">
-                   <property name="text">
-                    <string>[m]</string>
-                   </property>
-                  </widget>
                  </item>
                 </layout>
                </widget>
@@ -1863,7 +1021,7 @@
             </widget>
             <widget class="QWidget" name="tab_JCAL">
              <attribute name="title">
-              <string>JCAL</string>
+              <string>JCAL models</string>
              </attribute>
              <layout class="QGridLayout" name="gridLayout_14">
               <property name="leftMargin">
@@ -1881,13 +1039,13 @@
               <property name="spacing">
                <number>4</number>
               </property>
-              <item row="0" column="0">
+              <item row="1" column="0">
                <widget class="QFrame" name="frame_10">
                 <property name="frameShape">
-                 <enum>QFrame::NoFrame</enum>
+                 <enum>QFrame::Shape::NoFrame</enum>
                 </property>
                 <property name="frameShadow">
-                 <enum>QFrame::Raised</enum>
+                 <enum>QFrame::Shadow::Raised</enum>
                 </property>
                 <layout class="QGridLayout" name="gridLayout_13">
                  <property name="leftMargin">
@@ -1905,8 +1063,21 @@
                  <property name="spacing">
                   <number>6</number>
                  </property>
-                 <item row="1" column="1">
-                  <widget class="QLabel" name="label_18">
+                 <item row="1" column="5">
+                  <spacer name="horizontalSpacer_17">
+                   <property name="orientation">
+                    <enum>Qt::Orientation::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                 <item row="4" column="1">
+                  <widget class="QLabel" name="label_27">
                    <property name="maximumSize">
                     <size>
                      <width>16777215</width>
@@ -1919,35 +1090,82 @@
                     </font>
                    </property>
                    <property name="text">
-                    <string>Tortuosity:</string>
+                    <string>Thermal characteristic length:</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                    <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                    </property>
                   </widget>
                  </item>
-                 <item row="0" column="3">
-                  <widget class="QLabel" name="label_38">
-                   <property name="text">
-                    <string>[--]</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="1" column="3">
+                 <item row="2" column="3">
                   <widget class="QLabel" name="label_37">
                    <property name="text">
                     <string>[--]</string>
                    </property>
                   </widget>
                  </item>
-                 <item row="3" column="3">
-                  <widget class="QLabel" name="label_35">
-                   <property name="text">
-                    <string>[m]</string>
+                 <item row="6" column="2">
+                  <widget class="QDoubleSpinBox" name="doubleSpinBox_flow_resistivity_JCAL">
+                   <property name="minimumSize">
+                    <size>
+                     <width>100</width>
+                     <height>28</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>100</width>
+                     <height>28</height>
+                    </size>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignmentFlag::AlignCenter</set>
+                   </property>
+                   <property name="decimals">
+                    <number>4</number>
+                   </property>
+                   <property name="maximum">
+                    <double>100000.000000000000000</double>
+                   </property>
+                   <property name="value">
+                    <double>1518.506599999999935</double>
                    </property>
                   </widget>
                  </item>
-                 <item row="0" column="2">
+                 <item row="1" column="3">
+                  <widget class="QLabel" name="label_38">
+                   <property name="text">
+                    <string>[--]</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="1" column="4">
+                  <spacer name="horizontalSpacer_15">
+                   <property name="orientation">
+                    <enum>Qt::Orientation::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                 <item row="1" column="0">
+                  <spacer name="horizontalSpacer_16">
+                   <property name="orientation">
+                    <enum>Qt::Orientation::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                 <item row="1" column="2">
                   <widget class="QDoubleSpinBox" name="doubleSpinBox_porosity_JCAL">
                    <property name="minimumSize">
                     <size>
@@ -1962,7 +1180,7 @@
                     </size>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignCenter</set>
+                    <set>Qt::AlignmentFlag::AlignCenter</set>
                    </property>
                    <property name="decimals">
                     <number>4</number>
@@ -1981,147 +1199,14 @@
                    </property>
                   </widget>
                  </item>
-                 <item row="1" column="2">
-                  <widget class="QDoubleSpinBox" name="doubleSpinBox_tortuosity_JCAL">
-                   <property name="minimumSize">
-                    <size>
-                     <width>100</width>
-                     <height>28</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>100</width>
-                     <height>28</height>
-                    </size>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignCenter</set>
-                   </property>
-                   <property name="decimals">
-                    <number>4</number>
-                   </property>
-                   <property name="minimum">
-                    <double>0.000000000000000</double>
-                   </property>
-                   <property name="maximum">
-                    <double>100.000000000000000</double>
-                   </property>
-                   <property name="value">
-                    <double>1.000000000000000</double>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="1">
-                  <widget class="QLabel" name="label_15">
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>28</height>
-                    </size>
-                   </property>
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
+                 <item row="3" column="3">
+                  <widget class="QLabel" name="label_32">
                    <property name="text">
-                    <string>Porosity:</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                    <string>[m]</string>
                    </property>
                   </widget>
                  </item>
-                 <item row="3" column="1">
-                  <widget class="QLabel" name="label_27">
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>28</height>
-                    </size>
-                   </property>
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="text">
-                    <string>Thermal characteristic length:</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="5">
-                  <spacer name="horizontalSpacer_17">
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>40</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                  </spacer>
-                 </item>
-                 <item row="5" column="2">
-                  <widget class="QDoubleSpinBox" name="doubleSpinBox_flow_resistivity_JCAL">
-                   <property name="minimumSize">
-                    <size>
-                     <width>100</width>
-                     <height>28</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>100</width>
-                     <height>28</height>
-                    </size>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignCenter</set>
-                   </property>
-                   <property name="decimals">
-                    <number>4</number>
-                   </property>
-                   <property name="maximum">
-                    <double>100000.000000000000000</double>
-                   </property>
-                   <property name="value">
-                    <double>1518.506599999999935</double>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="0" column="0">
-                  <spacer name="horizontalSpacer_16">
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>40</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                  </spacer>
-                 </item>
-                 <item row="0" column="4">
-                  <spacer name="horizontalSpacer_15">
-                   <property name="orientation">
-                    <enum>Qt::Horizontal</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>40</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                  </spacer>
-                 </item>
-                 <item row="5" column="3">
+                 <item row="6" column="3">
                   <widget class="QLabel" name="label_26">
                    <property name="font">
                     <font>
@@ -2133,22 +1218,7 @@
                    </property>
                   </widget>
                  </item>
-                 <item row="5" column="1">
-                  <widget class="QLabel" name="label_25">
-                   <property name="font">
-                    <font>
-                     <pointsize>10</pointsize>
-                    </font>
-                   </property>
-                   <property name="text">
-                    <string>Flow resistivity:</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-                   </property>
-                  </widget>
-                 </item>
-                 <item row="3" column="2">
+                 <item row="4" column="2">
                   <widget class="QLineEdit" name="lineEdit_thermal_characteristic_length_JCAL">
                    <property name="minimumSize">
                     <size>
@@ -2166,12 +1236,12 @@
                     <string>159e-6</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignCenter</set>
+                    <set>Qt::AlignmentFlag::AlignCenter</set>
                    </property>
                   </widget>
                  </item>
-                 <item row="2" column="1">
-                  <widget class="QLabel" name="label_28">
+                 <item row="1" column="1">
+                  <widget class="QLabel" name="label_15">
                    <property name="maximumSize">
                     <size>
                      <width>16777215</width>
@@ -2184,14 +1254,29 @@
                     </font>
                    </property>
                    <property name="text">
-                    <string>Viscous characteristic length:</string>
+                    <string>Porosity:</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                    <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                    </property>
                   </widget>
                  </item>
-                 <item row="2" column="2">
+                 <item row="6" column="1">
+                  <widget class="QLabel" name="label_25">
+                   <property name="font">
+                    <font>
+                     <pointsize>10</pointsize>
+                    </font>
+                   </property>
+                   <property name="text">
+                    <string>Flow resistivity:</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="3" column="2">
                   <widget class="QLineEdit" name="lineEdit_viscous_characteristic_length_JCAL">
                    <property name="minimumSize">
                     <size>
@@ -2209,12 +1294,85 @@
                     <string>77e-6</string>
                    </property>
                    <property name="alignment">
-                    <set>Qt::AlignCenter</set>
+                    <set>Qt::AlignmentFlag::AlignCenter</set>
                    </property>
                   </widget>
                  </item>
-                 <item row="2" column="3">
-                  <widget class="QLabel" name="label_32">
+                 <item row="2" column="1">
+                  <widget class="QLabel" name="label_18">
+                   <property name="maximumSize">
+                    <size>
+                     <width>16777215</width>
+                     <height>28</height>
+                    </size>
+                   </property>
+                   <property name="font">
+                    <font>
+                     <pointsize>10</pointsize>
+                    </font>
+                   </property>
+                   <property name="text">
+                    <string>Tortuosity:</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="2">
+                  <widget class="QDoubleSpinBox" name="doubleSpinBox_tortuosity_JCAL">
+                   <property name="minimumSize">
+                    <size>
+                     <width>100</width>
+                     <height>28</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>100</width>
+                     <height>28</height>
+                    </size>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignmentFlag::AlignCenter</set>
+                   </property>
+                   <property name="decimals">
+                    <number>4</number>
+                   </property>
+                   <property name="minimum">
+                    <double>0.000000000000000</double>
+                   </property>
+                   <property name="maximum">
+                    <double>100.000000000000000</double>
+                   </property>
+                   <property name="value">
+                    <double>1.000000000000000</double>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="3" column="1">
+                  <widget class="QLabel" name="label_28">
+                   <property name="maximumSize">
+                    <size>
+                     <width>16777215</width>
+                     <height>28</height>
+                    </size>
+                   </property>
+                   <property name="font">
+                    <font>
+                     <pointsize>10</pointsize>
+                    </font>
+                   </property>
+                   <property name="text">
+                    <string>Viscous characteristic length:</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="4" column="3">
+                  <widget class="QLabel" name="label_35">
                    <property name="text">
                     <string>[m]</string>
                    </property>
@@ -2223,9 +1381,100 @@
                 </layout>
                </widget>
               </item>
+              <item row="0" column="0">
+               <widget class="QFrame" name="frame_8">
+                <property name="frameShape">
+                 <enum>QFrame::Shape::NoFrame</enum>
+                </property>
+                <property name="frameShadow">
+                 <enum>QFrame::Shadow::Raised</enum>
+                </property>
+                <layout class="QGridLayout" name="gridLayout_25">
+                 <property name="leftMargin">
+                  <number>2</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>2</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>2</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>2</number>
+                 </property>
+                 <item row="0" column="1">
+                  <widget class="QLabel" name="label_52">
+                   <property name="font">
+                    <font>
+                     <pointsize>10</pointsize>
+                    </font>
+                   </property>
+                   <property name="text">
+                    <string>Material model:</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="0" column="2">
+                  <widget class="QComboBox" name="comboBox_JCAL_pm_model">
+                   <property name="minimumSize">
+                    <size>
+                     <width>252</width>
+                     <height>0</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>16777215</width>
+                     <height>16777215</height>
+                    </size>
+                   </property>
+                   <item>
+                    <property name="text">
+                     <string>Jhonson-Champoux-Allard</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>Jhonson-Champoux-Allard-Lafarge</string>
+                    </property>
+                   </item>
+                  </widget>
+                 </item>
+                 <item row="0" column="3">
+                  <spacer name="horizontalSpacer_23">
+                   <property name="orientation">
+                    <enum>Qt::Orientation::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                 <item row="0" column="0">
+                  <spacer name="horizontalSpacer_24">
+                   <property name="orientation">
+                    <enum>Qt::Orientation::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                </layout>
+               </widget>
+              </item>
              </layout>
             </widget>
-            <widget class="QWidget" name="frame_11">
+            <widget class="QWidget" name="tab_edit">
              <attribute name="title">
               <string>Edit</string>
              </attribute>
@@ -2446,10 +1695,10 @@
                  </size>
                 </property>
                 <property name="frameShape">
-                 <enum>QFrame::NoFrame</enum>
+                 <enum>QFrame::Shape::NoFrame</enum>
                 </property>
                 <property name="frameShadow">
-                 <enum>QFrame::Raised</enum>
+                 <enum>QFrame::Shadow::Raised</enum>
                 </property>
                 <layout class="QGridLayout" name="gridLayout_15">
                  <property name="leftMargin">
@@ -2485,7 +1734,6 @@
                     <font>
                      <family>MS Shell Dlg 2</family>
                      <pointsize>10</pointsize>
-                     <weight>50</weight>
                      <italic>false</italic>
                      <bold>false</bold>
                     </font>
@@ -2516,7 +1764,6 @@
                     <font>
                      <family>MS Shell Dlg 2</family>
                      <pointsize>10</pointsize>
-                     <weight>50</weight>
                      <italic>false</italic>
                      <bold>false</bold>
                     </font>
@@ -2604,10 +1851,10 @@
           <item row="2" column="0">
            <widget class="QFrame" name="frame_plot_setup">
             <property name="frameShape">
-             <enum>QFrame::NoFrame</enum>
+             <enum>QFrame::Shape::NoFrame</enum>
             </property>
             <property name="frameShadow">
-             <enum>QFrame::Raised</enum>
+             <enum>QFrame::Shadow::Raised</enum>
             </property>
             <layout class="QGridLayout" name="gridLayout_18">
              <item row="1" column="1">
@@ -2621,7 +1868,7 @@
                 <string>Fluid density</string>
                </property>
                <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                </property>
               </widget>
              </item>
@@ -2648,13 +1895,13 @@
                 </font>
                </property>
                <property name="focusPolicy">
-                <enum>Qt::ClickFocus</enum>
+                <enum>Qt::FocusPolicy::ClickFocus</enum>
                </property>
                <property name="text">
                 <string/>
                </property>
                <property name="alignment">
-                <set>Qt::AlignCenter</set>
+                <set>Qt::AlignmentFlag::AlignCenter</set>
                </property>
               </widget>
              </item>
@@ -2669,7 +1916,7 @@
                 <string>[m]</string>
                </property>
                <property name="alignment">
-                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
                </property>
               </widget>
              </item>
@@ -2700,7 +1947,7 @@
              <item row="3" column="0">
               <spacer name="horizontalSpacer_14">
                <property name="orientation">
-                <enum>Qt::Horizontal</enum>
+                <enum>Qt::Orientation::Horizontal</enum>
                </property>
                <property name="sizeHint" stdset="0">
                 <size>
@@ -2713,7 +1960,7 @@
              <item row="3" column="4">
               <spacer name="horizontalSpacer_18">
                <property name="orientation">
-                <enum>Qt::Horizontal</enum>
+                <enum>Qt::Orientation::Horizontal</enum>
                </property>
                <property name="sizeHint" stdset="0">
                 <size>
@@ -2743,7 +1990,7 @@
                 </font>
                </property>
                <property name="alignment">
-                <set>Qt::AlignCenter</set>
+                <set>Qt::AlignmentFlag::AlignCenter</set>
                </property>
                <property name="decimals">
                 <number>4</number>
@@ -2773,7 +2020,7 @@
                 <string>Porous material depth:</string>
                </property>
                <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                </property>
               </widget>
              </item>
@@ -2800,13 +2047,13 @@
                 </font>
                </property>
                <property name="focusPolicy">
-                <enum>Qt::ClickFocus</enum>
+                <enum>Qt::FocusPolicy::ClickFocus</enum>
                </property>
                <property name="text">
                 <string/>
                </property>
                <property name="alignment">
-                <set>Qt::AlignCenter</set>
+                <set>Qt::AlignmentFlag::AlignCenter</set>
                </property>
               </widget>
              </item>
@@ -2821,7 +2068,7 @@
                 <string>Selected the fluid:</string>
                </property>
                <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                </property>
               </widget>
              </item>
@@ -2836,7 +2083,7 @@
                 <string>Speed of sound:</string>
                </property>
                <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                </property>
               </widget>
              </item>
@@ -2863,13 +2110,13 @@
                 </font>
                </property>
                <property name="focusPolicy">
-                <enum>Qt::ClickFocus</enum>
+                <enum>Qt::FocusPolicy::ClickFocus</enum>
                </property>
                <property name="text">
                 <string/>
                </property>
                <property name="alignment">
-                <set>Qt::AlignCenter</set>
+                <set>Qt::AlignmentFlag::AlignCenter</set>
                </property>
               </widget>
              </item>
@@ -2884,7 +2131,7 @@
                 <string>[kg/m³]</string>
                </property>
                <property name="alignment">
-                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
                </property>
               </widget>
              </item>
@@ -2899,7 +2146,7 @@
                 <string>[m/s]</string>
                </property>
                <property name="alignment">
-                <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+                <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
                </property>
               </widget>
              </item>
@@ -2915,10 +2162,10 @@
              </size>
             </property>
             <property name="frameShape">
-             <enum>QFrame::NoFrame</enum>
+             <enum>QFrame::Shape::NoFrame</enum>
             </property>
             <property name="frameShadow">
-             <enum>QFrame::Raised</enum>
+             <enum>QFrame::Shadow::Raised</enum>
             </property>
             <layout class="QGridLayout" name="gridLayout_19">
              <item row="0" column="1">
@@ -2944,7 +2191,7 @@
                 <string>Plot selector:</string>
                </property>
                <property name="alignment">
-                <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+                <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                </property>
               </widget>
              </item>
@@ -2992,7 +2239,7 @@
              <item row="0" column="4">
               <spacer name="horizontalSpacer_19">
                <property name="orientation">
-                <enum>Qt::Horizontal</enum>
+                <enum>Qt::Orientation::Horizontal</enum>
                </property>
                <property name="sizeHint" stdset="0">
                 <size>
@@ -3029,7 +2276,7 @@
              <item row="0" column="0">
               <spacer name="horizontalSpacer_20">
                <property name="orientation">
-                <enum>Qt::Horizontal</enum>
+                <enum>Qt::Orientation::Horizontal</enum>
                </property>
                <property name="sizeHint" stdset="0">
                 <size>
@@ -3045,10 +2292,10 @@
           <item row="1" column="0">
            <widget class="QFrame" name="frame_2">
             <property name="frameShape">
-             <enum>QFrame::StyledPanel</enum>
+             <enum>QFrame::Shape::StyledPanel</enum>
             </property>
             <property name="frameShadow">
-             <enum>QFrame::Raised</enum>
+             <enum>QFrame::Shadow::Raised</enum>
             </property>
            </widget>
           </item>
@@ -3074,10 +2321,10 @@
       </size>
      </property>
      <property name="frameShape">
-      <enum>QFrame::NoFrame</enum>
+      <enum>QFrame::Shape::NoFrame</enum>
      </property>
      <property name="frameShadow">
-      <enum>QFrame::Raised</enum>
+      <enum>QFrame::Shadow::Raised</enum>
      </property>
      <layout class="QGridLayout" name="gridLayout_4">
       <item row="0" column="1">
@@ -3134,19 +2381,6 @@
   </layout>
  </widget>
  <tabstops>
-  <tabstop>doubleSpinBox_C1_DB</tabstop>
-  <tabstop>doubleSpinBox_C2_DB</tabstop>
-  <tabstop>doubleSpinBox_C3_DB</tabstop>
-  <tabstop>doubleSpinBox_C4_DB</tabstop>
-  <tabstop>doubleSpinBox_C5_DB</tabstop>
-  <tabstop>doubleSpinBox_C6_DB</tabstop>
-  <tabstop>doubleSpinBox_C7_DB</tabstop>
-  <tabstop>doubleSpinBox_C8_DB</tabstop>
-  <tabstop>doubleSpinBox_flow_resistivity_DB</tabstop>
-  <tabstop>pushButton_get_fluid</tabstop>
-  <tabstop>doubleSpinBox_porous_material_depth</tabstop>
-  <tabstop>comboBox_plot_type</tabstop>
-  <tabstop>pushButton_plot_data</tabstop>
   <tabstop>doubleSpinBox_C1_DBM</tabstop>
   <tabstop>doubleSpinBox_C2_DBM</tabstop>
   <tabstop>doubleSpinBox_C3_DBM</tabstop>
@@ -3156,11 +2390,10 @@
   <tabstop>doubleSpinBox_C7_DBM</tabstop>
   <tabstop>doubleSpinBox_C8_DBM</tabstop>
   <tabstop>doubleSpinBox_flow_resistivity_DBM</tabstop>
-  <tabstop>doubleSpinBox_porosity_JCA</tabstop>
-  <tabstop>doubleSpinBox_tortuosity_JCA</tabstop>
-  <tabstop>lineEdit_viscous_characteristic_length_JCA</tabstop>
-  <tabstop>lineEdit_thermal_characteristic_length_JCA</tabstop>
-  <tabstop>doubleSpinBox_flow_resistivity_JCA</tabstop>
+  <tabstop>pushButton_get_fluid</tabstop>
+  <tabstop>doubleSpinBox_porous_material_depth</tabstop>
+  <tabstop>comboBox_plot_type</tabstop>
+  <tabstop>pushButton_plot_data</tabstop>
   <tabstop>doubleSpinBox_porosity_JCAL</tabstop>
   <tabstop>doubleSpinBox_tortuosity_JCAL</tabstop>
   <tabstop>lineEdit_viscous_characteristic_length_JCAL</tabstop>
@@ -3170,13 +2403,12 @@
   <tabstop>pushButton_exit</tabstop>
   <tabstop>comboBox_attribution_type</tabstop>
   <tabstop>pushButton_DB_equations</tabstop>
-  <tabstop>pushButton_DBM_equations</tabstop>
   <tabstop>treeWidget_porous_material_model</tabstop>
   <tabstop>pushButton_reset</tabstop>
   <tabstop>pushButton_remove</tabstop>
  </tabstops>
  <resources>
-  <include location="../../../../../icons/resources.qrc"/>
+  <include location="../../../../icons/resources.qrc"/>
  </resources>
  <connections/>
 </ui>
