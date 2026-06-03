@@ -16,7 +16,6 @@ from vibra import LIGHT_ICON_COLOR, SUPPORTED_GEOMETRY_EXTENSIONS, SUPPORTED_MES
 from vibra.engine.assemblers import AcousticAssembler
 from vibra.engine.solvers import HarmonicSolver
 from vibra.interface.analysis_toolbar import AnalysisToolbar
-from vibra.interface.view_toolbar import ViewToolbar
 from vibra.interface.data_handler.export_mesh_data import ExportMeshData
 from vibra.interface.formatters.icons import change_icon_color_for_widgets, get_vibra_icon
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -33,6 +32,7 @@ from vibra.interface.status_bar import StatusBar
 from vibra.interface.ui_generated.main_window_ui import MainWindow_UI
 from vibra.interface.user_input.input_ui import InputUi
 from vibra.interface.user_input.render_user_preferences import RendererUserPreferencesInput
+from vibra.interface.view_toolbar import ViewToolbar
 from vibra.interface.viewer_3d.render_widgets import (
     GeometryRenderWidget,
     MeshRenderWidget,
@@ -109,8 +109,8 @@ class MainWindow(MainWindow_UI):
         self.set_toolbars_visible(False)
 
         self.render_widgets_stack.currentChanged.connect(self.render_changed_callback)
-        self.visualization_changed.connect(self.update_visualization_filter)
-        self.update_visualization_filter()
+        self.visualization_changed.connect(self.reload_visualization_filter)
+        self.reload_visualization_filter()
 
         self.stacked_setup.addWidget(self.model_setup_widget)
         self.stacked_setup.addWidget(self.results_viewer_widget)
@@ -620,7 +620,7 @@ class MainWindow(MainWindow_UI):
             self.show_geometry_render_widget()
 
         self.action_line_view_callback(not any(solid_elements))
-        self.update_visualization_filter()
+        self.reload_visualization_filter()
         self.visualization_changed.emit()
 
     def action_unhide_all_callback(self):
@@ -668,7 +668,7 @@ class MainWindow(MainWindow_UI):
     def new_project_dialog(self):
         if self.import_geometry_or_mesh_dialog():
             return
-            
+
     def import_geometry_or_mesh_dialog(self):
         self.close_dialogs()
 
@@ -1014,7 +1014,7 @@ class MainWindow(MainWindow_UI):
         self.visualization_filter.ghost = clicked
         self.visualization_changed.emit()
 
-    def update_visualization_filter(self):
+    def reload_visualization_filter(self):
         self.blockSignals(True)
         self.action_node_view.setChecked(self.visualization_filter.points)
         self.action_line_view.setChecked(self.visualization_filter.lines)
@@ -1121,7 +1121,7 @@ class MainWindow(MainWindow_UI):
             for i in range(self.render_widgets_stack.count()):
                 widget = self.render_widgets_stack.widget(i)
                 if hasattr(widget, "update_hidden_plot"):
-                    logging.info(f"Updating render... [{i+1}/{N}]")
+                    logging.info(f"Updating render... [{i + 1}/{N}]")
                     widget.update_hidden_plot()
 
         LoadingWindow(update_plot_callback).run()
