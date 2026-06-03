@@ -7,6 +7,7 @@ from PySide6.QtWidgets import QComboBox, QLabel, QPushButton, QToolBar, QWidget
 from vibra import ICON_DIR, app
 from vibra.engine import AnalysisID
 from vibra.engine.analysis_info import AnalysisType, PhysicalDomain
+from vibra.engine.checkers.analysis_checker import AnalysisChecker
 from vibra.interface.analysis.harmonic_analysis_setup_input import HarmonicAnalysisSetupInput
 from vibra.interface.analysis.modal_analysis_input import ModalAnalysisInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
@@ -232,7 +233,7 @@ class AnalysisToolbar(QToolBar):
     def check_analysis_setup_callback(self):
         app().main_window.update_symbols()
         app().main_window.update_info_text()
-    
+
     def run_analysis(self, is_resume: bool = True):
         if app().config.user_preferences.run_analysis_in_subprocess:
             self.run_analysis_in_subprocess()
@@ -281,6 +282,9 @@ class AnalysisToolbar(QToolBar):
 
         app().main_window.action_results_workspace.setDisabled(True)
         app().main_window.results_viewer_widget.clear_treeWidgets_of_frequencies()
+
+        checker = AnalysisChecker(self.model)
+        checker.check_analysis_requirements()
 
         app().project.write_to_working_dir()
 
