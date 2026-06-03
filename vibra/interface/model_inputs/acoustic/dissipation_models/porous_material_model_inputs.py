@@ -103,6 +103,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
     def _create_connections(self):
         #
+        self.checkBox_advanced_porous_material_plots.stateChanged.connect(self.advanced_porous_material_callback)
         self.checkBox_load_material_data_from_selection.stateChanged.connect(self.geometry_selection_callback)
         #
         self.comboBox_attribution_type.currentIndexChanged.connect(self.update_attribution_type)
@@ -130,6 +131,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         #
         self.update_attribution_type()
         self.update_plot_buttons_access()
+        self.advanced_porous_material_callback()
         self.configure_right_click_actions_to_copy_porous_material_parameters()
 
     def configure_right_click_actions_to_copy_porous_material_parameters(self):
@@ -213,6 +215,11 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
     def actions_to_finalize(self):
         app().main_window.update_symbols()
+
+    def advanced_porous_material_callback(self):
+        enabled = self.checkBox_advanced_porous_material_plots.isChecked()
+        self.frame_plot_setup.setVisible(enabled)
+        self.frame_plot_buttons.setVisible(enabled)
     
     def geometry_selection_callback(self):
         current_tab = self.tabWidget_main.currentIndex()
