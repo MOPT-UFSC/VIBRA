@@ -1667,6 +1667,15 @@ wheels = [
 ]
 
 [[package]]
+name = "tuna"
+version = "0.5.15"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/cf/79/2321629fc8838b07ca0b2851a8e4ebf99d4a36c2d3fecd3dc391c9dba9a9/tuna-0.5.15.tar.gz", hash = "sha256:0109ab102374ecf5d47f950267b516b6009c3cf48e8caba3b2c859ed3f6fb996", size = 162409, upload-time = "2026-05-19T09:31:42.049Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a6/c7/622f828d2d6e73826f46d7589f1d3be9812cef5827076040c9fa06b80f7e/tuna-0.5.15-py3-none-any.whl", hash = "sha256:889a62552067133e86851cebb1042bfc28242141ea80d4ae9c64142d86e060a3", size = 160492, upload-time = "2026-05-19T09:31:40.665Z" },
+]
+
+[[package]]
 name = "typing-extensions"
 version = "4.15.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1742,6 +1751,7 @@ dev = [
     { name = "pyinstaller" },
     { name = "pytest" },
     { name = "pytest-datadir" },
+    { name = "tuna" },
 ]
 
 [package.metadata]
@@ -1775,6 +1785,7 @@ dev = [
     { name = "pyinstaller", specifier = ">=6.20.0" },
     { name = "pytest", specifier = ">=8.3.5,<9" },
     { name = "pytest-datadir", specifier = ">=1.7.2,<2" },
+    { name = "tuna", specifier = ">=0.5.15" },
 ]
 
 [[package]]
