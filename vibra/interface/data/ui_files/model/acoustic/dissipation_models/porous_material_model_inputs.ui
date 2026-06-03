@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>531</width>
-    <height>451</height>
+    <height>489</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -267,7 +267,7 @@
            <x>0</x>
            <y>0</y>
            <width>494</width>
-           <height>500</height>
+           <height>540</height>
           </rect>
          </property>
          <layout class="QGridLayout" name="gridLayout_20">
@@ -276,7 +276,7 @@
             <property name="minimumSize">
              <size>
               <width>0</width>
-              <height>260</height>
+              <height>300</height>
              </size>
             </property>
             <property name="maximumSize">
@@ -317,10 +317,13 @@
                <number>4</number>
               </property>
               <property name="bottomMargin">
+               <number>8</number>
+              </property>
+              <property name="horizontalSpacing">
                <number>4</number>
               </property>
-              <property name="spacing">
-               <number>4</number>
+              <property name="verticalSpacing">
+               <number>2</number>
               </property>
               <item row="1" column="0">
                <widget class="QFrame" name="frame_4">
@@ -923,6 +926,18 @@
               </item>
               <item row="0" column="0">
                <widget class="QFrame" name="frame">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>48</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>48</height>
+                 </size>
+                </property>
                 <property name="frameShape">
                  <enum>QFrame::Shape::NoFrame</enum>
                 </property>
@@ -1025,18 +1040,21 @@
              </attribute>
              <layout class="QGridLayout" name="gridLayout_14">
               <property name="leftMargin">
-               <number>4</number>
+               <number>2</number>
               </property>
               <property name="topMargin">
-               <number>4</number>
+               <number>8</number>
               </property>
               <property name="rightMargin">
-               <number>4</number>
+               <number>2</number>
               </property>
               <property name="bottomMargin">
-               <number>4</number>
+               <number>8</number>
               </property>
-              <property name="spacing">
+              <property name="horizontalSpacing">
+               <number>2</number>
+              </property>
+              <property name="verticalSpacing">
                <number>4</number>
               </property>
               <item row="1" column="0">
@@ -1383,6 +1401,18 @@
               </item>
               <item row="0" column="0">
                <widget class="QFrame" name="frame_8">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>48</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>48</height>
+                 </size>
+                </property>
                 <property name="frameShape">
                  <enum>QFrame::Shape::NoFrame</enum>
                 </property>
