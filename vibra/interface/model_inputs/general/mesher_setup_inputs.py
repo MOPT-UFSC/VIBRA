@@ -28,6 +28,7 @@ from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.ui_generated.model.general.mesher_setup_inputs_ui import MesherSetupInputs_UI
 from vibra.interface.ui_generated.plots.general.mesh_quality_histogram_plot_ui import MeshQualityHistogramPlot_UI
 from vibra.utils.interface_utils import block_signals
+from vibra.utils.subprocess.subprocess_handler import SubProcessHandler, SubProcessStatus
 
 gmsh_algorithms_2d = [
     gmsh_constants.MESH_ADAPT_2D,
@@ -324,6 +325,21 @@ class MesherSetupInputs(MesherSetupInputs_UI):
                 self.comboBox_3d_algorithm.setCurrentIndex(GMSHAlgorithms_3D.HXT_3D)
 
     def generate_mesh_callback(self):
+        def generate_in_subprocess():
+            mesh_setup = self._get_mesh_setup()
+            app().project.configure_mesh(mesh_setup)
+            app().project.write_to_working_dir()
+
+            status = SubProcessHandler("utils/subprocess/generate_mesh_subprocess.py").run()
+            if status != SubProcessStatus.SUCCESS:
+                return
+
+            mesh = app().project.project_reader.read_mesh()
+            app().project.model.mesh = mesh
+            app().project.model.process_degrees_of_freedom_decoupling()
+            app().project.reset_solution()
+            app().project.project_writer.write_mesh(app().project.model.mesh)
+            app().project.mark_project_as_modified()
 
         def generate():
             mesh_setup = self._get_mesh_setup()
@@ -332,7 +348,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
         self.hide()
 
-        LoadingWindow(generate).run()
+        LoadingWindow(generate_in_subprocess).run()
         LoadingWindow(self.actions_to_finalize).run()
 
         self.update_mesh_refinement_table()

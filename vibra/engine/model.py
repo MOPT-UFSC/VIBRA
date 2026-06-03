@@ -88,7 +88,7 @@ class Model:
         self.mesh: Optional[Mesh] = None
         self.mesh_setup_old = None
         self.stop_processing = False
-        self.geometry_path = None
+        self.geometry_path: Optional[Path | str] = None
         self.initial_element_size = None
         self.geometry_qf = 1.0
 
@@ -154,7 +154,7 @@ class Model:
     def set_geometry_quality_factor(self, geometry_qf: float = 1.0):
         self.geometry_qf = geometry_qf
 
-    def set_geometry_path(self, path: str):
+    def set_geometry_path(self, path: Path | str):
         self.geometry_path = path
 
     def check_path_for_geometry_file(self, path: Path | str):
