@@ -60,7 +60,7 @@ class SubProcessHandler:
             self._subprocess.kill()
 
     def _run_subprocess(self) -> SubProcessStatus:
-        logging.info("Launching solver in separate subprocess...")
+        logging.info("Launching subprocess...")
 
         try:
             self._subprocess = subprocess.Popen(
@@ -71,11 +71,11 @@ class SubProcessHandler:
                 bufsize=1,
             )
         except OSError as error:
-            raise OSError("Could not launch solver subprocess.") from error
+            raise OSError("Could not launch subprocess.") from error
 
         if self._subprocess.stdout is None or self._subprocess.stderr is None:
             self._interrupt_subprocess(by_user=False)
-            raise OSError("Solver subprocess stdout or stderr PIPE was not created.")
+            raise OSError("Subprocess stdout or stderr PIPE was not created.")
 
         stdout_queue = Queue()
         stdout_reader = Thread(
@@ -95,11 +95,11 @@ class SubProcessHandler:
 
         if self._subprocess.returncode != 0:
             if self._interrupted:
-                logging.info("Solver subprocess was interrupted.")
+                logging.info("Subprocess was interrupted.")
                 return SubProcessStatus.INTERRUPTED
 
             stderr = self._subprocess.stderr.read()
-            logging.error(f"Solver subprocess exited with code {self._subprocess.returncode}")
+            logging.error(f"Subprocess exited with code {self._subprocess.returncode}")
             raise SolverSubprocessError(
                 returncode=self._subprocess.returncode,
                 stderr=stderr,
