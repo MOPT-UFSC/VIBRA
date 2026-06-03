@@ -145,23 +145,17 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
     
     def geometry_selection_callback(self):
         current_tab = self.tabWidget_main.currentIndex()
-
         if current_tab == TabType.LIST:
             self.verify_if_selected_volumes_are_in_tree_widget_porous_material_model()
-
-        pm_tabs = current_tab <= TabType.JCAL_MODELS
-
-        if not pm_tabs:
+            self.comboBox_attribution_type.setCurrentIndex(AttributionBodiesType.SELECTED_BODIES)
             return
 
         volumes = app().main_window.selection.geometry_volumes
-
         if not volumes:
             return
 
         if self.comboBox_attribution_type.currentIndex() == AttributionBodiesType.ALL_BODIES:
             self.comboBox_attribution_type.setCurrentIndex(AttributionBodiesType.SELECTED_BODIES)
-            # return
 
         text = ", ".join([str(i) for i in volumes])
         self.lineEdit_selection_id.setText(text)
@@ -356,6 +350,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         pm_tab = current_tab <= TabType.JCAL_MODELS
 
         if self.last_tab in edit_or_list_tabs or current_tab in edit_or_list_tabs:
+            self.comboBox_attribution_type.setCurrentIndex(AttributionBodiesType.SELECTED_BODIES)
             app().main_window.selection.clear_selection()
             self.clear_line_edit_selection_id()
 
@@ -551,7 +546,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             model_data_dict = model_data.get_data()
 
             model_id_item = QTableWidgetItem(str(model_id))
-            model_item = QTableWidgetItem(self.addapt_model_name(model))
+            model_item = QTableWidgetItem(self.abbreviate_porous_material_model_name(model))
             model_id_item.setFlags(Qt.ItemIsSelectable)
             model_item.setFlags(Qt.ItemIsSelectable)
             model_item.setToolTip(model)
@@ -605,7 +600,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             model_data = self.map_model_id_to_model[model_id]
 
             for volume_id in volume_ids:
-                new = QTreeWidgetItem([str(volume_id), self.addapt_model_name(model_data.model), str(model_id)])
+                new = QTreeWidgetItem([str(volume_id), self.abbreviate_porous_material_model_name(model_data.model), str(model_id)])
                 for i in range(3):
                     new.setTextAlignment(i, Qt.AlignCenter)
 
@@ -664,8 +659,8 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
                 item.setTextAlignment(Qt.AlignCenter)
 
         self.tableWidget_JCAL.blockSignals(False)
-    
-    def addapt_model_name(self, model:str) -> str:
+
+    def abbreviate_porous_material_model_name(self, model:str) -> str:
         if model == "Delany-Bazley":
             return "DB"
 
@@ -674,7 +669,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
         elif model == "Jhonson-Champoux-Allard":
             return "JCA"
-        
+
         return "JCAL"
 
     def get_Delany_Bazley_Miki_model_data(self, material_model: str) -> DelanyBazleyData:
@@ -713,25 +708,17 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             self.doubleSpinBox_flow_resistivity_JCAL.value(),
             material_model,
         )
-        
+
     def get_DBM_material_model(self):
-
-        if self.tabWidget_main.currentIndex() != TabType.DBM_MODELS:
-            return None
-
-        if self.comboBox_JCAL_pm_model.currentIndex() == DBMConstants.DELANY_BAZLEY:
+        index = self.comboBox_DBM_constants.currentIndex()
+        if index == DBMConstants.DELANY_BAZLEY:
             return "Delany-Bazley"
-        elif self.comboBox_JCAL_pm_model.currentIndex() == DBMConstants.DELANY_BAZLEY_MIKI:
+        elif index == DBMConstants.DELANY_BAZLEY_MIKI:
             return "Delany-Bazley-Miki"
         else:
             return "User-defined (DBM)"
-    
 
     def get_JCAL_material_model(self):
-
-        if self.tabWidget_main.currentIndex() != TabType.JCAL_MODELS:
-            return None
-
         if self.comboBox_JCAL_pm_model.currentIndex() == JCALMaterialModel.JCA:
             return "Jhonson-Champoux-Allard"
         else:

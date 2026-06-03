@@ -266,7 +266,7 @@
           <rect>
            <x>0</x>
            <y>0</y>
-           <width>499</width>
+           <width>494</width>
            <height>540</height>
           </rect>
          </property>
@@ -304,7 +304,7 @@
             </property>
             <widget class="QWidget" name="tab_DBM">
              <attribute name="title">
-              <string>DBM models</string>
+              <string>DB/DBM models</string>
              </attribute>
              <layout class="QGridLayout" name="gridLayout_5">
               <property name="leftMargin">
@@ -877,7 +877,7 @@
                     </font>
                    </property>
                    <property name="text">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Flow resistivity &amp;sigma;:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Flow resistivity &lt;span style=&quot; font-size:11pt;&quot;&gt;σ&lt;/span&gt;:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
                   </widget>
                  </item>
@@ -998,7 +998,7 @@
                    </item>
                    <item>
                     <property name="text">
-                     <string>User-defined</string>
+                     <string>User-defined (DBM)</string>
                     </property>
                    </item>
                   </widget>
@@ -1036,7 +1036,7 @@
             </widget>
             <widget class="QWidget" name="tab_JCAL">
              <attribute name="title">
-              <string>JCAL models</string>
+              <string>JCA/JCAL models</string>
              </attribute>
              <layout class="QGridLayout" name="gridLayout_14">
               <property name="leftMargin">
