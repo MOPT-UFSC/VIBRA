@@ -336,9 +336,12 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
             mesh = app().project.project_reader.read_mesh()
             app().project.model.mesh = mesh
-            app().project.model.process_degrees_of_freedom_decoupling()
+
+            if app().project.model.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
+                app().project.model.process_degrees_of_freedom_decoupling()
+                app().project.project_writer.write_mesh(app().project.model.mesh)
+
             app().project.reset_solution()
-            app().project.project_writer.write_mesh(app().project.model.mesh)
             app().project.mark_project_as_modified()
 
         def generate():
