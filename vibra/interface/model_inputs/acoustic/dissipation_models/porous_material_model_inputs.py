@@ -103,6 +103,8 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
     def _create_connections(self):
         #
+        self.checkBox_load_material_data_from_selection.stateChanged.connect(self.geometry_selection_callback)
+        #
         self.comboBox_attribution_type.currentIndexChanged.connect(self.update_attribution_type)
         self.comboBox_DBM_constants.currentIndexChanged.connect(self.update_DBM_constants_callback)
         self.comboBox_plot_type.currentIndexChanged.connect(self.plot_type_callback)
@@ -177,7 +179,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         item_0 = self.tableWidget_DBM.item(0, item.column())
         if item_0 is None:
             return
-        
+
         identifier = int(item_0.text())
         pm_data = self.map_model_id_to_model.get(identifier)
         if not isinstance(pm_data, DelanyBazleyMikiData):
@@ -189,7 +191,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         item_0 = self.tableWidget_JCAL.item(0, item.column())
         if item_0 is None:
             return
-        
+
         identifier = int(item_0.text())
         pm_data = self.map_model_id_to_model.get(identifier)
         if not isinstance(pm_data, JhonsonChampouxAllardLafargeData):
