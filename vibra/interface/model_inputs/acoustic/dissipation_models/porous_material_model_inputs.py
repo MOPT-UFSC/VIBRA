@@ -23,8 +23,8 @@ from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.acoustic.definitions.enums import AttributionBodiesType, PlotTypesTab
-from vibra.interface.model_inputs.acoustic.dissipation_models.delany_bazley_data import DelanyBazleyMikiData
-from vibra.interface.model_inputs.acoustic.dissipation_models.jca_data import JhonsonChampouxAllardLafargeData
+from vibra.interface.model_inputs.acoustic.dissipation_models.dbm_data import DelanyBazleyMikiData
+from vibra.interface.model_inputs.acoustic.dissipation_models.jcal_data import JhonsonChampouxAllardLafargeData
 from vibra.interface.model_inputs.acoustic.dissipation_models.show_porous_material_model_equations import ShowPorousMaterialModelEquations
 from vibra.interface.model_inputs.general.fluid.set_fluid_inputs_simplified import SetFluidInputsSimplified
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
