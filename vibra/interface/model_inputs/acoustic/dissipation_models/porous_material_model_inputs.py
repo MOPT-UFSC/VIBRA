@@ -156,22 +156,23 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
         volumes = app().main_window.selection.geometry_volumes
 
-        if volumes:
+        if not volumes:
+            return
 
-            if self.comboBox_attribution_type.currentIndex() == AttributionBodiesType.ALL_BODIES:
-                self.comboBox_attribution_type.setCurrentIndex(AttributionBodiesType.SELECTED_BODIES)
-                # return
+        if self.comboBox_attribution_type.currentIndex() == AttributionBodiesType.ALL_BODIES:
+            self.comboBox_attribution_type.setCurrentIndex(AttributionBodiesType.SELECTED_BODIES)
+            # return
 
-            text = ", ".join([str(i) for i in volumes])
-            self.lineEdit_selection_id.setText(text)
+        text = ", ".join([str(i) for i in volumes])
+        self.lineEdit_selection_id.setText(text)
 
-            if len(volumes) == 1 and self.update_tabs:
-                volume_id = list(volumes)[0]
-                pm_data = self.properties._get_property("porous_material_model", volume=volume_id)
-                if pm_data is None:
-                    return
+        if len(volumes) == 1 and self.update_tabs:
+            volume_id = list(volumes)[0]
+            pm_data = self.properties._get_property("porous_material_model", volume=volume_id)
+            if pm_data is None:
+                return
 
-                self.load_porous_material_model_inputs(pm_data)
+            self.load_porous_material_model_inputs(pm_data)
     
     def verify_if_selected_volumes_are_in_tree_widget_porous_material_model(self):
         if self.tree_item_clicked:
@@ -595,7 +596,6 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         if there_is_jca_model or there_is_delany_model:
             self.tabWidget_main.setTabVisible(TabType.EDIT, True)
             self.tabWidget_main.setTabVisible(TabType.LIST, True)
-            self.tabWidget_main.setCurrentIndex(TabType.EDIT)
         
         self.update_tableWidget_DBM_items()
         self.update_tableWidget_JCAL_items()
@@ -719,10 +719,13 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         if self.tabWidget_main.currentIndex() != TabType.DBM_MODELS:
             return None
 
-        if self.comboBox_JCAL_pm_model.currentIndex() == JCALMaterialModel.JCA:
-            return "Jhonson-Champoux-Allard"
+        if self.comboBox_JCAL_pm_model.currentIndex() == DBMConstants.DELANY_BAZLEY:
+            return "Delany-Bazley"
+        elif self.comboBox_JCAL_pm_model.currentIndex() == DBMConstants.DELANY_BAZLEY_MIKI:
+            return "Delany-Bazley-Miki"
         else:
-            return "Jhonson-Champoux-Allard-Lafarge"
+            return "User-defined (DBM)"
+    
 
     def get_JCAL_material_model(self):
 
@@ -739,21 +742,11 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         tab_index = self.tabWidget_main.currentIndex()
 
         if tab_index == TabType.DBM_MODELS:
-            if self.comboBox_DBM_constants.currentIndex() == DBMConstants.DELANY_BAZLEY:
-                pm_model = "Delany-Bazley"
-            elif self.comboBox_DBM_constants.currentIndex() == DBMConstants.DELANY_BAZLEY_MIKI:
-                pm_model = "Delany-Bazley-Miki"
-            else:
-                pm_model = "User-defined (DBM)"
-
+            pm_model = self.get_DBM_material_model()
             model_data = self.get_Delany_Bazley_Miki_model_data(pm_model)
 
         elif tab_index == TabType.JCAL_MODELS:
-            if self.comboBox_JCAL_pm_model.currentIndex() == JCALMaterialModel.JCA:
-                pm_model = "Jhonson-Champoux-Allard"
-            else:
-                pm_model = "Jhonson-Champoux-Allard-Lafarge"
-
+            pm_model = self.get_JCAL_material_model()
             model_data = self.get_Jhonson_Champoux_Allard_Lafarge_model_data(pm_model)
 
         else:
@@ -872,15 +865,12 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         tab_index = self.tabWidget_main.currentIndex()
 
         if tab_index == TabType.DBM_MODELS:
-            pm_data = self.get_Delany_Bazley_Miki_model_data()
+            pm_model = self.get_DBM_material_model()
+            pm_data = self.get_Delany_Bazley_Miki_model_data(pm_model)
             rho_eff, C_eff = model.get_Delany_Bazley_Miki_effective_properties(omega, fluid, pm_data.get_data())
 
         elif tab_index == TabType.JCAL_MODELS:
-            if self.comboBox_JCAL_pm_model.currentIndex() == JCALMaterialModel.JCA:
-                pm_model = "Jhonson-Champoux-Allard"
-            else:
-                pm_model = "Jhonson-Champoux-Allard-Lafarge"
-
+            pm_model = self.get_JCAL_material_model()
             pm_data = self.get_Jhonson_Champoux_Allard_Lafarge_model_data(pm_model)
             rho_eff, C_eff = model.get_JCAL_effective_properties(omega, fluid, pm_data.get_data())
 
