@@ -324,34 +324,39 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             case MeshAlgorithms3D.HXT_3D:
                 self.comboBox_3d_algorithm.setCurrentIndex(GMSHAlgorithms_3D.HXT_3D)
 
+    def _generate_in_subprocess(self) -> bool:
+        mesh_setup = self._get_mesh_setup()
+        app().project.configure_mesh(mesh_setup)
+        app().project.write_to_working_dir()
+
+        status = SubProcessHandler("utils/subprocess/generate_mesh_subprocess.py").run()
+        if status != SubProcessStatus.SUCCESS:
+            return False
+
+        mesh = app().project.project_reader.read_mesh()
+        app().project.model.mesh = mesh
+
+        if app().project.model.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
+            app().project.model.process_degrees_of_freedom_decoupling()
+            app().project.project_writer.write_mesh(app().project.model.mesh)
+
+        app().project.reset_solution()
+        app().project.mark_project_as_modified()
+
+        return True
+
     def generate_mesh_callback(self):
-        def generate_in_subprocess():
-            mesh_setup = self._get_mesh_setup()
-            app().project.configure_mesh(mesh_setup)
-            app().project.write_to_working_dir()
-
-            status = SubProcessHandler("utils/subprocess/generate_mesh_subprocess.py").run()
-            if status != SubProcessStatus.SUCCESS:
-                return
-
-            mesh = app().project.project_reader.read_mesh()
-            app().project.model.mesh = mesh
-
-            if app().project.model.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
-                app().project.model.process_degrees_of_freedom_decoupling()
-                app().project.project_writer.write_mesh(app().project.model.mesh)
-
-            app().project.reset_solution()
-            app().project.mark_project_as_modified()
-
-        def generate():
-            mesh_setup = self._get_mesh_setup()
-            app().project.configure_mesh(mesh_setup)
-            app().project.generate_mesh()
-
         self.hide()
-
-        LoadingWindow(generate_in_subprocess).run()
+        if not self._generate_in_subprocess():
+            return
+        # def generate():
+        #     mesh_setup = self._get_mesh_setup()
+        #     app().project.configure_mesh(mesh_setup)
+        #     app().project.generate_mesh()
+        #
+        # self.hide()
+        #
+        # LoadingWindow(generate).run()
         LoadingWindow(self.actions_to_finalize).run()
 
         self.update_mesh_refinement_table()
