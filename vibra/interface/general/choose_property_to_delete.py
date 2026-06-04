@@ -1,4 +1,3 @@
-from numpy import int64
 from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QTableWidgetItem
@@ -9,14 +8,15 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.ui_generated.model.general.choose_property_to_delete_ui import ChoosePropertyToDelete_UI
 
 
-class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
+class ChoosePropertyToDelete(ChoosePropertyToDelete_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args)
 
         app().main_window.set_input_widget(self)
 
         self._initialize()
-        self._mount_properties_list_from_data()
+        self._configure_table()
+        self._load_properties_data_and_update_table()
 
         if not self.properties_formated:
             return
@@ -24,10 +24,7 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
         self._config_window()
         self._create_connections()
         self._configure_filter_timer()
-        self._configure_table()
         self._configure_lineEdit()
-
-        self._fill_table(self.properties_formated)
 
         while self.keep_window_open:
             self.exec()
@@ -35,14 +32,6 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
     def _initialize(self):
         self.keep_window_open = True
         self.properties_formated: list[dict[str, str]] = list()
-
-    def selected_entities(self) -> dict[str, set[int64]]:
-        return {
-            "points": app().main_window.selection.geometry_points,
-            "lines": app().main_window.selection.geometry_lines,
-            "surfaces": app().main_window.selection.geometry_surfaces,
-            "volumes": app().main_window.selection.geometry_volumes,
-        }
 
     def _config_window(self):
         self.setWindowIcon(app().main_window.vibra_icon)
@@ -74,8 +63,8 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
         self.tableWidget.setSortingEnabled(True)
         self.tableWidget.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.tableWidget.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-        self.tableWidget.setColumnCount(len(labels))
 
+        self.tableWidget.setColumnCount(len(labels))
         self.tableWidget.setHorizontalHeaderLabels(labels)
         self.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
         # self.tableWidget.resizeColumnsToContents()
@@ -94,9 +83,17 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
     def _start_timer(self):
         self.filter_timer.start()
 
-    def _mount_properties_list_from_data(self):
-        
-        selected_entities = self.selected_entities()
+    def _load_properties_data_and_update_table(self):
+
+        self.tableWidget.clearContents()
+        self.properties_formated.clear()
+
+        selected_entities = {
+            "points": app().main_window.selection.geometry_points,
+            "lines": app().main_window.selection.geometry_lines,
+            "surfaces": app().main_window.selection.geometry_surfaces,
+            "volumes": app().main_window.selection.geometry_volumes,
+        }
 
         prop = app().project.model.properties.get_properties_from_points(selected_entities.get("points"))
         prop = [{"id": str(id_number), "entity": "point", "name": name} for name, id_number in prop]
@@ -127,6 +124,8 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
         self.properties_formated = list(filter(filter_physical_domain_properties, self.properties_formated))
         self.properties_formated.sort(key=lambda item: item.get("name", ""))
 
+        self._fill_table(self.properties_formated)
+
     def _fill_table(self, properties_list: list[dict[str, str]]):
         self.tableWidget.setSortingEnabled(False)
         self.tableWidget.setRowCount(len(properties_list))
@@ -155,13 +154,14 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
         self._fill_table(properties_filtered)
 
     def _get_user_confirmation(self, properties_count: int) -> bool:
-        text = "property" if properties_count == 1 else "properties"
 
-        title = "Remove property?"
         if properties_count > 1:
-            title = f"Remove {properties_count} {text}?"
+            text = "properties"
+        else:
+            text = "property"
 
-        message = f"You have selected {properties_count} {text} for removal. Are you sure?"
+        title = f"Remove selected {text}"
+        message = f"Would you like to remove the selected {text} from the model?"
 
         buttons_config = {
             "left_button_label": "Cancel",
@@ -226,12 +226,16 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
                 app().project.model.properties.remove_table_files_from_volume(entity_id, property_selected)
                 app().project.model.properties._remove_volume_property(property_selected, entity_id)
 
+        self._load_properties_data_and_update_table()
         self.actions_to_finalize()
 
     def actions_to_finalize(self):
         app().main_window.update_info_text()
         app().project.update_model_properties_file()
         app().main_window.update_symbols()
+
+        if not self.properties_formated:
+            self.close()
 
     def keyPressEvent(self, event):
         if event.key() in [Qt.Key_Enter, Qt.Key_Return, Qt.Key_Delete]:
