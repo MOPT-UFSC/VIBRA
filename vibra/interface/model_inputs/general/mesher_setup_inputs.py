@@ -335,12 +335,8 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         if status != SubProcessStatus.SUCCESS:
             return False
 
-        mesh = app().project.project_reader.read_mesh()
-        app().project.model.mesh = mesh
-
-        if app().project.model.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
-            app().project.model.process_degrees_of_freedom_decoupling()
-            app().project.project_writer.write_mesh(app().project.model.mesh)
+        app().project.model.mesh = LoadingWindow(app().project.project_reader.read_mesh).run()
+        app().project.model.properties = app().project.project_reader.read_model_properties()
 
         app().project.reset_solution()
         app().project.mark_project_as_modified()
@@ -562,9 +558,8 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         app().main_window.analysis_toolbar.pushButton_reset_solution.setDisabled(True)
         app().main_window.analysis_toolbar.check_analysis_setup_callback()
         app().main_window.action_export_element_transfer_data.setDisabled(True)
-        app().main_window.update_symbols()
 
-    def get_element_type(self) -> ElementSetup:
+    def get_element_type(self) -> ElementSetup | None:
         element_type = self.comboBox_element_type.currentText().lower()
         shape_function = self.comboBox_shape_function.currentText().lower()
 
@@ -588,7 +583,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         if not mesh.are_there_volumes_in_geometry():
             self.comboBox_element_type.removeItem(1)
             self.comboBox_shape_function.removeItem(1)
-        
+
     def update_advanced_gmsh_controls(self):
         mesh = app().project.model.mesh
         if mesh is None:

@@ -21,6 +21,7 @@ def main():
 
     mesh_setup: Optional[MeshSetup] = project.project_reader.read_mesh_setup()
     geometry_path: Optional[Path] = project.project_reader.read_geometry_path()
+    properties = project.project_reader.read_model_properties()
 
     if mesh_setup is None:
         raise FileNotFoundError(f"No mesh setup found in {project.project_paths.project_setup_filepath}")
@@ -30,8 +31,12 @@ def main():
 
     project.model.mesh_setup = mesh_setup
     project.model.geometry_path = geometry_path
+    project.model.properties = properties
 
     project.generate_mesh()
+
+    if project.model.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
+        project.update_model_properties_file()
 
 if __name__ == "__main__":
     try:
