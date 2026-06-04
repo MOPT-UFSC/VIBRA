@@ -162,6 +162,14 @@ class Project:
         self.model = self.project_reader.read_model(self.model)
         return self
 
+    def reload_solution_from_working_dir(self):
+        """
+        Reload solution data written by another process.
+        """
+        self.model.solution = self.project_reader.read_solution(self.model)
+        self.assembler, self.solver = self.project_reader.read_assembler_and_solver(self.model)
+        self.update_post_processing()
+
     def write_to_working_dir(self):
         """
         Writes project data to the working directory.
@@ -315,7 +323,7 @@ class Project:
         self.update_project_setup_file()
 
         checker = AnalysisChecker(self.model)
-        checker.check_analysis_requirements(AnalysisID.STRUCTURAL_MODAL)
+        checker.check_analysis_requirements()
 
         self.assembler = StructuralAssembler(self.model)
         self.solver = ModalSolver(self.assembler)
@@ -339,7 +347,7 @@ class Project:
         self.update_project_setup_file()
 
         checker = AnalysisChecker(self.model)
-        checker.check_analysis_requirements(AnalysisID.STRUCTURAL_HARMONIC)
+        checker.check_analysis_requirements()
 
         self.assembler = StructuralAssembler(self.model)
         self.solver = HarmonicSolver(self.assembler, self.project_paths)
@@ -375,7 +383,7 @@ class Project:
         self.update_project_setup_file()
 
         checker = AnalysisChecker(self.model)
-        checker.check_analysis_requirements(AnalysisID.ACOUSTIC_MODAL)
+        checker.check_analysis_requirements()
 
         self.assembler = AcousticAssembler(self.model)
         self.solver = ModalSolver(self.assembler)
@@ -399,7 +407,7 @@ class Project:
         self.update_project_setup_file()
 
         checker = AnalysisChecker(self.model)
-        checker.check_analysis_requirements(AnalysisID.ACOUSTIC_HARMONIC)
+        checker.check_analysis_requirements()
 
         self.assembler = AcousticAssembler(self.model)
         self.solver = HarmonicSolver(self.assembler, self.project_paths)
@@ -474,7 +482,7 @@ class Project:
         """
 
         try:
-            AnalysisChecker(self.model).check_analysis_requirements(self.model.analysis_id)
+            AnalysisChecker(self.model).check_analysis_requirements()
         except Exception:
             return False
         else:

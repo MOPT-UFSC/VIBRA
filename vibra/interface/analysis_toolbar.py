@@ -7,10 +7,12 @@ from PySide6.QtWidgets import QComboBox, QLabel, QPushButton, QToolBar, QWidget
 from vibra import ICON_DIR, app
 from vibra.engine import AnalysisID
 from vibra.engine.analysis_info import AnalysisType, PhysicalDomain
+from vibra.engine.checkers.analysis_checker import AnalysisChecker
 from vibra.interface.analysis.harmonic_analysis_setup_input import HarmonicAnalysisSetupInput
 from vibra.interface.analysis.modal_analysis_input import ModalAnalysisInput
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.loading_window import LoadingWindow
+from vibra.utils.subprocess.subprocess_handler import SubProcessHandler, SubProcessStatus
 
 
 class AnalysisToolbar(QToolBar):
@@ -232,7 +234,13 @@ class AnalysisToolbar(QToolBar):
         app().main_window.update_symbols()
         app().main_window.update_info_text()
 
-    def run_analysis(self, is_resume: bool = False):
+    def run_analysis(self, is_resume: bool = True):
+        if app().config.user_preferences.run_analysis_in_subprocess:
+            self.run_analysis_in_subprocess()
+        else:
+            self.run_analysis_in_current_process(is_resume)
+
+    def run_analysis_in_current_process(self, is_resume: bool = False):
         if self.model.analysis_setup is None:
             self.configure_analysis()
             if not self.solve_analysis:
@@ -267,6 +275,31 @@ class AnalysisToolbar(QToolBar):
         app().main_window.results_viewer_widget.results_viewer_items.update_items()
 
         LoadingWindow(self.post_processing_analysis).run()
+
+    def run_analysis_in_subprocess(self) -> bool:
+        if app().main_window.action_results_workspace.isChecked():
+            app().main_window.action_model_workspace_callback()
+
+        app().main_window.action_results_workspace.setDisabled(True)
+        app().main_window.results_viewer_widget.clear_treeWidgets_of_frequencies()
+
+        checker = AnalysisChecker(self.model)
+        checker.check_analysis_requirements()
+
+        app().project.write_to_working_dir()
+
+        subprocess_status = SubProcessHandler("utils/subprocess/analysis_subprocess.py").run()
+        if subprocess_status != SubProcessStatus.SUCCESS:
+            app().project.reset_solution()
+            return False
+
+        app().project.reload_solution_from_working_dir()
+
+        app().main_window.configure_results_render_widget()
+        app().main_window.results_viewer_widget.results_viewer_items.update_items()
+
+        LoadingWindow(self.post_processing_analysis).run()
+        return True
 
     def post_processing_analysis(self):
         logging.info("Post-processing results... [10/100]")
