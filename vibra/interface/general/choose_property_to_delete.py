@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QTableWidgetItem
 from vibra import app
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.ui_generated.general.choose_property_to_delete_ui import ChoosePropertyToDelete_UI
+from vibra.interface.ui_generated.model.general.choose_property_to_delete_ui import ChoosePropertyToDelete_UI
 
 
 class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
@@ -15,21 +15,26 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
 
         app().main_window.set_input_widget(self)
 
-        self.properties_formated: list[dict[str, str]] = list()
+        self._initialize()
+        self._mount_properties_list_from_data()
+
+        if not self.properties_formated:
+            return
 
         self._config_window()
-        self._configure_labels()
-        self._configure_buttons()
         self._create_connections()
         self._configure_filter_timer()
         self._configure_table()
         self._configure_lineEdit()
 
-        self._mount_properties_list_from_data()
         self._fill_table(self.properties_formated)
 
-        if len(self.properties_formated) > 0:
+        while self.keep_window_open:
             self.exec()
+
+    def _initialize(self):
+        self.keep_window_open = True
+        self.properties_formated: list[dict[str, str]] = list()
 
     def selected_entities(self) -> dict[str, set[int64]]:
         return {
@@ -47,25 +52,11 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
 
     def _create_connections(self):
         self.pushButton_remove.clicked.connect(self.remove_callback)
-        self.pushButton_cancel.clicked.connect(self.cancel_callback)
+        self.pushButton_cancel.clicked.connect(self.close)
         self.lineEdit_filter.textChanged.connect(self._start_timer)
 
-    def _configure_buttons(self):
-        self.pushButton_cancel.setText("Cancel")
-        self.pushButton_remove.setText("Remove")
-        self.pushButton_remove.setDefault(True)
-
-    def _configure_labels(self):
-        self.label_title.setText("Remove Property")
-        self.label_title.setWordWrap(True)
-        self.label_title.setAlignment(Qt.AlignmentFlag.AlignJustify)
-        self.label_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.label_title.setMargin(12)
-        self.label_title.adjustSize()
-        self.adjustSize()
-
     def _configure_lineEdit(self):
-        self.lineEdit_filter.setPlaceholderText("Enter the name of the property to be filtered...")
+        self.lineEdit_filter.setPlaceholderText("Filter properties by name, entity type, or ID...")
 
         style = """
         QLineEdit::placeholder {
@@ -87,7 +78,11 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
 
         self.tableWidget.setHorizontalHeaderLabels(labels)
         self.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
-        self.tableWidget.resizeColumnsToContents()
+        # self.tableWidget.resizeColumnsToContents()
+
+        for i, width in enumerate([100, 100]):
+            self.tableWidget.setColumnWidth(i, width)
+
         self.tableWidget.horizontalHeader().setStretchLastSection(True)
 
     def _configure_filter_timer(self):
@@ -154,7 +149,7 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
         filter_text = self.lineEdit_filter.text().lower().replace(" ", "_")
 
         def filter_properties_formated(prop: dict[str, str]) -> bool:
-            return filter_text in prop.get("name", "") or filter_text in prop.get("entity", "") or filter_text in prop.get("id", "")
+            return filter_text in prop.get("name", "") or filter_text in prop.get("entity", "") or filter_text == prop.get("id", "")
 
         properties_filtered = list(filter(filter_properties_formated, self.properties_formated))
         self._fill_table(properties_filtered)
@@ -174,6 +169,7 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
             "right_toolTip": "Remove selected items",
         }
 
+        self.hide()
         read = GetUserConfirmationInput(
             title, message, buttons_config=buttons_config, window_title="Vibra"
         )
@@ -188,6 +184,7 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
 
         properties_count: int = len(rows_selected)
         if properties_count == 0:
+            self.hide()
             title = "No property selected"
             message = "Please select at least one property."
             PrintMessageInput(["Error", title, message])
@@ -230,16 +227,19 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
                 app().project.model.properties._remove_volume_property(property_selected, entity_id)
 
         self.actions_to_finalize()
-        self.close()
 
     def actions_to_finalize(self):
         app().main_window.update_info_text()
         app().project.update_model_properties_file()
         app().main_window.update_symbols()
 
-    def cancel_callback(self):
-        self.close()
+    def keyPressEvent(self, event):
+        if event.key() in [Qt.Key_Enter, Qt.Key_Return, Qt.Key_Delete]:
+            self.remove_callback()
+        elif event.key() == Qt.Key_Escape:
+            self.close()
+        return
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
-        # self.keep_window_open = False
+        self.keep_window_open = False
         return super().closeEvent(a0)
