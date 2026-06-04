@@ -208,8 +208,13 @@ class Mesh:
             gmsh.initialize("", False, interruptible=False)
             gmsh.option.set_number("General.Terminal", 0)
             gmsh.option.set_number("General.Verbosity", 0)
-            # gmsh.option.set_number("General.NumThreads", threads)
             gmsh.option.set_number("Geometry.Tolerance", mesh_setup.geometry_tolerance)
+
+            # n_thread = 14
+            # gmsh.option.set_number("General.NumThreads", n_thread)
+            # gmsh.option.set_number("Mesh.MaxNumThreads1D", n_thread)
+            # gmsh.option.set_number("Mesh.MaxNumThreads2D", n_thread)
+            # gmsh.option.set_number("Mesh.MaxNumThreads3D", n_thread)
 
             logging.info("Loading geometry... [10/100]")
             gmsh.open(str(path))
