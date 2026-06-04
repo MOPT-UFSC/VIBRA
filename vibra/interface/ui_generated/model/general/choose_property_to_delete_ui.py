@@ -24,7 +24,7 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
-        Dialog.resize(687, 530)
+        Dialog.resize(650, 530)
         sizePolicy = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -92,7 +92,10 @@ class Ui_Dialog(object):
         self.gridLayout.setContentsMargins(2, 2, 2, 2)
         self.lineEdit_filter = QLineEdit(self.frame_4)
         self.lineEdit_filter.setObjectName(u"lineEdit_filter")
-        self.lineEdit_filter.setMinimumSize(QSize(320, 30))
+        self.lineEdit_filter.setMinimumSize(QSize(360, 30))
+        font1 = QFont()
+        font1.setPointSize(10)
+        self.lineEdit_filter.setFont(font1)
 
         self.gridLayout.addWidget(self.lineEdit_filter, 0, 2, 1, 1)
 
@@ -102,8 +105,6 @@ class Ui_Dialog(object):
 
         self.label = QLabel(self.frame_4)
         self.label.setObjectName(u"label")
-        font1 = QFont()
-        font1.setPointSize(10)
         self.label.setFont(font1)
 
         self.gridLayout.addWidget(self.label, 0, 1, 1, 1)
@@ -138,6 +139,7 @@ class Ui_Dialog(object):
         font2.setItalic(False)
         self.pushButton_remove.setFont(font2)
         self.pushButton_remove.setStyleSheet(u"")
+        self.pushButton_remove.setAutoDefault(False)
 
         self.gridLayout_3.addWidget(self.pushButton_remove, 0, 1, 1, 1)
 
@@ -147,6 +149,7 @@ class Ui_Dialog(object):
         self.pushButton_cancel.setMaximumSize(QSize(140, 32))
         self.pushButton_cancel.setFont(font2)
         self.pushButton_cancel.setStyleSheet(u"")
+        self.pushButton_cancel.setAutoDefault(False)
 
         self.gridLayout_3.addWidget(self.pushButton_cancel, 0, 0, 1, 1)
 
@@ -163,7 +166,7 @@ class Ui_Dialog(object):
         Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"Dialog", None))
         self.label_title.setText(QCoreApplication.translate("Dialog", u"Remove property assistant", None))
 #if QT_CONFIG(tooltip)
-        self.lineEdit_filter.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p>Enter the name of the property to be filtered</p></body></html>", None))
+        self.lineEdit_filter.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p>Filter properties by name, entity type, or ID</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.label.setText(QCoreApplication.translate("Dialog", u"Filter selector:", None))
 #if QT_CONFIG(tooltip)
