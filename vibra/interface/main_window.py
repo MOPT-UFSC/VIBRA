@@ -960,20 +960,8 @@ class MainWindow(MainWindow_UI):
         self.workspaces_toolbar.setEnabled(state)
 
     def remove_property(self):
-        selected_geometry_entities = {
-            "points": self.selection.geometry_points,
-            "lines": self.selection.geometry_lines,
-            "surfaces": self.selection.geometry_surfaces,
-            "volumes": self.selection.geometry_volumes,
-        }
-
         self.close_dialogs()
-
-        ChoosePropertytoDelete(
-            "Remove Property",
-            "Choose a property",
-            data=selected_geometry_entities,
-            window_title="Vibra")
+        ChoosePropertytoDelete()
 
     def update_toolbar_and_menu_items_after_load_project(self):
         self.model_setup_widget.model_setup_items.filter_available_items_and_analyzes_according_to_geometry_information()

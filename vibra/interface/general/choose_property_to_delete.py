@@ -1,30 +1,20 @@
 from numpy import int64
-from PySide6.QtCore import QTimer, Qt
+from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QCloseEvent
-from PySide6.QtWidgets import (
-    QAbstractItemView,
-    QTableWidgetItem,
-    QHeaderView,
-)
+from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QTableWidgetItem
 
-from vibra import app, __version__
+from vibra import app
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.ui_generated.general.choose_property_to_delete_ui import (
-    ChoosePropertyToDelete_UI,
-)
+from vibra.interface.ui_generated.general.choose_property_to_delete_ui import ChoosePropertyToDelete_UI
 
 
 class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
-    def __init__(self, title, message, data: dict[str, set[int64]], *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args)
 
         app().main_window.set_input_widget(self)
 
-        self.title = title
-        self.message = message
-        self.data = data
-        self.window_title = kwargs.get("window_title", f"Vibra v{__version__}")
         self.properties_formated: list[dict[str, str]] = list()
 
         self._config_window()
@@ -34,18 +24,26 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
         self._configure_filter_timer()
         self._configure_table()
         self._configure_lineEdit()
-        
+
         self._mount_properties_list_from_data()
         self._fill_table(self.properties_formated)
 
         if len(self.properties_formated) > 0:
             self.exec()
 
+    def selected_entities(self) -> dict[str, set[int64]]:
+        return {
+            "points": app().main_window.selection.geometry_points,
+            "lines": app().main_window.selection.geometry_lines,
+            "surfaces": app().main_window.selection.geometry_surfaces,
+            "volumes": app().main_window.selection.geometry_volumes,
+        }
+
     def _config_window(self):
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowFlags(Qt.WindowType.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModality.WindowModal)
-        self.setWindowTitle(self.window_title)
+        self.setWindowTitle("Vibra")
 
     def _create_connections(self):
         self.pushButton_remove.clicked.connect(self.remove_callback)
@@ -67,7 +65,7 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
         self.adjustSize()
 
     def _configure_lineEdit(self):
-        self.lineEdit_filter.setPlaceholderText("Search...")
+        self.lineEdit_filter.setPlaceholderText("Enter the name of the property to be filtered...")
 
         style = """
         QLineEdit::placeholder {
@@ -80,7 +78,7 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
 
     def _configure_table(self):
         # table will always have 3 collumns
-        labels = ["Entity ID", "Entity", "Property"]
+        labels = ["Entity ID", "Entity", "Property name"]
 
         self.tableWidget.setSortingEnabled(True)
         self.tableWidget.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
@@ -88,15 +86,13 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
         self.tableWidget.setColumnCount(len(labels))
 
         self.tableWidget.setHorizontalHeaderLabels(labels)
-        self.tableWidget.horizontalHeader().setSectionResizeMode(
-            QHeaderView.ResizeMode.Interactive
-        )
+        self.tableWidget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
         self.tableWidget.resizeColumnsToContents()
         self.tableWidget.horizontalHeader().setStretchLastSection(True)
 
     def _configure_filter_timer(self):
         self.filter_timer = QTimer()
-        self.filter_timer.setInterval(300)
+        self.filter_timer.setInterval(100)
         self.filter_timer.setSingleShot(True)
         self.filter_timer.timeout.connect(self.filter_table)
 
@@ -104,27 +100,22 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
         self.filter_timer.start()
 
     def _mount_properties_list_from_data(self):
-        prop = app().project.model.properties.get_properties_from_points(
-            self.data.get("points")
-        )
+        
+        selected_entities = self.selected_entities()
+
+        prop = app().project.model.properties.get_properties_from_points(selected_entities.get("points"))
         prop = [{"id": str(id_number), "entity": "point", "name": name} for name, id_number in prop]
         self.properties_formated.extend(prop)
 
-        prop = app().project.model.properties.get_properties_from_lines(
-            self.data.get("lines")
-        )
+        prop = app().project.model.properties.get_properties_from_lines(selected_entities.get("lines"))
         prop = [{"id": str(id_number), "entity": "line", "name": name} for name, id_number in prop]
         self.properties_formated.extend(prop)
 
-        prop = app().project.model.properties.get_properties_from_surfaces(
-            self.data.get("surfaces")
-        )
+        prop = app().project.model.properties.get_properties_from_surfaces(selected_entities.get("surfaces"))
         prop = [{"id": str(id_number), "entity": "surface", "name": name} for name, id_number in prop]
         self.properties_formated.extend(prop)
 
-        prop = app().project.model.properties.get_properties_from_volumes(
-            self.data.get("volumes")
-        )
+        prop = app().project.model.properties.get_properties_from_volumes(selected_entities.get("volumes"))
         prop = [{"id": str(id_number), "entity": "volume", "name": name} for name, id_number in prop]
         self.properties_formated.extend(prop)
 
@@ -133,22 +124,12 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
             return prop.get("name") not in ["fluid", "material", "degrees_of_freedom_decoupling", "perforated_plate_model", "transfer_impedance"]
 
         def filter_physical_domain_properties(prop: dict[str, str]) -> bool:
-            current_physical_domain = (
-                app()
-                .main_window.analysis_toolbar.combo_box_physical_domain.currentText()
-                .lower()
-            )
-            prop_physical_domain = app().project.model.properties.get_data_group_label(
-                prop.get("name", "")
-            )
+            current_physical_domain = app().main_window.analysis_toolbar.combo_box_physical_domain.currentText().lower()
+            prop_physical_domain = app().project.model.properties.get_data_group_label(prop.get("name", ""))
             return prop_physical_domain == current_physical_domain
 
-        self.properties_formated = list(
-            filter(filter_properties_to_not_show, self.properties_formated)
-        )
-        self.properties_formated = list(
-            filter(filter_physical_domain_properties, self.properties_formated)
-        )
+        self.properties_formated = list(filter(filter_properties_to_not_show, self.properties_formated))
+        self.properties_formated = list(filter(filter_physical_domain_properties, self.properties_formated))
         self.properties_formated.sort(key=lambda item: item.get("name", ""))
 
     def _fill_table(self, properties_list: list[dict[str, str]]):
@@ -185,9 +166,7 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
         if properties_count > 1:
             title = f"Remove {properties_count} {text}?"
 
-        message = (
-            f"You have selected {properties_count} {text} for removal. Are you sure?"
-        )
+        message = f"You have selected {properties_count} {text} for removal. Are you sure?"
 
         buttons_config = {
             "left_button_label": "Cancel",
@@ -235,36 +214,20 @@ class ChoosePropertytoDelete(ChoosePropertyToDelete_UI):
             entity_id = int(entity_id_table_item.text())
 
             if entity_name == "point":
-                app().project.model.properties.remove_table_files_from_point(
-                    entity_id, property_selected
-                )
-                app().project.model.properties._remove_point_property(
-                    property_selected, entity_id
-                )
+                app().project.model.properties.remove_table_files_from_point(entity_id, property_selected)
+                app().project.model.properties._remove_point_property(property_selected, entity_id)
 
             elif entity_name == "line":
-                app().project.model.properties.remove_table_files_from_line(
-                    entity_id, property_selected
-                )
-                app().project.model.properties._remove_line_property(
-                    property_selected, entity_id
-                )
+                app().project.model.properties.remove_table_files_from_line(entity_id, property_selected)
+                app().project.model.properties._remove_line_property(property_selected, entity_id)
 
             elif entity_name == "surface":
-                app().project.model.properties.remove_table_files_from_surface(
-                    entity_id, property_selected
-                )
-                app().project.model.properties._remove_surface_property(
-                    property_selected, entity_id
-                )
+                app().project.model.properties.remove_table_files_from_surface(entity_id, property_selected)
+                app().project.model.properties._remove_surface_property(property_selected, entity_id)
 
             elif entity_name == "volume":
-                app().project.model.properties.remove_table_files_from_volume(
-                    entity_id, property_selected
-                )
-                app().project.model.properties._remove_volume_property(
-                    property_selected, entity_id
-                )
+                app().project.model.properties.remove_table_files_from_volume(entity_id, property_selected)
+                app().project.model.properties._remove_volume_property(property_selected, entity_id)
 
         self.actions_to_finalize()
         self.close()
