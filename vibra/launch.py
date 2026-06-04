@@ -2,7 +2,6 @@ import logging
 import os
 import platform
 import sys
-from traceback import print_exception
 
 from PySide6.QtCore import QLocale
 
@@ -31,11 +30,9 @@ def custom_exception_hooks(exc_type, exc_value, exc_traceback):
         if isinstance(exc_value, VibraException) and not exc_value.show_traceback:
             exc_traceback = None
 
-        if exc_traceback is not None:
-            print_exception(exc_value)
-
         error_message = ExceptionMessage(exc_value, stack_trace=exc_traceback)
         error_message.show()
+        error_message.move_stacktrace_to_bottom()
 
     except Exception as e:
         logging.exception(e)
@@ -92,6 +89,8 @@ def main():
 
     # Make the window scale evenly for every monitor
     os.environ["QT_AUTO_SCREEN_SCALE_FACTOR"] = "1"
+
+    Application.setAttribute(Qt.ApplicationAttribute.AA_ShareOpenGLContexts)
 
     if platform.system() == "Linux":
         # Ensure the use of X11 instead of Wayland in Linux systems

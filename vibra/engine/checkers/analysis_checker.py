@@ -15,9 +15,7 @@ class AnalysisChecker:
     def __init__(self, model: Model):
         self.model = model
 
-    def check_analysis_requirements(self, analysis_id_to_check: AnalysisID):
-        self.check_analysis_setup(analysis_id_to_check)
-
+    def check_analysis_requirements(self):
         match self.model.analysis_id:
             case AnalysisID.STRUCTURAL_MODAL:
                 self.check_structural_modal_analysis()

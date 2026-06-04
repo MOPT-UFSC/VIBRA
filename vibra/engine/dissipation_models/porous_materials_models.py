@@ -1,10 +1,43 @@
+from typing import TYPE_CHECKING
+
 from vibra.engine.properties.fluid import Fluid
 
-from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from vibra.engine.model import Model
 
 import numpy as np
+
+
+def get_DB_standard_constants() -> dict[str, float]:
+    """
+    Returns the standard constants to the Delany-Bazley porous material model.
+    """
+    return {
+    "C1" : 0.0858,
+    "C2" : 0.7000,
+    "C3" : 0.1690,
+    "C4" : 0.5950,
+    "C5" : 0.0497,
+    "C6" : 0.7540,
+    "C7" : 0.0758,
+    "C8" : 0.7320,
+    }
+
+
+def get_DBM_standard_constants() -> dict[str, float]:
+    """
+    Returns the standard constants to the Delany-Bazley-Miki porous material model.
+    """
+    return {
+    "C1" : 0.1090,
+    "C2" : 0.6180,
+    "C3" : 0.1600,
+    "C4" : 0.6180,
+    "C5" : 0.0699,
+    "C6" : 0.6320,
+    "C7" : 0.1070,
+    "C8" : 0.6320,
+    }
 
 
 class PorousMaterialModels:
