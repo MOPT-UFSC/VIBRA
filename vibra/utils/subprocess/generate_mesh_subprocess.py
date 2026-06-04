@@ -31,13 +31,7 @@ def main():
     project.model.mesh_setup = mesh_setup
     project.model.geometry_path = geometry_path
 
-    mesh = project.generate_mesh()
-
-    print(f"Mesh written to: {project.working_directory}")
-    print(f"Nodes: {len(mesh.nodal_coordinates)}")
-    print(f"Line elements: {len(mesh.lines_connectivity)}")
-    print(f"Face elements: {len(mesh.faces_connectivity)}")
-    print(f"Solid elements: {len(mesh.solids_connectivity)}")
+    project.generate_mesh()
 
 if __name__ == "__main__":
     try:

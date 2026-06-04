@@ -1,6 +1,7 @@
 import logging
 from copy import deepcopy
 from enum import IntEnum
+import time
 
 import matplotlib.colors as mcolors
 import numpy as np
@@ -325,6 +326,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
                 self.comboBox_3d_algorithm.setCurrentIndex(GMSHAlgorithms_3D.HXT_3D)
 
     def _generate_in_subprocess(self) -> bool:
+        # di = time.perf_counter()
         mesh_setup = self._get_mesh_setup()
         app().project.configure_mesh(mesh_setup)
         app().project.write_to_working_dir()
@@ -342,21 +344,27 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
         app().project.reset_solution()
         app().project.mark_project_as_modified()
+        # print(f"Elapse time to generate mesh in subprocess {time.perf_counter() - di}")
 
         return True
 
     def generate_mesh_callback(self):
         self.hide()
-        if not self._generate_in_subprocess():
-            return
-        # def generate():
-        #     mesh_setup = self._get_mesh_setup()
-        #     app().project.configure_mesh(mesh_setup)
-        #     app().project.generate_mesh()
-        #
-        # self.hide()
-        #
-        # LoadingWindow(generate).run()
+        if app().config.user_preferences.generate_mesh_in_subprocess:
+            if not self._generate_in_subprocess():
+                return
+        else:
+            def generate():
+                # di = time.perf_counter()
+                mesh_setup = self._get_mesh_setup()
+                app().project.configure_mesh(mesh_setup)
+                app().project.generate_mesh()
+                # print(f"Elapse time to generate mesh in main process{time.perf_counter() - di}")
+
+            self.hide()
+
+            LoadingWindow(generate).run()
+
         LoadingWindow(self.actions_to_finalize).run()
 
         self.update_mesh_refinement_table()

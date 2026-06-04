@@ -222,6 +222,7 @@ class RendererUserPreferencesInput(RendererUserPreferences_UI):
         self.update_renderers_font_size()
         self.update_compatibility_mode()
         self.update_run_analysis_in_subprocess()
+        self.update_generate_mesh_in_subprocess()
         app().main_window.update_plots(reset_camera=False)
 
     def reset_to_default(self):
@@ -258,6 +259,13 @@ class RendererUserPreferencesInput(RendererUserPreferences_UI):
     def update_run_analysis_in_subprocess_checkbox(self):
         self.checkBox_run_analysis_in_subprocess.setChecked(self.tmp_user_preferences.run_analysis_in_subprocess)
 
+    def update_generate_mesh_in_subprocess(self):
+        is_checked = self.checkBox_generate_mesh_in_subprocess.isChecked()
+        self.tmp_user_preferences.generate_mesh_in_subprocess = is_checked
+
+    def update_generate_mesh_in_subprocess_checkbox(self):
+        self.checkBox_generate_mesh_in_subprocess.setChecked(self.tmp_user_preferences.generate_mesh_in_subprocess)
+
     def update_show_reference_scalebar_checkbox(self):
         self.checkBox_reference_scale.setChecked(self.tmp_user_preferences.show_reference_scale_bar)
 
@@ -283,6 +291,7 @@ class RendererUserPreferencesInput(RendererUserPreferences_UI):
         self.update_show_reference_scalebar_checkbox()
         self.update_compatibility_mode_checkbox()
         self.update_run_analysis_in_subprocess_checkbox()
+        self.update_generate_mesh_in_subprocess_checkbox()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
