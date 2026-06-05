@@ -93,7 +93,6 @@ class ChoosePropertyToDelete(ChoosePropertyToDelete_UI):
 
         elif isinstance(self.property_to_filter, str):
             selected_entities = app().project.model.properties.get_properties_from_all_entities(property_to_filter=self.property_to_filter)
-            print(selected_entities)
 
         else:
             selected_entities = {

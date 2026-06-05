@@ -597,8 +597,6 @@ class ModelProperties:
             # if entity_name not in entities_with_properties.keys():
             #     entities_with_properties[key].extend([])
 
-        print(property_to_filter, entities_with_properties)
-
         return entities_with_properties
 
 
