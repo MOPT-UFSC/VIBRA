@@ -80,9 +80,6 @@ class ModelSetupWidget(QWidget):
             return
 
         property_to_filter = item.property_name
-        # property_to_filter = self.model_setup_items.item_text_to_property_name.get(item.text(0))
-        # if property_to_filter is None:
-        #     return
 
         app().main_window.close_dialogs()
         ChoosePropertyToDelete(property_to_filter=property_to_filter)
