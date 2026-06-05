@@ -220,16 +220,18 @@ class MainWindow(MainWindow_UI):
 
         from vibra import DARK_ICON_COLOR, LIGHT_ICON_COLOR
 
+        self.icon_color = None
         if theme == "dark":
-            icon_color = DARK_ICON_COLOR.to_qt()
+            self.icon_color = DARK_ICON_COLOR.to_qt()
         elif theme == "light":
-            icon_color = LIGHT_ICON_COLOR.to_qt()
+            self.icon_color = LIGHT_ICON_COLOR.to_qt()
 
         widgets_type = [QAction, QAbstractButton]
         widgets = list()
         for widget_type in widgets_type:
             widgets += self.findChildren(widget_type)
-        change_icon_color_for_widgets(widgets, icon_color)
+
+        change_icon_color_for_widgets(widgets, self.icon_color)
 
         self.theme_changed.emit(theme)
 

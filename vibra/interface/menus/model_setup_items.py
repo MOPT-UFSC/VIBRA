@@ -118,6 +118,33 @@ class ModelSetupItems(CommonMenuItems):
             "item_child_acoustic_transfer_element_setup": "acoustic_transfer_element_setup",
         }
 
+        # correlate each menu item text with the name of the related property.
+        self.item_text_to_property_name = {
+            # "Material" : "material",
+            # "Fluid" : "fluid",
+            # "Surface thickness" : "surface_thickness",
+            "Prescribed DOF" : "prescribed_dof",
+            "Nodal Loads" : "nodal_loads",
+            "Distributed Loads" : "distributed_loads",
+            "Normal Pressure Load" : "normal_pressure_load",
+            "Acoustic Pressure" : "acoustic_pressure",
+            "Mass Source" : "mass_source",
+            "Surface Velocity" : "surface_velocity",
+            "Incident Plane Wave" : "incident_plane_wave",
+            "Anechoic Termination" : "anechoic_termination",
+            "Absorption Surface" : "absorption_surface",
+            "Specific Impedance" : "specific_impedance",
+            # "Transfer Impedance" : "transfer_impedance",
+            # "Perforated Plate Model" : "perforated_plate_model",
+            "Proportional Damping" : "proportional_damping",
+            "Porous Material Model" : "porous_material_model",
+            "Viscous-thermal Loss Model" : "viscous_thermal_model",
+            # "Acoustic Properties Gradient" : "acoustic_properties_gradient",
+            "Reciprocating Compressor Excitation" : "reciprocating_compressor_excitation",
+            "Compressor Excitation (waveform)" : "compressor_excitation_waveform",
+            "Compressor Excitation (spectrum)" : "compressor_excitation_spectrum",
+        }
+
     def _create_connections(self):
         """
         This function iterates through all child items, connecting the items one by one

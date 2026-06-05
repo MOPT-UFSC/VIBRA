@@ -1,4 +1,5 @@
 import json
+from collections import defaultdict
 from typing import Callable, Optional
 
 import numpy as np
@@ -543,15 +544,23 @@ class ModelProperties:
                 yield entity_name, property_name, tags, value
 
     def get_properties_from_points(self, point_ids: set[int]) -> list[tuple[str, int]]:
+        if not point_ids:
+            return list()
         return self._get_properties_from_entities(point_ids, self.point_properties)
     
     def get_properties_from_lines(self, line_ids: set[int]) -> list[tuple[str, int]]:
+        if not line_ids:
+            return list()
         return self._get_properties_from_entities(line_ids, self.line_properties)
 
     def get_properties_from_surfaces(self, surface_ids: set[int]) -> list[tuple[str, int]]:
+        if not surface_ids:
+            return list()
         return self._get_properties_from_entities(surface_ids, self.surface_properties)
 
     def get_properties_from_volumes(self, volume_ids: set[int]) -> list[tuple[str, int]]:
+        if not volume_ids:
+            return list()
         return self._get_properties_from_entities(volume_ids, self.volume_properties)
 
     def _get_properties_from_entities(self, entity_ids: set[int], entity_properties: dict) -> list[tuple[str, int]]:
@@ -562,6 +571,36 @@ class ModelProperties:
                 properties_found.append((property_name, entity_id))
         
         return properties_found
+
+    def get_properties_from_all_entities(self, property_to_filter: str | None = None):
+        property_dicts = {
+            # "global": self.global_properties,
+            # "group": self.group_properties,
+            "volume": self.volume_properties,
+            "surface": self.surface_properties,
+            "line": self.line_properties,
+            "point": self.point_properties,
+            # "element": self.element_properties,
+            # "node": self.nodal_properties,
+        }
+
+        entities_with_properties = defaultdict(list)
+
+        for entity_name, property_dict in property_dicts.items():
+            key = f"{entity_name}s"
+            for property_name, tag in property_dict.keys():
+                if isinstance(property_to_filter, str) and property_to_filter != property_name:
+                    continue
+
+                entities_with_properties[key].extend([tag])
+
+            # if entity_name not in entities_with_properties.keys():
+            #     entities_with_properties[key].extend([])
+
+        print(property_to_filter, entities_with_properties)
+
+        return entities_with_properties
+
 
 if __name__ == "__main__":
     p = ModelProperties()
