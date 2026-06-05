@@ -73,7 +73,7 @@ class ModelSetupWidget(QWidget):
             return
 
         app().main_window.close_dialogs()
-        ChoosePropertyToDelete(all_properties=True)
+        ChoosePropertyToDelete(property_to_filter="all_properties")
 
     def remove_selected_property_callback(self, item: QTreeWidgetItem):        
         if not isinstance(item, ChildTreeWidgetItem):

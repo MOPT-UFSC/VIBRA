@@ -14,7 +14,6 @@ class ChoosePropertyToDelete(ChoosePropertyToDelete_UI):
 
         app().main_window.set_input_widget(self)
 
-        self.all_properties = kwargs.get("all_properties", False)
         self.property_to_filter = kwargs.get("property_to_filter")
 
         self._initialize()
@@ -88,19 +87,19 @@ class ChoosePropertyToDelete(ChoosePropertyToDelete_UI):
 
     def _load_properties_data_and_update_table(self):
 
-        if self.all_properties:
-            selected_entities = app().project.model.properties.get_properties_from_all_entities()
-
-        elif isinstance(self.property_to_filter, str):
-            selected_entities = app().project.model.properties.get_properties_from_all_entities(property_to_filter=self.property_to_filter)
-
-        else:
+        if self.property_to_filter is None:
             selected_entities = {
                 "points": app().main_window.selection.geometry_points,
                 "lines": app().main_window.selection.geometry_lines,
                 "surfaces": app().main_window.selection.geometry_surfaces,
                 "volumes": app().main_window.selection.geometry_volumes,
             }
+
+        else:
+            if self.property_to_filter == "all_properties":
+                selected_entities = app().project.model.properties.get_properties_from_all_entities()
+            else:
+                selected_entities = app().project.model.properties.get_properties_from_all_entities(property_to_filter=self.property_to_filter)
 
         self.tableWidget.clearContents()
         self.properties_formated.clear()
