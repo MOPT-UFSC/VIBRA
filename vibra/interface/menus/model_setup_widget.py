@@ -4,7 +4,7 @@ from PySide6.QtWidgets import QFrame, QGridLayout, QMenu, QTreeWidgetItem, QWidg
 from vibra import ICON_DIR, app
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.choose_property_to_delete import ChoosePropertyToDelete
-from vibra.interface.menus.model_setup_items import ModelSetupItems
+from vibra.interface.menus.model_setup_items import ModelSetupItems, ChildTreeWidgetItem
 
 
 class ModelSetupWidget(QWidget):
@@ -75,13 +75,14 @@ class ModelSetupWidget(QWidget):
         app().main_window.close_dialogs()
         ChoosePropertyToDelete(all_properties=True)
 
-    def remove_selected_property_callback(self, item: QTreeWidgetItem):
-        if item is None:
+    def remove_selected_property_callback(self, item: QTreeWidgetItem):        
+        if not isinstance(item, ChildTreeWidgetItem):
             return
 
-        property_to_filter = self.model_setup_items.item_text_to_property_name.get(item.text(0))
-        if property_to_filter is None:
-            return
+        property_to_filter = item.property_name
+        # property_to_filter = self.model_setup_items.item_text_to_property_name.get(item.text(0))
+        # if property_to_filter is None:
+        #     return
 
         app().main_window.close_dialogs()
         ChoosePropertyToDelete(property_to_filter=property_to_filter)
