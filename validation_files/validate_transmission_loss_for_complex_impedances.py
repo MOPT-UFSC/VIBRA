@@ -148,9 +148,13 @@ def load_external_mesh_and_solve():
     #           "volume_id": 1
     #           }
 
+    data_Z = {"volume_id" : 1}
+
     model.properties._set_property("surface_velocity", data_Vn, surface=1)
-    model.properties._set_property("specific_impedance", data_Z, surface=1)
-    model.properties._set_property("specific_impedance", data_Z, surface=2)
+    # model.properties._set_property("specific_impedance", data_Z, surface=1)
+    # model.properties._set_property("specific_impedance", data_Z, surface=2)
+    model.properties._set_property("anechoic_termination", data_Z, surface=1)
+    model.properties._set_property("anechoic_termination", data_Z, surface=2)
 
     # Define the analysis frequency setup
     analysis_setup = model.get_harmonic_analysis_setup(

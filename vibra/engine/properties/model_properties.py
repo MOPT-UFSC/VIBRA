@@ -588,14 +588,22 @@ class ModelProperties:
 
         for entity_name, property_dict in property_dicts.items():
             key = f"{entity_name}s"
-            for property_name, tag in property_dict.keys():
-                if isinstance(property_to_filter, str) and property_to_filter != property_name:
+            for (property_name, tag), prop_data in property_dict.items():
+                if not isinstance(property_to_filter, str):
                     continue
 
-                entities_with_properties[key].extend([tag])
+                if property_to_filter != property_name:
+                    if property_to_filter == "anechoic_termination":
+                        if not isinstance(prop_data, dict):
+                            continue
 
-            # if entity_name not in entities_with_properties.keys():
-            #     entities_with_properties[key].extend([])
+                        if property_to_filter not in prop_data.keys():
+                            continue
+
+                    else:
+                        continue
+
+                entities_with_properties[key].extend([tag])
 
         return entities_with_properties
 
