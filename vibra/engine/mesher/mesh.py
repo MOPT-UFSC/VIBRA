@@ -239,11 +239,11 @@ class Mesh:
             gmsh.finalize()
 
             exception = MeshingAlgorithmError(
-                "A problem occured while generating the mesh.",
-                "Reducing the size of the elements and/or changing the 3D meshing ",
-                "algorithm may help resolve the issue.\n",
-                "If neither of these options works, we suggest reviewing the CAD geometry ",
-                "to eliminate any potential underlying geometric issues.",
+                "A problem occurred while generating the mesh.\n"
+                "Reducing the size of the elements and/or changing the 3D meshing "
+                "algorithm may help resolve the issue.\n"
+                "If neither of these options works, we suggest reviewing the CAD geometry "
+                "to eliminate any potential underlying geometric issues."
             )
             logging.error(str(exception))
             raise exception from e
