@@ -295,6 +295,9 @@ class Model:
         return mask
 
     def has_spectral_content_been_modified(self):
+        if isinstance(self.analysis_setup, ModalAnalysisSetup):
+            return False
+
         cond_A = self.analysis_setup.frequency_spacing == FrequencySpacing.USER_DEFINED
         cond_B = len(self.solution_steps_mask) != int(sum(self.solution_steps_mask))
         return cond_A or cond_B
