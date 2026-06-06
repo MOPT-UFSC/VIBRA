@@ -1,4 +1,4 @@
-from PySide6.QtGui import QColor
+from PySide6.QtGui import QColor, QShowEvent
 from PySide6.QtCore import Qt
 
 from vibra.interface.formatters.icons import get_error_icon, get_warning_icon
@@ -44,14 +44,19 @@ class ExceptionMessage(ExceptionMessage_UI):
 
         message = " ".join(str(i) for i in exception.args)
         self.error_message.setText(message)
-        
+
         self.ok_button.clicked.connect(self.close)
         self.adjustSize()
 
     def _config_window(self):
-        self.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.setWindowModality(Qt.WindowModal)
+        self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
+        self.setWindowModality(Qt.WindowModality.ApplicationModal)
 
     def move_stacktrace_to_bottom(self):
         v_scrollbar = self.stack_trace_text_browser.verticalScrollBar()
         v_scrollbar.setValue(v_scrollbar.maximum())
+
+    def showEvent(self, arg__1: QShowEvent, /):
+        super().showEvent(arg__1)
+        self.raise_()
+        self.activateWindow()
