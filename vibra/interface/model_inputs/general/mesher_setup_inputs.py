@@ -335,11 +335,17 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         if status != SubProcessStatus.SUCCESS:
             return False
 
-        app().project.model.mesh = LoadingWindow(app().project.project_reader.read_mesh).run()
-        app().project.model.properties = app().project.project_reader.read_model_properties()
+        def load_mesh_from_working_dir():
+            logging.info("Loading generated mesh... [10/100]")
+            app().project.model.mesh = app().project.project_reader.read_mesh()
+            logging.info("Reading model properties... [65/100]")
+            app().project.model.properties = app().project.project_reader.read_model_properties()
 
-        app().project.reset_solution()
-        app().project.mark_project_as_modified()
+            logging.info("Updating project state... [85/100]")
+            app().project.reset_solution()
+            app().project.mark_project_as_modified()
+
+        LoadingWindow(load_mesh_from_working_dir).run()
         # print(f"Elapse time to generate mesh in subprocess {time.perf_counter() - di}")
 
         return True
