@@ -58,20 +58,21 @@ class AnalysisToolbar(QToolBar):
         self.label_analysis_domain = QLabel("Physical domain:")
 
         # QPushButton
-        self.pushButton_run_analysis = QPushButton(self)
-        self.pushButton_configure_analysis = QPushButton(self)
-        self.pushButton_reset_solution = QPushButton(self)
-        self.pushButton_resume_analysis = QPushButton(self)
+        self.pushButton_run_analysis = QPushButton(parent=self, text="Run Analysis")
+        self.pushButton_configure_analysis = QPushButton(parent=self, text="Analysis Setup")
+        self.pushButton_reset_solution = QPushButton(parent=self, text="Reset Solution")
+        self.pushButton_resume_analysis = QPushButton(self, text="Resume Solution")
 
     def _create_connections(self):
         #
         self.combo_box_physical_domain.currentTextChanged.connect(self.check_analysis_setup_callback)
-        self.combo_box_analysis_type.currentTextChanged.connect(self.check_analysis_setup_callback)
+        self.combo_box_analysis_type.currentTextChanged.connect(self.analysis_type_callback)
         #
         self.pushButton_run_analysis.clicked.connect(self.run_analysis)
         self.pushButton_resume_analysis.clicked.connect(lambda: self.run_analysis(True))
         self.pushButton_configure_analysis.clicked.connect(self.configure_analysis)
         self.pushButton_reset_solution.clicked.connect(self.project_solution_data_reset_callback)
+        #
         self.enable_pushbutons.connect(self.check_analysis_setup_callback)
         self.enable_pushbutons.connect(self.set_pushbutton_reset_solution_enabled)
 
@@ -89,16 +90,6 @@ class AnalysisToolbar(QToolBar):
         for widget_type in widgets_type:
             for widget in self.findChildren(widget_type):
                 widget.setFont(font)
-
-        self.setStyleSheet(
-            """
-            QToolBar {
-                border-style: solid;
-                border-width: 0.5px;
-                border-color: #888888;
-            }
-            """
-        )
 
     def get_spacer(self):
         spacer = QWidget()
@@ -135,26 +126,26 @@ class AnalysisToolbar(QToolBar):
         self.combo_box_physical_domain.setFixedSize(100, 28)
 
         # QPushButton
-        self.pushButton_configure_analysis.setFixedSize(50, 30)
+        self.pushButton_configure_analysis.setFixedSize(130, 28)
         self.pushButton_configure_analysis.setIcon(self.settings_icon)
         self.pushButton_configure_analysis.setIconSize(QSize(20, 20))
         self.pushButton_configure_analysis.setCursor(Qt.PointingHandCursor)
         self.pushButton_configure_analysis.setToolTip("Configure the analysis")
 
-        self.pushButton_run_analysis.setFixedSize(50, 30)
+        self.pushButton_run_analysis.setFixedSize(130, 28)
         self.pushButton_run_analysis.setIcon(self.solution_icon)
         self.pushButton_run_analysis.setIconSize(QSize(20, 20))
         self.pushButton_run_analysis.setCursor(Qt.PointingHandCursor)
         self.pushButton_run_analysis.setToolTip("Run the analysis")
 
-        self.pushButton_resume_analysis.setFixedSize(50, 30)
+        self.pushButton_resume_analysis.setFixedSize(140, 28)
         self.pushButton_resume_analysis.setIcon(self.resume_icon)
         self.pushButton_resume_analysis.setIconSize(QSize(20, 20))
         self.pushButton_resume_analysis.setCursor(Qt.PointingHandCursor)
         self.pushButton_resume_analysis.setToolTip("Resume the analysis")
         self.pushButton_resume_analysis.setDisabled(True)
 
-        self.pushButton_reset_solution.setFixedSize(50, 30)
+        self.pushButton_reset_solution.setFixedSize(130, 28)
         self.pushButton_reset_solution.setIcon(self.reset_icon)
         self.pushButton_reset_solution.setIconSize(QSize(20, 20))
         self.pushButton_reset_solution.setCursor(Qt.PointingHandCursor)
@@ -230,9 +221,23 @@ class AnalysisToolbar(QToolBar):
 
         return AnalysisID.NO_ANALYSIS
 
+    def is_analysis_setup_valid(self):
+        current_analysis_id = self.get_current_analysis_id()
+        return self.model.is_there_a_valid_analysis_setup(current_analysis_id=current_analysis_id)
+
+    def analysis_type_callback(self):
+        analysis_id = self.model.analysis_setup.analysis_id
+        new_analysis_id = self.get_current_analysis_id()
+        self.pushButton_run_analysis.setEnabled(analysis_id == new_analysis_id)
+        self.combo_box_physical_domain.blockSignals(False)
+        self.check_analysis_setup_callback()
+
     def check_analysis_setup_callback(self):
         app().main_window.update_symbols()
         app().main_window.update_info_text()
+        valid_analysis_setup = self.is_analysis_setup_valid()
+        self.pushButton_run_analysis.setEnabled(valid_analysis_setup)
+        # self.domain_changed.emit()
 
     def run_analysis(self, is_resume: bool = True):
         if app().config.user_preferences.run_analysis_in_subprocess:
@@ -342,18 +347,15 @@ class AnalysisToolbar(QToolBar):
 
         match self.get_current_analysis_id():
             case AnalysisID.STRUCTURAL_HARMONIC:
-                self.harmonic_structural()
+                self.harmonic_analysis_setup_callback(AnalysisID.STRUCTURAL_HARMONIC)
             case AnalysisID.ACOUSTIC_HARMONIC:
-                self.harmonic_acoustic()
+                self.harmonic_analysis_setup_callback(AnalysisID.ACOUSTIC_HARMONIC)
             case AnalysisID.STRUCTURAL_MODAL:
-                self.modal_structural()
+                self.modal_analysis_setup_callback(AnalysisID.STRUCTURAL_MODAL)
             case AnalysisID.ACOUSTIC_MODAL:
-                self.modal_acoustic()
+                self.modal_analysis_setup_callback(AnalysisID.ACOUSTIC_MODAL)
 
-    # TODO: these functions are almost equal.
-    # Maybe they can be unified into a single one.
-    def harmonic_structural(self):
-        analysis_id = AnalysisID.STRUCTURAL_HARMONIC
+    def harmonic_analysis_setup_callback(self, analysis_id: AnalysisID):
         harmonic = HarmonicAnalysisSetupInput(analysis_id)
         self.solve_analysis = harmonic.solve_analysis
 
@@ -361,38 +363,9 @@ class AnalysisToolbar(QToolBar):
             self.run_analysis()
             app().main_window.update_symbols()
 
-    def harmonic_acoustic(self):
-        analysis_id = AnalysisID.ACOUSTIC_HARMONIC
-        harmonic = HarmonicAnalysisSetupInput(analysis_id)
-        self.solve_analysis = harmonic.solve_analysis
-
-        if self.solve_analysis:
-            self.run_analysis()
-
-    def modal_structural(self):
-        analysis_id = AnalysisID.STRUCTURAL_MODAL
+    def modal_analysis_setup_callback(self, analysis_id: AnalysisID):
         modal = ModalAnalysisInput(analysis_id)
         self.solve_analysis = modal.proceed_solution
-
-        if modal.setup_defined:
-            app().project.configure_analysis(
-                analysis_id,
-                modal.analysis_setup,
-            )
-
-        if self.solve_analysis:
-            self.run_analysis()
-
-    def modal_acoustic(self):
-        analysis_id = AnalysisID.ACOUSTIC_MODAL
-        modal = ModalAnalysisInput(analysis_id)
-        self.solve_analysis = modal.proceed_solution
-
-        if modal.setup_defined:
-            app().project.configure_analysis(
-                analysis_id,
-                modal.analysis_setup,
-            )
 
         if self.solve_analysis:
             self.run_analysis()
