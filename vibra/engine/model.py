@@ -135,6 +135,9 @@ class Model:
         if isinstance(self.analysis_setup, HarmonicAnalysisSetup):
             return self.analysis_setup.global_damping
         return (None, None, None)
+    
+    def reset_current_solution(self):
+        self.solution = None
 
     def get_harmonic_analysis_setup(self, **kwargs) -> HarmonicAnalysisSetup:
         analysis_setup = HarmonicAnalysisSetup(**kwargs)
