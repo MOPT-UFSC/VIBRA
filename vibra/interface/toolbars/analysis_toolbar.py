@@ -74,7 +74,7 @@ class AnalysisToolbar(QToolBar):
         self.reset_solution_action.triggered.connect(self.project_solution_data_reset_callback)
         #
         self.enable_pushbutons.connect(self.check_analysis_setup_callback)
-        self.enable_pushbutons.connect(self.set_pushbutton_reset_solution_enabled)
+        self.enable_pushbutons.connect(self.update_reset_solution_button_accessibility)
 
         # app().project.can_resume_solution_changed.connect(self.update_pushbutton_resume_analysis)
 
@@ -183,8 +183,9 @@ class AnalysisToolbar(QToolBar):
         can_resume_solution = app().project.can_resume_solution
         self.resume_analysis_action.setEnabled(can_resume_solution)
 
-    def set_pushbutton_reset_solution_enabled(self):
-        self.reset_solution_action.setEnabled(True)
+    def update_reset_solution_button_accessibility(self):
+        solution_exists = self.model.solution is not None
+        self.reset_solution_action.setEnabled(solution_exists)
 
     def get_current_analysis_id(self):
         analysis_type = self.combo_box_analysis_type.currentText()
@@ -291,7 +292,7 @@ class AnalysisToolbar(QToolBar):
 
     def post_processing_analysis(self):
         logging.info("Post-processing results... [10/100]")
-        self.set_pushbutton_reset_solution_enabled()
+        self.update_reset_solution_button_accessibility()
 
         logging.info("Post-processing results... [65/100]")
         app().main_window.model_setup_widget.model_setup_items.update_items_appearance()

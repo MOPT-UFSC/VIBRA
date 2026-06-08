@@ -956,6 +956,7 @@ class MainWindow(MainWindow_UI):
         self.set_toolbars_enabled(True)
         self.update_toolbar_and_menu_items_after_load_project()
         self.analysis_toolbar.check_analysis_setup_callback()
+        self.analysis_toolbar.update_reset_solution_button_accessibility()
 
         LoadingWindow(self.geometry_widget.update_plot).run()
         LoadingWindow(self.mesh_widget.update_plot).run()
