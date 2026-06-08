@@ -1,7 +1,7 @@
 import logging
 
-from PySide6.QtCore import QSize, Qt, Signal
-from PySide6.QtGui import QFont, QIcon
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QAction, QFont, QIcon
 from PySide6.QtWidgets import QComboBox, QLabel, QPushButton, QToolBar, QWidget
 
 from vibra import ICON_DIR, app
@@ -42,10 +42,10 @@ class AnalysisToolbar(QToolBar):
         return app().project.model.mesh
 
     def _load_icons(self):
-        self.settings_icon = QIcon(str(ICON_DIR / "settings.png"))
-        self.solution_icon = QIcon(str(ICON_DIR / "go_next.png"))
-        self.resume_icon = QIcon(str(ICON_DIR / "resume_icon.png"))
-        self.reset_icon = QIcon(str(ICON_DIR / "reset_icon.png"))
+        self.configure_analysis_icon = QIcon(str(ICON_DIR / "settings.png"))
+        self.reset_solution_icon = QIcon(str(ICON_DIR / "reset_icon.png"))
+        self.resume_solution_icon = QIcon(str(ICON_DIR / "resume_icon.png"))
+        self.run_analysis_icon = QIcon(str(ICON_DIR / "go_next.png"))
 
     def _define_qt_variables(self):
 
@@ -58,20 +58,20 @@ class AnalysisToolbar(QToolBar):
         self.label_analysis_domain = QLabel("Physical domain:")
 
         # QPushButton
-        self.pushButton_run_analysis = QPushButton(parent=self, text="Run Analysis")
-        self.pushButton_configure_analysis = QPushButton(parent=self, text="Analysis Setup")
-        self.pushButton_reset_solution = QPushButton(parent=self, text="Reset Solution")
-        self.pushButton_resume_analysis = QPushButton(self, text="Resume Solution")
+        self.run_analysis_action = QAction(self.run_analysis_icon, "Run Analysis", self)
+        self.configure_analysis_action = QAction(self.configure_analysis_icon, "Analysis Setup", self)
+        self.reset_solution_action = QAction(self.reset_solution_icon, "Reset Solution", self)
+        self.resume_analysis_action = QAction(self.resume_solution_icon, "Resume Solution", self)
 
     def _create_connections(self):
         #
         self.combo_box_physical_domain.currentTextChanged.connect(self.check_analysis_setup_callback)
         self.combo_box_analysis_type.currentTextChanged.connect(self.analysis_type_callback)
         #
-        self.pushButton_run_analysis.clicked.connect(self.run_analysis)
-        self.pushButton_resume_analysis.clicked.connect(lambda: self.run_analysis(True))
-        self.pushButton_configure_analysis.clicked.connect(self.configure_analysis)
-        self.pushButton_reset_solution.clicked.connect(self.project_solution_data_reset_callback)
+        self.run_analysis_action.triggered.connect(self.run_analysis)
+        self.resume_analysis_action.triggered.connect(lambda: self.run_analysis(True))
+        self.configure_analysis_action.triggered.connect(self.configure_analysis)
+        self.reset_solution_action.triggered.connect(self.project_solution_data_reset_callback)
         #
         self.enable_pushbutons.connect(self.check_analysis_setup_callback)
         self.enable_pushbutons.connect(self.set_pushbutton_reset_solution_enabled)
@@ -82,6 +82,7 @@ class AnalysisToolbar(QToolBar):
         self.setMinimumHeight(40)
         self.setMovable(True)
         self.setFloatable(True)
+        self.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
 
         font = QFont()
         font.setPointSize(10)
@@ -109,13 +110,13 @@ class AnalysisToolbar(QToolBar):
         #
         self.addSeparator()
         self.addWidget(self.get_spacer())
-        self.addWidget(self.pushButton_configure_analysis)
+        self.addAction(self.configure_analysis_action)
         self.addWidget(self.get_spacer())
-        self.addWidget(self.pushButton_run_analysis)
+        self.addAction(self.run_analysis_action)
         self.addWidget(self.get_spacer())
-        self.addWidget(self.pushButton_resume_analysis)
+        self.addAction(self.resume_analysis_action)
         self.addWidget(self.get_spacer())
-        self.addWidget(self.pushButton_reset_solution)
+        self.addAction(self.reset_solution_action)
         #
         self.adjustSize()
 
@@ -125,32 +126,14 @@ class AnalysisToolbar(QToolBar):
         self.combo_box_analysis_type.setFixedSize(100, 28)
         self.combo_box_physical_domain.setFixedSize(100, 28)
 
-        # QPushButton
-        self.pushButton_configure_analysis.setFixedSize(130, 28)
-        self.pushButton_configure_analysis.setIcon(self.settings_icon)
-        self.pushButton_configure_analysis.setIconSize(QSize(20, 20))
-        self.pushButton_configure_analysis.setCursor(Qt.PointingHandCursor)
-        self.pushButton_configure_analysis.setToolTip("Configure the analysis")
-
-        self.pushButton_run_analysis.setFixedSize(130, 28)
-        self.pushButton_run_analysis.setIcon(self.solution_icon)
-        self.pushButton_run_analysis.setIconSize(QSize(20, 20))
-        self.pushButton_run_analysis.setCursor(Qt.PointingHandCursor)
-        self.pushButton_run_analysis.setToolTip("Run the analysis")
-
-        self.pushButton_resume_analysis.setFixedSize(140, 28)
-        self.pushButton_resume_analysis.setIcon(self.resume_icon)
-        self.pushButton_resume_analysis.setIconSize(QSize(20, 20))
-        self.pushButton_resume_analysis.setCursor(Qt.PointingHandCursor)
-        self.pushButton_resume_analysis.setToolTip("Resume the analysis")
-        self.pushButton_resume_analysis.setDisabled(True)
-
-        self.pushButton_reset_solution.setFixedSize(130, 28)
-        self.pushButton_reset_solution.setIcon(self.reset_icon)
-        self.pushButton_reset_solution.setIconSize(QSize(20, 20))
-        self.pushButton_reset_solution.setCursor(Qt.PointingHandCursor)
-        self.pushButton_reset_solution.setToolTip("Reset Solution")
-        self.pushButton_reset_solution.setDisabled(True)
+        # QAction
+        self.configure_analysis_action.setToolTip("Configure the analysis settings")
+        self.resume_analysis_action.setToolTip("Resume the analysis")
+        self.reset_solution_action.setToolTip("Reset Solution")
+        self.run_analysis_action.setToolTip("Run the analysis")
+        #
+        self.reset_solution_action.setDisabled(True)
+        self.resume_analysis_action.setDisabled(True)
 
     def _load_analysis_types(self):
 
@@ -194,14 +177,14 @@ class AnalysisToolbar(QToolBar):
             self.combo_box_physical_domain.blockSignals(False)
 
     def set_pushbutton_resume_analysis_enabled(self, enable=True):
-        self.pushButton_resume_analysis.setEnabled(enable)
+        self.resume_analysis_action.setEnabled(enable)
 
     def update_pushbutton_resume_analysis(self):
         can_resume_solution = app().project.can_resume_solution
-        self.pushButton_resume_analysis.setEnabled(can_resume_solution)
+        self.resume_analysis_action.setEnabled(can_resume_solution)
 
     def set_pushbutton_reset_solution_enabled(self):
-        self.pushButton_reset_solution.setEnabled(True)
+        self.reset_solution_action.setEnabled(True)
 
     def get_current_analysis_id(self):
         analysis_type = self.combo_box_analysis_type.currentText()
@@ -228,7 +211,7 @@ class AnalysisToolbar(QToolBar):
     def analysis_type_callback(self):
         analysis_id = self.model.analysis_setup.analysis_id
         new_analysis_id = self.get_current_analysis_id()
-        self.pushButton_run_analysis.setEnabled(analysis_id == new_analysis_id)
+        self.run_analysis_action.setEnabled(analysis_id == new_analysis_id)
         self.combo_box_physical_domain.blockSignals(False)
         self.check_analysis_setup_callback()
 
@@ -236,7 +219,7 @@ class AnalysisToolbar(QToolBar):
         app().main_window.update_symbols()
         app().main_window.update_info_text()
         valid_analysis_setup = self.is_analysis_setup_valid()
-        self.pushButton_run_analysis.setEnabled(valid_analysis_setup)
+        self.run_analysis_action.setEnabled(valid_analysis_setup)
         # self.domain_changed.emit()
 
     def run_analysis(self, is_resume: bool = True):
@@ -336,7 +319,7 @@ class AnalysisToolbar(QToolBar):
 
     def reset_solution(self, force_delete_harmonic=False):
         app().project.reset_solution()
-        self.pushButton_reset_solution.setDisabled(True)
+        self.reset_solution_action.setDisabled(True)
         app().main_window.project_data_modified = True
         app().main_window.action_model_workspace_callback()
         app().main_window.action_export_element_transfer_data.setDisabled(True)

@@ -61,15 +61,15 @@ def check_mesh_related_issues(run_analysis_button: QPushButton):
     run_analysis_button.setDisabled(problematic_mesh)
 
     analysis_toolbar = app().main_window.analysis_toolbar
-    analysis_toolbar.pushButton_run_analysis.setToolTip(text)
-    analysis_toolbar.pushButton_run_analysis.setDisabled(problematic_mesh)
+    analysis_toolbar.run_analysis_action.setToolTip(text)
+    analysis_toolbar.run_analysis_action.setDisabled(problematic_mesh)
 
     # interrupt the code execution if any mesh-related issue has been detected
     if problematic_mesh:
         return
 
     valid_analysis_setup = analysis_toolbar.is_analysis_setup_valid()
-    analysis_toolbar.pushButton_run_analysis.setEnabled(valid_analysis_setup)
+    analysis_toolbar.run_analysis_action.setEnabled(valid_analysis_setup)
 
 def mesher_interface_callback(parent: QDialog, close_after_generate: bool = False):
     parent.hide()
