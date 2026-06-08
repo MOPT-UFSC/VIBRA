@@ -533,7 +533,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         )
 
         self.setup_defined = True
-        app().main_window.analysis_toolbar.check_analysis_setup_callback()
+        app().main_window.analysis_toolbar.enable_pushbutons.emit()
 
         if not self.keep_window_open_after_enter_setup:
             self.close()

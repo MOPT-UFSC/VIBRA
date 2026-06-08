@@ -3,7 +3,7 @@ from PySide6.QtGui import QIntValidator, Qt
 
 from vibra import app
 from vibra.engine import AnalysisID, ModalAnalysisSetup
-from vibra.interface.common.common_interface import check_mesh_related_issues, mesher_interface_callback
+from vibra.interface.common.common_interface import check_mesh_related_issues#, mesher_interface_callback
 from vibra.interface.ui_generated.analysis.modal_analysis_input_ui import (
     ModalAnalysisInput_UI,
 )
@@ -34,8 +34,6 @@ class ModalAnalysisInput(ModalAnalysisInput_UI):
 
     def _initialize(self):
         self.keep_window_open = True
-        self.modes_number = None
-        self.setup_defined = False
         self.proceed_solution = False
 
     def _config_window(self):
@@ -80,16 +78,17 @@ class ModalAnalysisInput(ModalAnalysisInput_UI):
                 line_edit.setFocus()
                 return True
 
-        self.modes_number = int(self.lineEdit_modes_number.text())
-        self.sigma_factor = float(self.lineEdit_sigma_factor.text())
-
-        self.analysis_setup = ModalAnalysisSetup(
+        analysis_setup = ModalAnalysisSetup(
             analysis_id = self.analysis_id,
-            modes_number = self.modes_number,
-            sigma_factor = self.sigma_factor,
+            modes_number = int(self.lineEdit_modes_number.text()),
+            sigma_factor = float(self.lineEdit_sigma_factor.text()),
         )
 
-        self.setup_defined = True
+        app().project.configure_analysis(
+            self.analysis_id,
+            analysis_setup,
+        )
+
         app().main_window.analysis_toolbar.enable_pushbutons.emit()
         self.close()
 
