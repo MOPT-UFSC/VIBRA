@@ -45,12 +45,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
         self._config_widgets()
         self._configure_validator()
         self._create_connections()
-        self._load_analysis_setup()
-
-        if self.load_input_surface_id():
-            return
-
-        self.geometry_selection_callback()
+        self.check_and_load_transmission_loss_data()
 
     @property
     def mesh(self):
@@ -65,9 +60,11 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
         return app().project.get_acoustic_postprocessing()
 
     def _initialize(self):
+        self.unit_label = "dB"
         self.exporter = None
         self.plotter = None
-        self.unit_label = "dB"
+        self.input_surface_id = None
+        self.output_surface_id = None
 
     def _config_widgets(self):
         self.current_lineEdit = self.lineEdit_output_surface_id
@@ -83,11 +80,6 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
         super().showEvent(event)
         app().main_window.show_geometry_render_widget()
 
-    def _load_analysis_setup(self):
-        self.analysis_method = ""
-        if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
-            self.analysis_method = "Direct method"
-
     def _create_connections(self):
         #
         self.comboBox_processing_selector.currentIndexChanged.connect(self.processing_selector_callback)
@@ -96,6 +88,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
         #
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
         self.pushButton_flip_selection.clicked.connect(self.invert_selection)
+        self.pushButton_help.clicked.connect(self.help_callback)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
         #
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
@@ -105,6 +98,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
         #
         self.lineEdit_output_clicked()
         self.update_cutoff_related_widgets_visibility()
+        self.geometry_selection_callback()
 
     def clickable(self, widget):
         class Filter(QObject):
@@ -130,7 +124,6 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
         self.highlight_selected_line_edit()
 
     def highlight_selected_line_edit(self):
-
         if self.current_lineEdit == self.lineEdit_input_surface_id:
             self.lineEdit_output_surface_id.setStyleSheet("")
         else:
@@ -158,7 +151,10 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
         _faces = [str(i) for i in faces]
         self.current_lineEdit.setText(_faces[0])
 
-    def load_input_surface_id(self):
+    def check_and_load_transmission_loss_data(self):
+
+        if self.comboBox_processing_selector.currentIndex() != DataType.TRANSMISSION_LOSS:
+            return
 
         input_surface_candidate = list()
         output_surface_candidate = list()
@@ -178,10 +174,19 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
                     input_surface_candidate.append(surf_id)
 
         if len(input_surface_candidate) == 1:
+            if isinstance(self.input_surface_id, int) and self.input_surface_id != input_surface_candidate[0]:
+                return True
+
             self.lineEdit_input_surface_id.setText(str(input_surface_candidate[0]))
 
         if len(output_surface_candidate) == 1:
+            if isinstance(self.output_surface_id, int) and self.output_surface_id != output_surface_candidate[0]:
+                return True
+
             self.lineEdit_output_surface_id.setText(str(output_surface_candidate[0]))
+
+        if input_surface_candidate and output_surface_candidate:
+            return False
 
         if input_surface_candidate:
             self.lineEdit_output_surface_id.setFocus()
@@ -189,10 +194,9 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
         elif output_surface_candidate:
             self.lineEdit_input_surface_id.setFocus()
 
-        if input_surface_candidate and output_surface_candidate:
-            return False
+        return True
 
-        self.close()
+    def show_transmission_loss_calculating_requirements_message(self):
         title = "Invalid inputs detected"
         message = "The transmission loss calculation requires only one active excitation source "
         message += "at the input surface, commonly in the form of a incident plane wave with and a "
@@ -200,8 +204,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
         message += "a surface velocity, combined with specific impedances in both input and output "
         message += "surfaces, is adopted. Any mismatch in these requirements will make the transmission "
         message += "loss calculation unfeasible."
-        PrintMessageInput([error_title, title, message])
-        return True
+        PrintMessageInput([error_title, title, message], height=300)
 
     def invert_selection(self):
         temp_text_input = self.lineEdit_input_surface_id.text()
@@ -213,6 +216,30 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
         transmission_loss = self.comboBox_processing_selector.currentIndex() == DataType.TRANSMISSION_LOSS
         self.label_integration_method.setEnabled(transmission_loss)
         self.comboBox_integration_method.setEnabled(transmission_loss)
+
+    def help_callback(self):
+        window_title = "Help"
+        if self.comboBox_processing_selector.currentIndex() == DataType.TRANSMISSION_LOSS:
+            title = "Required data to process the Transmission Loss"
+            message = "Dear user, to determine the Transmission Loss (TL) of a filter or duct it is necessary to select the "
+            message += "input surface ID where the indicent wave is applied (usually by a normal surface velocity or incident "
+            message += "plane wave source) and the output surface ID with an anechoic termination. An anechoic termination "
+            message += " also should be applied at the input surface ID to avoid wave reflections caused by the source itself.\n"
+            message += "\nInput surface ID: incident plane wave or surface velocity + anechoic impedance"
+            message += "\nOutput surface ID: outlet of filter or duct with an anechoic impedance\n"
+            height = 340
+            width = 620
+
+        else:
+            title = "Required data to process the Noise Reduction"
+            message = "Dear user, to determine the Noise Reduction (NR) it is necessary to select the input "
+            message += "surface ID at inlet of the duct or filter and the surface ID at the end termination. "
+            message += "By definition, the NR represents the sound pressure level differece between the "
+            message += "input and output of a duct or filter and it does not require a anechoic termination."
+            height = 300
+            width = 480
+
+        PrintMessageInput([window_title, title, message], height=height, width=width)
 
     def plot_data_callback(self):
 
@@ -254,6 +281,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
 
         if error_data is not None:
             self.lineEdit_input_surface_id.setFocus()
+            self.lineEdit_input_clicked()
             PrintMessageInput(error_data)
             return True
 
@@ -262,8 +290,14 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
 
         if error_data is not None:
             self.lineEdit_output_surface_id.setFocus()
+            self.lineEdit_output_clicked()
             PrintMessageInput(error_data)
             return True
+
+        if self.comboBox_processing_selector.currentIndex() == DataType.TRANSMISSION_LOSS:
+            if self.check_and_load_transmission_loss_data():
+                self.show_transmission_loss_calculating_requirements_message()
+                return True
 
         if self.input_surface_id == self.output_surface_id:
             title = "Invalid surfaces selected"
@@ -369,9 +403,12 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
 
             def transmission_loss_callback():
 
+                input_surface_id = int(self.lineEdit_input_surface_id.text())
+                output_surface_id = int(self.lineEdit_output_surface_id.text())
+
                 surface_ids = [
-                    self.input_surface_id, 
-                    self.output_surface_id,
+                    input_surface_id, 
+                    output_surface_id,
                     ]
 
                 surface_integration = self.comboBox_integration_method.currentIndex() == TLCalculation.SURFACE_INTEGRATION
@@ -387,8 +424,8 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
                 # t0 = perf_counter()
 
                 x_data, y_data = self.acoustic_post.compute_transmission_loss(
-                    self.input_surface_id,
-                    self.output_surface_id,
+                    input_surface_id,
+                    output_surface_id,
                     surface_integration = surface_integration,
                     )
 
