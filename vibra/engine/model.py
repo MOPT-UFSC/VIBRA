@@ -135,6 +135,9 @@ class Model:
         if isinstance(self.analysis_setup, HarmonicAnalysisSetup):
             return self.analysis_setup.global_damping
         return (None, None, None)
+    
+    def reset_current_solution(self):
+        self.solution = None
 
     def get_harmonic_analysis_setup(self, **kwargs) -> HarmonicAnalysisSetup:
         analysis_setup = HarmonicAnalysisSetup(**kwargs)
@@ -358,17 +361,17 @@ class Model:
 
         return False
 
-    def is_there_a_valid_analysis_setup(self):
-        # current_analysis_id = kwargs.get("current_analysis_id", self.analysis_id)
+    def is_there_a_valid_analysis_setup(self, current_analysis_id: int | None = None):
+
         if not isinstance(self.analysis_setup, HarmonicAnalysisSetup | ModalAnalysisSetup):
             return False
 
         if self.analysis_id == AnalysisID.NO_ANALYSIS:
             return False
 
-        # if isinstance(current_analysis_id, int):
-        #     if self.analysis_id != current_analysis_id:
-        #         return False
+        if isinstance(current_analysis_id, int):
+            if self.analysis_setup.analysis_id != current_analysis_id:
+                return False
 
         def check_modal_setup():
             for key in ["modes_number", "sigma_factor"]:

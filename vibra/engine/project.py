@@ -55,6 +55,7 @@ class Project:
         self.solver = None
         self.postprocessing = None
         self.project_writer.delete_results_data()
+        self.model.reset_current_solution()
         self.needs_saving = True
 
     def reset_project(self):
