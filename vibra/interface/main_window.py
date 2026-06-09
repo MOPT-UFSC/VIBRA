@@ -55,8 +55,6 @@ class MainWindow(MainWindow_UI):
         self.selection.selection_changed.connect(self.selection_changed_callback)
         self.visualization_filter = VisualizationFilter.all_true()
         self.visualization_filter.points = False
-        self.visualization_filter.disconected_nodes = False
-        self.visualization_filter.collapsed_element_nodes = False
 
         self.hidden_mesh_faces = set()
         self.hidden_mesh_solids = set()

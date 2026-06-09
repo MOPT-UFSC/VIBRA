@@ -1,9 +1,8 @@
+from molde.colors import Color, color_names
 from vtkmodules.vtkCommonDataModel import vtkPlane
 from vtkmodules.vtkFiltersCore import vtkExtractEdges
 from vtkmodules.vtkFiltersExtraction import vtkExtractGeometry
 from vtkmodules.vtkRenderingCore import vtkActor, vtkDataSetMapper
-
-from molde.colors import Color, color_names
 
 from vibra import app
 
@@ -69,15 +68,12 @@ class EdgesActor(vtkActor):
 
     def paint_edges_when_mesh_has_error(self):
         disconnected_nodes = app().project.model.mesh.get_list_of_disconnected_nodes()
-        nodes_collapsed_elements = (
-            app().project.model.mesh.get_list_of_nodes_from_collapsed_elements()
-        )
+        nodes_collapsed_elements = app().project.model.mesh.get_list_of_nodes_from_collapsed_elements()
 
         edges_error_color = color_names.GRAY_3
 
         if len(disconnected_nodes) > 0 or len(nodes_collapsed_elements) > 0:
             self.GetProperty().SetColor(edges_error_color.to_rgb_f())
-
 
     def paint_edges(self, color: Color, edges: tuple[int]):
         self.paint_cells(color, edges)
@@ -128,11 +124,7 @@ class EdgesActor(vtkActor):
         nodes_collapsed_elements = self.mesh.get_list_of_nodes_from_collapsed_elements()
 
         if disconnected_nodes:
-            visualization.disconected_nodes = True
             self.paint_nodes(disconected_nodes_color, disconnected_nodes)
 
         if nodes_collapsed_elements.size:
-            visualization.collapsed_element_nodes = True
             self.paint_nodes(collapsed_element_nodes_color, nodes_collapsed_elements)
-
-
