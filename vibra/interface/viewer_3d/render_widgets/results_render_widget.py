@@ -108,7 +108,10 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.analysis_actor = HollowAnalysisActor(mesh)
 
         logging.info("Updating the results render... [75/100]")
-        self.edges_actor = EdgesActor(self.analysis_actor.data)
+        self.edges_actor = EdgesActor(
+            self.analysis_actor.data,
+            visualization_filter=self.visualization_filter,
+        )
 
         logging.info("Updating the results render... [80/100]")
         self.ghost_actor = GhostActor(mesh)
@@ -430,7 +433,10 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         self.remove_actors(self.analysis_actor, self.edges_actor)
         self.analysis_actor = self._cache_hollow_solids_actor
-        self.edges_actor = EdgesActor(self.analysis_actor.data)
+        self.edges_actor = EdgesActor(
+            self.analysis_actor.data,
+            visualization_filter=self.visualization_filter,
+        )
         self.update_color_and_deformation()
         self.visualization_changed_callback()
         self.add_actors(self.analysis_actor, self.edges_actor)
@@ -453,7 +459,10 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         self.remove_actors(self.analysis_actor, self.edges_actor)
         self.analysis_actor = self._cache_full_solids_actor
-        self.edges_actor = EdgesActor(self.analysis_actor.data)
+        self.edges_actor = EdgesActor(
+            self.analysis_actor.data,
+            visualization_filter=self.visualization_filter,
+        )
         self.update_color_and_deformation()
         self.visualization_changed_callback()
         self.add_actors(self.analysis_actor, self.edges_actor)

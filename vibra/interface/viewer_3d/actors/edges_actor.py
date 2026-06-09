@@ -1,3 +1,5 @@
+from typing import Optional
+
 from molde.colors import Color, color_names
 from vtkmodules.vtkCommonDataModel import vtkPlane
 from vtkmodules.vtkFiltersCore import vtkExtractEdges
@@ -5,10 +7,19 @@ from vtkmodules.vtkFiltersExtraction import vtkExtractGeometry
 from vtkmodules.vtkRenderingCore import vtkActor, vtkDataSetMapper
 
 from vibra import app
+from vibra.utils.interface_utils import VisualizationFilter
 
 
 class EdgesActor(vtkActor):
-    def __init__(self, data):
+    def __init__(
+        self,
+        data,
+        visualization_filter: Optional[VisualizationFilter] = None,
+    ):
+        self.visualization_filter = visualization_filter
+        if self.visualization_filter is None:
+            self.visualization_filter = VisualizationFilter.all_true()
+
         self.mapper = vtkDataSetMapper()
         self.edges_extractor = vtkExtractEdges()
         self.edges_extractor.UseAllPointsOn()
@@ -110,7 +121,7 @@ class EdgesActor(vtkActor):
         self.GetMapper().ScalarVisibilityOn()
 
     def clear_colors(self):
-        visualization = app().main_window.visualization_filter
+        visualization = self.visualization_filter
         color = app().config.user_preferences.nodes_points_color
         disconected_nodes_color = color_names.GREEN
         collapsed_element_nodes_color = color_names.ORANGE

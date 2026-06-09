@@ -1,3 +1,5 @@
+from typing import Optional
+
 from molde.colors import Color, color_names
 from vtkmodules.vtkCommonCore import (
     vtkIntArray,
@@ -9,10 +11,20 @@ from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper
 
 from vibra import app
 from vibra.engine.mesher.mesh import Mesh
+from vibra.utils.interface_utils import VisualizationFilter
 
 
 class NodesActor(vtkActor):
-    def __init__(self, mesh: Mesh, hidden_nodes=None):
+    def __init__(
+        self,
+        mesh: Mesh,
+        hidden_nodes=None,
+        visualization_filter: Optional[VisualizationFilter] = None,
+    ):
+        self.visualization_filter = visualization_filter
+        if self.visualization_filter is None:
+            self.visualization_filter = VisualizationFilter.all_true()
+
         self.mesh = mesh
         self.data = None
         self.hidden_nodes = hidden_nodes if hidden_nodes is not None else set()
@@ -42,9 +54,7 @@ class NodesActor(vtkActor):
         cell_indexes.SetNumberOfTuples(len(self.mesh.nodal_coordinates))
 
         for i, (x, y, z) in enumerate(self.get_coordinates()):
-            cell_indexes.InsertValue(
-                i, i
-            )  # This is usefull if part of the cells are hidden
+            cell_indexes.InsertValue(i, i)  # This is usefull if part of the cells are hidden
             points.InsertNextPoint(x, y, z)
             data.InsertNextCell(VTK_VERTEX, 1, [i])
 
@@ -74,7 +84,7 @@ class NodesActor(vtkActor):
         self.clear_colors()
 
     def clear_colors(self):
-        visualization = app().main_window.visualization_filter
+        visualization = self.visualization_filter
         color = app().config.user_preferences.nodes_points_color
         disconected_nodes_color = color_names.GREEN
         collapsed_element_nodes_color = color_names.ORANGE

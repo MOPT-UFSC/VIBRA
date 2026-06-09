@@ -53,8 +53,6 @@ class MainWindow(MainWindow_UI):
 
         self.selection = SelectionHandler(app().project)
         self.selection.selection_changed.connect(self.selection_changed_callback)
-        self.visualization_filter = VisualizationFilter.all_true()
-        self.visualization_filter.points = False
 
         self.hidden_mesh_faces = set()
         self.hidden_mesh_solids = set()
@@ -339,9 +337,9 @@ class MainWindow(MainWindow_UI):
 
     def action_show_empty_callback(self, condition: bool):
         if condition:
-            self.visualization_filter.color_mode = GeometryColorMode.EMPTY
+            self.geometry_widget.visualization_filter.color_mode = GeometryColorMode.EMPTY
         else:
-            self.visualization_filter.color_mode = GeometryColorMode.COLORED
+            self.geometry_widget.visualization_filter.color_mode = GeometryColorMode.COLORED
         self.visualization_changed.emit()
 
     def get_renderer_widgets(self) -> list[CommonRenderWidget]:
@@ -483,8 +481,8 @@ class MainWindow(MainWindow_UI):
 
         self.reload_visualization_filter()
 
-        if self.visualization_filter.normal_symbols:
-            self.visualization_filter.normal_symbols = False
+        if self.results_widget.visualization_filter.normal_symbols:
+            self.results_widget.visualization_filter.normal_symbols = False
             self.update_symbols()
 
     def action_mesh_workspace_callback(self):
@@ -1001,18 +999,20 @@ class MainWindow(MainWindow_UI):
     def action_exit_callback(self):
         self.close_app()
 
-    def action_face_view_callback(self, clicked: bool):
+    def action_face_view_callback(self):
         self.visualization_changed_callback()
 
-    def action_line_view_callback(self, clicked: bool):
+    def action_line_view_callback(self):
         self.visualization_changed_callback()
 
-    def action_node_view_callback(self, clicked: bool):
+    def action_node_view_callback(self):
         self.visualization_changed_callback()
 
-    def action_ghost_view_callback(self, clicked: bool):
-        self.visualization_filter.ghost = clicked
-        self.visualization_changed.emit()
+    def action_hide_show_symbols_callback(self):
+        self.visualization_changed_callback()
+
+    def action_ghost_view_callback(self):
+        self.visualization_changed_callback()
 
     def get_current_render_widget(self) -> CommonRenderWidget | None:
         return self.render_widgets_stack.currentWidget()
@@ -1044,20 +1044,8 @@ class MainWindow(MainWindow_UI):
             return
         self.apply_visualization_filter(render_widget.visualization_filter)
 
-        return
-        self.blockSignals(True)
-        self.action_node_view.setChecked(self.visualization_filter.points)
-        self.action_line_view.setChecked(self.visualization_filter.lines)
-        self.action_face_view.setChecked(self.visualization_filter.faces and self.visualization_filter.solids)
-        self.action_ghost_view.setChecked(self.visualization_filter.ghost)
-        self.blockSignals(False)
-
     def action_about_vibra_callback(self):
         self.render_widgets_stack.setCurrentWidget(self.help_widget)
-
-    def action_hide_show_symbols_callback(self, clicked: bool):
-        self.visualization_filter.symbols = clicked
-        self.visualization_changed.emit()
 
     def close_app(self):
         self.minimize_dialogs()

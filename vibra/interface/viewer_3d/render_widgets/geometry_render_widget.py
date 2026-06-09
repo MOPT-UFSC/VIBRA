@@ -1,4 +1,3 @@
-from vibra.utils.interface_utils import VisualizationFilter
 import logging
 
 from molde import Color
@@ -6,8 +5,9 @@ from molde.render_widgets import CommonRenderWidget
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
 
-from vibra import app, ICON_DIR
+from vibra import ICON_DIR, app
 from vibra.utils.image_functions import removes_image_background
+from vibra.utils.interface_utils import VisualizationFilter
 
 from ..actors.ghost_actor import GhostActor
 from ..actors.lines_actor import LinesActor
@@ -18,8 +18,8 @@ from ..actors.selection_spheres import SelectionSpheres
 from ..actors.symbols_actor_acoustic import SymbolsActorAcoustic
 from ..actors.symbols_actor_acoustic_fixed_size import SymbolsActorAcousticFixedSize
 from ..actors.symbols_actor_structural import SymbolsActorStructural
-from ..selection.geometry_selection import GeometrySelection
 from ..render_tools.selection_tool import SelectionTool
+from ..selection.geometry_selection import GeometrySelection
 from .model_info_text import (
     acoustic_boundary_conditions_info_text,
     faces_info_text,
@@ -157,7 +157,7 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         self.points_actor = PointsActor(mesh)
         self.lines_actor = LinesActor(mesh)
-        self.multimaterial = MultimaterialGeometryActor(mesh)
+        self.multimaterial = MultimaterialGeometryActor(mesh, visualization_filter=self.visualization_filter)
 
         self.selection_spheres_actor = SelectionSpheres()
         self.symbols_actor_structural = SymbolsActorStructural(self.renderer)
@@ -267,7 +267,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
 
         self.remove_actors(self.multimaterial)
-        self.multimaterial = MultimaterialGeometryActor(mesh)
+        self.multimaterial = MultimaterialGeometryActor(mesh, visualization_filter=self.visualization_filter)
         self.add_actors(self.multimaterial)
 
         self.update_selection()
