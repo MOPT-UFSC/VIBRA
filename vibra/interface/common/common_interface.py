@@ -38,12 +38,13 @@ def update_analysis_setup_in_file(frequencies: np.ndarray):
         analysis_setup,
     )
 
-def check_mesh_related_issues(push_button: QPushButton):
+def check_mesh_related_issues(run_analysis_button: QPushButton):
 
     # disable run_analysis button if there are disconnected nodes or collapsed elements
     mesh = app().project.model.mesh
     disconnected_nodes = bool(mesh.disconnected_nodes_data)
     collapsed_elements = bool(mesh.collapsed_elements_data)
+    problematic_mesh = collapsed_elements or disconnected_nodes
 
     text = ""
     if collapsed_elements:
@@ -56,11 +57,19 @@ def check_mesh_related_issues(push_button: QPushButton):
         text += "The model solution will stay deactivated until the meshing-related issues \n"
         text += "have been addressed."
 
-    push_button.setToolTip(text)
-    push_button.setDisabled(collapsed_elements or disconnected_nodes)
+    run_analysis_button.setToolTip(text)
+    run_analysis_button.setDisabled(problematic_mesh)
 
-    app().main_window.analysis_toolbar.pushButton_run_analysis.setToolTip(text)
-    app().main_window.analysis_toolbar.pushButton_run_analysis.setDisabled(collapsed_elements or disconnected_nodes)
+    analysis_toolbar = app().main_window.analysis_toolbar
+    analysis_toolbar.run_analysis_action.setToolTip(text)
+    analysis_toolbar.run_analysis_action.setDisabled(problematic_mesh)
+
+    # interrupt the code execution if any mesh-related issue has been detected
+    if problematic_mesh:
+        return
+
+    valid_analysis_setup = analysis_toolbar.is_analysis_setup_valid()
+    analysis_toolbar.run_analysis_action.setEnabled(valid_analysis_setup)
 
 def mesher_interface_callback(parent: QDialog, close_after_generate: bool = False):
     parent.hide()

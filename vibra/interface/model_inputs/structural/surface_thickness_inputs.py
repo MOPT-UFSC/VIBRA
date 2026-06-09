@@ -223,7 +223,6 @@ class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
         app().main_window.update_info_text()
         app().project.update_model_properties_file()
         app().main_window.update_symbols()
-        app().main_window.update_symbols()
 
     def update_tabs_visibility(self):
         surface_ids = list()

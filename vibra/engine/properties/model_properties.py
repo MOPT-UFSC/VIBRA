@@ -56,7 +56,7 @@ class ModelProperties:
     def __init__(self, disable_resume_callback: Optional[Callable] = None):
         self.disable_resume_callback = disable_resume_callback
         self._reset_variables()
-
+    
     def _reset_variables(self):
         self.material_library = MaterialLibrary.default()
         self.fluid_library = FluidLibrary.default()
@@ -273,7 +273,7 @@ class ModelProperties:
 
             for _key in keys_to_remove:
                 data.pop(_key)
-        
+
         if self.disable_resume_callback is not None:
             self.disable_resume_callback()
 
@@ -355,16 +355,34 @@ class ModelProperties:
         elif group_label == "structural":
             self.structural_imported_tables[table_name] = data
 
-    def remove_imported_tables(self, group_label: str, table_name: str):
-        """
-        """
-        if group_label == "acoustic":
-            if table_name in self.acoustic_imported_tables.keys():
-                self.acoustic_imported_tables.pop(table_name)
+    def remove_table_files_from_point(self, point_id: int, property_name: str):
+        table_names = self.get_property_related_table_names(property_name, point_id, "points")
+        self._remove_table_files(table_names)
 
-        elif group_label == "structural":
-            if table_name in self.structural_imported_tables.keys():
-                self.structural_imported_tables.pop(table_name)
+    def remove_table_files_from_line(self, line_id: int, property_name: str):
+        table_names = self.get_property_related_table_names(property_name, line_id, "lines")
+        self._remove_table_files(table_names)
+
+    def remove_table_files_from_surface(self, surface_id: int, property_name: str):
+        table_names = self.get_property_related_table_names(property_name, surface_id, "surfaces")
+        self._remove_table_files(table_names)
+
+    def remove_table_files_from_volume(self, volume_id: int, property_name: str):
+        table_names = self.get_property_related_table_names(property_name, volume_id, "volumes")
+        self._remove_table_files(table_names)
+
+    def _remove_table_files(self, table_names: list):
+        for table_name in table_names:
+            self.remove_imported_tables("", table_name)
+
+    # TODO: group_label argument is used on calls across the program. Need to remove later
+    def remove_imported_tables(self, group_label: str, table_name: str):
+        #TODO: is it possible both have the same table_names? I am counting with this, need to check for problems
+        if table_name in self.acoustic_imported_tables.keys():
+            self.acoustic_imported_tables.pop(table_name)
+
+        if table_name in self.structural_imported_tables.keys():
+            self.structural_imported_tables.pop(table_name)
 
     def get_data_group_label(self, property : str) -> str:
 
@@ -380,13 +398,24 @@ class ModelProperties:
                            "compressor_excitation_waveform",
                            "reciprocating_compressor_excitation",
                            "acoustic_transfer_element",
+                            "porous_material_model",
                            "mass_source",
                            ]
 
+        structural_labels = [
+                            "surface_thickness",
+                            "prescribed_dof",
+                            "nodal_loads", 
+                            "distributed_loads", 
+                            "normal_pressure_load",
+                            ]
+
         if property in acoustic_labels:
             return "acoustic"
-        else:
+        elif property in structural_labels:
             return "structural"
+        else:
+            return "general"
 
     def get_property_related_table_names(self, property : str, selected_ids : int | list | tuple, selection: str) -> list:
         """
@@ -513,6 +542,26 @@ class ModelProperties:
                 property_name, tags = key
                 yield entity_name, property_name, tags, value
 
+    def get_properties_from_points(self, point_ids: set[int]) -> list[tuple[str, int]]:
+        return self._get_properties_from_entities(point_ids, self.point_properties)
+    
+    def get_properties_from_lines(self, line_ids: set[int]) -> list[tuple[str, int]]:
+        return self._get_properties_from_entities(line_ids, self.line_properties)
+
+    def get_properties_from_surfaces(self, surface_ids: set[int]) -> list[tuple[str, int]]:
+        return self._get_properties_from_entities(surface_ids, self.surface_properties)
+
+    def get_properties_from_volumes(self, volume_ids: set[int]) -> list[tuple[str, int]]:
+        return self._get_properties_from_entities(volume_ids, self.volume_properties)
+
+    def _get_properties_from_entities(self, entity_ids: set[int], entity_properties: dict) -> list[tuple[str, int]]:
+        properties_found: list[tuple[str, int]] = list()
+
+        for property_name, entity_id in entity_properties.keys():
+            if entity_id in entity_ids:
+                properties_found.append((property_name, entity_id))
+        
+        return properties_found
 
 if __name__ == "__main__":
     p = ModelProperties()

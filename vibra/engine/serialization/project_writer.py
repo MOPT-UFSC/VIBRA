@@ -245,6 +245,8 @@ class ProjectWriter:
         structural_tables: dict[str, np.ndarray],
     ):
         if not any([acoustic_tables, structural_tables]):
+            self.project_paths.imported_table_data_filepath.unlink(missing_ok=True)
+            self._remove_hash(HashEnum.TABLES)
             return
 
         logging.info("Writing project tables.")

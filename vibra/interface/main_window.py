@@ -15,10 +15,11 @@ from PySide6.QtWidgets import QAbstractButton, QFileDialog, QMenu, QMessageBox
 from vibra import LIGHT_ICON_COLOR, SUPPORTED_GEOMETRY_EXTENSIONS, SUPPORTED_MESH_EXTENSIONS, TEMP_PROJECT_DIR, app
 from vibra.engine.assemblers import AcousticAssembler
 from vibra.engine.solvers import HarmonicSolver
-from vibra.interface.analysis_toolbar import AnalysisToolbar
-from vibra.interface.view_toolbar import ViewToolbar
+from vibra.interface.toolbars.analysis_toolbar import AnalysisToolbar
+from vibra.interface.toolbars.view_toolbar import ViewToolbar
 from vibra.interface.data_handler.export_mesh_data import ExportMeshData
 from vibra.interface.formatters.icons import change_icon_color_for_widgets, get_vibra_icon
+from vibra.interface.general.choose_property_to_delete import ChoosePropertyToDelete
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.general.selection_handler import SelectionHandler
 from vibra.interface.help_widget import HelpWidget
@@ -124,6 +125,7 @@ class MainWindow(MainWindow_UI):
             self.view_toolbar.render_tool_changed.connect(render.add_render_tool)
 
         self.set_toolbars_enabled(False)
+        # self.update_toolbars_stylesheets()
         self.action_export_element_transfer_data.setDisabled(True)
 
         self.splitter.setSizes([100, 400])
@@ -183,6 +185,30 @@ class MainWindow(MainWindow_UI):
 
         else:
             self.try_to_open_argv_path()
+
+    def update_toolbars_stylesheets(self):
+        if self.analysis_toolbar.styleSheet() == "":
+            style_sheet = self.get_toolbars_stylesheet()
+            self.analysis_toolbar.setStyleSheet(style_sheet)
+            self.view_toolbar.setStyleSheet(style_sheet)
+            self.renderer_toolbar.setStyleSheet(style_sheet)
+            self.workspaces_toolbar.setStyleSheet(style_sheet)
+            return
+
+        self.analysis_toolbar.setStyleSheet("")
+        self.view_toolbar.setStyleSheet("")
+        self.renderer_toolbar.setStyleSheet("")
+        self.workspaces_toolbar.setStyleSheet("")
+
+    def get_toolbars_stylesheet(self):
+        style_sheet = """
+            QToolBar {
+                border-style: solid;
+                border-width: 0.5px;
+                border-color: #888888;
+            }
+            """
+        return style_sheet
 
     def try_to_open_argv_path(self):
         """
@@ -930,6 +956,7 @@ class MainWindow(MainWindow_UI):
         self.set_toolbars_enabled(True)
         self.update_toolbar_and_menu_items_after_load_project()
         self.analysis_toolbar.check_analysis_setup_callback()
+        self.analysis_toolbar.update_reset_solution_button_accessibility()
 
         LoadingWindow(self.geometry_widget.update_plot).run()
         LoadingWindow(self.mesh_widget.update_plot).run()
@@ -957,6 +984,10 @@ class MainWindow(MainWindow_UI):
         self.view_toolbar.setEnabled(state)
         self.renderer_toolbar.setEnabled(state)
         self.workspaces_toolbar.setEnabled(state)
+
+    def remove_property(self):
+        self.close_dialogs()
+        ChoosePropertyToDelete()
 
     def update_toolbar_and_menu_items_after_load_project(self):
         self.model_setup_widget.model_setup_items.filter_available_items_and_analyzes_according_to_geometry_information()
@@ -1129,7 +1160,6 @@ class MainWindow(MainWindow_UI):
     def eventFilter(self, obj, event: QEvent):
         modifiers = app().keyboardModifiers()
         alt_pressed = modifiers & Qt.KeyboardModifier.AltModifier
-
         if event.type() == QEvent.Type.ShortcutOverride:
             if event.key() == Qt.Key.Key_F5:
                 self.update_plots()
@@ -1144,7 +1174,10 @@ class MainWindow(MainWindow_UI):
                 self.action_section_plane.blockSignals(False)
                 self.section_plane.cutting = not active
                 self.section_plane.value_changed.emit()
-
+            
+            elif event.key() == Qt.Key.Key_Delete:
+                self.remove_property()
+        
         return super(MainWindow, self).eventFilter(obj, event)
 
     def closeEvent(self, event: QEvent):
