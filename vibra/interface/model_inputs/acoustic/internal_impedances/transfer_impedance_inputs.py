@@ -693,7 +693,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
             app().main_window.selection.set_geometry_selection()
 
             logging.info("Processing the post-assignment actions... [100/100]")
-            app().main_window.analysis_toolbar.pushButton_reset_solution.setDisabled(True)
+            app().main_window.analysis_toolbar.reset_solution_action.setDisabled(True)
 
         LoadingWindow(callback).run()
 
