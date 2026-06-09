@@ -2,7 +2,7 @@ from dataclasses import dataclass, fields
 
 
 @dataclass
-class DelanyBazleyData:
+class DelanyBazleyMikiData:
     C1: float
     C2: float
     C3: float
@@ -12,19 +12,19 @@ class DelanyBazleyData:
     C7: float
     C8: float
     flow_resistivity: float
-    model: str 
+    model: str # "Delany-Bazley" |  "Delany-Bazley-Miki" | "User-defined (DBM)"
 
     def get_data(self) -> dict:
         data = dict()
         for attr, value in self.__dict__.items():
             data[attr] = value
-        
+
         return data
 
     def get_parameters_position(self) -> dict:
         parameters = dict()
 
-        for index, field in enumerate(fields(DelanyBazleyData)):
+        for index, field in enumerate(fields(DelanyBazleyMikiData)):
             parameters[index] = field.name
 
         return parameters
@@ -37,10 +37,10 @@ class DelanyBazleyData:
         return string
     
     @classmethod
-    def set_data(cls, data: dict) -> "DelanyBazleyData":
+    def set_data(cls, data: dict) -> "DelanyBazleyMikiData":
         if "values" in data.keys():
             data.pop("values")
         
-        return DelanyBazleyData(**data)
+        return DelanyBazleyMikiData(**data)
 
         

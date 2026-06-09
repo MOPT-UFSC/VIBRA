@@ -55,6 +55,7 @@ class Project:
         self.solver = None
         self.postprocessing = None
         self.project_writer.delete_results_data()
+        self.model.reset_current_solution()
         self.needs_saving = True
 
     def reset_project(self):
@@ -145,6 +146,7 @@ class Project:
         """
         Unpacks the vibra file into the working directory and reads data from it.
         """
+        logging.info("Loading the project data... [25%]")
         path = Path(path)
         self.reset_solution()
         self.project_reader.unpack_into_working_directory(path)
@@ -159,8 +161,17 @@ class Project:
         """
         Reload project data from the working directory.
         """
+        logging.info("Loading the project data... [15%]")
         self.model = self.project_reader.read_model(self.model)
         return self
+
+    def reload_solution_from_working_dir(self):
+        """
+        Reload solution data written by another process.
+        """
+        self.model.solution = self.project_reader.read_solution(self.model)
+        self.assembler, self.solver = self.project_reader.read_assembler_and_solver(self.model)
+        self.update_post_processing()
 
     def write_to_working_dir(self):
         """
@@ -315,7 +326,7 @@ class Project:
         self.update_project_setup_file()
 
         checker = AnalysisChecker(self.model)
-        checker.check_analysis_requirements(AnalysisID.STRUCTURAL_MODAL)
+        checker.check_analysis_requirements()
 
         self.assembler = StructuralAssembler(self.model)
         self.solver = ModalSolver(self.assembler)
@@ -339,7 +350,7 @@ class Project:
         self.update_project_setup_file()
 
         checker = AnalysisChecker(self.model)
-        checker.check_analysis_requirements(AnalysisID.STRUCTURAL_HARMONIC)
+        checker.check_analysis_requirements()
 
         self.assembler = StructuralAssembler(self.model)
         self.solver = HarmonicSolver(self.assembler, self.project_paths)
@@ -375,7 +386,7 @@ class Project:
         self.update_project_setup_file()
 
         checker = AnalysisChecker(self.model)
-        checker.check_analysis_requirements(AnalysisID.ACOUSTIC_MODAL)
+        checker.check_analysis_requirements()
 
         self.assembler = AcousticAssembler(self.model)
         self.solver = ModalSolver(self.assembler)
@@ -399,7 +410,7 @@ class Project:
         self.update_project_setup_file()
 
         checker = AnalysisChecker(self.model)
-        checker.check_analysis_requirements(AnalysisID.ACOUSTIC_HARMONIC)
+        checker.check_analysis_requirements()
 
         self.assembler = AcousticAssembler(self.model)
         self.solver = HarmonicSolver(self.assembler, self.project_paths)
@@ -474,7 +485,7 @@ class Project:
         """
 
         try:
-            AnalysisChecker(self.model).check_analysis_requirements(self.model.analysis_id)
+            AnalysisChecker(self.model).check_analysis_requirements()
         except Exception:
             return False
         else:

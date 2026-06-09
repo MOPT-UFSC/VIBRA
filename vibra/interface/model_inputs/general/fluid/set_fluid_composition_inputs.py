@@ -121,6 +121,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         self.treeWidget_refprop_fluids.itemClicked.connect(self.on_click_item_refprop_fluids)
         self.treeWidget_refprop_fluids.itemDoubleClicked.connect(self.on_double_click_item_refprop_fluids)
         #
+        self.lineEdit_search_fluid.textChanged.connect(self._filter_refprop_fluids)
         self.distribution_type_changed_callback()
         self.fluids_configuration_mode_callback()
 
@@ -418,6 +419,11 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             new = QTreeWidgetItem([fluid])
             new.setTextAlignment(0, Qt.AlignCenter)
             self.treeWidget_refprop_fluids.addTopLevelItem(new)
+
+    def _filter_refprop_fluids(self, text: str):
+        for i in range(self.treeWidget_refprop_fluids.topLevelItemCount()):
+            item = self.treeWidget_refprop_fluids.topLevelItem(i)
+            item.setHidden(text.lower() not in item.text(0).lower())
 
     def config_table_data(self):
 
