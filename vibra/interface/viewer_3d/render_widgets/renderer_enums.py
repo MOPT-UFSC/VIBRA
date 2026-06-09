@@ -1,30 +1,6 @@
-from dataclasses import dataclass
 from enum import Enum, StrEnum, auto
 
 from vibra.utils.struct_enum import StructEnum
-
-
-@dataclass
-class VisualizationFilter:
-    points: bool = False
-    lines: bool = False
-    faces: bool = False
-    solids: bool = False
-    symbols: bool = False
-    ghost: bool = True
-    normal_symbols: bool = False
-
-    @classmethod
-    def all_false(cls):
-        # It is dumb, but it works
-        args = [False] * 8
-        return cls(*args)
-
-    @classmethod
-    def all_true(cls):
-        # It is dumb, but it works
-        args = [True] * 8
-        return cls(*args)
 
 
 class PressurePlotType(StrEnum):
