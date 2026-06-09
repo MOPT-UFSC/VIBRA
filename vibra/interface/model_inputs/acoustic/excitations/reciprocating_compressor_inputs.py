@@ -1,31 +1,80 @@
-from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem, QAbstractItemView
-from PySide6.QtGui import QCloseEvent
-from PySide6.QtCore import Qt, QPoint, QItemSelectionModel
+from enum import IntEnum
+from os.path import dirname
+from pathlib import Path
 
-from vibra import app, USER_PATH, SUPPORTED_OUTPUT_DATA_EXTENSIONS
+import numpy as np
+from PySide6.QtCore import QItemSelectionModel, QPoint, Qt
+from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import QAbstractItemView, QLineEdit, QTreeWidgetItem
+
+from vibra import SUPPORTED_OUTPUT_DATA_EXTENSIONS, USER_PATH, app
+from vibra.engine.properties.fluid import Fluid
 from vibra.interface import error_title
-from vibra.interface.common.common_interface import update_analysis_setup_in_file
+from vibra.interface.common.common_interface import mesher_interface_callback, update_analysis_setup_in_file
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.common.common_interface import mesher_interface_callback
 from vibra.interface.model_inputs.general.fluid.set_fluid_inputs import SetFluidInputs
 from vibra.interface.model_inputs.general.fluid.set_fluid_inputs_simplified import SetFluidInputsSimplified
+from vibra.interface.numeric_checks.unit_utilities import convert_temperature_unit
 from vibra.interface.plots.general.plot_2d_simplified import Plot2DSimplified
 from vibra.interface.ui_generated.model.acoustic.reciprocating_compressor_inputs_ui import ReciprocatingCompressorInputs_UI
-from vibra.interface.model_inputs.acoustic.definitions.enums import *
-
-from vibra.engine.properties.fluid import Fluid
 from vibra.model.machines.reciprocating_compressor_model import ReciprocatingCompressorModel
-
-import numpy as np
-from os.path import dirname
-from pathlib import Path
 
 psi_to_Pa = (0.45359237 * 9.80665) / ((0.0254)**2)
 kgf_cm2_to_Pa = 9.80665e4
 bar_to_Pa = 1e5
+
+
+class ActingHead(IntEnum):
+    HEAD_END = 0
+    CRANK_END = 1
+    BOTH_ENDS = 2
+
+
+class ActinCompressionStage(IntEnum):
+    FIRST_STAGE = 0
+    SECOND_STAGE = 1
+    THIRD_STAGE = 3
+
+
+class ConnectionType(IntEnum):
+    SUCTION = 0
+    DISCHARGE = 1
+
+
+class FluidDataSource(IntEnum):
+    REF_PROP = 0
+    USER_DEFINED = 1
+
+
+class RCTabTypes(IntEnum):
+    SETUP = 0
+    ADVANCED_OPTIONS = 1
+    LIST = 2
+
+
+class PressureUnit(IntEnum):
+    KGF_CM2_A = 0
+    BAR_A = 1
+    KPA_A = 2
+    PA_A = 3
+    KGF_CM2_G = 4
+    BAR_G = 5
+    KPA_G = 6
+    PA_G = 7
+
+
+class TemperatureUnit(IntEnum):
+    KELVIN = 0
+    CELSIUS = 1
+
+
+class TabIndex(IntEnum):
+    SETUP = 0
+    ADVANCED_OPTIONS = 1
+    REMOVE = 2
 
 
 class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
@@ -133,7 +182,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
     def _paint_icons(self):
         icon_color = None
         theme = app().config.user_preferences.interface_theme
-        from vibra import LIGHT_ICON_COLOR, DARK_ICON_COLOR
+        from vibra import DARK_ICON_COLOR, LIGHT_ICON_COLOR
         if theme == "dark":
             icon_color = DARK_ICON_COLOR.to_qt()
         else:
@@ -154,11 +203,11 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
         index = self.comboBox_fluid_data_source.currentIndex()
 
-        if index == FluidDataComboBox.REF_PROP:
+        if index == FluidDataSource.REF_PROP:
             self.lineEdit_isentropic_exponent.setDisabled(True)
             self.lineEdit_molar_mass.setDisabled(True)
 
-        elif index == FluidDataComboBox.USER_DEFINED:
+        elif index == FluidDataSource.USER_DEFINED:
             self.lineEdit_molar_mass.setEnabled(True)
 
     def geometry_selection_callback(self):
@@ -275,7 +324,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.pushButton_plot_volume_head_end_angle.setEnabled(True)
         self.pushButton_plot_volume_crank_end_angle.setEnabled(True)
 
-        if self.comboBox_acting_head.currentIndex() == ActingHeadComboBox.HEAD_END:
+        if self.comboBox_acting_head.currentIndex() == ActingHead.HEAD_END:
             self.lineEdit_rod_diameter.setDisabled(True)
             self.lineEdit_clearance_crank_end.setDisabled(True)
             self.label_rod_diameter.setDisabled(True)
@@ -287,7 +336,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             self.pushButton_plot_pressure_crank_end_angle.setDisabled(True)
             self.pushButton_plot_volume_crank_end_angle.setDisabled(True)
 
-        elif self.comboBox_acting_head.currentIndex() == ActingHeadComboBox.CRANK_END:
+        elif self.comboBox_acting_head.currentIndex() == ActingHead.CRANK_END:
             self.lineEdit_rod_diameter.setEnabled(True)
             self.lineEdit_clearance_head_end.setDisabled(True)
             self.lineEdit_clearance_crank_end.setEnabled(True)
@@ -303,7 +352,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         if self.check_all_parameters(check_all_entries = check_all_entries):
             return None
 
-        if self.comboBox_connection_type.currentIndex() == ConnectionTypeComboBox.SUCTION:
+        if self.comboBox_connection_type.currentIndex() == ConnectionType.SUCTION:
             pressure = self.P_suction
             temperature = self.T_suction
 
@@ -326,28 +375,34 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
     def get_fluid_callback(self):
 
         state_properties = self.get_state_properties(False)
-
-        if state_properties:
-            self.hide()
-            self.fluid_dialog = SetFluidInputsSimplified(state_properties = state_properties)
-            self.fluid_dialog.fluid_widget.pushButton_attribute.setText("Select fluid")
-            self.fluid_dialog.pushButton_attribute.clicked.connect(self.get_selected_fluid)
-            self.fluid_dialog.exec_and_keep_window_open()
-            app().main_window.set_input_widget(self)
+        if not state_properties:
+            return
+    
+        self.hide()
+        self.fluid_dialog = SetFluidInputsSimplified(state_properties = state_properties)
+        self.fluid_dialog.fluid_widget.pushButton_attribute.setText("Select fluid")
+        self.fluid_dialog.fluid_widget.pushButton_attribute.clicked.connect(self.get_selected_fluid)
+        self.fluid_dialog.exec_and_keep_window_open()
+        app().main_window.set_input_widget(self)
 
     def get_selected_fluid(self):
 
         self.selected_fluid = self.fluid_dialog.get_selected_fluid()
+        if not isinstance(self.selected_fluid, Fluid):
+            return
+        
+        self.fluid_dialog.close()
+        self.lineEdit_selected_fluid.setText(self.selected_fluid.name)
+        self.lineEdit_isentropic_exponent.setText(f"{self.selected_fluid.isentropic_exponent : .6f}")
+        self.lineEdit_molar_mass.setText(f"{self.selected_fluid.molar_mass : .6f}")
 
-        if isinstance(self.selected_fluid, Fluid):
+        if self.comboBox_connection_type.currentIndex() == ConnectionType.DISCHARGE:
+            temp_unit = self.comboBox_temperature_units.currentText()
+            temperature = convert_temperature_unit(self.selected_fluid.temperature, "K", temp_unit)
+            self.lineEdit_temperature_at_discharge.setText(f"{temperature : .6f}")
 
-            self.fluid_dialog.close()
-            if self.selected_fluid.name in self.fluid_dialog.fluid_widget.fluid_name_to_refprop_data.keys():
-                self.comboBox_fluid_data_source.setCurrentIndex(FluidDataComboBox.REF_PROP)
-
-            self.lineEdit_selected_fluid.setText(self.selected_fluid.name)
-            self.lineEdit_isentropic_exponent.setText(f"{self.selected_fluid.isentropic_exponent : .6f}")
-            self.lineEdit_molar_mass.setText(f"{self.selected_fluid.molar_mass : .6f}")
+        if self.selected_fluid.identifier in self.fluid_dialog.fluid_widget.refprop_fluids.keys():
+            self.comboBox_fluid_data_source.setCurrentIndex(FluidDataSource.REF_PROP)
 
     def change_aquisition_parameters_controls(self, _bool):
         self.pushButton_process_aquisition_parameters.setDisabled(_bool)
@@ -374,9 +429,9 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         if "connection_type" in data.keys():
             connection_type = data["connection_type"]
             if connection_type == 'suction':
-                self.comboBox_connection_type.setCurrentIndex(ConnectionTypeComboBox.SUCTION)
+                self.comboBox_connection_type.setCurrentIndex(ConnectionType.SUCTION)
             elif connection_type == 'discharge':
-                self.comboBox_connection_type.setCurrentIndex(ConnectionTypeComboBox.DISCHARGE)
+                self.comboBox_connection_type.setCurrentIndex(ConnectionType.DISCHARGE)
 
         parameters = data["parameters"]
 
@@ -465,10 +520,10 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             self.comboBox_frequency_resolution.setCurrentIndex(index)
 
     def reset_entries(self):
-        self.comboBox_acting_head.setCurrentIndex(ActingHeadComboBox.HEAD_END)
-        self.comboBox_stage.setCurrentIndex(CompressionStageComboBox.FIRST_STAGE)
-        self.comboBox_pressure_units.setCurrentIndex(PressureUnitComboBox.KGF_CM2_A)
-        self.comboBox_temperature_units.setCurrentIndex(TemperatureUnitComboBox.CELSIUS)
+        self.comboBox_acting_head.setCurrentIndex(ActingHead.HEAD_END)
+        self.comboBox_stage.setCurrentIndex(ActinCompressionStage.FIRST_STAGE)
+        self.comboBox_pressure_units.setCurrentIndex(PressureUnit.KGF_CM2_A)
+        self.comboBox_temperature_units.setCurrentIndex(TemperatureUnit.CELSIUS)
         self.doubleSpinBox_rotational_speed.setValue(360)
         self.lineEdit_bore_diameter.clear()
         self.lineEdit_stroke.clear()
@@ -752,11 +807,11 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         try:
 
             suction_temperature = float(self.lineEdit_temperature_at_suction.text())
-            if self.comboBox_temperature_units.currentIndex() == TemperatureUnitComboBox.CELSIUS:
+            if self.comboBox_temperature_units.currentIndex() == TemperatureUnit.CELSIUS:
                 suction_temperature += 273.15
 
             discharge_temperature = suction_temperature * (pressure_ratio**((gamma-1)/gamma))
-            if self.comboBox_temperature_units.currentIndex() == TemperatureUnitComboBox.CELSIUS:
+            if self.comboBox_temperature_units.currentIndex() == TemperatureUnit.CELSIUS:
                 discharge_temperature -= 273.15
 
             self.lineEdit_temperature_at_discharge.setText(f"{discharge_temperature : .6f}")
@@ -778,7 +833,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
         self.process_aquisition_parameters()
 
-        if self.comboBox_connection_type.currentIndex() == ConnectionTypeComboBox.SUCTION:
+        if self.comboBox_connection_type.currentIndex() == ConnectionType.SUCTION:
             flow_label = "in_flow"
             connection_type = "suction"
         else:
