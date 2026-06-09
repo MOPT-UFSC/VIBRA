@@ -42,9 +42,6 @@ class StructEnumMeta(type):
                 setattr(cls, k, inner_cls)
                 enum_members.append(inner_cls)
 
-            else:
-                raise ValueError("The types are expected to be dataclasses")
-
         cls._enum_members = tuple(enum_members)
         return cls
 
