@@ -20,6 +20,7 @@ class PrintMessageInput(PrintMessage_UI):
 
         self._config_widgets()
         self._set_texts()
+        self._adjust_size(kwargs)
 
         if kwargs.get("exec", True):
             self.exec()
@@ -65,7 +66,8 @@ class PrintMessageInput(PrintMessage_UI):
         self.title2 = f"   {self.title}   "
         self.label_title.setText(self.title2)
         self.label_message.setText(self.message)
-        self.setWindowTitle(self.window_title)
+        self.label_message.adjustSize()
+        self.label_message.setMargin(12)
 
         if self.window_title in ["Error", "ERROR"]:
             icon = get_error_icon(Color(255,0,0,200).to_qt())
@@ -75,12 +77,23 @@ class PrintMessageInput(PrintMessage_UI):
             icon = app().main_window.vibra_icon
 
         self.setWindowIcon(icon)
+        self.setWindowTitle(self.window_title)
 
         self.adjustSize()
         self.label_message.setAlignment(Qt.AlignCenter)
         if self.auto_close:
             self.timer.timeout.connect(self.message_close)
-            self.timer.start(50) 
+            self.timer.start(50)
+
+    def _adjust_size(self, kwargs: dict):
+
+        height = kwargs.get("height", None)
+        if isinstance(height, int):
+            self.setFixedHeight(height)
+
+        width = kwargs.get("width", None)
+        if isinstance(width, int):
+            self.setFixedWidth(width)
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:

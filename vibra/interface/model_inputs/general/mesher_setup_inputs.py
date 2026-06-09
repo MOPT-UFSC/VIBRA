@@ -1,7 +1,6 @@
 import logging
 from copy import deepcopy
 from enum import IntEnum
-import time
 
 import matplotlib.colors as mcolors
 import numpy as np
@@ -561,7 +560,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         logging.info("Updating render... [95/100]")
         app().main_window.action_mesh_workspace_callback()
         app().main_window.update_plots()
-        app().main_window.analysis_toolbar.reset_solution()
+        app().main_window.analysis_toolbar.reset_solution_action.setDisabled(True)
         app().main_window.analysis_toolbar.check_analysis_setup_callback()
         app().main_window.action_export_element_transfer_data.setDisabled(True)
 
