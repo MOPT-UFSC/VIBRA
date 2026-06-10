@@ -1047,11 +1047,15 @@ class MainWindow(MainWindow_UI):
     def get_current_render_widget(self) -> CommonRenderWidget | None:
         return self.render_widgets_stack.currentWidget()
 
-    def visualization_changed_callback(self):
+    def get_current_visualization_filter(self) -> VisualizationFilter | None:
         render_widget = self.get_current_render_widget()
         if not hasattr(render_widget, "visualization_filter"):
-            return
-        self.update_visualization_filter(render_widget.visualization_filter)
+            return None
+        return render_widget.visualization_filter
+
+    def visualization_changed_callback(self):
+        if visualization_filter := self.get_current_visualization_filter():
+            self.update_visualization_filter(visualization_filter)
         self.visualization_changed.emit()
 
     def apply_visualization_filter(self, filter: VisualizationFilter):
@@ -1069,10 +1073,8 @@ class MainWindow(MainWindow_UI):
         filter.ghost = self.action_ghost_view.isChecked()
 
     def reload_visualization_filter(self):
-        render_widget = self.get_current_render_widget()
-        if not hasattr(render_widget, "visualization_filter"):
-            return
-        self.apply_visualization_filter(render_widget.visualization_filter)
+        if visualization_filter := self.get_current_visualization_filter():
+            self.apply_visualization_filter(visualization_filter)
 
     def action_about_vibra_callback(self):
         self.render_widgets_stack.setCurrentWidget(self.help_widget)
