@@ -44,10 +44,7 @@ def test_write_and_read_project(fluid, datadir: Path):
         f_step = 200,
     )
 
-    project_a.configure_analysis(
-        AnalysisID.ACOUSTIC_HARMONIC,
-        analysis_setup
-    )
+    project_a.configure_analysis(analysis_setup)
     solution_a = project_a.solve_acoustic_harmonic_analysis()
     project_a.save_project(project_path)
 
