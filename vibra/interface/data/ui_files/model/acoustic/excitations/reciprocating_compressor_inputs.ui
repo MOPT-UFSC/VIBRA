@@ -123,13 +123,13 @@
      <property name="minimumSize">
       <size>
        <width>0</width>
-       <height>52</height>
+       <height>48</height>
       </size>
      </property>
      <property name="maximumSize">
       <size>
        <width>16777215</width>
-       <height>52</height>
+       <height>48</height>
       </size>
      </property>
      <property name="frameShape">
@@ -140,13 +140,13 @@
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
       <property name="leftMargin">
-       <number>0</number>
+       <number>6</number>
       </property>
       <property name="topMargin">
        <number>0</number>
       </property>
       <property name="rightMargin">
-       <number>0</number>
+       <number>6</number>
       </property>
       <property name="bottomMargin">
        <number>0</number>
@@ -154,17 +154,17 @@
       <property name="verticalSpacing">
        <number>0</number>
       </property>
-      <item row="0" column="1">
-       <widget class="QPushButton" name="pushButton_confirm">
+      <item row="0" column="3">
+       <widget class="QPushButton" name="pushButton_apply_and_close">
         <property name="minimumSize">
          <size>
-          <width>100</width>
+          <width>72</width>
           <height>30</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>100</width>
+          <width>72</width>
           <height>30</height>
          </size>
         </property>
@@ -179,7 +179,45 @@
          <string notr="true"/>
         </property>
         <property name="text">
-         <string>Confirm</string>
+         <string>Ok</string>
+        </property>
+        <property name="autoDefault">
+         <bool>false</bool>
+        </property>
+        <property name="default">
+         <bool>false</bool>
+        </property>
+        <property name="flat">
+         <bool>false</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QPushButton" name="pushButton_apply">
+        <property name="minimumSize">
+         <size>
+          <width>72</width>
+          <height>30</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>72</width>
+          <height>30</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>10</pointsize>
+          <italic>false</italic>
+          <bold>false</bold>
+         </font>
+        </property>
+        <property name="styleSheet">
+         <string notr="true"/>
+        </property>
+        <property name="text">
+         <string>Apply</string>
         </property>
         <property name="autoDefault">
          <bool>false</bool>
@@ -193,16 +231,16 @@
        </widget>
       </item>
       <item row="0" column="0">
-       <widget class="QPushButton" name="pushButton_exit">
+       <widget class="QPushButton" name="pushButton_cancel">
         <property name="minimumSize">
          <size>
-          <width>100</width>
+          <width>72</width>
           <height>30</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>100</width>
+          <width>72</width>
           <height>30</height>
          </size>
         </property>
@@ -217,7 +255,7 @@
          <string notr="true"/>
         </property>
         <property name="text">
-         <string>Exit</string>
+         <string>Cancel</string>
         </property>
         <property name="autoDefault">
          <bool>false</bool>
@@ -229,6 +267,19 @@
          <bool>false</bool>
         </property>
        </widget>
+      </item>
+      <item row="0" column="1">
+       <spacer name="horizontalSpacer_17">
+        <property name="orientation">
+         <enum>Qt::Orientation::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
       </item>
      </layout>
     </widget>
@@ -2980,7 +3031,7 @@
                   <x>0</x>
                   <y>0</y>
                   <width>486</width>
-                  <height>525</height>
+                  <height>529</height>
                  </rect>
                 </property>
                 <layout class="QGridLayout" name="gridLayout_18">
@@ -4732,8 +4783,8 @@ at suction</string>
   <tabstop>pushButton_plot_PV_diagram_crank_end</tabstop>
   <tabstop>pushButton_plot_PV_diagram_head_end</tabstop>
   <tabstop>pushButton_plot_PV_diagram_both_ends</tabstop>
-  <tabstop>pushButton_confirm</tabstop>
-  <tabstop>pushButton_exit</tabstop>
+  <tabstop>pushButton_apply</tabstop>
+  <tabstop>pushButton_cancel</tabstop>
   <tabstop>scrollArea_2</tabstop>
   <tabstop>treeWidget_compressor_excitation</tabstop>
   <tabstop>pushButton_reset</tabstop>

@@ -66,39 +66,54 @@ class Ui_Dialog(object):
 
         self.frame_2 = QFrame(Dialog)
         self.frame_2.setObjectName(u"frame_2")
-        self.frame_2.setMinimumSize(QSize(0, 52))
-        self.frame_2.setMaximumSize(QSize(16777215, 52))
+        self.frame_2.setMinimumSize(QSize(0, 48))
+        self.frame_2.setMaximumSize(QSize(16777215, 48))
         self.frame_2.setFrameShape(QFrame.Shape.NoFrame)
         self.frame_2.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_2 = QGridLayout(self.frame_2)
         self.gridLayout_2.setObjectName(u"gridLayout_2")
         self.gridLayout_2.setVerticalSpacing(0)
-        self.gridLayout_2.setContentsMargins(0, 0, 0, 0)
-        self.pushButton_confirm = QPushButton(self.frame_2)
-        self.pushButton_confirm.setObjectName(u"pushButton_confirm")
-        self.pushButton_confirm.setMinimumSize(QSize(100, 30))
-        self.pushButton_confirm.setMaximumSize(QSize(100, 30))
+        self.gridLayout_2.setContentsMargins(6, 0, 6, 0)
+        self.pushButton_apply_and_close = QPushButton(self.frame_2)
+        self.pushButton_apply_and_close.setObjectName(u"pushButton_apply_and_close")
+        self.pushButton_apply_and_close.setMinimumSize(QSize(72, 30))
+        self.pushButton_apply_and_close.setMaximumSize(QSize(72, 30))
         font2 = QFont()
         font2.setPointSize(10)
         font2.setBold(False)
         font2.setItalic(False)
-        self.pushButton_confirm.setFont(font2)
-        self.pushButton_confirm.setStyleSheet(u"")
-        self.pushButton_confirm.setAutoDefault(False)
-        self.pushButton_confirm.setFlat(False)
+        self.pushButton_apply_and_close.setFont(font2)
+        self.pushButton_apply_and_close.setStyleSheet(u"")
+        self.pushButton_apply_and_close.setAutoDefault(False)
+        self.pushButton_apply_and_close.setFlat(False)
 
-        self.gridLayout_2.addWidget(self.pushButton_confirm, 0, 1, 1, 1)
+        self.gridLayout_2.addWidget(self.pushButton_apply_and_close, 0, 3, 1, 1)
 
-        self.pushButton_exit = QPushButton(self.frame_2)
-        self.pushButton_exit.setObjectName(u"pushButton_exit")
-        self.pushButton_exit.setMinimumSize(QSize(100, 30))
-        self.pushButton_exit.setMaximumSize(QSize(100, 30))
-        self.pushButton_exit.setFont(font2)
-        self.pushButton_exit.setStyleSheet(u"")
-        self.pushButton_exit.setAutoDefault(False)
-        self.pushButton_exit.setFlat(False)
+        self.pushButton_apply = QPushButton(self.frame_2)
+        self.pushButton_apply.setObjectName(u"pushButton_apply")
+        self.pushButton_apply.setMinimumSize(QSize(72, 30))
+        self.pushButton_apply.setMaximumSize(QSize(72, 30))
+        self.pushButton_apply.setFont(font2)
+        self.pushButton_apply.setStyleSheet(u"")
+        self.pushButton_apply.setAutoDefault(False)
+        self.pushButton_apply.setFlat(False)
 
-        self.gridLayout_2.addWidget(self.pushButton_exit, 0, 0, 1, 1)
+        self.gridLayout_2.addWidget(self.pushButton_apply, 0, 2, 1, 1)
+
+        self.pushButton_cancel = QPushButton(self.frame_2)
+        self.pushButton_cancel.setObjectName(u"pushButton_cancel")
+        self.pushButton_cancel.setMinimumSize(QSize(72, 30))
+        self.pushButton_cancel.setMaximumSize(QSize(72, 30))
+        self.pushButton_cancel.setFont(font2)
+        self.pushButton_cancel.setStyleSheet(u"")
+        self.pushButton_cancel.setAutoDefault(False)
+        self.pushButton_cancel.setFlat(False)
+
+        self.gridLayout_2.addWidget(self.pushButton_cancel, 0, 0, 1, 1)
+
+        self.horizontalSpacer_17 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_2.addItem(self.horizontalSpacer_17, 0, 1, 1, 1)
 
 
         self.gridLayout_13.addWidget(self.frame_2, 2, 0, 1, 1)
@@ -969,7 +984,7 @@ class Ui_Dialog(object):
         self.scrollArea_2.setWidgetResizable(True)
         self.scrollAreaWidgetContents_2 = QWidget()
         self.scrollAreaWidgetContents_2.setObjectName(u"scrollAreaWidgetContents_2")
-        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, 0, 486, 525))
+        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, 0, 486, 529))
         self.gridLayout_18 = QGridLayout(self.scrollAreaWidgetContents_2)
         self.gridLayout_18.setObjectName(u"gridLayout_18")
         self.frame_4 = QFrame(self.scrollAreaWidgetContents_2)
@@ -1556,9 +1571,9 @@ class Ui_Dialog(object):
         QWidget.setTabOrder(self.pushButton_plot_rod_pressure_load_frequency, self.pushButton_plot_PV_diagram_crank_end)
         QWidget.setTabOrder(self.pushButton_plot_PV_diagram_crank_end, self.pushButton_plot_PV_diagram_head_end)
         QWidget.setTabOrder(self.pushButton_plot_PV_diagram_head_end, self.pushButton_plot_PV_diagram_both_ends)
-        QWidget.setTabOrder(self.pushButton_plot_PV_diagram_both_ends, self.pushButton_confirm)
-        QWidget.setTabOrder(self.pushButton_confirm, self.pushButton_exit)
-        QWidget.setTabOrder(self.pushButton_exit, self.scrollArea_2)
+        QWidget.setTabOrder(self.pushButton_plot_PV_diagram_both_ends, self.pushButton_apply)
+        QWidget.setTabOrder(self.pushButton_apply, self.pushButton_cancel)
+        QWidget.setTabOrder(self.pushButton_cancel, self.scrollArea_2)
         QWidget.setTabOrder(self.scrollArea_2, self.treeWidget_compressor_excitation)
         QWidget.setTabOrder(self.treeWidget_compressor_excitation, self.pushButton_reset)
         QWidget.setTabOrder(self.pushButton_reset, self.pushButton_remove)
@@ -1567,8 +1582,9 @@ class Ui_Dialog(object):
 
         self.retranslateUi(Dialog)
 
-        self.pushButton_confirm.setDefault(False)
-        self.pushButton_exit.setDefault(False)
+        self.pushButton_apply_and_close.setDefault(False)
+        self.pushButton_apply.setDefault(False)
+        self.pushButton_cancel.setDefault(False)
         self.tabWidget_main.setCurrentIndex(0)
         self.comboBox_connection_type.setCurrentIndex(1)
         self.pushButton_get_fluid.setDefault(False)
@@ -1585,8 +1601,9 @@ class Ui_Dialog(object):
     def retranslateUi(self, Dialog):
         Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"Reciprocating compressor excitation", None))
         self.label.setText(QCoreApplication.translate("Dialog", u"Reciprocating compressor model setup", None))
-        self.pushButton_confirm.setText(QCoreApplication.translate("Dialog", u"Confirm", None))
-        self.pushButton_exit.setText(QCoreApplication.translate("Dialog", u"Exit", None))
+        self.pushButton_apply_and_close.setText(QCoreApplication.translate("Dialog", u"Ok", None))
+        self.pushButton_apply.setText(QCoreApplication.translate("Dialog", u"Apply", None))
+        self.pushButton_cancel.setText(QCoreApplication.translate("Dialog", u"Cancel", None))
         self.label_47.setText(QCoreApplication.translate("Dialog", u"<html><head/><body><p>[%]</p></body></html>", None))
         self.label_14.setText(QCoreApplication.translate("Dialog", u"<html><head/><body><p>[m]</p></body></html>", None))
         self.label_8.setText(QCoreApplication.translate("Dialog", u"Compression stage:", None))
@@ -1755,8 +1772,9 @@ class ReciprocatingCompressorInputs_UI(QDialog, Ui_Dialog):
                             - label: QLabel
                 - frame_2: QFrame
                     - (Layout): QGridLayout
-                            - pushButton_confirm: QPushButton
-                            - pushButton_exit: QPushButton
+                            - pushButton_apply_and_close: QPushButton
+                            - pushButton_apply: QPushButton
+                            - pushButton_cancel: QPushButton
                 - frame: QFrame
                     - (Layout): QGridLayout
                             - frame_7: QFrame

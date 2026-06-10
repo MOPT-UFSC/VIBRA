@@ -233,8 +233,9 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.pushButton_process_aquisition_parameters.clicked.connect(self.process_aquisition_parameters)
         self.pushButton_export_path.clicked.connect(self.export_path_callback)
         #
-        self.pushButton_confirm.clicked.connect(self.attribute_callback)
-        self.pushButton_exit.clicked.connect(self.close)
+        self.pushButton_apply.clicked.connect(self.apply_callback)
+        self.pushButton_apply_and_close.clicked.connect(self.apply_and_close_callback)
+        self.pushButton_cancel.clicked.connect(self.close)
         self.pushButton_get_fluid.clicked.connect(self.get_fluid_callback)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
@@ -347,7 +348,8 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         current_tab = self.tabWidget_main.currentIndex()
         tab_list = current_tab == TabIndex.LIST
 
-        self.pushButton_confirm.setDisabled(tab_list)
+        self.pushButton_apply.setDisabled(tab_list)
+        self.pushButton_apply_and_close.setDisabled(tab_list)
         self.lineEdit_selection_id.setDisabled(tab_list)
 
         if self.last_tab == TabIndex.LIST or tab_list:
@@ -360,11 +362,6 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             self.treeWidget_compressor_excitation.clearSelection()
 
         self.last_tab = current_tab
-
-    # def tab_event_callback(self):
-    #     tab_config = self.tabWidget_main.currentIndex() != TabIndex.LIST
-    #     self.pushButton_confirm.setEnabled(tab_config)
-    #     self.pushButton_remove.setDisabled(True)
 
     def update_compressing_cylinders_setup(self):
 
@@ -812,17 +809,17 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         except Exception:
             return
 
-    def attribute_callback(self):
+    def apply_callback(self):
 
         if self.generate_mesh():
-            return
+            return True
 
         surface_id = self.check_input_surfaces()
         if surface_id is None:
-            return
+            return True
 
         if self.check_all_parameters():
-            return
+            return True
 
         self.process_aquisition_parameters()
 
@@ -836,7 +833,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
         state_properties = self.get_state_properties()
         if not state_properties:
-            return
+            return True
 
         state_properties.update({"surface_id" : surface_id, "volume_id" : volume_id[0]})
 
@@ -897,10 +894,19 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.remove_conflicting_excitations(surface_id)
 
         if self.save_table_values(table_name, frequencies, surface_velocity):
-            return
+            return True
 
         self.properties._set_property("reciprocating_compressor_excitation", data, surface=surface_id)
         self.actions_to_finalize()
+
+    def apply_and_close_callback(self):
+        print("apply_and_close_callback")
+        if self.apply_callback():
+            print("retornei aqui")
+            return
+
+        print("deveria fechar")
+        self.close()
 
     def export_compressor_excitation_data(self, surface_id: int, surface_area: float, frequencies: np.ndarray, flow_rate: np.ndarray):
         output_data_type = self.comboBox_output_data_type.currentText()
@@ -1457,7 +1463,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            self.attribute_callback()
+            self.apply_callback()
         elif event.key() == Qt.Key_Delete:
             self.remove_callback()
         elif event.key() == Qt.Key_Escape:

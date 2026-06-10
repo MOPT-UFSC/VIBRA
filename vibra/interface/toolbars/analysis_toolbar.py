@@ -206,7 +206,6 @@ class AnalysisToolbar(QToolBar):
         return self.model.is_there_a_valid_analysis_setup(current_analysis_id=current_analysis_id)
 
     def analysis_type_callback(self):
-        print(self.model.analysis_setup)
         analysis_id = self.model.analysis_id
         new_analysis_id = self.get_current_analysis_id()
         self.run_analysis_action.setEnabled(analysis_id == new_analysis_id)
@@ -310,7 +309,7 @@ class AnalysisToolbar(QToolBar):
         if not read._continue:
             return
 
-        self.reset_solution(True)
+        self.reset_solution()
 
     def reset_solution(self):
         app().project.reset_solution()
