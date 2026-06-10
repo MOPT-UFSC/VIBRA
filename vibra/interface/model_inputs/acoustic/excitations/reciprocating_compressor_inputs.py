@@ -27,17 +27,12 @@ from vibra.interface.numeric_checks.unit_utilities import (
 )
 from vibra.interface.plots.general.plot_2d_simplified import Plot2DSimplified
 from vibra.interface.ui_generated.model.acoustic.excitations.reciprocating_compressor_inputs_ui import ReciprocatingCompressorInputs_UI
-from vibra.model.machines.reciprocating_compressor_model import CylindersActingMode, ReciprocatingCompressorModel
+from vibra.model.machines.reciprocating_compressor_model import ConnectionType, CylindersActingMode, ReciprocatingCompressorModel
 
 
 class CompressorExcitationData(IntEnum):
     SURFACE_VELOCITY = 0
     VOLUME_VELOCITY = 1
-
-
-class ConnectionType(IntEnum):
-    SUCTION = 0
-    DISCHARGE = 1
 
 
 class TabIndex(IntEnum):
@@ -551,8 +546,8 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         if "clearance_CE" in parameters.keys():
             self.doubleSpinBox_clearance_crank_end.setValue(parameters["clearance_CE"])
 
-        if "tdc_crank_angle_1" in parameters.keys():
-            self.spinBox_tdc_crank_angle.setValue(parameters["tdc_crank_angle_1"])
+        if "tdc_crank_angle" in parameters.keys():
+            self.spinBox_tdc_crank_angle.setValue(parameters["tdc_crank_angle"])
 
         if "rotational_speed" in parameters.keys():
             self.doubleSpinBox_rotational_speed.setValue(parameters["rotational_speed"])
@@ -561,10 +556,12 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             self.spinBox_capacity.setValue(parameters["capacity"])
 
         if "isentropic_exponent" in parameters.keys():
-            self.lineEdit_isentropic_exponent.setText(str(parameters["isentropic_exponent"]))
+            isentropic_exponent = parameters["isentropic_exponent"]
+            self.lineEdit_isentropic_exponent.setText(f"{isentropic_exponent : .6f}")
 
         if "molar_mass" in parameters.keys():
-            self.lineEdit_molar_mass.setText(str(parameters["molar_mass"]))
+            molar_mass = parameters["molar_mass"]
+            self.lineEdit_molar_mass.setText(f"{molar_mass : .6f}")
 
         if "suction_pressure" in parameters.keys():
             self.lineEdit_suction_pressure.setText(str(parameters["suction_pressure"]))
@@ -705,7 +702,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.parameters['compression_stage'] = self.comboBox_compression_stage.currentIndex()
         self.parameters['clearance_HE'] = self.doubleSpinBox_clearance_head_end.value()
         self.parameters['clearance_CE'] = self.doubleSpinBox_clearance_crank_end.value()
-        self.parameters['tdc_crank_angle_1'] = self.spinBox_tdc_crank_angle.value()
+        self.parameters['tdc_crank_angle'] = self.spinBox_tdc_crank_angle.value()
         self.parameters['rotational_speed'] = self.doubleSpinBox_rotational_speed.value()
         self.parameters['capacity'] = self.spinBox_capacity.value()
         self.parameters['pressure_unit'] = self.comboBox_pressure_units.currentText()
@@ -839,6 +836,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         connection_type = self.comboBox_connection_type.currentText().lower()
 
         compressor_info = {
+            "source" : "reciprocating_compressor",
             "surface_id": surface_id,
             "volume_id": volume_id[0],
             "connection_type" : connection_type,
@@ -850,7 +848,6 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             "pressure_ratio" : self.parameters.get("pressure_ratio"),
             "check_ideal_gas": True,
         }
-
 
         if not isinstance(self.selected_fluid, Fluid):
 
@@ -910,62 +907,6 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
         self.properties._set_property("reciprocating_compressor_excitation", data, surface=surface_id)
         self.actions_to_finalize()
-
-        # self.hide()
-        # read = SetFluidInputs(state_properties = compressor_info)
-        # app().main_window.set_input_widget(self)
-
-        # if not read.complete:
-        #     return
-
-        # else:
-        #     if read.fluid_widget.refprop is not None:
-        #         if read.fluid_widget.refprop.complete:
-
-        #             self.parameters["molar_mass"] = round(read.fluid_widget.fluid_data_refprop["molar_mass"], 6)
-        #             self.parameters['isentropic_exponent'] = round(read.fluid_widget.fluid_data_refprop["isentropic_exponent"], 6)
-        #             self.parameters['fluid_properties_source'] = "refprop"
-        #     else:
-        #         self.parameters['fluid_properties_source'] = "user-defined"
-
-        #     self.parameters['points_per_revolution'] = self.compressor.number_points
-        #     self.compressor.process_state_properties_in_SI_units(self.parameters)
-
-        #     self.model.mesh.process_face_elements_connected_to_nodes(surface_id)
-        #     surface_area = self.model.mesh.surface_area_from_element_integration[surface_id]
-
-        #     frequencies, flow_rate = self.compressor.process_FFT_of_volumetric_flow_rate(self.N_rev, flow_label)
-        #     surface_velocity = flow_rate / surface_area
-
-        #     table_name = f"compressor_excitation_{connection_type}_surface_{surface_id}"
-
-        #     if self.checkBox_export_data.isChecked():
-        #         output_data_type = self.comboBox_output_data_type.currentText()
-        #         if output_data_type == "Surface velocity [m/s]":
-        #             unit = "m/s"
-        #             output_data = surface_velocity
-        #         else:
-        #             unit = "m³/s"
-        #             output_data = flow_rate
-
-        #         self.export_reciprocating_compressor_data_excitation(surface_id, frequencies, output_data, unit)
-
-        #     data = {
-        #             "connection_type" : connection_type,
-        #             "table_names" : [table_name],
-        #             "parameters" : self.parameters,
-        #             "values" : [surface_velocity],
-        #             "nodal_attribution" : False,
-        #             "averaged" : False
-        #             }
-
-        #     self.remove_conflicting_excitations(surface_id)
-
-        #     if self.save_table_values(table_name, frequencies, surface_velocity):
-        #         return
-
-        #     self.properties._set_property("reciprocating_compressor_excitation", data, surface=surface_id)
-        #     self.actions_to_finalize()
 
     def export_compressor_excitation_data(self, surface_id: int, surface_area: float, frequencies: np.ndarray, flow_rate: np.ndarray):
         output_data_type = self.comboBox_output_data_type.currentText()
@@ -1059,22 +1000,29 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
     def load_compressor_excitation_info(self):
 
         self.treeWidget_compressor_excitation.clear()
+        acting_labels = ["both ends", "head end", "crank end"]
 
         for (property, *args), data in self.properties.surface_properties.items():
-            if property == "reciprocating_compressor_excitation":
-                
-                surface_id = args[0]
-                connection_type = data["connection_type"]
+            if property != "reciprocating_compressor_excitation":
+                continue
 
-                rc_param = data.get("parameters", dict())
-                acting_head = rc_param.get("acting_head", "")
-                TDC_crank_angle = rc_param.get("TDC_crank_angle", 0)
+            if not isinstance(data, dict):
+                continue
 
-                new = QTreeWidgetItem([str(surface_id), connection_type, acting_head, str(TDC_crank_angle)])
-                for i in range(4):
-                    new.setTextAlignment(i, Qt.AlignCenter)
+            rc_param = data.get("parameters")
+            if not isinstance(rc_param, dict):
+                continue
 
-                self.treeWidget_compressor_excitation.addTopLevelItem(new)
+            surface_id = args[0]
+            connection_type = data["connection_type"]
+            acting_mode = rc_param.get("acting_mode", CylindersActingMode.HEAD_END)
+            tdc_crank_angle = rc_param.get("tdc_crank_angle", 0)
+
+            new = QTreeWidgetItem([str(surface_id), connection_type, acting_labels[acting_mode], str(tdc_crank_angle)])
+            for i in range(4):
+                new.setTextAlignment(i, Qt.AlignCenter)
+
+            self.treeWidget_compressor_excitation.addTopLevelItem(new)
 
         self.update_tabs_visibility()
 

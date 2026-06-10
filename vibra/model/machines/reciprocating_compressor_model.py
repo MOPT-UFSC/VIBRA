@@ -12,6 +12,11 @@ from vibra import VIBRA_DIR
 from vibra.interface.numeric_checks.unit_utilities import convert_pressure_unit, convert_temperature_unit
 
 
+class ConnectionType(IntEnum):
+    SUCTION = 0
+    DISCHARGE = 1
+
+
 class CylindersActingMode(IntEnum):
     BOTH_ENDS = 0
     HEAD_END = 1
