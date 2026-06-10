@@ -679,6 +679,9 @@ class FluidWidget(FluidWidget_UI):
 
     def load_state_properties_info(self):
 
+        if not isinstance(self.state_properties, dict):
+            return
+
         if not self.state_properties:
             return
 
@@ -696,10 +699,10 @@ class FluidWidget(FluidWidget_UI):
 
         app().main_window.selection.set_geometry_selection(surfaces=[surface_id])
 
-        connection_type = self.state_properties['connection_type']
+        connection_type = self.state_properties.get('connection_type')
         if source == "reciprocating_pump":
             title = f"Set a fluid for the reciprocating pump ({connection_type})"
-        
+
         elif source == "reciprocating_compressor":
             title = f"Set a fluid for the reciprocating compressor ({connection_type})"
 
