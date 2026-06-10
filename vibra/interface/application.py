@@ -27,18 +27,22 @@ class Application(QApplication):
 
         self.main_window = MainWindow()
         self.main_window.configure_main_window()
-        self.filter_tab_scroll_by_wheel()
+        self.filter_scroll_by_wheel_event()
 
-    def filter_tab_scroll_by_wheel(self):
+    def filter_scroll_by_wheel_event(self):
         from PySide6.QtCore import QEvent, QObject
-        from PySide6.QtWidgets import QTabBar
+        from PySide6.QtWidgets import QTabBar, QAbstractSpinBox, QComboBox
 
         class Filter(QObject):
             def eventFilter(self, obj, event):
-                if isinstance(obj, QTabBar) and (event.type() == QEvent.Wheel):
-                    return True
-                else:
+                if event.type() != QEvent.Wheel:
                     return False
+                
+                widgets = [QTabBar, QAbstractSpinBox, QComboBox]
+                for widget in widgets:
+                    if isinstance(obj, widget):
+                        return True
+                return False
 
         filter = Filter(self)
         self.installEventFilter(filter)
