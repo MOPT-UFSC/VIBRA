@@ -419,7 +419,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
     def get_state_properties(self):
 
-        if self.check_all_parameters():
+        if self.check_all_parameters(check_all_entries=False):
             return dict()
 
         state_properties = {
@@ -655,7 +655,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             return True
         return False
 
-    def check_all_parameters(self, check_all_entries=True):
+    def check_all_parameters(self, check_all_entries: bool=True):
 
         self.parameters = dict()
 
@@ -818,10 +818,8 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         if surface_id is None:
             return True
 
-        if self.check_all_parameters():
-            return True
-
-        self.process_aquisition_parameters()
+        if self.process_aquisition_parameters():
+            return
 
         if self.comboBox_connection_type.currentIndex() == ConnectionType.SUCTION:
             flow_label = "in_flow"
@@ -900,12 +898,9 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.actions_to_finalize()
 
     def apply_and_close_callback(self):
-        print("apply_and_close_callback")
         if self.apply_callback():
-            print("retornei aqui")
             return
 
-        print("deveria fechar")
         self.close()
 
     def export_compressor_excitation_data(self, surface_id: int, surface_area: float, frequencies: np.ndarray, flow_rate: np.ndarray):
