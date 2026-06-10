@@ -68,9 +68,9 @@ class AnalysisToolbar(QToolBar):
         self.combo_box_physical_domain.currentTextChanged.connect(self.check_analysis_setup_callback)
         self.combo_box_analysis_type.currentTextChanged.connect(self.analysis_type_callback)
         #
-        self.run_analysis_action.triggered.connect(self.run_analysis)
-        self.resume_analysis_action.triggered.connect(lambda: self.run_analysis(True))
-        self.configure_analysis_action.triggered.connect(self.configure_analysis)
+        self.run_analysis_action.triggered.connect(self.run_analysis_callback)
+        self.resume_analysis_action.triggered.connect(lambda: self.run_analysis_callback(True))
+        self.configure_analysis_action.triggered.connect(self.configure_analysis_callback)
         self.reset_solution_action.triggered.connect(self.project_solution_data_reset_callback)
         #
         self.enable_pushbutons.connect(self.check_analysis_setup_callback)
@@ -223,7 +223,7 @@ class AnalysisToolbar(QToolBar):
         self.run_analysis_action.setEnabled(valid_analysis_setup)
         # self.domain_changed.emit()
 
-    def run_analysis(self, is_resume: bool = True):
+    def run_analysis_callback(self, is_resume: bool = True):
         if app().config.user_preferences.run_analysis_in_subprocess:
             self.run_analysis_in_subprocess()
         else:
@@ -231,7 +231,7 @@ class AnalysisToolbar(QToolBar):
 
     def run_analysis_in_current_process(self, is_resume: bool = False):
         if self.model.analysis_setup is None:
-            self.configure_analysis()
+            self.configure_analysis_callback()
             if not self.solve_analysis:
                 return
 
@@ -325,7 +325,7 @@ class AnalysisToolbar(QToolBar):
         app().main_window.action_model_workspace_callback()
         app().main_window.action_export_element_transfer_data.setDisabled(True)
 
-    def configure_analysis(self):
+    def configure_analysis_callback(self):
 
         self.solve_analysis = False
 
@@ -344,7 +344,7 @@ class AnalysisToolbar(QToolBar):
         self.solve_analysis = harmonic.solve_analysis
 
         if self.solve_analysis:
-            self.run_analysis()
+            self.run_analysis_callback()
             app().main_window.update_symbols()
 
     def modal_analysis_setup_callback(self, analysis_id: AnalysisID):
@@ -352,4 +352,4 @@ class AnalysisToolbar(QToolBar):
         self.solve_analysis = modal.proceed_solution
 
         if self.solve_analysis:
-            self.run_analysis()
+            self.run_analysis_callback()
