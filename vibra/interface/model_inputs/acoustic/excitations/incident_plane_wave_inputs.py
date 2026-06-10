@@ -663,10 +663,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
                     return
 
         # No idea of what it does
-        app().project.configure_analysis(
-            app().project.model.analysis_id,
-            app().project.model.analysis_setup,
-        )
+        app().project.configure_analysis(app().project.model.analysis_setup)
 
     def update_tabs_visibility(self):
 

@@ -256,10 +256,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         if self.check_frequency_entries():
             return True
 
-        app().project.configure_analysis(
-            AnalysisID.ACOUSTIC_HARMONIC,
-            self.analysis_setup,
-        )
+        app().project.configure_analysis(self.analysis_setup)
 
     def process_data_callback(self):
         self.hide()
