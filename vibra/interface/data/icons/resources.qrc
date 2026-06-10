@@ -66,6 +66,7 @@
         <file>visibility.png</file>
         <file>visibility_off.png</file>
         <file>zoom_icon.png</file>
+        <file>help_icon.png</file>
         <file>figures/effective_acoustic_impedance_for_DBM_porous_material_models.png</file>
         <file>figures/effective_wavenumber_for_DBM_porous_material_models.png</file>
         <file>model_setup_items/absorption_surface.png</file>

@@ -239,6 +239,7 @@ class Ui_MainWindow(object):
         self.centralwidget.setObjectName(u"centralwidget")
         self.horizontalLayout = QHBoxLayout(self.centralwidget)
         self.horizontalLayout.setObjectName(u"horizontalLayout")
+        self.horizontalLayout.setContentsMargins(4, 2, 2, 4)
         self.splitter = QSplitter(self.centralwidget)
         self.splitter.setObjectName(u"splitter")
         self.splitter.setLineWidth(1)
@@ -289,7 +290,7 @@ class Ui_MainWindow(object):
         MainWindow.addToolBar(Qt.ToolBarArea.TopToolBarArea, self.renderer_toolbar)
         self.menubar = QMenuBar(MainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 1056, 24))
+        self.menubar.setGeometry(QRect(0, 0, 1056, 22))
         self.menu_project = QMenu(self.menubar)
         self.menu_project.setObjectName(u"menu_project")
         self.menu_settings = QMenu(self.menubar)
@@ -449,7 +450,7 @@ class Ui_MainWindow(object):
         self.action_surface_elements.setText(QCoreApplication.translate("MainWindow", u"Surface Elements", None))
         self.action_solid_elements.setText(QCoreApplication.translate("MainWindow", u"Solid Elements", None))
         self.action_all_entities_mesh.setText(QCoreApplication.translate("MainWindow", u"All Entities", None))
-        self.renderer_toolbar.setWindowTitle(QCoreApplication.translate("MainWindow", u"toolBar", None))
+        self.renderer_toolbar.setWindowTitle(QCoreApplication.translate("MainWindow", u"Renderer toolbar", None))
         self.menu_project.setTitle(QCoreApplication.translate("MainWindow", u"Project", None))
         self.menu_settings.setTitle(QCoreApplication.translate("MainWindow", u"Settings", None))
         self.menu_view_mode.setTitle(QCoreApplication.translate("MainWindow", u"View", None))
@@ -458,7 +459,7 @@ class Ui_MainWindow(object):
         self.menu_selection.setTitle(QCoreApplication.translate("MainWindow", u"Selection", None))
         self.menu_geometry_select_all.setTitle(QCoreApplication.translate("MainWindow", u"Geometry", None))
         self.menu_mesh_select_all.setTitle(QCoreApplication.translate("MainWindow", u"Mesh", None))
-        self.workspaces_toolbar.setWindowTitle(QCoreApplication.translate("MainWindow", u"toolBar", None))
+        self.workspaces_toolbar.setWindowTitle(QCoreApplication.translate("MainWindow", u"Workspace toolbar", None))
     # retranslateUi
 
 

@@ -23,7 +23,7 @@ class StrictDoubleValidator(QDoubleValidator):
         string = string.replace(",", ".")
 
         if not string:
-            return QDoubleValidator.State.Intermediate, string, pos
+            return QDoubleValidator.State.Acceptable, string, pos
 
         if string.count(".") > 1:
             return QDoubleValidator.State.Invalid, string, pos

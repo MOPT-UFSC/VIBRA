@@ -312,6 +312,20 @@ class Ui_Form(object):
 
         self.gridLayout.addWidget(self.label_unit_combo_box, 5, 3, 1, 1)
 
+        self.pushButton_help = QPushButton(self.frame_4)
+        self.pushButton_help.setObjectName(u"pushButton_help")
+        self.pushButton_help.setMinimumSize(QSize(40, 30))
+        self.pushButton_help.setMaximumSize(QSize(40, 30))
+        self.pushButton_help.setFont(font5)
+        self.pushButton_help.setStyleSheet(u"")
+        icon2 = QIcon()
+        icon2.addFile(u":/icons/help_icon.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.pushButton_help.setIcon(icon2)
+        self.pushButton_help.setIconSize(QSize(22, 22))
+        self.pushButton_help.setFlat(False)
+
+        self.gridLayout.addWidget(self.pushButton_help, 2, 3, 1, 1)
+
 
         self.gridLayout_3.addWidget(self.frame_4, 0, 0, 1, 1)
 
@@ -364,6 +378,10 @@ class Ui_Form(object):
         self.label_15.setText(QCoreApplication.translate("Form", u"Input ID: ", None))
         self.label_fc_combo_box.setText(QCoreApplication.translate("Form", u"<html><head/><body><p>Section diameter:</p></body></html>", None))
         self.label_unit_combo_box.setText(QCoreApplication.translate("Form", u"[mm]", None))
+#if QT_CONFIG(tooltip)
+        self.pushButton_help.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p><span style=\" font-size:10pt; font-weight:400;\">Press to get some help about the transmission loss or noise reduction</span></p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButton_help.setText("")
     # retranslateUi
 
 
@@ -401,6 +419,7 @@ class TransmissionLossInputs_UI(QWidget, Ui_Form):
                                         - label_fc_combo_box: QLabel
                                         - comboBox_cutoff_frequency: QComboBox
                                         - label_unit_combo_box: QLabel
+                                        - pushButton_help: QPushButton
     """
 
     def __init__(self, *args, **kwargs):
