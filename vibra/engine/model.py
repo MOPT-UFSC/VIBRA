@@ -81,7 +81,6 @@ class Model:
         self.length_unit: LengthUnits = "millimeter"
         self.mesh_setup: Optional[MeshSetup] = None
         self.analysis_setup: Optional[AnalysisSetup] = None
-        self.analysis_id: AnalysisID = AnalysisID.NO_ANALYSIS
         self.solution: Optional[Solution] = None
 
         # TODO: review these variables
@@ -113,18 +112,27 @@ class Model:
         self.reset_dissipation_model_properties()
 
     @property
+    def analysis_id(self):
+        if isinstance(self.analysis_setup, AnalysisSetup):
+            return self.analysis_setup.analysis_id
+
+        return AnalysisID.NO_ANALYSIS
+
+    @property
     def frequencies(self) -> Optional[np.ndarray]:
         """
         This property was created for retro compatibility.
         """
         if isinstance(self.analysis_setup, HarmonicAnalysisSetup):
             return self.analysis_setup.get_frequencies()
+
         return None
 
     @property
     def solution_steps_mask(self):
         if isinstance(self.analysis_setup, HarmonicAnalysisSetup):
             return self.analysis_setup.solution_steps_mask
+
         return list()
 
     @property
@@ -134,8 +142,9 @@ class Model:
         """
         if isinstance(self.analysis_setup, HarmonicAnalysisSetup):
             return self.analysis_setup.global_damping
+
         return (None, None, None)
-    
+
     def reset_current_solution(self):
         self.solution = None
 
@@ -261,9 +270,6 @@ class Model:
 
         if self.disable_resume_callback is not None:
             self.disable_resume_callback()
-
-    def set_analysis_id(self, analysis_id: AnalysisID):
-        self.analysis_id = analysis_id
 
     def set_analysis_setup(self, analysis_setup: Optional[AnalysisSetup]):
         if not isinstance(analysis_setup, AnalysisSetup | None):
