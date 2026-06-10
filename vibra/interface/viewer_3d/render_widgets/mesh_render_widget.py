@@ -193,17 +193,18 @@ class MeshRenderWidget(CommonRenderWidget):
 
         mesh = app().project.model.mesh
         mesh_error = mesh.collapsed_elements_data or mesh.disconnected_nodes_data
+        distinguished_solids = app().main_window.distinguished_solids
 
         visualization = self.visualization_filter
-        self.edges_actor.SetVisibility(visualization.lines)
+        self.edges_actor.SetVisibility(visualization.lines and not distinguished_solids)
         self.faces_actor.SetVisibility(visualization.faces and not mesh_error)
         self.solids_actor.SetVisibility(visualization.solids and not mesh_error)
         self.faces_actor.SetVisibility(visualization.faces and not mesh_error)
         self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
 
-        if app().main_window.distinguished_solids:
+        if distinguished_solids:
             self.switch_to_solids_actor()
-            self.solids_actor.distinguish_solids(app().main_window.distinguished_solids)
+            self.solids_actor.distinguish_solids(distinguished_solids)
             self.solids_actor.SetVisibility(True)
 
         self.update_selection()

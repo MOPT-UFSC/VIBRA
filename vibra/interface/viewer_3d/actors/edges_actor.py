@@ -121,12 +121,11 @@ class EdgesActor(vtkActor):
         self.GetMapper().ScalarVisibilityOn()
 
     def clear_colors(self):
-        visualization = self.visualization_filter
         color = app().config.user_preferences.nodes_points_color
         disconected_nodes_color = color_names.GREEN
         collapsed_element_nodes_color = color_names.ORANGE
 
-        if visualization.points:
+        if self.visualization_filter.points:
             self.set_color(color)
         else:
             self.set_color(Color(0, 0, 0, 0))
