@@ -104,6 +104,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
         self.spinBox_tdc_crank_angle.setValue(0)
         self.spinBox_capacity.setValue(100)
+        self.spinBox_valves_per_head.setValue(1)
         self.doubleSpinBox_clearance_head_end.setValue(0)
         self.doubleSpinBox_clearance_crank_end.setValue(0)
         self.doubleSpinBox_rotational_speed.setValue(360.0)
@@ -116,10 +117,8 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.lineEdit_discharge_temperature.setDisabled(True)
 
         # configure the QTreeWidget appearance
-        # widths = [100, 120, 120, 200]
         self.treeWidget_compressor_excitation.header().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         for i in range(2):
-            # self.treeWidget_compressor_excitation.setColumnWidth(i, width)
             self.treeWidget_compressor_excitation.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
         self._load_units_labels()
@@ -525,6 +524,9 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         if not isinstance(parameters, dict):
             return
 
+        if "valves_per_head" in parameters.keys():
+            self.spinBox_valves_per_head.setValue(parameters.get("valves_per_head", 1))
+
         if "bore_diameter" in parameters.keys():
             self.lineEdit_bore_diameter.setText(str(parameters["bore_diameter"]))
 
@@ -601,11 +603,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
     def check_input_surfaces(self):
 
         input_ids = self.lineEdit_selection_id.text()
-        surface_id, error_data = self.model.mesh.check_selected_ids(
-                                                                    input_ids, 
-                                                                    selection = "surfaces", 
-                                                                    single_id = True
-                                                                    )
+        surface_id, error_data = self.model.mesh.check_selected_ids(input_ids, selection="surfaces", single_id=True)
 
         if error_data is not None:
             self.hide()
@@ -705,6 +703,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.parameters['tdc_crank_angle'] = self.spinBox_tdc_crank_angle.value()
         self.parameters['rotational_speed'] = self.doubleSpinBox_rotational_speed.value()
         self.parameters['capacity'] = self.spinBox_capacity.value()
+        self.parameters['valves_per_head'] = self.spinBox_valves_per_head.value()
         self.parameters['pressure_unit'] = self.comboBox_pressure_units.currentText()
         self.parameters['temperature_unit'] = self.comboBox_temperature_units.currentText()
 
@@ -874,7 +873,10 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.model.mesh.process_face_elements_connected_to_nodes(surface_id)
         surface_area = self.model.mesh.surface_area_from_element_integration[surface_id]
 
+        # process the volumetric flow rate spectrum (per valve)
         frequencies, flow_rate = self.compressor.process_FFT_of_volumetric_flow_rate(self.N_rev, flow_label)
+
+        # compute the surface velocity
         surface_velocity = flow_rate / surface_area
 
         table_name = f"compressor_excitation_{connection_type}_surface_{surface_id}"

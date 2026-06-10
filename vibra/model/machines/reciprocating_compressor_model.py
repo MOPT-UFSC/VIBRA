@@ -67,6 +67,7 @@ class ReciprocatingCompressorModel:
 
     # compressor configuration
     acting_mode : int = CylindersActingMode.BOTH_ENDS                       # Active cylinder(s) key
+    valves_per_head : int = 1                                               # Number of valves per head
 
     # geometric parameters
     bore_diameter : float = 0.                                              # Cylinder bore diameter [m]
@@ -307,15 +308,17 @@ class ReciprocatingCompressorModel:
             end_angle = theta[end_index]
             end_volume = volumes[end_index]
 
-            boundary_data[labels[j]] = {"indexes" : [start_index, end_index],
-                                        "angles"  : [start_angle, end_angle],
-                                        "volumes" : [start_volume, end_volume]}
+            boundary_data[labels[j]] = {
+                "indexes": [start_index, end_index],
+                "angles": [start_angle, end_angle],
+                "volumes": [start_volume, end_volume],
+            }
 
             # print(f"{acting_label}: {labels[j]} {boundary_data[labels[j]]}")
 
         return boundary_data
 
-    def get_shifted_vector(self, data, index):
+    def get_shifted_vector(self, data: np.ndarray, index: int):
         N = len(data)
         output = np.zeros(N, dtype=float)
         output[:N-index] = data[index:]
@@ -666,7 +669,7 @@ class ReciprocatingCompressorModel:
 
         return volumes, pressures, valves_info
 
-    def get_cycle_indexes(self, start_index, end_index, N):
+    def get_cycle_indexes(self, start_index: int, end_index: int, N: int):
 
         if end_index > start_index:
             indexes = np.arange(start_index, end_index+1, 1)
@@ -687,20 +690,9 @@ class ReciprocatingCompressorModel:
         # the piston velocity
         v_piston = self.recip_v(tdc=tdc)
 
-        # # volumetric flow rate for head-end cylinder (for loop)
-        # N = len(v_piston)
-        # flow_in = np.zeros(N, dtype=float)
-        # flow_out = np.zeros(N, dtype=float)
-
-        # for i, v in enumerate(v_piston):
-        #     if valves_info["open suction"][i]:
-        #         flow_in[i] = v * self.area_head_end
-        #     if valves_info["open discharge"][i]:
-        #         flow_out[i] = v * self.area_head_end
-
         # volumetric flow rate for head-end cylinder (direct)
-        flow_in = v_piston * self.area_head_end * valves_info["open suction"].astype(int)
-        flow_out = v_piston * self.area_head_end * valves_info["open discharge"].astype(int)
+        flow_in = v_piston * self.area_head_end * valves_info.get("open suction").astype(int)
+        flow_out = v_piston * self.area_head_end * valves_info.get("open discharge").astype(int)
 
         output_data = {
             "in_flow" : flow_in,
@@ -709,8 +701,8 @@ class ReciprocatingCompressorModel:
 
         return output_data
 
-    def flow_crank_end(self, tdc=None, capacity=1):
-
+    def flow_crank_end(self, tdc: float | None = None, capacity: float = 1) -> dict:
+ 
         _, _, valves_info = self.process_crank_end_volumes_and_pressures(tdc=tdc, capacity=capacity)
         if valves_info is None:
             return None
@@ -718,20 +710,9 @@ class ReciprocatingCompressorModel:
         # the piston velocity on the crank-end side is opposite to the head-end ones
         v_piston = -self.recip_v(tdc=tdc)
 
-        # # volumetric flow rate for crank-end cylinder (for loop)
-        # N = len(v_piston)
-        # flow_in = np.zeros(N, dtype=float)
-        # flow_out = np.zeros(N, dtype=float)
-
-        # for i, v in enumerate(v_piston):
-        #     if valves_info["open suction"][i]:
-        #         flow_in[i] = v * self.area_crank_end
-        #     if valves_info["open discharge"][i]:
-        #         flow_out[i] = v * self.area_crank_end
-
         # volumetric flow rate for crank-end cylinder (direct)
-        flow_in = v_piston * self.area_crank_end * valves_info["open suction"].astype(int)
-        flow_out = v_piston * self.area_crank_end * valves_info["open discharge"].astype(int)
+        flow_in = v_piston * self.area_crank_end * valves_info.get("open suction").astype(int)
+        flow_out = v_piston * self.area_crank_end * valves_info.get("open discharge").astype(int)
 
         output_data = {
             "in_flow" : flow_in,
@@ -740,12 +721,12 @@ class ReciprocatingCompressorModel:
 
         return output_data
 
-    def mass_flow_crank_end(self, capacity=None):
+    def mass_flow_crank_end(self, capacity: float | None = None):
         vf = self.flow_crank_end(capacity=capacity)
         mf = -vf['in_flow'] * self.rho_suc
         return mf
 
-    def mass_flow_head_end(self, capacity=None):
+    def mass_flow_head_end(self, capacity: float | None = None):
         vf = self.flow_head_end(capacity=capacity)
         mf = -vf['in_flow'] * self.rho_suc
         return mf
@@ -756,18 +737,21 @@ class ReciprocatingCompressorModel:
         f_ce = np.sum(self.mass_flow_crank_end()) / N
         return f_he + f_ce
 
-    def process_sum_of_volumetric_flow_rate(self, key: str, capacity=None, smooth_data=False):
+    def process_sum_of_volumetric_flow_rate(self, flow_type: str, capacity: float | None = None, smooth_data=False):
         try:
 
             if self.acting_mode == CylindersActingMode.BOTH_ENDS:
-                flow_rate = self.flow_crank_end(tdc=self.tdc, capacity=capacity)[key]
-                flow_rate += self.flow_head_end(tdc=self.tdc, capacity=capacity)[key]
+                flow_rate_ce = self.flow_crank_end(tdc=self.tdc, capacity=capacity)
+                flow_rate_he = self.flow_head_end(tdc=self.tdc, capacity=capacity)
+                flow_rate_cyl = (flow_rate_ce.get(flow_type, 0.) + flow_rate_he.get(flow_type, 0.)) / self.valves_per_head
 
             elif self.acting_mode == CylindersActingMode.HEAD_END:
-                flow_rate = self.flow_head_end(tdc=self.tdc, capacity=capacity)[key]
+                flow_rate_he = self.flow_head_end(tdc=self.tdc, capacity=capacity)
+                flow_rate_cyl = flow_rate_he.get(flow_type, 0.) / self.valves_per_head
 
             elif self.acting_mode == CylindersActingMode.CRANK_END:
-                flow_rate = self.flow_crank_end(tdc=self.tdc, capacity=capacity)[key]
+                flow_rate_ce = self.flow_crank_end(tdc=self.tdc, capacity=capacity)
+                flow_rate_cyl = flow_rate_ce.get(flow_type, 0.) / self.valves_per_head
 
         except Exception as error:
             logging.error(str(error))
@@ -775,18 +759,18 @@ class ReciprocatingCompressorModel:
 
         if smooth_data:
     
-            N = len(flow_rate)
+            N = len(flow_rate_cyl)
             fs = N * (self.rpm / 60)
 
-            flow_rate_ext = np.append(flow_rate[:-1], flow_rate)
-            flow_rate_ext = np.append(flow_rate_ext, flow_rate[1:])
+            flow_rate_ext = np.append(flow_rate_cyl[:-1], flow_rate_cyl)
+            flow_rate_ext = np.append(flow_rate_ext, flow_rate_cyl[1:])
 
             b, a = butter(1, fs/15, btype='low', fs=fs,  output='ba')
-            flow_rate = filtfilt(b, a, flow_rate_ext)[N-1 : 2*N-1]
+            flow_rate_cyl = filtfilt(b, a, flow_rate_ext)[N-1 : 2*N-1]
 
-        return flow_rate
+        return flow_rate_cyl
 
-    def get_in_mass_flow(self, capacity=None):
+    def get_in_mass_flow(self, capacity: float | None = None):
 
         in_flow = self.process_sum_of_volumetric_flow_rate('in_flow', capacity=capacity)
         if in_flow is None:
@@ -795,7 +779,7 @@ class ReciprocatingCompressorModel:
         else:
             return -np.mean(in_flow) * self.rho_suc
 
-    def get_out_mass_flow(self, capacity=None):
+    def get_out_mass_flow(self, capacity: float | None = None):
 
         out_flow = self.process_sum_of_volumetric_flow_rate('out_flow', capacity=capacity)
         if out_flow is None:
@@ -830,7 +814,7 @@ class ReciprocatingCompressorModel:
             return -1
         else:
             mass_flow_full_capacity = self.get_in_mass_flow(capacity=1)
-            print(f"final mass flow: {capacity*mass_flow_full_capacity}")
+            # print(f"final mass flow: {capacity*mass_flow_full_capacity}")
 
             if mass_flow_full_capacity == -1:
                 return -1
@@ -919,42 +903,67 @@ class ReciprocatingCompressorModel:
 
     def extend_signals(self, data: np.ndarray, revolutions: int):
 
-        Trev = 60 / self.rpm
-        T = revolutions*Trev
+        # revollution time
+        T_rev = 60 / self.rpm
 
-        values_time = np.tile(data[:-1], revolutions) # extending signals
+        # acquisition time
+        T = revolutions * T_rev
 
-        return values_time, T
+        # process the extended signal
+        xt_ext = np.tile(data[:-1], revolutions)
 
-    def process_FFT_of_(self, values, revolutions):
+        return xt_ext, T
 
-        values_time, T = self.extend_signals(values, revolutions)
-        values_freq = self.FFT_periodic(values_time)
-        df = 1/T
+    def process_FFT_from_extended_signal(self, values: np.ndarray, revolutions: int):
         
-        size = len(values_freq)
-        if np.remainder(size, 2)==0:
-            N = int(size/2)
-        else:
-            N = int((size + 1)/2)
-        frequencies = np.arange(0, N+1, 1)*df
+        # extend the signal to increase the frequency resolution
+        xt_ext, T = self.extend_signals(values, revolutions)
 
-        return frequencies, values_freq[0:N+1]
+        # process the one-sided spectrum
+        X_f = np.fft.rfft(xt_ext) / len(xt_ext)
 
-    def process_FFT_of_volumetric_flow_rate(self, revolutions, key):
+        # adjust the one-sided spectrum amplitude
+        X_f[1:] *= 2
 
-        flow_rate = self.process_sum_of_volumetric_flow_rate(key)
+        # time increment
+        dt = T / len(xt_ext)
 
+        # create the frequencies vector
+        frequencies = np.fft.rfftfreq(len(xt_ext), dt)
+
+        # self.check_iFFT_processing(dt, xt_ext, X_f)
+
+        return frequencies, X_f
+
+    def process_FFT_of_volumetric_flow_rate(self, revolutions: int, flow_type: str, zero_frequency: bool = False):
+
+        flow_rate = self.process_sum_of_volumetric_flow_rate(flow_type)
         if flow_rate is None:
             return None, None
         
-        freq, flow_rate = self.process_FFT_of_(flow_rate, revolutions)
-        freq = freq[freq <= self.max_frequency]
-        flow_rate = flow_rate[:len(freq)]
+        freq, flow_rate = self.process_FFT_from_extended_signal(flow_rate, revolutions)
+
+        # high-pass frequency mask
+        if zero_frequency:
+            mask_hpf = freq >= 0
+        else:
+            mask_hpf = freq > 0
+
+        # low-pass frequency mask
+        mask_lpf = freq <= self.max_frequency
+
+        # band-pass frequency mask
+        mask_bpf = mask_hpf * mask_lpf
+        
+        # filter the frequencies vector
+        freq = freq[mask_bpf]
+
+        # filter the flow rate spectrum vector
+        flow_rate = flow_rate[mask_bpf]
 
         return freq, flow_rate
     
-    def get_piston_position_and_velocity_data(self, tdc=None, domain="time") -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def get_piston_position_and_velocity_data(self, tdc: float | None = None, domain: str = "time") -> tuple[np.ndarray, np.ndarray, np.ndarray]:
         _, x = self.recip_x(tdc=tdc)
         v = self.recip_v(tdc=tdc)
         Trev = 60 / self.rpm
@@ -1027,7 +1036,7 @@ class ReciprocatingCompressorModel:
     def get_rod_pressure_load_frequency_data(self, revolutions: int) -> tuple[np.ndarray, np.ndarray]:
         _, rod_pressure_load_time = self.get_rod_pressure_load_time_data()
 
-        freq, rod_pressure_load = self.process_FFT_of_(rod_pressure_load_time, revolutions)
+        freq, rod_pressure_load = self.process_FFT_from_extended_signal(rod_pressure_load_time, revolutions)
         mask = freq <= self.max_frequency
 
         return freq[mask], rod_pressure_load[mask]
