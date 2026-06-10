@@ -621,7 +621,6 @@ class MainWindow(MainWindow_UI):
         else:
             self.show_geometry_render_widget()
 
-        self.action_line_view_callback(not any(solid_elements))
         self.reload_visualization_filter()
         self.visualization_changed.emit()
 
