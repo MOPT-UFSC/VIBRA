@@ -9,14 +9,7 @@ import numpy as np
 from PIL.Image import Image
 
 from vibra import errors
-from vibra.engine.analysis_info import (
-    AnalysisID,
-    AnalysisSetup,
-    AnalysisType,
-    HarmonicAnalysisSetup,
-    ModalAnalysisSetup,
-    PhysicalDomain,
-)
+from vibra.engine.analysis_info import AnalysisID, AnalysisSetup, AnalysisType, HarmonicAnalysisSetup, ModalAnalysisSetup, PhysicalDomain
 from vibra.engine.assemblers import AcousticAssembler, StructuralAssembler
 from vibra.engine.checkers.analysis_checker import AnalysisChecker
 from vibra.engine.mesher.mesh import Mesh

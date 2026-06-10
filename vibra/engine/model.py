@@ -376,7 +376,7 @@ class Model:
             return False
 
         if isinstance(current_analysis_id, int):
-            if self.analysis_setup.analysis_id != current_analysis_id:
+            if self.analysis_id != current_analysis_id:
                 return False
 
         def check_modal_setup():
