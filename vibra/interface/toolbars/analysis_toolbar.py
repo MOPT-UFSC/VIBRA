@@ -6,7 +6,6 @@ from PySide6.QtWidgets import QComboBox, QLabel, QPushButton, QToolBar, QWidget
 
 from vibra import ICON_DIR, app
 from vibra.engine import AnalysisID
-from vibra.engine.model import Model
 from vibra.engine.analysis_info import AnalysisType, PhysicalDomain
 from vibra.engine.checkers.analysis_checker import AnalysisChecker
 from vibra.interface.analysis.harmonic_analysis_setup_input import HarmonicAnalysisSetupInput
