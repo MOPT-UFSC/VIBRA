@@ -527,10 +527,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
 
         analysis_setup = self.model.get_harmonic_analysis_setup(**analysis_setup_data)
 
-        app().project.configure_analysis(
-            self.analysis_id,
-            analysis_setup,
-        )
+        app().project.configure_analysis(self.analysis_id)
 
         self.setup_defined = True
         app().main_window.analysis_toolbar.enable_pushbutons.emit()
