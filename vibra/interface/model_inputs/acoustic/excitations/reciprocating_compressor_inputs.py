@@ -465,10 +465,10 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
     def get_fluid_callback(self):
 
-        state_properties = self.get_state_properties(False)
+        state_properties = self.get_state_properties()
         if not state_properties:
             return
-    
+
         self.hide()
         self.fluid_dialog = SetFluidInputsSimplified(state_properties = state_properties)
         self.fluid_dialog.fluid_widget.pushButton_attribute.setText("Select fluid")
@@ -834,24 +834,16 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         volume_id = self.model.mesh.volumes_from_surface[surface_id]
         connection_type = self.comboBox_connection_type.currentText().lower()
 
-        compressor_info = {
-            "source" : "reciprocating_compressor",
-            "surface_id": surface_id,
-            "volume_id": volume_id[0],
-            "connection_type" : connection_type,
-            "pressure_unit" : self.comboBox_pressure_units.currentText(),
-            "temperature_unit" : self.comboBox_temperature_units.currentText(),
-            "suction_pressure" : self.parameters.get("suction_pressure"),
-            "suction_temperature" : self.parameters.get("suction_temperature"),
-            "isentropic_exponent" : self.parameters.get("isentropic_exponent"),
-            "pressure_ratio" : self.parameters.get("pressure_ratio"),
-            "check_ideal_gas": True,
-        }
+        state_properties = self.get_state_properties()
+        if not state_properties:
+            return
+
+        state_properties.update({"surface_id" : surface_id, "volume_id" : volume_id[0]})
 
         if not isinstance(self.selected_fluid, Fluid):
 
             self.hide()
-            dialog = SetFluidInputs(state_properties = compressor_info)
+            dialog = SetFluidInputs(state_properties = state_properties)
             app().main_window.set_input_widget(self)
 
             if not dialog.complete:
