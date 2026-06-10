@@ -6,6 +6,7 @@ from PySide6.QtWidgets import QComboBox, QLabel, QPushButton, QToolBar, QWidget
 
 from vibra import ICON_DIR, app
 from vibra.engine import AnalysisID
+from vibra.engine.model import Model
 from vibra.engine.analysis_info import AnalysisType, PhysicalDomain
 from vibra.engine.checkers.analysis_checker import AnalysisChecker
 from vibra.interface.analysis.harmonic_analysis_setup_input import HarmonicAnalysisSetupInput
@@ -61,7 +62,7 @@ class AnalysisToolbar(QToolBar):
         self.run_analysis_action = QAction(self.run_analysis_icon, "Run Analysis", self)
         self.configure_analysis_action = QAction(self.configure_analysis_icon, "Analysis Setup", self)
         self.reset_solution_action = QAction(self.reset_solution_icon, "Reset Solution", self)
-        self.resume_analysis_action = QAction(self.resume_solution_icon, "Resume Solution", self)
+        self.resume_soluton_action = QAction(self.resume_solution_icon, "Resume Solution", self)
 
     def _create_connections(self):
         #
@@ -69,14 +70,12 @@ class AnalysisToolbar(QToolBar):
         self.combo_box_analysis_type.currentTextChanged.connect(self.analysis_type_callback)
         #
         self.run_analysis_action.triggered.connect(self.run_analysis_callback)
-        self.resume_analysis_action.triggered.connect(lambda: self.run_analysis_callback(True))
+        self.resume_soluton_action.triggered.connect(lambda: self.run_analysis_callback(True))
         self.configure_analysis_action.triggered.connect(self.configure_analysis_callback)
-        self.reset_solution_action.triggered.connect(self.project_solution_data_reset_callback)
+        self.reset_solution_action.triggered.connect(self.reset_solution_callback)
         #
         self.enable_pushbutons.connect(self.check_analysis_setup_callback)
         self.enable_pushbutons.connect(self.update_reset_solution_button_accessibility)
-
-        # app().project.can_resume_solution_changed.connect(self.update_pushbutton_resume_analysis)
 
     def _configure_appearance(self):
         self.setMinimumHeight(40)
@@ -116,7 +115,7 @@ class AnalysisToolbar(QToolBar):
         self.addWidget(self.get_spacer())
         self.addAction(self.reset_solution_action)
         self.addWidget(self.get_spacer())
-        self.addAction(self.resume_analysis_action)
+        self.addAction(self.resume_soluton_action)
         #
         self.adjustSize()
 
@@ -128,12 +127,12 @@ class AnalysisToolbar(QToolBar):
 
         # QAction
         self.configure_analysis_action.setToolTip("Configure the analysis settings")
-        self.resume_analysis_action.setToolTip("Resume the analysis")
+        self.resume_soluton_action.setToolTip("Resume the analysis")
         self.run_analysis_action.setToolTip("Run the analysis")
         self.reset_solution_action.setToolTip("Reset Solution")
         #
         self.reset_solution_action.setDisabled(True)
-        self.resume_analysis_action.setVisible(False)
+        self.resume_soluton_action.setVisible(False)
 
     def _load_analysis_types(self):
 
@@ -176,14 +175,14 @@ class AnalysisToolbar(QToolBar):
             self.combo_box_analysis_type.blockSignals(False)
             self.combo_box_physical_domain.blockSignals(False)
 
-    def update_pushbutton_resume_analysis(self):
+    def update_resume_soluton_button_visibility(self):
         can_resume_solution = app().project.can_resume_solution
-        self.resume_analysis_action.setVisible(can_resume_solution)
+        self.resume_soluton_action.setVisible(can_resume_solution)
 
     def update_reset_solution_button_accessibility(self):
         solution_exists = self.model.solution is not None
         self.reset_solution_action.setEnabled(solution_exists)
-        self.model.disable_resume_callback()
+        self.update_resume_soluton_button_visibility()
 
     def get_current_analysis_id(self):
         analysis_type = self.combo_box_analysis_type.currentText()
@@ -293,7 +292,7 @@ class AnalysisToolbar(QToolBar):
         logging.info("Post-processing results... [65/100]")
         app().main_window.model_setup_widget.model_setup_items.update_items_appearance()
 
-    def project_solution_data_reset_callback(self):
+    def reset_solution_callback(self):
 
         title = "Removal of project solution data"
         message = "Would you like to delete all solution data from this project? "
@@ -314,10 +313,10 @@ class AnalysisToolbar(QToolBar):
 
         self.reset_solution(True)
 
-    def reset_solution(self, force_delete_harmonic=False):
+    def reset_solution(self):
         app().project.reset_solution()
-        self.reset_solution_action.setDisabled(True)
-        app().main_window.project_data_modified = True
+        app().project.mark_project_as_modified()
+        self.update_reset_solution_button_accessibility()
         app().main_window.action_model_workspace_callback()
         app().main_window.action_export_element_transfer_data.setDisabled(True)
 
