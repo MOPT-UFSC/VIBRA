@@ -23,7 +23,7 @@ class SubProcessStatus(Enum):
 class SubProcessHandler:
     """Run the configured project analysis in a separate Python process."""
 
-    def __init__(self, path: Path | str):
+    def __init__(self, path: Path | str, extra_params: str = ""):
         process_script = Path(path).expanduser()
 
         if not process_script.is_absolute():
@@ -41,6 +41,7 @@ class SubProcessHandler:
             raise ValueError(f"Subprocess script path must point to a Python file: {process_script}")
 
         self.process_script = process_script
+        self.extra_params = extra_params
 
     def run(self) -> SubProcessStatus:
         self._subprocess: subprocess.Popen | None = None
@@ -64,7 +65,7 @@ class SubProcessHandler:
 
         try:
             self._subprocess = subprocess.Popen(
-                [sys.executable, str(self.process_script)],
+                [sys.executable, str(self.process_script), str(self.extra_params)],
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
