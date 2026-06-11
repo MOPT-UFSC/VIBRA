@@ -64,17 +64,17 @@ class Ui_Dialog(object):
 
         self.gridLayout_13.addWidget(self.frame_18, 0, 0, 1, 1)
 
-        self.frame_2 = QFrame(Dialog)
-        self.frame_2.setObjectName(u"frame_2")
-        self.frame_2.setMinimumSize(QSize(0, 48))
-        self.frame_2.setMaximumSize(QSize(16777215, 48))
-        self.frame_2.setFrameShape(QFrame.Shape.NoFrame)
-        self.frame_2.setFrameShadow(QFrame.Shadow.Raised)
-        self.gridLayout_2 = QGridLayout(self.frame_2)
+        self.frame_buttons = QFrame(Dialog)
+        self.frame_buttons.setObjectName(u"frame_buttons")
+        self.frame_buttons.setMinimumSize(QSize(0, 48))
+        self.frame_buttons.setMaximumSize(QSize(16777215, 48))
+        self.frame_buttons.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_buttons.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_2 = QGridLayout(self.frame_buttons)
         self.gridLayout_2.setObjectName(u"gridLayout_2")
         self.gridLayout_2.setVerticalSpacing(0)
         self.gridLayout_2.setContentsMargins(6, 0, 6, 0)
-        self.pushButton_apply_and_close = QPushButton(self.frame_2)
+        self.pushButton_apply_and_close = QPushButton(self.frame_buttons)
         self.pushButton_apply_and_close.setObjectName(u"pushButton_apply_and_close")
         self.pushButton_apply_and_close.setMinimumSize(QSize(72, 30))
         self.pushButton_apply_and_close.setMaximumSize(QSize(72, 30))
@@ -89,7 +89,7 @@ class Ui_Dialog(object):
 
         self.gridLayout_2.addWidget(self.pushButton_apply_and_close, 0, 3, 1, 1)
 
-        self.pushButton_apply = QPushButton(self.frame_2)
+        self.pushButton_apply = QPushButton(self.frame_buttons)
         self.pushButton_apply.setObjectName(u"pushButton_apply")
         self.pushButton_apply.setMinimumSize(QSize(72, 30))
         self.pushButton_apply.setMaximumSize(QSize(72, 30))
@@ -100,7 +100,7 @@ class Ui_Dialog(object):
 
         self.gridLayout_2.addWidget(self.pushButton_apply, 0, 2, 1, 1)
 
-        self.pushButton_cancel = QPushButton(self.frame_2)
+        self.pushButton_cancel = QPushButton(self.frame_buttons)
         self.pushButton_cancel.setObjectName(u"pushButton_cancel")
         self.pushButton_cancel.setMinimumSize(QSize(72, 30))
         self.pushButton_cancel.setMaximumSize(QSize(72, 30))
@@ -116,7 +116,7 @@ class Ui_Dialog(object):
         self.gridLayout_2.addItem(self.horizontalSpacer_17, 0, 1, 1, 1)
 
 
-        self.gridLayout_13.addWidget(self.frame_2, 2, 0, 1, 1)
+        self.gridLayout_13.addWidget(self.frame_buttons, 2, 0, 1, 1)
 
         self.frame = QFrame(Dialog)
         self.frame.setObjectName(u"frame")
@@ -1770,7 +1770,7 @@ class ReciprocatingCompressorInputs_UI(QDialog, Ui_Dialog):
                 - frame_18: QFrame
                     - (Layout): QGridLayout
                             - label: QLabel
-                - frame_2: QFrame
+                - frame_buttons: QFrame
                     - (Layout): QGridLayout
                             - pushButton_apply_and_close: QPushButton
                             - pushButton_apply: QPushButton
