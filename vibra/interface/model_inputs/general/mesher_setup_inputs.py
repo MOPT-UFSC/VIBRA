@@ -121,24 +121,26 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.setWindowTitle("Vibra")
 
     def _create_connections(self):
+        #
         self.comboBox_shape_function.currentIndexChanged.connect(self.update_advanced_gmsh_controls)
         self.comboBox_element_type.currentIndexChanged.connect(self.update_advanced_gmsh_controls)
-
-        self.pushButton_syncrhonize.clicked.connect(self.synchronize_button_callback)
+        #
         self.doubleSpinBox_maximum_element_size.valueChanged.connect(self.maximum_element_size_changed_callback)
-
+        #
         self.pushButton_add.clicked.connect(self.add_button_callback)
+        self.pushButton_apply.clicked.connect(self.apply_callback)
+        self.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
+        self.pushButton_cancel.clicked.connect(self.close)
         self.pushButton_delete.clicked.connect(self.remove_callback)
-        self.pushButton_show_bad_elements.clicked.connect(self.plot_bad_elements)
         self.pushButton_plot_histogram.clicked.connect(self.plot_mesh_parameter_histogram)
+        self.pushButton_show_bad_elements.clicked.connect(self.plot_bad_elements)
+        self.pushButton_syncrhonize.clicked.connect(self.synchronize_button_callback)
         # #
         # self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         # #
         self.tableWidget_refining_mesh_data.itemClicked.connect(self.mesh_refinement_item_clicked_callback)
         self.tableWidget_mesh_quality.itemClicked.connect(self.mesh_quality_item_clicked_callback)
-        self.pushButton_generate_mesh.clicked.connect(self.generate_mesh_callback)
-        self.pushButton_exit.clicked.connect(self.close)
-
+        #
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
     def _config_widgets(self):
@@ -151,7 +153,8 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.comboBox_recombine_all.setDisabled(True)
         #
         self.pushButton_show_bad_elements.setDisabled(True)
-        self.pushButton_generate_mesh.setAutoDefault(False)
+        self.pushButton_apply.setAutoDefault(False)
+        self.pushButton_apply_and_close.setAutoDefault(False)
         #
         self.lineEdit_selected_ids.setDisabled(True)
         self.pushButton_plot_histogram.setDisabled(True)
@@ -225,7 +228,8 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
     def tab_event_callback(self):
         mesh_quality_tab = self.tabWidget_main.currentIndex() == MeshSetupTabs.MESH_QUALITY
-        self.pushButton_generate_mesh.setDisabled(mesh_quality_tab)
+        self.pushButton_apply.setDisabled(mesh_quality_tab)
+        self.pushButton_apply_and_close.setDisabled(mesh_quality_tab)
 
     def mesh_refinement_item_clicked_callback(self, item: QTableWidgetItem):
         row = item.row()
@@ -323,7 +327,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             case MeshAlgorithms3D.HXT_3D:
                 self.comboBox_3d_algorithm.setCurrentIndex(GMSHAlgorithms_3D.HXT_3D)
 
-    def generate_mesh_callback(self):
+    def apply_callback(self, close: bool = False):
 
         def generate():
             mesh_setup = self._get_mesh_setup()
@@ -331,7 +335,6 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             app().project.generate_mesh()
 
         self.hide()
-
         LoadingWindow(generate).run()
         LoadingWindow(self.actions_to_finalize).run()
 
@@ -339,6 +342,9 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.update_mesh_quality_table()
 
         self.complete = True
+
+        if close:
+            self.close()
 
     def update_mesh_refinement_table(self):
         refinement_parameters = self.tmp_refinement_parameters
@@ -745,12 +751,12 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         if not read._continue:
             return True
 
-        self.generate_mesh_callback()
+        self.apply_callback()
 
     def keyPressEvent(self, event: QKeyEvent):
         match event.key():
             case Qt.Key.Key_Enter | Qt.Key.Key_Return:
-                self.generate_mesh_callback()
+                self.apply_callback()
             case Qt.Key_Delete:
                 self.remove_callback()
             case Qt.Key_Escape:
