@@ -1273,8 +1273,8 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             y_right_label="Piston velocity [m/s]",
             title="Piston displacement and velocity during a complete cycle",
         )
-        plotter.set_plot_data(x_data, position, label="Piston position", color=(0, 0, 0), line_width=2)
-        plotter.set_plot_data(x_data, velocity, label="Piston velocity", color=(0, 0, 1), line_width=2, y_label_position="right")
+        plotter.set_plot_data(x_data, position, label="Piston position", color=(0, 0, 0))
+        plotter.set_plot_data(x_data, velocity, label="Piston velocity", color=(0, 0, 1), y_label_position="right")
         plotter.show()
 
     def plot_piston_position_and_velocity_angle(self):
