@@ -437,8 +437,8 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
 
     def get_fluid_callback(self):
         self.fluid_dialog = SetFluidInputsSimplified(update_workspace = False)
-        self.fluid_dialog.fluid_widget.pushButton_attribute.setText("Select fluid")
-        self.fluid_dialog.pushButton_attribute.clicked.connect(self.get_selected_fluid)
+        self.fluid_dialog.fluid_widget.pushButton_apply.setText("Select fluid")
+        self.fluid_dialog.fluid_widget.pushButton_apply.clicked.connect(self.get_selected_fluid)
         self.fluid_dialog.exec()
 
     def get_selected_fluid(self, selected_fluid: Fluid|None=None):

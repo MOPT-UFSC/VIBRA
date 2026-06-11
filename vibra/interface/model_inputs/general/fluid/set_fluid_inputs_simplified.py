@@ -35,7 +35,7 @@ class SetFluidInputsSimplified(SimplifiedFluidInputs_UI):
         self.setWindowTitle("Vibra")
 
     def _create_connections(self):
-        self.fluid_widget.pushButton_exit.clicked.connect(self.close)
+        self.fluid_widget.pushButton_cancel.clicked.connect(self.close)
         self.fluid_widget.tableWidget_fluid_data.currentCellChanged.connect(self.current_cell_changed)
 
     def _add_fluid_widget(self):

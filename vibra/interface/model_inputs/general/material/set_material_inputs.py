@@ -69,9 +69,6 @@ class MaterialInputs(SetMaterial_UI):
         self._add_material_widget()
         self.scrollArea_table_of_materials.adjustSize()
 
-        self.pushButton_attribute = self.material_widget.pushButton_attribute
-        self.pushButton_exit = self.material_widget.pushButton_exit
-
         self.tableWidget_material_data = self.material_widget.tableWidget_material_data
         self.tableWidget_model_materials: QTableWidget
 
@@ -93,8 +90,9 @@ class MaterialInputs(SetMaterial_UI):
         self.comboBox_attribution_type.currentIndexChanged.connect(self.attribution_type_callback)
         #
         self.material_widget.modified.connect(self.load_model_info)
-        self.material_widget.pushButton_attribute.clicked.connect(self.attribute_callback)
-        self.material_widget.pushButton_exit.clicked.connect(self.close)
+        self.material_widget.pushButton_apply.clicked.connect(self.apply_callback)
+        self.material_widget.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
+        self.material_widget.pushButton_cancel.clicked.connect(self.close)
         self.material_widget.pushButton_remove_column.clicked.connect(self.reset_selected_material_lineEdit)
         self.material_widget.pushButton_reset_library.clicked.connect(self.reset_material_library_callback)
         self.pushButton_remove.clicked.connect(self.remove_callback)
@@ -301,7 +299,7 @@ class MaterialInputs(SetMaterial_UI):
         self.comboBox_attribution_type.clear()
         self.comboBox_attribution_type.addItems(labels)
 
-    def attribute_callback(self):
+    def apply_callback(self, close: bool = False):
 
         selected_material = self.material_widget.get_selected_material()
 
@@ -353,7 +351,9 @@ class MaterialInputs(SetMaterial_UI):
                 self.properties._set_property("material", selected_material, volume=volume_id)
 
         self.actions_to_finalize()
-        self.close()
+
+        if close:
+            self.close()
 
     def remove_callback(self):
         if not self.selected_items:
@@ -451,42 +451,43 @@ class MaterialInputs(SetMaterial_UI):
 
         for key in self.properties.volume_properties.keys():
             property, _ = key
-            if property == "material":
-                self.tabWidget_main.setTabVisible(TabType.LIST, True)
-                return
+            if property != "material":
+                continue
+
+            self.tabWidget_main.setTabVisible(TabType.LIST, True)
+            return
 
         for key in self.properties.surface_properties.keys():
             property, _ = key
             if property == "material":
-                self.tabWidget_main.setTabVisible(TabType.LIST, True)
-                return
+                continue
+
+            self.tabWidget_main.setTabVisible(TabType.LIST, True)
+            return
 
         self.tabWidget_main.setTabVisible(TabType.LIST, False)
 
     def tab_event_callback(self):
         app().main_window.selection.clear_selection()
-
         self.clear_line_edit_seletction_id()
         self.lineEdit_selected_material_name.clear()
+        tab_list = self.tabWidget_main.currentIndex() == TabType.LIST
 
-        is_tab_list = self.tabWidget_main.currentIndex() == TabType.LIST
-
-        if is_tab_list:
+        if tab_list:
             self.pushButton_remove.setDisabled(True)
             self.lineEdit_selection_id.setDisabled(True)
-
             self.tableWidget_model_materials.clearSelection()
 
         else:
             self.attribution_type_callback()
 
-        self.label_3.setVisible(not is_tab_list)
-        self.comboBox_attribution_type.setVisible(not is_tab_list)
-        self.lineEdit_selected_material_name.setVisible(not is_tab_list)
+        self.label_selected_material.setVisible(not tab_list)
+        self.comboBox_attribution_type.setVisible(not tab_list)
+        self.lineEdit_selected_material_name.setVisible(not tab_list)
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            self.attribute_callback()
+            self.apply_callback()
 
         elif event.key() == Qt.Key_Delete:
             self.remove_callback()

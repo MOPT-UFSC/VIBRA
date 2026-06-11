@@ -468,8 +468,8 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
         self.hide()
         self.fluid_dialog = SetFluidInputsSimplified(state_properties = state_properties)
-        self.fluid_dialog.fluid_widget.pushButton_attribute.setText("Select fluid")
-        self.fluid_dialog.fluid_widget.pushButton_attribute.clicked.connect(self.get_selected_fluid)
+        self.fluid_dialog.fluid_widget.pushButton_apply.setText("Select fluid")
+        self.fluid_dialog.fluid_widget.pushButton_apply.clicked.connect(self.get_selected_fluid)
         self.fluid_dialog.exec_and_keep_window_open()
         app().main_window.set_input_widget(self)
 

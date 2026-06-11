@@ -68,8 +68,9 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
     def _create_connections(self):
         #
-        self.pushButton_attribute.clicked.connect(self.attribute_callback)
-        self.pushButton_exit.clicked.connect(self.close)
+        self.pushButton_apply.clicked.connect(self.apply_callback)
+        self.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
+        self.pushButton_cancel.clicked.connect(self.close)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_load_table.clicked.connect(self.load_transfer_impedance_table)
         self.pushButton_reset.clicked.connect(self.reset_callback)
@@ -212,7 +213,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
         return surface_ids
 
-    def attribute_callback(self):
+    def apply_callback(self, close: bool = False):
 
         tab_index = self.tabWidget_main.currentIndex()
         if tab_index == StandardTabType.LIST:
@@ -231,6 +232,9 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
             self.process_assignment_for_table_values(surface_ids)
 
         self.lineEdit_selection_id.setText("")
+
+        if close:
+            self.close()
 
     def process_assignment_for_constant_values(self, surface_ids: int | tuple[int]):
         
@@ -795,7 +799,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            self.attribute_callback()
+            self.apply_callback()
         elif event.key() == Qt.Key_Delete:
             self.remove_callback()
         elif event.key() == Qt.Key_Escape:

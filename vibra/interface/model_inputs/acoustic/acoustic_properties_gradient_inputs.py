@@ -191,18 +191,16 @@ class AcousticPropertiesGradientInputs(AcousticPropertiesGradientInputs_UI):
 
             self.lineEdit_selection_id.setEnabled(True)
 
-
     def refinement_regions_callback(self):
         pass
 
     def get_fluid_callback(self):
         self.hide()
         self.fluid_dialog = SetFluidInputsSimplified()
-        self.fluid_dialog.fluid_widget.pushButton_attribute.setText("Select fluid")
-        self.fluid_dialog.fluid_widget.pushButton_attribute.clicked.connect(self.get_selected_fluid)
+        self.fluid_dialog.fluid_widget.pushButton_apply.setText("Select fluid")
+        self.fluid_dialog.fluid_widget.pushButton_apply.clicked.connect(self.get_selected_fluid)
         self.fluid_dialog.exec()
         app().main_window.set_input_widget(self)
-
 
     def get_selected_fluid(self):
         self.selected_fluid = self.fluid_dialog.get_selected_fluid()
