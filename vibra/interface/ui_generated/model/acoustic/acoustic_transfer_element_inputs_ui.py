@@ -23,7 +23,7 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
-        Dialog.setWindowModality(Qt.NonModal)
+        Dialog.setWindowModality(Qt.WindowModality.NonModal)
         Dialog.resize(400, 474)
         sizePolicy = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -32,7 +32,7 @@ class Ui_Dialog(object):
         Dialog.setSizePolicy(sizePolicy)
         Dialog.setMinimumSize(QSize(400, 440))
         Dialog.setMaximumSize(QSize(400, 480))
-        Dialog.setContextMenuPolicy(Qt.DefaultContextMenu)
+        Dialog.setContextMenuPolicy(Qt.ContextMenuPolicy.DefaultContextMenu)
         self.gridLayout_4 = QGridLayout(Dialog)
         self.gridLayout_4.setSpacing(4)
         self.gridLayout_4.setObjectName(u"gridLayout_4")
@@ -41,8 +41,8 @@ class Ui_Dialog(object):
         self.frame.setObjectName(u"frame")
         self.frame.setMinimumSize(QSize(0, 48))
         self.frame.setMaximumSize(QSize(520, 48))
-        self.frame.setFrameShape(QFrame.Box)
-        self.frame.setFrameShadow(QFrame.Raised)
+        self.frame.setFrameShape(QFrame.Shape.Box)
+        self.frame.setFrameShadow(QFrame.Shadow.Raised)
         self.frame.setLineWidth(1)
         self.gridLayout_2 = QGridLayout(self.frame)
         self.gridLayout_2.setSpacing(0)
@@ -58,8 +58,8 @@ class Ui_Dialog(object):
         font.setBold(False)
         font.setItalic(False)
         self.label.setFont(font)
-        self.label.setTextFormat(Qt.AutoText)
-        self.label.setAlignment(Qt.AlignCenter)
+        self.label.setTextFormat(Qt.TextFormat.AutoText)
+        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout_2.addWidget(self.label, 0, 0, 1, 1)
 
@@ -70,8 +70,8 @@ class Ui_Dialog(object):
         self.frame_2.setObjectName(u"frame_2")
         self.frame_2.setMinimumSize(QSize(0, 0))
         self.frame_2.setMaximumSize(QSize(520, 460))
-        self.frame_2.setFrameShape(QFrame.Box)
-        self.frame_2.setFrameShadow(QFrame.Raised)
+        self.frame_2.setFrameShape(QFrame.Shape.Box)
+        self.frame_2.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_3 = QGridLayout(self.frame_2)
         self.gridLayout_3.setObjectName(u"gridLayout_3")
         self.gridLayout_3.setHorizontalSpacing(4)
@@ -92,8 +92,8 @@ class Ui_Dialog(object):
         self.frame_10.setObjectName(u"frame_10")
         self.frame_10.setMinimumSize(QSize(260, 48))
         self.frame_10.setMaximumSize(QSize(16777215, 48))
-        self.frame_10.setFrameShape(QFrame.NoFrame)
-        self.frame_10.setFrameShadow(QFrame.Raised)
+        self.frame_10.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_10.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_7 = QGridLayout(self.frame_10)
         self.gridLayout_7.setObjectName(u"gridLayout_7")
         self.gridLayout_7.setHorizontalSpacing(4)
@@ -117,7 +117,7 @@ class Ui_Dialog(object):
         font2.setBold(False)
         self.lineEdit_spreadsheet_path.setFont(font2)
         self.lineEdit_spreadsheet_path.setStyleSheet(u"")
-        self.lineEdit_spreadsheet_path.setAlignment(Qt.AlignCenter)
+        self.lineEdit_spreadsheet_path.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout_7.addWidget(self.lineEdit_spreadsheet_path, 0, 1, 1, 1)
 
@@ -153,8 +153,8 @@ class Ui_Dialog(object):
         self.frame_11.setObjectName(u"frame_11")
         self.frame_11.setMinimumSize(QSize(0, 52))
         self.frame_11.setMaximumSize(QSize(16777215, 16777215))
-        self.frame_11.setFrameShape(QFrame.NoFrame)
-        self.frame_11.setFrameShadow(QFrame.Raised)
+        self.frame_11.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_11.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_16 = QGridLayout(self.frame_11)
         self.gridLayout_16.setSpacing(6)
         self.gridLayout_16.setObjectName(u"gridLayout_16")
@@ -173,7 +173,7 @@ class Ui_Dialog(object):
         self.lineEdit_output_selected_id.setMaximumSize(QSize(140, 30))
         self.lineEdit_output_selected_id.setFont(font1)
         self.lineEdit_output_selected_id.setStyleSheet(u"")
-        self.lineEdit_output_selected_id.setAlignment(Qt.AlignCenter)
+        self.lineEdit_output_selected_id.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout_16.addWidget(self.lineEdit_output_selected_id, 2, 3, 1, 1)
 
@@ -185,8 +185,8 @@ class Ui_Dialog(object):
         font4.setPointSize(10)
         font4.setBold(False)
         self.label_2.setFont(font4)
-        self.label_2.setFrameShape(QFrame.StyledPanel)
-        self.label_2.setAlignment(Qt.AlignCenter)
+        self.label_2.setFrameShape(QFrame.Shape.StyledPanel)
+        self.label_2.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout_16.addWidget(self.label_2, 6, 2, 1, 3)
 
@@ -195,7 +195,7 @@ class Ui_Dialog(object):
         self.label_11.setMinimumSize(QSize(120, 30))
         self.label_11.setMaximumSize(QSize(140, 30))
         self.label_11.setFont(font3)
-        self.label_11.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.label_11.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_16.addWidget(self.label_11, 2, 2, 1, 1)
 
@@ -209,8 +209,8 @@ class Ui_Dialog(object):
 
         self.frame_3 = QFrame(self.frame_11)
         self.frame_3.setObjectName(u"frame_3")
-        self.frame_3.setFrameShape(QFrame.StyledPanel)
-        self.frame_3.setFrameShadow(QFrame.Raised)
+        self.frame_3.setFrameShape(QFrame.Shape.StyledPanel)
+        self.frame_3.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout = QGridLayout(self.frame_3)
         self.gridLayout.setObjectName(u"gridLayout")
         self.label_22 = QLabel(self.frame_3)
@@ -218,7 +218,7 @@ class Ui_Dialog(object):
         self.label_22.setMinimumSize(QSize(100, 30))
         self.label_22.setMaximumSize(QSize(140, 30))
         self.label_22.setFont(font3)
-        self.label_22.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.label_22.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout.addWidget(self.label_22, 0, 0, 1, 1)
 
@@ -228,7 +228,7 @@ class Ui_Dialog(object):
         self.lineEdit_fmin.setMaximumSize(QSize(140, 30))
         self.lineEdit_fmin.setFont(font3)
         self.lineEdit_fmin.setStyleSheet(u"")
-        self.lineEdit_fmin.setAlignment(Qt.AlignCenter)
+        self.lineEdit_fmin.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout.addWidget(self.lineEdit_fmin, 0, 1, 1, 1)
 
@@ -237,7 +237,7 @@ class Ui_Dialog(object):
         self.label_24.setMinimumSize(QSize(30, 30))
         self.label_24.setMaximumSize(QSize(60, 30))
         self.label_24.setFont(font3)
-        self.label_24.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignVCenter)
+        self.label_24.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout.addWidget(self.label_24, 0, 2, 1, 1)
 
@@ -246,7 +246,7 @@ class Ui_Dialog(object):
         self.label_23.setMinimumSize(QSize(100, 30))
         self.label_23.setMaximumSize(QSize(140, 30))
         self.label_23.setFont(font3)
-        self.label_23.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.label_23.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout.addWidget(self.label_23, 1, 0, 1, 1)
 
@@ -256,7 +256,7 @@ class Ui_Dialog(object):
         self.lineEdit_fmax.setMaximumSize(QSize(140, 30))
         self.lineEdit_fmax.setFont(font3)
         self.lineEdit_fmax.setStyleSheet(u"")
-        self.lineEdit_fmax.setAlignment(Qt.AlignCenter)
+        self.lineEdit_fmax.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout.addWidget(self.lineEdit_fmax, 1, 1, 1, 1)
 
@@ -265,7 +265,7 @@ class Ui_Dialog(object):
         self.label_25.setMinimumSize(QSize(30, 30))
         self.label_25.setMaximumSize(QSize(60, 30))
         self.label_25.setFont(font3)
-        self.label_25.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignVCenter)
+        self.label_25.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout.addWidget(self.label_25, 1, 2, 1, 1)
 
@@ -274,7 +274,7 @@ class Ui_Dialog(object):
         self.label_21.setMinimumSize(QSize(100, 30))
         self.label_21.setMaximumSize(QSize(140, 30))
         self.label_21.setFont(font3)
-        self.label_21.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.label_21.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout.addWidget(self.label_21, 2, 0, 1, 1)
 
@@ -284,7 +284,7 @@ class Ui_Dialog(object):
         self.lineEdit_fstep.setMaximumSize(QSize(140, 30))
         self.lineEdit_fstep.setFont(font3)
         self.lineEdit_fstep.setStyleSheet(u"")
-        self.lineEdit_fstep.setAlignment(Qt.AlignCenter)
+        self.lineEdit_fstep.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout.addWidget(self.lineEdit_fstep, 2, 1, 1, 1)
 
@@ -293,7 +293,7 @@ class Ui_Dialog(object):
         self.label_26.setMinimumSize(QSize(30, 30))
         self.label_26.setMaximumSize(QSize(60, 30))
         self.label_26.setFont(font3)
-        self.label_26.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignVCenter)
+        self.label_26.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout.addWidget(self.label_26, 2, 2, 1, 1)
 
@@ -305,7 +305,7 @@ class Ui_Dialog(object):
         self.label_16.setMinimumSize(QSize(120, 30))
         self.label_16.setMaximumSize(QSize(140, 30))
         self.label_16.setFont(font3)
-        self.label_16.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.label_16.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_16.addWidget(self.label_16, 1, 2, 1, 1)
 
@@ -319,7 +319,7 @@ class Ui_Dialog(object):
         font5.setItalic(False)
         self.lineEdit_input_selected_id.setFont(font5)
         self.lineEdit_input_selected_id.setStyleSheet(u"")
-        self.lineEdit_input_selected_id.setAlignment(Qt.AlignCenter)
+        self.lineEdit_input_selected_id.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout_16.addWidget(self.lineEdit_input_selected_id, 1, 3, 1, 1)
 
@@ -358,8 +358,8 @@ class Ui_Dialog(object):
         self.frame_4.setObjectName(u"frame_4")
         self.frame_4.setMinimumSize(QSize(0, 52))
         self.frame_4.setMaximumSize(QSize(16777215, 52))
-        self.frame_4.setFrameShape(QFrame.NoFrame)
-        self.frame_4.setFrameShadow(QFrame.Raised)
+        self.frame_4.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_4.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_48 = QGridLayout(self.frame_4)
         self.gridLayout_48.setSpacing(2)
         self.gridLayout_48.setObjectName(u"gridLayout_48")

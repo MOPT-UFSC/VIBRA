@@ -141,7 +141,7 @@ class Ui_Dialog(object):
         self.scrollArea_table_of_fluids.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 714, 532))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 712, 532))
         self.scrollArea_table_of_fluids.setWidget(self.scrollAreaWidgetContents)
 
         self.gridLayout_5.addWidget(self.scrollArea_table_of_fluids, 0, 0, 1, 1)

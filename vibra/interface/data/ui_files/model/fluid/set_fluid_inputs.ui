@@ -349,7 +349,7 @@
                  <rect>
                   <x>0</x>
                   <y>0</y>
-                  <width>714</width>
+                  <width>712</width>
                   <height>532</height>
                  </rect>
                 </property>
@@ -592,7 +592,7 @@
   </layout>
  </widget>
  <resources>
-  <include location="../../../../icons/resources.qrc"/>
+  <include location="../../../icons/resources.qrc"/>
  </resources>
  <connections/>
 </ui>
