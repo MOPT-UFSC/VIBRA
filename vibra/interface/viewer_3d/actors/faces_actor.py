@@ -1,10 +1,12 @@
+from typing import Optional
+
 from molde import Color
 from vtkmodules.util.numpy_support import numpy_to_vtk
 from vtkmodules.vtkCommonCore import (
+    vtkFloatArray,
     vtkIntArray,
     vtkPoints,
     vtkUnsignedCharArray,
-    vtkFloatArray,
 )
 from vtkmodules.vtkCommonDataModel import (
     VTK_QUAD,
@@ -22,7 +24,7 @@ from vibra import app
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
-from vibra.utils.interface_utils import GeometryColorMode
+from vibra.utils.interface_utils import GeometryColorMode, VisualizationFilter
 
 
 class FacesActor(vtkActor):
@@ -33,7 +35,17 @@ class FacesActor(vtkActor):
         8: VTK_QUADRATIC_QUAD,
     }
 
-    def __init__(self, mesh: Mesh, allow_hidding=True, update_normals=True):
+    def __init__(
+        self,
+        mesh: Mesh,
+        allow_hidding=True,
+        update_normals=True,
+        visualization_filter: Optional[VisualizationFilter] = None,
+    ):
+        self.visualization_filter = visualization_filter
+        if self.visualization_filter is None:
+            self.visualization_filter = VisualizationFilter.all_true()
+
         self.mesh = mesh
         self.data = None
         self.allow_hidding = allow_hidding
@@ -140,7 +152,7 @@ class FacesActor(vtkActor):
 
         mesh = app().project.model.mesh
         properties = app().project.model.properties
-        color_mode = app().main_window.visualization_filter.color_mode
+        color_mode = self.visualization_filter.color_mode
         no_info_color = Color(20, 20, 20)
 
         if color_mode == GeometryColorMode.MATERIAL:
