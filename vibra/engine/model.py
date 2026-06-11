@@ -112,7 +112,7 @@ class Model:
         self.reset_dissipation_model_properties()
 
     @property
-    def analysis_id(self):
+    def analysis_id(self) -> AnalysisID:
         if isinstance(self.analysis_setup, AnalysisSetup):
             return self.analysis_setup.analysis_id
 

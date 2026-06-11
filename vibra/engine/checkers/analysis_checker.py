@@ -30,15 +30,15 @@ class AnalysisChecker:
 
     def check_analysis_setup(self, analysis_id_to_check: AnalysisID):
 
-        if AnalysisID(self.model.analysis_id).is_harmonic():
+        analysis_id = self.model.analysis_id
+        if AnalysisID(analysis_id).is_harmonic():
             if not isinstance(self.model.analysis_setup, HarmonicAnalysisSetup):
                 raise errors.InvalidModelSetupError("A HarmonicAnalysisSetup is needed to proceed with the analysis solution.")
 
-        if AnalysisID(self.model.analysis_id).is_modal():
+        if AnalysisID(analysis_id).is_modal():
             if not isinstance(self.model.analysis_setup,ModalAnalysisSetup):               
                 raise errors.InvalidModelSetupError("A ModalAnalysisSetup is needed to proceed with the analysis solution.")
 
-        analysis_id = self.model.analysis_id
         if analysis_id_to_check != analysis_id:
             raise errors.InvalidAnalysisSetupError(
                 f"The solver expects an '{analysis_id_to_check.name}' analysis type \
