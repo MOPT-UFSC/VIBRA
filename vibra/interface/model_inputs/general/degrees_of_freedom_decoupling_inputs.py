@@ -58,8 +58,9 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
 
     def _create_connections(self):
         #
-        self.pushButton_attribute.clicked.connect(self.attribute_callback)
-        self.pushButton_exit.clicked.connect(self.close)
+        self.pushButton_apply.clicked.connect(self.apply_callback)
+        self.pushButton_apply.clicked.connect(lambda: self.apply_callback(True))
+        self.pushButton_cancel.clicked.connect(self.close)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
         #
@@ -74,11 +75,11 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
         if self.tabWidget_main.currentIndex() == 1:
             self.lineEdit_selection_id.setText("")
             self.lineEdit_selection_id.setDisabled(True)
-            self.pushButton_attribute.setDisabled(True)
+            self.pushButton_apply.setDisabled(True)
 
         else:
             self.lineEdit_selection_id.setDisabled(False)
-            self.pushButton_attribute.setEnabled(True)
+            self.pushButton_apply.setEnabled(True)
 
     def geometry_selection_callback(self):
 
@@ -109,13 +110,10 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
 
         return
 
-    def attribute_callback(self):
+    def apply_callback(self, close: bool = False):
 
         input_ids = self.lineEdit_selection_id.text()
-        surface_ids, message_log = self.mesh.check_selected_ids(
-                                                                input_ids, 
-                                                                selection = "surfaces"
-                                                                )
+        surface_ids, message_log = self.mesh.check_selected_ids(input_ids, selection="surfaces")
 
         if message_log is not None:
             self.hide()
@@ -150,6 +148,9 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
         self.hide()
         self.actions_to_finalize()
         self.assignment_complete = True
+
+        if close:
+            self.close()
 
     def remove_all_surface_properties_from_surface(self, new_surface_ids: list[int]):
         if not new_surface_ids:
@@ -340,7 +341,7 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
             if self.tabWidget_main.currentIndex() == 0:
-                self.attribute_callback()
+                self.apply_callback()
         elif event.key() == Qt.Key_Delete:
             self.remove_callback()
         elif event.key() == Qt.Key_Escape:
