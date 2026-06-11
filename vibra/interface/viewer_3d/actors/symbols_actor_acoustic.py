@@ -1,5 +1,4 @@
 from collections import defaultdict
-from typing import Callable, TypedDict
 import numpy as np
 from molde.colors import color_names
 from molde.actors import CommonSymbolsActorVariableSize
