@@ -425,7 +425,7 @@ class Model:
         if self.list_frequencies != frequencies:
             return True
 
-    def get_tabular_frequency_setup(self):
+    def get_tabular_frequency_setup(self) -> None | tuple:
         """
         This method returns the frequency setup of the model's tabular data.
         """
