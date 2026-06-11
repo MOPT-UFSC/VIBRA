@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QFileDialog
-from PySide6.QtGui import QCloseEvent
+# from PySide6.QtGui import QCloseEvent
 from PySide6.QtCore import Qt
 
 from vibra import app
@@ -38,11 +38,11 @@ class LoadFluidCompositionInputs(LoadFluidComposition_UI):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
-        self.setWindowTitle(f"Vibra")
+        self.setWindowTitle("Vibra")
 
     def _create_connections(self):
-        self.pushButton_exit.clicked.connect(self.close)
-        self.pushButton_confirm.clicked.connect(self.confirm_button_callback)
+        self.pushButton_cancel.clicked.connect(self.close)
+        self.pushButton_load_composition.clicked.connect(self.confirm_button_callback)
         self.pushButton_search.clicked.connect(self.search_button_callback)
 
     def _config_widgets(self):

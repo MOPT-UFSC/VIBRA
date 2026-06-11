@@ -169,8 +169,8 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         self.lineEdit_search_fluid.textChanged.connect(self._filter_refprop_fluids)
         #
         self.pushButton_add_gas.clicked.connect(self.add_selected_fluid_button_callback)
-        self.pushButton_confirm.clicked.connect(self.get_fluid_data)
-        self.pushButton_exit.clicked.connect(self.close)
+        self.pushButton_get_fluid_properties.clicked.connect(self.get_fluid_data)
+        self.pushButton_cancel.clicked.connect(self.close)
         self.pushButton_fluid_configuration_mode.clicked.connect(self.fluids_configuration_mode_callback)
         self.pushButton_load_composition.clicked.connect(self.load_fluid_composition_callback)
         self.pushButton_remove_gas.clicked.connect(self.remove_selected_gas)

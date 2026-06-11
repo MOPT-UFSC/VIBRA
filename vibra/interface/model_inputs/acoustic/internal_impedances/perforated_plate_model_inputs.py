@@ -118,8 +118,9 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         self.comboBox_plot_type.currentIndexChanged.connect(self.plot_type_callback)
         self.comboBox_include_effects.currentIndexChanged.connect(self.include_effects_callback)
         #
-        self.pushButton_exit.clicked.connect(self.close)
-        self.pushButton_confirm.clicked.connect(self.attribute_callback)
+        self.pushButton_apply.clicked.connect(self.apply_callback)
+        self.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
+        self.pushButton_cancel.clicked.connect(self.close)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
         self.pushButton_load_path.clicked.connect(self.load_user_defined_transfer_impedance)
@@ -772,7 +773,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
         return surface_ids
 
-    def attribute_callback(self):
+    def apply_callback(self, close: bool = False):
         if self.tabWidget_main.currentIndex():
             return
 
@@ -798,6 +799,9 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
         self.hide()
         self.actions_to_finalize()
+
+        if close:
+            self.close()
 
     def include_user_defined_transfer_impedance(self, model: PerforatedPlateData, surface_id: int | list[int]):
 
@@ -930,7 +934,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         self.actions_to_finalize()
         self.restore_mesh_data_modified_by_decoupling()
         app().main_window.selection.clear_selection()
-
 
     def reset_callback(self):
 
@@ -1086,8 +1089,8 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
     def get_fluid_callback(self):
         self.hide()
         self.fluid_dialog = SetFluidInputsSimplified()
-        self.fluid_dialog.fluid_widget.pushButton_apply.setText("Select fluid")
-        self.fluid_dialog.fluid_widget.pushButton_apply.clicked.connect(self.get_selected_fluid)
+        self.fluid_dialog.fluid_widget.pushButton_apply.setVisible(False)
+        self.fluid_dialog.fluid_widget.pushButton_apply_and_close.clicked.connect(self.get_selected_fluid)
         self.fluid_dialog.exec()
         app().main_window.set_input_widget(self)
 
@@ -1224,7 +1227,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            self.attribute_callback()
+            self.apply_callback()
         elif event.key() == Qt.Key_Delete:
             self.remove_callback()
         elif event.key() == Qt.Key_Escape:

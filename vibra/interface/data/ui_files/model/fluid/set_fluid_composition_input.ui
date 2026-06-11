@@ -1643,7 +1643,7 @@ fraction [%]</string>
        <number>0</number>
       </property>
       <item row="0" column="0">
-       <widget class="QPushButton" name="pushButton_exit">
+       <widget class="QPushButton" name="pushButton_cancel">
         <property name="minimumSize">
          <size>
           <width>160</width>
@@ -1665,12 +1665,12 @@ fraction [%]</string>
          <string notr="true"/>
         </property>
         <property name="text">
-         <string>Exit</string>
+         <string>Cancel</string>
         </property>
        </widget>
       </item>
       <item row="0" column="1">
-       <widget class="QPushButton" name="pushButton_confirm">
+       <widget class="QPushButton" name="pushButton_get_fluid_properties">
         <property name="minimumSize">
          <size>
           <width>160</width>
@@ -1707,8 +1707,8 @@ fraction [%]</string>
   <tabstop>lineEdit_temperature_right</tabstop>
   <tabstop>lineEdit_pressure_left</tabstop>
   <tabstop>lineEdit_pressure_right</tabstop>
-  <tabstop>pushButton_confirm</tabstop>
-  <tabstop>pushButton_exit</tabstop>
+  <tabstop>pushButton_get_fluid_properties</tabstop>
+  <tabstop>pushButton_cancel</tabstop>
   <tabstop>tableWidget_new_fluid</tabstop>
  </tabstops>
  <resources/>
