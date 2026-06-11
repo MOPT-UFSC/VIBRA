@@ -68,8 +68,8 @@ class ElementOptionsInputs(ElementOptionsInput_UI):
         self.comboBox_option_3.setVisible(False)
 
     def _create_connections(self):
-        self.pushButton_confirm.clicked.connect(self.set_element_options_callback)
-        self.pushButton_exit.clicked.connect(self.close)
+        self.pushButton_apply.clicked.connect(self.set_element_options_callback)
+        self.pushButton_cancel.clicked.connect(self.close)
 
     def load_advanced_options(self):
 
