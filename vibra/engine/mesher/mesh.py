@@ -122,6 +122,7 @@ class Mesh:
         self.curvatures_surface = dict()
         self.nodal_normals_data = dict()
         self.solid_elements_center = dict()
+        self.surfaces_centers = dict()
         self.surface_area_from_element_integration = dict()
         self.cylindrical_surfaces_data = dict()
 
@@ -2341,6 +2342,11 @@ class Mesh:
             elif dim == 2:
                 self.area_from_surfaces[tag] = value * (unit_factor**2)
 
+                uv_min, uv_max = gmsh.model.getParametrizationBounds(dim, tag)
+                uv_mid = (uv_min + uv_max) / 2
+                center = gmsh.model.getValue(dim, tag, uv_mid) * unit_factor
+                self.surfaces_centers[tag] = center
+
             elif dim == 1:
                 self.length_from_lines[tag] = value * (unit_factor**1)
 
@@ -2517,6 +2523,9 @@ class Mesh:
                     center_coords.append(avg_coords)
 
         return center_coords
+
+    def get_geometric_surface_center(self, surface_id: int) -> np.ndarray | None:
+        return self.surfaces_centers.get(surface_id)
 
     def get_element_face_normal(self, connect: np.ndarray):
 

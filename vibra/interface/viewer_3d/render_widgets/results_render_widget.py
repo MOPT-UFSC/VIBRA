@@ -12,11 +12,10 @@ from vibra import ICON_DIR, app
 from vibra.engine import AnalysisID
 from vibra.engine.postprocessing import AcousticPostprocessing, StructuralPostprocessing
 from vibra.interface.loading_window import LoadingWindow
-from vibra.interface.viewer_3d.render_tools import RenderTool, SelectionTool
-from vibra.utils.math_functions import lerp
-
 from vibra.interface.plots.general.animation_widget import AnimationWidget
-
+from vibra.interface.viewer_3d.render_tools import RenderTool, SelectionTool
+from vibra.utils.interface_utils import VisualizationFilter
+from vibra.utils.math_functions import lerp
 
 from ..actors import (
     AnalysisActor,
@@ -38,6 +37,11 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         app().main_window.section_plane.value_changed.connect(self.update_section_plane)
         app().main_window.section_plane.value_changed.connect(self.update_color_and_deformation)
         app().main_window.visualization_changed.connect(self.visualization_changed_callback)
+
+        self.visualization_filter = VisualizationFilter(
+            faces=True,
+            solids=True,
+        )
 
         self._animation_cached_data = dict()
         self._animation_cache_lock = Lock()
@@ -89,7 +93,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.scale_bar_actor.GetLegendTitleProperty().SetColor(font_color.to_rgb_f())
             self.scale_bar_actor.GetLegendLabelProperty().SetColor(font_color.to_rgb_f())
 
-    def update_plot(self, reset_camera: bool=False):
+    def update_plot(self, reset_camera: bool = False):
         mesh = app().project.model.mesh
         if mesh is None:
             return
@@ -104,7 +108,10 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.analysis_actor = HollowAnalysisActor(mesh)
 
         logging.info("Updating the results render... [75/100]")
-        self.edges_actor = EdgesActor(self.analysis_actor.data)
+        self.edges_actor = EdgesActor(
+            self.analysis_actor.data,
+            visualization_filter=self.visualization_filter,
+        )
 
         logging.info("Updating the results render... [80/100]")
         self.ghost_actor = GhostActor(mesh)
@@ -123,7 +130,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.plane_actor,
         )
 
-        visualization = app().main_window.visualization_filter
+        visualization = self.visualization_filter
         self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
         self.plane_actor.VisibilityOff()
 
@@ -242,11 +249,11 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.cache_frame(frame)
 
     def update_color_and_deformation(
-            self,
-            phase: float = 0.0,
-            magnification_factor: float = 1.0,
-            clear_cache: bool = True,
-            ):
+        self,
+        phase: float = 0.0,
+        magnification_factor: float = 1.0,
+        clear_cache: bool = True,
+    ):
 
         if not self.actors_exists():
             return
@@ -382,7 +389,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if not self.actors_exists():
             return
 
-        visualization = app().main_window.visualization_filter
+        visualization = self.visualization_filter
         self.edges_actor.SetVisibility(visualization.lines)
         self.analysis_actor.SetVisibility(visualization.faces)
         self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
@@ -426,7 +433,10 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         self.remove_actors(self.analysis_actor, self.edges_actor)
         self.analysis_actor = self._cache_hollow_solids_actor
-        self.edges_actor = EdgesActor(self.analysis_actor.data)
+        self.edges_actor = EdgesActor(
+            self.analysis_actor.data,
+            visualization_filter=self.visualization_filter,
+        )
         self.update_color_and_deformation()
         self.visualization_changed_callback()
         self.add_actors(self.analysis_actor, self.edges_actor)
@@ -449,7 +459,10 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         self.remove_actors(self.analysis_actor, self.edges_actor)
         self.analysis_actor = self._cache_full_solids_actor
-        self.edges_actor = EdgesActor(self.analysis_actor.data)
+        self.edges_actor = EdgesActor(
+            self.analysis_actor.data,
+            visualization_filter=self.visualization_filter,
+        )
         self.update_color_and_deformation()
         self.visualization_changed_callback()
         self.add_actors(self.analysis_actor, self.edges_actor)
@@ -500,7 +513,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             normal = -normal
 
         logging.info("Applying cut... [70/100]")
-        visualization = app().main_window.visualization_filter
+        visualization = self.visualization_filter
         if is_mesh_field:
             self.analysis_actor.apply_cut(xyz, normal)
             self.edges_actor.VisibilityOn()
@@ -524,7 +537,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.update()
 
     def _disable_section_plane(self):
-        visualization = app().main_window.visualization_filter
+        visualization = self.visualization_filter
         self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
         self.plane_actor.VisibilityOff()
 
