@@ -115,7 +115,7 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
         return node
     
     def _build_nodal_normals(self):
-        if not app().main_window.visualization_filter.normal_symbols:
+        if not app().main_window.results_widget.visualization_filter.normal_symbols:
             return
 
         mesh = app().project.model.mesh
