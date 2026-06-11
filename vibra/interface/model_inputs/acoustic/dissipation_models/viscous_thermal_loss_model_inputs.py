@@ -91,8 +91,9 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         self.lineEdit_height_rectangular.textChanged.connect(self.update_rectangular_duct_area)
         self.lineEdit_diameter_circular.textChanged.connect(self.update_circular_duct_area)
         #
-        self.pushButton_exit.clicked.connect(self.close)
-        self.pushButton_confirm.clicked.connect(self.attribute_callback)
+        self.pushButton_apply.clicked.connect(self.apply_callback)
+        self.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
+        self.pushButton_cancel.clicked.connect(self.close)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
         self.pushButton_get_fluid.clicked.connect(self.get_fluid_callback)
@@ -233,6 +234,9 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
         self.last_tab = current_tab
 
+        self.pushButton_apply.setDisabled(list_or_edit_tab)
+        self.pushButton_apply_and_close.setDisabled(list_or_edit_tab)
+
         if current_tab == TabType.EDIT:
             self.comboBox_attribution_type.setCurrentIndex(AttributionBodiesType.SELECTED_BODIES)
             self.comboBox_attribution_type.setDisabled(True)
@@ -268,7 +272,6 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         self.tree_item_clicked = True
 
         volume_ids = self.get_selected_volumes_from_tree_widget_viscous_thermal_model()
-
         if not volume_ids:
             return
 
@@ -681,7 +684,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
         return CircularDuctData("Circular duct", formulation, diameter)
 
-    def attribute_callback(self):
+    def apply_callback(self, close: bool = False):
 
         model = None
         if self.tabWidget_main.currentIndex() == TabType.RECTANGULAR:
@@ -730,6 +733,9 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         app().project.update_model_properties_file()
         self.actions_to_finalize()
         self.load_info()
+
+        if close:
+            self.close()
 
     def verify_and_remove_model_conflicts_if_it_exists(self, volume_ids: list[int] = None):
         for volume_id in volume_ids:
@@ -978,7 +984,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            self.attribute_callback()
+            self.apply_callback()
         elif event.key() == Qt.Key_Delete:
             self.remove_callback()
         elif event.key() == Qt.Key_Escape:

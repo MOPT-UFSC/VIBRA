@@ -1,18 +1,18 @@
 
-from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
+import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
 
 from vibra import app
 from vibra.interface import error_title
 from vibra.interface.common.common_interface import update_analysis_setup_in_file
 from vibra.interface.data.data_manager import get_spectral_data_from_array
+from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.data_handler.data_importer import DataImporter
+from vibra.interface.model_inputs.acoustic.definitions.enums import StandardTabType
 from vibra.interface.ui_generated.model.acoustic.incident_plane_wave_inputs_ui import IncidentPlaneWaveInputs_UI
-
-import numpy as np
 
 
 class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
@@ -49,8 +49,9 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
         #
         self.comboBox_wave_direction.currentIndexChanged.connect(self.wave_direction_callback)
         #
-        self.pushButton_attribute.clicked.connect(self.attribute_callback)
-        self.pushButton_exit.clicked.connect(self.close)
+        self.pushButton_apply.clicked.connect(self.apply_callback)
+        self.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
+        self.pushButton_cancel.clicked.connect(self.close)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_load_table.clicked.connect(self.load_incident_pressure_table)
         self.pushButton_reset.clicked.connect(self.reset_callback)
@@ -72,14 +73,14 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
             self.treeWidget_incident_plane_wave.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def tab_event_callback(self):
-        self.pushButton_remove.setDisabled(True)
-        if self.tabWidget_main.currentIndex() == 2:
+        tab_list = self.tabWidget_main.currentIndex() == StandardTabType.LIST
+        if tab_list:
             self.lineEdit_selection_id.setText("")
-            self.lineEdit_selection_id.setDisabled(True)
-            self.pushButton_attribute.setDisabled(True)
-        else:
-            self.lineEdit_selection_id.setDisabled(False)
-            self.pushButton_attribute.setEnabled(True)
+
+        self.pushButton_remove.setDisabled(True)
+        self.lineEdit_selection_id.setDisabled(tab_list)
+        self.pushButton_apply.setDisabled(tab_list)
+        self.pushButton_apply_and_close.setDisabled(tab_list)        
 
     def on_click_item(self, item):
         if item.text(0) != "":
@@ -165,12 +166,16 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
         self.lineEdit_component_y.setText(f"{wave_vector[1] : .4f}".replace(" ", ""))
         self.lineEdit_component_z.setText(f"{wave_vector[2] : .4f}".replace(" ", ""))
 
-    def attribute_callback(self):
+    def apply_callback(self, close: bool = False):
         tab_index = self.tabWidget_main.currentIndex()
-        if tab_index == 0:
+        if tab_index == StandardTabType.CONSTANT_DATA:
             self.constant_data_assignment()
-        elif tab_index == 1:
+
+        elif tab_index == StandardTabType.TABULAR_DATA:
             self.tabular_data_assignment()
+
+        if close:
+            self.close()
 
     def check_inputs(self, line_edit: QLineEdit, label, only_positive: bool = True):
 
@@ -669,17 +674,19 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
 
         for key in self.properties.surface_properties.keys():
             property, *args = key
-            if property == "incident_plane_wave":
-                self.tabWidget_main.setTabVisible(2, True)
-                return
+            if property != "incident_plane_wave":
+                continue
 
-        self.tabWidget_main.setCurrentIndex(0)
+            self.tabWidget_main.setTabVisible(StandardTabType.LIST, True)
+            return
+
         self.lineEdit_incident_pressure_real.setFocus()
-        self.tabWidget_main.setTabVisible(2, False)
+        self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)
+        self.tabWidget_main.setTabVisible(StandardTabType.LIST, False)
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            self.attribute_callback()
+            self.apply_callback()
         elif event.key() == Qt.Key_Delete:
             self.remove_callback()
         elif event.key() == Qt.Key_Escape:

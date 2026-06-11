@@ -57,13 +57,15 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
 
     def _create_connections(self):
         #
-        self.pushButton_attribute.clicked.connect(self.attribute_callback)
-        self.pushButton_exit.clicked.connect(self.close)
+        self.pushButton_apply.clicked.connect(self.apply_callback)
+        self.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
+        self.pushButton_cancel.clicked.connect(self.close)
         self.pushButton_load_table.clicked.connect(self.load_acoustic_pressure_table)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
         #
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
+        #
         self.treeWidget_acoustic_pressure.itemClicked.connect(self.on_click_item)
         self.treeWidget_acoustic_pressure.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
@@ -168,23 +170,26 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
     
         if self.last_tab == StandardTabType.LIST or tab_list:
             app().main_window.selection.clear_selection()
-
             self.clear_line_edit_selection_id()
-            self.treeWidget_acoustic_pressure.clearSelection()
+
+        if tab_list:
             self.pushButton_remove.setDisabled(True)
+            self.treeWidget_acoustic_pressure.clearSelection()
 
         self.lineEdit_selection_id.setDisabled(tab_list)
-        self.pushButton_attribute.setDisabled(tab_list)
+        self.pushButton_apply.setDisabled(tab_list)
+        self.pushButton_apply_and_close.setDisabled(tab_list)
 
-        self.last_tab = current_tab
-
-    def attribute_callback(self):
+    def apply_callback(self, close: bool = False):
         tab_index = self.tabWidget_main.currentIndex()
         if tab_index == StandardTabType.CONSTANT_DATA:
             self.check_constant_values()
 
         elif tab_index == StandardTabType.TABULAR_DATA:
             self.check_table_values()
+
+        if close:
+            self.close()
 
     def check_complex_entries(self, lineEdit_real, lineEdit_imag):
         self.stop = False
@@ -545,7 +550,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            self.attribute_callback()
+            self.apply_callback()
         elif event.key() == Qt.Key_Delete:
             self.remove_callback()
         elif event.key() == Qt.Key_Escape:

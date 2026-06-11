@@ -54,8 +54,9 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
 
     def _create_connections(self):
         #
-        self.pushButton_attribute.clicked.connect(self.attribute_callback)
-        self.pushButton_exit.clicked.connect(self.close)
+        self.pushButton_apply.clicked.connect(self.apply_callback)
+        self.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
+        self.pushButton_cancel.clicked.connect(self.close)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
         #
@@ -82,12 +83,14 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
         self.treeWidget_anechoic_termination.clearSelection()
         self.pushButton_remove.setDisabled(True)
 
-        if self.tabWidget_main.currentIndex() == SetupTabType.LIST:
-            self.lineEdit_selection_id.setDisabled(True)
-            self.pushButton_attribute.setDisabled(True)
-        else:
-            self.lineEdit_selection_id.setDisabled(False)
-            self.pushButton_attribute.setEnabled(True)
+        tab_list = self.tabWidget_main.currentIndex() == SetupTabType.LIST
+        self.lineEdit_selection_id.setDisabled(tab_list)
+        self.pushButton_apply.setDisabled(tab_list)
+        self.pushButton_apply_and_close.setDisabled(tab_list)
+
+        if tab_list:
+            self.lineEdit_selection_id.setText("")
+            return
 
     def geometry_selection_callback(self):
         if self.tabWidget_main.currentIndex() == SetupTabType.LIST:
@@ -104,10 +107,7 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
     def update_volumes_from_faces(self):
 
         input_ids = self.lineEdit_selection_id.text()
-        surface_ids, error_data = self.mesh.check_selected_ids(
-                                                                input_ids, 
-                                                                selection = "surfaces"
-                                                                )
+        surface_ids, error_data = self.mesh.check_selected_ids(input_ids, selection="surfaces")
 
         if error_data is not None:
             self.hide()
@@ -180,13 +180,13 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
         
         return map_id_to_model_index
 
-    def attribute_callback(self):
+    def apply_callback(self, close: bool = False):
+
+        if self.tabWidget_main.currentIndex() == SetupTabType.SETUP:
+            return
 
         input_ids = self.lineEdit_selection_id.text()
-        surface_ids, error_data = self.mesh.check_selected_ids(
-                                                                input_ids, 
-                                                                selection = "surfaces"
-                                                                )
+        surface_ids, error_data = self.mesh.check_selected_ids(input_ids, selection="surfaces")
 
         if error_data is not None:
             self.hide()
@@ -233,6 +233,9 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
             self.properties._set_property("specific_impedance", data, surface=surface_id)
 
         self.actions_to_finalize()
+
+        if close:
+            self.close()
 
     def process_table_file_removal(self, table_names: list):
         for table_name in table_names:
@@ -326,10 +329,12 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
 
         for key, data in self.properties.surface_properties.items():
             property, *args = key
-            if property == "specific_impedance":
-                if "anechoic_termination" in data.keys():
-                    self.tabWidget_main.setTabVisible(SetupTabType.LIST, True)
-                    return
+            if property != "specific_impedance":
+                continue
+
+            if "anechoic_termination" in data.keys():
+                self.tabWidget_main.setTabVisible(SetupTabType.LIST, True)
+                return
 
         self.tabWidget_main.setCurrentIndex(SetupTabType.SETUP)
         self.tabWidget_main.setTabVisible(SetupTabType.LIST, False)
@@ -389,8 +394,7 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            if self.tabWidget_main.currentIndex() == SetupTabType.SETUP:
-                self.attribute_callback()
+            self.apply_callback()
         elif event.key() == Qt.Key_Delete:
             self.remove_callback()
         elif event.key() == Qt.Key_Escape:

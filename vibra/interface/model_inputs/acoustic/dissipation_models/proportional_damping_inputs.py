@@ -48,8 +48,9 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
         #
         self.comboBox_attribution_type.currentIndexChanged.connect(self.attribution_type_callback)
         #
-        self.pushButton_confirm.clicked.connect(self.attribute_callback)
-        self.pushButton_exit.clicked.connect(self.close)
+        self.pushButton_apply.clicked.connect(self.apply_callback)
+        self.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
+        self.pushButton_cancel.clicked.connect(self.close)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
         #
@@ -195,7 +196,7 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
 
         return out
 
-    def attribute_callback(self):
+    def apply_callback(self, close: bool = False):
 
         attribute_type = self.comboBox_attribution_type.currentIndex()
             
@@ -206,11 +207,7 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
 
         elif attribute_type == AttributionBodiesType.SELECTED_BODIES:
             input_ids = self.lineEdit_selection_id.text()
-            volume_ids, error_data = self.mesh.check_selected_ids(
-                                                                    input_ids, 
-                                                                    selection = "volumes", 
-                                                                    single_id = False
-                                                                    )
+            volume_ids, error_data = self.mesh.check_selected_ids(input_ids, selection="volumes", single_id=False)
 
             if error_data is not None:
                 self.hide()
@@ -231,15 +228,18 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
             return True
 
         data = {
-                "speed_of_sound_factor" : speed_of_sound_factor,
-                "fluid_density_factor" : fluid_density_factor,
-                }
+            "speed_of_sound_factor": speed_of_sound_factor,
+            "fluid_density_factor": fluid_density_factor,
+        }
 
         for volume_id in volume_ids:
             self.properties._set_property("proportional_damping", data, volume=volume_id)
 
         self.actions_to_finalize()
         self.load_info()
+
+        if close:
+            self.close()
 
     def remove_callback(self):
         selected_volumes = self.get_selected_volumes_from_tree_widget_proportional_damping()
@@ -289,8 +289,8 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
         app().main_window.selection.clear_selection()
 
         list_tab = self.tabWidget_main.currentIndex() == SetupTabType.LIST
-
-        self.pushButton_confirm.setDisabled(list_tab)
+        self.pushButton_apply.setDisabled(list_tab)
+        self.pushButton_apply_and_close.setDisabled(list_tab)
         self.lineEdit_selection_id.setDisabled(list_tab)
         self.comboBox_attribution_type.setDisabled(list_tab)
 
@@ -365,9 +365,11 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
 
     def update_tabs_visibility(self):
         for (property, _) in self.properties.volume_properties.keys():
-            if property == "proportional_damping":
-                self.tabWidget_main.setTabVisible(SetupTabType.LIST, True)
-                return
+            if property != "proportional_damping":
+                continue
+
+            self.tabWidget_main.setTabVisible(SetupTabType.LIST, True)
+            return
 
         self.tabWidget_main.setTabVisible(SetupTabType.LIST, False)
         self.tabWidget_main.setCurrentIndex(SetupTabType.SETUP)
@@ -379,7 +381,7 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            self.attribute_callback()
+            self.apply_callback()
         elif event.key() == Qt.Key_Delete:
             self.remove_callback()
         elif event.key() == Qt.Key_Escape:

@@ -58,8 +58,9 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
 
     def _create_connections(self):
         #
-        self.pushButton_attribute.clicked.connect(self.attribute_callback)
-        self.pushButton_exit.clicked.connect(self.close)
+        self.pushButton_apply.clicked.connect(self.apply_callback)
+        self.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
+        self.pushButton_cancel.clicked.connect(self.close)
         self.pushButton_load_table.clicked.connect(self.load_surface_velocity_table)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
@@ -192,17 +193,21 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
             self.treeWidget_surface_velocity.clearSelection()
         
         self.lineEdit_selection_id.setDisabled(tab_list)
-        self.pushButton_attribute.setDisabled(tab_list)
+        self.pushButton_apply.setDisabled(tab_list)
+        self.pushButton_apply_and_close.setDisabled(tab_list)
 
         self.last_tab = current_tab
 
-    def attribute_callback(self):
+    def apply_callback(self, close: bool = False):
         tab_index = self.tabWidget_main.currentIndex()
         if tab_index == StandardTabType.CONSTANT_DATA:
             self.check_constant_values()
 
         elif tab_index == StandardTabType.TABULAR_DATA:
             self.check_table_values()
+
+        if close:
+            self.close()
 
     def check_complex_entries(self, lineEdit_real, lineEdit_imag):
 
@@ -530,9 +535,11 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
 
         for key in self.properties.surface_properties.keys():
             property, *args = key
-            if property == "surface_velocity":
-                self.tabWidget_main.setTabVisible(StandardTabType.LIST, True)
-                return
+            if property != "surface_velocity":
+                continue
+
+            self.tabWidget_main.setTabVisible(StandardTabType.LIST, True)
+            return
 
         self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)    
         self.tabWidget_main.setTabVisible(StandardTabType.LIST, False)
@@ -600,7 +607,7 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            self.attribute_callback()
+            self.apply_callback()
         elif event.key() == Qt.Key_Delete:
             self.remove_callback()
         elif event.key() == Qt.Key_Escape:

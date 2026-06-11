@@ -110,8 +110,9 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         self.comboBox_DBM_constants.currentIndexChanged.connect(self.update_DBM_constants_callback)
         self.comboBox_plot_type.currentIndexChanged.connect(self.plot_type_callback)
         #
-        self.pushButton_exit.clicked.connect(self.close)
-        self.pushButton_confirm.clicked.connect(self.attribute_callback)
+        self.pushButton_apply.clicked.connect(self.apply_callback)
+        self.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
+        self.pushButton_cancel.clicked.connect(self.close)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
         self.pushButton_get_fluid.clicked.connect(self.get_fluid_callback)
@@ -437,7 +438,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
         self.frame_plot_setup.setVisible(pm_tab)
         self.frame_plot_buttons.setVisible(pm_tab)
-        self.pushButton_confirm.setEnabled(pm_tab)
+        self.pushButton_apply.setEnabled(pm_tab)
         self.comboBox_attribution_type.setEnabled(pm_tab)
 
         self.last_tab = current_tab
@@ -805,7 +806,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         else:
             return "Jhonson-Champoux-Allard-Lafarge"
 
-    def attribute_callback(self):
+    def apply_callback(self, close: bool = False):
 
         tab_index = self.tabWidget_main.currentIndex()
 
@@ -845,6 +846,9 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             app().project.update_model_properties_file()
             self.actions_to_finalize()
             self.load_info()
+
+            if close:
+                self.close()
 
     def check_inputs(self, lineEdit, label, only_positive=False, zero_included=True, _float=True):
 
@@ -953,6 +957,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         tab_index = self.tabWidget_main.currentIndex()
         if tab_index == TabType.DBM_MODELS:
             return self.comboBox_DBM_constants.currentText()
+
         elif tab_index == TabType.JCAL_MODELS:
             return self.comboBox_JCAL_pm_model.currentText()
 
@@ -1084,7 +1089,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            self.attribute_callback()
+            self.apply_callback()
         elif event.key() == Qt.Key_Escape:
             self.close()
         elif event.key() == Qt.Key_Control:

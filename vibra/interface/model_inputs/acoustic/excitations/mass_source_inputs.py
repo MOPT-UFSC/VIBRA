@@ -27,7 +27,7 @@ class AssignmentType(IntEnum):
     VOLUMES = 4
 
 
-class MSTabType(IntEnum):
+class TabIndex(IntEnum):
     CONSTANT_DATA = StandardTabType.CONSTANT_DATA
     TABULAR_DATA = StandardTabType.TABULAR_DATA
     ADVANCED_SEARCH = 2
@@ -90,8 +90,9 @@ class MassSourceInputs(MassSourceInputs_UI):
         #
         self.comboBox_attribution_type.currentIndexChanged.connect(self.attribution_type_callback)
         #
-        self.pushButton_attribute.clicked.connect(self.attribute_callback)
-        self.pushButton_exit.clicked.connect(self.close)
+        self.pushButton_apply.clicked.connect(self.apply_callback)
+        self.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
+        self.pushButton_cancel.clicked.connect(self.close)
         self.pushButton_load_table.clicked.connect(self.load_mass_source_table)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
@@ -111,7 +112,7 @@ class MassSourceInputs(MassSourceInputs_UI):
         points = app().main_window.selection.geometry_points
         nodes = app().main_window.selection.mesh_nodes
 
-        tab_list = self.tabWidget_main.currentIndex() == MSTabType.LIST
+        tab_list = self.tabWidget_main.currentIndex() == TabIndex.LIST
 
         if tab_list:
             self.verify_if_selected_items_are_in_tree_mass_source_inputs()
@@ -186,10 +187,11 @@ class MassSourceInputs(MassSourceInputs_UI):
         if isinstance(data, dict):
 
             if "table_paths" in data.keys():
-                self.tabWidget_main.setCurrentIndex(MSTabType.TABULAR_DATA)
+                self.tabWidget_main.setCurrentIndex(TabIndex.TABULAR_DATA)
                 self.lineEdit_table_path.setText(data["table_paths"][0])
+
             else:
-                self.tabWidget_main.setCurrentIndex(MSTabType.CONSTANT_DATA)
+                self.tabWidget_main.setCurrentIndex(TabIndex.CONSTANT_DATA)
                 self.lineEdit_real_value.setText(str(data["real_values"][0]))
                 self.lineEdit_imag_value.setText(str(data["imag_values"][0]))
     
@@ -488,9 +490,9 @@ class MassSourceInputs(MassSourceInputs_UI):
 
     def tab_event_callback(self):
         current_tab = self.tabWidget_main.currentIndex()
-        tab_list = current_tab == MSTabType.LIST
+        tab_list = current_tab == TabIndex.LIST
 
-        if self.last_tab == MSTabType.LIST or tab_list:
+        if self.last_tab == TabIndex.LIST or tab_list:
             app().main_window.selection.clear_selection()
             self.lineEdit_selection_id.clear()
 
@@ -500,7 +502,8 @@ class MassSourceInputs(MassSourceInputs_UI):
     
         self.comboBox_attribution_type.setDisabled(tab_list)
         self.lineEdit_selection_id.setDisabled(tab_list)
-        self.pushButton_attribute.setDisabled(tab_list)
+        self.pushButton_apply.setDisabled(tab_list)
+        self.pushButton_apply_and_close.setDisabled(tab_list)
 
         self.comboBox_attribution_type.setVisible(not tab_list)
         self.comboBox_inherit_fluid_from.setVisible(not tab_list)
@@ -508,13 +511,16 @@ class MassSourceInputs(MassSourceInputs_UI):
         
         self.last_tab = current_tab
 
-    def attribute_callback(self):
+    def apply_callback(self, close: bool = False):
         tab_index = self.tabWidget_main.currentIndex()
-        if tab_index == MSTabType.CONSTANT_DATA:
+        if tab_index == TabIndex.CONSTANT_DATA:
             self.check_constant_values()
 
-        elif tab_index == MSTabType.TABULAR_DATA:
+        elif tab_index == TabIndex.TABULAR_DATA:
             self.check_table_values()
+
+        if close:
+            self.close()
 
     def check_selection_data(self, print_message: bool = True):
 
@@ -927,12 +933,12 @@ class MassSourceInputs(MassSourceInputs_UI):
     def update_tabs_visibility(self):
 
         properties = [
-                      self.properties.nodal_properties,
-                      self.properties.point_properties,
-                      self.properties.line_properties,
-                      self.properties.surface_properties,
-                      self.properties.volume_properties,
-                      ]
+            self.properties.nodal_properties,
+            self.properties.point_properties,
+            self.properties.line_properties,
+            self.properties.surface_properties,
+            self.properties.volume_properties,
+        ]
 
         for m_property in properties:
             for key in m_property.keys():
@@ -940,11 +946,11 @@ class MassSourceInputs(MassSourceInputs_UI):
                 if property != "mass_source":
                     continue
 
-                self.tabWidget_main.setTabVisible(MSTabType.LIST, True)
+                self.tabWidget_main.setTabVisible(TabIndex.LIST, True)
                 return
 
-        self.tabWidget_main.setCurrentIndex(MSTabType.CONSTANT_DATA)    
-        self.tabWidget_main.setTabVisible(MSTabType.LIST, False)
+        self.tabWidget_main.setCurrentIndex(TabIndex.CONSTANT_DATA)    
+        self.tabWidget_main.setTabVisible(TabIndex.LIST, False)
 
     def on_click_item(self, item):
         self.tree_item_clicked = True
@@ -1037,7 +1043,7 @@ class MassSourceInputs(MassSourceInputs_UI):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            self.attribute_callback()
+            self.apply_callback()
         elif event.key() == Qt.Key_Delete:
             self.remove_callback()
         elif event.key() == Qt.Key_Escape:

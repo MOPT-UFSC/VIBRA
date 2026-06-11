@@ -13,8 +13,8 @@ from vibra.interface.ui_generated.model.structural.surface_thickness_inputs_ui i
 
 
 class AssignmentType(IntEnum):
-    SELECTED_SURFACES = 0
-    ALL_SURFACES = 1
+    ALL_SURFACES = 0
+    SELECTED_SURFACES = 1
 
 
 class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
