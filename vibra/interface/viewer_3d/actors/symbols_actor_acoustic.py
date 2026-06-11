@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Callable
+from typing import Callable, TypedDict
 import numpy as np
 from molde.colors import color_names
 from molde.actors import CommonSymbolsActorVariableSize
@@ -11,7 +11,9 @@ from vibra.interface.viewer_3d import sources
 class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
         self._prop_dict_list: dict[int, list] = defaultdict(list)
+
         self._build_dict_property_name_to_build_function()
         self.configure_appearance()
         self.build()
@@ -96,11 +98,9 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
 
         for surface_id, val in self._prop_dict_list.items():
             if len(val) == 1:
-                self.add_symbol(*val[0])
+                symbol = val[0]
+                self.add_symbol(symbol["shape"], symbol["coords"], symbol["normal"], color=symbol["color"])
             else:
-                normal = val[0][2]
-                center = val[0][1]
-
                 mesh = app().project.model.mesh
                 areas = mesh.area_from_surfaces
 
@@ -110,10 +110,12 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
                 else:
                     radius = np.sqrt(area / np.pi)
 
+                normal = val[0]["normal"]
+                center = val[0]["coords"]
                 coords = self._calculate_ring_position(center, normal, radius/2, len(val))
 
                 for i, symbol in enumerate(val):
-                    self.add_symbol(symbol[0], coords[i], symbol[2], symbol[3])
+                    self.add_symbol(symbol["shape"], coords[i], symbol["normal"], color=symbol["color"])
 
         super().build()
 
@@ -185,7 +187,7 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
             return
 
         coords, normal = self._get_center_coords_and_normals(surface_id)
-        self._prop_dict_list[surface_id].append((sources.create_surface_velocity_source, coords, normal, color_names.RED_6))
+        self._prop_dict_list[surface_id].append({"shape": sources.create_surface_velocity_source, "coords": coords, "normal": normal, "color": color_names.RED_6})
 
     def _build_specific_impedance(self, property_name: str, surface_id: int = -1, *args, **kwargs):
         if surface_id == -1:
@@ -200,28 +202,28 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
             if "anechoic_termination" in property.keys()
             else sources.create_impedance_source
         )
-        self._prop_dict_list[surface_id].append((shape, coords, normal, color_names.PURPLE_2))
+        self._prop_dict_list[surface_id].append({"shape": shape, "coords": coords, "normal": normal, "color": color_names.PURPLE_2})
 
     def _build_transfer_impedance(self, surface_id: int = -1, *args, **kwargs):
         if surface_id == -1:
             return
 
         coords, normal = self._get_center_coords_and_normals(surface_id)
-        self._prop_dict_list[surface_id].append((sources.create_transfer_impedance_source, coords, normal, color_names.PURPLE_2))
+        self._prop_dict_list[surface_id].append({"shape": sources.create_transfer_impedance_source, "coords": coords, "normal": normal, "color": color_names.PURPLE_2})
 
     def _build_perforated_plate_model(self, surface_id: int = -1, *args, **kwargs):
         if surface_id == -1:
             return
 
         coords, normal = self._get_center_coords_and_normals(surface_id)
-        self._prop_dict_list[surface_id].append((sources.create_perforated_plate_source, coords, normal, color_names.RED))
+        self._prop_dict_list[surface_id].append({"shape": sources.create_perforated_plate_source, "coords": coords, "normal": normal, "color": color_names.RED})
 
     def _build_mass_flow_rate(self, surface_id: int = -1, *args, **kwargs):
         if surface_id == -1:
             return
 
         coords, normal = self._get_center_coords_and_normals(surface_id)
-        self._prop_dict_list[surface_id].append((sources.create_mass_flow_rate_source, coords, normal, color_names.PINK))
+        self._prop_dict_list[surface_id].append({"shape": sources.create_mass_flow_rate_source, "coords": coords, "normal": normal, "color": color_names.PINK})
 
     def _build_dof_decoupling(self, surface_id: int = -1, *args, **kwargs):
         if surface_id == -1:
@@ -234,35 +236,35 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
             return
 
         coords, normal = self._get_center_coords_and_normals(surface_id)
-        self._prop_dict_list[surface_id].append((sources.create_degrees_of_freedom_decoupling_source, coords, normal, color_names.GREEN))
+        self._prop_dict_list[surface_id].append({"shape": sources.create_degrees_of_freedom_decoupling_source, "coords": coords, "normal": normal, "color": color_names.GREEN})
 
     def _build_absorption_surface(self, surface_id: int = -1, *args, **kwargs):
         if surface_id == -1:
             return
 
         coords, normal = self._get_center_coords_and_normals(surface_id)
-        self._prop_dict_list[surface_id].append((sources.create_absorption_surface_source, coords, normal, color_names.GREEN))
+        self._prop_dict_list[surface_id].append({"shape": sources.create_absorption_surface_source, "coords": coords, "normal": normal, "color": color_names.GREEN})
 
     def _build_acoustic_pressure(self, surface_id: int = -1, *args, **kwargs):
         if surface_id == -1:
             return
 
         coords, normal = self._get_center_coords_and_normals(surface_id)
-        self._prop_dict_list[surface_id].append((sources.create_acoustic_pressure_source, coords, normal, color_names.RED_2))
+        self._prop_dict_list[surface_id].append({"shape": sources.create_acoustic_pressure_source, "coords": coords, "normal": normal, "color": color_names.RED_2})
 
     def _build_proportional_damping(self, surface_id: int = -1, *args, **kwargs):
         if surface_id == -1:
             return
 
         coords, normal = self._get_center_coords_and_normals(surface_id)
-        self._prop_dict_list[surface_id].append((sources.create_dissipation_model_source, coords, normal, color_names.BLUE))
+        self._prop_dict_list[surface_id].append({"shape": sources.create_dissipation_model_source, "coords": coords, "normal": normal, "color": color_names.BLUE})
 
     def _build_viscous_thermal_loss_model(self, surface_id: int = -1, *args, **kwargs):
         if surface_id == -1:
             return
 
         coords, normal = self._get_center_coords_and_normals(surface_id)
-        self._prop_dict_list[surface_id].append((sources.create_dissipation_model_source, coords, normal, color_names.ORANGE))
+        self._prop_dict_list[surface_id].append({"shape": sources.create_dissipation_model_source, "coords": coords, "normal": normal, "color": color_names.ORANGE})
 
     def _build_acoustic_transfer_element_data(
         self, surface_id: int = -1
@@ -271,7 +273,7 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
             return
 
         coords, normal = self._get_center_coords_and_normals(surface_id)
-        self._prop_dict_list[surface_id].append((sources.create_acoustic_transfer_element_data_source, coords, normal, color_names.TURQUOISE))
+        self._prop_dict_list[surface_id].append({"shape": sources.create_acoustic_transfer_element_data_source, "coords": coords, "normal": normal, "color": color_names.TURQUOISE})
 
     def _build_incident_plane_wave(
         self, property_name: str, surface_id: int = -1, *args, **kwargs
@@ -285,7 +287,7 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
         wave_vector = property.get("wave_vector")
         coords, _ = self._get_center_coords_and_normals(surface_id)
 
-        self._prop_dict_list[surface_id].append((sources.create_incident_plane_wave_source, coords, wave_vector, color_names.BLUE))
+        self._prop_dict_list[surface_id].append({"shape": sources.create_incident_plane_wave_source, "coords": coords, "normal": wave_vector, "color": color_names.BLUE})
 
     def _build_mass_source(self, surface_id: int = -1, line_id: int = -1, point_id: int = -1, node_id: int = -1, *args, **kwargs):
         orientation = (0, 0, 0)
