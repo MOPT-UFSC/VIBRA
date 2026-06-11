@@ -105,7 +105,7 @@ class SetFluidInputs(SetFluidInputs_UI):
         self.fluid_widget.pushButton_remove_column.clicked.connect(self.reset_selected_fluid_lineEdit)
         self.fluid_widget.pushButton_reset_library.clicked.connect(self.reset_fluid_library_callback)
         self.pushButton_remove.clicked.connect(self.remove_callback)
-        # self.pushButton_reset.clicked.connect(self.reset_callback)
+        self.pushButton_reset.clicked.connect(self.reset_callback)
         #
         self.fluid_widget.tableWidget_fluid_data.currentCellChanged.connect(self.current_cell_changed)
         self.tableWidget_model_fluids.cellClicked.connect(self.cell_clicked_callback)
@@ -312,27 +312,28 @@ class SetFluidInputs(SetFluidInputs_UI):
         self.actions_to_finalize()
         app().main_window.selection.set_geometry_selection()
 
-    # def reset_callback(self):
+    def reset_callback(self):
 
-    #     self.hide()
+        self.hide()
 
-    #     title = "Fluids resetting"
-    #     message = "Would you like to remove the all assigned fluids from model?"
+        title = "Fluids resetting"
+        message = "Would you like to remove the all assigned fluids from model?"
 
-    #     buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
-    #     obj = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
+        buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
+        obj = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
 
-    #     if obj._cancel:
-    #         return
+        if obj._cancel:
+            return
 
-    #     if obj._continue:
-    #         self.properties._reset_property("fluid")
-    #         self.properties._reset_property("fluid_id")
-    #         self.actions_to_finalize()
+        if obj._continue:
+            self.properties._reset_property("fluid")
+            self.properties._reset_property("fluid_id")
+            self.actions_to_finalize()
 
-    #         app().main_window.selection.set_geometry_selection()
+            app().main_window.selection.set_geometry_selection()
 
     def actions_to_finalize(self):
+        self.load_model_info()
         self.clear_line_edit_seletction_id()
         self.lineEdit_selected_fluid_name.clear()
         self.pushButton_remove.setDisabled(True)
