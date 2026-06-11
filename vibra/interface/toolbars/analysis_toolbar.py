@@ -219,9 +219,9 @@ class AnalysisToolbar(QToolBar):
         self.run_analysis_action.setEnabled(valid_analysis_setup)
         # self.domain_changed.emit()
 
-    def run_analysis_callback(self, is_resume: bool = True):
+    def run_analysis_callback(self, is_resume: bool = False):
         if app().config.user_preferences.run_analysis_in_subprocess:
-            self.run_analysis_in_subprocess()
+            self.run_analysis_in_subprocess(is_resume)
         else:
             self.run_analysis_in_current_process(is_resume)
 
@@ -244,7 +244,7 @@ class AnalysisToolbar(QToolBar):
         else:
             interrupt_function = None
 
-        LoadingWindow(app().project.run_analysis, interrupt_function).run()
+        LoadingWindow(app().project.run_analysis, interrupt_function).run(is_resume)
 
         self.solve_analysis = False
 
@@ -258,7 +258,7 @@ class AnalysisToolbar(QToolBar):
 
         LoadingWindow(self.post_processing_analysis).run()
 
-    def run_analysis_in_subprocess(self) -> bool:
+    def run_analysis_in_subprocess(self, is_resume: bool = True) -> bool:
         if app().main_window.action_results_workspace.isChecked():
             app().main_window.action_model_workspace_callback()
 
@@ -270,7 +270,11 @@ class AnalysisToolbar(QToolBar):
 
         app().project.write_to_working_dir()
 
-        subprocess_status = SubProcessHandler("utils/subprocess/analysis_subprocess.py").run()
+        subprocess_status = SubProcessHandler(
+            "utils/subprocess/analysis_subprocess.py",
+            extra_params="--resume" if is_resume else "",
+        ).run()
+
         if subprocess_status != SubProcessStatus.SUCCESS:
             app().project.reset_solution()
             return False
