@@ -66,8 +66,8 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
 
     def _create_connections(self):
         self.pushButton_add.clicked.connect(self.add_solution_step_callback)
-        self.pushButton_confirm.clicked.connect(self.confirm_callback)
-        self.pushButton_exit.clicked.connect(self.close)
+        self.pushButton_cancel.clicked.connect(self.close)
+        self.pushButton_okay.clicked.connect(self.confirm_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
         #
         app().main_window.theme_changed.connect(self._paint_icons)
