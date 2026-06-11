@@ -1047,7 +1047,7 @@ class ReciprocatingCompressorModel:
     def get_volumetric_flow_rate_at_discharge_frequency_data(self, revolutions: int) -> tuple[np.ndarray, np.ndarray]:
         return self.process_FFT_of_volumetric_flow_rate(revolutions, "out_flow")
 
-    def get_pressure_head_end_angle_data(self) -> tuple[np.ndarray, np.ndarray]:
+    def get_head_end_pressure_angle_data(self) -> tuple[np.ndarray, np.ndarray]:
         _, pressure_HE_Pa, _ = self.process_head_end_volumes_and_pressures()
 
         pressure_HE = convert_pressure_unit(pressure_HE_Pa, "Pa", self.pressure_unit)
@@ -1057,7 +1057,7 @@ class ReciprocatingCompressorModel:
 
         return angle, pressure_HE
 
-    def get_volume_head_end_angle_data(self) -> tuple[np.ndarray, np.ndarray]:
+    def get_head_end_volume_angle_data(self) -> tuple[np.ndarray, np.ndarray]:
         volume_HE, _, _ = self.process_head_end_volumes_and_pressures()
 
         N = len(volume_HE)
@@ -1065,7 +1065,7 @@ class ReciprocatingCompressorModel:
 
         return angle, volume_HE
 
-    def get_pressure_crank_end_angle_data(self) -> tuple[np.ndarray, np.ndarray]:
+    def get_crank_end_pressure_angle_data(self) -> tuple[np.ndarray, np.ndarray]:
         _, pressure_CE_Pa, _ = self.process_crank_end_volumes_and_pressures()
 
         pressure_CE = convert_pressure_unit(pressure_CE_Pa, "Pa", self.pressure_unit)
@@ -1075,7 +1075,7 @@ class ReciprocatingCompressorModel:
 
         return angle, pressure_CE
 
-    def get_volume_crank_end_angle_data(self) -> tuple[np.ndarray, np.ndarray]:
+    def get_crank_end_volume_angle_data(self) -> tuple[np.ndarray, np.ndarray]:
         volume_CE, _, _ = self.process_crank_end_volumes_and_pressures()
 
         N = len(volume_CE)
