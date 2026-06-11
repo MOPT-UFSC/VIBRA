@@ -3,12 +3,7 @@ from enum import IntEnum
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
-from PySide6.QtWidgets import (
-    QAbstractItemView,
-    QGridLayout,
-    QHeaderView,
-    QTableWidgetItem,
-)
+from PySide6.QtWidgets import QAbstractItemView, QGridLayout, QHeaderView, QTableWidgetItem
 
 from vibra import app
 from vibra.engine.properties.fluid import Fluid
@@ -16,9 +11,7 @@ from vibra.interface import error_title
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.general.fluid.fluid_widget import FluidWidget
-from vibra.interface.ui_generated.model.fluid.set_fluid_inputs_ui import (
-    SetFluidInputs_UI,
-)
+from vibra.interface.ui_generated.model.fluid.set_fluid_inputs_ui import SetFluidInputs_UI
 
 
 class TabType(IntEnum):
@@ -104,7 +97,7 @@ class SetFluidInputs(SetFluidInputs_UI):
         self.fluid_widget.pushButton_remove_column.clicked.connect(self.reset_selected_fluid_lineEdit)
         self.fluid_widget.pushButton_reset_library.clicked.connect(self.reset_fluid_library_callback)
         self.pushButton_remove.clicked.connect(self.remove_callback)
-        # self.pushButton_reset.clicked.connect(self.reset_callback)
+        self.pushButton_reset.clicked.connect(self.reset_callback)
         #
         self.fluid_widget.tableWidget_fluid_data.currentCellChanged.connect(self.current_cell_changed)
         self.tableWidget_model_fluids.cellClicked.connect(self.cell_clicked_callback)
@@ -312,25 +305,25 @@ class SetFluidInputs(SetFluidInputs_UI):
         self.actions_to_finalize()
         app().main_window.selection.set_geometry_selection()
 
-    # def reset_callback(self):
+    def reset_callback(self):
 
-    #     self.hide()
+        self.hide()
 
-    #     title = "Fluids resetting"
-    #     message = "Would you like to remove the all assigned fluids from model?"
+        title = "Fluids resetting"
+        message = "Would you like to remove the all assigned fluids from model?"
 
-    #     buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
-    #     obj = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
+        buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
+        obj = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
 
-    #     if obj._cancel:
-    #         return
+        if obj._cancel:
+            return
 
-    #     if obj._continue:
-    #         self.properties._reset_property("fluid")
-    #         self.properties._reset_property("fluid_id")
-    #         self.actions_to_finalize()
+        if obj._continue:
+            self.properties._reset_property("fluid")
+            self.properties._reset_property("fluid_id")
+            self.actions_to_finalize()
 
-    #         app().main_window.selection.set_geometry_selection()
+            app().main_window.selection.set_geometry_selection()
 
     def actions_to_finalize(self):
         self.clear_line_edit_seletction_id()
