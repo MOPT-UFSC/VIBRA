@@ -1,7 +1,12 @@
 
-from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
+from collections import defaultdict
+from enum import IntEnum
+from os.path import basename
+
+import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
 
 from vibra import app
 from vibra.interface import error_title
@@ -9,13 +14,10 @@ from vibra.interface.common.common_interface import update_analysis_setup_in_fil
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.model_inputs.structural.definitions.enums import StandardTabType
+
 # from vibra.utils.utils import are_there_values_different_from_zero
 from vibra.interface.ui_generated.model.structural.dof_prescription_inputs_ui import DofPrescriptionInputs_UI
-
-import numpy as np
-from enum import IntEnum
-from os.path import basename
-from collections import defaultdict
 
 
 class ElementFormulation(IntEnum):
@@ -108,31 +110,31 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
     def _create_line_edits(self):
 
         self.constant_line_edits = {
-                                    "Ux": [self.lineEdit_real_ux, self.lineEdit_imag_ux],
-                                    "Uy": [self.lineEdit_real_uy, self.lineEdit_imag_uy],
-                                    "Uz": [self.lineEdit_real_uz, self.lineEdit_imag_uz],
-                                    "Rx": [self.lineEdit_real_rx, self.lineEdit_imag_rx],
-                                    "Ry": [self.lineEdit_real_ry, self.lineEdit_imag_ry],
-                                    "Rz": [self.lineEdit_real_rz, self.lineEdit_imag_rz],
-                                    }
+            "Ux": [self.lineEdit_real_ux, self.lineEdit_imag_ux],
+            "Uy": [self.lineEdit_real_uy, self.lineEdit_imag_uy],
+            "Uz": [self.lineEdit_real_uz, self.lineEdit_imag_uz],
+            "Rx": [self.lineEdit_real_rx, self.lineEdit_imag_rx],
+            "Ry": [self.lineEdit_real_ry, self.lineEdit_imag_ry],
+            "Rz": [self.lineEdit_real_rz, self.lineEdit_imag_rz],
+        }
 
-        self.table_line_edits = { 
-                                 "Ux" : self.lineEdit_path_table_ux,
-                                 "Uy" : self.lineEdit_path_table_uy,
-                                 "Uz" : self.lineEdit_path_table_uz,
-                                 "Rx" : self.lineEdit_path_table_rx,
-                                 "Ry" : self.lineEdit_path_table_ry,
-                                 "Rz" : self.lineEdit_path_table_rz,
-                                 }
+        self.table_line_edits = {
+            "Ux": self.lineEdit_path_table_ux,
+            "Uy": self.lineEdit_path_table_uy,
+            "Uz": self.lineEdit_path_table_uz,
+            "Rx": self.lineEdit_path_table_rx,
+            "Ry": self.lineEdit_path_table_ry,
+            "Rz": self.lineEdit_path_table_rz,
+        }
 
-        self.dof_setup_combo_boxes = { 
-                                      "Ux" : self.comboBox_displacement_ux,
-                                      "Uy" : self.comboBox_displacement_uy,
-                                      "Uz" : self.comboBox_displacement_uz,
-                                      "Rx" : self.comboBox_rotation_rx,
-                                      "Ry" : self.comboBox_rotation_ry,
-                                      "Rz" : self.comboBox_rotation_rz,
-                                      }
+        self.dof_setup_combo_boxes = {
+            "Ux": self.comboBox_displacement_ux,
+            "Uy": self.comboBox_displacement_uy,
+            "Uz": self.comboBox_displacement_uz,
+            "Rx": self.comboBox_rotation_rx,
+            "Ry": self.comboBox_rotation_ry,
+            "Rz": self.comboBox_rotation_rz,
+        }
 
     def _config_widgets(self):
         #
@@ -155,8 +157,9 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         #
         self.pushButton_all_dof_fixed.clicked.connect(self.set_all_dof_fixed_callback)
         self.pushButton_all_dof_free.clicked.connect(self.set_all_dof_free_callback)
-        self.pushButton_attribute.clicked.connect(self.attribute_callback)
-        self.pushButton_exit.clicked.connect(self.close)
+        self.pushButton_apply.clicked.connect(self.apply_callback)
+        self.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
+        self.pushButton_cancel.clicked.connect(self.close)
         self.pushButton_load_ux_table.clicked.connect(self.load_ux_table)
         self.pushButton_load_uy_table.clicked.connect(self.load_uy_table)
         self.pushButton_load_uz_table.clicked.connect(self.load_uz_table)
@@ -348,7 +351,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         if data is None:
             return
 
-        if self.tabWidget_main.currentIndex() == 2:
+        if self.tabWidget_main.currentIndex() == StandardTabType.LIST:
             return
 
         values = data.get("values", list())
@@ -363,7 +366,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
         if "table_paths" in data.keys():
     
-            self.tabWidget_main.setCurrentIndex(1)
+            self.tabWidget_main.setCurrentIndex(StandardTabType.TABULAR_DATA)
             table_paths = data["table_paths"]
             for index, lineEdit_table in enumerate(self.table_line_edits.values()):
                 if data["element_type"] == "3d_element" and index >= 3:
@@ -375,7 +378,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
         else:
 
-            self.tabWidget_main.setCurrentIndex(0)
+            self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)
             for index, (unit_label, (lineEdit_real, lineEdit_imag)) in enumerate(self.constant_line_edits.items()):
     
                 if data["element_type"] == "3d_element" and index >= 3:
@@ -867,12 +870,16 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
             self.process_table_file_removal(table_names)
 
-    def attribute_callback(self):
+    def apply_callback(self, close: bool=False):
         tab_index = self.tabWidget_main.currentIndex()
-        if tab_index == 0:
+        if tab_index == StandardTabType.CONSTANT_DATA:
             self.constant_values_attribution()
-        elif tab_index == 1:
+
+        elif tab_index == StandardTabType.TABULAR_DATA:
             self.table_values_attribution()
+
+        if close:
+            self.close()
 
     def text_label(self, mask):
 
@@ -958,20 +965,19 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                 # if not are_there_values_different_from_zero(data.get("values")):
                 #     continue
 
-                self.tabWidget_main.setTabVisible(2, True)
+                self.tabWidget_main.setTabVisible(StandardTabType.LIST, True)
                 return
 
         self.lineEdit_real_ux.setFocus()
-        self.tabWidget_main.setCurrentIndex(0)
-
-        self.tabWidget_main.setTabVisible(2, False)
+        self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)
+        self.tabWidget_main.setTabVisible(StandardTabType.LIST, False)
         app().main_window.selection.set_geometry_selection()
 
     def tab_event_callback(self):
-
-        list_tab = self.tabWidget_main.currentIndex() == 2
+        list_tab = self.tabWidget_main.currentIndex() == StandardTabType.LIST
         self.lineEdit_selection_id.setDisabled(list_tab)
-        self.pushButton_attribute.setDisabled(list_tab)
+        self.pushButton_apply.setDisabled(list_tab)
+        self.pushButton_apply_and_close.setDisabled(list_tab)
         self.pushButton_remove.setDisabled(True)
 
         if list_tab:
@@ -1157,7 +1163,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            self.attribute_callback()
+            self.apply_callback()
         elif event.key() == Qt.Key_Delete:
             self.remove_callback()
         elif event.key() == Qt.Key_Escape:

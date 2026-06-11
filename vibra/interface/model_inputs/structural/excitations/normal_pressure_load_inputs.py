@@ -11,9 +11,8 @@ from vibra.interface.common.common_interface import update_analysis_setup_in_fil
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.ui_generated.model.structural.normal_pressure_load_inputs_ui import (
-    NormalPressureLoadInputs_UI,
-)
+from vibra.interface.model_inputs.structural.definitions.enums import StandardTabType
+from vibra.interface.ui_generated.model.structural.normal_pressure_load_inputs_ui import NormalPressureLoadInputs_UI
 
 
 class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
@@ -66,8 +65,9 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         self.comboBox_attribution_type.currentIndexChanged.connect(self.attribution_type_callback)
         self.comboBox_element_type.currentIndexChanged.connect(self.element_type_callback)
         #
-        self.pushButton_exit.clicked.connect(self.close)
-        self.pushButton_attribute.clicked.connect(self.attribute_callback)
+        self.pushButton_apply.clicked.connect(self.apply_callback)
+        self.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
+        self.pushButton_cancel.clicked.connect(self.close)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_load_table.clicked.connect(self.load_pressure_table)
         self.pushButton_reset.clicked.connect(self.reset_callback)
@@ -370,12 +370,16 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         self.reset_table_variables()
         self.actions_to_finalize()
 
-    def attribute_callback(self):
-        index = self.tabWidget_main.currentIndex()
-        if index == 0:
+    def apply_callback(self, close: bool=False):
+        tab_index = self.tabWidget_main.currentIndex()
+        if tab_index == StandardTabType.CONSTANT_DATA:
             self.constant_values_attribution()
-        elif index == 1:
+
+        elif tab_index == StandardTabType.TABULAR_DATA:
             self.table_values_attribution()
+
+        if close:
+            self.close()
 
     def load_model_info(self):
 
@@ -416,30 +420,30 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         for current_property in properties_to_check:
             for (property, _) in current_property.keys():
                 if property == "normal_pressure_load":
-                    self.tabWidget_main.setTabVisible(2, True)
+                    self.tabWidget_main.setTabVisible(StandardTabType.LIST, True)
                     return
 
-        self.tabWidget_main.setTabVisible(2, False)
-        self.tabWidget_main.setCurrentIndex(0)
+        self.tabWidget_main.setTabVisible(StandardTabType.LIST, False)
+        self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)
         self.lineEdit_real_value.setFocus()
         app().main_window.selection.set_geometry_selection()
 
     def tab_event_callback(self):
+        list_tab = self.tabWidget_main.currentIndex() == StandardTabType.LIST
+        self.lineEdit_selection_id.setDisabled(list_tab)
+        self.pushButton_apply.setDisabled(list_tab)
+        self.pushButton_apply_and_close.setDisabled(list_tab)
+        self.pushButton_remove.setDisabled(True)
 
-        if self.tabWidget_main.currentIndex() == 3:
+        if list_tab:
             self.lineEdit_selection_id.setText("")
-            self.lineEdit_selection_id.setDisabled(True)
-            self.pushButton_attribute.setDisabled(True)
+            return
 
         else:
-
             text = self.lineEdit_selection_id.text()
-            if " - " in text:
-                selected_id = text.split(" - ")[1]
+            if "-" in text:
+                selected_id = text.split("-")[1]
                 self.lineEdit_selection_id.setText(selected_id)
-
-            self.lineEdit_selection_id.setDisabled(False)
-            self.pushButton_attribute.setEnabled(True)
 
     def on_click_item(self, item):
 
@@ -564,7 +568,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            self.attribute_callback()
+            self.apply_callback()
         elif event.key() == Qt.Key_Delete:
             self.remove_callback()
         elif event.key() == Qt.Key_Escape:

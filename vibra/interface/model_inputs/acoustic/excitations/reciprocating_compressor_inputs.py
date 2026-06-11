@@ -234,7 +234,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.pushButton_export_path.clicked.connect(self.export_path_callback)
         #
         self.pushButton_apply.clicked.connect(self.apply_callback)
-        self.pushButton_apply_and_close.clicked.connect(self.apply_and_close_callback)
+        self.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
         self.pushButton_cancel.clicked.connect(self.close)
         self.pushButton_get_fluid.clicked.connect(self.get_fluid_callback)
         self.pushButton_remove.clicked.connect(self.remove_callback)
@@ -809,7 +809,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         except Exception:
             return
 
-    def apply_callback(self):
+    def apply_callback(self, close: bool = False):
 
         if self.generate_mesh():
             return True
@@ -897,11 +897,8 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.properties._set_property("reciprocating_compressor_excitation", data, surface=surface_id)
         self.actions_to_finalize()
 
-    def apply_and_close_callback(self):
-        if self.apply_callback():
-            return
-
-        self.close()
+        if close:
+            self.close()
 
     def export_compressor_excitation_data(self, surface_id: int, surface_area: float, frequencies: np.ndarray, flow_rate: np.ndarray):
         output_data_type = self.comboBox_output_data_type.currentText()

@@ -1,7 +1,12 @@
 
-from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
+from collections import defaultdict
+from enum import IntEnum
+from os.path import basename
+
+import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
 
 from vibra import app
 from vibra.interface import error_title
@@ -9,12 +14,8 @@ from vibra.interface.common.common_interface import update_analysis_setup_in_fil
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.model_inputs.structural.definitions.enums import StandardTabType
 from vibra.interface.ui_generated.model.structural.nodal_loads_inputs_ui import NodalLoadsInputs_UI
-
-import numpy as np
-from enum import IntEnum
-from os.path import basename
-from collections import defaultdict
 
 
 class ElementFormulation(IntEnum):
@@ -100,23 +101,23 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
     def _create_list_lineEdits(self):
 
-        self.list_lineEdit_constant_values = [  
-                                              [self.lineEdit_real_Fx, self.lineEdit_imag_Fx],
-                                              [self.lineEdit_real_Fy, self.lineEdit_imag_Fy],
-                                              [self.lineEdit_real_Fz, self.lineEdit_imag_Fz],
-                                              [self.lineEdit_real_Mx, self.lineEdit_imag_Mx],
-                                              [self.lineEdit_real_My, self.lineEdit_imag_My],
-                                              [self.lineEdit_real_Mz, self.lineEdit_imag_Mz],
-                                              ]
+        self.list_lineEdit_constant_values = [
+            [self.lineEdit_real_Fx, self.lineEdit_imag_Fx],
+            [self.lineEdit_real_Fy, self.lineEdit_imag_Fy],
+            [self.lineEdit_real_Fz, self.lineEdit_imag_Fz],
+            [self.lineEdit_real_Mx, self.lineEdit_imag_Mx],
+            [self.lineEdit_real_My, self.lineEdit_imag_My],
+            [self.lineEdit_real_Mz, self.lineEdit_imag_Mz],
+        ]
 
-        self.table_lineEdits = { 
-                                "Fx" : self.lineEdit_path_table_Fx,
-                                "Fy" : self.lineEdit_path_table_Fy,
-                                "Fz" : self.lineEdit_path_table_Fz,
-                                "Mx" : self.lineEdit_path_table_Mx,
-                                "My" : self.lineEdit_path_table_My,
-                                "Mz" : self.lineEdit_path_table_Mz,
-                                }
+        self.table_lineEdits = {
+            "Fx": self.lineEdit_path_table_Fx,
+            "Fy": self.lineEdit_path_table_Fy,
+            "Fz": self.lineEdit_path_table_Fz,
+            "Mx": self.lineEdit_path_table_Mx,
+            "My": self.lineEdit_path_table_My,
+            "Mz": self.lineEdit_path_table_Mz,
+        }
 
     def _config_widgets(self):
         #
@@ -131,15 +132,16 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         self.comboBox_attribution_type.currentIndexChanged.connect(self.attribution_type_callback)
         self.comboBox_element_type.currentIndexChanged.connect(self.element_type_callback)
         #
-        self.pushButton_exit.clicked.connect(self.close)
-        self.pushButton_attribute.clicked.connect(self.attribute_callback)
-        self.pushButton_remove.clicked.connect(self.remove_callback)
+        self.pushButton_apply.clicked.connect(self.apply_callback)
+        self.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
+        self.pushButton_cancel.clicked.connect(self.close)
         self.pushButton_load_Fx_table.clicked.connect(self.load_Fx_table)
         self.pushButton_load_Fy_table.clicked.connect(self.load_Fy_table)
         self.pushButton_load_Fz_table.clicked.connect(self.load_Fz_table)
         self.pushButton_load_Mx_table.clicked.connect(self.load_Mx_table)
         self.pushButton_load_My_table.clicked.connect(self.load_My_table)
         self.pushButton_load_Mz_table.clicked.connect(self.load_Mz_table)
+        self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
         #
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
@@ -760,12 +762,16 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
             self.process_table_file_removal(table_names)
 
-    def attribute_callback(self):
+    def apply_callback(self, close: bool=False):
         tab_index = self.tabWidget_main.currentIndex()
-        if tab_index == 0:
+        if tab_index == StandardTabType.CONSTANT_DATA:
             self.constant_values_attribution()
-        elif tab_index == 1:
+
+        elif tab_index == StandardTabType.TABULAR_DATA:
             self.table_values_attribution()
+
+        if close:
+            self.close()
 
     def text_label(self, mask):
 
@@ -845,21 +851,19 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         for current_property in properties_to_check:
             for (property, _) in current_property.keys():
                 if property == "nodal_loads":
-                    self.tabWidget_main.setTabVisible(2, True)
+                    self.tabWidget_main.setTabVisible(StandardTabType.LIST, True)
                     return
 
         self.lineEdit_real_Fx.setFocus()
-        self.tabWidget_main.setCurrentIndex(0)
-
-        self.tabWidget_main.setTabVisible(2, False)
+        self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)
+        self.tabWidget_main.setTabVisible(StandardTabType.LIST, False)
         app().main_window.selection.set_geometry_selection()
 
     def tab_event_callback(self):
-
-        list_tab = self.tabWidget_main.currentIndex() == 2
+        list_tab = self.tabWidget_main.currentIndex() == StandardTabType.LIST
         self.lineEdit_selection_id.setDisabled(list_tab)
-        self.pushButton_attribute.setDisabled(list_tab)
-        self.pushButton_attribute.setDisabled(list_tab)
+        self.pushButton_apply.setDisabled(list_tab)
+        self.pushButton_apply_and_close.setDisabled(list_tab)
         self.pushButton_remove.setDisabled(True)
 
         if list_tab:
@@ -1040,7 +1044,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            self.attribute_callback()
+            self.apply_callback()
         elif event.key() == Qt.Key_Delete:
             self.remove_callback()
         elif event.key() == Qt.Key_Escape:
