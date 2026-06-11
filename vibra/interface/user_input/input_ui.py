@@ -79,7 +79,7 @@ class InputUi:
         app().main_window.action_model_workspace_callback()
         obj = self.process_input(MesherSetupInputs)
         if obj.complete:
-            self.model_setup_items.enable_and_expand_menu_items()
+            self.model_setup_items.expand_menu_items()
 
     def advanced_element_options(self):
         if not self.model_setup_items.item_child_element_options.isDisabled():

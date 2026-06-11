@@ -182,7 +182,7 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
 
     def apply_callback(self, close: bool = False):
 
-        if self.tabWidget_main.currentIndex() == SetupTabType.SETUP:
+        if self.tabWidget_main.currentIndex() == SetupTabType.LIST:
             return
 
         input_ids = self.lineEdit_selection_id.text()
