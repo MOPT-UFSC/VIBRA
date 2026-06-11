@@ -961,7 +961,7 @@ class MainWindow(MainWindow_UI):
         self.set_toolbars_visible(True)
         self.view_toolbar.set_front_view()
 
-        if app().project.can_resume_solution:
+        if app().project.model.can_resume_solution:
             window_title = "Acoustic Harmonic results"
             title = "Missing solution frequency records"
             message = 'Click on the "Resume the analysis" button to solve remaining frequencies'

@@ -1,14 +1,13 @@
 import logging
 from copy import deepcopy
+from numbers import Number
 from pathlib import Path
 from typing import Callable, Optional
 
 import numpy as np
-from numbers import Number
 from PIL.Image import Image
 
 from vibra import SUPPORTED_GEOMETRY_EXTENSIONS, errors
-
 from vibra.engine.analysis_info import (
     AnalysisID,
     AnalysisMethod,
@@ -60,7 +59,7 @@ from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.mesh_setup import MeshSetup
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.model_properties import ModelProperties
-from vibra.engine.solution import Solution
+from vibra.engine.solution import HarmonicSolution, Solution
 from vibra.engine.transfer_impedances.perforated_plate_models import (
     PerforatedPlateModels,
 )
@@ -145,14 +144,22 @@ class Model:
 
         return (None, None, None)
 
+    @property
+    def can_resume_solution(self) -> bool:
+        if not isinstance(self.solution, HarmonicSolution):
+            return False
+
+        try:
+            return not np.all(self.solution.status)
+        except Exception:
+            return False
+
     def reset_current_solution(self):
         self.solution = None
 
     def get_harmonic_analysis_setup(self, **kwargs) -> HarmonicAnalysisSetup:
         analysis_setup = HarmonicAnalysisSetup(**kwargs)
-        analysis_setup.solution_steps_mask = self.get_solution_steps_mask(
-            frequencies=analysis_setup.get_frequencies()
-        )
+        analysis_setup.solution_steps_mask = self.get_solution_steps_mask(frequencies=analysis_setup.get_frequencies())
         return analysis_setup
 
     def reset_dissipation_model_properties(self):
@@ -328,10 +335,10 @@ class Model:
 
         disconnected_nodes = bool(self.mesh.disconnected_nodes_data)
         collapsed_elements = bool(
-            self.mesh.collapsed_3d_elements or 
-            self.mesh.collapsed_2d_elements or 
-            self.mesh.collapsed_1d_elements
-            )
+            self.mesh.collapsed_3d_elements 
+            or self.mesh.collapsed_2d_elements 
+            or self.mesh.collapsed_1d_elements
+        )  # fmt: skip
 
         if disconnected_nodes or collapsed_elements:
             return False

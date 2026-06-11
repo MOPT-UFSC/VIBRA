@@ -175,7 +175,7 @@ class AnalysisToolbar(QToolBar):
             self.combo_box_physical_domain.blockSignals(False)
 
     def update_resume_soluton_button_visibility(self):
-        can_resume_solution = app().project.can_resume_solution
+        can_resume_solution = app().project.model.can_resume_solution
         self.resume_solution_action.setVisible(can_resume_solution)
 
     def update_reset_solution_button_accessibility(self):
