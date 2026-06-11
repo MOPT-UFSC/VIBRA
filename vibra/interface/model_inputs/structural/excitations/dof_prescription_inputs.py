@@ -17,7 +17,7 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.structural.definitions.enums import StandardTabType
 
 # from vibra.utils.utils import are_there_values_different_from_zero
-from vibra.interface.ui_generated.model.structural.dof_prescription_inputs_ui import DofPrescriptionInputs_UI
+from vibra.interface.ui_generated.model.structural.excitations.dof_prescription_inputs_ui import DofPrescriptionInputs_UI
 
 
 class ElementFormulation(IntEnum):

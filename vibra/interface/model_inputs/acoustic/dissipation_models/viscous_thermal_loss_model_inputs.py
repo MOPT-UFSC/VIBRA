@@ -18,7 +18,7 @@ from vibra.interface.model_inputs.acoustic.dissipation_models.circular_duct_data
 from vibra.interface.model_inputs.acoustic.dissipation_models.rectangular_duct_data import RectangularDuctData
 from vibra.interface.model_inputs.general.fluid.set_fluid_inputs_simplified import SetFluidInputsSimplified
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
-from vibra.interface.ui_generated.model.acoustic.viscous_thermal_model_inputs_ui import ViscousThermalModelInputs_UI
+from vibra.interface.ui_generated.model.acoustic.dissipation_models.viscous_thermal_model_inputs_ui import ViscousThermalModelInputs_UI
 
 
 class TabType(IntEnum):

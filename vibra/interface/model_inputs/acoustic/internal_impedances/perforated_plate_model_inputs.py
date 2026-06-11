@@ -9,19 +9,12 @@ from typing import Dict, List
 import numpy as np
 from PySide6.QtCore import QItemSelectionModel, QPoint, Qt
 from PySide6.QtGui import QCloseEvent
-from PySide6.QtWidgets import (
-    QAbstractItemView,
-    QHeaderView,
-    QLineEdit,
-    QTableWidgetItem,
-    QTreeWidgetItem,
-)
+from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QLineEdit, QTableWidgetItem, QTreeWidgetItem
+from vibra.interface.ui_generated.model.acoustic.internal_impedances.perforated_plate_model_inputs_ui import PerforatedPlateModelInputs_UI
 
 from vibra import app
 from vibra.engine.properties.fluid import Fluid
-from vibra.engine.transfer_impedances.perforated_plate_models import (
-    PerforatedPlateModels,
-)
+from vibra.engine.transfer_impedances.perforated_plate_models import PerforatedPlateModels
 from vibra.interface import error_title
 from vibra.interface.common.common_interface import update_analysis_setup_in_file
 from vibra.interface.data.data_manager import get_spectral_data_from_array
@@ -31,18 +24,9 @@ from vibra.interface.general.get_user_confirmation_input import GetUserConfirmat
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.model_inputs.acoustic.definitions.enums import SetupTabType
-from vibra.interface.model_inputs.acoustic.internal_impedances.perforated_plate_data import (
-    PerforatedPlateData,
-)
-from vibra.interface.model_inputs.general.fluid.set_fluid_inputs_simplified import (
-    SetFluidInputsSimplified,
-)
-from vibra.interface.plots.general.frequency_response_plotter import (
-    FrequencyResponsePlotter,
-)
-from vibra.interface.ui_generated.model.acoustic.perforated_plate_model_inputs_ui import (
-    PerforatedPlateModelInputs_UI,
-)
+from vibra.interface.model_inputs.acoustic.internal_impedances.perforated_plate_data import PerforatedPlateData
+from vibra.interface.model_inputs.general.fluid.set_fluid_inputs_simplified import SetFluidInputsSimplified
+from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
 from vibra.utils.bidict import bidict
 
 

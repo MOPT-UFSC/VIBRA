@@ -12,9 +12,7 @@ from vibra.interface.general.get_user_confirmation_input import GetUserConfirmat
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.acoustic.definitions.enums import StandardTabType
 from vibra.interface.numeric_checks.int_list_validator import IntListValidator
-from vibra.interface.ui_generated.model.acoustic.specific_impedance_inputs_ui import (
-    SpecificImpedanceInputs_UI,
-)
+from vibra.interface.ui_generated.model.acoustic.external_impedances.specific_impedance_inputs_ui import SpecificImpedanceInputs_UI
 
 
 class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):

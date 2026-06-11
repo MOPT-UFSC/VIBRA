@@ -5,13 +5,10 @@ from PySide6.QtWidgets import QLineEdit
 
 from vibra import app
 from vibra.engine.properties.fluid import Fluid
+
 # from vibra.interface import error_title, warning_title
-from vibra.interface.model_inputs.general.fluid.set_fluid_inputs_simplified import (
-    SetFluidInputsSimplified,
-)
-from vibra.interface.ui_generated.model.acoustic.acoustic_properties_gradient_inputs_ui import (
-    AcousticPropertiesGradientInputs_UI,
-)
+from vibra.interface.model_inputs.general.fluid.set_fluid_inputs_simplified import SetFluidInputsSimplified
+from vibra.interface.ui_generated.model.acoustic.others.acoustic_properties_gradient_inputs_ui import AcousticPropertiesGradientInputs_UI
 
 
 class AcousticPropertiesGradientInputs(AcousticPropertiesGradientInputs_UI):

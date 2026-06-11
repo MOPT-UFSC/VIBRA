@@ -13,7 +13,7 @@ from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.structural.definitions.enums import StandardTabType
-from vibra.interface.ui_generated.model.structural.distributed_loads_inputs_ui import DistributedLoadsInputs_UI
+from vibra.interface.ui_generated.model.structural.excitations.distributed_loads_inputs_ui import DistributedLoadsInputs_UI
 
 
 class DistributedLoadsInputs(DistributedLoadsInputs_UI):

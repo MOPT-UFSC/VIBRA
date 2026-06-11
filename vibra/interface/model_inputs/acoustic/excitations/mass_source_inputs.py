@@ -7,7 +7,7 @@ from vibra.interface import error_title
 from vibra.interface.common.common_interface import update_analysis_setup_in_file
 from vibra.interface.data.data_manager import get_spectral_data_from_array
 from vibra.interface.data_handler.data_importer import DataImporter
-from vibra.interface.ui_generated.model.acoustic.mass_source_inputs_ui import MassSourceInputs_UI
+from vibra.interface.ui_generated.model.acoustic.excitations.mass_source_inputs_ui import MassSourceInputs_UI
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.acoustic.definitions.enums import StandardTabType

@@ -17,9 +17,7 @@ from vibra.interface.general.get_user_confirmation_input import GetUserConfirmat
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.model_inputs.acoustic.definitions.enums import StandardTabType
-from vibra.interface.ui_generated.model.acoustic.transfer_impedance_inputs_ui import (
-    TransferImpedanceInputs_UI,
-)
+from vibra.interface.ui_generated.model.acoustic.internal_impedances.transfer_impedance_inputs_ui import TransferImpedanceInputs_UI
 from vibra.utils.bidict import bidict
 
 

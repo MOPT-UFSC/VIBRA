@@ -12,7 +12,7 @@ from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.acoustic.definitions.enums import StandardTabType
-from vibra.interface.ui_generated.model.acoustic.incident_plane_wave_inputs_ui import IncidentPlaneWaveInputs_UI
+from vibra.interface.ui_generated.model.acoustic.excitations.incident_plane_wave_inputs_ui import IncidentPlaneWaveInputs_UI
 
 
 class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):

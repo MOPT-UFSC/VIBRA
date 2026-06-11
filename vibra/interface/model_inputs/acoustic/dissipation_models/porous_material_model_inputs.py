@@ -6,16 +6,9 @@ from typing import Dict, List
 import numpy as np
 from PySide6.QtCore import QItemSelectionModel, QPoint, Qt
 from PySide6.QtGui import QAction, QCloseEvent, QIcon
-from PySide6.QtWidgets import (
-    QAbstractItemView,
-    QDialog,
-    QDoubleSpinBox,
-    QMenu,
-    QTableWidgetItem,
-    QTreeWidgetItem,
-)
+from PySide6.QtWidgets import QAbstractItemView, QDialog, QDoubleSpinBox, QMenu, QTableWidgetItem, QTreeWidgetItem
 
-from vibra import app, ICON_DIR
+from vibra import ICON_DIR, app
 from vibra.engine.dissipation_models.porous_materials_models import PorousMaterialModels, get_DB_standard_constants, get_DBM_standard_constants
 from vibra.engine.properties.fluid import Fluid
 from vibra.interface import error_title

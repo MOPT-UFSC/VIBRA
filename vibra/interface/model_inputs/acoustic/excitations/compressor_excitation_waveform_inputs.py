@@ -19,7 +19,7 @@ from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.plots.general.frequency_response_plotter import DataFormat, FrequencyResponsePlotter
-from vibra.interface.ui_generated.model.acoustic.compressor_excitation_waveform_inputs_ui import CompressorExcitationWaveformInputs_UI
+from vibra.interface.ui_generated.model.acoustic.excitations.compressor_excitation_waveform_inputs_ui import CompressorExcitationWaveformInputs_UI
 from vibra.utils.signal_processing import extend_signal, get_window_and_correction_factor, process_one_sided_spectrum
 
 
