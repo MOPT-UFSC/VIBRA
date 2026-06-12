@@ -303,7 +303,7 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
         if specific_impedance is None:
             self.hide()
             title = "Additional inputs required"
-            message = "You must enter an specific impedance value to proceed with the assignment."
+            message = "You must enter a specific impedance value to proceed with the assignment."
             PrintMessageInput([error_title, title, message])
             self.lineEdit_real_value.setFocus()
             return True
