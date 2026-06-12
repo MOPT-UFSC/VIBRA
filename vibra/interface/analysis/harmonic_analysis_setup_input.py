@@ -418,7 +418,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         if self.tabular_frequency_setup is None:
             condition_B = True
         else:
-            (_, f_max_tab, _, _) = self.tabular_frequency_setup
+            (f_min_tab, f_max_tab, _, _) = self.tabular_frequency_setup
             condition_B = not f_max_tab >= f_max
 
         if condition_A and condition_B:
@@ -444,15 +444,15 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
 
         # additional checks to prevent out-of-index access errors
         if isinstance(self.tabular_frequency_setup, tuple):
-            if _f_min < f_min:
-                _f_min = f_min
+            if _f_min < f_min_tab:
+                _f_min = f_min_tab
 
-            if _f_max > f_max:
-                _f_max = f_max
+            if _f_max > f_max_tab:
+                _f_max = f_max_tab
 
         return {
-            "f_min" : f_min,
-            "f_max" : f_max,
+            "f_min" : _f_min,
+            "f_max" : _f_max,
             "f_step" : f_step,
             }
     
