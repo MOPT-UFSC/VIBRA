@@ -378,11 +378,10 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         self.geometry_selection_callback()
         self.lineEdit_selection_id.setEnabled(True)
 
-    def on_click_item(self, item):
+    def on_click_item(self, item: QTreeWidgetItem):
         self.tree_item_clicked = True
 
         surface_ids = self.get_selected_surfaces_from_tree_widget_transfer_impedance()
-
         if not surface_ids:
             return
 
@@ -393,6 +392,9 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
             if isinstance(decoupling_data, dict):
                 new_surface_id = decoupling_data.get("new_surface_id")
+                if new_surface_id is None:
+                    continue
+
                 self.decoupling_map[surface_id] = new_surface_id
 
         self.pushButton_remove.setEnabled(True)
@@ -400,12 +402,11 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
         self.tree_item_clicked = False
 
-    def on_doubleclick_item(self, item):
+    def on_doubleclick_item(self, item: QTreeWidgetItem):
         self.on_click_item(item)
-    
+
     def get_selected_surfaces_from_tree_widget_transfer_impedance(self) -> list:
         selected_items = self.treeWidget_transfer_impedance.selectedItems()
-
         if not selected_items:
             return list()
         
@@ -415,12 +416,15 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         selected_surfaces_decoupled = list()
 
         for selected_surface in selected_surfaces:
-            decouple_surface = self.decoupling_map[selected_surface] if selected_surface in self.decoupling_map.keys() else self.decoupling_map.inverse[selected_surface][0]
+            decouple_surface = self.decoupling_map.get(selected_surface)
+            if decouple_surface is None:
+                decouple_pair = [selected_surface, "Awaiting uncoupling"]
 
-            decouple_pair = [selected_surface, decouple_surface]
-            decouple_pair.sort()
+            else:
+                decouple_pair = [selected_surface, decouple_surface]
+                decouple_pair.sort()
+                       
             decouple_pair = tuple(decouple_pair)
-
             selected_surfaces_decoupled.append(str(decouple_pair))
 
         selection_text = ", ".join(selected_surfaces_decoupled)

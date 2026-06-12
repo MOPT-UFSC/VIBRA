@@ -13,6 +13,7 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.model_inputs.structural.definitions.enums import SetupTabType
 from vibra.interface.ui_generated.model.dof_decoupling.degrees_of_freedom_decoupling_inputs_ui import DegreesOfFreedomDecouplingInputs_UI
+from vibra.utils.bidict import bidict
 
 
 class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
@@ -47,6 +48,7 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
         self.assignment_complete = False
         self.keep_window_open = True
         self.cache_surface_properties = deepcopy(self.properties.surface_properties)
+        self.decoupling_map = bidict()
 
     def _configure_qt_variables(self):
         #
@@ -71,15 +73,14 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
     def tab_event_callback(self):
+        tab_list = self.tabWidget_main.currentIndex() == SetupTabType.LIST
+        self.lineEdit_selection_id.setText("")
+        self.lineEdit_selection_id.setDisabled(tab_list)
+        self.pushButton_apply.setDisabled(tab_list)
+        self.pushButton_apply_and_close.setDisabled(tab_list)
 
-        if self.tabWidget_main.currentIndex() == 1:
-            self.lineEdit_selection_id.setText("")
-            self.lineEdit_selection_id.setDisabled(True)
-            self.pushButton_apply.setDisabled(True)
-
-        else:
-            self.lineEdit_selection_id.setDisabled(False)
-            self.pushButton_apply.setEnabled(True)
+        if tab_list:
+            self.on_click_item(None)
 
     def geometry_selection_callback(self):
 
@@ -293,11 +294,54 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
 
         self.process_decoupling_actions()
 
-    def on_click_item(self, item):
-        if item.text(0) != "":
-            surface_id = int(item.text(0))
-            self.lineEdit_selection_id.setText(item.text(0))
-            app().main_window.selection.set_geometry_selection(surfaces=[surface_id])
+    def get_selected_surfaces_from_tree_widget_transfer_impedance(self) -> list:
+        selected_items = self.treeWidget_dof_decoupling.selectedItems()
+        if not selected_items:
+            return list()
+
+        return [int(item.text(0)) for item in selected_items]
+
+    def set_selection_text(self, selected_surfaces: list | set):
+        selected_surfaces_decoupled = list()
+
+        for selected_surface in selected_surfaces:
+            decouple_surface = self.decoupling_map.get(selected_surface)
+            if decouple_surface is None:
+                decouple_pair = [selected_surface, "Awaiting uncoupling"]
+
+            else:
+                decouple_pair = [selected_surface, decouple_surface]
+                decouple_pair.sort()
+                       
+            decouple_pair = tuple(decouple_pair)
+            selected_surfaces_decoupled.append(str(decouple_pair))
+
+        selection_text = ", ".join(selected_surfaces_decoupled)
+
+        self.lineEdit_selection_id.setText(selection_text)
+        self.lineEdit_selection_id.setToolTip(selection_text)
+
+    def on_click_item(self, item: QTreeWidgetItem):
+
+        surface_ids = self.get_selected_surfaces_from_tree_widget_transfer_impedance()
+        if not surface_ids:
+            return
+
+        app().main_window.selection.set_geometry_selection(surfaces=surface_ids)
+
+        self.decoupling_map.clear()
+        for surface_id in surface_ids:
+            decoupling_data = self.properties._get_property("degrees_of_freedom_decoupling", surface=surface_id)
+
+            if isinstance(decoupling_data, dict):
+                new_surface_id = decoupling_data.get("new_surface_id")
+                if new_surface_id is None:
+                    continue
+
+                self.decoupling_map[surface_id] = new_surface_id
+
+        self.pushButton_remove.setEnabled(True)
+        self.set_selection_text(surface_ids)
 
     def on_doubleclick_item(self, item):
         self.on_click_item(item)
