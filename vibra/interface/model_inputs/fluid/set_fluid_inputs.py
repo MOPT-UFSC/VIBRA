@@ -10,7 +10,7 @@ from vibra.engine.properties.fluid import Fluid
 from vibra.interface import error_title
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.model_inputs.general.fluid.fluid_widget import FluidWidget
+from vibra.interface.model_inputs.fluid.fluid_widget import FluidWidget
 from vibra.interface.ui_generated.model.fluid.set_fluid_inputs_ui import SetFluidInputs_UI
 
 
@@ -236,7 +236,7 @@ class SetFluidInputs(SetFluidInputs_UI):
         self.lineEdit_selection_id.setText(text)
         self.lineEdit_selection_id.setEnabled(bool(index))
 
-    def apply_callback(self, close: bool = False):
+    def apply_callback(self, close_window: bool = False):
 
         selected_fluid = self.fluid_widget.get_selected_fluid()
 
@@ -277,10 +277,7 @@ class SetFluidInputs(SetFluidInputs_UI):
             for surface_id in self.mesh.surfaces_from_volume[volume_id]:
                 self.properties._set_property("fluid", selected_fluid, surface=surface_id)
 
-        self.actions_to_finalize()
-
-        if close:
-            self.close()
+        self.actions_to_finalize(close_window)
 
     def remove_callback(self):
         if not self.selected_items:
@@ -325,7 +322,7 @@ class SetFluidInputs(SetFluidInputs_UI):
 
             app().main_window.selection.set_geometry_selection()
 
-    def actions_to_finalize(self):
+    def actions_to_finalize(self, close_window: bool = False):
         self.load_model_info()
         self.clear_line_edit_seletction_id()
         self.lineEdit_selected_fluid_name.clear()
@@ -337,6 +334,9 @@ class SetFluidInputs(SetFluidInputs_UI):
         app().project.update_model_properties_file()
 
         self.complete = True
+
+        if close_window:
+            self.close()
 
     def load_model_info(self):
 

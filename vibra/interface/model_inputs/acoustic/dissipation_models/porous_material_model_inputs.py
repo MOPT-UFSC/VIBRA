@@ -19,7 +19,7 @@ from vibra.interface.model_inputs.acoustic.definitions.enums import AttributionB
 from vibra.interface.model_inputs.acoustic.dissipation_models.dbm_data import DelanyBazleyMikiData
 from vibra.interface.model_inputs.acoustic.dissipation_models.jcal_data import JhonsonChampouxAllardLafargeData
 from vibra.interface.model_inputs.acoustic.dissipation_models.show_porous_material_model_equations import ShowPorousMaterialModelEquations
-from vibra.interface.model_inputs.general.fluid.set_fluid_inputs_simplified import SetFluidInputsSimplified
+from vibra.interface.model_inputs.fluid.set_fluid_inputs_simplified import SetFluidInputsSimplified
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
 from vibra.interface.ui_generated.model.acoustic.dissipation_models.porous_material_model_inputs_ui import PorousMaterialModelInputs_UI
 
@@ -207,8 +207,13 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         widgets = [self.pushButton_DB_equations]
         change_icon_color_for_widgets(widgets, self.icon_color)
 
-    def actions_to_finalize(self):
+    def actions_to_finalize(self, close_window: bool = False):
+        self.load_info()
         app().main_window.update_symbols()
+        app().project.update_model_properties_file()
+
+        if close_window:
+            self.close()
 
     def advanced_porous_material_callback(self):
         enabled = self.checkBox_advanced_porous_material_plots.isChecked()
@@ -382,8 +387,6 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         self.pushButton_remove.setDisabled(True)
 
         app().main_window.selection.clear_selection()
-        app().project.update_model_properties_file()
-        self.load_info()
         self.actions_to_finalize()
 
         if len(self.map_model_id_to_model) > 0:
@@ -410,14 +413,13 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             if read._cancel:
                 return
 
-            if read._continue:
+            if not read._continue:
+                return
 
-                for volume_id in volume_ids:
-                    self.properties._remove_volume_property("porous_material_model", volume_id)
+            for volume_id in volume_ids:
+                self.properties._remove_volume_property("porous_material_model", volume_id)
 
-                app().project.update_model_properties_file()
-                self.actions_to_finalize()
-                self.close()
+            self.actions_to_finalize()
 
     def tab_event_porous_material_model(self):
         current_tab = self.tabWidget_main.currentIndex()
@@ -799,7 +801,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         else:
             return "Jhonson-Champoux-Allard-Lafarge"
 
-    def apply_callback(self, close: bool = False):
+    def apply_callback(self, close_window: bool = False):
 
         tab_index = self.tabWidget_main.currentIndex()
 
@@ -836,12 +838,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             for volume_id in volume_ids:
                 self.properties._set_property("porous_material_model", model_data.get_data(), volume=volume_id)
 
-            app().project.update_model_properties_file()
-            self.actions_to_finalize()
-            self.load_info()
-
-            if close:
-                self.close()
+            self.actions_to_finalize(close_window)
 
     def check_inputs(self, lineEdit, label, only_positive=False, zero_included=True, _float=True):
 

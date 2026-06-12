@@ -112,7 +112,7 @@
          </font>
         </property>
         <property name="text">
-         <string>Acoustic Degrees of Freedom Decoupling</string>
+         <string>Degrees of Freedom Decoupling Assistant</string>
         </property>
         <property name="textFormat">
          <enum>Qt::TextFormat::AutoText</enum>
@@ -499,13 +499,13 @@
           <widget class="QLineEdit" name="lineEdit_selection_id">
            <property name="minimumSize">
             <size>
-             <width>100</width>
+             <width>200</width>
              <height>28</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>100</width>
+             <width>200</width>
              <height>28</height>
             </size>
            </property>

@@ -9,8 +9,8 @@ from vibra.interface import error_title, warning_title
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
-from vibra.interface.model_inputs.general.fluid.load_fluid_composition_inputs import LoadFluidCompositionInputs
-from vibra.interface.model_inputs.general.fluid.refprop_interface import RefpropInterface
+from vibra.interface.model_inputs.fluid.load_fluid_composition_inputs import LoadFluidCompositionInputs
+from vibra.interface.model_inputs.fluid.refprop_interface import RefpropInterface
 from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator, is_numeric
 from vibra.interface.numeric_checks.unit_utilities import (
     PressureUnits,
@@ -873,7 +873,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
                 self.hide()
                 title = "Invalid thermodynamic states"
                 message = "The initial and final thermodynamic states are identical. "
-                message += "You must to specify different states to obtain valid"
+                message += "You must to specify different states to obtain valid "
                 message += "property distribuitions."
                 PrintMessageInput([error_title, title, message])
                 app().main_window.set_input_widget(self)

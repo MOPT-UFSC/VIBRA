@@ -16,7 +16,7 @@ from vibra.engine.properties.material import Material
 from vibra.interface import error_title
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.model_inputs.general.material.material_widget import MaterialWidget
+from vibra.interface.model_inputs.material.material_widget import MaterialWidget
 from vibra.interface.ui_generated.model.material.set_material_ui import SetMaterial_UI
 
 
@@ -299,7 +299,7 @@ class MaterialInputs(SetMaterial_UI):
         self.comboBox_attribution_type.clear()
         self.comboBox_attribution_type.addItems(labels)
 
-    def apply_callback(self, close: bool = False):
+    def apply_callback(self, close_window: bool = False):
 
         selected_material = self.material_widget.get_selected_material()
 
@@ -350,10 +350,7 @@ class MaterialInputs(SetMaterial_UI):
             for volume_id in volume_ids:
                 self.properties._set_property("material", selected_material, volume=volume_id)
 
-        self.actions_to_finalize()
-
-        if close:
-            self.close()
+        self.actions_to_finalize(close_window)
 
     def remove_callback(self):
         if not self.selected_items:
@@ -395,7 +392,7 @@ class MaterialInputs(SetMaterial_UI):
 
             app().main_window.selection.set_geometry_selection()
 
-    def actions_to_finalize(self):
+    def actions_to_finalize(self, close_window: bool = False):
         self.clear_line_edit_seletction_id()
         self.lineEdit_selected_material_name.clear()
         self.pushButton_remove.setDisabled(True)
@@ -405,6 +402,9 @@ class MaterialInputs(SetMaterial_UI):
         app().main_window.selection.clear_selection()  # this also updates
         app().main_window.update_symbols()
         app().project.update_model_properties_file()
+
+        if close_window:
+            self.close()
 
     def load_model_info(self):
 

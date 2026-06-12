@@ -17,7 +17,7 @@ from vibra.errors import InvalidFluidError
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.pick_color_input import PickColorInput
-from vibra.interface.model_inputs.general.fluid.set_fluid_composition_inputs import SetFluidCompositionInputs
+from vibra.interface.model_inputs.fluid.set_fluid_composition_inputs import SetFluidCompositionInputs
 from vibra.interface.ui_generated.model.fluid.fluid_widget_ui import FluidWidget_UI
 from vibra.utils.interface_utils import block_signals, qt_run_delayed
 

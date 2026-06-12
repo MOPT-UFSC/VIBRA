@@ -4,7 +4,7 @@ from PySide6.QtCore import Qt
 
 from vibra import app
 from vibra.interface.ui_generated.model.fluid.simplified_fluid_inputs_ui import SimplifiedFluidInputs_UI
-from vibra.interface.model_inputs.general.fluid.fluid_widget import FluidWidget
+from vibra.interface.model_inputs.fluid.fluid_widget import FluidWidget
 
 
 class SetFluidInputsSimplified(SimplifiedFluidInputs_UI):

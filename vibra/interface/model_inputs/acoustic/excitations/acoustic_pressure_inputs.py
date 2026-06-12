@@ -178,16 +178,31 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         self.pushButton_apply.setDisabled(tab_list)
         self.pushButton_apply_and_close.setDisabled(tab_list)
 
-    def apply_callback(self, close: bool = False):
+    def apply_callback(self, close_window: bool = False):
         tab_index = self.tabWidget_main.currentIndex()
+        if tab_index == StandardTabType.LIST:
+            return
+
+        input_ids = self.lineEdit_selection_id.text()
+        surface_ids, error_data = self.mesh.check_selected_ids(input_ids, selection="surfaces", single_id=False)
+
+        if error_data is not None:
+            self.hide()
+            self.lineEdit_selection_id.setFocus()
+            PrintMessageInput(error_data)
+            return
+
+        self.remove_conflicting_excitations(surface_ids)
+
         if tab_index == StandardTabType.CONSTANT_DATA:
-            self.check_constant_values()
+            if self.constant_data_assignment(surface_ids):
+                return
 
         elif tab_index == StandardTabType.TABULAR_DATA:
-            self.check_table_values()
+            if self.tabular_data_assignment(surface_ids):
+                return
 
-        if close:
-            self.close()
+        self.actions_to_finalize(close_window)
 
     def check_complex_entries(self, lineEdit_real, lineEdit_imag):
         self.stop = False
@@ -221,45 +236,28 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         else:
             return real_F + 1j * imag_F
 
-    def check_constant_values(self):
-
-        input_ids = self.lineEdit_selection_id.text()
-        surface_ids, error_data = self.mesh.check_selected_ids(
-                                                               input_ids, 
-                                                               selection = "surfaces"
-                                                               )
-
-        if error_data is not None:
-            self.hide()
-            self.lineEdit_selection_id.setFocus()
-            PrintMessageInput(error_data)
-            return
-
-        self.remove_conflicting_excitations(surface_ids)
+    def constant_data_assignment(self, surface_ids: list[int]):
 
         acoustic_pressure = self.check_complex_entries(self.lineEdit_real_value, self.lineEdit_imag_value)
 
-        if acoustic_pressure is not None:
-
-            real_values = [np.real(acoustic_pressure)]
-            imag_values = [np.imag(acoustic_pressure)]
-
-            data = {
-                    "real_values": real_values,
-                    "imag_values": imag_values,
-                    }
-
-            for surface_id in surface_ids:
-                self.properties._set_property("acoustic_pressure", data, surface=surface_id)
-
-            self.actions_to_finalize()
-
-        else:
+        if acoustic_pressure is None:
+            self.hide()
             title = "Additional inputs required"
-            message = "You must inform at least one acoustic pressure\n"
-            message += "before confirming the input!"
+            message = "You must enter a non-zero acoustic pressure value to proceed with the assignment."
             PrintMessageInput([error_title, title, message])
             self.lineEdit_real_value.setFocus()
+            return True
+
+        real_values = [np.real(acoustic_pressure)]
+        imag_values = [np.imag(acoustic_pressure)]
+
+        data = {
+            "real_values": real_values,
+            "imag_values": imag_values,
+        }
+
+        for surface_id in surface_ids:
+            self.properties._set_property("acoustic_pressure", data, surface=surface_id)
 
     def load_table(self, lineEdit : QLineEdit, direct_load=False):
 
@@ -331,69 +329,49 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
     def load_acoustic_pressure_table(self):
         self.imported_values = self.load_table(self.lineEdit_table_path)
 
-    def check_table_values(self):
+    def tabular_data_assignment(self, surface_ids: list[int]):
 
-        input_ids = self.lineEdit_selection_id.text()
-        surface_ids, error_data = self.mesh.check_selected_ids(
-                                                                input_ids, 
-                                                                selection = "surfaces",
-                                                                )
-
-        if error_data is not None:
+        if self.lineEdit_table_path.text() == "":
             self.hide()
-            self.lineEdit_selection_id.setFocus()
-            PrintMessageInput(error_data)
-            return
-
-        self.remove_conflicting_excitations(surface_ids)
-
-        if self.lineEdit_table_path.text() != "":
-
-            if self.imported_values is None:
-                self.imported_values = self.load_table( 
-                    self.lineEdit_table_path, 
-                    direct_load = True,
-                    )
-
-            for surface_id in surface_ids:
-
-                if isinstance(self.imported_values, np.ndarray):
-                    if self.imported_values.shape[1] >= 3:
-
-                        table_name = f"precribed_pressure_at_surface_{surface_id}"
-                        if self.save_table_values(table_name, self.imported_values):
-                            self.lineEdit_table_path.setFocus()
-                            self.imported_values = None
-                            return
-
-                else:
-                    return
-
-                if self.imported_values is None:
-                    return
-
-                # complex values computed from tabular data
-                complex_values = get_spectral_data_from_array(self.imported_values)
-
-                # table path from imported tabular data
-                table_path = self.lineEdit_table_path.text()
-
-                data = {
-                    "table_names" : [table_name],
-                    "table_paths" : [table_path],
-                    "values" : [complex_values],
-                    }
-
-                self.properties._set_property("acoustic_pressure", data, surface=surface_id)
-
-            self.actions_to_finalize()
-
-        else:
             title = "Additional inputs required"
-            message = "You must inform at least one acoustic pressure\n"
-            message += "table path before confirming the input!"
+            message = "You must enter the acoustic pressure table path to proceed with the assignment."
             PrintMessageInput([error_title, title, message])
             self.lineEdit_table_path.setFocus()
+            return True
+    
+        if self.imported_values is None:
+            self.imported_values = self.load_table(self.lineEdit_table_path, direct_load = True)
+
+        for surface_id in surface_ids:
+
+            if isinstance(self.imported_values, np.ndarray):
+                if self.imported_values.shape[1] >= 3:
+
+                    table_name = f"precribed_pressure_at_surface_{surface_id}"
+                    if self.save_table_values(table_name, self.imported_values):
+                        self.lineEdit_table_path.setFocus()
+                        self.imported_values = None
+                        return True
+
+            else:
+                return True
+
+            if self.imported_values is None:
+                return True
+
+            # complex values computed from tabular data
+            complex_values = get_spectral_data_from_array(self.imported_values)
+
+            # table path from imported tabular data
+            table_path = self.lineEdit_table_path.text()
+
+            data = {
+                "table_names" : [table_name],
+                "table_paths" : [table_path],
+                "values" : [complex_values],
+                }
+
+            self.properties._set_property("acoustic_pressure", data, surface=surface_id)
 
     def process_table_file_removal(self, table_names: list):
         for table_name in table_names:
@@ -469,11 +447,14 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
             self.properties._reset_property("acoustic_pressure")
             self.actions_to_finalize()
 
-    def actions_to_finalize(self):
+    def actions_to_finalize(self, close_window: bool = False):
         self.load_model_info()
         app().main_window.update_info_text()
         app().project.update_model_properties_file()
         app().main_window.update_symbols()
+
+        if close_window:
+            self.close()
 
     def reset_input_fields(self):
         self.lineEdit_real_value.setText("")

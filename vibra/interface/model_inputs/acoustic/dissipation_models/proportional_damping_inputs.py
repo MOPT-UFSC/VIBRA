@@ -57,6 +57,7 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         #
         self.geometry_selection_callback()
+        self.attribution_type_callback()
 
     def attribution_type_callback(self):
 
@@ -191,7 +192,7 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
 
         return out
 
-    def apply_callback(self, close: bool = False):
+    def apply_callback(self, close_window: bool = False):
 
         attribute_type = self.comboBox_attribution_type.currentIndex()
             
@@ -230,11 +231,7 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
         for volume_id in volume_ids:
             self.properties._set_property("proportional_damping", data, volume=volume_id)
 
-        self.actions_to_finalize()
-        self.load_info()
-
-        if close:
-            self.close()
+        self.actions_to_finalize(close_window)
 
     def remove_callback(self):
         selected_volumes = self.get_selected_volumes_from_tree_widget_proportional_damping()
@@ -251,7 +248,6 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
 
         app().main_window.selection.clear_selection()
         self.actions_to_finalize()
-        self.load_info()
 
     def reset_callback(self):
 
@@ -369,10 +365,14 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
         self.tabWidget_main.setTabVisible(SetupTabType.LIST, False)
         self.tabWidget_main.setCurrentIndex(SetupTabType.SETUP)
 
-    def actions_to_finalize(self):
+    def actions_to_finalize(self, close_window: bool = False):
+        self.load_info()
         app().main_window.update_info_text()
         app().project.update_model_properties_file()
         app().main_window.update_symbols()
+
+        if close_window:
+            self.close()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:

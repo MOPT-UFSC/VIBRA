@@ -1,11 +1,11 @@
+import logging
+import platform
+from pathlib import Path
+
+import numpy as np
 from PySide6.QtWidgets import QFileDialog
 
 from vibra import app
-
-import numpy as np
-import platform
-
-from pathlib import Path
 
 
 class ExportModelResults(QFileDialog):
@@ -39,12 +39,13 @@ class ExportModelResults(QFileDialog):
                 header = [x_label, f"{y_label} - real [{unit}]", f"{y_label} - imaginary [{unit}]", f"{y_label} - absolute [{unit}]"]
                 header = f"{x_label}, {y_label} - real [{unit}], {y_label} - imaginary [{unit}], Absolute [{unit}]"
                 data_to_export = np.array([x_data, np.real(y_data), np.imag(y_data), np.abs(y_data)]).T
-   
+
             else:
                 data_type = data.get("data_type", "")
                 header = f"{x_label}, {data_type.capitalize()} [{unit}]"
                 data_to_export = np.array([x_data, y_data]).T
 
+            logging.info("Exporting data... (85%)")
             np.savetxt(export_path, data_to_export, delimiter=delimiter, header=header)
 
     def export_data_in_spreadsheet_format(self, export_path: str, **kwargs):
@@ -52,6 +53,8 @@ class ExportModelResults(QFileDialog):
         from openpyxl import load_workbook
         from pandas import ExcelWriter
         from polars import DataFrame, read_excel
+
+        logging.info("Exporting data... (75%)")
 
         existing_data_frames = dict()
         existing_path = kwargs.get("existing_path", "")
@@ -63,12 +66,9 @@ class ExportModelResults(QFileDialog):
                 sheetnames = wb.sheetnames
 
                 for sheet_name in sheetnames:
-                    existing_data_frames[sheet_name] = read_excel(
-                                                                    existing_path, 
-                                                                    sheet_name = sheet_name, 
-                                                                    columns = [0,1,2,3],
-                                                                    engine="openpyxl"
-                                                                    )
+                    existing_data_frames[sheet_name] = read_excel(existing_path, sheet_name=sheet_name, columns=[0, 1, 2, 3], engine="openpyxl")
+
+        logging.info("Exporting data... (85%)")
 
         with ExcelWriter(export_path) as writer:
 
@@ -114,8 +114,10 @@ class ExportModelResults(QFileDialog):
 
         existing_path = kwargs.get("existing_path", "")
 
-        if not existing_path:
+        if existing_path:
+            file_path = existing_path
 
+        else:
             caption = "Export the model results"
 
             path = app().config.get_last_folder_for("exported_data_folder")
@@ -132,28 +134,20 @@ class ExportModelResults(QFileDialog):
             kwargs = dict()
             if platform.system() == "Linux":
                 kwargs["options"] = QFileDialog.Option.DontUseNativeDialog
-            file_path, selected_filter = self.getSaveFileName(
-                app().main_window,
-                caption,
-                str(directory_path),
-                filter=_filter,
-                **kwargs,
-            )
 
+            file_path, selected_filter = self.getSaveFileName(app().main_window, caption, str(directory_path), filter=_filter,**kwargs)
             if not file_path:
                 return
-            
+
             file_path = Path(file_path)
 
             if not file_path.suffix:
                 file_extension = f".{self.get_file_extension(selected_filter)}"
                 file_path = file_path.with_suffix(file_extension)
-            
-        else:
-            file_path = existing_path
 
         app().config.write_last_folder_path_in_file("exported_data_folder", file_path)
 
+        logging.info("Exporting data... (50%)")
         if file_path.suffix.lower() in [".xls", ".xlsx"]:
             self.export_data_in_spreadsheet_format(str(file_path), existing_path=existing_path)
         else:
