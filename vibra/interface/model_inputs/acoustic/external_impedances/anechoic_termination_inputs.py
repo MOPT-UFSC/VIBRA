@@ -180,11 +180,11 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
         
         return map_id_to_model_index
 
-    def apply_callback(self, close: bool = False):
+    def apply_callback(self, close_window: bool = False):
 
         if self.tabWidget_main.currentIndex() == SetupTabType.LIST:
             return
-
+        
         input_ids = self.lineEdit_selection_id.text()
         surface_ids, error_data = self.mesh.check_selected_ids(input_ids, selection="surfaces")
 
@@ -226,16 +226,13 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
                     return
 
             data = {
-                    "anechoic_termination" : True,
-                    "volume_id" : volume_id,
-                    }
+                "anechoic_termination": True,
+                "volume_id": volume_id,
+            }
 
             self.properties._set_property("specific_impedance", data, surface=surface_id)
 
-        self.actions_to_finalize()
-
-        if close:
-            self.close()
+        self.actions_to_finalize(close_window)
 
     def process_table_file_removal(self, table_names: list):
         for table_name in table_names:
@@ -307,12 +304,15 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
             self.properties._reset_property("specific_impedance")
             self.actions_to_finalize()
 
-    def actions_to_finalize(self):
+    def actions_to_finalize(self, close_window: bool = False):
         self.load_model_info()
         self.check_model_frequency_controls()
         app().main_window.update_info_text()
         app().project.update_model_properties_file()
         app().main_window.update_symbols()
+
+        if close_window:
+            self.close()
 
     def check_model_frequency_controls(self):
 

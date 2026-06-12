@@ -220,16 +220,22 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
 
         self.update_tabs_visibility()
 
-    def apply_callback(self, close: bool = False):
+    def apply_callback(self, close_window: bool = False):
+
+        if self.tabWidget_main.currentIndex() == StandardTabType.LIST:
+            return
+
         tab_index = self.tabWidget_main.currentIndex()
+
         if tab_index == StandardTabType.CONSTANT_DATA:
-            self.constant_data_assignment()
+            if self.constant_data_assignment():
+                return
 
         elif tab_index == StandardTabType.TABULAR_DATA:
-            self.tabular_data_assignment()
-
-        if close:
-            self.close()
+            if self.tabular_data_assignment():
+                return
+            
+        self.actions_to_finalize(close_window)
 
     def check_inputs(self, lineEdit: QLineEdit, label: str, zero_included: bool = True, only_positive: bool = True):
 
@@ -272,28 +278,24 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
     def constant_data_assignment(self):
 
         input_ids = self.lineEdit_selection_id.text()
-        surface_ids, error_data = self.mesh.check_selected_ids(
-                                                               input_ids, 
-                                                               selection = "surfaces",
-                                                               single_id = False,
-                                                               )
+        surface_ids, error_data = self.mesh.check_selected_ids(input_ids, selection="surfaces", single_id=False)
 
         if error_data is not None:
             self.hide()
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
-            return
+            return True
 
         self.remove_conflicting_excitations(surface_ids)
 
-        absorption_coefficient = self.check_inputs(
-                                                   self.lineEdit_real_value, 
-                                                   "Absorption coefficient", 
-                                                   zero_included = False,
-                                                   )
+        absorption_coefficient = self.check_inputs(self.lineEdit_real_value, "Absorption coefficient", zero_included=False,)
 
         if absorption_coefficient is None:
-            return
+            title = "Additional inputs required"
+            message = "You must enter an absorption surface value to proceed with the assignment."
+            PrintMessageInput([error_title, title, message])
+            self.lineEdit_real_value.setFocus()
+            return True
 
         real_values = [absorption_coefficient]
         imag_values = [None]
@@ -304,9 +306,7 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
             }
 
         for surface_id in surface_ids:
-            self.properties._set_property("absorption_surface", data, surface=surface_id)
-
-        self.actions_to_finalize()            
+            self.properties._set_property("absorption_surface", data, surface=surface_id)      
 
     def load_table(self, lineEdit : QLineEdit, direct_load=False):
 
@@ -383,67 +383,57 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
     def tabular_data_assignment(self):
 
         input_ids = self.lineEdit_selection_id.text()
-        surface_ids, error_data = self.mesh.check_selected_ids(
-                                                               input_ids, 
-                                                               selection = "surfaces",
-                                                               single_id = False,
-                                                               )
+        surface_ids, error_data = self.mesh.check_selected_ids(input_ids, selection="surfaces", single_id=False)
 
         if error_data is not None:
             self.hide()
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
-            return
+            return True
 
         self.remove_conflicting_excitations(surface_ids)
 
-        if self.lineEdit_table_path.text() != "":
-
-            if self.imported_values is None:
-                self.imported_values = self.load_table( 
-                    self.lineEdit_table_path, 
-                    direct_load = True,
-                    )
-                
-            for surface_id in surface_ids:
-
-                if isinstance(self.imported_values, np.ndarray):
-                    if self.imported_values.shape[1] >= 3:
-
-                        table_name = f"specific_impedance_at_surface_{surface_id}"
-                        if self.save_table_values(table_name, self.imported_values):
-                            self.lineEdit_table_path.setFocus()
-                            self.imported_values = None
-                            return
-
-                else:
-                    return
-
-                if self.imported_values is None:
-                    return
-
-                # complex values computed from tabular data
-                complex_values = get_spectral_data_from_array(self.imported_values)
-
-                # table path from imported tabular data
-                table_path = self.lineEdit_table_path.text()
-
-                data = {
-                    "table_names": [table_name],
-                    "table_paths" : [table_path],
-                    "values" : [complex_values],
-                    }
-
-                self.properties._set_property("absorption_surface", data, surface=surface_id)
-
-            self.actions_to_finalize()
-
-        else:
+        if self.lineEdit_table_path.text() == "":
             title = "Additional inputs required"
             message = "You must inform at least one absorption surface\n"
             message += "table path before confirming the input!"
             PrintMessageInput([error_title, title, message])
             self.lineEdit_table_path.setFocus()
+            return True
+
+        if self.imported_values is None:
+            self.imported_values = self.load_table(self.lineEdit_table_path, direct_load=True)
+
+        for surface_id in surface_ids:
+
+            if isinstance(self.imported_values, np.ndarray):
+                if self.imported_values.shape[1] >= 3:
+
+                    table_name = f"specific_impedance_at_surface_{surface_id}"
+                    if self.save_table_values(table_name, self.imported_values):
+                        self.lineEdit_table_path.setFocus()
+                        self.imported_values = None
+                        return True
+
+            else:
+                return True
+
+            if self.imported_values is None:
+                return True
+
+            # complex values computed from tabular data
+            complex_values = get_spectral_data_from_array(self.imported_values)
+
+            # table path from imported tabular data
+            table_path = self.lineEdit_table_path.text()
+
+            data = {
+                "table_names": [table_name],
+                "table_paths" : [table_path],
+                "values" : [complex_values],
+            }
+
+            self.properties._set_property("absorption_surface", data, surface=surface_id)
 
     def process_table_file_removal(self, table_names: list):
         for table_name in table_names:
@@ -518,12 +508,15 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
 
         self.actions_to_finalize()
 
-    def actions_to_finalize(self):
+    def actions_to_finalize(self, close_window: bool = False):
         self.load_model_info()
         self.check_model_frequency_controls()
         app().main_window.update_info_text()
         app().project.update_model_properties_file()
         app().main_window.update_symbols()
+
+        if close_window:
+            self.close()
 
     def check_model_frequency_controls(self):
 
@@ -574,7 +567,7 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
             self.treeWidget_absorption_surface.setSelectionMode(QAbstractItemView.MultiSelection)
         elif event.key() == Qt.Key_Shift:
             self.treeWidget_absorption_surface.setSelectionMode(QAbstractItemView.ContiguousSelection)
-    
+
     def keyReleaseEvent(self, event):
         if event.key() == Qt.Key_Control:
             self.treeWidget_absorption_surface.setSelectionMode(QAbstractItemView.SingleSelection)
