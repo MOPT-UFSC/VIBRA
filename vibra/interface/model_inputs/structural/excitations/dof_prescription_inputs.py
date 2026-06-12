@@ -67,7 +67,6 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         self.setWindowTitle("Vibra")
 
     def _initialize(self):
-        self.close_window = False
         self.keep_window_open = True
         self.element_types = ["2d_element", "3d_element"]
         self.assignment_types = {
@@ -477,22 +476,22 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
             self.hide()
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
-            return
+            return True
 
         etype_index = self.comboBox_element_type.currentIndex()
         element_type = self.element_types[etype_index]
 
         stop, ux = self.check_complex_entries(self.lineEdit_real_ux, self.lineEdit_imag_ux, "ux")
         if stop:
-            return
+            return True
 
         stop, uy = self.check_complex_entries(self.lineEdit_real_uy, self.lineEdit_imag_uy, "uy")
         if stop:
-            return
+            return True
 
         stop, uz = self.check_complex_entries(self.lineEdit_real_uz, self.lineEdit_imag_uz, "uz")
         if stop:
-            return
+            return True
 
         prescribed_dof = [ux, uy, uz]
 
@@ -500,15 +499,15 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
             stop, rx = self.check_complex_entries(self.lineEdit_real_rx, self.lineEdit_imag_rx, "rx")
             if stop:
-                return
+                return True
 
             stop, ry = self.check_complex_entries(self.lineEdit_real_ry, self.lineEdit_imag_ry, "ry")
             if stop:
-                return
+                return True
 
             stop, rz = self.check_complex_entries(self.lineEdit_real_rz, self.lineEdit_imag_rz, "rz")
             if stop:
-                return
+                return True
 
             prescribed_dof.extend([rx, ry, rz])
                 
@@ -520,7 +519,6 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         self.remove_conflicting_excitations(selected_ids, selection, all_dof_free=all_dof_free)
 
         if all_dof_free:
-            self.actions_to_finalize()
             return
 
         real_values = [value if value is None else np.real(value) for value in prescribed_dof]
@@ -529,11 +527,11 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         for selected_id in selected_ids:
 
             data = {
-                    "element_type" : element_type,
-                    "values" : prescribed_dof,
-                    "real_values" : real_values,
-                    "imag_values" : imag_values
-                    }
+                "element_type" : element_type,
+                "values" : prescribed_dof,
+                "real_values" : real_values,
+                "imag_values" : imag_values,
+            }
 
             if attribution_type == AssignmetType.SURFACES:
                 self.properties._set_property("prescribed_dof", data, surface=selected_id)
@@ -546,8 +544,6 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
             elif attribution_type == AssignmetType.NODES:
                 self.properties._set_property("prescribed_dof", data, node=selected_id)
-
-        self.actions_to_finalize()
 
     def load_table(self, lineEdit : QLineEdit, dof_label : str, direct_load = False):
 
@@ -677,7 +673,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
             self.hide()
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
-            return
+            return True
 
         element_type_index = self.comboBox_element_type.currentIndex()
         if element_type_index == 0:
@@ -742,17 +738,17 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                 message = "It is necessary to enter at least one prescribed dof "
                 message += "before confirming the property assignment."
                 PrintMessageInput([error_title, title, message]) 
-                return
+                return True
     
             self.remove_duplicated_attributions(selected_ids, selection)
             self.remove_conflicting_excitations(selected_ids, selection)
 
             data = {
-                    "element_type" : element_type,
-                    "table_names" : table_names,
-                    "table_paths" : table_paths,
-                    "values" : prescribed_dof
-                    }
+                "element_type" : element_type,
+                "table_names" : table_names,
+                "table_paths" : table_paths,
+                "values" : prescribed_dof,
+            }
 
             if attribution_type == AssignmetType.SURFACES:
                 self.properties._set_property("prescribed_dof", data, surface=selected_id)
@@ -767,7 +763,6 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                 self.properties._set_property("prescribed_dof", data, node=selected_id)
 
         self.reset_table_variables()
-        self.actions_to_finalize()
 
     def remove_duplicated_attributions(self, selected_ids: list, selection: str):
 
@@ -863,14 +858,20 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
     def apply_callback(self, close_window: bool=False):
 
-        self.close_window = close_window
+        if self.tabWidget_main.currentIndex() == StandardTabType.LIST:
+            return
+
         tab_index = self.tabWidget_main.currentIndex()
 
         if tab_index == StandardTabType.CONSTANT_DATA:
-            self.constant_values_attribution()
+            if self.constant_values_attribution():
+                return
 
         elif tab_index == StandardTabType.TABULAR_DATA:
-            self.table_values_attribution()
+            if self.table_values_attribution():
+                return
+
+        self.actions_to_finalize(close_window)
 
     def text_label(self, mask):
 
@@ -1120,14 +1121,14 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
             app().main_window.selection.set_geometry_selection()
             app().main_window.selection.set_mesh_selection()
 
-    def actions_to_finalize(self):
+    def actions_to_finalize(self, close_window: bool = False):
         self.load_model_info()
         self.reset_input_fields(reset_all=True)
         app().main_window.update_info_text()
         app().project.update_model_properties_file()
         app().main_window.update_symbols()
 
-        if self.close_window:
+        if close_window:
             self.close()
 
     def check_model_frequency_controls(self):

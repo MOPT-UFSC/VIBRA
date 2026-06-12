@@ -44,7 +44,6 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         self.setWindowTitle("Vibra")
 
     def _initialize(self):
-        self.close_window = False
         self.keep_window_open = True
         self.element_types = ["2d_element", "3d_element"]
         self.reset_table_variables()
@@ -180,21 +179,17 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
             self.hide()
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
-            return
+            return True
 
         self.remove_conflicting_excitations(surface_ids, "surfaces")
 
         index = self.comboBox_element_type.currentIndex()
         element_type = self.element_types[index]
 
-        stop, value = self.check_complex_entries(
-                                                 self.lineEdit_real_value.text(), 
-                                                 self.lineEdit_imag_value.text(), 
-                                                 "Pressure load"
-                                                 )
+        stop, value = self.check_complex_entries(self.lineEdit_real_value.text(), self.lineEdit_imag_value.text(), "Pressure load")
 
         if stop:
-            return
+            return True
 
         pressure_load = [value]
 
@@ -215,15 +210,13 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         for surface_id in surface_ids:
 
             data = {
-                    "element_type" : element_type,
-                    "values" : pressure_load,
-                    "real_values" : real_values,
-                    "imag_values" : imag_values,
-                    }
+                "element_type": element_type,
+                "values": pressure_load,
+                "real_values": real_values,
+                "imag_values": imag_values,
+            }
 
             self.properties._set_property("normal_pressure_load", data, surface=surface_id)
-
-        self.actions_to_finalize()
 
     def load_table(self, lineEdit : QLineEdit, load_label : str, direct_load = False):
 
@@ -321,7 +314,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
             self.hide()
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
-            return
+            return True
 
         self.remove_conflicting_excitations(surface_ids, "surfaces")
 
@@ -336,7 +329,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
             if self.pressure_table_values is not None:
                 self.pressure_table_name, self.pressure_array = self.save_table_files(surface_id, self.pressure_table_values)
                 if self.pressure_array is None:
-                    return
+                    return True
 
             table_names = [self.pressure_table_name]
             table_paths = [self.pressure_table_path]
@@ -351,30 +344,35 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
                 message = "It is necessary to enter at least one normal pressure load "
                 message += "before confirming the property assignment."
                 PrintMessageInput([error_title, title, message]) 
-                return
+                return True
 
             data = {
-                    "element_type" : element_type,
-                    "table_names" : table_names,
-                    "table_paths" : table_paths,
-                    "values" : pressure_load,
-                    }
+                "element_type": element_type,
+                "table_names": table_names,
+                "table_paths": table_paths,
+                "values": pressure_load,
+            }
 
             self.properties._set_property("normal_pressure_load", data, surface=surface_id)
 
         self.reset_table_variables()
-        self.actions_to_finalize()
 
     def apply_callback(self, close_window: bool=False):
 
-        self.close_window = close_window
+        if self.tabWidget_main.currentIndex() == StandardTabType.LIST:
+            return
+
         tab_index = self.tabWidget_main.currentIndex()
 
         if tab_index == StandardTabType.CONSTANT_DATA:
-            self.constant_values_attribution()
+            if self.constant_values_attribution():
+                return
 
         elif tab_index == StandardTabType.TABULAR_DATA:
-            self.table_values_attribution()
+            if self.table_values_attribution():
+                return
+
+        self.actions_to_finalize(close_window)
 
     def load_model_info(self):
 
@@ -537,14 +535,14 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
             app().main_window.selection.set_geometry_selection()
             app().main_window.selection.set_mesh_selection()
 
-    def actions_to_finalize(self):
+    def actions_to_finalize(self, close_window: bool = False):
         self.load_model_info()
         self.reset_input_fields()
         app().main_window.update_info_text()
         app().project.update_model_properties_file()
         app().main_window.update_symbols()
 
-        if self.close_window:
+        if close_window:
             self.close()
 
     def check_model_frequency_controls(self):
