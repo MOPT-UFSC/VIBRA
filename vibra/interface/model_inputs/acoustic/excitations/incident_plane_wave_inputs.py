@@ -201,11 +201,11 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
         self.remove_conflicting_excitations(surface_ids)
 
         if tab_index == StandardTabType.CONSTANT_DATA:
-            if self.constant_data_assignment():
+            if self.constant_data_assignment(surface_ids):
                 return
 
         elif tab_index == StandardTabType.TABULAR_DATA:
-            if self.tabular_data_assignment():
+            if self.tabular_data_assignment(surface_ids):
                 return
 
         self.actions_to_finalize(close_window)
@@ -329,24 +329,9 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
             wave_vector = [e_x, e_y, e_z]
 
         return wave_vector
-
-
-    def get_incident_wave_inputs(self):
-        
-        P_inc = self.check_complex_entries(self.lineEdit_incident_pressure_real, self.lineEdit_incident_pressure_imag, "P_inc")
-        if P_inc is None:
-            return dict()
-
-        output = {
-            "wave_direction": self.wave_direction,
-            "values": [P_inc],
-        }
-
-        return output
     
     def check_for_inside_surfaces(self, surface_ids: list[int]):
-        """
-        """
+
         for surface_id in surface_ids:
             volumes_from_surface = self.mesh.volumes_from_surface.get(surface_id)
             if len(volumes_from_surface) != 1:
@@ -487,9 +472,10 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
     def tabular_data_assignment(self, surface_ids: list[int]):
 
         if self.lineEdit_table_path.text() == "":
+            self.hide()
             title = "Additional inputs required"
-            message = "You must inform at least one absorption surface\n"
-            message += "table path before confirming the input!"
+            message = "You must inform a valid absorption surface "
+            message += "table path to proceed with the assignment."
             PrintMessageInput([error_title, title, message])
             self.lineEdit_table_path.setFocus()
             return True

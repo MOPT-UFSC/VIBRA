@@ -262,9 +262,10 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         )
 
         if surface_velocity is None:
+            self.hide()
             title = "Additional inputs required"
-            message = "You must inform at least one surface velocity\n"
-            message += "before confirming the input!"
+            message = "You must inform at least one surface velocity "
+            message += "to proceed with the assignment."
             PrintMessageInput([error_title, title, message])
             self.lineEdit_real_value.setFocus()
             return True
@@ -360,9 +361,10 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         self.remove_conflicting_excitations(surface_ids)
 
         if self.lineEdit_table_path.text() == "":
+            self.hide()
             title = "Additional inputs required"
-            message = "You must inform at least one surface velocity\n"
-            message += "table path before confirming the input!"
+            message = "You must inform at least one surface velocity "
+            message += "table path to proceed with the assignment."
             PrintMessageInput([error_title, title, message])
             self.lineEdit_table_path.setFocus()
             return True

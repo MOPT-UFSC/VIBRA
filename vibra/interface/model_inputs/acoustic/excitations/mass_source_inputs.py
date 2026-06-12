@@ -593,9 +593,10 @@ class MassSourceInputs(MassSourceInputs_UI):
         mass_source = self.check_complex_entries(self.lineEdit_real_value, self.lineEdit_imag_value)
 
         if mass_source is None:
+            self.hide()
             title = "Additional inputs required"
-            message = "You must inform at least one non-zero value to mass source \n"
-            message += "input fields before confirming the input!"
+            message = "You must inform at least one non-zero value to mass source "
+            message += "input fields to proceed with the assignment."
             PrintMessageInput([error_title, title, message])
             self.lineEdit_real_value.setFocus()
             return True
@@ -698,9 +699,10 @@ class MassSourceInputs(MassSourceInputs_UI):
     def tabular_data_assignment(self, selection_type: str, selection_ids: list[int]):
 
         if self.lineEdit_table_path.text() == "":
+            self.hide()
             title = "Additional inputs required"
-            message = "You must inform a valid table path to the mass source \n"
-            message += "data before confirming the input!"
+            message = "You must inform a valid table path to the mass source "
+            message += "data to proceed with the assignment."
             PrintMessageInput([error_title, title, message])
             self.lineEdit_table_path.setFocus()
             return True

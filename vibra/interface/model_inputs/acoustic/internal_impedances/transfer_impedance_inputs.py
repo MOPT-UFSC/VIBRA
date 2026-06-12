@@ -341,7 +341,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
             self.hide()
             title = "Additional inputs required"
             message = "You must inform a valid transfer impedance "
-            message += "table path before confirming the input!"
+            message += "table path to proceed with the assignment."
             PrintMessageInput([error_title, title, message])
             self.lineEdit_table_path.setFocus()
             return True

@@ -241,13 +241,14 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         acoustic_pressure = self.check_complex_entries(self.lineEdit_real_value, self.lineEdit_imag_value)
 
         if acoustic_pressure is None:
+            self.hide()
             title = "Additional inputs required"
-            message = "You must inform at least one acoustic pressure\n"
-            message += "before confirming the input!"
+            message = "You must inform at least one acoustic pressure "
+            message += "to proceed with the assignment"
             PrintMessageInput([error_title, title, message])
             self.lineEdit_real_value.setFocus()
             return True
-    
+
         real_values = [np.real(acoustic_pressure)]
         imag_values = [np.imag(acoustic_pressure)]
 
@@ -332,9 +333,10 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
     def tabular_data_assignment(self, surface_ids: list[int]):
 
         if self.lineEdit_table_path.text() == "":
+            self.hide()
             title = "Additional inputs required"
-            message = "You must inform at least one acoustic pressure\n"
-            message += "table path before confirming the input!"
+            message = "You must inform at least one acoustic pressure "
+            message += "table path to proceed with the assignment."
             PrintMessageInput([error_title, title, message])
             self.lineEdit_table_path.setFocus()
             return True

@@ -221,18 +221,27 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
         self.update_tabs_visibility()
 
     def apply_callback(self, close_window: bool = False):
-
-        if self.tabWidget_main.currentIndex() == StandardTabType.LIST:
+        tab_index = self.tabWidget_main.currentIndex()
+        if tab_index == StandardTabType.LIST:
             return
 
-        tab_index = self.tabWidget_main.currentIndex()
+        input_ids = self.lineEdit_selection_id.text()
+        surface_ids, error_data = self.mesh.check_selected_ids(input_ids, selection="surfaces", single_id=False)
+
+        if error_data is not None:
+            self.hide()
+            self.lineEdit_selection_id.setFocus()
+            PrintMessageInput(error_data)
+            return True
+
+        self.remove_conflicting_excitations(surface_ids)
 
         if tab_index == StandardTabType.CONSTANT_DATA:
-            if self.constant_data_assignment():
+            if self.constant_data_assignment(surface_ids):
                 return
 
         elif tab_index == StandardTabType.TABULAR_DATA:
-            if self.tabular_data_assignment():
+            if self.tabular_data_assignment(surface_ids):
                 return
             
         self.actions_to_finalize(close_window)
@@ -275,22 +284,12 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
         else:
             return value
 
-    def constant_data_assignment(self):
-
-        input_ids = self.lineEdit_selection_id.text()
-        surface_ids, error_data = self.mesh.check_selected_ids(input_ids, selection="surfaces", single_id=False)
-
-        if error_data is not None:
-            self.hide()
-            self.lineEdit_selection_id.setFocus()
-            PrintMessageInput(error_data)
-            return True
-
-        self.remove_conflicting_excitations(surface_ids)
+    def constant_data_assignment(self, surface_ids: list[int]):
 
         absorption_coefficient = self.check_inputs(self.lineEdit_real_value, "Absorption coefficient", zero_included=False,)
 
         if absorption_coefficient is None:
+            self.hide()
             title = "Additional inputs required"
             message = "You must enter an absorption surface value to proceed with the assignment."
             PrintMessageInput([error_title, title, message])
@@ -380,23 +379,13 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
     def load_specific_impedance_table(self):
         self.imported_values = self.load_table(self.lineEdit_table_path)
 
-    def tabular_data_assignment(self):
-
-        input_ids = self.lineEdit_selection_id.text()
-        surface_ids, error_data = self.mesh.check_selected_ids(input_ids, selection="surfaces", single_id=False)
-
-        if error_data is not None:
-            self.hide()
-            self.lineEdit_selection_id.setFocus()
-            PrintMessageInput(error_data)
-            return True
-
-        self.remove_conflicting_excitations(surface_ids)
+    def tabular_data_assignment(self, surface_ids: list[int]):
 
         if self.lineEdit_table_path.text() == "":
+            self.hide()
             title = "Additional inputs required"
-            message = "You must inform at least one absorption surface\n"
-            message += "table path before confirming the input!"
+            message = "You must inform at least one absorption surface "
+            message += "table path to proceed with the assignment."
             PrintMessageInput([error_title, title, message])
             self.lineEdit_table_path.setFocus()
             return True

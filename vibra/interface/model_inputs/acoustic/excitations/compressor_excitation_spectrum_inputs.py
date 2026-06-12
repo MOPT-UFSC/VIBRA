@@ -235,8 +235,8 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
         if self.lineEdit_table_path.text() == "":
             self.hide()
             title = "Additional inputs required"
-            message = "You must inform at least one mass flow rate\n"
-            message += "table path before confirming the input!"
+            message = "You must select the external compressor excitation "
+            message += "table path to proceed with the assignment"
             PrintMessageInput([error_title, title, message])
             self.lineEdit_table_path.setFocus()
             return

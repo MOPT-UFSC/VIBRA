@@ -873,7 +873,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
                 self.hide()
                 title = "Invalid thermodynamic states"
                 message = "The initial and final thermodynamic states are identical. "
-                message += "You must to specify different states to obtain valid"
+                message += "You must to specify different states to obtain valid "
                 message += "property distribuitions."
                 PrintMessageInput([error_title, title, message])
                 app().main_window.set_input_widget(self)
