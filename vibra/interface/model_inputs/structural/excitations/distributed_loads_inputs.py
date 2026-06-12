@@ -46,6 +46,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         self.setWindowTitle("Vibra")
 
     def _initialize(self):
+        self.close_window = False
         self.keep_window_open = True
         self.element_types = ["2d_element", "3d_element"]
         self.reset_table_variables()
@@ -273,11 +274,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
             selection = "lines"
             unit = "N/m"
 
-        selected_ids, error_data = self.mesh.check_selected_ids(
-                                                                input_ids, 
-                                                                selection = selection, 
-                                                                single_id = False
-                                                                )
+        selected_ids, error_data = self.mesh.check_selected_ids(input_ids, selection=selection, single_id=False)
 
         if error_data is not None:
             self.hide()
@@ -322,12 +319,12 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         for selected_id in selected_ids:
 
             data = {
-                    "element_type" : element_type,
-                    "values" : distributed_loads,
-                    "real_values" : real_values,
-                    "imag_values" : imag_values,
-                    "unit" : unit,
-                    }
+                "element_type": element_type,
+                "values": distributed_loads,
+                "real_values": real_values,
+                "imag_values": imag_values,
+                "unit": unit,
+            }
 
             if attribution_type == 0:
                 self.properties._set_property("distributed_loads", data, surface=selected_id)
@@ -446,11 +443,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
             selection = "lines"
             unit = "N/m"
 
-        selected_ids, error_data = self.mesh.check_selected_ids(
-                                                                input_ids, 
-                                                                selection = selection, 
-                                                                single_id = False
-                                                                )
+        selected_ids, error_data = self.mesh.check_selected_ids(input_ids, selection=selection, single_id=False)
 
         if error_data is not None:
             self.hide()
@@ -543,16 +536,16 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
 
             self.process_table_file_removal(table_names)
 
-    def apply_callback(self, close: bool=False):
+    def apply_callback(self, close_window: bool=False):
+
+        self.close_window = close_window
         tab_index = self.tabWidget_main.currentIndex()
+
         if tab_index == StandardTabType.CONSTANT_DATA:
             self.constant_values_attribution()
 
         elif tab_index == StandardTabType.TABULAR_DATA:
             self.table_values_attribution()
-
-        if close:
-            self.close()
 
     def text_label(self, mask):
 
@@ -776,6 +769,9 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         app().main_window.update_info_text()
         app().project.update_model_properties_file()
         app().main_window.update_symbols()
+
+        if self.close_window:
+            self.close()
 
     def check_model_frequency_controls(self):
 

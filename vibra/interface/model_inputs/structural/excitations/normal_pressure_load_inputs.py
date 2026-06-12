@@ -44,6 +44,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         self.setWindowTitle("Vibra")
 
     def _initialize(self):
+        self.close_window = False
         self.keep_window_open = True
         self.element_types = ["2d_element", "3d_element"]
         self.reset_table_variables()
@@ -173,10 +174,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
     def constant_values_attribution(self):
 
         input_ids = self.lineEdit_selection_id.text()
-        surface_ids, error_data = self.mesh.check_selected_ids(
-                                                               input_ids, 
-                                                               selection = "surfaces"
-                                                               )
+        surface_ids, error_data = self.mesh.check_selected_ids(input_ids, selection="surfaces")
 
         if error_data is not None:
             self.hide()
@@ -317,10 +315,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
     def table_values_attribution(self):
 
         input_ids = self.lineEdit_selection_id.text()
-        surface_ids, error_data = self.mesh.check_selected_ids(
-                                                               input_ids, 
-                                                               selection = "surfaces"
-                                                               )
+        surface_ids, error_data = self.mesh.check_selected_ids(input_ids, selection="surfaces")
 
         if error_data is not None:
             self.hide()
@@ -370,16 +365,16 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         self.reset_table_variables()
         self.actions_to_finalize()
 
-    def apply_callback(self, close: bool=False):
+    def apply_callback(self, close_window: bool=False):
+
+        self.close_window = close_window
         tab_index = self.tabWidget_main.currentIndex()
+
         if tab_index == StandardTabType.CONSTANT_DATA:
             self.constant_values_attribution()
 
         elif tab_index == StandardTabType.TABULAR_DATA:
             self.table_values_attribution()
-
-        if close:
-            self.close()
 
     def load_model_info(self):
 
@@ -548,6 +543,9 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         app().main_window.update_info_text()
         app().project.update_model_properties_file()
         app().main_window.update_symbols()
+
+        if self.close_window:
+            self.close()
 
     def check_model_frequency_controls(self):
 

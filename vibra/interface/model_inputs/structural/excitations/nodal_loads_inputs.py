@@ -59,6 +59,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         self.setWindowTitle("Vibra")
 
     def _initialize(self):
+        self.close_window = False
         self.keep_window_open = True
         self.element_types = ["2d_element", "3d_element"]
         self.assignment_types = {
@@ -335,11 +336,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         attribution_type = self.comboBox_attribution_type.currentIndex()
         selection = self.assignment_types.get(attribution_type)
 
-        selected_ids, error_data = self.mesh.check_selected_ids(
-                                                                input_ids, 
-                                                                selection = selection, 
-                                                                single_id = False
-                                                                )
+        selected_ids, error_data = self.mesh.check_selected_ids(input_ids, selection=selection, single_id=False)
 
         if error_data is not None:
             self.hide()
@@ -400,15 +397,14 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         key_avg = self.checkBox_averaged_constant_values.isChecked()
 
         for selected_id in selected_ids:
-
             data = {
-                    "element_type" : element_type,
-                    "values" : nodal_loads,
-                    "real_values" : real_values,
-                    "imag_values" : imag_values,
-                    "nodal_attribution": True,
-                    "averaged": key_avg,
-                    }
+                "element_type": element_type,
+                "values": nodal_loads,
+                "real_values": real_values,
+                "imag_values": imag_values,
+                "nodal_attribution": True,
+                "averaged": key_avg,
+            }
 
             if attribution_type == AssignmetType.SURFACES:
                 self.properties._set_property("nodal_loads", data, surface=selected_id)
@@ -555,11 +551,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         attribution_type = self.comboBox_attribution_type.currentIndex()
         selection = self.assignment_types.get(attribution_type)
 
-        selected_ids, error_data = self.mesh.check_selected_ids(
-                                                                input_ids, 
-                                                                selection = selection, 
-                                                                single_id = False
-                                                                )
+        selected_ids, error_data = self.mesh.check_selected_ids(input_ids, selection=selection, single_id=False)
 
         if error_data is not None:
             self.hide()
@@ -647,13 +639,13 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             self.remove_conflicting_excitations(selected_ids, selection)
 
             data = {
-                    "element_type" : element_type,
-                    "table_names" : table_names,
-                    "table_paths" : table_paths,
-                    "values" : nodal_loads,
-                    "nodal_attribution": True,
-                    "averaged": key_avg,
-                    }
+                "element_type": element_type,
+                "table_names": table_names,
+                "table_paths": table_paths,
+                "values": nodal_loads,
+                "nodal_attribution": True,
+                "averaged": key_avg,
+            }
 
             if attribution_type == AssignmetType.SURFACES:
                 self.properties._set_property("nodal_loads", data, surface=selected_id)
@@ -762,16 +754,16 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
             self.process_table_file_removal(table_names)
 
-    def apply_callback(self, close: bool=False):
+    def apply_callback(self, close_window: bool=False):
+
+        self.close_window = close_window
         tab_index = self.tabWidget_main.currentIndex()
+
         if tab_index == StandardTabType.CONSTANT_DATA:
             self.constant_values_attribution()
 
         elif tab_index == StandardTabType.TABULAR_DATA:
             self.table_values_attribution()
-
-        if close:
-            self.close()
 
     def text_label(self, mask):
 
@@ -1018,6 +1010,9 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         app().main_window.update_info_text()
         app().project.update_model_properties_file()
         app().main_window.update_symbols()
+
+        if self.close_window:
+            self.close()
 
     def check_model_frequency_controls(self):
 

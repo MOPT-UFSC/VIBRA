@@ -46,6 +46,7 @@ class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
         self.setWindowTitle("Vibra")
 
     def _initialize(self):
+        self.close_window = False
         self.imported_values = None
         self.keep_window_open = True
 
@@ -122,7 +123,9 @@ class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
 
         self.lineEdit_selection_id.setEnabled(bool(index))
 
-    def apply_callback(self, close: bool = False):
+    def apply_callback(self, close_window: bool = False):
+
+        self.close_window = close_window
 
         if self.comboBox_attribution_type.currentIndex() == AssignmentType.ALL_SURFACES:
             surface_ids = self.model.mesh.geometry_information["surfaces"]
@@ -155,9 +158,6 @@ class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
         self.actions_to_finalize()
 
         # print(f"The surface thickness has been assigned to surface(s) {surface_ids}")
-
-        if close:
-            self.close()
 
     def check_input_parameters(self, lineEdit: QLineEdit, label: str, _float=True):
 
@@ -231,6 +231,9 @@ class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
         app().main_window.update_info_text()
         app().project.update_model_properties_file()
         app().main_window.update_symbols()
+
+        if self.close_window:
+            self.close()
 
     def update_tabs_visibility(self):
         for key, data in self.properties.surface_properties.items():
