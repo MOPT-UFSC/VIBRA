@@ -1129,6 +1129,17 @@ class MainWindow(MainWindow_UI):
 
             window.close()
 
+    def hide_dialogs(self):
+        for window in app().topLevelWidgets():
+            if isinstance(window, MainWindow):
+                continue
+
+            if isinstance(window, LoadingWindow):
+                continue
+
+            if window.isVisible():
+                window.hide()
+
     def minimize_dialogs(self):
         for window in app().topLevelWidgets():
             if isinstance(window, MainWindow):
