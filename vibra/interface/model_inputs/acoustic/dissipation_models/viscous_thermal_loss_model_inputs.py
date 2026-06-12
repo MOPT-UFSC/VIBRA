@@ -226,13 +226,13 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
     def tab_event_callback(self):
         current_tab = self.tabWidget_main.currentIndex()
-        list_or_edit_tab = [TabType.LIST, TabType.EDIT]
-
-        if self.last_tab in list_or_edit_tab or current_tab in list_or_edit_tab:
-            app().main_window.selection.clear_selection()
-            self.clear_line_edit_selection_id()
-
+        for index in (self.last_tab, current_tab):
+            if index in [TabType.LIST, TabType.EDIT]:
+                app().main_window.selection.clear_selection()
+                self.clear_line_edit_selection_id()
+    
         self.last_tab = current_tab
+        list_or_edit_tab = current_tab in [TabType.LIST, TabType.EDIT]
 
         self.pushButton_apply.setDisabled(list_or_edit_tab)
         self.pushButton_apply_and_close.setDisabled(list_or_edit_tab)
