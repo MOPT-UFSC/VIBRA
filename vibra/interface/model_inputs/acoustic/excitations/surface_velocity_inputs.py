@@ -256,10 +256,7 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
 
     def constant_data_assignment(self, surface_ids: list[int]):
 
-        surface_velocity = self.check_complex_entries(
-            self.lineEdit_real_value,
-            self.lineEdit_imag_value,
-        )
+        surface_velocity = self.check_complex_entries(self.lineEdit_real_value, self.lineEdit_imag_value)
 
         if surface_velocity is None:
             self.hide()

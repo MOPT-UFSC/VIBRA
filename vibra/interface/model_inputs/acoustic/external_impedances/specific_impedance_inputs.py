@@ -299,8 +299,6 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
     def constant_data_assignment(self, surface_ids: list[int]):
 
         specific_impedance = self.check_complex_entries(self.lineEdit_real_value, self.lineEdit_imag_value)
-        if specific_impedance is None:
-            return True
 
         if specific_impedance is None:
             self.hide()
