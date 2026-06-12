@@ -9,8 +9,8 @@ from vibra.interface import error_title, warning_title
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
-from vibra.interface.model_inputs.general.fluid.load_fluid_composition_inputs import LoadFluidCompositionInputs
-from vibra.interface.model_inputs.general.fluid.refprop_interface import RefpropInterface
+from vibra.interface.model_inputs.fluid.load_fluid_composition_inputs import LoadFluidCompositionInputs
+from vibra.interface.model_inputs.fluid.refprop_interface import RefpropInterface
 from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator, is_numeric
 from vibra.interface.numeric_checks.unit_utilities import (
     PressureUnits,
