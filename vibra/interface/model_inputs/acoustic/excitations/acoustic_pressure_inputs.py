@@ -243,8 +243,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         if acoustic_pressure is None:
             self.hide()
             title = "Additional inputs required"
-            message = "You must inform at least one acoustic pressure "
-            message += "to proceed with the assignment"
+            message = "You must enter a non-zero acoustic pressure value to proceed with the assignment."
             PrintMessageInput([error_title, title, message])
             self.lineEdit_real_value.setFocus()
             return True
@@ -335,8 +334,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         if self.lineEdit_table_path.text() == "":
             self.hide()
             title = "Additional inputs required"
-            message = "You must inform at least one acoustic pressure "
-            message += "table path to proceed with the assignment."
+            message = "You must enter the acoustic pressure table path to proceed with the assignment."
             PrintMessageInput([error_title, title, message])
             self.lineEdit_table_path.setFocus()
             return True

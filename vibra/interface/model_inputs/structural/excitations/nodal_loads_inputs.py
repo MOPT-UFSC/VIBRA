@@ -382,8 +382,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         if condition_1 or condition_2:
             self.hide()
             title = "Additional inputs required"
-            message = "It is necessary to enter at least one prescribed dof "
-            message += "before confirming the property assignment."
+            message = "You must enter at least one nodal loads value before confirming the assignment."
             PrintMessageInput([error_title, title, message])
             return True
 
@@ -627,8 +626,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             if condition_1 or condition_2:
                 self.hide()
                 title = "Additional inputs required"
-                message = "It is necessary to enter at least one external load "
-                message += "before confirming the property assignment."
+                message = "You must enter at least one nodal loads table path before confirming the assignment."
                 PrintMessageInput([error_title, title, message]) 
                 return True
            

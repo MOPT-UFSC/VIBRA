@@ -393,8 +393,7 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
         if self.lineEdit_table_path.text() == "":
             self.hide()
             title = "Additional inputs required"
-            message = "You must inform at least one specific impedance "
-            message += "table path to proceed with the assignment."
+            message = "You must enter a specific impedance value to proceed with the assignment."
             PrintMessageInput([error_title, title, message])
             self.lineEdit_table_path.setFocus()
             return True

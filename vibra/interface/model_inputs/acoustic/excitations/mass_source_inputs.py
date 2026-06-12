@@ -595,8 +595,7 @@ class MassSourceInputs(MassSourceInputs_UI):
         if mass_source is None:
             self.hide()
             title = "Additional inputs required"
-            message = "You must inform at least one non-zero value to mass source "
-            message += "input fields to proceed with the assignment."
+            message = "You must enter a non-zero value to the mass source input fields to proceed with the assignment."
             PrintMessageInput([error_title, title, message])
             self.lineEdit_real_value.setFocus()
             return True
@@ -701,8 +700,7 @@ class MassSourceInputs(MassSourceInputs_UI):
         if self.lineEdit_table_path.text() == "":
             self.hide()
             title = "Additional inputs required"
-            message = "You must inform a valid table path to the mass source "
-            message += "data to proceed with the assignment."
+            message = "You must enter the mass source table path to proceed with the assignment."
             PrintMessageInput([error_title, title, message])
             self.lineEdit_table_path.setFocus()
             return True

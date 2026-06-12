@@ -245,8 +245,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         if real_value + imag_value == 0:
             self.hide()
             title = "Additional inputs required"
-            message = "You must enter a non-null transfer impedance "
-            message += "to proceed with the assignment."
+            message = "You must enter a non-zero transfer impedance value to proceed with the assignment."
             PrintMessageInput([error_title, title, message])
             self.lineEdit_real_value.setFocus()
             return True
@@ -340,8 +339,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         if self.lineEdit_table_path.text() == "":
             self.hide()
             title = "Additional inputs required"
-            message = "You must inform a valid transfer impedance "
-            message += "table path to proceed with the assignment."
+            message = "You must enter the transfer impedance table path to proceed with the assignment."
             PrintMessageInput([error_title, title, message])
             self.lineEdit_table_path.setFocus()
             return True

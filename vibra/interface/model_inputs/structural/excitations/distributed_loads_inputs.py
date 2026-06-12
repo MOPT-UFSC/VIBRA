@@ -307,8 +307,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         if condition_1 or condition_2:
             self.hide()
             title = "Additional inputs required"
-            message = "It is necessary to enter at least one prescribed dof "
-            message += "before confirming the property assignment."
+            message = "You must to enter at least one distributed load value before confirming the assignment."
             PrintMessageInput([error_title, title, message])
             return True
 
@@ -490,8 +489,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
             if condition_1 or condition_2:
                 self.hide()
                 title = "Additional inputs required"
-                message = "It is necessary to enter at least one distributed load "
-                message += "before confirming the property assignment."
+                message = "You must to enter at leat one distributed load table path before confirming the assignment."
                 PrintMessageInput([error_title, title, message]) 
                 return True
 

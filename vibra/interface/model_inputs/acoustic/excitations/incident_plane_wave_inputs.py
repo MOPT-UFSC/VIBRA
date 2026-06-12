@@ -474,8 +474,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
         if self.lineEdit_table_path.text() == "":
             self.hide()
             title = "Additional inputs required"
-            message = "You must inform a valid absorption surface "
-            message += "table path to proceed with the assignment."
+            message = "You must enter the absorption surface table path to proceed with the assignment."
             PrintMessageInput([error_title, title, message])
             self.lineEdit_table_path.setFocus()
             return True
