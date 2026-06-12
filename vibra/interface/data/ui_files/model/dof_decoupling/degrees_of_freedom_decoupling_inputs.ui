@@ -112,7 +112,7 @@
          </font>
         </property>
         <property name="text">
-         <string>Acoustic Degrees of Freedom Decoupling</string>
+         <string>Degrees of Freedom Decoupling Assistant</string>
         </property>
         <property name="textFormat">
          <enum>Qt::TextFormat::AutoText</enum>

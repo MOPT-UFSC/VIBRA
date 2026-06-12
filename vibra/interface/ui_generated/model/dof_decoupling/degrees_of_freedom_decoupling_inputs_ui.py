@@ -301,7 +301,7 @@ class Ui_Dialog(object):
 #if QT_CONFIG(whatsthis)
         Dialog.setWhatsThis("")
 #endif // QT_CONFIG(whatsthis)
-        self.label.setText(QCoreApplication.translate("Dialog", u"Acoustic Degrees of Freedom Decoupling", None))
+        self.label.setText(QCoreApplication.translate("Dialog", u"Degrees of Freedom Decoupling Assistant", None))
         self.label_2.setText(QCoreApplication.translate("Dialog", u"Entity selection information", None))
         ___qtreewidgetitem = self.treeWidget_selection_info.headerItem()
         ___qtreewidgetitem.setText(1, QCoreApplication.translate("Dialog", u"Volumes from surface", None));

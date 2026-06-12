@@ -1,18 +1,18 @@
-from PySide6.QtWidgets import QTreeWidgetItem 
+
+import logging
+from copy import deepcopy
+
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import QTreeWidgetItem
 
 from vibra import app
-from vibra.interface.ui_generated.model.acoustic.dof_decoupling.degrees_of_freedom_decoupling_inputs_ui import DegreesOfFreedomDecouplingInputs_UI
+from vibra.interface import warning_title
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
-
-from copy import deepcopy
-
-import logging
-
-warning_title = "Warning"
+from vibra.interface.model_inputs.structural.definitions.enums import SetupTabType
+from vibra.interface.ui_generated.model.dof_decoupling.degrees_of_freedom_decoupling_inputs_ui import DegreesOfFreedomDecouplingInputs_UI
 
 
 class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
@@ -44,6 +44,7 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
         self.setWindowTitle("Vibra")
 
     def _initialize(self):
+        self.close_window = False
         self.assignment_complete = False
         self.keep_window_open = True
         self.cache_surface_properties = deepcopy(self.properties.surface_properties)
@@ -59,7 +60,7 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
     def _create_connections(self):
         #
         self.pushButton_apply.clicked.connect(self.apply_callback)
-        self.pushButton_apply.clicked.connect(lambda: self.apply_callback(True))
+        self.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
         self.pushButton_cancel.clicked.connect(self.close)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
@@ -110,8 +111,12 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
 
         return
 
-    def apply_callback(self, close: bool = False):
+    def apply_callback(self, close_window: bool = False):
 
+        if self.tabWidget_main.currentIndex() == SetupTabType.LIST:
+            return
+
+        self.close_window = close_window
         input_ids = self.lineEdit_selection_id.text()
         surface_ids, message_log = self.mesh.check_selected_ids(input_ids, selection="surfaces")
 
@@ -145,12 +150,10 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
             data = {"volume_to_decouple" : volumes_from_surface[0]}
             self.properties._set_property("degrees_of_freedom_decoupling", data, surface=surface_id)
 
-        self.hide()
-        self.actions_to_finalize()
         self.assignment_complete = True
 
-        if close:
-            self.close()
+        self.hide()
+        self.actions_to_finalize()
 
     def remove_all_surface_properties_from_surface(self, new_surface_ids: list[int]):
         if not new_surface_ids:
@@ -257,6 +260,9 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
 
         LoadingWindow(callback).run()
 
+        if self.close_window:
+            self.close()
+
     def process_decoupling_actions(self):
 
         def callback():
@@ -302,46 +308,47 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
         self.treeWidget_dof_decoupling.clear()
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key
-            if property == "degrees_of_freedom_decoupling":
+            if property != "degrees_of_freedom_decoupling":
+                continue
 
-                data: dict
-                pp_data =  self.properties._get_property("perforated_plate_model", surface=surface_id)
-                if isinstance(pp_data, dict):
-                    continue
+            data: dict
+            pp_data =  self.properties._get_property("perforated_plate_model", surface=surface_id)
+            if isinstance(pp_data, dict):
+                continue
 
-                ti_data =  self.properties._get_property("transfer_impedance", surface=surface_id)
-                if isinstance(ti_data, dict):
-                    continue
- 
-                volume_id = data.get("volume_to_decouple")
-                if volume_id is None:
-                    continue
+            ti_data =  self.properties._get_property("transfer_impedance", surface=surface_id)
+            if isinstance(ti_data, dict):
+                continue
 
-                new = QTreeWidgetItem([str(surface_id), str(volume_id)])
-                new.setTextAlignment(0, Qt.AlignCenter)
-                new.setTextAlignment(1, Qt.AlignCenter)
-                self.treeWidget_dof_decoupling.addTopLevelItem(new)
+            volume_id = data.get("volume_to_decouple")
+            if volume_id is None:
+                continue
+
+            new = QTreeWidgetItem([str(surface_id), str(volume_id)])
+            new.setTextAlignment(0, Qt.AlignCenter)
+            new.setTextAlignment(1, Qt.AlignCenter)
+            self.treeWidget_dof_decoupling.addTopLevelItem(new)
 
         self.update_tabs_visibility()
 
     def update_tabs_visibility(self):
 
         for (property, surface_id) in self.properties.surface_properties.keys():
-            if property == "degrees_of_freedom_decoupling":
+            if property != "degrees_of_freedom_decoupling":
+                continue
 
-                pp_data = self.properties._get_property("perforated_plate_model", surface=surface_id)
-                if isinstance(pp_data, dict):
-                    continue
+            pp_data = self.properties._get_property("perforated_plate_model", surface=surface_id)
+            if isinstance(pp_data, dict):
+                continue
 
-                self.tabWidget_main.setTabVisible(1, True)
-                return
+            self.tabWidget_main.setTabVisible(1, True)
+            return
 
         self.tabWidget_main.setTabVisible(1, False)
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            if self.tabWidget_main.currentIndex() == 0:
-                self.apply_callback()
+            self.apply_callback()
         elif event.key() == Qt.Key_Delete:
             self.remove_callback()
         elif event.key() == Qt.Key_Escape:
@@ -378,7 +385,7 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
 
         return False
 
-    def closeEvent(self, a0: QCloseEvent | None) -> None:
+    def closeEvent(self, event: QCloseEvent | None) -> None:
 
         self.hide()
         if self.process_degress_of_freedom_decoupling():
@@ -387,4 +394,4 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
         self.keep_window_open = False
         app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
 
-        return super().closeEvent(a0)
+        return super().closeEvent(event)
