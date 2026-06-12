@@ -713,6 +713,48 @@ class Model:
             return density, speed_of_sound
 
         return None, None
+    
+    def get_surface_density_and_speed_of_sound(self, surface_id: int) -> float | complex | np.ndarray:
+        """
+        It returs the density and speed of sound of selected surface.
+
+        Parameter
+        ---------
+        surface_id: int
+            The selected surface ID.
+
+        Returns
+        -------
+        density: np.ndarray, float or None
+            The density of selected surface.
+       
+        speed_of_sound: np.ndarray, float or None
+            The speed of sound of selected surface.
+        """
+
+        density = None
+        speed_of_sound = None
+
+        rho_eff_pm, C_eff_pm = self.get_porous_material_model_effective_properties(surface_id)
+        rho_eff_tv, C_eff_tv = self.get_viscous_thermal_model_effective_properties(surface_id)
+
+        if isinstance(rho_eff_pm, np.ndarray):
+            density = rho_eff_pm
+            speed_of_sound = C_eff_pm
+
+        elif isinstance(rho_eff_tv, np.ndarray):
+            density = rho_eff_tv
+            speed_of_sound = C_eff_tv
+
+        else:
+            fluid = self.properties._get_property("fluid", surface=surface_id)
+            if not isinstance(fluid, Fluid):
+                return None, None
+
+            density = fluid.fluid_density
+            speed_of_sound = fluid.speed_of_sound
+
+        return (density, speed_of_sound)
 
     def get_surface_impedance(self, surface_id: int) -> float | complex | np.ndarray:
         """
@@ -735,26 +777,8 @@ class Model:
         si_data = self.properties._get_property("specific_impedance", surface=surface_id)
         pw_data = self.properties._get_property("incident_plane_wave", surface=surface_id)
 
-        if isinstance(at_data, dict):
-            rho_eff_pm, C_eff_pm = self.get_porous_material_model_effective_properties(surface_id)
-            rho_eff_tv, C_eff_tv = self.get_viscous_thermal_model_effective_properties(surface_id)
-
-            if isinstance(rho_eff_pm, np.ndarray):
-                density = rho_eff_pm
-                speed_of_sound = C_eff_pm
-
-            elif isinstance(rho_eff_tv, np.ndarray):
-                density = rho_eff_tv
-                speed_of_sound = C_eff_tv
-
-            else:
-                fluid = self.properties._get_property("fluid", surface=surface_id)
-                if not isinstance(fluid, Fluid):
-                    return None
-
-                density = fluid.fluid_density
-                speed_of_sound = fluid.speed_of_sound
-
+        if isinstance(at_data, dict) or isinstance(pw_data, dict):
+            density, speed_of_sound = self.get_surface_density_and_speed_of_sound(surface_id)
             impedance = density * speed_of_sound
 
         elif isinstance(si_data, dict):
@@ -764,51 +788,11 @@ class Model:
                 impedance = real_values + 1j * imag_values
 
             elif "anechoic_termination" in si_data.keys():
-                rho_eff_pm, C_eff_pm = self.get_porous_material_model_effective_properties(surface_id)
-                rho_eff_tv, C_eff_tv = self.get_viscous_thermal_model_effective_properties(surface_id)
-
-                if isinstance(rho_eff_pm, np.ndarray):
-                    density = rho_eff_pm
-                    speed_of_sound = C_eff_pm
-
-                elif isinstance(rho_eff_tv, np.ndarray):
-                    density = rho_eff_tv
-                    speed_of_sound = C_eff_tv
-
-                else:
-                    fluid = self.properties._get_property("fluid", surface=surface_id)
-                    if not isinstance(fluid, Fluid):
-                        return None
-
-                    density = fluid.fluid_density
-                    speed_of_sound = fluid.speed_of_sound
-
+                density, speed_of_sound = self.get_surface_density_and_speed_of_sound(surface_id)
                 impedance = density * speed_of_sound
 
             elif "values" in si_data.keys():
                 impedance = si_data["values"][0]
-
-        elif isinstance(pw_data, dict):
-            rho_eff_pm, C_eff_pm = self.get_porous_material_model_effective_properties(surface_id)
-            rho_eff_tv, C_eff_tv = self.get_viscous_thermal_model_effective_properties(surface_id)
-
-            if isinstance(rho_eff_pm, np.ndarray):
-                density = rho_eff_pm
-                speed_of_sound = C_eff_pm
-
-            elif isinstance(rho_eff_tv, np.ndarray):
-                density = rho_eff_tv
-                speed_of_sound = C_eff_tv
-
-            else:
-                fluid = self.properties._get_property("fluid", surface=surface_id)
-                if not isinstance(fluid, Fluid):
-                    return None
-
-                density = fluid.fluid_density
-                speed_of_sound = fluid.speed_of_sound
-
-            impedance = density * speed_of_sound
 
         return impedance
 
