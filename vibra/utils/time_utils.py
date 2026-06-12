@@ -1,9 +1,10 @@
 import logging
+from contextlib import contextmanager
 from functools import wraps
 from time import perf_counter
 
 
-def measure_time(func):
+def function_timer(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         start = perf_counter()
@@ -13,3 +14,11 @@ def measure_time(func):
         return result
 
     return wrapper
+
+
+@contextmanager
+def context_timer(name: str):
+    start = perf_counter()
+    yield start
+    elapsed = perf_counter() - start
+    logging.info(f"{name} took {elapsed:.3f}s")
