@@ -40,9 +40,9 @@ class ChoosePropertyToDelete(ChoosePropertyToDelete_UI):
         self.setWindowTitle("Vibra")
 
     def _create_connections(self):
+        self.lineEdit_filter.textChanged.connect(self._start_timer)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_cancel.clicked.connect(self.close)
-        self.lineEdit_filter.textChanged.connect(self._start_timer)
 
     def _configure_lineEdit(self):
         self.lineEdit_filter.setPlaceholderText("Filter properties by name, entity type, or ID...")

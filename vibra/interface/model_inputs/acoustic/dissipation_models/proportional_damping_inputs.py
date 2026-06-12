@@ -57,6 +57,7 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         #
         self.geometry_selection_callback()
+        self.attribution_type_callback()
 
     def attribution_type_callback(self):
 

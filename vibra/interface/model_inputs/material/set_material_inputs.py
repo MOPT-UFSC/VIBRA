@@ -299,7 +299,7 @@ class MaterialInputs(SetMaterial_UI):
         self.comboBox_attribution_type.clear()
         self.comboBox_attribution_type.addItems(labels)
 
-    def apply_callback(self, close: bool = False):
+    def apply_callback(self, close_window: bool = False):
 
         selected_material = self.material_widget.get_selected_material()
 
@@ -350,10 +350,7 @@ class MaterialInputs(SetMaterial_UI):
             for volume_id in volume_ids:
                 self.properties._set_property("material", selected_material, volume=volume_id)
 
-        self.actions_to_finalize()
-
-        if close:
-            self.close()
+        self.actions_to_finalize(close_window)
 
     def remove_callback(self):
         if not self.selected_items:
@@ -395,7 +392,7 @@ class MaterialInputs(SetMaterial_UI):
 
             app().main_window.selection.set_geometry_selection()
 
-    def actions_to_finalize(self):
+    def actions_to_finalize(self, close_window: bool = False):
         self.clear_line_edit_seletction_id()
         self.lineEdit_selected_material_name.clear()
         self.pushButton_remove.setDisabled(True)
@@ -405,6 +402,9 @@ class MaterialInputs(SetMaterial_UI):
         app().main_window.selection.clear_selection()  # this also updates
         app().main_window.update_symbols()
         app().project.update_model_properties_file()
+
+        if close_window:
+            self.close()
 
     def load_model_info(self):
 

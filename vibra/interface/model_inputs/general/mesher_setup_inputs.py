@@ -327,7 +327,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             case MeshAlgorithms3D.HXT_3D:
                 self.comboBox_3d_algorithm.setCurrentIndex(GMSHAlgorithms_3D.HXT_3D)
 
-    def apply_callback(self, close: bool = False):
+    def apply_callback(self, close_window: bool = False):
 
         def generate():
             mesh_setup = self._get_mesh_setup()
@@ -343,7 +343,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
         self.complete = True
 
-        if close:
+        if close_window:
             self.close()
 
     def update_mesh_refinement_table(self):

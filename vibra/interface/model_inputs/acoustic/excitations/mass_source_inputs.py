@@ -860,7 +860,7 @@ class MassSourceInputs(MassSourceInputs_UI):
             self.properties._reset_property("mass_source")
             self.actions_to_finalize()
 
-    def actions_to_finalize(self):
+    def actions_to_finalize(self, close_window: bool = False):
         self.load_model_info()
         self.check_model_frequency_controls()
         self.comboBox_inherit_fluid_from.clear()
@@ -868,6 +868,9 @@ class MassSourceInputs(MassSourceInputs_UI):
         app().project.update_model_properties_file()
         app().main_window.selection.clear_selection()
         app().main_window.update_symbols()
+
+        if close_window:
+            self.close()
 
     def check_model_frequency_controls(self):
 
