@@ -1,3 +1,4 @@
+import logging
 from enum import IntEnum
 from os.path import dirname
 from pathlib import Path
@@ -15,6 +16,7 @@ from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.model_inputs.general.fluid.set_fluid_inputs import SetFluidInputs
 from vibra.interface.model_inputs.general.fluid.set_fluid_inputs_simplified import SetFluidInputsSimplified
 from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
@@ -870,16 +872,22 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         table_name = f"compressor_excitation_{connection_type}_surface_{surface_id}"
 
         if self.checkBox_export_data.isChecked():
-            output_data_type = self.comboBox_output_data_type.currentText()
-            if output_data_type == "Surface velocity [m/s]":
-                unit = "m/s"
-                output_data = surface_velocity
+            def export_data_callback():    
+                logging.info("Exporting the compressor excitation data... (15%)")
 
-            else:
-                unit = "m³/s"
-                output_data = flow_rate
+                output_data_type = self.comboBox_output_data_type.currentText()
+                if output_data_type == "Surface velocity [m/s]":
+                    unit = "m/s"
+                    output_data = surface_velocity
 
-            self.export_reciprocating_compressor_data_excitation(surface_id, frequencies, output_data, unit)
+                else:
+                    unit = "m³/s"
+                    output_data = flow_rate
+
+                logging.info("Exporting the compressor excitation data... (25%)")
+                self.export_reciprocating_compressor_data_excitation(surface_id, frequencies, output_data, unit)
+
+            LoadingWindow(export_data_callback).run()
 
         data = {
             "connection_type": connection_type,
@@ -1096,11 +1104,13 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         unit_label = self.comboBox_pressure_units.currentText()
         self.label_suction_pressure_unit.setText(f"[{unit_label}]")
         self.label_discharge_pressure_unit.setText(f"[{unit_label}]")
+        self.update_state_properties_at_discharge()
 
     def temperature_unit_callback(self):
         unit_label = self.comboBox_temperature_units.currentText()
         self.label_suction_temperature_unit.setText(f"[{unit_label}]")
         self.label_discharge_temperature_unit.setText(f"[{unit_label}]")
+        self.update_state_properties_at_discharge()
 
     def plot_PV_diagram_head_end(self):
         if self.check_all_parameters():
@@ -1401,8 +1411,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             self.exporter = ExportModelResults()
 
         self.hide()
-        file_path, check = self.exporter.getSaveFileName(app().main_window, caption, directory_path, filter=ext_filter)
-
+        file_path, check = self.exporter.getSaveFileName(app().main_window, caption, str(directory_path), filter=ext_filter)
         if not check:
             return
 
@@ -1440,7 +1449,9 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             self.exporter = ExportModelResults()
 
         file_path = self.lineEdit_export_path.text()
-        if not self.is_file_path_valid(file_path):
+        if self.is_file_path_valid(file_path):
+            file_path = Path(file_path)
+        else:
             file_path = ""
 
         self.exporter._set_data_to_export(recip_excitation_data, existing_path=file_path)
