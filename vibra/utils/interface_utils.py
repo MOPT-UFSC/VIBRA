@@ -27,20 +27,18 @@ class VisualizationFilter:
     symbols: bool = False
     ghost: bool = True
     normal_symbols: bool = False
-    disconected_nodes: bool = False
-    collapsed_element_nodes: bool = False
     color_mode: GeometryColorMode = GeometryColorMode.COLORED
 
     @classmethod
     def all_false(cls):
         # It is dumb, but it works
-        args = [False] * 8
+        args = [False] * 7
         return cls(*args)
 
     @classmethod
     def all_true(cls):
         # It is dumb, but it works
-        args = [True] * 8
+        args = [True] * 7
         return cls(*args)
 
 

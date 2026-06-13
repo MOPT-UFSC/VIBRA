@@ -28,7 +28,7 @@ class Ui_Form(object):
         icon = QIcon()
         icon.addFile(u":/icons/logo_vibra.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         Form.setWindowIcon(icon)
-        Form.setStyleSheet(u"background-color: qlineargradient(spread:pad, x1:0.506, y1:0, x2:0.494318, y2:1, stop:0 rgba(155, 155, 155, 207), stop:0.823864 rgba(0, 0, 0, 203), stop:1 rgba(0, 0, 0, 230));")
+        Form.setStyleSheet(u"background-color: qlineargradient(spread:pad, x1:0.506, y1:0, x2:0.494318, y2:1, stop:0 #3e424d, stop:0.823864 #0b0f17, stop:1 #0b0f17);")
         self.gridLayout = QGridLayout(Form)
         self.gridLayout.setSpacing(4)
         self.gridLayout.setObjectName(u"gridLayout")
@@ -41,7 +41,7 @@ class Ui_Form(object):
         font.setBold(False)
         self.label_loading.setFont(font)
         self.label_loading.setStyleSheet(u"background-color: rgba(0,0,0,0);")
-        self.label_loading.setAlignment(Qt.AlignCenter)
+        self.label_loading.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout.addWidget(self.label_loading, 2, 1, 1, 1)
 
@@ -49,8 +49,8 @@ class Ui_Form(object):
         self.frame.setObjectName(u"frame")
         self.frame.setMaximumSize(QSize(16777215, 48))
         self.frame.setStyleSheet(u"background-color: rgba(255, 255, 255, 0);")
-        self.frame.setFrameShape(QFrame.NoFrame)
-        self.frame.setFrameShadow(QFrame.Raised)
+        self.frame.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_2 = QGridLayout(self.frame)
         self.gridLayout_2.setObjectName(u"gridLayout_2")
         self.progressBar = QProgressBar(self.frame)
@@ -68,8 +68,8 @@ class Ui_Form(object):
         self.frame_2.setObjectName(u"frame_2")
         self.frame_2.setMaximumSize(QSize(16777215, 20))
         self.frame_2.setStyleSheet(u"background-color: rgba(255, 255, 255, 0);")
-        self.frame_2.setFrameShape(QFrame.NoFrame)
-        self.frame_2.setFrameShadow(QFrame.Raised)
+        self.frame_2.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_2.setFrameShadow(QFrame.Shadow.Raised)
 
         self.gridLayout.addWidget(self.frame_2, 0, 1, 1, 1)
 
@@ -77,8 +77,8 @@ class Ui_Form(object):
         self.frame_main.setObjectName(u"frame_main")
         self.frame_main.setMaximumSize(QSize(16777215, 180))
         self.frame_main.setStyleSheet(u"background-color: rgba(0, 0, 0, 0);")
-        self.frame_main.setFrameShape(QFrame.NoFrame)
-        self.frame_main.setFrameShadow(QFrame.Raised)
+        self.frame_main.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_main.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_3 = QGridLayout(self.frame_main)
         self.gridLayout_3.setObjectName(u"gridLayout_3")
         self.label = QLabel(self.frame_main)
@@ -92,7 +92,7 @@ class Ui_Form(object):
         self.label.setFont(font1)
         self.label.setPixmap(QPixmap(u":/icons/azul cinza.png"))
         self.label.setScaledContents(True)
-        self.label.setAlignment(Qt.AlignCenter)
+        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout_3.addWidget(self.label, 0, 0, 1, 1)
 
