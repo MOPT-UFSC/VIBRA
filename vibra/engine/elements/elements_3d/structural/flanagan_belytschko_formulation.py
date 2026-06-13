@@ -201,7 +201,7 @@ def executar_patch_test():
     else:
         print("RESULTADO: FALHOU")
 
-executar_patch_test()
+# executar_patch_test()
 
 def calcular_k_stab_definitivo(coords, E, nu, eta=0.1):
     G = E / (2 * (1 + nu))
