@@ -1,43 +1,43 @@
-from vibra import PROJECT_DIR
-from vibra.engine import AnalysisID 
-from vibra.engine.properties.material import Material
-from vibra.engine.mesher.mesh import Mesh
-from vibra.engine.mesher.element_type import HEXAHEDRON_8
-from vibra.engine.elements.element_options import HEX8_structural, BbarDilatationalEvaluation
-from vibra.engine.model import Model
-from vibra.engine.assemblers.structural_assembler import StructuralAssembler
+from typing import TYPE_CHECKING
 
+from vibra import PROJECT_DIR
+from vibra.engine.analysis_info import AnalysisID, ModalAnalysisSetup
+from vibra.engine.assemblers.structural_assembler import StructuralAssembler
+from vibra.engine.elements.element_options import BbarDilatationalEvaluation, HEX8_structural
+from vibra.engine.mesher.element_setup import HEXAHEDRON_8
+from vibra.engine.mesher.mesh import Mesh
+from vibra.engine.model import Model
+from vibra.engine.properties.material import Material
 from vibra.engine.solvers.modal_solver import ModalSolver
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
 
-from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from vibra.engine.model import Model
 
 import os
-import numpy as np
-
 from time import time
+
+import numpy as np
 
 
 def load_external_mesh_and_solve(**kwargs):
 
     # start decoding the Ansys script file (ds.dat file or input file)
-    mesh_path = f"validation_files/data/WB/structural/elements/hex8/mesh/ds_hex8_cuboid_modal.dat"
-    # mesh_path = f"validation_files/data/WB/structural/elements/hex8/mesh/ds_hex8_cube_64e_harmonic.dat"
-    # mesh_path = f"validation_files/data/WB/structural/elements/hex8/mesh/ds_hex8_Bbar_cuboid_modal.dat"
+    mesh_path = "validation_files/data/WB/structural/elements/hex8/mesh/ds_hex8_cuboid_modal.dat"
+    # mesh_path = "validation_files/data/WB/structural/elements/hex8/mesh/ds_hex8_cube_64e_harmonic.dat"
+    # mesh_path = "validation_files/data/WB/structural/elements/hex8/mesh/ds_hex8_Bbar_cuboid_modal.dat"
 
     if not os.path.exists(mesh_path):
         return
 
     # define the known 'Named selections' from model
-    named_selecion_to_tag = { 
-                             "input_face" : 1,
-                             "output_face" : 2,
-                            }
+    named_selecion_to_tag = {
+        "input_face": 1,
+        "output_face": 2,
+    }
 
     # define surfaces from each volume
-    surfaces_from_volume = { 1 : [1, 2]}
+    surfaces_from_volume = {1: [1, 2]}
 
     t0 = time()
     external_mesh = ExternalMeshData()
@@ -64,7 +64,6 @@ def load_external_mesh_and_solve(**kwargs):
     mesh.element_type = HEXAHEDRON_8
 
     for named_selection, surf_data in external_mesh.elements_from_named_selection.items():
-
         if named_selection in ["input_edges", "output_edges"]:
             continue
 
@@ -73,7 +72,6 @@ def load_external_mesh_and_solve(**kwargs):
         mesh.external_connectivity_from_surfaces[tag] = surf_data["connectivity"] - 1
         ns_nodes = external_mesh.nodes_from_named_selection[named_selection]
         mesh.external_nodes_from_surfaces[tag] = np.array(ns_nodes, dtype=int) - 1
-
 
     for vol_id, surf_ids in surfaces_from_volume.items():
         for surf_id in surf_ids:
@@ -90,23 +88,22 @@ def load_external_mesh_and_solve(**kwargs):
     poisson_ratio = 0.30
     thermal_expansion_coefficient = 1.1e-5
 
-    material = Material(   
-        name = "Carbon steel",
-        identifier = 1,
-        color = (200, 200, 200),
-        material_density = density,
-        elasticity_modulus = elasticity_modulus,
-        poisson_ratio = poisson_ratio,
-        thermal_expansion_coefficient = thermal_expansion_coefficient
-        )
+    material = Material(
+        name="Carbon steel",
+        identifier=1,
+        color=(200, 200, 200),
+        material_density=density,
+        elasticity_modulus=elasticity_modulus,
+        poisson_ratio=poisson_ratio,
+        thermal_expansion_coefficient=thermal_expansion_coefficient,
+    )
 
     ## assign the created fluid
     model = Model()
-    model.mesh =  mesh
-    model.generated_mesh = True
+    model.mesh = mesh
 
     model.properties._set_property("material", material, volume=1)
-    
+
     for _surf_id in [1, 2]:
         model.properties._set_property("material", material, surface=_surf_id)
 
@@ -141,20 +138,20 @@ def load_external_mesh_and_solve(**kwargs):
         "element_type": "3d_element",
         "real_values": [0.0, 0.0, 0.0],
         "imag_values": [0.0, 0.0, 0.0],
-        }
+    }
 
     model.properties._set_property("prescribed_dof", prescribed_dof_data, surface=1)
 
     ## Define the analysis setup
-
-    analysis_setup = {
-        "analisys_id" : AnalysisID.STRUCTURAL_MODAL,
-        "modes_number": 40,
-        "sigma_factor": 0.01,
-        }
+    analysis_setup = ModalAnalysisSetup(
+        analysis_id = AnalysisID.STRUCTURAL_MODAL,
+        modes_number = 40,
+        sigma_factor = 0.01,
+        )
 
     # Set the analysis setup
     model.set_analysis_setup(analysis_setup)
+    model.set_analysis_id(AnalysisID.STRUCTURAL_MODAL)
 
     assembler = StructuralAssembler(model)
 
@@ -164,8 +161,8 @@ def load_external_mesh_and_solve(**kwargs):
     t0 = time()
     # Run modal analysis
     modal_solver = ModalSolver(assembler)
-    modal_solver.solve()
-    natural_frequencies = modal_solver.natural_frequencies
+    solution = modal_solver.solve()
+    natural_frequencies = solution.natural_frequencies
     dt = time() - t0
     print(f"Elapsed time to solve modal analysis: {round(dt, 4)}s")
     
@@ -201,7 +198,6 @@ def load_external_mesh_and_solve(**kwargs):
         print(f"Mode {i+1}: {nat_freq : .14f} Hz (Vibra) vs {natural_frequencies_ref[i]: .14f} Hz (Ansys)")
 
     print(f"\nMaximum percentual difference: {np.max(fnat_diff) : .4e} %")
-
 
 if __name__ == "__main__":
 

@@ -33,13 +33,13 @@ def _acoustic_model_nastran(path: str, fluid: Fluid) -> Model:
         for surf_id in model.mesh.surfaces_from_volume.get(vol_id):
             model.properties._set_property("fluid", fluid, surface=surf_id)
 
-    # Normal surface velocity data
-    data_Vn = {
-        "real_values": [1],
-        "imag_values": [0],
-        "nodal_attribution": False,
-        "averaged": False,
-    }
+    # # Normal surface velocity data
+    # data_Vn = {
+    #     "real_values": [1],
+    #     "imag_values": [0],
+    #     "nodal_attribution": False,
+    #     "averaged": False,
+    # }
 
     ## normal surface velocity data
     data_Pa = { 
@@ -73,7 +73,7 @@ def _acoustic_model_nastran(path: str, fluid: Fluid) -> Model:
         "frequencies": frequencies,
     }
 
-    model.set_analysis_setup(analysis_setup)
+    model.old_set_analysis_setup(analysis_setup)
     model.process_viscous_thermal_model_properties()
 
     return model
@@ -89,10 +89,11 @@ def _solve_harmonic_problem(datadir, model: "Model", path: str):
     frequencies = model.frequencies
 
     # Solve and store solutions into hdf5 files
-    solution = harmonic_solver.solve_direct(print_log=True)
+    model.solution = harmonic_solver.solve_direct(print_log=True)
+    nodal_solution = model.solution.nodal_solution
 
     output_surface_nodes = model.mesh.get_nodes_from_surface(11)
-    average_solution = np.average(solution[output_surface_nodes, :], axis=0)
+    average_solution = np.average(nodal_solution[output_surface_nodes, :], axis=0)
 
     results_path = dirname(path) + "/acoustic_pressures_reference.xlsx"
     external_data = DataImporter.load_spreadsheet_data_for_validation(results_path)

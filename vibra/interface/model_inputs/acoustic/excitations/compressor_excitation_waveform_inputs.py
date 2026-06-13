@@ -1,27 +1,25 @@
-from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
+from copy import deepcopy
+from pathlib import Path
+
+import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
+
+# from scipy.io import wavfile
+from scipy.signal.windows import hann
 
 from vibra import app
+from vibra.interface import error_title
 from vibra.interface.common.common_interface import update_analysis_setup_in_file
 from vibra.interface.data.data_manager import get_spectral_data_from_array
 from vibra.interface.data_handler.data_importer import DataImporter
+from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
+from vibra.interface.plots.general.frequency_response_plotter import DataFormat, FrequencyResponsePlotter
 from vibra.interface.ui_generated.model.acoustic.compressor_excitation_waveform_inputs_ui import CompressorExcitationWaveformInputs_UI
-
-from vibra.utils.signal_processing import extend_signal, process_one_sided_spectrum, get_window_and_correction_factor
-
-from copy import deepcopy
-from pathlib import Path
-from scipy.io import wavfile
-from scipy.signal.windows import hann
-
-import numpy as np
-import sounddevice as sd
-
-error_title = "Error"
+from vibra.utils.signal_processing import extend_signal, get_window_and_correction_factor, process_one_sided_spectrum
 
 
 class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
@@ -31,7 +29,6 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
 
-        self.project = app().project
         self.model = app().project.model
         self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
@@ -42,7 +39,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         self._create_connections()
 
         self.load_model_info()
-        
+
         while self.keep_window_open:
             self.exec()
 
@@ -103,8 +100,10 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         self.treeWidget_surface_velocity.itemClicked.connect(self.on_click_item)
         self.treeWidget_surface_velocity.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
+        app().main_window.theme_changed.connect(self.paint_icons_callback)
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         #
+        self.paint_icons_callback()
         self.data_source_callback()
         self.geometry_selection_callback()
 
@@ -176,6 +175,23 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
             self.lineEdit_table_path.setText(table_path)
             self.tabWidget_main.setCurrentIndex(0)
             self.lineEdit_frequency_resolution.setText("not calculated")
+
+    def paint_icons_callback(self):
+        icon_color = None
+        theme = app().config.user_preferences.interface_theme
+
+        from vibra import DARK_ICON_COLOR, LIGHT_ICON_COLOR
+        if theme == "dark":
+            icon_color = DARK_ICON_COLOR.to_qt()
+        else:
+            icon_color = LIGHT_ICON_COLOR.to_qt()
+
+        widgets = [
+            self.pushButton_load_table,
+            self.pushButton_reproduce_audio,
+            ]
+
+        change_icon_color_for_widgets(widgets, icon_color)
 
     def check_inputs(self, line_edit: QLineEdit, label: str):
 
@@ -683,7 +699,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         for table_name in table_names:
             self.properties.remove_imported_tables("acoustic", table_name)
         if table_names:
-            app().file.write_imported_table_data_in_file()
+            app().project.update_model_properties_file()
 
     def remove_conflicting_excitations(self, surface_ids: int | list):
 
@@ -750,8 +766,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
     def actions_to_finalize(self):
         self.load_model_info()
         self.check_model_frequency_controls()
-        app().file.write_model_properties_in_file()
-        app().file.write_imported_table_data_in_file()
+        app().project.update_model_properties_file()
         app().main_window.update_info_text()
         app().main_window.update_symbols()
 
@@ -770,10 +785,11 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
                 if "table_names" in data.keys():
                     return
 
-        analysis_setup = app().project.model.analysis_setup
-        if analysis_setup:
-            app().project.model.set_analysis_setup(analysis_setup)
-            app().file.write_analysis_setup_in_file(analysis_setup)
+        # No idea of what it does
+        app().project.configure_analysis(
+            app().project.model.analysis_id,
+            app().project.model.analysis_setup,
+        )
 
     def update_tabs_visibility(self):
 
@@ -870,7 +886,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         mask = self.frequencies_vector < f_max
 
         key = ("compressor", "excitation")
-        legend_label = f"compressor excitation signal"
+        legend_label = "compressor excitation signal"
         title = f"{excitation_type} spectrum".capitalize()
 
         self.model_results[key] = { 
@@ -894,7 +910,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         plot_type = excitation_type.capitalize()
 
         key = ("compressor", "excitation")
-        legend_label = f"compressor excitation signal"
+        legend_label = "compressor excitation signal"
         title = f"{excitation_type} waveform".capitalize()
 
         self.model_results[key] = { 
@@ -939,6 +955,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         self.waveform_plotter._set_model_results_data_to_plot(self.model_results)
 
     def reproduce_audio_callback(self):
+        import sounddevice as sd
 
         if self.x_data is None:
             return

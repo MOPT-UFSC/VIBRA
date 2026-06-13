@@ -1,44 +1,58 @@
-from PySide6.QtWidgets import QDialog, QTableWidgetItem, QTreeWidgetItem, QAbstractItemView
-from PySide6.QtCore import Qt, QPoint, QItemSelectionModel
-from PySide6.QtGui import QCloseEvent
-
-from vibra import app
-from vibra.interface.formatters.icons import change_icon_color_for_widgets
-from vibra.interface.ui_generated.model.acoustic.dissipation_models.porous_material_model_inputs_ui import PorousMaterialModelInputs_UI
-
-from vibra.interface.model_inputs.general.fluid.simplified_fluid_inputs import SimplifiedFluidInputs
-from vibra.interface.model_inputs.acoustic.dissipation_models.show_porous_material_model_equations import ShowPorousMaterialModelEquations
-from vibra.interface.model_inputs.acoustic.dissipation_models.delany_bazley_data import DelanyBazleyData
-from vibra.interface.model_inputs.acoustic.dissipation_models.jca_data import JCAData
-from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
-from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
-from vibra.interface.model_inputs.acoustic.definitions.enums import AttributionBodiesType, PlotTypesTab
-
-from vibra.engine.properties.fluid import Fluid
-from vibra.engine.dissipation_models.porous_materials_models import PorousMaterialModels
-
 import warnings
-import numpy as np
 from collections import defaultdict
 from enum import IntEnum
 from typing import Dict, List
 
-window_title_1 = "Error"
-window_title_2 = "Warning"
+import numpy as np
+from PySide6.QtCore import QItemSelectionModel, QPoint, Qt
+from PySide6.QtGui import QAction, QCloseEvent, QIcon
+from PySide6.QtWidgets import (
+    QAbstractItemView,
+    QDialog,
+    QDoubleSpinBox,
+    QMenu,
+    QTableWidgetItem,
+    QTreeWidgetItem,
+)
+
+from vibra import app, ICON_DIR
+from vibra.engine.dissipation_models.porous_materials_models import PorousMaterialModels, get_DB_standard_constants, get_DBM_standard_constants
+from vibra.engine.properties.fluid import Fluid
+from vibra.interface import error_title
+from vibra.interface.formatters.icons import change_icon_color_for_widgets
+from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
+from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.model_inputs.acoustic.definitions.enums import AttributionBodiesType, PlotTypesTab
+from vibra.interface.model_inputs.acoustic.dissipation_models.dbm_data import DelanyBazleyMikiData
+from vibra.interface.model_inputs.acoustic.dissipation_models.jcal_data import JhonsonChampouxAllardLafargeData
+from vibra.interface.model_inputs.acoustic.dissipation_models.show_porous_material_model_equations import ShowPorousMaterialModelEquations
+from vibra.interface.model_inputs.general.fluid.set_fluid_inputs_simplified import SetFluidInputsSimplified
+from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
+from vibra.interface.ui_generated.model.acoustic.dissipation_models.porous_material_model_inputs_ui import PorousMaterialModelInputs_UI
 
 
 class TabType(IntEnum):
-    DELANY_BAZLEY = 0
-    DELANY_BAZLEY_MIKI = 1
-    JCA = 2
-    JCAL = 3
-    EDIT = 4
-    LIST = 5
+    DBM_MODELS = 0
+    JCAL_MODELS = 1
+    EDIT = 2
+    LIST = 3
+
 
 class PMEditModelsTab(IntEnum):
     DB_DBM = 0
     JCA_JCAL = 1
+
+
+class DBMConstants(IntEnum):
+    DELANY_BAZLEY = 0
+    DELANY_BAZLEY_MIKI = 1
+    USER_DEFINED = 2
+
+
+class JCALMaterialModel(IntEnum):
+    JCA = 0
+    JCAL = 1
+
 
 class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
     def __init__(self, *args, **kwargs):
@@ -89,7 +103,11 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
     def _create_connections(self):
         #
+        self.checkBox_advanced_porous_material_plots.stateChanged.connect(self.advanced_porous_material_callback)
+        self.checkBox_load_material_data_from_selection.stateChanged.connect(self.geometry_selection_callback)
+        #
         self.comboBox_attribution_type.currentIndexChanged.connect(self.update_attribution_type)
+        self.comboBox_DBM_constants.currentIndexChanged.connect(self.update_DBM_constants_callback)
         self.comboBox_plot_type.currentIndexChanged.connect(self.plot_type_callback)
         #
         self.pushButton_exit.clicked.connect(self.close)
@@ -99,7 +117,6 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         self.pushButton_get_fluid.clicked.connect(self.get_fluid_callback)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
         self.pushButton_DB_equations.clicked.connect(self.show_equations_for_DBM_callback)
-        self.pushButton_DBM_equations.clicked.connect(self.show_equations_for_DBM_callback)
         #
         self.tabWidget_main.currentChanged.connect(self.tab_event_porous_material_model)
         #
@@ -114,51 +131,123 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         #
         self.update_attribution_type()
         self.update_plot_buttons_access()
-    
-    def _paint_icons(self):
-        icon_color = None
-        theme = app().config.user_preferences.interface_theme
-        from vibra import LIGHT_ICON_COLOR, DARK_ICON_COLOR
-        if theme == "dark":
-            icon_color = DARK_ICON_COLOR.to_qt()
-        else:
-            icon_color = LIGHT_ICON_COLOR.to_qt()
+        self.advanced_porous_material_callback()
+        self.configure_right_click_actions_to_copy_porous_material_parameters()
 
-        widgets = [self.pushButton_DB_equations, self.pushButton_DBM_equations]
-        change_icon_color_for_widgets(widgets, icon_color)
+    def configure_right_click_actions_to_copy_porous_material_parameters(self):
+        self.tableWidget_DBM.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.tableWidget_JCAL.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.tableWidget_DBM.customContextMenuRequested.connect(self.show_context_menu_DBM)
+        self.tableWidget_JCAL.customContextMenuRequested.connect(self.show_context_menu_JCAL)
+
+        self.tableWidget_DBM.setToolTip("Right-click to copy the porous material parameters")
+        self.tableWidget_JCAL.setToolTip("Right-click to copy the porous material parameters")
+
+    def show_context_menu_DBM(self, pos):
+        item = self.tableWidget_DBM.itemAt(pos)
+        if not item:
+            return
+
+        menu = QMenu(self)
+        copy_icon = str(ICON_DIR / "copy_icon.png")
+
+        action_DBM = QAction("Copy porous material", self)
+        action_DBM.setIcon(QIcon(copy_icon))
+        menu.addAction(action_DBM)
+
+        change_icon_color_for_widgets([action_DBM], self.icon_color)
+
+        action_DBM.triggered.connect(lambda: self.copy_DBM_porous_material_parameters(item))
+        menu.exec_(self.tableWidget_DBM.viewport().mapToGlobal(pos))
+
+    def show_context_menu_JCAL(self, pos):
+        item = self.tableWidget_JCAL.itemAt(pos)
+        if not item:
+            return
+
+        menu = QMenu(self)
+        copy_icon = str(ICON_DIR / "copy_icon.png")
+
+        action_JCAL = QAction("Copy porous material", self)
+        action_JCAL.setIcon(QIcon(copy_icon))
+        menu.addAction(action_JCAL)
+
+        change_icon_color_for_widgets([action_JCAL], self.icon_color)
+
+        action_JCAL.triggered.connect(lambda: self.copy_JCAL_porous_material_parameters(item))
+        menu.exec_(self.tableWidget_JCAL.viewport().mapToGlobal(pos))
+
+    def copy_DBM_porous_material_parameters(self, item: QTableWidgetItem):
+        item_0 = self.tableWidget_DBM.item(0, item.column())
+        if item_0 is None:
+            return
+
+        identifier = int(item_0.text())
+        pm_data = self.map_model_id_to_model.get(identifier)
+        if not isinstance(pm_data, DelanyBazleyMikiData):
+            return
+
+        self.load_porous_material_model_inputs(pm_data.get_data())
+
+    def copy_JCAL_porous_material_parameters(self, item: QTableWidgetItem):
+        item_0 = self.tableWidget_JCAL.item(0, item.column())
+        if item_0 is None:
+            return
+
+        identifier = int(item_0.text())
+        pm_data = self.map_model_id_to_model.get(identifier)
+        if not isinstance(pm_data, JhonsonChampouxAllardLafargeData):
+            return
+
+        self.load_porous_material_model_inputs(pm_data.get_data())
+
+    def _paint_icons(self):
+        self.icon_color = None
+        theme = app().config.user_preferences.interface_theme
+        from vibra import DARK_ICON_COLOR, LIGHT_ICON_COLOR
+        if theme == "dark":
+            self.icon_color = DARK_ICON_COLOR.to_qt()
+        else:
+            self.icon_color = LIGHT_ICON_COLOR.to_qt()
+
+        widgets = [self.pushButton_DB_equations]
+        change_icon_color_for_widgets(widgets, self.icon_color)
 
     def actions_to_finalize(self):
         app().main_window.update_symbols()
+
+    def advanced_porous_material_callback(self):
+        enabled = self.checkBox_advanced_porous_material_plots.isChecked()
+        self.frame_plot_setup.setVisible(enabled)
+        self.frame_plot_buttons.setVisible(enabled)
     
     def geometry_selection_callback(self):
         current_tab = self.tabWidget_main.currentIndex()
-
         if current_tab == TabType.LIST:
             self.verify_if_selected_volumes_are_in_tree_widget_porous_material_model()
-
-        pm_tabs = current_tab <= TabType.JCAL
-
-        if not pm_tabs:
+            self.comboBox_attribution_type.setCurrentIndex(AttributionBodiesType.SELECTED_BODIES)
             return
 
         volumes = app().main_window.selection.geometry_volumes
+        if not volumes:
+            return
 
-        if volumes:
+        if self.comboBox_attribution_type.currentIndex() == AttributionBodiesType.ALL_BODIES:
+            self.comboBox_attribution_type.setCurrentIndex(AttributionBodiesType.SELECTED_BODIES)
 
-            if self.comboBox_attribution_type.currentIndex() == AttributionBodiesType.ALL_BODIES:
-                self.comboBox_attribution_type.setCurrentIndex(AttributionBodiesType.SELECTED_BODIES)
-                # return
+        text = ", ".join([str(i) for i in volumes])
+        self.lineEdit_selection_id.setText(text)
 
-            text = ", ".join([str(i) for i in volumes])
-            self.lineEdit_selection_id.setText(text)
+        if not self.checkBox_load_material_data_from_selection.isChecked():
+            return
 
-            if len(volumes) == 1 and self.update_tabs:
-                volume_id = list(volumes)[0]
-                pm_data = self.properties._get_property("porous_material_model", volume=volume_id)
-                if pm_data is None:
-                    return
+        if len(volumes) == 1 and self.update_tabs:
+            volume_id = list(volumes)[0]
+            pm_data = self.properties._get_property("porous_material_model", volume=volume_id)
+            if pm_data is None:
+                return
 
-                self.load_porous_material_model_inputs(pm_data)
+            self.load_porous_material_model_inputs(pm_data)
     
     def verify_if_selected_volumes_are_in_tree_widget_porous_material_model(self):
         if self.tree_item_clicked:
@@ -206,48 +295,65 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         
         return map_id_to_model_index
 
+    def have_DBM_constants_modified(self, pm_data: dict):
+
+        pm_model = pm_data.get("model")
+        if pm_model == "User-defined (DBM)":
+            return True
+
+        current_constants = dict()
+        for i in range(8):
+            key = f"C{i+1}"
+            value = pm_data.get(key)
+            current_constants[key] = value
+
+        if pm_model == "Delany-Bazley":
+            DB_standard_constants = get_DB_standard_constants()
+            return current_constants != DB_standard_constants
+
+        elif pm_model == "Delany-Bazley-Miki":
+            DBM_standard_constants = get_DBM_standard_constants()
+            return current_constants != DBM_standard_constants
+
     def load_porous_material_model_inputs(self, pm_data: dict):
 
         pm_model = pm_data.get("model")
 
-        if pm_model == "Delany-Bazley":
+        DBM_models = ["Delany-Bazley", "Delany-Bazley-Miki", "User-defined (DBM)"]
+        JCAL_models = ["Jhonson-Champoux-Allard", "Jhonson-Champoux-Allard-Lafarge"]
 
-            self.tabWidget_main.setCurrentIndex(TabType.DELANY_BAZLEY)
-            self.doubleSpinBox_C1_DB.setValue(pm_data["C1"])
-            self.doubleSpinBox_C2_DB.setValue(pm_data["C2"])
-            self.doubleSpinBox_C3_DB.setValue(pm_data["C3"])
-            self.doubleSpinBox_C4_DB.setValue(pm_data["C4"])
-            self.doubleSpinBox_C5_DB.setValue(pm_data["C5"])
-            self.doubleSpinBox_C6_DB.setValue(pm_data["C6"])
-            self.doubleSpinBox_C7_DB.setValue(pm_data["C7"])
-            self.doubleSpinBox_C8_DB.setValue(pm_data["C8"])
-            self.doubleSpinBox_flow_resistivity_DB.setValue(pm_data["flow_resistivity"])       
+        if pm_model in DBM_models:
+            index = DBM_models.index(pm_model)
+            user_defined = index == DBMConstants.USER_DEFINED
 
-        elif pm_model == "Delany-Bazley-Miki":
+            # check if the DBM constants have been modified (to ensure the backwards compatibility)
+            if not user_defined:
+                if self.have_DBM_constants_modified(pm_data):
+                    user_defined = True
+                    index = DBMConstants.USER_DEFINED
 
-            self.tabWidget_main.setCurrentIndex(TabType.DELANY_BAZLEY_MIKI)
-            self.doubleSpinBox_C1_DBM.setValue(pm_data["C1"])
-            self.doubleSpinBox_C2_DBM.setValue(pm_data["C2"])
-            self.doubleSpinBox_C3_DBM.setValue(pm_data["C3"])
-            self.doubleSpinBox_C4_DBM.setValue(pm_data["C4"])
-            self.doubleSpinBox_C5_DBM.setValue(pm_data["C5"])
-            self.doubleSpinBox_C6_DBM.setValue(pm_data["C6"])
-            self.doubleSpinBox_C7_DBM.setValue(pm_data["C7"])
-            self.doubleSpinBox_C8_DBM.setValue(pm_data["C8"])
-            self.doubleSpinBox_flow_resistivity_DB.setValue(pm_data["flow_resistivity"])
+            self.comboBox_DBM_constants.setCurrentIndex(index)
+            self.tabWidget_main.setCurrentIndex(TabType.DBM_MODELS)
 
-        elif pm_model in ["Jhonson-Champoux-Allard", ""]:
+            for key, value in pm_data.items():
+                if key == "model":
+                    continue
 
-            self.tabWidget_main.setCurrentIndex(TabType.JCA)
-            self.doubleSpinBox_porosity_JCA.setValue(pm_data["porosity"])
-            self.doubleSpinBox_tortuosity_JCA.setValue(pm_data["tortuosity"])
-            self.lineEdit_thermal_characteristic_length_JCA.setText(str(pm_data["thermal_characteristic_length"]))
-            self.lineEdit_viscous_characteristic_length_JCA.setText(str(pm_data["viscous_characteristic_length"]))
-            self.doubleSpinBox_flow_resistivity_JCA.setValue(pm_data["flow_resistivity"])
+                elif key == "flow_resistivity":
+                    self.doubleSpinBox_flow_resistivity_DBM.setValue(value)   
 
-        elif pm_model == "Jhonson-Champoux-Allard-Lafarge":
+                else:
+                    widget = getattr(self, f"doubleSpinBox_{key}_DBM")
+                    if not isinstance(widget, QDoubleSpinBox):
+                        continue
 
-            self.tabWidget_main.setCurrentIndex(TabType.JCAL)
+                    widget.setEnabled(user_defined)
+                    widget.setValue(value)
+
+        elif pm_model in JCAL_models:
+            index = JCAL_models.index(pm_model)
+            self.comboBox_JCAL_pm_model.setCurrentIndex(index)
+            self.tabWidget_main.setCurrentIndex(TabType.JCAL_MODELS)
             self.doubleSpinBox_porosity_JCAL.setValue(pm_data["porosity"])
             self.doubleSpinBox_tortuosity_JCAL.setValue(pm_data["tortuosity"])
             self.lineEdit_thermal_characteristic_length_JCAL.setText(str(pm_data["thermal_characteristic_length"]))
@@ -282,7 +388,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         self.pushButton_remove.setDisabled(True)
 
         app().main_window.selection.clear_selection()
-        app().file.write_model_properties_in_file()
+        app().project.update_model_properties_file()
         self.load_info()
         self.actions_to_finalize()
 
@@ -315,16 +421,17 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
                 for volume_id in volume_ids:
                     self.properties._remove_volume_property("porous_material_model", volume_id)
 
-                app().file.write_model_properties_in_file()
+                app().project.update_model_properties_file()
                 self.actions_to_finalize()
                 self.close()
 
     def tab_event_porous_material_model(self):
         current_tab = self.tabWidget_main.currentIndex()
         edit_or_list_tabs = [TabType.EDIT, TabType.LIST]
-        pm_tab = current_tab <= TabType.JCAL
+        pm_tab = current_tab <= TabType.JCAL_MODELS
 
         if self.last_tab in edit_or_list_tabs or current_tab in edit_or_list_tabs:
+            self.comboBox_attribution_type.setCurrentIndex(AttributionBodiesType.SELECTED_BODIES)
             app().main_window.selection.clear_selection()
             self.clear_line_edit_selection_id()
 
@@ -406,7 +513,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         
         try:
             new_parameter_value = float(item.text())
-        except:
+        except Exception:
             value_error = True
         
         parameters_position = self.map_model_id_to_model[model_id].get_parameters_position()
@@ -423,21 +530,47 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             for volume in volumes:
                 self.properties._set_property("porous_material_model", model.get_data(), volume=volume)
             
-            app().file.write_model_properties_in_file()
-                                                  
+            app().project.update_model_properties_file()
+
+    def update_DBM_constants_callback(self):
+        index = self.comboBox_DBM_constants.currentIndex()
+        user_defined = index == DBMConstants.USER_DEFINED
+
+        model_constants = dict()  
+        if index == DBMConstants.DELANY_BAZLEY:
+            model_constants = get_DB_standard_constants()
+
+        elif index == DBMConstants.DELANY_BAZLEY_MIKI:
+            model_constants = get_DBM_standard_constants()
+
+        for key, value in model_constants.items():
+            widget = getattr(self, f"doubleSpinBox_{key}_DBM")
+            if not isinstance(widget, QDoubleSpinBox):
+                continue
+
+            widget.setValue(value)
+            widget.setEnabled(user_defined)
+
+        if not user_defined:
+            return
+
+        for _widget in self.findChildren(QDoubleSpinBox):
+            if "doubleSpinBox_C" in _widget.objectName():
+                _widget.setEnabled(user_defined)
+           
     def update_attribution_type(self):
         index = self.comboBox_attribution_type.currentIndex()
         if index == AttributionBodiesType.ALL_BODIES:
             self.lineEdit_selection_id.setText("All bodies")
             self.lineEdit_selection_id.setEnabled(False)
+
         elif index == AttributionBodiesType.SELECTED_BODIES:
             self.clear_line_edit_selection_id()
             self.lineEdit_selection_id.setEnabled(True)
-        # self.comboBox_attribution_type.setCurrentIndex(index)
 
     def map_existing_porous_materials(self):
         self.map_model_id_to_volumes: Dict[int, List[str]] = defaultdict(list)
-        self.map_model_id_to_model: Dict[int, DelanyBazleyData|JCAData] = dict()
+        self.map_model_id_to_model: Dict[int, DelanyBazleyMikiData|JhonsonChampouxAllardLafargeData] = dict()
 
         models = list()
         for key, data in self.properties.volume_properties.items():
@@ -445,15 +578,17 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
             if property != "porous_material_model":
                 continue
-        
-                
+
+            if not isinstance(data, dict):
+                continue
+
             try:
                 model = None
-                if data["model"] in ["Delany-Bazley", "Delany-Bazley-Miki"]:
-                    model = DelanyBazleyData.set_data(data)
+                if data.get("model") in ["Delany-Bazley", "Delany-Bazley-Miki", "User-defined (DBM)"]:
+                    model = DelanyBazleyMikiData.set_data(data)
                 else:
-                    model = JCAData.set_data(data)
-                
+                    model = JhonsonChampouxAllardLafargeData.set_data(data)
+
                 if model not in models:
                     models.append(model)
 
@@ -463,16 +598,16 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
                 if volume_id not in self.map_model_id_to_volumes[model_id]:
                     self.map_model_id_to_volumes[model_id].append(volume_id)
 
-            except:
-                    title = "Porous Material Model Error"
-                    message = "An error occurred while trying to load the porous material model data "
-                    message += "from the project file. The porous material model will be deleted."
-                    PrintMessageInput([window_title_1, title, message])
+            except Exception:
+                title = "Porous Material Model Error"
+                message = "An error occurred while trying to load the porous material model data "
+                message += "from the project file. The porous material model will be deleted."
+                PrintMessageInput([error_title, title, message])
 
-                    self.properties._reset_property("porous_material_model")
-                    app().main_window.update_symbols()
+                self.properties._reset_property("porous_material_model")
+                app().main_window.update_symbols()
 
-                    return
+                return
 
     def load_info(self):
         self.map_existing_porous_materials()
@@ -492,7 +627,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             model_data_dict = model_data.get_data()
 
             model_id_item = QTableWidgetItem(str(model_id))
-            model_item = QTableWidgetItem(self.addapt_model_name(model))
+            model_item = QTableWidgetItem(self.abbreviate_porous_material_model_name(model))
             model_id_item.setFlags(Qt.ItemIsSelectable)
             model_item.setFlags(Qt.ItemIsSelectable)
             model_item.setToolTip(model)
@@ -537,7 +672,6 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         if there_is_jca_model or there_is_delany_model:
             self.tabWidget_main.setTabVisible(TabType.EDIT, True)
             self.tabWidget_main.setTabVisible(TabType.LIST, True)
-            self.tabWidget_main.setCurrentIndex(TabType.EDIT)
         
         self.update_tableWidget_DBM_items()
         self.update_tableWidget_JCAL_items()
@@ -547,7 +681,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             model_data = self.map_model_id_to_model[model_id]
 
             for volume_id in volume_ids:
-                new = QTreeWidgetItem([str(volume_id), self.addapt_model_name(model_data.model), str(model_id)])
+                new = QTreeWidgetItem([str(volume_id), self.abbreviate_porous_material_model_name(model_data.model), str(model_id)])
                 for i in range(3):
                     new.setTextAlignment(i, Qt.AlignCenter)
 
@@ -558,7 +692,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         jca_count = 0
 
         for model in self.map_model_id_to_model.values():
-            if isinstance(model, DelanyBazleyData):
+            if isinstance(model, DelanyBazleyMikiData):
                 delany_count += 1
             else:
                 jca_count += 1
@@ -606,53 +740,34 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
                 item.setTextAlignment(Qt.AlignCenter)
 
         self.tableWidget_JCAL.blockSignals(False)
-    
-    def addapt_model_name(self, model:str) -> str:
+
+    def abbreviate_porous_material_model_name(self, model:str) -> str:
         if model == "Delany-Bazley":
             return "DB"
+
         elif model == "Delany-Bazley-Miki":
             return "DBM"
+
         elif model == "Jhonson-Champoux-Allard":
             return "JCA"
-        
+
         return "JCAL"
 
-    def get_Delany_Bazley_model_data(self) -> DelanyBazleyData:
-        return DelanyBazleyData(self.doubleSpinBox_C1_DB.value(), 
-                                self.doubleSpinBox_C2_DB.value(), self.doubleSpinBox_C3_DB.value(), 
-                                self.doubleSpinBox_C4_DB.value(), self.doubleSpinBox_C5_DB.value(), 
-                                self.doubleSpinBox_C6_DB.value(), self.doubleSpinBox_C7_DB.value(), 
-                                self.doubleSpinBox_C8_DB.value(), self.doubleSpinBox_flow_resistivity_DB.value(), 
-                                "Delany-Bazley",)
+    def get_Delany_Bazley_Miki_model_data(self, material_model: str) -> DelanyBazleyMikiData:
+        return DelanyBazleyMikiData(
+            self.doubleSpinBox_C1_DBM.value(),
+            self.doubleSpinBox_C2_DBM.value(),
+            self.doubleSpinBox_C3_DBM.value(),
+            self.doubleSpinBox_C4_DBM.value(),
+            self.doubleSpinBox_C5_DBM.value(),
+            self.doubleSpinBox_C6_DBM.value(),
+            self.doubleSpinBox_C7_DBM.value(),
+            self.doubleSpinBox_C8_DBM.value(),
+            self.doubleSpinBox_flow_resistivity_DBM.value(),
+            material_model,
+        )
 
-    def get_Delany_Bazley_Miki_model_data(self) -> DelanyBazleyData:
-        return DelanyBazleyData(self.doubleSpinBox_C1_DBM.value(), 
-                                self.doubleSpinBox_C2_DBM.value(), self.doubleSpinBox_C3_DBM.value(), 
-                                self.doubleSpinBox_C4_DBM.value(), self.doubleSpinBox_C5_DBM.value(), 
-                                self.doubleSpinBox_C6_DBM.value(), self.doubleSpinBox_C7_DBM.value(), 
-                                self.doubleSpinBox_C8_DBM.value(), self.doubleSpinBox_flow_resistivity_DBM.value(),
-                                "Delany-Bazley-Miki")
-
-    def get_Jhonson_Champoux_Allard_model_data(self) -> JCAData:
-
-        lineEdit = self.lineEdit_viscous_characteristic_length_JCA
-        vcl = self.check_inputs(lineEdit, "Viscous characteristic length", only_positive=True)
-        if self.stop:
-            lineEdit.setFocus()
-            return dict()
-
-        lineEdit = self.lineEdit_thermal_characteristic_length_JCA
-        tcl = self.check_inputs(lineEdit, "Thermal characteristic length", only_positive=True)
-        if self.stop:
-            lineEdit.setFocus()
-            return dict()
-
-        return JCAData(self.doubleSpinBox_porosity_JCA.value(),
-                      self.doubleSpinBox_tortuosity_JCA.value(), vcl,
-                      tcl, self.doubleSpinBox_flow_resistivity_JCA.value(),
-                      "Jhonson-Champoux-Allard")
-
-    def get_Jhonson_Champoux_Allard_Lafarge_model_data(self) -> JCAData:
+    def get_Jhonson_Champoux_Allard_Lafarge_model_data(self, material_model: str) -> JhonsonChampouxAllardLafargeData:
 
         lineEdit = self.lineEdit_viscous_characteristic_length_JCAL
         vcl = self.check_inputs(lineEdit, "Viscous characteristic length", only_positive=True)
@@ -666,22 +781,42 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             lineEdit.setFocus()
             return dict()
 
-        return JCAData(self.doubleSpinBox_porosity_JCAL.value(),
-                      self.doubleSpinBox_tortuosity_JCAL.value(), vcl,
-                      tcl, self.doubleSpinBox_flow_resistivity_JCAL.value(),
-                      "Jhonson-Champoux-Allard-Lafarge")
+        return JhonsonChampouxAllardLafargeData(
+            self.doubleSpinBox_porosity_JCAL.value(),
+            self.doubleSpinBox_tortuosity_JCAL.value(),
+            vcl,
+            tcl,
+            self.doubleSpinBox_flow_resistivity_JCAL.value(),
+            material_model,
+        )
+
+    def get_DBM_material_model(self):
+        index = self.comboBox_DBM_constants.currentIndex()
+        if index == DBMConstants.DELANY_BAZLEY:
+            return "Delany-Bazley"
+        elif index == DBMConstants.DELANY_BAZLEY_MIKI:
+            return "Delany-Bazley-Miki"
+        else:
+            return "User-defined (DBM)"
+
+    def get_JCAL_material_model(self):
+        if self.comboBox_JCAL_pm_model.currentIndex() == JCALMaterialModel.JCA:
+            return "Jhonson-Champoux-Allard"
+        else:
+            return "Jhonson-Champoux-Allard-Lafarge"
 
     def attribute_callback(self):
 
-        index = self.tabWidget_main.currentIndex()
-        if index == TabType.DELANY_BAZLEY:
-            model_data = self.get_Delany_Bazley_model_data()
-        elif index == TabType.DELANY_BAZLEY_MIKI:
-            model_data = self.get_Delany_Bazley_Miki_model_data()
-        elif index == TabType.JCA:
-            model_data = self.get_Jhonson_Champoux_Allard_model_data()
-        elif index == TabType.JCAL:
-            model_data = self.get_Jhonson_Champoux_Allard_Lafarge_model_data()
+        tab_index = self.tabWidget_main.currentIndex()
+
+        if tab_index == TabType.DBM_MODELS:
+            pm_model = self.get_DBM_material_model()
+            model_data = self.get_Delany_Bazley_Miki_model_data(pm_model)
+
+        elif tab_index == TabType.JCAL_MODELS:
+            pm_model = self.get_JCAL_material_model()
+            model_data = self.get_Jhonson_Champoux_Allard_Lafarge_model_data(pm_model)
+
         else:
             return
 
@@ -696,22 +831,18 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             elif attribute_type == AttributionBodiesType.SELECTED_BODIES:
 
                 input_ids = self.lineEdit_selection_id.text()
-                volume_ids, error_data = self.mesh.check_selected_ids(
-                                                                      input_ids, 
-                                                                      selection = "volumes", 
-                                                                      single_id = False,
-                                                                      )
+                volume_ids, error_data = self.mesh.check_selected_ids(input_ids, selection = "volumes", single_id = False)
 
                 if error_data is not None:
                     self.hide()
                     self.lineEdit_selection_id.setFocus()
                     PrintMessageInput(error_data)
                     return True
-            
+
             for volume_id in volume_ids:
                 self.properties._set_property("porous_material_model", model_data.get_data(), volume=volume_id)
 
-            app().file.write_model_properties_in_file()
+            app().project.update_model_properties_file()
             self.actions_to_finalize()
             self.load_info()
 
@@ -755,7 +886,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
                 message = f"Insert some value at the {label} input field."
 
         if message != "":
-            PrintMessageInput([window_title_1, title, message])
+            PrintMessageInput([error_title, title, message])
             self.stop = True
             return None
         return out
@@ -764,9 +895,9 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
     def get_fluid_callback(self):
         self.hide()
-        self.fluid_dialog = SimplifiedFluidInputs()
+        self.fluid_dialog = SetFluidInputsSimplified()
         self.fluid_dialog.fluid_widget.pushButton_attribute.setText("Select fluid")
-        self.fluid_dialog.pushButton_attribute.clicked.connect(self.get_selected_fluid)
+        self.fluid_dialog.fluid_widget.pushButton_attribute.clicked.connect(self.get_selected_fluid)
         self.fluid_dialog.exec()
         app().main_window.set_input_widget(self)
 
@@ -783,7 +914,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
         warnings.filterwarnings('ignore')
 
-        frequencies = app().project.model.analysis_setup.get("frequencies")
+        frequencies = app().project.model.frequencies
         if frequencies is None:
             df = 5
             f_min = 5
@@ -801,20 +932,14 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
         tab_index = self.tabWidget_main.currentIndex()
 
-        if tab_index == TabType.DELANY_BAZLEY:
-            pm_data = self.get_Delany_Bazley_model_data()
+        if tab_index == TabType.DBM_MODELS:
+            pm_model = self.get_DBM_material_model()
+            pm_data = self.get_Delany_Bazley_Miki_model_data(pm_model)
             rho_eff, C_eff = model.get_Delany_Bazley_Miki_effective_properties(omega, fluid, pm_data.get_data())
 
-        elif tab_index == TabType.DELANY_BAZLEY_MIKI:
-            pm_data = self.get_Delany_Bazley_Miki_model_data()
-            rho_eff, C_eff = model.get_Delany_Bazley_Miki_effective_properties(omega, fluid, pm_data.get_data())
-
-        elif tab_index == TabType.JCA:
-            pm_data = self.get_Jhonson_Champoux_Allard_model_data()
-            rho_eff, C_eff = model.get_JCA_effective_properties(omega, fluid, pm_data.get_data())
-
-        elif tab_index == TabType.JCAL:
-            pm_data = self.get_Jhonson_Champoux_Allard_Lafarge_model_data()
+        elif tab_index == TabType.JCAL_MODELS:
+            pm_model = self.get_JCAL_material_model()
+            pm_data = self.get_Jhonson_Champoux_Allard_Lafarge_model_data(pm_model)
             rho_eff, C_eff = model.get_JCAL_effective_properties(omega, fluid, pm_data.get_data())
 
         else:
@@ -826,14 +951,10 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
     def get_porous_material_model(self):
         tab_index = self.tabWidget_main.currentIndex()
-        if tab_index == TabType.DELANY_BAZLEY:
-            return "Delany-Bazley"
-        elif tab_index == TabType.DELANY_BAZLEY_MIKI:
-            return "Delany-Bazley-Miki"
-        elif tab_index == TabType.JCA:
-            return "Jhonson-Champoux-Allard"
-        elif tab_index == TabType.JCAL:
-            return "Jhonson-Champoux-Allard-Lafarge"
+        if tab_index == TabType.DBM_MODELS:
+            return self.comboBox_DBM_constants.currentText()
+        elif tab_index == TabType.JCAL_MODELS:
+            return self.comboBox_JCAL_pm_model.currentText()
 
     def plot_data_callback(self):
         plot_key = self.comboBox_plot_type.currentIndex()

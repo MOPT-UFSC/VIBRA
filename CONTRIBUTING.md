@@ -110,7 +110,7 @@ Pyinstaller is used to create executables.
 In linux run the following command to create a folder containing 
 a executable and its dependencies.
 ```
-uvx pyinstaller vibra.spec
+uv run pyinstaller vibra.spec --noconfirm
 ```
 
 ## Windows

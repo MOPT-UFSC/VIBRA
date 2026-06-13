@@ -1,18 +1,20 @@
-from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem, QAbstractItemView
-from PySide6.QtCore import Qt, QPoint, QItemSelectionModel
+import numpy as np
+from PySide6.QtCore import QItemSelectionModel, QPoint, Qt
 from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import QAbstractItemView, QLineEdit, QTreeWidgetItem
 
 from vibra import app
+from vibra.interface import error_title
 from vibra.interface.common.common_interface import update_analysis_setup_in_file
 from vibra.interface.data.data_manager import get_spectral_data_from_array
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.ui_generated.model.acoustic.specific_impedance_inputs_ui import SpecificImpedanceInputs_UI
 from vibra.interface.model_inputs.acoustic.definitions.enums import StandardTabType
-import numpy as np
-
-error_title = "Error"
+from vibra.interface.numeric_checks.int_list_validator import IntListValidator
+from vibra.interface.ui_generated.model.acoustic.specific_impedance_inputs_ui import (
+    SpecificImpedanceInputs_UI,
+)
 
 
 class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
@@ -22,7 +24,6 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
 
-        self.project = app().project
         self.model = app().project.model
         self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
@@ -31,6 +32,7 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
         self._initialize()
         self._configure_qt_variables()
         self._create_connections()
+        self._configure_validators()
 
         self.load_model_info()
         self.geometry_selection_callback()
@@ -69,6 +71,10 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
         self.treeWidget_specific_impedance.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
+    
+    def _configure_validators(self):
+        validator = IntListValidator()
+        self.lineEdit_selection_id.setValidator(validator)
 
     def tab_event_callback(self):
         current_tab = self.tabWidget_main.currentIndex()
@@ -145,6 +151,9 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
     def load_property_data(self, surface_id: int):
         data = self.properties._get_property("specific_impedance", surface=surface_id)
         if not isinstance(data, dict):
+            return
+        
+        if "anechoic_termination" in data.keys():
             return
 
         if "table_paths" in data.keys():
@@ -454,7 +463,7 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
         for table_name in table_names:
             self.properties.remove_imported_tables("acoustic", table_name)
         if table_names:
-            app().file.write_imported_table_data_in_file()
+            app().project.update_model_properties_file()
 
     def remove_conflicting_excitations(self, surface_ids: int | list):
 
@@ -530,8 +539,7 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
         self.load_model_info()
         self.check_model_frequency_controls()
         app().main_window.update_info_text()
-        app().file.write_model_properties_in_file()
-        app().file.write_imported_table_data_in_file()
+        app().project.update_model_properties_file()
         app().main_window.update_symbols()
 
     def check_model_frequency_controls(self):
@@ -542,10 +550,11 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
                 if "table_names" in data.keys():
                     return
 
-        analysis_setup = app().project.model.analysis_setup
-        if analysis_setup:
-            app().project.model.set_analysis_setup(analysis_setup)
-            app().file.write_analysis_setup_in_file(analysis_setup)
+        # No idea of what it does
+        app().project.configure_analysis(
+            app().project.model.analysis_id,
+            app().project.model.analysis_setup,
+        )
 
     def reset_input_fields(self):
         self.lineEdit_real_value.setText("")

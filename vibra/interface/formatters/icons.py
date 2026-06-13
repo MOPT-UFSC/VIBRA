@@ -74,13 +74,22 @@ def change_icon_color_for_widgets(widgets: list[QWidget], color: QColor):
     for widget in widgets:
         if not hasattr(widget, "icon") or not callable(widget.icon):
             continue
-        
+
         if not hasattr(widget, "setIcon") or not callable(widget.setIcon):
             continue
-    
+
         if hasattr(widget, "should_paint") and not widget.should_paint:
             continue
-        
+
         icon = widget.icon()
-        change_icon_color(icon, color)
-        widget.setIcon(icon)
+        if icon is None or icon.isNull():
+            continue
+
+        size = icon.actualSize(QSize(10_000, 10_000))
+        invalid_sizes = [-1, 0, 10_000]
+        if size.width() in invalid_sizes or size.height() in invalid_sizes:
+            continue
+
+        pixmap = icon.pixmap(size)
+        paint_pixmap(pixmap, color)
+        widget.setIcon(QIcon(pixmap))

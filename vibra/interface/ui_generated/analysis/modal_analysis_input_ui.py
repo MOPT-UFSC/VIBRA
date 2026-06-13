@@ -23,7 +23,7 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
-        Dialog.setWindowModality(Qt.NonModal)
+        Dialog.setWindowModality(Qt.WindowModality.NonModal)
         Dialog.resize(300, 220)
         sizePolicy = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(0)
@@ -32,7 +32,7 @@ class Ui_Dialog(object):
         Dialog.setSizePolicy(sizePolicy)
         Dialog.setMinimumSize(QSize(300, 220))
         Dialog.setMaximumSize(QSize(300, 220))
-        Dialog.setContextMenuPolicy(Qt.DefaultContextMenu)
+        Dialog.setContextMenuPolicy(Qt.ContextMenuPolicy.DefaultContextMenu)
         icon = QIcon()
         icon.addFile(u"../../../../../../../OpenPulse/Downloads/load - Copia.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         Dialog.setWindowIcon(icon)
@@ -49,8 +49,8 @@ class Ui_Dialog(object):
         font.setPointSize(12)
         font.setBold(True)
         self.frame_title.setFont(font)
-        self.frame_title.setFrameShape(QFrame.Box)
-        self.frame_title.setFrameShadow(QFrame.Raised)
+        self.frame_title.setFrameShape(QFrame.Shape.Box)
+        self.frame_title.setFrameShadow(QFrame.Shadow.Raised)
         self.frame_title.setLineWidth(1)
         self.gridLayout_2 = QGridLayout(self.frame_title)
         self.gridLayout_2.setSpacing(0)
@@ -64,8 +64,8 @@ class Ui_Dialog(object):
         font1.setBold(False)
         font1.setItalic(False)
         self.label_title.setFont(font1)
-        self.label_title.setTextFormat(Qt.AutoText)
-        self.label_title.setAlignment(Qt.AlignCenter)
+        self.label_title.setTextFormat(Qt.TextFormat.AutoText)
+        self.label_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout_2.addWidget(self.label_title, 0, 0, 1, 1)
 
@@ -74,8 +74,8 @@ class Ui_Dialog(object):
 
         self.frame_main = QFrame(Dialog)
         self.frame_main.setObjectName(u"frame_main")
-        self.frame_main.setFrameShape(QFrame.Box)
-        self.frame_main.setFrameShadow(QFrame.Raised)
+        self.frame_main.setFrameShape(QFrame.Shape.Box)
+        self.frame_main.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_3 = QGridLayout(self.frame_main)
         self.gridLayout_3.setObjectName(u"gridLayout_3")
         self.gridLayout_3.setContentsMargins(4, 4, 4, 4)
@@ -83,8 +83,8 @@ class Ui_Dialog(object):
         self.frame_modes.setObjectName(u"frame_modes")
         self.frame_modes.setMinimumSize(QSize(0, 40))
         self.frame_modes.setMaximumSize(QSize(16777215, 40))
-        self.frame_modes.setFrameShape(QFrame.NoFrame)
-        self.frame_modes.setFrameShadow(QFrame.Raised)
+        self.frame_modes.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_modes.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_12 = QGridLayout(self.frame_modes)
         self.gridLayout_12.setObjectName(u"gridLayout_12")
         self.gridLayout_12.setContentsMargins(0, 0, 0, 0)
@@ -103,26 +103,26 @@ class Ui_Dialog(object):
         font2 = QFont()
         font2.setPointSize(10)
         self.label_modes.setFont(font2)
-        self.label_modes.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.label_modes.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_12.addWidget(self.label_modes, 0, 1, 1, 1)
 
-        self.lineEdit_number_modes = QLineEdit(self.frame_modes)
-        self.lineEdit_number_modes.setObjectName(u"lineEdit_number_modes")
-        self.lineEdit_number_modes.setMinimumSize(QSize(80, 28))
-        self.lineEdit_number_modes.setMaximumSize(QSize(80, 28))
-        self.lineEdit_number_modes.setFont(font2)
-        self.lineEdit_number_modes.setStyleSheet(u"")
-        self.lineEdit_number_modes.setAlignment(Qt.AlignCenter)
+        self.lineEdit_modes_number = QLineEdit(self.frame_modes)
+        self.lineEdit_modes_number.setObjectName(u"lineEdit_modes_number")
+        self.lineEdit_modes_number.setMinimumSize(QSize(80, 28))
+        self.lineEdit_modes_number.setMaximumSize(QSize(80, 28))
+        self.lineEdit_modes_number.setFont(font2)
+        self.lineEdit_modes_number.setStyleSheet(u"")
+        self.lineEdit_modes_number.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.gridLayout_12.addWidget(self.lineEdit_number_modes, 0, 2, 1, 1)
+        self.gridLayout_12.addWidget(self.lineEdit_modes_number, 0, 2, 1, 1)
 
         self.label_spacing = QLabel(self.frame_modes)
         self.label_spacing.setObjectName(u"label_spacing")
         self.label_spacing.setMinimumSize(QSize(60, 28))
         self.label_spacing.setMaximumSize(QSize(60, 28))
         self.label_spacing.setFont(font2)
-        self.label_spacing.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.label_spacing.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_12.addWidget(self.label_spacing, 0, 3, 1, 1)
 
@@ -133,8 +133,8 @@ class Ui_Dialog(object):
         self.frame_sigma.setObjectName(u"frame_sigma")
         self.frame_sigma.setMinimumSize(QSize(0, 40))
         self.frame_sigma.setMaximumSize(QSize(16777215, 40))
-        self.frame_sigma.setFrameShape(QFrame.NoFrame)
-        self.frame_sigma.setFrameShadow(QFrame.Raised)
+        self.frame_sigma.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_sigma.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_4 = QGridLayout(self.frame_sigma)
         self.gridLayout_4.setObjectName(u"gridLayout_4")
         self.gridLayout_4.setContentsMargins(0, 0, 0, 0)
@@ -147,7 +147,7 @@ class Ui_Dialog(object):
         self.label_sigma_unit.setMinimumSize(QSize(60, 28))
         self.label_sigma_unit.setMaximumSize(QSize(60, 28))
         self.label_sigma_unit.setFont(font2)
-        self.label_sigma_unit.setAlignment(Qt.AlignLeading|Qt.AlignLeft|Qt.AlignVCenter)
+        self.label_sigma_unit.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_4.addWidget(self.label_sigma_unit, 0, 3, 1, 1)
 
@@ -156,7 +156,7 @@ class Ui_Dialog(object):
         self.label_sigma.setMinimumSize(QSize(60, 28))
         self.label_sigma.setMaximumSize(QSize(60, 28))
         self.label_sigma.setFont(font2)
-        self.label_sigma.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.label_sigma.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_4.addWidget(self.label_sigma, 0, 1, 1, 1)
 
@@ -166,7 +166,7 @@ class Ui_Dialog(object):
         self.lineEdit_sigma_factor.setMaximumSize(QSize(80, 28))
         self.lineEdit_sigma_factor.setFont(font2)
         self.lineEdit_sigma_factor.setStyleSheet(u"")
-        self.lineEdit_sigma_factor.setAlignment(Qt.AlignCenter)
+        self.lineEdit_sigma_factor.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout_4.addWidget(self.lineEdit_sigma_factor, 0, 2, 1, 1)
 
@@ -181,8 +181,8 @@ class Ui_Dialog(object):
         self.frame_button.setObjectName(u"frame_button")
         self.frame_button.setMinimumSize(QSize(0, 40))
         self.frame_button.setMaximumSize(QSize(16777215, 40))
-        self.frame_button.setFrameShape(QFrame.NoFrame)
-        self.frame_button.setFrameShadow(QFrame.Raised)
+        self.frame_button.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_button.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_11 = QGridLayout(self.frame_button)
         self.gridLayout_11.setObjectName(u"gridLayout_11")
         self.gridLayout_11.setContentsMargins(0, 0, 0, 0)
@@ -231,9 +231,9 @@ class Ui_Dialog(object):
         self.label_title.setText(QCoreApplication.translate("Dialog", u"Structural modal analysis setup", None))
         self.label_modes.setText(QCoreApplication.translate("Dialog", u"Modes:", None))
 #if QT_CONFIG(tooltip)
-        self.lineEdit_number_modes.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p>Number of modes to find in acoustic modal analysis</p></body></html>", None))
+        self.lineEdit_modes_number.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p>Number of modes to find in acoustic modal analysis</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
-        self.lineEdit_number_modes.setText(QCoreApplication.translate("Dialog", u"40", None))
+        self.lineEdit_modes_number.setText(QCoreApplication.translate("Dialog", u"40", None))
         self.label_spacing.setText("")
         self.label_sigma_unit.setText(QCoreApplication.translate("Dialog", u"[Hz]", None))
         self.label_sigma.setText(QCoreApplication.translate("Dialog", u"Sigma:", None))
@@ -260,7 +260,7 @@ class ModalAnalysisInput_UI(QDialog, Ui_Dialog):
                             - frame_modes: QFrame
                                 - (Layout): QGridLayout
                                         - label_modes: QLabel
-                                        - lineEdit_number_modes: QLineEdit
+                                        - lineEdit_modes_number: QLineEdit
                                         - label_spacing: QLabel
                             - frame_sigma: QFrame
                                 - (Layout): QGridLayout

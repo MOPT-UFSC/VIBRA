@@ -1,3 +1,42 @@
+from enum import IntEnum
+
+
+class MeshAlgorithms2D(IntEnum):
+    MESH_ADAPT_2D = 1
+    AUTOMATIC_2D = 2
+    INITIAL_MESH_ONLY_2D = 3
+    DELAUNAY_2D = 5
+    FRONTAL_DELAUNAY_2D = 6
+    BAMG_2D = 7
+    FRONTAL_DELAUNAY_FOR_QUADS_2D = 8
+    PACKING_OF_PARALLELOGRAMS_2D = 9
+    QUASI_STRUCTURED_QUADS_2D = 11
+
+
+class MeshAlgorithms3D(IntEnum):
+    DELAUNAY_3D = 1
+    INITIAL_MESH_ONLY_3D = 3
+    FRONTAL_3D = 4
+    MMG_3D = 7
+    RTREE_3D = 9
+    HXT_3D = 10
+
+
+class RecombinationAlgorithms(IntEnum):
+    SIMPLE_RECOMBINATION = 0
+    BLOSSOM_RECOMBINATION = 1
+    SIMPLE_FULL_QUAD_RECOMBINATION = 2
+    BLOSSOM_FULL_QUAD_RECOMBINATION = 3
+
+
+class SubdivisionAlgorithms(IntEnum):
+    NO_SUBDIVISION = 0
+    ALL_QUADRANGLES_SUBDIVISION = 1
+    ALL_HEXAHEDRA_SUBDIVISION = 2
+    BARYCENTRIC_SUBDIVISION = 3
+
+
+# TODO: delete repeated constants
 # 2D Mesh Algorithms
 MESH_ADAPT_2D = 1
 AUTOMATIC_2D = 2

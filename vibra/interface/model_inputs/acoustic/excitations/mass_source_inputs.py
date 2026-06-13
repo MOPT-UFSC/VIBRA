@@ -3,6 +3,7 @@ from PySide6.QtCore import Qt, QPoint, QItemSelectionModel
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
+from vibra.interface import error_title
 from vibra.interface.common.common_interface import update_analysis_setup_in_file
 from vibra.interface.data.data_manager import get_spectral_data_from_array
 from vibra.interface.data_handler.data_importer import DataImporter
@@ -17,6 +18,7 @@ from collections import defaultdict
 from enum import IntEnum
 from traceback import print_exception
 
+
 class AssignmentType(IntEnum):
     NODES = 0
     POINTS = 1
@@ -24,13 +26,12 @@ class AssignmentType(IntEnum):
     SURFACES = 3
     VOLUMES = 4
 
+
 class MSTabType(IntEnum):
     CONSTANT_DATA = StandardTabType.CONSTANT_DATA
     TABULAR_DATA = StandardTabType.TABULAR_DATA
     ADVANCED_SEARCH = 2
     LIST = 3
-
-error_title = "Error"
 
 
 class MassSourceInputs(MassSourceInputs_UI):
@@ -40,7 +41,6 @@ class MassSourceInputs(MassSourceInputs_UI):
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
         
-        self.project = app().project
         self.model = app().project.model
         self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
@@ -776,7 +776,7 @@ class MassSourceInputs(MassSourceInputs_UI):
         for table_name in table_names:
             self.properties.remove_imported_tables("acoustic", table_name)
         if table_names:
-            app().file.write_imported_table_data_in_file()
+            app().project.update_model_properties_file()
 
     def remove_conflicting_excitations(self, selection_ids: int | list, selection_type: str):
 
@@ -885,8 +885,7 @@ class MassSourceInputs(MassSourceInputs_UI):
         self.check_model_frequency_controls()
         self.comboBox_inherit_fluid_from.clear()
         app().main_window.update_info_text()
-        app().file.write_model_properties_in_file()
-        app().file.write_imported_table_data_in_file()
+        app().project.update_model_properties_file()
         app().main_window.selection.clear_selection()
         app().main_window.update_symbols()
 
@@ -917,10 +916,11 @@ class MassSourceInputs(MassSourceInputs_UI):
                     if "table_names" in data.keys():
                         return
 
-        analysis_setup = app().project.model.analysis_setup
-        if analysis_setup:
-            app().project.model.set_analysis_setup(analysis_setup)
-            app().file.write_analysis_setup_in_file(analysis_setup)
+        # No idea of what it does
+        app().project.configure_analysis(
+            app().project.model.analysis_id,
+            app().project.model.analysis_setup,
+        )
 
     def reset_input_fields(self):
         self.lineEdit_real_value.setText("")

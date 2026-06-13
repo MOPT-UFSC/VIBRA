@@ -1,10 +1,12 @@
-from vibra import PROJECT_DIR
-from vibra.engine.model import Model
-from vibra.engine.properties.fluid import Fluid
-
-import numpy as np
 import pytest
 
+from vibra import PROJECT_DIR
+from vibra.engine.analysis_info import (
+    AnalysisID,
+    FrequencySpacing,
+)
+from vibra.engine.model import Model
+from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
 
 
@@ -60,21 +62,15 @@ def viscous_thermal_acoustic_model(acoustic_model: Model) -> Model:
         "diameter": 0.005,
     }
     acoustic_model.set_viscous_thermal_model_data(viscous_thermal_model_data, volume=1)
+    analysis_setup = acoustic_model.get_harmonic_analysis_setup(
+        analysis_id = AnalysisID.ACOUSTIC_HARMONIC,
+        frequency_spacing = FrequencySpacing.EQUALLY_DISTRIBUTED,
+        f_min = 100,
+        f_max = 300,
+        f_step = 100,
+    )
 
-    # Define the analysis frequency setup
-    df = 100
-    f_min = 100
-    f_max = 300
-    frequencies = np.arange(f_min, f_max + df, df, dtype=float)
-
-    analysis_setup = {
-        "analysis_id": 3,
-        "f_min": f_min,
-        "f_max": f_max,
-        "f_step": df,
-        "frequencies": frequencies,
-    }
-
+    acoustic_model.analysis_id = AnalysisID.ACOUSTIC_HARMONIC
     acoustic_model.set_analysis_setup(analysis_setup)
     acoustic_model.process_viscous_thermal_model_properties()
 
@@ -84,14 +80,15 @@ def viscous_thermal_acoustic_model(acoustic_model: Model) -> Model:
 @pytest.fixture(scope="module")
 def material() -> Material:
     return Material(
-        name="Carbon Steel", 
-        identifier=1, 
-        color=(200, 200, 200), 
-        elasticity_modulus=2e11, 
-        poisson_ratio=0.3, 
+        name="Carbon Steel",
+        identifier=1,
+        color=(200, 200, 200),
+        elasticity_modulus=2e11,
+        poisson_ratio=0.3,
         material_density=7850,
         thermal_expansion_coefficient=1.1e-5,
     )
+
 
 @pytest.fixture(scope="module")
 def structural_model(material: Material) -> Model:
@@ -100,20 +97,20 @@ def structural_model(material: Material) -> Model:
 
     model = Model()
     model.properties._set_property("material", material, volume=1)
-    
+
     # Fixed boundary conditions
     data_prescribed_dofs = {
         "element_type": "3d_element",
-        "real_values": [0,0,0],
-        "imag_values": [0,0,0],
+        "real_values": [0, 0, 0],
+        "imag_values": [0, 0, 0],
     }
     model.properties._set_property("prescribed_dof", data_prescribed_dofs, surface=8)
-    
+
     # Fx load on a surface
     data_load = {
         "element_type": "3d_element",
-        "real_values": [1,0,0],
-        "imag_values": [0,0,0],
+        "real_values": [1, 0, 0],
+        "imag_values": [0, 0, 0],
         "nodal_attribution": True,
         "averaged": True,
     }
@@ -128,22 +125,16 @@ def structural_model(material: Material) -> Model:
 
     return model
 
+
 @pytest.fixture(scope="module")
 def structural_harmonic_analysis(structural_model: Model) -> Model:
-    # Define the analysis frequency setup
-    df = 200
-    f_min = 100
-    f_max = 500
-    frequencies = np.arange(f_min, f_max + df, df, dtype=float)
-
-    analysis_setup = {
-        "analysis_id": 3,
-        "f_min": f_min,
-        "f_max": f_max,
-        "f_step": df,
-        "frequencies": frequencies,
-    }
+    analysis_setup = structural_model.get_harmonic_analysis_setup(
+        analysis_id = AnalysisID.STRUCTURAL_HARMONIC,
+        frequency_spacing = FrequencySpacing.EQUALLY_DISTRIBUTED,
+        f_min = 100,
+        f_max = 500,
+        f_step = 200,
+    )
 
     structural_model.set_analysis_setup(analysis_setup)
-
     return structural_model

@@ -58,14 +58,16 @@ class LoadFluidCompositionInputs(LoadFluidComposition_UI):
 
         last_geometry_file = app().config.get_last_folder_for("fluid_composition_folder")
         if last_geometry_file is None:
-            inital_path = self.desktop_path
+            initial_path = self.desktop_path
         else:
-            inital_path = last_geometry_file
+            initial_path = last_geometry_file
 
-        file_path, check = QFileDialog.getOpenFileName( None,
-                                                        'Open file',
-                                                        inital_path,
-                                                        'Files (*.xlsx *.xls)')
+        file_path, check = QFileDialog.getOpenFileName(
+            None,
+            "Open file",
+            str(initial_path),
+            "Files (*.xlsx *.xls)",
+        )
 
         if not check:
             return True

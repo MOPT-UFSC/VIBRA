@@ -1,35 +1,39 @@
 # -*- mode: python ; coding: utf-8 -*-
 
-import sys
 import platform
-from PyInstaller.utils.hooks import collect_data_files
+import sys
+
+from PyInstaller.utils.hooks import collect_all, collect_data_files, copy_metadata
 
 os = platform.system()
 
 if os == "Windows":
-    current_system_binaries = [
-        (f"{sys.prefix}/Library/bin/*.dll", "./Library/bin/")
-    ]
+    binaries = [(f"{sys.prefix}/Library/bin/*.dll", "./Library/bin/")]
 elif os == "Linux":
-    current_system_binaries = [
-        (f"{sys.prefix}/lib/*.so*", "./lib/")
-    ]
+    binaries = [(f"{sys.prefix}/lib/*.so*", "./lib/")]
 else:
-    current_system_binaries = []
+    binaries = []
+
 
 datas = [
     ("vibra/interface/data/", "vibra/interface/data/"),
 ]
-datas += collect_data_files('molde')
+datas += collect_data_files("molde")
+datas += copy_metadata('imageio')
+
+hidden_imports = ["vtk"]
+datas_fastexcel, binaries_fastexcel, hidden_fastexcel = collect_all("fastexcel")
+
+datas += datas_fastexcel
+binaries += binaries_fastexcel
+hidden_imports += hidden_fastexcel
 
 a = Analysis(
-    ['vibra/launch.py'],
+    ["vibra/launch.py"],
     pathex=[],
-    binaries=current_system_binaries,
+    binaries=binaries,
     datas=datas,
-    hiddenimports=[
-        "vtk"
-    ],
+    hiddenimports=hidden_imports,
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
@@ -45,7 +49,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name='vibra.exe',
+    name="vibra.exe",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -56,7 +60,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['vibra.ico'],
+    icon=["vibra.ico"],
 )
 
 
@@ -67,5 +71,5 @@ coll = COLLECT(
     strip=False,
     upx=True,
     upx_exclude=[],
-    name='Vibra',
+    name="Vibra",
 )

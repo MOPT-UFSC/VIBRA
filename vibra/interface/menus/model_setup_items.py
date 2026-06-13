@@ -19,8 +19,6 @@ class ModelSetupItems(CommonMenuItems):
     def __init__(self):
         super().__init__()
 
-        self.project = app().project
-
         self._create_items()
         self._create_connections()
         self._initial_configuration()
@@ -191,7 +189,7 @@ class ModelSetupItems(CommonMenuItems):
             properties.point_properties,
             properties.element_properties,
             properties.nodal_properties,
-            ]
+        ]
 
         if property_name == "material":
             if mesh.are_there_volumes_in_geometry():
@@ -311,9 +309,9 @@ class ModelSetupItems(CommonMenuItems):
                 toolbar.combo_box_physical_domain.setCurrentIndex(0)
                 return
 
-        _, physical_domain = app().project.get_analysis_type_and_physical_domain()
-        if physical_domain == "":
+        if app().project.get_physical_domain() == "":
             toolbar.combo_box_physical_domain.setCurrentIndex(1)
+            toolbar.check_analysis_setup_callback()
         else:
             toolbar.update_analysis_combo_boxes(block_signals=True)
 
@@ -332,17 +330,17 @@ class ModelSetupItems(CommonMenuItems):
 
         self.item_top_general_settings.setHidden(False)
 
-        if physical_domain == "structural":
-            self.item_child_fluid.setHidden(True)
-            self.item_child_material.setHidden(False)
-            self.item_top_acoustic_model_setup.setHidden(True)
-            self.item_top_structural_model_setup.setHidden(False)
-
-        elif physical_domain == "acoustic":
+        if physical_domain == "acoustic":
             self.item_child_fluid.setHidden(False)
             self.item_child_material.setHidden(True)
             self.item_top_acoustic_model_setup.setHidden(False)
             self.item_top_structural_model_setup.setHidden(True)
+
+        else:
+            self.item_child_fluid.setHidden(True)
+            self.item_child_material.setHidden(False)
+            self.item_top_acoustic_model_setup.setHidden(True)
+            self.item_top_structural_model_setup.setHidden(False)
 
     def _are_there_collapsed_elements(self, item_child) -> bool:
         if item_child.property_name == "mesh_setup":
@@ -372,7 +370,8 @@ class ModelSetupItems(CommonMenuItems):
             analysis_type = app().main_window.analysis_toolbar.combo_box_analysis_type.currentText()
             physical_domain = app().main_window.analysis_toolbar.combo_box_physical_domain.currentText()
         except Exception:
-            analysis_type, physical_domain = app().project.get_analysis_type_and_physical_domain()
+            analysis_type = app().project.get_analysis_type()
+            physical_domain = app().project.get_physical_domain()
 
         analysis_type = analysis_type.lower()
         physical_domain = physical_domain.lower()
@@ -526,7 +525,7 @@ class ModelSetupItems(CommonMenuItems):
         app().main_window.input_ui.set_acoustic_transfer_element_setup()
 
     def modify_general_settings_items_access(self, key: bool):
-        imported_geometry = app().project.model.mesh.geometry_imported
+        imported_geometry = app().project.model.is_there_a_geometry_imported()
         self.item_child_mesh_setup.setDisabled(not imported_geometry)
         self.item_child_element_options.setDisabled(not imported_geometry)
         self.item_child_material.setDisabled(key)

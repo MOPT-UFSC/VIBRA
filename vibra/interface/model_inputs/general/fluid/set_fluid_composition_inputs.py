@@ -1,18 +1,29 @@
-from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QTableWidgetItem, QTreeWidgetItem
+import logging
+from enum import IntEnum
+
 from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (
+    QAbstractItemView,
+    QHeaderView,
+    QTableWidgetItem,
+    QTreeWidgetItem,
+)
 
 from vibra import app
 from vibra.engine.properties.fluid import Fluid
-from vibra.interface.ui_generated.model.fluid.set_fluid_composition_input_ui import SetFluidCompositionInput_UI
-from vibra.interface.model_inputs.general.fluid.refprop_interface import RefpropInterface
-from vibra.interface.model_inputs.general.fluid.load_fluid_composition_inputs import LoadFluidCompositionInputs
-from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface import error_title, warning_title
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
-
-from enum import IntEnum
-
-error_title = "Error"
-warning_title = "Warning"
+from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.loading_window import LoadingWindow
+from vibra.interface.model_inputs.general.fluid.load_fluid_composition_inputs import (
+    LoadFluidCompositionInputs,
+)
+from vibra.interface.model_inputs.general.fluid.refprop_interface import (
+    RefpropInterface,
+)
+from vibra.interface.ui_generated.model.fluid.set_fluid_composition_input_ui import (
+    SetFluidCompositionInput_UI,
+)
 
 
 class TemperatureUnit(IntEnum):
@@ -40,7 +51,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             self.check_state_properties(self.state_properties)
 
         self.update_remainig_composition()
-        if self.initialize_refprop_interface():
+        if LoadingWindow(self.initialize_refprop_interface).run():
             return
 
         self.update_selected_fluid(fluid_to_edit = self.fluid_to_edit)
@@ -76,15 +87,19 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         self.composition_file_path = ""
 
     def initialize_refprop_interface(self):
+        logging.info("Loading REFPROP interface [10%]")
         self.refprop_interface = RefpropInterface()
+
         if self.refprop_interface.initialize_REFPROP():
             return True
-
+        
+        logging.info("Loading REFPROP interface [80%]")
         self.refprop = self.refprop_interface.refprop
         self.load_default_gases_info(self.refprop_interface.refprop_fluids)
 
+        logging.info("Loading REFPROP interface [95%]")
         version = self.refprop_interface.get_REFPROP_version()
-        self.setWindowTitle(f"Vibra (REFPROP v{version})")
+        self.setWindowTitle(f"OpenPulse (REFPROP v{version})")
 
     def _create_connections(self):
         #
@@ -106,6 +121,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         self.treeWidget_refprop_fluids.itemClicked.connect(self.on_click_item_refprop_fluids)
         self.treeWidget_refprop_fluids.itemDoubleClicked.connect(self.on_double_click_item_refprop_fluids)
         #
+        self.lineEdit_search_fluid.textChanged.connect(self._filter_refprop_fluids)
         self.distribution_type_changed_callback()
         self.fluids_configuration_mode_callback()
 
@@ -211,8 +227,8 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             self.lineEdit_temperature_right.setDisabled(True)
 
             self.connection_type = state_properties['connection_type']
-            self.T_suction = state_properties[f'temperature_at_suction']
-            self.P_suction = state_properties[f'suction_pressure']
+            self.T_suction = state_properties['temperature_at_suction']
+            self.P_suction = state_properties['suction_pressure']
 
             if self.connection_type == "suction":
                 self.lineEdit_pressure_right.setVisible(False)
@@ -233,8 +249,8 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             self.lineEdit_pressure_right.setText(f"{self.P_discharge : .8e}")
 
             if 'temperature_at_discharge' in state_properties.keys():
-                self.T_discharge = state_properties[f'temperature_at_discharge']
-                self.lineEdit_temperature_right.setText(f"{self.T_discharge : .4f}")
+                self.T_discharge = state_properties['temperature_at_discharge']
+                self.lineEdit_temperature_right.setText("{self.T_discharge : .4f}")
 
             else:
 
@@ -379,7 +395,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
 
         self.hide()
 
-        title = f"Fluid composition reset"
+        title = "Fluid composition reset"
         message = "Would you like to reset the current fluid composition?"
 
         buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
@@ -403,6 +419,11 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             new = QTreeWidgetItem([fluid])
             new.setTextAlignment(0, Qt.AlignCenter)
             self.treeWidget_refprop_fluids.addTopLevelItem(new)
+
+    def _filter_refprop_fluids(self, text: str):
+        for i in range(self.treeWidget_refprop_fluids.topLevelItemCount()):
+            item = self.treeWidget_refprop_fluids.topLevelItem(i)
+            item.setHidden(text.lower() not in item.text(0).lower())
 
     def config_table_data(self):
 
@@ -509,7 +530,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             self.tableWidget_new_fluid.setItem(row, 1, QTableWidgetItem(molar_fraction))
             self.tableWidget_new_fluid.item(row, 1).setTextAlignment(Qt.AlignCenter)
 
-        except:
+        except Exception:
             return True
 
     def check_remaining_molar_fraction(self):
@@ -1040,35 +1061,34 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
     def load_fluid_composition_callback(self):
 
         self.hide()
-        self.label_selected_fluid.setText("")
-
-        self.fluid_data = dict()
-        self.fluid_to_composition = dict()
+        self.fluid_data.clear()
+        self.fluid_to_composition.clear()
+        self.label_selected_fluid.clear()
 
         read = LoadFluidCompositionInputs(file_path = self.composition_file_path)
 
-        if read.complete:
+        if not read.complete:
+            app().main_window.set_input_widget(self)
 
-            self.composition_file_path = read.file_path
-            composition_data = read.fluid_composition_data
+        self.composition_file_path = read.file_path
 
-            comp = 0
-            for (i, label, refprop_fluid_name, molar_fraction) in composition_data:
+        comp = 0
+        for (i, label, refprop_fluid_name, molar_fraction) in read.fluid_composition_data:
 
-                self.fluid_data[i] = [label, refprop_fluid_name, molar_fraction]
+            self.fluid_data[i] = [label, refprop_fluid_name, molar_fraction]
 
-                if not refprop_fluid_name in self.refprop_fluids.keys():
-                    pass
+            if refprop_fluid_name not in self.refprop_fluids.keys():
+                continue
+        
+            if not molar_fraction:
+                continue
 
-                if refprop_fluid_name in self.refprop_fluids.keys():
-                    if molar_fraction:
+            [fluid_file, _, _] = self.refprop_fluids[refprop_fluid_name]
+            self.fluid_to_composition[refprop_fluid_name] = [str(molar_fraction), molar_fraction, fluid_file]
+            comp += molar_fraction
 
-                        [fluid_file, _, _] = self.refprop_fluids[refprop_fluid_name]
-                        self.fluid_to_composition[refprop_fluid_name] = [str(molar_fraction), molar_fraction, fluid_file]
-                        comp += molar_fraction
-
-            self.load_fluid_composition_info()
-            self.update_remainig_composition()
+        self.load_fluid_composition_info()
+        self.update_remainig_composition()
 
         app().main_window.set_input_widget(self)
 

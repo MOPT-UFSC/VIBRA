@@ -6,7 +6,7 @@ from vibra.engine import AnalysisID
 
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.loading_window import LoadingWindow
+# from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter, DataFormat
 from vibra.interface.ui_generated.plots.acoustic.acoustic_pressure_waveform_inputs_ui import AcousticPressureWaveformInputs_UI
 
@@ -23,25 +23,38 @@ class AcousticPressureWaveformInputs(AcousticPressureWaveformInputs_UI):
 
         app().main_window.show_geometry_render_widget()
 
-        self.mesh = app().project.model.mesh
-
         self._reset_variables()
         self._create_connections()
 
         self._load_analysis_setup_and_solution()
         self.geometry_selection_callback()
     
+    @property
+    def model(self):
+        return app().project.model
+
+    @property
+    def mesh(self):
+        return app().project.model.mesh
+
+    @property
+    def properties(self):
+        return app().project.model.properties
+
+    @property
+    def nodal_solution(self):
+        return app().project.model.solution.nodal_solution
+
     def showEvent(self, event):
         super().showEvent(event)
         self.update_render_according_to_selector()
 
     def _load_analysis_setup_and_solution(self):
         self.analysis_method = ""
-        if self.project.model.analysis_setup.get("analysis_id") == AnalysisID.ACOUSTIC_HARMONIC:
+        if self.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
             self.analysis_method = "Direct method"
 
-        self.frequencies = app().project.model.frequencies
-        self.solution = app().project.acoustic_harmonic_solver.solution
+        self.frequencies = self.model.frequencies
 
     def _reset_variables(self):
         self.exporter = None
@@ -149,9 +162,9 @@ class AcousticPressureWaveformInputs(AcousticPressureWaveformInputs_UI):
             rows = selected_id
 
         if isinstance(rows, int):
-            response = self.solution[rows,:]
+            response = self.nodal_solution[rows,:]
         else:
-            response = np.average(self.solution[rows,:], axis=0)
+            response = np.average(self.nodal_solution[rows,:], axis=0)
 
         if complex(0) in response:
             response += 1e-12
@@ -162,7 +175,7 @@ class AcousticPressureWaveformInputs(AcousticPressureWaveformInputs_UI):
     def compute_multiple_ifft(self):
 
         logging.info("Computing multiple iffts... [10/100]")
-        solution = self.solution[:, :]
+        solution = self.nodal_solution[:, :]
 
         t0 = time()
         logging.info("Computing multiple iffts... [25/100]")

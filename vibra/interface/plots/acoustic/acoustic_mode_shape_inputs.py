@@ -1,15 +1,18 @@
+import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QTreeWidgetItem
+from PySide6.QtWidgets import QGridLayout, QTreeWidgetItem
 
 from vibra import app
+from vibra.engine.solution import ModalSolution
 from vibra.interface.common.common_interface import export_modal_analysis_results
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.loading_window import LoadingWindow
-from vibra.interface.ui_generated.plots.acoustic.acoustic_mode_shape_inputs_ui import AcousticModeShapeInputs_UI
+from vibra.interface.plots.general.animation_widget import AnimationWidget
+from vibra.interface.ui_generated.plots.acoustic.acoustic_mode_shape_inputs_ui import (
+    AcousticModeShapeInputs_UI,
+)
 from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
-
-import numpy as np
 
 
 class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
@@ -19,6 +22,7 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
         self._initialize()
         self._paint_icons()
         self._create_connections()
+        self.add_animation_widget()
 
     def showEvent(self, event):
         super().showEvent(event)
@@ -26,9 +30,7 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
         render_widget = app().main_window.results_widget
         app().main_window.render_widgets_stack.setCurrentWidget(render_widget)
         app().main_window.render_widget_changed.emit()
-
-        app().main_window.animation_toolbar.setDisabled(False)
-        app().main_window.render_tools_toolbar.hide_selection_tool()
+        app().main_window.view_toolbar.disable_selection_tool()
 
     def _initialize(self):
         self.mode_index = None
@@ -43,20 +45,33 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
         self.slider_transparency.valueChanged.connect(self.update_transparency_callback)
         #
         self.treeWidget_frequencies.itemClicked.connect(self.on_click_item)
-        self.treeWidget_frequencies.itemDoubleClicked.connect(self.on_doubleclick_item)
+        self.treeWidget_frequencies.itemDoubleClicked.connect(self.on_click_item)
         #
         app().main_window.theme_changed.connect(self._paint_icons)
         #
         self.load_user_preference_colormap()
 
-    def _configure_qt_variables(self):
+    def add_animation_widget(self):
+
+        self.grid_layout = QGridLayout()
+        self.grid_layout.setContentsMargins(0, 0, 0, 0)
+        self.frame_animation.setLayout(self.grid_layout)
+
+        self.animation_widget = AnimationWidget()
+        self.grid_layout.addWidget(self.animation_widget)
+        self.frame_animation.adjustSize()
+
+    def _configure_widgets(self):
         #
         self.frame_transparency.setVisible(False)
-        #
         self.lineEdit_natural_frequency.setDisabled(True)
         self.lineEdit_natural_frequency.setProperty("status", "information")
-        #
-        if app().project.acoustic_modal_solver.complex_natural_frequencies.size:
+
+        solution = app().project.model.solution
+        if not isinstance(solution, ModalSolution):
+            return
+
+        if isinstance(solution.complex_natural_frequencies, np.ndarray) and solution.complex_natural_frequencies.size:
             widths = [60, 160]
             headers = ["Mode", "Damped frequency [Hz]", "Damping ratio [--]"]
 
@@ -81,7 +96,7 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
 
         icon_color = None
         theme = app().config.user_preferences.interface_theme
-        from vibra import LIGHT_ICON_COLOR, DARK_ICON_COLOR
+        from vibra import DARK_ICON_COLOR, LIGHT_ICON_COLOR
         if theme == "dark":
             icon_color = DARK_ICON_COLOR.to_qt()
         else:
@@ -94,9 +109,9 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
     def update_animation_widget_visibility(self):
         index = self.comboBox_plot_type.currentIndex()
         if index >= 2:
-            app().main_window.animation_toolbar.setDisabled(True)
+            self.animation_widget.setDisabled(True)
         else:
-            app().main_window.animation_toolbar.setDisabled(False)
+            self.animation_widget.setDisabled(False)
 
     def load_user_preference_colormap(self):
         try:
@@ -111,7 +126,7 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
         app().config.user_preferences.color_map = self.get_colormap()
         app().config.update_config_file()
         try:
-            app().main_window.results_widget.update_color_and_deformation()
+            self.animation_widget.update_color_and_deformation()
         except AttributeError:
             pass
 
@@ -131,6 +146,7 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
 
         self.mode_index = self.natural_frequencies.index(self.selected_natural_frequency)
 
+        self.animation_widget.reset_sliders()
         LoadingWindow(app().main_window.results_widget.update_plot).run()
 
     def update_transparency_callback(self):
@@ -150,17 +166,16 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
         return plot_types[index]
 
     def load_natural_frequencies(self):
-        if app().project.acoustic_modal_solver is None:
+        solution = app().project.model.solution
+        if not isinstance(solution, ModalSolution):
             return
 
-        self._configure_qt_variables()
+        self._configure_widgets()
 
-        if len(app().project.acoustic_modal_solver.complex_natural_frequencies):
-            self.natural_frequencies = list(
-                app().project.acoustic_modal_solver.complex_natural_frequencies
-            )
+        if isinstance(solution.complex_natural_frequencies, np.ndarray) and solution.complex_natural_frequencies.size:
+            self.natural_frequencies = list(solution.complex_natural_frequencies)
         else:
-            self.natural_frequencies = list(app().project.acoustic_modal_solver.natural_frequencies)
+            self.natural_frequencies = list(solution.natural_frequencies)
 
         modes = np.arange(1, len(self.natural_frequencies) + 1, 1)
         self.modes_to_frequencies = dict(zip(modes, self.natural_frequencies))
@@ -198,7 +213,7 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
             return self.mode_index
         return 0
 
-    def on_click_item(self, item):
+    def on_click_item(self, item: QTreeWidgetItem):
         selected_frequency = self.modes_to_frequencies[int(item.text(0))]
 
         if isinstance(selected_frequency, complex):
@@ -210,9 +225,6 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
 
         self.selected_natural_frequency = selected_frequency
         self.update_plot()
-
-    def on_doubleclick_item(self, item):
-        self.on_click_item(item)
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:

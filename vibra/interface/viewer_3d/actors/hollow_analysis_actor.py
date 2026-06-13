@@ -41,3 +41,6 @@ class HollowAnalysisActor(HollowSolidsActor):
     def configure_appearance(self):
         super().configure_appearance()
         self.GetProperty().SetSpecular(0)
+
+    def apply_cutter(self, origin, normal):
+        self.apply_cut(origin, normal)

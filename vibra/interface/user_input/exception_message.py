@@ -12,7 +12,8 @@ from traceback import format_tb
 class ExceptionMessage(ExceptionMessage_UI):
     def __init__(self, exception: Exception, stack_trace = None):
         super().__init__()
-        self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint, True)
+
+        self._config_window()
 
         if isinstance(exception, Warning):
             self.setWindowIcon(get_warning_icon())
@@ -21,16 +22,21 @@ class ExceptionMessage(ExceptionMessage_UI):
             self.setWindowIcon(get_error_icon(QColor(255, 0, 0, 200)))
             self.setWindowTitle("Error")
 
-
         if stack_trace is None:
             self.stack_trace_text_browser.hide()
         else:
-            traceback = "\n".join(format_tb(stack_trace, limit=2))
+            traceback = "\n".join(format_tb(stack_trace, limit=-5))
+            if stderr := getattr(exception, "stderr", ""):
+                traceback = (
+                    f"{traceback}\n"
+                    f"{stderr}"
+                )
+
             self.stack_trace_text_browser.setText(
-                "<code>"
+                "<pre>"
                 + "Traceback (most recent call last):\n"
                 + traceback
-                + "</code>"
+                + "</pre>"
             )
 
         title = pascal_to_spaced_case(exception.__class__.__name__)
@@ -40,3 +46,12 @@ class ExceptionMessage(ExceptionMessage_UI):
         self.error_message.setText(message)
         
         self.ok_button.clicked.connect(self.close)
+        self.adjustSize()
+
+    def _config_window(self):
+        self.setWindowFlags(Qt.WindowStaysOnTopHint)
+        self.setWindowModality(Qt.WindowModal)
+
+    def move_stacktrace_to_bottom(self):
+        v_scrollbar = self.stack_trace_text_browser.verticalScrollBar()
+        v_scrollbar.setValue(v_scrollbar.maximum())

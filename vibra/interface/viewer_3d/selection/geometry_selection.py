@@ -94,6 +94,9 @@ class GeometrySelection:
         plane_mask = self._section_plane_mask(points_coords[:, 1:])
         points_coords = points_coords[plane_mask]
 
+        if points_coords.size == 0:
+            return set(), float("inf")
+
         i = np.argmin(np.linalg.norm(points_coords[:, 1:] - pick_position, axis=1))
         camera_position = np.array(renderer.GetActiveCamera().GetPosition())
         camera_distance = np.linalg.norm(camera_position - pick_position)

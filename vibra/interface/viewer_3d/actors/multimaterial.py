@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Sequence
+from typing import Optional, Sequence
 
 import numpy as np
 from molde.colors import Color, color_names
@@ -26,7 +26,7 @@ from vtkmodules.vtkRenderingCore import (
 
 from vibra import TEXTURE_DIR, app
 from vibra.engine.mesher.mesh import Mesh
-from vibra.utils.interface_utils import GeometryColorMode
+from vibra.utils.interface_utils import GeometryColorMode, VisualizationFilter
 from vibra.utils.vtk_utils import fill_array, read_texture
 
 
@@ -37,11 +37,16 @@ def get_first_visible_volume(volumes):
 
 
 class MultimaterialGeometryActor(vtkPropAssembly):
-    def __init__(self, mesh: Mesh | None = None):
-        self.mesh = mesh
-        if self.mesh is None:
-            self.mesh = app().project.model.mesh
+    def __init__(
+        self,
+        mesh: Mesh,
+        visualization_filter: Optional[VisualizationFilter] = None,
+    ):
+        self.visualization_filter = visualization_filter
+        if self.visualization_filter is None:
+            self.visualization_filter = VisualizationFilter.all_true()
 
+        self.mesh = mesh
         self.extractors: dict[str, vtkExtractCells] = dict()
         self.create_geometry()
 
@@ -69,7 +74,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
     def clear_colors(self):
         mesh = app().project.model.mesh
         properties = app().project.model.properties
-        color_mode = app().main_window.visualization_filter.color_mode
+        color_mode = self.visualization_filter.color_mode
 
         if color_mode == GeometryColorMode.EMPTY:
             self.reload_composition()
@@ -111,7 +116,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
     def reload_composition(self):
         mesh = app().project.model.mesh
         properties = app().project.model.properties
-        color_mode = app().main_window.visualization_filter.color_mode
+        color_mode = self.visualization_filter.color_mode
         surfaces = mesh.lines_from_surface.keys()  # We don't have just "surfaces" yet
 
         if color_mode == GeometryColorMode.EMPTY:

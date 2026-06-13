@@ -7,10 +7,6 @@ from vibra import app, TEMP_PROJECT_DIR
 from vibra.interface.ui_generated.project.save_project_data_selector_ui import SaveProjectDataSelector_UI
 
 
-window_title_1 = "Error"
-window_title_2 = "Warning"
-
-
 class SaveProjectDataSelector(SaveProjectDataSelector_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -76,6 +72,11 @@ class SaveProjectDataSelector(SaveProjectDataSelector_UI):
         self.keep_window_open = False
         return super().closeEvent(a0)
     
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
+            self.proceed_callback()
+        elif event.key() == Qt.Key_Escape:
+            self.close()
 
 def get_folder_size(path: Path):
     return sum(f.stat().st_size for f in path.rglob("*") if f.is_file())

@@ -1,4 +1,3 @@
-from scipy.special._ufuncs import loggamma
 import logging
 from threading import Lock
 from time import time
@@ -9,13 +8,13 @@ from PySide6.QtWidgets import QFileDialog
 from vtkmodules.vtkCommonCore import vtkPoints
 from vtkmodules.vtkCommonDataModel import vtkPointData
 
-from vibra import app, ICON_DIR
-from vibra.interface.viewer_3d.render_tools import (
-    SelectionTool,
-    RenderTool
-)
+from vibra import ICON_DIR, app
 from vibra.engine import AnalysisID
+from vibra.engine.postprocessing import AcousticPostprocessing, StructuralPostprocessing
 from vibra.interface.loading_window import LoadingWindow
+from vibra.interface.plots.general.animation_widget import AnimationWidget
+from vibra.interface.viewer_3d.render_tools import RenderTool, SelectionTool
+from vibra.utils.interface_utils import VisualizationFilter
 from vibra.utils.math_functions import lerp
 
 from ..actors import (
@@ -39,8 +38,10 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         app().main_window.section_plane.value_changed.connect(self.update_color_and_deformation)
         app().main_window.visualization_changed.connect(self.visualization_changed_callback)
 
-        self.acoustic_post = app().project.acoustic_postprocessing
-        self.structural_post = app().project.structural_postprocessing
+        self.visualization_filter = VisualizationFilter(
+            faces=True,
+            solids=True,
+        )
 
         self._animation_cached_data = dict()
         self._animation_cache_lock = Lock()
@@ -92,9 +93,12 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.scale_bar_actor.GetLegendTitleProperty().SetColor(font_color.to_rgb_f())
             self.scale_bar_actor.GetLegendLabelProperty().SetColor(font_color.to_rgb_f())
 
-    def update_plot(self, reset_camera=False):
+    def update_plot(self, reset_camera: bool = False):
         mesh = app().project.model.mesh
         if mesh is None:
+            return
+
+        if app().project.solver is None:
             return
 
         logging.info("Updating the results render... [10/100]")
@@ -104,8 +108,11 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.analysis_actor = HollowAnalysisActor(mesh)
 
         logging.info("Updating the results render... [75/100]")
-        self.edges_actor = EdgesActor(self.analysis_actor.data)
-        
+        self.edges_actor = EdgesActor(
+            self.analysis_actor.data,
+            visualization_filter=self.visualization_filter,
+        )
+
         logging.info("Updating the results render... [80/100]")
         self.ghost_actor = GhostActor(mesh)
 
@@ -123,7 +130,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.plane_actor,
         )
 
-        visualization = app().main_window.visualization_filter
+        visualization = self.visualization_filter
         self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
         self.plane_actor.VisibilityOff()
 
@@ -141,7 +148,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         logging.info("Updating the results render... [98/100]")
         self.update()
-    
+
     def enable_scale_bar(self):
         self.scale_bar_actor.VisibilityOn()
 
@@ -176,7 +183,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             with self._animation_cache_lock:
                 if self.timestamp != timestamp:
                     break
-                
+
                 if frame in self._animation_cached_data:
                     continue
 
@@ -187,7 +194,12 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         phase = lerp(0, 2 * np.pi, t)
 
         with self.update_lock:
-            self.update_color_and_deformation(phase, clear_cache=False)
+            animation_widget = app().main_window.results_viewer_widget.get_animation_widget()
+            self.update_color_and_deformation(
+                phase=phase,
+                magnification_factor=animation_widget.magnification_factor,
+                clear_cache=False,
+            )
 
         point_data = vtkPointData()
         point_position = vtkPoints()
@@ -205,15 +217,16 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         super().start_animation(*args, **kwargs)
 
     def stop_animation(self, *args, **kwargs):
-        app().main_window.animation_toolbar.pushButton_animate.setChecked(False)
-        app().main_window.animation_toolbar.update_animate_button_icons(False)
+        animation_widget = app().main_window.results_viewer_widget.get_animation_widget()
+        animation_widget.pushButton_animate.setChecked(False)
+        animation_widget.update_animate_button_icons(False)
         super().stop_animation(*args, **kwargs)
 
     def update_animation(self, frame):
         if not self.actors_exists():
             return
 
-        if app().project.analysis_id == AnalysisID.NO_ANALYSIS:
+        if app().project.model.analysis_id == AnalysisID.NO_ANALYSIS:
             self.stop_animation()
             return
 
@@ -235,22 +248,30 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             logging.warning(f"Cache miss on update_animation function for frame {frame}")
             self.cache_frame(frame)
 
-    def update_color_and_deformation(self, phase=None, clear_cache=True):
+    def update_color_and_deformation(
+        self,
+        phase: float = 0.0,
+        magnification_factor: float = 1.0,
+        clear_cache: bool = True,
+    ):
+
         if not self.actors_exists():
+            return
+
+        if app().project.model.solution is None:
             return
 
         if clear_cache:
             self.clear_cache()
 
-        animation_toolbar = app().main_window.animation_toolbar
-        magnification_factor = animation_toolbar.magnification_factor_slider.value() / 16
+        # magnification_factor = animation_widget.magnification_factor_slider.value() / 16
 
         displacements = None
         colormap = app().config.user_preferences.color_map
-        analysis_id = app().project.analysis_id
+        analysis_id = app().project.model.analysis_id
 
-        if phase is None:
-            phase = np.radians(animation_toolbar.phase_slider.value())
+        # if phase is None:
+        #     phase = np.radians(animation_widget.phase_slider.value())
 
         if analysis_id == AnalysisID.NO_ANALYSIS:
             return
@@ -260,11 +281,15 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.mode_index = analysis_widget.current_mode_index()
             displacement_type = analysis_widget.get_plot_type()
 
-            data = self.structural_post.compute_structural_displacement_field(
+            postprocessing = app().project.get_structural_postprocessing()
+            if not isinstance(postprocessing, StructuralPostprocessing):
+                return
+
+            data = postprocessing.compute_structural_displacement_field(
                 self.mode_index,
                 phase,
                 displacement_type,
-                is_modal=True
+                is_modal=True,
             )
             if data is None:
                 return
@@ -279,7 +304,11 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.frequency_index = analysis_widget.get_selected_frequency_index()
             displacement_type = analysis_widget.get_plot_type()
 
-            data = self.structural_post.compute_structural_displacement_field(
+            postprocessing = app().project.get_structural_postprocessing()
+            if not isinstance(postprocessing, StructuralPostprocessing):
+                return
+
+            data = postprocessing.compute_structural_displacement_field(
                 self.frequency_index,
                 phase,
                 displacement_type,
@@ -297,11 +326,15 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.mode_index = analysis_widget.current_mode_index()
             plot_type = analysis_widget.get_plot_type()
 
-            data = self.acoustic_post.compute_acoustic_pressure_field(
+            postprocessing = app().project.get_acoustic_postprocessing()
+            if not isinstance(postprocessing, AcousticPostprocessing):
+                return
+
+            data = postprocessing.compute_acoustic_pressure_field(
                 self.mode_index,
                 phase,
                 plot_type,
-                is_modal=True
+                is_modal=True,
             )
             if data is None:
                 return
@@ -316,7 +349,11 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.frequency_index = analysis_widget.get_selected_frequency_index()
             plot_type = analysis_widget.get_plot_type()
 
-            data = self.acoustic_post.compute_acoustic_pressure_field(
+            postprocessing = app().project.get_acoustic_postprocessing()
+            if not isinstance(postprocessing, AcousticPostprocessing):
+                return
+
+            data = postprocessing.compute_acoustic_pressure_field(
                 self.frequency_index,
                 phase,
                 plot_type,
@@ -333,7 +370,10 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             raise ValueError(f"Unknown analysis: {analysis_id}")
 
         if displacements is not None:
-            app().main_window.animation_toolbar.update_factor_label(max_value=max_value)
+            animation_widget = app().main_window.results_viewer_widget.get_animation_widget()
+            if isinstance(animation_widget, AnimationWidget):
+                animation_widget.update_factor_label(max_value=max_value)
+
             self.analysis_actor.apply_deformation(
                 displacements,
                 magnification_factor,
@@ -345,12 +385,11 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.update()
 
-
     def visualization_changed_callback(self):
         if not self.actors_exists():
             return
 
-        visualization = app().main_window.visualization_filter
+        visualization = self.visualization_filter
         self.edges_actor.SetVisibility(visualization.lines)
         self.analysis_actor.SetVisibility(visualization.faces)
         self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
@@ -394,7 +433,10 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         self.remove_actors(self.analysis_actor, self.edges_actor)
         self.analysis_actor = self._cache_hollow_solids_actor
-        self.edges_actor = EdgesActor(self.analysis_actor.data)
+        self.edges_actor = EdgesActor(
+            self.analysis_actor.data,
+            visualization_filter=self.visualization_filter,
+        )
         self.update_color_and_deformation()
         self.visualization_changed_callback()
         self.add_actors(self.analysis_actor, self.edges_actor)
@@ -417,7 +459,10 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         self.remove_actors(self.analysis_actor, self.edges_actor)
         self.analysis_actor = self._cache_full_solids_actor
-        self.edges_actor = EdgesActor(self.analysis_actor.data)
+        self.edges_actor = EdgesActor(
+            self.analysis_actor.data,
+            visualization_filter=self.visualization_filter,
+        )
         self.update_color_and_deformation()
         self.visualization_changed_callback()
         self.add_actors(self.analysis_actor, self.edges_actor)
@@ -468,7 +513,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             normal = -normal
 
         logging.info("Applying cut... [70/100]")
-        visualization = app().main_window.visualization_filter
+        visualization = self.visualization_filter
         if is_mesh_field:
             self.analysis_actor.apply_cut(xyz, normal)
             self.edges_actor.VisibilityOn()
@@ -487,12 +532,12 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.plane_actor.SetVisibility(show_plane)
         self.plane_actor.GetProperty().SetColor(0.5, 0.5, 0.5)
         self.plane_actor.GetProperty().SetOpacity(0.2)
-        
+
         logging.info("Updating... [99/100]")
         self.update()
 
     def _disable_section_plane(self):
-        visualization = app().main_window.visualization_filter
+        visualization = self.visualization_filter
         self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
         self.plane_actor.VisibilityOff()
 
@@ -503,29 +548,22 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.update()
 
     def update_info_text(self):
-
         if not app().project.is_there_a_valid_solution():
             return
 
         text = ""
-        analysis_id = app().project.analysis_id
+        analysis_id = app().project.model.analysis_id
 
         if analysis_id == AnalysisID.NO_ANALYSIS:
             return
-        
-        if  self.frequency_index is None and self.mode_index is None:
+
+        if self.frequency_index is None and self.mode_index is None:
             return
 
-        if analysis_id in [
-            AnalysisID.STRUCTURAL_HARMONIC, 
-            AnalysisID.ACOUSTIC_HARMONIC
-            ]:
+        if AnalysisID(analysis_id).is_harmonic():
             text += analysis_info_text(self.frequency_index + 1)
 
-        if analysis_id in [
-            AnalysisID.STRUCTURAL_MODAL,
-            AnalysisID.ACOUSTIC_MODAL,
-            ]:
+        if AnalysisID(analysis_id).is_modal():
             text += analysis_info_text(self.mode_index)
 
         self.set_info_text(text)
@@ -536,12 +574,12 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             return
 
         unit_mapping = {
-            AnalysisID.STRUCTURAL_HARMONIC : "m",
-            AnalysisID.ACOUSTIC_HARMONIC : "Pa",
+            AnalysisID.STRUCTURAL_HARMONIC: "m",
+            AnalysisID.ACOUSTIC_HARMONIC: "Pa",
         }
 
-        analysis_id = app().project.analysis_id
-        unit = unit_mapping.get(analysis_id, '--')
+        analysis_id = app().project.model.analysis_id
+        unit = unit_mapping.get(analysis_id, "--")
 
         self.colorbar_actor.SetTitle(f"Unit: [{unit}]")
         self.update()
@@ -562,17 +600,14 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         colorbar_label_property = self.colorbar_actor.GetLabelTextProperty()
         colorbar_title_property.SetFontSize(font_size_px)
         colorbar_label_property.SetFontSize(font_size_px)
-    
+
     def add_render_tool(self, tool_class):
         if tool_class == SelectionTool:
             super().add_render_tool(RenderTool)
         else:
             super().add_render_tool(tool_class)
-    
+
     def set_default_render_tool(self):
         tool = RenderTool()
         self.set_interactor_style(tool)
         tool.update_mouse_cursor_in_render_widgets(tool.current_cursor)
-
-
-

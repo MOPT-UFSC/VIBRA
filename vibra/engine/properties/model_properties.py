@@ -1,13 +1,11 @@
+import json
 from typing import Callable, Optional
 
+import numpy as np
+
+from vibra.engine.properties import FluidLibrary, MaterialLibrary
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
-
-import json
-import numpy as np
-import os
-from dataclasses import dataclass
-
 
 DEFAULT_MATERIAL = Material(
     name="Steel",
@@ -57,10 +55,11 @@ class ModelProperties:
 
     def __init__(self, disable_resume_callback: Optional[Callable] = None):
         self.disable_resume_callback = disable_resume_callback
-
         self._reset_variables()
-
+    
     def _reset_variables(self):
+        self.material_library = MaterialLibrary.default()
+        self.fluid_library = FluidLibrary.default()
 
         self.acoustic_imported_tables = dict()
         self.structural_imported_tables = dict()
@@ -94,23 +93,22 @@ class ModelProperties:
         return (1 + factor * 1j) * c_0
 
     def _set_property(
-                      self, 
-                      property: str, 
-                      data: dict | Fluid | Material, 
-                      node: int | None = None, 
-                      element: int | None = None, 
-                      point: int | None = None, 
-                      line: int | None = None, 
-                      surface: int | tuple[int] | None = None, 
-                      volume: int | None = None, 
-                      group: int | None = None
-                      ):
+        self,
+        property: str,
+        data: dict | Fluid | Material,
+        node: int | None = None,
+        element: int | None = None,
+        point: int | None = None,
+        line: int | None = None,
+        surface: int | tuple[int] | None = None,
+        volume: int | None = None,
+        group: int | None = None,
+    ):
         """
         This method sets a data to a property by node, element, line, surface or volume
         if any of these exists. Otherwise sets the property as global.
 
         """
-
         if isinstance(data, dict):
 
             values_list = list()
@@ -161,6 +159,12 @@ class ModelProperties:
 
             data["values"] =  values_list
 
+        elif isinstance(data, Material) and (data not in self.material_library):
+            self.material_library.add(data)
+
+        elif isinstance(data, Fluid) and (data not in self.fluid_library):
+            self.fluid_library.add(data)
+
         if node is not None:
             self.nodal_properties[property, node] = data
 
@@ -184,7 +188,7 @@ class ModelProperties:
 
         else:
             self.global_properties[property, "global"] = data
-        
+
         if self.disable_resume_callback is not None:
             self.disable_resume_callback()
 
@@ -269,9 +273,37 @@ class ModelProperties:
 
             for _key in keys_to_remove:
                 data.pop(_key)
-        
+
         if self.disable_resume_callback is not None:
             self.disable_resume_callback()
+
+    def remove_material(self, material: Material):
+        self.material_library.pop(material)
+        to_remove = list()
+        for entity_name, property_name, tags, value in self.iterate_properties():
+            if value == material:
+                to_remove.append((entity_name, tags))
+
+        for entity_name, tags in to_remove:
+            match entity_name:
+                case "volume":
+                    self._remove_volume_property("material", tags)
+                case "surface":
+                    self._remove_surface_property("material", tags)
+
+    def remove_fluid(self, fluid: Fluid):
+        self.fluid_library.pop(fluid)
+        to_remove = list()
+        for entity_name, property_name, tags, value in self.iterate_properties():
+            if value == fluid:
+                to_remove.append((entity_name, tags))
+
+        for entity_name, tags in to_remove:
+            match entity_name:
+                case "volume":
+                    self._remove_volume_property("fluid", tags)
+                case "surface":
+                    self._remove_surface_property("fluid", tags)
 
     def _remove_nodal_property(self, property: str, nodal_id: int):
         """Remove a nodal property at specific nodal_id."""
@@ -323,16 +355,34 @@ class ModelProperties:
         elif group_label == "structural":
             self.structural_imported_tables[table_name] = data
 
-    def remove_imported_tables(self, group_label: str, table_name: str):
-        """
-        """
-        if group_label == "acoustic":
-            if table_name in self.acoustic_imported_tables.keys():
-                self.acoustic_imported_tables.pop(table_name)
+    def remove_table_files_from_point(self, point_id: int, property_name: str):
+        table_names = self.get_property_related_table_names(property_name, point_id, "points")
+        self._remove_table_files(table_names)
 
-        elif group_label == "structural":
-            if table_name in self.structural_imported_tables.keys():
-                self.structural_imported_tables.pop(table_name)
+    def remove_table_files_from_line(self, line_id: int, property_name: str):
+        table_names = self.get_property_related_table_names(property_name, line_id, "lines")
+        self._remove_table_files(table_names)
+
+    def remove_table_files_from_surface(self, surface_id: int, property_name: str):
+        table_names = self.get_property_related_table_names(property_name, surface_id, "surfaces")
+        self._remove_table_files(table_names)
+
+    def remove_table_files_from_volume(self, volume_id: int, property_name: str):
+        table_names = self.get_property_related_table_names(property_name, volume_id, "volumes")
+        self._remove_table_files(table_names)
+
+    def _remove_table_files(self, table_names: list):
+        for table_name in table_names:
+            self.remove_imported_tables("", table_name)
+
+    # TODO: group_label argument is used on calls across the program. Need to remove later
+    def remove_imported_tables(self, group_label: str, table_name: str):
+        #TODO: is it possible both have the same table_names? I am counting with this, need to check for problems
+        if table_name in self.acoustic_imported_tables.keys():
+            self.acoustic_imported_tables.pop(table_name)
+
+        if table_name in self.structural_imported_tables.keys():
+            self.structural_imported_tables.pop(table_name)
 
     def get_data_group_label(self, property : str) -> str:
 
@@ -348,13 +398,24 @@ class ModelProperties:
                            "compressor_excitation_waveform",
                            "reciprocating_compressor_excitation",
                            "acoustic_transfer_element",
+                            "porous_material_model",
                            "mass_source",
                            ]
 
+        structural_labels = [
+                            "surface_thickness",
+                            "prescribed_dof",
+                            "nodal_loads", 
+                            "distributed_loads", 
+                            "normal_pressure_load",
+                            ]
+
         if property in acoustic_labels:
             return "acoustic"
-        else:
+        elif property in structural_labels:
             return "structural"
+        else:
+            return "general"
 
     def get_property_related_table_names(self, property : str, selected_ids : int | list | tuple, selection: str) -> list:
         """
@@ -463,7 +524,44 @@ class ModelProperties:
                     entities_without_property.append(surface_id)
     
         return entities_without_property
+    
+    def iterate_properties(self):
+        property_dicts = {
+            "global": self.global_properties,
+            "group": self.group_properties,
+            "volume": self.volume_properties,
+            "surface": self.surface_properties,
+            "line": self.line_properties,
+            "point": self.point_properties,
+            "element": self.element_properties,
+            "node": self.nodal_properties,
+        }
 
+        for entity_name, property_dict in property_dicts.items():
+            for key, value in property_dict.items():
+                property_name, tags = key
+                yield entity_name, property_name, tags, value
+
+    def get_properties_from_points(self, point_ids: set[int]) -> list[tuple[str, int]]:
+        return self._get_properties_from_entities(point_ids, self.point_properties)
+    
+    def get_properties_from_lines(self, line_ids: set[int]) -> list[tuple[str, int]]:
+        return self._get_properties_from_entities(line_ids, self.line_properties)
+
+    def get_properties_from_surfaces(self, surface_ids: set[int]) -> list[tuple[str, int]]:
+        return self._get_properties_from_entities(surface_ids, self.surface_properties)
+
+    def get_properties_from_volumes(self, volume_ids: set[int]) -> list[tuple[str, int]]:
+        return self._get_properties_from_entities(volume_ids, self.volume_properties)
+
+    def _get_properties_from_entities(self, entity_ids: set[int], entity_properties: dict) -> list[tuple[str, int]]:
+        properties_found: list[tuple[str, int]] = list()
+
+        for property_name, entity_id in entity_properties.keys():
+            if entity_id in entity_ids:
+                properties_found.append((property_name, entity_id))
+        
+        return properties_found
 
 if __name__ == "__main__":
     p = ModelProperties()

@@ -1,15 +1,25 @@
+from typing import Optional
+
+from molde.colors import Color, color_names
 from vtkmodules.vtkCommonDataModel import vtkPlane
 from vtkmodules.vtkFiltersCore import vtkExtractEdges
 from vtkmodules.vtkFiltersExtraction import vtkExtractGeometry
 from vtkmodules.vtkRenderingCore import vtkActor, vtkDataSetMapper
 
-from molde.colors import Color, color_names
-
 from vibra import app
+from vibra.utils.interface_utils import VisualizationFilter
 
 
 class EdgesActor(vtkActor):
-    def __init__(self, data):
+    def __init__(
+        self,
+        data,
+        visualization_filter: Optional[VisualizationFilter] = None,
+    ):
+        self.visualization_filter = visualization_filter
+        if self.visualization_filter is None:
+            self.visualization_filter = VisualizationFilter.all_true()
+
         self.mapper = vtkDataSetMapper()
         self.edges_extractor = vtkExtractEdges()
         self.edges_extractor.UseAllPointsOn()
@@ -69,15 +79,12 @@ class EdgesActor(vtkActor):
 
     def paint_edges_when_mesh_has_error(self):
         disconnected_nodes = app().project.model.mesh.get_list_of_disconnected_nodes()
-        nodes_collapsed_elements = (
-            app().project.model.mesh.get_list_of_nodes_from_collapsed_elements()
-        )
+        nodes_collapsed_elements = app().project.model.mesh.get_list_of_nodes_from_collapsed_elements()
 
         edges_error_color = color_names.GRAY_3
 
         if len(disconnected_nodes) > 0 or len(nodes_collapsed_elements) > 0:
             self.GetProperty().SetColor(edges_error_color.to_rgb_f())
-
 
     def paint_edges(self, color: Color, edges: tuple[int]):
         self.paint_cells(color, edges)
@@ -114,12 +121,11 @@ class EdgesActor(vtkActor):
         self.GetMapper().ScalarVisibilityOn()
 
     def clear_colors(self):
-        visualization = app().main_window.visualization_filter
         color = app().config.user_preferences.nodes_points_color
         disconected_nodes_color = color_names.GREEN
         collapsed_element_nodes_color = color_names.ORANGE
 
-        if visualization.points:
+        if self.visualization_filter.points:
             self.set_color(color)
         else:
             self.set_color(Color(0, 0, 0, 0))
@@ -128,11 +134,7 @@ class EdgesActor(vtkActor):
         nodes_collapsed_elements = self.mesh.get_list_of_nodes_from_collapsed_elements()
 
         if disconnected_nodes:
-            visualization.disconected_nodes = True
             self.paint_nodes(disconected_nodes_color, disconnected_nodes)
 
         if nodes_collapsed_elements.size:
-            visualization.collapsed_element_nodes = True
             self.paint_nodes(collapsed_element_nodes_color, nodes_collapsed_elements)
-
-
