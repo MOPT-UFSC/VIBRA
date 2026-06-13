@@ -6,8 +6,8 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from vibra.engine.model import Model
 
-from vibra.engine.elements.elements_3d.structural.FEMSTHEX8_FB import matricesH8S_FB
-from vibra.engine.elements.elements_3d.structural.flanagan_belytschko_formulation import get_B_analytic, compute_hourglass_stiffness, calcular_k_stab_corrigido
+# from vibra.engine.elements.elements_3d.structural.FEMSTHEX8_FB import matricesH8S_FB
+from vibra.engine.elements.elements_3d.structural.flanagan_belytschko_formulation import get_B_analytic, compute_hourglass_stiffness#, calcular_k_stab_corrigido
 
 from vibra.engine.elements.element_options import HEX8_structural, BbarDilatationalEvaluation
 
@@ -67,8 +67,6 @@ class STRUCT_HEXAHEDRON_8(Element3D):
             self.element_options = element_options
 
         self.static_condensation_required = element_options.extra_shape_functions or element_options.enhanced_assumed_strain
-        print(self.static_condensation_required)
-        print(self.element_options)
 
 
     def define_integration_points(self, integration_points: int = 8):

@@ -179,9 +179,9 @@ def load_external_mesh_and_solve(**kwargs):
     analysis_setup = model.get_harmonic_analysis_setup(
         analysis_id = AnalysisID.STRUCTURAL_HARMONIC,
         frequency_spacing = FrequencySpacing.EQUALLY_DISTRIBUTED,
-        f_min = 20,
+        f_min = 100,
         f_max = 2000,
-        f_step = 20,
+        f_step = 100,
     )
 
     frequencies = analysis_setup.get_frequencies()
