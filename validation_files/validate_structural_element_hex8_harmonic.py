@@ -223,7 +223,7 @@ def load_external_mesh_and_solve(**kwargs):
     WB_displacements_data = ext_data.load_displacements(entire_solution=True)
     WB_stresses_data = ext_data.load_stresses(entire_solution=True)
 
-    structural_post = StructuralPostprocessing(structural_harmonic_solver=harmonic_solver)
+    structural_post = StructuralPostprocessing(model)
 
     t0 = time()
     avg_nodal_stresses, _ = structural_post.get_structural_stresses(volume_ids=1)
@@ -255,7 +255,7 @@ def load_external_mesh_and_solve(**kwargs):
                 dofs_per_node,
                 udof_label,
                 frequencies,
-                model.solution,
+                model.solution.nodal_solution,
                 extra_shape_function,
                 WB_displacements_data,
                 plot_type=plot_type,
@@ -431,10 +431,10 @@ if __name__ == "__main__":
 
     load_external_mesh_and_solve(
         extra_shape_function = False,
-        reduced_integration = True,
+        reduced_integration = False,
         simple_enhanced_strain = False,
         enhanced_assumed_strain = False,
         EAS_internal_dofs = 9+4,
-        Bbar_formulation = False,
+        Bbar_formulation = True,
         Bbar_dilatational_evaluation = BbarDilatationalEvaluation.VOLUME_AVERAGED,
         )

@@ -1,28 +1,28 @@
-from vibra import PROJECT_DIR
-from vibra.engine import AnalysisID 
-from vibra.engine.properties.material import Material
-from vibra.engine.mesher.mesh import Mesh
-from vibra.engine.mesher.element_type import HEXAHEDRON_20
-from vibra.engine.model import Model
-from vibra.engine.assemblers.structural_assembler import StructuralAssembler
+from typing import TYPE_CHECKING
 
+from vibra import PROJECT_DIR
+from vibra.engine.analysis_info import AnalysisID, ModalAnalysisSetup
+from vibra.engine.assemblers.structural_assembler import StructuralAssembler
+from vibra.engine.mesher.element_setup import HEXAHEDRON_20
+from vibra.engine.mesher.mesh import Mesh
+from vibra.engine.model import Model
+from vibra.engine.properties.material import Material
 from vibra.engine.solvers.modal_solver import ModalSolver
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
 
-from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from vibra.engine.model import Model
 
 import os
-import numpy as np
-
 from time import time
+
+import numpy as np
 
 
 def load_external_mesh_and_solve(integration_type: str):
 
     # start decoding the Ansys script file (ds.dat file or input file)
-    mesh_path = f"validation_files/data/WB/structural/elements/hex20/mesh/ds_hex20_cuboid_modal.dat"
+    mesh_path = "validation_files/data/WB/structural/elements/hex20/mesh/ds_hex20_cuboid_modal.dat"
     if not os.path.exists(mesh_path):
         return
 
@@ -118,15 +118,15 @@ def load_external_mesh_and_solve(integration_type: str):
     model.properties._set_property("prescribed_dof", prescribed_dof_data, surface=1)
 
     ## Define the analysis setup
-
-    analysis_setup = {
-        "analisys_id" : AnalysisID.STRUCTURAL_MODAL,
-        "modes_number": 40,
-        "sigma_factor": 0.01,
-        }
+    analysis_setup = ModalAnalysisSetup(
+        analysis_id = AnalysisID.STRUCTURAL_MODAL,
+        modes_number = 40,
+        sigma_factor = 0.01,
+        )
 
     # Set the analysis setup
     model.set_analysis_setup(analysis_setup)
+    model.set_analysis_id(AnalysisID.ACOUSTIC_MODAL)
 
     assembler = StructuralAssembler(model)
 

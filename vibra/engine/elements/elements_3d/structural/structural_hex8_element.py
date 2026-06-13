@@ -67,6 +67,8 @@ class STRUCT_HEXAHEDRON_8(Element3D):
             self.element_options = element_options
 
         self.static_condensation_required = element_options.extra_shape_functions or element_options.enhanced_assumed_strain
+        print(self.static_condensation_required)
+        print(self.element_options)
 
 
     def define_integration_points(self, integration_points: int = 8):

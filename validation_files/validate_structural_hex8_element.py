@@ -1,14 +1,11 @@
 from vibra import PROJECT_DIR
-from vibra.engine import AnalysisID 
+from vibra.engine.analysis_info import AnalysisID, FrequencySpacing
 from vibra.engine.properties.material import Material
 from vibra.engine.mesher.mesh import Mesh
-from vibra.engine.mesher.element_type import HEXAHEDRON_8
+from vibra.engine.mesher.element_setup import HEXAHEDRON_8
 from vibra.engine.elements.element_options import HEX8_structural, BbarDilatationalEvaluation
 from vibra.engine.model import Model
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
-from vibra.engine.postprocessing import StructuralPostprocessing
-
-from vibra.engine.solvers.harmonic_solver import HarmonicSolver
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
 
 from typing import TYPE_CHECKING
@@ -17,10 +14,8 @@ if TYPE_CHECKING:
 
 import os
 import numpy as np
-import matplotlib.pyplot as plt
 
 from time import time
-from pathlib import Path
 
 
 stresses_labels = [
@@ -37,9 +32,9 @@ def load_external_mesh_and_solve(case: str, **kwargs):
 
     # start decoding the Ansys script file (ds.dat file or input file)
     if case == "cube_1e":
-        mesh_path = f"validation_files/data/WB/structural/elements/hex8/mesh/ds_hex8_cube_1e_modal.dat"
+        mesh_path = PROJECT_DIR / "validation_files/data/WB/structural/elements/hex8/mesh/ds_hex8_cube_1e_modal.dat"
     else:
-        mesh_path = f"validation_files/data/WB/structural/elements/hex8/mesh/ds_hex8_Bbar_cuboid_modal.dat"
+        mesh_path = PROJECT_DIR / "validation_files/data/WB/structural/elements/hex8/mesh/ds_hex8_Bbar_cuboid_modal.dat"
 
     if not os.path.exists(mesh_path):
         return
@@ -171,23 +166,19 @@ def load_external_mesh_and_solve(case: str, **kwargs):
     model.properties._set_property("nodal_loads", nodal_load_data, surface=2)
 
     ## Define the analysis frequency setup
+    analysis_setup = model.get_harmonic_analysis_setup(
+        frequency_spacing = FrequencySpacing.EQUALLY_DISTRIBUTED,
+        analysis_id = AnalysisID.STRUCTURAL_HARMONIC,
+        f_min = 20,
+        f_max = 40,
+        f_step = 20,
+    )
 
-    df = 20
-    f_min = 20
-    f_max = 40
-    frequencies = np.arange(f_min, f_max + df, df, dtype=float)
-
-    analysis_setup = {
-        "analisys_id" : AnalysisID.STRUCTURAL_HARMONIC,
-        "f_min" : f_min,
-        "f_max" : f_max,
-        "f_step" : df,
-        "frequencies" : frequencies,
-        "global_damping" : (0., 0., 0e-2),
-        }
+    # frequencies = analysis_setup.get_frequencies()
 
     # Set the analysis setup
     model.set_analysis_setup(analysis_setup)
+    model.set_analysis_id(AnalysisID.ACOUSTIC_HARMONIC)
 
     assembler = StructuralAssembler(model)
 
@@ -272,7 +263,7 @@ def load_external_mesh_and_solve(case: str, **kwargs):
     # t0 = time()
     # # Run modal analysis
     # harmonic_solver = HarmonicSolver(assembler)
-    # solution = harmonic_solver.solve_direct(print_log=True)
+    # model.solution = harmonic_solver.solve_direct(print_log=True)
     # dt = time() - t0
     # print(f"Elapsed time to solve modal analysis: {round(dt, 4)}s")
 

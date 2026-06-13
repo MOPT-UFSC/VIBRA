@@ -1,8 +1,8 @@
 from vibra import PROJECT_DIR
-from vibra.engine import AnalysisID 
+from vibra.engine.analysis_info import AnalysisID, ModalAnalysisSetup
 from vibra.engine.properties.material import Material
 from vibra.engine.mesher.mesh import Mesh
-from vibra.engine.mesher.element_type import TETRAHEDRON_10
+from vibra.engine.mesher.element_setup import TETRAHEDRON_10
 from vibra.engine.model import Model
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
 
@@ -21,7 +21,7 @@ from time import time
 def load_external_mesh_and_solve(integration_type: str):
 
     # start decoding the Ansys script file (ds.dat file or input file)
-    mesh_path = f"validation_files/data/WB/structural/elements/tet10/mesh/ds_tet10_tetrahedron_harmonic.dat"
+    mesh_path = PROJECT_DIR / "validation_files/data/WB/structural/elements/tet10/mesh/ds_tet10_tetrahedron_harmonic.dat"
     if not os.path.exists(mesh_path):
         return
 
@@ -117,15 +117,15 @@ def load_external_mesh_and_solve(integration_type: str):
     model.properties._set_property("prescribed_dof", prescribed_dof_data, surface=1)
 
     ## Define the analysis setup
-
-    analysis_setup = {
-        "analisys_id" : AnalysisID.STRUCTURAL_MODAL,
-        "modes_number": 40,
-        "sigma_factor": 0.01,
-        }
+    analysis_setup = ModalAnalysisSetup(
+        analysis_id = AnalysisID.STRUCTURAL_MODAL,
+        modes_number = 40,
+        sigma_factor = 0.01,
+        )
 
     # Set the analysis setup
     model.set_analysis_setup(analysis_setup)
+    model.set_analysis_id(AnalysisID.STRUCTURAL_MODAL)
 
     assembler = StructuralAssembler(model)
 
@@ -140,7 +140,7 @@ def load_external_mesh_and_solve(integration_type: str):
     dt = time() - t0
     print(f"Elapsed time to solve modal analysis: {round(dt, 4)}s")
 
-    results_path = PROJECT_DIR / f"validation_files/data/WB/structural/elements/tet10/results/modal/"
+    results_path = PROJECT_DIR / "validation_files/data/WB/structural/elements/tet10/results/modal/"
     natural_frequencies_ref = np.loadtxt(results_path / "natural_frequencies_reference.dat")[:, 1]
 
     # modes_indexes = np.arange(natural_frequencies.size)

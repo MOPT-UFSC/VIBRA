@@ -202,8 +202,8 @@ def load_external_mesh_and_solve(**kwargs):
 if __name__ == "__main__":
 
     load_external_mesh_and_solve(
-        extra_shape_function = False,
-        reduced_integration = True,
+        extra_shape_function = True,
+        reduced_integration = False,
         simple_enhanced_strain = False,
         enhanced_assumed_strain = False,
         EAS_internal_dofs = 9+4,

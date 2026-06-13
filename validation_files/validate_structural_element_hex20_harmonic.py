@@ -1,27 +1,26 @@
-from vibra import PROJECT_DIR
-from vibra.engine import AnalysisID 
-from vibra.engine.properties.material import Material
-from vibra.engine.mesher.mesh import Mesh
-from vibra.engine.mesher.element_type import HEXAHEDRON_20
-from vibra.engine.model import Model
-from vibra.engine.assemblers.structural_assembler import StructuralAssembler
-from vibra.engine.postprocessing import StructuralPostprocessing
+from typing import TYPE_CHECKING
 
+from validation_files.data.WB.load_external_data import LoadExternalData
+from vibra import PROJECT_DIR
+from vibra.engine.analysis_info import AnalysisID, FrequencySpacing
+from vibra.engine.assemblers.structural_assembler import StructuralAssembler
+from vibra.engine.mesher.element_setup import HEXAHEDRON_20
+from vibra.engine.mesher.mesh import Mesh
+from vibra.engine.model import Model
+from vibra.engine.postprocessing import StructuralPostprocessing
+from vibra.engine.postprocessing.structural_post_solution_dataclass import NodalStresses
+from vibra.engine.properties.material import Material
 from vibra.engine.solvers.harmonic_solver import HarmonicSolver
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
-from validation_files.data.WB.load_external_data import LoadExternalData
-from vibra.engine.postprocessing.structural_post_solution_dataclass import NodalStresses
 
-from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from vibra.engine.model import Model
 
 import os
-import numpy as np
-import matplotlib.pyplot as plt
-
 from time import time
 
+import matplotlib.pyplot as plt
+import numpy as np
 
 udof_labels = [
     "ux", 
@@ -158,23 +157,19 @@ def load_external_mesh_and_solve(integration_type: str):
     model.properties._set_property("nodal_loads", nodal_load_data, surface=2)
 
     ## Define the analysis frequency setup
+    analysis_setup = model.get_harmonic_analysis_setup(
+        frequency_spacing = FrequencySpacing.EQUALLY_DISTRIBUTED,
+        analysis_id = AnalysisID.STRUCTURAL_HARMONIC,
+        f_min = 100,
+        f_max = 2000,
+        f_step = 100,
+    )
 
-    df = 100
-    f_min = 100
-    f_max = 2000
-    frequencies = np.arange(f_min, f_max + df, df, dtype=float)
-
-    analysis_setup = {
-        "analisys_id" : AnalysisID.STRUCTURAL_HARMONIC,
-        "f_min" : f_min,
-        "f_max" : f_max,
-        "f_step" : df,
-        "frequencies" : frequencies,
-        "global_damping" : (0., 0., 0e-2),
-        }
+    frequencies = analysis_setup.get_frequencies()
 
     # Set the analysis setup
     model.set_analysis_setup(analysis_setup)
+    model.set_analysis_id(AnalysisID.ACOUSTIC_HARMONIC)
 
     assembler = StructuralAssembler(model)
 
@@ -184,20 +179,20 @@ def load_external_mesh_and_solve(integration_type: str):
     t0 = time()
     # Run modal analysis
     harmonic_solver = HarmonicSolver(assembler)
-    solution = harmonic_solver.solve_direct(print_log=True)
+    model.solution = harmonic_solver.solve_direct(print_log=True)
     dt = time() - t0
     print(f"Elapsed time to solve modal analysis: {round(dt, 4)}s")
 
     # Nodal results comparisons
     dofs_per_node = assembler.element_3d.DOF_PER_NODE
 
-    path = f"validation_files/data/WB/structural/elements/hex20/results/{integration_type}/harmonic/"
+    path = PROJECT_DIR / f"validation_files/data/WB/structural/elements/hex20/results/{integration_type}/harmonic/"
     ext_data = LoadExternalData(path)
 
     WB_displacements_data = ext_data.load_displacements(entire_solution=True)
     WB_stresses_data = ext_data.load_stresses(entire_solution=True)
 
-    structural_post = StructuralPostprocessing(structural_harmonic_solver=harmonic_solver)
+    structural_post = StructuralPostprocessing(model)
 
     t0 = time()
     avg_nodal_stresses, nodal_stresses_data = structural_post.get_structural_stresses(volume_ids=1)
@@ -236,7 +231,7 @@ def load_external_mesh_and_solve(integration_type: str):
                 dofs_per_node,
                 dof_label,
                 frequencies,
-                solution,
+                model.solution.nodal_solution,
                 integration_type,
                 WB_displacements_data,
                 plot_type=plot_type,

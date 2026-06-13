@@ -1,8 +1,7 @@
 from vibra import PROJECT_DIR
-from vibra.engine import AnalysisID 
 from vibra.engine.properties.material import Material
 from vibra.engine.mesher.mesh import Mesh
-from vibra.engine.mesher.element_type import TETRAHEDRON_10
+from vibra.engine.mesher.element_setup import TETRAHEDRON_10
 from vibra.engine.model import Model
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
@@ -13,16 +12,13 @@ if TYPE_CHECKING:
 
 import os
 import numpy as np
-import matplotlib.pyplot as plt
-
 from time import time
-from pathlib import Path
 
 
 def load_external_mesh_and_solve():
 
     # start decoding the Ansys script file (ds.dat file or input file)
-    mesh_path = f"validation_files/data/WB/structural/elements/tet10/mesh/ds_tet10_tetrahedron_1e_modal.dat"
+    mesh_path = PROJECT_DIR / "validation_files/data/WB/structural/elements/tet10/mesh/ds_tet10_tetrahedron_1e_modal.dat"
     if not os.path.exists(mesh_path):
         return
 
@@ -127,7 +123,7 @@ def load_external_mesh_and_solve():
     Me = assembler.data_M[0, :, :]
 
     # define the results folder path
-    results_path = PROJECT_DIR / f"validation_files/data/WB/structural/elements/tet10/results/elementar/"
+    results_path = PROJECT_DIR / "validation_files/data/WB/structural/elements/tet10/results/elementar/"
 
     Ke_ansys = np.loadtxt(results_path / "Ke_ansys.csv", delimiter=",")
     Me_ansys = np.loadtxt(results_path / "Me_ansys.csv", delimiter=",")
