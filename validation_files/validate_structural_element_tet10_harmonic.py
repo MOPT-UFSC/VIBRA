@@ -79,7 +79,7 @@ def load_external_mesh_and_solve(**kwargs):
     mesh.export_nodal_coordinates("nodal_coordinates.dat")
     mesh.export_solid_elements_connectivity("solids_connectivity.dat")
     mesh.export_face_elements_connectivity("faces_connectivity.dat")
-    mesh.element_setup = TETRAHEDRON_10
+    mesh.set_element_setup(TETRAHEDRON_10)
 
     for named_selection, surf_data in external_mesh.elements_from_named_selection.items():
 
