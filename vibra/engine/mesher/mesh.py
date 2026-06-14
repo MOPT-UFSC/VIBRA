@@ -47,7 +47,7 @@ class Mesh:
         self.reset_variables()
 
     def reset_variables(self):
-        self.element_type = DEFAULT_ELEMENT_TYPE
+        self.element_setup = DEFAULT_ELEMENT_TYPE
 
         ## geometry-related attributes
 
@@ -201,8 +201,8 @@ class Mesh:
         else:
             return 1
 
-    def set_element_type(self, element_type: ElementSetup):
-        self.element_type = element_type
+    def set_element_setup(self, element_setup: ElementSetup):
+        self.element_setup = element_setup
 
     def new_load_cad(self, path: str | Path, mesh_setup: MeshSetup):
         if not gmsh.is_initialized():
@@ -385,8 +385,8 @@ class Mesh:
         gmsh_gui = kwargs.get("gmsh_gui", False)
         self.geometry_imported = False
 
-        # self.element_type = kwargs.get("ElementType", DEFAULT_ELEMENT_TYPE)
-        # self.element_type: ElementType
+        # self.element_setup = kwargs.get("ElementType", DEFAULT_ELEMENT_TYPE)
+        # self.element_setup: ElementType
 
         gmsh.initialize("", False)
         gmsh.option.setNumber("General.Terminal", 0)
@@ -428,13 +428,13 @@ class Mesh:
     def update_element_type(self):
         nodes_per_element = self.solids_connectivity[0, 4:].size
         if nodes_per_element == 4:
-            self.element_type = TETRAHEDRON_4
+            self.element_setup = TETRAHEDRON_4
         elif nodes_per_element == 10:
-            self.element_type = TETRAHEDRON_10
+            self.element_setup = TETRAHEDRON_10
         elif nodes_per_element == 8:
-            self.element_type = HEXAHEDRON_8
+            self.element_setup = HEXAHEDRON_8
         elif nodes_per_element == 20:
-            self.element_type = HEXAHEDRON_20
+            self.element_setup = HEXAHEDRON_20
         else:
             return
 

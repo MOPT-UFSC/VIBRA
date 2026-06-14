@@ -10,30 +10,16 @@ import h5py
 import numpy as np
 from PIL.Image import Image
 
-from vibra.engine.analysis_info import (
-    AnalysisID,
-    AnalysisSetup,
-    HarmonicAnalysisSetup,
-    ModalAnalysisSetup,
-)
+from vibra.engine.analysis_info import AnalysisID, AnalysisSetup, HarmonicAnalysisSetup, ModalAnalysisSetup
 from vibra.engine.assemblers import AcousticAssembler, StructuralAssembler
 from vibra.engine.mesher.element_setup import ElementSetup
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.mesh_setup import MeshRefinementSetup, MeshSetup
 from vibra.engine.model import Model
-from vibra.engine.properties import (
-    Fluid,
-    FluidLibrary,
-    Material,
-    MaterialLibrary,
-)
+from vibra.engine.properties import Fluid, FluidLibrary, Material, MaterialLibrary
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.engine.serialization.file_helpers import read_image, read_json
-from vibra.engine.solution import (
-    HarmonicSolution,
-    ModalSolution,
-    Solution,
-)
+from vibra.engine.solution import HarmonicSolution, ModalSolution, Solution
 from vibra.engine.solution.lazy_harmonic_solution import LazyHarmonicSolution
 from vibra.engine.solvers import HarmonicSolver, ModalSolver
 from vibra.project_files.lazy_hdf5_matrix import LazyHDF5MatrixLoader
