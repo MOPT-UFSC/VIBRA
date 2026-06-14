@@ -70,7 +70,7 @@ def load_external_mesh_and_solve(case: str, **kwargs):
     mesh.export_nodal_coordinates("nodal_coordinates.dat")
     mesh.export_solid_elements_connectivity("solids_connectivity.dat")
     mesh.export_face_elements_connectivity("faces_connectivity.dat")
-    mesh.element_type = HEXAHEDRON_8
+    mesh.element_setup = HEXAHEDRON_8
 
     for named_selection, surf_data in external_mesh.elements_from_named_selection.items():
 
@@ -112,7 +112,6 @@ def load_external_mesh_and_solve(case: str, **kwargs):
     ## assign the created fluid
     model = Model()
     model.mesh =  mesh
-    model.generated_mesh = True
 
     model.properties._set_property("material", material, volume=1)
     
