@@ -10,13 +10,13 @@ class BbarDilatationalEvaluation(IntEnum):
 
 @dataclass
 class HEX8_structural:
-    Bbar_formulation: bool = field(default_factory=False)
-    reduced_integration: bool = field(default_factory=False)
-    simple_enhanced_strain: bool = field(default_factory=False)
-    enhanced_assumed_strain: bool = field(default_factory=False)
-    EAS_internal_dofs: int = field(default_factory = 9+4)
-    extra_shape_functions: bool = field(default_factory=False)
-    Bbar_dilatational_evaluation: IntEnum = field(default_factory=BbarDilatationalEvaluation.VOLUME_AVERAGED)
+    Bbar_formulation: bool = False
+    reduced_integration: bool = False
+    simple_enhanced_strain: bool = False
+    enhanced_assumed_strain: bool = False
+    EAS_internal_dofs: int = 9+4
+    extra_shape_functions: bool = False
+    Bbar_dilatational_evaluation: IntEnum = BbarDilatationalEvaluation.VOLUME_AVERAGED
 
     def get_data(self) -> dict:
         data = dict()

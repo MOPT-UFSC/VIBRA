@@ -55,7 +55,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         This method updates the extra shape functions state based on the model global properties.
         """
 
-        self.element_options = HEX8_structural
+        self.element_options = HEX8_structural()
         self.static_condensation_required = False
 
         advanced_element_options = self.model.properties._get_property("advanced_element_options")
