@@ -1,14 +1,14 @@
 import logging
 from copy import deepcopy
+from dataclasses import asdict
+from numbers import Number
 from pathlib import Path
 from typing import Callable, Optional
 
 import numpy as np
-from numbers import Number
 from PIL.Image import Image
 
 from vibra import SUPPORTED_GEOMETRY_EXTENSIONS, errors
-
 from vibra.engine.analysis_info import (
     AnalysisID,
     AnalysisMethod,
@@ -45,7 +45,6 @@ from vibra.engine.elements.elements_3d import (
 )
 from vibra.engine.geometry.geometry import LengthUnits
 from vibra.engine.mesh_modifiers.degrees_of_freedom_decoupling import DegreesOfFreedomDecoupling
-
 from vibra.engine.mesher.element_setup import (
     DEFAULT_ELEMENT_TYPE,
     HEXAHEDRON_8,
@@ -251,7 +250,7 @@ class Model:
             raise IncompleteSetupError(message, context=context)
 
         logging.info("Processing mesh [80/100]")
-        self.mesh.load_cad(self.geometry_path, **self.mesh_setup)
+        self.mesh.load_cad(self.geometry_path, **asdict(self.mesh_setup))
 
         if self.disable_resume_callback is not None:
             self.disable_resume_callback()
