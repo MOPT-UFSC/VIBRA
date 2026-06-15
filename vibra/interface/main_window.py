@@ -1071,6 +1071,7 @@ class MainWindow(MainWindow_UI):
         filter.faces = self.action_face_view.isChecked()
         filter.solids = self.action_face_view.isChecked()
         filter.ghost = self.action_ghost_view.isChecked()
+        filter.symbols = self.action_hide_show_symbols.isChecked()
 
     def reload_visualization_filter(self):
         if visualization_filter := self.get_current_visualization_filter():
