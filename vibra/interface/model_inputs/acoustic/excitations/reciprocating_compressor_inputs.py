@@ -581,7 +581,13 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             self.comboBox_cylinder_acting.setCurrentIndex(parameters["acting_mode"])
 
         if "compression_stage" in parameters.keys():
-            self.comboBox_compression_stage.setCurrentIndex(parameters["compression_stage"])
+            comp_stage = parameters["compression_stage"]
+            if isinstance(comp_stage, int):
+                self.comboBox_compression_stage.setCurrentIndex(parameters["compression_stage"])
+            elif isinstance(comp_stage, str):
+                comp_stage_labels = ["1st stage", "2nd stage", "3rd stage"]
+                index = comp_stage_labels.index(comp_stage)
+                self.comboBox_compression_stage.setCurrentIndex(index)
 
         if "points_per_revolution" in parameters.keys():
             self.spinBox_number_of_points.setValue(int(parameters["points_per_revolution"]))
