@@ -1,10 +1,24 @@
 import logging
+import typing
 from contextlib import contextmanager
 from functools import wraps
 from time import perf_counter
 
 
 def function_timer(func):
+    """
+    Decorator to log the time of a given function.
+
+    Example:
+    ```
+    @function_timer
+    def long_function():
+        ...
+
+    $ INFO:root:long_function took 0.601s
+    ```
+    """
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         start = perf_counter()
@@ -18,6 +32,21 @@ def function_timer(func):
 
 @contextmanager
 def context_timer(name: str):
+    """
+    Context manager to log the time of a code snippet.
+
+    Example:
+    ```
+    with context_timer(name="My code snippet"):
+        long_function()
+        short_function()
+        another_long_function()
+        ...
+
+    $ INFO:root:My code snippet took 0.601s
+    ```
+    """
+
     start = perf_counter()
     yield start
     elapsed = perf_counter() - start
