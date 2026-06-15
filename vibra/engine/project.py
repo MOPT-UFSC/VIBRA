@@ -9,14 +9,7 @@ import numpy as np
 from PIL.Image import Image
 
 from vibra import errors
-from vibra.engine.analysis_info import (
-    AnalysisID,
-    AnalysisSetup,
-    AnalysisType,
-    HarmonicAnalysisSetup,
-    ModalAnalysisSetup,
-    PhysicalDomain,
-)
+from vibra.engine.analysis_info import AnalysisID, AnalysisSetup, AnalysisType, HarmonicAnalysisSetup, ModalAnalysisSetup, PhysicalDomain
 from vibra.engine.assemblers import AcousticAssembler, StructuralAssembler
 from vibra.engine.checkers.analysis_checker import AnalysisChecker
 from vibra.engine.mesher.mesh import Mesh
@@ -308,7 +301,6 @@ class Project:
 
     def configure_analysis(
         self,
-        analysis_id: AnalysisID,
         analysis_setup: Optional[AnalysisSetup],
     ):
         """
@@ -316,12 +308,11 @@ class Project:
         execute a analysis.
         """
         self.reset_solution()
-        self.model.analysis_id = analysis_id
         self.model.set_analysis_setup(analysis_setup)
         self.update_project_setup_file()
 
     def solve_structural_modal_analysis(self) -> ModalSolution:
-        self.model.analysis_id = AnalysisID.STRUCTURAL_MODAL
+
         self.update_project_setup_file()
 
         checker = AnalysisChecker(self.model)
@@ -345,7 +336,7 @@ class Project:
         return self.model.solution
 
     def solve_structural_harmonic_analysis(self) -> HarmonicSolution:
-        self.model.analysis_id = AnalysisID.STRUCTURAL_HARMONIC
+
         self.update_project_setup_file()
 
         checker = AnalysisChecker(self.model)
@@ -380,7 +371,7 @@ class Project:
         return self.model.solution
 
     def solve_acoustic_modal_analysis(self) -> ModalSolution:
-        self.model.analysis_id = AnalysisID.ACOUSTIC_MODAL
+
         self.update_project_setup_file()
 
         checker = AnalysisChecker(self.model)
@@ -404,7 +395,7 @@ class Project:
         return self.model.solution
 
     def solve_acoustic_harmonic_analysis(self) -> HarmonicSolution:
-        self.model.analysis_id = AnalysisID.ACOUSTIC_HARMONIC
+
         self.update_project_setup_file()
 
         checker = AnalysisChecker(self.model)

@@ -65,7 +65,6 @@ class MainWindow(MainWindow_UI):
 
     def _initialize(self):
         self.dialog = None
-        self.project_data_modified = False
         self.user_path = Path().home()
 
     def _connect_actions(self):
@@ -858,7 +857,6 @@ class MainWindow(MainWindow_UI):
             # Update interface
             self.update_recents_menu()
             self.setWindowTitle(project.model.name)
-            self.project_data_modified = False
             logging.info("The project data has been saved. [100/100]")
 
         LoadingWindow(save_data).run(path)
@@ -993,7 +991,7 @@ class MainWindow(MainWindow_UI):
     def update_toolbar_and_menu_items_after_load_project(self):
         self.model_setup_widget.model_setup_items.filter_available_items_and_analyzes_according_to_geometry_information()
         self.model_setup_widget.model_setup_items.update_items_appearance()
-        self.analysis_toolbar.update_pushbutton_resume_analysis()
+        self.analysis_toolbar.update_resume_soluton_button_visibility()
 
     def action_save_as_callback(self):
         self.save_project_as_dialog()

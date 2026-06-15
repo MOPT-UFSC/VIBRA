@@ -60,7 +60,7 @@ class SubProcessHandler:
             self._subprocess.kill()
 
     def _run_subprocess(self) -> SubProcessStatus:
-        logging.info("Launching subprocess...")
+        logging.info("Launching subprocess... (15%)")
 
         try:
             self._subprocess = subprocess.Popen(

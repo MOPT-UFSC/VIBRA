@@ -151,7 +151,6 @@ def load_external_mesh_and_solve(**kwargs):
 
     # Set the analysis setup
     model.set_analysis_setup(analysis_setup)
-    model.set_analysis_id(AnalysisID.STRUCTURAL_MODAL)
 
     assembler = StructuralAssembler(model)
 

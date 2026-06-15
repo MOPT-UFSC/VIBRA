@@ -68,7 +68,6 @@ def viscous_thermal_acoustic_model(acoustic_model: Model) -> Model:
         f_step = 100,
     )
 
-    acoustic_model.analysis_id = AnalysisID.ACOUSTIC_HARMONIC
     acoustic_model.set_analysis_setup(analysis_setup)
     acoustic_model.process_viscous_thermal_model_properties()
 

@@ -252,15 +252,6 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
 
         self.frequencies = self.analysis_setup.get_frequencies()
 
-    def configure_analysis(self):
-        if self.check_frequency_entries():
-            return True
-
-        app().project.configure_analysis(
-            AnalysisID.ACOUSTIC_HARMONIC,
-            self.analysis_setup,
-        )
-
     def process_data_callback(self):
         self.hide()
         self.element_transfer_data.clear()
@@ -272,8 +263,10 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         if self.check_typed_ids():
             return
 
-        if self.configure_analysis():
-            return
+        if self.check_frequency_entries():
+            return True
+
+        app().project.configure_analysis(self.analysis_setup)
 
         if not app().project.model.is_there_a_valid_mesh():
             if mesher_interface_callback(self, close_after_generate=True):

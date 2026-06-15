@@ -509,10 +509,7 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
                     return
 
         # No idea of what it does
-        app().project.configure_analysis(
-            app().project.model.analysis_id,
-            app().project.model.analysis_setup,
-        )
+        app().project.configure_analysis(app().project.model.analysis_setup)
 
     def reset_input_fields(self):
         self.lineEdit_real_value.setText("")

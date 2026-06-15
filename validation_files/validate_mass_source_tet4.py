@@ -176,7 +176,6 @@ def load_external_mesh_and_solve(assignment_type: str):
 
     # Set the analysis setup
     model.set_analysis_setup(analysis_setup)
-    model.set_analysis_id(AnalysisID.ACOUSTIC_HARMONIC)
 
     # ## Define the perforated plate setup
 

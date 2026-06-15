@@ -4,7 +4,7 @@ import numpy as np
 from PySide6.QtWidgets import QDialog, QFileDialog, QPushButton, QWidget
 
 from vibra import app
-from vibra.engine.analysis_info import FrequencySpacing
+from vibra.engine.analysis_info import AnalysisID, FrequencySpacing
 from vibra.interface.data.data_manager import is_frequencies_vector_equally_distributed
 from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
 
@@ -25,18 +25,21 @@ def update_analysis_setup_in_file(frequencies: np.ndarray):
         frequency_spacing = FrequencySpacing.USER_DEFINED
         frequencies = frequencies
 
-    analysis_setup = app().project.model.get_harmonic_analysis_setup(
-        frequency_spacing = frequency_spacing,
-        f_min = f_min,
-        f_max = f_max,
-        f_step = f_step,
-        frequencies = frequencies,
-        )
+    # transfer the analysis id to the
+    analysis_id = app().project.model.analysis_id
+    if analysis_id == AnalysisID.NO_ANALYSIS:
+        analysis_id = app().main_window.analysis_toolbar.get_current_analysis_id()
 
-    app().project.configure_analysis(
-        app().project.model.analysis_id,
-        analysis_setup,
+    analysis_setup = app().project.model.get_harmonic_analysis_setup(
+        analysis_id=analysis_id,
+        frequency_spacing=frequency_spacing,
+        f_min=f_min,
+        f_max=f_max,
+        f_step=f_step,
+        frequencies=frequencies,
     )
+
+    app().project.configure_analysis(analysis_setup)
 
 def check_mesh_related_issues(run_analysis_button: QPushButton):
 

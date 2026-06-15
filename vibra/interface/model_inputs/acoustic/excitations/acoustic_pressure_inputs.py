@@ -481,10 +481,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
                     return
 
         # I am not sure what it is suposed to do.
-        app().project.configure_analysis(
-            app().project.model.analysis_id,
-            app().project.model.analysis_setup,
-        )
+        app().project.configure_analysis(app().project.model.analysis_setup)
 
     def reset_input_fields(self):
         self.lineEdit_real_value.setText("")

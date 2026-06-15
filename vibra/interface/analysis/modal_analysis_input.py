@@ -84,11 +84,7 @@ class ModalAnalysisInput(ModalAnalysisInput_UI):
             sigma_factor = float(self.lineEdit_sigma_factor.text()),
         )
 
-        app().project.configure_analysis(
-            self.analysis_id,
-            analysis_setup,
-        )
-
+        app().project.configure_analysis(analysis_setup)
         app().main_window.analysis_toolbar.enable_pushbutons.emit()
         self.close()
 

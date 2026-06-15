@@ -127,7 +127,6 @@ def load_external_mesh_and_solve():
     frequencies = analysis_setup.get_frequencies()
 
     model.set_analysis_setup(analysis_setup)
-    model.set_analysis_id(AnalysisID.ACOUSTIC_HARMONIC)
 
     # Configure the viscous-thermal models
 

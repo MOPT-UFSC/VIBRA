@@ -122,6 +122,7 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
             if len(volumes_from_surface) == 1:
                 selected_fluid = self.properties._get_property("fluid", volume=volumes_from_surface[0])
                 self.get_selected_fluid(selected_fluid=selected_fluid)
+
             elif len(volumes_from_surface) == 2:
                 fluid_A = self.properties._get_property("fluid", volume=volumes_from_surface[0])
                 fluid_B = self.properties._get_property("fluid", volume=volumes_from_surface[1])

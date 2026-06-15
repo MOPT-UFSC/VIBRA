@@ -149,7 +149,12 @@ class FluidWidget(FluidWidget_UI):
                 new_id = self.properties.fluid_library.get_new_id()
                 identifier_item.setText(str(new_id))
 
+            if self.refprop is None:
+                self.load_state_properties_in_SI_units(column_index)
+                self.tableWidget_fluid_data.editItem(name_item)
+
             self._update_size_policy()
+
         self.modified.emit()
 
     def duplicate_selected_fluid(self):
@@ -679,6 +684,9 @@ class FluidWidget(FluidWidget_UI):
 
     def load_state_properties_info(self):
 
+        if not isinstance(self.state_properties, dict):
+            return
+
         if not self.state_properties:
             return
 
@@ -696,47 +704,53 @@ class FluidWidget(FluidWidget_UI):
 
         app().main_window.selection.set_geometry_selection(surfaces=[surface_id])
 
-        connection_type = self.state_properties['connection_type']
+        connection_type = self.state_properties.get('connection_type')
         if source == "reciprocating_pump":
             title = f"Set a fluid for the reciprocating pump ({connection_type})"
-        
+
         elif source == "reciprocating_compressor":
             title = f"Set a fluid for the reciprocating compressor ({connection_type})"
 
         window.setWindowTitle(title)
 
-    def load_state_properties_in_SI_units(self, last_col: int):
+    def load_state_properties_in_SI_units(self, column_index: int):
         """
         This method returns the state properties in SI unit system.
         """
+        if not isinstance(self.state_properties, dict):
+            return
+
         if not self.state_properties:
             return
 
-        if self.state_properties.get('source') is not None:
-            connection_type = self.state_properties.get("connection_type")
-            if connection_type == "discharge":
-                pressure = self.state_properties.get("discharge_pressure")
-                temperature = self.state_properties.get("discharge_temperature")
-            else:
-                pressure = self.state_properties.get("suction_pressure")
-                temperature = self.state_properties.get("suction_temperature")
+        if self.state_properties.get('source') is None:
+            return
 
-            pressure_unit = self.state_properties.get("pressure_unit")
-            temperature_unit = self.state_properties.get("temperature_unit")
+        connection_type = self.state_properties.get("connection_type")
+        if connection_type == "discharge":
+            pressure = self.state_properties.get("discharge_pressure")
+            temperature = self.state_properties.get("discharge_temperature")
 
-            pressure_Pa = convert_pressure_unit(pressure, pressure_unit, "Pa")
-            temperature_K = convert_temperature_unit(temperature, temperature_unit, "K")
+        else:
+            pressure = self.state_properties.get("suction_pressure")
+            temperature = self.state_properties.get("suction_temperature")
 
-            self.tableWidget_fluid_data.item(3, last_col).setText(f"{pressure_Pa : .8e}")
-            self.tableWidget_fluid_data.item(2, last_col).setText(f"{temperature_K : .8f}")
+        pressure_unit = self.state_properties.get("pressure_unit")
+        temperature_unit = self.state_properties.get("temperature_unit")
 
-            isentropic_exponent = self.state_properties.get("isentropic_exponent")
-            if isinstance(isentropic_exponent, float):
-                self.tableWidget_fluid_data.item(6, last_col).setText(f"{isentropic_exponent}")
+        pressure_Pa = convert_pressure_unit(pressure, pressure_unit, "Pa")
+        temperature_K = convert_temperature_unit(temperature, temperature_unit, "K")
 
-            molar_mass = self.state_properties.get("molar_mass")
-            if isinstance(molar_mass, float):
-                self.tableWidget_fluid_data.item(12, last_col).setText(f"{molar_mass}")
+        self.tableWidget_fluid_data.item(3, column_index).setText(f"{pressure_Pa : .8e}")
+        self.tableWidget_fluid_data.item(2, column_index).setText(f"{temperature_K : .8f}")
+
+        isentropic_exponent = self.state_properties.get("isentropic_exponent")
+        if isinstance(isentropic_exponent, float):
+            self.tableWidget_fluid_data.item(6, column_index).setText(f"{isentropic_exponent}")
+
+        molar_mass = self.state_properties.get("molar_mass")
+        if isinstance(molar_mass, float):
+            self.tableWidget_fluid_data.item(11, column_index).setText(f"{molar_mass}")
 
     def keyPressEvent(self, event):
         window = self.nativeParentWidget()
