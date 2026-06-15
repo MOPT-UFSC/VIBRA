@@ -17,8 +17,8 @@ from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
-from vibra.interface.model_inputs.general.fluid.set_fluid_inputs import SetFluidInputs
-from vibra.interface.model_inputs.general.fluid.set_fluid_inputs_simplified import SetFluidInputsSimplified
+from vibra.interface.model_inputs.fluid.set_fluid_inputs import SetFluidInputs
+from vibra.interface.model_inputs.fluid.set_fluid_inputs_simplified import SetFluidInputsSimplified
 from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
 from vibra.interface.numeric_checks.unit_utilities import (
     PressureUnits,
@@ -236,7 +236,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.pushButton_export_path.clicked.connect(self.export_path_callback)
         #
         self.pushButton_apply.clicked.connect(self.apply_callback)
-        self.pushButton_apply_and_close.clicked.connect(self.apply_and_close_callback)
+        self.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
         self.pushButton_cancel.clicked.connect(self.close)
         self.pushButton_get_fluid.clicked.connect(self.get_fluid_callback)
         self.pushButton_remove.clicked.connect(self.remove_callback)
@@ -471,8 +471,8 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
         self.hide()
         self.fluid_dialog = SetFluidInputsSimplified(state_properties = state_properties)
-        self.fluid_dialog.fluid_widget.pushButton_attribute.setText("Select fluid")
-        self.fluid_dialog.fluid_widget.pushButton_attribute.clicked.connect(self.get_selected_fluid)
+        self.fluid_dialog.fluid_widget.pushButton_apply.setVisible(False)
+        self.fluid_dialog.fluid_widget.pushButton_apply_and_close.clicked.connect(self.get_selected_fluid)
         self.fluid_dialog.exec_and_keep_window_open()
         app().main_window.set_input_widget(self)
 
@@ -818,7 +818,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         except Exception:
             return
 
-    def apply_callback(self):
+    def apply_callback(self, close_window: bool = False):
 
         if self.generate_mesh():
             return True
@@ -910,13 +910,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             return True
 
         self.properties._set_property("reciprocating_compressor_excitation", data, surface=surface_id)
-        self.actions_to_finalize()
-
-    def apply_and_close_callback(self):
-        if self.apply_callback():
-            return
-
-        self.close()
+        self.actions_to_finalize(close_window)
 
     def export_compressor_excitation_data(self, surface_id: int, surface_area: float, frequencies: np.ndarray, flow_rate: np.ndarray):
         output_data_type = self.comboBox_output_data_type.currentText()
@@ -930,11 +924,14 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
         self.export_reciprocating_compressor_data_excitation(surface_id, frequencies, output_data, unit)
 
-    def actions_to_finalize(self):
+    def actions_to_finalize(self, close_window: bool = False):
         self.load_compressor_excitation_info()
         app().project.update_model_properties_file()
         app().main_window.selection.set_geometry_selection()
         app().main_window.update_symbols()
+
+        if close_window:
+            self.close()
 
     def process_table_file_removal(self, table_names: list):
         for table_name in table_names:

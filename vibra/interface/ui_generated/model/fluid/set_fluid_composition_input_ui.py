@@ -600,23 +600,23 @@ class Ui_Dialog(object):
         self.gridLayout_4.setSpacing(0)
         self.gridLayout_4.setObjectName(u"gridLayout_4")
         self.gridLayout_4.setContentsMargins(0, 0, 0, 0)
-        self.pushButton_exit = QPushButton(self.frame_buttons)
-        self.pushButton_exit.setObjectName(u"pushButton_exit")
-        self.pushButton_exit.setMinimumSize(QSize(160, 30))
-        self.pushButton_exit.setMaximumSize(QSize(160, 30))
-        self.pushButton_exit.setFont(font3)
-        self.pushButton_exit.setStyleSheet(u"")
+        self.pushButton_cancel = QPushButton(self.frame_buttons)
+        self.pushButton_cancel.setObjectName(u"pushButton_cancel")
+        self.pushButton_cancel.setMinimumSize(QSize(160, 30))
+        self.pushButton_cancel.setMaximumSize(QSize(160, 30))
+        self.pushButton_cancel.setFont(font3)
+        self.pushButton_cancel.setStyleSheet(u"")
 
-        self.gridLayout_4.addWidget(self.pushButton_exit, 0, 0, 1, 1)
+        self.gridLayout_4.addWidget(self.pushButton_cancel, 0, 0, 1, 1)
 
-        self.pushButton_confirm = QPushButton(self.frame_buttons)
-        self.pushButton_confirm.setObjectName(u"pushButton_confirm")
-        self.pushButton_confirm.setMinimumSize(QSize(160, 30))
-        self.pushButton_confirm.setMaximumSize(QSize(160, 30))
-        self.pushButton_confirm.setFont(font3)
-        self.pushButton_confirm.setStyleSheet(u"")
+        self.pushButton_get_fluid_properties = QPushButton(self.frame_buttons)
+        self.pushButton_get_fluid_properties.setObjectName(u"pushButton_get_fluid_properties")
+        self.pushButton_get_fluid_properties.setMinimumSize(QSize(160, 30))
+        self.pushButton_get_fluid_properties.setMaximumSize(QSize(160, 30))
+        self.pushButton_get_fluid_properties.setFont(font3)
+        self.pushButton_get_fluid_properties.setStyleSheet(u"")
 
-        self.gridLayout_4.addWidget(self.pushButton_confirm, 0, 1, 1, 1)
+        self.gridLayout_4.addWidget(self.pushButton_get_fluid_properties, 0, 1, 1, 1)
 
 
         self.gridLayout_11.addWidget(self.frame_buttons, 2, 0, 1, 1)
@@ -625,9 +625,9 @@ class Ui_Dialog(object):
         QWidget.setTabOrder(self.lineEdit_temperature_left, self.lineEdit_temperature_right)
         QWidget.setTabOrder(self.lineEdit_temperature_right, self.lineEdit_pressure_left)
         QWidget.setTabOrder(self.lineEdit_pressure_left, self.lineEdit_pressure_right)
-        QWidget.setTabOrder(self.lineEdit_pressure_right, self.pushButton_confirm)
-        QWidget.setTabOrder(self.pushButton_confirm, self.pushButton_exit)
-        QWidget.setTabOrder(self.pushButton_exit, self.tableWidget_new_fluid)
+        QWidget.setTabOrder(self.lineEdit_pressure_right, self.pushButton_get_fluid_properties)
+        QWidget.setTabOrder(self.pushButton_get_fluid_properties, self.pushButton_cancel)
+        QWidget.setTabOrder(self.pushButton_cancel, self.tableWidget_new_fluid)
 
         self.retranslateUi(Dialog)
 
@@ -706,8 +706,8 @@ class Ui_Dialog(object):
         self.comboBox_color_scale.setItemText(0, QCoreApplication.translate("Dialog", u"Red-to-blue", None))
         self.comboBox_color_scale.setItemText(1, QCoreApplication.translate("Dialog", u"Blue-to-red", None))
 
-        self.pushButton_exit.setText(QCoreApplication.translate("Dialog", u"Exit", None))
-        self.pushButton_confirm.setText(QCoreApplication.translate("Dialog", u"Get fluid properties", None))
+        self.pushButton_cancel.setText(QCoreApplication.translate("Dialog", u"Cancel", None))
+        self.pushButton_get_fluid_properties.setText(QCoreApplication.translate("Dialog", u"Get fluid properties", None))
     # retranslateUi
 
 
@@ -775,8 +775,8 @@ class SetFluidCompositionInput_UI(QDialog, Ui_Dialog):
                                                     - comboBox_color_scale: QComboBox
                 - frame_buttons: QFrame
                     - (Layout): QGridLayout
-                            - pushButton_exit: QPushButton
-                            - pushButton_confirm: QPushButton
+                            - pushButton_cancel: QPushButton
+                            - pushButton_get_fluid_properties: QPushButton
     """
 
     def __init__(self, *args, **kwargs):

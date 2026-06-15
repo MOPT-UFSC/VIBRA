@@ -61,7 +61,7 @@ class AnalysisToolbar(QToolBar):
         self.run_analysis_action = QAction(self.run_analysis_icon, "Run Analysis", self)
         self.configure_analysis_action = QAction(self.configure_analysis_icon, "Analysis Setup", self)
         self.reset_solution_action = QAction(self.reset_solution_icon, "Reset Solution", self)
-        self.resume_soluton_action = QAction(self.resume_solution_icon, "Resume Solution", self)
+        self.resume_solution_action = QAction(self.resume_solution_icon, "Resume Solution", self)
 
     def _create_connections(self):
         #
@@ -69,7 +69,7 @@ class AnalysisToolbar(QToolBar):
         self.combo_box_analysis_type.currentTextChanged.connect(self.analysis_type_callback)
         #
         self.run_analysis_action.triggered.connect(self.run_analysis_callback)
-        self.resume_soluton_action.triggered.connect(lambda: self.run_analysis_callback(True))
+        self.resume_solution_action.triggered.connect(lambda: self.run_analysis_callback(True))
         self.configure_analysis_action.triggered.connect(self.configure_analysis_callback)
         self.reset_solution_action.triggered.connect(self.reset_solution_callback)
         #
@@ -114,7 +114,7 @@ class AnalysisToolbar(QToolBar):
         self.addWidget(self.get_spacer())
         self.addAction(self.reset_solution_action)
         self.addWidget(self.get_spacer())
-        self.addAction(self.resume_soluton_action)
+        self.addAction(self.resume_solution_action)
         #
         self.adjustSize()
 
@@ -126,12 +126,12 @@ class AnalysisToolbar(QToolBar):
 
         # QAction
         self.configure_analysis_action.setToolTip("Configure the analysis settings")
-        self.resume_soluton_action.setToolTip("Resume the analysis")
+        self.resume_solution_action.setToolTip("Resume the analysis")
         self.run_analysis_action.setToolTip("Run the analysis")
         self.reset_solution_action.setToolTip("Reset Solution")
         #
         self.reset_solution_action.setDisabled(True)
-        self.resume_soluton_action.setVisible(False)
+        self.resume_solution_action.setVisible(False)
 
     def _load_analysis_types(self):
 
@@ -176,7 +176,7 @@ class AnalysisToolbar(QToolBar):
 
     def update_resume_soluton_button_visibility(self):
         can_resume_solution = app().project.can_resume_solution
-        self.resume_soluton_action.setVisible(can_resume_solution)
+        self.resume_solution_action.setVisible(can_resume_solution)
 
     def update_reset_solution_button_accessibility(self):
         solution_exists = self.model.solution is not None

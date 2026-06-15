@@ -1,7 +1,7 @@
 from PySide6.QtCore import Qt
 
 from vibra import app
-from vibra.interface.ui_generated.model.auxiliar.equations_for_DBM_porous_material_models_ui import EquationsForDbmPorousMaterialModels_UI
+from vibra.interface.ui_generated.model.acoustic.dissipation_models.equations_for_DBM_porous_material_models_ui import EquationsForDbmPorousMaterialModels_UI
 
 
 class ShowPorousMaterialModelEquations(EquationsForDbmPorousMaterialModels_UI):
