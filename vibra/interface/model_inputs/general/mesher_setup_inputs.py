@@ -331,8 +331,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
         def generate():
             mesh_setup = self._get_mesh_setup()
-            app().project.configure_mesh(mesh_setup)
-            app().project.generate_mesh()
+            app().project.generate_mesh(mesh_setup)
 
         self.hide()
         LoadingWindow(generate).run()

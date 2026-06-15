@@ -63,20 +63,20 @@ class SolidsActor(vtkActor):
         solid_indexes = vtkIntArray()
         solid_indexes.SetName("solid_indexes")
 
-        if self.mesh.element_type == TETRAHEDRON_4:
+        if self.mesh.element_setup == TETRAHEDRON_4:
             cell_type = VTK_TETRA
             nodes_connectivity = self.mesh.solids_connectivity
 
-        elif self.mesh.element_type == TETRAHEDRON_10:
+        elif self.mesh.element_setup == TETRAHEDRON_10:
             cell_type = VTK_QUADRATIC_TETRA
             nodes_order = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 12)
             nodes_connectivity = self.mesh.solids_connectivity[:, nodes_order]
 
-        elif self.mesh.element_type == HEXAHEDRON_8:
+        elif self.mesh.element_setup == HEXAHEDRON_8:
             cell_type = VTK_HEXAHEDRON
             nodes_connectivity = self.mesh.solids_connectivity
 
-        elif self.mesh.element_type == HEXAHEDRON_20:
+        elif self.mesh.element_setup == HEXAHEDRON_20:
             cell_type = VTK_QUADRATIC_HEXAHEDRON
             nodes_order = (
                 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 

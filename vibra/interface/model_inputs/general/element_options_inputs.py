@@ -1,20 +1,21 @@
+from enum import IntEnum, StrEnum
+
 from PySide6.QtCore import Qt
 
 from vibra import app
+from vibra.engine.elements.element_options import HEX8_structural
 from vibra.engine.mesher.element_setup import (
-    TETRAHEDRON_4,
-    TETRAHEDRON_10,
     HEXAHEDRON_8,
     HEXAHEDRON_20,
+    TETRAHEDRON_4,
+    TETRAHEDRON_10,
 )
+from vibra.engine.mesher.mesh_setup import MeshSetup
 
-from vibra.engine.elements.element_options import HEX8_structural
 # from vibra.interface import error_title, warning_title
 # from vibra.interface.general.print_message_input import PrintMessageInput
 # from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.ui_generated.model.general.element_options_input_ui import ElementOptionsInput_UI
-
-from enum import IntEnum, StrEnum
 
 
 class TabType(IntEnum):
@@ -87,28 +88,28 @@ class ElementOptionsInputs(ElementOptionsInput_UI):
 
     def update_tab_visibility(self):
 
-        mesh_setup = app().project.model.mesh_setup_old
-        if not isinstance(mesh_setup, dict):
+        mesh_setup = app().project.model.mesh_setup
+        if not isinstance(mesh_setup, MeshSetup):
             return
 
-        _element_type = mesh_setup.get("ElementType")
-        if _element_type is None:
+        element_setup = mesh_setup.element_setup
+        if element_setup is None:
             NotImplementedError("ElementType not found")
             return
 
         for i in range(4):
             self.tabWidget_main.setTabVisible(i, False)
 
-        if _element_type == TETRAHEDRON_4:
+        if element_setup == TETRAHEDRON_4:
             self.tabWidget_main.setTabVisible(TabType.TET4, True)
 
-        elif _element_type == TETRAHEDRON_10:
+        elif element_setup == TETRAHEDRON_10:
             self.tabWidget_main.setTabVisible(TabType.TET10, True)
 
-        elif _element_type == HEXAHEDRON_8:
+        elif element_setup == HEXAHEDRON_8:
             self.tabWidget_main.setTabVisible(TabType.HEX8, True)
 
-        elif _element_type == HEXAHEDRON_20:
+        elif element_setup == HEXAHEDRON_20:
             self.tabWidget_main.setTabVisible(TabType.HEX20, True)
 
         else:

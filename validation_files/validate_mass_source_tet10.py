@@ -64,7 +64,7 @@ def load_external_mesh_and_solve(assignment_type: str):
     mesh.import_external_solids_connectivity(external_mesh.solids_connectivities, index_zero=True, etype_tag=11)
     mesh.export_nodal_coordinates("nodal_coordinates.dat")
     mesh.export_solid_elements_connectivity("solids_connectivity.dat")
-    mesh.element_type = TETRAHEDRON_10
+    mesh.set_element_setup(TETRAHEDRON_10)
 
     for named_selection, surf_data in external_mesh.elements_from_named_selection.items():
         if named_selection in ["input_edges", "output_edges"]:
