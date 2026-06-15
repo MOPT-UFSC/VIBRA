@@ -22,3 +22,53 @@ def context_timer(name: str):
     yield start
     elapsed = perf_counter() - start
     logging.info(f"{name} took {elapsed:.3f}s")
+
+
+@typing.overload
+def warn_delays(time=0.1, /): ...
+
+
+def warn_delays(arg=None, /):
+    """
+    Decorator to warn if a given function is taking too long to run.
+    The default time considered to be long is 100 ms, or 0.1 s.
+    This can be customized
+
+    Example:
+    ```
+    @warn_delays
+    def short_function():
+        ...
+
+    @warn_delays(0.5)
+    def long_function():
+        ...
+    ```
+    """
+
+    if callable(arg):
+        function = arg
+        maximum_time = 0.1
+    else:
+        function = None
+        maximum_time = arg
+
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            start = perf_counter()
+            result = func(*args, **kwargs)
+            elapsed = perf_counter() - start
+
+            if elapsed >= maximum_time:
+                logging.warn(f"{func.__name__} took {elapsed:.3f}s when it should be less than {maximum_time:.3f}")
+
+            return result
+
+        return wrapper
+
+    # This is a trick to allow for arguments in the decorator
+    if function is not None:
+        return decorator(function)
+    else:
+        return decorator
