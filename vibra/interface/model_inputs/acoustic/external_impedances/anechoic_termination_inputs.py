@@ -128,11 +128,9 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
 
         for surf_id in np.sort(surface_ids):
             density, speed_of_sound = self.model.get_surface_density_and_speed_of_sound(surf_id)
-            if density is None:
-                continue
 
             if density is None:
-                str_impedance = "Undefined fluid"
+                str_impedance = "Not defined fluid"
 
             elif isinstance(density, np.ndarray):
                 str_impedance = "Spectral data"
