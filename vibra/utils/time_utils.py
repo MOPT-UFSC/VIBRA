@@ -31,7 +31,7 @@ def function_timer(func):
 
 
 @contextmanager
-def context_timer(name: str):
+def context_timer(name: str, /):
     """
     Context manager to log the time of a code snippet.
 
@@ -90,7 +90,7 @@ def warn_delays(arg=None, /):
             elapsed = perf_counter() - start
 
             if elapsed >= maximum_time:
-                logging.warn(f"{func.__name__} took {elapsed:.3f}s when it should be less than {maximum_time:.3f}")
+                logging.warning(f"{func.__name__} took {elapsed:.3f}s. It should be less than {maximum_time:.3f}s.")
 
             return result
 
@@ -101,3 +101,12 @@ def warn_delays(arg=None, /):
         return decorator(function)
     else:
         return decorator
+
+
+def warn_delay_since_start(name: str, /, maximum_time=0.1):
+    from vibra import INTIAL_TIME
+
+    elapsed = perf_counter() - INTIAL_TIME
+
+    if elapsed >= maximum_time:
+        logging.warning(f"{name} took {elapsed:.3f}s since the software started. It should be less than {maximum_time:.3f}s.")
