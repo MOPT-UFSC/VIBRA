@@ -1,3 +1,4 @@
+from vibra.utils.time_utils import warn_delays
 import logging
 
 from molde.colors import Color, color_names
@@ -216,6 +217,7 @@ class MeshRenderWidget(CommonRenderWidget):
     def click_callback(self, x, y):
         self.mouse_click = (x, y)
 
+    @warn_delays(0.2)
     def selection_callback(self, x, y):
         if not self.actors_exists():
             return

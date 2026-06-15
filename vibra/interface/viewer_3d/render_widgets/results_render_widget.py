@@ -1,3 +1,4 @@
+from vibra.utils.time_utils import warn_delays
 import logging
 from threading import Lock
 from time import time
@@ -189,6 +190,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
                 self.cache_frame(frame)
 
+    @warn_delays
     def cache_frame(self, frame):
         t = frame / (self._animation_total_frames - 1)
         phase = lerp(0, 2 * np.pi, t)
