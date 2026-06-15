@@ -210,7 +210,7 @@ class AnalysisToolbar(QToolBar):
         return self.model.is_there_a_valid_analysis_setup(current_analysis_id=current_analysis_id)
 
     def analysis_type_callback(self):
-        analysis_id = self.model.analysis_setup.analysis_id
+        analysis_id = self.model.analysis_id
         new_analysis_id = self.get_current_analysis_id()
         self.run_analysis_action.setEnabled(analysis_id == new_analysis_id)
         self.combo_box_physical_domain.blockSignals(False)

@@ -69,7 +69,7 @@ def load_external_mesh_and_solve():
     mesh.import_external_faces_connectivity(external_mesh.solids_connectivities, index_zero=True, etype_tag=4)
     mesh.export_nodal_coordinates("nodal_coordinates.dat")
     mesh.export_solid_elements_connectivity("solids_connectivity.dat")
-    mesh.element_type = TETRAHEDRON_4
+    mesh.set_element_setup(TETRAHEDRON_4)
 
     for named_selection, surf_data in external_mesh.elements_from_named_selection.items():
         if named_selection in ["input_edges", "output_edges"]:
@@ -83,7 +83,7 @@ def load_external_mesh_and_solve():
 
     # # Load the external data
     # path = f"validation_files/data/WB/structural/shell/pipes/results/results_for_L_pipe.xlsx"
-    # ext_data = LoadExternalData(path, rho_0)
+    # ext_data = LoadExternalData(path, fluid_density=rho_0)
 
     # assign the created fluid
     model = Model()

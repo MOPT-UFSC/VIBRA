@@ -1,10 +1,7 @@
 from pathlib import Path
 
 from vibra import PROJECT_DIR
-from vibra.engine.analysis_info import (
-    AnalysisID,
-    FrequencySpacing,
-)
+from vibra.engine.analysis_info import AnalysisID, FrequencySpacing
 from vibra.engine.mesher.mesh_setup import MeshSetup
 from vibra.engine.project import Project
 
@@ -27,8 +24,8 @@ def test_write_and_read_project(fluid, datadir: Path):
 
     project_a = Project()
     project_a.import_geometry(geometry_path)
-    project_a.configure_mesh(mesh_setup)
-    project_a.generate_mesh()
+    # project_a.configure_mesh()
+    project_a.generate_mesh(mesh_setup)
 
     project_a.model.properties._set_property("fluid", fluid, volume=1)
     project_a.model.properties._set_property("fluid", fluid, volume=2)
