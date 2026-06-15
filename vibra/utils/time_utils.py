@@ -59,7 +59,8 @@ def warn_delays(time=0.1, /): ...
 
 def warn_delays(arg=None, /):
     """
-    Decorator to warn if a given function is taking too long to run.
+    Warn if a given function is taking too long to run.
+
     The default time considered to be long is 100 ms, or 0.1 s.
     This can be customized
 
@@ -104,6 +105,19 @@ def warn_delays(arg=None, /):
 
 
 def warn_delay_since_start(name: str, /, maximum_time=0.1):
+    """
+    Warn if the elapsed time since software start exceeds a threshold.
+
+    Unlike @warn_delays (which measures individual function calls), this
+    checks the total wall-clock time since ``INTIAL_TIME`` (set at import time
+    in ``vibra/__init__.py``).
+
+    Example:
+    ```
+    warn_delay_since_start("Startup sequence", maximum_time=2.0)
+    ```
+    """
+
     from vibra import INTIAL_TIME
 
     elapsed = perf_counter() - INTIAL_TIME
