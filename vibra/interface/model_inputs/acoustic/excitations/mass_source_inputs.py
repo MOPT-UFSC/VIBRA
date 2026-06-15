@@ -862,7 +862,6 @@ class MassSourceInputs(MassSourceInputs_UI):
 
     def actions_to_finalize(self, close_window: bool = False):
         self.load_model_info()
-        self.check_model_frequency_controls()
         self.comboBox_inherit_fluid_from.clear()
         app().main_window.update_info_text()
         app().project.update_model_properties_file()
@@ -871,36 +870,6 @@ class MassSourceInputs(MassSourceInputs_UI):
 
         if close_window:
             self.close()
-
-    def check_model_frequency_controls(self):
-
-        model_properties = [
-                            self.properties.surface_properties,
-                            self.properties.point_properties,
-                            self.properties.nodal_properties,
-                            ]
-
-        properties = [
-                      "acoustic_pressure", 
-                      "surface_velocity", 
-                      "specific_impedance",
-                      "incident_plane_wave",
-                      "incident_plane_wave",
-                      "transfer_impedance",
-                      "perforated_plate", 
-                      "reciprocating_compressor_excitation",
-                      "mass_source",
-                      ]
-
-        for model_property in model_properties:
-            for key, data in model_property.items():
-                property, _ = key
-                if property in properties:
-                    if "table_names" in data.keys():
-                        return
-
-        # No idea of what it does
-        app().project.configure_analysis(app().project.model.analysis_setup)
 
     def reset_input_fields(self):
         self.lineEdit_real_value.setText("")

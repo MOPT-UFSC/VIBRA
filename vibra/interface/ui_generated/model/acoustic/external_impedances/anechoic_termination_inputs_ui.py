@@ -15,7 +15,7 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QComboBox, QDialog, QFrame,
+from PySide6.QtWidgets import (QAbstractItemView, QApplication, QDialog, QFrame,
     QGridLayout, QHeaderView, QLabel, QLineEdit,
     QPushButton, QSizePolicy, QSpacerItem, QTabWidget,
     QTreeWidget, QTreeWidgetItem, QWidget)
@@ -25,14 +25,14 @@ class Ui_Dialog(object):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
         Dialog.setWindowModality(Qt.WindowModality.WindowModal)
-        Dialog.resize(400, 359)
+        Dialog.resize(400, 400)
         sizePolicy = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(Dialog.sizePolicy().hasHeightForWidth())
         Dialog.setSizePolicy(sizePolicy)
-        Dialog.setMinimumSize(QSize(400, 340))
-        Dialog.setMaximumSize(QSize(400, 400))
+        Dialog.setMinimumSize(QSize(400, 400))
+        Dialog.setMaximumSize(QSize(400, 500))
         font = QFont()
         font.setPointSize(11)
         font.setBold(False)
@@ -63,48 +63,40 @@ class Ui_Dialog(object):
         self.tab_setup = QWidget()
         self.tab_setup.setObjectName(u"tab_setup")
         self.gridLayout_12 = QGridLayout(self.tab_setup)
-        self.gridLayout_12.setSpacing(2)
         self.gridLayout_12.setObjectName(u"gridLayout_12")
-        self.gridLayout_12.setContentsMargins(2, 6, 2, 6)
-        self.frame_4 = QFrame(self.tab_setup)
-        self.frame_4.setObjectName(u"frame_4")
-        self.frame_4.setFrameShape(QFrame.Shape.NoFrame)
-        self.frame_4.setFrameShadow(QFrame.Shadow.Raised)
-        self.gridLayout_2 = QGridLayout(self.frame_4)
-        self.gridLayout_2.setObjectName(u"gridLayout_2")
-        self.label_3 = QLabel(self.frame_4)
-        self.label_3.setObjectName(u"label_3")
-        self.label_3.setMinimumSize(QSize(90, 28))
-        self.label_3.setMaximumSize(QSize(90, 28))
-        self.label_3.setFont(font1)
-        self.label_3.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
-
-        self.gridLayout_2.addWidget(self.label_3, 0, 1, 1, 1)
-
-        self.comboBox_volume_id = QComboBox(self.frame_4)
-        self.comboBox_volume_id.setObjectName(u"comboBox_volume_id")
-        self.comboBox_volume_id.setMinimumSize(QSize(100, 28))
-        self.comboBox_volume_id.setMaximumSize(QSize(100, 28))
+        self.gridLayout_12.setHorizontalSpacing(2)
+        self.gridLayout_12.setVerticalSpacing(4)
+        self.gridLayout_12.setContentsMargins(10, 10, 10, 10)
+        self.treeWidget_selection_info = QTreeWidget(self.tab_setup)
+        __qtreewidgetitem = QTreeWidgetItem()
+        __qtreewidgetitem.setTextAlignment(1, Qt.AlignCenter);
+        __qtreewidgetitem.setTextAlignment(0, Qt.AlignCenter);
+        self.treeWidget_selection_info.setHeaderItem(__qtreewidgetitem)
+        self.treeWidget_selection_info.setObjectName(u"treeWidget_selection_info")
+        self.treeWidget_selection_info.setMinimumSize(QSize(320, 0))
+        self.treeWidget_selection_info.setMaximumSize(QSize(16777215, 16777215))
         font2 = QFont()
         font2.setFamilies([u"MS Shell Dlg 2"])
-        font2.setPointSize(10)
+        font2.setPointSize(9)
         font2.setBold(False)
         font2.setItalic(False)
-        self.comboBox_volume_id.setFont(font2)
-        self.comboBox_volume_id.setStyleSheet(u"")
+        self.treeWidget_selection_info.setFont(font2)
+        self.treeWidget_selection_info.setIndentation(1)
+        self.treeWidget_selection_info.setHeaderHidden(False)
+        self.treeWidget_selection_info.header().setHighlightSections(False)
+        self.treeWidget_selection_info.header().setProperty(u"showSortIndicator", False)
+        self.treeWidget_selection_info.header().setStretchLastSection(True)
 
-        self.gridLayout_2.addWidget(self.comboBox_volume_id, 0, 2, 1, 1)
+        self.gridLayout_12.addWidget(self.treeWidget_selection_info, 1, 0, 1, 1)
 
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        self.label_2 = QLabel(self.tab_setup)
+        self.label_2.setObjectName(u"label_2")
+        self.label_2.setMinimumSize(QSize(0, 32))
+        self.label_2.setFrameShape(QFrame.Shape.Box)
+        self.label_2.setFrameShadow(QFrame.Shadow.Raised)
+        self.label_2.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.gridLayout_2.addItem(self.horizontalSpacer, 0, 0, 1, 1)
-
-        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_2.addItem(self.horizontalSpacer_2, 0, 3, 1, 1)
-
-
-        self.gridLayout_12.addWidget(self.frame_4, 0, 0, 1, 1)
+        self.gridLayout_12.addWidget(self.label_2, 0, 0, 1, 1)
 
         self.tabWidget_main.addTab(self.tab_setup, "")
         self.tab_list = QWidget()
@@ -112,11 +104,11 @@ class Ui_Dialog(object):
         self.gridLayout_9 = QGridLayout(self.tab_list)
         self.gridLayout_9.setSpacing(2)
         self.gridLayout_9.setObjectName(u"gridLayout_9")
-        self.gridLayout_9.setContentsMargins(2, 8, 2, 2)
+        self.gridLayout_9.setContentsMargins(10, 10, 10, 2)
         self.frame_3 = QFrame(self.tab_list)
         self.frame_3.setObjectName(u"frame_3")
         self.frame_3.setMinimumSize(QSize(320, 40))
-        self.frame_3.setMaximumSize(QSize(320, 40))
+        self.frame_3.setMaximumSize(QSize(16777215, 40))
         self.frame_3.setFrameShape(QFrame.Shape.NoFrame)
         self.frame_3.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_8 = QGridLayout(self.frame_3)
@@ -127,7 +119,12 @@ class Ui_Dialog(object):
         self.pushButton_reset.setObjectName(u"pushButton_reset")
         self.pushButton_reset.setMinimumSize(QSize(100, 28))
         self.pushButton_reset.setMaximumSize(QSize(100, 28))
-        self.pushButton_reset.setFont(font2)
+        font3 = QFont()
+        font3.setFamilies([u"MS Shell Dlg 2"])
+        font3.setPointSize(10)
+        font3.setBold(False)
+        font3.setItalic(False)
+        self.pushButton_reset.setFont(font3)
         self.pushButton_reset.setStyleSheet(u"")
         self.pushButton_reset.setAutoDefault(False)
 
@@ -137,7 +134,7 @@ class Ui_Dialog(object):
         self.pushButton_remove.setObjectName(u"pushButton_remove")
         self.pushButton_remove.setMinimumSize(QSize(100, 28))
         self.pushButton_remove.setMaximumSize(QSize(100, 28))
-        self.pushButton_remove.setFont(font2)
+        self.pushButton_remove.setFont(font3)
         self.pushButton_remove.setStyleSheet(u"")
         self.pushButton_remove.setAutoDefault(False)
 
@@ -147,19 +144,15 @@ class Ui_Dialog(object):
         self.gridLayout_9.addWidget(self.frame_3, 1, 0, 1, 1)
 
         self.treeWidget_anechoic_termination = QTreeWidget(self.tab_list)
-        __qtreewidgetitem = QTreeWidgetItem()
-        __qtreewidgetitem.setTextAlignment(1, Qt.AlignCenter);
-        __qtreewidgetitem.setTextAlignment(0, Qt.AlignCenter);
-        self.treeWidget_anechoic_termination.setHeaderItem(__qtreewidgetitem)
+        __qtreewidgetitem1 = QTreeWidgetItem()
+        __qtreewidgetitem1.setTextAlignment(1, Qt.AlignCenter);
+        __qtreewidgetitem1.setTextAlignment(0, Qt.AlignCenter);
+        self.treeWidget_anechoic_termination.setHeaderItem(__qtreewidgetitem1)
         self.treeWidget_anechoic_termination.setObjectName(u"treeWidget_anechoic_termination")
         self.treeWidget_anechoic_termination.setMinimumSize(QSize(320, 0))
-        self.treeWidget_anechoic_termination.setMaximumSize(QSize(320, 200))
-        font3 = QFont()
-        font3.setFamilies([u"MS Shell Dlg 2"])
-        font3.setPointSize(9)
-        font3.setBold(False)
-        font3.setItalic(False)
-        self.treeWidget_anechoic_termination.setFont(font3)
+        self.treeWidget_anechoic_termination.setMaximumSize(QSize(16777215, 200))
+        self.treeWidget_anechoic_termination.setFont(font2)
+        self.treeWidget_anechoic_termination.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.treeWidget_anechoic_termination.setIndentation(1)
         self.treeWidget_anechoic_termination.setHeaderHidden(False)
         self.treeWidget_anechoic_termination.header().setHighlightSections(False)
@@ -183,6 +176,23 @@ class Ui_Dialog(object):
         self.gridLayout.setHorizontalSpacing(6)
         self.gridLayout.setVerticalSpacing(2)
         self.gridLayout.setContentsMargins(2, 2, 2, 2)
+        self.label_10 = QLabel(self.frame_8)
+        self.label_10.setObjectName(u"label_10")
+        self.label_10.setMinimumSize(QSize(90, 28))
+        self.label_10.setMaximumSize(QSize(90, 28))
+        self.label_10.setFont(font3)
+        self.label_10.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+
+        self.gridLayout.addWidget(self.label_10, 1, 1, 1, 1)
+
+        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout.addItem(self.horizontalSpacer_3, 1, 0, 1, 1)
+
+        self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout.addItem(self.horizontalSpacer_4, 1, 3, 1, 1)
+
         self.lineEdit_selection_id = QLineEdit(self.frame_8)
         self.lineEdit_selection_id.setObjectName(u"lineEdit_selection_id")
         self.lineEdit_selection_id.setMinimumSize(QSize(100, 28))
@@ -195,24 +205,7 @@ class Ui_Dialog(object):
         self.lineEdit_selection_id.setStyleSheet(u"")
         self.lineEdit_selection_id.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.gridLayout.addWidget(self.lineEdit_selection_id, 0, 2, 1, 1)
-
-        self.label_10 = QLabel(self.frame_8)
-        self.label_10.setObjectName(u"label_10")
-        self.label_10.setMinimumSize(QSize(90, 28))
-        self.label_10.setMaximumSize(QSize(90, 28))
-        self.label_10.setFont(font2)
-        self.label_10.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
-
-        self.gridLayout.addWidget(self.label_10, 0, 1, 1, 1)
-
-        self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout.addItem(self.horizontalSpacer_4, 0, 3, 1, 1)
-
-        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout.addItem(self.horizontalSpacer_3, 0, 0, 1, 1)
+        self.gridLayout.addWidget(self.lineEdit_selection_id, 1, 2, 1, 1)
 
 
         self.gridLayout_4.addWidget(self.frame_8, 0, 0, 1, 1)
@@ -301,7 +294,6 @@ class Ui_Dialog(object):
         self.retranslateUi(Dialog)
 
         self.tabWidget_main.setCurrentIndex(0)
-        self.comboBox_volume_id.setCurrentIndex(-1)
         self.pushButton_apply_and_close.setDefault(False)
         self.pushButton_apply.setDefault(False)
         self.pushButton_cancel.setDefault(False)
@@ -315,19 +307,25 @@ class Ui_Dialog(object):
 #if QT_CONFIG(whatsthis)
         Dialog.setWhatsThis("")
 #endif // QT_CONFIG(whatsthis)
-        self.label_3.setText(QCoreApplication.translate("Dialog", u"Volume ID:", None))
+        ___qtreewidgetitem = self.treeWidget_selection_info.headerItem()
+        ___qtreewidgetitem.setText(1, QCoreApplication.translate("Dialog", u"Specific impedance [kg/m\u00b2.s]", None));
+        ___qtreewidgetitem.setText(0, QCoreApplication.translate("Dialog", u"Surface ID", None));
+#if QT_CONFIG(tooltip)
+        self.treeWidget_selection_info.setToolTip(QCoreApplication.translate("Dialog", u"Select a face to remove the previously attributed boundary condition.", None))
+#endif // QT_CONFIG(tooltip)
+        self.label_2.setText(QCoreApplication.translate("Dialog", u"Impedance of selected surfaces", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_setup), QCoreApplication.translate("Dialog", u"Setup", None))
         self.pushButton_reset.setText(QCoreApplication.translate("Dialog", u"Reset", None))
         self.pushButton_remove.setText(QCoreApplication.translate("Dialog", u"Remove", None))
-        ___qtreewidgetitem = self.treeWidget_anechoic_termination.headerItem()
-        ___qtreewidgetitem.setText(1, QCoreApplication.translate("Dialog", u"Volume ID", None));
-        ___qtreewidgetitem.setText(0, QCoreApplication.translate("Dialog", u"Surface ID", None));
+        ___qtreewidgetitem1 = self.treeWidget_anechoic_termination.headerItem()
+        ___qtreewidgetitem1.setText(1, QCoreApplication.translate("Dialog", u"Specific impedance [kg/m\u00b2.s]", None));
+        ___qtreewidgetitem1.setText(0, QCoreApplication.translate("Dialog", u"Surface ID", None));
 #if QT_CONFIG(tooltip)
         self.treeWidget_anechoic_termination.setToolTip(QCoreApplication.translate("Dialog", u"Select a face to remove the previously attributed boundary condition.", None))
 #endif // QT_CONFIG(tooltip)
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_list), QCoreApplication.translate("Dialog", u"List", None))
-        self.lineEdit_selection_id.setText("")
         self.label_10.setText(QCoreApplication.translate("Dialog", u"Selected ID:", None))
+        self.lineEdit_selection_id.setText("")
         self.label.setText(QCoreApplication.translate("Dialog", u"Anechoic termination setup", None))
         self.pushButton_apply_and_close.setText(QCoreApplication.translate("Dialog", u"Ok", None))
         self.pushButton_apply.setText(QCoreApplication.translate("Dialog", u"Apply", None))
@@ -346,10 +344,8 @@ class AnechoicTerminationInputs_UI(QDialog, Ui_Dialog):
                             - tabWidget_main: QTabWidget
                                 - tab_setup: QWidget
                                     - (Layout): QGridLayout
-                                            - frame_4: QFrame
-                                                - (Layout): QGridLayout
-                                                        - label_3: QLabel
-                                                        - comboBox_volume_id: QComboBox
+                                            - treeWidget_selection_info: QTreeWidget
+                                            - label_2: QLabel
                                 - tab_list: QWidget
                                     - (Layout): QGridLayout
                                             - frame_3: QFrame
@@ -359,8 +355,8 @@ class AnechoicTerminationInputs_UI(QDialog, Ui_Dialog):
                                             - treeWidget_anechoic_termination: QTreeWidget
                             - frame_8: QFrame
                                 - (Layout): QGridLayout
-                                        - lineEdit_selection_id: QLineEdit
                                         - label_10: QLabel
+                                        - lineEdit_selection_id: QLineEdit
                 - frame: QFrame
                     - (Layout): QGridLayout
                             - label: QLabel

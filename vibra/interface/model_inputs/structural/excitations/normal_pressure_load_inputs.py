@@ -543,17 +543,6 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         if close_window:
             self.close()
 
-    def check_model_frequency_controls(self):
-
-        for key, data in self.properties.surface_properties.items():
-            property, _ = key
-            if property in ["nodal_loads", "prescribed_dof"]:
-                if "table_names" in data.keys():
-                    return
-
-        # No idea of what it does
-        app().project.configure_analysis(app().project.model.analysis_setup)
-
     def reset_input_fields(self):
         self.lineEdit_selection_id.setText("")
         self.lineEdit_real_value.setText("")

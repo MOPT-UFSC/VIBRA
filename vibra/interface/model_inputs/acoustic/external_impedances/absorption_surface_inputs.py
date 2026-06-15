@@ -498,34 +498,12 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
 
     def actions_to_finalize(self, close_window: bool = False):
         self.load_model_info()
-        self.check_model_frequency_controls()
         app().main_window.update_info_text()
         app().project.update_model_properties_file()
         app().main_window.update_symbols()
 
         if close_window:
             self.close()
-
-    def check_model_frequency_controls(self):
-
-        properties = [
-                      "acoustic_pressure", 
-                      "surface_velocity", 
-                      "specific_impedance",
-                      "absorption_surface",
-                      "transfer_impedance",
-                      "perforated_plate", 
-                      "reciprocating_compressor_excitation",
-                      ]
-
-        for key, data in self.properties.surface_properties.items():
-            property, _ = key
-            if property in properties:
-                if "table_names" in data.keys():
-                    return
-
-        # No idea of what it does
-        app().project.configure_analysis(app().project.model.analysis_setup)
 
     def reset_input_fields(self):
         self.lineEdit_real_value.setText("")

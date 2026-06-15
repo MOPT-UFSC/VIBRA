@@ -772,31 +772,12 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
 
     def actions_to_finalize(self, close_window: bool = False):
         self.load_model_info()
-        self.check_model_frequency_controls()
         app().project.update_model_properties_file()
         app().main_window.update_info_text()
         app().main_window.update_symbols()
 
         if close_window:
             self.close()
-
-    def check_model_frequency_controls(self):
-
-        for key, data in self.properties.surface_properties.items():
-            property, _ = key
-            if property in [
-                "acoustic_pressure",
-                "surface_velocity",
-                "incident_plane_wave",
-                "specific_impedance",
-                "compressor_excitation_waveform",
-                "reciprocating_compressor_excitation",
-                ]:
-                if "table_names" in data.keys():
-                    return
-
-        # No idea of what it does
-        app().project.configure_analysis(app().project.model.analysis_setup)
 
     def update_tabs_visibility(self):
 
