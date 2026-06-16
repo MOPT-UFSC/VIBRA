@@ -197,6 +197,7 @@ class ResultsViewerItems(CommonMenuItems):
         self.update_allowable_pulsation_criteria_visibility_for_reciprocating_compressor(analysis_id)
         self.update_allowable_pulsation_criteria_visibility_for_screw_compressor(analysis_id)
         self.update_tree_visibility_after_solution()
+        self.update_results_items_warnings()
 
     def update_allowable_pulsation_criteria_visibility_for_reciprocating_compressor(self, analysis_id: int):
         compressor_exists = False
@@ -265,22 +266,13 @@ class ResultsViewerItems(CommonMenuItems):
             top_level_item.setData(0, Qt.ForegroundRole, None)  # reset color
             top_level_item.setData(0, Qt.DecorationRole, None)
 
-    def update_results_items_warnings(self, properties_changed: bool, outdated_solution: bool = True):
-
-        solution_exists = app().project.model.solution is not None
-        should_update = solution_exists and properties_changed
+    def update_results_items_warnings(self):
 
         # check if the current solution is outdated
-        is_solution_outdated = app().project.model.outdated_solution
-
-        if properties_changed:
-            analysis_setup = app().project.model.analysis_setup
-            if isinstance(analysis_setup, HarmonicAnalysisSetup | ModalAnalysisSetup):
-                analysis_setup.outdated_solution = should_update
-                app().project.configure_analysis(analysis_setup, reset_solution=False)
+        warning = app().project.model.outdated_solution
 
         for top_level_item in self.top_level_items:
-            warning = should_update or is_solution_outdated 
+            # warning = should_update or is_solution_outdated 
             self.set_warning_for_top_level_item(warning, top_level_item)
             for index in range(top_level_item.childCount()):
 

@@ -740,8 +740,6 @@ class MainWindow(MainWindow_UI):
 
         else:
             raise ValueError(f"File extension {ext} not supported")
-        
-        self.results_viewer_widget.results_viewer_items.update_results_items_warnings(False)
 
     def import_geometry_dialog(self):
         path = app().config.get_last_folder_for(
@@ -954,7 +952,6 @@ class MainWindow(MainWindow_UI):
         self.update_toolbar_and_menu_items_after_load_project()
         self.analysis_toolbar.check_analysis_setup_callback()
         self.analysis_toolbar.update_reset_solution_button_accessibility()
-        self.results_viewer_widget.results_viewer_items.update_results_items_warnings(False)
 
         LoadingWindow(self.geometry_widget.update_plot).run()
         LoadingWindow(self.mesh_widget.update_plot).run()
