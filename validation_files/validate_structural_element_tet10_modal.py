@@ -1,21 +1,21 @@
+from typing import TYPE_CHECKING
+
 from vibra import PROJECT_DIR
 from vibra.engine.analysis_info import AnalysisID, ModalAnalysisSetup
-from vibra.engine.properties.material import Material
-from vibra.engine.mesher.mesh import Mesh
-from vibra.engine.mesher.element_setup import TETRAHEDRON_10
-from vibra.engine.model import Model
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
-
+from vibra.engine.mesher.mesh import Mesh
+from vibra.engine.model import Model
+from vibra.engine.properties.material import Material
 from vibra.engine.solvers.modal_solver import ModalSolver
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
 
-from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from vibra.engine.model import Model
 
 import os
-import numpy as np
 from time import time
+
+import numpy as np
 
 
 def load_external_mesh_and_solve(integration_type: str):
@@ -56,7 +56,6 @@ def load_external_mesh_and_solve(integration_type: str):
     mesh.export_nodal_coordinates("nodal_coordinates.dat")
     mesh.export_solid_elements_connectivity("solids_connectivity.dat")
     mesh.export_face_elements_connectivity("faces_connectivity.dat")
-    mesh.set_element_setup(TETRAHEDRON_10)
 
     for named_selection, surf_data in external_mesh.elements_from_named_selection.items():
 
@@ -95,10 +94,12 @@ def load_external_mesh_and_solve(integration_type: str):
         thermal_expansion_coefficient = thermal_expansion_coefficient
         )
 
-    ## assign the created fluid
+    ## intialize the model
     model = Model()
-    model.mesh =  mesh
+    model.set_element_type(element_geometry="tetrahedron", element_order="quadratic")
+    model.mesh = mesh
 
+    ## assign the created fluid
     model.properties._set_property("material", material, volume=1)
     
     for _surf_id in [1, 2]:
@@ -124,7 +125,6 @@ def load_external_mesh_and_solve(integration_type: str):
 
     # Set the analysis setup
     model.set_analysis_setup(analysis_setup)
-    model.set_analysis_id(AnalysisID.STRUCTURAL_MODAL)
 
     assembler = StructuralAssembler(model)
 
