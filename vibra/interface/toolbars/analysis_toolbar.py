@@ -220,6 +220,7 @@ class AnalysisToolbar(QToolBar):
         # self.domain_changed.emit()
 
     def run_analysis_callback(self, is_resume: bool = True):
+        app().main_window.results_viewer_widget.results_viewer_items.update_results_items_warnings(False)
         if app().config.user_preferences.run_analysis_in_subprocess:
             self.run_analysis_in_subprocess()
         else:

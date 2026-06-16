@@ -1,10 +1,12 @@
-from PySide6.QtGui import QPen
-from PySide6.QtCore import Qt
-
-from vibra import app
-from vibra.engine import AnalysisID
-from vibra.interface.menus.common_menu_items import CommonMenuItems
 from molde import Color
+from molde.colors import color_names
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QFont, QIcon, QPen
+
+from vibra import ICON_DIR, app
+from vibra.engine import AnalysisID
+from vibra.interface.menus.common_menu_items import ChildTreeWidgetItem, CommonMenuItems, TopTreeWidgetItem
+
 
 class ResultsViewerItems(CommonMenuItems):
     """Menu Items
@@ -246,3 +248,40 @@ class ResultsViewerItems(CommonMenuItems):
         for item in self.top_level_items:
             item.setBackground(0, self.background_color)
             item.setData(0, border_role, border_pen)
+
+    def set_warning_for_top_level_item(self, warning: bool, top_level_item: TopTreeWidgetItem):
+        if warning:
+            font = QFont()
+            font.setBold(True)
+            top_level_item.setFont(0, font)
+            top_level_item.setForeground(0, Color(*color_names.RED_5.to_rgb()).to_qt())
+            warning_icon = QIcon(str(ICON_DIR / "model_setup_items/warning_yellow.png"))
+            top_level_item.setIcon(0, warning_icon)
+
+        else:
+            # Resets data to default
+            top_level_item.setData(0, Qt.FontRole, None)  # reset color
+            top_level_item.setData(0, Qt.ForegroundRole, None)  # reset color
+            top_level_item.setData(0, Qt.DecorationRole, None)
+
+    def update_results_items_warnings(self, properties_changed: bool):
+
+        solution_exists = app().project.model.solution is not None
+        warning = solution_exists and properties_changed
+
+        for top_level_item in self.top_level_items:
+            self.set_warning_for_top_level_item(warning, top_level_item)
+            for index in range(top_level_item.childCount()):
+
+                item_child: ChildTreeWidgetItem = top_level_item.child(index)
+                if item_child.isDisabled():
+                    item_child.setToolTip(0, "")
+                    item_child.set_warning(False)
+                    continue
+
+                tool_tip = ""
+                if warning:
+                    tool_tip = "<b style='color:red'>The model configuration does not match that of the current solution.</b>"
+
+                item_child.set_warning(warning)
+                item_child.setToolTip(0, tool_tip)

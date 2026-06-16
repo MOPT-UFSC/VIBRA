@@ -332,6 +332,7 @@ class SetFluidInputs(SetFluidInputs_UI):
         app().main_window.selection.clear_selection()  # this also updates
         app().main_window.update_symbols()
         app().project.update_model_properties_file()
+        app().main_window.results_viewer_widget.results_viewer_items.update_results_items_warnings(True)
 
         self.complete = True
 
