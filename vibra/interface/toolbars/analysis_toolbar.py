@@ -219,14 +219,8 @@ class AnalysisToolbar(QToolBar):
         self.run_analysis_action.setEnabled(valid_analysis_setup)
         # self.domain_changed.emit()
 
-    def reset_outdated_attribute_before_solving_analysis(self):
-        analysis_setup = self.model.analysis_setup
-        analysis_setup.outdated_solution = False
-        app().project.configure_analysis(analysis_setup)
-        app().main_window.results_viewer_widget.results_viewer_items.update_results_items_warnings(False)
-
     def run_analysis_callback(self, is_resume: bool = True):
-        self.reset_outdated_attribute_before_solving_analysis()
+        app().project.mark_solution_as_outdated(reset=True)
         if app().config.user_preferences.run_analysis_in_subprocess:
             self.run_analysis_in_subprocess()
         else:

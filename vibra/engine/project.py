@@ -177,6 +177,7 @@ class Project:
 
     # TODO: use only "write_to_working_dir"
     def update_model_properties_file(self):
+        self.mark_solution_as_outdated()
         self.project_writer.write_model_properties(self.model.properties)
         self.mark_project_as_modified()
 
@@ -302,14 +303,12 @@ class Project:
     def configure_analysis(
         self,
         analysis_setup: Optional[AnalysisSetup],
-        reset_solution: bool = True,
     ):
         """
         Defines the `AnalysisID` and the `AnalysisSetup` required to
         execute a analysis.
         """
-        if reset_solution:
-            self.reset_solution()
+        self.reset_solution()
         self.model.set_analysis_setup(analysis_setup)
         self.update_project_setup_file()
 
@@ -539,3 +538,13 @@ class Project:
         Indicates that something was modified and that the project need to be saved.
         """
         self.needs_saving = True
+
+    def mark_solution_as_outdated(self, reset: bool = False):
+        solution_exists = isinstance(self.model.solution, HarmonicSolution | ModalSolution)
+        solution_outdated = not reset and solution_exists
+
+        analysis_setup = self.model.analysis_setup
+        if isinstance(analysis_setup, HarmonicAnalysisSetup | ModalAnalysisSetup):
+            analysis_setup.outdated_solution = solution_outdated
+            self.model.set_analysis_setup(analysis_setup)
+            self.update_project_setup_file()
