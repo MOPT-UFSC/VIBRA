@@ -972,13 +972,10 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             self.load_model_info()
 
             logging.info("Processing the post-assignment actions... [20/100]")
-            app().project.reset_solution()
+            app().main_window.analysis_toolbar.reset_solution()
 
             logging.info("Processing the post-assignment actions... [30/100]")
             app().project.project_writer.delete_mesh_data()
-
-            logging.info("Processing the post-assignment actions... [50/100]")
-            app().project.update_model_properties_file()
 
             logging.info("Processing the post-assignment actions... [60/100]")
             app().project.update_model_properties_file()
@@ -989,16 +986,13 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             logging.info("Processing the post-assignment actions... [80/100]")
             app().main_window.update_info_text()
 
+            logging.info("Processing the post-assignment actions... [90/100]")
+            app().main_window.update_symbols()
+
             logging.info("Processing the post-assignment actions... [95/100]")
             app().main_window.selection.set_geometry_selection()
 
-            logging.info("Processing the post-assignment actions... [100/100]")
-            app().main_window.action_results_workspace.setEnabled(False)
-            app().main_window.analysis_toolbar.reset_solution_action.setDisabled(True)
-
         LoadingWindow(callback).run()
-
-        app().main_window.results_viewer_widget.results_viewer_items.update_results_items_warnings(True)
 
         if close_window:
             self.close()
