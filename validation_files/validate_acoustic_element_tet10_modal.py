@@ -65,7 +65,7 @@ def load_external_mesh_and_solve():
     mesh.export_nodal_coordinates("nodal_coordinates.dat")
     mesh.export_solid_elements_connectivity("solids_connectivity.dat")
     mesh.export_face_elements_connectivity("faces_connectivity.dat")
-    mesh.element_type = TETRAHEDRON_10
+    mesh.set_element_setup(TETRAHEDRON_10)
 
     for named_selection, surf_data in external_mesh.elements_from_named_selection.items():
         if named_selection in ["input_edges", "output_edges"]:
@@ -144,7 +144,6 @@ def load_external_mesh_and_solve():
 
     # Set the analysis setup
     model.set_analysis_setup(analysis_setup)
-    model.set_analysis_id(AnalysisID.ACOUSTIC_MODAL)
 
     assembler = AcousticAssembler(model)
 

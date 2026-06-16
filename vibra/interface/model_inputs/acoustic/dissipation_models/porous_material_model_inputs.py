@@ -6,16 +6,9 @@ from typing import Dict, List
 import numpy as np
 from PySide6.QtCore import QItemSelectionModel, QPoint, Qt
 from PySide6.QtGui import QAction, QCloseEvent, QIcon
-from PySide6.QtWidgets import (
-    QAbstractItemView,
-    QDialog,
-    QDoubleSpinBox,
-    QMenu,
-    QTableWidgetItem,
-    QTreeWidgetItem,
-)
+from PySide6.QtWidgets import QAbstractItemView, QDialog, QDoubleSpinBox, QMenu, QTableWidgetItem, QTreeWidgetItem
 
-from vibra import app, ICON_DIR
+from vibra import ICON_DIR, app
 from vibra.engine.dissipation_models.porous_materials_models import PorousMaterialModels, get_DB_standard_constants, get_DBM_standard_constants
 from vibra.engine.properties.fluid import Fluid
 from vibra.interface import error_title
@@ -26,7 +19,7 @@ from vibra.interface.model_inputs.acoustic.definitions.enums import AttributionB
 from vibra.interface.model_inputs.acoustic.dissipation_models.dbm_data import DelanyBazleyMikiData
 from vibra.interface.model_inputs.acoustic.dissipation_models.jcal_data import JhonsonChampouxAllardLafargeData
 from vibra.interface.model_inputs.acoustic.dissipation_models.show_porous_material_model_equations import ShowPorousMaterialModelEquations
-from vibra.interface.model_inputs.general.fluid.set_fluid_inputs_simplified import SetFluidInputsSimplified
+from vibra.interface.model_inputs.fluid.set_fluid_inputs_simplified import SetFluidInputsSimplified
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
 from vibra.interface.ui_generated.model.acoustic.dissipation_models.porous_material_model_inputs_ui import PorousMaterialModelInputs_UI
 
@@ -110,8 +103,9 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         self.comboBox_DBM_constants.currentIndexChanged.connect(self.update_DBM_constants_callback)
         self.comboBox_plot_type.currentIndexChanged.connect(self.plot_type_callback)
         #
-        self.pushButton_exit.clicked.connect(self.close)
-        self.pushButton_confirm.clicked.connect(self.attribute_callback)
+        self.pushButton_apply.clicked.connect(self.apply_callback)
+        self.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
+        self.pushButton_cancel.clicked.connect(self.close)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
         self.pushButton_get_fluid.clicked.connect(self.get_fluid_callback)
@@ -213,8 +207,13 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         widgets = [self.pushButton_DB_equations]
         change_icon_color_for_widgets(widgets, self.icon_color)
 
-    def actions_to_finalize(self):
+    def actions_to_finalize(self, close_window: bool = False):
+        self.load_info()
         app().main_window.update_symbols()
+        app().project.update_model_properties_file()
+
+        if close_window:
+            self.close()
 
     def advanced_porous_material_callback(self):
         enabled = self.checkBox_advanced_porous_material_plots.isChecked()
@@ -388,8 +387,6 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         self.pushButton_remove.setDisabled(True)
 
         app().main_window.selection.clear_selection()
-        app().project.update_model_properties_file()
-        self.load_info()
         self.actions_to_finalize()
 
         if len(self.map_model_id_to_model) > 0:
@@ -416,14 +413,13 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             if read._cancel:
                 return
 
-            if read._continue:
+            if not read._continue:
+                return
 
-                for volume_id in volume_ids:
-                    self.properties._remove_volume_property("porous_material_model", volume_id)
+            for volume_id in volume_ids:
+                self.properties._remove_volume_property("porous_material_model", volume_id)
 
-                app().project.update_model_properties_file()
-                self.actions_to_finalize()
-                self.close()
+            self.actions_to_finalize()
 
     def tab_event_porous_material_model(self):
         current_tab = self.tabWidget_main.currentIndex()
@@ -437,7 +433,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
         self.frame_plot_setup.setVisible(pm_tab)
         self.frame_plot_buttons.setVisible(pm_tab)
-        self.pushButton_confirm.setEnabled(pm_tab)
+        self.pushButton_apply.setEnabled(pm_tab)
         self.comboBox_attribution_type.setEnabled(pm_tab)
 
         self.last_tab = current_tab
@@ -805,7 +801,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         else:
             return "Jhonson-Champoux-Allard-Lafarge"
 
-    def attribute_callback(self):
+    def apply_callback(self, close_window: bool = False):
 
         tab_index = self.tabWidget_main.currentIndex()
 
@@ -842,9 +838,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             for volume_id in volume_ids:
                 self.properties._set_property("porous_material_model", model_data.get_data(), volume=volume_id)
 
-            app().project.update_model_properties_file()
-            self.actions_to_finalize()
-            self.load_info()
+            self.actions_to_finalize(close_window)
 
     def check_inputs(self, lineEdit, label, only_positive=False, zero_included=True, _float=True):
 
@@ -896,8 +890,8 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
     def get_fluid_callback(self):
         self.hide()
         self.fluid_dialog = SetFluidInputsSimplified()
-        self.fluid_dialog.fluid_widget.pushButton_attribute.setText("Select fluid")
-        self.fluid_dialog.fluid_widget.pushButton_attribute.clicked.connect(self.get_selected_fluid)
+        self.fluid_dialog.fluid_widget.pushButton_apply.setVisible(False)
+        self.fluid_dialog.fluid_widget.pushButton_apply_and_close.clicked.connect(self.get_selected_fluid)
         self.fluid_dialog.exec()
         app().main_window.set_input_widget(self)
 
@@ -953,6 +947,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         tab_index = self.tabWidget_main.currentIndex()
         if tab_index == TabType.DBM_MODELS:
             return self.comboBox_DBM_constants.currentText()
+
         elif tab_index == TabType.JCAL_MODELS:
             return self.comboBox_JCAL_pm_model.currentText()
 
@@ -1084,7 +1079,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            self.attribute_callback()
+            self.apply_callback()
         elif event.key() == Qt.Key_Escape:
             self.close()
         elif event.key() == Qt.Key_Control:

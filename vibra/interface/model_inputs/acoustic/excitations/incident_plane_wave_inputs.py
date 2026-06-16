@@ -1,18 +1,18 @@
 
-from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
+import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
 
 from vibra import app
 from vibra.interface import error_title
 from vibra.interface.common.common_interface import update_analysis_setup_in_file
 from vibra.interface.data.data_manager import get_spectral_data_from_array
+from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.data_handler.data_importer import DataImporter
-from vibra.interface.ui_generated.model.acoustic.incident_plane_wave_inputs_ui import IncidentPlaneWaveInputs_UI
-
-import numpy as np
+from vibra.interface.model_inputs.acoustic.definitions.enums import StandardTabType
+from vibra.interface.ui_generated.model.acoustic.excitations.incident_plane_wave_inputs_ui import IncidentPlaneWaveInputs_UI
 
 
 class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
@@ -35,6 +35,15 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
         while self.keep_window_open:
             self.exec()
 
+    @property
+    def wave_direction(self):
+        if self.comboBox_wave_direction.currentIndex():
+            wave_direction = "components"
+        else:
+            wave_direction = "normal"
+
+        return wave_direction
+
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
@@ -49,8 +58,9 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
         #
         self.comboBox_wave_direction.currentIndexChanged.connect(self.wave_direction_callback)
         #
-        self.pushButton_attribute.clicked.connect(self.attribute_callback)
-        self.pushButton_exit.clicked.connect(self.close)
+        self.pushButton_apply.clicked.connect(self.apply_callback)
+        self.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
+        self.pushButton_cancel.clicked.connect(self.close)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_load_table.clicked.connect(self.load_incident_pressure_table)
         self.pushButton_reset.clicked.connect(self.reset_callback)
@@ -72,14 +82,14 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
             self.treeWidget_incident_plane_wave.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def tab_event_callback(self):
-        self.pushButton_remove.setDisabled(True)
-        if self.tabWidget_main.currentIndex() == 2:
+        tab_list = self.tabWidget_main.currentIndex() == StandardTabType.LIST
+        if tab_list:
             self.lineEdit_selection_id.setText("")
-            self.lineEdit_selection_id.setDisabled(True)
-            self.pushButton_attribute.setDisabled(True)
-        else:
-            self.lineEdit_selection_id.setDisabled(False)
-            self.pushButton_attribute.setEnabled(True)
+
+        self.pushButton_remove.setDisabled(True)
+        self.lineEdit_selection_id.setDisabled(tab_list)
+        self.pushButton_apply.setDisabled(tab_list)
+        self.pushButton_apply_and_close.setDisabled(tab_list)        
 
     def on_click_item(self, item):
         if item.text(0) != "":
@@ -165,12 +175,40 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
         self.lineEdit_component_y.setText(f"{wave_vector[1] : .4f}".replace(" ", ""))
         self.lineEdit_component_z.setText(f"{wave_vector[2] : .4f}".replace(" ", ""))
 
-    def attribute_callback(self):
+    def apply_callback(self, close_window: bool = False):
         tab_index = self.tabWidget_main.currentIndex()
-        if tab_index == 0:
-            self.constant_data_assignment()
-        elif tab_index == 1:
-            self.tabular_data_assignment()
+        if tab_index == StandardTabType.LIST:
+            return
+
+        input_ids = self.lineEdit_selection_id.text()
+        surface_ids, error_data = self.mesh.check_selected_ids(input_ids, selection = "surfaces", single_id = False)
+
+        if error_data is not None:
+            self.hide()
+            self.lineEdit_selection_id.setFocus()
+            PrintMessageInput(error_data)
+            return
+
+        if self.check_for_inside_surfaces(surface_ids):
+            self.hide()
+            title = "Invalid surface selected"
+            message = "An invalid surface has been detected in the current "
+            message += "selection. The incident plane wave excitation can"
+            message += "only applied on the outside surfaces."
+            PrintMessageInput([error_title, title, message])
+            return
+
+        self.remove_conflicting_excitations(surface_ids)
+
+        if tab_index == StandardTabType.CONSTANT_DATA:
+            if self.constant_data_assignment(surface_ids):
+                return
+
+        elif tab_index == StandardTabType.TABULAR_DATA:
+            if self.tabular_data_assignment(surface_ids):
+                return
+
+        self.actions_to_finalize(close_window)
 
     def check_inputs(self, line_edit: QLineEdit, label, only_positive: bool = True):
 
@@ -291,30 +329,9 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
             wave_vector = [e_x, e_y, e_z]
 
         return wave_vector
-
-
-    def get_incident_wave_inputs(self):
-        
-        P_inc = self.check_complex_entries(self.lineEdit_incident_pressure_real, self.lineEdit_incident_pressure_imag, "P_inc")
-
-        if self.comboBox_wave_direction.currentIndex():
-            wave_direction = "components"
-        else:
-            wave_direction = "normal"
-
-        if P_inc is None:
-            return dict()
-
-        output = {
-                  "wave_direction" : wave_direction,
-                  "values" : [P_inc],
-                  }
-
-        return output
     
     def check_for_inside_surfaces(self, surface_ids: list[int]):
-        """
-        """
+
         for surface_id in surface_ids:
             volumes_from_surface = self.mesh.volumes_from_surface.get(surface_id)
             if len(volumes_from_surface) != 1:
@@ -352,61 +369,32 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
 
         return False
 
-    def constant_data_assignment(self):
-
-        input_ids = self.lineEdit_selection_id.text()
-        surface_ids, error_data = self.mesh.check_selected_ids(
-                                                               input_ids, 
-                                                               selection = "surfaces",
-                                                               single_id = False,
-                                                               )
-
-        if error_data is not None:
-            self.hide()
-            self.lineEdit_selection_id.setFocus()
-            PrintMessageInput(error_data)
-            return
-
-        if self.check_for_inside_surfaces(surface_ids):
-            self.hide()
-            title = "Invalid surface selected"
-            message = "An invalid surface has been detected in the current "
-            message += "selection. The incident plane wave excitation can"
-            message += "only applied on the outside surfaces."
-            PrintMessageInput([error_title, title, message])
-            return
-
-        incident_wave_inputs = self.get_incident_wave_inputs()
-        if not incident_wave_inputs:
-            return
-
-        self.remove_conflicting_excitations(surface_ids)
-
-        values = incident_wave_inputs.get("values")
-        wave_direction = incident_wave_inputs.get("wave_direction")
+    def constant_data_assignment(self, surface_ids: list[int]):
+        
+        values = self.check_complex_entries(self.lineEdit_incident_pressure_real, self.lineEdit_incident_pressure_imag, "P_inc")
+        if values is None:
+            return None
 
         real_values = [value if value is None else np.real(value) for value in values]
         imag_values = [value if value is None else np.imag(value) for value in values]
 
         data = {
-                "wave_direction" : wave_direction,
-                "real_values" : real_values,
-                "imag_values" : imag_values,
-                }
+            "wave_direction": self.wave_direction,
+            "real_values": real_values,
+            "imag_values": imag_values,
+        }
 
         if self.check_wave_incidence(surface_ids, values[0]):
-            return
+            return True
 
         for surface_id in surface_ids:
 
             wave_vector = self.get_input_wave_vector(surface_id)
             if wave_vector is None:
-                return
+                return True
 
-            data["wave_vector"] = wave_vector
+            data.update({"wave_vector": wave_vector})
             self.properties._set_property("incident_plane_wave", data, surface=surface_id)
-
-        self.actions_to_finalize()  
 
     def load_table(self, lineEdit : QLineEdit, direct_load=False):
 
@@ -481,88 +469,56 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
     def load_incident_pressure_table(self):
         self.imported_values = self.load_table(self.lineEdit_table_path)
 
-    def tabular_data_assignment(self):
+    def tabular_data_assignment(self, surface_ids: list[int]):
 
-        input_ids = self.lineEdit_selection_id.text()
-        surface_ids, error_data = self.mesh.check_selected_ids(
-                                                               input_ids, 
-                                                               selection = "surfaces",
-                                                               single_id = False,
-                                                               )
-
-        if error_data is not None:
+        if self.lineEdit_table_path.text() == "":
             self.hide()
-            self.lineEdit_selection_id.setFocus()
-            PrintMessageInput(error_data)
-            return
-
-        if self.check_for_inside_surfaces(surface_ids):
-            self.hide()
-            title = "Invalid surface selected"
-            message = "An invalid surface has been detected in the current "
-            message += "selection. The incident plane wave excitation can"
-            message += "only applied on the outside surfaces."
-            PrintMessageInput([error_title, title, message])
-            return
-
-        if self.comboBox_wave_direction.currentIndex():
-            wave_direction = "components"
-        else:
-            wave_direction = "normal"
-
-        self.remove_conflicting_excitations(surface_ids)
-
-        if self.lineEdit_table_path.text() != "":
-
-            if self.imported_values is None:
-                self.imported_values = self.load_table( self.lineEdit_table_path, 
-                                                        direct_load = True )
-
-                if isinstance(self.imported_values, np.ndarray):
-                    if self.imported_values.shape[1] < 3:
-                        return
-                else:
-                    return
-            
-                # complex values computed from tabular data
-                complex_values = get_spectral_data_from_array(self.imported_values)
-
-                # table path from imported tabular data
-                table_path = self.lineEdit_table_path.text()
-
-            if self.check_wave_incidence(surface_ids, complex_values):
-                return
-            
-            for surface_id in surface_ids:
-
-                wave_vector = self.get_input_wave_vector(surface_id)
-                if wave_vector is None:
-                    return
-
-                table_name = f"incident_pressure_wave_{surface_id}"
-                if self.save_table_values(table_name, self.imported_values):
-                    self.lineEdit_table_path.setFocus()
-                    self.imported_values = None
-                    return
-
-                data = {
-                        "wave_direction" : wave_direction,
-                        "wave_vector" : wave_vector,
-                        "table_names": [table_name],
-                        "table_paths" : [table_path],
-                        "values" : [complex_values],
-                        }
-
-                self.properties._set_property("incident_plane_wave", data, surface=surface_id)
-
-            self.actions_to_finalize()
-
-        else:
             title = "Additional inputs required"
-            message = "You must inform at least one absorption surface\n"
-            message += "table path before confirming the input!"
+            message = "You must enter the absorption surface table path to proceed with the assignment."
             PrintMessageInput([error_title, title, message])
             self.lineEdit_table_path.setFocus()
+            return True
+
+        if self.imported_values is None:
+            self.imported_values = self.load_table(self.lineEdit_table_path, direct_load = True)
+
+            if isinstance(self.imported_values, np.ndarray):
+                if self.imported_values.shape[1] < 3:
+                    return True
+
+            else:
+                return True
+        
+            # complex values computed from tabular data
+            complex_values = get_spectral_data_from_array(self.imported_values)
+
+            # table path from imported tabular data
+            table_path = self.lineEdit_table_path.text()
+
+        if self.check_wave_incidence(surface_ids, complex_values):
+            return True
+        
+        for surface_id in surface_ids:
+
+            wave_vector = self.get_input_wave_vector(surface_id)
+            if wave_vector is None:
+                return True
+
+            table_name = f"incident_pressure_wave_{surface_id}"
+            if self.save_table_values(table_name, self.imported_values):
+                self.lineEdit_table_path.setFocus()
+                self.imported_values = None
+                return True
+
+            data = {
+                "wave_direction": self.wave_direction,
+                "wave_vector": wave_vector,
+                "table_names": [table_name],
+                "table_paths": [table_path],
+                "values": [complex_values],
+            }
+
+            self.properties._set_property("incident_plane_wave", data, surface=surface_id)
 
     def process_table_file_removal(self, table_names: list):
         for table_name in table_names:
@@ -637,52 +593,32 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
 
         self.actions_to_finalize()
 
-    def actions_to_finalize(self):
+    def actions_to_finalize(self, close_window: bool = False):
         self.load_model_info()
-        self.check_model_frequency_controls()
         app().project.update_model_properties_file()
         app().main_window.update_info_text()
         app().main_window.update_symbols()
 
-    def check_model_frequency_controls(self):
-
-        properties = [
-                      "acoustic_pressure", 
-                      "surface_velocity", 
-                      "specific_impedance",
-                      "incident_plane_wave",
-                      "transfer_impedance",
-                      "perforated_plate", 
-                      "reciprocating_compressor_excitation",
-                      ]
-
-        for key, data in self.properties.surface_properties.items():
-            property, _ = key
-            if property in properties:
-                if "table_names" in data.keys():
-                    return
-
-        # No idea of what it does
-        app().project.configure_analysis(
-            app().project.model.analysis_id,
-            app().project.model.analysis_setup,
-        )
+        if close_window:
+            self.close()
 
     def update_tabs_visibility(self):
 
         for key in self.properties.surface_properties.keys():
             property, *args = key
-            if property == "incident_plane_wave":
-                self.tabWidget_main.setTabVisible(2, True)
-                return
+            if property != "incident_plane_wave":
+                continue
 
-        self.tabWidget_main.setCurrentIndex(0)
+            self.tabWidget_main.setTabVisible(StandardTabType.LIST, True)
+            return
+
         self.lineEdit_incident_pressure_real.setFocus()
-        self.tabWidget_main.setTabVisible(2, False)
+        self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)
+        self.tabWidget_main.setTabVisible(StandardTabType.LIST, False)
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            self.attribute_callback()
+            self.apply_callback()
         elif event.key() == Qt.Key_Delete:
             self.remove_callback()
         elif event.key() == Qt.Key_Escape:

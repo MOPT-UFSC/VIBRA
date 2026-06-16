@@ -35,7 +35,7 @@ class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
     def _initialize(self):
         self.selected_frequency_index = None
 
-    def _configure_widgets(self):
+    def _configure_widgets(self):#
         #
         self.frame_transparency.setVisible(False)
         #
@@ -120,8 +120,8 @@ class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
 
     def get_plot_type(self):
         plot_types = [
-            "absolute_animation",
             "non_absolute_animation",
+            "absolute_animation",
             "absolute_values",
             "real_values",
             "imag_values",
