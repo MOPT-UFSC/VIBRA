@@ -151,12 +151,13 @@ class ChildTreeWidgetItem(QTreeWidgetItem):
         name = name.strip()
         self.property_name = name
 
-    def set_warning(self, cond):
+    def set_warning(self, cond: bool, update_item_color: bool = True):
         if cond:
             font = QFont()
             font.setBold(True)
             self.setFont(0, font)
-            self.setForeground(0, Color(*color_names.YELLOW.to_rgb()).to_qt())
+            if update_item_color:
+                self.setForeground(0, Color(*color_names.YELLOW.to_rgb()).to_qt())
             warning_icon = QIcon(str(Path(ICON_DIR / "model_setup_items/warning_yellow.png")))
             self.setIcon(0, warning_icon)
         else:
