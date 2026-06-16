@@ -102,6 +102,7 @@ class MainWindow(MainWindow_UI):
 
         self.render_widgets_stack.currentChanged.connect(self.render_changed_callback)
         self.visualization_changed.connect(self.reload_visualization_filter)
+        self.render_widget_changed.connect(self.reload_visualization_filter)
         self.reload_visualization_filter()
 
         self.stacked_setup.addWidget(self.model_setup_widget)
@@ -425,11 +426,7 @@ class MainWindow(MainWindow_UI):
         self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
         self.results_viewer_widget.hide_bottom_widget()
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
-
-        self.action_results_workspace.setEnabled(True)
-        self.action_results_workspace.setChecked(True)
-        self.action_mesh_workspace.setChecked(False)
-        self.action_model_workspace.setChecked(False)
+        self.reload_visualization_filter()
 
     def show_geometry_render_widget(self):
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
