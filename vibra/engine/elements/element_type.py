@@ -1,28 +1,29 @@
 from dataclasses import dataclass
-
 from enum import StrEnum
 
-class Element(StrEnum):
-    HEXAHEDRAL_8 = "hexahedral_8"
-    HEXAHEDRAL_20 = "hexahedral_20"
-    TETRAHEDRAL_4 = "tetrahedral_4"
-    TETRAHEDRAL_10 = "tetrahedral_10"
+
+class ElementTopology(StrEnum):
+    HEXAHEDRON_8 = "hexahedral_8"
+    HEXAHEDRON_20 = "hexahedral_20"
+    TETRAHEDRON_4 = "tetrahedral_4"
+    TETRAHEDRON_10 = "tetrahedral_10"
+
 
 @dataclass
 class ElementType:
-    element_type: str
-    shape_function: str
+    element_geometry: str
+    element_order: str
 
     @property
-    def get_element_type(self):
-        match self.element_type, self.shape_function:
+    def get_element(self):
+        match self.element_geometry, self.element_order:
             case "tetrahedral", "linear":
-                return Element.TETRAHEDRAL_4
+                return ElementTopology.TETRAHEDRON_4
             case "tetrahedral", "quadratic":
-                return Element.TETRAHEDRAL_10
+                return ElementTopology.TETRAHEDRON_10
             case "hexahedral", "linear":
-                return Element.HEXAHEDRAL_8
+                return ElementTopology.HEXAHEDRON_8
             case "hexahedral", "quadratic":
-                return Element.HEXAHEDRAL_20
+                return ElementTopology.HEXAHEDRON_20
             case _:
                 raise NotImplementedError("Invalid element type or shape function!")

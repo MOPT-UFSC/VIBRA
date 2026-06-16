@@ -65,18 +65,20 @@ class ProjectReader:
 
         model.reset_variables()
         model.thumbnail = self.read_thumbnail()
+        model.geometry_path = self.read_geometry_path()
+
         analysis_setup = self.read_analysis_setup()
 
         if analysis_setup is not None:
             model.set_analysis_setup(analysis_setup)
 
-        model.mesh_setup = self.read_mesh_setup()
-        model.properties = self.read_model_properties()
-        model.geometry_path = self.read_geometry_path()
-
         if self.project_paths.mesh_data_filepath.exists():
             model.mesh = self.read_mesh()
 
+        mesh_setup = self.read_mesh_setup()
+        model.set_mesh_setup(mesh_setup)
+
+        model.properties = self.read_model_properties()
         model.solution = self.read_solution(model)
 
         return model

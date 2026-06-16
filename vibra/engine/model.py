@@ -19,6 +19,7 @@ from vibra.engine.analysis_info import (
 )
 from vibra.engine.dissipation_models.porous_materials_models import PorousMaterialModels
 from vibra.engine.dissipation_models.viscous_thermal_loss_models import ViscousThermalLossModels
+from vibra.engine.elements.element_type import ElementTopology, ElementType
 
 # 1d elements - acoustic
 from vibra.engine.elements.elements_1d import ACT_LINE_2, ACT_LINE_3
@@ -45,13 +46,7 @@ from vibra.engine.elements.elements_3d import (
 )
 from vibra.engine.geometry.geometry import LengthUnits
 from vibra.engine.mesh_modifiers.degrees_of_freedom_decoupling import DegreesOfFreedomDecoupling
-from vibra.engine.mesher.element_setup import (
-    DEFAULT_ELEMENT_TYPE,
-    HEXAHEDRON_8,
-    HEXAHEDRON_20,
-    TETRAHEDRON_4,
-    TETRAHEDRON_10,
-)
+from vibra.engine.mesher.element_setup import DEFAULT_ELEMENT_TYPE
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.mesh_setup import MeshSetup
 from vibra.engine.properties.fluid import Fluid
@@ -74,6 +69,7 @@ class Model:
 
         self.length_unit: LengthUnits = "millimeter"
         self.mesh_setup: Optional[MeshSetup] = None
+        self.element_type: Optional[ElementType] = None
         self.analysis_setup: Optional[AnalysisSetup] = None
         self.solution: Optional[Solution] = None
 
@@ -187,8 +183,16 @@ class Model:
     def set_properties(self, properties):
         self.properties = properties
 
+    def set_element_type(self, mesh_setup: MeshSetup | None = None, element_geometry: str | None = None, element_order: str | None = None):
+        if isinstance(mesh_setup, MeshSetup):
+            element_geometry = mesh_setup.element_type
+            element_order = mesh_setup.shape_function
+
+        self.element_type = ElementType(element_geometry, element_order)
+
     def set_mesh_setup(self, mesh_setup: MeshSetup):
         self.mesh_setup = mesh_setup
+        self.set_element_type(mesh_setup=mesh_setup)
         self.mesh.set_element_setup(mesh_setup.element_setup)
 
     def initialize_mesh(self):
@@ -441,46 +445,40 @@ class Model:
         return (f_min, f_max, f_step, frequencies)
 
     def get_structural_elements(self):
-        if isinstance(self.mesh_setup, MeshSetup):
-            element_setup = self.mesh_setup.element_setup
-        else:
-            element_setup = self.mesh.element_setup
+        element_type = self.element_type.get_element
 
-        if element_setup == TETRAHEDRON_4:
+        if element_type == ElementTopology.TETRAHEDRON_4:
             return STRUCT_TETRAHEDRON_4S(self), STRUCT_TRIANGLE_3(self), None
 
-        elif element_setup == TETRAHEDRON_10:
+        elif element_type == ElementTopology.TETRAHEDRON_10:
             return STRUCT_TETRAHEDRON_10S(self), None, None
 
-        elif element_setup == HEXAHEDRON_8:
+        elif element_type == ElementTopology.HEXAHEDRON_8:
             return STRUCT_HEXAHEDRON_8(self), None, None
 
-        elif element_setup == HEXAHEDRON_20:
+        elif element_type == ElementTopology.HEXAHEDRON_20:
             return STRUCT_HEXAHEDRON_20(self), None, None
 
         else:
-            raise NotImplementedError(f'Element type "{element_setup}" is not supported yet.')
+            raise NotImplementedError(f'Element type "{element_type}" is not supported yet.')
 
     def get_acoustic_elements(self):
-        if isinstance(self.mesh_setup, MeshSetup):
-            element_setup = self.mesh_setup.element_setup
-        else:
-            element_setup = self.mesh.element_setup
+        element_type = self.element_type.get_element
 
-        if element_setup == TETRAHEDRON_4:
+        if element_type == ElementTopology.TETRAHEDRON_4:
             return ACT_TETRAHEDRON_4C(self), ACT_TRIANGLE_3(self), ACT_LINE_2(self)
 
-        elif element_setup == TETRAHEDRON_10:
+        elif element_type == ElementTopology.TETRAHEDRON_10:
             return ACT_TETRAHEDRON_10C(self), ACT_TRIANGLE_6(self), ACT_LINE_3(self)
 
-        elif element_setup == HEXAHEDRON_8:
+        elif element_type == ElementTopology.HEXAHEDRON_8:
             return ACT_HEXAHEDRON_8C(self), ACT_QUADRANGLE_4(self), ACT_LINE_2(self)
 
-        elif element_setup == HEXAHEDRON_20:
+        elif element_type == ElementTopology.HEXAHEDRON_20:
             return ACT_HEXAHEDRON_20C(self), ACT_QUADRANGLE_8(self), ACT_LINE_3(self)
 
         else:
-            raise NotImplementedError(f'Element type "{element_setup}" is not supported yet.')
+            raise NotImplementedError(f'Element type "{element_type}" is not supported yet.')
 
     def set_structural_elements(self):
         element_3d, element_2d, element_1d = self.get_structural_elements()
