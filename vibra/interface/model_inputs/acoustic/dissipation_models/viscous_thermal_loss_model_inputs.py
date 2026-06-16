@@ -16,9 +16,9 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.acoustic.definitions.enums import AttributionBodiesType, PlotTypesTab
 from vibra.interface.model_inputs.acoustic.dissipation_models.circular_duct_data import CircularDuctData
 from vibra.interface.model_inputs.acoustic.dissipation_models.rectangular_duct_data import RectangularDuctData
-from vibra.interface.model_inputs.general.fluid.set_fluid_inputs_simplified import SetFluidInputsSimplified
+from vibra.interface.model_inputs.fluid.set_fluid_inputs_simplified import SetFluidInputsSimplified
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
-from vibra.interface.ui_generated.model.acoustic.viscous_thermal_model_inputs_ui import ViscousThermalModelInputs_UI
+from vibra.interface.ui_generated.model.acoustic.dissipation_models.viscous_thermal_model_inputs_ui import ViscousThermalModelInputs_UI
 
 
 class TabType(IntEnum):
@@ -132,8 +132,13 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         
         self.load_diameter_from_selected_volumes(volumes)
 
-    def actions_to_finalize(self):
+    def actions_to_finalize(self, close_window: bool = False):
+        self.load_info()
+        app().project.update_model_properties_file()
         app().main_window.update_symbols()
+
+        if close_window:
+            self.close()
 
     def update_plot_buttons_access(self):
         state = self.selected_fluid is None
@@ -187,9 +192,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         self.clear_line_edit_selection_id()
 
         app().main_window.selection.clear_selection()
-        app().project.update_model_properties_file()
         self.actions_to_finalize()
-        self.load_info()
 
         if self.map_model_id_to_volumes:
             self.tabWidget_main.setCurrentIndex(TabType.LIST)
@@ -202,37 +205,37 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             if property == "viscous_thermal_model":
                 volume_ids.append(volume_id)
 
-        if volume_ids:
-            self.hide()
+        if not volume_ids:
+            return
 
-            title = "Viscous-thermal dissipation model resetting"
-            message = "Would you like to remove the Viscous-thermal dissipation effects from the model?"
+        self.hide()
+        title = "Viscous-thermal dissipation model resetting"
+        message = "Would you like to remove the Viscous-thermal dissipation effects from the model?"
 
-            buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
-            read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
+        buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
+        read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
 
-            if read._cancel:
-                return
+        if read._cancel:
+            return
 
-            if read._continue:
-                for volume_id in volume_ids:
-                    self.properties._remove_volume_property("viscous_thermal_model", volume_id)
+        if not read._continue:
+            return
 
-                self.models = list()
-                app().project.update_model_properties_file()
-                self.load_info()
+        for volume_id in volume_ids:
+            self.properties._remove_volume_property("viscous_thermal_model", volume_id)
 
+        self.models = list()
         self.actions_to_finalize()
 
     def tab_event_callback(self):
         current_tab = self.tabWidget_main.currentIndex()
-        list_or_edit_tab = [TabType.LIST, TabType.EDIT]
-
-        if self.last_tab in list_or_edit_tab or current_tab in list_or_edit_tab:
-            app().main_window.selection.clear_selection()
-            self.clear_line_edit_selection_id()
-
+        for index in (self.last_tab, current_tab):
+            if index in [TabType.LIST, TabType.EDIT]:
+                app().main_window.selection.clear_selection()
+                self.clear_line_edit_selection_id()
+    
         self.last_tab = current_tab
+        list_or_edit_tab = current_tab in [TabType.LIST, TabType.EDIT]
 
         self.pushButton_apply.setDisabled(list_or_edit_tab)
         self.pushButton_apply_and_close.setDisabled(list_or_edit_tab)
@@ -684,7 +687,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
         return CircularDuctData("Circular duct", formulation, diameter)
 
-    def apply_callback(self, close: bool = False):
+    def apply_callback(self, close_window: bool = False):
 
         model = None
         if self.tabWidget_main.currentIndex() == TabType.RECTANGULAR:
@@ -729,13 +732,8 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
             for volume_id in volume_ids:
                 self.properties._set_property("viscous_thermal_model", model_data, volume=volume_id)
-
-        app().project.update_model_properties_file()
-        self.actions_to_finalize()
-        self.load_info()
-
-        if close:
-            self.close()
+        
+        self.actions_to_finalize(close_window)
 
     def verify_and_remove_model_conflicts_if_it_exists(self, volume_ids: list[int] = None):
         for volume_id in volume_ids:

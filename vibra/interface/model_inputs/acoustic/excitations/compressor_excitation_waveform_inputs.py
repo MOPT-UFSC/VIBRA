@@ -19,7 +19,7 @@ from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.plots.general.frequency_response_plotter import DataFormat, FrequencyResponsePlotter
-from vibra.interface.ui_generated.model.acoustic.compressor_excitation_waveform_inputs_ui import CompressorExcitationWaveformInputs_UI
+from vibra.interface.ui_generated.model.acoustic.excitations.compressor_excitation_waveform_inputs_ui import CompressorExcitationWaveformInputs_UI
 from vibra.utils.signal_processing import extend_signal, get_window_and_correction_factor, process_one_sided_spectrum
 
 
@@ -603,7 +603,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
 
         return False
 
-    def apply_callback(self, close: bool = False):
+    def apply_callback(self, close_window: bool = False):
         if self.tabWidget_main.currentIndex() == TabIndex.LIST:
             return
 
@@ -700,10 +700,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
 
             self.properties._set_property("compressor_excitation_waveform", data, surface=surface_id)
 
-        self.actions_to_finalize()
-
-        if close:
-            self.close()
+        self.actions_to_finalize(close_window)
 
     def process_table_file_removal(self, table_names: list):
         for table_name in table_names:
@@ -773,30 +770,14 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
             self.properties._reset_property("compressor_excitation_waveform")
             self.actions_to_finalize()
 
-    def actions_to_finalize(self):
+    def actions_to_finalize(self, close_window: bool = False):
         self.load_model_info()
-        self.check_model_frequency_controls()
         app().project.update_model_properties_file()
         app().main_window.update_info_text()
         app().main_window.update_symbols()
 
-    def check_model_frequency_controls(self):
-
-        for key, data in self.properties.surface_properties.items():
-            property, _ = key
-            if property in [
-                "acoustic_pressure",
-                "surface_velocity",
-                "incident_plane_wave",
-                "specific_impedance",
-                "compressor_excitation_waveform",
-                "reciprocating_compressor_excitation",
-                ]:
-                if "table_names" in data.keys():
-                    return
-
-        # No idea of what it does
-        app().project.configure_analysis(app().project.model.analysis_setup)
+        if close_window:
+            self.close()
 
     def update_tabs_visibility(self):
 

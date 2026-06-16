@@ -9,7 +9,7 @@ from vibra.interface import error_title
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.structural.definitions.enums import SetupTabType
-from vibra.interface.ui_generated.model.structural.surface_thickness_inputs_ui import SurfaceThicknessInputs_UI
+from vibra.interface.ui_generated.model.structural.shell.surface_thickness_inputs_ui import SurfaceThicknessInputs_UI
 
 
 class AssignmentType(IntEnum):
@@ -122,7 +122,7 @@ class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
 
         self.lineEdit_selection_id.setEnabled(bool(index))
 
-    def apply_callback(self, close: bool = False):
+    def apply_callback(self, close_window: bool = False):
 
         if self.comboBox_attribution_type.currentIndex() == AssignmentType.ALL_SURFACES:
             surface_ids = self.model.mesh.geometry_information["surfaces"]
@@ -152,12 +152,9 @@ class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
         for surface_id in surface_ids:
             self.properties._set_property("surface_thickness", data, surface=surface_id)
 
-        self.actions_to_finalize()
+        self.actions_to_finalize(close_window)
 
         # print(f"The surface thickness has been assigned to surface(s) {surface_ids}")
-
-        if close:
-            self.close()
 
     def check_input_parameters(self, lineEdit: QLineEdit, label: str, _float=True):
 
@@ -226,11 +223,14 @@ class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
             self.properties._reset_property("surface_thickness")
             self.actions_to_finalize()
 
-    def actions_to_finalize(self):
+    def actions_to_finalize(self, close_window: bool = False):
         self.load_model_info()
         app().main_window.update_info_text()
         app().project.update_model_properties_file()
         app().main_window.update_symbols()
+
+        if close_window:
+            self.close()
 
     def update_tabs_visibility(self):
         for key, data in self.properties.surface_properties.items():

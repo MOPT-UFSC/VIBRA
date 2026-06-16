@@ -17,7 +17,7 @@ from vibra.engine.assemblers import AcousticAssembler
 from vibra.engine.solvers import HarmonicSolver
 from vibra.interface.data_handler.export_mesh_data import ExportMeshData
 from vibra.interface.formatters.icons import change_icon_color_for_widgets, get_vibra_icon
-from vibra.interface.general.choose_property_to_delete import ChoosePropertyToDelete
+from vibra.interface.model_inputs.general.choose_property_to_delete import ChoosePropertyToDelete
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.general.selection_handler import SelectionHandler
 from vibra.interface.help_widget import HelpWidget
@@ -1128,6 +1128,17 @@ class MainWindow(MainWindow_UI):
                 continue
 
             window.close()
+
+    def hide_dialogs(self):
+        for window in app().topLevelWidgets():
+            if isinstance(window, MainWindow):
+                continue
+
+            if isinstance(window, LoadingWindow):
+                continue
+
+            if window.isVisible():
+                window.hide()
 
     def minimize_dialogs(self):
         for window in app().topLevelWidgets():

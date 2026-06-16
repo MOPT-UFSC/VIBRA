@@ -24,5 +24,5 @@ class SplashScreen(Splash_UI):
         pos_y = int((desktop_geometry.height() - self.height()) / 2)
         self.setGeometry(pos_x, pos_y, self.width(), self.height())
 
-    def update_progress(self, value: int):
+    def update_progress(self, value : int):
         self.progressBar.setValue(value)

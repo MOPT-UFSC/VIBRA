@@ -68,6 +68,7 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
 
     def _get_center_coords_and_normals(self, surface_id: int) -> tuple[np.ndarray, np.ndarray]:
         mesh = app().project.model.mesh
+
         surface_nodes = mesh.get_nodes_from_surface(surface_id)
         surface_coordinates = mesh.nodal_coordinates[surface_nodes, 1:]
 
@@ -81,7 +82,11 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
 
         curvatures_surface = mesh.curvatures_surface.get(surface_id)
         contains_curvature = (curvatures_surface is not None) and (np.average(curvatures_surface) > 1e-4)
-        center_coords = np.average(surface_coordinates, axis=0)
+
+        center_coords = mesh.get_geometric_surface_center(surface_id)
+
+        if center_coords is None:
+            center_coords = np.average(surface_coordinates, axis=0)
 
         if contains_curvature:
             # Finds the node that is closest to the center coords

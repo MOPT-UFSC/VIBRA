@@ -13,7 +13,7 @@ from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.structural.definitions.enums import StandardTabType
-from vibra.interface.ui_generated.model.structural.distributed_loads_inputs_ui import DistributedLoadsInputs_UI
+from vibra.interface.ui_generated.model.structural.excitations.distributed_loads_inputs_ui import DistributedLoadsInputs_UI
 
 
 class DistributedLoadsInputs(DistributedLoadsInputs_UI):
@@ -273,17 +273,13 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
             selection = "lines"
             unit = "N/m"
 
-        selected_ids, error_data = self.mesh.check_selected_ids(
-                                                                input_ids, 
-                                                                selection = selection, 
-                                                                single_id = False
-                                                                )
+        selected_ids, error_data = self.mesh.check_selected_ids(input_ids, selection=selection, single_id=False)
 
         if error_data is not None:
             self.hide()
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
-            return
+            return True
 
         self.remove_duplicated_attributions(selected_ids, selection)
         self.remove_conflicting_excitations(selected_ids, selection)
@@ -293,15 +289,15 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
 
         stop, Fx= self.check_complex_entries(self.lineEdit_real_Fx.text(), self.lineEdit_imag_Fx.text(), "Fx")
         if stop:
-            return
+            return True
 
         stop, Fy= self.check_complex_entries(self.lineEdit_real_Fy.text(), self.lineEdit_imag_Fy.text(), "Fy")
         if stop:
-            return
+            return True
 
         stop, Fz= self.check_complex_entries(self.lineEdit_real_Fz.text(), self.lineEdit_imag_Fz.text(), "Fz")
         if stop:
-            return
+            return True
 
         distributed_loads = [Fx, Fy, Fz]
 
@@ -311,10 +307,9 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         if condition_1 or condition_2:
             self.hide()
             title = "Additional inputs required"
-            message = "It is necessary to enter at least one prescribed dof "
-            message += "before confirming the property assignment."
+            message = "You must to enter at least one distributed load value before confirming the assignment."
             PrintMessageInput([error_title, title, message])
-            return
+            return True
 
         real_values = [value if value is None else np.real(value) for value in distributed_loads]
         imag_values = [value if value is None else np.imag(value) for value in distributed_loads]
@@ -322,20 +317,18 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         for selected_id in selected_ids:
 
             data = {
-                    "element_type" : element_type,
-                    "values" : distributed_loads,
-                    "real_values" : real_values,
-                    "imag_values" : imag_values,
-                    "unit" : unit,
-                    }
+                "element_type": element_type,
+                "values": distributed_loads,
+                "real_values": real_values,
+                "imag_values": imag_values,
+                "unit": unit,
+            }
 
             if attribution_type == 0:
                 self.properties._set_property("distributed_loads", data, surface=selected_id)
 
             elif attribution_type == 1:
                 self.properties._set_property("distributed_loads", data, line=selected_id)
-
-        self.actions_to_finalize()
 
     def load_table(self, lineEdit : QLineEdit, load_label: str, direct_load = False):
 
@@ -446,17 +439,13 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
             selection = "lines"
             unit = "N/m"
 
-        selected_ids, error_data = self.mesh.check_selected_ids(
-                                                                input_ids, 
-                                                                selection = selection, 
-                                                                single_id = False
-                                                                )
+        selected_ids, error_data = self.mesh.check_selected_ids(input_ids, selection=selection, single_id=False)
 
         if error_data is not None:
             self.hide()
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
-            return
+            return True
 
         self.remove_duplicated_attributions(selected_ids, selection)
         self.remove_conflicting_excitations(selected_ids, selection)
@@ -478,17 +467,17 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
             if self.Fx_table_values is not None:
                 self.Fx_table_name, self.Fx_array = self.save_table_files("Fx", selected_id, selection, self.Fx_table_values)
                 if self.Fx_array is None:
-                    return
+                    return True
 
             if self.Fy_table_values is not None:
                 self.Fy_table_name, self.Fy_array = self.save_table_files("Fy", selected_id, selection, self.Fy_table_values)
                 if self.Fy_array is None:
-                    return
+                    return True
 
             if self.Fz_table_values is not None:
                 self.Fz_table_name, self.Fz_array = self.save_table_files("Fz", selected_id, selection, self.Fz_table_values)
                 if self.Fz_array is None:
-                    return
+                    return True
 
             table_names = [self.Fx_table_name, self.Fy_table_name, self.Fz_table_name]
             table_paths = [self.Fx_table_path, self.Fy_table_path, self.Fz_table_path]
@@ -500,18 +489,17 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
             if condition_1 or condition_2:
                 self.hide()
                 title = "Additional inputs required"
-                message = "It is necessary to enter at least one distributed load "
-                message += "before confirming the property assignment."
+                message = "You must to enter at leat one distributed load table path before confirming the assignment."
                 PrintMessageInput([error_title, title, message]) 
-                return
+                return True
 
             data = {
-                    "element_type" : element_type,
-                    "table_names" : table_names,
-                    "table_paths" : table_paths,
-                    "values" : distributed_loads,
-                    "unit" : unit,
-                    }
+                "element_type" : element_type,
+                "table_names" : table_names,
+                "table_paths" : table_paths,
+                "values" : distributed_loads,
+                "unit" : unit,
+            }
 
             if attribution_type == 0:
                 self.properties._set_property("distributed_loads", data, surface=selected_id)
@@ -520,7 +508,6 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
                 self.properties._set_property("distributed_loads", data, line=selected_id)
 
         self.reset_table_variables()
-        self.actions_to_finalize()
 
     def remove_duplicated_attributions(self, selected_ids: list, selection: str):
 
@@ -543,16 +530,22 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
 
             self.process_table_file_removal(table_names)
 
-    def apply_callback(self, close: bool=False):
+    def apply_callback(self, close_window: bool=False):
+
+        if self.tabWidget_main.currentIndex() == StandardTabType.LIST:
+            return
+
         tab_index = self.tabWidget_main.currentIndex()
+
         if tab_index == StandardTabType.CONSTANT_DATA:
-            self.constant_values_attribution()
+            if self.constant_values_attribution():
+                return
 
         elif tab_index == StandardTabType.TABULAR_DATA:
-            self.table_values_attribution()
+            if self.table_values_attribution():
+                return
 
-        if close:
-            self.close()
+        self.actions_to_finalize(close_window)
 
     def text_label(self, mask):
 
@@ -770,23 +763,15 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
             app().main_window.selection.set_geometry_selection()
             app().main_window.selection.set_mesh_selection()
 
-    def actions_to_finalize(self):
+    def actions_to_finalize(self, close_window: bool = False):
         self.load_model_info()
         self.reset_input_fields(reset_all=True)
         app().main_window.update_info_text()
         app().project.update_model_properties_file()
         app().main_window.update_symbols()
 
-    def check_model_frequency_controls(self):
-
-        for key, data in self.properties.surface_properties.items():
-            property, _ = key
-            if property in ["distributed_loads", "prescribed_dof"]:
-                if "table_names" in data.keys():
-                    return
-
-        # No idea of what it does
-        app().project.configure_analysis(app().project.model.analysis_setup)
+        if close_window:
+            self.close()
 
     def reset_input_fields(self, reset_all=False):
 

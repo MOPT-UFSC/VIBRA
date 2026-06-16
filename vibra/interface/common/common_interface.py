@@ -4,10 +4,33 @@ import numpy as np
 from PySide6.QtWidgets import QDialog, QFileDialog, QPushButton, QWidget
 
 from vibra import app
+from vibra.interface import warning_title
 from vibra.engine.analysis_info import AnalysisID, FrequencySpacing
 from vibra.interface.data.data_manager import is_frequencies_vector_equally_distributed
 from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
+from vibra.interface.general.print_message_input import PrintMessageInput
 
+
+def filter_outside_surfaces(surface_ids: list[int], bc_label: str) -> tuple[list[int], list[int]]:
+
+    inside_surfaces = list()
+    outside_surfaces = list()
+    for surf_id in surface_ids:
+        volume_ids = app().project.model.mesh.volumes_from_surface.get(surf_id)
+        if len(volume_ids) == 1:
+            outside_surfaces.append(surf_id)
+        elif len(volume_ids) > 1:
+            inside_surfaces.append(surf_id)
+
+    if inside_surfaces:
+        app().main_window.hide_dialogs()
+        title = "Inside surfaces selected"
+        message = "At least one inside surface has been detected in the current selection. "
+        message += f"However, only the external surfaces are allowed for {bc_label} "
+        message += "boundary condition. The inside surfaces will be ignored."
+        PrintMessageInput([warning_title, title, message])
+
+    return (outside_surfaces, inside_surfaces)
 
 def update_analysis_setup_in_file(frequencies: np.ndarray):
 
@@ -40,6 +63,68 @@ def update_analysis_setup_in_file(frequencies: np.ndarray):
     )
 
     app().project.configure_analysis(analysis_setup)
+
+def check_acoustic_model_frequency_controls():
+
+    properties = app().project.model.properties
+
+    model_properties = [
+        properties.surface_properties,
+        properties.point_properties,
+        properties.nodal_properties,
+    ]
+
+    prop_labels = [
+        "acoustic_pressure",
+        "surface_velocity",
+        "mass_source",
+        "specific_impedance",
+        "absorption_surface",
+        "transfer_impedance",
+        "perforated_plate",
+        "reciprocating_compressor_excitation",
+        "compressor_excitation_waveform",
+        "compressor_excitation_spectrum",
+    ]
+
+    for model_property in model_properties:
+        for (property, *_), data in model_property.items():
+            if property not in prop_labels:
+                continue
+
+            if "table_names" in data.keys():
+                return
+
+    # No idea of what it does
+    app().project.configure_analysis(app().project.model.analysis_setup)
+
+def check_structural_model_frequency_controls():
+
+    properties = app().project.model.properties
+
+    model_properties = [
+        properties.surface_properties,
+        properties.point_properties,
+        properties.nodal_properties,
+    ]
+
+    prop_labels = [
+        "prescribed_dof",
+        "nodal_loads",
+        "distributed_loads",
+        "normal_pressure_loads",
+    ]
+
+    for model_property in model_properties:
+        for (property, *_), data in model_property.items():
+            if property not in prop_labels:
+                continue
+
+            if "table_names" in data.keys():
+                return
+
+    # No idea of what it does
+    app().project.configure_analysis(app().project.model.analysis_setup)
 
 def check_mesh_related_issues(run_analysis_button: QPushButton):
 

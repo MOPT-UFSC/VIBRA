@@ -12,7 +12,7 @@ from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.acoustic.definitions.enums import SetupTabType
-from vibra.interface.ui_generated.model.acoustic.compressor_excitation_spectrum_inputs_ui import CompressorExcitationSpectrumInputs_UI
+from vibra.interface.ui_generated.model.acoustic.excitations.compressor_excitation_spectrum_inputs_ui import CompressorExcitationSpectrumInputs_UI
 
 
 class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
@@ -217,7 +217,7 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
     def load_compressor_excitation_spectrum_data(self):
         self.imported_values = self.load_table(self.lineEdit_table_path)
 
-    def apply_callback(self, close: bool = False):
+    def apply_callback(self, close_window: bool = False):
         if self.tabWidget_main.currentIndex() != SetupTabType.SETUP:
             return
 
@@ -235,8 +235,8 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
         if self.lineEdit_table_path.text() == "":
             self.hide()
             title = "Additional inputs required"
-            message = "You must inform at least one mass flow rate\n"
-            message += "table path before confirming the input!"
+            message = "You must select the external compressor excitation "
+            message += "table path to proceed with the assignment"
             PrintMessageInput([error_title, title, message])
             self.lineEdit_table_path.setFocus()
             return
@@ -284,10 +284,7 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
 
             self.properties._set_property("compressor_excitation_spectrum", data, surface=surface_id)
 
-        self.actions_to_finalize()
-
-        if close:
-            self.close()
+        self.actions_to_finalize(close_window)
 
     def process_table_file_removal(self, table_names: list):
         for table_name in table_names:
@@ -357,32 +354,14 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
             self.properties._reset_property("compressor_excitation_spectrum")
             self.actions_to_finalize()
 
-    def actions_to_finalize(self):
+    def actions_to_finalize(self, close_window: bool = False):
         self.load_model_info()
-        self.check_model_frequency_controls()
         app().project.update_model_properties_file()
         app().main_window.update_info_text()
         app().main_window.update_symbols()
 
-    def check_model_frequency_controls(self):
-
-        properties = [
-            "acoustic_pressure",
-            "surface_velocity",
-            "specific_impedance",
-            "compressor_excitation_spectrum",
-            "compressor_excitation_waveform",
-            "reciprocating_compressor_excitation",
-            ]
-
-        for key, data in self.properties.surface_properties.items():
-            property, _ = key
-            if property in properties:
-                if "table_names" in data.keys():
-                    return
-        
-        # No idea of what it does
-        app().project.configure_analysis(app().project.model.analysis_setup)
+        if close_window:
+            self.close()
 
     def update_tabs_visibility(self):
 

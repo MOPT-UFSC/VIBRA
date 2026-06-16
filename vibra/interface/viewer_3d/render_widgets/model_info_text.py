@@ -468,10 +468,12 @@ def get_reciprocating_compressor_text(rc_data: dict):
     pressure_unit = rc_parameters.get("pressure_unit", "")
     temperature_unit = rc_parameters.get("temperature_unit", "")
 
-    compression_stage_index = rc_parameters.get("compression_stage", "unknown")
-    if isinstance(compression_stage_index, int):
+    comp_stg_value = rc_parameters.get("compression_stage")
+    if isinstance(comp_stg_value, int):
         compression_labels = ["1st stage", "2nd stage", "3rd stage"]
-        compression_stage = compression_labels[compression_stage_index]
+        compression_stage = compression_labels[comp_stg_value]
+    else:
+        compression_stage = rc_parameters.get("compression_stage", "unknown")
 
     tdc_crank_angle = 0
     for key in ["tdc_crank_angle", "TDC_crank_angle", "TDC_crank_angle_1"]:
@@ -502,8 +504,16 @@ def get_reciprocating_compressor_text(rc_data: dict):
     tree_rc.add_item("TDC angle", tdc_crank_angle, "deg")
     tree_rc.add_item("Capacity", rc_parameters.get("capacity", ""), "%")
 
-    tree_rc.add_item("Suction pressure", rc_parameters.get("suction_pressure", ""), pressure_unit.replace(" ", ""))
-    tree_rc.add_item("Suction temperature", rc_parameters.get("suction_temperature", ""), temperature_unit)
+    suction_pressure = ""
+    for key in ["suction_pressure", "pressure_at_suction"]:
+        suction_pressure = rc_parameters.get(key)
+    
+    suction_temperature = ""
+    for key in ["suction_temperature", "temperature_at_suction"]:
+        suction_temperature = rc_parameters.get(key)
+
+    tree_rc.add_item("Suction pressure", suction_pressure, pressure_unit.replace(" ", ""))
+    tree_rc.add_item("Suction temperature", suction_temperature, temperature_unit)
     tree_rc.add_item("Rotational speed", rc_parameters.get("rotational_speed", ""), "rpm")
     tree_rc.add_item("Pressure ratio", rc_parameters.get("pressure_ratio", ""), "--")
 

@@ -1,5 +1,6 @@
 import logging
 from copy import deepcopy
+from dataclasses import asdict
 from numbers import Number
 from pathlib import Path
 from typing import Callable, Optional
@@ -17,9 +18,7 @@ from vibra.engine.analysis_info import (
     ModalAnalysisSetup,
 )
 from vibra.engine.dissipation_models.porous_materials_models import PorousMaterialModels
-from vibra.engine.dissipation_models.viscous_thermal_loss_models import (
-    ViscousThermalLossModels,
-)
+from vibra.engine.dissipation_models.viscous_thermal_loss_models import ViscousThermalLossModels
 
 # 1d elements - acoustic
 from vibra.engine.elements.elements_1d import ACT_LINE_2, ACT_LINE_3
@@ -45,9 +44,7 @@ from vibra.engine.elements.elements_3d import (
     STRUCT_TETRAHEDRON_10S,
 )
 from vibra.engine.geometry.geometry import LengthUnits
-from vibra.engine.mesh_modifiers.degrees_of_freedom_decoupling import (
-    DegreesOfFreedomDecoupling,
-)
+from vibra.engine.mesh_modifiers.degrees_of_freedom_decoupling import DegreesOfFreedomDecoupling
 from vibra.engine.mesher.element_setup import (
     DEFAULT_ELEMENT_TYPE,
     HEXAHEDRON_8,
@@ -84,7 +81,6 @@ class Model:
 
         # TODO: review these variables
         self.mesh: Optional[Mesh] = None
-        self.mesh_setup_old = None
         self.stop_processing = False
         self.geometry_path = None
         self.initial_element_size = None
@@ -194,9 +190,9 @@ class Model:
     def set_properties(self, properties):
         self.properties = properties
 
-    def set_mesh_setup(self, mesh_setup: dict):
-        self.mesh_setup_old = mesh_setup
-        self.mesh.set_element_type(mesh_setup.get("ElementType", DEFAULT_ELEMENT_TYPE))
+    def set_mesh_setup(self, mesh_setup: MeshSetup):
+        self.mesh_setup = mesh_setup
+        self.mesh.set_element_setup(mesh_setup.element_setup)
 
     def initialize_mesh(self):
         self.mesh = Mesh(length_unit=self.length_unit, geometry_qf=self.geometry_qf)
@@ -267,13 +263,13 @@ class Model:
             )
             raise IncompleteSetupError(message, context=context)
 
-        if self.mesh_setup_old is None:
+        if self.mesh_setup is None:
             message = "Mesh setup not defined"
             context = "The mesh setup has not been defined yet.You should to configure the mesher to proceed."
             raise IncompleteSetupError(message, context=context)
 
         logging.info("Processing mesh [80/100]")
-        self.mesh.load_cad(self.geometry_path, **self.mesh_setup_old)
+        self.mesh.load_cad(self.geometry_path, **asdict(self.mesh_setup))
 
         if self.disable_resume_callback is not None:
             self.disable_resume_callback()
@@ -432,7 +428,7 @@ class Model:
         if self.list_frequencies != frequencies:
             return True
 
-    def get_tabular_frequency_setup(self):
+    def get_tabular_frequency_setup(self) -> None | tuple:
         """
         This method returns the frequency setup of the model's tabular data.
         """
@@ -448,40 +444,46 @@ class Model:
         return (f_min, f_max, f_step, frequencies)
 
     def get_structural_elements(self):
-        element_type = self.mesh.element_type
+        if isinstance(self.mesh_setup, MeshSetup):
+            element_setup = self.mesh_setup.element_setup
+        else:
+            element_setup = self.mesh.element_setup
 
-        if element_type == TETRAHEDRON_4:
+        if element_setup == TETRAHEDRON_4:
             return STRUCT_TETRAHEDRON_4S(self), STRUCT_TRIANGLE_3(self), None
 
-        elif element_type == TETRAHEDRON_10:
+        elif element_setup == TETRAHEDRON_10:
             return STRUCT_TETRAHEDRON_10S(self), None, None
 
-        elif element_type == HEXAHEDRON_8:
+        elif element_setup == HEXAHEDRON_8:
             return STRUCT_HEXAHEDRON_8(self), None, None
 
-        elif element_type == HEXAHEDRON_20:
+        elif element_setup == HEXAHEDRON_20:
             return STRUCT_HEXAHEDRON_20(self), None, None
 
         else:
-            raise NotImplementedError(f'Element type "{element_type}" is not supported yet.')
+            raise NotImplementedError(f'Element type "{element_setup}" is not supported yet.')
 
     def get_acoustic_elements(self):
-        element_type = self.mesh.element_type
+        if isinstance(self.mesh_setup, MeshSetup):
+            element_setup = self.mesh_setup.element_setup
+        else:
+            element_setup = self.mesh.element_setup
 
-        if element_type == TETRAHEDRON_4:
+        if element_setup == TETRAHEDRON_4:
             return ACT_TETRAHEDRON_4C(self), ACT_TRIANGLE_3(self), ACT_LINE_2(self)
 
-        elif element_type == TETRAHEDRON_10:
+        elif element_setup == TETRAHEDRON_10:
             return ACT_TETRAHEDRON_10C(self), ACT_TRIANGLE_6(self), ACT_LINE_3(self)
 
-        elif element_type == HEXAHEDRON_8:
+        elif element_setup == HEXAHEDRON_8:
             return ACT_HEXAHEDRON_8C(self), ACT_QUADRANGLE_4(self), ACT_LINE_2(self)
 
-        elif element_type == HEXAHEDRON_20:
+        elif element_setup == HEXAHEDRON_20:
             return ACT_HEXAHEDRON_20C(self), ACT_QUADRANGLE_8(self), ACT_LINE_3(self)
 
         else:
-            raise NotImplementedError(f'Element type "{element_type}" is not supported yet.')
+            raise NotImplementedError(f'Element type "{element_setup}" is not supported yet.')
 
     def set_structural_elements(self):
         element_3d, element_2d, element_1d = self.get_structural_elements()
@@ -721,6 +723,48 @@ class Model:
 
         return None, None
 
+    def get_surface_density_and_speed_of_sound(self, surface_id: int) -> float | complex | np.ndarray:
+        """
+        It returs the density and speed of sound of selected surface.
+
+        Parameter
+        ---------
+        surface_id: int
+            The selected surface ID.
+
+        Returns
+        -------
+        density: np.ndarray, float or None
+            The density of selected surface.
+
+        speed_of_sound: np.ndarray, float or None
+            The speed of sound of selected surface.
+        """
+
+        density = None
+        speed_of_sound = None
+
+        rho_eff_pm, C_eff_pm = self.get_porous_material_model_effective_properties(surface_id)
+        rho_eff_tv, C_eff_tv = self.get_viscous_thermal_model_effective_properties(surface_id)
+
+        if isinstance(rho_eff_pm, np.ndarray):
+            density = rho_eff_pm
+            speed_of_sound = C_eff_pm
+
+        elif isinstance(rho_eff_tv, np.ndarray):
+            density = rho_eff_tv
+            speed_of_sound = C_eff_tv
+
+        else:
+            fluid = self.properties._get_property("fluid", surface=surface_id)
+            if not isinstance(fluid, Fluid):
+                return None, None
+
+            density = fluid.fluid_density
+            speed_of_sound = fluid.speed_of_sound
+
+        return (density, speed_of_sound)
+
     def get_surface_impedance(self, surface_id: int) -> float | complex | np.ndarray:
         """
         It returs the acoustic impedance of selected surface.
@@ -742,26 +786,8 @@ class Model:
         si_data = self.properties._get_property("specific_impedance", surface=surface_id)
         pw_data = self.properties._get_property("incident_plane_wave", surface=surface_id)
 
-        if isinstance(at_data, dict):
-            rho_eff_pm, C_eff_pm = self.get_porous_material_model_effective_properties(surface_id)
-            rho_eff_tv, C_eff_tv = self.get_viscous_thermal_model_effective_properties(surface_id)
-
-            if isinstance(rho_eff_pm, np.ndarray):
-                density = rho_eff_pm
-                speed_of_sound = C_eff_pm
-
-            elif isinstance(rho_eff_tv, np.ndarray):
-                density = rho_eff_tv
-                speed_of_sound = C_eff_tv
-
-            else:
-                fluid = self.properties._get_property("fluid", surface=surface_id)
-                if not isinstance(fluid, Fluid):
-                    return None
-
-                density = fluid.fluid_density
-                speed_of_sound = fluid.speed_of_sound
-
+        if isinstance(at_data, dict) or isinstance(pw_data, dict):
+            density, speed_of_sound = self.get_surface_density_and_speed_of_sound(surface_id)
             impedance = density * speed_of_sound
 
         elif isinstance(si_data, dict):
@@ -771,51 +797,11 @@ class Model:
                 impedance = real_values + 1j * imag_values
 
             elif "anechoic_termination" in si_data.keys():
-                rho_eff_pm, C_eff_pm = self.get_porous_material_model_effective_properties(surface_id)
-                rho_eff_tv, C_eff_tv = self.get_viscous_thermal_model_effective_properties(surface_id)
-
-                if isinstance(rho_eff_pm, np.ndarray):
-                    density = rho_eff_pm
-                    speed_of_sound = C_eff_pm
-
-                elif isinstance(rho_eff_tv, np.ndarray):
-                    density = rho_eff_tv
-                    speed_of_sound = C_eff_tv
-
-                else:
-                    fluid = self.properties._get_property("fluid", surface=surface_id)
-                    if not isinstance(fluid, Fluid):
-                        return None
-
-                    density = fluid.fluid_density
-                    speed_of_sound = fluid.speed_of_sound
-
+                density, speed_of_sound = self.get_surface_density_and_speed_of_sound(surface_id)
                 impedance = density * speed_of_sound
 
             elif "values" in si_data.keys():
                 impedance = si_data["values"][0]
-
-        elif isinstance(pw_data, dict):
-            rho_eff_pm, C_eff_pm = self.get_porous_material_model_effective_properties(surface_id)
-            rho_eff_tv, C_eff_tv = self.get_viscous_thermal_model_effective_properties(surface_id)
-
-            if isinstance(rho_eff_pm, np.ndarray):
-                density = rho_eff_pm
-                speed_of_sound = C_eff_pm
-
-            elif isinstance(rho_eff_tv, np.ndarray):
-                density = rho_eff_tv
-                speed_of_sound = C_eff_tv
-
-            else:
-                fluid = self.properties._get_property("fluid", surface=surface_id)
-                if not isinstance(fluid, Fluid):
-                    return None
-
-                density = fluid.fluid_density
-                speed_of_sound = fluid.speed_of_sound
-
-            impedance = density * speed_of_sound
 
         return impedance
 

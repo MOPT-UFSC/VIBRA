@@ -1,3 +1,4 @@
+import logging
 from enum import IntEnum
 from os.path import dirname
 from pathlib import Path
@@ -15,8 +16,9 @@ from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.model_inputs.general.fluid.set_fluid_inputs import SetFluidInputs
-from vibra.interface.model_inputs.general.fluid.set_fluid_inputs_simplified import SetFluidInputsSimplified
+from vibra.interface.loading_window import LoadingWindow
+from vibra.interface.model_inputs.fluid.set_fluid_inputs import SetFluidInputs
+from vibra.interface.model_inputs.fluid.set_fluid_inputs_simplified import SetFluidInputsSimplified
 from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
 from vibra.interface.numeric_checks.unit_utilities import (
     PressureUnits,
@@ -371,6 +373,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
         self.pushButton_plot_PV_diagram_head_end.setDisabled(False)
         self.pushButton_plot_PV_diagram_crank_end.setDisabled(False)
+        self.pushButton_plot_PV_diagram_both_ends.setDisabled(False)
         self.pushButton_plot_pressure_head_end_angle.setDisabled(False)
         self.pushButton_plot_pressure_crank_end_angle.setDisabled(False)
         self.pushButton_plot_volume_head_end_angle.setDisabled(False)
@@ -387,7 +390,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
                 self.doubleSpinBox_clearance_head_end.setValue(15.80)
 
             self.pushButton_plot_PV_diagram_crank_end.setDisabled(True)
-            self.pushButton_plot_PV_diagram_both_ends.setDisabled(False)
+            self.pushButton_plot_PV_diagram_both_ends.setDisabled(True)
             self.pushButton_plot_pressure_crank_end_angle.setDisabled(True)
             self.pushButton_plot_volume_crank_end_angle.setDisabled(True)
 
@@ -402,7 +405,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
                 self.doubleSpinBox_clearance_crank_end.setValue(18.39)
 
             self.pushButton_plot_PV_diagram_head_end.setDisabled(True)
-            self.pushButton_plot_PV_diagram_both_ends.setDisabled(False)
+            self.pushButton_plot_PV_diagram_both_ends.setDisabled(True)
             self.pushButton_plot_pressure_head_end_angle.setDisabled(True)
             self.pushButton_plot_volume_head_end_angle.setDisabled(True)
 
@@ -578,7 +581,13 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             self.comboBox_cylinder_acting.setCurrentIndex(parameters["acting_mode"])
 
         if "compression_stage" in parameters.keys():
-            self.comboBox_compression_stage.setCurrentIndex(parameters["compression_stage"])
+            comp_stage = parameters["compression_stage"]
+            if isinstance(comp_stage, int):
+                self.comboBox_compression_stage.setCurrentIndex(parameters["compression_stage"])
+            elif isinstance(comp_stage, str):
+                comp_stage_labels = ["1st stage", "2nd stage", "3rd stage"]
+                index = comp_stage_labels.index(comp_stage)
+                self.comboBox_compression_stage.setCurrentIndex(index)
 
         if "points_per_revolution" in parameters.keys():
             self.spinBox_number_of_points.setValue(int(parameters["points_per_revolution"]))
@@ -809,7 +818,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         except Exception:
             return
 
-    def apply_callback(self, close: bool = False):
+    def apply_callback(self, close_window: bool = False):
 
         if self.generate_mesh():
             return True
@@ -869,16 +878,22 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         table_name = f"compressor_excitation_{connection_type}_surface_{surface_id}"
 
         if self.checkBox_export_data.isChecked():
-            output_data_type = self.comboBox_output_data_type.currentText()
-            if output_data_type == "Surface velocity [m/s]":
-                unit = "m/s"
-                output_data = surface_velocity
+            def export_data_callback():    
+                logging.info("Exporting the compressor excitation data... (15%)")
 
-            else:
-                unit = "m³/s"
-                output_data = flow_rate
+                output_data_type = self.comboBox_output_data_type.currentText()
+                if output_data_type == "Surface velocity [m/s]":
+                    unit = "m/s"
+                    output_data = surface_velocity
 
-            self.export_reciprocating_compressor_data_excitation(surface_id, frequencies, output_data, unit)
+                else:
+                    unit = "m³/s"
+                    output_data = flow_rate
+
+                logging.info("Exporting the compressor excitation data... (25%)")
+                self.export_reciprocating_compressor_data_excitation(surface_id, frequencies, output_data, unit)
+
+            LoadingWindow(export_data_callback).run()
 
         data = {
             "connection_type": connection_type,
@@ -895,10 +910,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             return True
 
         self.properties._set_property("reciprocating_compressor_excitation", data, surface=surface_id)
-        self.actions_to_finalize()
-
-        if close:
-            self.close()
+        self.actions_to_finalize(close_window)
 
     def export_compressor_excitation_data(self, surface_id: int, surface_area: float, frequencies: np.ndarray, flow_rate: np.ndarray):
         output_data_type = self.comboBox_output_data_type.currentText()
@@ -912,11 +924,14 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
         self.export_reciprocating_compressor_data_excitation(surface_id, frequencies, output_data, unit)
 
-    def actions_to_finalize(self):
+    def actions_to_finalize(self, close_window: bool = False):
         self.load_compressor_excitation_info()
         app().project.update_model_properties_file()
         app().main_window.selection.set_geometry_selection()
         app().main_window.update_symbols()
+
+        if close_window:
+            self.close()
 
     def process_table_file_removal(self, table_names: list):
         for table_name in table_names:
@@ -1092,11 +1107,13 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         unit_label = self.comboBox_pressure_units.currentText()
         self.label_suction_pressure_unit.setText(f"[{unit_label}]")
         self.label_discharge_pressure_unit.setText(f"[{unit_label}]")
+        self.update_state_properties_at_discharge()
 
     def temperature_unit_callback(self):
         unit_label = self.comboBox_temperature_units.currentText()
         self.label_suction_temperature_unit.setText(f"[{unit_label}]")
         self.label_discharge_temperature_unit.setText(f"[{unit_label}]")
+        self.update_state_properties_at_discharge()
 
     def plot_PV_diagram_head_end(self):
         if self.check_all_parameters():
@@ -1137,11 +1154,16 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
     def plot_PV_diagram_both_ends(self):
         if self.check_all_parameters():
             return
+
         N = self.spinBox_number_of_points.value()
         self.compressor.number_points = N
 
-        volume_HE, pressure_HE, volume_CE, pressure_CE = self.compressor.get_PV_diagram_both_ends_data()
+        volume_HE, pressure_HE = self.compressor.get_PV_diagram_head_end_data()
         if volume_HE is None:
+            return
+
+        volume_CE, pressure_CE = self.compressor.get_PV_diagram_crank_end_data()
+        if volume_CE is None:
             return
 
         plotter = Plot2DSimplified(
@@ -1149,6 +1171,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             y_left_label=f"Pressure [{self.compressor.pressure_unit}]",
             title="P-V RECIPROCATING COMPRESSOR DIAGRAM",
         )
+
         plotter.set_plot_data(volume_HE, pressure_HE, label="Head End", color=(1, 0, 0))
         plotter.set_plot_data(volume_CE, pressure_CE, label="Crank End", color=(0, 0, 1), line_style="--")
         plotter.show()
@@ -1263,8 +1286,8 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             y_right_label="Piston velocity [m/s]",
             title="Piston displacement and velocity during a complete cycle",
         )
-        plotter.set_plot_data(x_data, position, label="Piston position", color=(0, 0, 0), line_width=2)
-        plotter.set_plot_data(x_data, velocity, label="Piston velocity", color=(0, 0, 1), line_width=2, y_label_position="right")
+        plotter.set_plot_data(x_data, position, label="Piston position", color=(0, 0, 0))
+        plotter.set_plot_data(x_data, velocity, label="Piston velocity", color=(0, 0, 1), y_label_position="right")
         plotter.show()
 
     def plot_piston_position_and_velocity_angle(self):
@@ -1318,7 +1341,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         N = self.spinBox_number_of_points.value()
         self.compressor.number_points = N
 
-        angle, pressure_HE = self.compressor.get_head_end_pressure_vs_angle_data()
+        angle, pressure_HE = self.compressor.get_head_end_pressure_angle_data()
 
         plotter = Plot2DSimplified(
             x_label="Crank angle [degree]",
@@ -1334,7 +1357,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         N = self.spinBox_number_of_points.value()
         self.compressor.number_points = N
 
-        angle, volume_HE = self.compressor.get_head_end_volume_vs_angle_data()
+        angle, volume_HE = self.compressor.get_head_end_volume_angle_data()
 
         plotter = Plot2DSimplified(
             x_label="Crank angle [degree]",
@@ -1350,7 +1373,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         N = self.spinBox_number_of_points.value()
         self.compressor.number_points = N
 
-        angle, pressure_CE = self.compressor.get_crank_end_pressure_vs_angle_data()
+        angle, pressure_CE = self.compressor.get_crank_end_pressure_angle_data()
 
         plotter = Plot2DSimplified(
             x_label="Crank angle [degree]",
@@ -1366,7 +1389,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         N = self.spinBox_number_of_points.value()
         self.compressor.number_points = N
 
-        angle, volume_CE = self.compressor.get_crank_end_volume_vs_angle_data()
+        angle, volume_CE = self.compressor.get_crank_end_volume_angle_data()
 
         plotter = Plot2DSimplified(
             x_label="Crank angle [degree]",
@@ -1391,13 +1414,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             self.exporter = ExportModelResults()
 
         self.hide()
-        file_path, check = self.exporter.getSaveFileName(
-                                                         app().main_window, 
-                                                         caption, 
-                                                         directory_path, 
-                                                         filter = ext_filter
-                                                         )
-
+        file_path, check = self.exporter.getSaveFileName(app().main_window, caption, str(directory_path), filter=ext_filter)
         if not check:
             return
 
@@ -1406,13 +1423,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
         app().config.write_last_folder_path_in_file("exported_data_folder", file_path)
 
-    def export_reciprocating_compressor_data_excitation(
-                                                        self, 
-                                                        surface_id: int, 
-                                                        frequencies: np.ndarray, 
-                                                        excitation_data: np.ndarray,
-                                                        unit: str
-                                                        ):
+    def export_reciprocating_compressor_data_excitation(self, surface_id: int, frequencies: np.ndarray, excitation_data: np.ndarray, unit: str):
 
         recip_excitation_data = dict()
         title = "Reciprocating compressor excitation"
@@ -1425,23 +1436,25 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         legend_label = f"Reciprocating compressor excitation at surface [{surface_id}]"
 
         recip_excitation_data[key] = {
-                                        "x_data" : frequencies,
-                                        "y_data" : excitation_data,
-                                        "x_label" : "Frequency [Hz]",
-                                        "y_label" : "Compressor excitation",
-                                        "title" : title,
-                                        "data_type" : "compressor excitation",
-                                        "legend" : legend_label,
-                                        "unit" : unit,
-                                        "color" : [0, 0, 1],
-                                        "linestyle" : "-"  
-                                        }
+            "x_data": frequencies,
+            "y_data": excitation_data,
+            "x_label": "Frequency [Hz]",
+            "y_label": "Compressor excitation",
+            "title": title,
+            "data_type": "compressor excitation",
+            "legend": legend_label,
+            "unit": unit,
+            "color": [0, 0, 1],
+            "linestyle": "-",
+        }
 
         if self.exporter is None:
             self.exporter = ExportModelResults()
 
         file_path = self.lineEdit_export_path.text()
-        if not self.is_file_path_valid(file_path):
+        if self.is_file_path_valid(file_path):
+            file_path = Path(file_path)
+        else:
             file_path = ""
 
         self.exporter._set_data_to_export(recip_excitation_data, existing_path=file_path)
