@@ -5,6 +5,7 @@ from PySide6.QtGui import QFont, QIcon, QPen
 
 from vibra import ICON_DIR, app
 from vibra.engine import AnalysisID
+from vibra.engine.analysis_info import HarmonicAnalysisSetup, ModalAnalysisSetup
 from vibra.interface.menus.common_menu_items import ChildTreeWidgetItem, CommonMenuItems, TopTreeWidgetItem
 
 
@@ -264,12 +265,22 @@ class ResultsViewerItems(CommonMenuItems):
             top_level_item.setData(0, Qt.ForegroundRole, None)  # reset color
             top_level_item.setData(0, Qt.DecorationRole, None)
 
-    def update_results_items_warnings(self, properties_changed: bool):
+    def update_results_items_warnings(self, properties_changed: bool, outdated_solution: bool = True):
 
         solution_exists = app().project.model.solution is not None
-        warning = solution_exists and properties_changed
+        should_update = solution_exists and properties_changed
+
+        # check if the current solution is outdated
+        is_solution_outdated = app().project.model.outdated_solution
+
+        if properties_changed:
+            analysis_setup = app().project.model.analysis_setup
+            if isinstance(analysis_setup, HarmonicAnalysisSetup | ModalAnalysisSetup):
+                analysis_setup.outdated_solution = should_update
+                app().project.configure_analysis(analysis_setup, reset_solution=False)
 
         for top_level_item in self.top_level_items:
+            warning = should_update or is_solution_outdated 
             self.set_warning_for_top_level_item(warning, top_level_item)
             for index in range(top_level_item.childCount()):
 

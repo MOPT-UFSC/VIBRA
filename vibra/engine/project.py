@@ -302,12 +302,14 @@ class Project:
     def configure_analysis(
         self,
         analysis_setup: Optional[AnalysisSetup],
+        reset_solution: bool = True,
     ):
         """
         Defines the `AnalysisID` and the `AnalysisSetup` required to
         execute a analysis.
         """
-        self.reset_solution()
+        if reset_solution:
+            self.reset_solution()
         self.model.set_analysis_setup(analysis_setup)
         self.update_project_setup_file()
 

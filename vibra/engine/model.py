@@ -137,6 +137,13 @@ class Model:
             return self.analysis_setup.global_damping
 
         return (None, None, None)
+    
+    @property
+    def outdated_solution(self):
+        if isinstance(self.analysis_setup, ModalAnalysisSetup | HarmonicAnalysisSetup):
+            return self.analysis_setup.outdated_solution
+
+        return False
 
     def reset_current_solution(self):
         self.solution = None
