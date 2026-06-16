@@ -867,7 +867,6 @@ class MassSourceInputs(MassSourceInputs_UI):
         app().project.update_model_properties_file()
         app().main_window.selection.clear_selection()
         app().main_window.update_symbols()
-        app().main_window.results_viewer_widget.results_viewer_items.update_results_items_warnings(True)
 
         if close_window:
             self.close()
