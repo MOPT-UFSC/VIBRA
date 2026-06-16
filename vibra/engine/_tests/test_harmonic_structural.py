@@ -28,7 +28,7 @@ def test_harmonic_structural():
             sigma_factor=0.01,
         )
 
-        project.configure_analysis(AnalysisID.STRUCTURAL_HARMONIC, analysis_setup)
+        project.configure_analysis(analysis_setup)
         project.run_analysis()
 
     # Define the analysis frequency setup
@@ -40,7 +40,7 @@ def test_harmonic_structural():
         f_step=5000,
     )
 
-    (project.configure_analysis(AnalysisID.STRUCTURAL_HARMONIC, analysis_setup),)
+    project.configure_analysis(analysis_setup)
 
     with pytest.raises(errors.InvalidModelSetupError):
         # Material not configured

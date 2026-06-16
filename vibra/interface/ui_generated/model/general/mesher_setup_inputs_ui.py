@@ -28,6 +28,8 @@ class Ui_Dialog(object):
         Dialog.resize(596, 603)
         self.gridLayout = QGridLayout(Dialog)
         self.gridLayout.setObjectName(u"gridLayout")
+        self.gridLayout.setVerticalSpacing(4)
+        self.gridLayout.setContentsMargins(4, 4, 4, -1)
         self.frame_title = QFrame(Dialog)
         self.frame_title.setObjectName(u"frame_title")
         self.frame_title.setMinimumSize(QSize(0, 48))
@@ -665,42 +667,64 @@ class Ui_Dialog(object):
 
         self.gridLayout.addWidget(self.frame_main, 1, 0, 1, 1)
 
-        self.frame_buttons = QFrame(Dialog)
-        self.frame_buttons.setObjectName(u"frame_buttons")
-        self.frame_buttons.setMinimumSize(QSize(0, 48))
-        self.frame_buttons.setMaximumSize(QSize(16777215, 48))
-        self.frame_buttons.setFrameShape(QFrame.Shape.NoFrame)
-        self.frame_buttons.setFrameShadow(QFrame.Shadow.Raised)
-        self.gridLayout_5 = QGridLayout(self.frame_buttons)
-        self.gridLayout_5.setObjectName(u"gridLayout_5")
-        self.gridLayout_5.setContentsMargins(4, 4, 4, 4)
-        self.pushButton_exit = QPushButton(self.frame_buttons)
-        self.pushButton_exit.setObjectName(u"pushButton_exit")
-        self.pushButton_exit.setMinimumSize(QSize(140, 30))
-        self.pushButton_exit.setMaximumSize(QSize(140, 30))
-        self.pushButton_exit.setFont(font1)
-        self.pushButton_exit.setAutoDefault(False)
+        self.frame_buttons_2 = QFrame(Dialog)
+        self.frame_buttons_2.setObjectName(u"frame_buttons_2")
+        self.frame_buttons_2.setMinimumSize(QSize(0, 48))
+        self.frame_buttons_2.setMaximumSize(QSize(16777215, 48))
+        self.frame_buttons_2.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_buttons_2.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_11 = QGridLayout(self.frame_buttons_2)
+        self.gridLayout_11.setObjectName(u"gridLayout_11")
+        self.gridLayout_11.setVerticalSpacing(0)
+        self.gridLayout_11.setContentsMargins(6, 0, 6, 0)
+        self.pushButton_apply_and_close = QPushButton(self.frame_buttons_2)
+        self.pushButton_apply_and_close.setObjectName(u"pushButton_apply_and_close")
+        self.pushButton_apply_and_close.setMinimumSize(QSize(72, 30))
+        self.pushButton_apply_and_close.setMaximumSize(QSize(72, 30))
+        font3 = QFont()
+        font3.setPointSize(10)
+        font3.setBold(False)
+        font3.setItalic(False)
+        self.pushButton_apply_and_close.setFont(font3)
+        self.pushButton_apply_and_close.setStyleSheet(u"")
+        self.pushButton_apply_and_close.setAutoDefault(False)
+        self.pushButton_apply_and_close.setFlat(False)
 
-        self.gridLayout_5.addWidget(self.pushButton_exit, 0, 0, 1, 1)
+        self.gridLayout_11.addWidget(self.pushButton_apply_and_close, 0, 3, 1, 1)
 
-        self.pushButton_generate_mesh = QPushButton(self.frame_buttons)
-        self.pushButton_generate_mesh.setObjectName(u"pushButton_generate_mesh")
-        self.pushButton_generate_mesh.setMinimumSize(QSize(140, 30))
-        self.pushButton_generate_mesh.setMaximumSize(QSize(140, 30))
-        self.pushButton_generate_mesh.setFont(font1)
-        self.pushButton_generate_mesh.setAutoDefault(True)
+        self.pushButton_apply = QPushButton(self.frame_buttons_2)
+        self.pushButton_apply.setObjectName(u"pushButton_apply")
+        self.pushButton_apply.setMinimumSize(QSize(72, 30))
+        self.pushButton_apply.setMaximumSize(QSize(72, 30))
+        self.pushButton_apply.setFont(font3)
+        self.pushButton_apply.setStyleSheet(u"")
+        self.pushButton_apply.setAutoDefault(False)
+        self.pushButton_apply.setFlat(False)
 
-        self.gridLayout_5.addWidget(self.pushButton_generate_mesh, 0, 1, 1, 1)
+        self.gridLayout_11.addWidget(self.pushButton_apply, 0, 2, 1, 1)
+
+        self.pushButton_cancel = QPushButton(self.frame_buttons_2)
+        self.pushButton_cancel.setObjectName(u"pushButton_cancel")
+        self.pushButton_cancel.setMinimumSize(QSize(72, 30))
+        self.pushButton_cancel.setMaximumSize(QSize(72, 30))
+        self.pushButton_cancel.setFont(font3)
+        self.pushButton_cancel.setStyleSheet(u"")
+        self.pushButton_cancel.setAutoDefault(False)
+        self.pushButton_cancel.setFlat(False)
+
+        self.gridLayout_11.addWidget(self.pushButton_cancel, 0, 0, 1, 1)
+
+        self.horizontalSpacer_17 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_11.addItem(self.horizontalSpacer_17, 0, 1, 1, 1)
 
 
-        self.gridLayout.addWidget(self.frame_buttons, 2, 0, 1, 1)
+        self.gridLayout.addWidget(self.frame_buttons_2, 2, 0, 1, 1)
 
         QWidget.setTabOrder(self.comboBox_element_type, self.comboBox_shape_function)
         QWidget.setTabOrder(self.comboBox_shape_function, self.comboBox_volumes_interface_behavior)
         QWidget.setTabOrder(self.comboBox_volumes_interface_behavior, self.tabWidget_main)
-        QWidget.setTabOrder(self.tabWidget_main, self.pushButton_exit)
-        QWidget.setTabOrder(self.pushButton_exit, self.pushButton_generate_mesh)
-        QWidget.setTabOrder(self.pushButton_generate_mesh, self.lineEdit_selected_ids)
+        QWidget.setTabOrder(self.tabWidget_main, self.lineEdit_selected_ids)
         QWidget.setTabOrder(self.lineEdit_selected_ids, self.doubleSpinBox_refined_element_size)
         QWidget.setTabOrder(self.doubleSpinBox_refined_element_size, self.tableWidget_refining_mesh_data)
         QWidget.setTabOrder(self.tableWidget_refining_mesh_data, self.pushButton_delete)
@@ -715,8 +739,9 @@ class Ui_Dialog(object):
         self.comboBox_volumes_interface_behavior.setCurrentIndex(1)
         self.tabWidget_main.setCurrentIndex(0)
         self.comboBox_3d_algorithm.setCurrentIndex(0)
-        self.pushButton_exit.setDefault(False)
-        self.pushButton_generate_mesh.setDefault(False)
+        self.pushButton_apply_and_close.setDefault(False)
+        self.pushButton_apply.setDefault(False)
+        self.pushButton_cancel.setDefault(False)
 
 
         QMetaObject.connectSlotsByName(Dialog)
@@ -821,8 +846,9 @@ class Ui_Dialog(object):
         self.pushButton_plot_histogram.setText(QCoreApplication.translate("Dialog", u"Plot Histogram", None))
         self.pushButton_show_bad_elements.setText(QCoreApplication.translate("Dialog", u"Show bad elements", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_mesh_quality), QCoreApplication.translate("Dialog", u"Mesh quality", None))
-        self.pushButton_exit.setText(QCoreApplication.translate("Dialog", u"Exit", None))
-        self.pushButton_generate_mesh.setText(QCoreApplication.translate("Dialog", u"Generate mesh", None))
+        self.pushButton_apply_and_close.setText(QCoreApplication.translate("Dialog", u"Ok", None))
+        self.pushButton_apply.setText(QCoreApplication.translate("Dialog", u"Apply", None))
+        self.pushButton_cancel.setText(QCoreApplication.translate("Dialog", u"Cancel", None))
     # retranslateUi
 
 
@@ -903,10 +929,11 @@ class MesherSetupInputs_UI(QDialog, Ui_Dialog):
                                                             - (Layout): QGridLayout
                                                                     - pushButton_plot_histogram: QPushButton
                                                                     - pushButton_show_bad_elements: QPushButton
-                - frame_buttons: QFrame
+                - frame_buttons_2: QFrame
                     - (Layout): QGridLayout
-                            - pushButton_exit: QPushButton
-                            - pushButton_generate_mesh: QPushButton
+                            - pushButton_apply_and_close: QPushButton
+                            - pushButton_apply: QPushButton
+                            - pushButton_cancel: QPushButton
     """
 
     def __init__(self, *args, **kwargs):

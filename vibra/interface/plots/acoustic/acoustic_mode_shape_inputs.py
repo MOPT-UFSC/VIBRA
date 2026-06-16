@@ -156,8 +156,8 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
 
     def get_plot_type(self):
         plot_types = [
-            "absolute_animation",
             "non_absolute_animation",
+            "absolute_animation",
             "absolute_values",
             "real_values",
             "imag_values",

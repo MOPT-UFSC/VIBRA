@@ -9,16 +9,9 @@ from vibra.engine.properties.fluid import Fluid
 from vibra.interface import error_title
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.model_inputs.general.fluid.set_fluid_inputs_simplified import (
-    SetFluidInputsSimplified,
-)
-from vibra.interface.plots.general.frequency_response_plotter import (
-    DataFormat,
-    FrequencyResponsePlotter,
-)
-from vibra.interface.ui_generated.plots.acoustic.allowable_pulsations_for_screw_compressor_inputs_ui import (
-    AllowablePulsationsForScrewCompressorInputs_UI,
-)
+from vibra.interface.model_inputs.fluid.set_fluid_inputs_simplified import SetFluidInputsSimplified
+from vibra.interface.plots.general.frequency_response_plotter import DataFormat,FrequencyResponsePlotter
+from vibra.interface.ui_generated.plots.acoustic.allowable_pulsations_for_screw_compressor_inputs_ui import AllowablePulsationsForScrewCompressorInputs_UI
 from vibra.utils.signal_processing import process_ifft_from_one_sided_spectrum_signal
 
 
@@ -399,8 +392,8 @@ class AllowablePulsationsForScrewCompressorInputs(AllowablePulsationsForScrewCom
 
     def get_fluid_callback(self):
         self.fluid_dialog = SetFluidInputsSimplified(update_workspace = False)
-        self.fluid_dialog.fluid_widget.pushButton_attribute.setText("Select fluid")
-        self.fluid_dialog.pushButton_attribute.clicked.connect(self.get_selected_fluid)
+        self.fluid_dialog.fluid_widget.pushButton_apply.setVisible(False)
+        self.fluid_dialog.fluid_widget.pushButton_apply_and_close.clicked.connect(self.get_selected_fluid)
         self.fluid_dialog.exec()
 
     def get_selected_fluid(self, selected_fluid: Fluid|None=None):

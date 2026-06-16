@@ -28,45 +28,10 @@ class Ui_Form(object):
         self.gridLayout_4.setSpacing(4)
         self.gridLayout_4.setObjectName(u"gridLayout_4")
         self.gridLayout_4.setContentsMargins(4, 4, 4, 4)
-        self.frame_3 = QFrame(Form)
-        self.frame_3.setObjectName(u"frame_3")
-        self.frame_3.setMinimumSize(QSize(0, 48))
-        self.frame_3.setFrameShape(QFrame.NoFrame)
-        self.frame_3.setFrameShadow(QFrame.Raised)
-        self.gridLayout_3 = QGridLayout(self.frame_3)
-        self.gridLayout_3.setSpacing(4)
-        self.gridLayout_3.setObjectName(u"gridLayout_3")
-        self.gridLayout_3.setContentsMargins(4, 4, 4, 4)
-        self.pushButton_attribute = QPushButton(self.frame_3)
-        self.pushButton_attribute.setObjectName(u"pushButton_attribute")
-        self.pushButton_attribute.setMinimumSize(QSize(140, 32))
-        self.pushButton_attribute.setMaximumSize(QSize(160, 32))
-        font = QFont()
-        font.setFamilies([u"MS Shell Dlg 2"])
-        font.setPointSize(10)
-        font.setBold(False)
-        font.setItalic(False)
-        self.pushButton_attribute.setFont(font)
-        self.pushButton_attribute.setStyleSheet(u"")
-
-        self.gridLayout_3.addWidget(self.pushButton_attribute, 0, 1, 1, 1)
-
-        self.pushButton_exit = QPushButton(self.frame_3)
-        self.pushButton_exit.setObjectName(u"pushButton_exit")
-        self.pushButton_exit.setMinimumSize(QSize(140, 32))
-        self.pushButton_exit.setMaximumSize(QSize(160, 32))
-        self.pushButton_exit.setFont(font)
-        self.pushButton_exit.setStyleSheet(u"")
-
-        self.gridLayout_3.addWidget(self.pushButton_exit, 0, 0, 1, 1)
-
-
-        self.gridLayout_4.addWidget(self.frame_3, 1, 0, 1, 1)
-
         self.frame_2 = QFrame(Form)
         self.frame_2.setObjectName(u"frame_2")
-        self.frame_2.setFrameShape(QFrame.NoFrame)
-        self.frame_2.setFrameShadow(QFrame.Raised)
+        self.frame_2.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_2.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_2 = QGridLayout(self.frame_2)
         self.gridLayout_2.setObjectName(u"gridLayout_2")
         self.gridLayout_2.setHorizontalSpacing(4)
@@ -106,8 +71,8 @@ class Ui_Form(object):
         self.frame_6 = QFrame(self.frame_2)
         self.frame_6.setObjectName(u"frame_6")
         self.frame_6.setMinimumSize(QSize(0, 0))
-        self.frame_6.setFrameShape(QFrame.NoFrame)
-        self.frame_6.setFrameShadow(QFrame.Raised)
+        self.frame_6.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_6.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_5 = QGridLayout(self.frame_6)
         self.gridLayout_5.setObjectName(u"gridLayout_5")
         self.gridLayout_5.setHorizontalSpacing(8)
@@ -117,20 +82,20 @@ class Ui_Form(object):
         self.pushButton_add_column.setObjectName(u"pushButton_add_column")
         self.pushButton_add_column.setMinimumSize(QSize(26, 26))
         self.pushButton_add_column.setMaximumSize(QSize(26, 26))
-        font1 = QFont()
-        font1.setFamilies([u"MS Shell Dlg 2"])
-        font1.setPointSize(9)
-        font1.setBold(True)
-        font1.setItalic(False)
-        self.pushButton_add_column.setFont(font1)
+        font = QFont()
+        font.setFamilies([u"MS Shell Dlg 2"])
+        font.setPointSize(9)
+        font.setBold(True)
+        font.setItalic(False)
+        self.pushButton_add_column.setFont(font)
         self.pushButton_add_column.setStyleSheet(u"")
 
         self.gridLayout_5.addWidget(self.pushButton_add_column, 0, 2, 1, 1)
 
         self.frame_7 = QFrame(self.frame_6)
         self.frame_7.setObjectName(u"frame_7")
-        self.frame_7.setFrameShape(QFrame.NoFrame)
-        self.frame_7.setFrameShadow(QFrame.Raised)
+        self.frame_7.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_7.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout = QGridLayout(self.frame_7)
         self.gridLayout.setSpacing(0)
         self.gridLayout.setObjectName(u"gridLayout")
@@ -139,7 +104,12 @@ class Ui_Form(object):
         self.pushButton_reset_library.setObjectName(u"pushButton_reset_library")
         self.pushButton_reset_library.setMinimumSize(QSize(60, 26))
         self.pushButton_reset_library.setMaximumSize(QSize(60, 26))
-        self.pushButton_reset_library.setFont(font)
+        font1 = QFont()
+        font1.setFamilies([u"MS Shell Dlg 2"])
+        font1.setPointSize(10)
+        font1.setBold(False)
+        font1.setItalic(False)
+        self.pushButton_reset_library.setFont(font1)
         self.pushButton_reset_library.setStyleSheet(u"")
 
         self.gridLayout.addWidget(self.pushButton_reset_library, 0, 0, 1, 1)
@@ -184,22 +154,73 @@ class Ui_Form(object):
 
         self.gridLayout_4.addWidget(self.frame_2, 0, 0, 1, 1)
 
+        self.frame_buttons = QFrame(Form)
+        self.frame_buttons.setObjectName(u"frame_buttons")
+        self.frame_buttons.setMinimumSize(QSize(0, 48))
+        self.frame_buttons.setMaximumSize(QSize(16777215, 48))
+        self.frame_buttons.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_buttons.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_11 = QGridLayout(self.frame_buttons)
+        self.gridLayout_11.setObjectName(u"gridLayout_11")
+        self.gridLayout_11.setVerticalSpacing(0)
+        self.gridLayout_11.setContentsMargins(6, 0, 6, 0)
+        self.pushButton_apply_and_close = QPushButton(self.frame_buttons)
+        self.pushButton_apply_and_close.setObjectName(u"pushButton_apply_and_close")
+        self.pushButton_apply_and_close.setMinimumSize(QSize(72, 30))
+        self.pushButton_apply_and_close.setMaximumSize(QSize(72, 30))
+        font3 = QFont()
+        font3.setPointSize(10)
+        font3.setBold(False)
+        font3.setItalic(False)
+        self.pushButton_apply_and_close.setFont(font3)
+        self.pushButton_apply_and_close.setStyleSheet(u"")
+        self.pushButton_apply_and_close.setAutoDefault(False)
+        self.pushButton_apply_and_close.setFlat(False)
+
+        self.gridLayout_11.addWidget(self.pushButton_apply_and_close, 0, 3, 1, 1)
+
+        self.pushButton_apply = QPushButton(self.frame_buttons)
+        self.pushButton_apply.setObjectName(u"pushButton_apply")
+        self.pushButton_apply.setMinimumSize(QSize(72, 30))
+        self.pushButton_apply.setMaximumSize(QSize(72, 30))
+        self.pushButton_apply.setFont(font3)
+        self.pushButton_apply.setStyleSheet(u"")
+        self.pushButton_apply.setAutoDefault(False)
+        self.pushButton_apply.setFlat(False)
+
+        self.gridLayout_11.addWidget(self.pushButton_apply, 0, 2, 1, 1)
+
+        self.pushButton_cancel = QPushButton(self.frame_buttons)
+        self.pushButton_cancel.setObjectName(u"pushButton_cancel")
+        self.pushButton_cancel.setMinimumSize(QSize(72, 30))
+        self.pushButton_cancel.setMaximumSize(QSize(72, 30))
+        self.pushButton_cancel.setFont(font3)
+        self.pushButton_cancel.setStyleSheet(u"")
+        self.pushButton_cancel.setAutoDefault(False)
+        self.pushButton_cancel.setFlat(False)
+
+        self.gridLayout_11.addWidget(self.pushButton_cancel, 0, 0, 1, 1)
+
+        self.horizontalSpacer_17 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_11.addItem(self.horizontalSpacer_17, 0, 1, 1, 1)
+
+
+        self.gridLayout_4.addWidget(self.frame_buttons, 1, 0, 1, 1)
+
 
         self.retranslateUi(Form)
+
+        self.pushButton_apply_and_close.setDefault(False)
+        self.pushButton_apply.setDefault(False)
+        self.pushButton_cancel.setDefault(False)
+
 
         QMetaObject.connectSlotsByName(Form)
     # setupUi
 
     def retranslateUi(self, Form):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Form", None))
-#if QT_CONFIG(tooltip)
-        self.pushButton_attribute.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Confirm material attribution</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.pushButton_attribute.setText(QCoreApplication.translate("Form", u"Attribute material", None))
-#if QT_CONFIG(tooltip)
-        self.pushButton_exit.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Confirm material attribution</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.pushButton_exit.setText(QCoreApplication.translate("Form", u"Exit", None))
         ___qtablewidgetitem = self.tableWidget_material_data.verticalHeaderItem(0)
         ___qtablewidgetitem.setText(QCoreApplication.translate("Form", u"Name", None));
         ___qtablewidgetitem1 = self.tableWidget_material_data.verticalHeaderItem(1)
@@ -230,6 +251,9 @@ class Ui_Form(object):
         self.pushButton_remove_column.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Remove the selected material</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButton_remove_column.setText(QCoreApplication.translate("Form", u"-", None))
+        self.pushButton_apply_and_close.setText(QCoreApplication.translate("Form", u"Ok", None))
+        self.pushButton_apply.setText(QCoreApplication.translate("Form", u"Apply", None))
+        self.pushButton_cancel.setText(QCoreApplication.translate("Form", u"Cancel", None))
     # retranslateUi
 
 
@@ -239,10 +263,6 @@ class MaterialWidget_UI(QWidget, Ui_Form):
     Component Hierarchy:
     - Form: QWidget
         - (Layout): QGridLayout
-                - frame_3: QFrame
-                    - (Layout): QGridLayout
-                            - pushButton_attribute: QPushButton
-                            - pushButton_exit: QPushButton
                 - frame_2: QFrame
                     - (Layout): QGridLayout
                             - tableWidget_material_data: QTableWidget
@@ -254,6 +274,11 @@ class MaterialWidget_UI(QWidget, Ui_Form):
                                                     - pushButton_reset_library: QPushButton
                                         - pushButton_duplicate: QPushButton
                                         - pushButton_remove_column: QPushButton
+                - frame_buttons: QFrame
+                    - (Layout): QGridLayout
+                            - pushButton_apply_and_close: QPushButton
+                            - pushButton_apply: QPushButton
+                            - pushButton_cancel: QPushButton
     """
 
     def __init__(self, *args, **kwargs):
