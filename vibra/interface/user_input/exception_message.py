@@ -1,4 +1,4 @@
-from PySide6.QtGui import QColor
+from PySide6.QtGui import QColor, QShowEvent
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
 
@@ -59,8 +59,8 @@ class ExceptionMessage(ExceptionMessage_UI):
         self.adjustSize()
 
     def _config_window(self):
-        self.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.setWindowModality(Qt.WindowModal)
+        self.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
+        self.setWindowModality(Qt.WindowModality.ApplicationModal)
 
     def _create_connections(self):
         self.ok_button.clicked.connect(self.close)
@@ -82,3 +82,8 @@ class ExceptionMessage(ExceptionMessage_UI):
     def move_stacktrace_to_bottom(self):
         v_scrollbar = self.stack_trace_text_browser.verticalScrollBar()
         v_scrollbar.setValue(v_scrollbar.maximum())
+
+    def showEvent(self, arg__1: QShowEvent, /):
+        super().showEvent(arg__1)
+        self.raise_()
+        self.activateWindow()

@@ -20,6 +20,7 @@ from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.ui_generated.model.general.mesher_setup_inputs_ui import MesherSetupInputs_UI
 from vibra.interface.ui_generated.plots.general.mesh_quality_histogram_plot_ui import MeshQualityHistogramPlot_UI
 from vibra.utils.interface_utils import block_signals
+from vibra.utils.subprocess.subprocess_handler import SubProcessHandler, SubProcessStatus
 
 gmsh_algorithms_2d = [
     gmsh_constants.MESH_ADAPT_2D,
@@ -319,20 +320,52 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             case MeshAlgorithms3D.HXT_3D:
                 self.comboBox_3d_algorithm.setCurrentIndex(GMSHAlgorithms_3D.HXT_3D)
 
+    def _generate_in_subprocess(self) -> bool:
+        mesh_setup = self._get_mesh_setup()
+        app().project.configure_mesh(mesh_setup)
+        app().project.write_to_working_dir()
+
+        status = SubProcessHandler("utils/subprocess/generate_mesh_subprocess.py").run()
+        if status != SubProcessStatus.SUCCESS:
+            return False
+
+        def load_mesh_from_working_dir():
+            logging.info("Loading generated mesh... [10/100]")
+            app().project.model.mesh = app().project.project_reader.read_mesh()
+            logging.info("Reading model properties... [65/100]")
+            app().project.model.properties = app().project.project_reader.read_model_properties()
+
+            logging.info("Updating project state... [85/100]")
+            app().project.reset_solution()
+            app().project.mark_project_as_modified()
+
+        LoadingWindow(load_mesh_from_working_dir).run()
+
+        return True
+
+
     def apply_callback(self, close_window: bool = False):
+        def generate_mesh() -> bool:
+            self.hide()
 
-        def generate():
-            mesh_setup = self._get_mesh_setup()
-            app().project.generate_mesh(mesh_setup)
+            if app().config.user_preferences.generate_mesh_in_subprocess:
+                if not self._generate_in_subprocess():
+                    return False
+            else:
+                def generate():
+                    mesh_setup = self._get_mesh_setup()
+                    app().project.generate_mesh(mesh_setup)
 
-        self.hide()
-        LoadingWindow(generate).run()
-        LoadingWindow(self.actions_to_finalize).run()
+                LoadingWindow(generate).run()
 
-        self.update_mesh_refinement_table()
-        self.update_mesh_quality_table()
+            LoadingWindow(self.actions_to_finalize).run()
 
-        self.complete = True
+            self.update_mesh_refinement_table()
+            self.update_mesh_quality_table()
+
+            return True
+
+        self.complete = generate_mesh()
 
         if close_window:
             self.close()
@@ -527,9 +560,8 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         app().main_window.analysis_toolbar.reset_solution_action.setDisabled(True)
         app().main_window.analysis_toolbar.check_analysis_setup_callback()
         app().main_window.action_export_element_transfer_data.setDisabled(True)
-        app().main_window.update_symbols()
 
-    def get_element_setup(self) -> ElementSetup:
+    def get_element_setup(self) -> ElementSetup | None:
         element_geometry = self.comboBox_element_geometry.currentText().lower()
         element_order = self.comboBox_element_order.currentText().lower()
 
@@ -553,7 +585,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         if not mesh.are_there_volumes_in_geometry():
             self.comboBox_element_geometry.removeItem(1)
             self.comboBox_element_order.removeItem(1)
-        
+
     def update_advanced_gmsh_controls(self):
         model = app().project.model
         if model.mesh is None:

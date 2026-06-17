@@ -192,8 +192,13 @@ class Mesh:
             gmsh.initialize("", False, interruptible=False)
             gmsh.option.set_number("General.Terminal", 0)
             gmsh.option.set_number("General.Verbosity", 0)
-            # gmsh.option.set_number("General.NumThreads", threads)
             gmsh.option.set_number("Geometry.Tolerance", mesh_setup.geometry_tolerance)
+
+            n_thread = 0
+            gmsh.option.set_number("General.NumThreads", n_thread)
+            gmsh.option.set_number("Mesh.MaxNumThreads1D", n_thread)
+            gmsh.option.set_number("Mesh.MaxNumThreads2D", n_thread)
+            gmsh.option.set_number("Mesh.MaxNumThreads3D", n_thread)
 
             logging.info("Loading geometry... [10/100]")
             gmsh.open(str(path))
@@ -218,11 +223,11 @@ class Mesh:
             gmsh.finalize()
 
             exception = MeshingAlgorithmError(
-                "A problem occured while generating the mesh.",
-                "Reducing the size of the elements and/or changing the 3D meshing ",
-                "algorithm may help resolve the issue.\n",
-                "If neither of these options works, we suggest reviewing the CAD geometry ",
-                "to eliminate any potential underlying geometric issues.",
+                "A problem occurred while generating the mesh.\n"
+                "Reducing the size of the elements and/or changing the 3D meshing "
+                "algorithm may help resolve the issue.\n"
+                "If neither of these options works, we suggest reviewing the CAD geometry "
+                "to eliminate any potential underlying geometric issues."
             )
             logging.error(str(exception))
             raise exception from e

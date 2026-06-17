@@ -24,6 +24,7 @@ class UserPreferences:
     show_reference_scale_bar: bool = True
     compatibility_mode: bool = False
     run_analysis_in_subprocess: bool = True
+    generate_mesh_in_subprocess: bool = True
     color_map: str = "jet"
 
     def set_light_theme(self):
