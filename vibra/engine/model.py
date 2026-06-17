@@ -50,8 +50,10 @@ from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.mesh_setup import MeshSetup, HEXAHEDRON_8, HEXAHEDRON_20, TETRAHEDRON_4, TETRAHEDRON_10, ElementTopology
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.model_properties import ModelProperties
-from vibra.engine.solution import Solution
-from vibra.engine.transfer_impedances.perforated_plate_models import PerforatedPlateModels
+from vibra.engine.solution import HarmonicSolution, Solution
+from vibra.engine.transfer_impedances.perforated_plate_models import (
+    PerforatedPlateModels,
+)
 from vibra.errors import IncompleteSetupError
 from vibra.interface import error_title
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -149,14 +151,22 @@ class Model:
 
         return False
 
+    @property
+    def can_resume_solution(self) -> bool:
+        if not isinstance(self.solution, HarmonicSolution):
+            return False
+
+        try:
+            return not np.all(self.solution.status)
+        except Exception:
+            return False
+
     def reset_current_solution(self):
         self.solution = None
 
     def get_harmonic_analysis_setup(self, **kwargs) -> HarmonicAnalysisSetup:
         analysis_setup = HarmonicAnalysisSetup(**kwargs)
-        analysis_setup.solution_steps_mask = self.get_solution_steps_mask(
-            frequencies=analysis_setup.get_frequencies()
-        )
+        analysis_setup.solution_steps_mask = self.get_solution_steps_mask(frequencies=analysis_setup.get_frequencies())
         return analysis_setup
 
     def reset_dissipation_model_properties(self):
@@ -331,10 +341,10 @@ class Model:
 
         disconnected_nodes = bool(self.mesh.disconnected_nodes_data)
         collapsed_elements = bool(
-            self.mesh.collapsed_3d_elements or 
-            self.mesh.collapsed_2d_elements or 
-            self.mesh.collapsed_1d_elements
-            )
+            self.mesh.collapsed_3d_elements 
+            or self.mesh.collapsed_2d_elements 
+            or self.mesh.collapsed_1d_elements
+        )  # fmt: skip
 
         if disconnected_nodes or collapsed_elements:
             return False
@@ -716,7 +726,7 @@ class Model:
             return density, speed_of_sound
 
         return None, None
-    
+
     def get_surface_density_and_speed_of_sound(self, surface_id: int) -> float | complex | np.ndarray:
         """
         It returs the density and speed of sound of selected surface.
@@ -730,7 +740,7 @@ class Model:
         -------
         density: np.ndarray, float or None
             The density of selected surface.
-       
+
         speed_of_sound: np.ndarray, float or None
             The speed of sound of selected surface.
         """
