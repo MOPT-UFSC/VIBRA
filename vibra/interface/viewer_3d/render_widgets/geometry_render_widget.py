@@ -1,3 +1,4 @@
+from vibra.utils.time_utils import warn_delays
 import logging
 
 from molde import Color
@@ -197,6 +198,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         if app().project.model.thumbnail is None:
             self.save_thumbnail()
 
+    @warn_delays
     def save_thumbnail(self):
         thumbnail = app().project.model.thumbnail
 
@@ -292,6 +294,7 @@ class GeometryRenderWidget(CommonRenderWidget):
     def click_callback(self, x, y):
         self.mouse_click = (x, y)
 
+    @warn_delays(0.2)  # this is already too much and should be optimized
     def selection_callback(self, x, y):
         if not self.actors_exists():
             return
@@ -466,6 +469,7 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         return analysis_type, physical_domain
 
+    @warn_delays
     def update_info_text(self):
         analysis_type, physical_domain = self.get_analysis_type_and_physical_domain()
 
