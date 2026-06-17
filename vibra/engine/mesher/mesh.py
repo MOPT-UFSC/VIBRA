@@ -12,18 +12,11 @@ from typing import Literal, Optional
 import gmsh
 import numpy as np
 from vtkmodules.vtkCommonCore import vtkPoints
-from vtkmodules.vtkCommonDataModel import (
-    VTK_HEXAHEDRON,
-    VTK_QUADRATIC_HEXAHEDRON,
-    VTK_QUADRATIC_TETRA,
-    VTK_TETRA,
-    vtkUnstructuredGrid,
-)
+from vtkmodules.vtkCommonDataModel import VTK_HEXAHEDRON, VTK_QUADRATIC_HEXAHEDRON, VTK_QUADRATIC_TETRA, VTK_TETRA, vtkUnstructuredGrid
 from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridWriter
 
-from vibra.engine.elements.element_type import HEXAHEDRON_8, HEXAHEDRON_20, TETRAHEDRON_4, TETRAHEDRON_10, ElementType
 from vibra.engine.mesher.element_setup import DEFAULT_ELEMENT_SETUP, ElementSetup
-from vibra.engine.mesher.mesh_setup import MeshRefinementSetup, MeshSetup
+from vibra.engine.mesher.mesh_setup import HEXAHEDRON_8, HEXAHEDRON_20, TETRAHEDRON_4, TETRAHEDRON_10, ElementTopology, MeshRefinementSetup, MeshSetup
 from vibra.errors import MeshingAlgorithmError
 from vibra.interface.numeric_checks.unit_utilities import convert_length_unit
 
@@ -40,7 +33,7 @@ class Mesh:
         self.reset_variables()
 
     def reset_variables(self):
-        self.element_type: Optional[ElementType] = None
+        self.element_topology: Optional[ElementTopology] = None
 
         ## geometry-related attributes
 
@@ -275,6 +268,8 @@ class Mesh:
         gmsh.model.mesh.clear()
         gmsh.model.occ.synchronize()
 
+        self.element_topology = mesh_setup.element_topology
+
     def load_cad(self, path: str | Path, **kwargs):
         import warnings
 
@@ -389,7 +384,7 @@ class Mesh:
 
         logging.info("Post-processing mesh... [50/100]")
         self.post_process_mesh_data()
-        self.update_element_type()
+        self.update_element_type_based_on_connectivity()
 
         logging.info("Post-processing mesh... [80/100]")
         self.process_downwards_adjacencies_from_mesh_data()
@@ -412,7 +407,7 @@ class Mesh:
 
         return self
 
-    def update_element_type(self):
+    def update_element_type_based_on_connectivity(self):
         """
         This method updates the element type based on the connectivity information.
         It's only used when working with NASTRAN files.
@@ -420,13 +415,13 @@ class Mesh:
         nodes_per_element = self.solids_connectivity[0, 4:].size
         match nodes_per_element:
             case 4:
-                self.element_type = TETRAHEDRON_4
+                self.element_topology = TETRAHEDRON_4
             case 10:
-                self.element_type = TETRAHEDRON_10
+                self.element_topology = TETRAHEDRON_10
             case 8:
-                self.element_type = HEXAHEDRON_8
+                self.element_topology = HEXAHEDRON_8
             case 20:
-                self.element_type = HEXAHEDRON_20
+                self.element_topology = HEXAHEDRON_20
 
     def process_downwards_adjacencies_from_mesh_data(self):
         """

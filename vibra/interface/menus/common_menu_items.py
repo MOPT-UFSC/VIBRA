@@ -9,7 +9,6 @@ from vibra.interface.menus.tool_tip import ToolTip
 from molde import Color
 from molde.colors import color_names
 
-import re
 from pathlib import Path
 
 # class MyDelegate(QItemDelegate):      

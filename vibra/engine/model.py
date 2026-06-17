@@ -19,7 +19,6 @@ from vibra.engine.analysis_info import (
 )
 from vibra.engine.dissipation_models.porous_materials_models import PorousMaterialModels
 from vibra.engine.dissipation_models.viscous_thermal_loss_models import ViscousThermalLossModels
-from vibra.engine.elements.element_type import HEXAHEDRON_8, HEXAHEDRON_20, TETRAHEDRON_4, TETRAHEDRON_10, ElementType
 
 # 1d elements - acoustic
 from vibra.engine.elements.elements_1d import ACT_LINE_2, ACT_LINE_3
@@ -48,7 +47,7 @@ from vibra.engine.geometry.geometry import LengthUnits
 from vibra.engine.mesh_modifiers.degrees_of_freedom_decoupling import DegreesOfFreedomDecoupling
 from vibra.engine.mesher.element_setup import DEFAULT_ELEMENT_SETUP
 from vibra.engine.mesher.mesh import Mesh
-from vibra.engine.mesher.mesh_setup import MeshSetup
+from vibra.engine.mesher.mesh_setup import MeshSetup, HEXAHEDRON_8, HEXAHEDRON_20, TETRAHEDRON_4, TETRAHEDRON_10, ElementTopology
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.engine.solution import Solution
@@ -69,7 +68,6 @@ class Model:
 
         self.length_unit: LengthUnits = "millimeter"
         self.mesh_setup: Optional[MeshSetup] = None
-        self.element_type: Optional[ElementType] = None
         self.analysis_setup: Optional[AnalysisSetup] = None
         self.solution: Optional[Solution] = None
 
@@ -99,6 +97,16 @@ class Model:
         self.properties = ModelProperties(self.disable_resume_callback)
 
         self.reset_dissipation_model_properties()
+
+    @property
+    def element_topology(self) -> ElementTopology | None:
+        if not isinstance(self.mesh, Mesh):
+            return
+
+        if self.mesh.element_topology is None:
+            self.mesh.update_element_type_based_on_connectivity()
+
+        return self.mesh.element_topology
 
     @property
     def analysis_id(self) -> AnalysisID:
@@ -183,17 +191,8 @@ class Model:
     def set_properties(self, properties):
         self.properties = properties
 
-    def set_element_type(self, mesh_setup: MeshSetup | None = None, element_geometry: str | None = None, element_order: str | None = None):
-        if isinstance(mesh_setup, MeshSetup):
-            element_geometry = mesh_setup.element_type
-            element_order = mesh_setup.shape_function
-
-        if isinstance(element_geometry, str) and isinstance(element_order, str):
-            self.element_type = ElementType(element_geometry, element_order)
-
     def set_mesh_setup(self, mesh_setup: MeshSetup):
         self.mesh_setup = mesh_setup
-        self.set_element_type(mesh_setup=mesh_setup)
 
     def initialize_mesh(self):
         self.mesh = Mesh(length_unit=self.length_unit, geometry_qf=self.geometry_qf)
@@ -444,15 +443,8 @@ class Model:
 
         return (f_min, f_max, f_step, frequencies)
 
-    def get_structural_elements(self):
-        if isinstance(self.element_type, ElementType):
-            element_type = self.element_type
-
-        else:
-            if self.mesh.element_type is None:
-                self.mesh.update_element_type()
-                          
-            element_type = self.mesh.element_type
+    def get_structural_elements(self):                        
+        element_type = self.element_topology
 
         if element_type == TETRAHEDRON_4:
             return STRUCT_TETRAHEDRON_4S(self), STRUCT_TRIANGLE_3(self), None
@@ -470,14 +462,7 @@ class Model:
             raise NotImplementedError(f'Element type "{element_type}" is not supported yet.')
 
     def get_acoustic_elements(self):
-        if isinstance(self.element_type, ElementType):
-            element_type = self.element_type
-
-        else:
-            if self.mesh.element_type is None:
-                self.mesh.update_element_type()
-
-            element_type = self.mesh.element_type
+        element_type = self.element_topology
 
         if element_type == TETRAHEDRON_4:
             return ACT_TETRAHEDRON_4C(self), ACT_TRIANGLE_3(self), ACT_LINE_2(self)

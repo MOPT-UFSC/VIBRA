@@ -4,7 +4,7 @@ from PySide6.QtCore import Qt
 
 from vibra import app
 from vibra.engine.elements.element_options import HEX8_structural
-from vibra.engine.elements.element_type import TETRAHEDRON_4, TETRAHEDRON_10, HEXAHEDRON_8, HEXAHEDRON_20, ElementType
+from vibra.engine.mesher.mesh_setup import HEXAHEDRON_8, HEXAHEDRON_20, TETRAHEDRON_4, TETRAHEDRON_10, ElementTopology
 from vibra.engine.mesher.mesh_setup import MeshSetup
 
 # from vibra.interface import error_title, warning_title
@@ -87,9 +87,9 @@ class ElementOptionsInputs(ElementOptionsInput_UI):
         if not isinstance(mesh_setup, MeshSetup):
             return
         
-        element_type = app().project.model.element_type
-        if not isinstance(element_type, ElementType):
-            NotImplementedError("ElementType not found")
+        element_type = app().project.model.element_topology
+        if not isinstance(element_type, ElementTopology):
+            NotImplementedError("ElementTopology not found")
             return
 
         for i in range(4):

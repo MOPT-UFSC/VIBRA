@@ -1,11 +1,10 @@
 from molde import Color
-from molde.colors import color_names
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QFont, QIcon, QPen
+from PySide6.QtGui import QPen
 
-from vibra import ICON_DIR, app
+from vibra import app
 from vibra.engine import AnalysisID
-from vibra.interface.menus.common_menu_items import ChildTreeWidgetItem, CommonMenuItems, TopTreeWidgetItem
+from vibra.interface.menus.common_menu_items import ChildTreeWidgetItem, CommonMenuItems
 
 
 class ResultsViewerItems(CommonMenuItems):
