@@ -6,33 +6,19 @@ from collections import defaultdict
 from copy import deepcopy
 from itertools import permutations
 from pathlib import Path
-from typing import Literal
-# from time import perf_counter
+from typing import Literal, Optional
 
+# from time import perf_counter
 import gmsh
 import numpy as np
 from vtkmodules.vtkCommonCore import vtkPoints
-from vtkmodules.vtkCommonDataModel import (
-    VTK_HEXAHEDRON,
-    VTK_QUADRATIC_HEXAHEDRON,
-    VTK_QUADRATIC_TETRA,
-    VTK_TETRA,
-    vtkUnstructuredGrid,
-)
+from vtkmodules.vtkCommonDataModel import VTK_HEXAHEDRON, VTK_QUADRATIC_HEXAHEDRON, VTK_QUADRATIC_TETRA, VTK_TETRA, vtkUnstructuredGrid
 from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridWriter
 
-from vibra.engine.mesher.element_setup import (
-    DEFAULT_ELEMENT_TYPE,
-    HEXAHEDRON_8,
-    HEXAHEDRON_20,
-    TETRAHEDRON_4,
-    TETRAHEDRON_10,
-    ElementSetup,
-)
-from vibra.engine.mesher.mesh_setup import MeshRefinementSetup, MeshSetup
+from vibra.engine.mesher.element_setup import DEFAULT_ELEMENT_SETUP, ElementSetup
+from vibra.engine.mesher.mesh_setup import HEXAHEDRON_8, HEXAHEDRON_20, TETRAHEDRON_4, TETRAHEDRON_10, ElementTopology, MeshRefinementSetup, MeshSetup
 from vibra.errors import MeshingAlgorithmError
 from vibra.interface.numeric_checks.unit_utilities import convert_length_unit
-
 
 MeshQualityParams = Literal["gamma", "volume", "minSJ", "aspectRatio"]
 
@@ -47,7 +33,7 @@ class Mesh:
         self.reset_variables()
 
     def reset_variables(self):
-        self.element_setup = DEFAULT_ELEMENT_TYPE
+        self.element_topology: Optional[ElementTopology] = None
 
         ## geometry-related attributes
 
@@ -201,9 +187,6 @@ class Mesh:
         else:
             return 1
 
-    def set_element_setup(self, element_setup: ElementSetup):
-        self.element_setup = element_setup
-
     def new_load_cad(self, path: str | Path, mesh_setup: MeshSetup):
         if not gmsh.is_initialized():
             gmsh.initialize("", False, interruptible=False)
@@ -284,6 +267,8 @@ class Mesh:
 
         gmsh.model.mesh.clear()
         gmsh.model.occ.synchronize()
+
+        self.element_topology = mesh_setup.element_topology
 
     def load_cad(self, path: str | Path, **kwargs):
         import warnings
@@ -385,9 +370,6 @@ class Mesh:
         gmsh_gui = kwargs.get("gmsh_gui", False)
         self.geometry_imported = False
 
-        # self.element_setup = kwargs.get("ElementType", DEFAULT_ELEMENT_TYPE)
-        # self.element_setup: ElementType
-
         gmsh.initialize("", False)
         gmsh.option.setNumber("General.Terminal", 0)
         gmsh.option.setNumber("General.Verbosity", 0)
@@ -402,7 +384,7 @@ class Mesh:
 
         logging.info("Post-processing mesh... [50/100]")
         self.post_process_mesh_data()
-        self.update_element_type()
+        self.update_element_type_based_on_connectivity()
 
         logging.info("Post-processing mesh... [80/100]")
         self.process_downwards_adjacencies_from_mesh_data()
@@ -425,18 +407,21 @@ class Mesh:
 
         return self
 
-    def update_element_type(self):
+    def update_element_type_based_on_connectivity(self):
+        """
+        This method updates the element type based on the connectivity information.
+        It's only used when working with NASTRAN files.
+        """
         nodes_per_element = self.solids_connectivity[0, 4:].size
-        if nodes_per_element == 4:
-            self.element_setup = TETRAHEDRON_4
-        elif nodes_per_element == 10:
-            self.element_setup = TETRAHEDRON_10
-        elif nodes_per_element == 8:
-            self.element_setup = HEXAHEDRON_8
-        elif nodes_per_element == 20:
-            self.element_setup = HEXAHEDRON_20
-        else:
-            return
+        match nodes_per_element:
+            case 4:
+                self.element_topology = TETRAHEDRON_4
+            case 10:
+                self.element_topology = TETRAHEDRON_10
+            case 8:
+                self.element_topology = HEXAHEDRON_8
+            case 20:
+                self.element_topology = HEXAHEDRON_20
 
     def process_downwards_adjacencies_from_mesh_data(self):
         """
@@ -1006,8 +991,8 @@ class Mesh:
         maximum_element_size = kwargs.get("maximum_element_size", 30.0)
         minimum_element_size = kwargs.get("minimum_element_size", 30.0)
         mesh_refinement_parameters = kwargs.get("mesh_refinement_parameters", list())
-        element_type = kwargs.get("ElementType", DEFAULT_ELEMENT_TYPE)
-        element_type: ElementSetup
+        element_setup = kwargs.get("ElementSetup", DEFAULT_ELEMENT_SETUP)
+        element_setup: ElementSetup
 
         if mesh_refinement_parameters:
             self.local_mesh_refine(maximum_element_size, mesh_refinement_parameters)
@@ -1017,13 +1002,13 @@ class Mesh:
 
         gmsh.option.setNumber("Mesh.RandomSeed", 1234)
         gmsh.option.setNumber("Mesh.MeshSizeFactor", size_factor)
-        gmsh.option.setNumber("Mesh.Algorithm", element_type.algorithm_2d)
-        gmsh.option.setNumber("Mesh.Algorithm3D", element_type.algorithm_3d)
-        gmsh.option.setNumber("Mesh.RecombinationAlgorithm", element_type.recombination_algorithm)
-        gmsh.option.setNumber("Mesh.SubdivisionAlgorithm", element_type.subdivision_algorithm)
-        gmsh.option.setNumber("Mesh.RecombineAll", element_type.recombine_all)
-        gmsh.option.setNumber("Mesh.ElementOrder", element_type.element_order)
-        gmsh.option.setNumber("Mesh.SecondOrderIncomplete", element_type.second_order_incomplete)
+        gmsh.option.setNumber("Mesh.Algorithm", element_setup.algorithm_2d)
+        gmsh.option.setNumber("Mesh.Algorithm3D", element_setup.algorithm_3d)
+        gmsh.option.setNumber("Mesh.RecombinationAlgorithm", element_setup.recombination_algorithm)
+        gmsh.option.setNumber("Mesh.SubdivisionAlgorithm", element_setup.subdivision_algorithm)
+        gmsh.option.setNumber("Mesh.RecombineAll", element_setup.recombine_all)
+        gmsh.option.setNumber("Mesh.ElementOrder", element_setup.element_order)
+        gmsh.option.setNumber("Mesh.SecondOrderIncomplete", element_setup.second_order_incomplete)
 
     def clear_mesh_data(self):
         self.nodal_coordinates = np.zeros((0, 4), dtype=float)
@@ -2838,5 +2823,5 @@ if __name__ == "__main__":
         maximum_element_size=100,
         minimum_element_size=100,
         size_factor=0,
-        ElementType=TETRAHEDRON_4,
+        ElementSetup=DEFAULT_ELEMENT_SETUP,
     )

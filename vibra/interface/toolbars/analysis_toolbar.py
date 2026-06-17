@@ -220,6 +220,7 @@ class AnalysisToolbar(QToolBar):
         # self.domain_changed.emit()
 
     def run_analysis_callback(self, is_resume: bool = True):
+        app().project.mark_solution_as_outdated(reset=True)
         if app().config.user_preferences.run_analysis_in_subprocess:
             self.run_analysis_in_subprocess()
         else:

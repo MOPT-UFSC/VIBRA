@@ -64,7 +64,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         # Acoustic
         self.results_viewer_items.item_child_acoustic_pressure_field.clicked.connect(self.add_acoustic_harmonic_widget)
         self.results_viewer_items.item_child_acoustic_pressure_frequency_response.clicked.connect(self.add_acoustic_pressure_frequency_response_widget)
-        self.results_viewer_items.item_child_acoustic_pressure_frequency_response_function.clicked.connect(self.add_acoustic_pressure_frequency_response_function_widget)
+        self.results_viewer_items.item_child_acoustic_pressure_frf.clicked.connect(self.add_acoustic_pressure_frequency_response_function_widget)
         self.results_viewer_items.item_child_allowable_pulsations_for_reciprocating_compressor.clicked.connect(self.add_allowable_pulsations_for_reciprocating_compressor_widget)
         self.results_viewer_items.item_child_allowable_pulsations_for_screw_compressor.clicked.connect(self.add_allowable_pulsations_for_screw_compressor_widget)
         self.results_viewer_items.item_child_acoustic_pressure_waveform.clicked.connect(self.add_acoustic_pressure_waveform_widget)
