@@ -804,6 +804,19 @@ class Model:
                 impedance = si_data["values"][0]
 
         return impedance
+    
+    def is_surface_impedance_frequency_dependent(self, surface_id: int) -> bool:
+        """
+        This method verifies whether the acoustic impedance of the selected surface is 
+        frequency-dependent, returning True if positive and False otherwise.
+        """
+        properties = ["porous_material_model", "viscous_thermal_model", "proportional_damping"]
+        for volume_id in self.mesh.volumes_from_surface.get(surface_id):
+            for _property in properties:
+                prop_data = self.properties._get_property(_property, volume=volume_id)
+                if isinstance(prop_data, dict):
+                    return True
+        return False
 
     def get_downstream_pressure_and_particle_velocity(self, surface_id: int):
         """
@@ -906,9 +919,15 @@ class Model:
                 continue
 
             if surface_id in self.mesh.surfaces_from_volume.get(volume_id):
+                if not self.porous_material_properties:
+                    self.process_porous_material_properties()
+
                 pm_properties = self.porous_material_properties.get(volume_id)
-                rho_eff = pm_properties["rho_eff"]
-                C_eff = pm_properties["C_eff"]
+                if not isinstance(pm_properties, dict):
+                    continue
+
+                rho_eff = pm_properties.get("rho_eff")
+                C_eff = pm_properties.get("C_eff")
                 break
 
         return rho_eff, C_eff
@@ -952,9 +971,15 @@ class Model:
                 continue
 
             if surface_id in self.mesh.surfaces_from_volume.get(volume_id):
+                if not self.viscous_thermal_model_properties:
+                    self.process_viscous_thermal_model_properties()
+
                 vt_properties = self.viscous_thermal_model_properties.get(volume_id)
-                rho_eff = vt_properties["rho_eff"]
-                C_eff = vt_properties["C_eff"]
+                if not isinstance(vt_properties, dict):
+                    continue
+
+                rho_eff = vt_properties.get("rho_eff")
+                C_eff = vt_properties.get("C_eff")
                 break
 
         return rho_eff, C_eff
