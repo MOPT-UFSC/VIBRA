@@ -250,29 +250,13 @@ class ResultsViewerItems(CommonMenuItems):
             item.setBackground(0, self.background_color)
             item.setData(0, border_role, border_pen)
 
-    def set_warning_for_top_level_item(self, warning: bool, top_level_item: TopTreeWidgetItem):
-        if warning:
-            font = QFont()
-            font.setBold(True)
-            top_level_item.setFont(0, font)
-            top_level_item.setForeground(0, Color(*color_names.RED_5.to_rgb()).to_qt())
-            warning_icon = QIcon(str(ICON_DIR / "model_setup_items/warning_yellow.png"))
-            top_level_item.setIcon(0, warning_icon)
-
-        else:
-            # Resets data to default
-            top_level_item.setData(0, Qt.FontRole, None)  # reset color
-            top_level_item.setData(0, Qt.ForegroundRole, None)  # reset color
-            top_level_item.setData(0, Qt.DecorationRole, None)
-
     def update_results_items_warnings(self):
 
         # check if the current solution is outdated
         warning = app().project.model.outdated_solution
 
         for top_level_item in self.top_level_items:
-            # warning = should_update or is_solution_outdated 
-            self.set_warning_for_top_level_item(warning, top_level_item)
+            top_level_item.set_warning(warning)
             for index in range(top_level_item.childCount()):
 
                 item_child: ChildTreeWidgetItem = top_level_item.child(index)

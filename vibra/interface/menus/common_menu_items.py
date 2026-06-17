@@ -137,6 +137,21 @@ class TopTreeWidgetItem(QTreeWidgetItem):
         # self.setBackground(0, linear_gradient)
         # self.setBackground(0, self.background_color)
 
+    def set_warning(self, warning: bool):
+        if warning:
+            font = QFont()
+            font.setBold(True)
+            self.setFont(0, font)
+            self.setForeground(0, Color(*color_names.RED_5.to_rgb()).to_qt())
+            warning_icon = QIcon(str(ICON_DIR / "model_setup_items/warning_yellow.png"))
+            self.setIcon(0, warning_icon)
+
+        else:
+            # Resets data to default
+            self.setData(0, Qt.FontRole, None)  # reset color
+            self.setData(0, Qt.ForegroundRole, None)  # reset color
+            self.setData(0, Qt.DecorationRole, None)
+
 
 class ChildTreeWidgetItem(QTreeWidgetItem):
     def __init__(self, name):
