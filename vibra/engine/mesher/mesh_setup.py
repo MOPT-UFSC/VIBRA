@@ -4,13 +4,7 @@ from dataclasses import dataclass, field
 from typing import Literal, Optional
 
 from vibra import errors
-from vibra.engine.mesher.element_setup import (
-    HEXAHEDRON_8,
-    HEXAHEDRON_20,
-    TETRAHEDRON_4,
-    TETRAHEDRON_10,
-    ElementSetup,
-)
+from vibra.engine.mesher.element_setup import GMSH_HEX8, GMSH_HEX20, GMSH_TET4, GMSH_TET10, ElementSetup
 
 
 @dataclass(kw_only=True)
@@ -42,13 +36,13 @@ class MeshSetup:
 
         match self.element_type, self.shape_function:
             case "tetrahedral", "linear":
-                return TETRAHEDRON_4
+                return GMSH_TET4
             case "tetrahedral", "quadratic":
-                return TETRAHEDRON_10
+                return GMSH_TET10
             case "hexahedral", "linear":
-                return HEXAHEDRON_8
+                return GMSH_HEX8
             case "hexahedral", "quadratic":
-                return HEXAHEDRON_20
+                return GMSH_HEX20
             case _:
                 raise NotImplementedError("Invalid element type or shape function!")
 

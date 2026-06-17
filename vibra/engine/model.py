@@ -19,7 +19,7 @@ from vibra.engine.analysis_info import (
 )
 from vibra.engine.dissipation_models.porous_materials_models import PorousMaterialModels
 from vibra.engine.dissipation_models.viscous_thermal_loss_models import ViscousThermalLossModels
-from vibra.engine.elements.element_type import ElementTopology, ElementType
+from vibra.engine.elements.element_type import HEXAHEDRON_8, HEXAHEDRON_20, TETRAHEDRON_4, TETRAHEDRON_10, ElementType
 
 # 1d elements - acoustic
 from vibra.engine.elements.elements_1d import ACT_LINE_2, ACT_LINE_3
@@ -46,7 +46,7 @@ from vibra.engine.elements.elements_3d import (
 )
 from vibra.engine.geometry.geometry import LengthUnits
 from vibra.engine.mesh_modifiers.degrees_of_freedom_decoupling import DegreesOfFreedomDecoupling
-from vibra.engine.mesher.element_setup import DEFAULT_ELEMENT_TYPE
+from vibra.engine.mesher.element_setup import DEFAULT_ELEMENT_SETUP
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.mesh_setup import MeshSetup
 from vibra.engine.properties.fluid import Fluid
@@ -188,12 +188,12 @@ class Model:
             element_geometry = mesh_setup.element_type
             element_order = mesh_setup.shape_function
 
-        self.element_type = ElementType(element_geometry, element_order)
+        if isinstance(element_geometry, str) and isinstance(element_order, str):
+            self.element_type = ElementType(element_geometry, element_order)
 
     def set_mesh_setup(self, mesh_setup: MeshSetup):
         self.mesh_setup = mesh_setup
         self.set_element_type(mesh_setup=mesh_setup)
-        self.mesh.set_element_setup(mesh_setup.element_setup)
 
     def initialize_mesh(self):
         self.mesh = Mesh(length_unit=self.length_unit, geometry_qf=self.geometry_qf)
@@ -209,7 +209,7 @@ class Model:
                     dimension=2,
                     minimum_element_size=element_size * 0.4,
                     maximum_element_size=element_size,
-                    ElementType=DEFAULT_ELEMENT_TYPE,
+                    ElementSetup=DEFAULT_ELEMENT_SETUP,
                 )
 
             except Exception:
@@ -221,7 +221,7 @@ class Model:
                     dimension=2,
                     minimum_element_size=element_size * 0.5,
                     maximum_element_size=element_size,
-                    ElementType=DEFAULT_ELEMENT_TYPE,
+                    ElementSetup=DEFAULT_ELEMENT_SETUP,
                 )
 
             self.initial_element_size = element_size
@@ -445,36 +445,50 @@ class Model:
         return (f_min, f_max, f_step, frequencies)
 
     def get_structural_elements(self):
-        element_type = self.element_type.get_element
+        if isinstance(self.element_type, ElementType):
+            element_type = self.element_type
 
-        if element_type == ElementTopology.TETRAHEDRON_4:
+        else:
+            if self.mesh.element_type is None:
+                self.mesh.update_element_type()
+                          
+            element_type = self.mesh.element_type
+
+        if element_type == TETRAHEDRON_4:
             return STRUCT_TETRAHEDRON_4S(self), STRUCT_TRIANGLE_3(self), None
 
-        elif element_type == ElementTopology.TETRAHEDRON_10:
+        elif element_type == TETRAHEDRON_10:
             return STRUCT_TETRAHEDRON_10S(self), None, None
 
-        elif element_type == ElementTopology.HEXAHEDRON_8:
+        elif element_type == HEXAHEDRON_8:
             return STRUCT_HEXAHEDRON_8(self), None, None
 
-        elif element_type == ElementTopology.HEXAHEDRON_20:
+        elif element_type == HEXAHEDRON_20:
             return STRUCT_HEXAHEDRON_20(self), None, None
 
         else:
             raise NotImplementedError(f'Element type "{element_type}" is not supported yet.')
 
     def get_acoustic_elements(self):
-        element_type = self.element_type.get_element
+        if isinstance(self.element_type, ElementType):
+            element_type = self.element_type
 
-        if element_type == ElementTopology.TETRAHEDRON_4:
+        else:
+            if self.mesh.element_type is None:
+                self.mesh.update_element_type()
+
+            element_type = self.mesh.element_type
+
+        if element_type == TETRAHEDRON_4:
             return ACT_TETRAHEDRON_4C(self), ACT_TRIANGLE_3(self), ACT_LINE_2(self)
 
-        elif element_type == ElementTopology.TETRAHEDRON_10:
+        elif element_type == TETRAHEDRON_10:
             return ACT_TETRAHEDRON_10C(self), ACT_TRIANGLE_6(self), ACT_LINE_3(self)
 
-        elif element_type == ElementTopology.HEXAHEDRON_8:
+        elif element_type == HEXAHEDRON_8:
             return ACT_HEXAHEDRON_8C(self), ACT_QUADRANGLE_4(self), ACT_LINE_2(self)
 
-        elif element_type == ElementTopology.HEXAHEDRON_20:
+        elif element_type == HEXAHEDRON_20:
             return ACT_HEXAHEDRON_20C(self), ACT_QUADRANGLE_8(self), ACT_LINE_3(self)
 
         else:
