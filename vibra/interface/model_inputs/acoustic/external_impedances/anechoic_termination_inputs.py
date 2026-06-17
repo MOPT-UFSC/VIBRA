@@ -25,8 +25,6 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
         self._create_connections()
 
         self.load_model_info()
-        self.model.reset_dissipation_model_properties()
-        self.model.process_porous_material_properties()
 
         while self.keep_window_open:
             self.exec()
@@ -127,17 +125,22 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
             return
 
         for surf_id in np.sort(surface_ids):
-            density, speed_of_sound = self.model.get_surface_density_and_speed_of_sound(surf_id)
 
-            if density is None:
-                str_impedance = "Not defined fluid"
-
-            elif isinstance(density, np.ndarray):
+            str_impedance = None
+            if self.model.is_surface_impedance_frequency_dependent(surf_id):
                 str_impedance = "Spectral data"
 
             else:
-                impedance = density * speed_of_sound
-                str_impedance = f"{impedance : .6f}"
+                density, speed_of_sound = self.model.get_surface_density_and_speed_of_sound(surf_id)
+                if density is None:
+                    str_impedance = "Not defined fluid"
+
+                else:
+                    impedance = density * speed_of_sound
+                    str_impedance = f"{impedance : .6f}"
+
+            if not isinstance(str_impedance, str):
+                continue
 
             item = QTreeWidgetItem([str(surf_id), str_impedance])
             for j in range(2):
