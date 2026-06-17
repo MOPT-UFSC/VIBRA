@@ -283,7 +283,7 @@ class ResultsViewerItems(CommonMenuItems):
 
                 tool_tip = ""
                 if warning:
-                    tool_tip = "<b style='color:red'>The model configuration does not match that of the current solution.</b>"
+                    tool_tip = "<b style='color:red'>The solution is outdated because the model configuration does not match that of the current solution.</b>"
 
                 item_child.set_warning(warning, update_item_color=False)
                 item_child.setToolTip(0, tool_tip)
