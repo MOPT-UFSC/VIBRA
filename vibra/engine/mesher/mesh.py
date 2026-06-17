@@ -375,9 +375,6 @@ class Mesh:
         gmsh_gui = kwargs.get("gmsh_gui", False)
         self.geometry_imported = False
 
-        # self.element_setup = kwargs.get("ElementSetup", DEFAULT_ELEMENT_SETUP)
-        # self.element_setup: ElementSetup
-
         gmsh.initialize("", False)
         gmsh.option.setNumber("General.Terminal", 0)
         gmsh.option.setNumber("General.Verbosity", 0)
@@ -416,26 +413,20 @@ class Mesh:
         return self
 
     def update_element_type(self):
-
+        """
+        This method updates the element type based on the connectivity information.
+        It's only used when working with NASTRAN files.
+        """
         nodes_per_element = self.solids_connectivity[0, 4:].size
-
-        print()
-        print("update_element_type")
-        print(f"Nodes per element: {nodes_per_element}")
-        print()
-
-        if nodes_per_element == 4:
-            self.element_type = TETRAHEDRON_4
-        elif nodes_per_element == 10:
-            self.element_type = TETRAHEDRON_10
-        elif nodes_per_element == 8:
-            self.element_type = HEXAHEDRON_8
-        elif nodes_per_element == 20:
-            self.element_type = HEXAHEDRON_20
-        else:
-            return
-
-        print(self.element_type)
+        match nodes_per_element:
+            case 4:
+                self.element_type = TETRAHEDRON_4
+            case 10:
+                self.element_type = TETRAHEDRON_10
+            case 8:
+                self.element_type = HEXAHEDRON_8
+            case 20:
+                self.element_type = HEXAHEDRON_20
 
     def process_downwards_adjacencies_from_mesh_data(self):
         """
