@@ -31,14 +31,14 @@ class Application(QApplication):
 
     def filter_scroll_by_wheel_event(self):
         from PySide6.QtCore import QEvent, QObject
-        from PySide6.QtWidgets import QTabBar, QAbstractSpinBox, QComboBox
+        from PySide6.QtWidgets import QTabBar, QComboBox
 
         class Filter(QObject):
             def eventFilter(self, obj, event):
                 if event.type() != QEvent.Wheel:
                     return False
                 
-                widgets = [QTabBar, QAbstractSpinBox, QComboBox]
+                widgets = [QTabBar, QComboBox]
                 for widget in widgets:
                     if isinstance(obj, widget):
                         return True

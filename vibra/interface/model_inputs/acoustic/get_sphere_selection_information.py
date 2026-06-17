@@ -2,9 +2,7 @@ from PySide6.QtCore import Qt
 
 from vibra import app
 from vibra.interface.loading_window import LoadingWindow
-from vibra.interface.ui_generated.model.acoustic.get_sphere_selection_information_ui import (
-    GetSphereSelectionInformation_UI,
-)
+from vibra.interface.ui_generated.model.acoustic.others.get_sphere_selection_information_ui import GetSphereSelectionInformation_UI
 
 
 class GetSphereSelectionInformation(GetSphereSelectionInformation_UI):

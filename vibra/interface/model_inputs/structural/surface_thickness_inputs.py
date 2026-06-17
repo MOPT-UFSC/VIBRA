@@ -1,12 +1,20 @@
-from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
+from enum import IntEnum
+
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
 
 from vibra import app
 from vibra.interface import error_title
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.ui_generated.model.structural.surface_thickness_inputs_ui import SurfaceThicknessInputs_UI
+from vibra.interface.model_inputs.structural.definitions.enums import SetupTabType
+from vibra.interface.ui_generated.model.structural.shell.surface_thickness_inputs_ui import SurfaceThicknessInputs_UI
+
+
+class AssignmentType(IntEnum):
+    ALL_SURFACES = 0
+    SELECTED_SURFACES = 1
 
 
 class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
@@ -45,12 +53,14 @@ class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
         #
         self.comboBox_attribution_type.currentIndexChanged.connect(self.attribution_type_callback)
         #
-        self.pushButton_attribute.clicked.connect(self.attribute_callback)
-        self.pushButton_exit.clicked.connect(self.close)
+        self.pushButton_apply.clicked.connect(self.apply_callback)
+        self.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
+        self.pushButton_cancel.clicked.connect(self.close)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
         #
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
+        #
         self.treeWidget_surface_thickness.itemClicked.connect(self.on_click_item)
         self.treeWidget_surface_thickness.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
@@ -80,46 +90,46 @@ class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
 
     def load_property_data(self, surface_id: int):
 
-        if self.tabWidget_main.currentIndex() == 1:
+        if self.tabWidget_main.currentIndex() == SetupTabType.LIST:
             return
 
         data = self.model.properties._get_property("surface_thickness", surface=surface_id)
-
-        if isinstance(data, dict):
-            self.tabWidget_main.setCurrentIndex(0)
-            self.lineEdit_surface_thickness.setText(str(data["surface_thickness"]))
-            self.comboBox_thickness_offset.setCurrentText(data["thickness_offset"])
+        if not isinstance(data, dict):
+            return
+    
+        self.tabWidget_main.setCurrentIndex(SetupTabType.SETUP)
+        self.lineEdit_surface_thickness.setText(str(data["surface_thickness"]))
+        self.comboBox_thickness_offset.setCurrentText(data["thickness_offset"])
 
     def tab_event_callback(self):
-        if self.tabWidget_main.currentIndex() == 1:
+        list_tab = self.tabWidget_main.currentIndex() == SetupTabType.LIST
+        self.lineEdit_selection_id.setDisabled(list_tab)
+        self.pushButton_apply.setDisabled(list_tab)
+        self.pushButton_apply_and_close.setDisabled(list_tab)
+        self.pushButton_remove.setDisabled(True)
+
+        if list_tab:
             self.lineEdit_selection_id.setText("")
-            self.lineEdit_selection_id.setDisabled(True)
-            self.pushButton_attribute.setDisabled(True)
-        else:
-            self.lineEdit_selection_id.setDisabled(False)
-            self.pushButton_attribute.setEnabled(True)
+            return
 
     def attribution_type_callback(self):
-
         index = self.comboBox_attribution_type.currentIndex()
-        if index == 0:
+        if index == AssignmentType.ALL_SURFACES:
             self.lineEdit_selection_id.setText("All surfaces")
-        elif index == 1:
+
+        elif index == AssignmentType.SELECTED_SURFACES:
             self.lineEdit_selection_id.setText("")
 
         self.lineEdit_selection_id.setEnabled(bool(index))
 
-    def attribute_callback(self):
+    def apply_callback(self, close_window: bool = False):
 
-        if self.comboBox_attribution_type.currentIndex() == 0:
+        if self.comboBox_attribution_type.currentIndex() == AssignmentType.ALL_SURFACES:
             surface_ids = self.model.mesh.geometry_information["surfaces"]
         
         else:
             input_ids = self.lineEdit_selection_id.text()
-            surface_ids, error_data = self.mesh.check_selected_ids(
-                                                                input_ids, 
-                                                                selection = "surfaces"
-                                                                )
+            surface_ids, error_data = self.mesh.check_selected_ids(input_ids, selection="surfaces")
 
             if error_data is not None:
                 self.hide()
@@ -134,22 +144,17 @@ class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
             self.lineEdit_surface_thickness.setFocus()
             return
 
-        thickness_offset = self.comboBox_thickness_offset.currentText()
-
         data = {
-                "surface_thickness": surface_thickness,
-                "thickness_offset": thickness_offset,
-                }
+            "surface_thickness": surface_thickness,
+            "thickness_offset": self.comboBox_thickness_offset.currentText(),
+        }
 
         for surface_id in surface_ids:
             self.properties._set_property("surface_thickness", data, surface=surface_id)
 
-        self.actions_to_finalize()
+        self.actions_to_finalize(close_window)
 
         # print(f"The surface thickness has been assigned to surface(s) {surface_ids}")
-
-        if self.comboBox_attribution_type.currentIndex() == 0:
-            self.close()
 
     def check_input_parameters(self, lineEdit: QLineEdit, label: str, _float=True):
 
@@ -218,23 +223,26 @@ class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
             self.properties._reset_property("surface_thickness")
             self.actions_to_finalize()
 
-    def actions_to_finalize(self):
+    def actions_to_finalize(self, close_window: bool = False):
         self.load_model_info()
         app().main_window.update_info_text()
         app().project.update_model_properties_file()
         app().main_window.update_symbols()
 
+        if close_window:
+            self.close()
+
     def update_tabs_visibility(self):
-        surface_ids = list()
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key
-            if property == "surface_thickness":
-                surface_ids.append(surface_id)
+            if property != "surface_thickness":
+                continue
+        
+            self.tabWidget_main.setTabVisible(SetupTabType.LIST, True)
+            return
 
-        if len(surface_ids) == 0:
-            self.tabWidget_main.setTabVisible(1, False)
-        else:
-            self.tabWidget_main.setTabVisible(1, True)
+        self.tabWidget_main.setTabVisible(SetupTabType.LIST, False)
+
 
     def on_click_item(self, item):
         if item.text(0) != "":
@@ -284,7 +292,7 @@ class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            self.attribute_callback()
+            self.apply_callback()
         elif event.key() == Qt.Key_Delete:
             self.remove_callback()
         elif event.key() == Qt.Key_Escape:

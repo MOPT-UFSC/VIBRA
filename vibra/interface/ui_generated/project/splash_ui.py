@@ -64,14 +64,15 @@ class Ui_Form(object):
 
         self.gridLayout.addWidget(self.frame, 3, 1, 1, 1)
 
-        self.frame_2 = QFrame(Form)
-        self.frame_2.setObjectName(u"frame_2")
-        self.frame_2.setMaximumSize(QSize(16777215, 20))
-        self.frame_2.setStyleSheet(u"background-color: rgba(255, 255, 255, 0);")
-        self.frame_2.setFrameShape(QFrame.Shape.NoFrame)
-        self.frame_2.setFrameShadow(QFrame.Shadow.Raised)
+        self.label_loading1 = QLabel(Form)
+        self.label_loading1.setObjectName(u"label_loading1")
+        self.label_loading1.setMaximumSize(QSize(16777215, 32))
+        self.label_loading1.setFont(font)
+        self.label_loading1.setStyleSheet(u"background-color: rgba(0,0,0,0);")
+        self.label_loading1.setFrameShape(QFrame.Shape.NoFrame)
+        self.label_loading1.setFrameShadow(QFrame.Shadow.Raised)
 
-        self.gridLayout.addWidget(self.frame_2, 0, 1, 1, 1)
+        self.gridLayout.addWidget(self.label_loading1, 1, 1, 1, 1)
 
         self.frame_main = QFrame(Form)
         self.frame_main.setObjectName(u"frame_main")
@@ -97,7 +98,7 @@ class Ui_Form(object):
         self.gridLayout_3.addWidget(self.label, 0, 0, 1, 1)
 
 
-        self.gridLayout.addWidget(self.frame_main, 1, 1, 1, 1)
+        self.gridLayout.addWidget(self.frame_main, 0, 1, 1, 1)
 
 
         self.retranslateUi(Form)
@@ -122,7 +123,7 @@ class Splash_UI(QWidget, Ui_Form):
                 - frame: QFrame
                     - (Layout): QGridLayout
                             - progressBar: QProgressBar
-                - frame_2: QFrame
+                - label_loading: QLabel
                 - frame_main: QFrame
                     - (Layout): QGridLayout
                             - label: QLabel

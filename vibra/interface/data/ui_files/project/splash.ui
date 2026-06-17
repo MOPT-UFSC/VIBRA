@@ -107,16 +107,22 @@
      </layout>
     </widget>
    </item>
-   <item row="0" column="1">
-    <widget class="QFrame" name="frame_2">
+   <item row="1" column="1">
+    <widget class="QLabel" name="label_loading">
      <property name="maximumSize">
       <size>
        <width>16777215</width>
-       <height>20</height>
+       <height>32</height>
       </size>
      </property>
+     <property name="font">
+      <font>
+       <pointsize>11</pointsize>
+       <bold>false</bold>
+      </font>
+     </property>
      <property name="styleSheet">
-      <string notr="true">background-color: rgba(255, 255, 255, 0);</string>
+      <string notr="true">background-color: rgba(0,0,0,0);</string>
      </property>
      <property name="frameShape">
       <enum>QFrame::Shape::NoFrame</enum>
@@ -126,7 +132,7 @@
      </property>
     </widget>
    </item>
-   <item row="1" column="1">
+   <item row="0" column="1">
     <widget class="QFrame" name="frame_main">
      <property name="maximumSize">
       <size>

@@ -19,8 +19,8 @@ def test_modal_structural():
     with pytest.raises(errors.InvalidModelSetupError):
         # Incompatible AnalysisID and AnalysisSetup
         project.configure_analysis(
-            AnalysisID.STRUCTURAL_MODAL,
             HarmonicAnalysisSetup(
+                analysis_id=AnalysisID.STRUCTURAL_MODAL,
                 f_min=1,
                 f_max=10,
                 f_step=1,
@@ -31,7 +31,6 @@ def test_modal_structural():
     analysis_setup = ModalAnalysisSetup(analysis_id=AnalysisID.STRUCTURAL_MODAL, modes_number=10, sigma_factor=0.01)
 
     project.configure_analysis(
-        AnalysisID.STRUCTURAL_MODAL,
         analysis_setup,
     )
 
