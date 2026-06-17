@@ -328,9 +328,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             case MeshAlgorithms3D.HXT_3D:
                 self.comboBox_3d_algorithm.setCurrentIndex(GMSHAlgorithms_3D.HXT_3D)
 
-# <<<<<<< HEAD
     def _generate_in_subprocess(self) -> bool:
-        # di = time.perf_counter()
         mesh_setup = self._get_mesh_setup()
         app().project.configure_mesh(mesh_setup)
         app().project.write_to_working_dir()
@@ -350,42 +348,32 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             app().project.mark_project_as_modified()
 
         LoadingWindow(load_mesh_from_working_dir).run()
-        # print(f"Elapse time to generate mesh in subprocess {time.perf_counter() - di}")
 
         return True
 
-    def generate_mesh_callback(self):
-        self.hide()
-        if app().config.user_preferences.generate_mesh_in_subprocess:
-            if not self._generate_in_subprocess():
-                return
-        else:
-            def generate():
-                # di = time.perf_counter()
-                mesh_setup = self._get_mesh_setup()
-                app().project.generate_mesh(mesh_setup)
-                # print(f"Elapse time to generate mesh in main process{time.perf_counter() - di}")
 
+    def apply_callback(self, close_window: bool = False):
+        def generate_mesh() -> bool:
             self.hide()
 
-            LoadingWindow(generate).run()
+            if app().config.user_preferences.generate_mesh_in_subprocess:
+                if not self._generate_in_subprocess():
+                    return False
+            else:
+                def generate():
+                    mesh_setup = self._get_mesh_setup()
+                    app().project.generate_mesh(mesh_setup)
 
-# =======
-    def apply_callback(self, close_window: bool = False):
+                LoadingWindow(generate).run()
 
-        def generate():
-            mesh_setup = self._get_mesh_setup()
-            app().project.generate_mesh(mesh_setup)
+            LoadingWindow(self.actions_to_finalize).run()
 
-        self.hide()
-        LoadingWindow(generate).run()
-# >>>>>>> dev
-        LoadingWindow(self.actions_to_finalize).run()
+            self.update_mesh_refinement_table()
+            self.update_mesh_quality_table()
 
-        self.update_mesh_refinement_table()
-        self.update_mesh_quality_table()
+            return True
 
-        self.complete = True
+        self.complete = generate_mesh()
 
         if close_window:
             self.close()
@@ -625,6 +613,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
         self.comboBox_2d_algorithm.setCurrentIndex(map_algorithms_2d[element_type.algorithm_2d])
         self.comboBox_3d_algorithm.setCurrentIndex(map_algorithms_3d[element_type.algorithm_3d])
+
     def mesh_quality_item_clicked_callback(self, item):
         self.pushButton_show_bad_elements.setEnabled(False)
 

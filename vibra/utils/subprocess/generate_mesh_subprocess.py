@@ -33,7 +33,7 @@ def main():
     project.model.geometry_path = geometry_path
     project.model.properties = properties
 
-    project.generate_mesh()
+    project.generate_mesh(project.model.mesh_setup)
 
     if project.model.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
         project.update_model_properties_file()
