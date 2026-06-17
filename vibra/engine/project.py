@@ -113,20 +113,20 @@ class Project:
         self.project_paths.clear_data()
         self.mark_project_as_modified()
 
-    def run_analysis(self):
+    def run_analysis(self, is_resume: bool = False):
         """
         It performs the solution of the currently configured model.
         It might raise errors if the analysis is not propperly configured.
         """
         match self.model.analysis_id:
             case AnalysisID.STRUCTURAL_MODAL:
-                return self.solve_structural_modal_analysis()
+                return self.solve_structural_modal_analysis(is_resume)
             case AnalysisID.STRUCTURAL_HARMONIC:
-                return self.solve_structural_harmonic_analysis()
+                return self.solve_structural_harmonic_analysis(is_resume)
             case AnalysisID.ACOUSTIC_MODAL:
-                return self.solve_acoustic_modal_analysis()
+                return self.solve_acoustic_modal_analysis(is_resume)
             case AnalysisID.ACOUSTIC_HARMONIC:
-                return self.solve_acoustic_harmonic_analysis()
+                return self.solve_acoustic_harmonic_analysis(is_resume)
             case AnalysisID.NO_ANALYSIS:
                 raise errors.IncompleteSetupError("No AnalysisID was provided.")
             case _:
@@ -177,6 +177,7 @@ class Project:
 
     # TODO: use only "write_to_working_dir"
     def update_model_properties_file(self):
+        self.mark_solution_as_outdated()
         self.project_writer.write_model_properties(self.model.properties)
         self.mark_project_as_modified()
 
@@ -311,7 +312,7 @@ class Project:
         self.model.set_analysis_setup(analysis_setup)
         self.update_project_setup_file()
 
-    def solve_structural_modal_analysis(self) -> ModalSolution:
+    def solve_structural_modal_analysis(self, is_resume: bool = False) -> ModalSolution:
 
         self.update_project_setup_file()
 
@@ -335,7 +336,7 @@ class Project:
 
         return self.model.solution
 
-    def solve_structural_harmonic_analysis(self) -> HarmonicSolution:
+    def solve_structural_harmonic_analysis(self, is_resume: bool = False) -> HarmonicSolution:
 
         self.update_project_setup_file()
 
@@ -352,11 +353,11 @@ class Project:
 
         analysis_method = self.model.analysis_setup.analysis_method
         if analysis_method == "direct":
-            self.model.solution = self.solver.solve_direct(is_resume=self.can_resume_solution)
+            self.model.solution = self.solver.solve_direct(is_resume=is_resume)
         elif analysis_method == "mode_superposition":
             self.model.solution = self.solver.solve_mode_superposition(
                 is_proportionally_damped=True,
-                is_resume=self.can_resume_solution,
+                is_resume=is_resume,
             )
         else:
             raise ValueError(f"Unsupported analysis method: {analysis_method}")
@@ -370,7 +371,7 @@ class Project:
 
         return self.model.solution
 
-    def solve_acoustic_modal_analysis(self) -> ModalSolution:
+    def solve_acoustic_modal_analysis(self, is_resume: bool = False) -> ModalSolution:
 
         self.update_project_setup_file()
 
@@ -394,7 +395,7 @@ class Project:
 
         return self.model.solution
 
-    def solve_acoustic_harmonic_analysis(self) -> HarmonicSolution:
+    def solve_acoustic_harmonic_analysis(self, is_resume: bool = False) -> HarmonicSolution:
 
         self.update_project_setup_file()
 
@@ -415,9 +416,9 @@ class Project:
 
         analysis_method = self.model.analysis_setup.analysis_method
         if analysis_method == "direct":
-            self.model.solution = self.solver.solve_direct(is_resume=self.can_resume_solution)
+            self.model.solution = self.solver.solve_direct(is_resume=is_resume)
         elif analysis_method == "mode_superposition":
-            self.model.solution = self.solver.solve_mode_superposition(is_resume=self.can_resume_solution)
+            self.model.solution = self.solver.solve_mode_superposition(is_resume=is_resume)
         else:
             raise ValueError(f"Unsupported analysis method: {analysis_method}")
 
@@ -537,3 +538,13 @@ class Project:
         Indicates that something was modified and that the project need to be saved.
         """
         self.needs_saving = True
+
+    def mark_solution_as_outdated(self, reset: bool = False):
+        solution_exists = isinstance(self.model.solution, HarmonicSolution | ModalSolution)
+        solution_outdated = not reset and solution_exists
+
+        analysis_setup = self.model.analysis_setup
+        if isinstance(analysis_setup, HarmonicAnalysisSetup | ModalAnalysisSetup):
+            analysis_setup.outdated_solution = solution_outdated
+            self.model.set_analysis_setup(analysis_setup)
+            self.update_project_setup_file()

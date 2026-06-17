@@ -45,19 +45,15 @@ from vibra.engine.elements.elements_3d import (
 )
 from vibra.engine.geometry.geometry import LengthUnits
 from vibra.engine.mesh_modifiers.degrees_of_freedom_decoupling import DegreesOfFreedomDecoupling
-from vibra.engine.mesher.element_setup import (
-    DEFAULT_ELEMENT_TYPE,
-    HEXAHEDRON_8,
-    HEXAHEDRON_20,
-    TETRAHEDRON_4,
-    TETRAHEDRON_10,
-)
+from vibra.engine.mesher.element_setup import DEFAULT_ELEMENT_SETUP
 from vibra.engine.mesher.mesh import Mesh
-from vibra.engine.mesher.mesh_setup import MeshSetup
+from vibra.engine.mesher.mesh_setup import MeshSetup, HEXAHEDRON_8, HEXAHEDRON_20, TETRAHEDRON_4, TETRAHEDRON_10, ElementTopology
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.model_properties import ModelProperties
-from vibra.engine.solution import Solution
-from vibra.engine.transfer_impedances.perforated_plate_models import PerforatedPlateModels
+from vibra.engine.solution import HarmonicSolution, Solution
+from vibra.engine.transfer_impedances.perforated_plate_models import (
+    PerforatedPlateModels,
+)
 from vibra.errors import IncompleteSetupError
 from vibra.interface import error_title
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -105,6 +101,16 @@ class Model:
         self.reset_dissipation_model_properties()
 
     @property
+    def element_topology(self) -> ElementTopology | None:
+        if not isinstance(self.mesh, Mesh):
+            return
+
+        if self.mesh.element_topology is None:
+            self.mesh.update_element_type_based_on_connectivity()
+
+        return self.mesh.element_topology
+
+    @property
     def analysis_id(self) -> AnalysisID:
         if isinstance(self.analysis_setup, AnalysisSetup):
             return self.analysis_setup.analysis_id
@@ -137,15 +143,30 @@ class Model:
             return self.analysis_setup.global_damping
 
         return (None, None, None)
+    
+    @property
+    def outdated_solution(self):
+        if isinstance(self.analysis_setup, ModalAnalysisSetup | HarmonicAnalysisSetup):
+            return self.analysis_setup.outdated_solution
+
+        return False
+
+    @property
+    def can_resume_solution(self) -> bool:
+        if not isinstance(self.solution, HarmonicSolution):
+            return False
+
+        try:
+            return not np.all(self.solution.status)
+        except Exception:
+            return False
 
     def reset_current_solution(self):
         self.solution = None
 
     def get_harmonic_analysis_setup(self, **kwargs) -> HarmonicAnalysisSetup:
         analysis_setup = HarmonicAnalysisSetup(**kwargs)
-        analysis_setup.solution_steps_mask = self.get_solution_steps_mask(
-            frequencies=analysis_setup.get_frequencies()
-        )
+        analysis_setup.solution_steps_mask = self.get_solution_steps_mask(frequencies=analysis_setup.get_frequencies())
         return analysis_setup
 
     def reset_dissipation_model_properties(self):
@@ -182,7 +203,6 @@ class Model:
 
     def set_mesh_setup(self, mesh_setup: MeshSetup):
         self.mesh_setup = mesh_setup
-        self.mesh.set_element_setup(mesh_setup.element_setup)
 
     def initialize_mesh(self):
         self.mesh = Mesh(length_unit=self.length_unit, geometry_qf=self.geometry_qf)
@@ -198,7 +218,7 @@ class Model:
                     dimension=2,
                     minimum_element_size=element_size * 0.4,
                     maximum_element_size=element_size,
-                    ElementType=DEFAULT_ELEMENT_TYPE,
+                    ElementSetup=DEFAULT_ELEMENT_SETUP,
                 )
 
             except Exception:
@@ -210,7 +230,7 @@ class Model:
                     dimension=2,
                     minimum_element_size=element_size * 0.5,
                     maximum_element_size=element_size,
-                    ElementType=DEFAULT_ELEMENT_TYPE,
+                    ElementSetup=DEFAULT_ELEMENT_SETUP,
                 )
 
             self.initial_element_size = element_size
@@ -321,10 +341,10 @@ class Model:
 
         disconnected_nodes = bool(self.mesh.disconnected_nodes_data)
         collapsed_elements = bool(
-            self.mesh.collapsed_3d_elements or 
-            self.mesh.collapsed_2d_elements or 
-            self.mesh.collapsed_1d_elements
-            )
+            self.mesh.collapsed_3d_elements 
+            or self.mesh.collapsed_2d_elements 
+            or self.mesh.collapsed_1d_elements
+        )  # fmt: skip
 
         if disconnected_nodes or collapsed_elements:
             return False
@@ -433,47 +453,41 @@ class Model:
 
         return (f_min, f_max, f_step, frequencies)
 
-    def get_structural_elements(self):
-        if isinstance(self.mesh_setup, MeshSetup):
-            element_setup = self.mesh_setup.element_setup
-        else:
-            element_setup = self.mesh.element_setup
+    def get_structural_elements(self):                        
+        element_type = self.element_topology
 
-        if element_setup == TETRAHEDRON_4:
+        if element_type == TETRAHEDRON_4:
             return STRUCT_TETRAHEDRON_4S(self), STRUCT_TRIANGLE_3(self), None
 
-        elif element_setup == TETRAHEDRON_10:
+        elif element_type == TETRAHEDRON_10:
             return STRUCT_TETRAHEDRON_10S(self), None, None
 
-        elif element_setup == HEXAHEDRON_8:
+        elif element_type == HEXAHEDRON_8:
             return STRUCT_HEXAHEDRON_8(self), None, None
 
-        elif element_setup == HEXAHEDRON_20:
+        elif element_type == HEXAHEDRON_20:
             return STRUCT_HEXAHEDRON_20(self), None, None
 
         else:
-            raise NotImplementedError(f'Element type "{element_setup}" is not supported yet.')
+            raise NotImplementedError(f'Element type "{element_type}" is not supported yet.')
 
     def get_acoustic_elements(self):
-        if isinstance(self.mesh_setup, MeshSetup):
-            element_setup = self.mesh_setup.element_setup
-        else:
-            element_setup = self.mesh.element_setup
+        element_type = self.element_topology
 
-        if element_setup == TETRAHEDRON_4:
+        if element_type == TETRAHEDRON_4:
             return ACT_TETRAHEDRON_4C(self), ACT_TRIANGLE_3(self), ACT_LINE_2(self)
 
-        elif element_setup == TETRAHEDRON_10:
+        elif element_type == TETRAHEDRON_10:
             return ACT_TETRAHEDRON_10C(self), ACT_TRIANGLE_6(self), ACT_LINE_3(self)
 
-        elif element_setup == HEXAHEDRON_8:
+        elif element_type == HEXAHEDRON_8:
             return ACT_HEXAHEDRON_8C(self), ACT_QUADRANGLE_4(self), ACT_LINE_2(self)
 
-        elif element_setup == HEXAHEDRON_20:
+        elif element_type == HEXAHEDRON_20:
             return ACT_HEXAHEDRON_20C(self), ACT_QUADRANGLE_8(self), ACT_LINE_3(self)
 
         else:
-            raise NotImplementedError(f'Element type "{element_setup}" is not supported yet.')
+            raise NotImplementedError(f'Element type "{element_type}" is not supported yet.')
 
     def set_structural_elements(self):
         element_3d, element_2d, element_1d = self.get_structural_elements()
@@ -712,7 +726,7 @@ class Model:
             return density, speed_of_sound
 
         return None, None
-    
+
     def get_surface_density_and_speed_of_sound(self, surface_id: int) -> float | complex | np.ndarray:
         """
         It returs the density and speed of sound of selected surface.
@@ -726,7 +740,7 @@ class Model:
         -------
         density: np.ndarray, float or None
             The density of selected surface.
-       
+
         speed_of_sound: np.ndarray, float or None
             The speed of sound of selected surface.
         """

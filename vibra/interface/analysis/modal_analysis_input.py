@@ -86,6 +86,10 @@ class ModalAnalysisInput(ModalAnalysisInput_UI):
 
         app().project.configure_analysis(analysis_setup)
         app().main_window.analysis_toolbar.enable_pushbutons.emit()
+
+        if app().main_window.action_results_workspace.isChecked():
+            app().main_window.action_model_workspace_callback()
+
         self.close()
 
     def run_analysis(self):

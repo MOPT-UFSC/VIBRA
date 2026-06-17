@@ -1,12 +1,8 @@
 from typing import TYPE_CHECKING
 
 from validation_files.data.WB.load_external_data import LoadExternalData
-from vibra.engine.analysis_info import (
-    AnalysisID,
-    FrequencySpacing,
-)
+from vibra.engine.analysis_info import AnalysisID, FrequencySpacing
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
-from vibra.engine.mesher.element_setup import TETRAHEDRON_4
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.engine.postprocessing import AcousticPostprocessing
@@ -64,7 +60,6 @@ def load_external_mesh_and_solve():
     mesh.import_external_solids_connectivity(external_mesh.solids_connectivities, index_zero=True, etype_tag=4)
     mesh.export_nodal_coordinates("nodal_coordinates.dat")
     mesh.export_solid_elements_connectivity("solids_connectivity.dat")
-    mesh.set_element_setup(TETRAHEDRON_4)
 
     for named_selection, surf_data in external_mesh.elements_from_named_selection.items():
         # print(named_selection, surf_data)
@@ -111,10 +106,11 @@ def load_external_mesh_and_solve():
     # path = "validation_files/data/WB/transmission_loss/results/Zo_complex"
     ext_data = LoadExternalData(path, fluid_density=rho_0)
 
-    # Set the defined fluid
+    ## intialize the model
     model = Model()
     model.mesh = mesh
 
+    ## assign the created fluid
     for vol_id in [1]:
         model.properties._set_property("fluid", fluid, volume=vol_id)
 

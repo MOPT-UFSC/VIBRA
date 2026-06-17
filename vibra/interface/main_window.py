@@ -426,6 +426,11 @@ class MainWindow(MainWindow_UI):
         self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
         self.results_viewer_widget.hide_bottom_widget()
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
+
+        self.action_results_workspace.setEnabled(True)
+        self.action_results_workspace.setChecked(True)
+        self.action_mesh_workspace.setChecked(False)
+        self.action_model_workspace.setChecked(False)
         self.reload_visualization_filter()
 
     def show_geometry_render_widget(self):
@@ -958,7 +963,7 @@ class MainWindow(MainWindow_UI):
         self.set_toolbars_visible(True)
         self.view_toolbar.set_front_view()
 
-        if app().project.can_resume_solution:
+        if app().project.model.can_resume_solution:
             window_title = "Acoustic Harmonic results"
             title = "Missing solution frequency records"
             message = 'Click on the "Resume the analysis" button to solve remaining frequencies'

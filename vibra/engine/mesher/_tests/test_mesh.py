@@ -1,17 +1,12 @@
 
-from vibra import PROJECT_DIR
-from vibra.engine.mesher.mesh import Mesh
-
-from vibra.engine.mesher.element_setup import (
-    HEXAHEDRON_8,
-    HEXAHEDRON_20,
-    TETRAHEDRON_4,
-    TETRAHEDRON_10,
-)
+from pathlib import Path
 
 import gmsh
 import numpy as np
-from pathlib import Path
+
+from vibra import PROJECT_DIR
+from vibra.engine.mesher.element_setup import GMSH_HEX8, GMSH_HEX20, GMSH_TET4, GMSH_TET10
+from vibra.engine.mesher.mesh import Mesh
 
 
 def test_tetrahedron_4_mesh():
@@ -23,7 +18,7 @@ def test_tetrahedron_4_mesh():
         minimum_element_size=30,
         maximum_element_size=80,
         threads=1,
-        element_type=TETRAHEDRON_4,
+        element_type=GMSH_TET4,
     )
 
     _compare_mesh(
@@ -41,7 +36,7 @@ def test_tetrahedron_10_mesh():
         minimum_element_size=30,
         maximum_element_size=80,
         threads=1,
-        element_type=TETRAHEDRON_10,
+        element_type=GMSH_TET10,
     )
 
     _compare_mesh(
@@ -59,7 +54,7 @@ def test_hexahedron_8_mesh():
         minimum_element_size=30,
         maximum_element_size=80,
         threads=1,
-        element_type=HEXAHEDRON_8,
+        element_type=GMSH_HEX8,
     )
 
     _compare_mesh(
@@ -78,7 +73,7 @@ def test_hexahedron_20_mesh():
         minimum_element_size=300,
         maximum_element_size=300,
         threads=1,
-        element_type=HEXAHEDRON_20,
+        element_type=GMSH_HEX20,
     )
 
     _compare_mesh(

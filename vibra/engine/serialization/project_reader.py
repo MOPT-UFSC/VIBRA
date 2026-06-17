@@ -65,18 +65,20 @@ class ProjectReader:
 
         model.reset_variables()
         model.thumbnail = self.read_thumbnail()
+        model.geometry_path = self.read_geometry_path()
+
         analysis_setup = self.read_analysis_setup()
 
         if analysis_setup is not None:
             model.set_analysis_setup(analysis_setup)
 
-        model.mesh_setup = self.read_mesh_setup()
-        model.properties = self.read_model_properties()
-        model.geometry_path = self.read_geometry_path()
-
         if self.project_paths.mesh_data_filepath.exists():
             model.mesh = self.read_mesh()
 
+        mesh_setup = self.read_mesh_setup()
+        model.set_mesh_setup(mesh_setup)
+
+        model.properties = self.read_model_properties()
         model.solution = self.read_solution(model)
 
         return model
@@ -140,8 +142,8 @@ class ProjectReader:
             maximum_element_size=mesh_setup_dict.get("maximum_element_size", float("inf")),
             geometry_tolerance=mesh_setup_dict.get("geometry_tolerance", 1e-6),
             size_factor=mesh_setup_dict.get("size_factor", 1),
-            element_type=mesh_setup_dict.get("element_type", "tetrahedral"),
-            shape_function=mesh_setup_dict.get("shape_function","linear"),
+            element_geometry=mesh_setup_dict.get("element_type", "tetrahedral"),
+            element_order=mesh_setup_dict.get("shape_function","linear"),
             compute_quality_metrics=mesh_setup_dict.get("compute_quality_metrics", False),
             merge_connected_volumes=mesh_setup_dict.get("merge_connected_volumes", False),
             refinement_parameters=refinement_parameters,
