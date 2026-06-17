@@ -27,6 +27,8 @@ class ExceptionMessage(ExceptionMessage_UI):
 
         if stack_trace is None:
             self.stack_trace_text_browser.hide()
+            self.copy_log_button.hide()
+            self.copy_stacktrace_button.hide()
         else:
             self.traceback = "\n".join(format_tb(stack_trace))
 
