@@ -11,9 +11,8 @@ from vibra.interface.common.common_interface import update_analysis_setup_in_fil
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.ui_generated.model.structural.normal_pressure_load_inputs_ui import (
-    NormalPressureLoadInputs_UI,
-)
+from vibra.interface.model_inputs.structural.definitions.enums import StandardTabType
+from vibra.interface.ui_generated.model.structural.excitations.normal_pressure_load_inputs_ui import NormalPressureLoadInputs_UI
 
 
 class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
@@ -66,8 +65,9 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         self.comboBox_attribution_type.currentIndexChanged.connect(self.attribution_type_callback)
         self.comboBox_element_type.currentIndexChanged.connect(self.element_type_callback)
         #
-        self.pushButton_exit.clicked.connect(self.close)
-        self.pushButton_attribute.clicked.connect(self.attribute_callback)
+        self.pushButton_apply.clicked.connect(self.apply_callback)
+        self.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
+        self.pushButton_cancel.clicked.connect(self.close)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_load_table.clicked.connect(self.load_pressure_table)
         self.pushButton_reset.clicked.connect(self.reset_callback)
@@ -173,30 +173,23 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
     def constant_values_attribution(self):
 
         input_ids = self.lineEdit_selection_id.text()
-        surface_ids, error_data = self.mesh.check_selected_ids(
-                                                               input_ids, 
-                                                               selection = "surfaces"
-                                                               )
+        surface_ids, error_data = self.mesh.check_selected_ids(input_ids, selection="surfaces")
 
         if error_data is not None:
             self.hide()
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
-            return
+            return True
 
         self.remove_conflicting_excitations(surface_ids, "surfaces")
 
         index = self.comboBox_element_type.currentIndex()
         element_type = self.element_types[index]
 
-        stop, value = self.check_complex_entries(
-                                                 self.lineEdit_real_value.text(), 
-                                                 self.lineEdit_imag_value.text(), 
-                                                 "Pressure load"
-                                                 )
+        stop, value = self.check_complex_entries(self.lineEdit_real_value.text(), self.lineEdit_imag_value.text(), "Pressure load")
 
         if stop:
-            return
+            return True
 
         pressure_load = [value]
 
@@ -206,8 +199,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         if condition_1 or condition_2:
             self.hide()
             title = "Additional inputs required"
-            message = "It is necessary to enter at least one prescribed dof "
-            message += "before confirming the property assignment."
+            message = "You must enter a non-zero normal pressure load value before confirming the assignment."
             PrintMessageInput([error_title, title, message])
             return
 
@@ -217,15 +209,13 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         for surface_id in surface_ids:
 
             data = {
-                    "element_type" : element_type,
-                    "values" : pressure_load,
-                    "real_values" : real_values,
-                    "imag_values" : imag_values,
-                    }
+                "element_type": element_type,
+                "values": pressure_load,
+                "real_values": real_values,
+                "imag_values": imag_values,
+            }
 
             self.properties._set_property("normal_pressure_load", data, surface=surface_id)
-
-        self.actions_to_finalize()
 
     def load_table(self, lineEdit : QLineEdit, load_label : str, direct_load = False):
 
@@ -317,16 +307,13 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
     def table_values_attribution(self):
 
         input_ids = self.lineEdit_selection_id.text()
-        surface_ids, error_data = self.mesh.check_selected_ids(
-                                                               input_ids, 
-                                                               selection = "surfaces"
-                                                               )
+        surface_ids, error_data = self.mesh.check_selected_ids(input_ids, selection="surfaces")
 
         if error_data is not None:
             self.hide()
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
-            return
+            return True
 
         self.remove_conflicting_excitations(surface_ids, "surfaces")
 
@@ -341,7 +328,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
             if self.pressure_table_values is not None:
                 self.pressure_table_name, self.pressure_array = self.save_table_files(surface_id, self.pressure_table_values)
                 if self.pressure_array is None:
-                    return
+                    return True
 
             table_names = [self.pressure_table_name]
             table_paths = [self.pressure_table_path]
@@ -353,29 +340,37 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
             if condition_1 or condition_2:
                 self.hide()
                 title = "Additional inputs required"
-                message = "It is necessary to enter at least one normal pressure load "
-                message += "before confirming the property assignment."
+                message = "You must enter the normal pressure load table path before confirming the assignment."
                 PrintMessageInput([error_title, title, message]) 
-                return
+                return True
 
             data = {
-                    "element_type" : element_type,
-                    "table_names" : table_names,
-                    "table_paths" : table_paths,
-                    "values" : pressure_load,
-                    }
+                "element_type": element_type,
+                "table_names": table_names,
+                "table_paths": table_paths,
+                "values": pressure_load,
+            }
 
             self.properties._set_property("normal_pressure_load", data, surface=surface_id)
 
         self.reset_table_variables()
-        self.actions_to_finalize()
 
-    def attribute_callback(self):
-        index = self.tabWidget_main.currentIndex()
-        if index == 0:
-            self.constant_values_attribution()
-        elif index == 1:
-            self.table_values_attribution()
+    def apply_callback(self, close_window: bool=False):
+
+        if self.tabWidget_main.currentIndex() == StandardTabType.LIST:
+            return
+
+        tab_index = self.tabWidget_main.currentIndex()
+
+        if tab_index == StandardTabType.CONSTANT_DATA:
+            if self.constant_values_attribution():
+                return
+
+        elif tab_index == StandardTabType.TABULAR_DATA:
+            if self.table_values_attribution():
+                return
+
+        self.actions_to_finalize(close_window)
 
     def load_model_info(self):
 
@@ -416,30 +411,30 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         for current_property in properties_to_check:
             for (property, _) in current_property.keys():
                 if property == "normal_pressure_load":
-                    self.tabWidget_main.setTabVisible(2, True)
+                    self.tabWidget_main.setTabVisible(StandardTabType.LIST, True)
                     return
 
-        self.tabWidget_main.setTabVisible(2, False)
-        self.tabWidget_main.setCurrentIndex(0)
+        self.tabWidget_main.setTabVisible(StandardTabType.LIST, False)
+        self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)
         self.lineEdit_real_value.setFocus()
         app().main_window.selection.set_geometry_selection()
 
     def tab_event_callback(self):
+        list_tab = self.tabWidget_main.currentIndex() == StandardTabType.LIST
+        self.lineEdit_selection_id.setDisabled(list_tab)
+        self.pushButton_apply.setDisabled(list_tab)
+        self.pushButton_apply_and_close.setDisabled(list_tab)
+        self.pushButton_remove.setDisabled(True)
 
-        if self.tabWidget_main.currentIndex() == 3:
+        if list_tab:
             self.lineEdit_selection_id.setText("")
-            self.lineEdit_selection_id.setDisabled(True)
-            self.pushButton_attribute.setDisabled(True)
+            return
 
         else:
-
             text = self.lineEdit_selection_id.text()
-            if " - " in text:
-                selected_id = text.split(" - ")[1]
+            if "-" in text:
+                selected_id = text.split("-")[1]
                 self.lineEdit_selection_id.setText(selected_id)
-
-            self.lineEdit_selection_id.setDisabled(False)
-            self.pushButton_attribute.setEnabled(True)
 
     def on_click_item(self, item):
 
@@ -538,26 +533,15 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
             app().main_window.selection.set_geometry_selection()
             app().main_window.selection.set_mesh_selection()
 
-    def actions_to_finalize(self):
+    def actions_to_finalize(self, close_window: bool = False):
         self.load_model_info()
         self.reset_input_fields()
         app().main_window.update_info_text()
         app().project.update_model_properties_file()
         app().main_window.update_symbols()
 
-    def check_model_frequency_controls(self):
-
-        for key, data in self.properties.surface_properties.items():
-            property, _ = key
-            if property in ["nodal_loads", "prescribed_dof"]:
-                if "table_names" in data.keys():
-                    return
-
-        # No idea of what it does
-        app().project.configure_analysis(
-            app().project.model.analysis_id,
-            app().project.model.analysis_setup,
-        )
+        if close_window:
+            self.close()
 
     def reset_input_fields(self):
         self.lineEdit_selection_id.setText("")
@@ -567,7 +551,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            self.attribute_callback()
+            self.apply_callback()
         elif event.key() == Qt.Key_Delete:
             self.remove_callback()
         elif event.key() == Qt.Key_Escape:

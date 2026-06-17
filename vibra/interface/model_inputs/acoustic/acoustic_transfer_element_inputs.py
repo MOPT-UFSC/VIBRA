@@ -9,20 +9,14 @@ from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QFileDialog, QLineEdit
 
 from vibra import app
-from vibra.engine.analysis_info import (
-    AnalysisID,
-    FrequencySpacing,
-    HarmonicAnalysisSetup,
-)
+from vibra.engine.analysis_info import AnalysisID, FrequencySpacing, HarmonicAnalysisSetup
 from vibra.interface import error_title
 from vibra.interface.common.common_interface import mesher_interface_callback
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
-from vibra.interface.ui_generated.model.acoustic.acoustic_transfer_element_inputs_ui import (
-    AcousticTransferElementInputs_UI,
-)
+from vibra.interface.ui_generated.model.acoustic.element_transfer.acoustic_transfer_element_inputs_ui import AcousticTransferElementInputs_UI
 
 
 class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
@@ -252,15 +246,6 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
 
         self.frequencies = self.analysis_setup.get_frequencies()
 
-    def configure_analysis(self):
-        if self.check_frequency_entries():
-            return True
-
-        app().project.configure_analysis(
-            AnalysisID.ACOUSTIC_HARMONIC,
-            self.analysis_setup,
-        )
-
     def process_data_callback(self):
         self.hide()
         self.element_transfer_data.clear()
@@ -272,8 +257,10 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         if self.check_typed_ids():
             return
 
-        if self.configure_analysis():
-            return
+        if self.check_frequency_entries():
+            return True
+
+        app().project.configure_analysis(self.analysis_setup)
 
         if not app().project.model.is_there_a_valid_mesh():
             if mesher_interface_callback(self, close_after_generate=True):

@@ -1,6 +1,8 @@
-from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
+
+import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
 
 from vibra import app
 from vibra.interface import error_title
@@ -9,9 +11,8 @@ from vibra.interface.data.data_manager import get_spectral_data_from_array
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.ui_generated.model.acoustic.compressor_excitation_spectrum_inputs_ui import CompressorExcitationSpectrumInputs_UI
-
-import numpy as np
+from vibra.interface.model_inputs.acoustic.definitions.enums import SetupTabType
+from vibra.interface.ui_generated.model.acoustic.excitations.compressor_excitation_spectrum_inputs_ui import CompressorExcitationSpectrumInputs_UI
 
 
 class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
@@ -54,8 +55,9 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
 
     def _create_connections(self):
         #
-        self.pushButton_attribute.clicked.connect(self.attribute_callback)
-        self.pushButton_exit.clicked.connect(self.close)
+        self.pushButton_apply.clicked.connect(self.apply_callback)
+        self.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
+        self.pushButton_cancel.clicked.connect(self.close)
         self.pushButton_load_table.clicked.connect(self.load_compressor_excitation_spectrum_data)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
@@ -79,7 +81,7 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
             self.load_property_data(surface_id)
 
     def load_property_data(self, surface_id: int):
-        if self.tabWidget_main.currentIndex() != 0:
+        if self.tabWidget_main.currentIndex() != SetupTabType.SETUP:
             return
 
         data = self.properties._get_property("compressor_excitation_spectrum", surface=surface_id)
@@ -97,17 +99,17 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
         if "table_paths" in data.keys():
             table_path = data.get("table_paths")[0]
             self.lineEdit_table_path.setText(table_path)
-            self.tabWidget_main.setCurrentIndex(0)
+            self.tabWidget_main.setCurrentIndex(SetupTabType.SETUP)
 
     def tab_event_callback(self):
-        if self.tabWidget_main.currentIndex() == 1:
-            self.lineEdit_selection_id.setText("")
-            self.lineEdit_selection_id.setDisabled(True)
-            self.pushButton_attribute.setDisabled(True)
-            return
+        tab_list = self.tabWidget_main.currentIndex() == SetupTabType.LIST
+        self.lineEdit_selection_id.setDisabled(tab_list)
+        self.pushButton_apply.setDisabled(tab_list)
+        self.pushButton_apply_and_close.setDisabled(tab_list)
 
-        self.lineEdit_selection_id.setDisabled(False)
-        self.pushButton_attribute.setEnabled(True)
+        if tab_list:
+            self.lineEdit_selection_id.setText("")
+            return
 
         surfaces = app().main_window.selection.geometry_surfaces
         if not surfaces:
@@ -215,16 +217,12 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
     def load_compressor_excitation_spectrum_data(self):
         self.imported_values = self.load_table(self.lineEdit_table_path)
 
-    def attribute_callback(self):
-
-        if self.tabWidget_main.currentIndex() != 0:
+    def apply_callback(self, close_window: bool = False):
+        if self.tabWidget_main.currentIndex() != SetupTabType.SETUP:
             return
 
         input_ids = self.lineEdit_selection_id.text()
-        surface_ids, error_data = self.mesh.check_selected_ids(
-            input_ids, 
-            selection = "surfaces"
-            )
+        surface_ids, error_data = self.mesh.check_selected_ids(input_ids, selection = "surfaces")
 
         if error_data is not None:
             self.hide()
@@ -237,8 +235,8 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
         if self.lineEdit_table_path.text() == "":
             self.hide()
             title = "Additional inputs required"
-            message = "You must inform at least one mass flow rate\n"
-            message += "table path before confirming the input!"
+            message = "You must select the external compressor excitation "
+            message += "table path to proceed with the assignment"
             PrintMessageInput([error_title, title, message])
             self.lineEdit_table_path.setFocus()
             return
@@ -248,10 +246,7 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
         connection_type = self.comboBox_connection_type.currentText()
 
         if self.imported_values is None:
-            self.imported_values = self.load_table( 
-                self.lineEdit_table_path, 
-                direct_load = True,
-                )
+            self.imported_values = self.load_table(self.lineEdit_table_path, direct_load = True)
 
         for surface_id in surface_ids:
 
@@ -289,7 +284,7 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
 
             self.properties._set_property("compressor_excitation_spectrum", data, surface=surface_id)
 
-        self.actions_to_finalize()
+        self.actions_to_finalize(close_window)
 
     def process_table_file_removal(self, table_names: list):
         for table_name in table_names:
@@ -359,50 +354,31 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
             self.properties._reset_property("compressor_excitation_spectrum")
             self.actions_to_finalize()
 
-    def actions_to_finalize(self):
+    def actions_to_finalize(self, close_window: bool = False):
         self.load_model_info()
-        self.check_model_frequency_controls()
         app().project.update_model_properties_file()
         app().main_window.update_info_text()
         app().main_window.update_symbols()
 
-    def check_model_frequency_controls(self):
-
-        properties = [
-            "acoustic_pressure",
-            "surface_velocity",
-            "specific_impedance",
-            "compressor_excitation_spectrum",
-            "compressor_excitation_waveform",
-            "reciprocating_compressor_excitation",
-            ]
-
-        for key, data in self.properties.surface_properties.items():
-            property, _ = key
-            if property in properties:
-                if "table_names" in data.keys():
-                    return
-        
-        # No idea of what it does
-        app().project.configure_analysis(
-            app().project.model.analysis_id,
-            app().project.model.analysis_setup,
-        )
+        if close_window:
+            self.close()
 
     def update_tabs_visibility(self):
 
         for key in self.properties.surface_properties.keys():
             property, *args = key
-            if property == "compressor_excitation_spectrum":
-                self.tabWidget_main.setTabVisible(1, True)
-                return
+            if property != "compressor_excitation_spectrum":
+                continue
 
-        self.tabWidget_main.setCurrentIndex(0)
-        self.tabWidget_main.setTabVisible(1, False)
+            self.tabWidget_main.setTabVisible(SetupTabType.LIST, True)
+            return
+
+        self.tabWidget_main.setCurrentIndex(SetupTabType.SETUP)
+        self.tabWidget_main.setTabVisible(SetupTabType.LIST, False)
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            self.attribute_callback()
+            self.apply_callback()
         elif event.key() == Qt.Key_Delete:
             self.remove_callback()
         elif event.key() == Qt.Key_Escape:

@@ -10,30 +10,16 @@ import h5py
 import numpy as np
 from PIL.Image import Image
 
-from vibra.engine.analysis_info import (
-    AnalysisID,
-    AnalysisSetup,
-    HarmonicAnalysisSetup,
-    ModalAnalysisSetup,
-)
+from vibra.engine.analysis_info import AnalysisID, AnalysisSetup, HarmonicAnalysisSetup, ModalAnalysisSetup
 from vibra.engine.assemblers import AcousticAssembler, StructuralAssembler
 from vibra.engine.mesher.element_setup import ElementSetup
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.mesh_setup import MeshRefinementSetup, MeshSetup
 from vibra.engine.model import Model
-from vibra.engine.properties import (
-    Fluid,
-    FluidLibrary,
-    Material,
-    MaterialLibrary,
-)
+from vibra.engine.properties import Fluid, FluidLibrary, Material, MaterialLibrary
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.engine.serialization.file_helpers import read_image, read_json
-from vibra.engine.solution import (
-    HarmonicSolution,
-    ModalSolution,
-    Solution,
-)
+from vibra.engine.solution import HarmonicSolution, ModalSolution, Solution
 from vibra.engine.solution.lazy_harmonic_solution import LazyHarmonicSolution
 from vibra.engine.solvers import HarmonicSolver, ModalSolver
 from vibra.project_files.lazy_hdf5_matrix import LazyHDF5MatrixLoader
@@ -75,13 +61,12 @@ class ProjectReader:
         if model is None:
             model = Model()
 
-        logging.info("Reading model.")
+        logging.info("Reading the model data... (25%)")
 
         model.reset_variables()
         model.thumbnail = self.read_thumbnail()
-        model.analysis_id = self.read_current_analysis_id()
-
         analysis_setup = self.read_analysis_setup()
+
         if analysis_setup is not None:
             model.set_analysis_setup(analysis_setup)
 
@@ -122,6 +107,7 @@ class ProjectReader:
             return None
 
         analysis_id = AnalysisID(analysis_setup_dict.get("analysis_id", AnalysisID.NO_ANALYSIS))
+        analysis_setup_dict.update({"analysis_id" : analysis_id})
 
         if analysis_id.is_harmonic():
             return HarmonicAnalysisSetup(**analysis_setup_dict)
@@ -415,7 +401,7 @@ class ProjectReader:
         if model.analysis_id.is_harmonic():
             return self.read_harmonic_solution()
         elif model.analysis_id.is_modal():
-            return self.read_modal_solution()
+            return self.read_modal_solution(model)
         else:
             return None
 
@@ -425,17 +411,15 @@ class ProjectReader:
 
         return LazyHarmonicSolution(self.project_paths)
 
-    def read_modal_solution(self) -> Optional[ModalSolution]:
+    def read_modal_solution(self, model: Model) -> Optional[ModalSolution]:
         if not self.project_paths.modal_solution_filepath.exists():
             return None
-
-        analysis_id = self.read_current_analysis_id()
 
         with h5py.File(self.project_paths.modal_solution_filepath, "r") as file:
             file: h5py.File
 
             return ModalSolution(
-                analysis_id=analysis_id,
+                analysis_id=model.analysis_id,
                 natural_frequencies=file["frequencies"],
                 modal_shapes=file["solution"],
                 displacement_dof=file.get("displacement_dof"),

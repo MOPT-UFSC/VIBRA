@@ -47,7 +47,7 @@ class Mesh:
         self.reset_variables()
 
     def reset_variables(self):
-        self.element_type = DEFAULT_ELEMENT_TYPE
+        self.element_setup = DEFAULT_ELEMENT_TYPE
 
         ## geometry-related attributes
 
@@ -122,6 +122,7 @@ class Mesh:
         self.curvatures_surface = dict()
         self.nodal_normals_data = dict()
         self.solid_elements_center = dict()
+        self.surfaces_centers = dict()
         self.surface_area_from_element_integration = dict()
         self.cylindrical_surfaces_data = dict()
 
@@ -200,8 +201,8 @@ class Mesh:
         else:
             return 1
 
-    def set_element_type(self, element_type: ElementSetup):
-        self.element_type = element_type
+    def set_element_setup(self, element_setup: ElementSetup):
+        self.element_setup = element_setup
 
     def new_load_cad(self, path: str | Path, mesh_setup: MeshSetup):
         if not gmsh.is_initialized():
@@ -389,8 +390,8 @@ class Mesh:
         gmsh_gui = kwargs.get("gmsh_gui", False)
         self.geometry_imported = False
 
-        # self.element_type = kwargs.get("ElementType", DEFAULT_ELEMENT_TYPE)
-        # self.element_type: ElementType
+        # self.element_setup = kwargs.get("ElementType", DEFAULT_ELEMENT_TYPE)
+        # self.element_setup: ElementType
 
         gmsh.initialize("", False)
         gmsh.option.setNumber("General.Terminal", 0)
@@ -432,13 +433,13 @@ class Mesh:
     def update_element_type(self):
         nodes_per_element = self.solids_connectivity[0, 4:].size
         if nodes_per_element == 4:
-            self.element_type = TETRAHEDRON_4
+            self.element_setup = TETRAHEDRON_4
         elif nodes_per_element == 10:
-            self.element_type = TETRAHEDRON_10
+            self.element_setup = TETRAHEDRON_10
         elif nodes_per_element == 8:
-            self.element_type = HEXAHEDRON_8
+            self.element_setup = HEXAHEDRON_8
         elif nodes_per_element == 20:
-            self.element_type = HEXAHEDRON_20
+            self.element_setup = HEXAHEDRON_20
         else:
             return
 
@@ -1869,7 +1870,12 @@ class Mesh:
 
         return face_elements_connected_to_nodes
 
-    def get_solid_elements_connected_to_nodes(self, **kwargs) -> tuple[dict, np.ndarray]:
+    def get_solid_elements_connected_to_nodes(
+            self, 
+            node_ids: list[int] | np.ndarray | None = None,
+            surface_id: int | None = None,
+            return_nodes: bool = False,
+            ) -> tuple[dict, np.ndarray]:
         """
         This method processes the solid elements connected to the nodes.
         It returns a dictionary mapping the node IDs to the solid element IDs.
@@ -1877,13 +1883,12 @@ class Mesh:
 
         # t0 = time()
 
-        surface_id = kwargs.get("surface_id")
-        if isinstance(surface_id, int):
-            node_ids = self.get_nodes_from_surface(surface_id)
-        else:
-            node_ids = kwargs.get("node_ids")
+        if node_ids is None:
+            if isinstance(surface_id, int):
+                node_ids = self.get_nodes_from_surface(surface_id)
 
-        return_nodes = kwargs.get("return_nodes", False)
+        if node_ids is None:
+            return
 
         mask_0 = np.sum(np.isin(self.solids_connectivity[:, 4:], node_ids), axis=1) >= 1
         filtered_data = self.solids_connectivity[mask_0, :]
@@ -1915,6 +1920,32 @@ class Mesh:
             return solid_elements_connected_to_nodes, nodes_from_solid_elements
 
         return solid_elements_connected_to_nodes
+
+
+    def get_solid_elements_from_nodes(
+            self, 
+            node_ids : list[int] | np.ndarray,
+            return_enodes: bool = False,
+            ):
+
+        mask = np.sum(np.isin(self.solids_connectivity[:, 4:], node_ids), axis=1) >= 1
+        element_ids = self.solids_connectivity[mask, 0]
+
+        if not return_enodes:
+            return element_ids
+
+        # unique, counts = np.unique(self.solids_connectivity[mask, 4:], return_counts=True)
+        # counts_map = dict(zip(unique, counts))
+
+        unique = np.unique(self.solids_connectivity[mask, 4:])
+        element_nodes = np.sort(unique)
+
+        return element_ids, element_nodes#, counts_map
+
+    
+    def get_global_dofs(self, node_ids: list[int] | np.ndarray, dofs_per_node: int):
+        pass
+
 
     def get_surface_nodal_normals_reference(self, surface_id: int) -> dict:
         """
@@ -2346,6 +2377,11 @@ class Mesh:
             elif dim == 2:
                 self.area_from_surfaces[tag] = value * (unit_factor**2)
 
+                uv_min, uv_max = gmsh.model.getParametrizationBounds(dim, tag)
+                uv_mid = (uv_min + uv_max) / 2
+                center = gmsh.model.getValue(dim, tag, uv_mid) * unit_factor
+                self.surfaces_centers[tag] = center
+
             elif dim == 1:
                 self.length_from_lines[tag] = value * (unit_factor**1)
 
@@ -2522,6 +2558,9 @@ class Mesh:
                     center_coords.append(avg_coords)
 
         return center_coords
+
+    def get_geometric_surface_center(self, surface_id: int) -> np.ndarray | None:
+        return self.surfaces_centers.get(surface_id)
 
     def get_element_face_normal(self, connect: np.ndarray):
 

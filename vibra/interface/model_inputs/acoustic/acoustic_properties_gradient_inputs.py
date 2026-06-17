@@ -5,13 +5,10 @@ from PySide6.QtWidgets import QLineEdit
 
 from vibra import app
 from vibra.engine.properties.fluid import Fluid
+
 # from vibra.interface import error_title, warning_title
-from vibra.interface.model_inputs.general.fluid.set_fluid_inputs_simplified import (
-    SetFluidInputsSimplified,
-)
-from vibra.interface.ui_generated.model.acoustic.acoustic_properties_gradient_inputs_ui import (
-    AcousticPropertiesGradientInputs_UI,
-)
+from vibra.interface.model_inputs.fluid.set_fluid_inputs_simplified import SetFluidInputsSimplified
+from vibra.interface.ui_generated.model.acoustic.others.acoustic_properties_gradient_inputs_ui import AcousticPropertiesGradientInputs_UI
 
 
 class AcousticPropertiesGradientInputs(AcousticPropertiesGradientInputs_UI):
@@ -54,8 +51,9 @@ class AcousticPropertiesGradientInputs(AcousticPropertiesGradientInputs_UI):
         self.comboBox_attribution_type.currentIndexChanged.connect(self.attribution_type_callback)
         self.comboBox_refinement_regions.currentIndexChanged.connect(self.refinement_regions_callback)
         #
-        self.pushButton_exit.clicked.connect(self.close)
-        self.pushButton_confirm.clicked.connect(self.attribute_callback)
+        self.pushButton_apply.clicked.connect(self.apply_callback)
+        self.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
+        self.pushButton_cancel.clicked.connect(self.close)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
         self.pushButton_get_fluid.clicked.connect(self.get_fluid_callback)
@@ -190,18 +188,16 @@ class AcousticPropertiesGradientInputs(AcousticPropertiesGradientInputs_UI):
 
             self.lineEdit_selection_id.setEnabled(True)
 
-
     def refinement_regions_callback(self):
         pass
 
     def get_fluid_callback(self):
         self.hide()
         self.fluid_dialog = SetFluidInputsSimplified()
-        self.fluid_dialog.fluid_widget.pushButton_attribute.setText("Select fluid")
-        self.fluid_dialog.fluid_widget.pushButton_attribute.clicked.connect(self.get_selected_fluid)
+        self.fluid_dialog.fluid_widget.pushButton_apply.setVisible(False)
+        self.fluid_dialog.fluid_widget.pushButton_apply_and_close.clicked.connect(self.get_selected_fluid)
         self.fluid_dialog.exec()
         app().main_window.set_input_widget(self)
-
 
     def get_selected_fluid(self):
         self.selected_fluid = self.fluid_dialog.get_selected_fluid()
@@ -213,7 +209,6 @@ class AcousticPropertiesGradientInputs(AcousticPropertiesGradientInputs_UI):
 
 
     def tab_event_callback(self):
-
         return
 
         self.pushButton_remove.setDisabled(True)
@@ -239,8 +234,9 @@ class AcousticPropertiesGradientInputs(AcousticPropertiesGradientInputs_UI):
 
             self.lineEdit_selection_id.setDisabled(False)
 
-    def attribute_callback(self):
-        pass
+    def apply_callback(self, close: bool = False):
+        if close:
+            self.close()
 
     def remove_callback(self):
         pass
@@ -261,10 +257,8 @@ class AcousticPropertiesGradientInputs(AcousticPropertiesGradientInputs_UI):
         self.lineEdit_selection_id.setText(key)
         self.pushButton_remove.setEnabled(True)
 
-
     def on_doubleclick_item(self, item):
         self.on_click_item(item)
-
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False

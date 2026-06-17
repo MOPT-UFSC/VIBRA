@@ -1,7 +1,12 @@
 
-from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
+from collections import defaultdict
+from enum import IntEnum
+from os.path import basename
+
+import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
 
 from vibra import app
 from vibra.interface import error_title
@@ -9,13 +14,10 @@ from vibra.interface.common.common_interface import update_analysis_setup_in_fil
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-# from vibra.utils.utils import are_there_values_different_from_zero
-from vibra.interface.ui_generated.model.structural.dof_prescription_inputs_ui import DofPrescriptionInputs_UI
+from vibra.interface.model_inputs.structural.definitions.enums import StandardTabType
 
-import numpy as np
-from enum import IntEnum
-from os.path import basename
-from collections import defaultdict
+# from vibra.utils.utils import are_there_values_different_from_zero
+from vibra.interface.ui_generated.model.structural.excitations.dof_prescription_inputs_ui import DofPrescriptionInputs_UI
 
 
 class ElementFormulation(IntEnum):
@@ -108,31 +110,31 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
     def _create_line_edits(self):
 
         self.constant_line_edits = {
-                                    "Ux": [self.lineEdit_real_ux, self.lineEdit_imag_ux],
-                                    "Uy": [self.lineEdit_real_uy, self.lineEdit_imag_uy],
-                                    "Uz": [self.lineEdit_real_uz, self.lineEdit_imag_uz],
-                                    "Rx": [self.lineEdit_real_rx, self.lineEdit_imag_rx],
-                                    "Ry": [self.lineEdit_real_ry, self.lineEdit_imag_ry],
-                                    "Rz": [self.lineEdit_real_rz, self.lineEdit_imag_rz],
-                                    }
+            "Ux": [self.lineEdit_real_ux, self.lineEdit_imag_ux],
+            "Uy": [self.lineEdit_real_uy, self.lineEdit_imag_uy],
+            "Uz": [self.lineEdit_real_uz, self.lineEdit_imag_uz],
+            "Rx": [self.lineEdit_real_rx, self.lineEdit_imag_rx],
+            "Ry": [self.lineEdit_real_ry, self.lineEdit_imag_ry],
+            "Rz": [self.lineEdit_real_rz, self.lineEdit_imag_rz],
+        }
 
-        self.table_line_edits = { 
-                                 "Ux" : self.lineEdit_path_table_ux,
-                                 "Uy" : self.lineEdit_path_table_uy,
-                                 "Uz" : self.lineEdit_path_table_uz,
-                                 "Rx" : self.lineEdit_path_table_rx,
-                                 "Ry" : self.lineEdit_path_table_ry,
-                                 "Rz" : self.lineEdit_path_table_rz,
-                                 }
+        self.table_line_edits = {
+            "Ux": self.lineEdit_path_table_ux,
+            "Uy": self.lineEdit_path_table_uy,
+            "Uz": self.lineEdit_path_table_uz,
+            "Rx": self.lineEdit_path_table_rx,
+            "Ry": self.lineEdit_path_table_ry,
+            "Rz": self.lineEdit_path_table_rz,
+        }
 
-        self.dof_setup_combo_boxes = { 
-                                      "Ux" : self.comboBox_displacement_ux,
-                                      "Uy" : self.comboBox_displacement_uy,
-                                      "Uz" : self.comboBox_displacement_uz,
-                                      "Rx" : self.comboBox_rotation_rx,
-                                      "Ry" : self.comboBox_rotation_ry,
-                                      "Rz" : self.comboBox_rotation_rz,
-                                      }
+        self.dof_setup_combo_boxes = {
+            "Ux": self.comboBox_displacement_ux,
+            "Uy": self.comboBox_displacement_uy,
+            "Uz": self.comboBox_displacement_uz,
+            "Rx": self.comboBox_rotation_rx,
+            "Ry": self.comboBox_rotation_ry,
+            "Rz": self.comboBox_rotation_rz,
+        }
 
     def _config_widgets(self):
         #
@@ -155,8 +157,9 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         #
         self.pushButton_all_dof_fixed.clicked.connect(self.set_all_dof_fixed_callback)
         self.pushButton_all_dof_free.clicked.connect(self.set_all_dof_free_callback)
-        self.pushButton_attribute.clicked.connect(self.attribute_callback)
-        self.pushButton_exit.clicked.connect(self.close)
+        self.pushButton_apply.clicked.connect(self.apply_callback)
+        self.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
+        self.pushButton_cancel.clicked.connect(self.close)
         self.pushButton_load_ux_table.clicked.connect(self.load_ux_table)
         self.pushButton_load_uy_table.clicked.connect(self.load_uy_table)
         self.pushButton_load_uz_table.clicked.connect(self.load_uz_table)
@@ -348,7 +351,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         if data is None:
             return
 
-        if self.tabWidget_main.currentIndex() == 2:
+        if self.tabWidget_main.currentIndex() == StandardTabType.LIST:
             return
 
         values = data.get("values", list())
@@ -363,7 +366,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
         if "table_paths" in data.keys():
     
-            self.tabWidget_main.setCurrentIndex(1)
+            self.tabWidget_main.setCurrentIndex(StandardTabType.TABULAR_DATA)
             table_paths = data["table_paths"]
             for index, lineEdit_table in enumerate(self.table_line_edits.values()):
                 if data["element_type"] == "3d_element" and index >= 3:
@@ -375,7 +378,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
         else:
 
-            self.tabWidget_main.setCurrentIndex(0)
+            self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)
             for index, (unit_label, (lineEdit_real, lineEdit_imag)) in enumerate(self.constant_line_edits.items()):
     
                 if data["element_type"] == "3d_element" and index >= 3:
@@ -467,33 +470,28 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         input_ids = self.lineEdit_selection_id.text()
         attribution_type = self.comboBox_attribution_type.currentIndex()
         selection = self.assignment_types.get(attribution_type)
-
-        selected_ids, error_data = self.mesh.check_selected_ids(
-                                                                input_ids, 
-                                                                selection = selection, 
-                                                                single_id = False
-                                                                )
+        selected_ids, error_data = self.mesh.check_selected_ids(input_ids, selection=selection, single_id=False)
 
         if error_data is not None:
             self.hide()
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
-            return
+            return True
 
         etype_index = self.comboBox_element_type.currentIndex()
         element_type = self.element_types[etype_index]
 
         stop, ux = self.check_complex_entries(self.lineEdit_real_ux, self.lineEdit_imag_ux, "ux")
         if stop:
-            return
+            return True
 
         stop, uy = self.check_complex_entries(self.lineEdit_real_uy, self.lineEdit_imag_uy, "uy")
         if stop:
-            return
+            return True
 
         stop, uz = self.check_complex_entries(self.lineEdit_real_uz, self.lineEdit_imag_uz, "uz")
         if stop:
-            return
+            return True
 
         prescribed_dof = [ux, uy, uz]
 
@@ -501,15 +499,15 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
             stop, rx = self.check_complex_entries(self.lineEdit_real_rx, self.lineEdit_imag_rx, "rx")
             if stop:
-                return
+                return True
 
             stop, ry = self.check_complex_entries(self.lineEdit_real_ry, self.lineEdit_imag_ry, "ry")
             if stop:
-                return
+                return True
 
             stop, rz = self.check_complex_entries(self.lineEdit_real_rz, self.lineEdit_imag_rz, "rz")
             if stop:
-                return
+                return True
 
             prescribed_dof.extend([rx, ry, rz])
                 
@@ -521,7 +519,6 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         self.remove_conflicting_excitations(selected_ids, selection, all_dof_free=all_dof_free)
 
         if all_dof_free:
-            self.actions_to_finalize()
             return
 
         real_values = [value if value is None else np.real(value) for value in prescribed_dof]
@@ -530,11 +527,11 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         for selected_id in selected_ids:
 
             data = {
-                    "element_type" : element_type,
-                    "values" : prescribed_dof,
-                    "real_values" : real_values,
-                    "imag_values" : imag_values
-                    }
+                "element_type" : element_type,
+                "values" : prescribed_dof,
+                "real_values" : real_values,
+                "imag_values" : imag_values,
+            }
 
             if attribution_type == AssignmetType.SURFACES:
                 self.properties._set_property("prescribed_dof", data, surface=selected_id)
@@ -547,8 +544,6 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
             elif attribution_type == AssignmetType.NODES:
                 self.properties._set_property("prescribed_dof", data, node=selected_id)
-
-        self.actions_to_finalize()
 
     def load_table(self, lineEdit : QLineEdit, dof_label : str, direct_load = False):
 
@@ -672,18 +667,13 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         input_ids = self.lineEdit_selection_id.text()
         attribution_type = self.comboBox_attribution_type.currentIndex()
         selection = self.assignment_types.get(attribution_type)
-
-        selected_ids, error_data = self.mesh.check_selected_ids(
-                                                                input_ids, 
-                                                                selection = selection, 
-                                                                single_id = False
-                                                                )
+        selected_ids, error_data = self.mesh.check_selected_ids(input_ids, selection=selection, single_id=False)
 
         if error_data is not None:
             self.hide()
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
-            return
+            return True
 
         element_type_index = self.comboBox_element_type.currentIndex()
         if element_type_index == 0:
@@ -745,20 +735,19 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
             if condition_1 or condition_2:
                 self.hide()
                 title = "Additional inputs required"
-                message = "It is necessary to enter at least one prescribed dof "
-                message += "before confirming the property assignment."
+                message = "You must enter at least one prescribed dof table path before confirming the assignment."
                 PrintMessageInput([error_title, title, message]) 
-                return
-    
+                return True
+
             self.remove_duplicated_attributions(selected_ids, selection)
             self.remove_conflicting_excitations(selected_ids, selection)
 
             data = {
-                    "element_type" : element_type,
-                    "table_names" : table_names,
-                    "table_paths" : table_paths,
-                    "values" : prescribed_dof
-                    }
+                "element_type" : element_type,
+                "table_names" : table_names,
+                "table_paths" : table_paths,
+                "values" : prescribed_dof,
+            }
 
             if attribution_type == AssignmetType.SURFACES:
                 self.properties._set_property("prescribed_dof", data, surface=selected_id)
@@ -773,7 +762,6 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                 self.properties._set_property("prescribed_dof", data, node=selected_id)
 
         self.reset_table_variables()
-        self.actions_to_finalize()
 
     def remove_duplicated_attributions(self, selected_ids: list, selection: str):
 
@@ -867,12 +855,22 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
             self.process_table_file_removal(table_names)
 
-    def attribute_callback(self):
+    def apply_callback(self, close_window: bool=False):
+
+        if self.tabWidget_main.currentIndex() == StandardTabType.LIST:
+            return
+
         tab_index = self.tabWidget_main.currentIndex()
-        if tab_index == 0:
-            self.constant_values_attribution()
-        elif tab_index == 1:
-            self.table_values_attribution()
+
+        if tab_index == StandardTabType.CONSTANT_DATA:
+            if self.constant_values_attribution():
+                return
+
+        elif tab_index == StandardTabType.TABULAR_DATA:
+            if self.table_values_attribution():
+                return
+
+        self.actions_to_finalize(close_window)
 
     def text_label(self, mask):
 
@@ -958,20 +956,19 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                 # if not are_there_values_different_from_zero(data.get("values")):
                 #     continue
 
-                self.tabWidget_main.setTabVisible(2, True)
+                self.tabWidget_main.setTabVisible(StandardTabType.LIST, True)
                 return
 
         self.lineEdit_real_ux.setFocus()
-        self.tabWidget_main.setCurrentIndex(0)
-
-        self.tabWidget_main.setTabVisible(2, False)
+        self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)
+        self.tabWidget_main.setTabVisible(StandardTabType.LIST, False)
         app().main_window.selection.set_geometry_selection()
 
     def tab_event_callback(self):
-
-        list_tab = self.tabWidget_main.currentIndex() == 2
+        list_tab = self.tabWidget_main.currentIndex() == StandardTabType.LIST
         self.lineEdit_selection_id.setDisabled(list_tab)
-        self.pushButton_attribute.setDisabled(list_tab)
+        self.pushButton_apply.setDisabled(list_tab)
+        self.pushButton_apply_and_close.setDisabled(list_tab)
         self.pushButton_remove.setDisabled(True)
 
         if list_tab:
@@ -1123,26 +1120,15 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
             app().main_window.selection.set_geometry_selection()
             app().main_window.selection.set_mesh_selection()
 
-    def actions_to_finalize(self):
+    def actions_to_finalize(self, close_window: bool = False):
         self.load_model_info()
         self.reset_input_fields(reset_all=True)
         app().main_window.update_info_text()
         app().project.update_model_properties_file()
         app().main_window.update_symbols()
 
-    def check_model_frequency_controls(self):
-
-        for key, data in self.properties.surface_properties.items():
-            property, _ = key
-            if property in ["nodal_loads", "prescribed_dof"]:
-                if "table_names" in data.keys():
-                    return
-
-        # No idea of what it does
-        app().project.configure_analysis(
-            app().project.model.analysis_id,
-            app().project.model.analysis_setup,
-        )
+        if close_window:
+            self.close()
 
     def reset_input_fields(self, reset_all=False):
 
@@ -1160,7 +1146,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            self.attribute_callback()
+            self.apply_callback()
         elif event.key() == Qt.Key_Delete:
             self.remove_callback()
         elif event.key() == Qt.Key_Escape:

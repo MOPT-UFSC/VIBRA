@@ -1,7 +1,12 @@
 
-from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
+from collections import defaultdict
+from enum import IntEnum
+from os.path import basename
+
+import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
 
 from vibra import app
 from vibra.interface import error_title
@@ -9,12 +14,8 @@ from vibra.interface.common.common_interface import update_analysis_setup_in_fil
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.ui_generated.model.structural.nodal_loads_inputs_ui import NodalLoadsInputs_UI
-
-import numpy as np
-from enum import IntEnum
-from os.path import basename
-from collections import defaultdict
+from vibra.interface.model_inputs.structural.definitions.enums import StandardTabType
+from vibra.interface.ui_generated.model.structural.excitations.nodal_loads_inputs_ui import NodalLoadsInputs_UI
 
 
 class ElementFormulation(IntEnum):
@@ -100,23 +101,23 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
     def _create_list_lineEdits(self):
 
-        self.list_lineEdit_constant_values = [  
-                                              [self.lineEdit_real_Fx, self.lineEdit_imag_Fx],
-                                              [self.lineEdit_real_Fy, self.lineEdit_imag_Fy],
-                                              [self.lineEdit_real_Fz, self.lineEdit_imag_Fz],
-                                              [self.lineEdit_real_Mx, self.lineEdit_imag_Mx],
-                                              [self.lineEdit_real_My, self.lineEdit_imag_My],
-                                              [self.lineEdit_real_Mz, self.lineEdit_imag_Mz],
-                                              ]
+        self.list_lineEdit_constant_values = [
+            [self.lineEdit_real_Fx, self.lineEdit_imag_Fx],
+            [self.lineEdit_real_Fy, self.lineEdit_imag_Fy],
+            [self.lineEdit_real_Fz, self.lineEdit_imag_Fz],
+            [self.lineEdit_real_Mx, self.lineEdit_imag_Mx],
+            [self.lineEdit_real_My, self.lineEdit_imag_My],
+            [self.lineEdit_real_Mz, self.lineEdit_imag_Mz],
+        ]
 
-        self.table_lineEdits = { 
-                                "Fx" : self.lineEdit_path_table_Fx,
-                                "Fy" : self.lineEdit_path_table_Fy,
-                                "Fz" : self.lineEdit_path_table_Fz,
-                                "Mx" : self.lineEdit_path_table_Mx,
-                                "My" : self.lineEdit_path_table_My,
-                                "Mz" : self.lineEdit_path_table_Mz,
-                                }
+        self.table_lineEdits = {
+            "Fx": self.lineEdit_path_table_Fx,
+            "Fy": self.lineEdit_path_table_Fy,
+            "Fz": self.lineEdit_path_table_Fz,
+            "Mx": self.lineEdit_path_table_Mx,
+            "My": self.lineEdit_path_table_My,
+            "Mz": self.lineEdit_path_table_Mz,
+        }
 
     def _config_widgets(self):
         #
@@ -131,15 +132,16 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         self.comboBox_attribution_type.currentIndexChanged.connect(self.attribution_type_callback)
         self.comboBox_element_type.currentIndexChanged.connect(self.element_type_callback)
         #
-        self.pushButton_exit.clicked.connect(self.close)
-        self.pushButton_attribute.clicked.connect(self.attribute_callback)
-        self.pushButton_remove.clicked.connect(self.remove_callback)
+        self.pushButton_apply.clicked.connect(self.apply_callback)
+        self.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
+        self.pushButton_cancel.clicked.connect(self.close)
         self.pushButton_load_Fx_table.clicked.connect(self.load_Fx_table)
         self.pushButton_load_Fy_table.clicked.connect(self.load_Fy_table)
         self.pushButton_load_Fz_table.clicked.connect(self.load_Fz_table)
         self.pushButton_load_Mx_table.clicked.connect(self.load_Mx_table)
         self.pushButton_load_My_table.clicked.connect(self.load_My_table)
         self.pushButton_load_Mz_table.clicked.connect(self.load_Mz_table)
+        self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
         #
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
@@ -333,32 +335,28 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         attribution_type = self.comboBox_attribution_type.currentIndex()
         selection = self.assignment_types.get(attribution_type)
 
-        selected_ids, error_data = self.mesh.check_selected_ids(
-                                                                input_ids, 
-                                                                selection = selection, 
-                                                                single_id = False
-                                                                )
+        selected_ids, error_data = self.mesh.check_selected_ids(input_ids, selection=selection, single_id=False)
 
         if error_data is not None:
             self.hide()
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
-            return
+            return True
 
         index = self.comboBox_element_type.currentIndex()
         element_type = self.element_types[index]
 
         stop, Fx = self.check_complex_entries(self.lineEdit_real_Fx.text(), self.lineEdit_imag_Fx.text(), "Fx")
         if stop:
-            return
+            return True
 
         stop, Fy = self.check_complex_entries(self.lineEdit_real_Fy.text(), self.lineEdit_imag_Fy.text(), "Fy")
         if stop:
-            return
+            return True
 
         stop, Fz = self.check_complex_entries(self.lineEdit_real_Fz.text(), self.lineEdit_imag_Fz.text(), "Fz")
         if stop:
-            return
+            return True
 
         nodal_loads = [Fx, Fy, Fz]
 
@@ -366,15 +364,15 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             
             stop, rx = self.check_complex_entries(self.lineEdit_real_Mx.text(), self.lineEdit_imag_Mx.text(), "rx")
             if stop:
-                return
+                return True
 
             stop, ry = self.check_complex_entries(self.lineEdit_real_My.text(), self.lineEdit_imag_My.text(), "ry")
             if stop:
-                return
+                return True
 
             stop, Mz = self.check_complex_entries(self.lineEdit_real_Mz.text(), self.lineEdit_imag_Mz.text(), "Mz")
             if stop:
-                return
+                return True
 
             nodal_loads.extend([rx, ry, Mz])
 
@@ -384,10 +382,9 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         if condition_1 or condition_2:
             self.hide()
             title = "Additional inputs required"
-            message = "It is necessary to enter at least one prescribed dof "
-            message += "before confirming the property assignment."
+            message = "You must enter at least one nodal loads value before confirming the assignment."
             PrintMessageInput([error_title, title, message])
-            return
+            return True
 
         self.remove_duplicated_attributions(selected_ids, selection)
         self.remove_conflicting_excitations(selected_ids, selection)
@@ -398,15 +395,14 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         key_avg = self.checkBox_averaged_constant_values.isChecked()
 
         for selected_id in selected_ids:
-
             data = {
-                    "element_type" : element_type,
-                    "values" : nodal_loads,
-                    "real_values" : real_values,
-                    "imag_values" : imag_values,
-                    "nodal_attribution": True,
-                    "averaged": key_avg,
-                    }
+                "element_type": element_type,
+                "values": nodal_loads,
+                "real_values": real_values,
+                "imag_values": imag_values,
+                "nodal_attribution": True,
+                "averaged": key_avg,
+            }
 
             if attribution_type == AssignmetType.SURFACES:
                 self.properties._set_property("nodal_loads", data, surface=selected_id)
@@ -419,8 +415,6 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
             elif attribution_type == AssignmetType.NODES:
                 self.properties._set_property("nodal_loads", data, node=selected_id)
-
-        self.actions_to_finalize()
 
     def load_table(self, lineEdit : QLineEdit, load_label : str, direct_load = False):
 
@@ -553,17 +547,13 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         attribution_type = self.comboBox_attribution_type.currentIndex()
         selection = self.assignment_types.get(attribution_type)
 
-        selected_ids, error_data = self.mesh.check_selected_ids(
-                                                                input_ids, 
-                                                                selection = selection, 
-                                                                single_id = False
-                                                                )
+        selected_ids, error_data = self.mesh.check_selected_ids(input_ids, selection=selection, single_id=False)
 
         if error_data is not None:
             self.hide()
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
-            return
+            return True
 
         index = self.comboBox_element_type.currentIndex()
         element_type = self.element_types[index]
@@ -593,17 +583,17 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             if self.Fx_table_values is not None:
                 self.Fx_table_name, self.Fx_array = self.save_table_files("Fx", selected_id, selection, self.Fx_table_values)
                 if self.Fx_array is None:
-                    return
+                    return True
                 
             if self.Fy_table_values is not None:
                 self.Fy_table_name, self.Fy_array = self.save_table_files("Fy", selected_id, selection, self.Fy_table_values)
                 if self.Fy_array is None:
-                    return
+                    return True
                 
             if self.Fz_table_values is not None:
                 self.Fz_table_name, self.Fz_array = self.save_table_files("Fz", selected_id, selection, self.Fz_table_values)
                 if self.Fz_array is None:
-                    return
+                    return True
 
             table_names = [self.Fx_table_name, self.Fy_table_name, self.Fz_table_name]
             table_paths = [self.Fx_table_path, self.Fy_table_path, self.Fz_table_path]
@@ -614,17 +604,17 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                 if self.Mx_table_values is not None:
                     self.Mx_table_name, self.Mx_array = self.save_table_files("Mx", selected_id, selection, self.Mx_table_values)
                     if self.Mx_array is None:
-                        return
+                        return True
 
                 if self.My_table_values is not None:
                     self.My_table_name, self.Mx_array = self.save_table_files("My", selected_id, selection, self.My_table_values)
                     if self.My_array is None:
-                        return
+                        return True
 
                 if self.Mz_table_values is not None:
                     self.Mz_table_name, self.Mx_array = self.save_table_files("Mz", selected_id, selection, self.Mz_table_values)
                     if self.Mz_array is None:
-                        return
+                        return True
 
                 table_names.extend([self.Mx_table_name, self.My_table_name, self.Mz_table_name])
                 table_paths.extend([self.Mx_table_path, self.My_table_path, self.Mz_table_path])
@@ -636,22 +626,21 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             if condition_1 or condition_2:
                 self.hide()
                 title = "Additional inputs required"
-                message = "It is necessary to enter at least one external load "
-                message += "before confirming the property assignment."
+                message = "You must enter at least one nodal loads table path before confirming the assignment."
                 PrintMessageInput([error_title, title, message]) 
-                return
+                return True
            
             self.remove_duplicated_attributions(selected_ids, selection)
             self.remove_conflicting_excitations(selected_ids, selection)
 
             data = {
-                    "element_type" : element_type,
-                    "table_names" : table_names,
-                    "table_paths" : table_paths,
-                    "values" : nodal_loads,
-                    "nodal_attribution": True,
-                    "averaged": key_avg,
-                    }
+                "element_type": element_type,
+                "table_names": table_names,
+                "table_paths": table_paths,
+                "values": nodal_loads,
+                "nodal_attribution": True,
+                "averaged": key_avg,
+            }
 
             if attribution_type == AssignmetType.SURFACES:
                 self.properties._set_property("nodal_loads", data, surface=selected_id)
@@ -666,7 +655,6 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                 self.properties._set_property("nodal_loads", data, node=selected_id)
 
         self.reset_table_variables()
-        self.actions_to_finalize()
 
     def remove_duplicated_attributions(self, selected_ids: list, selection: str):
 
@@ -760,12 +748,22 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
             self.process_table_file_removal(table_names)
 
-    def attribute_callback(self):
+    def apply_callback(self, close_window: bool=False):
+
+        if self.tabWidget_main.currentIndex() == StandardTabType.LIST:
+            return
+
         tab_index = self.tabWidget_main.currentIndex()
-        if tab_index == 0:
-            self.constant_values_attribution()
-        elif tab_index == 1:
-            self.table_values_attribution()
+
+        if tab_index == StandardTabType.CONSTANT_DATA:
+            if self.constant_values_attribution():
+                return
+
+        elif tab_index == StandardTabType.TABULAR_DATA:
+            if self.table_values_attribution():
+                return
+
+        self.actions_to_finalize(close_window)
 
     def text_label(self, mask):
 
@@ -845,21 +843,19 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         for current_property in properties_to_check:
             for (property, _) in current_property.keys():
                 if property == "nodal_loads":
-                    self.tabWidget_main.setTabVisible(2, True)
+                    self.tabWidget_main.setTabVisible(StandardTabType.LIST, True)
                     return
 
         self.lineEdit_real_Fx.setFocus()
-        self.tabWidget_main.setCurrentIndex(0)
-
-        self.tabWidget_main.setTabVisible(2, False)
+        self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)
+        self.tabWidget_main.setTabVisible(StandardTabType.LIST, False)
         app().main_window.selection.set_geometry_selection()
 
     def tab_event_callback(self):
-
-        list_tab = self.tabWidget_main.currentIndex() == 2
+        list_tab = self.tabWidget_main.currentIndex() == StandardTabType.LIST
         self.lineEdit_selection_id.setDisabled(list_tab)
-        self.pushButton_attribute.setDisabled(list_tab)
-        self.pushButton_attribute.setDisabled(list_tab)
+        self.pushButton_apply.setDisabled(list_tab)
+        self.pushButton_apply_and_close.setDisabled(list_tab)
         self.pushButton_remove.setDisabled(True)
 
         if list_tab:
@@ -1008,26 +1004,15 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             app().main_window.selection.set_geometry_selection()
             app().main_window.selection.set_mesh_selection()
 
-    def actions_to_finalize(self):
+    def actions_to_finalize(self, close_window: bool = False):
         self.load_model_info()
         self.reset_input_fields(reset_all=True)
         app().main_window.update_info_text()
         app().project.update_model_properties_file()
         app().main_window.update_symbols()
 
-    def check_model_frequency_controls(self):
-
-        for key, data in self.properties.surface_properties.items():
-            property, _ = key
-            if property in ["nodal_loads", "prescribed_dof"]:
-                if "table_names" in data.keys():
-                    return
-
-        # No idea of what it does
-        app().project.configure_analysis(
-            app().project.model.analysis_id,
-            app().project.model.analysis_setup,
-        )
+        if close_window:
+            self.close()
 
     def reset_input_fields(self, reset_all=False):
 
@@ -1043,7 +1028,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            self.attribute_callback()
+            self.apply_callback()
         elif event.key() == Qt.Key_Delete:
             self.remove_callback()
         elif event.key() == Qt.Key_Escape:
