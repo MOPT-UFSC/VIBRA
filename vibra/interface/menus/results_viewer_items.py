@@ -5,7 +5,6 @@ from PySide6.QtGui import QFont, QIcon, QPen
 
 from vibra import ICON_DIR, app
 from vibra.engine import AnalysisID
-from vibra.engine.analysis_info import HarmonicAnalysisSetup, ModalAnalysisSetup
 from vibra.interface.menus.common_menu_items import ChildTreeWidgetItem, CommonMenuItems, TopTreeWidgetItem
 
 

@@ -13,15 +13,7 @@ from PySide6.QtWidgets import QTableWidgetItem, QVBoxLayout
 
 from vibra import ICON_DIR, app
 from vibra.engine.mesher import gmsh_constants
-from vibra.engine.mesher.element_setup import (
-    HEXAHEDRON_8,
-    HEXAHEDRON_20,
-    TETRAHEDRON_4,
-    TETRAHEDRON_10,
-    ElementSetup,
-    MeshAlgorithms3D,
-    SubdivisionAlgorithms,
-)
+from vibra.engine.mesher.element_setup import GMSH_HEX8, GMSH_HEX20, GMSH_TET4, GMSH_TET10, ElementSetup, MeshAlgorithms3D, SubdivisionAlgorithms
 from vibra.engine.mesher.mesh_setup import MeshRefinementSetup, MeshSetup
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.loading_window import LoadingWindow
@@ -503,13 +495,13 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         custom_element_setup = None
         match element_type, shape_function:
             case "tetrahedral", "linear":
-                custom_element_setup = TETRAHEDRON_4.copy()
+                custom_element_setup = GMSH_TET4.copy()
             case "tetrahedral", "quadratic":
-                custom_element_setup = TETRAHEDRON_10.copy()
+                custom_element_setup = GMSH_TET10.copy()
             case "hexahedral", "linear":
-                custom_element_setup = HEXAHEDRON_8.copy()
+                custom_element_setup = GMSH_HEX8.copy()
             case "hexahedral", "quadratic":
-                custom_element_setup = HEXAHEDRON_20.copy()
+                custom_element_setup = GMSH_HEX20.copy()
 
         assert custom_element_setup is not None
         match self.comboBox_3d_algorithm.currentIndex():
@@ -542,13 +534,13 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         shape_function = self.comboBox_shape_function.currentText().lower()
 
         if element_type == "tetrahedral" and shape_function == "linear":
-            return TETRAHEDRON_4
+            return GMSH_TET4
         elif element_type == "tetrahedral" and shape_function == "quadratic":
-            return TETRAHEDRON_10
+            return GMSH_TET10
         elif element_type == "hexahedral" and shape_function == "linear":
-            return HEXAHEDRON_8
+            return GMSH_HEX8
         elif element_type == "hexahedral" and shape_function == "quadratic":
-            return HEXAHEDRON_20
+            return GMSH_HEX20
         else:
             return None
             # raise NotImplementedError(f"Element type not defined!")
@@ -570,10 +562,10 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         volume_exists = mesh.are_there_volumes_in_geometry()
         element_type = self.get_element_type()
 
-        enable_mesh_metrics = volume_exists and element_type in [None, TETRAHEDRON_4, TETRAHEDRON_10]
+        enable_mesh_metrics = volume_exists and element_type in [None, GMSH_TET4, GMSH_TET10]
         self.comboBox_mesh_quality_metrics.setEnabled(enable_mesh_metrics)
 
-        if element_type not in [None, TETRAHEDRON_4, TETRAHEDRON_10]:
+        if element_type not in [None, GMSH_TET4, GMSH_TET10]:
             self.comboBox_mesh_quality_metrics.setCurrentText("Disabled")
             self.comboBox_mesh_quality_metrics.setDisabled(True)
             if element_type is None:
