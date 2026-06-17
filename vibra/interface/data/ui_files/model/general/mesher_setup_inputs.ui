@@ -178,7 +178,7 @@
           </widget>
          </item>
          <item row="0" column="2">
-          <widget class="QComboBox" name="comboBox_element_type">
+          <widget class="QComboBox" name="comboBox_element_geometry">
            <property name="minimumSize">
             <size>
              <width>120</width>
@@ -228,7 +228,7 @@
             </font>
            </property>
            <property name="text">
-            <string>Element type:</string>
+            <string>Element geometry:</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
@@ -281,7 +281,7 @@
             </font>
            </property>
            <property name="text">
-            <string>Shape function:</string>
+            <string>Element order:</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
@@ -316,7 +316,7 @@
           </widget>
          </item>
          <item row="1" column="2">
-          <widget class="QComboBox" name="comboBox_shape_function">
+          <widget class="QComboBox" name="comboBox_element_order">
            <property name="minimumSize">
             <size>
              <width>120</width>
@@ -393,33 +393,6 @@
            </property>
            <property name="text">
             <string>Volumes interface behavior:</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QLabel" name="label_16">
-           <property name="minimumSize">
-            <size>
-             <width>180</width>
-             <height>20</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>240</width>
-             <height>16777215</height>
-            </size>
-           </property>
-           <property name="font">
-            <font>
-             <pointsize>10</pointsize>
-            </font>
-           </property>
-           <property name="text">
-            <string>Element type:</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
@@ -1969,8 +1942,8 @@
   </layout>
  </widget>
  <tabstops>
-  <tabstop>comboBox_element_type</tabstop>
-  <tabstop>comboBox_shape_function</tabstop>
+  <tabstop>comboBox_element_geometry</tabstop>
+  <tabstop>comboBox_element_order</tabstop>
   <tabstop>comboBox_volumes_interface_behavior</tabstop>
   <tabstop>tabWidget_main</tabstop>
   <tabstop>lineEdit_selected_ids</tabstop>
