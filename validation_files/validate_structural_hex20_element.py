@@ -106,7 +106,6 @@ def load_external_mesh_and_solve(case: str):
 
     ## intialize the model
     model = Model()
-    model.set_element_type(element_geometry="hexahedral", element_order="quadratic")
     model.mesh = mesh
 
     ## assign the created fluid

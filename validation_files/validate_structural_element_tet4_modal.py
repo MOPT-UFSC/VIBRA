@@ -96,7 +96,6 @@ def load_external_mesh_and_solve(integration_type: str):
 
     ## intialize the model
     model = Model()
-    model.set_element_type(element_geometry="tetrahedral", element_order="linear")
     model.mesh = mesh
 
     ## assign the created fluid
