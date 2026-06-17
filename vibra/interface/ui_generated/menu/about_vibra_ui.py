@@ -120,6 +120,7 @@ class Ui_Dialog(object):
 
         self.logo_label = QLabel(Dialog)
         self.logo_label.setObjectName(u"logo_label")
+        self.logo_label.setMinimumSize(QSize(0, 50))
         self.logo_label.setMaximumSize(QSize(16777215, 48))
         self.logo_label.setAlignment(Qt.AlignCenter)
 
