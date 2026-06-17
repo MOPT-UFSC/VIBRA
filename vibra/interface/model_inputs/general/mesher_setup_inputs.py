@@ -13,15 +13,7 @@ from PySide6.QtWidgets import QTableWidgetItem, QVBoxLayout
 
 from vibra import ICON_DIR, app
 from vibra.engine.mesher import gmsh_constants
-from vibra.engine.mesher.element_setup import (
-    HEXAHEDRON_8,
-    HEXAHEDRON_20,
-    TETRAHEDRON_4,
-    TETRAHEDRON_10,
-    ElementSetup,
-    MeshAlgorithms3D,
-    SubdivisionAlgorithms,
-)
+from vibra.engine.mesher.element_setup import GMSH_HEX8, GMSH_HEX20, GMSH_TET4, GMSH_TET10, ElementSetup, MeshAlgorithms3D, SubdivisionAlgorithms
 from vibra.engine.mesher.mesh_setup import MeshRefinementSetup, MeshSetup
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.loading_window import LoadingWindow
@@ -122,8 +114,8 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
     def _create_connections(self):
         #
-        self.comboBox_shape_function.currentIndexChanged.connect(self.update_advanced_gmsh_controls)
-        self.comboBox_element_type.currentIndexChanged.connect(self.update_advanced_gmsh_controls)
+        self.comboBox_element_geometry.currentIndexChanged.connect(self.update_advanced_gmsh_controls)
+        self.comboBox_element_order.currentIndexChanged.connect(self.update_advanced_gmsh_controls)
         #
         self.doubleSpinBox_maximum_element_size.valueChanged.connect(self.maximum_element_size_changed_callback)
         #
@@ -161,14 +153,13 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
     def _load_current_mesh_setup(self):
         mesh_setup = app().project.model.mesh_setup
-
         if mesh_setup is None:
             self._load_initial_element_size()
             self._show_quality_table(False)
             return
 
         self.tmp_refinement_parameters = deepcopy(mesh_setup.refinement_parameters)
-        self.update_element_type(mesh_setup.element_setup)
+        self.update_interface_controls(mesh_setup)
 
         self.doubleSpinBox_maximum_element_size.setValue(mesh_setup.maximum_element_size)
         self.doubleSpinBox_minimum_element_size.setValue(mesh_setup.minimum_element_size)
@@ -304,22 +295,23 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.tmp_refinement_parameters.pop(current_row)
         self.update_mesh_refinement_table()
 
-    def update_element_type(self, element_setup: ElementSetup):
-        match element_setup.element_order:
-            case 1:
-                self.comboBox_shape_function.setCurrentText("Linear")
-            case 2:
-                self.comboBox_shape_function.setCurrentText("Quadratic")
+    def update_interface_controls(self, mesh_setup: MeshSetup):
+
+        match mesh_setup.element_order:
+            case "linear":
+                self.comboBox_element_order.setCurrentText("Linear")
+            case "quadratic":
+                self.comboBox_element_order.setCurrentText("Quadratic")
             case _:
                 raise NotImplementedError("Invalid element order")
 
-        match element_setup.subdivision_algorithm:
+        match mesh_setup.element_setup.subdivision_algorithm:
             case SubdivisionAlgorithms.NO_SUBDIVISION:
-                self.comboBox_element_type.setCurrentText("Tetrahedral")
+                self.comboBox_element_geometry.setCurrentText("Tetrahedral")
             case SubdivisionAlgorithms.ALL_HEXAHEDRA_SUBDIVISION:
-                self.comboBox_element_type.setCurrentText("Hexahedral")
+                self.comboBox_element_geometry.setCurrentText("Hexahedral")
 
-        match element_setup.algorithm_3d:
+        match mesh_setup.element_setup.algorithm_3d:
             case MeshAlgorithms3D.DELAUNAY_3D:
                 self.comboBox_3d_algorithm.setCurrentIndex(GMSHAlgorithms_3D.DELAUNAY_3D)
             case MeshAlgorithms3D.FRONTAL_3D:
@@ -463,11 +455,11 @@ class MesherSetupInputs(MesherSetupInputs_UI):
                 return color_names.GREEN
 
     def _get_mesh_setup(self) -> MeshSetup:
-        element_type = self.comboBox_element_type.currentText().lower()  # not great
-        assert element_type in ("tetrahedral", "hexahedral")
+        element_geometry = self.comboBox_element_geometry.currentText().lower()  # not great
+        assert element_geometry in ("tetrahedral", "hexahedral")
 
-        shape_function = self.comboBox_shape_function.currentText().lower()  # not great
-        assert shape_function in ("linear", "quadratic")
+        element_order = self.comboBox_element_order.currentText().lower()  # not great
+        assert element_order in ("linear", "quadratic")
 
         try:
             geometry_tolerance = float(self.lineEdit_geometry_tolerance.text())
@@ -485,8 +477,8 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             maximum_element_size=self.doubleSpinBox_maximum_element_size.value(),
             geometry_tolerance=geometry_tolerance,
             size_factor=self.doubleSpinBox_size_factor.value(),
-            element_type=element_type,
-            shape_function=shape_function,
+            element_geometry=element_geometry,
+            element_order=element_order,
             merge_connected_volumes=merge_connected_volumes,
             compute_quality_metrics=compute_quality_metrics,
             custom_element_setup=self._get_custom_element_setup(),
@@ -494,22 +486,22 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         )
 
     def _get_custom_element_setup(self) -> ElementSetup:
-        element_type = self.comboBox_element_type.currentText().lower()  # not great
-        assert element_type in ("tetrahedral", "hexahedral")
+        element_geometry = self.comboBox_element_geometry.currentText().lower()  # not great
+        assert element_geometry in ("tetrahedral", "hexahedral")
 
-        shape_function = self.comboBox_shape_function.currentText().lower()  # not great
-        assert shape_function in ("linear", "quadratic")
+        element_order = self.comboBox_element_order.currentText().lower()  # not great
+        assert element_order in ("linear", "quadratic")
 
         custom_element_setup = None
-        match element_type, shape_function:
+        match element_geometry, element_order:
             case "tetrahedral", "linear":
-                custom_element_setup = TETRAHEDRON_4.copy()
+                custom_element_setup = GMSH_TET4.copy()
             case "tetrahedral", "quadratic":
-                custom_element_setup = TETRAHEDRON_10.copy()
+                custom_element_setup = GMSH_TET10.copy()
             case "hexahedral", "linear":
-                custom_element_setup = HEXAHEDRON_8.copy()
+                custom_element_setup = GMSH_HEX8.copy()
             case "hexahedral", "quadratic":
-                custom_element_setup = HEXAHEDRON_20.copy()
+                custom_element_setup = GMSH_HEX20.copy()
 
         assert custom_element_setup is not None
         match self.comboBox_3d_algorithm.currentIndex():
@@ -537,18 +529,18 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         app().main_window.action_export_element_transfer_data.setDisabled(True)
         app().main_window.update_symbols()
 
-    def get_element_type(self) -> ElementSetup:
-        element_type = self.comboBox_element_type.currentText().lower()
-        shape_function = self.comboBox_shape_function.currentText().lower()
+    def get_element_setup(self) -> ElementSetup:
+        element_geometry = self.comboBox_element_geometry.currentText().lower()
+        element_order = self.comboBox_element_order.currentText().lower()
 
-        if element_type == "tetrahedral" and shape_function == "linear":
-            return TETRAHEDRON_4
-        elif element_type == "tetrahedral" and shape_function == "quadratic":
-            return TETRAHEDRON_10
-        elif element_type == "hexahedral" and shape_function == "linear":
-            return HEXAHEDRON_8
-        elif element_type == "hexahedral" and shape_function == "quadratic":
-            return HEXAHEDRON_20
+        if element_geometry == "tetrahedral" and element_order == "linear":
+            return GMSH_TET4
+        elif element_geometry == "tetrahedral" and element_order == "quadratic":
+            return GMSH_TET10
+        elif element_geometry == "hexahedral" and element_order == "linear":
+            return GMSH_HEX8
+        elif element_geometry == "hexahedral" and element_order == "quadratic":
+            return GMSH_HEX20
         else:
             return None
             # raise NotImplementedError(f"Element type not defined!")
@@ -559,28 +551,33 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             return
 
         if not mesh.are_there_volumes_in_geometry():
-            self.comboBox_element_type.removeItem(1)
-            self.comboBox_shape_function.removeItem(1)
+            self.comboBox_element_geometry.removeItem(1)
+            self.comboBox_element_order.removeItem(1)
         
     def update_advanced_gmsh_controls(self):
-        mesh = app().project.model.mesh
-        if mesh is None:
+        model = app().project.model
+        if model.mesh is None:
             return
 
-        volume_exists = mesh.are_there_volumes_in_geometry()
-        element_type = self.get_element_type()
+        if isinstance(model.mesh_setup, MeshSetup):
+            element_setup = model.mesh_setup.element_setup
+        else:
+            element_setup = self.get_element_setup()
 
-        enable_mesh_metrics = volume_exists and element_type in [None, TETRAHEDRON_4, TETRAHEDRON_10]
+        volume_exists = model.mesh.are_there_volumes_in_geometry()
+
+        enable_mesh_metrics = volume_exists and element_setup in [None, GMSH_TET4, GMSH_TET10]
         self.comboBox_mesh_quality_metrics.setEnabled(enable_mesh_metrics)
 
-        if element_type not in [None, TETRAHEDRON_4, TETRAHEDRON_10]:
+        if element_setup not in [None, GMSH_TET4, GMSH_TET10]:
             self.comboBox_mesh_quality_metrics.setCurrentText("Disabled")
             self.comboBox_mesh_quality_metrics.setDisabled(True)
-            if element_type is None:
+            if element_setup is None:
                 return
 
-        self.comboBox_2d_algorithm.setCurrentIndex(map_algorithms_2d[element_type.algorithm_2d])
-        self.comboBox_3d_algorithm.setCurrentIndex(map_algorithms_3d[element_type.algorithm_3d])
+        self.comboBox_2d_algorithm.setCurrentIndex(map_algorithms_2d[element_setup.algorithm_2d])
+        self.comboBox_3d_algorithm.setCurrentIndex(map_algorithms_3d[element_setup.algorithm_3d])
+
     def mesh_quality_item_clicked_callback(self, item):
         self.pushButton_show_bad_elements.setEnabled(False)
 

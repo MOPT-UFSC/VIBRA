@@ -1,4 +1,3 @@
-from pathlib import Path
 
 from molde import Color
 from PySide6.QtCore import Qt
@@ -44,9 +43,9 @@ class ModelSetupItems(CommonMenuItems):
                         exhibit minor variations. We appreciate your understanding as we continue to improve the precision of our models.</p>
                         '''
         self.item_top_structural_model_setup.setToolTip(0, tooltip_html)
-        path_image = str(Path((ICON_DIR / "model_setup_items" / "structural_help.png")))
+        path_image = str(ICON_DIR / "model_setup_items/structural_help.png")
         self.item_top_structural_model_setup.setIcon(0, QIcon(path_image))
-        
+
         self.item_child_surface_thickness = self.add_item("Surface Thickness")
         self.item_child_prescribed_dof = self.add_item("Prescribed DOF")
         self.item_child_nodal_loads = self.add_item("Nodal Loads")
@@ -376,6 +375,7 @@ class ModelSetupItems(CommonMenuItems):
             return
 
         for top_level_items in self.top_level_items:
+
             for index in range(top_level_items.childCount()):
                 item_child: ChildTreeWidgetItem = top_level_items.child(index)
                 item_child_name = self._find_qtree_widget_item_name(item_child)

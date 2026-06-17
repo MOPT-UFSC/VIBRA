@@ -668,13 +668,10 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
             self.load_model_info()
 
             logging.info("Processing the post-assignment actions... [20/100]")
-            app().project.reset_solution()
+            app().main_window.analysis_toolbar.reset_solution()
 
             logging.info("Processing the post-assignment actions... [30/100]")
             app().project.project_writer.delete_mesh_data()
-
-            logging.info("Processing the post-assignment actions... [50/100]")
-            app().project.update_model_properties_file()
 
             logging.info("Processing the post-assignment actions... [60/100]")
             app().project.update_model_properties_file()
@@ -690,9 +687,6 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
             logging.info("Processing the post-assignment actions... [95/100]")
             app().main_window.selection.set_geometry_selection()
-
-            logging.info("Processing the post-assignment actions... [100/100]")
-            app().main_window.analysis_toolbar.reset_solution_action.setDisabled(True)
 
         LoadingWindow(callback).run()
 
