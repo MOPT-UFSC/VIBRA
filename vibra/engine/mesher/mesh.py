@@ -187,18 +187,17 @@ class Mesh:
         else:
             return 1
 
-    def new_load_cad(self, path: str | Path, mesh_setup: MeshSetup):
+    def new_load_cad(self, path: str | Path, mesh_setup: MeshSetup, threads: int = 0):
         if not gmsh.is_initialized():
             gmsh.initialize("", False, interruptible=False)
             gmsh.option.set_number("General.Terminal", 0)
             gmsh.option.set_number("General.Verbosity", 0)
             gmsh.option.set_number("Geometry.Tolerance", mesh_setup.geometry_tolerance)
 
-            n_thread = 0
-            gmsh.option.set_number("General.NumThreads", n_thread)
-            gmsh.option.set_number("Mesh.MaxNumThreads1D", n_thread)
-            gmsh.option.set_number("Mesh.MaxNumThreads2D", n_thread)
-            gmsh.option.set_number("Mesh.MaxNumThreads3D", n_thread)
+            gmsh.option.set_number("General.NumThreads", threads)
+            gmsh.option.set_number("Mesh.MaxNumThreads1D", threads)
+            gmsh.option.set_number("Mesh.MaxNumThreads2D", threads)
+            gmsh.option.set_number("Mesh.MaxNumThreads3D", threads)
 
             logging.info("Loading geometry... [10/100]")
             gmsh.open(str(path))
