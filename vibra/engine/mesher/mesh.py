@@ -273,7 +273,7 @@ class Mesh:
         gmsh.model.mesh.clear()
         gmsh.model.occ.synchronize()
 
-        self.element_topology = mesh_setup.element_topology
+        # self.element_topology = mesh_setup.element_topology
 
     def load_cad(self, path: str | Path, **kwargs):
         import warnings
@@ -389,7 +389,7 @@ class Mesh:
 
         logging.info("Post-processing mesh... [50/100]")
         self.post_process_mesh_data()
-        self.update_element_type_based_on_connectivity()
+        self.update_element_topology_based_on_connectivity()
 
         logging.info("Post-processing mesh... [80/100]")
         self.process_downwards_adjacencies_from_mesh_data()
@@ -412,7 +412,7 @@ class Mesh:
 
         return self
 
-    def update_element_type_based_on_connectivity(self):
+    def update_element_topology_based_on_connectivity(self):
         """
         This method updates the element type based on the connectivity information.
         It's only used when working with NASTRAN files.

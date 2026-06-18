@@ -106,7 +106,7 @@ class Model:
             return
 
         if self.mesh.element_topology is None:
-            self.mesh.update_element_type_based_on_connectivity()
+            self.mesh.update_element_topology_based_on_connectivity()
 
         return self.mesh.element_topology
 
