@@ -201,7 +201,7 @@ class Model:
     def set_properties(self, properties):
         self.properties = properties
 
-    def set_mesh_setup(self, mesh_setup: MeshSetup):
+    def set_mesh_setup(self, mesh_setup: MeshSetup | None):
         self.mesh_setup = mesh_setup
 
     def initialize_mesh(self):
