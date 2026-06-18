@@ -1,6 +1,5 @@
 import logging
 from copy import deepcopy
-from dataclasses import asdict
 from numbers import Number
 from pathlib import Path
 from typing import Callable, Optional
@@ -45,7 +44,7 @@ from vibra.engine.elements.elements_3d import (
 )
 from vibra.engine.geometry.geometry import LengthUnits
 from vibra.engine.mesh_modifiers.degrees_of_freedom_decoupling import DegreesOfFreedomDecoupling
-from vibra.engine.mesher.element_setup import DEFAULT_ELEMENT_SETUP, GMSH_VISUAL_MESH
+from vibra.engine.mesher.element_setup import GMSH_VISUAL_MESH
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.mesh_setup import HEXAHEDRON_8, HEXAHEDRON_20, TETRAHEDRON_4, TETRAHEDRON_10, ElementTopology, MeshSetup
 from vibra.engine.properties.fluid import Fluid

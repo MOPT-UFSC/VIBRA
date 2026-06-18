@@ -1,13 +1,15 @@
 #fmt: off
 
+from typing import TYPE_CHECKING
+
 from vibra.engine.elements.surface_elements import Element2D
 from vibra.engine.properties.material import Material
 
-from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from vibra.engine.model import Model
 
 import numpy as np
+
 np.set_printoptions(precision=18)#threshold=sys.maxsize)
 
 
@@ -942,7 +944,6 @@ def elementary_matrices(nodal_coords: np.ndarray):
 
 if __name__ == "__main__":
     
-    from vibra import PROJECT_DIR
 
     nodal_coords = np.array([[1.0, 0.0, 0.0],
                              [0.0, 1.0, 0.0],

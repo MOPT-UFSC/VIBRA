@@ -1,8 +1,7 @@
+import os
 from collections import defaultdict
 from pathlib import Path
-from time import time
 
-import os
 import numpy as np
 
 
