@@ -2805,25 +2805,3 @@ class Mesh:
 
     def reset_error_data(self):
         self.error_data.clear()
-
-
-if __name__ == "__main__":
-    # path = "C:\\Repositorios\\VibraEngine\\examples\\geometry_files\\Paralelepipedo.STEP"
-    # path = "C:\\Repositorios\\VibraEngine\\examples\\geometry_files\\Tetraedro.STEP"
-    # path = "C:\\Repositorios\\VibraEngine\\examples\\geometry_files\\Cubo_1m3.STEP"
-    # path = "C:\\Repositorios\\VibraEngine\\examples\\geometry_files\\Cilindro.STEP"
-    # path = "C:\\Repositorios\\VibraEngine\\examples\\script_files\\script_hex_elements.txt"
-
-    path = "data/geometries/vessel.step"
-
-    if not os.path.exists(path):
-        raise FileNotFoundError
-
-    mesh = Mesh()
-    mesh.load_cad(
-        path,
-        maximum_element_size=100,
-        minimum_element_size=100,
-        size_factor=0,
-        ElementSetup=DEFAULT_ELEMENT_SETUP,
-    )
