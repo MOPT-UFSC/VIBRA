@@ -214,6 +214,7 @@ class Mesh:
         logging.info("Processing geometry data... [35/100]")
         self.process_downwards_adjacencies_from_entities()
         self.process_upwards_adjacencies_from_entities()
+        self.update_element_topology_based_on_connectivity()
 
         try:
             dimension = mesh_setup.element_setup.dimensions
@@ -271,8 +272,6 @@ class Mesh:
 
         gmsh.model.mesh.clear()
         gmsh.model.occ.synchronize()
-
-        self.element_topology = mesh_setup.element_topology
 
     def load_cad(self, path: str | Path, **kwargs):
         import warnings
