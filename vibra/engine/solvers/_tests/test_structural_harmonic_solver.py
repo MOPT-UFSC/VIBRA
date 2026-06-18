@@ -4,9 +4,9 @@ import numpy as np
 from typing_extensions import TYPE_CHECKING
 
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
+from vibra.engine.serialization.project_paths import ProjectPaths
 from vibra.engine.solution import HarmonicSolution, LazyHarmonicSolution
 from vibra.engine.solvers.harmonic_solver import HarmonicSolver
-from vibra.project_files.project_file import ProjectFile
 
 if TYPE_CHECKING:
     from vibra.engine.model import Model
@@ -15,8 +15,8 @@ if TYPE_CHECKING:
 def test_regression_structural_harmonic_solver_solution(datadir, structural_harmonic_analysis: Model):
     assembler = StructuralAssembler(structural_harmonic_analysis)
     assembler.assemble_global_matrices_and_excitations()
-    project_file = ProjectFile(str(datadir))
-    harmonic_solver = HarmonicSolver(assembler, project_file)
+    project_paths = ProjectPaths(datadir)
+    harmonic_solver = HarmonicSolver(assembler, project_paths)
 
     frequencies = structural_harmonic_analysis.frequencies
 
