@@ -591,11 +591,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         if model.mesh is None:
             return
 
-        if isinstance(model.mesh_setup, MeshSetup):
-            element_setup = model.mesh_setup.element_setup
-        else:
-            element_setup = self.get_element_setup()
-
+        element_setup = self.get_element_setup()
         volume_exists = model.mesh.are_there_volumes_in_geometry()
 
         enable_mesh_metrics = volume_exists and element_setup in [None, GMSH_TET4, GMSH_TET10]

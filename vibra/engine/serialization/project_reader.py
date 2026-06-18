@@ -137,13 +137,23 @@ class ProjectReader:
         if custom_element is not None:
             custom_element = ElementSetup(**custom_element)
 
+        if "element_type" in mesh_setup_dict.keys():
+            element_geometry = mesh_setup_dict.get("element_type")
+        else:
+            element_geometry = mesh_setup_dict.get("element_geometry", "tetrahedral")
+
+        if "shape_function" in mesh_setup_dict.keys():
+            element_order = mesh_setup_dict.get("shape_function")
+        else:
+            element_order = mesh_setup_dict.get("element_order", "linear")
+
         mesh_setup = MeshSetup(
             minimum_element_size=mesh_setup_dict.get("minimum_element_size", 0),
             maximum_element_size=mesh_setup_dict.get("maximum_element_size", float("inf")),
             geometry_tolerance=mesh_setup_dict.get("geometry_tolerance", 1e-6),
             size_factor=mesh_setup_dict.get("size_factor", 1),
-            element_geometry=mesh_setup_dict.get("element_type", "tetrahedral"),
-            element_order=mesh_setup_dict.get("shape_function","linear"),
+            element_geometry=element_geometry,
+            element_order=element_order,
             compute_quality_metrics=mesh_setup_dict.get("compute_quality_metrics", False),
             merge_connected_volumes=mesh_setup_dict.get("merge_connected_volumes", False),
             refinement_parameters=refinement_parameters,
