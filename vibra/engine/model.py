@@ -218,7 +218,7 @@ class Model:
                     maximum_element_size=element_size,
                     custom_element_setup=GMSH_VISUAL_MESH,
                 )
-                self.mesh.new_load_cad(path, mesh_setup)
+                self.mesh.load_cad(path, mesh_setup)
 
             except Exception:
                 element_size = 10
@@ -275,7 +275,7 @@ class Model:
 
         logging.info("Processing mesh [80/100]")
         self.mesh = Mesh(length_unit=self.length_unit, geometry_qf=self.geometry_qf)
-        self.mesh.new_load_cad(self.geometry_path, self.mesh_setup)
+        self.mesh.load_cad(self.geometry_path, self.mesh_setup)
 
         if self.disable_resume_callback is not None:
             self.disable_resume_callback()

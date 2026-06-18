@@ -18,7 +18,7 @@ def test_tetrahedron_4_mesh():
         maximum_element_size=80,
         custom_element_setup=GMSH_TET4,
     )
-    mesh = Mesh().new_load_cad(geometry_path, mesh_setup, threads=1)
+    mesh = Mesh().load_cad(geometry_path, mesh_setup, threads=1)
     assert mesh.element_topology == ElementTopology("tetrahedral", "linear")
 
     _compare_mesh(
@@ -36,7 +36,7 @@ def test_tetrahedron_10_mesh():
         maximum_element_size=80,
         custom_element_setup=GMSH_TET10,
     )
-    mesh = Mesh().new_load_cad(geometry_path, mesh_setup, threads=1)
+    mesh = Mesh().load_cad(geometry_path, mesh_setup, threads=1)
     assert mesh.element_topology == ElementTopology("tetrahedral", "quadratic")
 
     _compare_mesh(
@@ -54,7 +54,7 @@ def test_hexahedron_8_mesh():
         maximum_element_size=80,
         custom_element_setup=GMSH_HEX8,
     )
-    mesh = Mesh().new_load_cad(geometry_path, mesh_setup, threads=1)
+    mesh = Mesh().load_cad(geometry_path, mesh_setup, threads=1)
     assert mesh.element_topology == ElementTopology("hexahedral", "linear")
 
     # hexahedral mesh is not deterministic =(
@@ -73,7 +73,7 @@ def test_hexahedron_20_mesh():
         maximum_element_size=300,
         custom_element_setup=GMSH_HEX20,
     )
-    mesh = Mesh().new_load_cad(geometry_path, mesh_setup, threads=1)
+    mesh = Mesh().load_cad(geometry_path, mesh_setup, threads=1)
     assert mesh.element_topology == ElementTopology("hexahedral", "quadratic")
 
     # hexahedral mesh is not deterministic =(

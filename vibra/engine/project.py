@@ -251,7 +251,7 @@ class Project:
         if not isinstance(mesh_setup, MeshSetup):
             raise errors.InvalidMeshSetupError("The mesh setup has not been configured yet.")
 
-        mesh = Mesh().new_load_cad(self.model.geometry_path, mesh_setup)
+        mesh = Mesh().load_cad(self.model.geometry_path, mesh_setup)
 
         if mesh.collapsed_1d_elements or mesh.collapsed_2d_elements or mesh.collapsed_3d_elements:
             message = "The generated mesh contains collapsed elements."

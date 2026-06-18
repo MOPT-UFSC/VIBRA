@@ -187,7 +187,7 @@ class Mesh:
         else:
             return 1
 
-    def new_load_cad(self, path: str | Path, mesh_setup: MeshSetup, threads: int = 0) -> Self:
+    def load_cad(self, path: str | Path, mesh_setup: MeshSetup, threads: int = 0) -> Self:
         if not gmsh.is_initialized():
             gmsh.initialize("", False, interruptible=False)
             gmsh.option.set_number("General.Terminal", 0)
@@ -203,7 +203,7 @@ class Mesh:
             gmsh.open(str(path))
 
         logging.info("Configuring mesh... [20/100]")
-        self._new_configure_mesh(mesh_setup)
+        self._configure_mesh(mesh_setup)
 
         if mesh_setup.merge_connected_volumes:
             self._merge_nodes_from_adjacent_volumes()
@@ -250,9 +250,9 @@ class Mesh:
 
         return self
 
-    def _new_configure_mesh(self, mesh_setup: MeshSetup):
+    def _configure_mesh(self, mesh_setup: MeshSetup):
         if mesh_setup.refinement_parameters:
-            self.new_local_mesh_refine(
+            self._local_mesh_refine(
                 mesh_setup.maximum_element_size,
                 mesh_setup.refinement_parameters,
             )
@@ -848,7 +848,7 @@ class Mesh:
         writer.SetInputData(vtk_dataset)
         writer.Write()
 
-    def new_local_mesh_refine(self, global_size: float, refinement_setups: list[MeshRefinementSetup]):
+    def _local_mesh_refine(self, global_size: float, refinement_setups: list[MeshRefinementSetup]):
         gmsh.model.mesh.field.add("Constant")
         gmsh.model.mesh.field.setNumbers(1, "SurfacesList", [])
         gmsh.model.mesh.field.setNumbers(1, "VolumesList", [])
