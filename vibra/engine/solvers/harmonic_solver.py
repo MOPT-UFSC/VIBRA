@@ -6,12 +6,12 @@ import numpy as np
 from vibra.engine.analysis_info import HarmonicAnalysisSetup
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
+from vibra.engine.serialization.lazy_hdf5_matrix import LazyHDF5MatrixWriter
 from vibra.engine.serialization.project_paths import ProjectPaths
 from vibra.engine.solution import HarmonicSolution
 from vibra.engine.solution.lazy_harmonic_solution import LazyHarmonicSolution
 from vibra.engine.solvers import ModalSolver
 from vibra.engine.solvers.linear_solver import LinearSolver, SolverType, initialize_solver
-from vibra.project_files.lazy_hdf5_matrix import LazyHDF5MatrixWriter
 
 
 class HarmonicSolver:

@@ -19,10 +19,10 @@ from vibra.engine.model import Model
 from vibra.engine.properties import Fluid, FluidLibrary, Material, MaterialLibrary
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.engine.serialization.file_helpers import read_image, read_json
+from vibra.engine.serialization.lazy_hdf5_matrix import LazyHDF5MatrixLoader
 from vibra.engine.solution import HarmonicSolution, ModalSolution, Solution
 from vibra.engine.solution.lazy_harmonic_solution import LazyHarmonicSolution
 from vibra.engine.solvers import HarmonicSolver, ModalSolver
-from vibra.project_files.lazy_hdf5_matrix import LazyHDF5MatrixLoader
 
 from .project_paths import ProjectPaths
 
@@ -109,7 +109,7 @@ class ProjectReader:
             return None
 
         analysis_id = AnalysisID(analysis_setup_dict.get("analysis_id", AnalysisID.NO_ANALYSIS))
-        analysis_setup_dict.update({"analysis_id" : analysis_id})
+        analysis_setup_dict.update({"analysis_id": analysis_id})
 
         if analysis_id.is_harmonic():
             return HarmonicAnalysisSetup(**analysis_setup_dict)
