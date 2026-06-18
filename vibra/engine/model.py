@@ -201,9 +201,10 @@ class Model:
     def set_properties(self, properties):
         self.properties = properties
 
-    def set_mesh_setup(self, mesh_setup: MeshSetup):
+    def set_mesh_setup(self, mesh_setup: MeshSetup | None):
         self.mesh_setup = mesh_setup
-        self.mesh.element_topology = mesh_setup.element_topology
+        if isinstance(mesh_setup, MeshSetup):
+            self.mesh.element_topology = mesh_setup.element_topology
 
     def initialize_mesh(self):
         self.mesh = Mesh(length_unit=self.length_unit, geometry_qf=self.geometry_qf)
