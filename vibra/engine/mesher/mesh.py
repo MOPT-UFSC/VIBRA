@@ -389,7 +389,7 @@ class Mesh:
 
         logging.info("Post-processing mesh... [50/100]")
         self.post_process_mesh_data()
-        self.update_element_type_based_on_connectivity()
+        self.update_element_topology_based_on_connectivity()
 
         logging.info("Post-processing mesh... [80/100]")
         self.process_downwards_adjacencies_from_mesh_data()
@@ -412,11 +412,14 @@ class Mesh:
 
         return self
 
-    def update_element_type_based_on_connectivity(self):
+    def update_element_topology_based_on_connectivity(self):
         """
         This method updates the element type based on the connectivity information.
         It's only used when working with NASTRAN files.
         """
+        if self.solids_connectivity.size == 0:
+            return
+
         nodes_per_element = self.solids_connectivity[0, 4:].size
         match nodes_per_element:
             case 4:

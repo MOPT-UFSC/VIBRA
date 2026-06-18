@@ -106,7 +106,7 @@ class Model:
             return
 
         if self.mesh.element_topology is None:
-            self.mesh.update_element_type_based_on_connectivity()
+            self.mesh.update_element_topology_based_on_connectivity()
 
         return self.mesh.element_topology
 
@@ -201,7 +201,7 @@ class Model:
     def set_properties(self, properties):
         self.properties = properties
 
-    def set_mesh_setup(self, mesh_setup: MeshSetup):
+    def set_mesh_setup(self, mesh_setup: MeshSetup | None):
         self.mesh_setup = mesh_setup
 
     def initialize_mesh(self):
