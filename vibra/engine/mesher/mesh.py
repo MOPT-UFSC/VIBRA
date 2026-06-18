@@ -273,7 +273,7 @@ class Mesh:
         gmsh.model.mesh.clear()
         gmsh.model.occ.synchronize()
 
-        # self.element_topology = mesh_setup.element_topology
+        self.element_topology = mesh_setup.element_topology
 
     def load_cad(self, path: str | Path, **kwargs):
         import warnings

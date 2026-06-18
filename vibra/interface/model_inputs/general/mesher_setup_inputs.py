@@ -345,7 +345,6 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         def load_mesh_from_working_dir():
             logging.info("Loading generated mesh... [10/100]")
             app().project.model.mesh = app().project.project_reader.read_mesh()
-            app().project.model.mesh.element_topology = mesh_setup.element_topology
 
             logging.info("Reading model properties... [65/100]")
             app().project.model.properties = app().project.project_reader.read_model_properties()
