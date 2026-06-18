@@ -69,4 +69,15 @@ GMSH_HEX20 = ElementSetup(
     dimensions=3,
 )
 
+GMSH_VISUAL_MESH = ElementSetup(
+    algorithm_2d=MeshAlgorithms2D.DELAUNAY_2D,
+    algorithm_3d=MeshAlgorithms3D.HXT_3D,
+    subdivision_algorithm=SubdivisionAlgorithms.NO_SUBDIVISION,
+    recombination_algorithm=RecombinationAlgorithms.SIMPLE_RECOMBINATION,
+    recombine_all=False,
+    second_order_incomplete=False,
+    element_order=1,
+    dimensions=2,
+)
+
 DEFAULT_ELEMENT_SETUP = GMSH_TET4
