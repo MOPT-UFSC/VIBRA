@@ -6,7 +6,7 @@ from collections import defaultdict
 from copy import deepcopy
 from itertools import permutations
 from pathlib import Path
-from typing import Literal, Optional
+from typing import Literal, Optional, Self
 
 # from time import perf_counter
 import gmsh
@@ -187,7 +187,7 @@ class Mesh:
         else:
             return 1
 
-    def new_load_cad(self, path: str | Path, mesh_setup: MeshSetup, threads: int = 0):
+    def new_load_cad(self, path: str | Path, mesh_setup: MeshSetup, threads: int = 0) -> Self:
         if not gmsh.is_initialized():
             gmsh.initialize("", False, interruptible=False)
             gmsh.option.set_number("General.Terminal", 0)
@@ -214,7 +214,6 @@ class Mesh:
         logging.info("Processing geometry data... [35/100]")
         self.process_downwards_adjacencies_from_entities()
         self.process_upwards_adjacencies_from_entities()
-        self.update_element_topology_based_on_connectivity()
 
         try:
             dimension = mesh_setup.element_setup.dimensions
@@ -234,6 +233,7 @@ class Mesh:
 
         logging.info("Post-processing mesh... [60/100]")
         self.post_process_mesh_data()
+        self.update_element_topology_based_on_connectivity()
 
         logging.info("Post-processing mesh... [95/100]")
         if mesh_setup.compute_quality_metrics:
@@ -1153,14 +1153,13 @@ class Mesh:
         # t0 = perf_counter()
         self.cylindrical_surfaces_data.clear()
         for surface_id, curvatures in self.curvatures_surface.items():
-
             avg_curvature = np.average(curvatures)
             if not np.all(curvatures - avg_curvature < 1e-5):
                 continue
 
             if not avg_curvature:
                 continue
-            
+
             # surface normals
             normals_surface = self.normals_surface.get(surface_id)
             if normals_surface is None:
@@ -1857,11 +1856,11 @@ class Mesh:
         return face_elements_connected_to_nodes
 
     def get_solid_elements_connected_to_nodes(
-            self, 
-            node_ids: list[int] | np.ndarray | None = None,
-            surface_id: int | None = None,
-            return_nodes: bool = False,
-            ) -> tuple[dict, np.ndarray]:
+        self,
+        node_ids: list[int] | np.ndarray | None = None,
+        surface_id: int | None = None,
+        return_nodes: bool = False,
+    ) -> tuple[dict, np.ndarray]:
         """
         This method processes the solid elements connected to the nodes.
         It returns a dictionary mapping the node IDs to the solid element IDs.
@@ -1907,12 +1906,11 @@ class Mesh:
 
         return solid_elements_connected_to_nodes
 
-
     def get_solid_elements_from_nodes(
-            self, 
-            node_ids : list[int] | np.ndarray,
-            return_enodes: bool = False,
-            ):
+        self,
+        node_ids: list[int] | np.ndarray,
+        return_enodes: bool = False,
+    ):
 
         mask = np.sum(np.isin(self.solids_connectivity[:, 4:], node_ids), axis=1) >= 1
         element_ids = self.solids_connectivity[mask, 0]
@@ -1926,12 +1924,10 @@ class Mesh:
         unique = np.unique(self.solids_connectivity[mask, 4:])
         element_nodes = np.sort(unique)
 
-        return element_ids, element_nodes#, counts_map
+        return element_ids, element_nodes  # , counts_map
 
-    
     def get_global_dofs(self, node_ids: list[int] | np.ndarray, dofs_per_node: int):
         pass
-
 
     def get_surface_nodal_normals_reference(self, surface_id: int) -> dict:
         """
