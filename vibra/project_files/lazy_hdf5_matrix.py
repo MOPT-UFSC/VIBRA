@@ -26,35 +26,35 @@ class LazyHDF5MatrixWriter:
         self.file = h5py.File(self.filepath, file_mode)
         self.shape = (num_rows, num_cols)
 
-        if HDF5_SOLUTION_FREQ_KEY in self.file:
-            self.solution = self.file[HDF5_SOLUTION_FREQ_KEY]
-            self.status = self.file[HDF5_SOLUTION_STATUS_KEY]
-            self.frequencies = self.file[HDF5_FREQ_KEY]
-        else:
-            chunk_rows = min(num_rows, 2**20)
-            chunk_cols = 1
+        chunk_rows = min(num_rows, 2**20)
+        chunk_cols = 1
 
-            self.solution = self.file.create_dataset(
-                HDF5_SOLUTION_FREQ_KEY,
-                shape=(num_rows, num_cols),
-                chunks=(chunk_rows, chunk_cols),  # This is important for efficient read/load large matrices.
-                dtype=dtype,
-            )
-            self.frequencies = self.file.create_dataset(
-                HDF5_FREQ_KEY,
-                shape=(num_cols,),
-                dtype=type(cols[0]),
-                data=cols,
-            )
-            self.status = self.file.create_dataset(
-                HDF5_SOLUTION_STATUS_KEY,
-                shape=(num_cols,),
-                dtype=bool,
-            )
-            self.status[:] = False
+        self.solution = self.create_dataset_if_not_exists(
+            HDF5_SOLUTION_FREQ_KEY,
+            shape=(num_rows, num_cols),
+            chunks=(chunk_rows, chunk_cols),  # This is important for efficient read/load large matrices.
+            dtype=dtype,
+        )
+        self.frequencies = self.create_dataset_if_not_exists(
+            HDF5_FREQ_KEY,
+            shape=(num_cols,),
+            dtype=type(cols[0]),
+            data=cols,
+        )
+        self.status = self.create_dataset_if_not_exists(
+            HDF5_SOLUTION_STATUS_KEY,
+            shape=(num_cols,),
+            dtype=bool,
+        )
 
     def has_column(self, index):
         return self.status[index]
+
+    def create_dataset_if_not_exists(self, name, shape=None, dtype=None, data=None, **kwargs):
+        if name in self.file:
+            return self.file[name]
+
+        return self.file.create_dataset(name, shape, dtype, data, **kwargs)
 
     def __setitem__(self, key, value):
         if isinstance(key, tuple):
@@ -77,7 +77,7 @@ class LazyHDF5MatrixWriter:
         self.file.flush()
 
     def save_extra_data(self, key: str, data, dtype=None):
-        self.file.create_dataset(key, data=data, dtype=dtype if dtype else None)
+        self.create_dataset_if_not_exists(key, data=data, dtype=dtype)
         self.file.flush()
 
     def close(self):

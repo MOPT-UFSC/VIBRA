@@ -9,19 +9,11 @@ from typing import Dict, List
 import numpy as np
 from PySide6.QtCore import QItemSelectionModel, QPoint, Qt
 from PySide6.QtGui import QCloseEvent
-from PySide6.QtWidgets import (
-    QAbstractItemView,
-    QHeaderView,
-    QLineEdit,
-    QTableWidgetItem,
-    QTreeWidgetItem,
-)
+from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QLineEdit, QTableWidgetItem, QTreeWidgetItem
 
 from vibra import app
 from vibra.engine.properties.fluid import Fluid
-from vibra.engine.transfer_impedances.perforated_plate_models import (
-    PerforatedPlateModels,
-)
+from vibra.engine.transfer_impedances.perforated_plate_models import PerforatedPlateModels
 from vibra.interface import error_title
 from vibra.interface.common.common_interface import update_analysis_setup_in_file
 from vibra.interface.data.data_manager import get_spectral_data_from_array
@@ -31,18 +23,10 @@ from vibra.interface.general.get_user_confirmation_input import GetUserConfirmat
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.model_inputs.acoustic.definitions.enums import SetupTabType
-from vibra.interface.model_inputs.acoustic.internal_impedances.perforated_plate_data import (
-    PerforatedPlateData,
-)
-from vibra.interface.model_inputs.general.fluid.set_fluid_inputs_simplified import (
-    SetFluidInputsSimplified,
-)
-from vibra.interface.plots.general.frequency_response_plotter import (
-    FrequencyResponsePlotter,
-)
-from vibra.interface.ui_generated.model.acoustic.perforated_plate_model_inputs_ui import (
-    PerforatedPlateModelInputs_UI,
-)
+from vibra.interface.model_inputs.acoustic.internal_impedances.perforated_plate_data import PerforatedPlateData
+from vibra.interface.model_inputs.fluid.set_fluid_inputs_simplified import SetFluidInputsSimplified
+from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
+from vibra.interface.ui_generated.model.acoustic.internal_impedances.perforated_plate_model_inputs_ui import PerforatedPlateModelInputs_UI
 from vibra.utils.bidict import bidict
 
 
@@ -51,17 +35,21 @@ class PPMMainTabType(IntEnum):
     EDIT = 1
     LIST = 2
 
+
 class PPlateModelsTabType(IntEnum):
     CIRCULAR_HOLES = 0
 
+
 class PlotTypeBoxType(IntEnum):
     ACOUSTIC_IMPEDANCE = 0
+
 
 class IncludeEffectsBoxType(IntEnum):
     NONE = 0
     NON_LINEAR = 1
     USER_DEFINED = 2
     NON_LINEAR_AND_USER_DEFINED = 3
+
 
 class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
     def __init__(self, *args, **kwargs):
@@ -118,8 +106,9 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         self.comboBox_plot_type.currentIndexChanged.connect(self.plot_type_callback)
         self.comboBox_include_effects.currentIndexChanged.connect(self.include_effects_callback)
         #
-        self.pushButton_exit.clicked.connect(self.close)
-        self.pushButton_confirm.clicked.connect(self.attribute_callback)
+        self.pushButton_apply.clicked.connect(self.apply_callback)
+        self.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
+        self.pushButton_cancel.clicked.connect(self.close)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
         self.pushButton_load_path.clicked.connect(self.load_user_defined_transfer_impedance)
@@ -772,8 +761,9 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
         return surface_ids
 
-    def attribute_callback(self):
-        if self.tabWidget_main.currentIndex():
+    def apply_callback(self, close_window: bool = False):
+
+        if self.tabWidget_main.currentIndex() != SetupTabType.SETUP:
             return
 
         surface_ids = self.check_selected_surfaces()
@@ -797,7 +787,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         self.clear_line_edit_selection_id()
 
         self.hide()
-        self.actions_to_finalize()
+        self.actions_to_finalize(close_window)
 
     def include_user_defined_transfer_impedance(self, model: PerforatedPlateData, surface_id: int | list[int]):
 
@@ -931,7 +921,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         self.restore_mesh_data_modified_by_decoupling()
         app().main_window.selection.clear_selection()
 
-
     def reset_callback(self):
 
         surface_ids = list()
@@ -975,7 +964,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         self.actions_to_finalize()
         self.restore_mesh_data_modified_by_decoupling()
 
-    def actions_to_finalize(self):
+    def actions_to_finalize(self, close_window: bool = False):
 
         def callback():
 
@@ -983,13 +972,10 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             self.load_model_info()
 
             logging.info("Processing the post-assignment actions... [20/100]")
-            app().project.reset_solution()
+            app().main_window.analysis_toolbar.reset_solution()
 
             logging.info("Processing the post-assignment actions... [30/100]")
             app().project.project_writer.delete_mesh_data()
-
-            logging.info("Processing the post-assignment actions... [50/100]")
-            app().project.update_model_properties_file()
 
             logging.info("Processing the post-assignment actions... [60/100]")
             app().project.update_model_properties_file()
@@ -1000,14 +986,16 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             logging.info("Processing the post-assignment actions... [80/100]")
             app().main_window.update_info_text()
 
+            logging.info("Processing the post-assignment actions... [90/100]")
+            app().main_window.update_symbols()
+
             logging.info("Processing the post-assignment actions... [95/100]")
             app().main_window.selection.set_geometry_selection()
 
-            logging.info("Processing the post-assignment actions... [100/100]")
-            app().main_window.action_results_workspace.setEnabled(False)
-            app().main_window.analysis_toolbar.reset_solution_action.setDisabled(True)
-
         LoadingWindow(callback).run()
+
+        if close_window:
+            self.close()
 
     def process_decoupling_actions(self):
 
@@ -1086,8 +1074,8 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
     def get_fluid_callback(self):
         self.hide()
         self.fluid_dialog = SetFluidInputsSimplified()
-        self.fluid_dialog.fluid_widget.pushButton_attribute.setText("Select fluid")
-        self.fluid_dialog.fluid_widget.pushButton_attribute.clicked.connect(self.get_selected_fluid)
+        self.fluid_dialog.fluid_widget.pushButton_apply.setVisible(False)
+        self.fluid_dialog.fluid_widget.pushButton_apply_and_close.clicked.connect(self.get_selected_fluid)
         self.fluid_dialog.exec()
         app().main_window.set_input_widget(self)
 
@@ -1224,7 +1212,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            self.attribute_callback()
+            self.apply_callback()
         elif event.key() == Qt.Key_Delete:
             self.remove_callback()
         elif event.key() == Qt.Key_Escape:
@@ -1233,7 +1221,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             self.treeWidget_perforated_plate_model.setSelectionMode(QAbstractItemView.MultiSelection)
         elif event.key() == Qt.Key_Shift:
             self.treeWidget_perforated_plate_model.setSelectionMode(QAbstractItemView.ContiguousSelection)
-    
+
     def keyReleaseEvent(self, event):
         if event.key() == Qt.Key_Control:
             self.treeWidget_perforated_plate_model.setSelectionMode(QAbstractItemView.SingleSelection)

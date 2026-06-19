@@ -46,8 +46,8 @@ class UserDefinedSolutionStepsFromTabularDataInput(UserDefinedSolutionStepsFromT
 
     def _create_connections(self):
         #
-        self.pushButton_confirm.clicked.connect(self.confirm_callback)
-        self.pushButton_exit.clicked.connect(self.close)
+        self.pushButton_cancel.clicked.connect(self.close)
+        self.pushButton_okay.clicked.connect(self.confirm_callback)
         self.pushButton_select_unselect_all.clicked.connect(self.select_unselect_all_callback)
         #
         app().main_window.theme_changed.connect(self._paint_icons)

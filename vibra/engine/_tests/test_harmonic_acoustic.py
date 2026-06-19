@@ -28,7 +28,7 @@ def test_harmonic_acoustic():
             sigma_factor=0.01,
         )
 
-        project.configure_analysis(AnalysisID.ACOUSTIC_HARMONIC, analysis_setup)
+        project.configure_analysis(analysis_setup)
         project.run_analysis()
 
     ## Define the analysis frequency setup
@@ -40,7 +40,7 @@ def test_harmonic_acoustic():
         f_step=1000,
     )
 
-    project.configure_analysis(AnalysisID.ACOUSTIC_HARMONIC, analysis_setup)
+    project.configure_analysis(analysis_setup)
 
     with pytest.raises(errors.InvalidModelSetupError):
         # Fluid not configured

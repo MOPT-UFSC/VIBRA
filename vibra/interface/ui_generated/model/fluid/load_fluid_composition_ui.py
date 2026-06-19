@@ -34,8 +34,8 @@ class Ui_Dialog(object):
         self.frame.setObjectName(u"frame")
         self.frame.setMinimumSize(QSize(0, 48))
         self.frame.setMaximumSize(QSize(16777215, 48))
-        self.frame.setFrameShape(QFrame.Box)
-        self.frame.setFrameShadow(QFrame.Raised)
+        self.frame.setFrameShape(QFrame.Shape.Box)
+        self.frame.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_2 = QGridLayout(self.frame)
         self.gridLayout_2.setSpacing(4)
         self.gridLayout_2.setObjectName(u"gridLayout_2")
@@ -45,7 +45,7 @@ class Ui_Dialog(object):
         font = QFont()
         font.setPointSize(11)
         self.label.setFont(font)
-        self.label.setAlignment(Qt.AlignCenter)
+        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout_2.addWidget(self.label, 0, 0, 1, 1)
 
@@ -54,8 +54,8 @@ class Ui_Dialog(object):
 
         self.frame_3 = QFrame(Dialog)
         self.frame_3.setObjectName(u"frame_3")
-        self.frame_3.setFrameShape(QFrame.Box)
-        self.frame_3.setFrameShadow(QFrame.Raised)
+        self.frame_3.setFrameShape(QFrame.Shape.Box)
+        self.frame_3.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_4 = QGridLayout(self.frame_3)
         self.gridLayout_4.setObjectName(u"gridLayout_4")
         self.gridLayout_4.setContentsMargins(12, 4, 12, 4)
@@ -66,7 +66,7 @@ class Ui_Dialog(object):
         font1 = QFont()
         font1.setPointSize(9)
         self.lineEdit_file_path.setFont(font1)
-        self.lineEdit_file_path.setAlignment(Qt.AlignCenter)
+        self.lineEdit_file_path.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout_4.addWidget(self.lineEdit_file_path, 0, 0, 1, 1)
 
@@ -87,8 +87,8 @@ class Ui_Dialog(object):
         self.frame_4 = QFrame(self.frame_3)
         self.frame_4.setObjectName(u"frame_4")
         self.frame_4.setMaximumSize(QSize(16777215, 40))
-        self.frame_4.setFrameShape(QFrame.NoFrame)
-        self.frame_4.setFrameShadow(QFrame.Raised)
+        self.frame_4.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_4.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_5 = QGridLayout(self.frame_4)
         self.gridLayout_5.setObjectName(u"gridLayout_5")
         self.gridLayout_5.setContentsMargins(0, 0, 0, 0)
@@ -97,7 +97,7 @@ class Ui_Dialog(object):
         self.label_sheet_name.setMinimumSize(QSize(0, 28))
         self.label_sheet_name.setMaximumSize(QSize(100, 28))
         self.label_sheet_name.setFont(font2)
-        self.label_sheet_name.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.label_sheet_name.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_5.addWidget(self.label_sheet_name, 0, 1, 1, 1)
 
@@ -127,25 +127,25 @@ class Ui_Dialog(object):
         self.frame_2.setObjectName(u"frame_2")
         self.frame_2.setMinimumSize(QSize(0, 48))
         self.frame_2.setMaximumSize(QSize(16777215, 48))
-        self.frame_2.setFrameShape(QFrame.NoFrame)
-        self.frame_2.setFrameShadow(QFrame.Raised)
+        self.frame_2.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_2.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_3 = QGridLayout(self.frame_2)
         self.gridLayout_3.setObjectName(u"gridLayout_3")
-        self.pushButton_exit = QPushButton(self.frame_2)
-        self.pushButton_exit.setObjectName(u"pushButton_exit")
-        self.pushButton_exit.setMinimumSize(QSize(90, 30))
-        self.pushButton_exit.setMaximumSize(QSize(90, 30))
-        self.pushButton_exit.setFont(font2)
+        self.pushButton_cancel = QPushButton(self.frame_2)
+        self.pushButton_cancel.setObjectName(u"pushButton_cancel")
+        self.pushButton_cancel.setMinimumSize(QSize(80, 30))
+        self.pushButton_cancel.setMaximumSize(QSize(80, 30))
+        self.pushButton_cancel.setFont(font2)
 
-        self.gridLayout_3.addWidget(self.pushButton_exit, 0, 0, 1, 1)
+        self.gridLayout_3.addWidget(self.pushButton_cancel, 0, 0, 1, 1)
 
-        self.pushButton_confirm = QPushButton(self.frame_2)
-        self.pushButton_confirm.setObjectName(u"pushButton_confirm")
-        self.pushButton_confirm.setMinimumSize(QSize(90, 30))
-        self.pushButton_confirm.setMaximumSize(QSize(90, 30))
-        self.pushButton_confirm.setFont(font2)
+        self.pushButton_load_composition = QPushButton(self.frame_2)
+        self.pushButton_load_composition.setObjectName(u"pushButton_load_composition")
+        self.pushButton_load_composition.setMinimumSize(QSize(80, 30))
+        self.pushButton_load_composition.setMaximumSize(QSize(80, 30))
+        self.pushButton_load_composition.setFont(font2)
 
-        self.gridLayout_3.addWidget(self.pushButton_confirm, 0, 1, 1, 1)
+        self.gridLayout_3.addWidget(self.pushButton_load_composition, 0, 1, 1, 1)
 
 
         self.gridLayout.addWidget(self.frame_2, 2, 0, 1, 1)
@@ -161,8 +161,8 @@ class Ui_Dialog(object):
         self.label.setText(QCoreApplication.translate("Dialog", u"Load fluid composition from file", None))
         self.pushButton_search.setText("")
         self.label_sheet_name.setText(QCoreApplication.translate("Dialog", u"Sheet name:", None))
-        self.pushButton_exit.setText(QCoreApplication.translate("Dialog", u"Exit", None))
-        self.pushButton_confirm.setText(QCoreApplication.translate("Dialog", u"Confirm", None))
+        self.pushButton_cancel.setText(QCoreApplication.translate("Dialog", u"Cancel", None))
+        self.pushButton_load_composition.setText(QCoreApplication.translate("Dialog", u"Load", None))
     # retranslateUi
 
 
@@ -185,8 +185,8 @@ class LoadFluidComposition_UI(QDialog, Ui_Dialog):
                                         - comboBox_sheet_names: QComboBox
                 - frame_2: QFrame
                     - (Layout): QGridLayout
-                            - pushButton_exit: QPushButton
-                            - pushButton_confirm: QPushButton
+                            - pushButton_cancel: QPushButton
+                            - pushButton_load_composition: QPushButton
     """
 
     def __init__(self, *args, **kwargs):

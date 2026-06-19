@@ -3,7 +3,6 @@ from typing import TYPE_CHECKING
 from vibra import PROJECT_DIR
 from vibra.engine.analysis_info import AnalysisID, ModalAnalysisSetup
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
-from vibra.engine.mesher.element_setup import TETRAHEDRON_4
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.engine.properties.fluid import Fluid
@@ -65,7 +64,6 @@ def load_external_mesh_and_solve():
     mesh.export_nodal_coordinates("nodal_coordinates.dat")
     mesh.export_solid_elements_connectivity("solids_connectivity.dat")
     mesh.export_face_elements_connectivity("faces_connectivity.dat")
-    mesh.element_type = TETRAHEDRON_4
 
     for named_selection, surf_data in external_mesh.elements_from_named_selection.items():
         if named_selection in ["input_edges", "output_edges"]:
@@ -112,10 +110,10 @@ def load_external_mesh_and_solve():
         molar_mass=molar_mass,
     )
 
-    ## assign the created fluid
     model = Model()
     model.mesh = mesh
 
+    ## assign the created fluid
     for _vol_id in [1]:
         model.properties._set_property("fluid", fluid, volume=_vol_id)
 
@@ -147,7 +145,6 @@ def load_external_mesh_and_solve():
 
     # Set the analysis setup
     model.set_analysis_setup(analysis_setup)
-    model.set_analysis_id(AnalysisID.ACOUSTIC_MODAL)
 
     assembler = AcousticAssembler(model)
 

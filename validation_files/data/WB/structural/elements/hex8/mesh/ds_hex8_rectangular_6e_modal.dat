@@ -1,0 +1,181 @@
+/batch
+/config,noeldb,1     ! force off writing results to database
+*get,_wallstrt,active,,time,wall
+! ANSYS input file written by Workbench version 2023 R2
+! File used for geometry attach: C:\Users\Petro3_ii\Desktop\Validacoes\CAD\rectangular_cavity.STEP
+/title,cuboide_hex8_esf--Modal (F5)
+! ****** Begin Custom Load Command Snippet ******
+/COM, ACT Extensions:
+/COM,     LSDYNA, 2023.2
+/COM,     5f463412-bd3e-484b-87e7-cbc0a665e474, wbex
+/COM,/COM,     ANSYSMotion, 2023.2
+/COM,     20180725-3f81-49eb-9f31-41364844c769, wbex
+/COM,
+! ****** End   Custom Load Command Snippet ******
+*DIM,_wb_ProjectScratch_dir,string,248
+_wb_ProjectScratch_dir(1) = 'C:\Users\Petro3_ii\Desktop\Validacoes\Vibra\hex8_extra_shape_function\WB\cuboide_hex8_esf_files\dp0\SYS-7\MECH\'
+*DIM,_wb_SolverFiles_dir,string,248
+_wb_SolverFiles_dir(1) = 'C:\Users\Petro3_ii\Desktop\Validacoes\Vibra\hex8_extra_shape_function\WB\cuboide_hex8_esf_files\dp0\SYS-7\MECH\'
+*DIM,_wb_userfiles_dir,string,248
+_wb_userfiles_dir(1) = 'C:\Users\Petro3_ii\Desktop\Validacoes\Vibra\hex8_extra_shape_function\WB\cuboide_hex8_esf_files\user_files\'
+/com,--- Data in consistent MKS units. See Solving Units in the help system for more information.
+/units,MKS
+/nopr
+/wb,file,start              !  signify a WB generated input file
+/prep7
+! Turn off shape checking because checks already performed inside WB mesher.
+! See help system for more information.
+SHPP,OFF,,NOWARN
+/nolist
+etcon,set             ! allow ANSYS to choose best KEYOP's for 180x elements, resets any applicable keyopt to MAPDL defaults
+/com,*********** Nodes for the whole assembly ***********
+nblock,3,,33
+(1i9,3e20.9e3)
+        1     2.000000000E+00     0.000000000E+00     0.000000000E+00
+        2     2.000000000E+00     5.000000000E-01     0.000000000E+00
+        3     1.500000000E+00     0.000000000E+00     0.000000000E+00
+        4     1.500000000E+00     5.000000000E-01     0.000000000E+00
+        5     1.000000000E+00     5.000000000E-01     0.000000000E+00
+        6     1.000000000E+00     0.000000000E+00     0.000000000E+00
+        7     0.000000000E+00     5.000000000E-01     0.000000000E+00
+        8     5.000000000E-01     5.000000000E-01     0.000000000E+00
+        9     5.000000000E-01     0.000000000E+00     0.000000000E+00
+       10     0.000000000E+00     0.000000000E+00     0.000000000E+00
+       11     2.000000000E+00     0.000000000E+00     1.000000000E+00
+       12     2.000000000E+00     5.000000000E-01     1.000000000E+00
+       13     1.500000000E+00     0.000000000E+00     1.000000000E+00
+       14     1.500000000E+00     5.000000000E-01     1.000000000E+00
+       15     1.000000000E+00     5.000000000E-01     1.000000000E+00
+       16     1.000000000E+00     0.000000000E+00     1.000000000E+00
+       17     0.000000000E+00     5.000000000E-01     1.000000000E+00
+       18     5.000000000E-01     5.000000000E-01     1.000000000E+00
+       19     5.000000000E-01     0.000000000E+00     1.000000000E+00
+       20     0.000000000E+00     0.000000000E+00     1.000000000E+00
+       21     1.500000000E+00     5.000000000E-01     5.000000000E-01
+       22     1.000000000E+00     5.000000000E-01     5.000000000E-01
+       23     5.000000000E-01     5.000000000E-01     5.000000000E-01
+       24     0.000000000E+00     5.000000000E-01     5.000000000E-01
+       25     2.000000000E+00     5.000000000E-01     5.000000000E-01
+       26     2.000000000E+00     0.000000000E+00     5.000000000E-01
+       27     5.000000000E-01     0.000000000E+00     5.000000000E-01
+       28     1.000000000E+00     0.000000000E+00     5.000000000E-01
+       29     1.500000000E+00     0.000000000E+00     5.000000000E-01
+       30     0.000000000E+00     0.000000000E+00     5.000000000E-01
+-1
+/wb,elem,start            !  set before creation of elements
+/com,*********** Elements for Body 1 "rectangular_cavity-FreeParts|Ressalto-extrus_o1" ***********
+!
+et,1,SOLID45
+!  
+KEYOPT,1,1,0
+KEYOPT,1,2,0
+KEYOPT,1,4,0
+KEYOPT,1,5,0
+KEYOPT,1,6,0
+!
+eblock,19,solid,,8
+(19i9)
+        1        1        1        1        0        0        0        0        8        0        1       11       12       25       26       13       14       21       29
+        1        1        1        1        0        0        0        0        8        0        2       13       16       15       14       29       28       22       21
+        1        1        1        1        0        0        0        0        8        0        3        1       26       25        2        3       29       21        4
+        1        1        1        1        0        0        0        0        8        0        4        3        4        5        6       29       21       22       28
+        1        1        1        1        0        0        0        0        8        0        5       15       16       19       18       22       28       27       23
+        1        1        1        1        0        0        0        0        8        0        6        5        8        9        6       22       23       27       28
+        1        1        1        1        0        0        0        0        8        0        7       17       20       30       24       18       19       27       23
+        1        1        1        1        0        0        0        0        8        0        8        7       24       30       10        8       23       27        9
+-1
+!Material Id = {DCC85B21-D6B7-43B4-A673-F3557B680BAB}
+/wb,elem,end               !  done creating elements
+/com,*********** Send User Defined Coordinate System(s) ***********
+csys,0
+toffst,273.15,  ! Temperature offset from absolute zero
+/com,*********** Set Reference Temperature ***********
+tref,22.
+/wb,mat,start              !  starting to send materials
+/com,*********** Send Materials ***********
+Temperature = 'TEMP' ! Temperature
+MP,DENS,1,7850,	! kg m^-3
+MP,C,1,434,	! J kg^-1 C^-1
+MP,KXX,1,60.5,	! W m^-1 C^-1
+MP,RSVX,1,1.7e-07,	! kg m^3 A^-2 s^-3
+MP,EX,1,200000000000,	! Pa
+MP,NUXY,1,0.3,
+MP,MURX,1,10000,
+MP,UVID,1,6c7bf0c7-236f-4d36-9368-7cf9734f5fc8
+MP,UMID,1,59002a79-71c2-428e-906b-55d7dbee100e
+
+/wb,mat,end                !  done sending materials
+!************************* Model Summary ********************
+!rectangular_cavity-FreeParts|Ressalto-extrus_o1,	Structural Steel,	matid,	1
+!************************* End Model Summary ********************
+! get the diagonal of the bounding box. Needed later for other things
+*get,_xmin,node,,mnloc,x
+*get,_ymin,node,,mnloc,y
+*get,_zmin,node,,mnloc,z
+*get,_xmax,node,,mxloc,x
+*get,_ymax,node,,mxloc,y
+*get,_zmax,node,,mxloc,z
+_ASMDIAG=(_xmax-_xmin)*(_xmax-_xmin)+(_ymax-_ymin)*(_ymax-_ymin)+(_zmax-_zmin)*(_zmax-_zmin)
+_ASMDIAG=SQRT(_ASMDIAG)
+/wb,contact,start          !  starting to send contact
+/wb,contact,end            !  done creating contacts
+/com,*********** Send Named Selection as Node Component ***********
+CMBLOCK,INPUT_FACE,NODE,        6
+(8i10)
+         7        10        17        20        24        30
+/com,*********** Send Named Selection as Node Component ***********
+CMBLOCK,OUTPUT_FACE,NODE,        6
+(8i10)
+         1         2        11        12        25        26
+/solu
+antype,2                   ! modal analysis
+_thickRatio=  1     ! Ratio of thick parts in the model
+modopt,lanb,6
+outres,erase
+outres,all,none
+outres,nsol,all
+outres,eangl,all
+outres,etmp,all
+outres,veng,all
+outres,strs,all
+outres,epel,all
+outres,rsol,all
+outres,cont,all
+mxpand                    ! default expand in case of complex solution
+
+EMATWRITE, YES
+WRFULL,YES
+
+SOLVE
+/com *************** Write FE CONNECTORS ********* 
+CEWRITE,file,ce,,INTE
+*get,_nmodalsolproc,active,0,numcpu
+
+FINISH
+
+!/POST1
+/AUX2
+
+! commands to create dense matrix
+
+*DO, n_el, 1, 6, 1
+
+*DMAT, MatK, D, IMPORT, EMAT, file.emat, STIFF, n_el
+*EXPORT, MatK, MMF, Ke_%n_el%_ansys.txt,
+
+*DMAT, MatM, D, IMPORT, EMAT, file.emat, MASS, n_el
+*EXPORT, MatM, MMF, Me_%n_el%_ansys.txt,
+
+*ENDDO
+
+! Stiffness global matrix
+!*DMAT,K_dense,D,IMPORT,FULL,file.full,STIFF
+!*EXPORT,K_dense,CSV,Ke_ansys.csv,24,
+!*PRINT,K_dense,Kdense_full.dat
+
+! Mass global matrix
+!*DMAT,M_dense,D,IMPORT,FULL,file.full,MASS
+!*EXPORT,M_dense,CSV,Me_ansys.csv,24,
+!*PRINT,M_dense,Mdense_full.dat
+
+FINISH

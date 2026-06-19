@@ -6,33 +6,19 @@ from collections import defaultdict
 from copy import deepcopy
 from itertools import permutations
 from pathlib import Path
-from typing import Literal
-# from time import perf_counter
+from typing import Literal, Optional
 
+# from time import perf_counter
 import gmsh
 import numpy as np
 from vtkmodules.vtkCommonCore import vtkPoints
-from vtkmodules.vtkCommonDataModel import (
-    VTK_HEXAHEDRON,
-    VTK_QUADRATIC_HEXAHEDRON,
-    VTK_QUADRATIC_TETRA,
-    VTK_TETRA,
-    vtkUnstructuredGrid,
-)
+from vtkmodules.vtkCommonDataModel import VTK_HEXAHEDRON, VTK_QUADRATIC_HEXAHEDRON, VTK_QUADRATIC_TETRA, VTK_TETRA, vtkUnstructuredGrid
 from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridWriter
 
-from vibra.engine.mesher.element_setup import (
-    DEFAULT_ELEMENT_TYPE,
-    HEXAHEDRON_8,
-    HEXAHEDRON_20,
-    TETRAHEDRON_4,
-    TETRAHEDRON_10,
-    ElementSetup,
-)
-from vibra.engine.mesher.mesh_setup import MeshRefinementSetup, MeshSetup
+from vibra.engine.mesher.element_setup import DEFAULT_ELEMENT_SETUP, ElementSetup
+from vibra.engine.mesher.mesh_setup import HEXAHEDRON_8, HEXAHEDRON_20, TETRAHEDRON_4, TETRAHEDRON_10, ElementTopology, MeshRefinementSetup, MeshSetup
 from vibra.errors import MeshingAlgorithmError
 from vibra.interface.numeric_checks.unit_utilities import convert_length_unit
-
 
 MeshQualityParams = Literal["gamma", "volume", "minSJ", "aspectRatio"]
 
@@ -47,7 +33,7 @@ class Mesh:
         self.reset_variables()
 
     def reset_variables(self):
-        self.element_type = DEFAULT_ELEMENT_TYPE
+        self.element_topology: Optional[ElementTopology] = None
 
         ## geometry-related attributes
 
@@ -201,16 +187,18 @@ class Mesh:
         else:
             return 1
 
-    def set_element_type(self, element_type: ElementSetup):
-        self.element_type = element_type
-
     def new_load_cad(self, path: str | Path, mesh_setup: MeshSetup):
         if not gmsh.is_initialized():
             gmsh.initialize("", False, interruptible=False)
             gmsh.option.set_number("General.Terminal", 0)
             gmsh.option.set_number("General.Verbosity", 0)
-            # gmsh.option.set_number("General.NumThreads", threads)
             gmsh.option.set_number("Geometry.Tolerance", mesh_setup.geometry_tolerance)
+
+            n_thread = 0
+            gmsh.option.set_number("General.NumThreads", n_thread)
+            gmsh.option.set_number("Mesh.MaxNumThreads1D", n_thread)
+            gmsh.option.set_number("Mesh.MaxNumThreads2D", n_thread)
+            gmsh.option.set_number("Mesh.MaxNumThreads3D", n_thread)
 
             logging.info("Loading geometry... [10/100]")
             gmsh.open(str(path))
@@ -235,11 +223,11 @@ class Mesh:
             gmsh.finalize()
 
             exception = MeshingAlgorithmError(
-                "A problem occured while generating the mesh.",
-                "Reducing the size of the elements and/or changing the 3D meshing ",
-                "algorithm may help resolve the issue.\n",
-                "If neither of these options works, we suggest reviewing the CAD geometry ",
-                "to eliminate any potential underlying geometric issues.",
+                "A problem occurred while generating the mesh.\n"
+                "Reducing the size of the elements and/or changing the 3D meshing "
+                "algorithm may help resolve the issue.\n"
+                "If neither of these options works, we suggest reviewing the CAD geometry "
+                "to eliminate any potential underlying geometric issues."
             )
             logging.error(str(exception))
             raise exception from e
@@ -284,6 +272,8 @@ class Mesh:
 
         gmsh.model.mesh.clear()
         gmsh.model.occ.synchronize()
+
+        self.element_topology = mesh_setup.element_topology
 
     def load_cad(self, path: str | Path, **kwargs):
         import warnings
@@ -385,9 +375,6 @@ class Mesh:
         gmsh_gui = kwargs.get("gmsh_gui", False)
         self.geometry_imported = False
 
-        # self.element_type = kwargs.get("ElementType", DEFAULT_ELEMENT_TYPE)
-        # self.element_type: ElementType
-
         gmsh.initialize("", False)
         gmsh.option.setNumber("General.Terminal", 0)
         gmsh.option.setNumber("General.Verbosity", 0)
@@ -402,7 +389,7 @@ class Mesh:
 
         logging.info("Post-processing mesh... [50/100]")
         self.post_process_mesh_data()
-        self.update_element_type()
+        self.update_element_topology_based_on_connectivity()
 
         logging.info("Post-processing mesh... [80/100]")
         self.process_downwards_adjacencies_from_mesh_data()
@@ -425,18 +412,24 @@ class Mesh:
 
         return self
 
-    def update_element_type(self):
-        nodes_per_element = self.solids_connectivity[0, 4:].size
-        if nodes_per_element == 4:
-            self.element_type = TETRAHEDRON_4
-        elif nodes_per_element == 10:
-            self.element_type = TETRAHEDRON_10
-        elif nodes_per_element == 8:
-            self.element_type = HEXAHEDRON_8
-        elif nodes_per_element == 20:
-            self.element_type = HEXAHEDRON_20
-        else:
+    def update_element_topology_based_on_connectivity(self):
+        """
+        This method updates the element type based on the connectivity information.
+        It's only used when working with NASTRAN files.
+        """
+        if self.solids_connectivity.size == 0:
             return
+
+        nodes_per_element = self.solids_connectivity[0, 4:].size
+        match nodes_per_element:
+            case 4:
+                self.element_topology = TETRAHEDRON_4
+            case 10:
+                self.element_topology = TETRAHEDRON_10
+            case 8:
+                self.element_topology = HEXAHEDRON_8
+            case 20:
+                self.element_topology = HEXAHEDRON_20
 
     def process_downwards_adjacencies_from_mesh_data(self):
         """
@@ -1006,8 +999,8 @@ class Mesh:
         maximum_element_size = kwargs.get("maximum_element_size", 30.0)
         minimum_element_size = kwargs.get("minimum_element_size", 30.0)
         mesh_refinement_parameters = kwargs.get("mesh_refinement_parameters", list())
-        element_type = kwargs.get("ElementType", DEFAULT_ELEMENT_TYPE)
-        element_type: ElementSetup
+        element_setup = kwargs.get("ElementSetup", DEFAULT_ELEMENT_SETUP)
+        element_setup: ElementSetup
 
         if mesh_refinement_parameters:
             self.local_mesh_refine(maximum_element_size, mesh_refinement_parameters)
@@ -1017,13 +1010,13 @@ class Mesh:
 
         gmsh.option.setNumber("Mesh.RandomSeed", 1234)
         gmsh.option.setNumber("Mesh.MeshSizeFactor", size_factor)
-        gmsh.option.setNumber("Mesh.Algorithm", element_type.algorithm_2d)
-        gmsh.option.setNumber("Mesh.Algorithm3D", element_type.algorithm_3d)
-        gmsh.option.setNumber("Mesh.RecombinationAlgorithm", element_type.recombination_algorithm)
-        gmsh.option.setNumber("Mesh.SubdivisionAlgorithm", element_type.subdivision_algorithm)
-        gmsh.option.setNumber("Mesh.RecombineAll", element_type.recombine_all)
-        gmsh.option.setNumber("Mesh.ElementOrder", element_type.element_order)
-        gmsh.option.setNumber("Mesh.SecondOrderIncomplete", element_type.second_order_incomplete)
+        gmsh.option.setNumber("Mesh.Algorithm", element_setup.algorithm_2d)
+        gmsh.option.setNumber("Mesh.Algorithm3D", element_setup.algorithm_3d)
+        gmsh.option.setNumber("Mesh.RecombinationAlgorithm", element_setup.recombination_algorithm)
+        gmsh.option.setNumber("Mesh.SubdivisionAlgorithm", element_setup.subdivision_algorithm)
+        gmsh.option.setNumber("Mesh.RecombineAll", element_setup.recombine_all)
+        gmsh.option.setNumber("Mesh.ElementOrder", element_setup.element_order)
+        gmsh.option.setNumber("Mesh.SecondOrderIncomplete", element_setup.second_order_incomplete)
 
     def clear_mesh_data(self):
         self.nodal_coordinates = np.zeros((0, 4), dtype=float)
@@ -1865,7 +1858,12 @@ class Mesh:
 
         return face_elements_connected_to_nodes
 
-    def get_solid_elements_connected_to_nodes(self, **kwargs) -> tuple[dict, np.ndarray]:
+    def get_solid_elements_connected_to_nodes(
+            self, 
+            node_ids: list[int] | np.ndarray | None = None,
+            surface_id: int | None = None,
+            return_nodes: bool = False,
+            ) -> tuple[dict, np.ndarray]:
         """
         This method processes the solid elements connected to the nodes.
         It returns a dictionary mapping the node IDs to the solid element IDs.
@@ -1873,13 +1871,12 @@ class Mesh:
 
         # t0 = time()
 
-        surface_id = kwargs.get("surface_id")
-        if isinstance(surface_id, int):
-            node_ids = self.get_nodes_from_surface(surface_id)
-        else:
-            node_ids = kwargs.get("node_ids")
+        if node_ids is None:
+            if isinstance(surface_id, int):
+                node_ids = self.get_nodes_from_surface(surface_id)
 
-        return_nodes = kwargs.get("return_nodes", False)
+        if node_ids is None:
+            return
 
         mask_0 = np.sum(np.isin(self.solids_connectivity[:, 4:], node_ids), axis=1) >= 1
         filtered_data = self.solids_connectivity[mask_0, :]
@@ -1911,6 +1908,32 @@ class Mesh:
             return solid_elements_connected_to_nodes, nodes_from_solid_elements
 
         return solid_elements_connected_to_nodes
+
+
+    def get_solid_elements_from_nodes(
+            self, 
+            node_ids : list[int] | np.ndarray,
+            return_enodes: bool = False,
+            ):
+
+        mask = np.sum(np.isin(self.solids_connectivity[:, 4:], node_ids), axis=1) >= 1
+        element_ids = self.solids_connectivity[mask, 0]
+
+        if not return_enodes:
+            return element_ids
+
+        # unique, counts = np.unique(self.solids_connectivity[mask, 4:], return_counts=True)
+        # counts_map = dict(zip(unique, counts))
+
+        unique = np.unique(self.solids_connectivity[mask, 4:])
+        element_nodes = np.sort(unique)
+
+        return element_ids, element_nodes#, counts_map
+
+    
+    def get_global_dofs(self, node_ids: list[int] | np.ndarray, dofs_per_node: int):
+        pass
+
 
     def get_surface_nodal_normals_reference(self, surface_id: int) -> dict:
         """
@@ -2808,5 +2831,5 @@ if __name__ == "__main__":
         maximum_element_size=100,
         minimum_element_size=100,
         size_factor=0,
-        ElementType=TETRAHEDRON_4,
+        ElementSetup=DEFAULT_ELEMENT_SETUP,
     )

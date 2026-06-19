@@ -22,4 +22,6 @@
 !response_uy_node_6210_Ansys.dat
 !response_uy_node_6269_Ansys.dat
 
+!/structural/**
+
 !mesh_info/*/*

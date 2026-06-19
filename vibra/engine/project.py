@@ -9,14 +9,7 @@ import numpy as np
 from PIL.Image import Image
 
 from vibra import errors
-from vibra.engine.analysis_info import (
-    AnalysisID,
-    AnalysisSetup,
-    AnalysisType,
-    HarmonicAnalysisSetup,
-    ModalAnalysisSetup,
-    PhysicalDomain,
-)
+from vibra.engine.analysis_info import AnalysisID, AnalysisSetup, AnalysisType, HarmonicAnalysisSetup, ModalAnalysisSetup, PhysicalDomain
 from vibra.engine.assemblers import AcousticAssembler, StructuralAssembler
 from vibra.engine.checkers.analysis_checker import AnalysisChecker
 from vibra.engine.mesher.mesh import Mesh
@@ -120,20 +113,20 @@ class Project:
         self.project_paths.clear_data()
         self.mark_project_as_modified()
 
-    def run_analysis(self):
+    def run_analysis(self, is_resume: bool = False):
         """
         It performs the solution of the currently configured model.
         It might raise errors if the analysis is not propperly configured.
         """
         match self.model.analysis_id:
             case AnalysisID.STRUCTURAL_MODAL:
-                return self.solve_structural_modal_analysis()
+                return self.solve_structural_modal_analysis(is_resume)
             case AnalysisID.STRUCTURAL_HARMONIC:
-                return self.solve_structural_harmonic_analysis()
+                return self.solve_structural_harmonic_analysis(is_resume)
             case AnalysisID.ACOUSTIC_MODAL:
-                return self.solve_acoustic_modal_analysis()
+                return self.solve_acoustic_modal_analysis(is_resume)
             case AnalysisID.ACOUSTIC_HARMONIC:
-                return self.solve_acoustic_harmonic_analysis()
+                return self.solve_acoustic_harmonic_analysis(is_resume)
             case AnalysisID.NO_ANALYSIS:
                 raise errors.IncompleteSetupError("No AnalysisID was provided.")
             case _:
@@ -184,6 +177,7 @@ class Project:
 
     # TODO: use only "write_to_working_dir"
     def update_model_properties_file(self):
+        self.mark_solution_as_outdated()
         self.project_writer.write_model_properties(self.model.properties)
         self.mark_project_as_modified()
 
@@ -240,10 +234,10 @@ class Project:
         Configures how to create a mesh from a geometry.
         This method might be called before or after loading a geometry.
         """
-        self.model.mesh_setup = mesh_setup
+        self.model.set_mesh_setup(mesh_setup)
         self.update_project_setup_file()
 
-    def generate_mesh(self) -> Mesh:
+    def generate_mesh(self, mesh_setup: MeshSetup) -> Mesh:
         """
         Generates a mesh from the loaded geometry and the
         parameters set using the configure_mesh method.
@@ -254,13 +248,10 @@ class Project:
         if self.model.geometry_path is None:
             raise errors.InvalidMeshSetupError("The geometry has not been loaded yet.")
 
-        if self.model.mesh_setup is None:
+        if not isinstance(mesh_setup, MeshSetup):
             raise errors.InvalidMeshSetupError("The mesh setup has not been configured yet.")
 
-        mesh = Mesh().new_load_cad(
-            self.model.geometry_path,
-            self.model.mesh_setup,
-        )
+        mesh = Mesh().new_load_cad(self.model.geometry_path, mesh_setup)
 
         if mesh.collapsed_1d_elements or mesh.collapsed_2d_elements or mesh.collapsed_3d_elements:
             message = "The generated mesh contains collapsed elements."
@@ -277,11 +268,13 @@ class Project:
             )
 
         self.model.mesh = mesh
+        self.configure_mesh(mesh_setup)
         self.model.process_degrees_of_freedom_decoupling()
 
         self.reset_solution()
         self.project_writer.write_mesh(mesh)
         self.mark_project_as_modified()
+
         return mesh
 
     def generate_visual_mesh(self) -> Mesh:
@@ -309,7 +302,6 @@ class Project:
 
     def configure_analysis(
         self,
-        analysis_id: AnalysisID,
         analysis_setup: Optional[AnalysisSetup],
     ):
         """
@@ -317,12 +309,11 @@ class Project:
         execute a analysis.
         """
         self.reset_solution()
-        self.model.analysis_id = analysis_id
         self.model.set_analysis_setup(analysis_setup)
         self.update_project_setup_file()
 
-    def solve_structural_modal_analysis(self) -> ModalSolution:
-        self.model.analysis_id = AnalysisID.STRUCTURAL_MODAL
+    def solve_structural_modal_analysis(self, is_resume: bool = False) -> ModalSolution:
+
         self.update_project_setup_file()
 
         checker = AnalysisChecker(self.model)
@@ -345,8 +336,8 @@ class Project:
 
         return self.model.solution
 
-    def solve_structural_harmonic_analysis(self) -> HarmonicSolution:
-        self.model.analysis_id = AnalysisID.STRUCTURAL_HARMONIC
+    def solve_structural_harmonic_analysis(self, is_resume: bool = False) -> HarmonicSolution:
+
         self.update_project_setup_file()
 
         checker = AnalysisChecker(self.model)
@@ -362,18 +353,17 @@ class Project:
 
         analysis_method = self.model.analysis_setup.analysis_method
         if analysis_method == "direct":
-            self.model.solution = self.solver.solve_direct(is_resume=self.can_resume_solution)
+            self.model.solution = self.solver.solve_direct(is_resume=is_resume)
         elif analysis_method == "mode_superposition":
             self.model.solution = self.solver.solve_mode_superposition(
                 is_proportionally_damped=True,
-                is_resume=self.can_resume_solution,
+                is_resume=is_resume,
             )
         else:
             raise ValueError(f"Unsupported analysis method: {analysis_method}")
 
         self.project_writer.write_harmonic_solution(self.model.solution)
         self.mark_project_as_modified()
-
         dt = perf_counter() - t0
 
         print(f"Elapsed time to solve structural harmonic analysis: {dt: .6f} [s]")
@@ -381,8 +371,8 @@ class Project:
 
         return self.model.solution
 
-    def solve_acoustic_modal_analysis(self) -> ModalSolution:
-        self.model.analysis_id = AnalysisID.ACOUSTIC_MODAL
+    def solve_acoustic_modal_analysis(self, is_resume: bool = False) -> ModalSolution:
+
         self.update_project_setup_file()
 
         checker = AnalysisChecker(self.model)
@@ -405,8 +395,8 @@ class Project:
 
         return self.model.solution
 
-    def solve_acoustic_harmonic_analysis(self) -> HarmonicSolution:
-        self.model.analysis_id = AnalysisID.ACOUSTIC_HARMONIC
+    def solve_acoustic_harmonic_analysis(self, is_resume: bool = False) -> HarmonicSolution:
+
         self.update_project_setup_file()
 
         checker = AnalysisChecker(self.model)
@@ -426,9 +416,9 @@ class Project:
 
         analysis_method = self.model.analysis_setup.analysis_method
         if analysis_method == "direct":
-            self.model.solution = self.solver.solve_direct(is_resume=self.can_resume_solution)
+            self.model.solution = self.solver.solve_direct(is_resume=is_resume)
         elif analysis_method == "mode_superposition":
-            self.model.solution = self.solver.solve_mode_superposition(is_resume=self.can_resume_solution)
+            self.model.solution = self.solver.solve_mode_superposition(is_resume=is_resume)
         else:
             raise ValueError(f"Unsupported analysis method: {analysis_method}")
 
@@ -436,8 +426,8 @@ class Project:
             self.project_writer.write_harmonic_solution(self.model.solution)
 
         self.mark_project_as_modified()
-
         dt = perf_counter() - t0
+
         print(f"Elapsed time to solve acoustic harmonic analysis: {dt: .6f} [s]")
         logging.info(f"Elapsed time to solve acoustic harmonic analysis: {dt: .6f} [s]")
 
@@ -548,3 +538,13 @@ class Project:
         Indicates that something was modified and that the project need to be saved.
         """
         self.needs_saving = True
+
+    def mark_solution_as_outdated(self, reset: bool = False):
+        solution_exists = isinstance(self.model.solution, HarmonicSolution | ModalSolution)
+        solution_outdated = not reset and solution_exists
+
+        analysis_setup = self.model.analysis_setup
+        if isinstance(analysis_setup, HarmonicAnalysisSetup | ModalAnalysisSetup):
+            analysis_setup.outdated_solution = solution_outdated
+            self.model.set_analysis_setup(analysis_setup)
+            self.update_project_setup_file()

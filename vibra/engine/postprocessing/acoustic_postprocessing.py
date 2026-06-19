@@ -302,6 +302,13 @@ class AcousticPostprocessing:
 
         map_elements_to_nodes, filtered_nodes = self.mesh.get_solid_elements_connected_to_nodes(surface_id=surface_id, return_nodes=True)
 
+        node_ids = self.mesh.get_nodes_from_surface(surface_id)
+        map_elements_to_nodes, filtered_nodes = self.mesh.get_solid_elements_connected_to_nodes(
+            node_ids=node_ids, return_nodes=True)
+        
+        # map_elements_to_nodes, filtered_nodes = aelf.mesh.get_solid_elements_connected_to_nodes(
+        #     surface_id=surface_id, return_nodes=True)
+
         # Load all frequency solutions to optimize multiple load on the `process_particle_velocity` method below.
         node_to_index = dict(zip(filtered_nodes, np.arange(filtered_nodes.size, dtype=int)))
         solution = self.solution.nodal_solution[filtered_nodes, :]

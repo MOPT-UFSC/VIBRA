@@ -26,7 +26,7 @@ class Ui_Dialog(object):
         Dialog.setWindowModality(Qt.WindowModality.ApplicationModal)
         Dialog.resize(320, 240)
         Dialog.setMinimumSize(QSize(240, 240))
-        Dialog.setMaximumSize(QSize(600, 600))
+        Dialog.setMaximumSize(QSize(900, 600))
         Dialog.setModal(True)
         self.verticalLayout = QVBoxLayout(Dialog)
         self.verticalLayout.setSpacing(4)
@@ -124,7 +124,22 @@ class Ui_Dialog(object):
         self.ok_button.setMaximumSize(QSize(80, 16777215))
         self.ok_button.setBaseSize(QSize(0, 0))
 
-        self.gridLayout_2.addWidget(self.ok_button, 0, 0, 1, 1)
+        self.gridLayout_2.addWidget(self.ok_button, 0, 3, 1, 1)
+
+        self.copy_log_button = QPushButton(self.frame_button)
+        self.copy_log_button.setObjectName(u"copy_log_button")
+        self.copy_log_button.setMinimumSize(QSize(100, 0))
+        self.copy_log_button.setMaximumSize(QSize(100, 16777215))
+
+        self.gridLayout_2.addWidget(self.copy_log_button, 0, 1, 1, 1)
+
+        self.copy_stacktrace_button = QPushButton(self.frame_button)
+        self.copy_stacktrace_button.setObjectName(u"copy_stacktrace_button")
+        self.copy_stacktrace_button.setMinimumSize(QSize(140, 0))
+        self.copy_stacktrace_button.setMaximumSize(QSize(140, 16777215))
+        self.copy_stacktrace_button.setFont(font)
+
+        self.gridLayout_2.addWidget(self.copy_stacktrace_button, 0, 2, 1, 1)
 
 
         self.verticalLayout.addWidget(self.frame_button)
@@ -148,6 +163,8 @@ class Ui_Dialog(object):
 "</style></head><body style=\" font-family:'Courier'; font-size:10pt; font-weight:400; font-style:normal;\">\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:'Cascadia Code'; font-size:9pt;\">Stack trace containing only the last few calls</span></p></body></html>", None))
         self.ok_button.setText(QCoreApplication.translate("Dialog", u"OK", None))
+        self.copy_log_button.setText(QCoreApplication.translate("Dialog", u"Copy logs", None))
+        self.copy_stacktrace_button.setText(QCoreApplication.translate("Dialog", u"Copy Stacktrace", None))
     # retranslateUi
 
 
@@ -167,6 +184,8 @@ class ExceptionMessage_UI(QDialog, Ui_Dialog):
                 - frame_button: QFrame
                     - (Layout): QGridLayout
                             - ok_button: QPushButton
+                            - copy_log_button: QPushButton
+                            - copy_stacktrace_button: QPushButton
     """
 
     def __init__(self, *args, **kwargs):

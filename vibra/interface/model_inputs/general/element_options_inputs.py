@@ -1,20 +1,16 @@
+from enum import IntEnum
+
 from PySide6.QtCore import Qt
 
 from vibra import app
-from vibra.engine.mesher.element_setup import (
-    TETRAHEDRON_4,
-    TETRAHEDRON_10,
-    HEXAHEDRON_8,
-    HEXAHEDRON_20,
-)
-
 from vibra.engine.elements.element_options import HEX8_structural
+from vibra.engine.mesher.mesh_setup import HEXAHEDRON_8, HEXAHEDRON_20, TETRAHEDRON_4, TETRAHEDRON_10, ElementTopology
+from vibra.engine.mesher.mesh_setup import MeshSetup
+
 # from vibra.interface import error_title, warning_title
 # from vibra.interface.general.print_message_input import PrintMessageInput
 # from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.ui_generated.model.general.element_options_input_ui import ElementOptionsInput_UI
-
-from enum import IntEnum, StrEnum
 
 
 class TabType(IntEnum):
@@ -24,14 +20,14 @@ class TabType(IntEnum):
     TET10 = 3
 
 
-class ElementType(StrEnum):
-    HEXAHEDRAL = "hexahedral"
-    TETRAHEDRAL = "tetrahedral"
+# class ElementGeometry(StrEnum):
+#     HEXAHEDRAL = "hexahedral"
+#     TETRAHEDRAL = "tetrahedral"
 
 
-class ShapeFunction(StrEnum):
-    LINEAR = "linear"
-    QUADRATIC = "quadratic"
+# class ShapeOrder(StrEnum):
+#     LINEAR = "linear"
+#     QUADRATIC = "quadratic"
 
 
 class ElementOptionsInputs(ElementOptionsInput_UI):
@@ -68,8 +64,8 @@ class ElementOptionsInputs(ElementOptionsInput_UI):
         self.comboBox_option_3.setVisible(False)
 
     def _create_connections(self):
-        self.pushButton_confirm.clicked.connect(self.set_element_options_callback)
-        self.pushButton_exit.clicked.connect(self.close)
+        self.pushButton_apply.clicked.connect(self.set_element_options_callback)
+        self.pushButton_cancel.clicked.connect(self.close)
 
     def load_advanced_options(self):
 
@@ -87,28 +83,28 @@ class ElementOptionsInputs(ElementOptionsInput_UI):
 
     def update_tab_visibility(self):
 
-        mesh_setup = app().project.model.mesh_setup_old
-        if not isinstance(mesh_setup, dict):
+        mesh_setup = app().project.model.mesh_setup
+        if not isinstance(mesh_setup, MeshSetup):
             return
-
-        _element_type = mesh_setup.get("ElementType")
-        if _element_type is None:
-            NotImplementedError("ElementType not found")
+        
+        element_type = app().project.model.element_topology
+        if not isinstance(element_type, ElementTopology):
+            NotImplementedError("ElementTopology not found")
             return
 
         for i in range(4):
             self.tabWidget_main.setTabVisible(i, False)
 
-        if _element_type == TETRAHEDRON_4:
+        if element_type == TETRAHEDRON_4:
             self.tabWidget_main.setTabVisible(TabType.TET4, True)
 
-        elif _element_type == TETRAHEDRON_10:
+        elif element_type == TETRAHEDRON_10:
             self.tabWidget_main.setTabVisible(TabType.TET10, True)
 
-        elif _element_type == HEXAHEDRON_8:
+        elif element_type == HEXAHEDRON_8:
             self.tabWidget_main.setTabVisible(TabType.HEX8, True)
 
-        elif _element_type == HEXAHEDRON_20:
+        elif element_type == HEXAHEDRON_20:
             self.tabWidget_main.setTabVisible(TabType.HEX20, True)
 
         else:

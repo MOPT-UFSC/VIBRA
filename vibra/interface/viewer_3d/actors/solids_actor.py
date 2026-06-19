@@ -21,13 +21,7 @@ from vtkmodules.vtkFiltersExtraction import vtkExtractGeometry
 from vtkmodules.vtkRenderingCore import vtkActor, vtkDataSetMapper
 
 from vibra import app
-from vibra.engine.mesher.element_setup import (
-    TETRAHEDRON_4,
-    TETRAHEDRON_10,
-    HEXAHEDRON_8,
-    HEXAHEDRON_20,
-)
-
+from vibra.engine.mesher.mesh_setup import HEXAHEDRON_8, HEXAHEDRON_20, TETRAHEDRON_4, TETRAHEDRON_10
 from molde import Color
 
 from typing import TYPE_CHECKING
@@ -63,20 +57,20 @@ class SolidsActor(vtkActor):
         solid_indexes = vtkIntArray()
         solid_indexes.SetName("solid_indexes")
 
-        if self.mesh.element_type == TETRAHEDRON_4:
+        if self.mesh.element_topology == TETRAHEDRON_4:
             cell_type = VTK_TETRA
             nodes_connectivity = self.mesh.solids_connectivity
 
-        elif self.mesh.element_type == TETRAHEDRON_10:
+        elif self.mesh.element_topology == TETRAHEDRON_10:
             cell_type = VTK_QUADRATIC_TETRA
             nodes_order = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 12)
             nodes_connectivity = self.mesh.solids_connectivity[:, nodes_order]
 
-        elif self.mesh.element_type == HEXAHEDRON_8:
+        elif self.mesh.element_topology == HEXAHEDRON_8:
             cell_type = VTK_HEXAHEDRON
             nodes_connectivity = self.mesh.solids_connectivity
 
-        elif self.mesh.element_type == HEXAHEDRON_20:
+        elif self.mesh.element_topology == HEXAHEDRON_20:
             cell_type = VTK_QUADRATIC_HEXAHEDRON
             nodes_order = (
                 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 
@@ -85,7 +79,7 @@ class SolidsActor(vtkActor):
             nodes_connectivity = self.mesh.solids_connectivity[:, nodes_order]
 
         else:
-            raise NotImplementedError("Unknown element type")
+            raise NotImplementedError("Unknown element topology")
 
         number_of_nodes = self.mesh.nodal_coordinates.shape[0]
         number_of_elements = self.mesh.solids_connectivity.shape[0]

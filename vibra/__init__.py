@@ -1,3 +1,7 @@
+from time import perf_counter
+
+INTIAL_TIME = perf_counter()  # this need to be at the start of the file
+
 # Use this to allow type hints without circular imports
 from typing import TYPE_CHECKING
 

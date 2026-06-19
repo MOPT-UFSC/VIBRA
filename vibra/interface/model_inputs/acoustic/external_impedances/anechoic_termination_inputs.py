@@ -1,15 +1,15 @@
-# fmt: on
-
-from PySide6.QtWidgets import QTreeWidgetItem, QAbstractItemView
-from PySide6.QtCore import Qt, QPoint, QItemSelectionModel
+import numpy as np
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import QAbstractItemView, QTreeWidgetItem
 
 from vibra import app
 from vibra.interface import warning_title
-from vibra.interface.ui_generated.model.acoustic.anechoic_termination_inputs_ui import AnechoicTerminationInputs_UI
+from vibra.interface.common.common_interface import filter_outside_surfaces
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.acoustic.definitions.enums import SetupTabType
+from vibra.interface.ui_generated.model.acoustic.external_impedances.anechoic_termination_inputs_ui import AnechoicTerminationInputs_UI
 
 
 class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
@@ -19,21 +19,27 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
 
-        self.model = app().project.model
-        self.mesh = app().project.model.mesh
-        self.properties = app().project.model.properties
-
         self._initialize()
         self._config_window()
-        self._configure_qt_variables()
-        self._create_connections()
         self._config_widgets()
+        self._create_connections()
 
         self.load_model_info()
-        self.geometry_selection_callback()
 
         while self.keep_window_open:
             self.exec()
+
+    @property
+    def model(self):
+        return app().project.model
+
+    @property
+    def mesh(self):
+        return app().project.model.mesh
+
+    @property
+    def properties(self):
+        return app().project.model.properties
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -44,70 +50,73 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
     def _initialize(self):
         self.keep_window_open = True
         self.anechoic_termination = None
-        self.tree_item_clicked = False
-
-    def _configure_qt_variables(self):
-        self.comboBox_volume_id.setDisabled(True)
-        self.lineEdit_selection_id.setDisabled(True)
-        self.treeWidget_anechoic_termination.setColumnWidth(1, 20)
-        self.treeWidget_anechoic_termination.setColumnWidth(2, 80)
 
     def _create_connections(self):
         #
-        self.pushButton_attribute.clicked.connect(self.attribute_callback)
-        self.pushButton_exit.clicked.connect(self.close)
+        self.pushButton_apply.clicked.connect(self.apply_callback)
+        self.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
+        self.pushButton_cancel.clicked.connect(self.close)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
         #
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
+        #
         self.treeWidget_anechoic_termination.itemClicked.connect(self.on_click_item)
         self.treeWidget_anechoic_termination.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
+        #
+        self.geometry_selection_callback()
 
     def _config_widgets(self):
-        #
-        self.comboBox_volume_id.setDisabled(True)
-        #
+
         self.lineEdit_selection_id.setDisabled(True)
-        #
+        self.treeWidget_selection_info.setSelectionMode(QAbstractItemView.NoSelection)
+    
         for i, w in enumerate([120]):
+            self.treeWidget_selection_info.setColumnWidth(i, w)
+            self.treeWidget_selection_info.headerItem().setTextAlignment(i, Qt.AlignCenter)
             self.treeWidget_anechoic_termination.setColumnWidth(i, w)
             self.treeWidget_anechoic_termination.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def tab_event_callback(self):
+        self.clear_line_edit_selection_id()
         app().main_window.selection.clear_selection()
 
-        self.clear_line_edit_selection_id()
-        self.treeWidget_anechoic_termination.clearSelection()
         self.pushButton_remove.setDisabled(True)
+        self.treeWidget_selection_info.clear()
+        self.treeWidget_anechoic_termination.clearSelection()
 
-        if self.tabWidget_main.currentIndex() == SetupTabType.LIST:
-            self.lineEdit_selection_id.setDisabled(True)
-            self.pushButton_attribute.setDisabled(True)
-        else:
-            self.lineEdit_selection_id.setDisabled(False)
-            self.pushButton_attribute.setEnabled(True)
+        tab_list = self.tabWidget_main.currentIndex() == SetupTabType.LIST
+        # self.lineEdit_selection_id.setDisabled(tab_list)
+        self.pushButton_apply.setDisabled(tab_list)
+        self.pushButton_apply_and_close.setDisabled(tab_list)
 
     def geometry_selection_callback(self):
         if self.tabWidget_main.currentIndex() == SetupTabType.LIST:
-            self.verify_if_selected_surfaces_are_in_tree_widget_anechoic_termination()
+            selected_surfaces = self.get_selected_surfaces_from_tree_widget()
+            if not selected_surfaces:
+                return
+
+            self.set_selection_text(selected_surfaces)
             return
 
-        faces = app().main_window.selection.geometry_surfaces
+        surfaces = app().main_window.selection.geometry_surfaces
+        if not surfaces:
+            return
 
-        if faces:
-            text = ", ".join([str(i) for i in faces])
-            self.lineEdit_selection_id.setText(text)
-            self.update_volumes_from_faces()
+        (outside_surfaces, _) = filter_outside_surfaces(list(surfaces), "anechoic termination")
+        if not outside_surfaces:
+            return
 
-    def update_volumes_from_faces(self):
+        self.set_selection_text(outside_surfaces)
+        self.load_specific_impedance_of_selected_surfaces()
 
+    def load_specific_impedance_of_selected_surfaces(self):
+
+        self.treeWidget_selection_info.clear()
         input_ids = self.lineEdit_selection_id.text()
-        surface_ids, error_data = self.mesh.check_selected_ids(
-                                                                input_ids, 
-                                                                selection = "surfaces"
-                                                                )
+        surface_ids, error_data = self.mesh.check_selected_ids(input_ids, selection="surfaces")
 
         if error_data is not None:
             self.hide()
@@ -115,78 +124,37 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
             PrintMessageInput(error_data)
             return
 
-        list_volumes = list()
-        for face_id in surface_ids:            
-            for volume_id in self.model.mesh.volumes_from_surface[face_id]:
-                if volume_id not in list_volumes:
-                    list_volumes.append(volume_id)
+        for surf_id in np.sort(surface_ids):
 
-        self.comboBox_volume_id.clear()
-        for vol_id in list_volumes:
-            self.comboBox_volume_id.addItem(str(vol_id))
-        
-        if len(list_volumes) == 1:
-            self.comboBox_volume_id.setDisabled(True)
-        else:
-            if len(surface_ids) == 1:
-                self.comboBox_volume_id.setDisabled(False)
+            str_impedance = None
+            if self.model.is_surface_impedance_frequency_dependent(surf_id):
+                str_impedance = "Spectral data"
+
             else:
-                self.comboBox_volume_id.clear()
-                self.comboBox_volume_id.addItem("multiple")
-    
-    def verify_if_selected_surfaces_are_in_tree_widget_anechoic_termination(self):
-        if self.tree_item_clicked:
-            return
+                density, speed_of_sound = self.model.get_surface_density_and_speed_of_sound(surf_id)
+                if density is None:
+                    str_impedance = "Not defined fluid"
 
-        selected_surfaces = app().main_window.selection.geometry_surfaces
+                else:
+                    impedance = density * speed_of_sound
+                    str_impedance = f"{impedance : .6f}"
 
-        if not selected_surfaces:
-            return
+            if not isinstance(str_impedance, str):
+                continue
 
-        self.clear_line_edit_selection_id()
-        self.treeWidget_anechoic_termination.clearSelection()
-        self.pushButton_remove.setDisabled(True)
+            item = QTreeWidgetItem([str(surf_id), str_impedance])
+            for j in range(2):
+                item.setTextAlignment(j, Qt.AlignCenter)
 
-        map_id_to_model_index = self.get_tree_widget_anechoic_termination_items_map()
-        selected_ids = set(map_id_to_model_index.keys())
-        selected_surfaces_in_tree_widget = selected_surfaces.intersection(selected_ids)
+            self.treeWidget_selection_info.addTopLevelItem(item)
 
-        if not selected_surfaces_in_tree_widget:
+    def apply_callback(self, close_window: bool = False):
+
+        if self.tabWidget_main.currentIndex() == SetupTabType.LIST:
             return
         
-        self.pushButton_remove.setEnabled(True)
-        
-        model_selector = self.treeWidget_anechoic_termination.selectionModel()
-
-        for surface_id in selected_surfaces_in_tree_widget:
-            model_index = map_id_to_model_index[surface_id]
-
-            model_selector.select(model_index, QItemSelectionModel.SelectionFlag.Select | QItemSelectionModel.SelectionFlag.Rows)
-
-        self.treeWidget_anechoic_termination.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.set_selection_text(selected_surfaces_in_tree_widget)
-
-    def get_tree_widget_anechoic_termination_items_map(self) -> dict:
-        map_id_to_model_index = dict()
-
-        index = self.treeWidget_anechoic_termination.indexAt(QPoint(0, 0))
-        while index.isValid():
-            item = self.treeWidget_anechoic_termination.itemFromIndex(index)
-            surface_id = item.text(0)
-
-            map_id_to_model_index[int(surface_id)] = index
-
-            index = self.treeWidget_anechoic_termination.indexBelow(index)
-        
-        return map_id_to_model_index
-
-    def attribute_callback(self):
-
         input_ids = self.lineEdit_selection_id.text()
-        surface_ids, error_data = self.mesh.check_selected_ids(
-                                                                input_ids, 
-                                                                selection = "surfaces"
-                                                                )
+        surface_ids, error_data = self.mesh.check_selected_ids(input_ids, selection="surfaces")
 
         if error_data is not None:
             self.hide()
@@ -209,30 +177,16 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
                 message += "In this case, it is necessary to select the Face ID and the respective Volume ID "
                 message += "to proceed."
                 PrintMessageInput([warning_title, title, message])
-
                 return
 
-            if self.comboBox_volume_id.currentText() == "multiple":
-                volume_id = volume_ids[0]
-            else:
-                try:
-                    volume_id = int(self.comboBox_volume_id.currentText())
-                except Exception:
-                    window_title = "Error"
-                    title = "Error in the model setup"
-                    message = "You cannot set an anechoic termination for a shell element"
-
-                    PrintMessageInput([window_title, title, message])
-                    return
-
             data = {
-                    "anechoic_termination" : True,
-                    "volume_id" : volume_id,
-                    }
+                "anechoic_termination": True,
+                "volume_id": volume_ids[0],
+            }
 
             self.properties._set_property("specific_impedance", data, surface=surface_id)
 
-        self.actions_to_finalize()
+        self.actions_to_finalize(close_window)
 
     def process_table_file_removal(self, table_names: list):
         for table_name in table_names:
@@ -262,11 +216,10 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
         self.process_table_file_removal(table_names)
 
     def remove_callback(self):
-        selected_surfaces = self.get_selected_surfaces_from_tree_widget_anechoic_termination()
-
+        selected_surfaces = self.get_selected_surfaces_from_tree_widget()
         if not selected_surfaces:
             return
-    
+
         for surface_id in selected_surfaces:
             self.remove_table_files_from_surfaces(surface_id)
             self.properties._remove_surface_property("specific_impedance", surface_id)
@@ -290,80 +243,67 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
         if read._cancel:
             return
 
-        if read._continue:
+        if not read._continue:
+            return
 
-            surface_ids = list()
-            for (property, *args), data in self.properties.surface_properties.items():
-                if property == "specific_impedance":
-                    if "anechoic_termination" in data.keys():
-                        surface_id = args[0]
-                        surface_ids.append(surface_id)
+        surface_ids = list()
+        for (property, *args), data in self.properties.surface_properties.items():
+            if property != "specific_impedance":
+                continue
 
-            self.remove_table_files_from_surfaces(surface_ids)
+            if "anechoic_termination" not in data.keys():
+                continue
 
-            self.properties._reset_property("specific_impedance")
-            self.actions_to_finalize()
+            surface_id = args[0]
+            surface_ids.append(surface_id)
 
-    def actions_to_finalize(self):
+        self.remove_table_files_from_surfaces(surface_ids)
+        self.properties._reset_property("specific_impedance")
+        self.actions_to_finalize()
+
+    def actions_to_finalize(self, close_window: bool = False):
         self.load_model_info()
-        self.check_model_frequency_controls()
         app().main_window.update_info_text()
         app().project.update_model_properties_file()
         app().main_window.update_symbols()
 
-    def check_model_frequency_controls(self):
-
-        for key, data in self.properties.surface_properties.items():
-            property, _ = key
-            if property in ["acoustic_pressure", "surface_velocity", "specific_impedance", "reciprocating_compressor_excitation"]:
-                if "table_names" in data.keys():
-                    return
-
-        # No idea of what it does
-        app().project.configure_analysis(
-            app().project.model.analysis_id,
-            app().project.model.analysis_setup,
-        )
+        if close_window:
+            self.close()
 
     def update_tabs_visibility(self):
 
         for key, data in self.properties.surface_properties.items():
             property, *args = key
-            if property == "specific_impedance":
-                if "anechoic_termination" in data.keys():
-                    self.tabWidget_main.setTabVisible(SetupTabType.LIST, True)
-                    return
+            if property != "specific_impedance":
+                continue
+
+            if "anechoic_termination" in data.keys():
+                self.tabWidget_main.setTabVisible(SetupTabType.LIST, True)
+                return
 
         self.tabWidget_main.setCurrentIndex(SetupTabType.SETUP)
         self.tabWidget_main.setTabVisible(SetupTabType.LIST, False)
 
-    def on_click_item(self, item):
-        self.tree_item_clicked = True
-
-        surface_ids = self.get_selected_surfaces_from_tree_widget_anechoic_termination()
-
+    def on_click_item(self, item: QTreeWidgetItem):
+        surface_ids = self.get_selected_surfaces_from_tree_widget()
         if not surface_ids:
             return
     
         app().main_window.selection.set_geometry_selection(surfaces=surface_ids)
+        self.pushButton_remove.setEnabled(True)
 
-        self.pushButton_remove.setDisabled(False)
-        self.set_selection_text(surface_ids)
-
-        self.tree_item_clicked = False
-
-    def on_doubleclick_item(self, item):
+    def on_doubleclick_item(self, item: QTreeWidgetItem):
         self.on_click_item(item)
 
-    def get_selected_surfaces_from_tree_widget_anechoic_termination(self) -> list:
+    def get_selected_surfaces_from_tree_widget(self) -> list:
         selected_items = self.treeWidget_anechoic_termination.selectedItems()
-
         if not selected_items:
             return list()
 
         return [int(item.text(0)) for item in selected_items]
     
     def set_selection_text(self, selected_surfaces: list | set):
+        self.clear_line_edit_selection_id()
         selected_surfaces = list(selected_surfaces)
         selected_surfaces.sort()
 
@@ -381,19 +321,37 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
         self.treeWidget_anechoic_termination.clear()
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key
-            if property == "specific_impedance":
-                if "anechoic_termination" in data.keys():
-                    volume_id = data["volume_id"]
-                    new = QTreeWidgetItem([str(surface_id), str(volume_id)])
-                    new.setTextAlignment(0, Qt.AlignCenter)
-                    new.setTextAlignment(1, Qt.AlignCenter)
-                    self.treeWidget_anechoic_termination.addTopLevelItem(new)
+            if property != "specific_impedance":
+                continue
+
+            if "anechoic_termination" not in data.keys():
+                continue
+
+            volume_id = data.get("volume_id")
+            if volume_id is None:
+                continue
+
+            density, speed_of_sound = self.model.get_surface_density_and_speed_of_sound(surface_id)
+            if density is None:
+                continue
+
+            if isinstance(density, np.ndarray):
+                str_impedance = "Spectral data"
+            else:
+                impedance = density * speed_of_sound
+                str_impedance = f"{impedance : .6f}"
+
+            item = QTreeWidgetItem([str(surface_id), str_impedance])
+            for j in range(2):
+                item.setTextAlignment(j, Qt.AlignCenter)
+            
+            self.treeWidget_anechoic_termination.addTopLevelItem(item)
+
         self.update_tabs_visibility()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            if self.tabWidget_main.currentIndex() == SetupTabType.SETUP:
-                self.attribute_callback()
+            self.apply_callback()
         elif event.key() == Qt.Key_Delete:
             self.remove_callback()
         elif event.key() == Qt.Key_Escape:

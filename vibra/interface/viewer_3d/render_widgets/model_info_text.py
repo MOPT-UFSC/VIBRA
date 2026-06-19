@@ -444,54 +444,76 @@ def get_compressor_excitation_waveform(data: dict):
 def get_reciprocating_compressor_text(rc_data: dict):
 
     rc_parameters = rc_data.get("parameters", dict)
-    acting_head = rc_parameters.get("acting_head", "")
+    if not isinstance(rc_parameters, dict):
+        return ""
+
+    acting_label = ""
+    acting_labels = ["both ends", "head end", "crank end"]
 
     # ensure the backwards compatibility
-    if acting_head == "":
-        acting_head = rc_parameters.get("acting_label", "")
+    for key in ["acting_mode", "acting_head", "acting_label"]:
+        value = rc_parameters.get(key)
+        if value is None:
+            continue
 
-    if acting_head != "":
-        acting_head = acting_head.replace("_", " ")
+        elif isinstance(value, int):
+            acting_label = acting_labels[value]
+            break
 
+        elif isinstance(value, str):
+            acting_label = value
+            break
+    
+    acting_label = acting_label.replace("_", " ")
     pressure_unit = rc_parameters.get("pressure_unit", "")
     temperature_unit = rc_parameters.get("temperature_unit", "")
 
-    compression_stage = rc_parameters.get("compression_stage")
-    if isinstance(compression_stage, int):
-        labels = ["1st stage", "2nd stage", "3rd stage"]
-        compression_stage = labels[compression_stage-1]
+    comp_stg_value = rc_parameters.get("compression_stage")
+    if isinstance(comp_stg_value, int):
+        compression_labels = ["1st stage", "2nd stage", "3rd stage"]
+        compression_stage = compression_labels[comp_stg_value]
     else:
-        compression_stage = compression_stage.lower()
+        compression_stage = rc_parameters.get("compression_stage", "unknown")
 
-    if "TDC_crank_angle_1" in rc_parameters.keys():
-        tdc_crank_angle = rc_parameters.get("TDC_crank_angle_1")
-    else:
-        tdc_crank_angle = rc_parameters.get("TDC_crank_angle", "")
+    tdc_crank_angle = 0
+    for key in ["tdc_crank_angle", "TDC_crank_angle", "TDC_crank_angle_1"]:
+        value = rc_parameters.get(key)
+        if isinstance(value, float):
+            tdc_crank_angle = value
+            break
 
     tree_rc = TreeInfo("Reciprocating compressor")
     tree_rc.add_item("Connection", rc_data.get("connection_type", ""))
     tree_rc.add_item("Compression stage", compression_stage)
     tree_rc.add_item("Valves per head", rc_parameters.get("valves_per_head", "1"))
-    tree_rc.add_item("Acting head", acting_head)
+    tree_rc.add_item("Acting head", acting_label)
 
-    if acting_head in ["head end", "both ends"]:
+    if acting_label in ["head end", "both ends"]:
         tree_rc.add_item("HE clearance", rc_parameters.get("clearance_HE", ""), "%")
 
-    if acting_head in ["crank end", "both ends"]:
+    if acting_label in ["crank end", "both ends"]:
         tree_rc.add_item("CE clearance", rc_parameters.get("clearance_CE", ""), "%")
 
     tree_rc.add_item("Bore diameter", rc_parameters.get("bore_diameter", ""), "m")
     tree_rc.add_item("Stroke", rc_parameters.get("stroke", ""), "m")
     tree_rc.add_item("Connecting rod length", rc_parameters.get("connecting_rod_length", ""), "m")
 
-    if acting_head in ["crank end", "both ends"]:
+    if acting_label in ["crank end", "both ends"]:
         tree_rc.add_item("Rod diameter", rc_parameters.get("rod_diameter", ""), "m")
 
     tree_rc.add_item("TDC angle", tdc_crank_angle, "deg")
     tree_rc.add_item("Capacity", rc_parameters.get("capacity", ""), "%")
 
-    tree_rc.add_item("Pressure at suction", rc_parameters.get("pressure_at_suction", ""), pressure_unit.replace(" ", ""))
-    tree_rc.add_item("Temperature at suction", rc_parameters.get("temperature_at_suction", ""), temperature_unit)
+    suction_pressure = ""
+    for key in ["suction_pressure", "pressure_at_suction"]:
+        suction_pressure = rc_parameters.get(key)
+    
+    suction_temperature = ""
+    for key in ["suction_temperature", "temperature_at_suction"]:
+        suction_temperature = rc_parameters.get(key)
+
+    tree_rc.add_item("Suction pressure", suction_pressure, pressure_unit.replace(" ", ""))
+    tree_rc.add_item("Suction temperature", suction_temperature, temperature_unit)
     tree_rc.add_item("Rotational speed", rc_parameters.get("rotational_speed", ""), "rpm")
     tree_rc.add_item("Pressure ratio", rc_parameters.get("pressure_ratio", ""), "--")
 

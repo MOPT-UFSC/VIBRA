@@ -1,14 +1,14 @@
 import logging
 from copy import deepcopy
+from dataclasses import asdict
+from numbers import Number
 from pathlib import Path
 from typing import Callable, Optional
 
 import numpy as np
-from numbers import Number
 from PIL.Image import Image
 
 from vibra import SUPPORTED_GEOMETRY_EXTENSIONS, errors
-
 from vibra.engine.analysis_info import (
     AnalysisID,
     AnalysisMethod,
@@ -18,9 +18,7 @@ from vibra.engine.analysis_info import (
     ModalAnalysisSetup,
 )
 from vibra.engine.dissipation_models.porous_materials_models import PorousMaterialModels
-from vibra.engine.dissipation_models.viscous_thermal_loss_models import (
-    ViscousThermalLossModels,
-)
+from vibra.engine.dissipation_models.viscous_thermal_loss_models import ViscousThermalLossModels
 
 # 1d elements - acoustic
 from vibra.engine.elements.elements_1d import ACT_LINE_2, ACT_LINE_3
@@ -46,21 +44,13 @@ from vibra.engine.elements.elements_3d import (
     STRUCT_TETRAHEDRON_10S,
 )
 from vibra.engine.geometry.geometry import LengthUnits
-from vibra.engine.mesh_modifiers.degrees_of_freedom_decoupling import (
-    DegreesOfFreedomDecoupling,
-)
-from vibra.engine.mesher.element_setup import (
-    DEFAULT_ELEMENT_TYPE,
-    HEXAHEDRON_8,
-    HEXAHEDRON_20,
-    TETRAHEDRON_4,
-    TETRAHEDRON_10,
-)
+from vibra.engine.mesh_modifiers.degrees_of_freedom_decoupling import DegreesOfFreedomDecoupling
+from vibra.engine.mesher.element_setup import DEFAULT_ELEMENT_SETUP
 from vibra.engine.mesher.mesh import Mesh
-from vibra.engine.mesher.mesh_setup import MeshSetup
+from vibra.engine.mesher.mesh_setup import MeshSetup, HEXAHEDRON_8, HEXAHEDRON_20, TETRAHEDRON_4, TETRAHEDRON_10, ElementTopology
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.model_properties import ModelProperties
-from vibra.engine.solution import Solution
+from vibra.engine.solution import HarmonicSolution, Solution
 from vibra.engine.transfer_impedances.perforated_plate_models import (
     PerforatedPlateModels,
 )
@@ -81,14 +71,12 @@ class Model:
         self.length_unit: LengthUnits = "millimeter"
         self.mesh_setup: Optional[MeshSetup] = None
         self.analysis_setup: Optional[AnalysisSetup] = None
-        self.analysis_id: AnalysisID = AnalysisID.NO_ANALYSIS
         self.solution: Optional[Solution] = None
 
         # TODO: review these variables
         self.mesh: Optional[Mesh] = None
-        self.mesh_setup_old = None
         self.stop_processing = False
-        self.geometry_path = None
+        self.geometry_path: Optional[Path | str] = None
         self.initial_element_size = None
         self.geometry_qf = 1.0
 
@@ -113,18 +101,37 @@ class Model:
         self.reset_dissipation_model_properties()
 
     @property
+    def element_topology(self) -> ElementTopology | None:
+        if not isinstance(self.mesh, Mesh):
+            return
+
+        if self.mesh.element_topology is None:
+            self.mesh.update_element_topology_based_on_connectivity()
+
+        return self.mesh.element_topology
+
+    @property
+    def analysis_id(self) -> AnalysisID:
+        if isinstance(self.analysis_setup, AnalysisSetup):
+            return self.analysis_setup.analysis_id
+
+        return AnalysisID.NO_ANALYSIS
+
+    @property
     def frequencies(self) -> Optional[np.ndarray]:
         """
         This property was created for retro compatibility.
         """
         if isinstance(self.analysis_setup, HarmonicAnalysisSetup):
             return self.analysis_setup.get_frequencies()
+
         return None
 
     @property
     def solution_steps_mask(self):
         if isinstance(self.analysis_setup, HarmonicAnalysisSetup):
             return self.analysis_setup.solution_steps_mask
+
         return list()
 
     @property
@@ -134,16 +141,32 @@ class Model:
         """
         if isinstance(self.analysis_setup, HarmonicAnalysisSetup):
             return self.analysis_setup.global_damping
+
         return (None, None, None)
     
+    @property
+    def outdated_solution(self):
+        if isinstance(self.analysis_setup, ModalAnalysisSetup | HarmonicAnalysisSetup):
+            return self.analysis_setup.outdated_solution
+
+        return False
+
+    @property
+    def can_resume_solution(self) -> bool:
+        if not isinstance(self.solution, HarmonicSolution):
+            return False
+
+        try:
+            return not np.all(self.solution.status)
+        except Exception:
+            return False
+
     def reset_current_solution(self):
         self.solution = None
 
     def get_harmonic_analysis_setup(self, **kwargs) -> HarmonicAnalysisSetup:
         analysis_setup = HarmonicAnalysisSetup(**kwargs)
-        analysis_setup.solution_steps_mask = self.get_solution_steps_mask(
-            frequencies=analysis_setup.get_frequencies()
-        )
+        analysis_setup.solution_steps_mask = self.get_solution_steps_mask(frequencies=analysis_setup.get_frequencies())
         return analysis_setup
 
     def reset_dissipation_model_properties(self):
@@ -157,7 +180,7 @@ class Model:
     def set_geometry_quality_factor(self, geometry_qf: float = 1.0):
         self.geometry_qf = geometry_qf
 
-    def set_geometry_path(self, path: str):
+    def set_geometry_path(self, path: Path | str):
         self.geometry_path = path
 
     def check_path_for_geometry_file(self, path: Path | str):
@@ -178,9 +201,8 @@ class Model:
     def set_properties(self, properties):
         self.properties = properties
 
-    def set_mesh_setup(self, mesh_setup: dict):
-        self.mesh_setup_old = mesh_setup
-        self.mesh.set_element_type(mesh_setup.get("ElementType", DEFAULT_ELEMENT_TYPE))
+    def set_mesh_setup(self, mesh_setup: MeshSetup | None):
+        self.mesh_setup = mesh_setup
 
     def initialize_mesh(self):
         self.mesh = Mesh(length_unit=self.length_unit, geometry_qf=self.geometry_qf)
@@ -196,7 +218,7 @@ class Model:
                     dimension=2,
                     minimum_element_size=element_size * 0.4,
                     maximum_element_size=element_size,
-                    ElementType=DEFAULT_ELEMENT_TYPE,
+                    ElementSetup=DEFAULT_ELEMENT_SETUP,
                 )
 
             except Exception:
@@ -208,7 +230,7 @@ class Model:
                     dimension=2,
                     minimum_element_size=element_size * 0.5,
                     maximum_element_size=element_size,
-                    ElementType=DEFAULT_ELEMENT_TYPE,
+                    ElementSetup=DEFAULT_ELEMENT_SETUP,
                 )
 
             self.initial_element_size = element_size
@@ -251,19 +273,16 @@ class Model:
             )
             raise IncompleteSetupError(message, context=context)
 
-        if self.mesh_setup_old is None:
+        if self.mesh_setup is None:
             message = "Mesh setup not defined"
             context = "The mesh setup has not been defined yet.You should to configure the mesher to proceed."
             raise IncompleteSetupError(message, context=context)
 
         logging.info("Processing mesh [80/100]")
-        self.mesh.load_cad(self.geometry_path, **self.mesh_setup_old)
+        self.mesh.load_cad(self.geometry_path, **asdict(self.mesh_setup))
 
         if self.disable_resume_callback is not None:
             self.disable_resume_callback()
-
-    def set_analysis_id(self, analysis_id: AnalysisID):
-        self.analysis_id = analysis_id
 
     def set_analysis_setup(self, analysis_setup: Optional[AnalysisSetup]):
         if not isinstance(analysis_setup, AnalysisSetup | None):
@@ -322,10 +341,10 @@ class Model:
 
         disconnected_nodes = bool(self.mesh.disconnected_nodes_data)
         collapsed_elements = bool(
-            self.mesh.collapsed_3d_elements or 
-            self.mesh.collapsed_2d_elements or 
-            self.mesh.collapsed_1d_elements
-            )
+            self.mesh.collapsed_3d_elements 
+            or self.mesh.collapsed_2d_elements 
+            or self.mesh.collapsed_1d_elements
+        )  # fmt: skip
 
         if disconnected_nodes or collapsed_elements:
             return False
@@ -370,7 +389,7 @@ class Model:
             return False
 
         if isinstance(current_analysis_id, int):
-            if self.analysis_setup.analysis_id != current_analysis_id:
+            if self.analysis_id != current_analysis_id:
                 return False
 
         def check_modal_setup():
@@ -419,7 +438,7 @@ class Model:
         if self.list_frequencies != frequencies:
             return True
 
-    def get_tabular_frequency_setup(self):
+    def get_tabular_frequency_setup(self) -> None | tuple:
         """
         This method returns the frequency setup of the model's tabular data.
         """
@@ -434,8 +453,8 @@ class Model:
 
         return (f_min, f_max, f_step, frequencies)
 
-    def get_structural_elements(self):
-        element_type = self.mesh.element_type
+    def get_structural_elements(self):                        
+        element_type = self.element_topology
 
         if element_type == TETRAHEDRON_4:
             return STRUCT_TETRAHEDRON_4S(self), STRUCT_TRIANGLE_3(self), None
@@ -453,7 +472,7 @@ class Model:
             raise NotImplementedError(f'Element type "{element_type}" is not supported yet.')
 
     def get_acoustic_elements(self):
-        element_type = self.mesh.element_type
+        element_type = self.element_topology
 
         if element_type == TETRAHEDRON_4:
             return ACT_TETRAHEDRON_4C(self), ACT_TRIANGLE_3(self), ACT_LINE_2(self)
@@ -708,6 +727,48 @@ class Model:
 
         return None, None
 
+    def get_surface_density_and_speed_of_sound(self, surface_id: int) -> float | complex | np.ndarray:
+        """
+        It returs the density and speed of sound of selected surface.
+
+        Parameter
+        ---------
+        surface_id: int
+            The selected surface ID.
+
+        Returns
+        -------
+        density: np.ndarray, float or None
+            The density of selected surface.
+
+        speed_of_sound: np.ndarray, float or None
+            The speed of sound of selected surface.
+        """
+
+        density = None
+        speed_of_sound = None
+
+        rho_eff_pm, C_eff_pm = self.get_porous_material_model_effective_properties(surface_id)
+        rho_eff_tv, C_eff_tv = self.get_viscous_thermal_model_effective_properties(surface_id)
+
+        if isinstance(rho_eff_pm, np.ndarray):
+            density = rho_eff_pm
+            speed_of_sound = C_eff_pm
+
+        elif isinstance(rho_eff_tv, np.ndarray):
+            density = rho_eff_tv
+            speed_of_sound = C_eff_tv
+
+        else:
+            fluid = self.properties._get_property("fluid", surface=surface_id)
+            if not isinstance(fluid, Fluid):
+                return None, None
+
+            density = fluid.fluid_density
+            speed_of_sound = fluid.speed_of_sound
+
+        return (density, speed_of_sound)
+
     def get_surface_impedance(self, surface_id: int) -> float | complex | np.ndarray:
         """
         It returs the acoustic impedance of selected surface.
@@ -729,26 +790,8 @@ class Model:
         si_data = self.properties._get_property("specific_impedance", surface=surface_id)
         pw_data = self.properties._get_property("incident_plane_wave", surface=surface_id)
 
-        if isinstance(at_data, dict):
-            rho_eff_pm, C_eff_pm = self.get_porous_material_model_effective_properties(surface_id)
-            rho_eff_tv, C_eff_tv = self.get_viscous_thermal_model_effective_properties(surface_id)
-
-            if isinstance(rho_eff_pm, np.ndarray):
-                density = rho_eff_pm
-                speed_of_sound = C_eff_pm
-
-            elif isinstance(rho_eff_tv, np.ndarray):
-                density = rho_eff_tv
-                speed_of_sound = C_eff_tv
-
-            else:
-                fluid = self.properties._get_property("fluid", surface=surface_id)
-                if not isinstance(fluid, Fluid):
-                    return None
-
-                density = fluid.fluid_density
-                speed_of_sound = fluid.speed_of_sound
-
+        if isinstance(at_data, dict) or isinstance(pw_data, dict):
+            density, speed_of_sound = self.get_surface_density_and_speed_of_sound(surface_id)
             impedance = density * speed_of_sound
 
         elif isinstance(si_data, dict):
@@ -758,53 +801,26 @@ class Model:
                 impedance = real_values + 1j * imag_values
 
             elif "anechoic_termination" in si_data.keys():
-                rho_eff_pm, C_eff_pm = self.get_porous_material_model_effective_properties(surface_id)
-                rho_eff_tv, C_eff_tv = self.get_viscous_thermal_model_effective_properties(surface_id)
-
-                if isinstance(rho_eff_pm, np.ndarray):
-                    density = rho_eff_pm
-                    speed_of_sound = C_eff_pm
-
-                elif isinstance(rho_eff_tv, np.ndarray):
-                    density = rho_eff_tv
-                    speed_of_sound = C_eff_tv
-
-                else:
-                    fluid = self.properties._get_property("fluid", surface=surface_id)
-                    if not isinstance(fluid, Fluid):
-                        return None
-
-                    density = fluid.fluid_density
-                    speed_of_sound = fluid.speed_of_sound
-
+                density, speed_of_sound = self.get_surface_density_and_speed_of_sound(surface_id)
                 impedance = density * speed_of_sound
 
             elif "values" in si_data.keys():
                 impedance = si_data["values"][0]
 
-        elif isinstance(pw_data, dict):
-            rho_eff_pm, C_eff_pm = self.get_porous_material_model_effective_properties(surface_id)
-            rho_eff_tv, C_eff_tv = self.get_viscous_thermal_model_effective_properties(surface_id)
-
-            if isinstance(rho_eff_pm, np.ndarray):
-                density = rho_eff_pm
-                speed_of_sound = C_eff_pm
-
-            elif isinstance(rho_eff_tv, np.ndarray):
-                density = rho_eff_tv
-                speed_of_sound = C_eff_tv
-
-            else:
-                fluid = self.properties._get_property("fluid", surface=surface_id)
-                if not isinstance(fluid, Fluid):
-                    return None
-
-                density = fluid.fluid_density
-                speed_of_sound = fluid.speed_of_sound
-
-            impedance = density * speed_of_sound
-
         return impedance
+    
+    def is_surface_impedance_frequency_dependent(self, surface_id: int) -> bool:
+        """
+        This method verifies whether the acoustic impedance of the selected surface is 
+        frequency-dependent, returning True if positive and False otherwise.
+        """
+        properties = ["porous_material_model", "viscous_thermal_model", "proportional_damping"]
+        for volume_id in self.mesh.volumes_from_surface.get(surface_id):
+            for _property in properties:
+                prop_data = self.properties._get_property(_property, volume=volume_id)
+                if isinstance(prop_data, dict):
+                    return True
+        return False
 
     def get_downstream_pressure_and_particle_velocity(self, surface_id: int):
         """
@@ -907,9 +923,15 @@ class Model:
                 continue
 
             if surface_id in self.mesh.surfaces_from_volume.get(volume_id):
+                if not self.porous_material_properties:
+                    self.process_porous_material_properties()
+
                 pm_properties = self.porous_material_properties.get(volume_id)
-                rho_eff = pm_properties["rho_eff"]
-                C_eff = pm_properties["C_eff"]
+                if not isinstance(pm_properties, dict):
+                    continue
+
+                rho_eff = pm_properties.get("rho_eff")
+                C_eff = pm_properties.get("C_eff")
                 break
 
         return rho_eff, C_eff
@@ -953,9 +975,15 @@ class Model:
                 continue
 
             if surface_id in self.mesh.surfaces_from_volume.get(volume_id):
+                if not self.viscous_thermal_model_properties:
+                    self.process_viscous_thermal_model_properties()
+
                 vt_properties = self.viscous_thermal_model_properties.get(volume_id)
-                rho_eff = vt_properties["rho_eff"]
-                C_eff = vt_properties["C_eff"]
+                if not isinstance(vt_properties, dict):
+                    continue
+
+                rho_eff = vt_properties.get("rho_eff")
+                C_eff = vt_properties.get("C_eff")
                 break
 
         return rho_eff, C_eff

@@ -2,13 +2,7 @@
 from vibra import app
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
-from vibra.engine.mesher.element_setup import (
-    TETRAHEDRON_4,
-    TETRAHEDRON_10,
-    HEXAHEDRON_8,
-    HEXAHEDRON_20,
-)
-from vibra.utils.utils import get_color_rgb
+from vibra.engine.mesher.element_setup import GMSH_TET4, GMSH_TET10, GMSH_HEX8, GMSH_HEX20
 
 import logging
 import numpy as np
@@ -270,16 +264,16 @@ class LoadProject:
                 shape_function = mesh_setup.get("shape_function", "").strip().lower()
                 
                 if element_type == "tetrahedral" and shape_function == "linear":
-                    solid_element = TETRAHEDRON_4
+                    solid_element = GMSH_TET4
 
                 elif element_type == "tetrahedral" and shape_function == "quadratic":
-                    solid_element = TETRAHEDRON_10
+                    solid_element = GMSH_TET10
 
                 elif element_type == "hexahedral" and shape_function == "linear":
-                    solid_element = HEXAHEDRON_8
+                    solid_element = GMSH_HEX8
 
                 elif element_type == "hexahedral" and shape_function == "quadratic":
-                    solid_element = HEXAHEDRON_20
+                    solid_element = GMSH_HEX20
 
                 else:
                     raise NotImplementedError(f'Element type "{element_type}" not defined!')

@@ -61,22 +61,20 @@ class AnalysisToolbar(QToolBar):
         self.run_analysis_action = QAction(self.run_analysis_icon, "Run Analysis", self)
         self.configure_analysis_action = QAction(self.configure_analysis_icon, "Analysis Setup", self)
         self.reset_solution_action = QAction(self.reset_solution_icon, "Reset Solution", self)
-        self.resume_analysis_action = QAction(self.resume_solution_icon, "Resume Solution", self)
+        self.resume_solution_action = QAction(self.resume_solution_icon, "Resume Solution", self)
 
     def _create_connections(self):
         #
         self.combo_box_physical_domain.currentTextChanged.connect(self.check_analysis_setup_callback)
         self.combo_box_analysis_type.currentTextChanged.connect(self.analysis_type_callback)
         #
-        self.run_analysis_action.triggered.connect(self.run_analysis)
-        self.resume_analysis_action.triggered.connect(lambda: self.run_analysis(True))
-        self.configure_analysis_action.triggered.connect(self.configure_analysis)
-        self.reset_solution_action.triggered.connect(self.project_solution_data_reset_callback)
+        self.run_analysis_action.triggered.connect(self.run_analysis_callback)
+        self.resume_solution_action.triggered.connect(lambda: self.run_analysis_callback(True))
+        self.configure_analysis_action.triggered.connect(self.configure_analysis_callback)
+        self.reset_solution_action.triggered.connect(self.reset_solution_callback)
         #
         self.enable_pushbutons.connect(self.check_analysis_setup_callback)
         self.enable_pushbutons.connect(self.update_reset_solution_button_accessibility)
-
-        # app().project.can_resume_solution_changed.connect(self.update_pushbutton_resume_analysis)
 
     def _configure_appearance(self):
         self.setMinimumHeight(40)
@@ -114,9 +112,9 @@ class AnalysisToolbar(QToolBar):
         self.addWidget(self.get_spacer())
         self.addAction(self.run_analysis_action)
         self.addWidget(self.get_spacer())
-        self.addAction(self.resume_analysis_action)
-        self.addWidget(self.get_spacer())
         self.addAction(self.reset_solution_action)
+        self.addWidget(self.get_spacer())
+        self.addAction(self.resume_solution_action)
         #
         self.adjustSize()
 
@@ -128,12 +126,12 @@ class AnalysisToolbar(QToolBar):
 
         # QAction
         self.configure_analysis_action.setToolTip("Configure the analysis settings")
-        self.resume_analysis_action.setToolTip("Resume the analysis")
-        self.reset_solution_action.setToolTip("Reset Solution")
+        self.resume_solution_action.setToolTip("Resume the analysis")
         self.run_analysis_action.setToolTip("Run the analysis")
+        self.reset_solution_action.setToolTip("Reset Solution")
         #
         self.reset_solution_action.setDisabled(True)
-        self.resume_analysis_action.setDisabled(True)
+        self.resume_solution_action.setVisible(False)
 
     def _load_analysis_types(self):
 
@@ -176,16 +174,14 @@ class AnalysisToolbar(QToolBar):
             self.combo_box_analysis_type.blockSignals(False)
             self.combo_box_physical_domain.blockSignals(False)
 
-    def set_pushbutton_resume_analysis_enabled(self, enable=True):
-        self.resume_analysis_action.setEnabled(enable)
-
-    def update_pushbutton_resume_analysis(self):
-        can_resume_solution = app().project.can_resume_solution
-        self.resume_analysis_action.setEnabled(can_resume_solution)
+    def update_resume_soluton_button_visibility(self):
+        can_resume_solution = app().project.model.can_resume_solution
+        self.resume_solution_action.setVisible(can_resume_solution)
 
     def update_reset_solution_button_accessibility(self):
         solution_exists = self.model.solution is not None
         self.reset_solution_action.setEnabled(solution_exists)
+        self.update_resume_soluton_button_visibility()
 
     def get_current_analysis_id(self):
         analysis_type = self.combo_box_analysis_type.currentText()
@@ -210,7 +206,7 @@ class AnalysisToolbar(QToolBar):
         return self.model.is_there_a_valid_analysis_setup(current_analysis_id=current_analysis_id)
 
     def analysis_type_callback(self):
-        analysis_id = self.model.analysis_setup.analysis_id
+        analysis_id = self.model.analysis_id
         new_analysis_id = self.get_current_analysis_id()
         self.run_analysis_action.setEnabled(analysis_id == new_analysis_id)
         self.combo_box_physical_domain.blockSignals(False)
@@ -223,15 +219,16 @@ class AnalysisToolbar(QToolBar):
         self.run_analysis_action.setEnabled(valid_analysis_setup)
         # self.domain_changed.emit()
 
-    def run_analysis(self, is_resume: bool = True):
+    def run_analysis_callback(self, is_resume: bool = False):
+        app().project.mark_solution_as_outdated(reset=True)
         if app().config.user_preferences.run_analysis_in_subprocess:
-            self.run_analysis_in_subprocess()
+            self.run_analysis_in_subprocess(is_resume)
         else:
             self.run_analysis_in_current_process(is_resume)
 
     def run_analysis_in_current_process(self, is_resume: bool = False):
         if self.model.analysis_setup is None:
-            self.configure_analysis()
+            self.configure_analysis_callback()
             if not self.solve_analysis:
                 return
 
@@ -243,15 +240,12 @@ class AnalysisToolbar(QToolBar):
 
         self.update_analysis_combo_boxes()
 
-        if app().project.analysis_id.is_harmonic():
+        if app().project.model.analysis_id.is_harmonic():
             interrupt_function = self.model.toggle_processing_callback
         else:
             interrupt_function = None
 
-        LoadingWindow(
-            app().project.run_analysis,
-            interrupt_function,
-        ).run()
+        LoadingWindow(app().project.run_analysis, interrupt_function).run(is_resume)
 
         self.solve_analysis = False
 
@@ -265,7 +259,7 @@ class AnalysisToolbar(QToolBar):
 
         LoadingWindow(self.post_processing_analysis).run()
 
-    def run_analysis_in_subprocess(self) -> bool:
+    def run_analysis_in_subprocess(self, is_resume: bool = True) -> bool:
         if app().main_window.action_results_workspace.isChecked():
             app().main_window.action_model_workspace_callback()
 
@@ -277,7 +271,11 @@ class AnalysisToolbar(QToolBar):
 
         app().project.write_to_working_dir()
 
-        subprocess_status = SubProcessHandler("utils/subprocess/analysis_subprocess.py").run()
+        subprocess_status = SubProcessHandler(
+            "utils/subprocess/analysis_subprocess.py",
+            extra_params="--resume" if is_resume else "",
+        ).run()
+
         if subprocess_status != SubProcessStatus.SUCCESS:
             app().project.reset_solution()
             return False
@@ -297,7 +295,7 @@ class AnalysisToolbar(QToolBar):
         logging.info("Post-processing results... [65/100]")
         app().main_window.model_setup_widget.model_setup_items.update_items_appearance()
 
-    def project_solution_data_reset_callback(self):
+    def reset_solution_callback(self):
 
         title = "Removal of project solution data"
         message = "Would you like to delete all solution data from this project? "
@@ -316,16 +314,16 @@ class AnalysisToolbar(QToolBar):
         if not read._continue:
             return
 
-        self.reset_solution(True)
+        self.reset_solution()
 
-    def reset_solution(self, force_delete_harmonic=False):
+    def reset_solution(self):
         app().project.reset_solution()
-        self.reset_solution_action.setDisabled(True)
-        app().main_window.project_data_modified = True
+        app().project.mark_project_as_modified()
+        self.update_reset_solution_button_accessibility()
         app().main_window.action_model_workspace_callback()
         app().main_window.action_export_element_transfer_data.setDisabled(True)
 
-    def configure_analysis(self):
+    def configure_analysis_callback(self):
 
         self.solve_analysis = False
 
@@ -344,7 +342,7 @@ class AnalysisToolbar(QToolBar):
         self.solve_analysis = harmonic.solve_analysis
 
         if self.solve_analysis:
-            self.run_analysis()
+            self.run_analysis_callback()
             app().main_window.update_symbols()
 
     def modal_analysis_setup_callback(self, analysis_id: AnalysisID):
@@ -352,4 +350,4 @@ class AnalysisToolbar(QToolBar):
         self.solve_analysis = modal.proceed_solution
 
         if self.solve_analysis:
-            self.run_analysis()
+            self.run_analysis_callback()

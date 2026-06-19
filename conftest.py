@@ -1,10 +1,8 @@
 import pytest
 
 from vibra import PROJECT_DIR
-from vibra.engine.analysis_info import (
-    AnalysisID,
-    FrequencySpacing,
-)
+from vibra.engine.analysis_info import AnalysisID, FrequencySpacing
+from vibra.engine.mesher.mesh_setup import MeshSetup
 from vibra.engine.model import Model
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
@@ -31,7 +29,7 @@ def fluid() -> Fluid:
 @pytest.fixture(scope="module")
 def acoustic_model(fluid: Fluid) -> Model:
     path = str(PROJECT_DIR / "data/examples/geometry_files/cylinder.step")
-    mesh_setup = dict(minimum_element_size=50, maximum_element_size=50)
+    mesh_setup = MeshSetup(minimum_element_size=50, maximum_element_size=50)
 
     model = Model()
     model.properties._set_property("fluid", fluid, volume=1)
@@ -70,7 +68,6 @@ def viscous_thermal_acoustic_model(acoustic_model: Model) -> Model:
         f_step = 100,
     )
 
-    acoustic_model.analysis_id = AnalysisID.ACOUSTIC_HARMONIC
     acoustic_model.set_analysis_setup(analysis_setup)
     acoustic_model.process_viscous_thermal_model_properties()
 
@@ -93,7 +90,7 @@ def material() -> Material:
 @pytest.fixture(scope="module")
 def structural_model(material: Material) -> Model:
     path = path = str(PROJECT_DIR / "data/examples/geometry_files/curve_L_3D.step")
-    mesh_setup = dict(minimum_element_size=50, maximum_element_size=50)
+    mesh_setup = MeshSetup(minimum_element_size=50, maximum_element_size=50)
 
     model = Model()
     model.properties._set_property("material", material, volume=1)

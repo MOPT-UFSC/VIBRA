@@ -22,8 +22,8 @@ def test_write_and_read_mesh_project(fluid, datadir: Path):
     project_a.model.properties._set_property("fluid", fluid, volume=2)
 
     project_a.configure_analysis(
-        AnalysisID.ACOUSTIC_MODAL,
         ModalAnalysisSetup(
+            analysis_id=AnalysisID.ACOUSTIC_MODAL,
             modes_number = 5,
             sigma_factor = 0.01,
         ),
@@ -77,10 +77,7 @@ def test_compare_interface_based_mesh_project():
         f_step = 100,
     )
 
-    project_cli.configure_analysis(
-        AnalysisID.ACOUSTIC_HARMONIC,
-        analysis_setup
-    )
+    project_cli.configure_analysis(analysis_setup)
     project_cli.run_analysis()
 
     assert np.allclose(

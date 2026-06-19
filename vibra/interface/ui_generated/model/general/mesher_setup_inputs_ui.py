@@ -28,6 +28,8 @@ class Ui_Dialog(object):
         Dialog.resize(596, 603)
         self.gridLayout = QGridLayout(Dialog)
         self.gridLayout.setObjectName(u"gridLayout")
+        self.gridLayout.setVerticalSpacing(4)
+        self.gridLayout.setContentsMargins(4, 4, 4, -1)
         self.frame_title = QFrame(Dialog)
         self.frame_title.setObjectName(u"frame_title")
         self.frame_title.setMinimumSize(QSize(0, 48))
@@ -86,15 +88,15 @@ class Ui_Dialog(object):
 
         self.gridLayout_2.addWidget(self.comboBox_volumes_interface_behavior, 3, 2, 1, 1)
 
-        self.comboBox_element_type = QComboBox(self.frame_element_formulation)
-        self.comboBox_element_type.addItem("")
-        self.comboBox_element_type.addItem("")
-        self.comboBox_element_type.setObjectName(u"comboBox_element_type")
-        self.comboBox_element_type.setMinimumSize(QSize(120, 28))
-        self.comboBox_element_type.setMaximumSize(QSize(140, 16777215))
-        self.comboBox_element_type.setFont(font1)
+        self.comboBox_element_geometry = QComboBox(self.frame_element_formulation)
+        self.comboBox_element_geometry.addItem("")
+        self.comboBox_element_geometry.addItem("")
+        self.comboBox_element_geometry.setObjectName(u"comboBox_element_geometry")
+        self.comboBox_element_geometry.setMinimumSize(QSize(120, 28))
+        self.comboBox_element_geometry.setMaximumSize(QSize(140, 16777215))
+        self.comboBox_element_geometry.setFont(font1)
 
-        self.gridLayout_2.addWidget(self.comboBox_element_type, 0, 2, 1, 1)
+        self.gridLayout_2.addWidget(self.comboBox_element_geometry, 0, 2, 1, 1)
 
         self.label_16 = QLabel(self.frame_element_formulation)
         self.label_16.setObjectName(u"label_16")
@@ -131,15 +133,15 @@ class Ui_Dialog(object):
 
         self.gridLayout_2.addWidget(self.label_19, 2, 1, 1, 1)
 
-        self.comboBox_shape_function = QComboBox(self.frame_element_formulation)
-        self.comboBox_shape_function.addItem("")
-        self.comboBox_shape_function.addItem("")
-        self.comboBox_shape_function.setObjectName(u"comboBox_shape_function")
-        self.comboBox_shape_function.setMinimumSize(QSize(120, 28))
-        self.comboBox_shape_function.setMaximumSize(QSize(140, 16777215))
-        self.comboBox_shape_function.setFont(font1)
+        self.comboBox_element_order = QComboBox(self.frame_element_formulation)
+        self.comboBox_element_order.addItem("")
+        self.comboBox_element_order.addItem("")
+        self.comboBox_element_order.setObjectName(u"comboBox_element_order")
+        self.comboBox_element_order.setMinimumSize(QSize(120, 28))
+        self.comboBox_element_order.setMaximumSize(QSize(140, 16777215))
+        self.comboBox_element_order.setFont(font1)
 
-        self.gridLayout_2.addWidget(self.comboBox_shape_function, 1, 2, 1, 1)
+        self.gridLayout_2.addWidget(self.comboBox_element_order, 1, 2, 1, 1)
 
         self.horizontalSpacer_9 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
@@ -157,15 +159,6 @@ class Ui_Dialog(object):
         self.label_201.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_2.addWidget(self.label_201, 3, 1, 1, 1)
-
-        self.label_161 = QLabel(self.frame_element_formulation)
-        self.label_161.setObjectName(u"label_161")
-        self.label_161.setMinimumSize(QSize(180, 20))
-        self.label_161.setMaximumSize(QSize(240, 16777215))
-        self.label_161.setFont(font1)
-        self.label_161.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
-
-        self.gridLayout_2.addWidget(self.label_161, 0, 1, 1, 1)
 
         self.comboBox_mesh_quality_metrics = QComboBox(self.frame_element_formulation)
         self.comboBox_mesh_quality_metrics.addItem("")
@@ -665,42 +658,64 @@ class Ui_Dialog(object):
 
         self.gridLayout.addWidget(self.frame_main, 1, 0, 1, 1)
 
-        self.frame_buttons = QFrame(Dialog)
-        self.frame_buttons.setObjectName(u"frame_buttons")
-        self.frame_buttons.setMinimumSize(QSize(0, 48))
-        self.frame_buttons.setMaximumSize(QSize(16777215, 48))
-        self.frame_buttons.setFrameShape(QFrame.Shape.NoFrame)
-        self.frame_buttons.setFrameShadow(QFrame.Shadow.Raised)
-        self.gridLayout_5 = QGridLayout(self.frame_buttons)
-        self.gridLayout_5.setObjectName(u"gridLayout_5")
-        self.gridLayout_5.setContentsMargins(4, 4, 4, 4)
-        self.pushButton_exit = QPushButton(self.frame_buttons)
-        self.pushButton_exit.setObjectName(u"pushButton_exit")
-        self.pushButton_exit.setMinimumSize(QSize(140, 30))
-        self.pushButton_exit.setMaximumSize(QSize(140, 30))
-        self.pushButton_exit.setFont(font1)
-        self.pushButton_exit.setAutoDefault(False)
+        self.frame_buttons_2 = QFrame(Dialog)
+        self.frame_buttons_2.setObjectName(u"frame_buttons_2")
+        self.frame_buttons_2.setMinimumSize(QSize(0, 48))
+        self.frame_buttons_2.setMaximumSize(QSize(16777215, 48))
+        self.frame_buttons_2.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_buttons_2.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_11 = QGridLayout(self.frame_buttons_2)
+        self.gridLayout_11.setObjectName(u"gridLayout_11")
+        self.gridLayout_11.setVerticalSpacing(0)
+        self.gridLayout_11.setContentsMargins(6, 0, 6, 0)
+        self.pushButton_apply_and_close = QPushButton(self.frame_buttons_2)
+        self.pushButton_apply_and_close.setObjectName(u"pushButton_apply_and_close")
+        self.pushButton_apply_and_close.setMinimumSize(QSize(72, 30))
+        self.pushButton_apply_and_close.setMaximumSize(QSize(72, 30))
+        font3 = QFont()
+        font3.setPointSize(10)
+        font3.setBold(False)
+        font3.setItalic(False)
+        self.pushButton_apply_and_close.setFont(font3)
+        self.pushButton_apply_and_close.setStyleSheet(u"")
+        self.pushButton_apply_and_close.setAutoDefault(False)
+        self.pushButton_apply_and_close.setFlat(False)
 
-        self.gridLayout_5.addWidget(self.pushButton_exit, 0, 0, 1, 1)
+        self.gridLayout_11.addWidget(self.pushButton_apply_and_close, 0, 3, 1, 1)
 
-        self.pushButton_generate_mesh = QPushButton(self.frame_buttons)
-        self.pushButton_generate_mesh.setObjectName(u"pushButton_generate_mesh")
-        self.pushButton_generate_mesh.setMinimumSize(QSize(140, 30))
-        self.pushButton_generate_mesh.setMaximumSize(QSize(140, 30))
-        self.pushButton_generate_mesh.setFont(font1)
-        self.pushButton_generate_mesh.setAutoDefault(True)
+        self.pushButton_apply = QPushButton(self.frame_buttons_2)
+        self.pushButton_apply.setObjectName(u"pushButton_apply")
+        self.pushButton_apply.setMinimumSize(QSize(72, 30))
+        self.pushButton_apply.setMaximumSize(QSize(72, 30))
+        self.pushButton_apply.setFont(font3)
+        self.pushButton_apply.setStyleSheet(u"")
+        self.pushButton_apply.setAutoDefault(False)
+        self.pushButton_apply.setFlat(False)
 
-        self.gridLayout_5.addWidget(self.pushButton_generate_mesh, 0, 1, 1, 1)
+        self.gridLayout_11.addWidget(self.pushButton_apply, 0, 2, 1, 1)
+
+        self.pushButton_cancel = QPushButton(self.frame_buttons_2)
+        self.pushButton_cancel.setObjectName(u"pushButton_cancel")
+        self.pushButton_cancel.setMinimumSize(QSize(72, 30))
+        self.pushButton_cancel.setMaximumSize(QSize(72, 30))
+        self.pushButton_cancel.setFont(font3)
+        self.pushButton_cancel.setStyleSheet(u"")
+        self.pushButton_cancel.setAutoDefault(False)
+        self.pushButton_cancel.setFlat(False)
+
+        self.gridLayout_11.addWidget(self.pushButton_cancel, 0, 0, 1, 1)
+
+        self.horizontalSpacer_17 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_11.addItem(self.horizontalSpacer_17, 0, 1, 1, 1)
 
 
-        self.gridLayout.addWidget(self.frame_buttons, 2, 0, 1, 1)
+        self.gridLayout.addWidget(self.frame_buttons_2, 2, 0, 1, 1)
 
-        QWidget.setTabOrder(self.comboBox_element_type, self.comboBox_shape_function)
-        QWidget.setTabOrder(self.comboBox_shape_function, self.comboBox_volumes_interface_behavior)
+        QWidget.setTabOrder(self.comboBox_element_geometry, self.comboBox_element_order)
+        QWidget.setTabOrder(self.comboBox_element_order, self.comboBox_volumes_interface_behavior)
         QWidget.setTabOrder(self.comboBox_volumes_interface_behavior, self.tabWidget_main)
-        QWidget.setTabOrder(self.tabWidget_main, self.pushButton_exit)
-        QWidget.setTabOrder(self.pushButton_exit, self.pushButton_generate_mesh)
-        QWidget.setTabOrder(self.pushButton_generate_mesh, self.lineEdit_selected_ids)
+        QWidget.setTabOrder(self.tabWidget_main, self.lineEdit_selected_ids)
         QWidget.setTabOrder(self.lineEdit_selected_ids, self.doubleSpinBox_refined_element_size)
         QWidget.setTabOrder(self.doubleSpinBox_refined_element_size, self.tableWidget_refining_mesh_data)
         QWidget.setTabOrder(self.tableWidget_refining_mesh_data, self.pushButton_delete)
@@ -715,8 +730,9 @@ class Ui_Dialog(object):
         self.comboBox_volumes_interface_behavior.setCurrentIndex(1)
         self.tabWidget_main.setCurrentIndex(0)
         self.comboBox_3d_algorithm.setCurrentIndex(0)
-        self.pushButton_exit.setDefault(False)
-        self.pushButton_generate_mesh.setDefault(False)
+        self.pushButton_apply_and_close.setDefault(False)
+        self.pushButton_apply.setDefault(False)
+        self.pushButton_cancel.setDefault(False)
 
 
         QMetaObject.connectSlotsByName(Dialog)
@@ -729,17 +745,16 @@ class Ui_Dialog(object):
         self.comboBox_volumes_interface_behavior.setItemText(0, QCoreApplication.translate("Dialog", u"Disconnect nodes", None))
         self.comboBox_volumes_interface_behavior.setItemText(1, QCoreApplication.translate("Dialog", u"Merge nodes", None))
 
-        self.comboBox_element_type.setItemText(0, QCoreApplication.translate("Dialog", u"Tetrahedral", None))
-        self.comboBox_element_type.setItemText(1, QCoreApplication.translate("Dialog", u"Hexahedral", None))
+        self.comboBox_element_geometry.setItemText(0, QCoreApplication.translate("Dialog", u"Tetrahedral", None))
+        self.comboBox_element_geometry.setItemText(1, QCoreApplication.translate("Dialog", u"Hexahedral", None))
 
-        self.label_16.setText(QCoreApplication.translate("Dialog", u"Element type:", None))
-        self.label_10.setText(QCoreApplication.translate("Dialog", u"Shape function:", None))
+        self.label_16.setText(QCoreApplication.translate("Dialog", u"Element geometry:", None))
+        self.label_10.setText(QCoreApplication.translate("Dialog", u"Element order:", None))
         self.label_19.setText(QCoreApplication.translate("Dialog", u"Mesh quality metrics:", None))
-        self.comboBox_shape_function.setItemText(0, QCoreApplication.translate("Dialog", u"Linear", None))
-        self.comboBox_shape_function.setItemText(1, QCoreApplication.translate("Dialog", u"Quadratic", None))
+        self.comboBox_element_order.setItemText(0, QCoreApplication.translate("Dialog", u"Linear", None))
+        self.comboBox_element_order.setItemText(1, QCoreApplication.translate("Dialog", u"Quadratic", None))
 
         self.label_201.setText(QCoreApplication.translate("Dialog", u"Volumes interface behavior:", None))
-        self.label_161.setText(QCoreApplication.translate("Dialog", u"Element type:", None))
         self.comboBox_mesh_quality_metrics.setItemText(0, QCoreApplication.translate("Dialog", u"Disabled", None))
         self.comboBox_mesh_quality_metrics.setItemText(1, QCoreApplication.translate("Dialog", u"Enabled", None))
 
@@ -821,8 +836,9 @@ class Ui_Dialog(object):
         self.pushButton_plot_histogram.setText(QCoreApplication.translate("Dialog", u"Plot Histogram", None))
         self.pushButton_show_bad_elements.setText(QCoreApplication.translate("Dialog", u"Show bad elements", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_mesh_quality), QCoreApplication.translate("Dialog", u"Mesh quality", None))
-        self.pushButton_exit.setText(QCoreApplication.translate("Dialog", u"Exit", None))
-        self.pushButton_generate_mesh.setText(QCoreApplication.translate("Dialog", u"Generate mesh", None))
+        self.pushButton_apply_and_close.setText(QCoreApplication.translate("Dialog", u"Ok", None))
+        self.pushButton_apply.setText(QCoreApplication.translate("Dialog", u"Apply", None))
+        self.pushButton_cancel.setText(QCoreApplication.translate("Dialog", u"Cancel", None))
     # retranslateUi
 
 
@@ -841,13 +857,12 @@ class MesherSetupInputs_UI(QDialog, Ui_Dialog):
                                 - (Layout): QGridLayout
                                         - label_20: QLabel
                                         - comboBox_volumes_interface_behavior: QComboBox
-                                        - comboBox_element_type: QComboBox
+                                        - comboBox_element_geometry: QComboBox
                                         - label_16: QLabel
                                         - label_10: QLabel
                                         - label_19: QLabel
-                                        - comboBox_shape_function: QComboBox
+                                        - comboBox_element_order: QComboBox
                                         - label_20: QLabel
-                                        - label_16: QLabel
                                         - comboBox_mesh_quality_metrics: QComboBox
                             - frame_tab_widgets: QFrame
                                 - (Layout): QGridLayout
@@ -903,10 +918,11 @@ class MesherSetupInputs_UI(QDialog, Ui_Dialog):
                                                             - (Layout): QGridLayout
                                                                     - pushButton_plot_histogram: QPushButton
                                                                     - pushButton_show_bad_elements: QPushButton
-                - frame_buttons: QFrame
+                - frame_buttons_2: QFrame
                     - (Layout): QGridLayout
-                            - pushButton_exit: QPushButton
-                            - pushButton_generate_mesh: QPushButton
+                            - pushButton_apply_and_close: QPushButton
+                            - pushButton_apply: QPushButton
+                            - pushButton_cancel: QPushButton
     """
 
     def __init__(self, *args, **kwargs):

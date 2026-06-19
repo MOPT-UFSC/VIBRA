@@ -1,16 +1,15 @@
 from typing import TYPE_CHECKING
 
+from validation_files.data.WB.load_external_data import LoadExternalData
 from vibra import PROJECT_DIR
-from vibra.engine.analysis_info import (
-    AnalysisID,
-    FrequencySpacing,
-)
+from vibra.engine.analysis_info import AnalysisID, FrequencySpacing
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
-from vibra.engine.mesher.element_setup import HEXAHEDRON_8
+from vibra.engine.elements.element_options import BbarDilatationalEvaluation, HEX8_structural
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
+from vibra.engine.postprocessing import StructuralPostprocessing
+from vibra.engine.postprocessing.structural_post_solution_dataclass import NodalStresses
 from vibra.engine.properties.material import Material
-from vibra.engine.solution.harmonic_solution import HarmonicSolution
 from vibra.engine.solvers.harmonic_solver import HarmonicSolver
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
 
@@ -23,11 +22,29 @@ from time import time
 import matplotlib.pyplot as plt
 import numpy as np
 
+udof_labels = [
+    "ux", 
+    "uy", 
+    "uz",
+    ]
 
-def load_external_mesh_and_solve():
+
+stresses_labels = [
+    "sigma_x", 
+    "sigma_y", 
+    "sigma_z", 
+    "tau_xy", 
+    "tau_xz",
+    "tau_yz", 
+    ]
+
+
+def load_external_mesh_and_solve(**kwargs):
 
     # start decoding the Ansys script file (ds.dat file or input file)
-    mesh_path = "validation_files/data/WB/structural/elements/hex8/extra_shape_functions/mesh/ds_hex8_cuboid_modal.dat"
+    mesh_path = "validation_files/data/WB/structural/elements/hex8/mesh/ds_hex8_cuboid_modal.dat"
+    # mesh_path = "validation_files/data/WB/structural/elements/hex8/mesh/ds_hex8_cube_64e_harmonic.dat"
+
     if not os.path.exists(mesh_path):
         return
 
@@ -62,7 +79,6 @@ def load_external_mesh_and_solve():
     mesh.export_nodal_coordinates("nodal_coordinates.dat")
     mesh.export_solid_elements_connectivity("solids_connectivity.dat")
     mesh.export_face_elements_connectivity("faces_connectivity.dat")
-    mesh.element_type = HEXAHEDRON_8
 
     for named_selection, surf_data in external_mesh.elements_from_named_selection.items():
         if named_selection in ["input_edges", "output_edges"]:
@@ -99,22 +115,39 @@ def load_external_mesh_and_solve():
         thermal_expansion_coefficient=thermal_expansion_coefficient,
     )
 
-    ## assign the created fluid
+    ## intialize the model
     model = Model()
     model.mesh = mesh
 
+    ## assign the created fluid
     model.properties._set_property("material", material, volume=1)
 
     for _surf_id in [1, 2]:
         model.properties._set_property("material", material, surface=_surf_id)
 
     ## advanced options for structural hex8 element
-    esf = False
+    extra_shape_function = kwargs.get("extra_shape_function", False)
+    Bbar_formulation = kwargs.get("Bbar_formulation", False)
+    reduced_integration = kwargs.get("reduced_integration", False)
+    simple_enhanced_strain = kwargs.get("simple_enhanced_strain", False)
+    enhanced_assumed_strain = kwargs.get("enhanced_assumed_strain", False)
+    EAS_internal_dofs = kwargs.get("EAS_internal_dofs", 9)
+    Bbar_dilatational_evaluation = kwargs.get("Bbar_dilatational_evaluation", BbarDilatationalEvaluation.VOLUME_AVERAGED)
 
-    hex8_advanced_options = {"hex8": {"extra_shape_functions": esf}}
+    element_options = HEX8_structural(
+        Bbar_formulation,
+        reduced_integration,
+        simple_enhanced_strain,
+        enhanced_assumed_strain,
+        EAS_internal_dofs,
+        extra_shape_function,
+        Bbar_dilatational_evaluation,
+    )
+
+    element_options = {"hex8" : element_options}
 
     # assign the hex8 element advanced options as a global property
-    model.properties._set_property("advanced_element_options", hex8_advanced_options)
+    model.properties._set_property("advanced_element_options", element_options)
 
     ## boundary condition
 
@@ -130,7 +163,7 @@ def load_external_mesh_and_solve():
     # nodal load data
     nodal_load_data = {
         "element_type": "3d_element",
-        "real_values": [0.0, 1.0, 0.0],
+        "real_values": [0.0, 1.0, 1.0],
         "imag_values": [0.0, 0.0, 0.0],
         "nodal_attribution": True,
         "averaged": False,
@@ -142,15 +175,14 @@ def load_external_mesh_and_solve():
     analysis_setup = model.get_harmonic_analysis_setup(
         analysis_id = AnalysisID.STRUCTURAL_HARMONIC,
         frequency_spacing = FrequencySpacing.EQUALLY_DISTRIBUTED,
-        f_min = 20,
+        f_min = 100,
         f_max = 2000,
-        f_step = 20,
+        f_step = 100,
     )
 
     frequencies = analysis_setup.get_frequencies()
 
     model.set_analysis_setup(analysis_setup)
-    model.set_analysis_id(AnalysisID.STRUCTURAL_HARMONIC)
 
     assembler = StructuralAssembler(model)
 
@@ -164,36 +196,109 @@ def load_external_mesh_and_solve():
     dt = time() - t0
     print(f"Elapsed time to solve modal analysis: {round(dt, 4)}s")
 
-    if not isinstance(model.solution, HarmonicSolution):
-        return
+    if Bbar_formulation:
+        folder = "full_integration"
+    elif reduced_integration:
+        folder = "reduced_integration"
+    elif simple_enhanced_strain:
+        folder = "simple_enhanced_strain"
+    elif enhanced_assumed_strain:
+        folder = "enhanced_assumed_strain"
+    else:
+        folder = "with_esf" if extra_shape_function else "without_esf"
 
-    # Nodal results comparisons
+    print()
+    print(folder)
+    print()
+
+    results_path = PROJECT_DIR / f"validation_files/data/WB/structural/elements/hex8/results/harmonic/{folder}/"
+
+    ext_data = LoadExternalData(results_path)
+
+    WB_displacements_data = ext_data.load_displacements(entire_solution=True)
+    WB_stresses_data = ext_data.load_stresses(entire_solution=True)
+
+    structural_post = StructuralPostprocessing(model)
+
+    t0 = time()
+    avg_nodal_stresses, _ = structural_post.get_structural_stresses(volume_ids=1)
+    dt = time() - t0
+    print(f"Time to compute nodal stresses: {dt} s")
+
+    nodal_averaged_stresses = structural_post.nodal_stresses_post_process(avg_nodal_stresses)
+    # element_averaged_stresses = structural_post.nodal_stresses_post_process(element_stresses)
+
+   # Nodal results comparisons
     dofs_per_node = assembler.element_3d.DOF_PER_NODE
 
+    # define the plot type
     plot_type = "absolute"
 
-    nodal_solution = model.solution.nodal_solution
+    if "cube_64" in str(mesh_path):
+        node_ids = [60, 67, 98]
+    else:
+        node_ids = [5100, 6199, 6232]
 
-    compare_results(4882, dofs_per_node, "uz", frequencies, nodal_solution, esf, plot_type=plot_type)
-    compare_results(4882, dofs_per_node, "uy", frequencies, nodal_solution, esf, plot_type=plot_type)
-    compare_results(5522, dofs_per_node, "uy", frequencies, nodal_solution, esf, plot_type=plot_type)
-    compare_results(6210, dofs_per_node, "uy", frequencies, nodal_solution, esf, plot_type=plot_type)
-    compare_results(6269, dofs_per_node, "uy", frequencies, nodal_solution, esf, plot_type=plot_type)
+    # displacements plots
+    for node_id in node_ids:
+
+        print()
+        # plots for displacements
+        for udof_label in udof_labels:
+            compare_nodal_displacements_results(
+                node_id,
+                dofs_per_node,
+                udof_label,
+                frequencies,
+                model.solution.nodal_solution,
+                extra_shape_function,
+                WB_displacements_data,
+                plot_type=plot_type,
+                )
+
+        # plots for stresses
+        for stress_label in stresses_labels[0:3]:
+            compare_averaged_nodal_stresses_results(
+                node_id, 
+                stress_label, 
+                frequencies, 
+                nodal_averaged_stresses, 
+                extra_shape_function, 
+                WB_stresses_data,
+                plot_type=plot_type,
+                )
+
     plt.show()
 
 
-def compare_results(
-    node_id: int,
-    dofs_per_node: int,
-    dof_label: str,
-    frequencies: np.ndarray,
-    nodal_solution: np.ndarray,
-    esf: bool,
-    plot_type: str = "absolute",
-):
+def compare_nodal_displacements_results(
+        node_id: int, 
+        dofs_per_node: int, 
+        dof_label: str, 
+        frequencies: np.ndarray, 
+        solution: np.ndarray,
+        esf: bool,
+        solution_reference: dict,
+        named_selection: str = "all_solutions",
+        plot_type: str = "absolute",
+        ):
 
-    response_vibra = get_model_response(node_id, dof_label, dofs_per_node, nodal_solution)
-    freq_apdl, response_apdl = get_apdl_reference_results(node_id, dof_label, esf)
+    response_vibra = get_model_response(
+        node_id, 
+        dof_label, 
+        dofs_per_node, 
+        solution,
+        )
+
+    freq_ref, response_ref = get_reference_nodal_response(
+        node_id, 
+        dof_label, 
+        named_selection, 
+        solution_reference,
+        )
+
+    if response_ref is None:
+        return
 
     title = f"Harmonic response at node {node_id} - {'(ESF included)' if esf else '(ESF excluded)'}"
     x_label = "Frequency [Hz]"
@@ -212,44 +317,119 @@ def compare_results(
         plot_data = np.abs
         plot = ax.semilogy
 
-    plot(frequencies, plot_data(response_vibra), "r", label="Vibra")
-    plot(freq_apdl, plot_data(response_apdl), "k--", label="APDL")
+    plot(frequencies, plot_data(response_vibra), 'r', label='Vibra')
+    plot(freq_ref, plot_data(response_ref), 'k--', label='APDL')
 
     ax.set(xlabel=x_label, ylabel=y_label, title=title)
     ax.grid()
     ax.legend()
 
+    if response_vibra.size != response_ref.size:
+        return
 
-def get_apdl_reference_results(
-    apdl_node_id: int,
-    dof_label: str,
-    extra_shape_functions: bool,
-) -> np.ndarray | None:
+    abs_diff = np.abs((response_vibra - response_ref) / response_ref)
+    max_abs_diff = 100 * np.max(abs_diff)
+    freq_max_diff = frequencies[np.argmax(abs_diff)]
 
-    folder = "with_esf" if extra_shape_functions else "without_esf"
-    results_path = PROJECT_DIR / f"validation_files/data/WB/structural/elements/hex8/extra_shape_functions/results/{folder}/"
+    print(f"Maximum difference for {dof_label.capitalize()} @ node {node_id}: {max_abs_diff} [%] @ {freq_max_diff} [Hz]")
 
-    if not results_path.exists():
-        return None, None
 
-    # load mechanical apdl results
-    ansys_data = np.loadtxt(results_path / f"response_{dof_label}_node_{apdl_node_id}_Ansys.dat", skiprows=2)
+def compare_averaged_nodal_stresses_results(
+    node_id: int, 
+    stress_label: str, 
+    frequencies: np.ndarray, 
+    nodal_averaged_stresses: NodalStresses,
+    esf: bool,
+    solution_reference,
+    named_selection: str = "all_solutions",
+    plot_type: str = "absolute",
+    ):
 
-    freq_apdl = ansys_data[:, 0]
-    response_apdl = ansys_data[:, 1] + 1j * ansys_data[:, 2]
+    response_vibra = getattr(nodal_averaged_stresses, stress_label)[node_id - 1]
 
-    return freq_apdl, response_apdl
+    freq_ref, response_ref = get_reference_nodal_response(
+        node_id, 
+        stress_label, 
+        named_selection, 
+        solution_reference,
+        )
+    
+    text = "(ESF included)" if esf else "(ESF excluded)"
+
+    title = f"Harmonic response at node {node_id} - {text}"
+    x_label = "Frequency [Hz]"
+    y_label = f'Structural stress {stress_label} [Pa] - {plot_type.capitalize()}'
+
+    fig, ax = plt.subplots()
+    if plot_type == "real":
+        plot_data = np.real
+        plot = ax.plot
+
+    elif plot_type == "imaginary":
+        plot_data = np.imag
+        plot = ax.plot
+
+    else:
+        plot_data = np.abs
+        plot = ax.semilogy
+
+    plot(frequencies, plot_data(response_vibra), 'r', label='Vibra')
+
+    if isinstance(response_ref, np.ndarray):
+        plot(freq_ref, plot_data(response_ref), 'k--', label='APDL')
+
+    ax.set(xlabel=x_label, ylabel=y_label, title=title)
+    ax.grid()
+    ax.legend()
+
+    if response_vibra.size != response_ref.size:
+        return
+
+    abs_diff = np.abs((response_vibra - response_ref) / response_ref)
+    max_abs_diff = 100 * np.max(abs_diff)
+    freq_max_diff = frequencies[np.argmax(abs_diff)]
+
+    print(f"Maximum difference for averaged {stress_label.capitalize()} @ node {node_id}: {max_abs_diff} [%] @ {freq_max_diff} [Hz]")
 
 
 def get_model_response(apdl_node_id: int, dof_label: str, dofs_per_node: int, nodal_solution: np.ndarray) -> np.ndarray:
 
-    dof_labels = ["ux", "uy", "uz"]
-    local_dof = dof_labels.index(dof_label)
+    local_dof = udof_labels.index(dof_label)
 
     index = int((apdl_node_id - 1) * dofs_per_node) + local_dof
 
     return nodal_solution[index, :]
 
 
+def get_reference_nodal_response(
+    node_id: int,
+    _label: str,
+    named_selection: str,
+    solution_reference: dict,
+    ):
+
+    key = (_label, named_selection)
+    freq_ref, _, nodal_solution_ref = solution_reference.get(key, (None, None, None))
+
+    if freq_ref is None:
+        return None, None
+
+    if not isinstance(nodal_solution_ref, dict):
+        return None, None
+
+    response_ref = nodal_solution_ref.get(node_id)
+
+    return freq_ref, response_ref
+
+
 if __name__ == "__main__":
-    load_external_mesh_and_solve()
+
+    load_external_mesh_and_solve(
+        extra_shape_function = False,
+        reduced_integration = False,
+        simple_enhanced_strain = False,
+        enhanced_assumed_strain = False,
+        EAS_internal_dofs = 9+4,
+        Bbar_formulation = True,
+        Bbar_dilatational_evaluation = BbarDilatationalEvaluation.VOLUME_AVERAGED,
+        )

@@ -1,8 +1,8 @@
 import logging
-from pathlib import Path
 import subprocess
 import sys
 from enum import Enum, auto
+from pathlib import Path
 from queue import Empty, Queue
 from threading import Thread
 from time import sleep
@@ -11,8 +11,8 @@ from typing import IO
 from PySide6.QtWidgets import QApplication
 
 from vibra import VIBRA_DIR
-from vibra.interface.loading_window import LoadingWindow
 from vibra.errors import SolverSubprocessError
+from vibra.interface.loading_window import LoadingWindow
 
 
 class SubProcessStatus(Enum):
@@ -23,7 +23,7 @@ class SubProcessStatus(Enum):
 class SubProcessHandler:
     """Run the configured project analysis in a separate Python process."""
 
-    def __init__(self, path: Path | str):
+    def __init__(self, path: Path | str, extra_params: str = ""):
         process_script = Path(path).expanduser()
 
         if not process_script.is_absolute():
@@ -41,6 +41,7 @@ class SubProcessHandler:
             raise ValueError(f"Subprocess script path must point to a Python file: {process_script}")
 
         self.process_script = process_script
+        self.extra_params = extra_params
 
     def run(self) -> SubProcessStatus:
         self._subprocess: subprocess.Popen | None = None
@@ -60,11 +61,15 @@ class SubProcessHandler:
             self._subprocess.kill()
 
     def _run_subprocess(self) -> SubProcessStatus:
-        logging.info("Launching subprocess...")
+        logging.info("Launching subprocess... (15%)")
 
         try:
+            commands = [sys.executable, str(self.process_script)]
+            if self.extra_params:
+                commands.append(str(self.extra_params))
+
             self._subprocess = subprocess.Popen(
-                [sys.executable, str(self.process_script)],
+                commands,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,

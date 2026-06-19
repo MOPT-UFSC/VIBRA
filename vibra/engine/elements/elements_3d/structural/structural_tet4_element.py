@@ -55,6 +55,28 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
         xi_3 = self.num_int_data[:, 2]
 
         self.phi, self.dphi = self.get_shape_functions_and_derivatives(xi_1, xi_2, xi_3)
+        self.phi_inv = self.inverse_of_trilinear_shape_functions()
+
+
+    def inverse_of_trilinear_shape_functions(self):
+        """
+        This method returns the inverse of shape functions matrix N applied
+        at integration points (Gauss-Legendre quadrature points).
+        """
+        N = self.phi
+        n_intp, n_nodes = N.shape
+
+        if n_intp == n_nodes:
+            # print("N_int = N_nodes")
+            return np.linalg.inv(N)
+
+        elif n_intp > n_nodes:
+            # print("N_int > N_nodes")
+            return np.linalg.inv(N.T @ N) @ N.T
+
+        else:
+            print("Not implemented stress extrapolation for N_int < N_nodes")
+            return None
 
 
     def get_shape_functions_and_derivatives(self, xi_1: np.ndarray, xi_2: np.ndarray, xi_3: np.ndarray) -> np.ndarray:
@@ -101,35 +123,33 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
         phi[:, 3] = xi_1      # ->      (1.0, 0.0, 0.0)   Node 4
 
         ## derivatives of shape functions (obtained from the Atalla and Sgard proposed shape functions)
-        dphi = np.zeros((3, self.NODES_PER_ELEMENT), dtype=float)
-        dphi[0, 0] = -1
-        dphi[0, 1] =  0
-        dphi[0, 2] =  0
-        dphi[0, 3] =  1
+        dphi = np.zeros((Nz, 3, self.NODES_PER_ELEMENT), dtype=float)
+        dphi[:, 0, 0] = -1
+        dphi[:, 0, 1] =  0
+        dphi[:, 0, 2] =  0
+        dphi[:, 0, 3] =  1
 
-        dphi[1, 0] = -1
-        dphi[1, 1] =  1
-        dphi[1, 2] =  0
-        dphi[1, 3] =  0
+        dphi[:, 1, 0] = -1
+        dphi[:, 1, 1] =  1
+        dphi[:, 1, 2] =  0
+        dphi[:, 1, 3] =  0
 
-        dphi[2, 0] = -1
-        dphi[2, 1] =  0
-        dphi[2, 2] =  1
-        dphi[2, 3] =  0
+        dphi[:, 2, 0] = -1
+        dphi[:, 2, 1] =  0
+        dphi[:, 2, 2] =  1
+        dphi[:, 2, 3] =  0
 
         return phi, dphi
 
 
-    def elementary_matrices(self, el_index: int, material: Material):
-        """Stiffness and mass matrices.
-        This is not a p-u mixed fomulation. Do not compare with SOLID285.
+    def process_detJAC_and_B_matrix(self, element_id: int, return_coords: bool=False):
+        """
+        This method computes and returns the matrix of shape functions 
+        derivatives B and the determinant of the Jacobian matrix detJAC. 
         """
 
-        rho = material.material_density
-        const_mat, rho = self.get_constitutive_model(material, model_type="linear-isotropic")
-
         # nodes from element
-        elem_nodes = self.connectivity[el_index, 1:]
+        elem_nodes = self.connectivity[element_id, 1:]
 
         # element nodal coords
         coords = self.nodal_coordinates[elem_nodes, 1:4]
@@ -142,18 +162,55 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
 
         # derivatives
         dphi_t = invJAC @ self.dphi
+        
+        # initialize the B matrix
+        B = np.zeros((self.nint, 6, self.DOF_PER_ELEMENT), dtype=float)
 
-        B = np.zeros((6, self.DOF_PER_ELEMENT), dtype=float)
-        B[0, 0::3] = dphi_t[0, :]
-        B[1, 1::3] = dphi_t[1, :]
-        B[2, 2::3] = dphi_t[2, :]
-        B[3, 0::3] = dphi_t[1, :]
-        B[3, 1::3] = dphi_t[0, :]
-        B[4, 0::3] = dphi_t[2, :]
-        B[4, 2::3] = dphi_t[0, :]
-        B[5, 1::3] = dphi_t[2, :]
-        B[5, 2::3] = dphi_t[1, :]
+        B[:, 0, 0::3] = dphi_t[:, 0, :]
+        B[:, 1, 1::3] = dphi_t[:, 1, :]
+        B[:, 2, 2::3] = dphi_t[:, 2, :]
+        B[:, 3, 0::3] = dphi_t[:, 1, :]
+        B[:, 3, 1::3] = dphi_t[:, 0, :]
+        B[:, 4, 0::3] = dphi_t[:, 2, :]
+        B[:, 4, 2::3] = dphi_t[:, 0, :]
+        B[:, 5, 1::3] = dphi_t[:, 2, :]
+        B[:, 5, 2::3] = dphi_t[:, 1, :]
 
+        if return_coords:
+            return detJAC, B, coords
+
+        return detJAC, B
+
+
+    def elementary_matrices(self, element_id: int, material: Material):
+        """
+        This method integrates the elementary stiffness and mass matrices
+        for the structural linear tetrahedron element.
+
+        Parameters
+        ----------
+        element_id: int
+            The element index.  
+        
+        material: Material
+            An object of the material dataclass.
+
+        Returns
+        -------
+        Ke: np.ndarray
+            The elementary stiffness matrix.
+
+        Me: np.ndarray
+            The elementary mass matrix.
+
+        """
+        # get constitutive law matrix D and the material's density
+        const_mat, rho = self.get_constitutive_model(material, model_type="linear-isotropic")
+
+        # process the determinant of Jacobian and the B matrix  
+        detJAC, B = self.process_detJAC_and_B_matrix(element_id)
+
+        # initialize the matrix of shape functions N
         N = np.zeros((self.nint, 3, self.DOF_PER_ELEMENT), dtype=float)
         N[:, 0, 0::3] = self.phi
         N[:, 1, 1::3] = self.phi
@@ -162,10 +219,77 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
         # integration loop
         Ke, Me = 0, 0
         for i in range(self.nint):
-            Ke += B.T @ const_mat @ B * (detJAC * self.wps[i])
-            Me += rho * N[i, :, :].T @ N[i, :, :] * (detJAC * self.wps[i])
+            Ke += B[i, :, :].T @ const_mat @ B[i, :, :] * (detJAC[i, :, :] * self.wps[i])
+            Me += rho * N[i, :, :].T @ N[i, :, :] * (detJAC[i, :, :] * self.wps[i])
 
         return Ke, Me
+
+ 
+    def process_stresses_at_integration_points(
+        self,
+        element_id : int,
+        nodal_solution : np.ndarray | None = None,
+        solution: np.ndarray | None = None,
+        element_averaged: bool = False,
+        **kwargs
+        ):
+
+        node_ids = kwargs.get("node_ids")
+
+        if node_ids is None:
+            node_ids = self.connectivity[element_id, 1:]
+
+        if isinstance(nodal_solution, np.ndarray):
+            Ue = nodal_solution
+
+        elif isinstance(solution, np.ndarray):
+            indexes = node_ids.reshape(-1, 1) * self.DOF_PER_NODE + self.LOCAL_DOF
+            Ue = solution[indexes.flatten(), :]
+
+        else:
+            return 0.
+
+        if self.connectivity is None:
+            self.reorder_connect()
+
+        # get the volume ID from element
+        vol_id = self.model.mesh.solids_connectivity[element_id, 1]
+
+        # get the material from element
+        material = self.model.properties._get_property("material", volume=vol_id)
+        if not isinstance(material, Material):
+            return 0.
+
+        D, _ = self.get_constitutive_model(material, model_type="linear-isotropic")
+
+        # get data to compute the stress
+        _, B = self.process_detJAC_and_B_matrix(element_id)
+
+        # initialize the element stresses matrix
+        element_stresses = np.zeros((6, self.nint, Ue.shape[1]), dtype=complex)
+
+        # calculate the nodal stress tensor
+        for i in range(self.nint):
+            element_stresses[:, i, :] = D @ (B[i, :, :] @ Ue)
+
+        if element_averaged:
+            return np.average(element_stresses, axis=1)
+
+        return element_stresses
+
+
+    def extrapolate_stresses_to_nodes(self, element_stresses: np.ndarray) -> np.ndarray:
+        """
+        This method extrapolates the nodal stresses from 
+        the stresses calculated at the integration points.
+
+        Parameters
+        ----------
+        element_stresses: np.ndarray
+            The stresses calculate at integration points.
+
+        """
+        return self.phi_inv @ element_stresses
 
 
     def reorder_connect(self):

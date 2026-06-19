@@ -1,12 +1,11 @@
-from pathlib import Path
-from PySide6.QtGui import QIcon, QPen, QColor
-from PySide6.QtCore import QTimer, Qt
-from PySide6.QtWidgets import QToolTip
-
-from vibra import app, DEVELOPER_MODE, ICON_DIR
-from vibra.interface.menus.common_menu_items import ChildTreeWidgetItem, CommonMenuItems
 
 from molde import Color
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QIcon, QPen
+
+from vibra import DEVELOPER_MODE, ICON_DIR, app
+from vibra.interface.menus.common_menu_items import ChildTreeWidgetItem, CommonMenuItems
+
 
 class ModelSetupItems(CommonMenuItems):
     """Menu Items
@@ -44,9 +43,9 @@ class ModelSetupItems(CommonMenuItems):
                         exhibit minor variations. We appreciate your understanding as we continue to improve the precision of our models.</p>
                         '''
         self.item_top_structural_model_setup.setToolTip(0, tooltip_html)
-        path_image = str(Path((ICON_DIR / "model_setup_items" / "structural_help.png")))
+        path_image = str(ICON_DIR / "model_setup_items/structural_help.png")
         self.item_top_structural_model_setup.setIcon(0, QIcon(path_image))
-        
+
         self.item_child_surface_thickness = self.add_item("Surface Thickness")
         self.item_child_prescribed_dof = self.add_item("Prescribed DOF")
         self.item_child_nodal_loads = self.add_item("Nodal Loads")
@@ -152,11 +151,6 @@ class ModelSetupItems(CommonMenuItems):
     def _initial_configuration(self):
         self.item_top_structural_model_setup.setHidden(True)
         self.item_top_acoustic_model_setup.setHidden(True)
-
-        self.item_child_mesh_setup.setDisabled(True)
-        self.item_child_element_options.setDisabled(True)
-        self.item_child_material.setDisabled(True)
-        self.item_child_fluid.setDisabled(True)
 
     def _filter_visible_items_based_on_current_mode(self):
         self.item_child_incident_plane_wave.setHidden(not DEVELOPER_MODE)
@@ -377,7 +371,11 @@ class ModelSetupItems(CommonMenuItems):
         physical_domain = physical_domain.lower()
         self.filter_items_according_to_analysis(analysis_type, physical_domain)
 
+        if app().project.model.mesh is None:
+            return
+
         for top_level_items in self.top_level_items:
+
             for index in range(top_level_items.childCount()):
                 item_child: ChildTreeWidgetItem = top_level_items.child(index)
                 item_child_name = self._find_qtree_widget_item_name(item_child)
@@ -524,39 +522,10 @@ class ModelSetupItems(CommonMenuItems):
     def item_child_acoustic_transfer_element_setup_callback(self):
         app().main_window.input_ui.set_acoustic_transfer_element_setup()
 
-    def modify_general_settings_items_access(self, key: bool):
+    def modify_general_settings_items_access(self):
         imported_geometry = app().project.model.is_there_a_geometry_imported()
         self.item_child_mesh_setup.setDisabled(not imported_geometry)
         self.item_child_element_options.setDisabled(not imported_geometry)
-        self.item_child_material.setDisabled(key)
-        self.item_child_fluid.setDisabled(key)
-
-    def modify_structural_model_setup_items_acces(self, key: bool):
-        self.item_child_surface_thickness.setDisabled(key)
-        self.item_child_prescribed_dof.setDisabled(key)
-        self.item_child_nodal_loads.setDisabled(key)
-        self.item_child_normal_pressure_load.setDisabled(key)
-        self.item_child_distributed_loads.setDisabled(key)
-
-    def modify_acoustic_model_setup_items_acces(self, key: bool):
-        self.item_child_acoustic_pressure.setDisabled(key)
-        self.item_child_mass_source.setDisabled(key)
-        self.item_child_surface_velocity.setDisabled(key)
-        self.item_child_incident_plane_wave.setDisabled(key)
-        self.item_child_compressor_excitation_spectrum.setDisabled(key)
-        self.item_child_compressor_excitation_waveform.setDisabled(key)
-        self.item_child_reciprocating_compressor_excitation.setDisabled(key)
-        self.item_child_specific_impedance.setDisabled(key)
-        self.item_child_anechoic_termination.setDisabled(key)
-        self.item_child_absorption_surface.setDisabled(key)
-        self.item_child_transfer_impedance.setDisabled(key)
-        self.item_child_proportional_damping.setDisabled(key)
-        self.item_child_porous_material_model.setDisabled(key)
-        self.item_child_viscous_thermal_model.setDisabled(key)
-        self.item_child_perforated_plate_model.setDisabled(key)
-        self.item_child_degrees_of_freedom_decoupling.setDisabled(key)
-        self.item_child_acoustic_properties_gradient.setDisabled(key)
-        self.item_child_acoustic_transfer_element_setup.setDisabled(key)
 
     def hide_all_top_items(self):
         self.item_top_general_settings.setHidden(True)
@@ -566,11 +535,7 @@ class ModelSetupItems(CommonMenuItems):
         self.item_top_structural_model_setup.setHidden(True)
         self.item_top_acoustic_model_setup.setHidden(True)
 
-    def enable_and_expand_menu_items(self):
-        self.modify_general_settings_items_access(False)
-        self.modify_acoustic_model_setup_items_acces(False)
-        self.modify_structural_model_setup_items_acces(False)
-
+    def expand_menu_items(self):
         self.expandItem(self.item_top_general_settings)
         self.expandItem(self.item_top_structural_model_setup)
         self.expandItem(self.item_top_acoustic_model_setup)

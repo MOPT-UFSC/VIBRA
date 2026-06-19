@@ -1,4 +1,5 @@
 from copy import deepcopy
+from enum import IntEnum
 from pathlib import Path
 
 import numpy as np
@@ -18,8 +19,14 @@ from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.plots.general.frequency_response_plotter import DataFormat, FrequencyResponsePlotter
-from vibra.interface.ui_generated.model.acoustic.compressor_excitation_waveform_inputs_ui import CompressorExcitationWaveformInputs_UI
+from vibra.interface.ui_generated.model.acoustic.excitations.compressor_excitation_waveform_inputs_ui import CompressorExcitationWaveformInputs_UI
 from vibra.utils.signal_processing import extend_signal, get_window_and_correction_factor, process_one_sided_spectrum
+
+
+class TabIndex(IntEnum):
+    SETUP = 0
+    SIGNALS = 1
+    LIST = 2
 
 
 class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
@@ -87,8 +94,9 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         self.lineEdit_frequency_resolution_required.textEdited.connect(self.compute_compressor_excitation_spectrum)
         self.lineEdit_maximum_frequency.textEdited.connect(self.compute_compressor_excitation_spectrum)
         #
-        self.pushButton_attribute.clicked.connect(self.attribute_callback)
-        self.pushButton_exit.clicked.connect(self.close)
+        self.pushButton_apply.clicked.connect(self.apply_callback)
+        self.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
+        self.pushButton_cancel.clicked.connect(self.close)
         self.pushButton_load_table.clicked.connect(self.load_compressor_excitation_data)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
@@ -146,7 +154,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
             self.load_property_data(surface_id)
 
     def load_property_data(self, surface_id: int):
-        if self.tabWidget_main.currentIndex() != 0:
+        if self.tabWidget_main.currentIndex() == TabIndex.LIST:
             return
 
         data = self.properties._get_property("compressor_excitation_waveform", surface=surface_id)
@@ -173,7 +181,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         if "table_paths" in data.keys():
             table_path = data.get("table_paths")[0]
             self.lineEdit_table_path.setText(table_path)
-            self.tabWidget_main.setCurrentIndex(0)
+            self.tabWidget_main.setCurrentIndex(TabIndex.SETUP)
             self.lineEdit_frequency_resolution.setText("not calculated")
 
     def paint_icons_callback(self):
@@ -506,15 +514,14 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         self.lineEdit_frequency_resolution_plot.setText(f"{df}")
 
     def tab_event_callback(self):
-        if self.tabWidget_main.currentIndex() == 2:
+        tab_list = self.tabWidget_main.currentIndex() == TabIndex.LIST
+        self.lineEdit_selection_id.setDisabled(tab_list)
+        self.pushButton_apply.setDisabled(tab_list)
+        self.pushButton_apply_and_close.setDisabled(tab_list)
+
+        if tab_list:
             self.lineEdit_selection_id.setText("")
-            self.lineEdit_selection_id.setDisabled(True)
-            self.pushButton_attribute.setDisabled(True)
-            self.pushButton_remove.setDisabled(True)
             return
-        
-        self.lineEdit_selection_id.setDisabled(False)
-        self.pushButton_attribute.setEnabled(True)
 
         surfaces = app().main_window.selection.geometry_surfaces
         if not surfaces:
@@ -596,16 +603,16 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
 
         return False
 
-    def attribute_callback(self):
-        if self.tabWidget_main.currentIndex() != 0:
+    def apply_callback(self, close_window: bool = False):
+        if self.tabWidget_main.currentIndex() == TabIndex.LIST:
             return
 
         input_ids = self.lineEdit_selection_id.text()
         surface_ids, error_data = self.mesh.check_selected_ids(
-                                                               input_ids, 
-                                                               selection = "surfaces",
-                                                               single_id = False,
-                                                               )
+            input_ids,
+            selection="surfaces",
+            single_id=False,
+        )
 
         if error_data is not None:
             self.hide()
@@ -693,7 +700,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
 
             self.properties._set_property("compressor_excitation_waveform", data, surface=surface_id)
 
-        self.actions_to_finalize()
+        self.actions_to_finalize(close_window)
 
     def process_table_file_removal(self, table_names: list):
         for table_name in table_names:
@@ -763,44 +770,27 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
             self.properties._reset_property("compressor_excitation_waveform")
             self.actions_to_finalize()
 
-    def actions_to_finalize(self):
+    def actions_to_finalize(self, close_window: bool = False):
         self.load_model_info()
-        self.check_model_frequency_controls()
         app().project.update_model_properties_file()
         app().main_window.update_info_text()
         app().main_window.update_symbols()
 
-    def check_model_frequency_controls(self):
-
-        for key, data in self.properties.surface_properties.items():
-            property, _ = key
-            if property in [
-                "acoustic_pressure",
-                "surface_velocity",
-                "incident_plane_wave",
-                "specific_impedance",
-                "compressor_excitation_waveform",
-                "reciprocating_compressor_excitation",
-                ]:
-                if "table_names" in data.keys():
-                    return
-
-        # No idea of what it does
-        app().project.configure_analysis(
-            app().project.model.analysis_id,
-            app().project.model.analysis_setup,
-        )
+        if close_window:
+            self.close()
 
     def update_tabs_visibility(self):
 
         for key in self.properties.surface_properties.keys():
             property, *args = key
-            if property == "compressor_excitation_waveform":
-                self.tabWidget_main.setTabVisible(2, True)
-                return
+            if property != "compressor_excitation_waveform":
+                continue
 
-        self.tabWidget_main.setCurrentIndex(0)    
-        self.tabWidget_main.setTabVisible(2, False)
+            self.tabWidget_main.setTabVisible(TabIndex.LIST, True)
+            return
+
+        self.tabWidget_main.setCurrentIndex(TabIndex.SETUP)
+        self.tabWidget_main.setTabVisible(TabIndex.LIST, False)
 
     def on_click_item(self, item):
         if item.text(0) != "":
@@ -1005,7 +995,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            self.attribute_callback()
+            self.apply_callback()
         elif event.key() == Qt.Key_Delete:
             self.remove_callback()
         elif event.key() == Qt.Key_Escape:

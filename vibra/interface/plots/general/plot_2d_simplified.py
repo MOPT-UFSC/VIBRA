@@ -102,7 +102,7 @@ class Plot2DSimplified(Plot2dDialog_UI):
         y_data: np.ndarray,
         label: str = None,
         line_style: str = "-",
-        line_width: float = 1.5,
+        line_width: float = 1.0,
         color: tuple = (0, 0, 1),
         marker: str = None,
         marker_size: int = 5,
