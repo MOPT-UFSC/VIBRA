@@ -39,8 +39,6 @@ def save_icon(icon_path: Path, icon_image: Image) -> None:
 
 def paint_icons():
     for dir, color in zip(ICONS_DIRS, COLORS):
-        print(dir, color)
-
         icons_to_paint = get_icons_to_paint(dir)
 
         for icon in icons_to_paint:
