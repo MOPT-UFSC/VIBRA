@@ -24,7 +24,7 @@ class CustomNavigationToolbar(NavigationToolbar2QT):
         self.action_copy_graph = QAction()
         self.action_copy_graph.setToolTip("Copy Graph (Ctrl+C)")
         self.action_copy_graph.triggered.connect(self.copy_graph)
-        self.action_copy_graph.setIcon(QIcon(str(ICON_DIR / "mpltoolbar/copy_icon.png")))
+        self.action_copy_graph.setIcon(QIcon(str(ICON_DIR / "copy_icon.png")))
         self.action_copy_graph.setShortcut("ctrl+c")
 
         action_save_figure = self._actions["save_figure"]
