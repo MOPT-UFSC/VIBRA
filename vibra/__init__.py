@@ -25,6 +25,8 @@ PROJECT_DIR = Path(__file__).parents[1]
 DEVELOPER_MODE = True
 
 ICON_DIR = VIBRA_DIR / "interface/data/icons/"
+LIGHT_ICONS_DIR = ICON_DIR / "light_theme"
+DARK_ICONS_DIR = ICON_DIR / "dark_theme"
 TEXTURE_DIR = VIBRA_DIR / "interface/data/textures/"
 UI_DIR = VIBRA_DIR / "interface/data/ui_files/"
 SYMBOLS_DIR = VIBRA_DIR / "interface/data/symbols/"
