@@ -1,4 +1,3 @@
-from vibra.utils.time_utils import warn_delays
 import logging
 from threading import Lock
 from time import time
@@ -17,6 +16,7 @@ from vibra.interface.plots.general.animation_widget import AnimationWidget
 from vibra.interface.viewer_3d.render_tools import RenderTool, SelectionTool
 from vibra.utils.interface_utils import VisualizationFilter
 from vibra.utils.math_functions import lerp
+from vibra.utils.time_utils import warn_delays
 
 from ..actors import (
     AnalysisActor,
@@ -256,7 +256,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         magnification_factor: float = 1.0,
         clear_cache: bool = True,
     ):
-
+        
+        self.unit_label = "--"
         if not self.actors_exists():
             return
 
@@ -266,14 +267,9 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if clear_cache:
             self.clear_cache()
 
-        # magnification_factor = animation_widget.magnification_factor_slider.value() / 16
-
         displacements = None
         colormap = app().config.user_preferences.color_map
         analysis_id = app().project.model.analysis_id
-
-        # if phase is None:
-        #     phase = np.radians(animation_widget.phase_slider.value())
 
         if analysis_id == AnalysisID.NO_ANALYSIS:
             return
@@ -287,12 +283,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             if not isinstance(postprocessing, StructuralPostprocessing):
                 return
 
-            data = postprocessing.compute_structural_displacement_field(
-                self.mode_index,
-                phase,
-                displacement_type,
-                is_modal=True,
-            )
+            data = postprocessing.compute_structural_response_field(self.mode_index, phase, displacement_type, is_modal=True)
             if data is None:
                 return
 
@@ -304,17 +295,15 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         elif analysis_id == AnalysisID.STRUCTURAL_HARMONIC:
             analysis_widget = app().main_window.results_viewer_widget.plot_structural_harmonic
             self.frequency_index = analysis_widget.get_selected_frequency_index()
-            displacement_type = analysis_widget.get_plot_type()
+            self.differentiate = analysis_widget.get_number_of_differentiations()
+            data_type = analysis_widget.get_data_type()
+            self.unit_label = analysis_widget.get_plot_units()
 
             postprocessing = app().project.get_structural_postprocessing()
             if not isinstance(postprocessing, StructuralPostprocessing):
                 return
 
-            data = postprocessing.compute_structural_displacement_field(
-                self.frequency_index,
-                phase,
-                displacement_type,
-            )
+            data = postprocessing.compute_structural_response_field(self.frequency_index, phase, data_type, self.differentiate)
             if data is None:
                 return
 
@@ -350,6 +339,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             analysis_widget = app().main_window.results_viewer_widget.plot_acoustic_harmonic
             self.frequency_index = analysis_widget.get_selected_frequency_index()
             plot_type = analysis_widget.get_plot_type()
+            self.unit_label = "Pa"
 
             postprocessing = app().project.get_acoustic_postprocessing()
             if not isinstance(postprocessing, AcousticPostprocessing):
@@ -575,15 +565,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if not hasattr(self, "colorbar_actor"):
             return
 
-        unit_mapping = {
-            AnalysisID.STRUCTURAL_HARMONIC: "m",
-            AnalysisID.ACOUSTIC_HARMONIC: "Pa",
-        }
-
-        analysis_id = app().project.model.analysis_id
-        unit = unit_mapping.get(analysis_id, "--")
-
-        self.colorbar_actor.SetTitle(f"Unit: [{unit}]")
+        self.colorbar_actor.SetTitle(f"Unit: [{self.unit_label}]")
         self.update()
 
     def update_renderer_font_size(self):

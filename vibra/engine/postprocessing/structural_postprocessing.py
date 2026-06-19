@@ -7,11 +7,12 @@ from typing import Literal
 
 import numpy as np
 
+from vibra.engine import AnalysisID
 from vibra.engine.model import Model
 from vibra.engine.postprocessing.structural_post_solution_dataclass import NodalStresses
 from vibra.engine.solution import HarmonicSolution, LazyHarmonicSolution, ModalSolution
 
-DisplacementTypes = Literal["u_sum", "u_x", "u_y", "u_z"]
+DataTypes = Literal["u_sum", "u_x", "u_y", "u_z", "v_svm", "v_x", "v_y", "v_z", "a_sum", "a_x", "a_y", "a_z"]
 
 
 class StructuralPostprocessing:
@@ -42,29 +43,26 @@ class StructuralPostprocessing:
         return self.model.structural_element_3d
 
     @cache
-    def get_max_min_values_of_displacements(self, column: int, disp_type: str, is_modal: bool = False):
-        """This method returns the minimum and maximum displacement values
-        of selected frequency for animation purposes.
+    def get_max_min_values_of_selected_data(self, data_complex: tuple[complex], data_type: str) -> list[float, float]:
+        """
+        This method returns the minimum and maximum values of selected frequency for animation purposes.
 
-        Parameters:
-        -----------
-        column: int value relative to frequency column index.
+        Parameters
+        ----------
+        data_complex: a tuple of complex values in which the phase sweep will be applied.
 
-        Returns:
-        -----------
-        u_min, u_max: float values for minimum and maximum displacements,
+        data_type: a string of type DataTypes that represents the data to be processed.
+
+        Return
+        ------
+        r_min, r_max: float values for minimum and maximum displacements,
 
         """
-        if not isinstance(self.solution, ModalSolution | HarmonicSolution):
+        if not data_complex:
             return
 
-        if isinstance(self.solution, LazyHarmonicSolution) and not self.solution.is_valid():
-            return
-
-        data = self.solution.get_nodal_displacement_at_column(column)
-
-        amplitudes = np.abs(data)
-        phases = np.angle(data)
+        amplitudes = np.abs(data_complex)
+        phases = np.angle(data_complex)
 
         r_min = 1
         r_max = 0
@@ -73,11 +71,11 @@ class StructuralPostprocessing:
         for theta in thetas:
             results = (amplitudes * np.cos(phases + theta)).reshape(-1, 3)
 
-            if disp_type == "u_x":
+            if data_type in ["u_x", "v_x", "a_x"]:
                 u_xyz = results * np.array([1.0, 0.0, 0.0])
-            elif disp_type == "u_y":
+            elif data_type in ["u_y", "v_y", "a_y"]:
                 u_xyz = results * np.array([0.0, 1.0, 0.0])
-            elif disp_type == "u_z":
+            elif data_type in ["u_z", "v_z", "a_z"]:
                 u_xyz = results * np.array([0.0, 0.0, 1.0])
             else:
                 u_xyz = np.linalg.norm(results, axis=1)
@@ -90,22 +88,22 @@ class StructuralPostprocessing:
             if r_max_i > r_max:
                 r_max = r_max_i
 
-        if disp_type == "u_sum":
+        if data_type in ["u_sum", "v_sum", "a_sum"]:
             return 0.0, r_max
 
-        else:
-            if np.abs(r_min) != np.abs(r_max):
-                max_abs = np.max(np.abs([r_min, r_max]))
-                r_min = -max_abs
-                r_max = max_abs
+        if np.abs(r_min) != np.abs(r_max):
+            max_abs = np.max(np.abs([r_min, r_max]))
+            r_min = -max_abs
+            r_max = max_abs
 
         return r_min, r_max
 
-    def compute_structural_displacement_field(
+    def compute_structural_response_field(
         self,
         column: int,
         phase_rad: float,
-        displacement_type: DisplacementTypes,
+        data_type: DataTypes,
+        differentiate: int = 0,
         is_modal: bool = False,
     ):
         if not isinstance(self.solution, ModalSolution | HarmonicSolution):
@@ -114,35 +112,37 @@ class StructuralPostprocessing:
         if isinstance(self.solution, LazyHarmonicSolution) and not self.solution.is_valid():
             return
 
-        displacements_complex = self.solution.get_nodal_displacement_at_column(column)
+        data_complex = self.solution.get_nodal_displacement_at_column(column)
+        if self.model.analysis_id == AnalysisID.STRUCTURAL_HARMONIC:
+            freq = self.model.frequencies[column]
+            data_complex *= (1j * freq)**differentiate
 
-        amplitudes = np.abs(displacements_complex)
-        phases = np.angle(displacements_complex)
+        amplitudes = np.abs(data_complex)
+        phases = np.angle(data_complex)
         delta = -phases[np.argmax(amplitudes)]
 
-        displacements = amplitudes * np.cos(phases + phase_rad + delta)
-        current_solution = displacements.reshape(-1, 3).copy()
+        phase_shifted_data = amplitudes * np.cos(phases + phase_rad + delta)
+        current_solution = phase_shifted_data.reshape(-1, 3).copy()
 
-        if displacement_type == "u_sum":
+        if data_type in ["u_sum", "v_sum", "a_sum"]:
             color_scalars = np.linalg.norm(current_solution, axis=1)
-            displacements = current_solution.copy()
+            phase_shifted_data = current_solution.copy()
 
-        elif displacement_type == "u_x":
+        elif data_type in ["u_x", "v_x", "a_x"]:
             color_scalars = current_solution[:, 0]
-            displacements = current_solution * np.array([1.0, 0.0, 0.0])
+            phase_shifted_data = current_solution * np.array([1.0, 0.0, 0.0])
 
-        elif displacement_type == "u_y":
+        elif data_type in ["u_y", "v_y", "a_y"]:
             color_scalars = current_solution[:, 1]
-            displacements = current_solution * np.array([0.0, 1.0, 0.0])
+            phase_shifted_data = current_solution * np.array([0.0, 1.0, 0.0])
 
-        elif displacement_type == "u_z":
+        elif data_type in ["u_z", "v_z", "a_z"]:
             color_scalars = current_solution[:, 2]
-            displacements = current_solution * np.array([0.0, 0.0, 1.0])
+            phase_shifted_data = current_solution * np.array([0.0, 0.0, 1.0])
 
-        min_value, max_value = self.get_max_min_values_of_displacements(column, displacement_type, is_modal)
+        min_value, max_value = self.get_max_min_values_of_selected_data(tuple(data_complex), data_type)
 
-        return displacements, color_scalars, min_value, max_value, np.imag(displacements).any()
-
+        return phase_shifted_data, color_scalars, min_value, max_value, np.imag(phase_shifted_data).any()
 
     def get_structural_stresses(
             self,
@@ -165,8 +165,8 @@ class StructuralPostprocessing:
         volume_ids: int, list[int], None. (default None)
             The selected volume IDss.
 
-        Returns
-        -------
+        Return
+        ------
         avg_nodal_stresses_data: dict
             A dictionary whose keys are the node_ids and the values are the averaged
             nodal stresses.
@@ -205,7 +205,7 @@ class StructuralPostprocessing:
                 for volume_id in volume_ids:
                     volume_nodes = self.mesh.get_nodes_from_volume(volume_id)
                     node_ids.extend(volume_nodes)
-    
+
         if not node_ids:
             print("Invalid node ids")
             return dict(), dict()
@@ -270,7 +270,6 @@ class StructuralPostprocessing:
 
         return avg_nodal_stresses_data, nodal_stresses_data
 
-
     def get_structural_stresses_ref(
             self,
             node_ids : int | list[int] | None = None,
@@ -292,8 +291,8 @@ class StructuralPostprocessing:
         volume_ids: int, list[int], None. (default None)
             The selected volume IDss.
 
-        Returns
-        -------
+        Return
+        ------
         avg_nodal_stresses_data: dict
             A dictionary whose keys are the node_ids and the values are the averaged
             nodal stresses.
@@ -306,9 +305,9 @@ class StructuralPostprocessing:
         mesh = self.model.mesh
         element_3d = self.model.structural_element_3d
 
-        if element_3d is None:
-            self.harmonic_solver.assembler.define_structural_elements()
-            element_3d = self.harmonic_solver.assembler.element_3d
+        # if element_3d is None:
+        #     self.harmonic_solver.assembler.define_structural_elements()
+        #     element_3d = self.harmonic_solver.assembler.element_3d
 
         if element_3d.connectivity is None:
             element_3d.reorder_connect()

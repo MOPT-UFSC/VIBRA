@@ -5,11 +5,11 @@ from PySide6.QtWidgets import QGridLayout, QTreeWidgetItem
 from vibra import app
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.plots.general.animation_widget import AnimationWidget
-from vibra.interface.ui_generated.plots.structural.displacement_field_inputs_ui import DisplacementFieldInputs_UI
+from vibra.interface.ui_generated.plots.structural.structural_response_fields_inputs_ui import StructuralResponseFieldsInputs_UI
 from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
 
 
-class PlotDisplacementFieldInputs(DisplacementFieldInputs_UI):
+class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -34,7 +34,8 @@ class PlotDisplacementFieldInputs(DisplacementFieldInputs_UI):
 
     def _configure_widgets(self):
         #
-        self.frame_transparency.setVisible(False)
+        self.label_transparency.setVisible(False)
+        self.slider_transparency.setVisible(False)
         #
         self.lineEdit_selected_frequency.setDisabled(True)
         self.lineEdit_selected_frequency.setProperty("status", "information")
@@ -47,6 +48,7 @@ class PlotDisplacementFieldInputs(DisplacementFieldInputs_UI):
         #
         self.comboBox_colormaps.currentIndexChanged.connect(self.update_colormap_type)
         self.comboBox_plot_type.currentIndexChanged.connect(self.update_plot)
+        self.comboBox_plotting_results.currentIndexChanged.connect(self.update_plotting_results_combo_box_items)
         #
         self.slider_transparency.valueChanged.connect(self.update_transparency_callback)
         #
@@ -65,6 +67,20 @@ class PlotDisplacementFieldInputs(DisplacementFieldInputs_UI):
         self.animation_widget = AnimationWidget()
         self.grid_layout.addWidget(self.animation_widget)
         self.frame_animation.adjustSize()
+
+    def update_plotting_results_combo_box_items(self):
+        prefixes = ["u", "v", "a"]
+        ind = self.comboBox_plotting_results.currentIndex()
+        prefix = prefixes[ind]
+
+        self.comboBox_plot_type.blockSignals(True)
+        self.comboBox_plot_type.clear()
+
+        for suffix in ["sum", "x", "y", "z"]:
+            self.comboBox_plot_type.addItem(f"{prefix}_{suffix}")
+
+        self.comboBox_plot_type.blockSignals(False)
+        self.update_plot()
 
     def update_animation_widget_visibility(self):
         return
@@ -91,15 +107,18 @@ class PlotDisplacementFieldInputs(DisplacementFieldInputs_UI):
         except AttributeError:
             pass
 
-    def get_plot_type(self):
-        plot_types = [
-            "u_sum",
-            "u_x",
-            "u_y",
-            "u_z",
-        ]
-        index = self.comboBox_plot_type.currentIndex()
-        return plot_types[index]
+    def get_data_type(self):
+        prefixes = ["u", "v", "a"]
+        suffixes = ["sum", "x", "y", "z"]
+
+        ind_dformat = self.comboBox_plotting_results.currentIndex()
+        ind_ptype = self.comboBox_plot_type.currentIndex()
+
+        return f"{prefixes[ind_dformat]}_{suffixes[ind_ptype]}"
+
+    def get_plot_units(self) -> str:
+        units = ["m", "m/s", "m²/s"]
+        return units[self.comboBox_plotting_results.currentIndex()]
 
     def update_transparency_callback(self):
         return
@@ -119,7 +138,7 @@ class PlotDisplacementFieldInputs(DisplacementFieldInputs_UI):
 
         if self.selected_frequency_index is None:
             return
-
+        
         self.animation_widget.reset_sliders()
         LoadingWindow(app().main_window.results_widget.update_plot).run()
 
@@ -128,6 +147,9 @@ class PlotDisplacementFieldInputs(DisplacementFieldInputs_UI):
             return self.selected_frequency_index
 
         return 0
+    
+    def get_number_of_differentiations(self):
+        return self.comboBox_plotting_results.currentIndex()
 
     def get_colormap(self) -> str:
         index = self.comboBox_colormaps.currentIndex()
@@ -138,11 +160,10 @@ class PlotDisplacementFieldInputs(DisplacementFieldInputs_UI):
 
     def load_frequencies(self):
         self.treeWidget_frequencies.setDisabled(False)
-        if isinstance(app().project.model.frequencies, np.ndarray):
-            self.frequencies = app().project.model.frequencies
-        else:
+        if not isinstance(app().project.model.frequencies, np.ndarray):
             return
 
+        self.frequencies = app().project.model.frequencies
         self.indexes = np.arange(len(self.frequencies), dtype=int)
 
         self.treeWidget_frequencies.clear()

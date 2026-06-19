@@ -5,8 +5,8 @@ from vibra.interface.menus.results_viewer_items import ResultsViewerItems
 from vibra.interface.plots.acoustic.acoustic_mode_shape_inputs import AcousticModeShapeInputs
 from vibra.interface.plots.acoustic.acoustic_pressure_field_inputs import AcousticPressureFieldInputs
 from vibra.interface.plots.general.animation_widget import AnimationWidget
-from vibra.interface.plots.structural.displacement_field_inputs import PlotDisplacementFieldInputs
 from vibra.interface.plots.structural.structural_mode_shape_inputs import PlotStructuralModeShapeInputs
+from vibra.interface.plots.structural.structural_response_fields_inputs import StructuralResponseFieldsInputs
 from vibra.interface.ui_generated.menu.left_menu_widget_ui import LeftMenuWidget_UI
 
 
@@ -15,7 +15,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         super().__init__()
 
         self.plot_structural_modal = PlotStructuralModeShapeInputs()
-        self.plot_structural_harmonic = PlotDisplacementFieldInputs()
+        self.plot_structural_harmonic = StructuralResponseFieldsInputs()
         self.plot_acoustic_modal = AcousticModeShapeInputs()
         self.plot_acoustic_harmonic = AcousticPressureFieldInputs()
 
@@ -32,7 +32,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
     def current_widget_is_animatable(self) -> bool:
         return isinstance(self.current_widget, (
             PlotStructuralModeShapeInputs,
-            PlotDisplacementFieldInputs,
+            StructuralResponseFieldsInputs,
             AcousticModeShapeInputs,
             AcousticPressureFieldInputs,
         ))
