@@ -587,7 +587,6 @@ class ReciprocatingCompressorModel:
         valves_info = dict()
         open_suc = np.zeros(N, dtype=bool)
         open_disc = np.zeros(N, dtype=bool)
-        message = ""
 
         # print(f"Capacity (crank end): {capacity}")
         stage_log = f"Capacity (crank end) = {capacity}\n\n"

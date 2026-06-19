@@ -28,7 +28,6 @@ DEVELOPER_MODE = True
 
 ICON_DIR = VIBRA_DIR / "interface/data/icons/"
 TEXTURE_DIR = VIBRA_DIR / "interface/data/textures/"
-UI_DIR = VIBRA_DIR / "interface/data/ui_files/"
 SYMBOLS_DIR = VIBRA_DIR / "interface/data/symbols/"
 EXAMPLES_DIR = VIBRA_DIR / "interface/data/examples/"
 

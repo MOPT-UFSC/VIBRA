@@ -1,8 +1,7 @@
+import os
 from collections import defaultdict
 from pathlib import Path
-from time import time
 
-import os
 import numpy as np
 
 
@@ -49,12 +48,12 @@ class ExternalMeshData():
             if "NUMOFF,NODE," in line:
                 line = line.replace(" ", "")
                 number_nodes = int(line.split("NUMOFF,NODE,")[1])
-                nodal_coordinates = np.zeros((number_nodes, 4), dtype=float)
+                nodal_coordinates = np.zeros((number_nodes, 4), dtype=float)  # noqa: F841
                 continue
 
             if "NUMOFF,ELEM," in line:
                 line = line.replace(" ", "")
-                number_elements = int(line.split("NUMOFF,ELEM,")[1])
+                number_elements = int(line.split("NUMOFF,ELEM,")[1])  # noqa: F841
                 # nodal_coordinates = np.zeros((number_elements, 4), dtype=float)
                 continue
 

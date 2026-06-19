@@ -1,9 +1,8 @@
 
-from copy import deepcopy
 
+import matplotlib.pyplot as plt
 import numpy as np
 from scipy import signal
-import matplotlib.pyplot as plt
 
 
 def process_ifft_from_one_sided_spectrum_signal(frequencies: np.ndarray, Xf_data: np.ndarray, dc_included: bool=False):

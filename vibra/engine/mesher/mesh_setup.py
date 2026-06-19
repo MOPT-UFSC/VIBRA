@@ -17,13 +17,13 @@ class ElementTopology:
 class MeshSetup:
     minimum_element_size: float = 0
     maximum_element_size: float = float("inf")
-    geometry_tolerance: float = 1e-6
+    geometry_tolerance: float = 1e-8
     size_factor: float = 1
     element_geometry: Literal["tetrahedral", "hexahedral"] = "tetrahedral"
     element_order: Literal["linear", "quadratic"] = "linear"
 
     compute_quality_metrics: bool = False
-    merge_connected_volumes: bool = False
+    merge_connected_volumes: bool = True
 
     # Advanced stuff
     refinement_parameters: list[MeshRefinementSetup] = field(default_factory=list)

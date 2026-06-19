@@ -5,7 +5,7 @@ from time import sleep
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
 
-from vibra import UI_DIR, app
+from vibra import app
 from vibra.interface.ui_generated.messages.loading_window_ui import LoadingWindow_UI
 
 # Catches every message that contains something like [n/N]

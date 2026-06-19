@@ -1,8 +1,6 @@
 import numpy as np
 from vtkmodules.vtkFiltersSources import (
-    vtkConeSource,
     vtkCubeSource,
-    vtkCylinderSource,
 )
 from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper
 

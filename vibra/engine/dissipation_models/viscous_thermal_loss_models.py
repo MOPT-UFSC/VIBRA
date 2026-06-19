@@ -96,7 +96,7 @@ class ViscousThermalLossModels:
 
     def get_rectangular_section_effective_properties(self, omega: np.ndarray, fluid: Fluid, data: RectangularDuctData, fast_integration: bool=True):
 
-        P_0 = fluid.pressure
+        P_0 = fluid.pressure  # noqa: F841
         rho_0 = fluid.fluid_density
         C_0 = fluid.speed_of_sound
         gamma = fluid.isentropic_exponent
@@ -173,7 +173,7 @@ class ViscousThermalLossModels:
 
     def get_narrow_slit_section_effective_properties(self, omega: np.ndarray, fluid: Fluid, data: RectangularDuctData):
 
-        P_0 = fluid.pressure
+        P_0 = fluid.pressure  # noqa: F841
         rho_0 = fluid.fluid_density
         C_0 = fluid.speed_of_sound
         gamma = fluid.isentropic_exponent
@@ -211,7 +211,7 @@ class ViscousThermalLossModels:
 
     def get_circular_section_effective_properties_for_Stinson_model(self, omega: np.ndarray, fluid: Fluid, data: CircularDuctData):
 
-        P_0 = fluid.pressure
+        P_0 = fluid.pressure  # noqa: F841
         rho_0 = fluid.fluid_density
         C_0 = fluid.speed_of_sound
         gamma = fluid.isentropic_exponent
@@ -285,7 +285,7 @@ class ViscousThermalLossModels:
 
     def get_circular_section_effective_properties_for_LRF_model(self, omega: np.ndarray, fluid: Fluid, data: CircularDuctData):
 
-        P_0 = fluid.pressure
+        P_0 = fluid.pressure  # noqa: F841
         rho_0 = fluid.fluid_density
         C_0 = fluid.speed_of_sound
         gamma = fluid.isentropic_exponent

@@ -1,9 +1,15 @@
-import numpy as np
-import pytest
 from pathlib import Path
 
-from vibra.project_files.lazy_hdf5_matrix import LazyHDF5MatrixWriter, LazyHDF5MatrixLoader, \
-    COL_ERROR_MESSAGE_FORMAT, COLS_EMPTY_ERROR_MESSAGE, NUM_ROWS_ZERO_ERROR_MESSAGE
+import numpy as np
+import pytest
+
+from vibra.engine.serialization.lazy_hdf5_matrix import (
+    COL_ERROR_MESSAGE_FORMAT,
+    COLS_EMPTY_ERROR_MESSAGE,
+    NUM_ROWS_ZERO_ERROR_MESSAGE,
+    LazyHDF5MatrixLoader,
+    LazyHDF5MatrixWriter,
+)
 
 
 @pytest.fixture
