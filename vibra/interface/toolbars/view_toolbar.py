@@ -30,20 +30,18 @@ class ViewToolbar(QToolBar):
         self.setWindowTitle("View toolbar")
 
     def _load_icons(self):
-        color = LIGHT_ICON_COLOR.to_qt()
-
-        self.top_icon = load_icon(":/icons/views/top.png", color)
-        self.bottom_icon = load_icon(":/icons/views/bottom.png", color)
-        self.right_icon = load_icon(":/icons/views/right.png", color)
-        self.left_icon = load_icon(":/icons/views/left.png", color)
-        self.front_icon = load_icon(":/icons/views/front.png", color)
-        self.back_icon = load_icon(":/icons/views/back.png", color)
-        self.isometric_icon = load_icon(":/icons/views/orthogonal.png", color)
-        self.zoom_to_fit_icon = load_icon(":/icons/views/zoom_icon.png", color)
-        self.selection_tool_icon = load_icon(":/icons/selection_icon.png", color)
-        self.grab_tool_icon = load_icon(":/icons/grab_icon.png", color)
-        self.rotation_tool_icon = load_icon(":/icons/rotation_icon.png", color)
-        self.zoom_tool_icon = load_icon(":/icons/zoom_icon.png", color)
+        self.top_icon = load_icon(":/icons/views/top.png")
+        self.bottom_icon = load_icon(":/icons/views/bottom.png")
+        self.right_icon = load_icon(":/icons/views/right.png")
+        self.left_icon = load_icon(":/icons/views/left.png")
+        self.front_icon = load_icon(":/icons/views/front.png")
+        self.back_icon = load_icon(":/icons/views/back.png")
+        self.isometric_icon = load_icon(":/icons/views/orthogonal.png")
+        self.zoom_to_fit_icon = load_icon(":/icons/views/zoom_icon.png")
+        self.selection_tool_icon = load_icon(":/icons/selection_icon.png")
+        self.grab_tool_icon = load_icon(":/icons/grab_icon.png")
+        self.rotation_tool_icon = load_icon(":/icons/rotation_icon.png")
+        self.zoom_tool_icon = load_icon(":/icons/zoom_icon.png")
 
     def _create_actions(self):
         self.action_top_view = QAction(self.top_icon, "Top View", self)

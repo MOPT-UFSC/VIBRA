@@ -39,16 +39,9 @@ class AnimationWidget(AnimationWidget_UI):
         self.current_render_widget = None
 
     def _configure_icons(self):
-        icon_color = None
-        theme = app().config.user_preferences.interface_theme
-        if theme == "dark":
-            icon_color = DARK_ICON_COLOR.to_qt()
-        else:
-            icon_color = LIGHT_ICON_COLOR.to_qt()
-
-        self.play_icon = load_icon(ICON_DIR / "play.png", icon_color)
-        self.pause_icon = load_icon(ICON_DIR / "pause.png", icon_color)
-        self.save_animation_icon = load_icon(ICON_DIR / "create_video_icon.png", icon_color)
+        self.play_icon = load_icon(ICON_DIR / "play.png")
+        self.pause_icon = load_icon(ICON_DIR / "pause.png")
+        self.save_animation_icon = load_icon(ICON_DIR / "create_video_icon.png")
 
     def _config_widgets(self):
 
