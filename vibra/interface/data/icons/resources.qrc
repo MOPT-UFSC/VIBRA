@@ -4,7 +4,6 @@
         <file>add_notes.png</file>
         <file>add_row_below.png</file>
         <file>arrow_circle_down_blue.png</file>
-        <file>azul cinza.png</file>
         <file>broom.png</file>
         <file>close_icon.png</file>
         <file>copy_icon.png</file>
@@ -32,8 +31,6 @@
         <file>import_mesh.png</file>
         <file>invert_icon.png</file>
         <file>legend_toggle.png</file>
-        <file>logo_vibra.png</file>
-        <file>logo_vibra_comp.png</file>
         <file>mesh.png</file>
         <file>model.png</file>
         <file>moon_icon.png</file>
@@ -72,6 +69,9 @@
         <file>cursors/zoom_cursor.png</file>
         <file>figures/effective_acoustic_impedance_for_DBM_porous_material_models.png</file>
         <file>figures/effective_wavenumber_for_DBM_porous_material_models.png</file>
+        <file>logos/azul cinza.png</file>
+        <file>logos/logo_vibra.png</file>
+        <file>logos/logo_vibra_comp.png</file>
         <file>model_configuration/listen_audio.png</file>
         <file>model_configuration/play_audio.png</file>
         <file>model_setup_items/absorption_surface.png</file>
