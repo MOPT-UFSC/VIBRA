@@ -32,6 +32,7 @@ from vibra.interface.toolbars.analysis_toolbar import AnalysisToolbar
 from vibra.interface.toolbars.view_toolbar import ViewToolbar
 from vibra.interface.ui_generated.main_window_ui import MainWindow_UI
 from vibra.interface.user_input.input_ui import InputUi
+from vibra.interface.user_input.about_vibra import AboutVibraInput
 from vibra.interface.user_input.render_user_preferences import RendererUserPreferencesInput
 from vibra.interface.viewer_3d.render_widgets import GeometryRenderWidget, MeshRenderWidget, ResultsRenderWidget
 from vibra.interface.welcome_widget import WelcomeWidget
