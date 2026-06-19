@@ -24,7 +24,7 @@ def get_formatted_icon(path: Path | str, color: QColor):
     return QIcon(pixmap)
 
 def get_vibra_icon(color= QColor("#448cff")):
-    icon_path = get_icons_path('logo_vibra.png')
+    icon_path = get_icons_path('/logos/logo_vibra.png')
     # return get_formatted_icon(icon_path, color)
     return QIcon(icon_path)
 

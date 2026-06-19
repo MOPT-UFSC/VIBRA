@@ -29,7 +29,7 @@ class WelcomeWidget(QWidget):
     def setup_image(self, layout):
         image_label = QLabel(self)
         image_label.setAlignment(Qt.AlignCenter)
-        pixmap = QPixmap(str(ICON_DIR / "azul cinza.png")).scaled(350, 350, Qt.KeepAspectRatio)
+        pixmap = QPixmap(str(ICON_DIR / "logos/azul cinza.png")).scaled(350, 350, Qt.KeepAspectRatio)
         image_label.setPixmap(pixmap)
         image_label.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(image_label)

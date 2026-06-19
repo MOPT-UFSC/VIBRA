@@ -68,7 +68,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if hasattr(self, "vibra_logo"):
             self.renderer.RemoveViewProp(self.vibra_logo)
 
-        path = ICON_DIR / "logo_vibra_comp.png"
+        path = ICON_DIR / "logos/logo_vibra_comp.png"
         self.vibra_logo = self.create_logo(path)
         self.vibra_logo.SetPosition(0.895, 0.91)
         self.vibra_logo.SetPosition2(0.10, 0.10)

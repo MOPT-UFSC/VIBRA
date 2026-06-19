@@ -91,7 +91,7 @@ class Ui_Form(object):
         font1.setBold(False)
         font1.setKerning(False)
         self.label.setFont(font1)
-        self.label.setPixmap(QPixmap(u":/icons/azul cinza.png"))
+        self.label.setPixmap(QPixmap(u":/icons/logos/azul cinza.png"))
         self.label.setScaledContents(True)
         self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
