@@ -47,7 +47,6 @@ def test_tetrahedron_10_mesh():
 
 def test_hexahedron_8_mesh():
     geometry_path = str(PROJECT_DIR / "data/examples/geometry_files/cylinder.step")
-    mesh_test_path = str(PROJECT_DIR / "validation_files/data/mesh_info/cilinder_hex8/")
 
     mesh_setup = MeshSetup(
         minimum_element_size=30,
@@ -57,16 +56,9 @@ def test_hexahedron_8_mesh():
     mesh = Mesh().load_cad(geometry_path, mesh_setup, threads=1)
     assert mesh.element_topology == ElementTopology("hexahedral", "linear")
 
-    # hexahedral mesh is not deterministic =(
-    # _compare_mesh(
-    #     mesh,
-    #     mesh_test_path,
-    # )
-
 
 def test_hexahedron_20_mesh():
     geometry_path = str(PROJECT_DIR / "data/examples/geometry_files/parallelepiped.step")
-    mesh_test_path = str(PROJECT_DIR / "validation_files/data/mesh_info/parallelepiped_hex20/")
 
     mesh_setup = MeshSetup(
         minimum_element_size=300,
@@ -75,12 +67,6 @@ def test_hexahedron_20_mesh():
     )
     mesh = Mesh().load_cad(geometry_path, mesh_setup, threads=1)
     assert mesh.element_topology == ElementTopology("hexahedral", "quadratic")
-
-    # hexahedral mesh is not deterministic =(
-    # _compare_mesh(
-    #     mesh,
-    #     mesh_test_path,
-    # )
 
 
 def _compare_mesh(mesh: Mesh, mesh_path: Path | str):

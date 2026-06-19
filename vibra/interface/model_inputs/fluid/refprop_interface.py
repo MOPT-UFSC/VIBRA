@@ -127,7 +127,7 @@ class RefpropInterface:
 
                 f = open(filepath, 'r')
                 line_0 = f.readline()
-                line_1 = f.readline()
+                line_1 = f.readline()  # noqa: F841
                 line_2 = f.readline()
 
                 f.close()
