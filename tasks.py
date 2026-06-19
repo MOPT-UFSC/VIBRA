@@ -10,9 +10,15 @@ from importlib.metadata import version
 UI_FILES_PATH = Path("vibra/interface/data/ui_files")
 GENERATED_PATH = Path("vibra/interface/ui_generated")
 RESOURCE_DIR = Path("vibra/interface/data/icons") 
-QRC_PATH = RESOURCE_DIR / "resources.qrc" 
+RESOURCE_DIR_DARK = RESOURCE_DIR / "dark_theme"
+RESOURCE_DIR_LIGHT = RESOURCE_DIR / "light_theme"
+QRC_PATH_DARK = RESOURCE_DIR_DARK / "resources.qrc" 
+QRC_PATH_LIGHT = RESOURCE_DIR_LIGHT / "resources.qrc" 
 QRC_PREFIX_NAME = "/icons/"
 QRC_PREFIX = f":{QRC_PREFIX_NAME}"
+
+RESOURCES_DIR = [RESOURCE_DIR_DARK, RESOURCE_DIR_LIGHT]
+QRC_PATHS = [QRC_PATH_DARK, QRC_PATH_LIGHT]
 
 
 @task
@@ -25,21 +31,23 @@ def qrc_codegen(c):
     if not RESOURCE_DIR.exists():
         print(f"❌ Directory '{RESOURCE_DIR}' not found.")
         return
+    
+    for dir, qrc_path in zip(RESOURCES_DIR, QRC_PATHS):
 
-    qrc_content = ['<RCC>', '    <qresource prefix="icons">']
+        qrc_content = ['<RCC>', '    <qresource prefix="icons">']
+        
+        for file_path in dir.rglob("*.png"):
+            if file_path.is_file():
+                relative_path = file_path.relative_to(dir)
+                qrc_content.append(f'        <file>{relative_path.as_posix()}</file>')
 
-    for file_path in RESOURCE_DIR.rglob("*.png"):
-        if file_path.is_file():
-            relative_path = file_path.relative_to(RESOURCE_DIR)
-            qrc_content.append(f'        <file>{relative_path.as_posix()}</file>')
+        qrc_content.append('    </qresource>')
+        qrc_content.append('</RCC>')
 
-    qrc_content.append('    </qresource>')
-    qrc_content.append('</RCC>')
+        with open(qrc_path, "w", encoding="utf-8") as qrc:
+            qrc.write("\n".join(qrc_content))
 
-    with open(QRC_PATH, "w", encoding="utf-8") as qrc:
-        qrc.write("\n".join(qrc_content))
-
-    print(f"✅ {QRC_PATH} generated successfully!")
+        print(f"✅ {qrc_path} generated successfully!")
 
 
 @task(pre=[qrc_codegen])
@@ -49,11 +57,13 @@ def qrc_compile(c):
 
     Usage example: inv qrc-compile
     '''
-    rcc_path = RESOURCE_DIR / "resources_rc.py"
-    command = f"pyside6-rcc \"{str(QRC_PATH)}\" -o \"{str(rcc_path)}\""
-    result = c.run(command, warn=True)
-    if result.ok:
-        print(f"✅ {rcc_path} generated successfully!")
+    for dir, qrc_path in zip(RESOURCES_DIR, QRC_PATHS):
+
+        rcc_path = dir / "resources_rc.py"
+        command = f"pyside6-rcc \"{str(qrc_path)}\" -o \"{str(rcc_path)}\""
+        result = c.run(command, warn=True)
+        if result.ok:
+            print(f"✅ {rcc_path} generated successfully!")
 
 
 @task(pre=[qrc_compile])
@@ -253,8 +263,8 @@ def extract_widget_hierarchy(ui_path: str) -> str:
         return ""
 
 
-def get_relative_qrc_path(ui_path: Path) -> str:
-    return os.path.relpath(QRC_PATH, start=ui_path.parent)
+def get_relative_qrc_path(ui_path: Path, qrc_path: Path = QRC_PATH_DARK) -> str:
+    return os.path.relpath(qrc_path, start=ui_path.parent)
 
 
 def convert_to_qrc_path(icon_path: str) -> str:
