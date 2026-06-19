@@ -59,7 +59,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         # Structural
         self.results_viewer_items.item_child_structural_mode_shapes.clicked.connect(self.add_structural_modal_widget)
         self.results_viewer_items.item_child_structural_frequency_response.clicked.connect(self.add_structural_frequency_response_widget)
-        self.results_viewer_items.item_child_displacement_field.clicked.connect(self.add_structural_harmonic_widget)
+        self.results_viewer_items.item_child_structural_results_fields.clicked.connect(self.add_structural_harmonic_widget)
 
         # Acoustic
         self.results_viewer_items.item_child_acoustic_pressure_field.clicked.connect(self.add_acoustic_harmonic_widget)
