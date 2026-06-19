@@ -17,6 +17,8 @@ __version__ = "0.5.3"
 __release_date__ = "May 2026"
 
 VERSION = __version__
+RELEASE_DATE = __release_date__
+
 APP_ID = f"mopt.vibra.{VERSION}"
 
 VIBRA_DIR = Path(__file__).parent

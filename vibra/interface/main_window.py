@@ -20,7 +20,6 @@ from vibra.interface.formatters.icons import change_icon_color_for_widgets, get_
 from vibra.interface.model_inputs.general.choose_property_to_delete import ChoosePropertyToDelete
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.general.selection_handler import SelectionHandler
-from vibra.interface.help_widget import HelpWidget
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.menus.model_setup_widget import ModelSetupWidget
 from vibra.interface.menus.results_viewer_widget import ResultsViewerWidget
@@ -33,6 +32,7 @@ from vibra.interface.toolbars.analysis_toolbar import AnalysisToolbar
 from vibra.interface.toolbars.view_toolbar import ViewToolbar
 from vibra.interface.ui_generated.main_window_ui import MainWindow_UI
 from vibra.interface.user_input.input_ui import InputUi
+from vibra.interface.user_input.about_vibra import AboutVibraInput
 from vibra.interface.user_input.render_user_preferences import RendererUserPreferencesInput
 from vibra.interface.viewer_3d.render_widgets import GeometryRenderWidget, MeshRenderWidget, ResultsRenderWidget
 from vibra.interface.welcome_widget import WelcomeWidget
@@ -94,7 +94,6 @@ class MainWindow(MainWindow_UI):
         self.render_widgets_stack.addWidget(self.geometry_widget)
         self.render_widgets_stack.addWidget(self.mesh_widget)
         self.render_widgets_stack.addWidget(self.results_widget)
-        self.render_widgets_stack.addWidget(self.help_widget)
         self.render_widgets_stack.addWidget(self.welcome_widget)
         self.view_toolbar = ViewToolbar(self.render_widgets_stack)
 
@@ -276,7 +275,6 @@ class MainWindow(MainWindow_UI):
         self.results_widget = ResultsRenderWidget()
 
         self.welcome_widget = WelcomeWidget()
-        self.help_widget = HelpWidget()
 
     def _load_menu_widgets(self):
         self.results_viewer_widget = ResultsViewerWidget()
@@ -1075,7 +1073,8 @@ class MainWindow(MainWindow_UI):
             self.apply_visualization_filter(visualization_filter)
 
     def action_about_vibra_callback(self):
-        self.render_widgets_stack.setCurrentWidget(self.help_widget)
+        self.close_dialogs()
+        AboutVibraInput()
 
     def close_app(self):
         self.minimize_dialogs()

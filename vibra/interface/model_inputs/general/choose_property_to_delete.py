@@ -21,6 +21,10 @@ class ChoosePropertyToDelete(ChoosePropertyToDelete_UI):
         if not self.properties_formated:
             return
 
+        if len(self.properties_formated) == 1:
+            self.tableWidget.selectAll()
+            self.remove_callback()
+
         self._config_window()
         self._create_connections()
         self._configure_filter_timer()
@@ -143,6 +147,7 @@ class ChoosePropertyToDelete(ChoosePropertyToDelete_UI):
                 self.tableWidget.setItem(row_index, column_index, item)
 
         self.tableWidget.setSortingEnabled(True)
+        self.tableWidget.selectAll()
 
     def filter_table(self):
         filter_text = self.lineEdit_filter.text().lower().replace(" ", "_")
