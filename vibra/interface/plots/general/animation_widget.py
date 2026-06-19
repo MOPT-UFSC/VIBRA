@@ -189,11 +189,7 @@ class AnimationWidget(AnimationWidget_UI):
             self.current_render_widget.update_deformations()
 
     def update_color_and_deformation(self, clear_cache: bool = True):
-        app().main_window.results_widget.update_color_and_deformation(
-            phase=self.phase_in_radians, 
-            magnification_factor=self.magnification_factor,
-            clear_cache=clear_cache,
-            )
+        app().main_window.results_widget.update_color_and_deformation(phase=self.phase_in_radians, clear_cache=clear_cache)
 
     def reset_sliders(self):
         # block the slider signal to avoid multiple render updates

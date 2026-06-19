@@ -196,10 +196,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         phase = lerp(0, 2 * np.pi, t)
 
         with self.update_lock:
-            animation_widget = app().main_window.results_viewer_widget.get_animation_widget()
             self.update_color_and_deformation(
                 phase=phase,
-                magnification_factor=animation_widget.magnification_factor,
                 clear_cache=False,
             )
 
@@ -250,13 +248,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             logging.warning(f"Cache miss on update_animation function for frame {frame}")
             self.cache_frame(frame)
 
-    def update_color_and_deformation(
-        self,
-        phase: float = 0.0,
-        magnification_factor: float = 1.0,
-        clear_cache: bool = True,
-    ):
-        
+    def update_color_and_deformation(self, phase: float = 0.0, clear_cache: bool = True):
+
         self.unit_label = "--"
         if not self.actors_exists():
             return
@@ -321,12 +314,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             if not isinstance(postprocessing, AcousticPostprocessing):
                 return
 
-            data = postprocessing.compute_acoustic_pressure_field(
-                self.mode_index,
-                phase,
-                plot_type,
-                is_modal=True,
-            )
+            data = postprocessing.compute_acoustic_pressure_field(self.mode_index, phase, plot_type, is_modal=True)
             if data is None:
                 return
 
@@ -345,11 +333,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             if not isinstance(postprocessing, AcousticPostprocessing):
                 return
 
-            data = postprocessing.compute_acoustic_pressure_field(
-                self.frequency_index,
-                phase,
-                plot_type,
-            )
+            data = postprocessing.compute_acoustic_pressure_field(self.frequency_index, phase, plot_type)
             if data is None:
                 return
 
@@ -366,11 +350,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             if isinstance(animation_widget, AnimationWidget):
                 animation_widget.update_factor_label(max_value=max_value)
 
-            self.analysis_actor.apply_deformation(
-                displacements,
-                magnification_factor,
-                max_value,
-            )
+            self.analysis_actor.apply_deformation(displacements, animation_widget.magnification_factor,max_value)
             self.edges_actor.extract_data(self.analysis_actor.data)
 
         self.analysis_actor.plot_color_bar(color_scalars, min_value, max_value, colormap)
