@@ -50,7 +50,7 @@ from vibra.interface.plots.acoustic.particle_velocity_inputs import ParticleVelo
 #
 from vibra.interface.plots.acoustic.surface_absorption_coefficient_inputs import SurfaceAbsorptionCoefficientInputs
 from vibra.interface.plots.acoustic.transmission_loss_inputs import TransmissionLossInputs
-from vibra.interface.plots.structural.displacement_field_inputs import PlotDisplacementFieldInputs
+from vibra.interface.plots.structural.structural_response_fields_inputs import StructuralResponseFieldsInputs
 
 #
 from vibra.interface.plots.structural.structural_frequency_response_inputs import PlotStructuralFrequencyResponseInputs
@@ -187,7 +187,7 @@ class InputUi:
 
     def plot_displacement_field(self):
         if app().project.model.analysis_id == AnalysisID.STRUCTURAL_HARMONIC:
-            return self.process_input(PlotDisplacementFieldInputs)
+            return self.process_input(StructuralResponseFieldsInputs)
 
     def plot_structural_frequency_response(self):
         if app().project.model.analysis_id == AnalysisID.STRUCTURAL_HARMONIC:

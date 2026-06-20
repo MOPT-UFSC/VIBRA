@@ -189,11 +189,7 @@ class AnimationWidget(AnimationWidget_UI):
             self.current_render_widget.update_deformations()
 
     def update_color_and_deformation(self, clear_cache: bool = True):
-        app().main_window.results_widget.update_color_and_deformation(
-            phase=self.phase_in_radians, 
-            magnification_factor=self.magnification_factor,
-            clear_cache=clear_cache,
-            )
+        app().main_window.results_widget.update_color_and_deformation(phase=self.phase_in_radians, clear_cache=clear_cache)
 
     def reset_sliders(self):
         # block the slider signal to avoid multiple render updates
@@ -246,7 +242,10 @@ class AnimationWidget(AnimationWidget_UI):
     def update_factor_label(self, max_value=None):
         value = self.magnification_factor_slider.value() / 16
         if isinstance(max_value, float | int):
-            value /= (10 * max_value)
+            if max_value:
+                value /= (10 * max_value)
+            else:
+                value = 1
         self.label_factor.setText(f"{value : .2e}x")
 
     def update_phase_slider_steps(self):
