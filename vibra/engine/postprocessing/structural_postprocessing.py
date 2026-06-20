@@ -103,7 +103,7 @@ class StructuralPostprocessing:
         column: int,
         phase_rad: float,
         data_type: DataTypes,
-        differentiate: int = 0,
+        n_diff: int = 0,
         is_modal: bool = False,
     ):
         if not isinstance(self.solution, ModalSolution | HarmonicSolution):
@@ -114,7 +114,6 @@ class StructuralPostprocessing:
 
         data_complex = self.solution.get_nodal_displacement_at_column(column)
         if self.model.analysis_id == AnalysisID.STRUCTURAL_HARMONIC:
-            n_diff = differentiate
             freq = self.model.frequencies[column]
             data_complex *= (1j * 2 * np.pi * freq)**n_diff
 
