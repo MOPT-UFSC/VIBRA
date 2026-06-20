@@ -16,6 +16,15 @@ from vibra.interface.general.get_user_confirmation_input import GetUserConfirmat
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.structural.definitions.enums import StandardTabType
 
+from vibra.engine.analysis_info import (
+    AnalysisID,
+    AnalysisMethod,
+    AnalysisSetup,
+    FrequencySpacing,
+    HarmonicAnalysisSetup,
+    ModalAnalysisSetup,
+)
+
 # from vibra.utils.utils import are_there_values_different_from_zero
 from vibra.interface.ui_generated.model.structural.excitations.dof_prescription_inputs_ui import DofPrescriptionInputs_UI
 
@@ -36,6 +45,12 @@ class AssignmetType(IntEnum):
     LINES = 1
     POINTS = 2
     NODES = 3
+
+
+class DataType(IntEnum):
+    DISPLACEMENT = 0
+    VELOCITY = 1
+    ACCELERATION = 2
 
 
 class DofPrescriptionInputs(DofPrescriptionInputs_UI):
@@ -193,13 +208,11 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         self.comboBox_rotation_rx.setVisible(element_2d)
         self.comboBox_rotation_ry.setVisible(element_2d)
         self.comboBox_rotation_rz.setVisible(element_2d)
-        self.comboBox_angular_data_type.setVisible(element_2d)
 
         self.label_Rx_constant.setVisible(element_2d)
         self.label_Ry_constant.setVisible(element_2d)
         self.label_Rz_constant.setVisible(element_2d)
 
-        self.label_angular.setVisible(element_2d)
         # self.label_Rx_unit.setVisible(element_2d)
         # self.label_Ry_unit.setVisible(element_2d)
         # self.label_Rz_unit.setVisible(element_2d)
@@ -524,6 +537,9 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         real_values = [value if value is None else np.real(value) for value in prescribed_dof]
         imag_values = [value if value is None else np.imag(value) for value in prescribed_dof]
 
+        if self.comboBox_data_type.currentIndex() != DataType.DISPLACEMENT:
+            self.update_frequencies_setup()
+
         for selected_id in selected_ids:
 
             data = {
@@ -531,6 +547,8 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                 "values" : prescribed_dof,
                 "real_values" : real_values,
                 "imag_values" : imag_values,
+                "data_type" : self.comboBox_data_type.currentText().lower(),
+                "integrate" : self.comboBox_data_type.currentIndex(),
             }
 
             if attribution_type == AssignmetType.SURFACES:
@@ -544,6 +562,24 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
             elif attribution_type == AssignmetType.NODES:
                 self.properties._set_property("prescribed_dof", data, node=selected_id)
+
+    def update_frequencies_setup(self):
+        if not isinstance(self.model.frequencies, np.ndarray):
+            return
+
+        if not any(self.model.frequencies == 0):
+            return
+
+        analysis_setup = self.model.analysis_setup
+        if not isinstance(analysis_setup, HarmonicAnalysisSetup):
+            return
+
+        if analysis_setup.f_min == 0:
+            analysis_setup.f_min = analysis_setup.f_step
+
+        analysis_setup.frequencies = analysis_setup.get_frequencies()
+
+        app().project.configure_analysis(analysis_setup)
 
     def load_table(self, lineEdit : QLineEdit, dof_label : str, direct_load = False):
 
@@ -619,18 +655,14 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         if self.rz_table_path is None:
             self.lineEdit_reset(self.lineEdit_path_table_rz)
 
-    def integrate_and_save_table_files(self, dof_label: str, selected_id: int, selection: str, values: np.ndarray, linear=False, angular=False):
+    def integrate_and_save_table_files(self, dof_label: str, selected_id: int, selection: str, values: np.ndarray):
 
         if self.frequencies[0] == 0:
             self.frequencies[0] = float(1e-6)
 
-        if linear:
-            index_lin = self.comboBox_linear_data_type.currentIndex()
-            values /= ((1j*2*np.pi*self.frequencies)**index_lin)
-
-        if angular:
-            index_ang = self.comboBox_angular_data_type.currentIndex()
-            values /= ((1j*2*np.pi*self.frequencies)**index_ang)
+        n_diff = self.comboBox_data_type.currentIndex()
+        if n_diff:
+            values /= (1j*2*np.pi*self.frequencies)**n_diff
 
         if self.frequencies[0] == float(1e-6):
             self.frequencies[0] = 0
@@ -702,13 +734,13 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         for selected_id in selected_ids:
             
             if self.ux_table_values is not None:
-                self.ux_table_name, self.ux_array = self.integrate_and_save_table_files("Ux", selected_id, selection, self.ux_table_values, linear = True)
+                self.ux_table_name, self.ux_array = self.integrate_and_save_table_files("Ux", selected_id, selection, self.ux_table_values)
 
             if self.uy_table_values is not None:
-                self.uy_table_name, self.uy_array = self.integrate_and_save_table_files("Uy", selected_id, selection, self.uy_table_values, linear = True)
+                self.uy_table_name, self.uy_array = self.integrate_and_save_table_files("Uy", selected_id, selection, self.uy_table_values)
 
             if self.uz_table_values is not None:
-                self.uz_table_name, self.uz_array = self.integrate_and_save_table_files("Uz", selected_id, selection, self.uz_table_values, linear = True)
+                self.uz_table_name, self.uz_array = self.integrate_and_save_table_files("Uz", selected_id, selection, self.uz_table_values)
 
             table_names = [self.ux_table_name, self.uy_table_name, self.uz_table_name]
             table_paths = [self.ux_table_path, self.uy_table_path, self.uz_table_path]
@@ -717,13 +749,13 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
             if element_type_index == 0:
 
                 if self.rx_table_values is not None:
-                    self.rx_table_name, self.rx_array = self.integrate_and_save_table_files("Rx", selected_id, selection, self.rx_table_values, angular = True)
+                    self.rx_table_name, self.rx_array = self.integrate_and_save_table_files("Rx", selected_id, selection, self.rx_table_values)
 
                 if self.ry_table_values is not None:
-                    self.ry_table_name, self.rx_array = self.integrate_and_save_table_files("Ry", selected_id, selection, self.ry_table_values, angular = True)
+                    self.ry_table_name, self.rx_array = self.integrate_and_save_table_files("Ry", selected_id, selection, self.ry_table_values)
 
                 if self.rz_table_values is not None:
-                    self.rz_table_name, self.rx_array = self.integrate_and_save_table_files("Rz", selected_id, selection, self.rz_table_values, angular = True)
+                    self.rz_table_name, self.rx_array = self.integrate_and_save_table_files("Rz", selected_id, selection, self.rz_table_values)
 
                 table_names.extend([self.rx_table_name, self.ry_table_name, self.rz_table_name])
                 table_paths.extend([self.rx_table_path, self.ry_table_path, self.rz_table_path])

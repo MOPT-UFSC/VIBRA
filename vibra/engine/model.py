@@ -560,13 +560,18 @@ class Model:
                 else:
                     pass
 
+        n_int = 0
+        if "integrate" in data.keys():
+            n_int = data.get("integrate", 0)
+
         for node_gdof in global_dof:
             for j, gdof in enumerate(node_gdof):
                 values = data["values"][j]
                 if values is None:
                     continue
-
-                output_data[gdof] = values / den
+    
+                avg_value = values / den
+                output_data[gdof] = avg_value / ((1j * 2 * np.pi * self.frequencies)**n_int)
 
         return output_data
 
