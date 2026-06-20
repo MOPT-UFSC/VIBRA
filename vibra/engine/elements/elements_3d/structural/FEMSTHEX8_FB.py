@@ -1,7 +1,5 @@
 import numpy as np
 from scipy.sparse import csr_matrix
-from scipy.sparse.linalg import eigs
-
 
 # Hourglass base vectors (Table I, Flanagan & Belytschko 1981)
 GAMMA = np.array([[ 1., 1.,-1.,-1.,-1.,-1., 1., 1.],

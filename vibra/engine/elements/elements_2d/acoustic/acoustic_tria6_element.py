@@ -39,7 +39,7 @@ def get_local_coordinates(coords: np.ndarray) -> np.ndarray:
 
     unit_x_axis = loc_x_axis / np.linalg.norm(loc_x_axis)
     unit_y_axis = loc_y_axis / np.linalg.norm(loc_y_axis)
-    unit_z_axis = loc_z_axis / np.linalg.norm(loc_z_axis)
+    unit_z_axis = loc_z_axis / np.linalg.norm(loc_z_axis)  # noqa: F841
 
     x1 = 0.
     x2 = np.dot(vec_12, unit_x_axis)
@@ -658,7 +658,7 @@ def forceF6(ee, coord, connect_face, c_0, rho, Vn):
 
     unit_x_axis = loc_x_axis/np.linalg.norm(loc_x_axis)
     unit_y_axis = loc_y_axis/np.linalg.norm(loc_y_axis)
-    unit_z_axis = loc_z_axis/np.linalg.norm(loc_z_axis)
+    unit_z_axis = loc_z_axis/np.linalg.norm(loc_z_axis)  # noqa: F841
 
     x1 = 0 
     x2 = np.dot(vec21,unit_x_axis)

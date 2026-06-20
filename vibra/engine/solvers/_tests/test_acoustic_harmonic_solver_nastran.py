@@ -1,23 +1,20 @@
+from os.path import dirname
+from pathlib import Path
 
+import numpy as np
+import pytest
 
 from vibra import PROJECT_DIR
+from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.model import Model
 from vibra.engine.properties.fluid import Fluid
-
-from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
+from vibra.engine.serialization.project_paths import ProjectPaths
 from vibra.engine.solvers import HarmonicSolver
-from vibra.project_files.project_file import ProjectFile
 from vibra.interface.data_handler.data_importer import DataImporter
-
-from os.path import dirname
-import pytest
-import numpy as np
-
-from pathlib import Path
 
 
 def _acoustic_model_nastran(path: str, fluid: Fluid) -> Model:
-    
+
     # mesh_setup = dict(minimum_element_size=50, maximum_element_size=50)
 
     model = Model()
@@ -42,18 +39,18 @@ def _acoustic_model_nastran(path: str, fluid: Fluid) -> Model:
     # }
 
     ## normal surface velocity data
-    data_Pa = { 
-                "real_values" : [1],
-                "imag_values" : [0],
-                }
+    data_Pa = {
+        "real_values": [1],
+        "imag_values": [0],
+    }
 
     ## boundary impedance setup
     Zo = fluid.impedance
 
-    data_Z = {  
-              "real_values" : [Zo],
-              "imag_values" : [0],
-              }
+    data_Z = {
+        "real_values": [Zo],
+        "imag_values": [0],
+    }
 
     # model.properties._set_property("surface_velocity", data_Vn, surface=1)
     model.properties._set_property("acoustic_pressure", data_Pa, surface=1)
@@ -83,8 +80,8 @@ def _solve_harmonic_problem(datadir, model: "Model", path: str):
 
     assembler = AcousticAssembler(model)
     assembler.assemble_global_matrices_and_excitations()
-    project_file = ProjectFile(str(datadir))
-    harmonic_solver = HarmonicSolver(assembler, project_file)
+    project_paths = ProjectPaths(datadir)
+    harmonic_solver = HarmonicSolver(assembler, project_paths)
 
     frequencies = model.frequencies
 
@@ -99,11 +96,12 @@ def _solve_harmonic_problem(datadir, model: "Model", path: str):
     external_data = DataImporter.load_spreadsheet_data_for_validation(results_path)
 
     output_pressures = external_data.get("output_surface")
-    reference_solution = output_pressures[:, 1] + 1j*output_pressures[:, 2]
+    reference_solution = output_pressures[:, 1] + 1j * output_pressures[:, 2]
 
     if output_pressures[:, 0].size == frequencies.size:
         diff_abs = np.abs((average_solution - reference_solution) / reference_solution)
         assert np.max(diff_abs) < 0.02
+
 
 @pytest.mark.skip
 def test_solve_model_for_tet4_element(fluid: Fluid, datadir: Path):
@@ -111,17 +109,20 @@ def test_solve_model_for_tet4_element(fluid: Fluid, datadir: Path):
     model = _acoustic_model_nastran(path, fluid)
     _solve_harmonic_problem(datadir, model, path)
 
+
 @pytest.mark.skip
 def test_solve_model_for_tet10_element(fluid: Fluid, datadir: Path):
     path = str(PROJECT_DIR / "validation_files/data/Comsol/tet10_lagrange/rectangular_cavities_tet10_50x30_mm.nas")
     model = _acoustic_model_nastran(path, fluid)
     _solve_harmonic_problem(datadir, model, path)
 
+
 @pytest.mark.skip
 def test_solve_model_for_hex8_element(fluid: Fluid, datadir: Path):
     path = str(PROJECT_DIR / "validation_files/data/Comsol/hex8_linear/rectangular_cavities_hex8_40x30_mm.nas")
     model = _acoustic_model_nastran(path, fluid)
     _solve_harmonic_problem(datadir, model, path)
+
 
 @pytest.mark.skip
 def test_solve_model_for_hex20_element(fluid: Fluid, datadir: Path):

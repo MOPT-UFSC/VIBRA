@@ -1,15 +1,11 @@
 from copy import deepcopy
-from dataclasses import fields
 
-from PySide6.QtWidgets import QDialog, QCheckBox, QFrame, QLineEdit, QPushButton, QSlider, QSpinBox
-from PySide6.QtGui import QIcon, QFont
+from molde.colors import Color
 from PySide6.QtCore import Qt
 
 from vibra import app
-from vibra.interface.ui_generated.project.render.renderer_user_preferences_ui import RendererUserPreferences_UI
-from molde.colors import Color
-
 from vibra.interface.general.pick_color_input import PickColorInput
+from vibra.interface.ui_generated.project.render.renderer_user_preferences_ui import RendererUserPreferences_UI
 
 
 class RendererUserPreferencesInput(RendererUserPreferences_UI):

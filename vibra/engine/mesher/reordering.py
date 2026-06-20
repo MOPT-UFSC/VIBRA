@@ -1,8 +1,6 @@
 
 import numpy as np
-from scipy.sparse import csr_matrix, coo_matrix
-from time import time
-
+from scipy.sparse import coo_matrix, csr_matrix
 from scipy.sparse.csgraph import reverse_cuthill_mckee as rcm
 
 # fmt: off
