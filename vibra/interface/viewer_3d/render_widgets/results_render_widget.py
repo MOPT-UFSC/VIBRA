@@ -288,7 +288,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         elif analysis_id == AnalysisID.STRUCTURAL_HARMONIC:
             analysis_widget = app().main_window.results_viewer_widget.plot_structural_harmonic
             self.frequency_index = analysis_widget.get_selected_frequency_index()
-            self.differentiate = analysis_widget.get_number_of_differentiations()
+            n_diff = analysis_widget.get_number_of_differentiations()
             data_type = analysis_widget.get_data_type()
             self.unit_label = analysis_widget.get_plot_units()
 
@@ -296,7 +296,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             if not isinstance(postprocessing, StructuralPostprocessing):
                 return
 
-            data = postprocessing.compute_structural_response_field(self.frequency_index, phase, data_type, self.differentiate)
+            data = postprocessing.compute_structural_response_field(self.frequency_index, phase, data_type, n_diff)
             if data is None:
                 return
 

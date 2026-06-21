@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>460</width>
+    <width>500</width>
     <height>560</height>
    </rect>
   </property>
@@ -21,13 +21,13 @@
   </property>
   <property name="minimumSize">
    <size>
-    <width>460</width>
+    <width>500</width>
     <height>540</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>460</width>
+    <width>500</width>
     <height>560</height>
    </size>
   </property>
@@ -469,7 +469,7 @@
            </property>
            <property name="maximumSize">
             <size>
-             <width>420</width>
+             <width>480</width>
              <height>16777215</height>
             </size>
            </property>
@@ -554,7 +554,7 @@
                   </property>
                   <property name="maximumSize">
                    <size>
-                    <width>80</width>
+                    <width>100</width>
                     <height>26</height>
                    </size>
                   </property>
@@ -604,8 +604,14 @@
                  <widget class="QComboBox" name="comboBox_displacement_ux">
                   <property name="minimumSize">
                    <size>
-                    <width>90</width>
+                    <width>100</width>
                     <height>26</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>120</width>
+                    <height>16777215</height>
                    </size>
                   </property>
                   <property name="font">
@@ -641,7 +647,7 @@
                   </property>
                   <property name="maximumSize">
                    <size>
-                    <width>80</width>
+                    <width>100</width>
                     <height>26</height>
                    </size>
                   </property>
@@ -665,8 +671,14 @@
                  <widget class="QComboBox" name="comboBox_displacement_uz">
                   <property name="minimumSize">
                    <size>
-                    <width>90</width>
+                    <width>100</width>
                     <height>26</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>120</width>
+                    <height>16777215</height>
                    </size>
                   </property>
                   <property name="font">
@@ -696,8 +708,14 @@
                  <widget class="QComboBox" name="comboBox_displacement_uy">
                   <property name="minimumSize">
                    <size>
-                    <width>90</width>
+                    <width>100</width>
                     <height>26</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>120</width>
+                    <height>16777215</height>
                    </size>
                   </property>
                   <property name="font">
@@ -819,7 +837,7 @@
                   </property>
                   <property name="maximumSize">
                    <size>
-                    <width>80</width>
+                    <width>100</width>
                     <height>26</height>
                    </size>
                   </property>
@@ -880,7 +898,7 @@
                   </property>
                   <property name="maximumSize">
                    <size>
-                    <width>80</width>
+                    <width>100</width>
                     <height>26</height>
                    </size>
                   </property>
@@ -910,7 +928,7 @@
                   </property>
                   <property name="maximumSize">
                    <size>
-                    <width>80</width>
+                    <width>100</width>
                     <height>26</height>
                    </size>
                   </property>
@@ -940,7 +958,7 @@
                   </property>
                   <property name="maximumSize">
                    <size>
-                    <width>80</width>
+                    <width>100</width>
                     <height>26</height>
                    </size>
                   </property>
@@ -999,7 +1017,7 @@
                   </property>
                   <property name="maximumSize">
                    <size>
-                    <width>80</width>
+                    <width>100</width>
                     <height>26</height>
                    </size>
                   </property>
@@ -1058,7 +1076,7 @@
                   </property>
                   <property name="maximumSize">
                    <size>
-                    <width>80</width>
+                    <width>100</width>
                     <height>26</height>
                    </size>
                   </property>
@@ -1086,7 +1104,7 @@
                   </property>
                   <property name="maximumSize">
                    <size>
-                    <width>80</width>
+                    <width>100</width>
                     <height>26</height>
                    </size>
                   </property>
@@ -1114,7 +1132,7 @@
                   </property>
                   <property name="maximumSize">
                    <size>
-                    <width>80</width>
+                    <width>100</width>
                     <height>26</height>
                    </size>
                   </property>
@@ -1142,7 +1160,7 @@
                   </property>
                   <property name="maximumSize">
                    <size>
-                    <width>80</width>
+                    <width>100</width>
                     <height>26</height>
                    </size>
                   </property>
@@ -1170,7 +1188,7 @@
                   </property>
                   <property name="maximumSize">
                    <size>
-                    <width>80</width>
+                    <width>100</width>
                     <height>26</height>
                    </size>
                   </property>
@@ -1249,8 +1267,14 @@
                  <widget class="QComboBox" name="comboBox_rotation_rz">
                   <property name="minimumSize">
                    <size>
-                    <width>90</width>
+                    <width>100</width>
                     <height>26</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>120</width>
+                    <height>16777215</height>
                    </size>
                   </property>
                   <property name="font">
@@ -1280,8 +1304,14 @@
                  <widget class="QComboBox" name="comboBox_rotation_ry">
                   <property name="minimumSize">
                    <size>
-                    <width>90</width>
+                    <width>100</width>
                     <height>26</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>120</width>
+                    <height>16777215</height>
                    </size>
                   </property>
                   <property name="font">
@@ -1311,8 +1341,14 @@
                  <widget class="QComboBox" name="comboBox_rotation_rx">
                   <property name="minimumSize">
                    <size>
-                    <width>90</width>
+                    <width>100</width>
                     <height>26</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>120</width>
+                    <height>16777215</height>
                    </size>
                   </property>
                   <property name="font">
@@ -1477,7 +1513,7 @@
                </property>
                <layout class="QGridLayout" name="gridLayout_3">
                 <property name="leftMargin">
-                 <number>2</number>
+                 <number>4</number>
                 </property>
                 <property name="topMargin">
                  <number>4</number>
@@ -1498,13 +1534,13 @@
                   </property>
                   <property name="minimumSize">
                    <size>
-                    <width>280</width>
+                    <width>260</width>
                     <height>26</height>
                    </size>
                   </property>
                   <property name="maximumSize">
                    <size>
-                    <width>300</width>
+                    <width>360</width>
                     <height>26</height>
                    </size>
                   </property>
@@ -1654,13 +1690,13 @@
                   </property>
                   <property name="minimumSize">
                    <size>
-                    <width>280</width>
+                    <width>260</width>
                     <height>26</height>
                    </size>
                   </property>
                   <property name="maximumSize">
                    <size>
-                    <width>300</width>
+                    <width>360</width>
                     <height>26</height>
                    </size>
                   </property>
@@ -1760,13 +1796,13 @@
                   </property>
                   <property name="minimumSize">
                    <size>
-                    <width>280</width>
+                    <width>260</width>
                     <height>26</height>
                    </size>
                   </property>
                   <property name="maximumSize">
                    <size>
-                    <width>300</width>
+                    <width>360</width>
                     <height>26</height>
                    </size>
                   </property>
@@ -1838,13 +1874,13 @@
                   </property>
                   <property name="minimumSize">
                    <size>
-                    <width>280</width>
+                    <width>260</width>
                     <height>26</height>
                    </size>
                   </property>
                   <property name="maximumSize">
                    <size>
-                    <width>300</width>
+                    <width>360</width>
                     <height>26</height>
                    </size>
                   </property>
@@ -2056,13 +2092,13 @@
                   </property>
                   <property name="minimumSize">
                    <size>
-                    <width>280</width>
+                    <width>260</width>
                     <height>26</height>
                    </size>
                   </property>
                   <property name="maximumSize">
                    <size>
-                    <width>300</width>
+                    <width>360</width>
                     <height>26</height>
                    </size>
                   </property>
@@ -2084,13 +2120,13 @@
                   </property>
                   <property name="minimumSize">
                    <size>
-                    <width>280</width>
+                    <width>260</width>
                     <height>26</height>
                    </size>
                   </property>
                   <property name="maximumSize">
                    <size>
-                    <width>300</width>
+                    <width>360</width>
                     <height>26</height>
                    </size>
                   </property>

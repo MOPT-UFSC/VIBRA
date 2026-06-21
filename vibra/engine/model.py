@@ -302,14 +302,14 @@ class Model:
         if len(table_frequencies) != 1:
             return all_true
 
-        mask = list()
+        solution_steps_mask = list()
         _table_frequencies = np.array(table_frequencies[0], dtype=float)
 
         for freq in _table_frequencies:
             diff_abs = np.min(np.abs(frequencies - freq)) < tol
-            mask.append(bool(diff_abs))
+            solution_steps_mask.append(bool(diff_abs))
 
-        return mask
+        return solution_steps_mask
 
     def has_spectral_content_been_modified(self):
         if isinstance(self.analysis_setup, ModalAnalysisSetup):
@@ -320,14 +320,24 @@ class Model:
         return cond_A or cond_B
 
     def modify_analysis_setup_to_filter_zero_frequency(self, analysis_setup: AnalysisSetup) -> AnalysisSetup:
-        
+
         if not isinstance(analysis_setup, HarmonicAnalysisSetup):
             return analysis_setup
         
         if not analysis_setup.analysis_id == AnalysisID.STRUCTURAL_HARMONIC:
             return analysis_setup
 
-        _frequencies = analysis_setup.get_frequencies()
+        table_exists = self.properties.check_if_there_are_tables_at_the_model()
+
+        if table_exists:
+            tabular_frequency_data = self.get_tabular_frequency_setup()
+            if tabular_frequency_data is None:
+                return analysis_setup
+
+            _frequencies = np.array(tabular_frequency_data[-1], dtype=float)
+
+        else:
+            _frequencies = analysis_setup.get_frequencies()
 
         if not isinstance(_frequencies, np.ndarray):
             return analysis_setup
@@ -347,9 +357,10 @@ class Model:
         new_mask = list()
         for j, freq in enumerate(_frequencies):
             if freq == 0:
-                continue
-
-            new_mask.append(current_mask[j])
+                if table_exists:
+                    new_mask.append(False)
+            else:
+                new_mask.append(current_mask[j])
 
         analysis_setup.solution_steps_mask = new_mask
 
@@ -600,8 +611,12 @@ class Model:
                 values = data["values"][j]
                 if values is None:
                     continue
-    
-                avg_value = values / den
+
+                if isinstance(values, np.ndarray):
+                    avg_value = values[self.solution_steps_mask] / den
+                else:
+                    avg_value = values / den
+
                 output_data[gdof] = avg_value / ((1j * 2 * np.pi * self.frequencies)**n_int)
 
         return output_data
