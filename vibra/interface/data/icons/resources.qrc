@@ -42,6 +42,10 @@
         <file>sync_disabled.png</file>
         <file>sync_enabled.png</file>
         <file>user_preferences_icon.png</file>
+        <file>grab_icon.png</file>
+        <file>rotation_icon.png</file>
+        <file>selection_icon.png</file>
+        <file>zoom_icon.png</file>
         <file>add_narrow.png</file>
         <file>add_notes.png</file>
         <file>add_row_below.png</file>
@@ -51,21 +55,17 @@
         <file>exit_to_app_icon.png</file>
         <file>export_notes_icon.png</file>
         <file>file_export_icon.png</file>
-        <file>grab_icon.png</file>
         <file>legend_toggle.png</file>
         <file>preview_data.png</file>
         <file>remove.png</file>
         <file>reset_settings.png</file>
-        <file>rotation_icon.png</file>
         <file>save_as_2.png</file>
         <file>select_all_icon.png</file>
-        <file>selection_icon.png</file>
         <file>settings_applications.png</file>
         <file>settings_b_roll.png</file>
         <file>start_solution.png</file>
         <file>visibility.png</file>
         <file>visibility_off.png</file>
-        <file>zoom_icon.png</file>
         <file>help_icon.png</file>
         <file>figures/effective_acoustic_impedance_for_DBM_porous_material_models.png</file>
         <file>figures/effective_wavenumber_for_DBM_porous_material_models.png</file>
