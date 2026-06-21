@@ -505,6 +505,17 @@ class ModelProperties:
 
         return False
     
+    def is_there_a_prescribed_velocity_or_acceleration_in_the_model(self) -> bool:
+        for _, property_name, _, data in self.iterate_properties():
+            if property_name != "prescribed_dof":
+                continue
+
+            if isinstance(data, dict):
+                if data.get("integrate"):
+                    return True
+        
+        return False
+    
     def get_entities_without_property(self, property: str, **kwargs):
 
         entities_without_property = list()

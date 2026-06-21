@@ -319,6 +319,42 @@ class Model:
         cond_B = len(self.solution_steps_mask) != int(sum(self.solution_steps_mask))
         return cond_A or cond_B
 
+    def modify_analysis_setup_to_filter_zero_frequency(self, analysis_setup: AnalysisSetup) -> AnalysisSetup:
+        
+        if not isinstance(analysis_setup, HarmonicAnalysisSetup):
+            return analysis_setup
+        
+        if not analysis_setup.analysis_id == AnalysisID.STRUCTURAL_HARMONIC:
+            return analysis_setup
+
+        _frequencies = analysis_setup.get_frequencies()
+
+        if not isinstance(_frequencies, np.ndarray):
+            return analysis_setup
+
+        if not any(_frequencies == 0):
+            return analysis_setup
+
+        current_mask = analysis_setup.solution_steps_mask
+        equally_spaced = analysis_setup.frequency_spacing == FrequencySpacing.EQUALLY_DISTRIBUTED
+
+        if analysis_setup.f_min == 0 and equally_spaced:
+            analysis_setup.f_min = analysis_setup.f_step
+            analysis_setup.frequencies = analysis_setup.get_frequencies()
+        else:
+            analysis_setup.frequencies = _frequencies[_frequencies != 0]
+
+        new_mask = list()
+        for j, freq in enumerate(_frequencies):
+            if freq == 0:
+                continue
+
+            new_mask.append(current_mask[j])
+
+        analysis_setup.solution_steps_mask = new_mask
+
+        return analysis_setup
+
     def is_the_mesh_setup_defined(self):
         if isinstance(self.geometry_path, str | Path):
             if self.is_there_a_geometry_imported():

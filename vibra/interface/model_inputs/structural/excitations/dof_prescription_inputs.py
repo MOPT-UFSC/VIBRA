@@ -6,24 +6,16 @@ from os.path import basename
 import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
-from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
+from PySide6.QtWidgets import QLabel, QLineEdit, QTreeWidgetItem
 
 from vibra import app
+from vibra.engine.analysis_info import AnalysisID
 from vibra.interface import error_title
 from vibra.interface.common.common_interface import update_analysis_setup_in_file
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.structural.definitions.enums import StandardTabType
-
-from vibra.engine.analysis_info import (
-    AnalysisID,
-    AnalysisMethod,
-    AnalysisSetup,
-    FrequencySpacing,
-    HarmonicAnalysisSetup,
-    ModalAnalysisSetup,
-)
 
 # from vibra.utils.utils import are_there_values_different_from_zero
 from vibra.interface.ui_generated.model.structural.excitations.dof_prescription_inputs_ui import DofPrescriptionInputs_UI
@@ -60,20 +52,27 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
 
-        self.model = app().project.model
-        self.mesh = app().project.model.mesh
-        self.properties = app().project.model.properties
-
         self._config_window()
+        self._config_widgets()
         self._initialize()
         self._create_line_edits()
         self._create_connections()
-
-        self._config_widgets()
         self.load_model_info()
 
         while self.keep_window_open:
             self.exec()
+
+    @property
+    def model(self):
+        return app().project.model
+
+    @property
+    def mesh(self):
+        return app().project.model.mesh
+
+    @property
+    def properties(self):
+        return app().project.model.properties
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -162,6 +161,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
     def _create_connections(self):
         #
         self.comboBox_attribution_type.currentIndexChanged.connect(self.attribution_type_callback)
+        self.comboBox_data_type.currentIndexChanged.connect(self.update_combo_box_units_callback)
         self.comboBox_element_type.currentIndexChanged.connect(self.element_type_callback)
         self.comboBox_displacement_ux.currentIndexChanged.connect(self.displacement_ux_callback)
         self.comboBox_displacement_uy.currentIndexChanged.connect(self.displacement_uy_callback)
@@ -191,9 +191,38 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         #
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         #
-        self.geometry_selection_callback()
         self.update_element_type_based_on_geometry_information()
         self.set_all_dof_free_callback()
+        self.update_combo_box_units_callback()
+        self.geometry_selection_callback()
+
+    def update_combo_box_units_callback(self):
+
+        suffixes = ["", "/s", "/s²"]
+        directions = ["x", "y", "z", "x", "y", "z"]
+        data_types = ["{}<sub>{}</sub>:", "d{}<sub>{}</sub>/dt:", "d²{}<sub>{}</sub>/dt²:"]
+
+        index = self.comboBox_data_type.currentIndex()
+        unit_den = suffixes[index]
+        label_width = int(40 + 10 * index)
+
+        for i, (key, combo_box) in enumerate(self.dof_setup_combo_boxes.items()):
+            unit_num = "m" if i < 3 else "rad"
+            combo_box.blockSignals(True)
+            combo_box.setItemText(0, f"Value ({unit_num}{unit_den})")
+            combo_box.blockSignals(False)
+
+            label_unit_constant: QLabel = self.__getattribute__(f"label_{key}_constant")
+            label_unit_table: QLabel = self.__getattribute__(f"label_{key}_table")
+
+            dof_type = "u" if i < 3 else "\u03b8"
+            label_text = data_types[index].format(dof_type, directions[i])
+
+            label_unit_constant.setText(label_text)
+            label_unit_constant.setFixedWidth(label_width)
+
+            label_unit_table.setText(label_text)
+            label_unit_table.setFixedWidth(label_width)
 
     def attribution_type_callback(self):
         if self.comboBox_attribution_type.currentIndex() == 3:
@@ -367,8 +396,6 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         if self.tabWidget_main.currentIndex() == StandardTabType.LIST:
             return
 
-        values = data.get("values", list())
-
         self.reset_input_fields()
 
         element_type = data.get("element_type", None)
@@ -377,12 +404,14 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         else:
             self.comboBox_element_type.setCurrentIndex(ElementFormulation.ELEMENT_3D)
 
+        self.comboBox_data_type.setCurrentIndex(data.get("integrate", 0))
+
         if "table_paths" in data.keys():
     
             self.tabWidget_main.setCurrentIndex(StandardTabType.TABULAR_DATA)
             table_paths = data["table_paths"]
             for index, lineEdit_table in enumerate(self.table_line_edits.values()):
-                if data["element_type"] == "3d_element" and index >= 3:
+                if element_type == "3d_element" and index >= 3:
                     continue
 
                 table_path = table_paths[index]
@@ -391,10 +420,12 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
         else:
 
+            values = data.get("values", list())
             self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)
+
             for index, (unit_label, (lineEdit_real, lineEdit_imag)) in enumerate(self.constant_line_edits.items()):
     
-                if data["element_type"] == "3d_element" and index >= 3:
+                if element_type == "3d_element" and index >= 3:
                     continue
 
                 if values[index] is None:
@@ -409,6 +440,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                 if isinstance(values[index], complex):
                     if values[index] == complex(0):
                         continue
+
                     lineEdit_real.setText(str(np.real(values[index])))
                     lineEdit_imag.setText(str(np.imag(values[index])))
 
@@ -538,7 +570,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         imag_values = [value if value is None else np.imag(value) for value in prescribed_dof]
 
         if self.comboBox_data_type.currentIndex() != DataType.DISPLACEMENT:
-            self.update_frequencies_setup()
+            self.update_analysis_setup_to_filter_zero_frequency()
 
         for selected_id in selected_ids:
 
@@ -547,7 +579,6 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                 "values" : prescribed_dof,
                 "real_values" : real_values,
                 "imag_values" : imag_values,
-                "data_type" : self.comboBox_data_type.currentText().lower(),
                 "integrate" : self.comboBox_data_type.currentIndex(),
             }
 
@@ -563,23 +594,10 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
             elif attribution_type == AssignmetType.NODES:
                 self.properties._set_property("prescribed_dof", data, node=selected_id)
 
-    def update_frequencies_setup(self):
-        if not isinstance(self.model.frequencies, np.ndarray):
-            return
-
-        if not any(self.model.frequencies == 0):
-            return
-
-        analysis_setup = self.model.analysis_setup
-        if not isinstance(analysis_setup, HarmonicAnalysisSetup):
-            return
-
-        if analysis_setup.f_min == 0:
-            analysis_setup.f_min = analysis_setup.f_step
-
-        analysis_setup.frequencies = analysis_setup.get_frequencies()
-
-        app().project.configure_analysis(analysis_setup)
+    def update_analysis_setup_to_filter_zero_frequency(self):
+        if self.model.analysis_id == AnalysisID.STRUCTURAL_HARMONIC:
+            analysis_setup = self.model.modify_analysis_setup_to_filter_zero_frequency(self.model.analysis_setup)
+            app().project.configure_analysis(analysis_setup)
 
     def load_table(self, lineEdit : QLineEdit, dof_label : str, direct_load = False):
 
@@ -974,11 +992,11 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
     def update_tabs_visibility(self):
 
         properties_to_check = [
-                               self.properties.surface_properties,
-                               self.properties.line_properties,
-                               self.properties.point_properties,
-                               self.properties.nodal_properties,
-                               ]
+            self.properties.surface_properties,
+            self.properties.line_properties,
+            self.properties.point_properties,
+            self.properties.nodal_properties,
+        ]
 
         for current_property in properties_to_check:
             for (property, _), data in current_property.items():
@@ -1186,6 +1204,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
+        app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
         return super().closeEvent(a0)
 
     def update_formulation_callback(self, **kwargs):
