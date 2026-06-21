@@ -1,3 +1,6 @@
+# isort: skip_file
+import vibra  # this need to be at the start of the file 
+
 import logging
 import os
 import platform
@@ -5,7 +8,6 @@ import sys
 
 from PySide6.QtCore import QLocale
 
-from vibra import APP_ID, USER_PATH
 from vibra.errors import VibraException
 
 error_message = None
@@ -53,7 +55,7 @@ def configure_logs():
     are shown to users.
     """
     file_formatter = logging.Formatter("%(asctime)s \t | %(levelname)s \t | %(message)s")
-    file_handler = logging.FileHandler(USER_PATH / ".vibra.log", "w+")
+    file_handler = logging.FileHandler(vibra.USER_PATH / ".vibra.log", "w+")
     file_handler.setLevel(logging.INFO)
     file_handler.setFormatter(file_formatter)
 
@@ -104,7 +106,7 @@ def main():
         import ctypes
 
         # This forces the Vibra icon to appear in the taskbar
-        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(APP_ID)
+        ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(vibra.APP_ID)
 
     QLocale.setDefault(QLocale.c())
 

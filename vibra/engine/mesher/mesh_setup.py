@@ -4,26 +4,26 @@ from dataclasses import dataclass, field
 from typing import Literal, Optional
 
 from vibra import errors
-from vibra.engine.mesher.element_setup import (
-    HEXAHEDRON_8,
-    HEXAHEDRON_20,
-    TETRAHEDRON_4,
-    TETRAHEDRON_10,
-    ElementSetup,
-)
+from vibra.engine.mesher.element_setup import GMSH_HEX8, GMSH_HEX20, GMSH_TET4, GMSH_TET10, ElementSetup
+
+
+@dataclass
+class ElementTopology:
+    element_geometry: Literal["tetrahedral", "hexahedral"]
+    element_order: Literal["linear", "quadratic"]
 
 
 @dataclass(kw_only=True)
 class MeshSetup:
     minimum_element_size: float = 0
     maximum_element_size: float = float("inf")
-    geometry_tolerance: float = 1e-6
+    geometry_tolerance: float = 1e-8
     size_factor: float = 1
-    element_type: Literal["tetrahedral", "hexahedral"] = "tetrahedral"
-    shape_function: Literal["linear", "quadratic"] = "linear"
+    element_geometry: Literal["tetrahedral", "hexahedral"] = "tetrahedral"
+    element_order: Literal["linear", "quadratic"] = "linear"
 
     compute_quality_metrics: bool = False
-    merge_connected_volumes: bool = False
+    merge_connected_volumes: bool = True
 
     # Advanced stuff
     refinement_parameters: list[MeshRefinementSetup] = field(default_factory=list)
@@ -36,40 +36,25 @@ class MeshSetup:
             raise errors.InvalidMeshSetupError(msg)
 
     @property
+    def element_topology(self):
+        return ElementTopology(self.element_geometry, self.element_order)
+
+    @property
     def element_setup(self) -> ElementSetup:
         if self.custom_element_setup is not None:
             return self.custom_element_setup
 
-        match self.element_type, self.shape_function:
+        match self.element_geometry, self.element_order:
             case "tetrahedral", "linear":
-                return TETRAHEDRON_4
+                return GMSH_TET4
             case "tetrahedral", "quadratic":
-                return TETRAHEDRON_10
+                return GMSH_TET10
             case "hexahedral", "linear":
-                return HEXAHEDRON_8
+                return GMSH_HEX8
             case "hexahedral", "quadratic":
-                return HEXAHEDRON_20
+                return GMSH_HEX20
             case _:
                 raise NotImplementedError("Invalid element type or shape function!")
-
-    def as_dict(self) -> dict:
-        element_setup = self.element_setup
-
-        return {
-            "element_type": self.element_type,
-            "shape_function": self.shape_function,
-            "minimum_element_size": self.minimum_element_size,
-            "maximum_element_size": self.maximum_element_size,
-            "geometry_tolerance": self.geometry_tolerance,
-            "algorithm_3d": element_setup.algorithm_3d,
-            "mesh_connections": self.mesh_connections,
-            "mesh_quality_metrics": self.mesh_quality_metrics,
-            "mesh_refinement_parameters": [
-                (i.entity_type, i.element_size, i.entity_ids) 
-                for i in self.refinement_parameters
-            ],
-            "size_factor": self.size_factor,
-        }  # fmt: skip
 
 
 @dataclass
@@ -92,3 +77,9 @@ class MeshRefinementSetup:
     def is_empty(self) -> bool:
         return len(self.entity_ids) == 0
 
+
+TETRAHEDRON_4 = ElementTopology("tetrahedral", "linear")
+TETRAHEDRON_10 = ElementTopology("tetrahedral", "quadratic")
+HEXAHEDRON_8 = ElementTopology("hexahedral", "linear")
+HEXAHEDRON_20 = ElementTopology("hexahedral", "quadratic")
+DEFAULT_ELEMENT_TYPE = TETRAHEDRON_4

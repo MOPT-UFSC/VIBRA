@@ -13,6 +13,10 @@ class SplashScreen(Splash_UI):
 
     def _config_widget(self):
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
+        self.progressBar.setStyleSheet("""  
+            QProgressBar{background-color : rgba(255, 255, 255, 0); border-radius: 6px; border-style: ridge; border-width: 0px;}
+            QProgressBar::chunk {background-color : rgb(45, 110, 190); border-radius: 6px; border-style: ridge; border-width: 0px;}
+            """)
 
     def update_position(self, app):
         desktop_geometry = app.primaryScreen().geometry()
@@ -20,5 +24,5 @@ class SplashScreen(Splash_UI):
         pos_y = int((desktop_geometry.height() - self.height()) / 2)
         self.setGeometry(pos_x, pos_y, self.width(), self.height())
 
-    def update_progress(self, value: int):
+    def update_progress(self, value : int):
         self.progressBar.setValue(value)

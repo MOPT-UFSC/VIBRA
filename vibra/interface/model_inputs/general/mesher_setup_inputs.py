@@ -14,11 +14,12 @@ from PySide6.QtWidgets import QTableWidgetItem, QVBoxLayout
 from vibra import ICON_DIR, app
 from vibra.engine.mesher import gmsh_constants
 from vibra.engine.mesher.element_setup import (
-    HEXAHEDRON_8,
-    HEXAHEDRON_20,
-    TETRAHEDRON_4,
-    TETRAHEDRON_10,
+    GMSH_HEX8,
+    GMSH_HEX20,
+    GMSH_TET4,
+    GMSH_TET10,
     ElementSetup,
+    MeshAlgorithms2D,
     MeshAlgorithms3D,
     SubdivisionAlgorithms,
 )
@@ -28,30 +29,22 @@ from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.ui_generated.model.general.mesher_setup_inputs_ui import MesherSetupInputs_UI
 from vibra.interface.ui_generated.plots.general.mesh_quality_histogram_plot_ui import MeshQualityHistogramPlot_UI
 from vibra.utils.interface_utils import block_signals
-
-gmsh_algorithms_2d = [
-    gmsh_constants.MESH_ADAPT_2D,
-    gmsh_constants.AUTOMATIC_2D,
-    gmsh_constants.INITIAL_MESH_ONLY_2D,
-    gmsh_constants.DELAUNAY_2D,
-    gmsh_constants.FRONTAL_DELAUNAY_2D,
-    gmsh_constants.QUASI_STRUCTURED_QUADS_2D,
-]
-
-gmsh_algorithms_3d = [
-    gmsh_constants.DELAUNAY_3D,
-    gmsh_constants.FRONTAL_3D,
-    gmsh_constants.HXT_3D,
-]
-
-map_algorithms_2d = dict(zip(gmsh_algorithms_2d, [0, 1, 2, 3, 4, 5]))
-map_algorithms_3d = dict(zip(gmsh_algorithms_3d, [0, 1, 2]))
+from vibra.utils.subprocess.subprocess_handler import SubProcessHandler, SubProcessStatus
 
 
 class GMSHAlgorithms_3D(IntEnum):
     DELAUNAY_3D = 0
     FRONTAL_3D = 1
     HXT_3D = 2
+
+
+class GMSHAlgorithms_2D(IntEnum):
+    MESH_ADAPT_2D = 0
+    AUTOMATIC_2D = 1
+    INITIAL_MESH_ONLY_2D = 2
+    DELAUNAY_2D = 3
+    FRONTAL_DELAUNAY_2D = 4
+    QUASI_STRUCTURED_QUADS_2D = 5
 
 
 class QualityTableRows(IntEnum):
@@ -94,7 +87,6 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self._config_widgets()
         self._load_current_mesh_setup()
         self.update_combo_boxes_according_to_geometry_info()
-        self.update_advanced_gmsh_controls()
 
         while self.keep_window_open:
             self.exec()
@@ -121,24 +113,26 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.setWindowTitle("Vibra")
 
     def _create_connections(self):
-        self.comboBox_shape_function.currentIndexChanged.connect(self.update_advanced_gmsh_controls)
-        self.comboBox_element_type.currentIndexChanged.connect(self.update_advanced_gmsh_controls)
-
-        self.pushButton_syncrhonize.clicked.connect(self.synchronize_button_callback)
+        #
+        self.comboBox_element_geometry.currentIndexChanged.connect(self.element_topology_changed_callback)
+        self.comboBox_element_order.currentIndexChanged.connect(self.element_topology_changed_callback)
+        #
         self.doubleSpinBox_maximum_element_size.valueChanged.connect(self.maximum_element_size_changed_callback)
-
+        #
         self.pushButton_add.clicked.connect(self.add_button_callback)
+        self.pushButton_apply.clicked.connect(self.apply_callback)
+        self.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
+        self.pushButton_cancel.clicked.connect(self.close)
         self.pushButton_delete.clicked.connect(self.remove_callback)
-        self.pushButton_show_bad_elements.clicked.connect(self.plot_bad_elements)
         self.pushButton_plot_histogram.clicked.connect(self.plot_mesh_parameter_histogram)
+        self.pushButton_show_bad_elements.clicked.connect(self.plot_bad_elements)
+        self.pushButton_syncrhonize.clicked.connect(self.synchronize_button_callback)
         # #
         # self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         # #
         self.tableWidget_refining_mesh_data.itemClicked.connect(self.mesh_refinement_item_clicked_callback)
         self.tableWidget_mesh_quality.itemClicked.connect(self.mesh_quality_item_clicked_callback)
-        self.pushButton_generate_mesh.clicked.connect(self.generate_mesh_callback)
-        self.pushButton_exit.clicked.connect(self.close)
-
+        #
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
     def _config_widgets(self):
@@ -151,21 +145,21 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.comboBox_recombine_all.setDisabled(True)
         #
         self.pushButton_show_bad_elements.setDisabled(True)
-        self.pushButton_generate_mesh.setAutoDefault(False)
+        self.pushButton_apply.setAutoDefault(False)
+        self.pushButton_apply_and_close.setAutoDefault(False)
         #
         self.lineEdit_selected_ids.setDisabled(True)
         self.pushButton_plot_histogram.setDisabled(True)
 
     def _load_current_mesh_setup(self):
         mesh_setup = app().project.model.mesh_setup
-
         if mesh_setup is None:
             self._load_initial_element_size()
             self._show_quality_table(False)
             return
 
         self.tmp_refinement_parameters = deepcopy(mesh_setup.refinement_parameters)
-        self.update_element_type(mesh_setup.element_setup)
+        self.update_interface_controls(mesh_setup.element_setup)
 
         self.doubleSpinBox_maximum_element_size.setValue(mesh_setup.maximum_element_size)
         self.doubleSpinBox_minimum_element_size.setValue(mesh_setup.minimum_element_size)
@@ -225,7 +219,8 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
     def tab_event_callback(self):
         mesh_quality_tab = self.tabWidget_main.currentIndex() == MeshSetupTabs.MESH_QUALITY
-        self.pushButton_generate_mesh.setDisabled(mesh_quality_tab)
+        self.pushButton_apply.setDisabled(mesh_quality_tab)
+        self.pushButton_apply_and_close.setDisabled(mesh_quality_tab)
 
     def mesh_refinement_item_clicked_callback(self, item: QTableWidgetItem):
         row = item.row()
@@ -300,20 +295,33 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.tmp_refinement_parameters.pop(current_row)
         self.update_mesh_refinement_table()
 
-    def update_element_type(self, element_setup: ElementSetup):
+    def update_interface_controls(self, element_setup: ElementSetup):
+
         match element_setup.element_order:
             case 1:
-                self.comboBox_shape_function.setCurrentText("Linear")
+                self.comboBox_element_order.setCurrentText("Linear")
             case 2:
-                self.comboBox_shape_function.setCurrentText("Quadratic")
+                self.comboBox_element_order.setCurrentText("Quadratic")
             case _:
                 raise NotImplementedError("Invalid element order")
 
         match element_setup.subdivision_algorithm:
             case SubdivisionAlgorithms.NO_SUBDIVISION:
-                self.comboBox_element_type.setCurrentText("Tetrahedral")
+                self.comboBox_element_geometry.setCurrentText("Tetrahedral")
             case SubdivisionAlgorithms.ALL_HEXAHEDRA_SUBDIVISION:
-                self.comboBox_element_type.setCurrentText("Hexahedral")
+                self.comboBox_element_geometry.setCurrentText("Hexahedral")
+
+        match element_setup.algorithm_2d:
+            case MeshAlgorithms2D.MESH_ADAPT_2D:
+                self.comboBox_2d_algorithm.setCurrentIndex(GMSHAlgorithms_2D.MESH_ADAPT_2D)
+            case MeshAlgorithms2D.AUTOMATIC_2D:
+                self.comboBox_2d_algorithm.setCurrentIndex(GMSHAlgorithms_2D.AUTOMATIC_2D)
+            case MeshAlgorithms2D.INITIAL_MESH_ONLY_2D:
+                self.comboBox_2d_algorithm.setCurrentIndex(GMSHAlgorithms_2D.INITIAL_MESH_ONLY_2D)
+            case MeshAlgorithms2D.DELAUNAY_2D:
+                self.comboBox_2d_algorithm.setCurrentIndex(GMSHAlgorithms_2D.DELAUNAY_2D)
+            case MeshAlgorithms2D.QUASI_STRUCTURED_QUADS_2D:
+                self.comboBox_2d_algorithm.setCurrentIndex(GMSHAlgorithms_2D.QUASI_STRUCTURED_QUADS_2D)
 
         match element_setup.algorithm_3d:
             case MeshAlgorithms3D.DELAUNAY_3D:
@@ -323,22 +331,57 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             case MeshAlgorithms3D.HXT_3D:
                 self.comboBox_3d_algorithm.setCurrentIndex(GMSHAlgorithms_3D.HXT_3D)
 
-    def generate_mesh_callback(self):
+        self.update_mesh_quality_metric_buttons_accessibility()
 
-        def generate():
-            mesh_setup = self._get_mesh_setup()
-            app().project.configure_mesh(mesh_setup)
-            app().project.generate_mesh()
+    def _generate_in_subprocess(self) -> bool:
+        mesh_setup = self._get_mesh_setup()
+        app().project.configure_mesh(mesh_setup)
+        app().project.write_to_working_dir()
 
-        self.hide()
+        status = SubProcessHandler("utils/subprocess/generate_mesh_subprocess.py").run()
+        if status != SubProcessStatus.SUCCESS:
+            return False
 
-        LoadingWindow(generate).run()
-        LoadingWindow(self.actions_to_finalize).run()
+        def load_mesh_from_working_dir():
+            logging.info("Loading generated mesh... [10/100]")
+            app().project.model.mesh = app().project.project_reader.read_mesh()
 
-        self.update_mesh_refinement_table()
-        self.update_mesh_quality_table()
+            logging.info("Reading model properties... [65/100]")
+            app().project.model.properties = app().project.project_reader.read_model_properties()
 
-        self.complete = True
+            logging.info("Updating project state... [85/100]")
+            app().project.reset_solution()
+            app().project.mark_project_as_modified()
+
+        LoadingWindow(load_mesh_from_working_dir).run()
+
+        return True
+
+    def apply_callback(self, close_window: bool = False):
+        def generate_mesh() -> bool:
+            self.hide()
+
+            if app().config.user_preferences.generate_mesh_in_subprocess:
+                if not self._generate_in_subprocess():
+                    return False
+            else:
+                def generate():
+                    mesh_setup = self._get_mesh_setup()
+                    app().project.generate_mesh(mesh_setup)
+
+                LoadingWindow(generate).run()
+
+            LoadingWindow(self.actions_to_finalize).run()
+
+            self.update_mesh_refinement_table()
+            self.update_mesh_quality_table()
+
+            return True
+
+        self.complete = generate_mesh()
+
+        if close_window:
+            self.close()
 
     def update_mesh_refinement_table(self):
         refinement_parameters = self.tmp_refinement_parameters
@@ -458,11 +501,11 @@ class MesherSetupInputs(MesherSetupInputs_UI):
                 return color_names.GREEN
 
     def _get_mesh_setup(self) -> MeshSetup:
-        element_type = self.comboBox_element_type.currentText().lower()  # not great
-        assert element_type in ("tetrahedral", "hexahedral")
+        element_geometry = self.comboBox_element_geometry.currentText().lower()  # not great
+        assert element_geometry in ("tetrahedral", "hexahedral")
 
-        shape_function = self.comboBox_shape_function.currentText().lower()  # not great
-        assert shape_function in ("linear", "quadratic")
+        element_order = self.comboBox_element_order.currentText().lower()  # not great
+        assert element_order in ("linear", "quadratic")
 
         try:
             geometry_tolerance = float(self.lineEdit_geometry_tolerance.text())
@@ -480,8 +523,8 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             maximum_element_size=self.doubleSpinBox_maximum_element_size.value(),
             geometry_tolerance=geometry_tolerance,
             size_factor=self.doubleSpinBox_size_factor.value(),
-            element_type=element_type,
-            shape_function=shape_function,
+            element_geometry=element_geometry,
+            element_order=element_order,
             merge_connected_volumes=merge_connected_volumes,
             compute_quality_metrics=compute_quality_metrics,
             custom_element_setup=self._get_custom_element_setup(),
@@ -489,22 +532,22 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         )
 
     def _get_custom_element_setup(self) -> ElementSetup:
-        element_type = self.comboBox_element_type.currentText().lower()  # not great
-        assert element_type in ("tetrahedral", "hexahedral")
+        element_geometry = self.comboBox_element_geometry.currentText().lower()  # not great
+        assert element_geometry in ("tetrahedral", "hexahedral")
 
-        shape_function = self.comboBox_shape_function.currentText().lower()  # not great
-        assert shape_function in ("linear", "quadratic")
+        element_order = self.comboBox_element_order.currentText().lower()  # not great
+        assert element_order in ("linear", "quadratic")
 
         custom_element_setup = None
-        match element_type, shape_function:
+        match element_geometry, element_order:
             case "tetrahedral", "linear":
-                custom_element_setup = TETRAHEDRON_4.copy()
+                custom_element_setup = GMSH_TET4.copy()
             case "tetrahedral", "quadratic":
-                custom_element_setup = TETRAHEDRON_10.copy()
+                custom_element_setup = GMSH_TET10.copy()
             case "hexahedral", "linear":
-                custom_element_setup = HEXAHEDRON_8.copy()
+                custom_element_setup = GMSH_HEX8.copy()
             case "hexahedral", "quadratic":
-                custom_element_setup = HEXAHEDRON_20.copy()
+                custom_element_setup = GMSH_HEX20.copy()
 
         assert custom_element_setup is not None
         match self.comboBox_3d_algorithm.currentIndex():
@@ -530,20 +573,19 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         app().main_window.analysis_toolbar.reset_solution_action.setDisabled(True)
         app().main_window.analysis_toolbar.check_analysis_setup_callback()
         app().main_window.action_export_element_transfer_data.setDisabled(True)
-        app().main_window.update_symbols()
 
-    def get_element_type(self) -> ElementSetup:
-        element_type = self.comboBox_element_type.currentText().lower()
-        shape_function = self.comboBox_shape_function.currentText().lower()
+    def get_element_setup(self) -> ElementSetup | None:
+        element_geometry = self.comboBox_element_geometry.currentText().lower()
+        element_order = self.comboBox_element_order.currentText().lower()
 
-        if element_type == "tetrahedral" and shape_function == "linear":
-            return TETRAHEDRON_4
-        elif element_type == "tetrahedral" and shape_function == "quadratic":
-            return TETRAHEDRON_10
-        elif element_type == "hexahedral" and shape_function == "linear":
-            return HEXAHEDRON_8
-        elif element_type == "hexahedral" and shape_function == "quadratic":
-            return HEXAHEDRON_20
+        if element_geometry == "tetrahedral" and element_order == "linear":
+            return GMSH_TET4
+        elif element_geometry == "tetrahedral" and element_order == "quadratic":
+            return GMSH_TET10
+        elif element_geometry == "hexahedral" and element_order == "linear":
+            return GMSH_HEX8
+        elif element_geometry == "hexahedral" and element_order == "quadratic":
+            return GMSH_HEX20
         else:
             return None
             # raise NotImplementedError(f"Element type not defined!")
@@ -554,28 +596,22 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             return
 
         if not mesh.are_there_volumes_in_geometry():
-            self.comboBox_element_type.removeItem(1)
-            self.comboBox_shape_function.removeItem(1)
-        
-    def update_advanced_gmsh_controls(self):
-        mesh = app().project.model.mesh
-        if mesh is None:
-            return
+            self.comboBox_element_geometry.removeItem(1)
+            self.comboBox_element_order.removeItem(1)
 
-        volume_exists = mesh.are_there_volumes_in_geometry()
-        element_type = self.get_element_type()
+    def element_topology_changed_callback(self):
+        element_setup = self.get_element_setup()
+        self.update_interface_controls(element_setup)
 
-        enable_mesh_metrics = volume_exists and element_type in [None, TETRAHEDRON_4, TETRAHEDRON_10]
+    def update_mesh_quality_metric_buttons_accessibility(self):
+        volume_exists = app().project.model.mesh.are_there_volumes_in_geometry()
+        is_tetrahedral = self.comboBox_element_geometry.currentText() == "Tetrahedral"
+        enable_mesh_metrics = volume_exists and is_tetrahedral
         self.comboBox_mesh_quality_metrics.setEnabled(enable_mesh_metrics)
 
-        if element_type not in [None, TETRAHEDRON_4, TETRAHEDRON_10]:
+        if not is_tetrahedral:
             self.comboBox_mesh_quality_metrics.setCurrentText("Disabled")
-            self.comboBox_mesh_quality_metrics.setDisabled(True)
-            if element_type is None:
-                return
 
-        self.comboBox_2d_algorithm.setCurrentIndex(map_algorithms_2d[element_type.algorithm_2d])
-        self.comboBox_3d_algorithm.setCurrentIndex(map_algorithms_3d[element_type.algorithm_3d])
     def mesh_quality_item_clicked_callback(self, item):
         self.pushButton_show_bad_elements.setEnabled(False)
 
@@ -745,12 +781,12 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         if not read._continue:
             return True
 
-        self.generate_mesh_callback()
+        self.apply_callback()
 
     def keyPressEvent(self, event: QKeyEvent):
         match event.key():
             case Qt.Key.Key_Enter | Qt.Key.Key_Return:
-                self.generate_mesh_callback()
+                self.apply_callback()
             case Qt.Key_Delete:
                 self.remove_callback()
             case Qt.Key_Escape:

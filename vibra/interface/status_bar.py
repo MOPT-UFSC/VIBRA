@@ -108,15 +108,22 @@ class StatusBar(QStatusBar):
             self.selected_volumes_label.setText(f"Selected volume: {str_volumes}")
 
     def update_mesh_information(self):
-        nodes, surface_elements, solid_elements = app().project.model.mesh.get_mesh_info()
+        mesh = app().project.model.mesh
+        if mesh is None:
+            return
+
+        nodes, surface_elements, solid_elements = mesh.get_mesh_info()
         self.nodes_label.setText(f"Nodes: {nodes}")
         self.surface_elements_label.setText(f"Surface elements: {surface_elements}")
         self.solid_elements_label.setText(f"Solid elements: {solid_elements}")
         self.reset_mesh_info_visibility(key=True)
 
     def update_geometry_information(self):
+        mesh = app().project.model.mesh
+        if mesh is None:
+            return
 
-        geometry_info = app().project.model.mesh.geometry_information
+        geometry_info = mesh.geometry_information
 
         points = geometry_info.get("points", "--")
         if isinstance(points, list):

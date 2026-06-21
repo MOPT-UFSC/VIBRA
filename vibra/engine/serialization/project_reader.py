@@ -10,33 +10,19 @@ import h5py
 import numpy as np
 from PIL.Image import Image
 
-from vibra.engine.analysis_info import (
-    AnalysisID,
-    AnalysisSetup,
-    HarmonicAnalysisSetup,
-    ModalAnalysisSetup,
-)
+from vibra.engine.analysis_info import AnalysisID, AnalysisSetup, HarmonicAnalysisSetup, ModalAnalysisSetup
 from vibra.engine.assemblers import AcousticAssembler, StructuralAssembler
 from vibra.engine.mesher.element_setup import ElementSetup
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.mesh_setup import MeshRefinementSetup, MeshSetup
 from vibra.engine.model import Model
-from vibra.engine.properties import (
-    Fluid,
-    FluidLibrary,
-    Material,
-    MaterialLibrary,
-)
+from vibra.engine.properties import Fluid, FluidLibrary, Material, MaterialLibrary
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.engine.serialization.file_helpers import read_image, read_json
-from vibra.engine.solution import (
-    HarmonicSolution,
-    ModalSolution,
-    Solution,
-)
+from vibra.engine.serialization.lazy_hdf5_matrix import LazyHDF5MatrixLoader
+from vibra.engine.solution import HarmonicSolution, ModalSolution, Solution
 from vibra.engine.solution.lazy_harmonic_solution import LazyHarmonicSolution
 from vibra.engine.solvers import HarmonicSolver, ModalSolver
-from vibra.project_files.lazy_hdf5_matrix import LazyHDF5MatrixLoader
 
 from .project_paths import ProjectPaths
 
@@ -75,23 +61,24 @@ class ProjectReader:
         if model is None:
             model = Model()
 
-        logging.info("Reading model.")
+        logging.info("Reading the model data... (25%)")
 
         model.reset_variables()
         model.thumbnail = self.read_thumbnail()
-        model.analysis_id = self.read_current_analysis_id()
+        model.geometry_path = self.read_geometry_path()
 
         analysis_setup = self.read_analysis_setup()
+
         if analysis_setup is not None:
             model.set_analysis_setup(analysis_setup)
-
-        model.mesh_setup = self.read_mesh_setup()
-        model.properties = self.read_model_properties()
-        model.geometry_path = self.read_geometry_path()
 
         if self.project_paths.mesh_data_filepath.exists():
             model.mesh = self.read_mesh()
 
+        mesh_setup = self.read_mesh_setup()
+        model.set_mesh_setup(mesh_setup)
+
+        model.properties = self.read_model_properties()
         model.solution = self.read_solution(model)
 
         return model
@@ -122,6 +109,7 @@ class ProjectReader:
             return None
 
         analysis_id = AnalysisID(analysis_setup_dict.get("analysis_id", AnalysisID.NO_ANALYSIS))
+        analysis_setup_dict.update({"analysis_id": analysis_id})
 
         if analysis_id.is_harmonic():
             return HarmonicAnalysisSetup(**analysis_setup_dict)
@@ -149,13 +137,23 @@ class ProjectReader:
         if custom_element is not None:
             custom_element = ElementSetup(**custom_element)
 
+        if "element_type" in mesh_setup_dict.keys():
+            element_geometry = mesh_setup_dict.get("element_type")
+        else:
+            element_geometry = mesh_setup_dict.get("element_geometry", "tetrahedral")
+
+        if "shape_function" in mesh_setup_dict.keys():
+            element_order = mesh_setup_dict.get("shape_function")
+        else:
+            element_order = mesh_setup_dict.get("element_order", "linear")
+
         mesh_setup = MeshSetup(
             minimum_element_size=mesh_setup_dict.get("minimum_element_size", 0),
             maximum_element_size=mesh_setup_dict.get("maximum_element_size", float("inf")),
             geometry_tolerance=mesh_setup_dict.get("geometry_tolerance", 1e-6),
             size_factor=mesh_setup_dict.get("size_factor", 1),
-            element_type=mesh_setup_dict.get("element_type", "tetrahedral"),
-            shape_function=mesh_setup_dict.get("shape_function","linear"),
+            element_geometry=element_geometry,
+            element_order=element_order,
             compute_quality_metrics=mesh_setup_dict.get("compute_quality_metrics", False),
             merge_connected_volumes=mesh_setup_dict.get("merge_connected_volumes", False),
             refinement_parameters=refinement_parameters,
@@ -263,6 +261,7 @@ class ProjectReader:
 
         mesh.process_upwards_adjacencies_from_entities()
         mesh.process_mesh_related_mappings()
+        mesh.update_element_topology_based_on_connectivity()
         mesh.mesh_quality_data = self.read_mesh_quality_metrics()
 
         return mesh
@@ -415,7 +414,7 @@ class ProjectReader:
         if model.analysis_id.is_harmonic():
             return self.read_harmonic_solution()
         elif model.analysis_id.is_modal():
-            return self.read_modal_solution()
+            return self.read_modal_solution(model)
         else:
             return None
 
@@ -425,17 +424,15 @@ class ProjectReader:
 
         return LazyHarmonicSolution(self.project_paths)
 
-    def read_modal_solution(self) -> Optional[ModalSolution]:
+    def read_modal_solution(self, model: Model) -> Optional[ModalSolution]:
         if not self.project_paths.modal_solution_filepath.exists():
             return None
-
-        analysis_id = self.read_current_analysis_id()
 
         with h5py.File(self.project_paths.modal_solution_filepath, "r") as file:
             file: h5py.File
 
             return ModalSolution(
-                analysis_id=analysis_id,
+                analysis_id=model.analysis_id,
                 natural_frequencies=file["frequencies"],
                 modal_shapes=file["solution"],
                 displacement_dof=file.get("displacement_dof"),

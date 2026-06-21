@@ -1,5 +1,6 @@
-import numpy as np
 from numbers import Number
+
+import numpy as np
 
 from vibra import errors
 from vibra.engine.analysis_info import (
@@ -15,7 +16,7 @@ class AnalysisChecker:
     def __init__(self, model: Model):
         self.model = model
 
-    def check_analysis_requirements(self):
+    def check_analysis_requirements(self, is_resume: bool = False):
         match self.model.analysis_id:
             case AnalysisID.STRUCTURAL_MODAL:
                 self.check_structural_modal_analysis()
@@ -30,15 +31,15 @@ class AnalysisChecker:
 
     def check_analysis_setup(self, analysis_id_to_check: AnalysisID):
 
-        if AnalysisID(self.model.analysis_id).is_harmonic():
+        analysis_id = self.model.analysis_id
+        if AnalysisID(analysis_id).is_harmonic():
             if not isinstance(self.model.analysis_setup, HarmonicAnalysisSetup):
                 raise errors.InvalidModelSetupError("A HarmonicAnalysisSetup is needed to proceed with the analysis solution.")
 
-        if AnalysisID(self.model.analysis_id).is_modal():
-            if not isinstance(self.model.analysis_setup,ModalAnalysisSetup):               
+        if AnalysisID(analysis_id).is_modal():
+            if not isinstance(self.model.analysis_setup, ModalAnalysisSetup):
                 raise errors.InvalidModelSetupError("A ModalAnalysisSetup is needed to proceed with the analysis solution.")
 
-        analysis_id = self.model.analysis_id
         if analysis_id_to_check != analysis_id:
             raise errors.InvalidAnalysisSetupError(
                 f"The solver expects an '{analysis_id_to_check.name}' analysis type \
@@ -48,13 +49,15 @@ class AnalysisChecker:
         if not self.model.is_there_a_valid_analysis_setup():
             raise errors.InvalidAnalysisSetupError("An invalid analysis setup has been configured.")
 
-    def check_acoustic_harmonic_analysis(self):
+    def check_acoustic_harmonic_analysis(self, is_resume: bool = False):
+        self.check_can_resume(is_resume)
         self.check_mesh()
         self.check_contains_volumes()
         self.check_fluids_volumes()
         self.check_acoustic_harmonic_excitations()
 
-    def check_structural_harmonic_analysis(self):
+    def check_structural_harmonic_analysis(self, is_resume: bool = False):
+        self.check_can_resume(is_resume)
         self.check_mesh()
 
         if self.model.mesh.are_there_volumes_in_geometry():
@@ -67,13 +70,15 @@ class AnalysisChecker:
         if self.model.analysis_setup.analysis_method == AnalysisMethod.MODE_SUPERPOSITION:
             self.check_mode_superposition_prescribed_dof_criterion()
 
-    def check_acoustic_modal_analysis(self):
+    def check_acoustic_modal_analysis(self, is_resume: bool = False):
+        self.check_can_resume(is_resume)
         self.check_mesh()
         self.check_contains_volumes()
         self.check_fluids_volumes()
         self.check_frequency_varying_fluid_properties_for_modal_analysis()
 
-    def check_structural_modal_analysis(self):
+    def check_structural_modal_analysis(self, is_resume: bool = False):
+        self.check_can_resume(is_resume)
         self.check_mesh()
 
         if self.model.mesh.are_there_volumes_in_geometry():
@@ -82,6 +87,10 @@ class AnalysisChecker:
             self.check_materials_surfaces()
 
     # common checkers:
+    def check_can_resume(self, is_resume: bool):
+        if is_resume and not self.model.can_resume_solution:
+            raise errors.InvalidAnalysisSetupError("Analysis can not be resumed.")
+
     def check_mesh(self):
         mesh = self.model.mesh
         if mesh is None:

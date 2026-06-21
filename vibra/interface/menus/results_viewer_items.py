@@ -1,10 +1,11 @@
-from PySide6.QtGui import QPen
+from molde import Color
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QPen
 
 from vibra import app
 from vibra.engine import AnalysisID
-from vibra.interface.menus.common_menu_items import CommonMenuItems
-from molde import Color
+from vibra.interface.menus.common_menu_items import ChildTreeWidgetItem, CommonMenuItems
+
 
 class ResultsViewerItems(CommonMenuItems):
     """Menu Items
@@ -27,7 +28,7 @@ class ResultsViewerItems(CommonMenuItems):
         ## Structural results items
         self.item_top_results_viewer_structural = self.add_top_item("Results Viewer - Structural")
         self.item_child_structural_mode_shapes = self.add_item("Plot Structural Mode Shapes")
-        self.item_child_displacement_field = self.add_item("Plot Displacement Field")
+        self.item_child_structural_results_fields = self.add_item("Structural Results Fields")
         self.item_child_structural_frequency_response = self.add_item("Plot Structural Frequency Response")
         # self.item_child_reaction_frequency_response = self.add_item("Plot Reactions Frequency Response")
         # self.item_child_stress_field = self.add_item("Plot Stress Field")
@@ -39,7 +40,7 @@ class ResultsViewerItems(CommonMenuItems):
         self.item_child_acoustic_pressure_field = self.add_item("Acoustic Pressure Field")
         self.item_child_acoustic_pressure_waveform = self.add_item("Acoustic Pressure Waveform")
         self.item_child_acoustic_pressure_frequency_response = self.add_item("Acoustic Pressure Frequency Response")
-        self.item_child_acoustic_pressure_frequency_response_function = self.add_item("Acoustic Presssure Frequency Response Function")
+        self.item_child_acoustic_pressure_frf = self.add_item("Acoustic Presssure FRF")
         self.item_child_allowable_pulsations_for_reciprocating_compressor = self.add_item("Allowable Pulsation (Reciprocating Compressor)")
         self.item_child_allowable_pulsations_for_screw_compressor = self.add_item("Allowable Pulsation (Screw Compressor)")
         self.item_child_TL_NR = self.add_item("Transmission Loss or Attenuation")
@@ -100,7 +101,7 @@ class ResultsViewerItems(CommonMenuItems):
         self.item_child_acoustic_mode_shapes.setDisabled(key)
         self.item_child_acoustic_pressure_field.setDisabled(key)
         self.item_child_acoustic_pressure_frequency_response.setDisabled(key)
-        self.item_child_acoustic_pressure_frequency_response_function.setDisabled(key)
+        self.item_child_acoustic_pressure_frf.setDisabled(key)
         self.item_child_allowable_pulsations_for_reciprocating_compressor.setDisabled(key)
         self.item_child_allowable_pulsations_for_screw_compressor.setDisabled(key)
         self.item_child_TL_NR.setDisabled(key)
@@ -121,7 +122,7 @@ class ResultsViewerItems(CommonMenuItems):
 
     def modify_structural_results_viewer_items(self, key: bool):
         self.item_top_results_viewer_structural.setHidden(key)
-        self.item_child_displacement_field.setDisabled(key)
+        self.item_child_structural_results_fields.setDisabled(key)
         self.item_child_structural_frequency_response.setDisabled(key)
         # self.item_child_reaction_frequency_response.setDisabled(key)
         # self.item_child_stress_field.setDisabled(key)
@@ -161,7 +162,7 @@ class ResultsViewerItems(CommonMenuItems):
 
         if analysis_id == AnalysisID.STRUCTURAL_HARMONIC:
             self.item_child_structural_frequency_response.setDisabled(False)
-            self.item_child_displacement_field.setDisabled(False)
+            self.item_child_structural_results_fields.setDisabled(False)
             # self.item_child_reaction_frequency_response.setDisabled(False)
             # self.item_child_stress_field.setDisabled(False)
             # self.item_child_stress_frequency_response.setDisabled(False)
@@ -174,7 +175,7 @@ class ResultsViewerItems(CommonMenuItems):
         
         elif analysis_id in [AnalysisID.ACOUSTIC_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
             if analysis_id == AnalysisID.COUPLED_HARMONIC:
-                self.item_child_displacement_field.setDisabled(False)
+                self.item_child_structural_results_fields.setDisabled(False)
                 self.item_child_structural_frequency_response.setDisabled(False)
                 # self.item_child_stress_field.setDisabled(False)
                 # self.item_child_stress_frequency_response.setDisabled(False)
@@ -182,7 +183,7 @@ class ResultsViewerItems(CommonMenuItems):
 
             self.item_child_acoustic_pressure_field.setDisabled(False)
             self.item_child_acoustic_pressure_frequency_response.setDisabled(False)
-            self.item_child_acoustic_pressure_frequency_response_function.setDisabled(False)
+            self.item_child_acoustic_pressure_frf.setDisabled(False)
             self.item_child_allowable_pulsations_for_reciprocating_compressor.setDisabled(False)
             self.item_child_allowable_pulsations_for_screw_compressor.setDisabled(False)
             self.item_child_acoustic_pressure_waveform.setDisabled(False)
@@ -194,6 +195,7 @@ class ResultsViewerItems(CommonMenuItems):
         self.update_allowable_pulsation_criteria_visibility_for_reciprocating_compressor(analysis_id)
         self.update_allowable_pulsation_criteria_visibility_for_screw_compressor(analysis_id)
         self.update_tree_visibility_after_solution()
+        self.update_results_items_warnings()
 
     def update_allowable_pulsation_criteria_visibility_for_reciprocating_compressor(self, analysis_id: int):
         compressor_exists = False
@@ -246,3 +248,25 @@ class ResultsViewerItems(CommonMenuItems):
         for item in self.top_level_items:
             item.setBackground(0, self.background_color)
             item.setData(0, border_role, border_pen)
+
+    def update_results_items_warnings(self):
+
+        # check if the current solution is outdated
+        warning = app().project.model.outdated_solution
+
+        for top_level_item in self.top_level_items:
+            top_level_item.set_warning(warning)
+            for index in range(top_level_item.childCount()):
+
+                item_child: ChildTreeWidgetItem = top_level_item.child(index)
+                if item_child.isDisabled():
+                    item_child.setToolTip(0, "")
+                    item_child.set_warning(False)
+                    continue
+
+                tool_tip = ""
+                if warning:
+                    tool_tip = "<b style='color:red'>The solution is outdated because the model configuration does not match that of the current solution.</b>"
+
+                item_child.set_warning(warning, update_item_color=False)
+                item_child.setToolTip(0, tool_tip)

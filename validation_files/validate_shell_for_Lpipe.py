@@ -1,11 +1,7 @@
 from typing import TYPE_CHECKING
 
-from vibra.engine.analysis_info import (
-    AnalysisID,
-    FrequencySpacing,
-)
+from vibra.engine.analysis_info import AnalysisID, FrequencySpacing
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
-from vibra.engine.mesher.element_setup import TETRAHEDRON_4
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.engine.properties.material import Material
@@ -67,7 +63,6 @@ def load_external_mesh_and_solve():
     mesh.import_external_faces_connectivity(external_mesh.solids_connectivities, index_zero=True, etype_tag=4)
     mesh.export_nodal_coordinates("nodal_coordinates.dat")
     mesh.export_solid_elements_connectivity("solids_connectivity.dat")
-    mesh.element_type = TETRAHEDRON_4
 
     for named_selection, surf_data in external_mesh.elements_from_named_selection.items():
         if named_selection in ["input_edges", "output_edges"]:
@@ -81,18 +76,18 @@ def load_external_mesh_and_solve():
 
     # # Load the external data
     # path = f"validation_files/data/WB/structural/shell/pipes/results/results_for_L_pipe.xlsx"
-    # ext_data = LoadExternalData(path, rho_0)
+    # ext_data = LoadExternalData(path, fluid_density=rho_0)
 
-    # assign the created fluid
+    ## intialize the model
     model = Model()
     model.mesh = mesh
 
-    data_thick = {
+    thickness_data = {
         "surface_thickness": 0.008,
         "thickness_offset": "middle",
     }
 
-    model.properties._set_property("surface_thickness", data_thick, surface=1)
+    model.properties._set_property("surface_thickness", thickness_data, surface=1)
 
     # Define the material properties
 
@@ -145,7 +140,6 @@ def load_external_mesh_and_solve():
     frequencies = analysis_setup.get_frequencies()
 
     model.set_analysis_setup(analysis_setup)
-    model.set_analysis_id(AnalysisID.STRUCTURAL_HARMONIC)
 
     # Define and process the assemble
     assembler = StructuralAssembler(model)

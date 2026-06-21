@@ -17,9 +17,7 @@ from vibra.interface.general.get_user_confirmation_input import GetUserConfirmat
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.model_inputs.acoustic.definitions.enums import StandardTabType
-from vibra.interface.ui_generated.model.acoustic.transfer_impedance_inputs_ui import (
-    TransferImpedanceInputs_UI,
-)
+from vibra.interface.ui_generated.model.acoustic.internal_impedances.transfer_impedance_inputs_ui import TransferImpedanceInputs_UI
 from vibra.utils.bidict import bidict
 
 
@@ -68,8 +66,9 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
     def _create_connections(self):
         #
-        self.pushButton_attribute.clicked.connect(self.attribute_callback)
-        self.pushButton_exit.clicked.connect(self.close)
+        self.pushButton_apply.clicked.connect(self.apply_callback)
+        self.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
+        self.pushButton_cancel.clicked.connect(self.close)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_load_table.clicked.connect(self.load_transfer_impedance_table)
         self.pushButton_reset.clicked.connect(self.reset_callback)
@@ -212,7 +211,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
         return surface_ids
 
-    def attribute_callback(self):
+    def apply_callback(self, close_window: bool = False):
 
         tab_index = self.tabWidget_main.currentIndex()
         if tab_index == StandardTabType.LIST:
@@ -225,34 +224,38 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         self.remove_conflicting_excitations(surface_ids)
 
         if tab_index == StandardTabType.CONSTANT_DATA:
-            self.process_assignment_for_constant_values(surface_ids)
+            if self.constant_data_assignment(surface_ids):
+                return
 
         elif tab_index == StandardTabType.TABULAR_DATA:
-            self.process_assignment_for_table_values(surface_ids)
+            if self.tabular_data_assignment(surface_ids):
+                return
 
-        self.lineEdit_selection_id.setText("")
+        self.hide()
+        self.actions_to_finalize(close_window)
 
-    def process_assignment_for_constant_values(self, surface_ids: int | tuple[int]):
+    def constant_data_assignment(self, surface_ids: int | tuple[int]):
         
         real_value = self.check_inputs(self.lineEdit_real_value, "Real part of transfer impedance", only_positive=False)
         imag_value = self.check_inputs(self.lineEdit_imag_value, "Imaginary part of transfer impedance", only_positive=False)
 
         if (real_value, imag_value).count(None):
-            return
+            return True
 
         if real_value + imag_value == 0:
             self.hide()
             title = "Additional inputs required"
-            message = "You must enter a non-null transfer impedance "
-            message += "to proceed with the assignment."
+            message = "You must enter a non-zero transfer impedance value to proceed with the assignment."
             PrintMessageInput([error_title, title, message])
             self.lineEdit_real_value.setFocus()
-            return
+            return True
 
-        self.ti_data.update({
-                             "real_values" : [real_value],
-                             "imag_values" : [imag_value],
-                             })
+        self.ti_data.update(
+            {
+                "real_values": [real_value],
+                "imag_values": [imag_value],
+            }
+        )
 
         for surface_id in surface_ids:
             self.properties._set_property("transfer_impedance", deepcopy(self.ti_data), surface=surface_id)
@@ -260,9 +263,6 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
         self.assignment_complete = True
         self.clear_line_edit_selection_id()
-
-        self.hide()
-        self.actions_to_finalize()
 
     def load_table(self, lineEdit : QLineEdit, direct_load=False):
 
@@ -334,23 +334,21 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
     def load_transfer_impedance_table(self):
         self.imported_values = self.load_table(self.lineEdit_table_path)
 
-    def process_assignment_for_table_values(self, surface_ids: int | tuple[int]):
+    def tabular_data_assignment(self, surface_ids: int | tuple[int]):
 
         if self.lineEdit_table_path.text() == "":
             self.hide()
             title = "Additional inputs required"
-            message = "You must inform a valid transfer impedance "
-            message += "table path before confirming the input!"
+            message = "You must enter the transfer impedance table path to proceed with the assignment."
             PrintMessageInput([error_title, title, message])
             self.lineEdit_table_path.setFocus()
-            return
+            return True
 
         if self.imported_values is None:
-            self.imported_values = self.load_table( self.lineEdit_table_path, 
-                                                    direct_load = True )
+            self.imported_values = self.load_table(self.lineEdit_table_path, direct_load = True)
 
         if self.imported_values is None:
-            return
+            return True
 
         for surface_id in surface_ids:
             self.include_transfer_impedance_table_data(surface_id)
@@ -359,9 +357,6 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
         self.assignment_complete = True
         self.clear_line_edit_selection_id()
-
-        self.hide()
-        self.actions_to_finalize()
 
     def tab_event_callback(self):
         current_tab = self.tabWidget_main.currentIndex()
@@ -383,11 +378,10 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         self.geometry_selection_callback()
         self.lineEdit_selection_id.setEnabled(True)
 
-    def on_click_item(self, item):
+    def on_click_item(self, item: QTreeWidgetItem):
         self.tree_item_clicked = True
 
         surface_ids = self.get_selected_surfaces_from_tree_widget_transfer_impedance()
-
         if not surface_ids:
             return
 
@@ -398,6 +392,9 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
             if isinstance(decoupling_data, dict):
                 new_surface_id = decoupling_data.get("new_surface_id")
+                if new_surface_id is None:
+                    continue
+
                 self.decoupling_map[surface_id] = new_surface_id
 
         self.pushButton_remove.setEnabled(True)
@@ -405,12 +402,11 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
         self.tree_item_clicked = False
 
-    def on_doubleclick_item(self, item):
+    def on_doubleclick_item(self, item: QTreeWidgetItem):
         self.on_click_item(item)
-    
+
     def get_selected_surfaces_from_tree_widget_transfer_impedance(self) -> list:
         selected_items = self.treeWidget_transfer_impedance.selectedItems()
-
         if not selected_items:
             return list()
         
@@ -420,12 +416,15 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         selected_surfaces_decoupled = list()
 
         for selected_surface in selected_surfaces:
-            decouple_surface = self.decoupling_map[selected_surface] if selected_surface in self.decoupling_map.keys() else self.decoupling_map.inverse[selected_surface][0]
+            decouple_surface = self.decoupling_map.get(selected_surface)
+            if decouple_surface is None:
+                decouple_pair = [selected_surface, "Awaiting uncoupling"]
 
-            decouple_pair = [selected_surface, decouple_surface]
-            decouple_pair.sort()
+            else:
+                decouple_pair = [selected_surface, decouple_surface]
+                decouple_pair.sort()
+                       
             decouple_pair = tuple(decouple_pair)
-
             selected_surfaces_decoupled.append(str(decouple_pair))
 
         selection_text = ", ".join(selected_surfaces_decoupled)
@@ -661,7 +660,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         self.actions_to_finalize()
         self.restore_mesh_data_modified_by_decoupling()
 
-    def actions_to_finalize(self):
+    def actions_to_finalize(self, close_window: bool = False):
 
         def callback():
 
@@ -669,13 +668,10 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
             self.load_model_info()
 
             logging.info("Processing the post-assignment actions... [20/100]")
-            app().project.reset_solution()
+            app().main_window.analysis_toolbar.reset_solution()
 
             logging.info("Processing the post-assignment actions... [30/100]")
             app().project.project_writer.delete_mesh_data()
-
-            logging.info("Processing the post-assignment actions... [50/100]")
-            app().project.update_model_properties_file()
 
             logging.info("Processing the post-assignment actions... [60/100]")
             app().project.update_model_properties_file()
@@ -692,10 +688,10 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
             logging.info("Processing the post-assignment actions... [95/100]")
             app().main_window.selection.set_geometry_selection()
 
-            logging.info("Processing the post-assignment actions... [100/100]")
-            app().main_window.analysis_toolbar.reset_solution_action.setDisabled(True)
-
         LoadingWindow(callback).run()
+
+        if close_window:
+            self.close()
 
     def process_decoupling_actions(self):
 
@@ -795,7 +791,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            self.attribute_callback()
+            self.apply_callback()
         elif event.key() == Qt.Key_Delete:
             self.remove_callback()
         elif event.key() == Qt.Key_Escape:

@@ -17,10 +17,9 @@ from vibra.engine.assemblers import AcousticAssembler
 from vibra.engine.solvers import HarmonicSolver
 from vibra.interface.data_handler.export_mesh_data import ExportMeshData
 from vibra.interface.formatters.icons import change_icon_color_for_widgets, get_vibra_icon
-from vibra.interface.general.choose_property_to_delete import ChoosePropertyToDelete
+from vibra.interface.model_inputs.general.choose_property_to_delete import ChoosePropertyToDelete
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.general.selection_handler import SelectionHandler
-from vibra.interface.help_widget import HelpWidget
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.menus.model_setup_widget import ModelSetupWidget
 from vibra.interface.menus.results_viewer_widget import ResultsViewerWidget
@@ -33,12 +32,9 @@ from vibra.interface.toolbars.analysis_toolbar import AnalysisToolbar
 from vibra.interface.toolbars.view_toolbar import ViewToolbar
 from vibra.interface.ui_generated.main_window_ui import MainWindow_UI
 from vibra.interface.user_input.input_ui import InputUi
+from vibra.interface.user_input.about_vibra import AboutVibraInput
 from vibra.interface.user_input.render_user_preferences import RendererUserPreferencesInput
-from vibra.interface.viewer_3d.render_widgets import (
-    GeometryRenderWidget,
-    MeshRenderWidget,
-    ResultsRenderWidget,
-)
+from vibra.interface.viewer_3d.render_widgets import GeometryRenderWidget, MeshRenderWidget, ResultsRenderWidget
 from vibra.interface.welcome_widget import WelcomeWidget
 from vibra.utils.icons import load_icon
 from vibra.utils.interface_utils import GeometryColorMode, VisualizationFilter, block_signals, qt_extensions
@@ -65,7 +61,6 @@ class MainWindow(MainWindow_UI):
 
     def _initialize(self):
         self.dialog = None
-        self.project_data_modified = False
         self.user_path = Path().home()
 
     def _connect_actions(self):
@@ -99,7 +94,6 @@ class MainWindow(MainWindow_UI):
         self.render_widgets_stack.addWidget(self.geometry_widget)
         self.render_widgets_stack.addWidget(self.mesh_widget)
         self.render_widgets_stack.addWidget(self.results_widget)
-        self.render_widgets_stack.addWidget(self.help_widget)
         self.render_widgets_stack.addWidget(self.welcome_widget)
         self.view_toolbar = ViewToolbar(self.render_widgets_stack)
 
@@ -107,6 +101,7 @@ class MainWindow(MainWindow_UI):
 
         self.render_widgets_stack.currentChanged.connect(self.render_changed_callback)
         self.visualization_changed.connect(self.reload_visualization_filter)
+        self.render_widget_changed.connect(self.reload_visualization_filter)
         self.reload_visualization_filter()
 
         self.stacked_setup.addWidget(self.model_setup_widget)
@@ -280,7 +275,6 @@ class MainWindow(MainWindow_UI):
         self.results_widget = ResultsRenderWidget()
 
         self.welcome_widget = WelcomeWidget()
-        self.help_widget = HelpWidget()
 
     def _load_menu_widgets(self):
         self.results_viewer_widget = ResultsViewerWidget()
@@ -435,6 +429,7 @@ class MainWindow(MainWindow_UI):
         self.action_results_workspace.setChecked(True)
         self.action_mesh_workspace.setChecked(False)
         self.action_model_workspace.setChecked(False)
+        self.reload_visualization_filter()
 
     def show_geometry_render_widget(self):
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
@@ -501,7 +496,7 @@ class MainWindow(MainWindow_UI):
 
         self.stacked_setup.setCurrentWidget(self.model_setup_widget)
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
-        self.model_setup_widget.model_setup_items.enable_and_expand_menu_items()
+        self.model_setup_widget.model_setup_items.expand_menu_items()
 
         self.splitter.widget(0).setVisible(True)
 
@@ -531,7 +526,7 @@ class MainWindow(MainWindow_UI):
         self.update_mesh_information()
         self.stacked_setup.setCurrentWidget(self.model_setup_widget)
         self.render_widgets_stack.setCurrentWidget(self.mesh_widget)
-        self.model_setup_widget.model_setup_items.enable_and_expand_menu_items()
+        self.model_setup_widget.model_setup_items.expand_menu_items()
 
         self.splitter.widget(0).setVisible(True)
 
@@ -858,7 +853,6 @@ class MainWindow(MainWindow_UI):
             # Update interface
             self.update_recents_menu()
             self.setWindowTitle(project.model.name)
-            self.project_data_modified = False
             logging.info("The project data has been saved. [100/100]")
 
         LoadingWindow(save_data).run(path)
@@ -952,7 +946,7 @@ class MainWindow(MainWindow_UI):
         self.status_bar.update_geometry_information()
         self.status_bar.update_mesh_information()
 
-        self.model_setup_widget.model_setup_items.hide_model_setup_top_items()
+        self.model_setup_widget.model_setup_items.expand_menu_items()
 
         self.set_toolbars_enabled(True)
         self.update_toolbar_and_menu_items_after_load_project()
@@ -967,7 +961,7 @@ class MainWindow(MainWindow_UI):
         self.set_toolbars_visible(True)
         self.view_toolbar.set_front_view()
 
-        if app().project.can_resume_solution:
+        if app().project.model.can_resume_solution:
             window_title = "Acoustic Harmonic results"
             title = "Missing solution frequency records"
             message = 'Click on the "Resume the analysis" button to solve remaining frequencies'
@@ -992,8 +986,9 @@ class MainWindow(MainWindow_UI):
 
     def update_toolbar_and_menu_items_after_load_project(self):
         self.model_setup_widget.model_setup_items.filter_available_items_and_analyzes_according_to_geometry_information()
+        self.model_setup_widget.model_setup_items.modify_general_settings_items_access()
         self.model_setup_widget.model_setup_items.update_items_appearance()
-        self.analysis_toolbar.update_pushbutton_resume_analysis()
+        self.analysis_toolbar.update_resume_soluton_button_visibility()
 
     def action_save_as_callback(self):
         self.save_project_as_dialog()
@@ -1071,13 +1066,15 @@ class MainWindow(MainWindow_UI):
         filter.faces = self.action_face_view.isChecked()
         filter.solids = self.action_face_view.isChecked()
         filter.ghost = self.action_ghost_view.isChecked()
+        filter.symbols = self.action_hide_show_symbols.isChecked()
 
     def reload_visualization_filter(self):
         if visualization_filter := self.get_current_visualization_filter():
             self.apply_visualization_filter(visualization_filter)
 
     def action_about_vibra_callback(self):
-        self.render_widgets_stack.setCurrentWidget(self.help_widget)
+        self.close_dialogs()
+        AboutVibraInput()
 
     def close_app(self):
         self.minimize_dialogs()
@@ -1133,6 +1130,17 @@ class MainWindow(MainWindow_UI):
                 continue
 
             window.close()
+
+    def hide_dialogs(self):
+        for window in app().topLevelWidgets():
+            if isinstance(window, MainWindow):
+                continue
+
+            if isinstance(window, LoadingWindow):
+                continue
+
+            if window.isVisible():
+                window.hide()
 
     def minimize_dialogs(self):
         for window in app().topLevelWidgets():

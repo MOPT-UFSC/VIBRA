@@ -21,7 +21,7 @@
   </property>
   <property name="maximumSize">
    <size>
-    <width>600</width>
+    <width>900</width>
     <height>600</height>
    </size>
   </property>
@@ -259,7 +259,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
       <property name="spacing">
        <number>2</number>
       </property>
-      <item row="0" column="0">
+      <item row="0" column="3">
        <widget class="QPushButton" name="ok_button">
         <property name="minimumSize">
          <size>
@@ -281,6 +281,49 @@ li.checked::marker { content: &quot;\2612&quot;; }
         </property>
         <property name="text">
          <string>OK</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QPushButton" name="copy_log_button">
+        <property name="minimumSize">
+         <size>
+          <width>100</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>100</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="text">
+         <string>Copy logs</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QPushButton" name="copy_stacktrace_button">
+        <property name="minimumSize">
+         <size>
+          <width>140</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>140</width>
+          <height>16777215</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>11</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>Copy Stacktrace</string>
         </property>
        </widget>
       </item>

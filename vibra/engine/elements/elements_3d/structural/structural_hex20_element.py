@@ -13,6 +13,7 @@ class STRUCT_HEXAHEDRON_20(Element3D):
     NODES_PER_ELEMENT = 20
     DOF_PER_NODE = 3
     DOF_PER_ELEMENT = NODES_PER_ELEMENT * DOF_PER_NODE
+    LOCAL_DOF = np.arange(DOF_PER_NODE, dtype=int)
 
     def __init__(self, model: "Model"):
 
@@ -27,21 +28,56 @@ class STRUCT_HEXAHEDRON_20(Element3D):
         self.number_of_nodes = len(self.nodal_coordinates)
         self.number_of_elements = len(self.solids_connectivity)
 
-        self.define_integration_points()
-        self.process_shape_functions_and_derivatives()
+        self.define_integration_points_for_Ke()
+        self.define_integration_points_for_Me()
+        self.process_shape_functions_and_derivatives_for_Ke()
+        self.process_shape_functions_and_derivatives_for_Me()
 
 
-    def define_integration_points(self, integration_points: int = 14):
-        """ 
+    @property
+    def corner_nodes_indexes(self):
+        return np.arange(8, dtype=int)
+
+
+    @property
+    def midside_nodes_indexes_map(self):
+        return {
+            8 : (0, 1),      # Q -> (I, J)
+            9 : (1, 2),      # R -> (J, K)
+            10 : (2, 3),     # S -> (K, L)
+            11 : (3, 4),     # T -> (L, I)
+            12 : (4, 5),     # U -> (M, N)
+            13 : (5, 6),     # V -> (N, O)
+            14 : (6, 7),     # W -> (O, P)
+            15 : (7, 4),     # X -> (P, M)
+            16 : (4, 0),     # Y -> (M, I)
+            17 : (5, 1),     # Z -> (N, J)
+            18 : (6, 2),     # A -> (O, K)
+            19 : (7, 3),     # B -> (P, L)
+            }
+
+
+    def define_integration_points_for_Ke(self, integration_points: int = 8):
+        """
         This method defines the integration points and their
         weights for numerical integration.
         """
-        self.nint = integration_points
-        self.num_int_data = self.integration_points_data_for_hexahedrons(integration_points)
-        self.wps = self.num_int_data[:, -1].reshape(-1, 1, 1)
+        self.nint_K = integration_points
+        self.num_int_data_K = self.integration_points_data_for_hexahedrons(integration_points)
+        self.wps_K = self.num_int_data_K[:, -1].reshape(-1, 1, 1)
 
 
-    def process_shape_functions_and_derivatives(self):
+    def define_integration_points_for_Me(self, integration_points: int = 14):
+        """
+        This method defines the integration points and their
+        weights for numerical integration.
+        """
+        self.nint_M = integration_points
+        self.num_int_data_M = self.integration_points_data_for_hexahedrons(integration_points)
+        self.wps_M = self.num_int_data_M[:, -1].reshape(-1, 1, 1)
+
+
+    def process_shape_functions_and_derivatives_for_Ke(self):
         """
         This method returns the shape functions and its derivatives
         for all integration points.
@@ -56,11 +92,56 @@ class STRUCT_HEXAHEDRON_20(Element3D):
         """
 
         ## coordinates from integration points
-        xi_1 = self.num_int_data[:, 0]
-        xi_2 = self.num_int_data[:, 1]
-        xi_3 = self.num_int_data[:, 2]
+        xi_1 = self.num_int_data_K[:, 0]
+        xi_2 = self.num_int_data_K[:, 1]
+        xi_3 = self.num_int_data_K[:, 2]
 
-        self.phi, self.dphi = self.get_shape_functions_and_derivatives(xi_1, xi_2, xi_3)
+        self.phi_K, self.dphi_K = self.get_shape_functions_and_derivatives(xi_1, xi_2, xi_3)
+        self.phi_K_trilinear = self.get_shape_functions_for_linear_stress_extrapolation(xi_1, xi_2, xi_3)
+        self.phi_inv = self.inverse_of_trilinear_shape_functions()
+
+
+    def inverse_of_trilinear_shape_functions(self):
+        """
+        This method returns the inverse of shape functions matrix N applied
+        at integration points (Gauss-Legendre quadrature points).
+        """
+        N = self.phi_K_trilinear
+        n_intp, n_nodes = N.shape
+
+        if n_intp == n_nodes:
+            # print("N_int = N_nodes")
+            return np.linalg.inv(N)
+
+        elif n_intp > n_nodes:
+            # print("N_int > N_nodes")
+            return np.linalg.inv(N.T @ N) @ N.T
+
+        else:
+            print("Not implemented stress extrapolation for N_int < N_nodes")
+            return None
+
+
+    def process_shape_functions_and_derivatives_for_Me(self):
+        """
+        This method returns the shape functions and its derivatives
+        for all integration points.
+
+        Returns
+        -------
+        phi: np.ndarray
+            The shape functions evaluated in the integration points.
+
+        dphi: np.ndarray
+            The shape functions derivatives.
+        """
+
+        ## coordinates from integration points
+        xi_1 = self.num_int_data_M[:, 0]
+        xi_2 = self.num_int_data_M[:, 1]
+        xi_3 = self.num_int_data_M[:, 2]
+
+        self.phi_M, self.dphi_M = self.get_shape_functions_and_derivatives(xi_1, xi_2, xi_3)
 
 
     def get_shape_functions_and_derivatives(self, xi_1: np.ndarray|float, xi_2: np.ndarray|float, xi_3: np.ndarray|float):
@@ -190,29 +271,79 @@ class STRUCT_HEXAHEDRON_20(Element3D):
         return phi, dphi
 
 
-    def elementary_matrices(self, el_index: int, material: Material):
-        """This method returns elementary stiffness and mass matrices for HEXAHEDRON-20 nodes.
-        ANSYS SOLID95 - Do not compare with new Ansys solid elements
+    def get_shape_functions_for_linear_stress_extrapolation(
+            self, 
+            xi_1: np.ndarray | float, 
+            xi_2: np.ndarray | float, 
+            xi_3: np.ndarray | float,
+            ):
+
+        """
+        This method returns the shape functions and its derivatives.
+        
+        Parameters
+        ----------
+        xi_1: np.ndarray
+            The x coordinates of the integration points.
+        
+        xi_2: np.ndarray
+            The y coordinates of the integration points.
+
+        xi_3: np.ndarray
+            The z coordinates of the integration points.
+
+        Returns
+        -------
+        phi: np.ndarray
+            The shape functions evaluated in the integration points.
+
+        dphi: np.ndarray
+            The shape functions derivatives.
         """
 
-        const_mat, rho = self.get_constitutive_model(material, model_type="linear-isotropic")
+        Nz = xi_1.size
+
+        ##NOTE: Atalla, Noureddine.; Sgard Franck. Finite Element and Boundary Methods in Structural Acoustics and Vibration. 1st Ed. 2015
+
+        # define the shape functions (Atalla and Sgard, 2015, pg. 171)
+        phi = np.zeros((Nz, 8), dtype=float)
+
+        phi[:, 0] = (1.0 - xi_1) * (1.0 - xi_2) * (1.0 - xi_3) / 8       # ->      (-1.0, -1.0, -1.0)   Node 1
+        phi[:, 1] = (1.0 + xi_1) * (1.0 - xi_2) * (1.0 - xi_3) / 8       # ->      ( 1.0, -1.0, -1.0)   Node 2
+        phi[:, 2] = (1.0 + xi_1) * (1.0 + xi_2) * (1.0 - xi_3) / 8       # ->      ( 1.0,  1.0, -1.0)   Node 3
+        phi[:, 3] = (1.0 - xi_1) * (1.0 + xi_2) * (1.0 - xi_3) / 8       # ->      (-1.0,  1.0, -1.0)   Node 4
+        phi[:, 4] = (1.0 - xi_1) * (1.0 - xi_2) * (1.0 + xi_3) / 8       # ->      (-1.0, -1.0,  1.0)   Node 5
+        phi[:, 5] = (1.0 + xi_1) * (1.0 - xi_2) * (1.0 + xi_3) / 8       # ->      ( 1.0, -1.0,  1.0)   Node 6
+        phi[:, 6] = (1.0 + xi_1) * (1.0 + xi_2) * (1.0 + xi_3) / 8       # ->      ( 1.0,  1.0,  1.0)   Node 7
+        phi[:, 7] = (1.0 - xi_1) * (1.0 + xi_2) * (1.0 + xi_3) / 8       # ->      (-1.0,  1.0,  1.0)   Node 8
+
+        return phi
+
+
+    def process_detJAC_and_B_matrix(self, element_id: int, return_coords: bool=False):
+        """
+        This method computes and returns the matrix of shape functions 
+        derivatives B and the determinant of the Jacobian matrix detJAC. 
+        """
 
         # nodes from element
-        elem_nodes = self.connectivity[el_index, 1:]
+        elem_nodes = self.connectivity[element_id, 1:]
 
         # element nodal coords
         coords = self.nodal_coordinates[elem_nodes, 1:4]
 
         # Jacobian matrix
-        JAC = self.dphi @ coords
+        JAC_K = self.dphi_K @ coords
 
         # Jacobian determinant and inverse
-        detJAC, invJAC = self.get_detJAC_and_invJAC(JAC)
+        detJAC_K, invJAC_K = self.get_detJAC_and_invJAC(JAC_K)
 
         # derivatives
-        dphi_t = invJAC @ self.dphi
+        dphi_t = invJAC_K @ self.dphi_K
 
-        B = np.zeros((self.nint, 6, self.DOF_PER_ELEMENT), dtype=float)
+        # initialize the B matrix
+        B = np.zeros((self.nint_K, 6, self.DOF_PER_ELEMENT), dtype=float)
+
         B[:, 0, 0::3] = dphi_t[:, 0, :]
         B[:, 1, 1::3] = dphi_t[:, 1, :]
         B[:, 2, 2::3] = dphi_t[:, 2, :]
@@ -223,18 +354,139 @@ class STRUCT_HEXAHEDRON_20(Element3D):
         B[:, 5, 1::3] = dphi_t[:, 2, :]
         B[:, 5, 2::3] = dphi_t[:, 1, :]
 
-        N = np.zeros((self.nint, 3, self.DOF_PER_ELEMENT), dtype=float)
-        N[:, 0, 0::3] = self.phi
-        N[:, 1, 1::3] = self.phi
-        N[:, 2, 2::3] = self.phi
+        if return_coords:
+            return detJAC_K, B, coords
+
+        return detJAC_K, B
+
+
+    def elementary_matrices(self, element_id: int, material: Material):
+        """
+        This method integrates the elementary stiffness and mass matrices
+        for the structural quadratic hexahedron element.
+
+        Parameters
+        ----------
+        element_id: int
+            The element index.  
+        
+        material: Material
+            An object of the material dataclass.
+
+        Returns
+        -------
+        Ke: np.ndarray
+            The elementary stiffness matrix.
+
+        Me: np.ndarray
+            The elementary mass matrix.
+
+        """
+        # get constitutive law matrix D and the material's density
+        const_mat, rho = self.get_constitutive_model(material, model_type="linear-isotropic")
+
+        # process the determinant of Jacobian and the B matrix  
+        detJAC_K, B, coords = self.process_detJAC_and_B_matrix(element_id, return_coords=True)
+
+        # Jacobian matrix
+        JAC_M = self.dphi_M @ coords
+
+        # Jacobian determinant and inverse
+        detJAC_M = self.get_detJAC(JAC_M)
+
+        # initialize the matrix of shape functions N
+        N = np.zeros((self.nint_M, 3, self.DOF_PER_ELEMENT), dtype=float)
+        N[:, 0, 0::3] = self.phi_M
+        N[:, 1, 1::3] = self.phi_M
+        N[:, 2, 2::3] = self.phi_M
 
         # integration loop
         Ke, Me = 0, 0
-        for i in range(self.nint):
-            Ke += B[i, :, :].T @ const_mat @ B[i, :, :] * (detJAC[i, :, :] * self.wps[i])
-            Me += rho * N[i, :, :].T @ N[i, :, :] * (detJAC[i, :, :] * self.wps[i])
+
+        for i in range(self.nint_K):
+            Ke += B[i, :, :].T @ const_mat @ B[i, :, :] * (detJAC_K[i, :, :] * self.wps_K[i])
+
+        for i in range(self.nint_M):
+            Me += rho * N[i, :, :].T @ N[i, :, :] * (detJAC_M[i, :, :] * self.wps_M[i])
 
         return Ke, Me
+
+ 
+    def process_stresses_at_integration_points(
+        self,
+        element_id : int,
+        nodal_solution : np.ndarray | None = None,
+        solution: np.ndarray | None = None,
+        element_averaged: bool = False,
+        **kwargs
+        ):
+
+        node_ids = kwargs.get("node_ids")
+
+        if node_ids is None:
+            node_ids = self.connectivity[element_id, 1:]
+
+        if isinstance(nodal_solution, np.ndarray):
+            Ue = nodal_solution
+
+        elif isinstance(solution, np.ndarray):
+            indexes = node_ids.reshape(-1, 1) * self.DOF_PER_NODE + self.LOCAL_DOF
+            Ue = solution[indexes.flatten(), :]
+
+        else:
+            return 0.
+
+        if self.connectivity is None:
+            self.reorder_connect()
+
+        # get the volume ID from element
+        vol_id = self.model.mesh.solids_connectivity[element_id, 1]
+
+        # get the material from element
+        material = self.model.properties._get_property("material", volume=vol_id)
+        if not isinstance(material, Material):
+            return 0.
+
+        D, _ = self.get_constitutive_model(material, model_type="linear-isotropic")
+
+        # get data to compute the stress
+        _, B = self.process_detJAC_and_B_matrix(element_id)
+
+        # initialize the element stresses matrix
+        element_stresses = np.zeros((6, self.nint_K, Ue.shape[1]), dtype=complex)
+
+        # calculate the nodal stress tensor
+        for i in range(self.nint_K):
+            element_stresses[:, i, :] = D @ (B[i, :, :] @ Ue)
+
+        if element_averaged:
+            return np.average(element_stresses, axis=1)
+
+        return element_stresses
+
+
+    def extrapolate_stresses_to_nodes(self, element_stresses: np.ndarray) -> np.ndarray:
+        """
+        This method extrapolates the nodal stresses from 
+        the stresses calculated at the integration points.
+
+        Parameters
+        ----------
+        element_stresses: np.ndarray
+            The stresses calculate at integration points.
+
+        """
+
+        # Nf = element_stresses.shape[2]
+        # nodal_stresses = np.zeros((self.NODES_PER_ELEMENT, 6, Nf), dtype=complex)
+
+        # for i in range(6):
+        #     nodal_stresses[:, i, :] = self.phi_inv @ element_stresses[:, i, :]
+
+        nodal_stresses = self.phi_inv @ element_stresses
+        # nodal_stresses = np.transpose(nodal_stresses, axes=(1, 0, 2))
+
+        return nodal_stresses
 
 
     def reorder_connect(self):

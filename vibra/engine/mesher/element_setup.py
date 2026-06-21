@@ -25,7 +25,7 @@ class ElementSetup:
         return ElementSetup(**self.__dict__)
 
 
-TETRAHEDRON_4 = ElementSetup(
+GMSH_TET4 = ElementSetup(
     algorithm_2d=MeshAlgorithms2D.DELAUNAY_2D,
     algorithm_3d=MeshAlgorithms3D.HXT_3D,
     subdivision_algorithm=SubdivisionAlgorithms.NO_SUBDIVISION,
@@ -36,7 +36,7 @@ TETRAHEDRON_4 = ElementSetup(
     dimensions=3,
 )
 
-TETRAHEDRON_10 = ElementSetup(
+GMSH_TET10 = ElementSetup(
     algorithm_2d=MeshAlgorithms2D.DELAUNAY_2D,
     algorithm_3d=MeshAlgorithms3D.HXT_3D,
     subdivision_algorithm=SubdivisionAlgorithms.NO_SUBDIVISION,
@@ -47,7 +47,7 @@ TETRAHEDRON_10 = ElementSetup(
     dimensions=3,
 )
 
-HEXAHEDRON_8 = ElementSetup(
+GMSH_HEX8 = ElementSetup(
     algorithm_2d=MeshAlgorithms2D.QUASI_STRUCTURED_QUADS_2D,
     algorithm_3d=MeshAlgorithms3D.DELAUNAY_3D,
     subdivision_algorithm=SubdivisionAlgorithms.ALL_HEXAHEDRA_SUBDIVISION,
@@ -58,7 +58,7 @@ HEXAHEDRON_8 = ElementSetup(
     dimensions=3,
 )
 
-HEXAHEDRON_20 = ElementSetup(
+GMSH_HEX20 = ElementSetup(
     algorithm_2d=MeshAlgorithms2D.QUASI_STRUCTURED_QUADS_2D,
     algorithm_3d=MeshAlgorithms3D.DELAUNAY_3D,
     subdivision_algorithm=SubdivisionAlgorithms.ALL_HEXAHEDRA_SUBDIVISION,
@@ -69,4 +69,15 @@ HEXAHEDRON_20 = ElementSetup(
     dimensions=3,
 )
 
-DEFAULT_ELEMENT_TYPE = TETRAHEDRON_4
+GMSH_VISUAL_MESH = ElementSetup(
+    algorithm_2d=MeshAlgorithms2D.DELAUNAY_2D,
+    algorithm_3d=MeshAlgorithms3D.HXT_3D,
+    subdivision_algorithm=SubdivisionAlgorithms.NO_SUBDIVISION,
+    recombination_algorithm=RecombinationAlgorithms.SIMPLE_RECOMBINATION,
+    recombine_all=False,
+    second_order_incomplete=False,
+    element_order=1,
+    dimensions=2,
+)
+
+DEFAULT_ELEMENT_SETUP = GMSH_TET4

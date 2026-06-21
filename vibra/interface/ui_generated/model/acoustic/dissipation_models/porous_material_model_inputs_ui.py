@@ -971,32 +971,59 @@ class Ui_Dialog(object):
 
         self.gridLayout.addWidget(self.frame_main, 1, 0, 1, 1)
 
-        self.frame_bottom = QFrame(Dialog)
-        self.frame_bottom.setObjectName(u"frame_bottom")
-        self.frame_bottom.setMinimumSize(QSize(0, 48))
-        self.frame_bottom.setMaximumSize(QSize(16777215, 48))
-        self.frame_bottom.setFrameShape(QFrame.Shape.NoFrame)
-        self.frame_bottom.setFrameShadow(QFrame.Shadow.Raised)
-        self.gridLayout_4 = QGridLayout(self.frame_bottom)
-        self.gridLayout_4.setObjectName(u"gridLayout_4")
-        self.pushButton_confirm = QPushButton(self.frame_bottom)
-        self.pushButton_confirm.setObjectName(u"pushButton_confirm")
-        self.pushButton_confirm.setMinimumSize(QSize(100, 28))
-        self.pushButton_confirm.setMaximumSize(QSize(100, 28))
-        self.pushButton_confirm.setFont(font1)
+        self.frame_buttons = QFrame(Dialog)
+        self.frame_buttons.setObjectName(u"frame_buttons")
+        self.frame_buttons.setMinimumSize(QSize(0, 48))
+        self.frame_buttons.setMaximumSize(QSize(16777215, 48))
+        self.frame_buttons.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_buttons.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_11 = QGridLayout(self.frame_buttons)
+        self.gridLayout_11.setObjectName(u"gridLayout_11")
+        self.gridLayout_11.setVerticalSpacing(0)
+        self.gridLayout_11.setContentsMargins(6, 0, 6, 0)
+        self.pushButton_apply_and_close = QPushButton(self.frame_buttons)
+        self.pushButton_apply_and_close.setObjectName(u"pushButton_apply_and_close")
+        self.pushButton_apply_and_close.setMinimumSize(QSize(72, 30))
+        self.pushButton_apply_and_close.setMaximumSize(QSize(72, 30))
+        font5 = QFont()
+        font5.setPointSize(10)
+        font5.setBold(False)
+        font5.setItalic(False)
+        self.pushButton_apply_and_close.setFont(font5)
+        self.pushButton_apply_and_close.setStyleSheet(u"")
+        self.pushButton_apply_and_close.setAutoDefault(False)
+        self.pushButton_apply_and_close.setFlat(False)
 
-        self.gridLayout_4.addWidget(self.pushButton_confirm, 0, 1, 1, 1)
+        self.gridLayout_11.addWidget(self.pushButton_apply_and_close, 0, 3, 1, 1)
 
-        self.pushButton_exit = QPushButton(self.frame_bottom)
-        self.pushButton_exit.setObjectName(u"pushButton_exit")
-        self.pushButton_exit.setMinimumSize(QSize(100, 28))
-        self.pushButton_exit.setMaximumSize(QSize(100, 28))
-        self.pushButton_exit.setFont(font1)
+        self.pushButton_apply = QPushButton(self.frame_buttons)
+        self.pushButton_apply.setObjectName(u"pushButton_apply")
+        self.pushButton_apply.setMinimumSize(QSize(72, 30))
+        self.pushButton_apply.setMaximumSize(QSize(72, 30))
+        self.pushButton_apply.setFont(font5)
+        self.pushButton_apply.setStyleSheet(u"")
+        self.pushButton_apply.setAutoDefault(False)
+        self.pushButton_apply.setFlat(False)
 
-        self.gridLayout_4.addWidget(self.pushButton_exit, 0, 0, 1, 1)
+        self.gridLayout_11.addWidget(self.pushButton_apply, 0, 2, 1, 1)
+
+        self.pushButton_cancel = QPushButton(self.frame_buttons)
+        self.pushButton_cancel.setObjectName(u"pushButton_cancel")
+        self.pushButton_cancel.setMinimumSize(QSize(72, 30))
+        self.pushButton_cancel.setMaximumSize(QSize(72, 30))
+        self.pushButton_cancel.setFont(font5)
+        self.pushButton_cancel.setStyleSheet(u"")
+        self.pushButton_cancel.setAutoDefault(False)
+        self.pushButton_cancel.setFlat(False)
+
+        self.gridLayout_11.addWidget(self.pushButton_cancel, 0, 0, 1, 1)
+
+        self.horizontalSpacer_25 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_11.addItem(self.horizontalSpacer_25, 0, 1, 1, 1)
 
 
-        self.gridLayout.addWidget(self.frame_bottom, 2, 0, 1, 1)
+        self.gridLayout.addWidget(self.frame_buttons, 2, 0, 1, 1)
 
         QWidget.setTabOrder(self.doubleSpinBox_C1_DBM, self.doubleSpinBox_C2_DBM)
         QWidget.setTabOrder(self.doubleSpinBox_C2_DBM, self.doubleSpinBox_C3_DBM)
@@ -1015,9 +1042,7 @@ class Ui_Dialog(object):
         QWidget.setTabOrder(self.doubleSpinBox_tortuosity_JCAL, self.lineEdit_viscous_characteristic_length_JCAL)
         QWidget.setTabOrder(self.lineEdit_viscous_characteristic_length_JCAL, self.lineEdit_thermal_characteristic_length_JCAL)
         QWidget.setTabOrder(self.lineEdit_thermal_characteristic_length_JCAL, self.doubleSpinBox_flow_resistivity_JCAL)
-        QWidget.setTabOrder(self.doubleSpinBox_flow_resistivity_JCAL, self.pushButton_confirm)
-        QWidget.setTabOrder(self.pushButton_confirm, self.pushButton_exit)
-        QWidget.setTabOrder(self.pushButton_exit, self.comboBox_attribution_type)
+        QWidget.setTabOrder(self.doubleSpinBox_flow_resistivity_JCAL, self.comboBox_attribution_type)
         QWidget.setTabOrder(self.comboBox_attribution_type, self.pushButton_DB_equations)
         QWidget.setTabOrder(self.pushButton_DB_equations, self.treeWidget_porous_material_model)
         QWidget.setTabOrder(self.treeWidget_porous_material_model, self.pushButton_reset)
@@ -1027,6 +1052,9 @@ class Ui_Dialog(object):
 
         self.tabWidget_main.setCurrentIndex(0)
         self.tabWidget_models.setCurrentIndex(0)
+        self.pushButton_apply_and_close.setDefault(False)
+        self.pushButton_apply.setDefault(False)
+        self.pushButton_cancel.setDefault(False)
 
 
         QMetaObject.connectSlotsByName(Dialog)
@@ -1146,8 +1174,9 @@ class Ui_Dialog(object):
         self.label_12.setText(QCoreApplication.translate("Dialog", u"Selected bodies:", None))
         self.checkBox_load_material_data_from_selection.setText(QCoreApplication.translate("Dialog", u"Load porous material data from selection", None))
         self.checkBox_advanced_porous_material_plots.setText(QCoreApplication.translate("Dialog", u"Enable the advanced porous material plots", None))
-        self.pushButton_confirm.setText(QCoreApplication.translate("Dialog", u"Confirm", None))
-        self.pushButton_exit.setText(QCoreApplication.translate("Dialog", u"Exit", None))
+        self.pushButton_apply_and_close.setText(QCoreApplication.translate("Dialog", u"Ok", None))
+        self.pushButton_apply.setText(QCoreApplication.translate("Dialog", u"Apply", None))
+        self.pushButton_cancel.setText(QCoreApplication.translate("Dialog", u"Cancel", None))
     # retranslateUi
 
 
@@ -1264,10 +1293,11 @@ class PorousMaterialModelInputs_UI(QDialog, Ui_Dialog):
                                 - (Layout): QGridLayout
                                         - checkBox_load_material_data_from_selection: QCheckBox
                                         - checkBox_advanced_porous_material_plots: QCheckBox
-                - frame_bottom: QFrame
+                - frame_buttons: QFrame
                     - (Layout): QGridLayout
-                            - pushButton_confirm: QPushButton
-                            - pushButton_exit: QPushButton
+                            - pushButton_apply_and_close: QPushButton
+                            - pushButton_apply: QPushButton
+                            - pushButton_cancel: QPushButton
     """
 
     def __init__(self, *args, **kwargs):

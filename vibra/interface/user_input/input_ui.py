@@ -23,10 +23,10 @@ from vibra.interface.model_inputs.acoustic.external_impedances.anechoic_terminat
 from vibra.interface.model_inputs.acoustic.external_impedances.specific_impedance_inputs import SpecificImpedanceInputs
 from vibra.interface.model_inputs.acoustic.internal_impedances.perforated_plate_model_inputs import PerforatedPlateModelInputs
 from vibra.interface.model_inputs.acoustic.internal_impedances.transfer_impedance_inputs import TransferImpedanceInputs
-from vibra.interface.model_inputs.general.degrees_of_freedom_decoupling_inputs import DegreesOfFreedomDecouplingInputs
+from vibra.interface.model_inputs.dof_decoupling.degrees_of_freedom_decoupling_inputs import DegreesOfFreedomDecouplingInputs
 from vibra.interface.model_inputs.general.element_options_inputs import ElementOptionsInputs
-from vibra.interface.model_inputs.general.fluid.set_fluid_inputs import SetFluidInputs
-from vibra.interface.model_inputs.general.material.set_material_inputs import MaterialInputs
+from vibra.interface.model_inputs.fluid.set_fluid_inputs import SetFluidInputs
+from vibra.interface.model_inputs.material.set_material_inputs import MaterialInputs
 from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
 from vibra.interface.model_inputs.structural.excitations.distributed_loads_inputs import DistributedLoadsInputs
 
@@ -50,7 +50,7 @@ from vibra.interface.plots.acoustic.particle_velocity_inputs import ParticleVelo
 #
 from vibra.interface.plots.acoustic.surface_absorption_coefficient_inputs import SurfaceAbsorptionCoefficientInputs
 from vibra.interface.plots.acoustic.transmission_loss_inputs import TransmissionLossInputs
-from vibra.interface.plots.structural.displacement_field_inputs import PlotDisplacementFieldInputs
+from vibra.interface.plots.structural.structural_response_fields_inputs import StructuralResponseFieldsInputs
 
 #
 from vibra.interface.plots.structural.structural_frequency_response_inputs import PlotStructuralFrequencyResponseInputs
@@ -79,7 +79,7 @@ class InputUi:
         app().main_window.action_model_workspace_callback()
         obj = self.process_input(MesherSetupInputs)
         if obj.complete:
-            self.model_setup_items.enable_and_expand_menu_items()
+            self.model_setup_items.expand_menu_items()
 
     def advanced_element_options(self):
         if not self.model_setup_items.item_child_element_options.isDisabled():
@@ -187,7 +187,7 @@ class InputUi:
 
     def plot_displacement_field(self):
         if app().project.model.analysis_id == AnalysisID.STRUCTURAL_HARMONIC:
-            return self.process_input(PlotDisplacementFieldInputs)
+            return self.process_input(StructuralResponseFieldsInputs)
 
     def plot_structural_frequency_response(self):
         if app().project.model.analysis_id == AnalysisID.STRUCTURAL_HARMONIC:

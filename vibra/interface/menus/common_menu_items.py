@@ -9,7 +9,6 @@ from vibra.interface.menus.tool_tip import ToolTip
 from molde import Color
 from molde.colors import color_names
 
-import re
 from pathlib import Path
 
 # class MyDelegate(QItemDelegate):      
@@ -137,6 +136,21 @@ class TopTreeWidgetItem(QTreeWidgetItem):
         # self.setBackground(0, linear_gradient)
         # self.setBackground(0, self.background_color)
 
+    def set_warning(self, warning: bool):
+        if warning:
+            font = QFont()
+            font.setBold(True)
+            self.setFont(0, font)
+            self.setForeground(0, Color(*color_names.RED_5.to_rgb()).to_qt())
+            warning_icon = QIcon(str(ICON_DIR / "model_setup_items/warning_yellow.png"))
+            self.setIcon(0, warning_icon)
+
+        else:
+            # Resets data to default
+            self.setData(0, Qt.FontRole, None)  # reset color
+            self.setData(0, Qt.ForegroundRole, None)  # reset color
+            self.setData(0, Qt.DecorationRole, None)
+
 
 class ChildTreeWidgetItem(QTreeWidgetItem):
     def __init__(self, name):
@@ -151,14 +165,17 @@ class ChildTreeWidgetItem(QTreeWidgetItem):
         name = name.strip()
         self.property_name = name
 
-    def set_warning(self, cond):
+    def set_warning(self, cond: bool, update_item_color: bool = True):
         if cond:
-            font = QFont()
-            font.setBold(True)
-            self.setFont(0, font)
-            self.setForeground(0, Color(*color_names.YELLOW.to_rgb()).to_qt())
+            if update_item_color:
+                font = QFont()
+                font.setBold(True)
+                self.setFont(0, font)
+                self.setForeground(0, Color(*color_names.YELLOW.to_rgb()).to_qt())
+
             warning_icon = QIcon(str(Path(ICON_DIR / "model_setup_items/warning_yellow.png")))
             self.setIcon(0, warning_icon)
+
         else:
             # Resets data to default
             self.setData(0, Qt.FontRole, None)  # reset color

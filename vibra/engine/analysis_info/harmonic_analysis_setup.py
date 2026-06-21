@@ -21,6 +21,7 @@ class HarmonicAnalysisSetup:
     modes_number: int = 40
     sigma_factor: float = 0.01
     global_damping: tuple[float, float, float] = (0.0, 0.0, 0.0)
+    outdated_solution: bool = False
 
     @property
     def f_size(self):
@@ -55,6 +56,7 @@ class HarmonicAnalysisSetup:
             "frequencies": self.get_frequencies(),
             "solution_steps_mask": self.get_mask(),
             "global_damping": self.global_damping,
+            "outdated_solution" : self.outdated_solution,
         }
 
         if self.frequency_spacing == FrequencySpacing.EQUALLY_DISTRIBUTED:

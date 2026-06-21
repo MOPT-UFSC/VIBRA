@@ -25,7 +25,7 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
-        Dialog.resize(900, 500)
+        Dialog.resize(878, 500)
         Dialog.setMinimumSize(QSize(600, 500))
         Dialog.setMaximumSize(QSize(900, 600))
         self.gridLayout = QGridLayout(Dialog)
@@ -95,13 +95,13 @@ class Ui_Dialog(object):
 
         self.gridLayout_2.addWidget(self.lineEdit_selection_id, 0, 2, 1, 1)
 
-        self.label_3 = QLabel(self.frame)
-        self.label_3.setObjectName(u"label_3")
-        self.label_3.setFont(font1)
-        self.label_3.setTextFormat(Qt.TextFormat.AutoText)
-        self.label_3.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+        self.label_selected_material = QLabel(self.frame)
+        self.label_selected_material.setObjectName(u"label_selected_material")
+        self.label_selected_material.setFont(font1)
+        self.label_selected_material.setTextFormat(Qt.TextFormat.AutoText)
+        self.label_selected_material.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
-        self.gridLayout_2.addWidget(self.label_3, 1, 1, 1, 1)
+        self.gridLayout_2.addWidget(self.label_selected_material, 1, 1, 1, 1)
 
         self.lineEdit_selected_material_name = QLineEdit(self.frame)
         self.lineEdit_selected_material_name.setObjectName(u"lineEdit_selected_material_name")
@@ -136,7 +136,7 @@ class Ui_Dialog(object):
         self.scrollArea_table_of_materials.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 870, 322))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 848, 322))
         self.scrollArea_table_of_materials.setWidget(self.scrollAreaWidgetContents)
 
         self.gridLayout_5.addWidget(self.scrollArea_table_of_materials, 0, 0, 1, 1)
@@ -257,7 +257,7 @@ class Ui_Dialog(object):
 
         self.label.setText(QCoreApplication.translate("Dialog", u"Selection:", None))
         self.lineEdit_selection_id.setText("")
-        self.label_3.setText(QCoreApplication.translate("Dialog", u"Selected material:", None))
+        self.label_selected_material.setText(QCoreApplication.translate("Dialog", u"Selected material:", None))
         self.lineEdit_selected_material_name.setText("")
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_setup), QCoreApplication.translate("Dialog", u"Setup", None))
         self.pushButton_reset.setText(QCoreApplication.translate("Dialog", u"Reset", None))
@@ -292,7 +292,7 @@ class SetMaterial_UI(QDialog, Ui_Dialog):
                                         - comboBox_attribution_type: QComboBox
                                         - label: QLabel
                                         - lineEdit_selection_id: QLineEdit
-                                        - label_3: QLabel
+                                        - label_selected_material: QLabel
                                         - lineEdit_selected_material_name: QLineEdit
                             - tabWidget_main: QTabWidget
                                 - tab_setup: QWidget

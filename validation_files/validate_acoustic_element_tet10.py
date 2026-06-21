@@ -2,12 +2,8 @@ from typing import TYPE_CHECKING
 
 from validation_files.data.WB.load_external_data import LoadExternalData
 from vibra import PROJECT_DIR
-from vibra.engine.analysis_info import (
-    AnalysisID,
-    FrequencySpacing,
-)
+from vibra.engine.analysis_info import AnalysisID, FrequencySpacing
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
-from vibra.engine.mesher.element_setup import TETRAHEDRON_10
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.engine.postprocessing.acoustic_postprocessing import AcousticPostprocessing
@@ -72,7 +68,6 @@ def load_external_mesh_and_solve():
     mesh.export_nodal_coordinates("nodal_coordinates.dat")
     mesh.export_solid_elements_connectivity("solids_connectivity.dat")
     mesh.export_face_elements_connectivity("faces_connectivity.dat")
-    mesh.element_type = TETRAHEDRON_10
 
     # print()
     # print("Solids connectivity: ")
@@ -128,10 +123,11 @@ def load_external_mesh_and_solve():
         molar_mass=molar_mass,
     )
 
-    ## assign the created fluid
+    ## intialize the model
     model = Model()
     model.mesh = mesh
 
+    ## assign the created fluid
     for _vol_id in [1]:
         model.properties._set_property("fluid", fluid, volume=_vol_id)
 
@@ -175,7 +171,6 @@ def load_external_mesh_and_solve():
 
     # Set the analysis setup
     model.set_analysis_setup(analysis_setup)
-    model.set_analysis_id(AnalysisID.ACOUSTIC_HARMONIC)
 
     assembler = AcousticAssembler(model)
 

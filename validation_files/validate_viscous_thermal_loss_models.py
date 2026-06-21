@@ -4,12 +4,8 @@ from time import time
 import matplotlib.pyplot as plt
 import numpy as np
 
-from vibra.engine.analysis_info import (
-    AnalysisID,
-    FrequencySpacing,
-)
+from vibra.engine.analysis_info import AnalysisID, FrequencySpacing
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
-from vibra.engine.mesher.element_setup import TETRAHEDRON_4
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.engine.postprocessing import AcousticPostprocessing
@@ -45,7 +41,6 @@ def load_external_mesh_and_solve():
     mesh.import_external_solids_connectivity(external_mesh.solids_connectivities, index_zero=True, etype_tag=4)
     mesh.export_nodal_coordinates("nodal_coordinates.dat")
     mesh.export_solid_elements_connectivity("solids_connectivity.dat")
-    mesh.element_type = TETRAHEDRON_4
 
     for named_selection, surf_data in external_mesh.elements_from_named_selection.items():
         tag = named_selecion_to_tag[named_selection]
@@ -86,10 +81,11 @@ def load_external_mesh_and_solve():
         molar_mass=molar_mass,
     )
 
-    # Set the defined fluid
+    ## intialize the model
     model = Model()
     model.mesh = mesh
 
+    ## assign the created fluid
     for vol_id in [1, 2, 3, 4, 5]:
         model.properties._set_property("fluid", fluid, volume=vol_id)
 
@@ -127,7 +123,6 @@ def load_external_mesh_and_solve():
     frequencies = analysis_setup.get_frequencies()
 
     model.set_analysis_setup(analysis_setup)
-    model.set_analysis_id(AnalysisID.ACOUSTIC_HARMONIC)
 
     # Configure the viscous-thermal models
 

@@ -808,9 +808,9 @@ class AcousticAssembler:
         self.mass_source_vector_points = np.array([])
 
         model_properties = {
-                            "point_properties" : self.properties.point_properties,
-                            "nodal_properties" : self.properties.nodal_properties,
-                            }
+            "point_properties": self.properties.point_properties,
+            "nodal_properties": self.properties.nodal_properties,
+        }
 
         for prop_label, model_property in model_properties.items():
             for (property, *args), data in model_property.items():
@@ -818,27 +818,34 @@ class AcousticAssembler:
                 if property != "mass_source":
                     continue
 
+                if not isinstance(data, dict):
+                    continue
+
                 if not self.mass_source_vector_points.any():
                     self.mass_source_vector_points = np.zeros((self.total_dof, self.number_frequencies), dtype=complex)
 
-                if "values" in data.keys():
-                    complex_values = data.get("values")[0]
-
                 volume_id = data.get("volume_id")
+                if volume_id is None:
+                    continue
+
                 fluid = self.model.properties._get_property("fluid", volume=volume_id)
-                density = fluid.fluid_density
+                if not isinstance(fluid, Fluid):
+                    continue
+
+                values = data.get("values")
+                if values is None:
+                    continue
 
                 if prop_label == "nodal_properties":
                     node_id = args[0]
-
                 else:
                     point_id = args[0]
                     node_id = self.model.mesh.nodes_from_points.get(point_id)
 
                 # normalize data type to array
-                complex_values_array = self.get_value_in_array_form(complex_values)
+                complex_values_array = self.get_value_in_array_form(values[0], flatten=True)
 
-                self.mass_source_vector_points[node_id, :] += complex_values_array / density
+                self.mass_source_vector_points[node_id, :] += complex_values_array / fluid.fluid_density
 
         if self.mass_source_vector_points.any():
             self.mass_source_vector_points = self.mass_source_vector_points[self.unprescribed_indexes, :]
@@ -857,11 +864,15 @@ class AcousticAssembler:
             if property != "mass_source":
                 continue
 
-            if not self.mass_source_vector_lines.any():
-                self.mass_source_vector_lines = np.zeros((self.total_dof, self.number_frequencies), dtype=complex)
+            if not isinstance(data, dict):
+                continue
 
-            if "values" in data.keys():
-                complex_values = data.get("values")[0]
+            if not self.mass_source_vector_points.any():
+                self.mass_source_vector_points = np.zeros((self.total_dof, self.number_frequencies), dtype=complex)
+
+            values = data.get("values")
+            if values is None:
+                continue
 
             nodes = self.model.mesh.get_nodes_from_line(args[0])
             if nodes is None:
@@ -870,7 +881,7 @@ class AcousticAssembler:
             aux_ones = np.ones((nodes.size, 1), dtype=float)
 
             # normalize data type to array
-            complex_values_array = self.get_value_in_array_form(complex_values)
+            complex_values_array = self.get_value_in_array_form(values[0])
 
             self.mass_source_vector_lines[nodes, :] += aux_ones @ complex_values_array
 
@@ -891,11 +902,15 @@ class AcousticAssembler:
             if property != "mass_source":
                 continue
 
-            if not self.mass_source_vector_surfaces.any():
-                self.mass_source_vector_surfaces = np.zeros((self.total_dof, self.number_frequencies), dtype=complex)
+            if not isinstance(data, dict):
+                continue
 
-            if "values" in data.keys():
-                complex_values = data.get("values")[0]
+            if not self.mass_source_vector_points.any():
+                self.mass_source_vector_points = np.zeros((self.total_dof, self.number_frequencies), dtype=complex)
+
+            values = data.get("values")
+            if values is None:
+                continue
 
             nodes = self.model.mesh.get_nodes_from_surface(args[0])
             if nodes is None:
@@ -904,7 +919,7 @@ class AcousticAssembler:
             aux_ones = np.ones((nodes.size, 1), dtype=float)
 
             # normalize data type to array
-            complex_values_array = self.get_value_in_array_form(complex_values)
+            complex_values_array = self.get_value_in_array_form(values[0])
 
             self.mass_source_vector_surfaces[nodes, :] += aux_ones @ complex_values_array
 
@@ -925,11 +940,15 @@ class AcousticAssembler:
             if property != "mass_source":
                 continue
 
-            if not self.mass_source_vector_volumes.any():
-                self.mass_source_vector_volumes = np.zeros((self.total_dof, self.number_frequencies), dtype=complex)
+            if not isinstance(data, dict):
+                continue
 
-            if "values" in data.keys():
-                complex_values = data.get("values")[0]
+            if not self.mass_source_vector_points.any():
+                self.mass_source_vector_points = np.zeros((self.total_dof, self.number_frequencies), dtype=complex)
+
+            values = data.get("values")
+            if values is None:
+                continue
 
             nodes = self.model.mesh.get_nodes_from_volume(args[0])
             if nodes is None:
@@ -938,7 +957,7 @@ class AcousticAssembler:
             aux_ones = np.ones((nodes.size, 1), dtype=float)
 
             # normalize data type to array
-            complex_values_array = self.get_value_in_array_form(complex_values)
+            complex_values_array = self.get_value_in_array_form(values[0])
 
             self.mass_source_vector_volumes[nodes, :] += aux_ones @ complex_values_array
 

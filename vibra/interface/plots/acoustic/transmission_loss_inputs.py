@@ -7,7 +7,6 @@ from PySide6.QtCore import QEvent, QObject, Qt, Signal
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
-from vibra.engine import AnalysisID
 from vibra.engine.properties.fluid import Fluid
 from vibra.interface import error_title
 from vibra.interface.data_handler.export_model_results import ExportModelResults

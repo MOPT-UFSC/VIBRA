@@ -671,12 +671,12 @@
                </property>
                <item>
                 <property name="text">
-                 <string>Absolute (animation)</string>
+                 <string>Non-absolute (animation)</string>
                 </property>
                </item>
                <item>
                 <property name="text">
-                 <string>Non-absolute (animation)</string>
+                 <string>Absolute (animation)</string>
                 </property>
                </item>
                <item>

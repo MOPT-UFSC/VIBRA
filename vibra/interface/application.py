@@ -2,11 +2,14 @@ from PySide6.QtWidgets import QApplication
 
 from vibra import TEMP_PROJECT_DIR
 from vibra.interface.splash_screen import SplashScreen
+from vibra.utils.time_utils import warn_delay_since_start
 
 
 class Application(QApplication):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        warn_delay_since_start("Initialization before Splash Screen", maximum_time=1)
 
         # create the splash screen
         self.splash = SplashScreen(self)
@@ -31,14 +34,14 @@ class Application(QApplication):
 
     def filter_scroll_by_wheel_event(self):
         from PySide6.QtCore import QEvent, QObject
-        from PySide6.QtWidgets import QTabBar, QAbstractSpinBox, QComboBox
+        from PySide6.QtWidgets import QComboBox, QTabBar
 
         class Filter(QObject):
             def eventFilter(self, obj, event):
                 if event.type() != QEvent.Wheel:
                     return False
-                
-                widgets = [QTabBar, QAbstractSpinBox, QComboBox]
+
+                widgets = [QTabBar, QComboBox]
                 for widget in widgets:
                     if isinstance(obj, widget):
                         return True

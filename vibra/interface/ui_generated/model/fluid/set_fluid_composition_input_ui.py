@@ -401,20 +401,6 @@ class Ui_Dialog(object):
 
         self.gridLayout_15.addWidget(self.label_pressure, 2, 1, 1, 1)
 
-        self.comboBox_temperature_units = QComboBox(self.frame_10)
-        self.comboBox_temperature_units.addItem("")
-        self.comboBox_temperature_units.addItem("")
-        self.comboBox_temperature_units.addItem("")
-        self.comboBox_temperature_units.setObjectName(u"comboBox_temperature_units")
-        self.comboBox_temperature_units.setMinimumSize(QSize(100, 28))
-        self.comboBox_temperature_units.setMaximumSize(QSize(100, 28))
-        font10 = QFont()
-        font10.setFamilies([u"MS Shell Dlg 2"])
-        font10.setItalic(False)
-        self.comboBox_temperature_units.setFont(font10)
-
-        self.gridLayout_15.addWidget(self.comboBox_temperature_units, 1, 4, 1, 1)
-
         self.lineEdit_pressure_left = QLineEdit(self.frame_10)
         self.lineEdit_pressure_left.setObjectName(u"lineEdit_pressure_left")
         self.lineEdit_pressure_left.setEnabled(True)
@@ -454,6 +440,20 @@ class Ui_Dialog(object):
         self.lineEdit_pressure_right.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout_15.addWidget(self.lineEdit_pressure_right, 2, 3, 1, 1)
+
+        self.comboBox_temperature_units = QComboBox(self.frame_10)
+        self.comboBox_temperature_units.addItem("")
+        self.comboBox_temperature_units.addItem("")
+        self.comboBox_temperature_units.addItem("")
+        self.comboBox_temperature_units.setObjectName(u"comboBox_temperature_units")
+        self.comboBox_temperature_units.setMinimumSize(QSize(100, 28))
+        self.comboBox_temperature_units.setMaximumSize(QSize(100, 28))
+        font10 = QFont()
+        font10.setFamilies([u"MS Shell Dlg 2"])
+        font10.setItalic(False)
+        self.comboBox_temperature_units.setFont(font10)
+
+        self.gridLayout_15.addWidget(self.comboBox_temperature_units, 1, 4, 1, 1)
 
         self.comboBox_pressure_units = QComboBox(self.frame_10)
         self.comboBox_pressure_units.addItem("")
@@ -600,23 +600,23 @@ class Ui_Dialog(object):
         self.gridLayout_4.setSpacing(0)
         self.gridLayout_4.setObjectName(u"gridLayout_4")
         self.gridLayout_4.setContentsMargins(0, 0, 0, 0)
-        self.pushButton_exit = QPushButton(self.frame_buttons)
-        self.pushButton_exit.setObjectName(u"pushButton_exit")
-        self.pushButton_exit.setMinimumSize(QSize(160, 30))
-        self.pushButton_exit.setMaximumSize(QSize(160, 30))
-        self.pushButton_exit.setFont(font3)
-        self.pushButton_exit.setStyleSheet(u"")
+        self.pushButton_cancel = QPushButton(self.frame_buttons)
+        self.pushButton_cancel.setObjectName(u"pushButton_cancel")
+        self.pushButton_cancel.setMinimumSize(QSize(160, 30))
+        self.pushButton_cancel.setMaximumSize(QSize(160, 30))
+        self.pushButton_cancel.setFont(font3)
+        self.pushButton_cancel.setStyleSheet(u"")
 
-        self.gridLayout_4.addWidget(self.pushButton_exit, 0, 0, 1, 1)
+        self.gridLayout_4.addWidget(self.pushButton_cancel, 0, 0, 1, 1)
 
-        self.pushButton_confirm = QPushButton(self.frame_buttons)
-        self.pushButton_confirm.setObjectName(u"pushButton_confirm")
-        self.pushButton_confirm.setMinimumSize(QSize(160, 30))
-        self.pushButton_confirm.setMaximumSize(QSize(160, 30))
-        self.pushButton_confirm.setFont(font3)
-        self.pushButton_confirm.setStyleSheet(u"")
+        self.pushButton_get_fluid_properties = QPushButton(self.frame_buttons)
+        self.pushButton_get_fluid_properties.setObjectName(u"pushButton_get_fluid_properties")
+        self.pushButton_get_fluid_properties.setMinimumSize(QSize(160, 30))
+        self.pushButton_get_fluid_properties.setMaximumSize(QSize(160, 30))
+        self.pushButton_get_fluid_properties.setFont(font3)
+        self.pushButton_get_fluid_properties.setStyleSheet(u"")
 
-        self.gridLayout_4.addWidget(self.pushButton_confirm, 0, 1, 1, 1)
+        self.gridLayout_4.addWidget(self.pushButton_get_fluid_properties, 0, 1, 1, 1)
 
 
         self.gridLayout_11.addWidget(self.frame_buttons, 2, 0, 1, 1)
@@ -625,14 +625,13 @@ class Ui_Dialog(object):
         QWidget.setTabOrder(self.lineEdit_temperature_left, self.lineEdit_temperature_right)
         QWidget.setTabOrder(self.lineEdit_temperature_right, self.lineEdit_pressure_left)
         QWidget.setTabOrder(self.lineEdit_pressure_left, self.lineEdit_pressure_right)
-        QWidget.setTabOrder(self.lineEdit_pressure_right, self.comboBox_temperature_units)
-        QWidget.setTabOrder(self.comboBox_temperature_units, self.pushButton_confirm)
-        QWidget.setTabOrder(self.pushButton_confirm, self.pushButton_exit)
-        QWidget.setTabOrder(self.pushButton_exit, self.tableWidget_new_fluid)
+        QWidget.setTabOrder(self.lineEdit_pressure_right, self.pushButton_get_fluid_properties)
+        QWidget.setTabOrder(self.pushButton_get_fluid_properties, self.pushButton_cancel)
+        QWidget.setTabOrder(self.pushButton_cancel, self.tableWidget_new_fluid)
 
         self.retranslateUi(Dialog)
 
-        self.comboBox_temperature_units.setCurrentIndex(1)
+        self.comboBox_temperature_units.setCurrentIndex(0)
 
 
         QMetaObject.connectSlotsByName(Dialog)
@@ -671,28 +670,28 @@ class Ui_Dialog(object):
         self.label_temperature.setText(QCoreApplication.translate("Dialog", u"Temperature:", None))
         self.lineEdit_temperature_right.setText("")
         self.label_pressure.setText(QCoreApplication.translate("Dialog", u"Pressure:", None))
-        self.comboBox_temperature_units.setItemText(0, QCoreApplication.translate("Dialog", u"  K", None))
-        self.comboBox_temperature_units.setItemText(1, QCoreApplication.translate("Dialog", u"  \u00baC", None))
-        self.comboBox_temperature_units.setItemText(2, QCoreApplication.translate("Dialog", u"  \u00baF", None))
-
         self.lineEdit_pressure_left.setText("")
         self.label_thermostate_left.setText(QCoreApplication.translate("Dialog", u"Suction", None))
         self.label_thermostate_right.setText(QCoreApplication.translate("Dialog", u"Discharge", None))
         self.lineEdit_pressure_right.setText("")
-        self.comboBox_pressure_units.setItemText(0, QCoreApplication.translate("Dialog", u" Pa (a)", None))
-        self.comboBox_pressure_units.setItemText(1, QCoreApplication.translate("Dialog", u" kPa (a)", None))
-        self.comboBox_pressure_units.setItemText(2, QCoreApplication.translate("Dialog", u" atm (a)", None))
-        self.comboBox_pressure_units.setItemText(3, QCoreApplication.translate("Dialog", u" bar (a)", None))
-        self.comboBox_pressure_units.setItemText(4, QCoreApplication.translate("Dialog", u" kgf/cm\u00b2 (a)", None))
-        self.comboBox_pressure_units.setItemText(5, QCoreApplication.translate("Dialog", u" psi (a)", None))
-        self.comboBox_pressure_units.setItemText(6, QCoreApplication.translate("Dialog", u" ksi (a)", None))
-        self.comboBox_pressure_units.setItemText(7, QCoreApplication.translate("Dialog", u" Pa (g)", None))
-        self.comboBox_pressure_units.setItemText(8, QCoreApplication.translate("Dialog", u" kPa (g)", None))
-        self.comboBox_pressure_units.setItemText(9, QCoreApplication.translate("Dialog", u" atm (g)", None))
-        self.comboBox_pressure_units.setItemText(10, QCoreApplication.translate("Dialog", u" bar (g)", None))
-        self.comboBox_pressure_units.setItemText(11, QCoreApplication.translate("Dialog", u" kgf/cm\u00b2 (g)", None))
-        self.comboBox_pressure_units.setItemText(12, QCoreApplication.translate("Dialog", u" psi (g)", None))
-        self.comboBox_pressure_units.setItemText(13, QCoreApplication.translate("Dialog", u" ksi (g)", None))
+        self.comboBox_temperature_units.setItemText(0, QCoreApplication.translate("Dialog", u"K", None))
+        self.comboBox_temperature_units.setItemText(1, QCoreApplication.translate("Dialog", u"\u00b0C", None))
+        self.comboBox_temperature_units.setItemText(2, QCoreApplication.translate("Dialog", u"\u00b0F", None))
+
+        self.comboBox_pressure_units.setItemText(0, QCoreApplication.translate("Dialog", u"Pa (a)", None))
+        self.comboBox_pressure_units.setItemText(1, QCoreApplication.translate("Dialog", u"kPa (a)", None))
+        self.comboBox_pressure_units.setItemText(2, QCoreApplication.translate("Dialog", u"atm (a)", None))
+        self.comboBox_pressure_units.setItemText(3, QCoreApplication.translate("Dialog", u"bar (a)", None))
+        self.comboBox_pressure_units.setItemText(4, QCoreApplication.translate("Dialog", u"kgf/cm\u00b2 (a)", None))
+        self.comboBox_pressure_units.setItemText(5, QCoreApplication.translate("Dialog", u"psi (a)", None))
+        self.comboBox_pressure_units.setItemText(6, QCoreApplication.translate("Dialog", u"ksi (a)", None))
+        self.comboBox_pressure_units.setItemText(7, QCoreApplication.translate("Dialog", u"Pa (g)", None))
+        self.comboBox_pressure_units.setItemText(8, QCoreApplication.translate("Dialog", u"kPa (g)", None))
+        self.comboBox_pressure_units.setItemText(9, QCoreApplication.translate("Dialog", u"atm (g)", None))
+        self.comboBox_pressure_units.setItemText(10, QCoreApplication.translate("Dialog", u"bar (g)", None))
+        self.comboBox_pressure_units.setItemText(11, QCoreApplication.translate("Dialog", u"kgf/cm\u00b2 (g)", None))
+        self.comboBox_pressure_units.setItemText(12, QCoreApplication.translate("Dialog", u"psi (g)", None))
+        self.comboBox_pressure_units.setItemText(13, QCoreApplication.translate("Dialog", u"ksi (g)", None))
 
         self.label_number_of_fluids.setText(QCoreApplication.translate("Dialog", u"Number of fluids:", None))
         self.label_decay_factor_2.setText(QCoreApplication.translate("Dialog", u"Color scale:", None))
@@ -707,8 +706,8 @@ class Ui_Dialog(object):
         self.comboBox_color_scale.setItemText(0, QCoreApplication.translate("Dialog", u"Red-to-blue", None))
         self.comboBox_color_scale.setItemText(1, QCoreApplication.translate("Dialog", u"Blue-to-red", None))
 
-        self.pushButton_exit.setText(QCoreApplication.translate("Dialog", u"Exit", None))
-        self.pushButton_confirm.setText(QCoreApplication.translate("Dialog", u"Get fluid properties", None))
+        self.pushButton_cancel.setText(QCoreApplication.translate("Dialog", u"Cancel", None))
+        self.pushButton_get_fluid_properties.setText(QCoreApplication.translate("Dialog", u"Get fluid properties", None))
     # retranslateUi
 
 
@@ -758,11 +757,11 @@ class SetFluidCompositionInput_UI(QDialog, Ui_Dialog):
                                                     - label_temperature: QLabel
                                                     - lineEdit_temperature_right: QLineEdit
                                                     - label_pressure: QLabel
-                                                    - comboBox_temperature_units: QComboBox
                                                     - lineEdit_pressure_left: QLineEdit
                                                     - label_thermostate_left: QLabel
                                                     - label_thermostate_right: QLabel
                                                     - lineEdit_pressure_right: QLineEdit
+                                                    - comboBox_temperature_units: QComboBox
                                                     - comboBox_pressure_units: QComboBox
                                         - frame_multiple_fluids: QFrame
                                             - (Layout): QGridLayout
@@ -776,8 +775,8 @@ class SetFluidCompositionInput_UI(QDialog, Ui_Dialog):
                                                     - comboBox_color_scale: QComboBox
                 - frame_buttons: QFrame
                     - (Layout): QGridLayout
-                            - pushButton_exit: QPushButton
-                            - pushButton_confirm: QPushButton
+                            - pushButton_cancel: QPushButton
+                            - pushButton_get_fluid_properties: QPushButton
     """
 
     def __init__(self, *args, **kwargs):

@@ -6,12 +6,12 @@ import numpy as np
 from vibra.engine.analysis_info import HarmonicAnalysisSetup
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
+from vibra.engine.serialization.lazy_hdf5_matrix import LazyHDF5MatrixWriter
 from vibra.engine.serialization.project_paths import ProjectPaths
 from vibra.engine.solution import HarmonicSolution
 from vibra.engine.solution.lazy_harmonic_solution import LazyHarmonicSolution
 from vibra.engine.solvers import ModalSolver
 from vibra.engine.solvers.linear_solver import LinearSolver, SolverType, initialize_solver
-from vibra.project_files.lazy_hdf5_matrix import LazyHDF5MatrixWriter
 
 
 class HarmonicSolver:
@@ -68,22 +68,22 @@ class HarmonicSolver:
         if isinstance(self.assembler, StructuralAssembler):
             self.displacement_dof = self.assembler.displacement_dof
 
-        if self.project_paths:
-            num_rows = self.assembler.total_dof
-            solution = LazyHDF5MatrixWriter(
-                self.project_paths.harmonic_solution_filepath,
-                num_rows,
-                self.frequencies,
-                complex,
-                is_resume,
-            )
-
-            if self.displacement_dof is not None:
-                solution.save_extra_data("displacement_dof", self.displacement_dof, dtype=int)
-
-        else:
+        if self.project_paths is None:
             num_rows = self.assembler.stiffness_matrix.shape[0]
             solution = np.zeros((num_rows, len(self.frequencies)), dtype=complex)
+            return solution
+
+        num_rows = self.assembler.total_dof
+        solution = LazyHDF5MatrixWriter(
+            self.project_paths.harmonic_solution_filepath,
+            num_rows,
+            self.frequencies,
+            complex,
+            is_resume,
+        )
+
+        if self.displacement_dof is not None:
+            solution.save_extra_data("displacement_dof", self.displacement_dof, dtype=int)
 
         return solution
 

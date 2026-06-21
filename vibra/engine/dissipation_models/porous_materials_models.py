@@ -64,7 +64,7 @@ class PorousMaterialModels:
 
         if frequencies is None:
             return
-        
+
         if isinstance(frequencies, list):
             frequencies = np.array(frequencies, dtype=float)
 
@@ -80,27 +80,24 @@ class PorousMaterialModels:
 
         for key, data in self.properties.volume_properties.items():
             property, volume_id = key
-            if property == "porous_material_model":
+            if property != "porous_material_model":
+                continue
 
-                fluid = self.properties._get_property("fluid", volume = volume_id)
+            fluid = self.properties._get_property("fluid", volume = volume_id)
 
-                if data["model"] in ["Delany-Bazley", "Delany-Bazley-Miki"]:
-                    rho_eff, C_eff = self.get_Delany_Bazley_Miki_effective_properties(omega, fluid, data)
+            if data["model"] in ["Delany-Bazley", "Delany-Bazley-Miki"]:
+                rho_eff, C_eff = self.get_Delany_Bazley_Miki_effective_properties(omega, fluid, data)
 
-                elif data["model"] == "Jhonson-Champoux-Allard":
-                    rho_eff, C_eff = self.get_JCA_effective_properties(omega, fluid, data)
+            elif data["model"] == "Jhonson-Champoux-Allard":
+                rho_eff, C_eff = self.get_JCA_effective_properties(omega, fluid, data)
 
-                elif data["model"] == "Jhonson-Champoux-Allard-Lafarge":
-                    rho_eff, C_eff = self.get_JCAL_effective_properties(omega, fluid, data)
+            elif data["model"] == "Jhonson-Champoux-Allard-Lafarge":
+                rho_eff, C_eff = self.get_JCAL_effective_properties(omega, fluid, data)
 
-                else:
-                    continue
+            else:
+                continue
 
-                self.effective_properties[volume_id] = {   
-                                                         "model" : data["model"],
-                                                         "rho_eff" : rho_eff,
-                                                         "C_eff" : C_eff   
-                                                         }
+            self.effective_properties[volume_id] = {"model": data["model"], "rho_eff": rho_eff, "C_eff": C_eff}
 
     def get_Delany_Bazley_Miki_effective_properties(self, omega: np.ndarray, fluid: Fluid, data: dict):
 
@@ -147,7 +144,7 @@ class PorousMaterialModels:
 
         P_0 = fluid.pressure
         rho_0 = fluid.fluid_density
-        C_0 = fluid.speed_of_sound
+        C_0 = fluid.speed_of_sound  # noqa: F841
         gamma = fluid.isentropic_exponent
         Cp = fluid.specific_heat_Cp
         mu = fluid.dynamic_viscosity
@@ -192,7 +189,7 @@ class PorousMaterialModels:
         P_0 = fluid.pressure
         rho_0 = fluid.fluid_density
         C_0 = fluid.speed_of_sound
-        Z_0 = rho_0 * C_0
+        Z_0 = rho_0 * C_0  # noqa: F841
         gamma = fluid.isentropic_exponent
         Cp = fluid.specific_heat_Cp
         mu = fluid.dynamic_viscosity

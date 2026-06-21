@@ -13,23 +13,15 @@ from vibra.engine.analysis_info import (
 )
 from vibra.engine.analysis_info.analysis_enums import AnalysisMethod
 from vibra.interface import error_title
-from vibra.interface.analysis.solutions_step_display_input import (
-    SolutionStepsDisplayInput,
-)
-from vibra.interface.analysis.user_defined_solution_steps_by_manual_input import (
-    UserDefinedSolutionStepsByManualInput,
-)
-from vibra.interface.analysis.user_defined_solution_steps_from_tabular_data_input import (
-    UserDefinedSolutionStepsFromTabularDataInput,
-)
+from vibra.interface.analysis.solutions_step_display_input import SolutionStepsDisplayInput
+from vibra.interface.analysis.user_defined_solution_steps_by_manual_input import UserDefinedSolutionStepsByManualInput
+from vibra.interface.analysis.user_defined_solution_steps_from_tabular_data_input import UserDefinedSolutionStepsFromTabularDataInput
 from vibra.interface.common.common_interface import check_mesh_related_issues#, mesher_interface_callback
 from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
-from vibra.interface.ui_generated.analysis.harmonic_analysis_setup_input_ui import (
-    HarmonicAnalysisSetupInput_UI,
-)
+from vibra.interface.ui_generated.analysis.harmonic_analysis_setup_input_ui import HarmonicAnalysisSetupInput_UI
 
 
 class TabType(IntEnum):
@@ -412,7 +404,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
             if line_edit.text() == "":
                 line_edit.setFocus()
                 return None
-            
+
         f_min = float(self.lineEdit_fmin.text())
         f_max = float(self.lineEdit_fmax.text())
 
@@ -421,35 +413,46 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         else:
             f_step = float(self.comboBox_fstep.currentText())
 
-        condition_1 = f_max < f_min + f_step
+        condition_A = f_max < f_min + f_step
 
         if self.tabular_frequency_setup is None:
-            condition_2 = True
+            condition_B = True
         else:
-            (_, f_max_tab, _, _) = self.tabular_frequency_setup
-            condition_2 = not f_max_tab >= f_max
+            (f_min_tab, f_max_tab, _, _) = self.tabular_frequency_setup
+            condition_B = not f_max_tab >= f_max
 
-        if condition_1:
-            if condition_2:
-                self.hide()
-                title = "Invalid frequency setup"
-                message = "The maximum frequency (fmax) must be greater than the sum of "
-                message += "minimum frequency (fmin) and frequency resolution (df)."
-                PrintMessageInput([error_title, title, message])
-                return None
-        
+        if condition_A and condition_B:
+            self.hide()
+            title = "Invalid frequency setup"
+            message = "The maximum frequency (fmax) must be greater than the sum of "
+            message += "minimum frequency (fmin) and frequency resolution (df)."
+            PrintMessageInput([error_title, title, message])
+            return None
+
         if self.check_tabular_frequencies_compatibility(f_min, f_max):
             return None
-        
-        if f_min % f_step:
-            f_min = np.floor(f_min / f_step) * f_step
 
-        if f_max % f_step:
-            f_max = np.ceil(f_max / f_step) * f_step
+        _f_min = f_min
+        if round(f_min % f_step, 10):
+            _f_min = np.floor(f_min / f_step) * f_step
+            print(f"The minimum frequency has been changed from {f_min} to {_f_min}")
+
+        _f_max = f_max
+        if round(f_max % f_step, 10):
+            _f_max = np.ceil(f_max / f_step) * f_step
+            print(f"The maximum frequency has been changed from {f_max} to {_f_max}")
+
+        # additional checks to prevent out-of-index access errors
+        if isinstance(self.tabular_frequency_setup, tuple):
+            if _f_min < f_min_tab:
+                _f_min = f_min_tab
+
+            if _f_max > f_max_tab:
+                _f_max = f_max_tab
 
         return {
-            "f_min" : f_min,
-            "f_max" : f_max,
+            "f_min" : _f_min,
+            "f_max" : _f_max,
             "f_step" : f_step,
             }
     
@@ -527,13 +530,13 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
 
         analysis_setup = self.model.get_harmonic_analysis_setup(**analysis_setup_data)
 
-        app().project.configure_analysis(
-            self.analysis_id,
-            analysis_setup,
-        )
+        app().project.configure_analysis(analysis_setup)
 
         self.setup_defined = True
         app().main_window.analysis_toolbar.enable_pushbutons.emit()
+
+        if app().main_window.action_results_workspace.isChecked():
+            app().main_window.action_model_workspace_callback()
 
         if not self.keep_window_open_after_enter_setup:
             self.close()

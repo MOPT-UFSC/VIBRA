@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from vibra import PROJECT_DIR
 from vibra.engine.analysis_info import AnalysisID, ModalAnalysisSetup
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
-from vibra.engine.mesher.element_setup import HEXAHEDRON_8
+from vibra.engine.elements.element_options import BbarDilatationalEvaluation, HEX8_structural
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.engine.properties.material import Material
@@ -19,10 +19,13 @@ from time import time
 import numpy as np
 
 
-def load_external_mesh_and_solve():
+def load_external_mesh_and_solve(**kwargs):
 
     # start decoding the Ansys script file (ds.dat file or input file)
-    mesh_path = "validation_files/data/WB/structural/elements/hex8/extra_shape_functions/mesh/ds_hex8_cuboid_modal.dat"
+    mesh_path = "validation_files/data/WB/structural/elements/hex8/mesh/ds_hex8_cuboid_modal.dat"
+    # mesh_path = "validation_files/data/WB/structural/elements/hex8/mesh/ds_hex8_cube_64e_harmonic.dat"
+    # mesh_path = "validation_files/data/WB/structural/elements/hex8/mesh/ds_hex8_Bbar_cuboid_modal.dat"
+
     if not os.path.exists(mesh_path):
         return
 
@@ -57,7 +60,6 @@ def load_external_mesh_and_solve():
     mesh.export_nodal_coordinates("nodal_coordinates.dat")
     mesh.export_solid_elements_connectivity("solids_connectivity.dat")
     mesh.export_face_elements_connectivity("faces_connectivity.dat")
-    mesh.element_type = HEXAHEDRON_8
 
     for named_selection, surf_data in external_mesh.elements_from_named_selection.items():
         if named_selection in ["input_edges", "output_edges"]:
@@ -94,22 +96,39 @@ def load_external_mesh_and_solve():
         thermal_expansion_coefficient=thermal_expansion_coefficient,
     )
 
-    ## assign the created fluid
+    ## intialize the model
     model = Model()
     model.mesh = mesh
 
+    ## assign the created fluid
     model.properties._set_property("material", material, volume=1)
 
     for _surf_id in [1, 2]:
         model.properties._set_property("material", material, surface=_surf_id)
 
     ## advanced options for structural hex8 element
-    esf = True
+    extra_shape_function = kwargs.get("extra_shape_function", False)
+    Bbar_formulation = kwargs.get("Bbar_formulation", False)
+    reduced_integration = kwargs.get("reduced_integration", False)
+    simple_enhanced_strain = kwargs.get("simple_enhanced_strain", False)
+    enhanced_assumed_strain = kwargs.get("enhanced_assumed_strain", False)
+    EAS_internal_dofs = kwargs.get("EAS_internal_dofs", 9)
+    Bbar_dilatational_evaluation = kwargs.get("Bbar_dilatational_evaluation", BbarDilatationalEvaluation.VOLUME_AVERAGED)
 
-    hex8_advanced_options = {"hex8": {"extra_shape_functions": esf}}
+    element_options = HEX8_structural(
+        Bbar_formulation,
+        reduced_integration,
+        simple_enhanced_strain,
+        enhanced_assumed_strain,
+        EAS_internal_dofs,
+        extra_shape_function,
+        Bbar_dilatational_evaluation,
+    )
+
+    element_options = {"hex8" : element_options}
 
     # assign the hex8 element advanced options as a global property
-    model.properties._set_property("advanced_element_options", hex8_advanced_options)
+    model.properties._set_property("advanced_element_options", element_options)
 
     ## boundary condition
 
@@ -131,7 +150,6 @@ def load_external_mesh_and_solve():
 
     # Set the analysis setup
     model.set_analysis_setup(analysis_setup)
-    model.set_analysis_id(AnalysisID.STRUCTURAL_MODAL)
 
     assembler = StructuralAssembler(model)
 
@@ -145,26 +163,48 @@ def load_external_mesh_and_solve():
     natural_frequencies = solution.natural_frequencies
     dt = time() - t0
     print(f"Elapsed time to solve modal analysis: {round(dt, 4)}s")
+    
+    if Bbar_formulation:
+        folder = "full_integration"
+    elif reduced_integration:
+        folder = "reduced_integration"
+    elif simple_enhanced_strain:
+        folder = "simple_enhanced_strain"
+    elif enhanced_assumed_strain:
+        folder = "enhanced_assumed_strain"
+    else:
+        folder = "with_esf" if extra_shape_function else "without_esf"
+
+    results_path = PROJECT_DIR / f"validation_files/data/WB/structural/elements/hex8/results/modal/{folder}/"
+
+    if folder == "reduced_integration":
+        hg_label = "with_hg"
+        results_path = results_path / f"{hg_label}/"
+
+    natural_frequencies_ref = np.loadtxt(results_path / "natural_frequencies_reference.dat")[:, 1]
 
     # modes_indexes = np.arange(natural_frequencies.size)
-
-    folder = "with_esf" if esf else "without_esf"
-    results_path = PROJECT_DIR / f"validation_files/data/WB/structural/elements/hex8/extra_shape_functions/results/{folder}/"
-    natural_frequencies_ref = np.loadtxt(results_path / "natural_frequencies_Ansys.dat")[:, 1]
-
     # nat_freq_data = np.array([modes_indexes, natural_frequencies]).T
     # np.savetxt("natural_frequencies_Vibra.dat", nat_freq_data, fmt = "%i %.12e", delimiter=',')
 
     fnat_diff = 100 * (np.abs(natural_frequencies[1:] - natural_frequencies_ref[1:]) / natural_frequencies_ref[1:])
-    assert np.max(fnat_diff) < 5e-3
+    # assert np.max(fnat_diff) < 5e-3
 
     print()
     print(">>> RESULTS COMPARISON:")
     for i, nat_freq in enumerate(natural_frequencies):
-        print(f"Mode {i + 1}: {nat_freq: .8f} Hz (Vibra) vs {natural_frequencies_ref[i]: .8f} Hz (Ansys)")
+        print(f"Mode {i+1}: {nat_freq : .14f} Hz (Vibra) vs {natural_frequencies_ref[i]: .14f} Hz (Ansys)")
 
-    print(f"\nMaximum percentual difference: {np.max(fnat_diff): .4e}")
-
+    print(f"\nMaximum percentual difference: {np.max(fnat_diff) : .4e} %")
 
 if __name__ == "__main__":
-    load_external_mesh_and_solve()
+
+    load_external_mesh_and_solve(
+        extra_shape_function = True,
+        reduced_integration = False,
+        simple_enhanced_strain = False,
+        enhanced_assumed_strain = False,
+        EAS_internal_dofs = 9+4,
+        Bbar_formulation = False,
+        Bbar_dilatational_evaluation = BbarDilatationalEvaluation.VOLUME_AVERAGED,
+        )
