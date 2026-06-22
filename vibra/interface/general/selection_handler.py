@@ -17,9 +17,6 @@ class SelectionHandler(QObject):
         self.geometry_volumes = set()
         self.volume_selection_mode = False
 
-        self.hidden_surfaces = set()
-        self.hidden_volumes = set()
-
     def clear_selection(self):
         self.set_geometry_selection()
         self.set_mesh_selection()
@@ -36,9 +33,6 @@ class SelectionHandler(QObject):
 
         if volumes is None:
             volumes = set()
-
-        surfaces = set(surfaces) - set(self.hidden_surfaces)
-        volumes = set(volumes) - set(self.hidden_volumes)
 
         # Select the surfaces associated to the selected volumes
         for volume in volumes:

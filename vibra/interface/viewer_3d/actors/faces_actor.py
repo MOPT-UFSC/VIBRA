@@ -103,7 +103,10 @@ class FacesActor(vtkActor):
                 surface_to_volume[surface] = volume
 
         self.visible_indexes = dict()
-        hidden_surfaces = app().main_window.selection.hidden_surfaces if self.allow_hidding else set()
+        hidden_surfaces = app().main_window.entity_visibility.get_hidden_surfaces()
+        if not self.allow_hidding:
+            hidden_surfaces.clear()
+
         for i, surface, _, _, *values in self.mesh.faces_connectivity:
             if surface in hidden_surfaces:
                 continue

@@ -281,13 +281,10 @@ class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
                 surfaces_to_hide.append(surface_id)
 
         if surfaces_to_hide:
-
             if len(surface_ids) == len(surfaces_to_hide):
                 return
 
-            for _surface_id in surfaces_to_hide:
-                app().main_window.selection.hidden_surfaces.add(_surface_id)
-    
+            app().main_window.entity_visibility.hide_surfaces(surfaces_to_hide)    
             app().main_window.update_hidden_plots()
 
     def keyPressEvent(self, event):
