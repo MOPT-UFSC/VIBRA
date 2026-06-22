@@ -9,13 +9,13 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>320</width>
+    <width>701</width>
     <height>240</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>240</width>
+    <width>500</width>
     <height>240</height>
    </size>
   </property>
@@ -263,13 +263,13 @@ li.checked::marker { content: &quot;\2612&quot;; }
        <widget class="QPushButton" name="ok_button">
         <property name="minimumSize">
          <size>
-          <width>80</width>
+          <width>145</width>
           <height>0</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>80</width>
+          <width>145</width>
           <height>16777215</height>
          </size>
         </property>
@@ -288,13 +288,13 @@ li.checked::marker { content: &quot;\2612&quot;; }
        <widget class="QPushButton" name="copy_log_button">
         <property name="minimumSize">
          <size>
-          <width>100</width>
+          <width>145</width>
           <height>0</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>100</width>
+          <width>145</width>
           <height>16777215</height>
          </size>
         </property>
@@ -307,13 +307,13 @@ li.checked::marker { content: &quot;\2612&quot;; }
        <widget class="QPushButton" name="copy_stacktrace_button">
         <property name="minimumSize">
          <size>
-          <width>140</width>
+          <width>145</width>
           <height>0</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>140</width>
+          <width>145</width>
           <height>16777215</height>
          </size>
         </property>

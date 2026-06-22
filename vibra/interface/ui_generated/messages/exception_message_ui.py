@@ -24,8 +24,8 @@ class Ui_Dialog(object):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
         Dialog.setWindowModality(Qt.WindowModality.ApplicationModal)
-        Dialog.resize(320, 240)
-        Dialog.setMinimumSize(QSize(240, 240))
+        Dialog.resize(701, 240)
+        Dialog.setMinimumSize(QSize(500, 240))
         Dialog.setMaximumSize(QSize(900, 600))
         Dialog.setModal(True)
         self.verticalLayout = QVBoxLayout(Dialog)
@@ -120,23 +120,23 @@ class Ui_Dialog(object):
         self.gridLayout_2.setContentsMargins(2, 2, 2, 2)
         self.ok_button = QPushButton(self.frame_button)
         self.ok_button.setObjectName(u"ok_button")
-        self.ok_button.setMinimumSize(QSize(80, 0))
-        self.ok_button.setMaximumSize(QSize(80, 16777215))
+        self.ok_button.setMinimumSize(QSize(145, 0))
+        self.ok_button.setMaximumSize(QSize(145, 16777215))
         self.ok_button.setBaseSize(QSize(0, 0))
 
         self.gridLayout_2.addWidget(self.ok_button, 0, 3, 1, 1)
 
         self.copy_log_button = QPushButton(self.frame_button)
         self.copy_log_button.setObjectName(u"copy_log_button")
-        self.copy_log_button.setMinimumSize(QSize(100, 0))
-        self.copy_log_button.setMaximumSize(QSize(100, 16777215))
+        self.copy_log_button.setMinimumSize(QSize(145, 0))
+        self.copy_log_button.setMaximumSize(QSize(145, 16777215))
 
         self.gridLayout_2.addWidget(self.copy_log_button, 0, 1, 1, 1)
 
         self.copy_stacktrace_button = QPushButton(self.frame_button)
         self.copy_stacktrace_button.setObjectName(u"copy_stacktrace_button")
-        self.copy_stacktrace_button.setMinimumSize(QSize(140, 0))
-        self.copy_stacktrace_button.setMaximumSize(QSize(140, 16777215))
+        self.copy_stacktrace_button.setMinimumSize(QSize(145, 0))
+        self.copy_stacktrace_button.setMaximumSize(QSize(145, 16777215))
         self.copy_stacktrace_button.setFont(font)
 
         self.gridLayout_2.addWidget(self.copy_stacktrace_button, 0, 2, 1, 1)
