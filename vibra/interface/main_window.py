@@ -610,7 +610,6 @@ class MainWindow(MainWindow_UI):
 
     def hide_volumes(self, volumes: set[int]):
         self.entity_visibility.hide_volumes(volumes)
-        self.update_hidden_plots()
 
     def has_hidden_part(self) -> bool:
         return any(
@@ -636,7 +635,6 @@ class MainWindow(MainWindow_UI):
 
     def action_unhide_all_callback(self):
         self.entity_visibility.unhide_all()
-        self.update_hidden_plots()
 
     def action_save_callback(self):
         self.save_project_dialog()

@@ -285,7 +285,6 @@ class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
                 return
 
             app().main_window.entity_visibility.hide_surfaces(surfaces_to_hide)    
-            app().main_window.update_hidden_plots()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
