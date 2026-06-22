@@ -901,31 +901,19 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
         self.actions_to_finalize(close_window)
 
-    def text_label(self, mask):
+    def get_dofs_labels(self, dofs_mask: list[bool], n_int: int):
 
-        if len(mask) == 6:
-            dof_labels = np.array(['Ux','Uy','Uz','Rx','Ry','Rz'])
+        def dof_label(dof_index: str, n_int: int):
+            dof_type = "U" if dof_index < 3 else "\u03b8"
+            directions = ["x", "y", "z", "x", "y", "z"]
+            data_types = ["{}{}", "d{}{}/dt", "d²{}{}/dt²"]
+            # data_types = ["{}<sub>{}</sub>", "d{}<sub>{}</sub>/dt", "d²{}<sub>{}</sub>/dt²"]
+            return data_types[n_int].format(dof_type, directions[dof_index])
 
-        elif len(mask) == 3:
-            dof_labels = np.array(['Ux','Uy','Uz'])
+        n_dofs = len(dofs_mask)
+        dof_labels = np.array([dof_label(i, n_int) for i in range(n_dofs)])[dofs_mask]
 
-        labels = dof_labels[mask]
-
-        text = ""
-        if list(mask).count(True) == 6:
-            text = "[{}, {}, {}, {}, {}, {}]".format(*labels)
-        elif list(mask).count(True) == 5:
-            text = "[{}, {}, {}, {}, {}]".format(*labels)
-        elif list(mask).count(True) == 4:
-            text = "[{}, {}, {}, {}]".format(*labels)
-        elif list(mask).count(True) == 3:
-            text = "[{}, {}, {}]".format(*labels)
-        elif list(mask).count(True) == 2:
-            text = "[{}, {}]".format(*labels)
-        elif list(mask).count(True) == 1:
-            text = "[{}]".format(*labels)
-
-        return text
+        return ", ".join([label for label in dof_labels])
 
     def add_model_info_in_tree_widget(self, entity: str):
 
@@ -951,13 +939,14 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
             if values is None:
                 continue
 
-            # if not are_there_values_different_from_zero(values):
-            #     continue
-
             element_type = data.get("element_type")
-            constrained_dof_mask = [False if value is None else True for value in values]
-            # print(constrained_dof_mask)
-            dof_labels = str(self.text_label(constrained_dof_mask))
+            n_int = data.get("integrate")
+
+            dofs_mask = [False if value is None else True for value in values]
+            if sum(dofs_mask) == 6:
+                continue
+
+            dof_labels = str(self.get_dofs_labels(dofs_mask, n_int))
 
             new = QTreeWidgetItem([f"{entity.capitalize()}-{args[0]}", dof_labels, element_type])
             for i in range(3):
