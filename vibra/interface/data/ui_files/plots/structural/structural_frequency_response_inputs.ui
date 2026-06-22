@@ -383,13 +383,13 @@
           <widget class="QComboBox" name="comboBox_structural_results">
            <property name="minimumSize">
             <size>
-             <width>140</width>
+             <width>160</width>
              <height>28</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>140</width>
+             <width>160</width>
              <height>28</height>
             </size>
            </property>
@@ -420,13 +420,13 @@
           <widget class="QComboBox" name="comboBox_selector_filter">
            <property name="minimumSize">
             <size>
-             <width>140</width>
+             <width>160</width>
              <height>30</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>140</width>
+             <width>160</width>
              <height>30</height>
             </size>
            </property>
@@ -484,7 +484,7 @@
             </font>
            </property>
            <property name="text">
-            <string>Results format:</string>
+            <string>Structural results:</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
@@ -508,13 +508,13 @@
           <widget class="QLineEdit" name="lineEdit_selection_id">
            <property name="minimumSize">
             <size>
-             <width>140</width>
+             <width>160</width>
              <height>30</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>140</width>
+             <width>160</width>
              <height>30</height>
             </size>
            </property>
@@ -538,13 +538,13 @@
           <widget class="QComboBox" name="comboBox_dof_selector">
            <property name="minimumSize">
             <size>
-             <width>140</width>
+             <width>160</width>
              <height>30</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>140</width>
+             <width>160</width>
              <height>30</height>
             </size>
            </property>

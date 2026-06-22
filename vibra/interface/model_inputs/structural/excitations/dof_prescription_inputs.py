@@ -939,13 +939,12 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
             if values is None:
                 continue
 
-            element_type = data.get("element_type")
-            n_int = data.get("integrate")
-
             dofs_mask = [False if value is None else True for value in values]
             if sum(dofs_mask) == 6:
                 continue
 
+            n_int = data.get("integrate")
+            element_type = data.get("element_type")
             dof_labels = str(self.get_dofs_labels(dofs_mask, n_int))
 
             new = QTreeWidgetItem([f"{entity.capitalize()}-{args[0]}", dof_labels, element_type])
