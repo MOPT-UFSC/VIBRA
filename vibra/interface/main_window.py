@@ -53,7 +53,7 @@ class MainWindow(MainWindow_UI):
         self.entity_visibility = EntityVisibilityHandler(app().project)
 
         self.selection.selection_changed.connect(self.selection_changed_callback)
-        # self.entity_visibility.changed.connect(self.update_hidden_plots)
+        self.entity_visibility.changed.connect(self.update_hidden_plots)
 
         self.hidden_mesh_faces = set()
         self.hidden_mesh_solids = set()

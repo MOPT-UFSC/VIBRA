@@ -9,6 +9,8 @@ class EntityVisibilityHandler(QObject):
     changed = Signal()
 
     def __init__(self, project: Project):
+        super().__init__()
+
         self.project = project
 
         self._surfaces_to_hide = set()
@@ -48,13 +50,13 @@ class EntityVisibilityHandler(QObject):
 
     def hide_surfaces(self, surfaces: Sequence[int]):
         self._surfaces_to_hide |= set(surfaces)
-        # if surfaces:
-        #     self.changed.emit()
+        if surfaces:
+            self.changed.emit()
 
     def hide_volumes(self, volumes: Sequence[int]):
         self._volumes_to_hide |= set(volumes)
-        # if volumes:
-        #     self.changed.emit()
+        if volumes:
+            self.changed.emit()
 
     def has_hidden_entity(self) -> bool:
         return bool(self._surfaces_to_hide) or bool(self._volumes_to_hide)
@@ -62,4 +64,4 @@ class EntityVisibilityHandler(QObject):
     def unhide_all(self):
         self._surfaces_to_hide.clear()
         self._volumes_to_hide.clear()
-        # self.changed.emit()
+        self.changed.emit()
