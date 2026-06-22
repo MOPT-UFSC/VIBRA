@@ -617,7 +617,10 @@ class Model:
                 else:
                     avg_value = values / den
 
-                output_data[gdof] = avg_value / ((1j * 2 * np.pi * self.frequencies)**n_int)
+                if n_int and isinstance(self.frequencies, np.ndarray):
+                    output_data[gdof] = avg_value / ((1j * 2 * np.pi * self.frequencies)**n_int)
+                else:
+                    output_data[gdof] = avg_value
 
         return output_data
 
