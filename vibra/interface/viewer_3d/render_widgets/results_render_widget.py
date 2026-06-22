@@ -349,8 +349,11 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             animation_widget = app().main_window.results_viewer_widget.get_animation_widget()
             if isinstance(animation_widget, AnimationWidget):
                 animation_widget.update_factor_label(max_value=max_value)
+                magnification_factor = animation_widget.magnification_factor
+            else:
+                magnification_factor = 1
 
-            self.analysis_actor.apply_deformation(displacements, animation_widget.magnification_factor,max_value)
+            self.analysis_actor.apply_deformation(displacements, magnification_factor, max_value)
             self.edges_actor.extract_data(self.analysis_actor.data)
 
         self.analysis_actor.plot_color_bar(color_scalars, min_value, max_value, colormap)
