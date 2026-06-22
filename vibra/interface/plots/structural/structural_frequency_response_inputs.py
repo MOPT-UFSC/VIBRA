@@ -282,7 +282,7 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
 
         directions = ["x", "y", "z", "x", "y", "z"]
         dof_type = "u" if dof_index < 3 else "\u03b8"
-        data_types = ["${}_{}$", "$d{}_{}$/dt:", "d²${}_{}$/dt²:"]
+        data_types = ["${}_{}$", "$d{}_{}$/dt", "d²${}_{}$/dt²"]
 
         index = self.comboBox_structural_results.currentIndex()
         dof_label = data_types[index].format(dof_type, directions[dof_index])
