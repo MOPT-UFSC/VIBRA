@@ -299,7 +299,7 @@ li.checked::marker { content: &quot;\2612&quot;; }
          </size>
         </property>
         <property name="text">
-         <string>Copy logs</string>
+         <string>Copy Logs</string>
         </property>
        </widget>
       </item>

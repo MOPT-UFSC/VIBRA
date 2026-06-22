@@ -163,7 +163,7 @@ class Ui_Dialog(object):
 "</style></head><body style=\" font-family:'Courier'; font-size:10pt; font-weight:400; font-style:normal;\">\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-family:'Cascadia Code'; font-size:9pt;\">Stack trace containing only the last few calls</span></p></body></html>", None))
         self.ok_button.setText(QCoreApplication.translate("Dialog", u"OK", None))
-        self.copy_log_button.setText(QCoreApplication.translate("Dialog", u"Copy logs", None))
+        self.copy_log_button.setText(QCoreApplication.translate("Dialog", u"Copy Logs", None))
         self.copy_stacktrace_button.setText(QCoreApplication.translate("Dialog", u"Copy Stacktrace", None))
     # retranslateUi
 
