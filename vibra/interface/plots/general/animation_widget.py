@@ -36,6 +36,8 @@ class AnimationWidget(AnimationWidget_UI):
 
     def _initialize(self):
         self.animating = False
+        self.frames_number = 1
+        self.sampling_time = 1
         self.current_render_widget = None
 
     def _configure_icons(self):
@@ -181,6 +183,19 @@ class AnimationWidget(AnimationWidget_UI):
         self.update_degree_label()
         self.update_color_and_deformation(clear_cache=False)
 
+    def time_frame_slider_callback(self):
+        self.update_time_frame_label()
+        self.update_color_and_deformation(clear_cache=False)
+
+    def configure_animation_slider_for_transient_plot(self, sampling_time: float, frames_number: int):
+        self.phase_slider.valueChanged.disconnect(self.phase_slider_callback)
+        self.phase_slider.setMaximum(frames_number)
+        self.phase_slider.valueChanged.connect(self.time_frame_slider_callback)
+
+        self.sampling_time = sampling_time
+        self.frames_number = frames_number
+        self.label_phase_angle.setText("0s")
+
     def magnification_factor_slider_callback(self, value: int):
         self.update_factor_label()
         self.update_color_and_deformation()
@@ -238,6 +253,11 @@ class AnimationWidget(AnimationWidget_UI):
     def update_degree_label(self):
         value = self.phase_slider.value()
         self.label_phase_angle.setText(f"{value}°")
+
+    def update_time_frame_label(self):
+        value = self.phase_slider.value()
+        time_step = (self.sampling_time / self.frames_number) * value
+        self.label_phase_angle.setText(f"{time_step : .4f}s")
 
     def update_factor_label(self, max_value=None):
         value = self.magnification_factor_slider.value() / 16

@@ -1,6 +1,7 @@
 import logging
 from time import perf_counter
 
+import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QGridLayout
@@ -85,16 +86,12 @@ class AcousticPressureWaveformFieldInputs(AcousticPressureWaveformFieldInputs_UI
         self.frame_animation.adjustSize()
 
     def update_slider_configuration(self):
-        df = self.frequencies[1] - self.frequencies[0]
-        if not df:
-            return
+        if isinstance(self.frequencies, np.ndarray):
+            N_steps = 2 * len(self.frequencies)
+            df = self.frequencies[1] - self.frequencies[0]
+            T = 1 / df
 
-        T = 1 / df
-        dt = T / len(self.frequencies)
-
-        self.animation_widget.phase_slider.setMinimum(0)
-        self.animation_widget.phase_slider.setMaximum(T)
-        self.animation_widget.phase_slider.setSingleStep(dt)
+        self.animation_widget.configure_animation_slider_for_transient_plot(T, N_steps)
 
     def load_user_preference_colormap(self):
         try:
