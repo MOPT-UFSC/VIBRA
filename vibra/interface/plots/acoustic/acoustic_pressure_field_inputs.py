@@ -22,7 +22,6 @@ class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
 
         self.load_user_preference_colormap()
         self.load_frequencies()
-        self.load_user_preference_colormap()
 
     def showEvent(self, event):
         super().showEvent(event)
