@@ -600,9 +600,8 @@ class MainWindow(MainWindow_UI):
                 ]
             )
 
-        volumes_to_hide = self.selection.calculate_volumes_to_hide()
-
-        self.hide_volumes(volumes_to_hide)
+        self.entity_visibility.hide_surfaces(self.selection.geometry_surfaces)
+        self.entity_visibility.hide_volumes(self.selection.geometry_volumes)
         self.selection.clear_selection()
 
     def recompute_hidden_volumes(self):
