@@ -604,12 +604,6 @@ class MainWindow(MainWindow_UI):
         self.entity_visibility.hide_volumes(self.selection.geometry_volumes)
         self.selection.clear_selection()
 
-    def recompute_hidden_volumes(self):
-        pass
-
-    def hide_volumes(self, volumes: set[int]):
-        self.entity_visibility.hide_volumes(volumes)
-
     def has_hidden_part(self) -> bool:
         return any(
             [
