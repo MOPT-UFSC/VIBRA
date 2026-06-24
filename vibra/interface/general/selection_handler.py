@@ -150,3 +150,75 @@ class SelectionHandler(QObject):
                 new_mesh_selection["solids"] = mesh.all_solid_element_ids() - self.mesh_solids
             if new_mesh_selection:
                 self.set_mesh_selection(**new_mesh_selection)
+
+    def select_all_points(self):
+        mesh = self.project.model.mesh
+        if mesh is None:
+            return
+
+        self.set_geometry_selection(points=mesh.all_point_ids())
+
+    def select_all_lines(self):
+        mesh = self.project.model.mesh
+        if mesh is None:
+            return
+
+        self.set_geometry_selection(lines=mesh.all_line_ids())
+
+    def select_all_surfaces(self):
+        mesh = self.project.model.mesh
+        if mesh is None:
+            return
+
+        self.set_geometry_selection(surfaces=mesh.all_surface_ids())
+
+    def select_all_volumes(self):
+        mesh = self.project.model.mesh
+        if mesh is None:
+            return
+
+        self.set_geometry_selection(volumes=mesh.all_solid_ids())
+
+    def select_all_geometry(self):
+        mesh = self.project.model.mesh
+        if mesh is None:
+            return
+
+        self.set_geometry_selection(
+            points=mesh.all_point_ids(),
+            lines=mesh.all_line_ids(),
+            surfaces=mesh.all_surface_ids(),
+            volumes=mesh.all_solid_ids(),
+        )
+
+    def select_all_nodes(self):
+        mesh = self.project.model.mesh
+        if mesh is None:
+            return
+
+        self.set_mesh_selection(nodes=mesh.all_node_ids())
+
+    def select_all_faces(self):
+        mesh = self.project.model.mesh
+        if mesh is None:
+            return
+
+        self.set_mesh_selection(faces=mesh.all_face_element_ids())
+
+    def select_all_solids(self):
+        mesh = self.project.model.mesh
+        if mesh is None:
+            return
+
+        self.set_mesh_selection(solids=mesh.all_solid_element_ids())
+
+    def select_all_mesh(self):
+        mesh = self.project.model.mesh
+        if mesh is None:
+            return
+
+        self.set_mesh_selection(
+            nodes=mesh.all_node_ids(),
+            faces=mesh.all_face_element_ids(),
+            solids=mesh.all_solid_element_ids(),
+        )
