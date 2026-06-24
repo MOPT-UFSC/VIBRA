@@ -1,10 +1,11 @@
-from PySide6.QtCore import Signal, QObject
+from PySide6.QtCore import QObject, Signal
 
 from vibra.engine.project import Project
 
+
 class SelectionHandler(QObject):
     selection_changed = Signal()
-    
+
     def __init__(self, project: Project):
         super().__init__()
         self.project = project
@@ -26,7 +27,7 @@ class SelectionHandler(QObject):
         surfaces = set()
         for volume in self.geometry_volumes:
             surfaces |= set(mesh.surfaces_from_volume.get(volume, []))
-        
+
         return surfaces
 
     def clear_selection(self):
@@ -107,17 +108,21 @@ class SelectionHandler(QObject):
     def invert_selection(self):
         mesh = self.project.model.mesh
 
-        geometry_selection_active = any([
-            self.geometry_points,
-            self.geometry_lines,
-            self.geometry_surfaces,
-            self.geometry_volumes,
-        ])
-        mesh_selection_active = any([
-            self.mesh_nodes,
-            self.mesh_faces,
-            self.mesh_solids,
-        ])
+        geometry_selection_active = any(
+            [
+                self.geometry_points,
+                self.geometry_lines,
+                self.geometry_surfaces,
+                self.geometry_volumes,
+            ]
+        )
+        mesh_selection_active = any(
+            [
+                self.mesh_nodes,
+                self.mesh_faces,
+                self.mesh_solids,
+            ]
+        )
 
         if not geometry_selection_active and not mesh_selection_active:
             return
@@ -145,19 +150,3 @@ class SelectionHandler(QObject):
                 new_mesh_selection["solids"] = mesh.all_solid_element_ids() - self.mesh_solids
             if new_mesh_selection:
                 self.set_mesh_selection(**new_mesh_selection)
-
-    def calculate_volumes_to_hide(self):
-        volumes_to_hide = set()
-        if self.geometry_volumes:
-            volumes_to_hide |= self.geometry_volumes
-
-        elif self.geometry_surfaces:
-            for surface in self.geometry_surfaces:
-                volumes_to_hide |= set(self.project.model.mesh.volumes_from_surface[surface])
-
-        elif self.mesh_solids:
-            for element in self.mesh_solids:
-                volumes_to_hide.add(self.project.model.mesh.get_volume_from_element(element))
-        return volumes_to_hide
-
-
