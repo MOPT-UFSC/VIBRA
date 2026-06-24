@@ -326,11 +326,12 @@ class MainWindow(MainWindow_UI):
         self.last_render_index = new_index
 
     def selection_changed_callback(self):
-        points = self.selection.geometry_points
-        lines = self.selection.geometry_lines
-        surfaces = self.selection.geometry_surfaces
-        volumes = self.selection.geometry_volumes
-        self.status_bar.set_selection(points, lines, surfaces, volumes)
+        self.status_bar.set_selection(
+            self.selection.geometry_points,
+            self.selection.geometry_lines,
+            self.selection.geometry_surfaces,
+            self.selection.geometry_volumes,
+        )
 
     def action_section_plane_callback(self, condition: bool):
         if condition:
