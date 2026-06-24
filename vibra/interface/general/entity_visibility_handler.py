@@ -62,6 +62,10 @@ class EntityVisibilityHandler(QObject):
         return bool(self._surfaces_to_hide) or bool(self._volumes_to_hide)
 
     def unhide_all(self):
+        # This is only to avoid unnecessary callbacks
+        if not any((self._surfaces_to_hide, self._volumes_to_hide)):
+            return
+
         self._surfaces_to_hide.clear()
         self._volumes_to_hide.clear()
         self.changed.emit()
