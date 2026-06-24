@@ -1,5 +1,5 @@
-from vibra.utils.time_utils import warn_delays
 import logging
+from datetime import datetime
 
 from molde import Color
 from molde.render_widgets import CommonRenderWidget
@@ -9,6 +9,7 @@ from PySide6.QtWidgets import QApplication
 from vibra import ICON_DIR, app
 from vibra.utils.image_functions import removes_image_background
 from vibra.utils.interface_utils import VisualizationFilter
+from vibra.utils.time_utils import warn_delays
 
 from ..actors.ghost_actor import GhostActor
 from ..actors.lines_actor import LinesActor
@@ -44,6 +45,8 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         self.geometry_selection = GeometrySelection(self)
         self.mouse_click = (0, 0)
+        self.last_click_time: datetime | None = None
+        self.is_double_click = False
 
         self.left_clicked.connect(self.click_callback)
         self.left_released.connect(self.selection_callback)
@@ -294,6 +297,13 @@ class GeometryRenderWidget(CommonRenderWidget):
     def click_callback(self, x, y):
         self.mouse_click = (x, y)
 
+        self.is_double_click = False
+        current_click_time = datetime.now()
+        if self.last_click_time is not None:
+            time_since_last_click = (current_click_time - self.last_click_time).total_seconds()
+            self.is_double_click = time_since_last_click < 0.5
+        self.last_click_time = current_click_time
+
     @warn_delays(0.2)  # this is already too much and should be optimized
     def selection_callback(self, x, y):
         if not self.actors_exists():
@@ -339,7 +349,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         shift_pressed = modifiers & Qt.ShiftModifier
         alt_pressed = modifiers & Qt.AltModifier
 
-        if not (shift_pressed or app().main_window.selection.volume_selection_mode):
+        if not (self.is_double_click or shift_pressed or app().main_window.selection.volume_selection_mode):
             picked_volumes.clear()
 
         app().main_window.selection.set_geometry_selection(
