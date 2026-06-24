@@ -17,6 +17,18 @@ class SelectionHandler(QObject):
         self.geometry_volumes = set()
         self.volume_selection_mode = False
 
+    @property
+    def surface_of_selected_volumes(self):
+        mesh = self.project.mesh
+        if mesh is None:
+            return set()
+
+        surfaces = set()
+        for volume in self.geometry_volumes:
+            surfaces |= set(mesh.surfaces_from_volume.get(volume, []))
+        
+        return surfaces
+
     def clear_selection(self):
         self.set_geometry_selection()
         self.set_mesh_selection()
@@ -33,11 +45,6 @@ class SelectionHandler(QObject):
 
         if volumes is None:
             volumes = set()
-
-        # Select the surfaces associated to the selected volumes
-        for volume in volumes:
-            volume_surfaces = self.project.model.mesh.surfaces_from_volume.get(volume, [])
-            surfaces |= set(volume_surfaces)
 
         if join and remove:
             self.geometry_points ^= set(points)

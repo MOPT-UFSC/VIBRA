@@ -348,8 +348,16 @@ class GeometryRenderWidget(CommonRenderWidget):
         ctrl_pressed = modifiers & Qt.ControlModifier
         shift_pressed = modifiers & Qt.ShiftModifier
         alt_pressed = modifiers & Qt.AltModifier
+    
+        select_volume = any([
+            self.is_double_click,
+            shift_pressed,
+            app().main_window.selection.volume_selection_mode
+        ])
 
-        if not (self.is_double_click or shift_pressed or app().main_window.selection.volume_selection_mode):
+        if select_volume:
+            picked_surfaces.clear()
+        else:
             picked_volumes.clear()
 
         app().main_window.selection.set_geometry_selection(
@@ -373,7 +381,7 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         points = app().main_window.selection.geometry_points
         lines = app().main_window.selection.geometry_lines
-        surfaces = app().main_window.selection.geometry_surfaces
+        surfaces = app().main_window.selection.geometry_surfaces | app().main_window.selection.surface_of_selected_volumes
 
         self.points_actor.paint_points(self.selection_nodes_points_color, points)
         self.lines_actor.paint_lines(self.selection_lines_color, lines)
