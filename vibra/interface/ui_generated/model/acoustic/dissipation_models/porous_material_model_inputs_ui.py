@@ -21,6 +21,8 @@ from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDialog,
     QSizePolicy, QSpacerItem, QTabWidget, QTableWidget,
     QTableWidgetItem, QTreeWidget, QTreeWidgetItem, QWidget)
 
+from vibra.interface.formatters.icons import themed_icon
+
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
@@ -392,8 +394,7 @@ class Ui_Dialog(object):
         self.pushButton_DB_equations.setMinimumSize(QSize(40, 28))
         self.pushButton_DB_equations.setMaximumSize(QSize(100, 28))
         self.pushButton_DB_equations.setFont(font1)
-        icon = QIcon()
-        icon.addFile(u":/icons/help.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon = themed_icon(u":/icons/help.png")
         self.pushButton_DB_equations.setIcon(icon)
         self.pushButton_DB_equations.setIconSize(QSize(18, 18))
 

@@ -19,6 +19,8 @@ from PySide6.QtWidgets import (QApplication, QDialog, QFrame, QGridLayout,
     QLabel, QLineEdit, QPushButton, QSizePolicy,
     QSpacerItem, QWidget)
 
+from vibra.interface.formatters.icons import themed_icon
+
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
@@ -33,8 +35,7 @@ class Ui_Dialog(object):
         Dialog.setMinimumSize(QSize(300, 220))
         Dialog.setMaximumSize(QSize(300, 220))
         Dialog.setContextMenuPolicy(Qt.ContextMenuPolicy.DefaultContextMenu)
-        icon = QIcon()
-        icon.addFile(u"../../../../../../../OpenPulse/Downloads/load - Copia.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon = themed_icon(u"../../../../../../../OpenPulse/Downloads/load - Copia.png")
         Dialog.setWindowIcon(icon)
         self.gridLayout = QGridLayout(Dialog)
         self.gridLayout.setSpacing(4)

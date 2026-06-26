@@ -21,6 +21,8 @@ from PySide6.QtWidgets import (QAbstractItemView, QApplication, QComboBox, QDial
     QSpacerItem, QTabWidget, QTableWidget, QTableWidgetItem,
     QWidget)
 
+from vibra.interface.formatters.icons import themed_icon
+
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
@@ -311,8 +313,7 @@ class Ui_Dialog(object):
 
         self.pushButton_syncrhonize = QPushButton(self.frame_6)
         self.pushButton_syncrhonize.setObjectName(u"pushButton_syncrhonize")
-        icon = QIcon()
-        icon.addFile(u":/icons/sync_enabled.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon = themed_icon(u":/icons/sync_enabled.png")
         self.pushButton_syncrhonize.setIcon(icon)
         self.pushButton_syncrhonize.setIconSize(QSize(20, 20))
         self.pushButton_syncrhonize.setAutoDefault(False)

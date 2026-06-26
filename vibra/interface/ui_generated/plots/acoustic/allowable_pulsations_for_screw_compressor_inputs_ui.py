@@ -19,6 +19,8 @@ from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFrame,
     QGridLayout, QLabel, QLineEdit, QPushButton,
     QSizePolicy, QSpacerItem, QTabWidget, QWidget)
 
+from vibra.interface.formatters.icons import themed_icon
+
 class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
@@ -173,8 +175,7 @@ class Ui_Form(object):
         font3.setItalic(False)
         self.pushButton_export_data.setFont(font3)
         self.pushButton_export_data.setStyleSheet(u"")
-        icon = QIcon()
-        icon.addFile(u":/icons/save_as.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon = themed_icon(u":/icons/save_as.png")
         self.pushButton_export_data.setIcon(icon)
         self.pushButton_export_data.setIconSize(QSize(20, 20))
         self.pushButton_export_data.setFlat(False)
@@ -253,8 +254,7 @@ class Ui_Form(object):
         self.pushButton_get_fluid.setMinimumSize(QSize(44, 0))
         self.pushButton_get_fluid.setMaximumSize(QSize(44, 28))
         self.pushButton_get_fluid.setFont(font1)
-        icon1 = QIcon()
-        icon1.addFile(u":/icons/get_fluid_blue.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon1 = themed_icon(u":/icons/get_fluid_blue.png")
         self.pushButton_get_fluid.setIcon(icon1)
         self.pushButton_get_fluid.setIconSize(QSize(20, 20))
 

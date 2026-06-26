@@ -20,6 +20,8 @@ from PySide6.QtWidgets import (QApplication, QDialog, QFrame, QGridLayout,
     QSizePolicy, QSpacerItem, QTreeWidget, QTreeWidgetItem,
     QWidget)
 
+from vibra.interface.formatters.icons import themed_icon
+
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
@@ -227,8 +229,7 @@ class Ui_Dialog(object):
         font5.setItalic(False)
         self.pushButton_search_file_to_import.setFont(font5)
         self.pushButton_search_file_to_import.setStyleSheet(u"")
-        icon = QIcon()
-        icon.addFile(u":/icons/import.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon = themed_icon(u":/icons/import.png")
         self.pushButton_search_file_to_import.setIcon(icon)
         self.pushButton_search_file_to_import.setIconSize(QSize(20, 20))
 

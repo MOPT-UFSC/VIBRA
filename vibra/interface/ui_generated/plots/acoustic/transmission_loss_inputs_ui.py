@@ -19,6 +19,8 @@ from PySide6.QtWidgets import (QApplication, QComboBox, QFrame, QGridLayout,
     QLabel, QLineEdit, QPushButton, QSizePolicy,
     QSpacerItem, QWidget)
 
+from vibra.interface.formatters.icons import themed_icon
+
 class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
@@ -234,8 +236,7 @@ class Ui_Form(object):
         font5.setItalic(False)
         self.pushButton_export_data.setFont(font5)
         self.pushButton_export_data.setStyleSheet(u"")
-        icon = QIcon()
-        icon.addFile(u":/icons/save_as.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon = themed_icon(u":/icons/save_as.png")
         self.pushButton_export_data.setIcon(icon)
         self.pushButton_export_data.setIconSize(QSize(20, 20))
         self.pushButton_export_data.setFlat(False)
@@ -248,8 +249,7 @@ class Ui_Form(object):
         self.pushButton_flip_selection.setMaximumSize(QSize(40, 30))
         self.pushButton_flip_selection.setFont(font5)
         self.pushButton_flip_selection.setStyleSheet(u"")
-        icon1 = QIcon()
-        icon1.addFile(u":/icons/invert_icon.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon1 = themed_icon(u":/icons/invert_icon.png")
         self.pushButton_flip_selection.setIcon(icon1)
         self.pushButton_flip_selection.setIconSize(QSize(22, 22))
         self.pushButton_flip_selection.setFlat(False)
@@ -318,8 +318,7 @@ class Ui_Form(object):
         self.pushButton_help.setMaximumSize(QSize(40, 30))
         self.pushButton_help.setFont(font5)
         self.pushButton_help.setStyleSheet(u"")
-        icon2 = QIcon()
-        icon2.addFile(u":/icons/help_icon.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon2 = themed_icon(u":/icons/help_icon.png")
         self.pushButton_help.setIcon(icon2)
         self.pushButton_help.setIconSize(QSize(22, 22))
         self.pushButton_help.setFlat(False)
