@@ -57,6 +57,11 @@ SUPPORTED_OUTPUT_DATA_EXTENSIONS = [
 LIGHT_ICON_COLOR = Color("#1a73e8")
 DARK_ICON_COLOR = Color("#5F9AF4")
 
+def get_icon_dir() -> Path:
+    if app().config.user_preferences.interface_theme == "light":
+        return ICON_DIR / "light_theme"
+    
+    return ICON_DIR / "dark_theme"
 
 def app() -> "Application":
     return QApplication.instance()
