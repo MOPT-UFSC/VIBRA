@@ -1,6 +1,7 @@
 <p align="center">
-   <img src="https://github.com/MOPT-UFSC/VIBRA/blob/main/pics/Vibra_Logo.png?raw=true" alt="VIBRA logo" width="500"/>
+   <img src="https://media.githubusercontent.com/media/MOPT-UFSC/molde/main/data/vibra/png/vibra_colored_other_background.png" alt="VIBRA logo" width="500"/>
 
+<a href="https://doi.org/10.5281/zenodo.20936528"><img src="https://zenodo.org/badge/662679851.svg" alt="DOI"></a>
 
 # Vibra: Vibroacoustic Analysis using FEM
 *V0.5.3 May 2026*
