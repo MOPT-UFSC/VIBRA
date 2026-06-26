@@ -4,10 +4,11 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 
-from vibra import DARK_ICON_COLOR, DARK_ICONS_DIR, LIGHT_ICON_COLOR, LIGHT_ICONS_DIR
+from vibra import DARK_ICON_COLOR, ICON_DIR, LIGHT_ICON_COLOR
 
 DIR_EXCEPTIONS = ["cursors", "figures", "logos", "model_setup_items", "__pycache__", "warnings"]
-ICONS_EXTENSIONS = [".png"]
+DARK_ICONS_DIR = ICON_DIR / "dark_theme"
+LIGHT_ICONS_DIR = ICON_DIR / "light_theme"  
 ICONS_DIRS = [DARK_ICONS_DIR, LIGHT_ICONS_DIR]
 COLORS = [DARK_ICON_COLOR, LIGHT_ICON_COLOR]
 
@@ -15,19 +16,13 @@ COLORS = [DARK_ICON_COLOR, LIGHT_ICON_COLOR]
 def get_icons_to_paint(dir: Path) -> list[Path]:
     icons_to_paint = list()
 
-    for dir_path, _, files in os.walk(os.path.abspath(dir)):
-        last_folder = Path(dir_path).name
+    for path in dir.rglob("*.png"):
+        last_folder = path.parent.name
 
         if last_folder in DIR_EXCEPTIONS:
             continue
 
-        for file in files:
-            icon_path = Path(os.path.join(dir_path, file))
-
-            if icon_path.suffix.lower() not in ICONS_EXTENSIONS:
-                continue
-
-            icons_to_paint.append(icon_path)
+        icons_to_paint.append(path)
 
     return icons_to_paint
 
