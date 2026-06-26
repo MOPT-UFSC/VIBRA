@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 from molde.render_widgets.animated_render_widget import AnimatedRenderWidget
 from PySide6.QtCore import QSize, Qt
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QFont, QIcon
 from PySide6.QtWidgets import (
     QFileDialog,
     QLabel,
@@ -12,14 +12,13 @@ from PySide6.QtWidgets import (
     QSpinBox,
 )
 
-from vibra import DARK_ICON_COLOR, ICON_DIR, LIGHT_ICON_COLOR, app
+from vibra import app
 from vibra.engine.analysis_info import PhysicalDomain
 from vibra.interface import error_title
 
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.ui_generated.plots.general.animation_widget_ui import AnimationWidget_UI
-from vibra.utils.icons import load_icon
 
 
 class AnimationWidget(AnimationWidget_UI):
@@ -39,9 +38,9 @@ class AnimationWidget(AnimationWidget_UI):
         self.current_render_widget = None
 
     def _configure_icons(self):
-        self.play_icon = load_icon(ICON_DIR / "play.png")
-        self.pause_icon = load_icon(ICON_DIR / "pause.png")
-        self.save_animation_icon = load_icon(ICON_DIR / "create_video_icon.png")
+        self.play_icon = QIcon(":/icons/play.png")
+        self.pause_icon = QIcon(":/icons/pause.png")
+        self.save_animation_icon = QIcon(":/icons/create_video_icon.png")
 
     def _config_widgets(self):
 

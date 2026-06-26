@@ -9,7 +9,7 @@ import gmsh
 from molde import stylesheets
 from molde.render_widgets import CommonRenderWidget
 from PySide6.QtCore import QEvent, Qt, Signal
-from PySide6.QtGui import QAction
+from PySide6.QtGui import QAction, QIcon
 from PySide6.QtWidgets import QFileDialog, QMenu, QMessageBox
 
 from vibra import SUPPORTED_GEOMETRY_EXTENSIONS, SUPPORTED_MESH_EXTENSIONS, TEMP_PROJECT_DIR, app
@@ -36,7 +36,6 @@ from vibra.interface.user_input.input_ui import InputUi
 from vibra.interface.user_input.render_user_preferences import RendererUserPreferencesInput
 from vibra.interface.viewer_3d.render_widgets import GeometryRenderWidget, MeshRenderWidget, ResultsRenderWidget
 from vibra.interface.welcome_widget import WelcomeWidget
-from vibra.utils.icons import load_icon
 from vibra.utils.interface_utils import GeometryColorMode, VisualizationFilter, block_signals, qt_extensions
 
 
@@ -279,7 +278,7 @@ class MainWindow(MainWindow_UI):
         self.update_renderer_font_size()
 
     def create_recents_menu(self):
-        self.recent_icon = load_icon(":/icons/recent.png")
+        self.recent_icon = QIcon(":/icons/recent.png")
 
         self.recents_menu = QMenu("Recent projects", self)
         self.recents_menu.setIcon(self.recent_icon)
@@ -326,8 +325,8 @@ class MainWindow(MainWindow_UI):
             self.section_plane.value_changed.emit()
 
     def action_theme_callback(self):
-        self.theme_sun_icon = load_icon(":/icons/sun_icon.png")
-        self.theme_moon_icon = load_icon(":/icons/moon_icon.png")
+        self.theme_sun_icon = QIcon(":/icons/sun_icon.png")
+        self.theme_moon_icon = QIcon(":/icons/moon_icon.png")
 
         if app().config.user_preferences.interface_theme == "light":
             app().config.user_preferences.set_dark_theme()

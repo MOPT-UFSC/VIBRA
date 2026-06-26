@@ -3,7 +3,7 @@ from pathlib import Path
 
 from molde.render_widgets.animated_render_widget import AnimatedRenderWidget
 from PySide6.QtCore import QSize, Qt
-from PySide6.QtGui import QFont
+from PySide6.QtGui import QFont, QIcon
 from PySide6.QtWidgets import (
     QFileDialog,
     QLabel,
@@ -14,12 +14,11 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from vibra import ICON_DIR, LIGHT_ICON_COLOR, app
+from vibra import app
 from vibra.interface import error_title
 from vibra.interface.formatters import icons
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
-from vibra.utils.icons import load_icon
 
 
 class AnimationToolbar(QToolBar):
@@ -41,11 +40,9 @@ class AnimationToolbar(QToolBar):
         self.current_render_widget = None
 
     def _load_icons(self):
-        color = LIGHT_ICON_COLOR.to_qt()
-
-        self.play_icon = load_icon(ICON_DIR / "play.png", color)
-        self.pause_icon = load_icon(ICON_DIR / "pause.png", color)
-        self.save_animation_icon = load_icon(ICON_DIR / "create_video_icon.png", color)
+        self.play_icon = QIcon(":/icons/play.png")
+        self.pause_icon = QIcon(":/icons/pause.png")
+        self.save_animation_icon = QIcon(":/icons/create_video_icon.png")
 
     def _define_qt_variables(self):
         # QLabel

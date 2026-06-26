@@ -1,17 +1,9 @@
 from molde.render_widgets import CommonRenderWidget
-from PySide6.QtGui import QAction
-from PySide6.QtWidgets import QStackedWidget, QToolBar
 from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QAction, QIcon
+from PySide6.QtWidgets import QStackedWidget, QToolBar
 
-from vibra import LIGHT_ICON_COLOR
-from vibra.utils.icons import load_icon
-from vibra.interface.viewer_3d.render_tools import (
-    RenderTool,
-    RotationTool,
-    GrabTool,
-    ZoomTool,
-    SelectionTool
-)
+from vibra.interface.viewer_3d.render_tools import GrabTool, RenderTool, RotationTool, SelectionTool, ZoomTool
 
 
 class ViewToolbar(QToolBar):
@@ -30,18 +22,18 @@ class ViewToolbar(QToolBar):
         self.setWindowTitle("View toolbar")
 
     def _load_icons(self):
-        self.top_icon = load_icon(":/icons/views/top.png")
-        self.bottom_icon = load_icon(":/icons/views/bottom.png")
-        self.right_icon = load_icon(":/icons/views/right.png")
-        self.left_icon = load_icon(":/icons/views/left.png")
-        self.front_icon = load_icon(":/icons/views/front.png")
-        self.back_icon = load_icon(":/icons/views/back.png")
-        self.isometric_icon = load_icon(":/icons/views/orthogonal.png")
-        self.zoom_to_fit_icon = load_icon(":/icons/views/zoom_icon.png")
-        self.selection_tool_icon = load_icon(":/icons/selection_icon.png")
-        self.grab_tool_icon = load_icon(":/icons/grab_icon.png")
-        self.rotation_tool_icon = load_icon(":/icons/rotation_icon.png")
-        self.zoom_tool_icon = load_icon(":/icons/zoom_icon.png")
+        self.top_icon = QIcon(":/icons/views/top.png")
+        self.bottom_icon = QIcon(":/icons/views/bottom.png")
+        self.right_icon = QIcon(":/icons/views/right.png")
+        self.left_icon = QIcon(":/icons/views/left.png")
+        self.front_icon = QIcon(":/icons/views/front.png")
+        self.back_icon = QIcon(":/icons/views/back.png")
+        self.isometric_icon = QIcon(":/icons/views/orthogonal.png")
+        self.zoom_to_fit_icon = QIcon(":/icons/views/zoom_icon.png")
+        self.selection_tool_icon = QIcon(":/icons/selection_icon.png")
+        self.grab_tool_icon = QIcon(":/icons/grab_icon.png")
+        self.rotation_tool_icon = QIcon(":/icons/rotation_icon.png")
+        self.zoom_tool_icon = QIcon(":/icons/zoom_icon.png")
 
     def _create_actions(self):
         self.action_top_view = QAction(self.top_icon, "Top View", self)
