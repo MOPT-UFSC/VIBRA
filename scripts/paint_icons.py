@@ -5,7 +5,6 @@ from PIL import Image
 
 from vibra import DARK_ICON_COLOR, ICON_DIR, LIGHT_ICON_COLOR
 
-DIR_EXCEPTIONS = ["cursors", "figures", "logos", "model_setup_items", "__pycache__", "warnings"]
 DARK_ICONS_DIR = ICON_DIR / "dark_theme"
 LIGHT_ICONS_DIR = ICON_DIR / "light_theme"  
 ICONS_DIRS = [DARK_ICONS_DIR, LIGHT_ICONS_DIR]
@@ -16,11 +15,6 @@ def get_icons_to_paint(dir: Path) -> list[Path]:
     icons_to_paint = list()
 
     for path in dir.rglob("*.png"):
-        last_folder = path.parent.name
-
-        if last_folder in DIR_EXCEPTIONS:
-            continue
-
         icons_to_paint.append(path)
 
     return icons_to_paint
