@@ -141,6 +141,9 @@ def ui_compile(c):
                             continue
                         modified_lines.append(line)
 
+                    # Make Designer resource icons follow the active theme.
+                    modified_lines = [rewrite_designer_icons("".join(modified_lines), ui_path)]
+
                     # Generate docstring with hierarchy
                     docstring = f'    """\n    Component Hierarchy:\n    {hierarchy}\n    """\n'
 
@@ -214,6 +217,54 @@ def clean_orphaned_files(root_dir: str, output_root: str) -> None:
     
     if deleted_count > 0:
         print(f"✅ Cleaned up {deleted_count} orphaned file(s)")
+
+
+THEMED_ICON_IMPORT = "from vibra.interface.formatters.icons import themed_icon\n"
+
+# Matches the ``QIcon() + addFile(":/icons/...")`` idiom emitted by pyside6-uic
+# for a single Normal/Off state, e.g.:
+#     icon1 = QIcon()
+#     icon1.addFile(u":/icons/import.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+DESIGNER_ICON_RE = re.compile(
+    r'(?m)^([ \t]*)(\w+) = QIcon\(\)\n[ \t]*\2\.addFile\(\s*u?"([^"]+)"[^\n]*\)\n'
+)
+
+
+def rewrite_designer_icons(text: str, ui_path: str) -> str:
+    """Make Designer resource icons follow the active icon theme.
+
+    Replaces the ``QIcon() + addFile(...)`` idiom emitted by pyside6-uic with
+    ``themed_icon(...)``, whose engine re-reads the active resource on each
+    repaint (so the same icon follows a ``set_icon_theme`` swap). Only the
+    single Normal/Off state form is converted; multi-state icons are left as a
+    default ``QIcon`` and reported.
+    """
+    if "QIcon.State.On" in text:
+        print(f"⚠️ {ui_path}: multi-state icon(s) detected; left as default QIcon (won't follow theme).")
+
+    new_text, count = DESIGNER_ICON_RE.subn(
+        lambda m: f'{m.group(1)}{m.group(2)} = themed_icon(u"{m.group(3)}")\n',
+        text,
+    )
+
+    if count == 0:
+        return new_text
+
+    if ".addFile(" in new_text:
+        print(f"⚠️ {ui_path}: leftover addFile() after icon rewrite; review (multi-file icon?).")
+
+    # Inject the themed_icon import once, just before the first class definition
+    # (safely after the import block, which may span multiple lines).
+    if THEMED_ICON_IMPORT not in new_text:
+        lines = new_text.splitlines(keepends=True)
+        insert_at = next(
+            (i for i, ln in enumerate(lines) if ln.startswith("class ")),
+            len(lines),
+        )
+        lines.insert(insert_at, THEMED_ICON_IMPORT + "\n")
+        new_text = "".join(lines)
+
+    return new_text
 
 
 def to_camel_case(filename: str) -> str:
