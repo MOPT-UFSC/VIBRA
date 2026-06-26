@@ -4,34 +4,86 @@ from pathlib import Path
 from molde import Color
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QColor, QIcon, QIconEngine, QPainter, QPixmap
-from PySide6.QtWidgets import QWidget
+from PySide6.QtWidgets import QApplication, QStyleOption, QWidget
+
+
+# Bumped whenever the active icon theme changes so cached pixmaps are dropped.
+_icon_generation = 0
+
+
+def invalidate_themed_icons() -> None:
+    """Invalidate every ``ResourceIconEngine`` cache (call on icon theme change).
+
+    Engines lazily clear their cache the next time they are asked for a pixmap,
+    so this is a cheap O(1) operation; the actual re-read happens on the next
+    repaint of each icon.
+    """
+    global _icon_generation
+    _icon_generation += 1
 
 
 class ResourceIconEngine(QIconEngine):
-    """Icon engine that re-reads its resource on every request.
+    """Icon engine that follows the active icon theme.
 
-    Unlike a plain ``QIcon(":/icons/...")``, which caches the pixmap of the
-    resource that was active when it was created, this engine reads the
-    currently registered resource each time it is asked for a pixmap. That
-    way the same ``QIcon`` follows the active icon theme after a
-    ``set_icon_theme`` swap, with no need to track icon paths externally nor
-    repaint icons by hand. A repaint of the owning widget is still required
-    for the new pixmap to be requested.
+    Unlike a plain ``QIcon(":/icons/...")``, which permanently caches the
+    pixmap of the resource that was active when it was created, this engine
+    re-reads the currently registered resource whenever the theme changes.
+    The same ``QIcon`` therefore follows a ``set_icon_theme`` swap, with no
+    need to track icon paths externally nor recreate icons by hand.
+
+    Pixmaps are cached per size and only dropped when
+    :func:`invalidate_themed_icons` bumps the global generation, so normal
+    repaints/scrolling cost the same as a standard ``QIcon``; only a theme
+    switch forces a re-decode. A repaint of the owning widget is still
+    required for the new pixmap to be requested.
     """
 
     def __init__(self, path: str):
         super().__init__()
         self._path = path
+        self._cache: dict[tuple[int, int, int], QPixmap] = {}
+        self._generation = -1
+
+    def _sync_generation(self) -> None:
+        if self._generation != _icon_generation:
+            self._cache.clear()
+            self._generation = _icon_generation
+
+    def _base_pixmap(self, size: QSize) -> QPixmap:
+        """Read and scale the Normal-mode pixmap, caching it per size."""
+        key = (size.width(), size.height(), QIcon.Mode.Normal.value)
+        pixmap = self._cache.get(key)
+        if pixmap is None:
+            pixmap = QPixmap(self._path)
+            if not pixmap.isNull() and pixmap.size() != size:
+                pixmap = pixmap.scaled(
+                    size,
+                    Qt.AspectRatioMode.KeepAspectRatio,
+                    Qt.TransformationMode.SmoothTransformation,
+                )
+            self._cache[key] = pixmap
+        return pixmap
 
     def pixmap(self, size: QSize, mode, state) -> QPixmap:
-        pixmap = QPixmap(self._path)
-        if pixmap.isNull() or pixmap.size() == size:
-            return pixmap
-        return pixmap.scaled(
-            size,
-            Qt.AspectRatioMode.KeepAspectRatio,
-            Qt.TransformationMode.SmoothTransformation,
-        )
+        self._sync_generation()
+
+        key = (size.width(), size.height(), mode.value)
+        cached = self._cache.get(key)
+        if cached is not None:
+            return cached
+
+        base = self._base_pixmap(size)
+        if mode == QIcon.Mode.Normal or base.isNull():
+            pixmap = base
+        else:
+            # Derive Disabled/Active/Selected appearance from the style, just
+            # like the default QIcon engine does (e.g. greys out disabled).
+            pixmap = QApplication.style().generatedIconPixmap(mode, base, QStyleOption())
+            if pixmap.isNull():
+                pixmap = base
+
+        self._cache[key] = pixmap
+        return pixmap
 
     def paint(self, painter: QPainter, rect, mode, state) -> None:
         painter.drawPixmap(rect, self.pixmap(rect.size(), mode, state))
