@@ -1,17 +1,14 @@
 
-from PySide6.QtWidgets import QWidget
-from PySide6.QtGui import QColor, QIcon, QPainter, QPixmap, QImage
-from PySide6.QtCore import QSize
-
-from vibra import ICON_DIR
-
-import os
-import numpy as np
-from PIL import Image
 from pathlib import Path
 
-def get_icons_path(filename):
-    path = ICON_DIR / filename
+from molde import Color
+from PySide6.QtCore import QSize
+from PySide6.QtGui import QColor, QIcon, QPainter, QPixmap
+from PySide6.QtWidgets import QWidget
+
+
+def get_icons_path(path):
+    path = Path(path)
     if path.exists():
         return str(path)
 
@@ -23,26 +20,24 @@ def get_formatted_icon(path: Path | str, color: QColor):
     painter.end()
     return QIcon(pixmap)
 
-def get_vibra_icon(color= QColor("#448cff")):
-    icon_path = get_icons_path('/logos/logo_vibra.png')
-    # return get_formatted_icon(icon_path, color)
-    return QIcon(icon_path)
+def get_vibra_icon(color=None):
+    icon_path = ":/icons/logos/logo_vibra.png"
+
+    if color is None:
+        return QIcon(icon_path)
+    
+    return get_formatted_icon(icon_path, color)
 
 def get_warning_icon(color=None):
     if color is None:
-        icon_path =  str(ICON_DIR / 'warnings/warning_2.png')
-        return QIcon(icon_path)
-    else:
-        icon_path = str(ICON_DIR / 'warnings/transparent_warning.png')
-        return get_formatted_icon(icon_path, color)
+        return QIcon(":/icons/warnings/warning_2.png")
+   
+    icon_path = ":/icons/warnings/transparent_warning.png"
+    return get_formatted_icon(icon_path, color)
 
-def get_error_icon(color=None):
-    if color is None:
-        icon_path = str(ICON_DIR / 'warnings/warning_2.png')
-        return QIcon(icon_path)
-    else:
-        icon_path = str(ICON_DIR / 'warnings/transparent_warning.png')
-        return get_formatted_icon(icon_path, color)
+def get_error_icon(color=Color(255,0,0,200).to_qt()):
+    icon_path = ":/icons/warnings/transparent_warning.png"
+    return get_formatted_icon(icon_path, color)
 
 def change_icon_color(icon: QIcon, color: QColor):
     if icon is None:

@@ -22,7 +22,7 @@ class ExceptionMessage(ExceptionMessage_UI):
             self.setWindowIcon(get_warning_icon())
             self.setWindowTitle("Warning")
         else:
-            self.setWindowIcon(get_error_icon(QColor(255, 0, 0, 200)))
+            self.setWindowIcon(get_error_icon())
             self.setWindowTitle("Error")
 
         if stack_trace is None:

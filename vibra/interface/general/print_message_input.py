@@ -5,7 +5,6 @@ from vibra.interface.ui_generated.messages.print_message_ui import PrintMessage_
 from vibra.interface.formatters.icons import get_error_icon, get_warning_icon
 
 from time import sleep, time 
-from molde import Color
 
 class PrintMessageInput(PrintMessage_UI):
     def __init__(self, text_info, *args, **kwargs):
@@ -70,7 +69,7 @@ class PrintMessageInput(PrintMessage_UI):
         self.label_message.setMargin(12)
 
         if self.window_title in ["Error", "ERROR"]:
-            icon = get_error_icon(Color(255,0,0,200).to_qt())
+            icon = get_error_icon()
         elif self.window_title in ["Warning", "WARNING"]:
             icon = get_warning_icon()
         else:
