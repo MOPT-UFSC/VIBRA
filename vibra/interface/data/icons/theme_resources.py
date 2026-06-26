@@ -3,6 +3,7 @@
 
 from vibra.interface.data.icons.dark_theme import resources_rc as _dark_rc
 from vibra.interface.data.icons.light_theme import resources_rc as _light_rc
+from vibra.interface.formatters.icons import invalidate_themed_icons
 
 _THEME_RESOURCES = {
     "dark": _dark_rc,
@@ -31,6 +32,8 @@ def set_icon_theme(theme: str) -> None:
 
     _THEME_RESOURCES[theme].qInitResources()
     _active_theme = theme
+    
+    invalidate_themed_icons()
 
 
 set_icon_theme(DEFAULT_THEME)
