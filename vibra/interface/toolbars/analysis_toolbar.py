@@ -4,7 +4,7 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QAction, QFont, QIcon
 from PySide6.QtWidgets import QComboBox, QLabel, QPushButton, QToolBar, QWidget
 
-from vibra import ICON_DIR, app
+from vibra import app
 from vibra.engine import AnalysisID
 from vibra.engine.analysis_info import AnalysisType, PhysicalDomain
 from vibra.engine.checkers.analysis_checker import AnalysisChecker
@@ -42,10 +42,10 @@ class AnalysisToolbar(QToolBar):
         return app().project.model.mesh
 
     def _load_icons(self):
-        self.configure_analysis_icon = QIcon(str(ICON_DIR / "settings.png"))
-        self.reset_solution_icon = QIcon(str(ICON_DIR / "reset_icon.png"))
-        self.resume_solution_icon = QIcon(str(ICON_DIR / "resume_icon.png"))
-        self.run_analysis_icon = QIcon(str(ICON_DIR / "go_next.png"))
+        self.configure_analysis_icon = QIcon(":/icons/settings.png")
+        self.reset_solution_icon = QIcon(":/icons/reset_icon.png")
+        self.resume_solution_icon = QIcon(":/icons/resume_icon.png")
+        self.run_analysis_icon = QIcon(":/icons/go_next.png")
 
     def _define_qt_variables(self):
 

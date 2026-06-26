@@ -10,13 +10,13 @@ from molde import stylesheets
 from molde.render_widgets import CommonRenderWidget
 from PySide6.QtCore import QEvent, Qt, Signal
 from PySide6.QtGui import QAction
-from PySide6.QtWidgets import QAbstractButton, QFileDialog, QMenu, QMessageBox
+from PySide6.QtWidgets import QFileDialog, QMenu, QMessageBox
 
-from vibra import LIGHT_ICONS_DIR, DARK_ICONS_DIR, SUPPORTED_GEOMETRY_EXTENSIONS, SUPPORTED_MESH_EXTENSIONS, TEMP_PROJECT_DIR, app, update_icons_dir
+from vibra import SUPPORTED_GEOMETRY_EXTENSIONS, SUPPORTED_MESH_EXTENSIONS, TEMP_PROJECT_DIR, app
 from vibra.engine.assemblers import AcousticAssembler
 from vibra.engine.solvers import HarmonicSolver
 from vibra.interface.data_handler.export_mesh_data import ExportMeshData
-from vibra.interface.formatters.icons import change_icon_color_for_widgets, get_vibra_icon
+from vibra.interface.formatters.icons import get_vibra_icon
 from vibra.interface.model_inputs.general.choose_property_to_delete import ChoosePropertyToDelete
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.general.selection_handler import SelectionHandler
@@ -235,7 +235,6 @@ class MainWindow(MainWindow_UI):
         app().config.user_preferences.interface_theme = theme
         stylesheets.set_theme(theme)
 
-        update_icons_dir(theme)
         self.theme_changed.emit(theme)
 
     def update_mesh_information(self):
