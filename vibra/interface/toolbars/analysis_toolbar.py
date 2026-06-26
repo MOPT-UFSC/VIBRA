@@ -1,7 +1,7 @@
 import logging
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QAction, QFont, QIcon
+from PySide6.QtGui import QAction, QFont
 from PySide6.QtWidgets import QComboBox, QLabel, QPushButton, QToolBar, QWidget
 
 from vibra import app
@@ -10,6 +10,7 @@ from vibra.engine.analysis_info import AnalysisType, PhysicalDomain
 from vibra.engine.checkers.analysis_checker import AnalysisChecker
 from vibra.interface.analysis.harmonic_analysis_setup_input import HarmonicAnalysisSetupInput
 from vibra.interface.analysis.modal_analysis_input import ModalAnalysisInput
+from vibra.interface.formatters.icons import themed_icon
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.loading_window import LoadingWindow
 from vibra.utils.subprocess.subprocess_handler import SubProcessHandler, SubProcessStatus
@@ -42,10 +43,10 @@ class AnalysisToolbar(QToolBar):
         return app().project.model.mesh
 
     def _load_icons(self):
-        self.configure_analysis_icon = QIcon(":/icons/settings.png")
-        self.reset_solution_icon = QIcon(":/icons/reset_icon.png")
-        self.resume_solution_icon = QIcon(":/icons/resume_icon.png")
-        self.run_analysis_icon = QIcon(":/icons/go_next.png")
+        self.configure_analysis_icon = themed_icon(":/icons/settings.png")
+        self.reset_solution_icon = themed_icon(":/icons/reset_icon.png")
+        self.resume_solution_icon = themed_icon(":/icons/resume_icon.png")
+        self.run_analysis_icon = themed_icon(":/icons/go_next.png")
 
     def _define_qt_variables(self):
 

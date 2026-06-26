@@ -9,7 +9,7 @@ import gmsh
 from molde import stylesheets
 from molde.render_widgets import CommonRenderWidget
 from PySide6.QtCore import QEvent, Qt, Signal
-from PySide6.QtGui import QAction, QIcon
+from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QFileDialog, QMenu, QMessageBox
 
 from vibra import SUPPORTED_GEOMETRY_EXTENSIONS, SUPPORTED_MESH_EXTENSIONS, TEMP_PROJECT_DIR, app
@@ -17,7 +17,7 @@ from vibra.engine.assemblers import AcousticAssembler
 from vibra.engine.solvers import HarmonicSolver
 from vibra.interface.data.icons.theme_resources import set_icon_theme
 from vibra.interface.data_handler.export_mesh_data import ExportMeshData
-from vibra.interface.formatters.icons import get_vibra_icon
+from vibra.interface.formatters.icons import get_vibra_icon, themed_icon
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.general.selection_handler import SelectionHandler
 from vibra.interface.help_widget import HelpWidget
@@ -238,7 +238,7 @@ class MainWindow(MainWindow_UI):
         set_icon_theme(theme)
         for w in app().topLevelWidgets():
             w.update()
-            
+
         self.theme_changed.emit(theme)
 
     def update_mesh_information(self):
@@ -283,7 +283,7 @@ class MainWindow(MainWindow_UI):
         self.update_renderer_font_size()
 
     def create_recents_menu(self):
-        self.recent_icon = QIcon(":/icons/recent.png")
+        self.recent_icon = themed_icon(":/icons/recent.png")
 
         self.recents_menu = QMenu("Recent projects", self)
         self.recents_menu.setIcon(self.recent_icon)
@@ -330,8 +330,8 @@ class MainWindow(MainWindow_UI):
             self.section_plane.value_changed.emit()
 
     def action_theme_callback(self):
-        self.theme_sun_icon = QIcon(":/icons/sun_icon.png")
-        self.theme_moon_icon = QIcon(":/icons/moon_icon.png")
+        self.theme_sun_icon = themed_icon(":/icons/sun_icon.png")
+        self.theme_moon_icon = themed_icon(":/icons/moon_icon.png")
 
         if app().config.user_preferences.interface_theme == "light":
             app().config.user_preferences.set_dark_theme()

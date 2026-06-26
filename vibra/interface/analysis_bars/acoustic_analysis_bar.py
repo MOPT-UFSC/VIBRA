@@ -11,10 +11,10 @@ from PySide6.QtWidgets import (
     QSlider,
     QWidget,
 )
-from PySide6.QtGui import QIcon
 
 from vibra import app
 from vibra.engine import AnalysisID
+from vibra.interface.formatters.icons import themed_icon
 
 
 class AcousticModalAnalysisBar(QWidget):
@@ -28,14 +28,14 @@ class AcousticModalAnalysisBar(QWidget):
 
         self.create_sliders()
 
-        self.play_icon = QIcon(":/icons/play.png")
-        self.pause_icon = QIcon(":/icons/pause.png")
+        self.play_icon = themed_icon(":/icons/play.png")
+        self.pause_icon = themed_icon(":/icons/pause.png")
         self.play_pause_button = QPushButton(self.play_icon, "")
         self.play_pause_button.setToolTip("Play animation")
         self.play_pause_button.setShortcut("Space")
         self.play_pause_button.setMinimumWidth(80)
 
-        self.create_video_icon = QIcon(":/icons/create_video_icon.png")
+        self.create_video_icon = themed_icon(":/icons/create_video_icon.png")
         self.create_video_button = QPushButton(self.create_video_icon, "")
         self.create_video_button.setToolTip("Create video")
         self.create_video_button.setMinimumWidth(80)

@@ -1,5 +1,5 @@
 from PySide6.QtCore import Signal
-from PySide6.QtGui import Qt, QIcon
+from PySide6.QtGui import Qt
 from PySide6.QtWidgets import (
     QButtonGroup,
     QCheckBox,
@@ -14,6 +14,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from vibra.interface.formatters.icons import themed_icon
+
 
 class StructuralModalAnalysisBar(QWidget):
     slider_pressed = Signal()
@@ -26,14 +28,14 @@ class StructuralModalAnalysisBar(QWidget):
 
         self.create_sliders()
         
-        self.play_icon = QIcon(":/icons/play.png")
-        self.pause_icon = QIcon(":/icons/pause.png")
+        self.play_icon = themed_icon(":/icons/play.png")
+        self.pause_icon = themed_icon(":/icons/pause.png")
         self.play_pause_button = QPushButton(self.play_icon, "")
         self.play_pause_button.setShortcut("Space")
         self.play_pause_button.setToolTip("Play animation")
         self.play_pause_button.setMinimumWidth(80)
 
-        self.create_video_icon = QIcon(":/icons/create_video_icon.png")
+        self.create_video_icon = themed_icon(":/icons/create_video_icon.png")
         self.create_video_button = QPushButton(self.create_video_icon, "")
         self.create_video_button.setToolTip("Create video")
         self.create_video_button.setMinimumWidth(80)

@@ -3,7 +3,7 @@ from pathlib import Path
 
 from molde.render_widgets.animated_render_widget import AnimatedRenderWidget
 from PySide6.QtCore import QSize, Qt
-from PySide6.QtGui import QFont, QIcon
+from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QFileDialog,
     QLabel,
@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (
 
 from vibra import app
 from vibra.interface import error_title
-from vibra.interface.formatters import icons
+from vibra.interface.formatters.icons import themed_icon
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 
@@ -40,9 +40,9 @@ class AnimationToolbar(QToolBar):
         self.current_render_widget = None
 
     def _load_icons(self):
-        self.play_icon = QIcon(":/icons/play.png")
-        self.pause_icon = QIcon(":/icons/pause.png")
-        self.save_animation_icon = QIcon(":/icons/create_video_icon.png")
+        self.play_icon = themed_icon(":/icons/play.png")
+        self.pause_icon = themed_icon(":/icons/pause.png")
+        self.save_animation_icon = themed_icon(":/icons/create_video_icon.png")
 
     def _define_qt_variables(self):
         # QLabel
@@ -263,17 +263,6 @@ class AnimationToolbar(QToolBar):
             self.pushButton_animate.setIcon(self.pause_icon)
         else:
             self.pushButton_animate.setIcon(self.play_icon)
-
-        theme = app().config.user_preferences.interface_theme
-
-        from vibra import DARK_ICON_COLOR, LIGHT_ICON_COLOR
-        if theme == "dark":
-            icon_color = DARK_ICON_COLOR.to_qt()
-        elif theme == "light":
-            icon_color = LIGHT_ICON_COLOR.to_qt()
-
-        widgets = self.findChildren((QPushButton))
-        icons.change_icon_color_for_widgets(widgets, icon_color)
 
     def update_animation_settings(self):
         self.frames = self.spinBox_frames.value()
