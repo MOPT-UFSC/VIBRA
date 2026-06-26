@@ -3,7 +3,7 @@ from PySide6.QtWidgets import QApplication
 from PySide6.QtGui import QImage, QIcon, QAction, QColor
 
 import io
-from vibra.interface.formatters.icons import change_icon_color_for_widgets
+from vibra.interface.formatters.icons import change_icon_color_for_widgets, themed_icon
 from vibra import app, ICON_DIR
 
 class CustomNavigationToolbar(NavigationToolbar2QT):
@@ -24,7 +24,7 @@ class CustomNavigationToolbar(NavigationToolbar2QT):
         self.action_copy_graph = QAction()
         self.action_copy_graph.setToolTip("Copy Graph (Ctrl+C)")
         self.action_copy_graph.triggered.connect(self.copy_graph)
-        self.action_copy_graph.setIcon(QIcon(str(ICON_DIR / "copy_icon.png")))
+        self.action_copy_graph.setIcon(themed_icon(":/icons/copy_icon.png"))
         self.action_copy_graph.setShortcut("ctrl+c")
 
         action_save_figure = self._actions["save_figure"]

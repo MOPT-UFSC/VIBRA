@@ -1,8 +1,5 @@
 from copy import deepcopy
-from dataclasses import fields
 
-from PySide6.QtWidgets import QDialog, QCheckBox, QFrame, QLineEdit, QPushButton, QSlider, QSpinBox
-from PySide6.QtGui import QIcon, QFont
 from PySide6.QtCore import Qt
 
 from vibra import app

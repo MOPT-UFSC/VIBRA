@@ -14,7 +14,6 @@ from vibra.interface.numeric_checks.unit_utilities import convert_pressure_unit,
 from vibra.engine.properties import FluidLibrary
 from vibra.engine.properties.fluid import Fluid
 from vibra.errors import InvalidFluidError
-from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.pick_color_input import PickColorInput
 from vibra.interface.model_inputs.fluid.set_fluid_composition_inputs import SetFluidCompositionInputs
@@ -52,7 +51,6 @@ class FluidWidget(FluidWidget_UI):
         self._initialize()
         self._config_widgets()
         self._create_connections()
-        self._paint_icons()
         self.reload_table_of_fluids()
 
     @ property
@@ -79,18 +77,6 @@ class FluidWidget(FluidWidget_UI):
         self.tableWidget_fluid_data.cellDoubleClicked.connect(self.cell_double_clicked_callback)
         self.tableWidget_fluid_data.itemChanged.connect(self.item_changed_callback)
         self.tableWidget_fluid_data.itemDelegate().closeEditor.connect(self.cell_editor_closed_callback)
-
-    def _paint_icons(self):
-        icon_color = None
-        theme = app().config.user_preferences.interface_theme
-        from vibra import LIGHT_ICON_COLOR, DARK_ICON_COLOR
-        if theme == "dark":
-            icon_color = DARK_ICON_COLOR.to_qt()
-        else:
-            icon_color = LIGHT_ICON_COLOR.to_qt()
-
-        widgets = [self.pushButton_duplicate]
-        change_icon_color_for_widgets(widgets, icon_color)
 
     def reload_table_of_fluids(self):
         number_of_rows = len(RowsEnum)

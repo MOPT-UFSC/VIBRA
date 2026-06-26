@@ -106,7 +106,6 @@ class AnimationWidget(AnimationWidget_UI):
 
         app().main_window.render_widget_changed.connect(self.update_current_render_widget)
         app().main_window.render_widget_changed.connect(self.update_toolbar)
-        app().main_window.theme_changed.connect(self._configure_icons)
 
     def update_toolbar(self):
         current_domain = app().main_window.analysis_toolbar.combo_box_physical_domain.currentText()

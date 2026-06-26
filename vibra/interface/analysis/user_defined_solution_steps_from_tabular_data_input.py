@@ -1,9 +1,9 @@
 from PySide6.QtWidgets import QCheckBox, QHBoxLayout, QHeaderView, QTableWidgetItem, QWidget
-from PySide6.QtGui import Qt, QIcon
+from PySide6.QtGui import Qt
 
-from vibra import app, ICON_DIR
+from vibra import app
 from vibra.interface import error_title
-from vibra.interface.formatters.icons import change_icon_color
+from vibra.interface.formatters.icons import themed_icon
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.ui_generated.analysis.user_defined_solution_steps_from_tabular_data_input_ui import UserDefinedSolutionStepsFromTabularDataInput_UI
 
@@ -18,7 +18,6 @@ class UserDefinedSolutionStepsFromTabularDataInput(UserDefinedSolutionStepsFromT
 
         self._initialize()
         self._config_window()
-        self._paint_icons()
 
         self._create_connections()
         self._load_analysis_setup()
@@ -35,8 +34,8 @@ class UserDefinedSolutionStepsFromTabularDataInput(UserDefinedSolutionStepsFromT
         self.index_to_check_box = dict()
         self.user_defined_solution_steps = list()
 
-        self.select_all_icon = QIcon(str(ICON_DIR / "select_all_icon.png"))
-        self.unselect_icon = QIcon(str(ICON_DIR / "deselect_icon.png"))
+        self.select_all_icon = themed_icon(":/icons/select_all_icon.png")
+        self.unselect_icon = themed_icon(":/icons/deselect_icon.png")
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -49,21 +48,6 @@ class UserDefinedSolutionStepsFromTabularDataInput(UserDefinedSolutionStepsFromT
         self.pushButton_cancel.clicked.connect(self.close)
         self.pushButton_okay.clicked.connect(self.confirm_callback)
         self.pushButton_select_unselect_all.clicked.connect(self.select_unselect_all_callback)
-        #
-        app().main_window.theme_changed.connect(self._paint_icons)
-
-    def _paint_icons(self):
-        icon_color = None
-        theme = app().config.user_preferences.interface_theme
-
-        from vibra import LIGHT_ICON_COLOR, DARK_ICON_COLOR
-        if theme == "dark":
-            icon_color = DARK_ICON_COLOR.to_qt()
-        else:
-            icon_color = LIGHT_ICON_COLOR.to_qt()
-
-        change_icon_color(self.select_all_icon, icon_color)
-        change_icon_color(self.unselect_icon, icon_color)
 
     def select_unselect_all_callback(self):
         select_all = self.pushButton_select_unselect_all.text() == "Select all"
