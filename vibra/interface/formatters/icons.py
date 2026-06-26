@@ -2,10 +2,47 @@
 from pathlib import Path
 
 from molde import Color
-from PySide6.QtCore import QSize
-from PySide6.QtGui import QColor, QIcon, QPainter, QPixmap
+from PySide6.QtCore import QSize, Qt
+from PySide6.QtGui import QColor, QIcon, QIconEngine, QPainter, QPixmap
 from PySide6.QtWidgets import QWidget
 
+
+class ResourceIconEngine(QIconEngine):
+    """Icon engine that re-reads its resource on every request.
+
+    Unlike a plain ``QIcon(":/icons/...")``, which caches the pixmap of the
+    resource that was active when it was created, this engine reads the
+    currently registered resource each time it is asked for a pixmap. That
+    way the same ``QIcon`` follows the active icon theme after a
+    ``set_icon_theme`` swap, with no need to track icon paths externally nor
+    repaint icons by hand. A repaint of the owning widget is still required
+    for the new pixmap to be requested.
+    """
+
+    def __init__(self, path: str):
+        super().__init__()
+        self._path = path
+
+    def pixmap(self, size: QSize, mode, state) -> QPixmap:
+        pixmap = QPixmap(self._path)
+        if pixmap.isNull() or pixmap.size() == size:
+            return pixmap
+        return pixmap.scaled(
+            size,
+            Qt.AspectRatioMode.KeepAspectRatio,
+            Qt.TransformationMode.SmoothTransformation,
+        )
+
+    def paint(self, painter: QPainter, rect, mode, state) -> None:
+        painter.drawPixmap(rect, self.pixmap(rect.size(), mode, state))
+
+    def clone(self) -> QIconEngine:
+        return ResourceIconEngine(self._path)
+
+
+def themed_icon(path: str) -> QIcon:
+    """Build a theme-reactive icon from a resource path (``:/icons/...``)."""
+    return QIcon(ResourceIconEngine(path))
 
 def get_icons_path(path):
     path = Path(path)
@@ -88,3 +125,4 @@ def change_icon_color_for_widgets(widgets: list[QWidget], color: QColor):
         pixmap = icon.pixmap(size)
         paint_pixmap(pixmap, color)
         widget.setIcon(QIcon(pixmap))
+
