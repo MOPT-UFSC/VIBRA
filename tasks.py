@@ -35,11 +35,22 @@ def qrc_codegen(c):
     for dir, qrc_path in zip(RESOURCES_DIR, QRC_PATHS):
 
         qrc_content = ['<RCC>', '    <qresource prefix="icons">']
+        other_themes = [theme_dir for theme_dir in RESOURCES_DIR if theme_dir != dir]
         
-        for file_path in dir.rglob("*.png"):
-            if file_path.is_file():
-                relative_path = file_path.relative_to(dir)
-                qrc_content.append(f'        <file>{relative_path.as_posix()}</file>')
+        for file_path in dir.parent.rglob("*.png"):
+            if not file_path.is_file():
+                continue
+
+            if any(other in file_path.parents for other in other_themes):
+                continue
+
+            if dir in file_path.parents:
+                alias = file_path.relative_to(dir).as_posix()
+            else:
+                alias = file_path.relative_to(RESOURCE_DIR).as_posix()
+
+            disk_path = os.path.relpath(file_path, qrc_path.parent).replace(os.sep, "/")
+            qrc_content.append(f'        <file alias="{alias}">{disk_path}</file>')
 
         qrc_content.append('    </qresource>')
         qrc_content.append('</RCC>')
