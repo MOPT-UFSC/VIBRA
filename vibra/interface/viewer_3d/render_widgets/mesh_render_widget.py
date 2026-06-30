@@ -6,7 +6,7 @@ from molde.render_widgets import CommonRenderWidget
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
 
-from vibra import ICON_DIR, app
+from vibra import LOGO_DIR, app
 from vibra.interface.loading_window import LoadingWindow
 from vibra.utils.interface_utils import VisualizationFilter
 
@@ -73,7 +73,7 @@ class MeshRenderWidget(CommonRenderWidget):
         if hasattr(self, "vibra_logo"):
             self.renderer.RemoveViewProp(self.vibra_logo)
 
-        path = ICON_DIR / "logo_vibra_comp.png"
+        path = LOGO_DIR / "vibra_colored_dark_background.png"
         self.vibra_logo = self.create_logo(path)
         self.vibra_logo.SetPosition(0.895, 0.91)
         self.vibra_logo.SetPosition2(0.10, 0.10)

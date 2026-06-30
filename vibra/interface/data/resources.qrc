@@ -146,14 +146,20 @@
         <file>icons/cursors/pan_cursor.png</file>
         <file>icons/cursors/zoom_cursor.png</file>
         <file>icons/cursors/rotation_cursor.png</file>
-        <file>logos/vibra_short_colored_dark_background.png</file>
-        <file>logos/vibra_short_bw_dark_background.png</file>
+        <file>logos/vibra_circle_bw_other_background.png</file>
+        <file>logos/vibra_bw_other_background.png</file>
         <file>logos/logo_vibra_comp.png</file>
+        <file>logos/vibra_circle_colored_light_background.png</file>
         <file>logos/azul cinza.png</file>
         <file>logos/logo_vibra.png</file>
-        <file>logos/vibra_short_bw_light_background.png</file>
-        <file>logos/vibra_short_colored_other_background.png</file>
-        <file>logos/vibra_short_bw_other_background.png</file>
-        <file>logos/vibra_short_colored_light_background.png</file>
+        <file>logos/vibra_circle_bw_light_background.png</file>
+        <file>logos/vibra_colored_dark_background.png</file>
+        <file>logos/vibra_colored_other_background.png</file>
+        <file>logos/vibra_circle_colored_dark_background.png</file>
+        <file>logos/vibra_bw_light_background.png</file>
+        <file>logos/vibra_circle_bw_dark_background.png</file>
+        <file>logos/vibra_bw_dark_background.png</file>
+        <file>logos/vibra_circle_colored_other_background.png</file>
+        <file>logos/vibra_colored_light_background.png</file>
     </qresource>
 </RCC>
