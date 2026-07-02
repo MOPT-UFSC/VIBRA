@@ -9,7 +9,7 @@ from vibra import ICON_DIR, LOGO_DIR
 
 
 def get_icons_path(filename):
-    path = LOGO_DIR / filename
+    path = LOGO_DIR / "circles" / filename
     if path.exists():
         return str(path)
 
