@@ -13,7 +13,7 @@ from PySide6.QtWidgets import (
 from vibra import app
 from vibra.engine.analysis_info import HarmonicAnalysisSetup
 from vibra.interface import error_title, warning_title
-from vibra.interface.formatters.icons import themed_icon
+from vibra.interface.formatters.icons import Icon
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.ui_generated.analysis.user_defined_solution_steps_by_manual_input_ui import (
@@ -52,7 +52,7 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
         self.user_defined_solution_steps = list()
         self.index_to_push_buttons = dict()
 
-        self.remove_icon = themed_icon(":/icons/delete.png")
+        self.remove_icon = Icon(":/icons/delete.png")
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)

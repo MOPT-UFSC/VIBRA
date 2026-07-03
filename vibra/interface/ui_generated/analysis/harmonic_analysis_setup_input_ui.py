@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (QApplication, QComboBox, QDialog, QFrame,
     QGridLayout, QLabel, QLineEdit, QPushButton,
     QSizePolicy, QSpacerItem, QTabWidget, QWidget)
 
-from vibra.interface.formatters.icons import themed_icon
+from vibra.interface.formatters.icons import Icon
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
@@ -92,7 +92,7 @@ class Ui_Dialog(object):
         font1 = QFont()
         font1.setPointSize(10)
         self.pushButton_show_solution_steps_table.setFont(font1)
-        icon = themed_icon(u":/icons/preview_data.png")
+        icon = Icon(u":/icons/preview_data.png")
         self.pushButton_show_solution_steps_table.setIcon(icon)
         self.pushButton_show_solution_steps_table.setIconSize(QSize(20, 20))
         self.pushButton_show_solution_steps_table.setAutoDefault(False)
@@ -204,7 +204,7 @@ class Ui_Dialog(object):
         self.pushButton_solution_steps_configurator.setMaximumSize(QSize(220, 32))
         self.pushButton_solution_steps_configurator.setFont(font3)
         self.pushButton_solution_steps_configurator.setStyleSheet(u"")
-        icon1 = themed_icon(u":/icons/user_preferences_icon.png")
+        icon1 = Icon(u":/icons/user_preferences_icon.png")
         self.pushButton_solution_steps_configurator.setIcon(icon1)
         self.pushButton_solution_steps_configurator.setIconSize(QSize(20, 20))
         self.pushButton_solution_steps_configurator.setAutoDefault(False)
@@ -268,7 +268,7 @@ class Ui_Dialog(object):
         self.pushButton_reset_frequency_settings = QPushButton(self.frame_equally_distributed)
         self.pushButton_reset_frequency_settings.setObjectName(u"pushButton_reset_frequency_settings")
         self.pushButton_reset_frequency_settings.setMinimumSize(QSize(42, 28))
-        icon2 = themed_icon(u":/icons/reset_settings.png")
+        icon2 = Icon(u":/icons/reset_settings.png")
         self.pushButton_reset_frequency_settings.setIcon(icon2)
         self.pushButton_reset_frequency_settings.setIconSize(QSize(22, 22))
         self.pushButton_reset_frequency_settings.setAutoDefault(False)
@@ -533,7 +533,7 @@ class Ui_Dialog(object):
         self.pushButton_exit.setMaximumSize(QSize(90, 30))
         self.pushButton_exit.setFont(font3)
         self.pushButton_exit.setStyleSheet(u"")
-        icon3 = themed_icon(u":/icons/exit_to_app_icon.png")
+        icon3 = Icon(u":/icons/exit_to_app_icon.png")
         self.pushButton_exit.setIcon(icon3)
         self.pushButton_exit.setIconSize(QSize(18, 18))
         self.pushButton_exit.setAutoDefault(False)
@@ -546,7 +546,7 @@ class Ui_Dialog(object):
         self.pushButton_enter_setup.setMaximumSize(QSize(120, 30))
         self.pushButton_enter_setup.setFont(font3)
         self.pushButton_enter_setup.setStyleSheet(u"")
-        icon4 = themed_icon(u":/icons/settings_b_roll.png")
+        icon4 = Icon(u":/icons/settings_b_roll.png")
         self.pushButton_enter_setup.setIcon(icon4)
         self.pushButton_enter_setup.setIconSize(QSize(18, 18))
         self.pushButton_enter_setup.setAutoDefault(False)
@@ -559,7 +559,7 @@ class Ui_Dialog(object):
         self.pushButton_run_analysis.setMaximumSize(QSize(120, 30))
         self.pushButton_run_analysis.setFont(font3)
         self.pushButton_run_analysis.setStyleSheet(u"")
-        icon5 = themed_icon(u":/icons/start_solution.png")
+        icon5 = Icon(u":/icons/start_solution.png")
         self.pushButton_run_analysis.setIcon(icon5)
         self.pushButton_run_analysis.setIconSize(QSize(18, 18))
         self.pushButton_run_analysis.setAutoDefault(False)

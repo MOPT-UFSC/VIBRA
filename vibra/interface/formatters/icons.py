@@ -92,9 +92,26 @@ class ResourceIconEngine(QIconEngine):
         return ResourceIconEngine(self._path)
 
 
-def themed_icon(path: str) -> QIcon:
-    """Build a theme-reactive icon from a resource path (``:/icons/...``)."""
-    return QIcon(ResourceIconEngine(path))
+class Icon:
+    """
+    Class used to instantiate new QIcons.
+
+    It returns a QIcon instance, that manages
+    the icon color independently, so we don't
+    need to worry about it.
+
+    Args:
+    - path (str): a string representing the
+    path to the icon in the resource file.
+
+    Usage example:
+
+    icon = Icon(:/folder/bla.png)
+    """
+
+    def __new__(cls, path: str) -> QIcon:
+        return QIcon(ResourceIconEngine(path))
+    
 
 def get_icons_path(path):
     path = Path(path)

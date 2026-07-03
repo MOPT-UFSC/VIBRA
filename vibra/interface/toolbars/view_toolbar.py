@@ -4,7 +4,7 @@ from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QStackedWidget, QToolBar
 
 from vibra.interface.viewer_3d.render_tools import GrabTool, RenderTool, RotationTool, SelectionTool, ZoomTool
-from vibra.interface.formatters.icons import themed_icon
+from vibra.interface.formatters.icons import Icon
 
 
 class ViewToolbar(QToolBar):
@@ -23,18 +23,18 @@ class ViewToolbar(QToolBar):
         self.setWindowTitle("View toolbar")
 
     def _load_icons(self):
-        self.top_icon = themed_icon(":/icons/views/top.png")
-        self.bottom_icon = themed_icon(":/icons/views/bottom.png")
-        self.right_icon = themed_icon(":/icons/views/right.png")
-        self.left_icon = themed_icon(":/icons/views/left.png")
-        self.front_icon = themed_icon(":/icons/views/front.png")
-        self.back_icon = themed_icon(":/icons/views/back.png")
-        self.isometric_icon = themed_icon(":/icons/views/orthogonal.png")
-        self.zoom_to_fit_icon = themed_icon(":/icons/views/zoom_icon.png")
-        self.selection_tool_icon = themed_icon(":/icons/selection_icon.png")
-        self.grab_tool_icon = themed_icon(":/icons/grab_icon.png")
-        self.rotation_tool_icon = themed_icon(":/icons/rotation_icon.png")
-        self.zoom_tool_icon = themed_icon(":/icons/zoom_icon.png")
+        self.top_icon = Icon(":/icons/views/top.png")
+        self.bottom_icon = Icon(":/icons/views/bottom.png")
+        self.right_icon = Icon(":/icons/views/right.png")
+        self.left_icon = Icon(":/icons/views/left.png")
+        self.front_icon = Icon(":/icons/views/front.png")
+        self.back_icon = Icon(":/icons/views/back.png")
+        self.isometric_icon = Icon(":/icons/views/orthogonal.png")
+        self.zoom_to_fit_icon = Icon(":/icons/views/zoom_icon.png")
+        self.selection_tool_icon = Icon(":/icons/selection_icon.png")
+        self.grab_tool_icon = Icon(":/icons/grab_icon.png")
+        self.rotation_tool_icon = Icon(":/icons/rotation_icon.png")
+        self.zoom_tool_icon = Icon(":/icons/zoom_icon.png")
 
     def _create_actions(self):
         self.action_top_view = QAction(self.top_icon, "Top View", self)

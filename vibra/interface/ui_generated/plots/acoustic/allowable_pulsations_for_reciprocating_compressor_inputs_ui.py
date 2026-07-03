@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFrame,
     QGridLayout, QLabel, QLineEdit, QPushButton,
     QSizePolicy, QSpacerItem, QTabWidget, QWidget)
 
-from vibra.interface.formatters.icons import themed_icon
+from vibra.interface.formatters.icons import Icon
 
 class Ui_Form(object):
     def setupUi(self, Form):
@@ -174,7 +174,7 @@ class Ui_Form(object):
         font3.setItalic(False)
         self.pushButton_export_data.setFont(font3)
         self.pushButton_export_data.setStyleSheet(u"")
-        icon = themed_icon(u":/icons/save_as.png")
+        icon = Icon(u":/icons/save_as.png")
         self.pushButton_export_data.setIcon(icon)
         self.pushButton_export_data.setIconSize(QSize(20, 20))
         self.pushButton_export_data.setFlat(False)
@@ -252,7 +252,7 @@ class Ui_Form(object):
         self.pushButton_get_fluid.setMinimumSize(QSize(44, 0))
         self.pushButton_get_fluid.setMaximumSize(QSize(44, 28))
         self.pushButton_get_fluid.setFont(font1)
-        icon1 = themed_icon(u":/icons/get_fluid_blue.png")
+        icon1 = Icon(u":/icons/get_fluid_blue.png")
         self.pushButton_get_fluid.setIcon(icon1)
         self.pushButton_get_fluid.setIconSize(QSize(20, 20))
 
@@ -507,7 +507,7 @@ class Ui_Form(object):
         self.pushButton_get_internal_diameter_from_selection.setObjectName(u"pushButton_get_internal_diameter_from_selection")
         self.pushButton_get_internal_diameter_from_selection.setMinimumSize(QSize(32, 28))
         self.pushButton_get_internal_diameter_from_selection.setMaximumSize(QSize(32, 28))
-        icon2 = themed_icon(u":/icons/arrow_circle_down_blue.png")
+        icon2 = Icon(u":/icons/arrow_circle_down_blue.png")
         self.pushButton_get_internal_diameter_from_selection.setIcon(icon2)
         self.pushButton_get_internal_diameter_from_selection.setIconSize(QSize(20, 20))
 

@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (QApplication, QComboBox, QFrame, QGridLayout,
     QLabel, QLineEdit, QPushButton, QSizePolicy,
     QSpacerItem, QWidget)
 
-from vibra.interface.formatters.icons import themed_icon
+from vibra.interface.formatters.icons import Icon
 
 class Ui_Form(object):
     def setupUi(self, Form):
@@ -187,7 +187,7 @@ class Ui_Form(object):
         font4.setItalic(False)
         self.pushButton_export_data.setFont(font4)
         self.pushButton_export_data.setStyleSheet(u"")
-        icon = themed_icon(u":/icons/save_as.png")
+        icon = Icon(u":/icons/save_as.png")
         self.pushButton_export_data.setIcon(icon)
         self.pushButton_export_data.setIconSize(QSize(20, 20))
         self.pushButton_export_data.setFlat(False)
@@ -222,7 +222,7 @@ class Ui_Form(object):
         self.pushButton_flip_selection.setMaximumSize(QSize(40, 30))
         self.pushButton_flip_selection.setFont(font4)
         self.pushButton_flip_selection.setStyleSheet(u"")
-        icon1 = themed_icon(u":/icons/invert_icon.png")
+        icon1 = Icon(u":/icons/invert_icon.png")
         self.pushButton_flip_selection.setIcon(icon1)
         self.pushButton_flip_selection.setIconSize(QSize(22, 22))
         self.pushButton_flip_selection.setFlat(False)

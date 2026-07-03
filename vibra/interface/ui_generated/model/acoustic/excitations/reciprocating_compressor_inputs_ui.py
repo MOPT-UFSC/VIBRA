@@ -21,7 +21,7 @@ from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDialog,
     QSizePolicy, QSpacerItem, QSpinBox, QTabWidget,
     QTreeWidget, QTreeWidgetItem, QWidget)
 
-from vibra.interface.formatters.icons import themed_icon
+from vibra.interface.formatters.icons import Icon
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
@@ -479,7 +479,7 @@ class Ui_Dialog(object):
         self.pushButton_reset_entries.setObjectName(u"pushButton_reset_entries")
         self.pushButton_reset_entries.setMinimumSize(QSize(40, 28))
         self.pushButton_reset_entries.setMaximumSize(QSize(40, 28))
-        icon = themed_icon(u":/icons/broom.png")
+        icon = Icon(u":/icons/broom.png")
         self.pushButton_reset_entries.setIcon(icon)
         self.pushButton_reset_entries.setIconSize(QSize(20, 20))
         self.pushButton_reset_entries.setAutoDefault(False)
@@ -657,7 +657,7 @@ class Ui_Dialog(object):
         self.pushButton_get_fluid.setMaximumSize(QSize(40, 28))
         self.pushButton_get_fluid.setFont(font4)
         self.pushButton_get_fluid.setStyleSheet(u"")
-        icon1 = themed_icon(u":/icons/model_setup_items/fluid.png")
+        icon1 = Icon(u":/icons/model_setup_items/fluid.png")
         self.pushButton_get_fluid.setIcon(icon1)
         self.pushButton_get_fluid.setAutoDefault(False)
         self.pushButton_get_fluid.setFlat(False)
@@ -945,7 +945,7 @@ class Ui_Dialog(object):
         self.pushButton_export_path.setMaximumSize(QSize(40, 28))
         self.pushButton_export_path.setFont(font4)
         self.pushButton_export_path.setStyleSheet(u"")
-        icon2 = themed_icon(u":/icons/new_file.png")
+        icon2 = Icon(u":/icons/new_file.png")
         self.pushButton_export_path.setIcon(icon2)
         self.pushButton_export_path.setIconSize(QSize(20, 20))
         self.pushButton_export_path.setAutoDefault(False)

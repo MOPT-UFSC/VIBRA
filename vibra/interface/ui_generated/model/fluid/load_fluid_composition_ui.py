@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (QApplication, QComboBox, QDialog, QFrame,
     QGridLayout, QLabel, QLineEdit, QPushButton,
     QSizePolicy, QSpacerItem, QWidget)
 
-from vibra.interface.formatters.icons import themed_icon
+from vibra.interface.formatters.icons import Icon
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
@@ -79,7 +79,7 @@ class Ui_Dialog(object):
         font2 = QFont()
         font2.setPointSize(10)
         self.pushButton_search.setFont(font2)
-        icon = themed_icon(u":/icons/new_file.png")
+        icon = Icon(u":/icons/new_file.png")
         self.pushButton_search.setIcon(icon)
         self.pushButton_search.setIconSize(QSize(22, 22))
 

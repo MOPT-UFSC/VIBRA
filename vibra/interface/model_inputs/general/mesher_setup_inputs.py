@@ -29,7 +29,7 @@ from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.ui_generated.model.general.mesher_setup_inputs_ui import MesherSetupInputs_UI
 from vibra.interface.ui_generated.plots.general.mesh_quality_histogram_plot_ui import MeshQualityHistogramPlot_UI
 from vibra.utils.interface_utils import block_signals
-from vibra.interface.formatters.icons import themed_icon
+from vibra.interface.formatters.icons import Icon
 from vibra.utils.subprocess.subprocess_handler import SubProcessHandler, SubProcessStatus
 
 
@@ -189,10 +189,10 @@ class MesherSetupInputs(MesherSetupInputs_UI):
     def synchronize_button_callback(self):
         self.synchronize_sizes = not self.synchronize_sizes
         if self.synchronize_sizes:
-            icon = themed_icon(":/icons/sync_disabled.png")
+            icon = Icon(":/icons/sync_disabled.png")
             tool_tip = "Desynchronize the minimum and maximum sizes"
         else:
-            icon = themed_icon(":/icons/sync_enabled.png")
+            icon = Icon(":/icons/sync_enabled.png")
             tool_tip = "Synchronize the minimum and maximum sizes"
 
         self.doubleSpinBox_minimum_element_size.setDisabled(self.synchronize_sizes)

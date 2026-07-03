@@ -3,7 +3,7 @@ from PySide6.QtGui import Qt
 
 from vibra import app
 from vibra.interface import error_title
-from vibra.interface.formatters.icons import themed_icon
+from vibra.interface.formatters.icons import Icon
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.ui_generated.analysis.user_defined_solution_steps_from_tabular_data_input_ui import UserDefinedSolutionStepsFromTabularDataInput_UI
 
@@ -34,8 +34,8 @@ class UserDefinedSolutionStepsFromTabularDataInput(UserDefinedSolutionStepsFromT
         self.index_to_check_box = dict()
         self.user_defined_solution_steps = list()
 
-        self.select_all_icon = themed_icon(":/icons/select_all_icon.png")
-        self.unselect_icon = themed_icon(":/icons/deselect_icon.png")
+        self.select_all_icon = Icon(":/icons/select_all_icon.png")
+        self.unselect_icon = Icon(":/icons/deselect_icon.png")
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)

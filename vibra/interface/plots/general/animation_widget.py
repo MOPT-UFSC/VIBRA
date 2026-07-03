@@ -15,7 +15,7 @@ from PySide6.QtWidgets import (
 from vibra import app
 from vibra.engine.analysis_info import PhysicalDomain
 from vibra.interface import error_title
-from vibra.interface.formatters.icons import themed_icon
+from vibra.interface.formatters.icons import Icon
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.ui_generated.plots.general.animation_widget_ui import AnimationWidget_UI
@@ -38,9 +38,9 @@ class AnimationWidget(AnimationWidget_UI):
         self.current_render_widget = None
 
     def _configure_icons(self):
-        self.play_icon = themed_icon(":/icons/play.png")
-        self.pause_icon = themed_icon(":/icons/pause.png")
-        self.save_animation_icon = themed_icon(":/icons/create_video_icon.png")
+        self.play_icon = Icon(":/icons/play.png")
+        self.pause_icon = Icon(":/icons/pause.png")
+        self.save_animation_icon = Icon(":/icons/create_video_icon.png")
 
     def _config_widgets(self):
 

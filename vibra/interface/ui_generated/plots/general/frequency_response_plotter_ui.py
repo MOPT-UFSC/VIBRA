@@ -20,7 +20,7 @@ from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDialog,
     QPushButton, QScrollArea, QSizePolicy, QSpacerItem,
     QSpinBox, QVBoxLayout, QWidget)
 
-from vibra.interface.formatters.icons import themed_icon
+from vibra.interface.formatters.icons import Icon
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
@@ -571,7 +571,7 @@ class Ui_Dialog(object):
         self.pushButton_display_hfrequencies = QPushButton(self.frame_hlines_main)
         self.pushButton_display_hfrequencies.setObjectName(u"pushButton_display_hfrequencies")
         self.pushButton_display_hfrequencies.setMinimumSize(QSize(30, 0))
-        icon = themed_icon(u":/icons/visibility_off.png")
+        icon = Icon(u":/icons/visibility_off.png")
         self.pushButton_display_hfrequencies.setIcon(icon)
         self.pushButton_display_hfrequencies.setIconSize(QSize(20, 20))
         self.pushButton_display_hfrequencies.setCheckable(False)
@@ -646,7 +646,7 @@ class Ui_Dialog(object):
         font6.setItalic(False)
         self.pushButton_export_data.setFont(font6)
         self.pushButton_export_data.setStyleSheet(u"")
-        icon1 = themed_icon(u":/icons/save_as_2.png")
+        icon1 = Icon(u":/icons/save_as_2.png")
         self.pushButton_export_data.setIcon(icon1)
         self.pushButton_export_data.setIconSize(QSize(20, 20))
         self.pushButton_export_data.setAutoDefault(False)
@@ -660,7 +660,7 @@ class Ui_Dialog(object):
         self.pushButton_import_data.setMaximumSize(QSize(120, 32))
         self.pushButton_import_data.setFont(font6)
         self.pushButton_import_data.setStyleSheet(u"")
-        icon2 = themed_icon(u":/icons/document_search.png")
+        icon2 = Icon(u":/icons/document_search.png")
         self.pushButton_import_data.setIcon(icon2)
         self.pushButton_import_data.setIconSize(QSize(20, 20))
         self.pushButton_import_data.setAutoDefault(False)

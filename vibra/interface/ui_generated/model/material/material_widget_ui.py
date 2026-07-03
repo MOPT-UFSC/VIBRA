@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (QApplication, QFrame, QGridLayout, QHeaderView,
     QPushButton, QSizePolicy, QSpacerItem, QTableWidget,
     QTableWidgetItem, QWidget)
 
-from vibra.interface.formatters.icons import themed_icon
+from vibra.interface.formatters.icons import Icon
 
 class Ui_Form(object):
     def setupUi(self, Form):
@@ -134,7 +134,7 @@ class Ui_Form(object):
         font2.setItalic(False)
         self.pushButton_duplicate.setFont(font2)
         self.pushButton_duplicate.setStyleSheet(u"")
-        icon = themed_icon(u":/icons/copy_icon.png")
+        icon = Icon(u":/icons/copy_icon.png")
         self.pushButton_duplicate.setIcon(icon)
         self.pushButton_duplicate.setIconSize(QSize(18, 18))
 

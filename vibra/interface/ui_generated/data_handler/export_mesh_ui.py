@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (QApplication, QCheckBox, QDialog, QFrame,
     QGridLayout, QLabel, QLineEdit, QPushButton,
     QSizePolicy, QSpacerItem, QWidget)
 
-from vibra.interface.formatters.icons import themed_icon
+from vibra.interface.formatters.icons import Icon
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
@@ -103,7 +103,7 @@ class Ui_Dialog(object):
         self.pushButton_export_mesh.setMinimumSize(QSize(120, 30))
         self.pushButton_export_mesh.setMaximumSize(QSize(120, 30))
         self.pushButton_export_mesh.setFont(font)
-        icon = themed_icon(u":/icons/import.png")
+        icon = Icon(u":/icons/import.png")
         self.pushButton_export_mesh.setIcon(icon)
         self.pushButton_export_mesh.setAutoDefault(False)
 
@@ -114,7 +114,7 @@ class Ui_Dialog(object):
         self.pushButton_exit.setMinimumSize(QSize(120, 30))
         self.pushButton_exit.setMaximumSize(QSize(120, 30))
         self.pushButton_exit.setFont(font)
-        icon1 = themed_icon(u":/icons/exit.png")
+        icon1 = Icon(u":/icons/exit.png")
         self.pushButton_exit.setIcon(icon1)
         self.pushButton_exit.setAutoDefault(False)
 
@@ -145,7 +145,7 @@ class Ui_Dialog(object):
         self.pushButton_search_folder.setMinimumSize(QSize(40, 30))
         self.pushButton_search_folder.setMaximumSize(QSize(40, 30))
         self.pushButton_search_folder.setFont(font)
-        icon2 = themed_icon(u":/icons/views/zoom_icon.png")
+        icon2 = Icon(u":/icons/views/zoom_icon.png")
         self.pushButton_search_folder.setIcon(icon2)
         self.pushButton_search_folder.setIconSize(QSize(20, 20))
         self.pushButton_search_folder.setAutoDefault(False)

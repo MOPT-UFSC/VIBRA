@@ -12,7 +12,7 @@ from vibra import app
 from vibra.engine.dissipation_models.porous_materials_models import PorousMaterialModels, get_DB_standard_constants, get_DBM_standard_constants
 from vibra.engine.properties.fluid import Fluid
 from vibra.interface import error_title
-from vibra.interface.formatters.icons import themed_icon
+from vibra.interface.formatters.icons import Icon
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.acoustic.definitions.enums import AttributionBodiesType, PlotTypesTab
@@ -143,7 +143,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         menu = QMenu(self)
 
         action_DBM = QAction("Copy porous material", self)
-        action_DBM.setIcon(themed_icon(":/icons/copy_icon.png"))
+        action_DBM.setIcon(Icon(":/icons/copy_icon.png"))
         menu.addAction(action_DBM)
 
         action_DBM.triggered.connect(lambda: self.copy_DBM_porous_material_parameters(item))
@@ -157,7 +157,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         menu = QMenu(self)
 
         action_JCAL = QAction("Copy porous material", self)
-        action_JCAL.setIcon(themed_icon(":/icons/copy_icon.png"))
+        action_JCAL.setIcon(Icon(":/icons/copy_icon.png"))
         menu.addAction(action_JCAL)
 
         action_JCAL.triggered.connect(lambda: self.copy_JCAL_porous_material_parameters(item))

@@ -21,7 +21,7 @@ from PySide6.QtWidgets import (QApplication, QComboBox, QDialog, QFrame,
     QSpinBox, QTabWidget, QTreeWidget, QTreeWidgetItem,
     QWidget)
 
-from vibra.interface.formatters.icons import themed_icon
+from vibra.interface.formatters.icons import Icon
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
@@ -379,7 +379,7 @@ class Ui_Dialog(object):
         font4.setItalic(False)
         self.pushButton_load_table.setFont(font4)
         self.pushButton_load_table.setStyleSheet(u"")
-        icon = themed_icon(u":/icons/document_search_blue.png")
+        icon = Icon(u":/icons/document_search_blue.png")
         self.pushButton_load_table.setIcon(icon)
         self.pushButton_load_table.setIconSize(QSize(20, 20))
         self.pushButton_load_table.setAutoDefault(False)
@@ -696,7 +696,7 @@ class Ui_Dialog(object):
         self.pushButton_reproduce_audio.setMinimumSize(QSize(0, 28))
         self.pushButton_reproduce_audio.setMaximumSize(QSize(16777215, 28))
         self.pushButton_reproduce_audio.setFont(font2)
-        icon1 = themed_icon(u":/icons/model_configuration/play_audio.png")
+        icon1 = Icon(u":/icons/model_configuration/play_audio.png")
         self.pushButton_reproduce_audio.setIcon(icon1)
         self.pushButton_reproduce_audio.setIconSize(QSize(22, 22))
         self.pushButton_reproduce_audio.setAutoDefault(False)

@@ -3,13 +3,13 @@ from enum import IntEnum
 import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
-from PySide6.QtWidgets import QDialog, QLineEdit, QToolButton, QVBoxLayout
+from PySide6.QtWidgets import QDialog, QLineEdit, QVBoxLayout
 
 from vibra import app
 from vibra.interface import error_title
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.data_handler.import_data_to_compare import ImportDataToCompare
-from vibra.interface.formatters.icons import themed_icon
+from vibra.interface.formatters.icons import Icon
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.plots.general.advanced_cursor import AdvancedCursor
 from vibra.interface.ui_generated.plots.general.frequency_response_plotter_ui import FrequencyResponsePlotter_UI
@@ -119,11 +119,11 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
     def update_harmonic_lines_legend_icon(self):
 
         if "Display" in self.pushButton_display_hfrequencies.toolTip():
-            icon = themed_icon(":/icons/visibility_off.png")
+            icon = Icon(":/icons/visibility_off.png")
             tool_tip = "Remove harmonic line frequencies"
 
         else:
-            icon = themed_icon(":/icons/visibility.png")
+            icon = Icon(":/icons/visibility.png")
             tool_tip = "Display harmonic line frequencies"
 
         self.pushButton_display_hfrequencies.setIcon(icon)

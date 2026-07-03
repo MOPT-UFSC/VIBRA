@@ -21,7 +21,7 @@ from PySide6.QtWidgets import (QApplication, QComboBox, QDialog, QFrame,
     QTabWidget, QTableWidget, QTableWidgetItem, QTreeWidget,
     QTreeWidgetItem, QWidget)
 
-from vibra.interface.formatters.icons import themed_icon
+from vibra.interface.formatters.icons import Icon
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
@@ -180,7 +180,7 @@ class Ui_Dialog(object):
         self.pushButton_load_path.setObjectName(u"pushButton_load_path")
         self.pushButton_load_path.setMinimumSize(QSize(32, 28))
         self.pushButton_load_path.setMaximumSize(QSize(32, 28))
-        icon = themed_icon(u":/icons/document_search_blue.png")
+        icon = Icon(u":/icons/document_search_blue.png")
         self.pushButton_load_path.setIcon(icon)
         self.pushButton_load_path.setIconSize(QSize(20, 20))
         self.pushButton_load_path.setAutoDefault(False)
@@ -432,7 +432,7 @@ class Ui_Dialog(object):
         self.pushButton_clean_inputs.setObjectName(u"pushButton_clean_inputs")
         self.pushButton_clean_inputs.setMinimumSize(QSize(36, 28))
         self.pushButton_clean_inputs.setMaximumSize(QSize(36, 28))
-        icon1 = themed_icon(u":/icons/broom.png")
+        icon1 = Icon(u":/icons/broom.png")
         self.pushButton_clean_inputs.setIcon(icon1)
         self.pushButton_clean_inputs.setIconSize(QSize(18, 18))
         self.pushButton_clean_inputs.setAutoDefault(False)

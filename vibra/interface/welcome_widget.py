@@ -9,7 +9,7 @@ from PySide6.QtGui import QIcon, QImage, QPixmap
 from PySide6.QtWidgets import QBoxLayout, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
 from vibra import EXAMPLES_DIR, app
-from vibra.interface.formatters.icons import themed_icon
+from vibra.interface.formatters.icons import Icon
 
 
 class WelcomeWidget(QWidget):
@@ -39,10 +39,10 @@ class WelcomeWidget(QWidget):
     def setup_labels(self, layout):
         labels_layout = QHBoxLayout()
 
-        new_item = WelcomeItem("New Project", themed_icon(":/icons/new_file.png"))
+        new_item = WelcomeItem("New Project", Icon(":/icons/new_file.png"))
         new_item.clicked.connect(self.new_project)
 
-        open_item = WelcomeItem("Open Project", themed_icon(":/icons/import.png"))
+        open_item = WelcomeItem("Open Project", Icon(":/icons/import.png"))
         open_item.clicked.connect(self.open_project)
 
         labels_layout.addWidget(new_item)

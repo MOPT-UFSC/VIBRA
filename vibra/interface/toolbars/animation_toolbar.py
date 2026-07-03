@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (
 
 from vibra import app
 from vibra.interface import error_title
-from vibra.interface.formatters.icons import themed_icon
+from vibra.interface.formatters.icons import Icon
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 
@@ -40,9 +40,9 @@ class AnimationToolbar(QToolBar):
         self.current_render_widget = None
 
     def _load_icons(self):
-        self.play_icon = themed_icon(":/icons/play.png")
-        self.pause_icon = themed_icon(":/icons/pause.png")
-        self.save_animation_icon = themed_icon(":/icons/create_video_icon.png")
+        self.play_icon = Icon(":/icons/play.png")
+        self.pause_icon = Icon(":/icons/pause.png")
+        self.save_animation_icon = Icon(":/icons/create_video_icon.png")
 
     def _define_qt_variables(self):
         # QLabel
