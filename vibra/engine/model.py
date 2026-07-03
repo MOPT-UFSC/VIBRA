@@ -1,6 +1,5 @@
 import logging
 from copy import deepcopy
-from dataclasses import asdict
 from numbers import Number
 from pathlib import Path
 from typing import Callable, Optional
@@ -44,10 +43,10 @@ from vibra.engine.elements.elements_3d import (
     STRUCT_TETRAHEDRON_10S,
 )
 from vibra.engine.geometry.geometry import LengthUnits
-from vibra.engine.mesh_modifiers.degrees_of_freedom_decoupling import DegreesOfFreedomDecoupling
-from vibra.engine.mesher.element_setup import DEFAULT_ELEMENT_SETUP
+from vibra.engine.mesher.degrees_of_freedom_decoupling import DegreesOfFreedomDecoupling
+from vibra.engine.mesher.element_setup import GMSH_VISUAL_MESH
 from vibra.engine.mesher.mesh import Mesh
-from vibra.engine.mesher.mesh_setup import MeshSetup, HEXAHEDRON_8, HEXAHEDRON_20, TETRAHEDRON_4, TETRAHEDRON_10, ElementTopology
+from vibra.engine.mesher.mesh_setup import HEXAHEDRON_8, HEXAHEDRON_20, TETRAHEDRON_4, TETRAHEDRON_10, ElementTopology, MeshSetup
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.engine.solution import HarmonicSolution, Solution
@@ -143,7 +142,7 @@ class Model:
             return self.analysis_setup.global_damping
 
         return (None, None, None)
-    
+
     @property
     def outdated_solution(self):
         if isinstance(self.analysis_setup, ModalAnalysisSetup | HarmonicAnalysisSetup):
@@ -208,29 +207,24 @@ class Model:
         self.mesh = Mesh(length_unit=self.length_unit, geometry_qf=self.geometry_qf)
 
     def process_visual_geometry_mesh(self, path: str):
-        self.initialize_mesh()
+        self.mesh = Mesh(length_unit=self.length_unit, geometry_qf=self.geometry_qf)
 
         try:
             try:
                 element_size = self.mesh.compute_initial_mesh_size(path)
-                self.mesh.load_cad(
-                    path,
-                    dimension=2,
+                mesh_setup = MeshSetup(
                     minimum_element_size=element_size * 0.4,
                     maximum_element_size=element_size,
-                    ElementSetup=DEFAULT_ELEMENT_SETUP,
+                    custom_element_setup=GMSH_VISUAL_MESH,
                 )
+                self.mesh.load_cad(path, mesh_setup)
 
             except Exception:
-                self.mesh = Mesh(length_unit=self.length_unit, geometry_qf=self.geometry_qf)
-
                 element_size = 10
-                self.mesh.load_cad(
-                    path,
-                    dimension=2,
+                mesh_setup = MeshSetup(
                     minimum_element_size=element_size * 0.5,
                     maximum_element_size=element_size,
-                    ElementSetup=DEFAULT_ELEMENT_SETUP,
+                    custom_element_setup=GMSH_VISUAL_MESH,
                 )
 
             self.initial_element_size = element_size
@@ -279,7 +273,8 @@ class Model:
             raise IncompleteSetupError(message, context=context)
 
         logging.info("Processing mesh [80/100]")
-        self.mesh.load_cad(self.geometry_path, **asdict(self.mesh_setup))
+        self.mesh = Mesh(length_unit=self.length_unit, geometry_qf=self.geometry_qf)
+        self.mesh.load_cad(self.geometry_path, self.mesh_setup)
 
         if self.disable_resume_callback is not None:
             self.disable_resume_callback()
@@ -453,7 +448,7 @@ class Model:
 
         return (f_min, f_max, f_step, frequencies)
 
-    def get_structural_elements(self):                        
+    def get_structural_elements(self):
         element_type = self.element_topology
 
         if element_type == TETRAHEDRON_4:
@@ -808,10 +803,10 @@ class Model:
                 impedance = si_data["values"][0]
 
         return impedance
-    
+
     def is_surface_impedance_frequency_dependent(self, surface_id: int) -> bool:
         """
-        This method verifies whether the acoustic impedance of the selected surface is 
+        This method verifies whether the acoustic impedance of the selected surface is
         frequency-dependent, returning True if positive and False otherwise.
         """
         properties = ["porous_material_model", "viscous_thermal_model", "proportional_damping"]

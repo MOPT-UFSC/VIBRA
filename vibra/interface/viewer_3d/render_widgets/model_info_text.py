@@ -873,10 +873,8 @@ def mesh_structural_format(property_name, values, labels, units, has_table):
     return str(tree)
 
 def problematic_nodes_info_text(self):
-    text = ""
+    ...
     
-    disconnected_nodes = 1
-
 # RESULTS RENDER WIDGET INFO TEXTS
 
 def analysis_info_text(frequency_index: int):

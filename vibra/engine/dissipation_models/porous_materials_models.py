@@ -144,7 +144,7 @@ class PorousMaterialModels:
 
         P_0 = fluid.pressure
         rho_0 = fluid.fluid_density
-        C_0 = fluid.speed_of_sound
+        C_0 = fluid.speed_of_sound  # noqa: F841
         gamma = fluid.isentropic_exponent
         Cp = fluid.specific_heat_Cp
         mu = fluid.dynamic_viscosity
@@ -189,7 +189,7 @@ class PorousMaterialModels:
         P_0 = fluid.pressure
         rho_0 = fluid.fluid_density
         C_0 = fluid.speed_of_sound
-        Z_0 = rho_0 * C_0
+        Z_0 = rho_0 * C_0  # noqa: F841
         gamma = fluid.isentropic_exponent
         Cp = fluid.specific_heat_Cp
         mu = fluid.dynamic_viscosity

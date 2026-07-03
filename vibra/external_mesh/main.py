@@ -1,6 +1,6 @@
-from vibra.external_mesh.external_mesh_data import ExternalMeshData
 from paraview_file import ParaviewFile
-import numpy as np
+
+from vibra.external_mesh.external_mesh_data import ExternalMeshData
 
 if __name__ == "__main__":
 

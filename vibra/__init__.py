@@ -17,6 +17,8 @@ __version__ = "0.5.3"
 __release_date__ = "May 2026"
 
 VERSION = __version__
+RELEASE_DATE = __release_date__
+
 APP_ID = f"mopt.vibra.{VERSION}"
 
 VIBRA_DIR = Path(__file__).parent
@@ -26,7 +28,6 @@ DEVELOPER_MODE = True
 
 ICON_DIR = VIBRA_DIR / "interface/data/icons"
 TEXTURE_DIR = VIBRA_DIR / "interface/data/textures/"
-UI_DIR = VIBRA_DIR / "interface/data/ui_files/"
 SYMBOLS_DIR = VIBRA_DIR / "interface/data/symbols/"
 EXAMPLES_DIR = VIBRA_DIR / "interface/data/examples/"
 

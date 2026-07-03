@@ -250,7 +250,7 @@ def matrices(x1,y1,z1,x2,y2,z2,x3,y3,z3):
     wfact_k = np.array([1.0,1.0])
     nint_m = 3 #Mass: Full integration #Distributed external load: Full integration
     pint_m = np.array([-0.774596669241483,0.7745966692414836, 0.0])
-    wfact_m = np.array([0.555555555555555,0.5555555555555555, 0.888888888888888])
+    wfact_m = np.array([0.555555555555555,0.5555555555555555, 0.888888888888888])  # noqa: F841
     #
     Ke = np.zeros((npel*ngln,npel*ngln))
     Me = np.zeros((npel*ngln,npel*ngln))

@@ -1,6 +1,5 @@
 from copy import deepcopy
 from enum import IntEnum
-from itertools import count
 from random import randint
 from typing import Optional
 

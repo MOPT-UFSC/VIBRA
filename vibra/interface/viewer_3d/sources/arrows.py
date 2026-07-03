@@ -1,7 +1,8 @@
-from vtkmodules.vtkFiltersSources import vtkArrowSource, vtkCylinderSource, vtkPlaneSource, vtkCubeSource
-from vtkmodules.vtkFiltersCore import vtkAppendPolyData
 from vtkmodules.vtkCommonTransforms import vtkTransform
+from vtkmodules.vtkFiltersCore import vtkAppendPolyData
 from vtkmodules.vtkFiltersGeneral import vtkTransformPolyDataFilter
+from vtkmodules.vtkFiltersSources import vtkArrowSource, vtkCubeSource, vtkCylinderSource
+
 from vibra.utils.vtk_utils import transform_polydata
 
 
