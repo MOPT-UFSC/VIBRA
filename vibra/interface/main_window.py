@@ -235,8 +235,6 @@ class MainWindow(MainWindow_UI):
         stylesheets.set_theme(theme)
 
         set_icon_theme(theme)
-        for w in app().topLevelWidgets():
-            w.update()
 
         self.theme_changed.emit(theme)
 

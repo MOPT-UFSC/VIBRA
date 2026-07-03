@@ -3,7 +3,7 @@ from pathlib import Path
 
 from molde import Color
 from PySide6.QtCore import QSize, Qt
-from PySide6.QtGui import QColor, QIcon, QIconEngine, QPainter, QPixmap
+from PySide6.QtGui import QColor, QIcon, QIconEngine, QPainter, QPixmap, QPixmapCache
 from PySide6.QtWidgets import QApplication, QStyleOption, QWidget
 
 
@@ -20,6 +20,7 @@ def invalidate_themed_icons() -> None:
     """
     global _icon_generation
     _icon_generation += 1
+    QPixmapCache.clear()
 
 
 class ResourceIconEngine(QIconEngine):
