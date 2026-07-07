@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import numpy as np
@@ -38,7 +39,16 @@ def paint_icons():
 
             painted_icon = Image.fromarray(img_data)
             save_icon(icon, painted_icon)
+            
+    
+def main():
+    paint_icons()
+
+    if os.system("uv --version") != 0:
+        return
+    
+    os.system("uv run invoke ui-compile")
 
 
 if __name__ == "__main__":
-    paint_icons()
+    main()
