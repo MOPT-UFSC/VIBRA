@@ -62,26 +62,31 @@ class StructuralAssembler:
     def get_property_data_for_selected_property(self, selected_property: str):
         """
         """
-        prescribed_data = defaultdict(int)
-        for (property, surface_id), data in self.properties.surface_properties.items():
-            if property == selected_property:
-                nodes = self.model.mesh.get_nodes_from_surface(surface_id)
-                if nodes is None:
-                    continue
+        output_data = defaultdict(int)
 
-                property_data_from_nodes = self.model.get_structural_property_data_from_nodes(nodes, data, "surfaces")
-                for gdof, p_data in property_data_from_nodes.items():
-                    prescribed_data[gdof] += p_data
+        for (property, surface_id), data in self.properties.surface_properties.items():
+            if property != selected_property:
+                continue
+
+            nodes = self.model.mesh.get_nodes_from_surface(surface_id)
+            if nodes is None:
+                continue
+
+            property_data_from_nodes = self.model.get_structural_property_data_from_nodes(nodes, data, "surfaces")
+            for gdof, p_data in property_data_from_nodes.items():
+                output_data[gdof] += p_data
 
         for (property, line_id), data in self.properties.line_properties.items():
-            if property == selected_property:
-                nodes = self.model.mesh.get_nodes_from_line(line_id)
-                if nodes is None:
-                    continue
+            if property != selected_property:
+                continue
 
-                property_data_from_nodes = self.model.get_structural_property_data_from_nodes(nodes, data, "lines")
-                for gdof, p_data in property_data_from_nodes.items():
-                    prescribed_data[gdof] += p_data
+            nodes = self.model.mesh.get_nodes_from_line(line_id)
+            if nodes is None:
+                continue
+
+            property_data_from_nodes = self.model.get_structural_property_data_from_nodes(nodes, data, "lines")
+            for gdof, p_data in property_data_from_nodes.items():
+                output_data[gdof] += p_data
 
         for (property, point_id), data in self.properties.point_properties.items():
             if property != selected_property:
@@ -94,16 +99,18 @@ class StructuralAssembler:
             _node_id = np.array([node_id], dtype=int)
             property_data_from_nodes = self.model.get_structural_property_data_from_nodes(_node_id, data, "points")
             for gdof, p_data in property_data_from_nodes.items():
-                prescribed_data[gdof] += p_data
+                output_data[gdof] += p_data
 
         for (property, node_id), data in self.properties.nodal_properties.items():
-            if property == selected_property:
-                nodes = np.array([node_id], dtype=int)
-                property_data_from_nodes = self.model.get_structural_property_data_from_nodes(nodes, data, "nodes")
-                for gdof, p_data in property_data_from_nodes.items():
-                    prescribed_data[gdof] += p_data
+            if property != selected_property:
+                continue
 
-        return prescribed_data
+            nodes = np.array([node_id], dtype=int)
+            property_data_from_nodes = self.model.get_structural_property_data_from_nodes(nodes, data, "nodes")
+            for gdof, p_data in property_data_from_nodes.items():
+                output_data[gdof] += p_data
+
+        return output_data
 
 
     def process_property_arrays(self, data: dict):

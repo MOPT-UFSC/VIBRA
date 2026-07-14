@@ -525,10 +525,17 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
 
                 analysis_setup_data.update(freq_data)
 
-        if AnalysisID(analysis_id).is_harmonic_structural():
+        is_harmonic_structural = AnalysisID(analysis_id).is_harmonic_structural()
+        if is_harmonic_structural:
             analysis_setup_data["global_damping"] = self.check_damping_inputs()
 
         analysis_setup = self.model.get_harmonic_analysis_setup(**analysis_setup_data)
+
+        if is_harmonic_structural:
+            # In order to avoid the division-by-zero error, we must filter out the zero frequency from the 
+            #  structural harmonic analysis if there is a prescribed velocity or acceleration in the model
+            if self.model.properties.is_there_a_prescribed_velocity_or_acceleration_in_the_model():
+                analysis_setup = self.model.modify_analysis_setup_to_filter_zero_frequency(analysis_setup)
 
         app().project.configure_analysis(analysis_setup)
 

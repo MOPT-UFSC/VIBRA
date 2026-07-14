@@ -218,8 +218,9 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
     def stop_animation(self, *args, **kwargs):
         animation_widget = app().main_window.results_viewer_widget.get_animation_widget()
-        animation_widget.pushButton_animate.setChecked(False)
-        animation_widget.update_animate_button_icons(False)
+        if animation_widget is not None:
+            animation_widget.pushButton_animate.setChecked(False)
+            animation_widget.update_animate_button_icons(False)
         super().stop_animation(*args, **kwargs)
 
     def update_animation(self, frame):
@@ -288,7 +289,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         elif analysis_id == AnalysisID.STRUCTURAL_HARMONIC:
             analysis_widget = app().main_window.results_viewer_widget.plot_structural_harmonic
             self.frequency_index = analysis_widget.get_selected_frequency_index()
-            self.differentiate = analysis_widget.get_number_of_differentiations()
+            n_diff = analysis_widget.get_number_of_differentiations()
             data_type = analysis_widget.get_data_type()
             self.unit_label = analysis_widget.get_plot_units()
 
@@ -296,7 +297,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             if not isinstance(postprocessing, StructuralPostprocessing):
                 return
 
-            data = postprocessing.compute_structural_response_field(self.frequency_index, phase, data_type, self.differentiate)
+            data = postprocessing.compute_structural_response_field(self.frequency_index, phase, data_type, n_diff)
             if data is None:
                 return
 
@@ -349,8 +350,11 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             animation_widget = app().main_window.results_viewer_widget.get_animation_widget()
             if isinstance(animation_widget, AnimationWidget):
                 animation_widget.update_factor_label(max_value=max_value)
+                magnification_factor = animation_widget.magnification_factor
+            else:
+                magnification_factor = 1
 
-            self.analysis_actor.apply_deformation(displacements, animation_widget.magnification_factor,max_value)
+            self.analysis_actor.apply_deformation(displacements, magnification_factor, max_value)
             self.edges_actor.extract_data(self.analysis_actor.data)
 
         self.analysis_actor.plot_color_bar(color_scalars, min_value, max_value, colormap)

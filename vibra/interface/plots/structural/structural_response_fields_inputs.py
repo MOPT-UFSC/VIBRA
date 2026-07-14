@@ -117,7 +117,7 @@ class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
         return f"{prefixes[ind_dformat]}_{suffixes[ind_ptype]}"
 
     def get_plot_units(self) -> str:
-        units = ["m", "m/s", "m²/s"]
+        units = ["m", "m/s", "m/s²"]
         return units[self.comboBox_plotting_results.currentIndex()]
 
     def update_transparency_callback(self):

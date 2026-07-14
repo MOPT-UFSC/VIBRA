@@ -150,6 +150,12 @@
       <enum>QFrame::Shadow::Raised</enum>
      </property>
      <layout class="QGridLayout" name="gridLayout_3">
+      <property name="topMargin">
+       <number>24</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
       <item row="0" column="0">
        <widget class="QLabel" name="label">
         <property name="maximumSize">
