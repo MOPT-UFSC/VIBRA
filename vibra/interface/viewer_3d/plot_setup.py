@@ -22,16 +22,16 @@ class DisplacementPlotType(StrEnum):
 class PlotSetup(StructEnum):
     class NoPlotSetup: ...
 
-    class FrequencyDisplacementPlotSetup:
-        phase: float
-        index: int
-        plot_type: PressurePlotType
-
-    class FrequencyPressurePlotSetup:
+    class FrequencyDisplacement:
         phase: float
         index: int
         magnification_factor: float
+        plot_type: PressurePlotType
+
+    class FrequencyPressure:
+        phase: float
+        index: int
         plot_type: DisplacementPlotType
 
-    class TransientPlot:
+    class TransientPressure:
         frame: int

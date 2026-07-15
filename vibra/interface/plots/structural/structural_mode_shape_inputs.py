@@ -1,3 +1,4 @@
+from vibra.interface.viewer_3d.plot_setup import PlotSetup
 import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
@@ -138,10 +139,16 @@ class PlotStructuralModeShapeInputs(StructuralModeShapeInputs_UI):
         self.update_animation_widget_visibility()
         if self.lineEdit_natural_frequency.text() == "":
             return
-        
-        self.mode_index = self.natural_frequencies.index(self.selected_natural_frequency)
 
+        self.mode_index = self.natural_frequencies.index(self.selected_natural_frequency)
         self.animation_widget.reset_sliders()
+
+        plot_setup = PlotSetup.FrequencyDisplacement(
+            phase=self.animation_widget.phase_in_radians,
+            magnification_factor=self.animation_widget.magnification_factor,
+            index=self.mode_index,
+            plot_type=self.get_plot_type(),
+        )
         LoadingWindow(app().main_window.results_widget.update_plot).run()
 
     def update_displacements(self):
