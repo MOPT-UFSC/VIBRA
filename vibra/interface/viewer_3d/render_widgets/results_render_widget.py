@@ -14,7 +14,13 @@ from vibra.engine import AnalysisID
 from vibra.engine.postprocessing import AcousticPostprocessing, StructuralPostprocessing
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.plots.general.animation_widget import AnimationWidget
-from vibra.interface.viewer_3d.plot_setup import NoPlotSetup, PlotSetup
+from vibra.interface.viewer_3d.plot_setup import (
+    FrequencyDisplacementPlotSetup,
+    FrequencyPressurePlotSetup,
+    NoPlotSetup,
+    PlotSetup,
+    TransientPressurePlotSetup,
+)
 from vibra.interface.viewer_3d.render_tools import RenderTool, SelectionTool
 from vibra.utils.interface_utils import VisualizationFilter
 from vibra.utils.math_functions import lerp
@@ -153,7 +159,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.visualization_changed_callback()
             self.update_color_and_deformation()
             self.update_info_text()
-            self.update_colorbar_unit()
+            # self.update_colorbar_unit()
 
         if reset_camera:
             self.renderer.ResetCamera()
@@ -166,6 +172,116 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.plot_setup = plot_setup
 
     def update_color_and_deformation(
+        self,
+        phase: Optional[float] = None,
+        clear_cache: bool = True,
+    ):
+        self.unit_label = "--"
+    
+        if not self.actors_exists():
+            return
+
+        if clear_cache:
+            self.clear_cache()
+
+        match self.plot_setup:
+            case NoPlotSetup():
+                self._plot_empty()
+
+            case FrequencyPressurePlotSetup():
+                self._plot_frequency_pressure(phase, clear_cache)
+
+            case FrequencyDisplacementPlotSetup():
+                self._plot_frequency_displacement(phase, clear_cache)
+
+            case TransientPressurePlotSetup():
+                pass
+
+            case _:
+                raise NotImplementedError(f'Plot setup "{self.plot_setup}" not implemented.')
+
+    def _plot_empty(self):
+        assert isinstance(self.plot_setup, NoPlotSetup)
+
+    def _plot_frequency_pressure(
+        self,
+        phase: Optional[float],
+        clear_cache: bool = True,
+    ):
+        assert isinstance(self.plot_setup, FrequencyPressurePlotSetup)
+
+        postprocessing = app().project.get_acoustic_postprocessing()
+        assert isinstance(postprocessing, AcousticPostprocessing)
+
+        analysis_id = app().project.model.analysis_id
+        assert analysis_id.is_acoustic()
+
+        if phase is None:
+            phase = self.plot_setup.phase
+
+        data = postprocessing.compute_acoustic_pressure_field(
+            self.plot_setup.index,
+            phase,
+            self.plot_setup.plot_type,
+            is_modal=analysis_id.is_modal(),
+        )
+
+        if data is None:
+            return
+
+        color_scalars, min_value, max_value, self.complex_result = data
+        if clear_cache:
+            self.min_value = min_value
+            self.max_value = max_value
+
+        colormap = app().config.user_preferences.color_map
+        self.analysis_actor.plot_color_bar(color_scalars, min_value, max_value, colormap)
+        self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
+        self.update()
+
+    def _plot_frequency_displacement(
+        self,
+        phase: Optional[float],
+        clear_cache: bool = True,
+    ):
+        assert isinstance(self.plot_setup, FrequencyDisplacementPlotSetup)
+
+        postprocessing = app().project.get_acoustic_postprocessing()
+        assert isinstance(postprocessing, StructuralPostprocessing)
+
+        analysis_id = app().project.model.analysis_id
+        assert analysis_id.is_structural()
+
+        if phase is None:
+            phase = self.plot_setup.phase
+
+        data = postprocessing.compute_structural_response_field(
+            self.plot_setup.index,
+            phase,
+            self.plot_setup.plot_type,
+            is_modal=analysis_id.is_modal(),
+        )
+
+        if data is None:
+            return
+
+        displacements, color_scalars, min_value, max_value, self.complex_result = data
+        if clear_cache:
+            self.min_value = min_value
+            self.max_value = max_value
+
+        self.analysis_actor.apply_deformation(displacements, self.plot_setup.magnification_factor, max_value)
+        self.edges_actor.extract_data(self.analysis_actor.data)
+
+        colormap = app().config.user_preferences.color_map
+        self.analysis_actor.plot_color_bar(color_scalars, min_value, max_value, colormap)
+        self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
+        self.update()
+
+    def _plot_transient_pressure(self):
+        assert isinstance(self.plot_setup, TransientPressurePlotSetup)
+
+    def _update_color_and_deformation(
         self,
         phase: Optional[float] = None,
         clear_cache: bool = True,
