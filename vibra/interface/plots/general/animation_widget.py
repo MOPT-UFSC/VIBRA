@@ -204,6 +204,7 @@ class AnimationWidget(AnimationWidget_UI):
             self.current_render_widget.update_deformations()
 
     def update_color_and_deformation(self, clear_cache: bool = True):
+        app().main_window.results_widget.plot_setup.phase = self.phase_in_radians
         app().main_window.results_widget.update_color_and_deformation(phase=self.phase_in_radians, clear_cache=clear_cache)
 
     def reset_sliders(self):
