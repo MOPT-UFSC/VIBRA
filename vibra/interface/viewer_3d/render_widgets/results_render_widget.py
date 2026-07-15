@@ -173,7 +173,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
     def update_color_and_deformation(
         self,
-        phase: Optional[float] = None,
+        progress: Optional[float] = None,
         clear_cache: bool = True,
     ):
         if not self.actors_exists():
@@ -187,13 +187,13 @@ class ResultsRenderWidget(AnimatedRenderWidget):
                 self._plot_empty()
 
             case FrequencyPressurePlotSetup():
-                self._plot_frequency_pressure(phase, clear_cache)
+                self._plot_frequency_pressure(progress, clear_cache)
 
             case FrequencyDisplacementPlotSetup():
-                self._plot_frequency_displacement(phase, clear_cache)
+                self._plot_frequency_displacement(progress, clear_cache)
 
             case TransientPressurePlotSetup():
-                pass
+                self._plot_transient_pressure(progress)
 
             case _:
                 raise NotImplementedError(f'Plot setup "{self.plot_setup}" not implemented.')
@@ -276,8 +276,13 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.update()
 
-    def _plot_transient_pressure(self):
+    def _plot_transient_pressure(self, time: Optional[float]):
         assert isinstance(self.plot_setup, TransientPressurePlotSetup)
+
+        if time is None:
+            time = self.plot_setup.time
+
+        print(">>>", self.plot_setup)
 
     def _update_color_and_deformation(
         self,
@@ -440,7 +445,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         with self.update_lock:
             self.update_color_and_deformation(
-                phase=phase,
+                progress=phase,
                 clear_cache=False,
             )
 

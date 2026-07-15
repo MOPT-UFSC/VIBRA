@@ -18,7 +18,7 @@ from vibra.interface import error_title
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.ui_generated.plots.general.animation_widget_ui import AnimationWidget_UI
-from vibra.interface.viewer_3d.plot_setup import FrequencyDisplacementPlotSetup, FrequencyPressurePlotSetup
+from vibra.interface.viewer_3d.plot_setup import FrequencyDisplacementPlotSetup, FrequencyPressurePlotSetup, TransientPressurePlotSetup
 from vibra.utils.icons import load_icon
 
 
@@ -174,6 +174,11 @@ class AnimationWidget(AnimationWidget_UI):
     @property
     def phase_in_radians(self):
         return np.radians(self.phase_slider.value())
+    
+    @property
+    def time(self):
+        value = self.phase_slider.value()
+        return (self.sampling_time / self.frames_number) * value
 
     @property
     def magnification_factor(self):
@@ -205,13 +210,15 @@ class AnimationWidget(AnimationWidget_UI):
 
     def update_color_and_deformation(self, clear_cache: bool = True):
         plot_setup = app().main_window.results_widget.plot_setup
-        
+
         match plot_setup:
             case FrequencyPressurePlotSetup():
                 plot_setup.phase = self.phase_in_radians
             case FrequencyDisplacementPlotSetup():
                 plot_setup.phase = self.phase_in_radians
                 plot_setup.magnification_factor = self.magnification_factor
+            case TransientPressurePlotSetup():
+                plot_setup.time = self.time
             case _:
                 return
 
@@ -266,9 +273,7 @@ class AnimationWidget(AnimationWidget_UI):
         self.label_phase_angle.setText(f"{value}°")
 
     def update_time_frame_label(self):
-        value = self.phase_slider.value()
-        time_step = (self.sampling_time / self.frames_number) * value
-        self.label_phase_angle.setText(f"{time_step: .4f}s")
+        self.label_phase_angle.setText(f"{self.time: .4f}s")
 
     def update_factor_label(self, max_value=None):
         value = self.magnification_factor_slider.value() / 16

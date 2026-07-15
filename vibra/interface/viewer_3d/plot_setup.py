@@ -50,7 +50,7 @@ class FrequencyPressurePlotSetup:
 
 @dataclass(slots=True)
 class TransientPressurePlotSetup:
-    frame: int
+    time: int
     unit: str = "--"
 
 
