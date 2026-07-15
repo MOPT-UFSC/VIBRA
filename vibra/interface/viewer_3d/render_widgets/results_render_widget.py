@@ -159,7 +159,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.visualization_changed_callback()
             self.update_color_and_deformation()
             self.update_info_text()
-            # self.update_colorbar_unit()
+            self.update_colorbar_unit()
 
         if reset_camera:
             self.renderer.ResetCamera()
@@ -176,8 +176,6 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         phase: Optional[float] = None,
         clear_cache: bool = True,
     ):
-        self.unit_label = "--"
-    
         if not self.actors_exists():
             return
 
@@ -286,8 +284,6 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         phase: Optional[float] = None,
         clear_cache: bool = True,
     ):
-
-        self.unit_label = "--"
         if not self.actors_exists():
             return
 
@@ -683,7 +679,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if not hasattr(self, "colorbar_actor"):
             return
 
-        self.colorbar_actor.SetTitle(f"Unit: [{self.unit_label}]")
+        self.colorbar_actor.SetTitle(f"Unit: [{self.plot_setup.unit}]")
         self.update()
 
     def update_renderer_font_size(self):

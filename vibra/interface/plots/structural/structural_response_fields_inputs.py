@@ -1,3 +1,4 @@
+from vibra.interface.viewer_3d.plot_setup import DisplacementPlotType
 import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QGridLayout, QTreeWidgetItem
@@ -108,14 +109,14 @@ class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
         except AttributeError:
             pass
 
-    def get_data_type(self):
+    def get_displacement_plot_type(self) -> DisplacementPlotType:
         prefixes = ["u", "v", "a"]
         suffixes = ["sum", "x", "y", "z"]
 
         ind_dformat = self.comboBox_plotting_results.currentIndex()
         ind_ptype = self.comboBox_plot_type.currentIndex()
 
-        return f"{prefixes[ind_dformat]}_{suffixes[ind_ptype]}"
+        return DisplacementPlotType(f"{prefixes[ind_dformat]}_{suffixes[ind_ptype]}")
 
     def get_plot_units(self) -> str:
         units = ["m", "m/s", "m/s²"]
@@ -146,7 +147,8 @@ class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
             phase=self.animation_widget.phase_in_radians,
             magnification_factor=self.animation_widget.magnification_factor,
             index=self.selected_frequency_index,
-            plot_type=self.get_plot_type(),
+            plot_type=self.get_displacement_plot_type(),
+            unit=self.get_plot_units()
         )
         LoadingWindow(app().main_window.results_widget.update_plot).run(plot_setup=plot_setup)
 

@@ -113,6 +113,7 @@ class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
             phase=self.animation_widget.phase_in_radians,
             index=self.selected_frequency_index,
             plot_type=self.get_plot_type(),
+            unit="Pa",
         )
 
         self.animation_widget.reset_sliders()

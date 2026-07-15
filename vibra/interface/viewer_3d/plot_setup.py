@@ -16,10 +16,19 @@ class DisplacementPlotType(StrEnum):
     U_X = auto()
     U_Y = auto()
     U_Z = auto()
+    V_SUM = auto()
+    V_X = auto()
+    V_Y = auto()
+    V_Z = auto()
+    A_SUM = auto()
+    A_X = auto()
+    A_Y = auto()
+    A_Z = auto()
 
 
 @dataclass(slots=True)
-class NoPlotSetup: ...
+class NoPlotSetup:
+    unit: str = "--"
 
 
 @dataclass(slots=True)
@@ -28,6 +37,7 @@ class FrequencyDisplacementPlotSetup:
     index: int
     magnification_factor: float
     plot_type: PressurePlotType
+    unit: str = "--"
 
 
 @dataclass(slots=True)
@@ -35,11 +45,13 @@ class FrequencyPressurePlotSetup:
     phase: float
     index: int
     plot_type: DisplacementPlotType
+    unit: str = "--"
 
 
 @dataclass(slots=True)
 class TransientPressurePlotSetup:
     frame: int
+    unit: str = "--"
 
 
 # Do not forget to add the type here
