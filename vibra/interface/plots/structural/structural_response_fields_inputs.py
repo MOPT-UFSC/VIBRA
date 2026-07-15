@@ -7,7 +7,7 @@ from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.plots.general.animation_widget import AnimationWidget
 from vibra.interface.ui_generated.plots.structural.structural_response_fields_inputs_ui import StructuralResponseFieldsInputs_UI
 from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
-from vibra.interface.viewer_3d.plot_setup import PlotSetup
+from vibra.interface.viewer_3d.plot_setup import FrequencyDisplacementPlotSetup
 
 
 class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
@@ -142,13 +142,13 @@ class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
 
         self.animation_widget.reset_sliders()
 
-        plot_setup = PlotSetup.FrequencyDisplacement(
+        plot_setup = FrequencyDisplacementPlotSetup(
             phase=self.animation_widget.phase_in_radians,
             magnification_factor=self.animation_widget.magnification_factor,
             index=self.selected_frequency_index,
             plot_type=self.get_plot_type(),
         )
-        LoadingWindow(app().main_window.results_widget.update_plot).run(plot_setup)
+        LoadingWindow(app().main_window.results_widget.update_plot).run(plot_setup=plot_setup)
 
     def get_selected_frequency_index(self):
         if self.selected_frequency_index is not None:

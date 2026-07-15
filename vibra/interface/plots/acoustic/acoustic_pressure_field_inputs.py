@@ -7,7 +7,7 @@ from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.plots.general.animation_widget import AnimationWidget
 from vibra.interface.ui_generated.plots.acoustic.acoustic_pressure_field_inputs_ui import AcousticPressureFieldInputs_UI
 from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
-from vibra.interface.viewer_3d.plot_setup import PlotSetup, PressurePlotType
+from vibra.interface.viewer_3d.plot_setup import FrequencyPressurePlotSetup, PlotSetup, PressurePlotType
 
 
 class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
@@ -109,14 +109,14 @@ class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
         if self.selected_frequency_index is None:
             return
 
-        plot_setup = PlotSetup.FrequencyPressure(
+        plot_setup = FrequencyPressurePlotSetup(
             phase=self.animation_widget.phase_in_radians,
             index=self.selected_frequency_index,
             plot_type=self.get_plot_type(),
         )
 
         self.animation_widget.reset_sliders()
-        LoadingWindow(app().main_window.results_widget.update_plot).run(plot_setup)
+        LoadingWindow(app().main_window.results_widget.update_plot).run(plot_setup=plot_setup)
 
     def get_colormap(self) -> str:
         index = self.comboBox_colormaps.currentIndex()

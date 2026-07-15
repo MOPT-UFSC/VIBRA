@@ -13,7 +13,7 @@ from vibra.interface.ui_generated.plots.acoustic.acoustic_mode_shape_inputs_ui i
     AcousticModeShapeInputs_UI,
 )
 from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
-from vibra.interface.viewer_3d.plot_setup import PlotSetup
+from vibra.interface.viewer_3d.plot_setup import FrequencyPressurePlotSetup
 
 
 class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
@@ -149,12 +149,12 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
         self.mode_index = self.natural_frequencies.index(self.selected_natural_frequency)
         self.animation_widget.reset_sliders()
 
-        plot_setup = PlotSetup.FrequencyPressure(
+        plot_setup = FrequencyPressurePlotSetup(
             phase=self.animation_widget.phase_in_radians,
             index=self.mode_index,
             plot_type=self.get_plot_type(),
         )
-        LoadingWindow(app().main_window.results_widget.update_plot).run(plot_setup)
+        LoadingWindow(app().main_window.results_widget.update_plot).run(plot_setup=plot_setup)
 
     def update_transparency_callback(self):
         return

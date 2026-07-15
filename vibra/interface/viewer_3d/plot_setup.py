@@ -1,4 +1,6 @@
+from dataclasses import dataclass
 from enum import StrEnum, auto
+from typing import Union
 
 from vibra.utils.struct_enum import StructEnum
 
@@ -18,20 +20,34 @@ class DisplacementPlotType(StrEnum):
     U_Z = auto()
 
 
-# This is not just nestled classes, it is a StructEnum
-class PlotSetup(StructEnum):
-    class NoPlotSetup: ...
+@dataclass(slots=True)
+class NoPlotSetup: ...
 
-    class FrequencyDisplacement:
-        phase: float
-        index: int
-        magnification_factor: float
-        plot_type: PressurePlotType
 
-    class FrequencyPressure:
-        phase: float
-        index: int
-        plot_type: DisplacementPlotType
+@dataclass(slots=True)
+class FrequencyDisplacementPlotSetup:
+    phase: float
+    index: int
+    magnification_factor: float
+    plot_type: PressurePlotType
 
-    class TransientPressure:
-        frame: int
+
+@dataclass(slots=True)
+class FrequencyPressurePlotSetup:
+    phase: float
+    index: int
+    plot_type: DisplacementPlotType
+
+
+@dataclass(slots=True)
+class TransientPressurePlotSetup:
+    frame: int
+
+
+# Do not forget to add the type here
+PlotSetup = Union[
+    NoPlotSetup,
+    FrequencyDisplacementPlotSetup,
+    FrequencyPressurePlotSetup,
+    TransientPressurePlotSetup,
+]
