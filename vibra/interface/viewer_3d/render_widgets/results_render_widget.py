@@ -13,6 +13,7 @@ from vibra.engine import AnalysisID
 from vibra.engine.postprocessing import AcousticPostprocessing, StructuralPostprocessing
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.plots.general.animation_widget import AnimationWidget
+from vibra.interface.viewer_3d.plot_setup import PlotSetup
 from vibra.interface.viewer_3d.render_tools import RenderTool, SelectionTool
 from vibra.utils.interface_utils import VisualizationFilter
 from vibra.utils.math_functions import lerp
@@ -43,6 +44,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             faces=True,
             solids=True,
         )
+
+        self.plot_setup: PlotSetup = PlotSetup.NoPlotSetup()
 
         self._animation_cached_data = dict()
         self._animation_cache_lock = Lock()
@@ -94,7 +97,13 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.scale_bar_actor.GetLegendTitleProperty().SetColor(font_color.to_rgb_f())
             self.scale_bar_actor.GetLegendLabelProperty().SetColor(font_color.to_rgb_f())
 
-    def update_plot(self, reset_camera: bool = False):
+    def update_plot(
+        self,
+        plot_setup: PlotSetup = PlotSetup.NoPlotSetup(),
+        reset_camera: bool = False,
+    ):
+        self.configure_plot(plot_setup)
+
         mesh = app().project.model.mesh
         if mesh is None:
             return
@@ -150,103 +159,9 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         logging.info("Updating the results render... [98/100]")
         self.update()
 
-    def enable_scale_bar(self):
-        self.scale_bar_actor.VisibilityOn()
-
-    def disable_scale_bar(self):
-        self.scale_bar_actor.VisibilityOff()
-
-    def update_hidden_plot(self):
-        self.update_plot(reset_camera=False)
-
-    def clear_cache(self):
-        logging.info("Clearing animation cache")
-        with self._animation_cache_lock:
-            timestamp = time()
-            self.timestamp = timestamp
-            self._animation_cached_data.clear()
-            self.min_value = 0
-            self.max_value = 0
-        return timestamp
-
-    def cache_animation_frames(self):
-        # Everytime the cache is cleared we store the timestamp
-        # to check if the cache is still valid.
-        # The only time "timestamp != self.timestamp" is when
-        # the cache was cleared from another thread, so we do not
-        # need to continue the processing
-
-        timestamp = self.clear_cache()
-
-        for frame in range(self._animation_total_frames):
-            logging.info(f"Caching animation frames [{frame}/{self._animation_total_frames}]")
-
-            with self._animation_cache_lock:
-                if self.timestamp != timestamp:
-                    break
-
-                if frame in self._animation_cached_data:
-                    continue
-
-                self.cache_frame(frame)
-
-    @warn_delays
-    def cache_frame(self, frame):
-        t = frame / (self._animation_total_frames - 1)
-        phase = lerp(0, 2 * np.pi, t)
-
-        with self.update_lock:
-            self.update_color_and_deformation(
-                phase=phase,
-                clear_cache=False,
-            )
-
-        point_data = vtkPointData()
-        point_position = vtkPoints()
-        point_data.DeepCopy(self.analysis_actor.data.GetPointData())
-        point_position.DeepCopy(self.analysis_actor.data.GetPoints())
-        self._animation_cached_data[frame] = (
-            point_data,
-            point_position,
-        )
-        if not self.complex_result:
-            mirrored_frame = self._animation_total_frames - frame - 1
-            self._animation_cached_data[mirrored_frame] = self._animation_cached_data[frame]
-
-    def start_animation(self, *args, **kwargs):
-        super().start_animation(*args, **kwargs)
-
-    def stop_animation(self, *args, **kwargs):
-        animation_widget = app().main_window.results_viewer_widget.get_animation_widget()
-        animation_widget.pushButton_animate.setChecked(False)
-        animation_widget.update_animate_button_icons(False)
-        super().stop_animation(*args, **kwargs)
-
-    def update_animation(self, frame):
-        if not self.actors_exists():
-            return
-
-        if app().project.model.analysis_id == AnalysisID.NO_ANALYSIS:
-            self.stop_animation()
-            return
-
-        if self._animation_cache_lock.locked():
-            return
-
-        if not self._animation_cached_data:
-            LoadingWindow(self.cache_animation_frames).run()
-
-        if frame in self._animation_cached_data:
-            logging.info(f"Rendering animation frame [{frame}/{self._animation_total_frames}]")
-            point_data, point_position = self._animation_cached_data[frame]
-            self.analysis_actor.data.GetPointData().DeepCopy(point_data)
-            self.analysis_actor.data.GetPoints().DeepCopy(point_position)
-            self.update()
-        else:
-            # It will only enter here if something wrong happened
-            # in the function that caches the frames
-            logging.warning(f"Cache miss on update_animation function for frame {frame}")
-            self.cache_frame(frame)
+    def configure_plot(self, plot_setup: PlotSetup):
+        assert isinstance(plot_setup, PlotSetup)
+        self.plot_setup = plot_setup
 
     def update_color_and_deformation(self, phase: float = 0.0, clear_cache: bool = True):
 
@@ -359,6 +274,104 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.analysis_actor.plot_color_bar(color_scalars, min_value, max_value, colormap)
         self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.update()
+
+    def enable_scale_bar(self):
+        self.scale_bar_actor.VisibilityOn()
+
+    def disable_scale_bar(self):
+        self.scale_bar_actor.VisibilityOff()
+
+    def update_hidden_plot(self):
+        self.update_plot(reset_camera=False)
+
+    def clear_cache(self):
+        logging.info("Clearing animation cache")
+        with self._animation_cache_lock:
+            timestamp = time()
+            self.timestamp = timestamp
+            self._animation_cached_data.clear()
+            self.min_value = 0
+            self.max_value = 0
+        return timestamp
+
+    def cache_animation_frames(self):
+        # Everytime the cache is cleared we store the timestamp
+        # to check if the cache is still valid.
+        # The only time "timestamp != self.timestamp" is when
+        # the cache was cleared from another thread, so we do not
+        # need to continue the processing
+
+        timestamp = self.clear_cache()
+
+        for frame in range(self._animation_total_frames):
+            logging.info(f"Caching animation frames [{frame}/{self._animation_total_frames}]")
+
+            with self._animation_cache_lock:
+                if self.timestamp != timestamp:
+                    break
+
+                if frame in self._animation_cached_data:
+                    continue
+
+                self.cache_frame(frame)
+
+    @warn_delays
+    def cache_frame(self, frame):
+        t = frame / (self._animation_total_frames - 1)
+        phase = lerp(0, 2 * np.pi, t)
+
+        with self.update_lock:
+            self.update_color_and_deformation(
+                phase=phase,
+                clear_cache=False,
+            )
+
+        point_data = vtkPointData()
+        point_position = vtkPoints()
+        point_data.DeepCopy(self.analysis_actor.data.GetPointData())
+        point_position.DeepCopy(self.analysis_actor.data.GetPoints())
+        self._animation_cached_data[frame] = (
+            point_data,
+            point_position,
+        )
+        if not self.complex_result:
+            mirrored_frame = self._animation_total_frames - frame - 1
+            self._animation_cached_data[mirrored_frame] = self._animation_cached_data[frame]
+
+    def start_animation(self, *args, **kwargs):
+        super().start_animation(*args, **kwargs)
+
+    def stop_animation(self, *args, **kwargs):
+        animation_widget = app().main_window.results_viewer_widget.get_animation_widget()
+        animation_widget.pushButton_animate.setChecked(False)
+        animation_widget.update_animate_button_icons(False)
+        super().stop_animation(*args, **kwargs)
+
+    def update_animation(self, frame):
+        if not self.actors_exists():
+            return
+
+        if app().project.model.analysis_id == AnalysisID.NO_ANALYSIS:
+            self.stop_animation()
+            return
+
+        if self._animation_cache_lock.locked():
+            return
+
+        if not self._animation_cached_data:
+            LoadingWindow(self.cache_animation_frames).run()
+
+        if frame in self._animation_cached_data:
+            logging.info(f"Rendering animation frame [{frame}/{self._animation_total_frames}]")
+            point_data, point_position = self._animation_cached_data[frame]
+            self.analysis_actor.data.GetPointData().DeepCopy(point_data)
+            self.analysis_actor.data.GetPoints().DeepCopy(point_position)
+            self.update()
+        else:
+            # It will only enter here if something wrong happened
+            # in the function that caches the frames
+            logging.warning(f"Cache miss on update_animation function for frame {frame}")
+            self.cache_frame(frame)
 
     def visualization_changed_callback(self):
         if not self.actors_exists():
