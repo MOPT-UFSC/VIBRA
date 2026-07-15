@@ -2,8 +2,6 @@ from dataclasses import dataclass
 from enum import StrEnum, auto
 from typing import Union
 
-from vibra.utils.struct_enum import StructEnum
-
 
 class PressurePlotType(StrEnum):
     ABSOLUTE_ANIMATION = auto()

@@ -1,6 +1,7 @@
 import logging
 from threading import Lock
 from time import time
+from typing import Optional
 
 import numpy as np
 from molde.render_widgets import AnimatedRenderWidget
@@ -13,7 +14,7 @@ from vibra.engine import AnalysisID
 from vibra.engine.postprocessing import AcousticPostprocessing, StructuralPostprocessing
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.plots.general.animation_widget import AnimationWidget
-from vibra.interface.viewer_3d.plot_setup import PlotSetup
+from vibra.interface.viewer_3d.plot_setup import NoPlotSetup, PlotSetup
 from vibra.interface.viewer_3d.render_tools import RenderTool, SelectionTool
 from vibra.utils.interface_utils import VisualizationFilter
 from vibra.utils.math_functions import lerp
@@ -40,12 +41,11 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         app().main_window.section_plane.value_changed.connect(self.update_color_and_deformation)
         app().main_window.visualization_changed.connect(self.visualization_changed_callback)
 
+        self.plot_setup: PlotSetup = NoPlotSetup()
         self.visualization_filter = VisualizationFilter(
             faces=True,
             solids=True,
         )
-
-        self.plot_setup: PlotSetup = PlotSetup.NoPlotSetup()
 
         self._animation_cached_data = dict()
         self._animation_cache_lock = Lock()
@@ -99,10 +99,12 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
     def update_plot(
         self,
-        plot_setup: PlotSetup = PlotSetup.NoPlotSetup(),
+        *,
+        plot_setup: Optional[PlotSetup] = None,
         reset_camera: bool = False,
     ):
-        self.configure_plot(plot_setup)
+        if plot_setup is not None:
+            self.configure_plot(plot_setup)
 
         mesh = app().project.model.mesh
         if mesh is None:
@@ -163,7 +165,11 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         assert isinstance(plot_setup, PlotSetup)
         self.plot_setup = plot_setup
 
-    def update_color_and_deformation(self, phase: float = 0.0, clear_cache: bool = True):
+    def update_color_and_deformation(
+        self,
+        phase: Optional[float] = None,
+        clear_cache: bool = True,
+    ):
 
         self.unit_label = "--"
         if not self.actors_exists():

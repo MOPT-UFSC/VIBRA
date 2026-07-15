@@ -15,10 +15,10 @@ from PySide6.QtWidgets import (
 from vibra import DARK_ICON_COLOR, ICON_DIR, LIGHT_ICON_COLOR, app
 from vibra.engine.analysis_info import PhysicalDomain
 from vibra.interface import error_title
-
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.ui_generated.plots.general.animation_widget_ui import AnimationWidget_UI
+from vibra.interface.viewer_3d.plot_setup import FrequencyDisplacementPlotSetup, FrequencyPressurePlotSetup
 from vibra.utils.icons import load_icon
 
 
@@ -130,7 +130,7 @@ class AnimationWidget(AnimationWidget_UI):
 
     def _configure_appearance(self):
 
-        self.stylesheet =  """
+        self.stylesheet = """
             QToolBar {
                 border-style: solid;
                 border-width: 1px;
@@ -204,8 +204,18 @@ class AnimationWidget(AnimationWidget_UI):
             self.current_render_widget.update_deformations()
 
     def update_color_and_deformation(self, clear_cache: bool = True):
-        app().main_window.results_widget.plot_setup.phase = self.phase_in_radians
-        app().main_window.results_widget.update_color_and_deformation(phase=self.phase_in_radians, clear_cache=clear_cache)
+        plot_setup = app().main_window.results_widget.plot_setup
+        
+        match plot_setup:
+            case FrequencyPressurePlotSetup():
+                plot_setup.phase = self.phase_in_radians
+            case FrequencyDisplacementPlotSetup():
+                plot_setup.phase = self.phase_in_radians
+                plot_setup.magnification_factor = self.magnification_factor
+            case _:
+                return
+
+        app().main_window.results_widget.update_color_and_deformation(clear_cache=clear_cache)
 
     def reset_sliders(self):
         # block the slider signal to avoid multiple render updates
@@ -240,7 +250,7 @@ class AnimationWidget(AnimationWidget_UI):
             )
         else:
             app().main_window.results_widget.stop_animation()
-        
+
     def update_animate_button_icons(self, state: bool):
         if state:
             self.pushButton_animate.setIcon(self.pause_icon)
@@ -258,16 +268,16 @@ class AnimationWidget(AnimationWidget_UI):
     def update_time_frame_label(self):
         value = self.phase_slider.value()
         time_step = (self.sampling_time / self.frames_number) * value
-        self.label_phase_angle.setText(f"{time_step : .4f}s")
+        self.label_phase_angle.setText(f"{time_step: .4f}s")
 
     def update_factor_label(self, max_value=None):
         value = self.magnification_factor_slider.value() / 16
         if isinstance(max_value, float | int):
             if max_value:
-                value /= (10 * max_value)
+                value /= 10 * max_value
             else:
                 value = 1
-        self.label_factor.setText(f"{value : .2e}x")
+        self.label_factor.setText(f"{value: .2e}x")
 
     def update_phase_slider_steps(self):
         frames = self.spinBox_frames.value()
@@ -280,10 +290,7 @@ class AnimationWidget(AnimationWidget_UI):
             kwargs["options"] = QFileDialog.Option.DontUseNativeDialog
 
         file_path, extension = QFileDialog.getSaveFileName(
-            self,
-            "Save As",
-            filter="Video (*.mp4);;WEBP (*.webp);;GIF (*.gif);; All Files ();;",
-            **kwargs
+            self, "Save As", filter="Video (*.mp4);;WEBP (*.webp);;GIF (*.gif);; All Files ();;", **kwargs
         )
 
         if not extension:
