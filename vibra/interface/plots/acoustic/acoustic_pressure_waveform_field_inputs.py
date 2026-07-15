@@ -85,6 +85,8 @@ class AcousticPressureWaveformFieldInputs(AcousticPressureWaveformFieldInputs_UI
         self.grid_layout.addWidget(self.animation_widget)
         self.frame_animation.adjustSize()
 
+        self.animation_widget.label_animation_phase.setText("Time step:")
+
     def update_slider_configuration(self):
         if isinstance(self.frequencies, np.ndarray):
             N_steps = 2 * len(self.frequencies)
