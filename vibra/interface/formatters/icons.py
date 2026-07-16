@@ -5,11 +5,11 @@ from PySide6.QtCore import QSize
 from PySide6.QtGui import QColor, QIcon, QPainter, QPixmap
 from PySide6.QtWidgets import QWidget
 
-from vibra import ICON_DIR
+from vibra import ICON_DIR, LOGO_DIR
 
 
 def get_icons_path(filename):
-    path = ICON_DIR / filename
+    path = LOGO_DIR / "circles" / filename
     if path.exists():
         return str(path)
 
@@ -21,9 +21,8 @@ def get_formatted_icon(path: Path | str, color: QColor):
     painter.end()
     return QIcon(pixmap)
 
-def get_vibra_icon(color= QColor("#448cff")):
-    icon_path = get_icons_path('logo_vibra.png')
-    # return get_formatted_icon(icon_path, color)
+def get_vibra_icon():
+    icon_path = get_icons_path('vibra_circle_colored_other_background.png')
     return QIcon(icon_path)
 
 def get_warning_icon(color=None):

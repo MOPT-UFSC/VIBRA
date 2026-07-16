@@ -353,10 +353,16 @@ class MainWindow(MainWindow_UI):
             self.set_theme("dark")
             self.action_theme.setIcon(self.theme_sun_icon)
 
+            if hasattr(self.welcome_widget, "update_logo"):
+                self.welcome_widget.update_logo("vibra_colored_dark_background.png")
+
         elif app().config.user_preferences.interface_theme == "dark":
             app().config.user_preferences.set_light_theme()
             self.set_theme("light")
             self.action_theme.setIcon(self.theme_moon_icon)
+
+            if hasattr(self.welcome_widget, "update_logo"):
+                self.welcome_widget.update_logo("vibra_colored_light_background.png")
 
         app().config.update_config_file()
 
