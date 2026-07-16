@@ -1,10 +1,11 @@
-from PySide6.QtCore import Signal, QObject
+from PySide6.QtCore import QObject, Signal
 
 from vibra.engine.project import Project
 
+
 class SelectionHandler(QObject):
     selection_changed = Signal()
-    
+
     def __init__(self, project: Project):
         super().__init__()
         self.project = project
@@ -17,8 +18,17 @@ class SelectionHandler(QObject):
         self.geometry_volumes = set()
         self.volume_selection_mode = False
 
-        self.hidden_surfaces = set()
-        self.hidden_volumes = set()
+    @property
+    def surface_of_selected_volumes(self):
+        mesh = self.project.mesh
+        if mesh is None:
+            return set()
+
+        surfaces = set()
+        for volume in self.geometry_volumes:
+            surfaces |= set(mesh.surfaces_from_volume.get(volume, []))
+
+        return surfaces
 
     def clear_selection(self):
         self.set_geometry_selection()
@@ -36,14 +46,6 @@ class SelectionHandler(QObject):
 
         if volumes is None:
             volumes = set()
-
-        surfaces = set(surfaces) - set(self.hidden_surfaces)
-        volumes = set(volumes) - set(self.hidden_volumes)
-
-        # Select the surfaces associated to the selected volumes
-        for volume in volumes:
-            volume_surfaces = self.project.model.mesh.surfaces_from_volume.get(volume, [])
-            surfaces |= set(volume_surfaces)
 
         if join and remove:
             self.geometry_points ^= set(points)
@@ -106,17 +108,21 @@ class SelectionHandler(QObject):
     def invert_selection(self):
         mesh = self.project.model.mesh
 
-        geometry_selection_active = any([
-            self.geometry_points,
-            self.geometry_lines,
-            self.geometry_surfaces,
-            self.geometry_volumes,
-        ])
-        mesh_selection_active = any([
-            self.mesh_nodes,
-            self.mesh_faces,
-            self.mesh_solids,
-        ])
+        geometry_selection_active = any(
+            [
+                self.geometry_points,
+                self.geometry_lines,
+                self.geometry_surfaces,
+                self.geometry_volumes,
+            ]
+        )
+        mesh_selection_active = any(
+            [
+                self.mesh_nodes,
+                self.mesh_faces,
+                self.mesh_solids,
+            ]
+        )
 
         if not geometry_selection_active and not mesh_selection_active:
             return
@@ -145,18 +151,74 @@ class SelectionHandler(QObject):
             if new_mesh_selection:
                 self.set_mesh_selection(**new_mesh_selection)
 
-    def calculate_volumes_to_hide(self):
-        volumes_to_hide = set()
-        if self.geometry_volumes:
-            volumes_to_hide |= self.geometry_volumes
+    def select_all_points(self):
+        mesh = self.project.model.mesh
+        if mesh is None:
+            return
 
-        elif self.geometry_surfaces:
-            for surface in self.geometry_surfaces:
-                volumes_to_hide |= set(self.project.model.mesh.volumes_from_surface[surface])
+        self.set_geometry_selection(points=mesh.all_point_ids())
 
-        elif self.mesh_solids:
-            for element in self.mesh_solids:
-                volumes_to_hide.add(self.project.model.mesh.get_volume_from_element(element))
-        return volumes_to_hide
+    def select_all_lines(self):
+        mesh = self.project.model.mesh
+        if mesh is None:
+            return
 
+        self.set_geometry_selection(lines=mesh.all_line_ids())
 
+    def select_all_surfaces(self):
+        mesh = self.project.model.mesh
+        if mesh is None:
+            return
+
+        self.set_geometry_selection(surfaces=mesh.all_surface_ids())
+
+    def select_all_volumes(self):
+        mesh = self.project.model.mesh
+        if mesh is None:
+            return
+
+        self.set_geometry_selection(volumes=mesh.all_solid_ids())
+
+    def select_all_geometry(self):
+        mesh = self.project.model.mesh
+        if mesh is None:
+            return
+
+        self.set_geometry_selection(
+            points=mesh.all_point_ids(),
+            lines=mesh.all_line_ids(),
+            surfaces=mesh.all_surface_ids(),
+            volumes=mesh.all_solid_ids(),
+        )
+
+    def select_all_nodes(self):
+        mesh = self.project.model.mesh
+        if mesh is None:
+            return
+
+        self.set_mesh_selection(nodes=mesh.all_node_ids())
+
+    def select_all_faces(self):
+        mesh = self.project.model.mesh
+        if mesh is None:
+            return
+
+        self.set_mesh_selection(faces=mesh.all_face_element_ids())
+
+    def select_all_solids(self):
+        mesh = self.project.model.mesh
+        if mesh is None:
+            return
+
+        self.set_mesh_selection(solids=mesh.all_solid_element_ids())
+
+    def select_all_mesh(self):
+        mesh = self.project.model.mesh
+        if mesh is None:
+            return
+
+        self.set_mesh_selection(
+            nodes=mesh.all_node_ids(),
+            faces=mesh.all_face_element_ids(),
+            solids=mesh.all_solid_element_ids(),
+        )

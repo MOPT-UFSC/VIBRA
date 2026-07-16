@@ -2,6 +2,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import IntEnum, auto
 from functools import partial, wraps
+from typing import Generator, TypeVar
 
 import numpy as np
 from PySide6.QtCore import QTimer
@@ -42,8 +43,11 @@ class VisualizationFilter:
         return cls(*args)
 
 
+T = TypeVar("T", bound=QWidget)
+
+
 @contextmanager
-def block_signals(widget: QWidget):
+def block_signals(widget: T) -> Generator[T, None, None]:
     widget.blockSignals(True)
     try:
         yield widget

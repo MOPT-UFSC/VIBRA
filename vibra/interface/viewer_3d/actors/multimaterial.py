@@ -32,7 +32,7 @@ from vibra.utils.vtk_utils import fill_array, read_texture
 
 def get_first_visible_volume(volumes):
     for volume in volumes:
-        if volume not in app().main_window.selection.hidden_volumes:
+        if volume not in app().main_window.entity_visibility._volumes_to_hide:
             return volume
 
 
@@ -118,12 +118,11 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         properties = app().project.model.properties
         color_mode = self.visualization_filter.color_mode
         surfaces = mesh.lines_from_surface.keys()  # We don't have just "surfaces" yet
+        visible_surfaces = app().main_window.entity_visibility.get_visible_surfaces()
 
         if color_mode == GeometryColorMode.EMPTY:
             self.clear_composition()
             self.default_actor.VisibilityOn()
-            hidden_surfaces = app().main_window.selection.hidden_surfaces
-            visible_surfaces = set(surfaces) - hidden_surfaces
             self.configure_composition("default", visible_surfaces)
             return
 
@@ -135,10 +134,10 @@ class MultimaterialGeometryActor(vtkPropAssembly):
             volumes = mesh.volumes_from_surface.get(surface, ())
             volume = get_first_visible_volume(volumes)
 
-            if surface in app().main_window.selection.hidden_surfaces:
-                continue
-            else:
+            if surface in visible_surfaces:
                 composition_to_surfaces["default"].append(surface)
+            else:
+                continue
 
             fluid = properties._get_property("fluid", surface=surface, volume=volume)
             material_wall = properties._get_property("material", surface=surface)
@@ -231,8 +230,10 @@ class MultimaterialGeometryActor(vtkPropAssembly):
 
     def _create_surfaces(self):
         combined_surfaces = vtkAppendPolyData()
+        visible_surfaces = app().main_window.entity_visibility.get_visible_surfaces()
+
         for surface, elements in self.mesh.elements_from_surface.items():
-            if surface in app().main_window.selection.hidden_surfaces:
+            if surface not in visible_surfaces:
                 continue
 
             coords, connect = self._reduce_connectivity(
