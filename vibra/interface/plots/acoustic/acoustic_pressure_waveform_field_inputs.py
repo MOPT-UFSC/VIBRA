@@ -143,7 +143,11 @@ class AcousticPressureWaveformFieldInputs(AcousticPressureWaveformFieldInputs_UI
                 self.compute_multiple_ifft()
 
             self.animation_widget.reset_sliders()
-            plot_setup = TransientPressurePlotSetup(time=0, unit="Pa")
+            plot_setup = TransientPressurePlotSetup(
+                time_index=0,
+                waveform=self.acoustic_pressure_waveforms,
+                unit="Pa",
+            )
             app().main_window.results_widget.update_plot(plot_setup=plot_setup)
 
         LoadingWindow(plot_callback).run()

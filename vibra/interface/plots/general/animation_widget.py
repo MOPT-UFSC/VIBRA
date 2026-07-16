@@ -174,11 +174,15 @@ class AnimationWidget(AnimationWidget_UI):
     @property
     def phase_in_radians(self):
         return np.radians(self.phase_slider.value())
-    
+
     @property
     def time(self):
         value = self.phase_slider.value()
         return (self.sampling_time / self.frames_number) * value
+
+    @property
+    def time_index(self):
+        return min(self.phase_slider.value(), self.frames_number - 1)
 
     @property
     def magnification_factor(self):
@@ -218,7 +222,7 @@ class AnimationWidget(AnimationWidget_UI):
                 plot_setup.phase = self.phase_in_radians
                 plot_setup.magnification_factor = self.magnification_factor
             case TransientPressurePlotSetup():
-                plot_setup.time = self.time
+                plot_setup.time_index = self.time_index
             case _:
                 return
 

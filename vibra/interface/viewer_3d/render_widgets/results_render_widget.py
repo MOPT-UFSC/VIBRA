@@ -171,9 +171,18 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         assert isinstance(plot_setup, PlotSetup)
         self.plot_setup = plot_setup
 
+    def _interpolate_phase(self, frame: int) -> float:
+        t = frame / (self._animation_total_frames - 1)
+        return lerp(0, 2 * np.pi, t)
+
+    def _interpolate_time_index(self, frame: int) -> int:
+        t = frame / (self._animation_total_frames - 1)
+        time_indexes = len(app().project.model.frequencies)
+        return int(lerp(0, time_indexes, t))
+
     def update_color_and_deformation(
         self,
-        progress: Optional[float] = None,
+        animation_frame: Optional[int] = None,
         clear_cache: bool = True,
     ):
         if not self.actors_exists():
@@ -187,13 +196,13 @@ class ResultsRenderWidget(AnimatedRenderWidget):
                 self._plot_empty()
 
             case FrequencyPressurePlotSetup():
-                self._plot_frequency_pressure(progress, clear_cache)
+                self._plot_frequency_pressure(animation_frame, clear_cache)
 
             case FrequencyDisplacementPlotSetup():
-                self._plot_frequency_displacement(progress, clear_cache)
+                self._plot_frequency_displacement(animation_frame, clear_cache)
 
             case TransientPressurePlotSetup():
-                self._plot_transient_pressure(progress)
+                self._plot_transient_pressure(animation_frame)
 
             case _:
                 raise NotImplementedError(f'Plot setup "{self.plot_setup}" not implemented.')
@@ -203,7 +212,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
     def _plot_frequency_pressure(
         self,
-        phase: Optional[float],
+        animation_frame: Optional[int],
         clear_cache: bool = True,
     ):
         assert isinstance(self.plot_setup, FrequencyPressurePlotSetup)
@@ -214,8 +223,10 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         analysis_id = app().project.model.analysis_id
         assert analysis_id.is_acoustic()
 
-        if phase is None:
+        if animation_frame is None:
             phase = self.plot_setup.phase
+        else:
+            phase = self._interpolate_phase(animation_frame)
 
         data = postprocessing.compute_acoustic_pressure_field(
             self.plot_setup.index,
@@ -239,7 +250,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
     def _plot_frequency_displacement(
         self,
-        phase: Optional[float],
+        animation_frame: Optional[int] = None,
         clear_cache: bool = True,
     ):
         assert isinstance(self.plot_setup, FrequencyDisplacementPlotSetup)
@@ -250,8 +261,10 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         analysis_id = app().project.model.analysis_id
         assert analysis_id.is_structural()
 
-        if phase is None:
+        if animation_frame is None:
             phase = self.plot_setup.phase
+        else:
+            phase = self._interpolate_phase(animation_frame)
 
         data = postprocessing.compute_structural_response_field(
             self.plot_setup.index,
@@ -276,16 +289,29 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.update()
 
-    def _plot_transient_pressure(self, time: Optional[float]):
+    def _plot_transient_pressure(
+        self,
+        animation_frame: Optional[int] = None,
+        clear_cache: bool = True,
+    ):
         assert isinstance(self.plot_setup, TransientPressurePlotSetup)
 
-        postprocessing = app().project.get_acoustic_postprocessing()
-        assert isinstance(postprocessing, AcousticPostprocessing)
+        if animation_frame is None:
+            time_index = self.plot_setup.time_index
+        else:
+            time_index = self._interpolate_time_index(animation_frame)
 
-        if time is None:
-            time = self.plot_setup.time
+        color_scalars = self.plot_setup.waveform[:, time_index].flatten()
+        min_value, max_value = np.min(color_scalars), np.max(color_scalars)
 
-        print(">>>", self.plot_setup)
+        if clear_cache:
+            self.min_value = min_value
+            self.max_value = max_value
+
+        colormap = app().config.user_preferences.color_map
+        self.analysis_actor.plot_color_bar(color_scalars, min_value, max_value, colormap)
+        self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
+        self.update()
 
     def _update_color_and_deformation(
         self,
@@ -443,14 +469,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
     @warn_delays
     def cache_frame(self, frame):
-        t = frame / (self._animation_total_frames - 1)
-        phase = lerp(0, 2 * np.pi, t)
-
         with self.update_lock:
-            self.update_color_and_deformation(
-                progress=phase,
-                clear_cache=False,
-            )
+            self.update_color_and_deformation(animation_frame=frame, clear_cache=False)
 
         point_data = vtkPointData()
         point_position = vtkPoints()
