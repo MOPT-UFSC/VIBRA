@@ -279,6 +279,9 @@ class ResultsRenderWidget(AnimatedRenderWidget):
     def _plot_transient_pressure(self, time: Optional[float]):
         assert isinstance(self.plot_setup, TransientPressurePlotSetup)
 
+        postprocessing = app().project.get_acoustic_postprocessing()
+        assert isinstance(postprocessing, AcousticPostprocessing)
+
         if time is None:
             time = self.plot_setup.time
 
