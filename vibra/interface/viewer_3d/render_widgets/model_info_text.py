@@ -415,8 +415,8 @@ def get_incident_plane_wave_text(ipw_data: dict):
     else:
         tree_pw.add_item("P_inc", "Table of values")
 
-    incident_wave_vector = ipw_data["incident_wave_vector"]
-    tree_pw.add_item("Incident wave vector", np.round(incident_wave_vector, 4))
+    ipw_vector = ipw_data["ipw_vector"]
+    tree_pw.add_item("Incident wave vector", np.round(ipw_vector, 4))
 
     return str(tree_pw)
 

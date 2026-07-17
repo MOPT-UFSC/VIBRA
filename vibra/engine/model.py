@@ -850,8 +850,7 @@ class Model:
 
         if isinstance(pw_data, dict):
             values = pw_data.get("values")[0]
-            _incident_wave_vector = pw_data.get("incident_wave_vector")
-            incident_wave_vector = np.array(_incident_wave_vector, dtype=float)
+            s_vector = np.array(pw_data.get("ipw_vector"), dtype=float)
 
             if isinstance(values, complex | float):
                 P_inc = values * np.ones_like(frequencies, dtype=complex)
@@ -861,7 +860,7 @@ class Model:
             node_normals = self.mesh.get_stacked_normals_for_surface_elements(surface_id)
             avg_normal = np.average(node_normals, axis=0).flatten()
 
-            P_downstream = P_inc * (avg_normal @ incident_wave_vector)
+            P_downstream = P_inc * (avg_normal @ s_vector)
             V_downstream = -P_downstream / Zo_in
 
         if isinstance(sv_data, dict):

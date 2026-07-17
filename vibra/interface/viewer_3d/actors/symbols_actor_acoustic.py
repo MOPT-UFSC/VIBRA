@@ -260,10 +260,10 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
         if not isinstance(prop_data, dict):
             return
 
-        incident_wave_vector = prop_data.get("incident_wave_vector")
+        ipw_vector = prop_data.get("ipw_vector")
         coords, _ = self._get_symbol_coords_and_normal(surface_id)
 
-        self.add_symbol(sources.create_incident_plane_wave_source, coords, incident_wave_vector, color=color_names.BLUE)
+        self.add_symbol(sources.create_incident_plane_wave_source, coords, ipw_vector, color=color_names.BLUE)
 
     def _build_mass_source(self, surface_id: int = -1, line_id: int = -1, point_id: int = -1, node_id: int = -1, *args, **kwargs):
         orientation = (0, 0, 0)
