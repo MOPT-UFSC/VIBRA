@@ -6,7 +6,7 @@ from itertools import permutations
 from pathlib import Path
 from typing import Literal, Optional, Self
 
-# from time import perf_counter
+from time import perf_counter
 import gmsh
 import numpy as np
 from vtkmodules.vtkCommonCore import vtkPoints
@@ -2411,7 +2411,7 @@ class Mesh:
         return self.surfaces_centers.get(surface_id)
 
     def get_element_face_normal(self, connect: np.ndarray):
-
+        
         coords = self.nodal_coordinates[connect, 1:]
 
         P1 = coords[0, :]
@@ -2424,12 +2424,26 @@ class Mesh:
         cross = np.cross(P2P1, P3P1)
         norm_cross = np.linalg.norm(cross)
 
-        if norm_cross == 0:
-            return 0.0
+        if not norm_cross:
+            return 0
 
-        normal = cross / np.linalg.norm(cross)
+        cross /= norm_cross
 
-        return normal
+        if self.solids_connectivity.size:
+
+            mask = np.sum(np.isin(self.solids_connectivity[:, 4:], connect), axis=1) == len(connect)
+            solid_element_id = self.solids_connectivity[mask, 0]
+            solid_connectivity = self.solids_connectivity[solid_element_id, 4:].flatten()
+
+            face_element_center = np.average(coords, axis=0)
+            solid_element_center = np.average(self.nodal_coordinates[solid_connectivity, 1:], axis=0)
+            vector = solid_element_center - face_element_center
+
+            if np.dot(cross, vector) > 0:
+                cross *= -1
+                print(f"The element face normal has been inverted >> corresponding solid element {solid_element_id}.")
+
+        return cross
 
     def set_nodal_normals_data(self, surface_id: int, normals_data: dict):
         for node_id, nodal_normal in normals_data.items():
