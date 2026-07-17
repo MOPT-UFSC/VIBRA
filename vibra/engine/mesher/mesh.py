@@ -6,7 +6,7 @@ from itertools import permutations
 from pathlib import Path
 from typing import Literal, Optional, Self
 
-from time import perf_counter
+# from time import perf_counter
 import gmsh
 import numpy as np
 from vtkmodules.vtkCommonCore import vtkPoints
@@ -2441,7 +2441,7 @@ class Mesh:
 
             if np.dot(cross, vector) > 0:
                 cross *= -1
-                print(f"The element face normal has been inverted >> corresponding solid element {solid_element_id}.")
+                print(f"The element face normal has been inverted -> corresponding solid element {solid_element_id}.")
 
         return cross
 
