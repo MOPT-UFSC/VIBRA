@@ -329,15 +329,15 @@ class Ui_Dialog(object):
 
         self.gridLayout_4.addWidget(self.tabWidget_main, 3, 0, 1, 1)
 
-        self.frame_wave_vector = QFrame(self.frame_2)
-        self.frame_wave_vector.setObjectName(u"frame_wave_vector")
-        self.frame_wave_vector.setFrameShape(QFrame.Shape.NoFrame)
-        self.frame_wave_vector.setFrameShadow(QFrame.Shadow.Raised)
-        self.gridLayout_10 = QGridLayout(self.frame_wave_vector)
+        self.frame_incident_wave_vector = QFrame(self.frame_2)
+        self.frame_incident_wave_vector.setObjectName(u"frame_incident_wave_vector")
+        self.frame_incident_wave_vector.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_incident_wave_vector.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_10 = QGridLayout(self.frame_incident_wave_vector)
         self.gridLayout_10.setObjectName(u"gridLayout_10")
         self.gridLayout_10.setVerticalSpacing(2)
         self.gridLayout_10.setContentsMargins(4, 4, 4, 4)
-        self.lineEdit_component_z = QLineEdit(self.frame_wave_vector)
+        self.lineEdit_component_z = QLineEdit(self.frame_incident_wave_vector)
         self.lineEdit_component_z.setObjectName(u"lineEdit_component_z")
         self.lineEdit_component_z.setMinimumSize(QSize(80, 28))
         self.lineEdit_component_z.setMaximumSize(QSize(80, 28))
@@ -347,7 +347,7 @@ class Ui_Dialog(object):
 
         self.gridLayout_10.addWidget(self.lineEdit_component_z, 1, 4, 1, 1)
 
-        self.lineEdit_component_y = QLineEdit(self.frame_wave_vector)
+        self.lineEdit_component_y = QLineEdit(self.frame_incident_wave_vector)
         self.lineEdit_component_y.setObjectName(u"lineEdit_component_y")
         self.lineEdit_component_y.setMinimumSize(QSize(80, 28))
         self.lineEdit_component_y.setMaximumSize(QSize(80, 28))
@@ -357,7 +357,7 @@ class Ui_Dialog(object):
 
         self.gridLayout_10.addWidget(self.lineEdit_component_y, 1, 3, 1, 1)
 
-        self.label_component_x = QLabel(self.frame_wave_vector)
+        self.label_component_x = QLabel(self.frame_incident_wave_vector)
         self.label_component_x.setObjectName(u"label_component_x")
         self.label_component_x.setMinimumSize(QSize(80, 22))
         self.label_component_x.setMaximumSize(QSize(80, 22))
@@ -366,7 +366,7 @@ class Ui_Dialog(object):
 
         self.gridLayout_10.addWidget(self.label_component_x, 0, 2, 1, 1)
 
-        self.lineEdit_component_x = QLineEdit(self.frame_wave_vector)
+        self.lineEdit_component_x = QLineEdit(self.frame_incident_wave_vector)
         self.lineEdit_component_x.setObjectName(u"lineEdit_component_x")
         self.lineEdit_component_x.setMinimumSize(QSize(80, 28))
         self.lineEdit_component_x.setMaximumSize(QSize(80, 28))
@@ -380,7 +380,7 @@ class Ui_Dialog(object):
 
         self.gridLayout_10.addItem(self.horizontalSpacer_6, 1, 0, 1, 1)
 
-        self.label_component_z = QLabel(self.frame_wave_vector)
+        self.label_component_z = QLabel(self.frame_incident_wave_vector)
         self.label_component_z.setObjectName(u"label_component_z")
         self.label_component_z.setMinimumSize(QSize(80, 22))
         self.label_component_z.setMaximumSize(QSize(80, 22))
@@ -389,7 +389,7 @@ class Ui_Dialog(object):
 
         self.gridLayout_10.addWidget(self.label_component_z, 0, 4, 1, 1)
 
-        self.label_component_y = QLabel(self.frame_wave_vector)
+        self.label_component_y = QLabel(self.frame_incident_wave_vector)
         self.label_component_y.setObjectName(u"label_component_y")
         self.label_component_y.setMinimumSize(QSize(80, 22))
         self.label_component_y.setMaximumSize(QSize(80, 22))
@@ -398,7 +398,7 @@ class Ui_Dialog(object):
 
         self.gridLayout_10.addWidget(self.label_component_y, 0, 3, 1, 1)
 
-        self.label_wave_vector = QLabel(self.frame_wave_vector)
+        self.label_wave_vector = QLabel(self.frame_incident_wave_vector)
         self.label_wave_vector.setObjectName(u"label_wave_vector")
         self.label_wave_vector.setMinimumSize(QSize(100, 28))
         self.label_wave_vector.setMaximumSize(QSize(140, 28))
@@ -411,7 +411,7 @@ class Ui_Dialog(object):
 
         self.gridLayout_10.addItem(self.horizontalSpacer_5, 1, 5, 1, 1)
 
-        self.label_wave_vector_2 = QLabel(self.frame_wave_vector)
+        self.label_wave_vector_2 = QLabel(self.frame_incident_wave_vector)
         self.label_wave_vector_2.setObjectName(u"label_wave_vector_2")
         self.label_wave_vector_2.setEnabled(False)
         self.label_wave_vector_2.setMinimumSize(QSize(100, 28))
@@ -421,7 +421,7 @@ class Ui_Dialog(object):
 
         self.gridLayout_10.addWidget(self.label_wave_vector_2, 2, 1, 1, 1)
 
-        self.lineEdit_normal_x = QLineEdit(self.frame_wave_vector)
+        self.lineEdit_normal_x = QLineEdit(self.frame_incident_wave_vector)
         self.lineEdit_normal_x.setObjectName(u"lineEdit_normal_x")
         self.lineEdit_normal_x.setEnabled(False)
         self.lineEdit_normal_x.setMinimumSize(QSize(80, 28))
@@ -432,7 +432,7 @@ class Ui_Dialog(object):
 
         self.gridLayout_10.addWidget(self.lineEdit_normal_x, 2, 2, 1, 1)
 
-        self.lineEdit_normal_y = QLineEdit(self.frame_wave_vector)
+        self.lineEdit_normal_y = QLineEdit(self.frame_incident_wave_vector)
         self.lineEdit_normal_y.setObjectName(u"lineEdit_normal_y")
         self.lineEdit_normal_y.setEnabled(False)
         self.lineEdit_normal_y.setMinimumSize(QSize(80, 28))
@@ -443,7 +443,7 @@ class Ui_Dialog(object):
 
         self.gridLayout_10.addWidget(self.lineEdit_normal_y, 2, 3, 1, 1)
 
-        self.lineEdit_normal_z = QLineEdit(self.frame_wave_vector)
+        self.lineEdit_normal_z = QLineEdit(self.frame_incident_wave_vector)
         self.lineEdit_normal_z.setObjectName(u"lineEdit_normal_z")
         self.lineEdit_normal_z.setEnabled(False)
         self.lineEdit_normal_z.setMinimumSize(QSize(80, 28))
@@ -455,7 +455,7 @@ class Ui_Dialog(object):
         self.gridLayout_10.addWidget(self.lineEdit_normal_z, 2, 4, 1, 1)
 
 
-        self.gridLayout_4.addWidget(self.frame_wave_vector, 2, 0, 1, 1)
+        self.gridLayout_4.addWidget(self.frame_incident_wave_vector, 2, 0, 1, 1)
 
         self.frame_4 = QFrame(self.frame_2)
         self.frame_4.setObjectName(u"frame_4")
@@ -673,7 +673,7 @@ class IncidentPlaneWaveInputs_UI(QDialog, Ui_Dialog):
                                                         - pushButton_reset: QPushButton
                                                         - pushButton_remove: QPushButton
                                             - treeWidget_incident_plane_wave: QTreeWidget
-                            - frame_wave_vector: QFrame
+                            - frame_incident_wave_vector: QFrame
                                 - (Layout): QGridLayout
                                         - lineEdit_component_z: QLineEdit
                                         - lineEdit_component_y: QLineEdit

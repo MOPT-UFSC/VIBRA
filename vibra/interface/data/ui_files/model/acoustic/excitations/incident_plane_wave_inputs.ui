@@ -634,7 +634,7 @@
                 <string/>
                </property>
                <property name="icon">
-                <iconset resource="../../../icons/resources.qrc">
+                <iconset resource="../../../../icons/resources.qrc">
                  <normaloff>:/icons/document_search_blue.png</normaloff>:/icons/document_search_blue.png</iconset>
                </property>
                <property name="iconSize">
@@ -897,7 +897,7 @@
        </widget>
       </item>
       <item row="2" column="0">
-       <widget class="QFrame" name="frame_wave_vector">
+       <widget class="QFrame" name="frame_incident_wave_vector">
         <property name="frameShape">
          <enum>QFrame::Shape::NoFrame</enum>
         </property>
@@ -1665,7 +1665,7 @@
   <tabstop>pushButton_load_table</tabstop>
  </tabstops>
  <resources>
-  <include location="../../../icons/resources.qrc"/>
+  <include location="../../../../icons/resources.qrc"/>
  </resources>
  <connections/>
 </ui>
