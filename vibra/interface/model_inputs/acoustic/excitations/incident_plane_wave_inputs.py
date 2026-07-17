@@ -244,7 +244,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
 
     def check_complex_entries(self, line_edit_real: QLineEdit, line_edit_imag: QLineEdit, label: str):
 
-        real_value = None
+        real_value = 0
         str_real = line_edit_real.text()
         if str_real != "":
             try:
@@ -257,9 +257,9 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
                 title = "Invalid value detected"
                 message = f"Wrong input for real part of {label}."
                 PrintMessageInput([error_title, title, message])
-                return True
+                return
 
-        imag_value = None
+        imag_value = 0
         str_imag = line_edit_imag.text()
         if str_imag != "":
             try:
@@ -272,7 +272,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
                 title = "Invalid value detected"
                 message = f"Wrong input for imaginary part of {label}."
                 PrintMessageInput([error_title, title, message])
-                return True
+                return
 
         if self.comboBox_wave_direction.currentIndex() == 0:
             if real_value <= 0:
@@ -282,20 +282,9 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
                 message = "Enter a positive value for the normal "
                 message += "incident wave amplitude."
                 PrintMessageInput([error_title, title, message])
-                return None
+                return
 
-            # return complex(real_value)
-
-        if real_value is None and imag_value is None:
-            values = None
-        elif real_value is None:
-            values = 1j * imag_value
-        elif imag_value is None:
-            values = complex(real_value)
-        else:
-            values = real_value + 1j * imag_value
-
-        return values
+        return real_value + 1j * imag_value
 
     def wave_direction_callback(self):
         index = self.comboBox_wave_direction.currentIndex()
@@ -375,8 +364,8 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
         if values is None:
             return None
 
-        real_values = [value if value is None else np.real(value) for value in values]
-        imag_values = [value if value is None else np.imag(value) for value in values]
+        real_values = [np.real(values)]
+        imag_values = [np.imag(values)]
 
         data = {
             "wave_direction": self.wave_direction,
@@ -384,7 +373,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
             "imag_values": imag_values,
         }
 
-        if self.check_wave_incidence(surface_ids, values[0]):
+        if self.check_wave_incidence(surface_ids, values):
             return True
 
         for surface_id in surface_ids:
