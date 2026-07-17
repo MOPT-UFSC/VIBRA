@@ -406,7 +406,7 @@ class AcousticAssembler:
 
             wave_vector = np.array(data.get("wave_vector"), dtype=float)
             norm_wave_vector = np.linalg.norm(wave_vector)
-            if norm_wave_vector > 1:
+            if norm_wave_vector:
                 wave_vector /= norm_wave_vector
 
             if isinstance(rho_eff_pm, np.ndarray):
@@ -418,7 +418,10 @@ class AcousticAssembler:
                 speed_of_sound = C_eff_tv
 
             else:
-                fluid = self.model.properties._get_property("fluid", surface=surface_id)
+                fluid: Fluid = self.model.properties._get_property("fluid", surface=surface_id)
+                if not isinstance(fluid, Fluid):
+                    continue
+
                 density = fluid.fluid_density
                 speed_of_sound = fluid.speed_of_sound
 
@@ -441,12 +444,12 @@ class AcousticAssembler:
         if aux_connect:
             connectivities = np.array(list(aux_connect.values()), dtype=int)
             integration_data = {
-                                "connectivities" : connectivities,
-                                "plane_wave_impedances" : plane_wave_impedances,
-                                "e_normals" : e_normals,
-                                "k_wave" : k_wave,
-                                "pressures" : pressures,
-                                }
+                "connectivities": connectivities,
+                "plane_wave_impedances": plane_wave_impedances,
+                "e_normals": e_normals,
+                "k_wave": k_wave,
+                "pressures": pressures,
+            }
 
         return integration_data
 
