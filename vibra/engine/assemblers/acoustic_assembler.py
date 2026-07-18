@@ -874,8 +874,8 @@ class AcousticAssembler:
             if not isinstance(data, dict):
                 continue
 
-            if not self.mass_source_vector_points.any():
-                self.mass_source_vector_points = np.zeros((self.total_dof, self.number_frequencies), dtype=complex)
+            if not self.mass_source_vector_lines.any():
+                self.mass_source_vector_lines = np.zeros((self.total_dof, self.number_frequencies), dtype=complex)
 
             values = data.get("values")
             if values is None:
@@ -950,8 +950,8 @@ class AcousticAssembler:
             if not isinstance(data, dict):
                 continue
 
-            if not self.mass_source_vector_points.any():
-                self.mass_source_vector_points = np.zeros((self.total_dof, self.number_frequencies), dtype=complex)
+            if not self.mass_source_vector_volumes.any():
+                self.mass_source_vector_volumes = np.zeros((self.total_dof, self.number_frequencies), dtype=complex)
 
             values = data.get("values")
             if values is None:
