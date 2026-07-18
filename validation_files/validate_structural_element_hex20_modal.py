@@ -51,8 +51,8 @@ def load_external_mesh_and_solve(integration_type: str):
 
     mesh = Mesh()
     mesh.import_external_nodal_coordinates(external_mesh.nodal_coordinates, index_zero=True)
-    mesh.import_external_solids_connectivity(external_mesh.solids_connectivities, index_zero=True, etype_tag=11)
     mesh.import_external_faces_connectivity(external_mesh.faces_connectivities, index_zero=True, etype_tag=9)
+    mesh.import_external_solids_connectivity(external_mesh.solids_connectivities, index_zero=True, etype_tag=11)
     mesh.export_nodal_coordinates("nodal_coordinates.dat")
     mesh.export_solid_elements_connectivity("solids_connectivity.dat")
     mesh.export_face_elements_connectivity("faces_connectivity.dat")
