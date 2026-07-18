@@ -1726,7 +1726,7 @@ class Mesh:
         node_ids: list[int] | np.ndarray | None = None,
         surface_id: int | None = None,
         return_nodes: bool = False,
-    ) -> tuple[dict, np.ndarray]:
+    ) -> dict[int, np.ndarray]:
         """
         This method processes the solid elements connected to the nodes.
         It returns a dictionary mapping the node IDs to the solid element IDs.
@@ -1896,10 +1896,12 @@ class Mesh:
             for i, e_nodes in enumerate(inside_face_connectivity):
                 mask = np.sum(np.isin(filt_element3d_connect, e_nodes), axis=1) == 3
                 connect_3d = filt_element3d_connect[mask, :].flatten()
+                if connect_3d.size == 0:
+                    print(f"No solid element touches the surface nodes: {e_nodes}")
 
-                coords = self.nodal_coordinates[e_nodes[0], 1:]
-                center_coords = np.average(self.nodal_coordinates[connect_3d, 1:], axis=0)
-                vector_inside = center_coords - coords
+                center_coords_2d = np.average(self.nodal_coordinates[e_nodes, 1:], axis=0)
+                center_coords_3d = np.average(self.nodal_coordinates[connect_3d, 1:], axis=0)
+                vector_inside = center_coords_3d - center_coords_2d
                 dot_product = np.dot(norm_cross[i, :], vector_inside)
 
                 factor = 1 if dot_product < 0 else -1
