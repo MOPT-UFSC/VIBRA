@@ -39,7 +39,7 @@ def load_external_mesh_and_solve(**kwargs):
     }
 
     # define surfaces from each volume
-    surfaces_from_volume = { 1 : [1, 2]}
+    surfaces_from_volume = { 1 : [2], 2 : [1]}
 
     t0 = perf_counter()
     external_mesh = ExternalMeshData()
@@ -65,9 +65,6 @@ def load_external_mesh_and_solve(**kwargs):
     mesh.export_face_elements_connectivity("faces_connectivity.dat")
 
     for named_selection, surf_data in external_mesh.elements_from_named_selection.items():
-
-        if named_selection in ["input_edges", "output_edges"]:
-            continue
 
         tag = named_selecion_to_tag[named_selection]
         mesh.elements_from_surface[tag] = surf_data["element_indexes"] - 1
@@ -187,19 +184,10 @@ def load_external_mesh_and_solve(**kwargs):
     input_particle_velocities = acoustic_post.get_particle_velocity_from_surface(1, volume_id=2)
     output_particle_velocities = acoustic_post.get_particle_velocity_from_surface(2, volume_id=1)
 
-    input_Vx = np.average(input_particle_velocities.Vx_array(), axis=0)
-    output_Vx = np.average(output_particle_velocities.Vx_array(), axis=0)
-
     dt = perf_counter() - t0
     print(f"Elapsed time to post-process data: {round(dt, 4)}")
 
-    input_rows = mesh.external_nodes_from_surfaces[1]
-    output_rows = mesh.external_nodes_from_surfaces[2]
-
     nodal_solution = model.solution.nodal_solution
-
-    input_pressure = np.average(nodal_solution[input_rows, :], axis=0).flatten()
-    output_pressure = np.average(nodal_solution[output_rows, :], axis=0).flatten()
 
     # Load the external data
     results_path = PROJECT_DIR / "validation_files/data/WB/acoustic/incident_plane_wave/tet4/results/"
@@ -208,79 +196,91 @@ def load_external_mesh_and_solve(**kwargs):
     WB_pressure_data = ext_data.load_nodal_pressures()
     WB_particle_velocities_data = ext_data.load_particle_velocities()
 
-    freq_WB, _, input_velocities_WB = WB_particle_velocities_data["Vx", "input_face"]
-    input_Vx_WB = np.average(list(input_velocities_WB.values()), axis=0)
+    for (surf_id, named_selection) in ((1, "input_face"), (2, "input_face")):
 
-    freq_WB, _, input_pressures_WB = WB_pressure_data["input_face"]
-    input_pressure_WB = np.average(list(input_pressures_WB.values()), axis=0)
+        print()
+        freq_WB, _, input_pressures_WB = WB_pressure_data[named_selection]
+        avg_pressure_WB = np.average(list(input_pressures_WB.values()), axis=0)
 
-    freq_WB, _, output_velocities_WB = WB_particle_velocities_data["Vx", "output_face"]
-    output_Vx_WB = np.average(list(output_velocities_WB.values()), axis=0)
+        rows = mesh.external_nodes_from_surfaces[surf_id]
+        avg_pressure_vibra = np.average(nodal_solution[rows, :], axis=0).flatten()
 
-    freq_WB, _, output_pressures_WB = WB_pressure_data["output_face"]
-    output_pressure_WB = np.average(list(output_pressures_WB.values()), axis=0)
+        abs_diff_pressure = np.abs((avg_pressure_WB - avg_pressure_vibra) / avg_pressure_WB)
+        print(f"Deviation of te averaged pressure (Surface #{surf_id}): {100 * np.max(abs_diff_pressure)} %")
 
-    # Print the averaged nodal results deviations for input and output faces
-    abs_diff_Pinput_face = np.abs((input_pressure_WB - input_pressure) / input_pressure_WB)
-    print(f"Deviation of pressure (input face): {100 * np.max(abs_diff_Pinput_face)} %")
+        for pv_label in particle_velocity_labels:
 
-    abs_diff_Poutput_face = np.abs((output_pressure_WB - output_pressure) / output_pressure_WB)
-    print(f"Deviation of pressure (output face): {100 * np.max(abs_diff_Poutput_face)} %")
+            freq_WB, _, input_velocities_WB = WB_particle_velocities_data[pv_label, named_selection]
+            avg_particle_velocity_WB = np.average(list(input_velocities_WB.values()), axis=0)
 
-    abs_diff_Vinput_face = np.abs((input_Vx_WB - input_Vx) / input_Vx_WB)
-    print(f"Deviation of particle velocity (input face): {100 * np.max(abs_diff_Vinput_face)} %")
+            if named_selection == "input_face":
+                particle_velocities_vibra = getattr(input_particle_velocities, pv_label)
+            else:
+                particle_velocities_vibra = getattr(output_particle_velocities, pv_label)
 
-    abs_diff_Voutput_face = np.abs((output_Vx_WB - output_Vx) / output_Vx_WB)
-    print(f"Deviation of particle velocity (output face): {100 * np.max(abs_diff_Voutput_face)} %")
+            avg_particle_velocity_vibra = np.average(list(particle_velocities_vibra.values()), axis=0)
 
+            abs_diff_pressure = np.abs((avg_particle_velocity_WB - avg_particle_velocity_vibra) / avg_particle_velocity_WB)
+            print(f"Deviation of the averaged particle velocity {pv_label} (Surface #{surf_id}): {100 * np.max(abs_diff_pressure)} %")
 
    # Nodal results comparisons
     dofs_per_node = assembler.element_3d.DOF_PER_NODE
 
     # define the plot type
-    plot_type = "absolute"
+    plot_type = "real"
+
+    # configure the postprocessing setup
+    postprocessing_setup = [
+        ((319, 325), "input_face", input_particle_velocities),
+        ((932, 946), "output_face", output_particle_velocities),
+    ]
 
     # acoustic results plots
-    for node_id in [319, 323, 932]:
+    for (node_ids, named_selection, particle_velocities) in postprocessing_setup:
+        
+        if isinstance(node_ids, int):
+            node_ids = [node_ids]
 
-        print()
-        # plots for acoustic pressure
+        for node_id in node_ids:
 
-        compare_nodal_pressures_results(
-            node_id,
-            dofs_per_node,
-            frequencies,
-            model.solution.nodal_solution,
-            WB_pressure_data,
-            "input_face",            
-            plot_type=plot_type,
+            print()
+            # plots for acoustic pressure
+
+            compare_nodal_pressures_results(
+                node_id,
+                dofs_per_node,
+                frequencies,
+                model.solution.nodal_solution,
+                WB_pressure_data,
+                named_selection,
+                plot_type=plot_type,
             )
 
-        # plots for particle velocity
-        for particle_velocity_label in particle_velocity_labels:
-            compare_averaged_nodal_particle_velocity_results(
-                node_id, 
-                particle_velocity_label, 
-                frequencies, 
-                input_particle_velocities,
-                WB_particle_velocities_data,
-                "input_face",
-                plot_type=plot_type,
+            # plots for particle velocity
+            for particle_velocity_label in particle_velocity_labels:
+                compare_averaged_nodal_particle_velocity_results(
+                    node_id,
+                    frequencies,
+                    particle_velocity_label,
+                    particle_velocities,
+                    WB_particle_velocities_data,
+                    named_selection,
+                    plot_type=plot_type,
                 )
 
     plt.show()
 
 
 def compare_nodal_pressures_results(
-        node_id: int, 
-        dofs_per_node: int, 
-        frequencies: np.ndarray, 
-        solution: np.ndarray,
-        solution_reference: dict,
-        named_selection: str = "all_solutions",
-        plot_type: str = "absolute",
-        ):
-    
+    node_id: int,
+    dofs_per_node: int,
+    frequencies: np.ndarray,
+    solution: np.ndarray,
+    solution_reference: dict,
+    named_selection: str = "all_solutions",
+    plot_type: str = "absolute",
+):
+
     response_vibra = get_model_response(node_id, dofs_per_node, solution)
     freq_ref, response_ref = get_reference_nodal_response(node_id, "pressure", named_selection, solution_reference)
 
@@ -322,14 +322,14 @@ def compare_nodal_pressures_results(
 
 
 def compare_averaged_nodal_particle_velocity_results(
-    node_id: int, 
-    particle_velocity_label: str, 
-    frequencies: np.ndarray, 
+    node_id: int,
+    frequencies: np.ndarray,
+    particle_velocity_label: str,
     nodal_averaged_particle_velocity: NodalParticleVelocities,
     solution_reference,
     named_selection: str = "all_solutions",
     plot_type: str = "absolute",
-    ):
+):
 
     response_vibra = getattr(nodal_averaged_particle_velocity, particle_velocity_label).get(node_id - 1)
     if response_vibra is None:
