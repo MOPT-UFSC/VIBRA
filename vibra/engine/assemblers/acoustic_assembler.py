@@ -1784,13 +1784,13 @@ class AcousticAssembler:
                 int2d_N = self.element_2d.load_vector(i)
 
                 # element face connectivity
-                e_connect = connectivities[i, :]
+                indices = self.element_2d.connectivities[i, :]
 
                 # auxilar vector
                 aux: np.ndarray =  2 * np.dot(n_vector, s_vector) * p_inc / Z_ipw
 
                 # assemble the acoustic load
-                output[e_connect, :] += int2d_N @ aux.reshape(1, -1)
+                output[indices, :] += int2d_N @ aux.reshape(1, -1)
 
         if self.prescribed_indexes:
             return output[self.unprescribed_indexes, :]
