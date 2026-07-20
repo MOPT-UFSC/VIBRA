@@ -58,8 +58,6 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.min_value = 0
         self.max_value = 0
         self.is_animation_symetric = True
-        self.frequency_index = None
-        self.mode_index = None
 
         self.set_default_render_tool()
         self.remove_all_actors()
@@ -595,14 +593,9 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if analysis_id == AnalysisID.NO_ANALYSIS:
             return
 
-        if self.frequency_index is None and self.mode_index is None:
-            return
-
-        if AnalysisID(analysis_id).is_harmonic():
-            text += analysis_info_text(self.frequency_index + 1)
-
-        if AnalysisID(analysis_id).is_modal():
-            text += analysis_info_text(self.mode_index)
+        match self.plot_setup:
+            case FrequencyDisplacementPlotSetup() | FrequencyPressurePlotSetup():
+                text += analysis_info_text(self.plot_setup.index + 1)
 
         self.set_info_text(text)
         self.update()
