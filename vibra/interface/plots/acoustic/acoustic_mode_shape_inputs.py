@@ -13,7 +13,7 @@ from vibra.interface.ui_generated.plots.acoustic.acoustic_mode_shape_inputs_ui i
     AcousticModeShapeInputs_UI,
 )
 from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
-from vibra.interface.viewer_3d.plot_setup import FrequencyPressurePlotSetup
+from vibra.interface.viewer_3d.plot_setup import FrequencyPressurePlotSetup, PressurePlotType
 
 
 class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
@@ -161,7 +161,7 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
         transparency = self.slider_transparency.value() / 100
         app().main_window.results_widget.set_tube_actors_transparency(transparency)
 
-    def get_plot_type(self):
+    def get_plot_type(self) -> PressurePlotType:
         plot_types = [
             "non_absolute_animation",
             "absolute_animation",
@@ -170,7 +170,7 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
             "imag_values",
         ]
         index = self.comboBox_plot_type.currentIndex()
-        return plot_types[index]
+        return PressurePlotType(plot_types[index])
 
     def load_natural_frequencies(self):
         solution = app().project.model.solution

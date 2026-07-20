@@ -2,8 +2,6 @@ from dataclasses import dataclass
 from enum import StrEnum, auto
 from typing import Union
 
-import numpy as np
-
 
 class PressurePlotType(StrEnum):
     ABSOLUTE_ANIMATION = auto()
@@ -53,6 +51,7 @@ class FrequencyPressurePlotSetup:
 @dataclass(slots=True)
 class TransientPressurePlotSetup:
     time_index: int
+    plot_type: PressurePlotType
     unit: str = "--"
 
 

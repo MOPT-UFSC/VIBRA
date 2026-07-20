@@ -11,7 +11,7 @@ from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.plots.general.animation_widget import AnimationWidget
 from vibra.interface.ui_generated.plots.structural.structural_mode_shape_inputs_ui import StructuralModeShapeInputs_UI
 from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
-from vibra.interface.viewer_3d.plot_setup import FrequencyDisplacementPlotSetup
+from vibra.interface.viewer_3d.plot_setup import DisplacementPlotType, FrequencyDisplacementPlotSetup
 
 
 class PlotStructuralModeShapeInputs(StructuralModeShapeInputs_UI):
@@ -160,7 +160,7 @@ class PlotStructuralModeShapeInputs(StructuralModeShapeInputs_UI):
         transparency = self.slider_transparency.value() / 100
         app().main_window.results_widget.set_tube_actors_transparency(transparency)
 
-    def get_plot_type(self):
+    def get_plot_type(self) -> DisplacementPlotType:
         plot_types = [
             "u_sum",
             "u_x",
@@ -168,7 +168,7 @@ class PlotStructuralModeShapeInputs(StructuralModeShapeInputs_UI):
             "u_z",
         ]
         index = self.comboBox_plot_type.currentIndex()
-        return plot_types[index]
+        return DisplacementPlotType(plot_types[index])
 
     def load_natural_frequencies(self):
         solution = app().project.model.solution

@@ -109,7 +109,7 @@ class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
         except AttributeError:
             pass
 
-    def get_displacement_plot_type(self) -> DisplacementPlotType:
+    def get_plot_type(self) -> DisplacementPlotType:
         prefixes = ["u", "v", "a"]
         suffixes = ["sum", "x", "y", "z"]
 
@@ -147,7 +147,7 @@ class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
             phase=self.animation_widget.phase_in_radians,
             magnification_factor=self.animation_widget.magnification_factor,
             index=self.selected_frequency_index,
-            plot_type=self.get_displacement_plot_type(),
+            plot_type=self.get_plot_type(),
             unit=self.get_plot_units()
         )
         LoadingWindow(app().main_window.results_widget.update_plot).run(plot_setup=plot_setup)
