@@ -6,7 +6,7 @@ from molde.render_widgets import CommonRenderWidget
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
 
-from vibra import ICON_DIR, app
+from vibra import LOGO_DIR, app
 from vibra.interface.loading_window import LoadingWindow
 from vibra.utils.interface_utils import VisualizationFilter
 
@@ -58,7 +58,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.set_default_render_tool()
         self.remove_all_actors()
         self.create_axes()
-        self.create_logos()
+        self.update_logo()
         self.create_scale_bar()
         self.create_camera_light(0.1, 0.1)
         self.update_plot()
@@ -69,15 +69,22 @@ class MeshRenderWidget(CommonRenderWidget):
         super().showEvent(event)
         self.update_section_plane()
 
-    def create_logos(self):
+    def update_logo(self):
         if hasattr(self, "vibra_logo"):
             self.renderer.RemoveViewProp(self.vibra_logo)
 
-        path = ICON_DIR / "logos/logo_vibra_comp.png"
+        path = LOGO_DIR / self.get_logo_for_current_theme()
         self.vibra_logo = self.create_logo(path)
         self.vibra_logo.SetPosition(0.895, 0.91)
         self.vibra_logo.SetPosition2(0.10, 0.10)
 
+    def get_logo_for_current_theme(self) -> str:
+        if app().config.user_preferences.interface_theme == "light":
+            return "vibra_colored_light_background.png"
+        
+        
+        return "vibra_colored_dark_background.png"
+    
     def set_theme(self, *args, **kwargs):
         self.update_theme()
 
@@ -106,6 +113,7 @@ class MeshRenderWidget(CommonRenderWidget):
             self.scale_bar_actor.GetLegendLabelProperty().SetColor(font_color.to_rgb_f())
 
         self.update_selection()
+        self.update_logo()
 
     def update_scale_bar_visibility(self):
         user_preferences = app().config.user_preferences

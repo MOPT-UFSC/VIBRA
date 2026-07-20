@@ -1,7 +1,7 @@
-from PySide6.QtGui import QCloseEvent, QDesktopServices
+from PySide6.QtGui import QCloseEvent, QDesktopServices, QPixmap
 from PySide6.QtCore import Qt, QUrl
 
-from vibra import app, RELEASE_DATE, VERSION
+from vibra import app, RELEASE_DATE, VERSION, LOGO_DIR
 from vibra.interface.ui_generated.menu.about_vibra_ui import AboutVibra_UI
 from vibra.interface.general.print_message_input import PrintMessageInput
 
@@ -16,8 +16,7 @@ class AboutVibraInput(AboutVibra_UI):
         self._config_window()
         self._initialize()
         self._define_qt_variables()
-        self._define_logo_variables()
-        self.update_logo_text()
+        self.update_logo()
         self._create_connections()
         self.adjustSize()
 
@@ -47,20 +46,24 @@ class AboutVibraInput(AboutVibra_UI):
 
     def _create_connections(self):
         self.pushButton_repository.clicked.connect(self.open_gitHub_repository)
-        app().main_window.theme_changed.connect(self.update_logo_text)
+        app().main_window.theme_changed.connect(self.update_logo)
     
-    def _define_logo_variables(self):
-        self.light_logo_text = """<html><head/><body style=\"font-size: 35pt; font-family: 'Bauhaus 93';
-                                \"><p><span style=\" color:#0055ff;\">V</span><span style=\" color:#4F4F4F;\">IBRA</span></p></body></html>"""
-    
-        self.dark_logo_text = """<html><head/><body style=\"font-size: 35pt; font-family: 'Bauhaus 93';
-                                \"><p><span style=\" color:#0055ff;\">V</span><span style=\" color:#c8c8c8;\">IBRA</span></p></body></html>"""
-
-    def update_logo_text(self):
-        if app().config.user_preferences.interface_theme == "dark":
-            self.logo_label.setText(self.dark_logo_text)
+    def update_logo(self, theme: str = None):
+        if not isinstance(theme, str):
+            theme = app().config.user_preferences.interface_theme
+            
+        if theme == "light":
+            logo = "vibra_colored_light_background.png"
         else:
-            self.logo_label.setText(self.light_logo_text)
+            logo = "vibra_colored_dark_background.png"
+            
+        pixmap = QPixmap(str(LOGO_DIR / logo)).scaled(
+            210, 90,
+            Qt.KeepAspectRatio,
+            Qt.SmoothTransformation
+        )
+
+        self.logo_label.setPixmap(pixmap)
 
     def open_gitHub_repository(self):
         title = "Error reached while trying to access the project repository"

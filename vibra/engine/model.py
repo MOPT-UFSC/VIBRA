@@ -302,14 +302,14 @@ class Model:
         if len(table_frequencies) != 1:
             return all_true
 
-        mask = list()
+        solution_steps_mask = list()
         _table_frequencies = np.array(table_frequencies[0], dtype=float)
 
         for freq in _table_frequencies:
             diff_abs = np.min(np.abs(frequencies - freq)) < tol
-            mask.append(bool(diff_abs))
+            solution_steps_mask.append(bool(diff_abs))
 
-        return mask
+        return solution_steps_mask
 
     def has_spectral_content_been_modified(self):
         if isinstance(self.analysis_setup, ModalAnalysisSetup):
@@ -318,6 +318,53 @@ class Model:
         cond_A = self.analysis_setup.frequency_spacing == FrequencySpacing.USER_DEFINED
         cond_B = len(self.solution_steps_mask) != int(sum(self.solution_steps_mask))
         return cond_A or cond_B
+
+    def modify_analysis_setup_to_filter_zero_frequency(self, analysis_setup: AnalysisSetup) -> AnalysisSetup:
+
+        if not isinstance(analysis_setup, HarmonicAnalysisSetup):
+            return analysis_setup
+        
+        if not analysis_setup.analysis_id == AnalysisID.STRUCTURAL_HARMONIC:
+            return analysis_setup
+
+        table_exists = self.properties.check_if_there_are_tables_at_the_model()
+
+        if table_exists:
+            tabular_frequency_data = self.get_tabular_frequency_setup()
+            if tabular_frequency_data is None:
+                return analysis_setup
+
+            _frequencies = np.array(tabular_frequency_data[-1], dtype=float)
+
+        else:
+            _frequencies = analysis_setup.get_frequencies()
+
+        if not isinstance(_frequencies, np.ndarray):
+            return analysis_setup
+
+        if not any(_frequencies == 0):
+            return analysis_setup
+
+        current_mask = analysis_setup.solution_steps_mask
+        equally_spaced = analysis_setup.frequency_spacing == FrequencySpacing.EQUALLY_DISTRIBUTED
+
+        if analysis_setup.f_min == 0 and equally_spaced:
+            analysis_setup.f_min = analysis_setup.f_step
+            analysis_setup.frequencies = analysis_setup.get_frequencies()
+        else:
+            analysis_setup.frequencies = _frequencies[_frequencies != 0]
+
+        new_mask = list()
+        for j, freq in enumerate(_frequencies):
+            if freq == 0:
+                if table_exists:
+                    new_mask.append(False)
+            else:
+                new_mask.append(current_mask[j])
+
+        analysis_setup.solution_steps_mask = new_mask
+
+        return analysis_setup
 
     def is_the_mesh_setup_defined(self):
         if isinstance(self.geometry_path, str | Path):
@@ -555,13 +602,25 @@ class Model:
                 else:
                     pass
 
+        n_int = 0
+        if "integrate" in data.keys():
+            n_int = data.get("integrate", 0)
+
         for node_gdof in global_dof:
             for j, gdof in enumerate(node_gdof):
                 values = data["values"][j]
                 if values is None:
                     continue
 
-                output_data[gdof] = values / den
+                if isinstance(values, np.ndarray):
+                    avg_value = values[self.solution_steps_mask] / den
+                else:
+                    avg_value = values / den
+
+                if n_int and isinstance(self.frequencies, np.ndarray):
+                    output_data[gdof] = avg_value / ((1j * 2 * np.pi * self.frequencies)**n_int)
+                else:
+                    output_data[gdof] = avg_value
 
         return output_data
 

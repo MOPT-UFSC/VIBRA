@@ -6,6 +6,8 @@ from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QColor, QIcon, QIconEngine, QPainter, QPixmap, QPixmapCache
 from PySide6.QtWidgets import QApplication, QStyleOption, QWidget
 
+from vibra import LOGO_DIR
+
 
 # Bumped whenever the active icon theme changes so cached pixmaps are dropped.
 _icon_generation = 0
@@ -112,10 +114,10 @@ class Icon:
 
     def __new__(cls, path: str) -> QIcon:
         return QIcon(ResourceIconEngine(path))
-    
 
-def get_icons_path(path):
-    path = Path(path)
+
+def get_icons_path(filename):
+    path = LOGO_DIR / "circles" / filename
     if path.exists():
         return str(path)
 
@@ -127,13 +129,9 @@ def get_formatted_icon(path: Path | str, color: QColor):
     painter.end()
     return QIcon(pixmap)
 
-def get_vibra_icon(color=None):
-    icon_path = ":/icons/logos/logo_vibra.png"
-
-    if color is None:
-        return QIcon(icon_path)
-    
-    return get_formatted_icon(icon_path, color)
+def get_vibra_icon():
+    icon_path = get_icons_path('vibra_circle_colored_other_background.png')
+    return QIcon(icon_path)
 
 def get_warning_icon(color=None):
     if color is None:

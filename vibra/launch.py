@@ -75,7 +75,7 @@ def main():
     The main function starts the Vibra software.
     This will create the Application and also pass the terminal arguments to it.
     """
-    # Import enabling compiled qt resources to be found from path `:/icons/{filepath_relative_to_qrc}`
+    # Import enabling compiled qt resources to be found from path `:/data/{filepath_relative_to_qrc}`
     from PySide6.QtCore import Qt
     from vtkmodules.vtkCommonCore import vtkLogger, vtkObject
 

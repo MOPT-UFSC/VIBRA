@@ -326,19 +326,23 @@ class Mesh:
         This method updates the element type based on the connectivity information.
         It's only used when working with NASTRAN files.
         """
-        if self.solids_connectivity.size == 0:
+
+        if self.solids_connectivity.size:
+            nodes_per_element = self.solids_connectivity[0, 4:].size
+        elif self.faces_connectivity.size:
+            nodes_per_element = self.faces_connectivity[0, 4:].size
+        else:
+            print("Invalid mesh detected for 3D and 2D elements.")
             return
 
-        nodes_per_element = self.solids_connectivity[0, 4:].size
-        match nodes_per_element:
-            case 4:
-                self.element_topology = TETRAHEDRON_4
-            case 10:
-                self.element_topology = TETRAHEDRON_10
-            case 8:
-                self.element_topology = HEXAHEDRON_8
-            case 20:
-                self.element_topology = HEXAHEDRON_20
+        if nodes_per_element in [3, 4] and self.faces_connectivity.size:
+            self.element_topology = TETRAHEDRON_4       
+        elif nodes_per_element == 10:
+            self.element_topology = TETRAHEDRON_10
+        elif nodes_per_element == 8:
+            self.element_topology = HEXAHEDRON_8
+        elif nodes_per_element ==  20:
+            self.element_topology = HEXAHEDRON_20
 
     def process_downwards_adjacencies_from_mesh_data(self):
         """

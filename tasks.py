@@ -9,13 +9,18 @@ from importlib.metadata import version
 
 UI_FILES_PATH = Path("vibra/interface/data/ui_files")
 GENERATED_PATH = Path("vibra/interface/ui_generated")
-RESOURCE_DIR = Path("vibra/interface/data/icons") 
+RESOURCE_DIR = Path("vibra/interface/data/icons")
 RESOURCE_DIR_DARK = RESOURCE_DIR / "dark_theme"
 RESOURCE_DIR_LIGHT = RESOURCE_DIR / "light_theme"
-QRC_PATH_DARK = RESOURCE_DIR_DARK / "resources.qrc" 
-QRC_PATH_LIGHT = RESOURCE_DIR_LIGHT / "resources.qrc" 
-QRC_PREFIX_NAME = "/icons/"
-QRC_PREFIX = f":{QRC_PREFIX_NAME}"
+QRC_PATH_DARK = RESOURCE_DIR_DARK / "resources.qrc"
+QRC_PATH_LIGHT = RESOURCE_DIR_LIGHT / "resources.qrc"
+
+LOGO_DIR = Path("vibra/interface/data/logos")
+
+QRC_PREFIXES = {
+    "/icons/": ":/icons/",
+    "/logos/": ":/logos/",
+}
 
 RESOURCES_DIR = [RESOURCE_DIR_DARK, RESOURCE_DIR_LIGHT]
 QRC_PATHS = [QRC_PATH_DARK, QRC_PATH_LIGHT]
@@ -36,7 +41,7 @@ def qrc_codegen(c):
 
         qrc_content = ['<RCC>', '    <qresource prefix="icons">']
         other_themes = [theme_dir for theme_dir in RESOURCES_DIR if theme_dir != dir]
-        
+
         for file_path in dir.parent.rglob("*.png"):
             if not file_path.is_file():
                 continue
@@ -49,6 +54,18 @@ def qrc_codegen(c):
             else:
                 alias = file_path.relative_to(RESOURCE_DIR).as_posix()
 
+            disk_path = os.path.relpath(file_path, qrc_path.parent).replace(os.sep, "/")
+            qrc_content.append(f'        <file alias="{alias}">{disk_path}</file>')
+
+        qrc_content.append('    </qresource>')
+
+        qrc_content.append('    <qresource prefix="logos">')
+
+        for file_path in LOGO_DIR.rglob("*.png"):
+            if not file_path.is_file():
+                continue
+
+            alias = file_path.relative_to(LOGO_DIR).as_posix()
             disk_path = os.path.relpath(file_path, qrc_path.parent).replace(os.sep, "/")
             qrc_content.append(f'        <file alias="{alias}">{disk_path}</file>')
 
@@ -331,17 +348,18 @@ def get_relative_qrc_path(ui_path: Path, qrc_path: Path = QRC_PATH_DARK) -> str:
 
 def convert_to_qrc_path(icon_path: str) -> str:
     icon_path = Path(icon_path).as_posix()
-    if QRC_PREFIX_NAME in icon_path:
-        relative_icon_path = icon_path.split(QRC_PREFIX_NAME)[-1]
-        return f"{QRC_PREFIX}{relative_icon_path}"
+    for prefix_name, prefix in QRC_PREFIXES.items():
+        if prefix_name in icon_path:
+            relative_icon_path = icon_path.split(prefix_name)[-1]
+            return f"{prefix}{relative_icon_path}"
     return icon_path
-    
+
 
 def fix_ui_file_text(file_path: Path) -> None:
     updated_lines = []
     lines = file_path.open('r').readlines()
     for line in lines:
-        if QRC_PREFIX in line:
+        if any(prefix in line for prefix in QRC_PREFIXES.values()):
             updated_lines.append(line)
             continue
 
@@ -351,12 +369,14 @@ def fix_ui_file_text(file_path: Path) -> None:
             continue
 
         for path in find_relative_paths(line):
-            if QRC_PREFIX_NAME in path:
-                qrc_path = f'{QRC_PREFIX}{path.split(QRC_PREFIX_NAME)[-1]}'
-                line = line.replace(path, qrc_path)
-            
+            for prefix_name, prefix in QRC_PREFIXES.items():
+                if prefix_name in path:
+                    qrc_path = f'{prefix}{path.split(prefix_name)[-1]}'
+                    line = line.replace(path, qrc_path)
+                    break
+
         updated_lines.append(line)
-    
+
     file_path.open('w').writelines(updated_lines)
     print(f"✅ Fixed: {file_path}")
 

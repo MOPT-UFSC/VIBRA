@@ -965,9 +965,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             logging.info("Processing the post-assignment actions... [60/100]")
             app().project.update_model_properties_file()
 
-            logging.info("Processing the post-assignment actions... [70/100]")
-            app().main_window.recompute_hidden_volumes()
-
             logging.info("Processing the post-assignment actions... [80/100]")
             app().main_window.update_info_text()
 
@@ -1003,7 +1000,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         
             logging.info("Processing degress of freedom decoupling... [95/100]")
             app().main_window.update_plots()
-            app().main_window.recompute_hidden_volumes()
 
         LoadingWindow(callback).run()
 
