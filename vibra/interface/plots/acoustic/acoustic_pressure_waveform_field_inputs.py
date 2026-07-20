@@ -65,7 +65,6 @@ class AcousticPressureWaveformFieldInputs(AcousticPressureWaveformFieldInputs_UI
     def _reset_variables(self):
         self.unit_label = "Pa"
         self.time_vector = None
-        self.acoustic_pressure_waveforms = None
 
     def _create_connections(self):
         #
@@ -118,36 +117,31 @@ class AcousticPressureWaveformFieldInputs(AcousticPressureWaveformFieldInputs_UI
         transparency = self.slider_transparency.value() / 100
         app().main_window.results_widget.set_tube_actors_transparency(transparency)
 
-    def compute_multiple_ifft(self):
+    # def compute_multiple_ifft(self):
 
-        logging.info("Computing multiple iffts... [10/100]")
-        solution = self.nodal_solution[:, :]
+    #     logging.info("Computing multiple iffts... [10/100]")
+    #     solution = self.nodal_solution[:, :]
 
-        t0 = perf_counter()
-        logging.info("Computing multiple iffts... [25/100]")
-        self.time_vector, self.acoustic_pressure_waveforms = process_multiple_iffts_from_one_sided_spectrum_signals(
-            self.frequencies, solution, dc_included=False
-        )
+    #     t0 = perf_counter()
+    #     logging.info("Computing multiple iffts... [25/100]")
+    #     self.time_vector, self.acoustic_pressure_waveforms = process_multiple_iffts_from_one_sided_spectrum_signals(
+    #         self.frequencies, solution, dc_included=False
+    #     )
 
-        logging.info("Computing multiple iffts... [100/100]")
-        print(self.acoustic_pressure_waveforms.shape)
+    #     logging.info("Computing multiple iffts... [100/100]")
+    #     print(self.acoustic_pressure_waveforms.shape)
 
-        dt = perf_counter() - t0
-        print(f"Elapsed time to process ifft: {dt: .6f} s")
-        ##
+    #     dt = perf_counter() - t0
+    #     print(f"Elapsed time to process ifft: {dt: .6f} s")
+    #     ##
 
     def plot_data_callback(self):
-
         def plot_callback():
-            if self.acoustic_pressure_waveforms is None:
-                self.compute_multiple_ifft()
-
-            self.animation_widget.reset_sliders()
             plot_setup = TransientPressurePlotSetup(
                 time_index=0,
-                waveform=self.acoustic_pressure_waveforms,
                 unit="Pa",
             )
+            self.animation_widget.reset_sliders()
             app().main_window.results_widget.update_plot(plot_setup=plot_setup)
 
         LoadingWindow(plot_callback).run()

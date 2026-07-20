@@ -53,7 +53,6 @@ class FrequencyPressurePlotSetup:
 @dataclass(slots=True)
 class TransientPressurePlotSetup:
     time_index: int
-    waveform: np.ndarray  # move to another place
     unit: str = "--"
 
 

@@ -13,7 +13,6 @@ from vibra import ICON_DIR, app
 from vibra.engine import AnalysisID
 from vibra.engine.postprocessing import AcousticPostprocessing, StructuralPostprocessing
 from vibra.interface.loading_window import LoadingWindow
-from vibra.interface.plots.general.animation_widget import AnimationWidget
 from vibra.interface.viewer_3d.plot_setup import (
     FrequencyDisplacementPlotSetup,
     FrequencyPressurePlotSetup,
@@ -256,7 +255,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
     ):
         assert isinstance(self.plot_setup, FrequencyDisplacementPlotSetup)
 
-        postprocessing = app().project.get_acoustic_postprocessing()
+        postprocessing = app().project.get_structural_postprocessing()
         assert isinstance(postprocessing, StructuralPostprocessing)
 
         analysis_id = app().project.model.analysis_id
@@ -298,13 +297,20 @@ class ResultsRenderWidget(AnimatedRenderWidget):
     ):
         assert isinstance(self.plot_setup, TransientPressurePlotSetup)
 
+        postprocessing = app().project.get_acoustic_postprocessing()
+        assert isinstance(postprocessing, AcousticPostprocessing)
+
         if animation_frame is None:
             time_index = self.plot_setup.time_index
         else:
             time_index = animation_frame
 
-        color_scalars = self.plot_setup.waveform[:, time_index].flatten()
-        min_value, max_value = np.min(self.plot_setup.waveform), np.max(self.plot_setup.waveform)
+        data = postprocessing.compute_acoustic_transient_pressure_field(time_index)
+        
+        if data is None:
+            return
+
+        color_scalars, min_value, max_value = data
         self.is_animation_symetric = False
         if clear_cache:
             self.min_value = min_value
