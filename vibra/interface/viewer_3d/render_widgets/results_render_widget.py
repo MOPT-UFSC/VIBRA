@@ -57,7 +57,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self._animation_cache_lock = Lock()
         self.min_value = 0
         self.max_value = 0
-        self.complex_result = False
+        self.is_animation_symetric = True
         self.frequency_index = None
         self.mode_index = None
 
@@ -202,7 +202,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
                 self._plot_frequency_displacement(animation_frame, clear_cache)
 
             case TransientPressurePlotSetup():
-                self._plot_transient_pressure(animation_frame)
+                self._plot_transient_pressure(animation_frame, clear_cache)
 
             case _:
                 raise NotImplementedError(f'Plot setup "{self.plot_setup}" not implemented.')
@@ -238,7 +238,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if data is None:
             return
 
-        color_scalars, min_value, max_value, self.complex_result = data
+        color_scalars, min_value, max_value, complex_result = data
+        self.is_animation_symetric = not complex_result
         if clear_cache:
             self.min_value = min_value
             self.max_value = max_value
@@ -276,7 +277,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if data is None:
             return
 
-        displacements, color_scalars, min_value, max_value, self.complex_result = data
+        displacements, color_scalars, min_value, max_value, complex_result = data
+        self.is_animation_symetric = not complex_result
         if clear_cache:
             self.min_value = min_value
             self.max_value = max_value
@@ -299,11 +301,11 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if animation_frame is None:
             time_index = self.plot_setup.time_index
         else:
-            time_index = self._interpolate_time_index(animation_frame)
+            time_index = animation_frame
 
         color_scalars = self.plot_setup.waveform[:, time_index].flatten()
-        min_value, max_value = np.min(color_scalars), np.max(color_scalars)
-
+        min_value, max_value = np.min(self.plot_setup.waveform), np.max(self.plot_setup.waveform)
+        self.is_animation_symetric = False
         if clear_cache:
             self.min_value = min_value
             self.max_value = max_value
@@ -366,7 +368,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             point_data,
             point_position,
         )
-        if not self.complex_result:
+        if self.is_animation_symetric:
             mirrored_frame = self._animation_total_frames - frame - 1
             self._animation_cached_data[mirrored_frame] = self._animation_cached_data[frame]
 
