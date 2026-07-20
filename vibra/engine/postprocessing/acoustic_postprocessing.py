@@ -197,11 +197,9 @@ class AcousticPostprocessing:
         )
 
         logging.info("Computing multiple iffts... [100/100]")
-        print(waveforms.shape)
 
         dt = perf_counter() - t0
-        print(f"Elapsed time to process ifft: {dt: .6f} s")
-
+        logging.info(f"Elapsed time to process ifft: {dt: .6f} s")
         return time_vector, waveforms
 
     def compute_particle_velocity(
