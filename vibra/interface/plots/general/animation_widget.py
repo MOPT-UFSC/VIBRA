@@ -196,10 +196,14 @@ class AnimationWidget(AnimationWidget_UI):
         self.update_time_frame_label()
         self.update_color_and_deformation(clear_cache=False)
 
-    def configure_animation_slider_for_transient_plot(self, sampling_time: float, frames_number: int):
+    def configure_animation_widget_for_transient_plot(self, sampling_time: float, frames_number: int):
         self.phase_slider.valueChanged.disconnect(self.phase_slider_callback)
         self.phase_slider.setMaximum(frames_number)
         self.phase_slider.valueChanged.connect(self.time_frame_slider_callback)
+
+        self.spinBox_frames.setMaximum(frames_number)
+        self.spinBox_frames.setValue(frames_number)
+        self.spinBox_frames.setEnabled(False)
 
         self.sampling_time = sampling_time
         self.frames_number = frames_number
@@ -250,11 +254,11 @@ class AnimationWidget(AnimationWidget_UI):
         if (self.current_render_widget is not None) and self.current_render_widget.playing_animation:
             self.current_render_widget.stop_animation()
 
-    def process_animation(self, state: bool):
+    def process_animation(self, button_pressed: bool):
         self.update_animation_settings()
-        self.update_animate_button_icons(state)
+        self.update_animate_button_icons(button_pressed)
 
-        if state:
+        if button_pressed:
             app().main_window.results_widget.start_animation(
                 frames=self.frames,
                 cycles=self.cycles,
@@ -262,8 +266,8 @@ class AnimationWidget(AnimationWidget_UI):
         else:
             app().main_window.results_widget.stop_animation()
 
-    def update_animate_button_icons(self, state: bool):
-        if state:
+    def update_animate_button_icons(self, button_pressed: bool):
+        if button_pressed:
             self.pushButton_animate.setIcon(self.pause_icon)
         else:
             self.pushButton_animate.setIcon(self.play_icon)
