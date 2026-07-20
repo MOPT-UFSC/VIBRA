@@ -3,23 +3,16 @@ from __future__ import annotations
 import logging
 from functools import cache
 from time import perf_counter
-from typing import Literal, Optional
+from typing import Optional
 
 import numpy as np
 
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.engine.solution import HarmonicSolution, Solution
+from vibra.interface.viewer_3d.plot_setup import PressurePlotType
 from vibra.utils.lazy_array import LazyArray
 from vibra.utils.signal_processing import process_multiple_iffts_from_one_sided_spectrum_signals
-
-AcousticPlotTypes = Literal[
-    "absolute_animation",
-    "non_absolute_animation",
-    "absolute_values",
-    "real_values",
-    "imag_values",
-]
 
 
 class AcousticPostprocessing:
@@ -121,7 +114,7 @@ class AcousticPostprocessing:
         self,
         index: int,
         phase_rad: float,
-        plot_type: AcousticPlotTypes,
+        plot_type: PressurePlotType,
         is_modal: bool = False,
     ):
         if is_modal:
@@ -143,15 +136,15 @@ class AcousticPostprocessing:
         delta = -phases[np.argmax(amplitudes)]
 
         acoustic_pressures = amplitudes * np.cos(phases + phase_rad + delta)
-
-        if plot_type == "absolute_values":
-            acoustic_pressures = np.abs(_nodal_solution)
-        elif plot_type == "real_values":
-            acoustic_pressures = np.real(_nodal_solution)
-        elif plot_type == "imag_values":
-            acoustic_pressures = np.imag(_nodal_solution)
-        elif plot_type == "absolute_animation":
-            acoustic_pressures = np.abs(acoustic_pressures)
+        match plot_type:
+            case PressurePlotType.ABSOLUTE_VALUES:
+                acoustic_pressures = np.abs(_nodal_solution)
+            case PressurePlotType.REAL_VALUES:
+                acoustic_pressures = np.real(_nodal_solution)
+            case PressurePlotType.IMAG_VALUES:
+                acoustic_pressures = np.imag(_nodal_solution)
+            case PressurePlotType.ABSOLUTE_ANIMATION:
+                acoustic_pressures = np.abs(acoustic_pressures)
 
         min_value, max_value = self.get_min_max_values_of_pressures(index, plot_type, is_modal)
 
@@ -160,12 +153,33 @@ class AcousticPostprocessing:
     def compute_acoustic_transient_pressure_field(
         self,
         time_index: int,
+        plot_type: PressurePlotType,
     ):
         time_vector, waveform = self.compute_multiple_ifft()
         acoustic_pressures = waveform[:, time_index].flatten()
 
-        min_value = np.min(waveform)
-        max_value = np.max(waveform)
+        match plot_type:
+            # TODO: verify if it is correct. Probably not.
+            case PressurePlotType.ABSOLUTE_VALUES | PressurePlotType.ABSOLUTE_ANIMATION:
+                acoustic_pressures = np.abs(acoustic_pressures)
+                min_value = 0
+                max_value = np.max(np.abs(waveform))
+
+            case PressurePlotType.REAL_VALUES:
+                acoustic_pressures = np.real(acoustic_pressures)
+                tmp = np.real(waveform)
+                min_value = np.min(tmp)
+                max_value = np.max(tmp)
+
+            case PressurePlotType.IMAG_VALUES:
+                acoustic_pressures = np.imag(acoustic_pressures)
+                tmp = np.imag(waveform)
+                min_value = np.min(tmp)
+                max_value = np.max(tmp)
+
+            case _:
+                min_value = np.min(waveform)
+                max_value = np.max(waveform)
 
         return acoustic_pressures, min_value, max_value
 
