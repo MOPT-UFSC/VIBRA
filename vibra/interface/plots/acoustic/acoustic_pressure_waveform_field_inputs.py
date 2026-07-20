@@ -94,7 +94,7 @@ class AcousticPressureWaveformFieldInputs(AcousticPressureWaveformFieldInputs_UI
             df = self.frequencies[1] - self.frequencies[0]
             T = 1 / df
 
-        self.animation_widget.configure_animation_slider_for_transient_plot(T, N_steps)
+        self.animation_widget.configure_animation_widget_for_transient_plot(T, N_steps)
 
     def load_user_preference_colormap(self):
         try:
