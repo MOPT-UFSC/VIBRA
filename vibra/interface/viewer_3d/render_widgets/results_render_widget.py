@@ -101,9 +101,9 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
     def update_plot(
         self,
+        reset_camera: bool = True,
         *,
         plot_setup: Optional[PlotSetup] = None,
-        reset_camera: bool = False,
     ):
         if plot_setup is not None:
             self.configure_plot(plot_setup)
