@@ -375,8 +375,9 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
     def stop_animation(self, *args, **kwargs):
         animation_widget = app().main_window.results_viewer_widget.get_animation_widget()
-        animation_widget.pushButton_animate.setChecked(False)
-        animation_widget.update_animate_button_icons(False)
+        if animation_widget is not None:
+            animation_widget.pushButton_animate.setChecked(False)
+            animation_widget.update_animate_button_icons(False)
         super().stop_animation(*args, **kwargs)
 
     def update_animation(self, frame):
