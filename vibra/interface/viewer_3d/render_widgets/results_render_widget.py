@@ -5,6 +5,7 @@ from typing import Optional
 
 import numpy as np
 from molde.render_widgets import AnimatedRenderWidget
+from numpy import dtype
 from PySide6.QtWidgets import QFileDialog
 from vtkmodules.vtkCommonCore import vtkPoints
 from vtkmodules.vtkCommonDataModel import vtkPointData
@@ -171,13 +172,18 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.plot_setup = plot_setup
 
     def _interpolate_phase(self, frame: int) -> float:
-        t = frame / (self._animation_total_frames - 1)
-        return lerp(0, 2 * np.pi, t)
+        return np.interp(
+            frame,
+            (0, self._animation_total_frames - 1),
+            (0, 2 * np.pi),
+        )
 
     def _interpolate_time_index(self, frame: int) -> int:
-        t = frame / (self._animation_total_frames - 1)
-        time_indexes = len(app().project.model.frequencies)
-        return int(lerp(0, time_indexes, t))
+        return np.interp(
+            frame,
+            (0, self._animation_total_frames - 1),
+            (0, 2 * len(app().project.model.frequencies) - 1),
+        ).astype(int)
 
     def update_color_and_deformation(
         self,
