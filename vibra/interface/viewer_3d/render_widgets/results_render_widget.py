@@ -5,7 +5,6 @@ from typing import Optional
 
 import numpy as np
 from molde.render_widgets import AnimatedRenderWidget
-from numpy import dtype
 from PySide6.QtWidgets import QFileDialog
 from vtkmodules.vtkCommonCore import vtkPoints
 from vtkmodules.vtkCommonDataModel import vtkPointData
@@ -23,7 +22,6 @@ from vibra.interface.viewer_3d.plot_setup import (
 )
 from vibra.interface.viewer_3d.render_tools import RenderTool, SelectionTool
 from vibra.utils.interface_utils import VisualizationFilter
-from vibra.utils.math_functions import lerp
 from vibra.utils.time_utils import warn_delays
 
 from ..actors import (
