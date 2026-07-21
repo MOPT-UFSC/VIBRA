@@ -17,12 +17,13 @@ from vibra.engine.assemblers import AcousticAssembler
 from vibra.engine.solvers import HarmonicSolver
 from vibra.interface.data_handler.export_mesh_data import ExportMeshData
 from vibra.interface.formatters.icons import change_icon_color_for_widgets, get_vibra_icon
-from vibra.interface.model_inputs.general.choose_property_to_delete import ChoosePropertyToDelete
+from vibra.interface.general.entity_visibility_handler import EntityVisibilityHandler
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.general.selection_handler import SelectionHandler
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.menus.model_setup_widget import ModelSetupWidget
 from vibra.interface.menus.results_viewer_widget import ResultsViewerWidget
+from vibra.interface.model_inputs.general.choose_property_to_delete import ChoosePropertyToDelete
 from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
 from vibra.interface.plots.acoustic.export_element_transfer_data_inputs import ExportElementTransferDataInputs
 from vibra.interface.project.save_project_data_selector import SaveProjectDataSelector
@@ -31,8 +32,8 @@ from vibra.interface.status_bar import StatusBar
 from vibra.interface.toolbars.analysis_toolbar import AnalysisToolbar
 from vibra.interface.toolbars.view_toolbar import ViewToolbar
 from vibra.interface.ui_generated.main_window_ui import MainWindow_UI
-from vibra.interface.user_input.input_ui import InputUi
 from vibra.interface.user_input.about_vibra import AboutVibraInput
+from vibra.interface.user_input.input_ui import InputUi
 from vibra.interface.user_input.render_user_preferences import RendererUserPreferencesInput
 from vibra.interface.viewer_3d.render_widgets import GeometryRenderWidget, MeshRenderWidget, ResultsRenderWidget
 from vibra.interface.welcome_widget import WelcomeWidget
@@ -49,7 +50,10 @@ class MainWindow(MainWindow_UI):
         super().__init__(parent)
 
         self.selection = SelectionHandler(app().project)
+        self.entity_visibility = EntityVisibilityHandler(app().project)
+
         self.selection.selection_changed.connect(self.selection_changed_callback)
+        self.entity_visibility.changed.connect(self.update_hidden_plots)
 
         self.hidden_mesh_faces = set()
         self.hidden_mesh_solids = set()
@@ -322,11 +326,12 @@ class MainWindow(MainWindow_UI):
         self.last_render_index = new_index
 
     def selection_changed_callback(self):
-        points = self.selection.geometry_points
-        lines = self.selection.geometry_lines
-        surfaces = self.selection.geometry_surfaces
-        volumes = self.selection.geometry_volumes
-        self.status_bar.set_selection(points, lines, surfaces, volumes)
+        self.status_bar.set_selection(
+            self.selection.geometry_points,
+            self.selection.geometry_lines,
+            self.selection.geometry_surfaces,
+            self.selection.geometry_volumes,
+        )
 
     def action_section_plane_callback(self, condition: bool):
         if condition:
@@ -348,10 +353,16 @@ class MainWindow(MainWindow_UI):
             self.set_theme("dark")
             self.action_theme.setIcon(self.theme_sun_icon)
 
+            if hasattr(self.welcome_widget, "update_logo"):
+                self.welcome_widget.update_logo("vibra_colored_dark_background.png")
+
         elif app().config.user_preferences.interface_theme == "dark":
             app().config.user_preferences.set_light_theme()
             self.set_theme("light")
             self.action_theme.setIcon(self.theme_moon_icon)
+
+            if hasattr(self.welcome_widget, "update_logo"):
+                self.welcome_widget.update_logo("vibra_colored_light_background.png")
 
         app().config.update_config_file()
 
@@ -370,45 +381,36 @@ class MainWindow(MainWindow_UI):
         self.render_user_preferences = RendererUserPreferencesInput()
 
     def action_points_callback(self):
-        all_ids = app().project.model.mesh.all_point_ids()
-        self.selection.set_geometry_selection(points=all_ids)
+        self.selection.select_all_points()
+        self.action_model_workspace_callback()
 
     def action_faces_callback(self):
-        all_ids = app().project.model.mesh.all_surface_ids()
-        self.selection.set_geometry_selection(surfaces=all_ids)
+        self.selection.select_all_surfaces()
+        self.action_model_workspace_callback()
 
     def action_solid_callback(self):
-        all_ids = app().project.model.mesh.all_solid_ids()
-        self.selection.set_geometry_selection(volumes=all_ids)
+        self.selection.select_all_volumes()
+        self.action_model_workspace_callback()
 
     def action_all_entities_geometry_callback(self):
-        mesh = app().project.model.mesh
-        self.selection.set_geometry_selection(
-            points=mesh.all_point_ids(),
-            lines=mesh.all_line_ids(),
-            surfaces=mesh.all_surface_ids(),
-            volumes=mesh.all_solid_ids(),
-        )
+        self.selection.select_all_geometry()
+        self.action_model_workspace_callback()
 
     def action_all_entities_mesh_callback(self):
-        mesh = app().project.model.mesh
-        self.selection.set_mesh_selection(
-            nodes=mesh.all_node_ids(),
-            faces=mesh.all_face_element_ids(),
-            solids=mesh.all_solid_element_ids(),
-        )
+        self.selection.select_all_mesh()
+        self.action_mesh_workspace_callback()
 
     def action_nodes_callback(self):
-        all_ids = app().project.model.mesh.all_node_ids()
-        self.selection.set_mesh_selection(nodes=all_ids)
+        self.selection.select_all_nodes()
+        self.action_mesh_workspace_callback()
 
     def action_surface_elements_callback(self):
-        all_ids = app().project.model.mesh.all_face_element_ids()
-        self.selection.set_mesh_selection(faces=all_ids)
+        self.selection.select_all_faces()
+        self.action_mesh_workspace_callback()
 
     def action_solid_elements_callback(self):
-        all_ids = app().project.model.mesh.all_solid_element_ids()
-        self.selection.set_mesh_selection(solids=all_ids)
+        self.selection.select_all_solids()
+        self.action_mesh_workspace_callback()
 
     def action_clear_selection_callback(self):
         self.selection.clear_selection()
@@ -596,37 +598,14 @@ class MainWindow(MainWindow_UI):
                 ]
             )
 
-        volumes_to_hide = self.selection.calculate_volumes_to_hide()
-
-        self.hide_volumes(volumes_to_hide)
+        self.entity_visibility.hide_surfaces(self.selection.geometry_surfaces)
+        self.entity_visibility.hide_volumes(self.selection.geometry_volumes)
         self.selection.clear_selection()
-
-    def recompute_hidden_volumes(self):
-        self.selection.hidden_surfaces.clear()
-        self.hide_volumes(app().main_window.selection.hidden_volumes)
-
-    def hide_volumes(self, volumes: set[int]):
-        mesh = app().project.model.mesh
-
-        volumes = set(volumes)
-        selected_volume_surfaces = set()
-        visible_volume_surfaces = set()
-
-        for volume, surfaces in mesh.surfaces_from_volume.items():
-            if volume in volumes:
-                selected_volume_surfaces |= set(surfaces)
-            elif volume not in self.selection.hidden_volumes:
-                visible_volume_surfaces |= set(surfaces)
-        surfaces_to_keep_visible = set.intersection(selected_volume_surfaces, visible_volume_surfaces)
-
-        self.selection.hidden_volumes |= volumes
-        self.selection.hidden_surfaces |= selected_volume_surfaces - surfaces_to_keep_visible
-        self.update_hidden_plots()
 
     def has_hidden_part(self) -> bool:
         return any(
             [
-                len(self.selection.hidden_surfaces) != 0,
+                self.entity_visibility.has_hidden_entity(),
                 len(self.distinguished_solids) != 0,
                 self.section_plane.cutting,
                 bool(app().project.model.mesh.collapsed_elements_data),
@@ -646,9 +625,7 @@ class MainWindow(MainWindow_UI):
         self.visualization_changed.emit()
 
     def action_unhide_all_callback(self):
-        self.selection.hidden_surfaces.clear()
-        self.selection.hidden_volumes.clear()
-        self.update_hidden_plots()
+        self.entity_visibility.unhide_all()
 
     def action_save_callback(self):
         self.save_project_dialog()

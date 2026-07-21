@@ -8,7 +8,7 @@ from PySide6.QtWidgets import QFileDialog
 from vtkmodules.vtkCommonCore import vtkPoints
 from vtkmodules.vtkCommonDataModel import vtkPointData
 
-from vibra import ICON_DIR, app
+from vibra import LOGO_DIR, app
 from vibra.engine import AnalysisID
 from vibra.engine.postprocessing import AcousticPostprocessing, StructuralPostprocessing
 from vibra.interface.loading_window import LoadingWindow
@@ -54,7 +54,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         self.set_default_render_tool()
         self.remove_all_actors()
-        self.create_logos()
+        self.update_logo()
         self.create_axes()
         self.create_color_bar()
         self.create_scale_bar()
@@ -64,14 +64,20 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         super().showEvent(event)
         self.update_section_plane()
 
-    def create_logos(self):
+    def update_logo(self):
         if hasattr(self, "vibra_logo"):
             self.renderer.RemoveViewProp(self.vibra_logo)
 
-        path = ICON_DIR / "logo_vibra_comp.png"
+        path = LOGO_DIR / self.get_logo_for_current_theme()
         self.vibra_logo = self.create_logo(path)
         self.vibra_logo.SetPosition(0.895, 0.91)
         self.vibra_logo.SetPosition2(0.10, 0.10)
+
+    def get_logo_for_current_theme(self) -> str:
+        if app().config.user_preferences.interface_theme == "light":
+            return "vibra_colored_light_background.png"
+        
+        return "vibra_colored_dark_background.png"
 
     def update_theme(self):
         user_preferences = app().config.user_preferences
@@ -93,6 +99,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if hasattr(self, "scale_bar_actor"):
             self.scale_bar_actor.GetLegendTitleProperty().SetColor(font_color.to_rgb_f())
             self.scale_bar_actor.GetLegendLabelProperty().SetColor(font_color.to_rgb_f())
+        
+        self.update_logo()
 
     def update_plot(self, reset_camera: bool = False):
         mesh = app().project.model.mesh
@@ -218,8 +226,9 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
     def stop_animation(self, *args, **kwargs):
         animation_widget = app().main_window.results_viewer_widget.get_animation_widget()
-        animation_widget.pushButton_animate.setChecked(False)
-        animation_widget.update_animate_button_icons(False)
+        if animation_widget is not None:
+            animation_widget.pushButton_animate.setChecked(False)
+            animation_widget.update_animate_button_icons(False)
         super().stop_animation(*args, **kwargs)
 
     def update_animation(self, frame):
@@ -288,7 +297,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         elif analysis_id == AnalysisID.STRUCTURAL_HARMONIC:
             analysis_widget = app().main_window.results_viewer_widget.plot_structural_harmonic
             self.frequency_index = analysis_widget.get_selected_frequency_index()
-            self.differentiate = analysis_widget.get_number_of_differentiations()
+            n_diff = analysis_widget.get_number_of_differentiations()
             data_type = analysis_widget.get_data_type()
             self.unit_label = analysis_widget.get_plot_units()
 
@@ -296,7 +305,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             if not isinstance(postprocessing, StructuralPostprocessing):
                 return
 
-            data = postprocessing.compute_structural_response_field(self.frequency_index, phase, data_type, self.differentiate)
+            data = postprocessing.compute_structural_response_field(self.frequency_index, phase, data_type, n_diff)
             if data is None:
                 return
 
@@ -349,8 +358,11 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             animation_widget = app().main_window.results_viewer_widget.get_animation_widget()
             if isinstance(animation_widget, AnimationWidget):
                 animation_widget.update_factor_label(max_value=max_value)
+                magnification_factor = animation_widget.magnification_factor
+            else:
+                magnification_factor = 1
 
-            self.analysis_actor.apply_deformation(displacements, animation_widget.magnification_factor,max_value)
+            self.analysis_actor.apply_deformation(displacements, magnification_factor, max_value)
             self.edges_actor.extract_data(self.analysis_actor.data)
 
         self.analysis_actor.plot_color_bar(color_scalars, min_value, max_value, colormap)
