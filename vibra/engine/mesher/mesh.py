@@ -2226,6 +2226,8 @@ class Mesh:
 
             elif dim == 2:
                 self.area_from_surfaces[tag] = value * (unit_factor**2)
+                if self.area_from_surfaces[tag] == 0:
+                    continue
 
                 uv_min, uv_max = gmsh.model.getParametrizationBounds(dim, tag)
                 uv_mid = (uv_min + uv_max) / 2
