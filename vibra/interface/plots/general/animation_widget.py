@@ -36,6 +36,7 @@ class AnimationWidget(AnimationWidget_UI):
 
     def _initialize(self):
         self.animating = False
+        self.fps = 30
         self.frames_number = 1
         self.sampling_time = 1
         self.current_render_widget = None
@@ -205,6 +206,7 @@ class AnimationWidget(AnimationWidget_UI):
         self.spinBox_frames.setValue(frames_number)
         self.spinBox_frames.setEnabled(False)
 
+        self.fps = max(1, frames_number // 30)
         self.sampling_time = sampling_time
         self.frames_number = frames_number
         self.label_phase_angle.setText("0s")
@@ -260,6 +262,7 @@ class AnimationWidget(AnimationWidget_UI):
 
         if button_pressed:
             app().main_window.results_widget.start_animation(
+                fps=self.fps,
                 frames=self.frames,
                 cycles=self.cycles,
             )
