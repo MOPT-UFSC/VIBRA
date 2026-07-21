@@ -73,6 +73,10 @@ class AnimationWidget(AnimationWidget_UI):
         self.pushButton_export_video.setCursor(Qt.PointingHandCursor)
         self.pushButton_export_video.setToolTip("Save animation")
 
+        self.pushButton_animation_loop.setCursor(Qt.PointingHandCursor)
+        self.pushButton_animation_loop.setToolTip("Loop the animation")
+        self.pushButton_animation_loop.setCheckable(True)
+
         # QSlider
         self.phase_slider.setOrientation(Qt.Orientation.Horizontal)
         self.phase_slider.setCursor(Qt.PointingHandCursor)
@@ -90,7 +94,7 @@ class AnimationWidget(AnimationWidget_UI):
         self.spinBox_cycles.setMinimum(0)
         self.spinBox_cycles.setMaximum(10)
         self.spinBox_cycles.setSingleStep(1)
-        self.spinBox_cycles.setValue(0)
+        self.spinBox_cycles.setValue(3)
         self.spinBox_cycles.setFixedSize(60, 30)
         self.spinBox_cycles.setAlignment(Qt.AlignHCenter)
         self.spinBox_cycles.setCursor(Qt.PointingHandCursor)
@@ -114,6 +118,7 @@ class AnimationWidget(AnimationWidget_UI):
 
         self.pushButton_animate.clicked.connect(self.process_animation)
         self.pushButton_export_video.clicked.connect(self.save_animation)
+        self.pushButton_animation_loop.clicked.connect(self.animation_loop_callback)
 
         app().main_window.render_widget_changed.connect(self.update_current_render_widget)
         app().main_window.render_widget_changed.connect(self.update_toolbar)
@@ -168,9 +173,6 @@ class AnimationWidget(AnimationWidget_UI):
         self.update_phase_slider_steps()
         app().main_window.results_widget.stop_animation()
         app().main_window.results_widget.clear_cache()
-
-    def cycles_value_changed(self):
-        self.cycles = self.spinBox_cycles.value()
 
     @property
     def phase_in_radians(self):
@@ -261,13 +263,11 @@ class AnimationWidget(AnimationWidget_UI):
         self.update_animate_button_icons(button_pressed)
 
         if button_pressed:
-            app().main_window.results_widget.start_animation(
-                fps=self.fps,
-                frames=self.frames,
-                cycles=self.cycles,
-            )
-        else:
-            app().main_window.results_widget.stop_animation()
+            cycles = 0 if self.pushButton_animation_loop.isChecked() else self.cycles
+            app().main_window.results_widget.start_animation(fps=self.fps, frames=self.frames, cycles=cycles)
+            return
+
+        app().main_window.results_widget.stop_animation()
 
     def update_animate_button_icons(self, button_pressed: bool):
         if button_pressed:
@@ -337,3 +337,7 @@ class AnimationWidget(AnimationWidget_UI):
             message = "An error has occured while exporting the animation file.\n"
             message += str(error_log)
             PrintMessageInput([error_title, title, message])
+
+    def animation_loop_callback(self):
+        is_clicked = self.pushButton_animation_loop.isChecked()
+        self.spinBox_cycles.setDisabled(is_clicked)
