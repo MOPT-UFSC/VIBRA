@@ -13,6 +13,7 @@ from vibra.interface.ui_generated.plots.acoustic.acoustic_mode_shape_inputs_ui i
     AcousticModeShapeInputs_UI,
 )
 from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
+from vibra.interface.viewer_3d.plot_setup import FrequencyPressurePlotSetup, PressurePlotType
 
 
 class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
@@ -97,6 +98,7 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
         icon_color = None
         theme = app().config.user_preferences.interface_theme
         from vibra import DARK_ICON_COLOR, LIGHT_ICON_COLOR
+
         if theme == "dark":
             icon_color = DARK_ICON_COLOR.to_qt()
         else:
@@ -145,16 +147,21 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
             return
 
         self.mode_index = self.natural_frequencies.index(self.selected_natural_frequency)
-
         self.animation_widget.reset_sliders()
-        LoadingWindow(app().main_window.results_widget.update_plot).run()
+
+        plot_setup = FrequencyPressurePlotSetup(
+            phase=self.animation_widget.phase_in_radians,
+            index=self.mode_index,
+            plot_type=self.get_plot_type(),
+        )
+        LoadingWindow(app().main_window.results_widget.update_plot).run(plot_setup=plot_setup)
 
     def update_transparency_callback(self):
         return
         transparency = self.slider_transparency.value() / 100
         app().main_window.results_widget.set_tube_actors_transparency(transparency)
 
-    def get_plot_type(self):
+    def get_plot_type(self) -> PressurePlotType:
         plot_types = [
             "non_absolute_animation",
             "absolute_animation",
@@ -163,7 +170,7 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
             "imag_values",
         ]
         index = self.comboBox_plot_type.currentIndex()
-        return plot_types[index]
+        return PressurePlotType(plot_types[index])
 
     def load_natural_frequencies(self):
         solution = app().project.model.solution
@@ -186,9 +193,7 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
                 cols = 3
                 damping_ratio = -np.real(value) / np.abs(value)
                 damped_frequency = np.abs(value) * ((1 - damping_ratio**2) ** (1 / 2))
-                new = QTreeWidgetItem(
-                    [str(mode), str(round(damped_frequency, 4)), str(round(damping_ratio, 4))]
-                )
+                new = QTreeWidgetItem([str(mode), str(round(damped_frequency, 4)), str(round(damping_ratio, 4))])
             else:
                 cols = 2
                 new = QTreeWidgetItem([str(mode), str(round(value, 4))])
@@ -221,7 +226,7 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
             damped_frequency = np.abs(selected_frequency) * ((1 - damping_ratio**2) ** (1 / 2))
             self.lineEdit_natural_frequency.setText(str(round(damped_frequency, 4)))
         else:
-            self.lineEdit_natural_frequency.setText(f"{selected_frequency : .6f}")
+            self.lineEdit_natural_frequency.setText(f"{selected_frequency: .6f}")
 
         self.selected_natural_frequency = selected_frequency
         self.update_plot()

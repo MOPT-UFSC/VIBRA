@@ -2,20 +2,17 @@ from __future__ import annotations
 
 import logging
 from functools import cache
-from typing import Literal
+from time import perf_counter
+from typing import Optional
 
 import numpy as np
 
+from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
+from vibra.engine.solution import HarmonicSolution, Solution
+from vibra.interface.viewer_3d.plot_setup import PressurePlotType
 from vibra.utils.lazy_array import LazyArray
-
-AcousticPlotTypes = Literal[
-    "absolute_animation",
-    "non_absolute_animation",
-    "absolute_values",
-    "real_values",
-    "imag_values",
-]
+from vibra.utils.signal_processing import process_multiple_iffts_from_one_sided_spectrum_signals
 
 
 class AcousticPostprocessing:
@@ -26,11 +23,11 @@ class AcousticPostprocessing:
         self.model = model
 
     @property
-    def mesh(self):
+    def mesh(self) -> Optional[Mesh]:
         return self.model.mesh
 
     @property
-    def solution(self):
+    def solution(self) -> Optional[Solution]:
         return self.model.solution
 
     @property
@@ -117,7 +114,7 @@ class AcousticPostprocessing:
         self,
         index: int,
         phase_rad: float,
-        plot_type: AcousticPlotTypes,
+        plot_type: PressurePlotType,
         is_modal: bool = False,
     ):
         if is_modal:
@@ -139,19 +136,58 @@ class AcousticPostprocessing:
         delta = -phases[np.argmax(amplitudes)]
 
         acoustic_pressures = amplitudes * np.cos(phases + phase_rad + delta)
-
-        if plot_type == "absolute_values":
-            acoustic_pressures = np.abs(_nodal_solution)
-        elif plot_type == "real_values":
-            acoustic_pressures = np.real(_nodal_solution)
-        elif plot_type == "imag_values":
-            acoustic_pressures = np.imag(_nodal_solution)
-        elif plot_type == "absolute_animation":
-            acoustic_pressures = np.abs(acoustic_pressures)
+        match plot_type:
+            case PressurePlotType.ABSOLUTE_VALUES:
+                acoustic_pressures = np.abs(_nodal_solution)
+            case PressurePlotType.REAL_VALUES:
+                acoustic_pressures = np.real(_nodal_solution)
+            case PressurePlotType.IMAG_VALUES:
+                acoustic_pressures = np.imag(_nodal_solution)
+            case PressurePlotType.ABSOLUTE_ANIMATION:
+                acoustic_pressures = np.abs(acoustic_pressures)
 
         min_value, max_value = self.get_min_max_values_of_pressures(index, plot_type, is_modal)
 
         return acoustic_pressures, min_value, max_value, np.imag(_nodal_solution).any()
+
+    def compute_acoustic_transient_pressure_field(
+        self,
+        time_index: int,
+        plot_type: PressurePlotType,
+    ):
+        time_vector, waveform = self.compute_multiple_ifft()
+        acoustic_pressures = waveform[:, time_index].flatten()
+
+        match plot_type:
+            case PressurePlotType.ABSOLUTE_ANIMATION:
+                acoustic_pressures = np.abs(acoustic_pressures)
+                min_value = 0
+                max_value = np.max(np.abs(waveform))
+
+            case _:
+                min_value = np.min(waveform)
+                max_value = np.max(waveform)
+
+        return acoustic_pressures, min_value, max_value
+
+    @cache
+    def compute_multiple_ifft(self):
+        assert isinstance(self.solution, HarmonicSolution)
+        assert self.solution.analysis_id.is_acoustic()  # for now, I guess
+
+        t0 = perf_counter()
+        logging.info("Computing multiple iffts... [25/100]")
+        time_vector, waveforms = process_multiple_iffts_from_one_sided_spectrum_signals(
+            self.solution.frequencies,
+            self.solution.nodal_solution,
+            dc_included=False,
+        )
+
+        logging.info("Computing multiple iffts... [100/100]")
+
+        dt = perf_counter() - t0
+        logging.info(f"Elapsed time to process ifft: {dt: .6f} s")
+        return time_vector, waveforms
 
     def compute_particle_velocity(
         self,
@@ -303,9 +339,8 @@ class AcousticPostprocessing:
         map_elements_to_nodes, filtered_nodes = self.mesh.get_solid_elements_connected_to_nodes(surface_id=surface_id, return_nodes=True)
 
         node_ids = self.mesh.get_nodes_from_surface(surface_id)
-        map_elements_to_nodes, filtered_nodes = self.mesh.get_solid_elements_connected_to_nodes(
-            node_ids=node_ids, return_nodes=True)
-        
+        map_elements_to_nodes, filtered_nodes = self.mesh.get_solid_elements_connected_to_nodes(node_ids=node_ids, return_nodes=True)
+
         # map_elements_to_nodes, filtered_nodes = aelf.mesh.get_solid_elements_connected_to_nodes(
         #     surface_id=surface_id, return_nodes=True)
 

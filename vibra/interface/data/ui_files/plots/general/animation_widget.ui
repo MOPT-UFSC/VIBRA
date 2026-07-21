@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>350</width>
+    <width>325</width>
     <height>220</height>
    </rect>
   </property>
@@ -286,19 +286,6 @@
       <property name="bottomMargin">
        <number>2</number>
       </property>
-      <item row="0" column="0">
-       <spacer name="horizontalSpacer_2">
-        <property name="orientation">
-         <enum>Qt::Orientation::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>79</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
       <item row="0" column="1">
        <widget class="QLabel" name="label_frames_cycle">
         <property name="minimumSize">
@@ -325,13 +312,13 @@
        <widget class="QSpinBox" name="spinBox_frames">
         <property name="minimumSize">
          <size>
-          <width>46</width>
+          <width>80</width>
           <height>26</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>16777215</width>
+          <width>80</width>
           <height>26</height>
          </size>
         </property>
@@ -351,19 +338,6 @@
          <number>40</number>
         </property>
        </widget>
-      </item>
-      <item row="0" column="3">
-       <spacer name="horizontalSpacer">
-        <property name="orientation">
-         <enum>Qt::Orientation::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
       </item>
       <item row="1" column="1">
        <widget class="QLabel" name="label_animation_cycles">
@@ -391,13 +365,13 @@
        <widget class="QSpinBox" name="spinBox_cycles">
         <property name="minimumSize">
          <size>
-          <width>46</width>
+          <width>80</width>
           <height>26</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>16777215</width>
+          <width>80</width>
           <height>26</height>
          </size>
         </property>
@@ -411,6 +385,32 @@
          <number>5</number>
         </property>
        </widget>
+      </item>
+      <item row="1" column="3">
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Orientation::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="1" column="0">
+       <spacer name="horizontalSpacer_2">
+        <property name="orientation">
+         <enum>Qt::Orientation::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>79</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
       </item>
      </layout>
     </widget>

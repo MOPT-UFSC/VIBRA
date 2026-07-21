@@ -1,5 +1,3 @@
-import logging
-from time import perf_counter
 
 import numpy as np
 from PySide6.QtCore import Qt
@@ -12,7 +10,7 @@ from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.plots.general.animation_widget import AnimationWidget
 from vibra.interface.ui_generated.plots.acoustic.acoustic_pressure_waveform_field_inputs_ui import AcousticPressureWaveformFieldInputs_UI
 from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
-from vibra.utils.signal_processing import process_multiple_iffts_from_one_sided_spectrum_signals
+from vibra.interface.viewer_3d.plot_setup import PressurePlotType, TransientPressurePlotSetup
 
 
 class AcousticPressureWaveformFieldInputs(AcousticPressureWaveformFieldInputs_UI):
@@ -27,6 +25,8 @@ class AcousticPressureWaveformFieldInputs(AcousticPressureWaveformFieldInputs_UI
 
         self.load_user_preference_colormap()
         self._load_analysis_setup_and_solution()
+
+        self.plot_data_callback()
 
     @property
     def model(self):
@@ -64,7 +64,6 @@ class AcousticPressureWaveformFieldInputs(AcousticPressureWaveformFieldInputs_UI
     def _reset_variables(self):
         self.unit_label = "Pa"
         self.time_vector = None
-        self.acoustic_pressure_waveforms = None
 
     def _create_connections(self):
         #
@@ -72,8 +71,6 @@ class AcousticPressureWaveformFieldInputs(AcousticPressureWaveformFieldInputs_UI
         self.comboBox_plot_type.currentIndexChanged.connect(self.plot_data_callback)
         #
         self.slider_transparency.valueChanged.connect(self.update_transparency_callback)
-        #
-        self.pushButton_plot_field.clicked.connect(self.plot_data_callback)
 
     def add_animation_widget(self):
 
@@ -93,7 +90,7 @@ class AcousticPressureWaveformFieldInputs(AcousticPressureWaveformFieldInputs_UI
             df = self.frequencies[1] - self.frequencies[0]
             T = 1 / df
 
-        self.animation_widget.configure_animation_slider_for_transient_plot(T, N_steps)
+        self.animation_widget.configure_animation_widget_for_transient_plot(T, N_steps)
 
     def load_user_preference_colormap(self):
         try:
@@ -117,34 +114,25 @@ class AcousticPressureWaveformFieldInputs(AcousticPressureWaveformFieldInputs_UI
         transparency = self.slider_transparency.value() / 100
         app().main_window.results_widget.set_tube_actors_transparency(transparency)
 
-    def compute_multiple_ifft(self):
-
-        logging.info("Computing multiple iffts... [10/100]")
-        solution = self.nodal_solution[:, :]
-
-        t0 = perf_counter()
-        logging.info("Computing multiple iffts... [25/100]")
-        self.time_vector, self.acoustic_pressure_waveforms = process_multiple_iffts_from_one_sided_spectrum_signals(
-            self.frequencies, solution, dc_included=False
-        )
-
-        logging.info("Computing multiple iffts... [100/100]")
-        print(self.acoustic_pressure_waveforms.shape)
-
-        dt = perf_counter() - t0
-        print(f"Elapsed time to process ifft: {dt : .6f} s")
-        ##
-
     def plot_data_callback(self):
-
         def plot_callback():
-            if self.acoustic_pressure_waveforms is None:
-                self.compute_multiple_ifft()
-
+            plot_setup = TransientPressurePlotSetup(
+                time_index=0,
+                plot_type=self.get_plot_type(),
+                unit="Pa",
+            )
             self.animation_widget.reset_sliders()
-            app().main_window.results_widget.update_plot()
+            app().main_window.results_widget.update_plot(plot_setup=plot_setup)
 
         LoadingWindow(plot_callback).run()
+
+    def get_plot_type(self) -> PressurePlotType:
+        plot_types = [
+            "non_absolute_animation",
+            "absolute_animation",
+        ]
+        index = self.comboBox_plot_type.currentIndex()
+        return PressurePlotType(plot_types[index])
 
     def get_colormap(self) -> str:
         index = self.comboBox_colormaps.currentIndex()
