@@ -23,7 +23,7 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(350, 220)
+        Form.resize(325, 220)
         Form.setMinimumSize(QSize(0, 220))
         self.gridLayout = QGridLayout(Form)
         self.gridLayout.setObjectName(u"gridLayout")
@@ -121,10 +121,6 @@ class Ui_Form(object):
         self.gridLayout_4 = QGridLayout(self.frame_top)
         self.gridLayout_4.setObjectName(u"gridLayout_4")
         self.gridLayout_4.setContentsMargins(6, 2, 6, 2)
-        self.horizontalSpacer_2 = QSpacerItem(79, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_4.addItem(self.horizontalSpacer_2, 0, 0, 1, 1)
-
         self.label_frames_cycle = QLabel(self.frame_top)
         self.label_frames_cycle.setObjectName(u"label_frames_cycle")
         self.label_frames_cycle.setMinimumSize(QSize(0, 26))
@@ -135,8 +131,8 @@ class Ui_Form(object):
 
         self.spinBox_frames = QSpinBox(self.frame_top)
         self.spinBox_frames.setObjectName(u"spinBox_frames")
-        self.spinBox_frames.setMinimumSize(QSize(46, 26))
-        self.spinBox_frames.setMaximumSize(QSize(16777215, 26))
+        self.spinBox_frames.setMinimumSize(QSize(80, 26))
+        self.spinBox_frames.setMaximumSize(QSize(80, 26))
         self.spinBox_frames.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.spinBox_frames.setMinimum(20)
         self.spinBox_frames.setMaximum(60)
@@ -144,10 +140,6 @@ class Ui_Form(object):
         self.spinBox_frames.setValue(40)
 
         self.gridLayout_4.addWidget(self.spinBox_frames, 0, 2, 1, 1)
-
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_4.addItem(self.horizontalSpacer, 0, 3, 1, 1)
 
         self.label_animation_cycles = QLabel(self.frame_top)
         self.label_animation_cycles.setObjectName(u"label_animation_cycles")
@@ -159,13 +151,21 @@ class Ui_Form(object):
 
         self.spinBox_cycles = QSpinBox(self.frame_top)
         self.spinBox_cycles.setObjectName(u"spinBox_cycles")
-        self.spinBox_cycles.setMinimumSize(QSize(46, 26))
-        self.spinBox_cycles.setMaximumSize(QSize(16777215, 26))
+        self.spinBox_cycles.setMinimumSize(QSize(80, 26))
+        self.spinBox_cycles.setMaximumSize(QSize(80, 26))
         self.spinBox_cycles.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.spinBox_cycles.setMaximum(20)
         self.spinBox_cycles.setValue(5)
 
         self.gridLayout_4.addWidget(self.spinBox_cycles, 1, 2, 1, 1)
+
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_4.addItem(self.horizontalSpacer, 1, 3, 1, 1)
+
+        self.horizontalSpacer_2 = QSpacerItem(79, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_4.addItem(self.horizontalSpacer_2, 1, 0, 1, 1)
 
 
         self.gridLayout.addWidget(self.frame_top, 0, 0, 2, 2)

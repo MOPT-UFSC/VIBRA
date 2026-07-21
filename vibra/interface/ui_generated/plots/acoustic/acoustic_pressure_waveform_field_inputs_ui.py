@@ -16,8 +16,8 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QComboBox, QFrame, QGridLayout,
-    QLabel, QPushButton, QScrollArea, QSizePolicy,
-    QSlider, QSpacerItem, QWidget)
+    QLabel, QScrollArea, QSizePolicy, QSlider,
+    QSpacerItem, QWidget)
 
 class Ui_Form(object):
     def setupUi(self, Form):
@@ -74,8 +74,8 @@ class Ui_Form(object):
 
         self.frame_main = QFrame(self.scrollAreaWidgetContents_2)
         self.frame_main.setObjectName(u"frame_main")
-        self.frame_main.setMinimumSize(QSize(0, 180))
-        self.frame_main.setMaximumSize(QSize(16777215, 180))
+        self.frame_main.setMinimumSize(QSize(0, 140))
+        self.frame_main.setMaximumSize(QSize(16777215, 140))
         self.frame_main.setSizeIncrement(QSize(0, 0))
         self.frame_main.setBaseSize(QSize(0, 0))
         self.frame_main.setFrameShape(QFrame.Shape.Box)
@@ -164,9 +164,6 @@ class Ui_Form(object):
         self.comboBox_plot_type = QComboBox(self.frame_4)
         self.comboBox_plot_type.addItem("")
         self.comboBox_plot_type.addItem("")
-        self.comboBox_plot_type.addItem("")
-        self.comboBox_plot_type.addItem("")
-        self.comboBox_plot_type.addItem("")
         self.comboBox_plot_type.setObjectName(u"comboBox_plot_type")
         self.comboBox_plot_type.setMinimumSize(QSize(176, 26))
         self.comboBox_plot_type.setMaximumSize(QSize(200, 26))
@@ -185,27 +182,6 @@ class Ui_Form(object):
 
 
         self.gridLayout_5.addWidget(self.frame_4, 0, 0, 1, 1)
-
-        self.frame_3 = QFrame(self.frame_main)
-        self.frame_3.setObjectName(u"frame_3")
-        self.frame_3.setMinimumSize(QSize(0, 40))
-        self.frame_3.setMaximumSize(QSize(16777215, 40))
-        self.frame_3.setFrameShape(QFrame.Shape.NoFrame)
-        self.frame_3.setFrameShadow(QFrame.Shadow.Raised)
-        self.gridLayout_9 = QGridLayout(self.frame_3)
-        self.gridLayout_9.setObjectName(u"gridLayout_9")
-        self.gridLayout_9.setHorizontalSpacing(6)
-        self.gridLayout_9.setVerticalSpacing(0)
-        self.gridLayout_9.setContentsMargins(0, 0, 0, 0)
-        self.pushButton_plot_field = QPushButton(self.frame_3)
-        self.pushButton_plot_field.setObjectName(u"pushButton_plot_field")
-        self.pushButton_plot_field.setMinimumSize(QSize(0, 26))
-        self.pushButton_plot_field.setMaximumSize(QSize(100, 26))
-
-        self.gridLayout_9.addWidget(self.pushButton_plot_field, 0, 0, 1, 1)
-
-
-        self.gridLayout_5.addWidget(self.frame_3, 1, 0, 1, 1)
 
 
         self.gridLayout_6.addWidget(self.frame_main, 1, 0, 1, 1)
@@ -247,12 +223,8 @@ class Ui_Form(object):
 
         self.comboBox_plot_type.setItemText(0, QCoreApplication.translate("Form", u"Non-absolute (animation)", None))
         self.comboBox_plot_type.setItemText(1, QCoreApplication.translate("Form", u"Absolute (animation)", None))
-        self.comboBox_plot_type.setItemText(2, QCoreApplication.translate("Form", u"Absolute values", None))
-        self.comboBox_plot_type.setItemText(3, QCoreApplication.translate("Form", u"Real values", None))
-        self.comboBox_plot_type.setItemText(4, QCoreApplication.translate("Form", u"Imag values", None))
 
         self.label_color_scalling.setText(QCoreApplication.translate("Form", u"Plot type:", None))
-        self.pushButton_plot_field.setText(QCoreApplication.translate("Form", u"Plot field", None))
     # retranslateUi
 
 
@@ -280,9 +252,6 @@ class AcousticPressureWaveformFieldInputs_UI(QWidget, Ui_Form):
                                                                     - comboBox_colormaps: QComboBox
                                                         - comboBox_plot_type: QComboBox
                                                         - label_color_scalling: QLabel
-                                            - frame_3: QFrame
-                                                - (Layout): QGridLayout
-                                                        - pushButton_plot_field: QPushButton
                                 - frame_animation: QFrame
     """
 
