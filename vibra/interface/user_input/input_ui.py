@@ -36,7 +36,7 @@ from vibra.interface.model_inputs.structural.excitations.nodal_loads_inputs impo
 from vibra.interface.model_inputs.structural.excitations.normal_pressure_load_inputs import NormalPressureLoadInputs
 from vibra.interface.model_inputs.structural.surface_thickness_inputs import SurfaceThicknessInputs
 from vibra.interface.plots.acoustic.acoustic_frequency_response_function_inputs import AcousticPressureFrequencyResponseFunctionInputs
-from vibra.interface.plots.acoustic.decompose_acoustic_pressure_waves_inputs import DecomposeAcousticPressureWavesInputs
+from vibra.interface.plots.acoustic.acoustic_waves_decomposition_inputs import AcousticWavesDecompositionInputs
 from vibra.interface.plots.acoustic.acoustic_impedance_inputs import AcousticImpedanceInputs
 from vibra.interface.plots.acoustic.acoustic_mode_shape_inputs import AcousticModeShapeInputs
 
@@ -224,7 +224,7 @@ class InputUi:
         
     def decompose_acoustic_pressure_waves(self):
         if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
-            return self.process_input(DecomposeAcousticPressureWavesInputs)
+            return self.process_input(AcousticWavesDecompositionInputs)
 
     def plot_allowable_pulsation_criteria_for_reciprocating_compressor(self):
         if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
