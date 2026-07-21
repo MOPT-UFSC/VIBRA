@@ -28,7 +28,7 @@ particle_velocity_labels = ["Vx", "Vy", "Vz"]
 def load_external_mesh_and_solve(**kwargs):
 
     # start decoding the Ansys script file (ds.dat file or input file)
-    mesh_path = PROJECT_DIR / "validation_files/data/WB/acoustic/incident_plane_wave/tet4/mesh/ds_tet4_tetrahedron_harmonic_acoustic.dat"
+    mesh_path = PROJECT_DIR / "validation_files/data/WB/acoustic/excitations/tet4/mesh/ds_tet4_tetrahedron_harmonic_acoustic.dat"
     if not os.path.exists(mesh_path):
         return
     
@@ -118,15 +118,23 @@ def load_external_mesh_and_solve(**kwargs):
     for _surf_id in [1, 2]:
         model.properties._set_property("fluid", fluid, surface=_surf_id)
 
-    ## normal surface velocity data
-    data_Vn = {
+    # ## normal surface velocity data
+    # data_Vn = {
+    #     "real_values": [1],
+    #     "imag_values": [0],
+    #     "nodal_attribution": False,
+    #     "averaged": False,
+    # }
+
+    # model.properties._set_property("surface_velocity", data_Vn, surface=1)
+
+    data_ipw = {        
         "real_values": [1],
         "imag_values": [0],
-        "nodal_attribution": False,
-        "averaged": False,
+        "ipw_vector": [1.0, 0, 0],
     }
 
-    model.properties._set_property("surface_velocity", data_Vn, surface=1)
+    model.properties._set_property("incident_plane_wave", data_ipw, surface=1)
 
     ## acoustic pressure data
     # data_Pa = {
@@ -144,7 +152,7 @@ def load_external_mesh_and_solve(**kwargs):
         "imag_values": [0],
     }
 
-    model.properties._set_property("specific_impedance", data_Z, surface=1)
+    # model.properties._set_property("specific_impedance", data_Z, surface=1)
     model.properties._set_property("specific_impedance", data_Z, surface=2)
 
     ## Define the analysis frequency setup
@@ -190,7 +198,7 @@ def load_external_mesh_and_solve(**kwargs):
     nodal_solution = model.solution.nodal_solution
 
     # Load the external data
-    results_path = PROJECT_DIR / "validation_files/data/WB/acoustic/incident_plane_wave/tet4/results/"
+    results_path = PROJECT_DIR / "validation_files/data/WB/acoustic/excitations/tet4/results/ipw_in_duct/"
     ext_data = LoadExternalData(results_path, rho_0)
 
     WB_pressure_data = ext_data.load_nodal_pressures()
