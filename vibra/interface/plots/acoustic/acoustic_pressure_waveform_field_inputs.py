@@ -26,6 +26,8 @@ class AcousticPressureWaveformFieldInputs(AcousticPressureWaveformFieldInputs_UI
         self.load_user_preference_colormap()
         self._load_analysis_setup_and_solution()
 
+        self.plot_data_callback()
+
     @property
     def model(self):
         return app().project.model
@@ -69,8 +71,6 @@ class AcousticPressureWaveformFieldInputs(AcousticPressureWaveformFieldInputs_UI
         self.comboBox_plot_type.currentIndexChanged.connect(self.plot_data_callback)
         #
         self.slider_transparency.valueChanged.connect(self.update_transparency_callback)
-        #
-        self.pushButton_plot_field.clicked.connect(self.plot_data_callback)
 
     def add_animation_widget(self):
 
@@ -130,9 +130,6 @@ class AcousticPressureWaveformFieldInputs(AcousticPressureWaveformFieldInputs_UI
         plot_types = [
             "non_absolute_animation",
             "absolute_animation",
-            "absolute_values",
-            "real_values",
-            "imag_values",
         ]
         index = self.comboBox_plot_type.currentIndex()
         return PressurePlotType(plot_types[index])

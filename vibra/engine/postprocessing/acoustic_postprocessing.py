@@ -159,23 +159,10 @@ class AcousticPostprocessing:
         acoustic_pressures = waveform[:, time_index].flatten()
 
         match plot_type:
-            # TODO: verify if it is correct. Probably not.
-            case PressurePlotType.ABSOLUTE_VALUES | PressurePlotType.ABSOLUTE_ANIMATION:
+            case PressurePlotType.ABSOLUTE_ANIMATION:
                 acoustic_pressures = np.abs(acoustic_pressures)
                 min_value = 0
                 max_value = np.max(np.abs(waveform))
-
-            case PressurePlotType.REAL_VALUES:
-                acoustic_pressures = np.real(acoustic_pressures)
-                tmp = np.real(waveform)
-                min_value = np.min(tmp)
-                max_value = np.max(tmp)
-
-            case PressurePlotType.IMAG_VALUES:
-                acoustic_pressures = np.imag(acoustic_pressures)
-                tmp = np.imag(waveform)
-                min_value = np.min(tmp)
-                max_value = np.max(tmp)
 
             case _:
                 min_value = np.min(waveform)
