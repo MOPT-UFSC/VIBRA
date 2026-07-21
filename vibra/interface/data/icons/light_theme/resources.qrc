@@ -79,7 +79,6 @@
         <file alias="exit_to_app_icon.png">exit_to_app_icon.png</file>
         <file alias="export_notes_icon.png">export_notes_icon.png</file>
         <file alias="file_export_icon.png">file_export_icon.png</file>
-        <file alias="geometry_icon.png">geometry_icon.png</file>
         <file alias="get_fluid_blue.png">get_fluid_blue.png</file>
         <file alias="get_fuid_light_blue.png">get_fuid_light_blue.png</file>
         <file alias="go_next.png">go_next.png</file>
@@ -126,6 +125,7 @@
         <file alias="visibility.png">visibility.png</file>
         <file alias="visibility_off.png">visibility_off.png</file>
         <file alias="zoom_icon.png">zoom_icon.png</file>
+        <file alias="geometry_icon.png">geometry_icon.png</file>
         <file alias="model_configuration/listen_audio.png">model_configuration/listen_audio.png</file>
         <file alias="model_configuration/play_audio.png">model_configuration/play_audio.png</file>
         <file alias="views/back.png">views/back.png</file>

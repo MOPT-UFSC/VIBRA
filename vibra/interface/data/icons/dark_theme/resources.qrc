@@ -62,6 +62,7 @@
         <file alias="warnings/transparent_warning.png">../warnings/transparent_warning.png</file>
         <file alias="warnings/warning.png">../warnings/warning.png</file>
         <file alias="warnings/warning_2.png">../warnings/warning_2.png</file>
+        <file alias="geometry_icon.png">geometry_icon.png</file>
         <file alias="add_narrow.png">add_narrow.png</file>
         <file alias="add_notes.png">add_notes.png</file>
         <file alias="add_row_below.png">add_row_below.png</file>
@@ -79,7 +80,6 @@
         <file alias="exit_to_app_icon.png">exit_to_app_icon.png</file>
         <file alias="export_notes_icon.png">export_notes_icon.png</file>
         <file alias="file_export_icon.png">file_export_icon.png</file>
-        <file alias="geometry_icon.png">geometry_icon.png</file>
         <file alias="get_fluid_blue.png">get_fluid_blue.png</file>
         <file alias="get_fuid_light_blue.png">get_fuid_light_blue.png</file>
         <file alias="go_next.png">go_next.png</file>
