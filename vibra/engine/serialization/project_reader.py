@@ -430,6 +430,7 @@ class ProjectReader:
                 frequencies=file["frequencies"],
                 nodal_solution=file["solution"],
                 status=file["solution_status"],
+                displacement_dof=file.get("displacement_dof"),
             )
 
     def read_modal_solution(self, model: Model) -> Optional[ModalSolution]:
