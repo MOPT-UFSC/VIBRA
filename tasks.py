@@ -9,29 +9,31 @@ from importlib.metadata import version
 
 UI_FILES_PATH = Path("vibra/interface/data/ui_files")
 GENERATED_PATH = Path("vibra/interface/ui_generated")
-RESOURCE_DIR = Path("vibra/interface/data/icons") 
+RESOURCE_DIR = Path("vibra/interface/data")
 QRC_PATH = RESOURCE_DIR / "resources.qrc" 
-QRC_PREFIX_NAME = "/icons/"
-QRC_PREFIX = f":{QRC_PREFIX_NAME}"
 
+RESOURCE_FOLDERS = ["icons", "logos"]
 
 @task
 def qrc_codegen(c):
     '''
-    Generate a .qrc file with the files (.png) included into the RESOURCE_DIR path.
-
-    Usage example: inv qrc-codegen
+    Generate a .qrc file with the files (.png) included into the RESOURCE_FOLDERS.
     '''
     if not RESOURCE_DIR.exists():
         print(f"❌ Directory '{RESOURCE_DIR}' not found.")
         return
 
-    qrc_content = ['<RCC>', '    <qresource prefix="icons">']
+    qrc_content = ['<RCC>', '    <qresource prefix="/">']
 
-    for file_path in RESOURCE_DIR.rglob("*.png"):
-        if file_path.is_file():
-            relative_path = file_path.relative_to(RESOURCE_DIR)
-            qrc_content.append(f'        <file>{relative_path.as_posix()}</file>')
+    for folder in RESOURCE_FOLDERS:
+        folder_path = RESOURCE_DIR / folder
+        if not folder_path.exists():
+            continue
+            
+        for file_path in folder_path.rglob("*.png"):
+            if file_path.is_file():
+                relative_path = file_path.relative_to(RESOURCE_DIR)
+                qrc_content.append(f'        <file>{relative_path.as_posix()}</file>')
 
     qrc_content.append('    </qresource>')
     qrc_content.append('</RCC>')
@@ -45,9 +47,7 @@ def qrc_codegen(c):
 @task(pre=[qrc_codegen])
 def qrc_compile(c):
     '''
-    Compile .qrc file to resource_rc.py file
-
-    Usage example: inv qrc-compile
+    Compile .qrc file to resources_rc.py file
     '''
     rcc_path = RESOURCE_DIR / "resources_rc.py"
     command = f"pyside6-rcc \"{str(QRC_PATH)}\" -o \"{str(rcc_path)}\""
@@ -259,28 +259,35 @@ def get_relative_qrc_path(ui_path: Path) -> str:
 
 def convert_to_qrc_path(icon_path: str) -> str:
     icon_path = Path(icon_path).as_posix()
-    if QRC_PREFIX_NAME in icon_path:
-        relative_icon_path = icon_path.split(QRC_PREFIX_NAME)[-1]
-        return f"{QRC_PREFIX}{relative_icon_path}"
+    for folder in RESOURCE_FOLDERS:
+        folder_match = f"/{folder}/"
+        if folder_match in icon_path:
+            relative_icon_path = icon_path.split(folder_match)[-1]
+            return f":/{folder}/{relative_icon_path}"
     return icon_path
     
 
 def fix_ui_file_text(file_path: Path) -> None:
     updated_lines = []
     lines = file_path.open('r').readlines()
+    
+    valid_qrc_prefixes = [f":/{f}/" for f in RESOURCE_FOLDERS]
+
     for line in lines:
-        if QRC_PREFIX in line:
+        if any(prefix in line for prefix in valid_qrc_prefixes):
             updated_lines.append(line)
             continue
 
         if '<resource' in line:
-            qrc_resource_tag = f' <resources><include location="{get_relative_qrc_path(file_path)}" /></resources>\n'
+            qrc_resource_tag = f' <resources><include location="{get_relative_qrc_path(file_path).replace(os.sep, "/")}" /></resources>\n'
             updated_lines.append(qrc_resource_tag)
             continue
 
         for path in find_relative_paths(line):
-            if QRC_PREFIX_NAME in path:
-                qrc_path = f'{QRC_PREFIX}{path.split(QRC_PREFIX_NAME)[-1]}'
+            clean_path = path.split("../")[-1] 
+            
+            if any(clean_path.startswith(f"{folder}/") for folder in RESOURCE_FOLDERS):
+                qrc_path = f":/{clean_path}"
                 line = line.replace(path, qrc_path)
             
         updated_lines.append(line)

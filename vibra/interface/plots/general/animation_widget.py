@@ -181,7 +181,6 @@ class AnimationWidget(AnimationWidget_UI):
     @property
     def time(self):
         value = self.phase_slider.value()
-        print(self.sampling_time, self.frames_number, value)
         return (self.sampling_time / self.frames_number) * value
 
     @property

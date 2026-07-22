@@ -9,7 +9,7 @@ from PySide6.QtWidgets import QFileDialog
 from vtkmodules.vtkCommonCore import vtkPoints
 from vtkmodules.vtkCommonDataModel import vtkPointData
 
-from vibra import ICON_DIR, app
+from vibra import LOGO_DIR, app
 from vibra.engine import AnalysisID
 from vibra.engine.postprocessing import AcousticPostprocessing, StructuralPostprocessing
 from vibra.interface.loading_window import LoadingWindow
@@ -59,7 +59,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         self.set_default_render_tool()
         self.remove_all_actors()
-        self.create_logos()
+        self.update_logo()
         self.create_axes()
         self.create_color_bar()
         self.create_scale_bar()
@@ -69,14 +69,20 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         super().showEvent(event)
         self.update_section_plane()
 
-    def create_logos(self):
+    def update_logo(self):
         if hasattr(self, "vibra_logo"):
             self.renderer.RemoveViewProp(self.vibra_logo)
 
-        path = ICON_DIR / "logo_vibra_comp.png"
+        path = LOGO_DIR / self.get_logo_for_current_theme()
         self.vibra_logo = self.create_logo(path)
         self.vibra_logo.SetPosition(0.895, 0.91)
         self.vibra_logo.SetPosition2(0.10, 0.10)
+
+    def get_logo_for_current_theme(self) -> str:
+        if app().config.user_preferences.interface_theme == "light":
+            return "vibra_colored_light_background.png"
+        
+        return "vibra_colored_dark_background.png"
 
     def update_theme(self):
         user_preferences = app().config.user_preferences
@@ -98,6 +104,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if hasattr(self, "scale_bar_actor"):
             self.scale_bar_actor.GetLegendTitleProperty().SetColor(font_color.to_rgb_f())
             self.scale_bar_actor.GetLegendLabelProperty().SetColor(font_color.to_rgb_f())
+        
+        self.update_logo()
 
     def update_plot(
         self,
