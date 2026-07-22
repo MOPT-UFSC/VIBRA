@@ -36,7 +36,7 @@ class ModalSolver:
         A, B, is_symmetric = self.assembler.build_eigenproblem_system()
 
         linear_solver = initialize_solver(SolverType.PARDISO, is_symmetric=is_symmetric)
-    
+
         if not is_symmetric:
             n_modes *= 2
 
@@ -103,11 +103,11 @@ class ModalSolver:
             self.displacement_dof = self.assembler.displacement_dof
 
         self.solution = ModalSolution(
-            analysis_id = self.assembler.model.analysis_id,
-            natural_frequencies = self.natural_frequencies,
-            modal_shapes = self.nodal_solution,
-            displacement_dof = self.displacement_dof,
-            complex_natural_frequencies = cnf,
+            analysis_id=self.assembler.model.analysis_id,
+            natural_frequencies=self.natural_frequencies,
+            modal_shapes=self.nodal_solution,
+            displacement_dof=self.displacement_dof,
+            complex_natural_frequencies=cnf,
         )
 
         return self.solution
