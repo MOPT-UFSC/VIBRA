@@ -173,6 +173,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
             app().main_window.results_widget.stop_animation()
 
         self.add_widget(self.current_widget)
+        self.current_widget.plot_data_callback()
 
     def add_TL_NR_widget(self):
         self.current_widget = app().main_window.input_ui.plot_TL_NR()

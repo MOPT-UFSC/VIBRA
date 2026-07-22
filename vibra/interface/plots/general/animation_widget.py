@@ -181,6 +181,7 @@ class AnimationWidget(AnimationWidget_UI):
     @property
     def time(self):
         value = self.phase_slider.value()
+        print(self.sampling_time, self.frames_number, value)
         return (self.sampling_time / self.frames_number) * value
 
     @property
@@ -201,17 +202,20 @@ class AnimationWidget(AnimationWidget_UI):
 
     def configure_animation_widget_for_transient_plot(self, sampling_time: float, frames_number: int):
         self.phase_slider.valueChanged.disconnect(self.phase_slider_callback)
-        self.phase_slider.setMaximum(frames_number)
+        self.update_animation_parameters(sampling_time, frames_number)
         self.phase_slider.valueChanged.connect(self.time_frame_slider_callback)
 
+        self.label_phase_angle.setText("0s")
+
+    def update_animation_parameters(self, sampling_time: float, frames_number: int):
+        self.sampling_time = sampling_time
+        self.fps = max(1, frames_number // 10)
+        self.frames_number = frames_number
+
+        self.phase_slider.setMaximum(frames_number)
         self.spinBox_frames.setMaximum(frames_number)
         self.spinBox_frames.setValue(frames_number)
         self.spinBox_frames.setEnabled(False)
-
-        self.fps = max(1, frames_number // 30)
-        self.sampling_time = sampling_time
-        self.frames_number = frames_number
-        self.label_phase_angle.setText("0s")
 
     def magnification_factor_slider_callback(self, value: int):
         self.update_factor_label()

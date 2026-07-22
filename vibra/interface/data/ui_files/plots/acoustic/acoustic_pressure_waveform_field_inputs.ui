@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>375</width>
+    <width>401</width>
     <height>520</height>
    </rect>
   </property>
@@ -48,7 +48,7 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>371</width>
+        <width>397</width>
         <height>516</height>
        </rect>
       </property>
@@ -160,7 +160,7 @@
          <property name="maximumSize">
           <size>
            <width>16777215</width>
-           <height>140</height>
+           <height>200</height>
           </size>
          </property>
          <property name="sizeIncrement">
@@ -208,7 +208,7 @@
             <property name="maximumSize">
              <size>
               <width>16777215</width>
-              <height>120</height>
+              <height>200</height>
              </size>
             </property>
             <property name="frameShape">
@@ -230,35 +230,8 @@
              <property name="bottomMargin">
               <number>0</number>
              </property>
-             <item row="1" column="1">
-              <widget class="QLabel" name="label_3">
-               <property name="minimumSize">
-                <size>
-                 <width>90</width>
-                 <height>26</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>90</width>
-                 <height>26</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <pointsize>10</pointsize>
-                </font>
-               </property>
-               <property name="text">
-                <string>Transparency:</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="3">
-              <spacer name="horizontalSpacer_12">
+             <item row="0" column="0">
+              <spacer name="horizontalSpacer_13">
                <property name="orientation">
                 <enum>Qt::Orientation::Horizontal</enum>
                </property>
@@ -270,7 +243,7 @@
                </property>
               </spacer>
              </item>
-             <item row="1" column="2">
+             <item row="1" column="3">
               <widget class="QSlider" name="slider_transparency">
                <property name="minimumSize">
                 <size>
@@ -289,17 +262,17 @@
                </property>
               </widget>
              </item>
-             <item row="0" column="1">
-              <widget class="QLabel" name="label_6">
+             <item row="2" column="1">
+              <widget class="QLabel" name="label_color_scalling">
                <property name="minimumSize">
                 <size>
-                 <width>90</width>
+                 <width>110</width>
                  <height>26</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
-                 <width>90</width>
+                 <width>110</width>
                  <height>26</height>
                 </size>
                </property>
@@ -309,14 +282,48 @@
                 </font>
                </property>
                <property name="text">
-                <string>Colormaps:</string>
+                <string>Plot type:</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                </property>
               </widget>
              </item>
-             <item row="0" column="2">
+             <item row="4" column="5">
+              <spacer name="horizontalSpacer">
+               <property name="orientation">
+                <enum>Qt::Orientation::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item row="4" column="3">
+              <widget class="QLineEdit" name="lineEdit_animation_time">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>26</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>26</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="3">
               <widget class="QFrame" name="frame_7">
                <property name="minimumSize">
                 <size>
@@ -373,27 +380,27 @@
                   </property>
                   <item>
                    <property name="text">
-                    <string> Jet scale</string>
+                    <string>Jet scale</string>
                    </property>
                   </item>
                   <item>
                    <property name="text">
-                    <string> Viridis scale</string>
+                    <string>Viridis scale</string>
                    </property>
                   </item>
                   <item>
                    <property name="text">
-                    <string> Inferno scale</string>
+                    <string>Inferno scale</string>
                    </property>
                   </item>
                   <item>
                    <property name="text">
-                    <string> Magma scale</string>
+                    <string>Magma scale</string>
                    </property>
                   </item>
                   <item>
                    <property name="text">
-                    <string> Plasma scale</string>
+                    <string>Plasma scale</string>
                    </property>
                   </item>
                   <item>
@@ -423,7 +430,7 @@
                   </item>
                   <item>
                    <property name="text">
-                    <string> Grayscale</string>
+                    <string>Grayscale</string>
                    </property>
                   </item>
                  </widget>
@@ -431,20 +438,88 @@
                </layout>
               </widget>
              </item>
-             <item row="0" column="0">
-              <spacer name="horizontalSpacer_13">
-               <property name="orientation">
-                <enum>Qt::Orientation::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
+             <item row="4" column="1">
+              <widget class="QLabel" name="label_animation_time">
+               <property name="minimumSize">
                 <size>
-                 <width>40</width>
-                 <height>20</height>
+                 <width>110</width>
+                 <height>26</height>
                 </size>
                </property>
-              </spacer>
+               <property name="maximumSize">
+                <size>
+                 <width>110</width>
+                 <height>26</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
+               <property name="text">
+                <string>Animation time:</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+               </property>
+              </widget>
              </item>
-             <item row="2" column="2">
+             <item row="1" column="1">
+              <widget class="QLabel" name="label_3">
+               <property name="minimumSize">
+                <size>
+                 <width>110</width>
+                 <height>26</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>110</width>
+                 <height>26</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
+               <property name="text">
+                <string>Transparency:</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QLabel" name="label_6">
+               <property name="minimumSize">
+                <size>
+                 <width>110</width>
+                 <height>26</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>110</width>
+                 <height>26</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
+               <property name="text">
+                <string>Colormaps:</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="3">
               <widget class="QComboBox" name="comboBox_plot_type">
                <property name="minimumSize">
                 <size>
@@ -475,17 +550,17 @@
                </item>
               </widget>
              </item>
-             <item row="2" column="1">
-              <widget class="QLabel" name="label_color_scalling">
+             <item row="3" column="1">
+              <widget class="QLabel" name="label_reduced_time">
                <property name="minimumSize">
                 <size>
-                 <width>90</width>
+                 <width>110</width>
                  <height>26</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
-                 <width>90</width>
+                 <width>110</width>
                  <height>26</height>
                 </size>
                </property>
@@ -495,10 +570,83 @@
                 </font>
                </property>
                <property name="text">
-                <string>Plot type:</string>
+                <string>Reduced time:</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="4" column="0">
+              <spacer name="horizontalSpacer_14">
+               <property name="orientation">
+                <enum>Qt::Orientation::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item row="3" column="3">
+              <widget class="QComboBox" name="comboBox_reduced_time">
+               <property name="minimumSize">
+                <size>
+                 <width>176</width>
+                 <height>26</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>200</width>
+                 <height>26</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
+               <item>
+                <property name="text">
+                 <string>Disabled</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>User-defined</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Rotational speed</string>
+                </property>
+               </item>
+              </widget>
+             </item>
+             <item row="4" column="4">
+              <widget class="QLabel" name="label_animation_time_unit">
+               <property name="minimumSize">
+                <size>
+                 <width>40</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>40</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
+               <property name="text">
+                <string>[s]</string>
                </property>
               </widget>
              </item>

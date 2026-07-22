@@ -154,8 +154,9 @@ class AcousticPostprocessing:
         self,
         time_index: int,
         plot_type: PressurePlotType,
+        reduced_loop_time: float = -1,
     ):
-        time_vector, waveform = self.compute_multiple_ifft()
+        time_vector, waveform = self.compute_multiple_ifft(reduced_loop_time=reduced_loop_time)
         acoustic_pressures = waveform[:, time_index].flatten()
 
         match plot_type:
@@ -168,10 +169,10 @@ class AcousticPostprocessing:
                 min_value = np.min(waveform)
                 max_value = np.max(waveform)
 
-        return acoustic_pressures, min_value, max_value
+        return time_vector, acoustic_pressures, min_value, max_value
 
     @cache
-    def compute_multiple_ifft(self):
+    def compute_multiple_ifft(self, reduced_loop_time: float = -1):
         assert isinstance(self.solution, HarmonicSolution)
         assert self.solution.analysis_id.is_acoustic()  # for now, I guess
 
@@ -182,6 +183,11 @@ class AcousticPostprocessing:
             self.solution.nodal_solution,
             dc_included=False,
         )
+
+        if reduced_loop_time != -1:
+            mask = time_vector <= reduced_loop_time
+            time_vector = time_vector[mask]
+            waveforms = waveforms[:, mask]
 
         logging.info("Computing multiple iffts... [100/100]")
 

@@ -53,7 +53,7 @@ class TransientPressurePlotSetup:
     time_index: int
     plot_type: PressurePlotType
     unit: str = "--"
-
+    reduced_loop_time: float = -1
 
 # Do not forget to add the type here
 PlotSetup = Union[

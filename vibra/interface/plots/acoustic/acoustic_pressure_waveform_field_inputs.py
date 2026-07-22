@@ -11,6 +11,15 @@ from vibra.interface.plots.general.animation_widget import AnimationWidget
 from vibra.interface.ui_generated.plots.acoustic.acoustic_pressure_waveform_field_inputs_ui import AcousticPressureWaveformFieldInputs_UI
 from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
 from vibra.interface.viewer_3d.plot_setup import PressurePlotType, TransientPressurePlotSetup
+from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
+
+from enum import IntEnum
+
+
+class ReduceLoopType(IntEnum):
+    DISABLED = 0
+    USER_DEFINED = 1
+    ROTATIONAL_SPEED = 2
 
 
 class AcousticPressureWaveformFieldInputs(AcousticPressureWaveformFieldInputs_UI):
@@ -22,11 +31,11 @@ class AcousticPressureWaveformFieldInputs(AcousticPressureWaveformFieldInputs_UI
         self._reset_variables()
         self._create_connections()
         self.add_animation_widget()
+        self._configure_validators()
 
         self.load_user_preference_colormap()
         self._load_analysis_setup_and_solution()
 
-        self.plot_data_callback()
 
     @property
     def model(self):
@@ -52,6 +61,9 @@ class AcousticPressureWaveformFieldInputs(AcousticPressureWaveformFieldInputs_UI
         app().main_window.render_widget_changed.emit()
         app().main_window.view_toolbar.disable_selection_tool()
 
+    def _configure_validators(self):
+        self.lineEdit_animation_time.setValidator(StrictDoubleValidator(1e-5, 1e8, 8))
+
     def _load_analysis_setup_and_solution(self):
         self.analysis_method = ""
         if self.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
@@ -69,8 +81,13 @@ class AcousticPressureWaveformFieldInputs(AcousticPressureWaveformFieldInputs_UI
         #
         self.comboBox_colormaps.currentIndexChanged.connect(self.update_colormap_type)
         self.comboBox_plot_type.currentIndexChanged.connect(self.plot_data_callback)
+        self.comboBox_reduced_time.currentIndexChanged.connect(self.reduced_loop_time_type_callback)
+        #
+        self.lineEdit_animation_time.editingFinished.connect(self.plot_data_callback)
         #
         self.slider_transparency.valueChanged.connect(self.update_transparency_callback)
+        #
+        self.reduced_loop_time_type_callback()
 
     def add_animation_widget(self):
 
@@ -114,12 +131,53 @@ class AcousticPressureWaveformFieldInputs(AcousticPressureWaveformFieldInputs_UI
         transparency = self.slider_transparency.value() / 100
         app().main_window.results_widget.set_tube_actors_transparency(transparency)
 
+    def reduced_loop_time_callback(self):
+        self.plot_data_callback()
+        # T_red = self.get_reduced_loop_time()
+        # app().main_window.results_widget.plot_setup.loop_time = T_red
+
+    def reduced_loop_time_type_callback(self):
+        index = self.comboBox_reduced_time.currentIndex()
+        is_disabled = index == ReduceLoopType.DISABLED
+
+        self.label_animation_time.setDisabled(is_disabled)
+        self.label_animation_time_unit.setDisabled(is_disabled)
+        self.lineEdit_animation_time.setDisabled(is_disabled)
+
+        if index == ReduceLoopType.ROTATIONAL_SPEED:
+            self.label_animation_time.setText("Rotational speed:")
+            self.label_animation_time_unit.setText("[rpm]")
+        else:
+            self.label_animation_time.setText("Animation time:")
+            self.label_animation_time_unit.setText("[s]")
+
+        tool_tip = "" if is_disabled else "Press enter to confirm the time filter"
+        self.lineEdit_animation_time.setToolTip(tool_tip)
+
+    def get_reduced_loop_time(self):
+        index = self.comboBox_reduced_time.currentIndex()
+        if index == ReduceLoopType.DISABLED:
+            self.lineEdit_animation_time.clear()
+            return -1
+
+        if self.lineEdit_animation_time.text() == "":
+            return -1
+        
+        value = float(self.lineEdit_animation_time.text())
+        if index == ReduceLoopType.USER_DEFINED:
+            return value
+
+        else:
+            # compute the revolution time of the rotary machine
+            return 60 / value
+
     def plot_data_callback(self):
         def plot_callback():
             plot_setup = TransientPressurePlotSetup(
                 time_index=0,
                 plot_type=self.get_plot_type(),
                 unit="Pa",
+                reduced_loop_time=self.get_reduced_loop_time(),
             )
             self.animation_widget.reset_sliders()
             app().main_window.results_widget.update_plot(plot_setup=plot_setup)

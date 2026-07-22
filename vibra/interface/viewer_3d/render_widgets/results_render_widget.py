@@ -297,6 +297,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         animation_frame: Optional[int] = None,
         clear_cache: bool = True,
     ):
+
         assert isinstance(self.plot_setup, TransientPressurePlotSetup)
 
         postprocessing = app().project.get_acoustic_postprocessing()
@@ -310,12 +311,20 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         data = postprocessing.compute_acoustic_transient_pressure_field(
             time_index,
             self.plot_setup.plot_type,
+            reduced_loop_time=self.plot_setup.reduced_loop_time
         )
 
         if data is None:
             return
 
-        color_scalars, min_value, max_value = data
+        time_vector, color_scalars, min_value, max_value = data
+
+        animation_widget = app().main_window.results_viewer_widget.get_animation_widget()
+
+        if animation_widget is not None:
+            sampling_time = time_vector[-1] - time_vector[0]
+            animation_widget.update_animation_parameters(sampling_time, time_vector.size)
+
         self.is_animation_symetric = False
         if clear_cache:
             self.min_value = min_value
