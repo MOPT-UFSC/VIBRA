@@ -1,5 +1,6 @@
 import logging
 from time import time
+from typing import Optional
 
 import numpy as np
 
@@ -30,10 +31,11 @@ class HarmonicSolver:
         return self.assembler.model.frequencies
 
     def reset_variables(self):
-        self.solution: HarmonicSolution | None = None
-        self.nodal_solution: np.ndarray | None = None
-        self.displacement_dof: np.ndarray | None = None
-        self._linear_solver = None
+        self.solution: Optional[HarmonicSolution] = None
+        self.nodal_solution: Optional[np.ndarray] = None
+        self.displacement_dof: Optional[np.ndarray] = None
+        self._linear_solver: Optional[LinearSolver] = None
+        self._file_writer: Optional[LazyHDF5MatrixWriter] = None
 
     def solve_direct(self, print_log: bool = False, is_resume: bool = False) -> HarmonicSolution:
         """
@@ -48,22 +50,58 @@ class HarmonicSolver:
 
         logging.info("Solving harmonic analysis (direct method)... [10/100]")
 
-        solution_handler = self._get_solution_handler(is_resume)
+        if isinstance(self.assembler, StructuralAssembler):
+            self.displacement_dof = self.assembler.displacement_dof
 
-        self.compute_frequency_sweep(solution_handler, print_log, is_resume)
+        self._initialize_file_writer(is_resume)
+        nodal_solution_buffer = self._get_nodal_solution_buffer()
+        self.compute_frequency_sweep(nodal_solution_buffer, print_log, is_resume)
+        self._close_file_writer()
 
         logging.info("Solving harmonic analysis (direct method)... [99/100]")
-        self.solution = self._close_solution_handler(solution_handler)
+
+        self.solution = HarmonicSolution(
+            analysis_id=self.assembler.model.analysis_id,
+            frequencies=self.assembler.model.frequencies,
+            nodal_solution=nodal_solution_buffer,
+            displacement_dof=self.displacement_dof,
+        )
 
         if self.assembler.model.stop_processing:
             self.solution = None
             return self.solution
 
-        # TODO: remove this variable since it is redundant
-        self.nodal_solution = self.solution.nodal_solution
-
         return self.solution
 
+    def _initialize_file_writer(self, is_resume: bool):
+        if self.project_paths is None:
+            return
+
+        self._file_writer = LazyHDF5MatrixWriter(
+            self.project_paths.harmonic_solution_filepath,
+            self.assembler.total_dof,
+            self.assembler.frequencies,
+            dtype=complex,
+            is_resume=is_resume,
+        )
+
+        if self.displacement_dof is not None:
+            self._file_writer.save_extra_data("displacement_dof", self.displacement_dof, dtype=int)
+
+    def _close_file_writer(self):
+        if self._file_writer is None:
+            return
+
+        self._file_writer.close()
+        self._file_writer = None
+
+    def _get_nodal_solution_buffer(self):
+        num_rows = self.assembler.total_dof
+        num_cols = len(self.assembler.frequencies)
+        solution = np.zeros((num_rows, num_cols), dtype=complex)
+        return solution
+
+    # TODO: remove
     def _get_solution_handler(self, is_resume):
         if isinstance(self.assembler, StructuralAssembler):
             self.displacement_dof = self.assembler.displacement_dof
@@ -76,10 +114,10 @@ class HarmonicSolver:
         num_rows = self.assembler.total_dof
         solution = LazyHDF5MatrixWriter(
             self.project_paths.harmonic_solution_filepath,
-            num_rows,
-            self.frequencies,
-            complex,
-            is_resume,
+            self.assembler.total_dof,
+            self.assembler.frequencies,
+            dtype=complex,
+            is_resume=is_resume,
         )
 
         if self.displacement_dof is not None:
@@ -87,6 +125,7 @@ class HarmonicSolver:
 
         return solution
 
+    # TODO: remove
     def _close_solution_handler(self, solution) -> HarmonicSolution | LazyHarmonicSolution:
         if isinstance(solution, LazyHDF5MatrixWriter):
             solution.close()
@@ -115,7 +154,7 @@ class HarmonicSolver:
 
             logging.info(f"Solution step {i + 1} and frequency {freq} Hz [{i + 1}/{len(frequencies)}]")
 
-            if is_resume and i != 0 and isinstance(solution, LazyHDF5MatrixWriter) and solution.has_column(i):
+            if is_resume and (i != 0) and isinstance(solution, LazyHDF5MatrixWriter) and solution.has_column(i):
                 continue
 
             if print_log:
@@ -124,19 +163,18 @@ class HarmonicSolver:
             A, f = self.assembler.build_harmonic_system(freq, i)
 
             if freq == 0:
-                # In case of freq=0, the matrix may differ from the non-zero frequencies, so we solve it with
-                # a particular linear solver
-                linear_solver = self._get_linear_solver(eigenvectors, True)
+                # In case of freq=0, the matrix may differ from the non-zero frequencies,
+                # so we solve it with a particular linear solver
+                linear_solver = self._get_linear_solver(eigenvectors, new_instance=True)
             else:
                 linear_solver = self._get_linear_solver(eigenvectors)
 
             solution_freq = linear_solver.solve(A, f)
-
-            if isinstance(solution, LazyHDF5MatrixWriter):
-                # reinsert the prescribed degrees of freedom into the solution vector
-                solution_freq = self.assembler.reinsert_the_prescribed_dof_into_solution_freq(solution_freq, i)
-
+            solution_freq = self.assembler.reinsert_the_prescribed_dof_into_solution_freq(solution_freq, i)
             solution[:, i] = solution_freq
+
+            if self._file_writer is not None:
+                self._file_writer[:, i] = solution_freq
 
             # clear the memory and delete some variables to reduce the memory usage
             linear_solver.clear_memory()
