@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import Literal
+from enum import IntEnum
 
 import numpy as np
 from PySide6.QtWidgets import QDialog, QFileDialog, QPushButton, QWidget
@@ -10,6 +11,11 @@ from vibra.interface import error_title, warning_title
 from vibra.interface.data.data_manager import is_frequencies_vector_equally_distributed
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
+
+
+class InputType(IntEnum):
+    REAL_IMAGINARY = 0
+    MAGNITUDE_PHASE = 1
 
 
 def save_table_values(table_name: str, imported_values: np.ndarray, physical_domain: Literal["acoustic", "structural"]):

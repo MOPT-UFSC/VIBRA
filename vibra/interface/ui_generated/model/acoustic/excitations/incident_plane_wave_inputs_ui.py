@@ -104,82 +104,118 @@ class Ui_Dialog(object):
         self.gridLayout.setSpacing(6)
         self.gridLayout.setObjectName(u"gridLayout")
         self.gridLayout.setContentsMargins(0, 0, 0, 0)
-        self.lineEdit_incident_pressure_real = QLineEdit(self.frame_8)
-        self.lineEdit_incident_pressure_real.setObjectName(u"lineEdit_incident_pressure_real")
-        self.lineEdit_incident_pressure_real.setMinimumSize(QSize(90, 28))
-        self.lineEdit_incident_pressure_real.setMaximumSize(QSize(90, 28))
+        self.label_pinc0_unit = QLabel(self.frame_8)
+        self.label_pinc0_unit.setObjectName(u"label_pinc0_unit")
+        self.label_pinc0_unit.setMinimumSize(QSize(40, 26))
+        self.label_pinc0_unit.setMaximumSize(QSize(40, 26))
         font3 = QFont()
         font3.setFamilies([u"MS Shell Dlg 2"])
         font3.setPointSize(10)
         font3.setBold(False)
         font3.setItalic(False)
+        self.label_pinc0_unit.setFont(font3)
+        self.label_pinc0_unit.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
+
+        self.gridLayout.addWidget(self.label_pinc0_unit, 3, 3, 1, 1)
+
+        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.gridLayout.addItem(self.verticalSpacer, 0, 2, 1, 1)
+
+        self.lineEdit_incident_pressure_real = QLineEdit(self.frame_8)
+        self.lineEdit_incident_pressure_real.setObjectName(u"lineEdit_incident_pressure_real")
+        self.lineEdit_incident_pressure_real.setMinimumSize(QSize(100, 28))
+        self.lineEdit_incident_pressure_real.setMaximumSize(QSize(100, 28))
         self.lineEdit_incident_pressure_real.setFont(font3)
         self.lineEdit_incident_pressure_real.setStyleSheet(u"")
         self.lineEdit_incident_pressure_real.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout.addWidget(self.lineEdit_incident_pressure_real, 3, 2, 1, 1)
 
-        self.lineEdit_incident_pressure_imag = QLineEdit(self.frame_8)
-        self.lineEdit_incident_pressure_imag.setObjectName(u"lineEdit_incident_pressure_imag")
-        self.lineEdit_incident_pressure_imag.setMinimumSize(QSize(90, 28))
-        self.lineEdit_incident_pressure_imag.setMaximumSize(QSize(90, 28))
-        self.lineEdit_incident_pressure_imag.setFont(font3)
-        self.lineEdit_incident_pressure_imag.setStyleSheet(u"")
-        self.lineEdit_incident_pressure_imag.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.gridLayout.addWidget(self.lineEdit_incident_pressure_imag, 3, 3, 1, 1)
-
         self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.gridLayout.addItem(self.horizontalSpacer_3, 3, 0, 1, 1)
 
-        self.label_incident_pressure_constant = QLabel(self.frame_8)
-        self.label_incident_pressure_constant.setObjectName(u"label_incident_pressure_constant")
-        self.label_incident_pressure_constant.setMinimumSize(QSize(110, 28))
-        self.label_incident_pressure_constant.setMaximumSize(QSize(140, 28))
-        self.label_incident_pressure_constant.setFont(font3)
-        self.label_incident_pressure_constant.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+        self.label_pinc1_constant = QLabel(self.frame_8)
+        self.label_pinc1_constant.setObjectName(u"label_pinc1_constant")
+        self.label_pinc1_constant.setMinimumSize(QSize(170, 28))
+        self.label_pinc1_constant.setMaximumSize(QSize(180, 28))
+        self.label_pinc1_constant.setFont(font3)
+        self.label_pinc1_constant.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
-        self.gridLayout.addWidget(self.label_incident_pressure_constant, 3, 1, 1, 1)
+        self.gridLayout.addWidget(self.label_pinc1_constant, 4, 1, 1, 1)
 
-        self.label_5 = QLabel(self.frame_8)
-        self.label_5.setObjectName(u"label_5")
-        self.label_5.setMinimumSize(QSize(80, 26))
-        self.label_5.setMaximumSize(QSize(80, 26))
-        self.label_5.setFont(font3)
-        self.label_5.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.label_pinc1_unit = QLabel(self.frame_8)
+        self.label_pinc1_unit.setObjectName(u"label_pinc1_unit")
+        self.label_pinc1_unit.setMinimumSize(QSize(40, 26))
+        self.label_pinc1_unit.setMaximumSize(QSize(40, 26))
+        self.label_pinc1_unit.setFont(font3)
+        self.label_pinc1_unit.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
 
-        self.gridLayout.addWidget(self.label_5, 2, 3, 1, 1)
-
-        self.label_4 = QLabel(self.frame_8)
-        self.label_4.setObjectName(u"label_4")
-        self.label_4.setMinimumSize(QSize(80, 26))
-        self.label_4.setMaximumSize(QSize(80, 26))
-        self.label_4.setFont(font3)
-        self.label_4.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.gridLayout.addWidget(self.label_4, 2, 2, 1, 1)
+        self.gridLayout.addWidget(self.label_pinc1_unit, 4, 3, 1, 1)
 
         self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gridLayout.addItem(self.horizontalSpacer_4, 3, 5, 1, 1)
-
-        self.label_21 = QLabel(self.frame_8)
-        self.label_21.setObjectName(u"label_21")
-        self.label_21.setMinimumSize(QSize(20, 28))
-        self.label_21.setMaximumSize(QSize(40, 28))
-        self.label_21.setFont(font3)
-        self.label_21.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
-
-        self.gridLayout.addWidget(self.label_21, 3, 4, 1, 1)
-
-        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-
-        self.gridLayout.addItem(self.verticalSpacer, 0, 2, 1, 1)
+        self.gridLayout.addItem(self.horizontalSpacer_4, 3, 4, 1, 1)
 
         self.verticalSpacer_2 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
-        self.gridLayout.addItem(self.verticalSpacer_2, 4, 2, 1, 1)
+        self.gridLayout.addItem(self.verticalSpacer_2, 5, 2, 1, 1)
+
+        self.label_pinc0_constant = QLabel(self.frame_8)
+        self.label_pinc0_constant.setObjectName(u"label_pinc0_constant")
+        self.label_pinc0_constant.setMinimumSize(QSize(170, 28))
+        self.label_pinc0_constant.setMaximumSize(QSize(180, 28))
+        self.label_pinc0_constant.setFont(font3)
+        self.label_pinc0_constant.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+
+        self.gridLayout.addWidget(self.label_pinc0_constant, 3, 1, 1, 1)
+
+        self.lineEdit_incident_pressure_imag = QLineEdit(self.frame_8)
+        self.lineEdit_incident_pressure_imag.setObjectName(u"lineEdit_incident_pressure_imag")
+        self.lineEdit_incident_pressure_imag.setMinimumSize(QSize(100, 28))
+        self.lineEdit_incident_pressure_imag.setMaximumSize(QSize(100, 28))
+        self.lineEdit_incident_pressure_imag.setFont(font3)
+        self.lineEdit_incident_pressure_imag.setStyleSheet(u"")
+        self.lineEdit_incident_pressure_imag.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout.addWidget(self.lineEdit_incident_pressure_imag, 4, 2, 1, 1)
+
+        self.frame_5 = QFrame(self.frame_8)
+        self.frame_5.setObjectName(u"frame_5")
+        self.frame_5.setMinimumSize(QSize(0, 36))
+        self.frame_5.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_5.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_13 = QGridLayout(self.frame_5)
+        self.gridLayout_13.setObjectName(u"gridLayout_13")
+        self.gridLayout_13.setContentsMargins(-1, 2, -1, 2)
+        self.horizontalSpacer_7 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_13.addItem(self.horizontalSpacer_7, 0, 3, 1, 1)
+
+        self.comboBox_input_mode = QComboBox(self.frame_5)
+        self.comboBox_input_mode.addItem("")
+        self.comboBox_input_mode.addItem("")
+        self.comboBox_input_mode.setObjectName(u"comboBox_input_mode")
+        self.comboBox_input_mode.setFont(font2)
+
+        self.gridLayout_13.addWidget(self.comboBox_input_mode, 0, 2, 1, 1)
+
+        self.label_incident_pressure_input_mode = QLabel(self.frame_5)
+        self.label_incident_pressure_input_mode.setObjectName(u"label_incident_pressure_input_mode")
+        self.label_incident_pressure_input_mode.setMinimumSize(QSize(110, 28))
+        self.label_incident_pressure_input_mode.setMaximumSize(QSize(140, 28))
+        self.label_incident_pressure_input_mode.setFont(font3)
+        self.label_incident_pressure_input_mode.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+
+        self.gridLayout_13.addWidget(self.label_incident_pressure_input_mode, 0, 1, 1, 1)
+
+        self.horizontalSpacer_10 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_13.addItem(self.horizontalSpacer_10, 0, 0, 1, 1)
+
+
+        self.gridLayout.addWidget(self.frame_5, 1, 0, 1, 5)
 
 
         self.gridLayout_12.addWidget(self.frame_8, 1, 0, 1, 1)
@@ -576,8 +612,7 @@ class Ui_Dialog(object):
 
         QWidget.setTabOrder(self.comboBox_wave_direction, self.tabWidget_main)
         QWidget.setTabOrder(self.tabWidget_main, self.lineEdit_incident_pressure_real)
-        QWidget.setTabOrder(self.lineEdit_incident_pressure_real, self.lineEdit_incident_pressure_imag)
-        QWidget.setTabOrder(self.lineEdit_incident_pressure_imag, self.lineEdit_component_x)
+        QWidget.setTabOrder(self.lineEdit_incident_pressure_real, self.lineEdit_component_x)
         QWidget.setTabOrder(self.lineEdit_component_x, self.lineEdit_component_y)
         QWidget.setTabOrder(self.lineEdit_component_y, self.lineEdit_component_z)
         QWidget.setTabOrder(self.lineEdit_component_z, self.pushButton_remove)
@@ -603,10 +638,14 @@ class Ui_Dialog(object):
         Dialog.setWhatsThis("")
 #endif // QT_CONFIG(whatsthis)
         self.label.setText(QCoreApplication.translate("Dialog", u"Incident plane wave setup", None))
-        self.label_incident_pressure_constant.setText(QCoreApplication.translate("Dialog", u"Incident pressure:", None))
-        self.label_5.setText(QCoreApplication.translate("Dialog", u"Imaginary", None))
-        self.label_4.setText(QCoreApplication.translate("Dialog", u"Real", None))
-        self.label_21.setText(QCoreApplication.translate("Dialog", u"[Pa]", None))
+        self.label_pinc0_unit.setText(QCoreApplication.translate("Dialog", u"[Pa]", None))
+        self.label_pinc1_constant.setText(QCoreApplication.translate("Dialog", u"Incident pressure (imag.):", None))
+        self.label_pinc1_unit.setText(QCoreApplication.translate("Dialog", u"[Pa]", None))
+        self.label_pinc0_constant.setText(QCoreApplication.translate("Dialog", u"Incident pressure (real):", None))
+        self.comboBox_input_mode.setItemText(0, QCoreApplication.translate("Dialog", u"Real and imaginary", None))
+        self.comboBox_input_mode.setItemText(1, QCoreApplication.translate("Dialog", u"Amplitude and phase", None))
+
+        self.label_incident_pressure_input_mode.setText(QCoreApplication.translate("Dialog", u"Input mode:", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_constant_data), QCoreApplication.translate("Dialog", u"Constant data", None))
         self.pushButton_load_table.setText("")
         self.label_3.setText(QCoreApplication.translate("Dialog", u"Choose a table file to import the data", None))
@@ -653,12 +692,16 @@ class IncidentPlaneWaveInputs_UI(QDialog, Ui_Dialog):
                                     - (Layout): QGridLayout
                                             - frame_8: QFrame
                                                 - (Layout): QGridLayout
+                                                        - label_pinc0_unit: QLabel
                                                         - lineEdit_incident_pressure_real: QLineEdit
+                                                        - label_pinc1_constant: QLabel
+                                                        - label_pinc1_unit: QLabel
+                                                        - label_pinc0_constant: QLabel
                                                         - lineEdit_incident_pressure_imag: QLineEdit
-                                                        - label_incident_pressure_constant: QLabel
-                                                        - label_5: QLabel
-                                                        - label_4: QLabel
-                                                        - label_21: QLabel
+                                                        - frame_5: QFrame
+                                                            - (Layout): QGridLayout
+                                                                    - comboBox_input_mode: QComboBox
+                                                                    - label_incident_pressure_input_mode: QLabel
                                 - tab_tabular_data: QWidget
                                     - (Layout): QGridLayout
                                             - frame_9: QFrame
