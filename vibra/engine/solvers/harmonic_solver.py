@@ -2,6 +2,7 @@ import logging
 from time import time
 from typing import Optional
 
+import h5py
 import numpy as np
 
 from vibra.engine.analysis_info import HarmonicAnalysisSetup
@@ -117,23 +118,6 @@ class HarmonicSolver:
             linear_solver.clear_memory()
             del A, f
 
-    def _get_linear_solver(self, eigenvectors, new_instance: bool = False) -> LinearSolver:
-        if self._linear_solver is None or new_instance:
-            if eigenvectors is not None:
-                linear_solver = initialize_solver(SolverType.MODAL_SUPERPOSITION, eigenvectors=eigenvectors)
-            elif isinstance(self.assembler, StructuralAssembler):
-                linear_solver = initialize_solver(SolverType.PARDISO, is_symmetric=True)
-            else:
-                linear_solver = initialize_solver(SolverType.PARDISO)
-
-        if new_instance:
-            return linear_solver
-        elif self._linear_solver is not None:
-            return self._linear_solver
-        else:
-            self._linear_solver = linear_solver
-            return linear_solver
-
     def solve_mode_superposition(
         self,
         print_log: bool = False,
@@ -221,8 +205,24 @@ class HarmonicSolver:
             nodal_solution_buffer[:, i] = solution_freq
 
             if isinstance(self._file_writer, LazyHDF5MatrixWriter):
-                # reinsert the prescribed degrees of freedom into the solution vector
-                solution_freq = self.assembler.reinsert_the_prescribed_dof_into_solution_freq(solution_freq, i)
+                self._file_writer[:, i] = solution_freq
+
+    def _get_linear_solver(self, eigenvectors, new_instance: bool = False) -> LinearSolver:
+        if self._linear_solver is None or new_instance:
+            if eigenvectors is not None:
+                linear_solver = initialize_solver(SolverType.MODAL_SUPERPOSITION, eigenvectors=eigenvectors)
+            elif isinstance(self.assembler, StructuralAssembler):
+                linear_solver = initialize_solver(SolverType.PARDISO, is_symmetric=True)
+            else:
+                linear_solver = initialize_solver(SolverType.PARDISO)
+
+        if new_instance:
+            return linear_solver
+        elif self._linear_solver is not None:
+            return self._linear_solver
+        else:
+            self._linear_solver = linear_solver
+            return linear_solver
 
     def _initialize_file_writer(self, is_resume: bool):
         if self.project_paths is None:
@@ -247,7 +247,10 @@ class HarmonicSolver:
         self._file_writer = None
 
     def _get_nodal_solution_buffer(self, is_resume: bool):
-        # do something to load the current solution
+        if is_resume and (self.project_paths is not None):
+            # loads partial solution to be used as an in-memory buffer
+            with h5py.File(self.project_paths.harmonic_solution_filepath, "r") as file:
+                return np.array(file["solution"])
 
         num_rows = self.assembler.total_dof
         num_cols = len(self.assembler.frequencies)
