@@ -412,17 +412,25 @@ class ProjectReader:
 
     def read_solution(self, model: Model) -> Optional[Solution]:
         if model.analysis_id.is_harmonic():
-            return self.read_harmonic_solution()
+            return self.read_harmonic_solution(model)
         elif model.analysis_id.is_modal():
             return self.read_modal_solution(model)
         else:
             return None
 
-    def read_harmonic_solution(self) -> Optional[HarmonicSolution]:
+    def read_harmonic_solution(self, model: Model) -> Optional[HarmonicSolution]:
         if not self.project_paths.harmonic_solution_filepath.exists():
             return None
 
-        return LazyHarmonicSolution(self.project_paths)
+        with h5py.File(self.project_paths.harmonic_solution_filepath, "r") as file:
+            file: h5py.File
+
+            return HarmonicSolution(
+                analysis_id=model.analysis_id,
+                frequencies=file["frequencies"],
+                nodal_solution=file["solution"],
+                status=file["solution_status"],
+            )
 
     def read_modal_solution(self, model: Model) -> Optional[ModalSolution]:
         if not self.project_paths.modal_solution_filepath.exists():
@@ -465,11 +473,6 @@ class ProjectReader:
             return None, None
 
         return assembler, solver
-
-    def get_solution_loader(self) -> Optional[LazyHDF5MatrixLoader]:
-        if not self.project_paths.harmonic_solution_filepath.exists():
-            return None
-        return LazyHDF5MatrixLoader(self.project_paths.harmonic_solution_filepath)
 
     def _property_key(self, str: str) -> tuple[str, int | tuple[int, ...]]:
         """
