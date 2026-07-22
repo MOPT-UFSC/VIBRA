@@ -53,8 +53,8 @@ class HarmonicSolver:
         if isinstance(self.assembler, StructuralAssembler):
             self.displacement_dof = self.assembler.displacement_dof
 
+        nodal_solution_buffer = self._get_nodal_solution_buffer(is_resume)
         self._initialize_file_writer(is_resume)
-        nodal_solution_buffer = self._get_nodal_solution_buffer()
         self.compute_frequency_sweep(nodal_solution_buffer, print_log, is_resume)
         self._close_file_writer()
 
@@ -73,76 +73,13 @@ class HarmonicSolver:
 
         return self.solution
 
-    def _initialize_file_writer(self, is_resume: bool):
-        if self.project_paths is None:
-            return
-
-        self._file_writer = LazyHDF5MatrixWriter(
-            self.project_paths.harmonic_solution_filepath,
-            self.assembler.total_dof,
-            self.assembler.frequencies,
-            dtype=complex,
-            is_resume=is_resume,
-        )
-
-        if self.displacement_dof is not None:
-            self._file_writer.save_extra_data("displacement_dof", self.displacement_dof, dtype=int)
-
-    def _close_file_writer(self):
-        if self._file_writer is None:
-            return
-
-        self._file_writer.close()
-        self._file_writer = None
-
-    def _get_nodal_solution_buffer(self):
-        num_rows = self.assembler.total_dof
-        num_cols = len(self.assembler.frequencies)
-        solution = np.zeros((num_rows, num_cols), dtype=complex)
-        return solution
-
-    # TODO: remove
-    def _get_solution_handler(self, is_resume):
-        if isinstance(self.assembler, StructuralAssembler):
-            self.displacement_dof = self.assembler.displacement_dof
-
-        if self.project_paths is None:
-            num_rows = self.assembler.stiffness_matrix.shape[0]
-            solution = np.zeros((num_rows, len(self.frequencies)), dtype=complex)
-            return solution
-
-        num_rows = self.assembler.total_dof
-        solution = LazyHDF5MatrixWriter(
-            self.project_paths.harmonic_solution_filepath,
-            self.assembler.total_dof,
-            self.assembler.frequencies,
-            dtype=complex,
-            is_resume=is_resume,
-        )
-
-        if self.displacement_dof is not None:
-            solution.save_extra_data("displacement_dof", self.displacement_dof, dtype=int)
-
-        return solution
-
-    # TODO: remove
-    def _close_solution_handler(self, solution) -> HarmonicSolution | LazyHarmonicSolution:
-        if isinstance(solution, LazyHDF5MatrixWriter):
-            solution.close()
-            if self.assembler.model.stop_processing:
-                self.reset_variables()
-
-            return LazyHarmonicSolution(self.project_paths)
-
-        else:
-            return HarmonicSolution(
-                analysis_id=self.assembler.model.analysis_id,
-                frequencies=self.assembler.model.frequencies,
-                nodal_solution=self.assembler.reinsert_the_prescribed_dof(solution),
-                displacement_dof=self.displacement_dof,
-            )
-
-    def compute_frequency_sweep(self, solution, print_log, is_resume, eigenvectors=None):
+    def compute_frequency_sweep(
+        self,
+        nodal_solution_buffer: np.ndarray,
+        print_log: bool,
+        is_resume: bool,
+        eigenvectors=None,
+    ):
 
         # frequencies vector [in hertz]
         frequencies = self.frequencies
@@ -154,7 +91,7 @@ class HarmonicSolver:
 
             logging.info(f"Solution step {i + 1} and frequency {freq} Hz [{i + 1}/{len(frequencies)}]")
 
-            if is_resume and (i != 0) and isinstance(solution, LazyHDF5MatrixWriter) and solution.has_column(i):
+            if is_resume and (i != 0) and isinstance(self._file_writer, LazyHDF5MatrixWriter) and self._file_writer.has_column(i):
                 continue
 
             if print_log:
@@ -171,7 +108,7 @@ class HarmonicSolver:
 
             solution_freq = linear_solver.solve(A, f)
             solution_freq = self.assembler.reinsert_the_prescribed_dof_into_solution_freq(solution_freq, i)
-            solution[:, i] = solution_freq
+            nodal_solution_buffer[:, i] = solution_freq
 
             if self._file_writer is not None:
                 self._file_writer[:, i] = solution_freq
@@ -204,29 +141,48 @@ class HarmonicSolver:
         is_proportionally_damped: bool = False,
     ) -> HarmonicSolution:
         logging.info("Solving harmonic analysis (mode superposition method)... [10/100]")
-        solution = self._get_solution_handler(is_resume)
-
         t0 = time()
         modal_solver = ModalSolver(self.assembler)
         modal_solution = modal_solver.solve(full_solution=False)
         dt = time() - t0
         print(f"Elapsed time to solve modal analysis: {dt: .6f} [s]")
 
+        nodal_solution_buffer = self._get_nodal_solution_buffer(is_resume)
+        self._initialize_file_writer(is_resume)
+
         if is_proportionally_damped:
             self.compute_proportionally_damped_frequency_sweep(
-                solution,
+                nodal_solution_buffer,
                 modal_solution.modal_shapes,
                 modal_solution.natural_frequencies,
                 print_log,
                 is_resume,
             )
         else:
-            self.compute_frequency_sweep(solution, print_log, is_resume)
+            self.compute_frequency_sweep(
+                nodal_solution_buffer,
+                print_log,
+                is_resume,
+            )
 
-        self.solution = self._close_solution_handler(solution)
+        self._close_file_writer()
+        self.solution = HarmonicSolution(
+            analysis_id=self.assembler.model.analysis_id,
+            frequencies=self.assembler.model.frequencies,
+            nodal_solution=nodal_solution_buffer,
+            displacement_dof=self.displacement_dof,
+        )
+
         return self.solution
 
-    def compute_proportionally_damped_frequency_sweep(self, solution, modes, natural_frequencies, print_log, is_resume):
+    def compute_proportionally_damped_frequency_sweep(
+        self,
+        nodal_solution_buffer: np.ndarray,
+        modal_shapes: np.ndarray,
+        natural_frequencies: np.ndarray,
+        print_log: bool,
+        is_resume: bool,
+    ):
         # frequencies vector [in hertz]
         frequencies = self.frequencies
 
@@ -240,14 +196,14 @@ class HarmonicSolver:
         omega_n = 2 * np.pi * natural_frequencies
 
         # Phi is the matrix of the eigenvectors
-        Phi = modes
+        Phi = modal_shapes
         Phi_t = Phi.T
 
         # compute the solution for each frequency step
         for i, freq in enumerate(frequencies):
             logging.info(f"Solution step {i + 1} and frequency {freq} Hz [{i + 1}/{len(frequencies)}]")
 
-            if is_resume and i != 0 and isinstance(solution, LazyHDF5MatrixWriter) and solution.has_column(i):
+            if is_resume and i != 0 and isinstance(self._file_writer, LazyHDF5MatrixWriter) and self._file_writer.has_column(i):
                 continue
 
             if print_log:
@@ -261,9 +217,39 @@ class HarmonicSolver:
 
             # compute the solution for each frequency step
             solution_freq = Phi @ (diag @ (Phi_t @ f))
+            solution_freq = self.assembler.reinsert_the_prescribed_dof_into_solution_freq(solution_freq, i)
+            nodal_solution_buffer[:, i] = solution_freq
 
-            if isinstance(solution, LazyHDF5MatrixWriter):
+            if isinstance(self._file_writer, LazyHDF5MatrixWriter):
                 # reinsert the prescribed degrees of freedom into the solution vector
                 solution_freq = self.assembler.reinsert_the_prescribed_dof_into_solution_freq(solution_freq, i)
 
-            solution[:, i] = solution_freq
+    def _initialize_file_writer(self, is_resume: bool):
+        if self.project_paths is None:
+            return
+
+        self._file_writer = LazyHDF5MatrixWriter(
+            self.project_paths.harmonic_solution_filepath,
+            self.assembler.total_dof,
+            self.assembler.frequencies,
+            dtype=complex,
+            is_resume=is_resume,
+        )
+
+        if self.displacement_dof is not None:
+            self._file_writer.save_extra_data("displacement_dof", self.displacement_dof, dtype=int)
+
+    def _close_file_writer(self):
+        if self._file_writer is None:
+            return
+
+        self._file_writer.close()
+        self._file_writer = None
+
+    def _get_nodal_solution_buffer(self, is_resume: bool):
+        # do something to load the current solution
+
+        num_rows = self.assembler.total_dof
+        num_cols = len(self.assembler.frequencies)
+        solution = np.zeros((num_rows, num_cols), dtype=complex)
+        return solution
