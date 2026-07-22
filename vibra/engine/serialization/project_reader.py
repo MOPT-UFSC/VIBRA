@@ -19,9 +19,7 @@ from vibra.engine.model import Model
 from vibra.engine.properties import Fluid, FluidLibrary, Material, MaterialLibrary
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.engine.serialization.file_helpers import read_image, read_json
-from vibra.engine.serialization.lazy_hdf5_matrix import LazyHDF5MatrixLoader
 from vibra.engine.solution import HarmonicSolution, ModalSolution, Solution
-from vibra.engine.solution.lazy_harmonic_solution import LazyHarmonicSolution
 from vibra.engine.solvers import HarmonicSolver, ModalSolver
 
 from .project_paths import ProjectPaths
@@ -463,13 +461,12 @@ class ProjectReader:
         if model.analysis_id.is_harmonic():
             solver = HarmonicSolver(assembler)
             if self.project_paths.harmonic_solution_filepath.exists():
-                solver.nodal_solution = LazyHDF5MatrixLoader(self.project_paths.harmonic_solution_filepath)
+                solver.solution = self.read_harmonic_solution(model)
 
         elif model.analysis_id.is_modal():
             solver = ModalSolver(assembler)
             if self.project_paths.modal_solution_filepath.exists():
-                solver.nodal_solution = LazyHDF5MatrixLoader(self.project_paths.modal_solution_filepath)
-
+                solver.solution = self.read_modal_solution(model)
         else:
             return None, None
 
