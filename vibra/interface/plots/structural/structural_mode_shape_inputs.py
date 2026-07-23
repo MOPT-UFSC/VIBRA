@@ -6,7 +6,6 @@ from PySide6.QtWidgets import QGridLayout, QTreeWidgetItem
 from vibra import app
 from vibra.engine.solution import ModalSolution
 from vibra.interface.common.common_interface import export_modal_analysis_results
-from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.plots.general.animation_widget import AnimationWidget
 from vibra.interface.ui_generated.plots.structural.structural_mode_shape_inputs_ui import StructuralModeShapeInputs_UI
@@ -18,7 +17,6 @@ class PlotStructuralModeShapeInputs(StructuralModeShapeInputs_UI):
         super().__init__(*args, **kwargs)
 
         self._initialize()
-        self._paint_icons()
         self._create_connections()
         self.add_animation_widget()
 
@@ -44,8 +42,6 @@ class PlotStructuralModeShapeInputs(StructuralModeShapeInputs_UI):
         #
         self.treeWidget_frequencies.itemClicked.connect(self.on_click_item)
         self.treeWidget_frequencies.itemDoubleClicked.connect(self.on_click_item)
-        #
-        app().main_window.theme_changed.connect(self._paint_icons)
         #
         self.load_user_preference_colormap()
 
@@ -85,20 +81,6 @@ class PlotStructuralModeShapeInputs(StructuralModeShapeInputs_UI):
                 self.treeWidget_frequencies.setColumnWidth(i, widths[i])
 
             self.treeWidget_frequencies.headerItem().setTextAlignment(i, Qt.AlignCenter)
-
-    def _paint_icons(self):
-
-        icon_color = None
-        theme = app().config.user_preferences.interface_theme
-        from vibra import DARK_ICON_COLOR, LIGHT_ICON_COLOR
-        if theme == "dark":
-            icon_color = DARK_ICON_COLOR.to_qt()
-        else:
-            icon_color = LIGHT_ICON_COLOR.to_qt()
-
-        widgets = [self.pushButton_export_results]
-
-        change_icon_color_for_widgets(widgets, icon_color)
 
     def update_animation_widget_visibility(self):
         return

@@ -12,7 +12,6 @@ from vibra import app
 from vibra.engine.analysis_info import AnalysisID, FrequencySpacing, HarmonicAnalysisSetup
 from vibra.interface import error_title
 from vibra.interface.common.common_interface import mesher_interface_callback
-from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
@@ -32,7 +31,6 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         self._configure_qt_variables()
         self._create_connections()
 
-        self._paint_icons()
         self._load_analysis_setup()
         self.geometry_selection_callback()
 
@@ -90,7 +88,6 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         self.pushButton_search.clicked.connect(self.search_callback)
         #
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
-        app().main_window.theme_changed.connect(self._paint_icons)
         #
         self.clickable(self.lineEdit_input_selected_id).connect(self.lineEdit_1_clicked)
         self.clickable(self.lineEdit_output_selected_id).connect(self.lineEdit_2_clicked)
@@ -501,20 +498,6 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         if self.element_transfer_data:
             path = self.lineEdit_spreadsheet_path.text()
             self.export_data_in_spreadsheet_format(path)
-
-    def _paint_icons(self):
-        icon_color = None
-        theme = app().config.user_preferences.interface_theme
-
-        from vibra import DARK_ICON_COLOR, LIGHT_ICON_COLOR
-
-        if theme == "dark":
-            icon_color = DARK_ICON_COLOR.to_qt()
-        else:
-            icon_color = LIGHT_ICON_COLOR.to_qt()
-
-        widgets = [self.pushButton_invert_selection, self.pushButton_search]
-        change_icon_color_for_widgets(widgets, icon_color)
 
     def print_final_message(self):
 

@@ -19,6 +19,8 @@ from PySide6.QtWidgets import (QApplication, QDialog, QFrame, QGridLayout,
     QLabel, QLineEdit, QPushButton, QSizePolicy,
     QWidget)
 
+from vibra.interface.formatters.icons import Icon
+
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
@@ -163,8 +165,7 @@ class Ui_Dialog(object):
         font3.setItalic(False)
         self.pushButton_choose_folder_export.setFont(font3)
         self.pushButton_choose_folder_export.setStyleSheet(u"")
-        icon = QIcon()
-        icon.addFile(u":/icons/import.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon = Icon(u":/icons/import.png")
         self.pushButton_choose_folder_export.setIcon(icon)
         self.pushButton_choose_folder_export.setIconSize(QSize(20, 20))
 

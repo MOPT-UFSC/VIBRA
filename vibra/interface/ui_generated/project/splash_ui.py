@@ -18,6 +18,8 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
 from PySide6.QtWidgets import (QApplication, QFrame, QGridLayout, QLabel,
     QProgressBar, QSizePolicy, QWidget)
 
+from vibra.interface.formatters.icons import Icon
+
 class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
@@ -30,8 +32,7 @@ class Ui_Form(object):
         Form.setSizePolicy(sizePolicy)
         Form.setMinimumSize(QSize(500, 280))
         Form.setMaximumSize(QSize(500, 280))
-        icon = QIcon()
-        icon.addFile(u":/icons/logo_vibra.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon = Icon(u":/logos/circles/vibra_circle_colored_other_background.png")
         Form.setWindowIcon(icon)
         Form.setStyleSheet(u"background-color: qlineargradient(spread:pad, x1:0.506, y1:0, x2:0.494318, y2:1, stop:0 #3e424d, stop:0.823864 #0b0f17, stop:1 #0b0f17);")
         self.gridLayout = QGridLayout(Form)

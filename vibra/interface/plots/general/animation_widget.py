@@ -12,14 +12,13 @@ from PySide6.QtWidgets import (
     QSpinBox,
 )
 
-from vibra import DARK_ICON_COLOR, ICON_DIR, LIGHT_ICON_COLOR, app
+from vibra import app
 from vibra.engine.analysis_info import PhysicalDomain
 from vibra.interface import error_title
-
+from vibra.interface.formatters.icons import Icon
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.ui_generated.plots.general.animation_widget_ui import AnimationWidget_UI
-from vibra.utils.icons import load_icon
 
 
 class AnimationWidget(AnimationWidget_UI):
@@ -39,16 +38,9 @@ class AnimationWidget(AnimationWidget_UI):
         self.current_render_widget = None
 
     def _configure_icons(self):
-        icon_color = None
-        theme = app().config.user_preferences.interface_theme
-        if theme == "dark":
-            icon_color = DARK_ICON_COLOR.to_qt()
-        else:
-            icon_color = LIGHT_ICON_COLOR.to_qt()
-
-        self.play_icon = load_icon(ICON_DIR / "play.png", icon_color)
-        self.pause_icon = load_icon(ICON_DIR / "pause.png", icon_color)
-        self.save_animation_icon = load_icon(ICON_DIR / "create_video_icon.png", icon_color)
+        self.play_icon = Icon(":/icons/play.png")
+        self.pause_icon = Icon(":/icons/pause.png")
+        self.save_animation_icon = Icon(":/icons/create_video_icon.png")
 
     def _config_widgets(self):
 
@@ -114,7 +106,6 @@ class AnimationWidget(AnimationWidget_UI):
 
         app().main_window.render_widget_changed.connect(self.update_current_render_widget)
         app().main_window.render_widget_changed.connect(self.update_toolbar)
-        app().main_window.theme_changed.connect(self._configure_icons)
 
     def update_toolbar(self):
         current_domain = app().main_window.analysis_toolbar.combo_box_physical_domain.currentText()
