@@ -73,7 +73,6 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.render_interactor.GetRenderWindow().SetMultiSamples(0)
 
         self.visualization_filter = VisualizationFilter(
-            points=True,
             lines=True,
             faces=True,
             solids=True,

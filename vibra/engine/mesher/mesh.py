@@ -1726,7 +1726,7 @@ class Mesh:
         node_ids: list[int] | np.ndarray | None = None,
         surface_id: int | None = None,
         return_nodes: bool = False,
-    ) -> tuple[dict, np.ndarray]:
+    ) -> dict[int, np.ndarray]:
         """
         This method processes the solid elements connected to the nodes.
         It returns a dictionary mapping the node IDs to the solid element IDs.
@@ -1896,10 +1896,12 @@ class Mesh:
             for i, e_nodes in enumerate(inside_face_connectivity):
                 mask = np.sum(np.isin(filt_element3d_connect, e_nodes), axis=1) == 3
                 connect_3d = filt_element3d_connect[mask, :].flatten()
+                if connect_3d.size == 0:
+                    print(f"No solid element touches the surface nodes: {e_nodes}")
 
-                coords = self.nodal_coordinates[e_nodes[0], 1:]
-                center_coords = np.average(self.nodal_coordinates[connect_3d, 1:], axis=0)
-                vector_inside = center_coords - coords
+                center_coords_2d = np.average(self.nodal_coordinates[e_nodes, 1:], axis=0)
+                center_coords_3d = np.average(self.nodal_coordinates[connect_3d, 1:], axis=0)
+                vector_inside = center_coords_3d - center_coords_2d
                 dot_product = np.dot(norm_cross[i, :], vector_inside)
 
                 factor = 1 if dot_product < 0 else -1
@@ -2224,6 +2226,8 @@ class Mesh:
 
             elif dim == 2:
                 self.area_from_surfaces[tag] = value * (unit_factor**2)
+                if self.area_from_surfaces[tag] == 0:
+                    continue
 
                 uv_min, uv_max = gmsh.model.getParametrizationBounds(dim, tag)
                 uv_mid = (uv_min + uv_max) / 2
@@ -2411,7 +2415,7 @@ class Mesh:
         return self.surfaces_centers.get(surface_id)
 
     def get_element_face_normal(self, connect: np.ndarray):
-
+        
         coords = self.nodal_coordinates[connect, 1:]
 
         P1 = coords[0, :]
@@ -2424,12 +2428,26 @@ class Mesh:
         cross = np.cross(P2P1, P3P1)
         norm_cross = np.linalg.norm(cross)
 
-        if norm_cross == 0:
-            return 0.0
+        if not norm_cross:
+            return 0
 
-        normal = cross / np.linalg.norm(cross)
+        cross /= norm_cross
 
-        return normal
+        if self.solids_connectivity.size:
+
+            mask = np.sum(np.isin(self.solids_connectivity[:, 4:], connect), axis=1) == len(connect)
+            solid_element_id = self.solids_connectivity[mask, 0]
+            solid_connectivity = self.solids_connectivity[solid_element_id, 4:].flatten()
+
+            face_element_center = np.average(coords, axis=0)
+            solid_element_center = np.average(self.nodal_coordinates[solid_connectivity, 1:], axis=0)
+            vector = solid_element_center - face_element_center
+
+            if np.dot(cross, vector) > 0:
+                cross *= -1
+                print(f"The element face normal has been inverted -> corresponding solid element {solid_element_id}.")
+
+        return cross
 
     def set_nodal_normals_data(self, surface_id: int, normals_data: dict):
         for node_id, nodal_normal in normals_data.items():

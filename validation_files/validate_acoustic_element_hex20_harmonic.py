@@ -62,8 +62,8 @@ def load_external_mesh_and_solve():
 
     mesh = Mesh()
     mesh.import_external_nodal_coordinates(external_mesh.nodal_coordinates, index_zero=True)
-    mesh.import_external_solids_connectivity(external_mesh.solids_connectivities, index_zero=True, etype_tag=11)
     mesh.import_external_faces_connectivity(external_mesh.faces_connectivities, index_zero=True, etype_tag=9)
+    mesh.import_external_solids_connectivity(external_mesh.solids_connectivities, index_zero=True, etype_tag=11)
     mesh.export_nodal_coordinates("nodal_coordinates.dat")
     mesh.export_solid_elements_connectivity("solids_connectivity.dat")
     mesh.export_face_elements_connectivity("faces_connectivity.dat")
@@ -190,11 +190,8 @@ def load_external_mesh_and_solve():
     input_particle_velocities = acoustic_post.get_particle_velocity_from_surface(1, volume_id=1)
     output_particle_velocities = acoustic_post.get_particle_velocity_from_surface(2, volume_id=2)
 
-    # input_velocities = np.array(list(input_particle_velocities["Vx"].values()), dtype=complex)
-    # output_velocities = np.array(list(output_particle_velocities["Vx"].values()), dtype=complex)
-
-    # input_Vx = np.average(input_velocities, axis=0)
-    # output_Vx = np.average(output_velocities, axis=0)
+    # input_Vx = np.average(input_particle_velocities.Vx_array(), axis=0)
+    # output_Vx = np.average(output_particle_velocities.Vx_array(), axis=0)
 
     dt = time() - t0
     print(f"Elapsed time to post-process data: {round(dt, 4)}")
@@ -236,11 +233,11 @@ def load_external_mesh_and_solve():
     abs_diff_node_Pout = np.abs((output_pressures_WB[node_out] - nodal_solution[node_out - 1, :]) / (output_pressures_WB[node_out]))
     print(f"Deviation of pressure (node {node_out}): {100 * np.max(abs_diff_node_Pout)} %")
 
-    abs_diff_node_Vin = np.abs((input_velocities_WB[node_in] - input_particle_velocities["Vx"][node_in - 1]) / (input_velocities_WB[node_in]))
+    abs_diff_node_Vin = np.abs((input_velocities_WB[node_in] - input_particle_velocities.Vx[node_in - 1]) / (input_velocities_WB[node_in]))
     print(f"Deviation of particle velocity (node {node_in}): {100 * np.max(abs_diff_node_Vin)} %")
 
     abs_diff_node_Vout = np.abs(
-        (output_velocities_WB[node_out] - output_particle_velocities["Vx"][node_out - 1]) / (output_velocities_WB[node_out])
+        (output_velocities_WB[node_out] - output_particle_velocities.Vx[node_out - 1]) / (output_velocities_WB[node_out])
     )
     print(f"Deviation of particle velocity (node {node_out}): {100 * np.max(abs_diff_node_Vout)} %")
 
@@ -315,7 +312,7 @@ def load_external_mesh_and_solve():
 
     fig7, ax7 = plt.subplots()
     title = f"Particle velocity at node {node_in}"
-    ax7.semilogy(frequencies, data_type(input_particle_velocities["Vx"][node_in - 1]), "r", label="Vibra")
+    ax7.semilogy(frequencies, data_type(input_particle_velocities.Vx[node_in - 1]), "r", label="Vibra")
     ax7.semilogy(freq_WB, data_type(input_velocities_WB[node_in]), "k--", label="Ansys")
     ax7.set_xlabel("Frequency [Hz]")
     ax7.set_ylabel(f"Particle velocity [m/s] - {type_label}")
@@ -325,7 +322,7 @@ def load_external_mesh_and_solve():
 
     fig8, ax8 = plt.subplots()
     title = f"Particle velocity at node {node_out}"
-    ax8.semilogy(frequencies, data_type(output_particle_velocities["Vx"][node_out - 1]), "r", label="Vibra")
+    ax8.semilogy(frequencies, data_type(output_particle_velocities.Vx[node_out - 1]), "r", label="Vibra")
     ax8.semilogy(freq_WB, data_type(output_velocities_WB[node_out]), "k--", label="Ansys")
     ax8.set_xlabel("Frequency [Hz]")
     ax8.set_ylabel(f"Particle velocity [m/s] - {type_label}")

@@ -102,7 +102,7 @@ class ExternalMeshData():
                     if len(coordinates) == 4:
                         self.nodal_coordinates.append(coordinates)
 
-                except:
+                except Exception:
                     self.modo = None
                     pass
 
@@ -194,7 +194,7 @@ class ExternalMeshData():
                         else:
                             continue
 
-                except:
+                except Exception:
                     self.modo = None
                     pass   
 
@@ -210,7 +210,7 @@ class ExternalMeshData():
                     for ns_node_id in [int(valor) for valor in line.split()]:
                         self.nodes_from_named_selection[self.named_selection].append(ns_node_id)
 
-                except:
+                except Exception:
                     self.modo = None
 
         self.post_process_nodal_coordinates()

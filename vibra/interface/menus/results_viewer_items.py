@@ -47,6 +47,7 @@ class ResultsViewerItems(CommonMenuItems):
         self.item_child_particle_velocity = self.add_item("Particle Velocity")
         self.item_child_acoustic_impedance = self.add_item("Acoustic Impedance")
         self.item_child_absorption_coefficient = self.add_item("Absorption Coefficient")
+        self.item_child_decompose_acoustic_waves = self.add_item("Decompose Acoustic Waves")
 
         self.top_level_items = [
             self.item_top_results_viewer_acoustic,
@@ -102,6 +103,7 @@ class ResultsViewerItems(CommonMenuItems):
         self.item_child_acoustic_pressure_field.setDisabled(key)
         self.item_child_acoustic_pressure_frequency_response.setDisabled(key)
         self.item_child_acoustic_pressure_frf.setDisabled(key)
+        self.item_child_decompose_acoustic_waves.setDisabled(key)
         self.item_child_allowable_pulsations_for_reciprocating_compressor.setDisabled(key)
         self.item_child_allowable_pulsations_for_screw_compressor.setDisabled(key)
         self.item_child_TL_NR.setDisabled(key)
@@ -184,6 +186,7 @@ class ResultsViewerItems(CommonMenuItems):
             self.item_child_acoustic_pressure_field.setDisabled(False)
             self.item_child_acoustic_pressure_frequency_response.setDisabled(False)
             self.item_child_acoustic_pressure_frf.setDisabled(False)
+            self.item_child_decompose_acoustic_waves.setDisabled(False)
             self.item_child_allowable_pulsations_for_reciprocating_compressor.setDisabled(False)
             self.item_child_allowable_pulsations_for_screw_compressor.setDisabled(False)
             self.item_child_acoustic_pressure_waveform.setDisabled(False)

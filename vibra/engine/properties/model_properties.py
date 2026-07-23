@@ -112,10 +112,11 @@ class ModelProperties:
         if isinstance(data, dict):
 
             values_list = list()
+            data_keys = list(data.keys())
             group_label = self.get_data_group_label(property)
 
-            if "real_values" in data.keys() and "imag_values" in data.keys():
-                for i, a in enumerate(data["real_values"]):
+            if "real_values" in data_keys and "imag_values" in data_keys:
+                for i, a in enumerate(data.get("real_values")):
 
                     if a is None:
                         values_list.append(None)
@@ -127,14 +128,25 @@ class ModelProperties:
                         else:
                             values_list.append(a + 1j*b)
 
-            elif "table_names" in data.keys():
+            elif "amplitude_values" in data_keys and "phase_values" in data_keys:
+                for i, amp in enumerate(data.get("amplitude_values")):
+
+                    if amp is None:
+                        values_list.append(None)
+
+                    else:
+                        phi_deg = data.get("phase_values")[i]
+                        complex_values = amp * np.exp(1j * phi_deg * np.pi / 180)
+                        values_list.append(complex(complex_values))
+
+            elif "table_names" in data_keys:
                 if group_label == "acoustic":
                     imported_tables = self.acoustic_imported_tables
                 else:
                     imported_tables = self.structural_imported_tables
 
                 frequencies_list = list()
-                for i, table_name in enumerate(data["table_names"]):
+                for i, table_name in enumerate(data.get("table_names")):
                     if table_name is None:
                         values_list.append(None)
                         continue
@@ -154,8 +166,8 @@ class ModelProperties:
 
                 data["tables_frequencies"] = frequencies_list
 
-            elif "values" in data.keys():
-                values_list = data["values"]
+            elif "values" in data_keys:
+                values_list = data.get("values")
 
             data["values"] =  values_list
 
