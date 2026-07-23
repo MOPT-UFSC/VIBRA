@@ -8,6 +8,7 @@ import numpy as np
 
 from vibra.engine.model import Model
 from vibra.utils.lazy_array import LazyArray
+from vibra.engine.postprocessing.acoustic_post_solution_dataclass import NodalParticleVelocities
 
 AcousticPlotTypes = Literal[
     "absolute_animation",
@@ -113,13 +114,7 @@ class AcousticPostprocessing:
 
         return p_min, p_max
 
-    def compute_acoustic_pressure_field(
-        self,
-        index: int,
-        phase_rad: float,
-        plot_type: AcousticPlotTypes,
-        is_modal: bool = False,
-    ):
+    def compute_acoustic_pressure_field(self, index: int, phase_rad: float, plot_type: AcousticPlotTypes, is_modal: bool = False):
         if is_modal:
             nodal_solution = self.solution.modal_shapes
         else:
@@ -161,24 +156,13 @@ class AcousticPostprocessing:
         volume_id: int | None = None,
     ) -> np.ndarray:
 
-        frequencies = self.model.frequencies
-        zeros = np.zeros_like(frequencies, dtype=complex)
-
         if isinstance(node_id, int):
             surface_ids = self.mesh.get_surfaces_from_node(node_id)
             # if np.unique(surface_ids).size != 1:
             #     print(f"The surfaces {surface_ids} contains the node: {node_id}")
 
-            surface_id = surface_ids[0]
-
-        particle_velocities_data = self.get_particle_velocity_from_surface(
-            surface_id,
-            volume_id=volume_id,
-        )
-
-        particle_velocities_Vj = particle_velocities_data.get(component_label)
-        if not isinstance(particle_velocities_Vj, dict):
-            return zeros
+        particle_velocities_data = self.get_particle_velocity_from_surface(surface_ids[0], volume_id=volume_id)
+        particle_velocities_Vj: dict = getattr(particle_velocities_data, component_label)
 
         if isinstance(node_id, int):
             return particle_velocities_Vj.get(node_id)
@@ -187,12 +171,7 @@ class AcousticPostprocessing:
             array_particle_velocities_Vj = np.array(list(particle_velocities_Vj.values()), dtype=complex)
             return np.average(array_particle_velocities_Vj, axis=0)
 
-    def compute_acoustic_impedance(
-        self,
-        node_id: int | None = None,
-        surface_id: int | None = None,
-        volume_id: int | None = None,
-    ):
+    def compute_acoustic_impedance(self, node_id: int | None = None, surface_id: int | None = None, volume_id: int | None = None):
 
         frequencies = self.model.frequencies
         zeros = np.zeros_like(frequencies, dtype=complex)
@@ -210,32 +189,20 @@ class AcousticPostprocessing:
         else:
             return zeros, None
 
-        particle_velocities_data = self.get_particle_velocity_from_surface(
-            surface_id,
-            volume_id=volume_id,
-        )
-
-        particle_velocities_Vj = particle_velocities_data.get("Vn")
-
-        if not isinstance(particle_velocities_Vj, dict):
-            return zeros, None
+        particle_velocities_data = self.get_particle_velocity_from_surface(surface_id, volume_id=volume_id)
 
         if isinstance(node_id, int):
             pressure = self.solution.nodal_solution[node_id, :]
-            particle_velocity = particle_velocities_Vj.get(node_id)
+            particle_velocities_Vn: dict = getattr(particle_velocities_data, "Vn")
+            particle_velocity = particle_velocities_Vn.get(node_id)
             return pressure / particle_velocity
 
         else:
             pressures = self.solution.nodal_solution[nodes, :]
-            array_particle_velocities_Vj = np.array(list(particle_velocities_Vj.values()), dtype=complex)
-            surface_impedance = pressures / array_particle_velocities_Vj
+            surface_impedance = pressures / particle_velocities_data.Vn_array()
             return np.average(surface_impedance, axis=0)
 
-    def compute_surface_absorption_coefficient(
-        self,
-        surface_id: int | None = None,
-        volume_id: int | None = None,
-    ):
+    def compute_surface_absorption_coefficient(self, surface_id: int | None = None, volume_id: int | None = None):
 
         frequencies = self.model.frequencies
         aux_zeros = np.zeros_like(frequencies, dtype=complex)
@@ -243,10 +210,7 @@ class AcousticPostprocessing:
         rho, speed_of_sound = self.model.get_fluid_properties_from_surface(surface_id)
         Z0 = rho * speed_of_sound
 
-        Zs = self.compute_acoustic_impedance(
-            surface_id=surface_id,
-            volume_id=volume_id,
-        )
+        Zs = self.compute_acoustic_impedance(surface_id=surface_id, volume_id=volume_id)
 
         if not Zs.any():
             return aux_zeros
@@ -259,11 +223,7 @@ class AcousticPostprocessing:
 
         return alpha
 
-    def get_particle_velocity_from_surface(
-        self,
-        surface_id: int,
-        volume_id: int | None = None,
-    ):
+    def get_particle_velocity_from_surface(self, surface_id: int, volume_id: int | None = None) -> NodalParticleVelocities:
         """
         This method computes the nodal average particle velocity in the selected surface.
 
@@ -295,18 +255,14 @@ class AcousticPostprocessing:
         if element_3d.connectivity is None:
             element_3d.reorder_connect()
 
-        data_normals = self.mesh.get_surface_nodal_normals(
-            surface_id,
-            volume_id,
-        )
+        data_normals = self.mesh.get_surface_nodal_normals(surface_id, volume_id)
 
         map_elements_to_nodes, filtered_nodes = self.mesh.get_solid_elements_connected_to_nodes(surface_id=surface_id, return_nodes=True)
 
         node_ids = self.mesh.get_nodes_from_surface(surface_id)
-        map_elements_to_nodes, filtered_nodes = self.mesh.get_solid_elements_connected_to_nodes(
-            node_ids=node_ids, return_nodes=True)
+        map_elements_to_nodes, filtered_nodes = self.mesh.get_solid_elements_connected_to_nodes(node_ids=node_ids, return_nodes=True)
         
-        # map_elements_to_nodes, filtered_nodes = aelf.mesh.get_solid_elements_connected_to_nodes(
+        # map_elements_to_nodes, filtered_nodes = self.mesh.get_solid_elements_connected_to_nodes(
         #     surface_id=surface_id, return_nodes=True)
 
         # Load all frequency solutions to optimize multiple load on the `process_particle_velocity` method below.
@@ -331,28 +287,6 @@ class AcousticPostprocessing:
 
             pv_data[node_id] = Vk / len(solid_element_ids)
 
-        Vx = dict()
-        Vy = dict()
-        Vz = dict()
-        Vn = dict()
-        particle_velocities = dict()
-
-        for i, _node_id in enumerate(np.sort(list(pv_data.keys()))):
-            nodal_velocities = pv_data.get(_node_id)
-            if nodal_velocities is None:
-                continue
-
-            Vx[_node_id] = nodal_velocities[0, :]
-            Vy[_node_id] = nodal_velocities[1, :]
-            Vz[_node_id] = nodal_velocities[2, :]
-            Vn[_node_id] = nodal_velocities.T @ data_normals[_node_id]
-
-        particle_velocities["Vx"] = Vx
-        particle_velocities["Vy"] = Vy
-        particle_velocities["Vz"] = Vz
-        particle_velocities["Vn"] = Vn
-        particle_velocities["nodal_normals"] = data_normals
-
         ## Uncomment the line below to plot the average normals at the nodes
         self.mesh.set_nodal_normals_data(surface_id, data_normals)
 
@@ -367,7 +301,25 @@ class AcousticPostprocessing:
         # header = "Node index || x-axis component [m] || y-axis component [m] || z-axis component [m]"
         # np.savetxt(fname, output_data, fmt=["%i", "%.16f", "%.16f", "%.16f"], delimiter=",", header=header)
 
-        return particle_velocities
+        return self.nodal_particle_velocity_post_process(pv_data, data_normals)
+
+    def nodal_particle_velocity_post_process(self, input_particle_velocity_data: dict, nodal_normals: np.ndarray):
+
+        nodal_particle_velocities = NodalParticleVelocities()
+
+        for key in input_particle_velocity_data.keys():
+            particle_velocity = input_particle_velocity_data.get(key)
+            if particle_velocity is None:
+                continue
+
+            nodal_particle_velocities.Vx[key] = particle_velocity[0, :]
+            nodal_particle_velocities.Vy[key] = particle_velocity[1, :]
+            nodal_particle_velocities.Vz[key] = particle_velocity[2, :]
+            nodal_particle_velocities.Vn[key] = particle_velocity.T @ nodal_normals[key]
+
+        nodal_particle_velocities.nodal_normals = nodal_normals
+
+        return nodal_particle_velocities
 
     def compute_transmission_loss(
         self,
@@ -487,7 +439,7 @@ class AcousticPostprocessing:
             I_in = np.abs(np.real(P_downstream * np.conjugate(V_downstream)) / 2)
 
             # output sound intensity calculation
-            V_out = np.array(list(output_pv_data["Vn"].values()), dtype=complex)
+            V_out = output_pv_data.Vn_array()
             I_out = np.real(P_out * np.conjugate(V_out)) / 2
 
             # NOTE: be careful of using the calculated particle velocity in the sound power
@@ -496,7 +448,7 @@ class AcousticPostprocessing:
             # therefore, you should use 'richer' elements with the quadratic shape functions
             # to get more representative results.
 
-            # V_in = -np.array(list(input_pv_data["Vn"].values()), dtype=complex)
+            # V_in = -input_pv_data.Vn_array()
             # P_downstream = (P_in + Zo_in * V_in) / 2
             # V_downstream = P_downstream / Zo_in
 

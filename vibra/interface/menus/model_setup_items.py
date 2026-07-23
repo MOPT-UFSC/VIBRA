@@ -53,6 +53,7 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_normal_pressure_load = self.add_item("Normal Pressure Load")
     
         self.item_top_acoustic_model_setup = self.add_top_item('Acoustic Model Setup')
+
         # acoustic model excitations
         self.item_child_acoustic_pressure = self.add_item('Acoustic Pressure')
         self.item_child_mass_source = self.add_item("Mass Source")
@@ -61,18 +62,22 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_compressor_excitation_spectrum = self.add_item("Compressor Excitation (spectrum)")
         self.item_child_compressor_excitation_waveform = self.add_item("Compressor Excitation (waveform)")
         self.item_child_reciprocating_compressor_excitation = self.add_item("Reciprocating Compressor Excitation")
+
         # external impedances
         self.item_child_anechoic_termination = self.add_item("Anechoic Termination")
         self.item_child_absorption_surface = self.add_item("Absorption Surface")
         self.item_child_specific_impedance = self.add_item("Specific Impedance")
         self.item_child_anechoic_termination.setToolTip(0, "equivalent to the long pipe boundary condition")
+
         # internal impedances
         self.item_child_transfer_impedance = self.add_item("Transfer Impedance")
         self.item_child_perforated_plate_model = self.add_item("Perforated Plate Model")
+
         # dissipation models
         self.item_child_proportional_damping = self.add_item("Proportional Damping")
         self.item_child_porous_material_model = self.add_item("Porous Material Model")
         self.item_child_viscous_thermal_model = self.add_item("Viscous-thermal Loss Model")
+
         # other features
         self.item_child_acoustic_properties_gradient = self.add_item("Acoustic Properties Gradient")
         self.item_child_acoustic_transfer_element_setup = self.add_item("Acoustic Transfer Element Data")
@@ -153,12 +158,12 @@ class ModelSetupItems(CommonMenuItems):
         self.item_top_acoustic_model_setup.setHidden(True)
 
     def _filter_visible_items_based_on_current_mode(self):
-        self.item_child_incident_plane_wave.setHidden(not DEVELOPER_MODE)
+        # self.item_child_incident_plane_wave.setHidden(not DEVELOPER_MODE)
         self.item_child_acoustic_properties_gradient.setHidden(not DEVELOPER_MODE)
         self.item_child_acoustic_transfer_element_setup.setHidden(not DEVELOPER_MODE)
 
         # TODO: remove when possible
-        self.item_child_incident_plane_wave.setHidden(True)
+        # self.item_child_incident_plane_wave.setHidden(True)
         self.item_child_acoustic_properties_gradient.setHidden(True)
 
     def _find_qtree_widget_item_name(self, qtree_widet_item) -> str | None:
