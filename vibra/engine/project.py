@@ -144,6 +144,7 @@ class Project:
         self.reset_solution()
         self.project_reader.unpack_into_working_directory(path)
         self.model = self.project_reader.read_model(self.model)
+        self.assembler, self.solver = self.project_reader.read_assembler_and_solver(self.model)
         self.model.name = path.stem
         self.save_path = path
         self.needs_saving = False

@@ -476,13 +476,10 @@ class ProjectReader:
 
         if model.analysis_id.is_harmonic():
             solver = HarmonicSolver(assembler)
-            if self.project_paths.harmonic_solution_filepath.exists():
-                solver.solution = self.read_harmonic_solution(model)
-
+            solver.solution = model.solution
         elif model.analysis_id.is_modal():
             solver = ModalSolver(assembler)
-            if self.project_paths.modal_solution_filepath.exists():
-                solver.solution = self.read_modal_solution(model)
+            solver.solution = model.solution
         else:
             return None, None
 
