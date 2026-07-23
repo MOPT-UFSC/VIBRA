@@ -423,12 +423,28 @@ class ProjectReader:
         with h5py.File(self.project_paths.harmonic_solution_filepath, "r") as file:
             file: h5py.File
 
+            logging.info("Reading harmonic solution [5/100]")
+
+            frequencies = np.array(file["frequencies"])
+            logging.info("Reading harmonic solution [20/100]")
+
+            solution = np.array(file["solution"])
+            logging.info("Reading harmonic solution [80/100]")
+
+            solution_status = np.array(file["solution_status"])
+            logging.info("Reading harmonic solution [90/100]")
+
+            displacement_dof = file.get("displacement_dof")
+            if displacement_dof is not None:
+                displacement_dof = np.array(displacement_dof)
+            logging.info("Reading harmonic solution [95/100]")
+
             return HarmonicSolution(
                 analysis_id=model.analysis_id,
-                frequencies=file["frequencies"],
-                nodal_solution=file["solution"],
-                status=file["solution_status"],
-                displacement_dof=file.get("displacement_dof"),
+                frequencies=frequencies,
+                nodal_solution=solution,
+                status=solution_status,
+                displacement_dof=displacement_dof,
             )
 
     def read_modal_solution(self, model: Model) -> Optional[ModalSolution]:
