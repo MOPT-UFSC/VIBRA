@@ -15,27 +15,24 @@ if TYPE_CHECKING:
 def test_regression_structural_harmonic_solver_solution(datadir, structural_harmonic_analysis: Model):
     assembler = StructuralAssembler(structural_harmonic_analysis)
     assembler.assemble_global_matrices_and_excitations()
+
     project_paths = ProjectPaths(datadir)
     harmonic_solver = HarmonicSolver(assembler, project_paths)
-
     frequencies = structural_harmonic_analysis.frequencies
 
     # Solve and store solutions into hdf5 files
-    solution = harmonic_solver.solve_direct()
+    # but returns in-memory data
+    in_memory_solution = harmonic_solver.solve_direct()
 
-    assembler = StructuralAssembler(structural_harmonic_analysis)
-    assembler.assemble_global_matrices_and_excitations()
-    in_memory_harmonic_solver = HarmonicSolver(assembler)
+    # Reads the written data lazily
+    lazy_solution = LazyHarmonicSolution(project_paths)
 
-    # # Solve and store solution in memory
-    in_memory_solution = in_memory_harmonic_solver.solve_direct()
-
-    assert isinstance(solution, LazyHarmonicSolution)
-    assert isinstance(in_memory_solution, HarmonicSolution)
+    assert type(lazy_solution) is LazyHarmonicSolution
+    assert type(in_memory_solution) is HarmonicSolution
 
     for i, _ in enumerate(frequencies):
         assert np.allclose(
-            solution.nodal_solution[:, i],
+            lazy_solution.nodal_solution[:, i],
             in_memory_solution.nodal_solution[:, i],
         )
 

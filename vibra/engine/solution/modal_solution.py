@@ -39,7 +39,7 @@ class ModalSolution(CommonSolution):
         return self._immutable_array(_nodal_displacements)
 
     def get_nodal_displacement_at_column(self, column_index: int) -> Array1D:
-        return self.modal_shapes[self.displacement_dof, column_index]
+        return self.modal_shapes[self.displacement_dof, column_index].copy()
 
     def get_row(self, row_index: int) -> Array1D:
         return self.modal_shapes[row_index, :]
