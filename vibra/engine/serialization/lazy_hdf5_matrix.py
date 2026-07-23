@@ -26,13 +26,9 @@ class LazyHDF5MatrixWriter:
         self.file = h5py.File(self.filepath, file_mode)
         self.shape = (num_rows, num_cols)
 
-        chunk_rows = min(num_rows, 2**20)
-        chunk_cols = 1
-
         self.solution = self.create_dataset_if_not_exists(
             HDF5_SOLUTION_FREQ_KEY,
             shape=(num_rows, num_cols),
-            chunks=(chunk_rows, chunk_cols),  # This is important for efficient read/load large matrices.
             dtype=dtype,
         )
         self.frequencies = self.create_dataset_if_not_exists(
