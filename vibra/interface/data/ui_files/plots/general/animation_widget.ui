@@ -323,7 +323,7 @@
         </property>
         <property name="icon">
          <iconset resource="../../../icons/light_theme/resources.qrc">
-          <normaloff>:/icons/circular_arrows_icon.png</normaloff>:/icons/circular_arrows_icon.png</iconset>
+          <normaloff>:/icons/infinite_symbol.png</normaloff>:/icons/infinite_symbol.png</iconset>
         </property>
         <property name="iconSize">
          <size>

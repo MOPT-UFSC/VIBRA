@@ -34,6 +34,7 @@
         <file alias="import.png">import.png</file>
         <file alias="import_geometry.png">import_geometry.png</file>
         <file alias="import_mesh.png">import_mesh.png</file>
+        <file alias="infinite_symbol.png">infinite_symbol.png</file>
         <file alias="invert_icon.png">invert_icon.png</file>
         <file alias="legend_toggle.png">legend_toggle.png</file>
         <file alias="mesh.png">mesh.png</file>
