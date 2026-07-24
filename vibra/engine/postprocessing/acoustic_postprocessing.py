@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from functools import cache
+
 # from time import perf_counter
 from typing import Optional
 
@@ -157,19 +158,18 @@ class AcousticPostprocessing:
         self,
         time_index: int,
         plot_type: PressurePlotType,
-        reduced_loop_time: float = -1,
+        reduced_loop_time: float | None = None,
     ):
 
         time_vector, self.waveforms = self.compute_multiple_ifft()
 
-        if reduced_loop_time != -1:
-            N = np.sum(time_vector <= reduced_loop_time)
+        if reduced_loop_time is None:
+            n = time_vector.size
         else:
-            N = time_vector.size
+            n = np.sum(time_vector <= reduced_loop_time)
 
         # cache the minimum and maximum values of the nodal pressure waveforms
-        min_max_values = self.get_acoustic_waveforms_minimum_and_maximum_values(int(N))
-
+        min_max_values = self.get_acoustic_waveforms_minimum_and_maximum_values(int(n))
         acoustic_pressures = self.waveforms[:, time_index].flatten()
 
         match plot_type:
@@ -181,7 +181,7 @@ class AcousticPostprocessing:
             case _:
                 min_value, max_value = min_max_values
 
-        return time_vector[:N], acoustic_pressures, min_value, max_value
+        return time_vector[:n], acoustic_pressures, min_value, max_value
 
     @cache
     def compute_multiple_ifft(self) -> tuple[np.ndarray, np.ndarray]:

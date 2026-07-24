@@ -81,7 +81,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
     def get_logo_for_current_theme(self) -> str:
         if app().config.user_preferences.interface_theme == "light":
             return "vibra_colored_light_background.png"
-        
+
         return "vibra_colored_dark_background.png"
 
     def update_theme(self):
@@ -104,7 +104,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if hasattr(self, "scale_bar_actor"):
             self.scale_bar_actor.GetLegendTitleProperty().SetColor(font_color.to_rgb_f())
             self.scale_bar_actor.GetLegendLabelProperty().SetColor(font_color.to_rgb_f())
-        
+
         self.update_logo()
 
     def update_plot(
@@ -317,9 +317,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             time_index = animation_frame
 
         data = postprocessing.compute_acoustic_transient_pressure_field(
-            time_index,
-            self.plot_setup.plot_type,
-            reduced_loop_time=self.plot_setup.reduced_loop_time
+            time_index, self.plot_setup.plot_type, reduced_loop_time=self.plot_setup.reduced_loop_time
         )
 
         if data is None:
