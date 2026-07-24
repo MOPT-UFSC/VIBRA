@@ -240,7 +240,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
         real_imag_imode = self.comboBox_input_mode.currentIndex() == InputType.REAL_IMAGINARY
         self.label_pinc0_constant.setText("Incident pressure ({}):".format("real" if real_imag_imode else "amp."))
         self.label_pinc1_constant.setText("Incident pressure ({}):".format("imag." if real_imag_imode else "phase"))
-        self.label_pinc0_unit.setText("[{}]:".format("Pa" if real_imag_imode else "Pa"))
+        self.label_pinc0_unit.setText("[Pa]:")
         self.label_pinc1_unit.setText("[{}]:".format("Pa" if real_imag_imode else "deg"))
 
     def check_incident_plane_wave_values(self, line_edit_fieldA: QLineEdit, line_edit_fieldB: QLineEdit, label: str):
