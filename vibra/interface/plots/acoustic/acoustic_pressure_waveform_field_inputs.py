@@ -1,4 +1,3 @@
-
 from enum import IntEnum
 
 import numpy as np
@@ -35,7 +34,6 @@ class AcousticPressureWaveformFieldInputs(AcousticPressureWaveformFieldInputs_UI
 
         self.load_user_preference_colormap()
         self._load_analysis_setup_and_solution()
-
 
     @property
     def model(self):
@@ -157,22 +155,24 @@ class AcousticPressureWaveformFieldInputs(AcousticPressureWaveformFieldInputs_UI
         if update_plot:
             self.plot_data_callback()
 
-    def get_reduced_loop_time(self):
+    def get_reduced_loop_time(self) -> float | None:
+        value_str = self.lineEdit_animation_time.text()
+        if value_str == "":
+            return None
+
         index = self.comboBox_reduced_time.currentIndex()
-        if index == ReduceLoopType.DISABLED:
-            self.lineEdit_animation_time.clear()
-            return -1
+        match index:
+            case ReduceLoopType.DISABLED:
+                return None
 
-        if self.lineEdit_animation_time.text() == "":
-            return -1
-        
-        value = float(self.lineEdit_animation_time.text())
-        if index == ReduceLoopType.USER_DEFINED:
-            return value
+            case ReduceLoopType.USER_DEFINED:
+                return float(value_str)
 
-        else:
-            # compute the revolution time of the rotary machine
-            return 60 / value
+            case ReduceLoopType.ROTATIONAL_SPEED:
+                return 60 / float(value_str)
+
+            case _:
+                return None
 
     def plot_data_callback(self):
 

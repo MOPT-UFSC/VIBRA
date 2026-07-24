@@ -237,6 +237,9 @@
         <property name="alignment">
          <set>Qt::AlignmentFlag::AlignCenter</set>
         </property>
+        <property name="minimum">
+         <number>1</number>
+        </property>
         <property name="maximum">
          <number>20</number>
         </property>
@@ -319,8 +322,8 @@
          <string/>
         </property>
         <property name="icon">
-         <iconset resource="../../../icons/resources.qrc">
-          <normaloff>:/icons/circular_arrows_icon.png</normaloff>:/icons/circular_arrows_icon.png</iconset>
+         <iconset resource="../../../icons/light_theme/resources.qrc">
+          <normaloff>:/icons/infinite_symbol.png</normaloff>:/icons/infinite_symbol.png</iconset>
         </property>
         <property name="iconSize">
          <size>
@@ -493,7 +496,8 @@
   </layout>
  </widget>
  <resources>
-  <include location="../../../icons/resources.qrc"/>
+  <include location="../../../icons/light_theme/resources.qrc"/>
+  <include location="../../../icons/dark_theme/resources.qrc"/>
  </resources>
  <connections/>
 </ui>
