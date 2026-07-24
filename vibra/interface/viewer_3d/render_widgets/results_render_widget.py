@@ -317,7 +317,9 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             time_index = animation_frame
 
         data = postprocessing.compute_acoustic_transient_pressure_field(
-            time_index, self.plot_setup.plot_type, reduced_loop_time=self.plot_setup.reduced_loop_time
+            time_index,
+            self.plot_setup.plot_type,
+            reduced_loop_time=self.plot_setup.reduced_loop_time,
         )
 
         if data is None:
