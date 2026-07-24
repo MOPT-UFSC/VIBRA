@@ -76,14 +76,15 @@ class AcousticPressureWaveformFieldInputs(AcousticPressureWaveformFieldInputs_UI
     def _reset_variables(self):
         self.unit_label = "Pa"
         self.time_vector = None
+        self.plot_setup = None
 
     def _create_connections(self):
         #
         self.comboBox_colormaps.currentIndexChanged.connect(self.update_colormap_type)
         self.comboBox_plot_type.currentIndexChanged.connect(self.plot_data_callback)
-        self.comboBox_reduced_time.currentIndexChanged.connect(self.reduced_loop_time_type_callback)
+        self.comboBox_reduced_time.currentIndexChanged.connect(lambda: self.reduced_loop_time_type_callback(True))
         #
-        self.lineEdit_animation_time.editingFinished.connect(self.reduced_loop_time_callback)
+        self.lineEdit_animation_time.editingFinished.connect(self.plot_data_callback)
         #
         self.slider_transparency.valueChanged.connect(self.update_transparency_callback)
         #
@@ -131,22 +132,7 @@ class AcousticPressureWaveformFieldInputs(AcousticPressureWaveformFieldInputs_UI
         transparency = self.slider_transparency.value() / 100
         app().main_window.results_widget.set_tube_actors_transparency(transparency)
 
-    def reduced_loop_time_callback(self):
-
-        ## TODO: please, implement something smart here to avoid the plot_data_callback
-
-        # plot_setup = TransientPressurePlotSetup(
-        #     time_index=0,
-        #     plot_type=self.get_plot_type(),
-        #     unit="Pa",
-        #     reduced_loop_time=self.get_reduced_loop_time(),
-        # )
-
-        # app().main_window.results_widget.configure_plot(plot_setup)
-
-        self.plot_data_callback()
-
-    def reduced_loop_time_type_callback(self):
+    def reduced_loop_time_type_callback(self, update_plot: bool = False):
         index = self.comboBox_reduced_time.currentIndex()
         is_disabled = index == ReduceLoopType.DISABLED
 
@@ -163,6 +149,12 @@ class AcousticPressureWaveformFieldInputs(AcousticPressureWaveformFieldInputs_UI
 
         tool_tip = "" if is_disabled else "Press enter to confirm the time filter"
         self.lineEdit_animation_time.setToolTip(tool_tip)
+
+        if is_disabled and self.lineEdit_animation_time.text() != "":
+            self.lineEdit_animation_time.clear()
+
+        if update_plot:
+            self.plot_data_callback()
 
     def get_reduced_loop_time(self):
         index = self.comboBox_reduced_time.currentIndex()
@@ -182,15 +174,22 @@ class AcousticPressureWaveformFieldInputs(AcousticPressureWaveformFieldInputs_UI
             return 60 / value
 
     def plot_data_callback(self):
+
+        plot_setup = TransientPressurePlotSetup(
+            time_index=0,
+            plot_type=self.get_plot_type(),
+            unit="Pa",
+            reduced_loop_time=self.get_reduced_loop_time(),
+        )
+
+        if plot_setup == self.plot_setup:
+            return
+
+        self.plot_setup = plot_setup
+
         def plot_callback():
-            plot_setup = TransientPressurePlotSetup(
-                time_index=0,
-                plot_type=self.get_plot_type(),
-                unit="Pa",
-                reduced_loop_time=self.get_reduced_loop_time(),
-            )
             self.animation_widget.reset_sliders()
-            app().main_window.results_widget.update_plot(plot_setup=plot_setup)
+            app().main_window.results_widget.update_plot(plot_setup=self.plot_setup)
 
         LoadingWindow(plot_callback).run()
 
