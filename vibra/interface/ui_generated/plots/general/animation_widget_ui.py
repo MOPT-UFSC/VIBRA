@@ -98,6 +98,7 @@ class Ui_Form(object):
         self.spinBox_cycles.setMaximumSize(QSize(80, 28))
         self.spinBox_cycles.setFont(font)
         self.spinBox_cycles.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.spinBox_cycles.setMinimum(1)
         self.spinBox_cycles.setMaximum(20)
         self.spinBox_cycles.setValue(5)
 

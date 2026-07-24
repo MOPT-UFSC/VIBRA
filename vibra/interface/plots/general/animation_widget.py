@@ -79,7 +79,7 @@ class AnimationWidget(AnimationWidget_UI):
         self.magnification_factor_slider.setSingleStep(1)
 
         # QSpinBox
-        self.spinBox_cycles.setMinimum(0)
+        self.spinBox_cycles.setMinimum(1)
         self.spinBox_cycles.setMaximum(10)
         self.spinBox_cycles.setSingleStep(1)
         self.spinBox_cycles.setValue(3)
