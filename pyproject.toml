@@ -59,3 +59,4 @@ line-length = 150
 
 [project.scripts]
 bump = "scripts.bump_version:main"
+icons = "scripts.paint_icons:main"

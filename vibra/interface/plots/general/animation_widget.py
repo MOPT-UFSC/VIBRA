@@ -5,12 +5,7 @@ import numpy as np
 from molde.render_widgets.animated_render_widget import AnimatedRenderWidget
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QFont
-from PySide6.QtWidgets import (
-    QFileDialog,
-    QLabel,
-    QPushButton,
-    QSpinBox,
-)
+from PySide6.QtWidgets import QFileDialog, QLabel, QPushButton, QSpinBox
 
 from vibra import app
 from vibra.engine.analysis_info import PhysicalDomain
@@ -19,6 +14,12 @@ from vibra.interface.formatters.icons import Icon
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.ui_generated.plots.general.animation_widget_ui import AnimationWidget_UI
+from vibra.interface.viewer_3d.plot_setup import (
+    FrequencyDisplacementPlotSetup,
+    FrequencyPressurePlotSetup,
+    PlotSetup,
+    TransientPressurePlotSetup,
+)
 
 
 class AnimationWidget(AnimationWidget_UI):
@@ -35,6 +36,8 @@ class AnimationWidget(AnimationWidget_UI):
 
     def _initialize(self):
         self.animating = False
+        self.frames_number = 1
+        self.sampling_time = 1
         self.current_render_widget = None
 
     def _configure_icons(self):
@@ -62,6 +65,10 @@ class AnimationWidget(AnimationWidget_UI):
         self.pushButton_export_video.setCursor(Qt.PointingHandCursor)
         self.pushButton_export_video.setToolTip("Save animation")
 
+        self.pushButton_animation_loop.setCursor(Qt.PointingHandCursor)
+        self.pushButton_animation_loop.setToolTip("Loop the animation")
+        self.pushButton_animation_loop.setCheckable(True)
+
         # QSlider
         self.phase_slider.setOrientation(Qt.Orientation.Horizontal)
         self.phase_slider.setCursor(Qt.PointingHandCursor)
@@ -76,10 +83,10 @@ class AnimationWidget(AnimationWidget_UI):
         self.magnification_factor_slider.setSingleStep(1)
 
         # QSpinBox
-        self.spinBox_cycles.setMinimum(0)
+        self.spinBox_cycles.setMinimum(1)
         self.spinBox_cycles.setMaximum(10)
         self.spinBox_cycles.setSingleStep(1)
-        self.spinBox_cycles.setValue(0)
+        self.spinBox_cycles.setValue(3)
         self.spinBox_cycles.setFixedSize(60, 30)
         self.spinBox_cycles.setAlignment(Qt.AlignHCenter)
         self.spinBox_cycles.setCursor(Qt.PointingHandCursor)
@@ -103,6 +110,7 @@ class AnimationWidget(AnimationWidget_UI):
 
         self.pushButton_animate.clicked.connect(self.process_animation)
         self.pushButton_export_video.clicked.connect(self.save_animation)
+        self.pushButton_animation_loop.clicked.connect(self.animation_loop_callback)
 
         app().main_window.render_widget_changed.connect(self.update_current_render_widget)
         app().main_window.render_widget_changed.connect(self.update_toolbar)
@@ -119,7 +127,7 @@ class AnimationWidget(AnimationWidget_UI):
 
     def _configure_appearance(self):
 
-        self.stylesheet =  """
+        self.stylesheet = """
             QToolBar {
                 border-style: solid;
                 border-width: 1px;
@@ -157,12 +165,18 @@ class AnimationWidget(AnimationWidget_UI):
         app().main_window.results_widget.stop_animation()
         app().main_window.results_widget.clear_cache()
 
-    def cycles_value_changed(self):
-        self.cycles = self.spinBox_cycles.value()
-
     @property
     def phase_in_radians(self):
         return np.radians(self.phase_slider.value())
+
+    @property
+    def time(self):
+        value = self.phase_slider.value()
+        return (self.sampling_time / self.frames_number) * value
+
+    @property
+    def time_index(self):
+        return min(self.phase_slider.value(), self.frames_number - 1)
 
     @property
     def magnification_factor(self):
@@ -172,6 +186,24 @@ class AnimationWidget(AnimationWidget_UI):
         self.update_degree_label()
         self.update_color_and_deformation(clear_cache=False)
 
+    def time_frame_slider_callback(self):
+        self.update_time_frame_label()
+        self.update_color_and_deformation(clear_cache=False)
+
+    def configure_animation_widget_for_transient_plot(self, sampling_time: float, frames_number: int):
+        self.phase_slider.valueChanged.disconnect(self.phase_slider_callback)
+        self.update_animation_parameters(sampling_time, frames_number)
+        self.phase_slider.valueChanged.connect(self.time_frame_slider_callback)
+
+    def update_animation_parameters(self, sampling_time: float, frames_number: int):
+        self.sampling_time = sampling_time
+        self.frames_number = frames_number
+
+        self.phase_slider.setMaximum(frames_number)
+        self.spinBox_frames.setMaximum(frames_number)
+        self.spinBox_frames.setValue(frames_number)
+        self.spinBox_frames.setEnabled(False)
+
     def magnification_factor_slider_callback(self, value: int):
         self.update_factor_label()
         self.update_color_and_deformation()
@@ -180,9 +212,22 @@ class AnimationWidget(AnimationWidget_UI):
             self.current_render_widget.update_deformations()
 
     def update_color_and_deformation(self, clear_cache: bool = True):
-        app().main_window.results_widget.update_color_and_deformation(phase=self.phase_in_radians, clear_cache=clear_cache)
+        plot_setup = app().main_window.results_widget.plot_setup
 
-    def reset_sliders(self):
+        match plot_setup:
+            case FrequencyPressurePlotSetup():
+                plot_setup.phase = self.phase_in_radians
+            case FrequencyDisplacementPlotSetup():
+                plot_setup.phase = self.phase_in_radians
+                plot_setup.magnification_factor = self.magnification_factor
+            case TransientPressurePlotSetup():
+                plot_setup.time_index = self.time_index
+            case _:
+                return
+
+        app().main_window.results_widget.update_color_and_deformation(clear_cache=clear_cache)
+
+    def reset_sliders(self, plot_setup: None | PlotSetup = None):
         # block the slider signal to avoid multiple render updates
         self.phase_slider.blockSignals(True)
 
@@ -190,7 +235,10 @@ class AnimationWidget(AnimationWidget_UI):
         self.phase_slider.setValue(0)
 
         # update labels
-        self.update_degree_label()
+        if isinstance(plot_setup, TransientPressurePlotSetup):
+            self.update_time_frame_label()
+        else:
+            self.update_degree_label()
 
         # unblocking the slider signals
         self.phase_slider.blockSignals(False)
@@ -204,20 +252,19 @@ class AnimationWidget(AnimationWidget_UI):
         if (self.current_render_widget is not None) and self.current_render_widget.playing_animation:
             self.current_render_widget.stop_animation()
 
-    def process_animation(self, state: bool):
+    def process_animation(self, button_pressed: bool):
         self.update_animation_settings()
-        self.update_animate_button_icons(state)
+        self.update_animate_button_icons(button_pressed)
 
-        if state:
-            app().main_window.results_widget.start_animation(
-                frames=self.frames,
-                cycles=self.cycles,
-            )
-        else:
-            app().main_window.results_widget.stop_animation()
-        
-    def update_animate_button_icons(self, state: bool):
-        if state:
+        if button_pressed:
+            cycles = 0 if self.pushButton_animation_loop.isChecked() else self.cycles
+            app().main_window.results_widget.start_animation(fps=30, frames=self.frames, cycles=cycles)
+            return
+
+        app().main_window.results_widget.stop_animation()
+
+    def update_animate_button_icons(self, button_pressed: bool):
+        if button_pressed:
             self.pushButton_animate.setIcon(self.pause_icon)
         else:
             self.pushButton_animate.setIcon(self.play_icon)
@@ -230,14 +277,17 @@ class AnimationWidget(AnimationWidget_UI):
         value = self.phase_slider.value()
         self.label_phase_angle.setText(f"{value}°")
 
+    def update_time_frame_label(self):
+        self.label_phase_angle.setText(f"{self.time: .4e}s")
+
     def update_factor_label(self, max_value=None):
         value = self.magnification_factor_slider.value() / 16
         if isinstance(max_value, float | int):
             if max_value:
-                value /= (10 * max_value)
+                value /= 10 * max_value
             else:
                 value = 1
-        self.label_factor.setText(f"{value : .2e}x")
+        self.label_factor.setText(f"{value: .2e}x")
 
     def update_phase_slider_steps(self):
         frames = self.spinBox_frames.value()
@@ -250,10 +300,7 @@ class AnimationWidget(AnimationWidget_UI):
             kwargs["options"] = QFileDialog.Option.DontUseNativeDialog
 
         file_path, extension = QFileDialog.getSaveFileName(
-            self,
-            "Save As",
-            filter="Video (*.mp4);;WEBP (*.webp);;GIF (*.gif);; All Files ();;",
-            **kwargs
+            self, "Save As", filter="Video (*.mp4);;WEBP (*.webp);;GIF (*.gif);; All Files ();;", **kwargs
         )
 
         if not extension:
@@ -284,3 +331,8 @@ class AnimationWidget(AnimationWidget_UI):
             message = "An error has occured while exporting the animation file.\n"
             message += str(error_log)
             PrintMessageInput([error_title, title, message])
+
+    def animation_loop_callback(self):
+        is_clicked = self.pushButton_animation_loop.isChecked()
+        self.spinBox_cycles.setDisabled(is_clicked)
+        app().main_window.results_widget.stop_animation()

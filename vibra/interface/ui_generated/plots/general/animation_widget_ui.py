@@ -19,11 +19,13 @@ from PySide6.QtWidgets import (QApplication, QFrame, QGridLayout, QLabel,
     QPushButton, QSizePolicy, QSlider, QSpacerItem,
     QSpinBox, QWidget)
 
+from vibra.interface.formatters.icons import Icon
+
 class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(350, 220)
+        Form.resize(377, 220)
         Form.setMinimumSize(QSize(0, 220))
         self.gridLayout = QGridLayout(Form)
         self.gridLayout.setObjectName(u"gridLayout")
@@ -42,6 +44,9 @@ class Ui_Form(object):
         self.pushButton_animate.setObjectName(u"pushButton_animate")
         self.pushButton_animate.setMinimumSize(QSize(0, 30))
         self.pushButton_animate.setMaximumSize(QSize(140, 16777215))
+        font = QFont()
+        font.setPointSize(10)
+        self.pushButton_animate.setFont(font)
         self.pushButton_animate.setIconSize(QSize(20, 20))
 
         self.gridLayout_2.addWidget(self.pushButton_animate, 1, 1, 1, 1)
@@ -50,12 +55,85 @@ class Ui_Form(object):
         self.pushButton_export_video.setObjectName(u"pushButton_export_video")
         self.pushButton_export_video.setMinimumSize(QSize(0, 30))
         self.pushButton_export_video.setMaximumSize(QSize(140, 16777215))
+        self.pushButton_export_video.setFont(font)
         self.pushButton_export_video.setIconSize(QSize(20, 20))
 
         self.gridLayout_2.addWidget(self.pushButton_export_video, 1, 0, 1, 1)
 
 
         self.gridLayout.addWidget(self.frame_bottom, 4, 0, 1, 2)
+
+        self.frame_top = QFrame(Form)
+        self.frame_top.setObjectName(u"frame_top")
+        self.frame_top.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_top.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_4 = QGridLayout(self.frame_top)
+        self.gridLayout_4.setObjectName(u"gridLayout_4")
+        self.gridLayout_4.setContentsMargins(6, 2, 6, 2)
+        self.spinBox_frames = QSpinBox(self.frame_top)
+        self.spinBox_frames.setObjectName(u"spinBox_frames")
+        self.spinBox_frames.setMinimumSize(QSize(80, 28))
+        self.spinBox_frames.setMaximumSize(QSize(80, 28))
+        self.spinBox_frames.setFont(font)
+        self.spinBox_frames.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.spinBox_frames.setMinimum(20)
+        self.spinBox_frames.setMaximum(60)
+        self.spinBox_frames.setSingleStep(10)
+        self.spinBox_frames.setValue(40)
+
+        self.gridLayout_4.addWidget(self.spinBox_frames, 0, 2, 1, 1)
+
+        self.label_frames_cycle = QLabel(self.frame_top)
+        self.label_frames_cycle.setObjectName(u"label_frames_cycle")
+        self.label_frames_cycle.setMinimumSize(QSize(0, 28))
+        self.label_frames_cycle.setMaximumSize(QSize(16777215, 28))
+        self.label_frames_cycle.setFont(font)
+        self.label_frames_cycle.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+
+        self.gridLayout_4.addWidget(self.label_frames_cycle, 0, 1, 1, 1)
+
+        self.spinBox_cycles = QSpinBox(self.frame_top)
+        self.spinBox_cycles.setObjectName(u"spinBox_cycles")
+        self.spinBox_cycles.setMinimumSize(QSize(80, 28))
+        self.spinBox_cycles.setMaximumSize(QSize(80, 28))
+        self.spinBox_cycles.setFont(font)
+        self.spinBox_cycles.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.spinBox_cycles.setMinimum(1)
+        self.spinBox_cycles.setMaximum(20)
+        self.spinBox_cycles.setValue(5)
+
+        self.gridLayout_4.addWidget(self.spinBox_cycles, 1, 2, 1, 1)
+
+        self.horizontalSpacer_2 = QSpacerItem(79, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_4.addItem(self.horizontalSpacer_2, 1, 0, 1, 1)
+
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_4.addItem(self.horizontalSpacer, 1, 4, 1, 1)
+
+        self.label_animation_cycles = QLabel(self.frame_top)
+        self.label_animation_cycles.setObjectName(u"label_animation_cycles")
+        self.label_animation_cycles.setMinimumSize(QSize(0, 28))
+        self.label_animation_cycles.setMaximumSize(QSize(16777215, 28))
+        self.label_animation_cycles.setFont(font)
+        self.label_animation_cycles.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+
+        self.gridLayout_4.addWidget(self.label_animation_cycles, 1, 1, 1, 1)
+
+        self.pushButton_animation_loop = QPushButton(self.frame_top)
+        self.pushButton_animation_loop.setObjectName(u"pushButton_animation_loop")
+        self.pushButton_animation_loop.setMinimumSize(QSize(40, 28))
+        self.pushButton_animation_loop.setMaximumSize(QSize(16777215, 28))
+        icon = Icon(u":/icons/circular_arrows_icon.png")
+        self.pushButton_animation_loop.setIcon(icon)
+        self.pushButton_animation_loop.setIconSize(QSize(22, 22))
+        self.pushButton_animation_loop.setCheckable(False)
+
+        self.gridLayout_4.addWidget(self.pushButton_animation_loop, 1, 3, 1, 1)
+
+
+        self.gridLayout.addWidget(self.frame_top, 1, 0, 1, 2)
 
         self.frame_middle = QFrame(Form)
         self.frame_middle.setObjectName(u"frame_middle")
@@ -92,6 +170,7 @@ class Ui_Form(object):
         self.label_animation_phase.setObjectName(u"label_animation_phase")
         self.label_animation_phase.setMinimumSize(QSize(0, 26))
         self.label_animation_phase.setMaximumSize(QSize(16777215, 26))
+        self.label_animation_phase.setFont(font)
         self.label_animation_phase.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_3.addWidget(self.label_animation_phase, 1, 0, 1, 1)
@@ -107,68 +186,13 @@ class Ui_Form(object):
         self.label_magnification_factor.setObjectName(u"label_magnification_factor")
         self.label_magnification_factor.setMinimumSize(QSize(0, 26))
         self.label_magnification_factor.setMaximumSize(QSize(16777215, 26))
+        self.label_magnification_factor.setFont(font)
         self.label_magnification_factor.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_3.addWidget(self.label_magnification_factor, 2, 0, 1, 1)
 
 
         self.gridLayout.addWidget(self.frame_middle, 2, 0, 1, 2)
-
-        self.frame_top = QFrame(Form)
-        self.frame_top.setObjectName(u"frame_top")
-        self.frame_top.setFrameShape(QFrame.Shape.NoFrame)
-        self.frame_top.setFrameShadow(QFrame.Shadow.Raised)
-        self.gridLayout_4 = QGridLayout(self.frame_top)
-        self.gridLayout_4.setObjectName(u"gridLayout_4")
-        self.gridLayout_4.setContentsMargins(6, 2, 6, 2)
-        self.horizontalSpacer_2 = QSpacerItem(79, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_4.addItem(self.horizontalSpacer_2, 0, 0, 1, 1)
-
-        self.label_frames_cycle = QLabel(self.frame_top)
-        self.label_frames_cycle.setObjectName(u"label_frames_cycle")
-        self.label_frames_cycle.setMinimumSize(QSize(0, 26))
-        self.label_frames_cycle.setMaximumSize(QSize(16777215, 26))
-        self.label_frames_cycle.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
-
-        self.gridLayout_4.addWidget(self.label_frames_cycle, 0, 1, 1, 1)
-
-        self.spinBox_frames = QSpinBox(self.frame_top)
-        self.spinBox_frames.setObjectName(u"spinBox_frames")
-        self.spinBox_frames.setMinimumSize(QSize(46, 26))
-        self.spinBox_frames.setMaximumSize(QSize(16777215, 26))
-        self.spinBox_frames.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.spinBox_frames.setMinimum(20)
-        self.spinBox_frames.setMaximum(60)
-        self.spinBox_frames.setSingleStep(10)
-        self.spinBox_frames.setValue(40)
-
-        self.gridLayout_4.addWidget(self.spinBox_frames, 0, 2, 1, 1)
-
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_4.addItem(self.horizontalSpacer, 0, 3, 1, 1)
-
-        self.label_animation_cycles = QLabel(self.frame_top)
-        self.label_animation_cycles.setObjectName(u"label_animation_cycles")
-        self.label_animation_cycles.setMinimumSize(QSize(0, 26))
-        self.label_animation_cycles.setMaximumSize(QSize(16777215, 26))
-        self.label_animation_cycles.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
-
-        self.gridLayout_4.addWidget(self.label_animation_cycles, 1, 1, 1, 1)
-
-        self.spinBox_cycles = QSpinBox(self.frame_top)
-        self.spinBox_cycles.setObjectName(u"spinBox_cycles")
-        self.spinBox_cycles.setMinimumSize(QSize(46, 26))
-        self.spinBox_cycles.setMaximumSize(QSize(16777215, 26))
-        self.spinBox_cycles.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.spinBox_cycles.setMaximum(20)
-        self.spinBox_cycles.setValue(5)
-
-        self.gridLayout_4.addWidget(self.spinBox_cycles, 1, 2, 1, 1)
-
-
-        self.gridLayout.addWidget(self.frame_top, 0, 0, 2, 2)
 
 
         self.retranslateUi(Form)
@@ -180,12 +204,16 @@ class Ui_Form(object):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Form", None))
         self.pushButton_animate.setText(QCoreApplication.translate("Form", u"Animate", None))
         self.pushButton_export_video.setText(QCoreApplication.translate("Form", u"Export video", None))
+        self.label_frames_cycle.setText(QCoreApplication.translate("Form", u"Frames / cycle:", None))
+        self.label_animation_cycles.setText(QCoreApplication.translate("Form", u"Animation cycles:", None))
+#if QT_CONFIG(tooltip)
+        self.pushButton_animation_loop.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Loop the animation</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButton_animation_loop.setText("")
         self.label_phase_angle.setText(QCoreApplication.translate("Form", u"0\u00ba", None))
         self.label_factor.setText(QCoreApplication.translate("Form", u"1.0x", None))
         self.label_animation_phase.setText(QCoreApplication.translate("Form", u"Phase:", None))
         self.label_magnification_factor.setText(QCoreApplication.translate("Form", u"Magnification:", None))
-        self.label_frames_cycle.setText(QCoreApplication.translate("Form", u"Frames / cycle:", None))
-        self.label_animation_cycles.setText(QCoreApplication.translate("Form", u"Animation cycles:", None))
     # retranslateUi
 
 
@@ -199,6 +227,13 @@ class AnimationWidget_UI(QWidget, Ui_Form):
                     - (Layout): QGridLayout
                             - pushButton_animate: QPushButton
                             - pushButton_export_video: QPushButton
+                - frame_top: QFrame
+                    - (Layout): QGridLayout
+                            - spinBox_frames: QSpinBox
+                            - label_frames_cycle: QLabel
+                            - spinBox_cycles: QSpinBox
+                            - label_animation_cycles: QLabel
+                            - pushButton_animation_loop: QPushButton
                 - frame_middle: QFrame
                     - (Layout): QGridLayout
                             - label_phase_angle: QLabel
@@ -207,12 +242,6 @@ class AnimationWidget_UI(QWidget, Ui_Form):
                             - label_animation_phase: QLabel
                             - phase_slider: QSlider
                             - label_magnification_factor: QLabel
-                - frame_top: QFrame
-                    - (Layout): QGridLayout
-                            - label_frames_cycle: QLabel
-                            - spinBox_frames: QSpinBox
-                            - label_animation_cycles: QLabel
-                            - spinBox_cycles: QSpinBox
     """
 
     def __init__(self, *args, **kwargs):

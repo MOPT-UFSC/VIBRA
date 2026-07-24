@@ -7,7 +7,7 @@ from PIL import Image
 from vibra import DARK_ICON_COLOR, ICON_DIR, LIGHT_ICON_COLOR
 
 DARK_ICONS_DIR = ICON_DIR / "dark_theme"
-LIGHT_ICONS_DIR = ICON_DIR / "light_theme"  
+LIGHT_ICONS_DIR = ICON_DIR / "light_theme"
 ICONS_DIRS = [DARK_ICONS_DIR, LIGHT_ICONS_DIR]
 COLORS = [DARK_ICON_COLOR, LIGHT_ICON_COLOR]
 
@@ -30,24 +30,23 @@ def save_icon(icon_path: Path, icon_image: Image) -> None:
 
 def paint_icons():
     for dir, color in zip(ICONS_DIRS, COLORS):
-
-        for icon in get_icons_to_paint(dir):
-            img = Image.open(icon).convert("RGBA")
+        for icon_path in get_icons_to_paint(dir):
+            img = Image.open(icon_path).convert("RGBA")
             img_data = np.array(img)
 
             mask = img_data[:, :, 3] >= MINIMUM_REQUIRED_ALPHA
             img_data[mask] = color.to_rgba()
 
             painted_icon = Image.fromarray(img_data)
-            save_icon(icon, painted_icon)
-    
+            save_icon(icon_path, painted_icon)
+
 
 def main():
     paint_icons()
 
     if os.system("uv --version") != 0:
         return
-    
+
     os.system("uv run invoke ui-compile")
 
 

@@ -17,7 +17,7 @@ from vibra.engine.assemblers import AcousticAssembler
 from vibra.engine.solvers import HarmonicSolver
 from vibra.interface.data.icons.theme_resources import set_icon_theme
 from vibra.interface.data_handler.export_mesh_data import ExportMeshData
-from vibra.interface.formatters.icons import get_vibra_icon, Icon
+from vibra.interface.formatters.icons import Icon, get_vibra_icon
 from vibra.interface.general.entity_visibility_handler import EntityVisibilityHandler
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.general.selection_handler import SelectionHandler
@@ -657,20 +657,17 @@ class MainWindow(MainWindow_UI):
     def import_geometry_or_mesh_dialog(self):
         self.close_dialogs()
 
-        path = app().config.get_last_folder_for(
-            "geometry_mesh_folder",
-            default=Path().home(),
-        )
+        path = app().config.get_last_folder_for("geometry_mesh_folder", default=self.user_path)
+
+        geo = qt_extensions(SUPPORTED_GEOMETRY_EXTENSIONS)
+        mesh = qt_extensions(SUPPORTED_MESH_EXTENSIONS)
 
         ext_filter = (
-            "All Accepted Files ({geo} {mesh})"
-            ";;Geometry Files ({geo})"
-            ";;Mesh Files ({mesh})"
+            f"All Accepted Files ({geo} {mesh})"
+            f";;Geometry Files ({geo})"
+            f";;Mesh Files ({mesh})"
             ";;All Files (*)"
-        ).format(
-            geo=qt_extensions(SUPPORTED_GEOMETRY_EXTENSIONS),
-            mesh=qt_extensions(SUPPORTED_MESH_EXTENSIONS),
-        )  # fmt: skip
+        )
 
         load_path, check = QFileDialog.getOpenFileName(
             self,
@@ -705,16 +702,10 @@ class MainWindow(MainWindow_UI):
             raise ValueError(f"File extension {ext} not supported")
 
     def import_geometry_dialog(self):
-        path = app().config.get_last_folder_for(
-            "geometry_mesh_folder",
-            default=Path().home(),
-        )
+        path = app().config.get_last_folder_for("geometry_mesh_folder", default=self.user_path)
 
-        ext_filter = (
-            "Geometry Files ({geo});; All Files (*)"
-        ).format(
-            geo=qt_extensions(SUPPORTED_GEOMETRY_EXTENSIONS),
-        )  # fmt: skip
+        geo = qt_extensions(SUPPORTED_GEOMETRY_EXTENSIONS)
+        ext_filter = (f"Geometry Files ({geo});; All Files (*)")
 
         load_path, check = QFileDialog.getOpenFileName(
             self,
@@ -730,16 +721,10 @@ class MainWindow(MainWindow_UI):
         self.import_geometry(load_path)
 
     def import_mesh_dialog(self):
-        path = app().config.get_last_folder_for(
-            "geometry_mesh_folder",
-            default=Path().home(),
-        )
+        path = app().config.get_last_folder_for("geometry_mesh_folder", default=self.user_path)
 
-        ext_filter = (
-            "Mesh Files ({mesh});; All Files (*)"
-        ).format(
-            mesh=qt_extensions(SUPPORTED_MESH_EXTENSIONS),
-        )  # fmt: skip
+        mesh = qt_extensions(SUPPORTED_MESH_EXTENSIONS)
+        ext_filter = (f"Mesh Files ({mesh});; All Files (*)")
 
         load_path, check = QFileDialog.getOpenFileName(
             self,
@@ -767,10 +752,7 @@ class MainWindow(MainWindow_UI):
         if not obj.complete:
             return False
 
-        save_dir = app().config.get_last_folder_for(
-            "project_folder",
-            default=Path().home(),
-        )
+        save_dir = app().config.get_last_folder_for("project_folder", default=self.user_path)
 
         kwargs = dict()
         if platform.system() == "Linux":
@@ -826,10 +808,7 @@ class MainWindow(MainWindow_UI):
         print(message)
 
     def open_project_dialog(self):
-        path = app().config.get_last_folder_for(
-            "project_folder",
-            default=Path().home(),
-        )
+        path = app().config.get_last_folder_for("project_folder", default=self.user_path)
 
         project_path, check = QFileDialog.getOpenFileName(
             self,

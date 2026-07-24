@@ -2,21 +2,19 @@ from __future__ import annotations
 
 import logging
 from functools import cache
-from typing import Literal
+
+# from time import perf_counter
+from typing import Optional
 
 import numpy as np
 
+from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
-from vibra.utils.lazy_array import LazyArray
 from vibra.engine.postprocessing.acoustic_post_solution_dataclass import NodalParticleVelocities
-
-AcousticPlotTypes = Literal[
-    "absolute_animation",
-    "non_absolute_animation",
-    "absolute_values",
-    "real_values",
-    "imag_values",
-]
+from vibra.engine.solution import HarmonicSolution, Solution
+from vibra.interface.viewer_3d.plot_setup import PressurePlotType
+from vibra.utils.lazy_array import LazyArray
+from vibra.utils.signal_processing import process_multiple_iffts_from_one_sided_spectrum_signals
 
 
 class AcousticPostprocessing:
@@ -26,12 +24,14 @@ class AcousticPostprocessing:
 
         self.model = model
 
+        self.waveforms = np.array([], dtype=float)
+
     @property
-    def mesh(self):
+    def mesh(self) -> Optional[Mesh]:
         return self.model.mesh
 
     @property
-    def solution(self):
+    def solution(self) -> Optional[Solution]:
         return self.model.solution
 
     @property
@@ -114,7 +114,13 @@ class AcousticPostprocessing:
 
         return p_min, p_max
 
-    def compute_acoustic_pressure_field(self, index: int, phase_rad: float, plot_type: AcousticPlotTypes, is_modal: bool = False):
+    def compute_acoustic_pressure_field(
+        self,
+        index: int,
+        phase_rad: float,
+        plot_type: PressurePlotType,
+        is_modal: bool = False,
+    ):
         if is_modal:
             nodal_solution = self.solution.modal_shapes
         else:
@@ -134,19 +140,73 @@ class AcousticPostprocessing:
         delta = -phases[np.argmax(amplitudes)]
 
         acoustic_pressures = amplitudes * np.cos(phases + phase_rad + delta)
-
-        if plot_type == "absolute_values":
-            acoustic_pressures = np.abs(_nodal_solution)
-        elif plot_type == "real_values":
-            acoustic_pressures = np.real(_nodal_solution)
-        elif plot_type == "imag_values":
-            acoustic_pressures = np.imag(_nodal_solution)
-        elif plot_type == "absolute_animation":
-            acoustic_pressures = np.abs(acoustic_pressures)
+        match plot_type:
+            case PressurePlotType.ABSOLUTE_VALUES:
+                acoustic_pressures = np.abs(_nodal_solution)
+            case PressurePlotType.REAL_VALUES:
+                acoustic_pressures = np.real(_nodal_solution)
+            case PressurePlotType.IMAG_VALUES:
+                acoustic_pressures = np.imag(_nodal_solution)
+            case PressurePlotType.ABSOLUTE_ANIMATION:
+                acoustic_pressures = np.abs(acoustic_pressures)
 
         min_value, max_value = self.get_min_max_values_of_pressures(index, plot_type, is_modal)
 
         return acoustic_pressures, min_value, max_value, np.imag(_nodal_solution).any()
+
+    def compute_acoustic_transient_pressure_field(
+        self,
+        time_index: int,
+        plot_type: PressurePlotType,
+        reduced_loop_time: float | None = None,
+    ):
+
+        time_vector, self.waveforms = self.compute_multiple_ifft()
+
+        if reduced_loop_time is None:
+            n = time_vector.size
+        else:
+            n = np.sum(time_vector <= reduced_loop_time)
+
+        # cache the minimum and maximum values of the nodal pressure waveforms
+        min_max_values = self.get_acoustic_waveforms_minimum_and_maximum_values(int(n))
+        acoustic_pressures = self.waveforms[:, time_index].flatten()
+
+        match plot_type:
+            case PressurePlotType.ABSOLUTE_ANIMATION:
+                acoustic_pressures = np.abs(acoustic_pressures)
+                min_value = 0
+                max_value = np.max(np.abs(min_max_values))
+
+            case _:
+                min_value, max_value = min_max_values
+
+        return time_vector[:n], acoustic_pressures, min_value, max_value
+
+    @cache
+    def compute_multiple_ifft(self) -> tuple[np.ndarray, np.ndarray]:
+        assert isinstance(self.solution, HarmonicSolution)
+        assert self.solution.analysis_id.is_acoustic()  # for now, I guess
+
+        # t0 = perf_counter()
+        logging.info("Computing multiple iffts... [25/100]")
+        time_vector, waveforms = process_multiple_iffts_from_one_sided_spectrum_signals(
+            self.solution.frequencies,
+            self.solution.nodal_solution,
+            dc_included=False,
+        )
+
+        logging.info("Computing multiple iffts... [100/100]")
+
+        # dt = perf_counter() - t0
+        # print(f"Elapsed time to process ifft: {dt: .6f} s")
+
+        return time_vector, waveforms
+
+    @cache
+    def get_acoustic_waveforms_minimum_and_maximum_values(self, N: float):
+        _waveforms = self.waveforms[:, :N]
+        return (_waveforms.min(), _waveforms.max())
 
     def compute_particle_velocity(
         self,
@@ -261,8 +321,8 @@ class AcousticPostprocessing:
 
         node_ids = self.mesh.get_nodes_from_surface(surface_id)
         map_elements_to_nodes, filtered_nodes = self.mesh.get_solid_elements_connected_to_nodes(node_ids=node_ids, return_nodes=True)
-        
-        # map_elements_to_nodes, filtered_nodes = self.mesh.get_solid_elements_connected_to_nodes(
+
+        # map_elements_to_nodes, filtered_nodes = aelf.mesh.get_solid_elements_connected_to_nodes(
         #     surface_id=surface_id, return_nodes=True)
 
         # Load all frequency solutions to optimize multiple load on the `process_particle_velocity` method below.

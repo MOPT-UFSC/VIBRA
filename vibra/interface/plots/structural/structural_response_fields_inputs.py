@@ -1,3 +1,4 @@
+from vibra.interface.viewer_3d.plot_setup import DisplacementPlotType
 import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QGridLayout, QTreeWidgetItem
@@ -7,6 +8,7 @@ from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.plots.general.animation_widget import AnimationWidget
 from vibra.interface.ui_generated.plots.structural.structural_response_fields_inputs_ui import StructuralResponseFieldsInputs_UI
 from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
+from vibra.interface.viewer_3d.plot_setup import FrequencyDisplacementPlotSetup
 
 
 class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
@@ -107,14 +109,14 @@ class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
         except AttributeError:
             pass
 
-    def get_data_type(self):
+    def get_plot_type(self) -> DisplacementPlotType:
         prefixes = ["u", "v", "a"]
         suffixes = ["sum", "x", "y", "z"]
 
         ind_dformat = self.comboBox_plotting_results.currentIndex()
         ind_ptype = self.comboBox_plot_type.currentIndex()
 
-        return f"{prefixes[ind_dformat]}_{suffixes[ind_ptype]}"
+        return DisplacementPlotType(f"{prefixes[ind_dformat]}_{suffixes[ind_ptype]}")
 
     def get_plot_units(self) -> str:
         units = ["m", "m/s", "m/s²"]
@@ -138,16 +140,24 @@ class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
 
         if self.selected_frequency_index is None:
             return
-        
+
         self.animation_widget.reset_sliders()
-        LoadingWindow(app().main_window.results_widget.update_plot).run()
+
+        plot_setup = FrequencyDisplacementPlotSetup(
+            phase=self.animation_widget.phase_in_radians,
+            magnification_factor=self.animation_widget.magnification_factor,
+            index=self.selected_frequency_index,
+            plot_type=self.get_plot_type(),
+            unit=self.get_plot_units()
+        )
+        LoadingWindow(app().main_window.results_widget.update_plot).run(plot_setup=plot_setup)
 
     def get_selected_frequency_index(self):
         if self.selected_frequency_index is not None:
             return self.selected_frequency_index
 
         return 0
-    
+
     def get_number_of_differentiations(self):
         return self.comboBox_plotting_results.currentIndex()
 
