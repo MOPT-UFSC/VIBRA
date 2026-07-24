@@ -2,18 +2,18 @@ from __future__ import annotations
 
 import logging
 from functools import cache
-from time import perf_counter
+# from time import perf_counter
 from typing import Optional
 
 import numpy as np
 
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
+from vibra.engine.postprocessing.acoustic_post_solution_dataclass import NodalParticleVelocities
 from vibra.engine.solution import HarmonicSolution, Solution
 from vibra.interface.viewer_3d.plot_setup import PressurePlotType
 from vibra.utils.lazy_array import LazyArray
 from vibra.utils.signal_processing import process_multiple_iffts_from_one_sided_spectrum_signals
-from vibra.engine.postprocessing.acoustic_post_solution_dataclass import NodalParticleVelocities
 
 
 class AcousticPostprocessing:
@@ -22,6 +22,8 @@ class AcousticPostprocessing:
             raise ValueError("The model argument must be of type Model.")
 
         self.model = model
+
+        self.waveforms = np.array([], dtype=float)
 
     @property
     def mesh(self) -> Optional[Mesh]:
@@ -157,27 +159,36 @@ class AcousticPostprocessing:
         plot_type: PressurePlotType,
         reduced_loop_time: float = -1,
     ):
-        time_vector, waveform = self.compute_multiple_ifft(reduced_loop_time=reduced_loop_time)
-        acoustic_pressures = waveform[:, time_index].flatten()
+
+        time_vector, self.waveforms = self.compute_multiple_ifft()
+
+        if reduced_loop_time != -1:
+            N = np.sum(time_vector <= reduced_loop_time)
+        else:
+            N = time_vector.size
+
+        # cache the minimum and maximum values of the nodal pressure waveforms
+        min_max_values = self.get_acoustic_waveforms_minimum_and_maximum_values(int(N))
+
+        acoustic_pressures = self.waveforms[:, time_index].flatten()
 
         match plot_type:
             case PressurePlotType.ABSOLUTE_ANIMATION:
                 acoustic_pressures = np.abs(acoustic_pressures)
                 min_value = 0
-                max_value = np.max(np.abs(waveform))
+                max_value = np.max(np.abs(min_max_values))
 
             case _:
-                min_value = np.min(waveform)
-                max_value = np.max(waveform)
+                min_value, max_value = min_max_values
 
-        return time_vector, acoustic_pressures, min_value, max_value
+        return time_vector[:N], acoustic_pressures, min_value, max_value
 
     @cache
-    def compute_multiple_ifft(self, reduced_loop_time: float = -1):
+    def compute_multiple_ifft(self) -> tuple[np.ndarray, np.ndarray]:
         assert isinstance(self.solution, HarmonicSolution)
         assert self.solution.analysis_id.is_acoustic()  # for now, I guess
 
-        t0 = perf_counter()
+        # t0 = perf_counter()
         logging.info("Computing multiple iffts... [25/100]")
         time_vector, waveforms = process_multiple_iffts_from_one_sided_spectrum_signals(
             self.solution.frequencies,
@@ -185,16 +196,17 @@ class AcousticPostprocessing:
             dc_included=False,
         )
 
-        if reduced_loop_time != -1:
-            mask = time_vector <= reduced_loop_time
-            time_vector = time_vector[mask]
-            waveforms = waveforms[:, mask]
-
         logging.info("Computing multiple iffts... [100/100]")
 
-        dt = perf_counter() - t0
-        logging.info(f"Elapsed time to process ifft: {dt: .6f} s")
+        # dt = perf_counter() - t0
+        # print(f"Elapsed time to process ifft: {dt: .6f} s")
+
         return time_vector, waveforms
+
+    @cache
+    def get_acoustic_waveforms_minimum_and_maximum_values(self, N: float):
+        _waveforms = self.waveforms[:, :N]
+        return (_waveforms.min(), _waveforms.max())
 
     def compute_particle_velocity(
         self,
