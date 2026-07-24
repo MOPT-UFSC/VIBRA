@@ -331,3 +331,4 @@ class AnimationWidget(AnimationWidget_UI):
     def animation_loop_callback(self):
         is_clicked = self.pushButton_animation_loop.isChecked()
         self.spinBox_cycles.setDisabled(is_clicked)
+        app().main_window.results_widget.stop_animation()
