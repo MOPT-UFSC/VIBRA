@@ -1,6 +1,6 @@
 import logging
 from threading import Lock
-from time import time
+from time import perf_counter, time
 from typing import Optional
 
 import numpy as np
@@ -385,17 +385,19 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
     @warn_delays
     def cache_frame(self, frame):
+        t0 = perf_counter()
         with self.update_lock:
             self.update_color_and_deformation(animation_frame=frame, clear_cache=False)
+
+        dt = perf_counter() - t0
+        print(f"Elapsed time to the compute animation frame: {dt} [s]")
 
         point_data = vtkPointData()
         point_position = vtkPoints()
         point_data.DeepCopy(self.analysis_actor.data.GetPointData())
         point_position.DeepCopy(self.analysis_actor.data.GetPoints())
-        self._animation_cached_data[frame] = (
-            point_data,
-            point_position,
-        )
+        self._animation_cached_data[frame] = (point_data, point_position)
+
         if self.is_animation_symetric:
             mirrored_frame = self._animation_total_frames - frame - 1
             self._animation_cached_data[mirrored_frame] = self._animation_cached_data[frame]
