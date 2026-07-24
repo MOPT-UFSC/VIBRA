@@ -1,4 +1,6 @@
 
+from enum import IntEnum
+
 import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
@@ -7,13 +9,11 @@ from PySide6.QtWidgets import QGridLayout
 from vibra import app
 from vibra.engine import AnalysisID
 from vibra.interface.loading_window import LoadingWindow
+from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
 from vibra.interface.plots.general.animation_widget import AnimationWidget
 from vibra.interface.ui_generated.plots.acoustic.acoustic_pressure_waveform_field_inputs_ui import AcousticPressureWaveformFieldInputs_UI
 from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
 from vibra.interface.viewer_3d.plot_setup import PressurePlotType, TransientPressurePlotSetup
-from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
-
-from enum import IntEnum
 
 
 class ReduceLoopType(IntEnum):
@@ -83,7 +83,7 @@ class AcousticPressureWaveformFieldInputs(AcousticPressureWaveformFieldInputs_UI
         self.comboBox_plot_type.currentIndexChanged.connect(self.plot_data_callback)
         self.comboBox_reduced_time.currentIndexChanged.connect(self.reduced_loop_time_type_callback)
         #
-        self.lineEdit_animation_time.editingFinished.connect(self.plot_data_callback)
+        self.lineEdit_animation_time.editingFinished.connect(self.reduced_loop_time_callback)
         #
         self.slider_transparency.valueChanged.connect(self.update_transparency_callback)
         #
@@ -132,9 +132,19 @@ class AcousticPressureWaveformFieldInputs(AcousticPressureWaveformFieldInputs_UI
         app().main_window.results_widget.set_tube_actors_transparency(transparency)
 
     def reduced_loop_time_callback(self):
+
+        ## TODO: please, implement something smart here to avoid the plot_data_callback
+
+        # plot_setup = TransientPressurePlotSetup(
+        #     time_index=0,
+        #     plot_type=self.get_plot_type(),
+        #     unit="Pa",
+        #     reduced_loop_time=self.get_reduced_loop_time(),
+        # )
+
+        # app().main_window.results_widget.configure_plot(plot_setup)
+
         self.plot_data_callback()
-        # T_red = self.get_reduced_loop_time()
-        # app().main_window.results_widget.plot_setup.loop_time = T_red
 
     def reduced_loop_time_type_callback(self):
         index = self.comboBox_reduced_time.currentIndex()
