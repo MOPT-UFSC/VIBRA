@@ -1,21 +1,21 @@
-from PySide6.QtWidgets import QFileDialog
-# from PySide6.QtGui import QCloseEvent
-from PySide6.QtCore import Qt
-
-from vibra import app
-from vibra.interface.ui_generated.model.fluid.load_fluid_composition_ui import LoadFluidComposition_UI
-from vibra.interface.general.print_message_input import PrintMessageInput
-
 import os
 from pathlib import Path
 
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QFileDialog
+
+from vibra import app
+from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.ui_generated.model.fluid.load_fluid_composition_ui import LoadFluidComposition_UI
+
+
 class LoadFluidCompositionInputs(LoadFluidComposition_UI):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, file_path: str = ""):
         super().__init__()
 
         app().main_window.set_input_widget(self)
 
-        self.file_path = kwargs.get("file_path", "")
+        self.file_path = file_path
        
         self._initialize()
         self._config_window()
@@ -28,7 +28,7 @@ class LoadFluidCompositionInputs(LoadFluidComposition_UI):
     def _initialize(self):
 
         self.complete = False
-        self.fluid_composition_data = None
+        self.fluid_composition_data: list[tuple[int, str, str, str]] = []
 
         user_path = os.path.expanduser('~')
         desktop_path = Path(os.path.join(os.path.join(user_path, 'Desktop')))
@@ -84,11 +84,11 @@ class LoadFluidCompositionInputs(LoadFluidComposition_UI):
         if self.lineEdit_file_path.text() == "":
             return
 
-        self.imported_data = dict()
+        self.imported_data = {}
         self.comboBox_sheet_names.clear()
 
-        from polars import read_excel
         from openpyxl import load_workbook
+        from polars import read_excel
 
         wb = load_workbook(self.file_path)
         sheetnames = wb.sheetnames
@@ -96,18 +96,18 @@ class LoadFluidCompositionInputs(LoadFluidComposition_UI):
 
             try:
                 sheet_data = read_excel(
-                                        self.file_path, 
-                                        sheet_name = sheetname, 
-                                        columns = [0,1,2,3]
-                                        ).to_numpy()
-                
+                    self.file_path,
+                    sheet_name=sheetname,
+                    columns=(0, 1, 2, 3),
+                ).to_numpy()
+
                 self.imported_data[sheetname] = sheet_data
                 self.comboBox_sheet_names.addItem(sheetname)
-                
+               
             except Exception as error_log:
                 window_title = "Error"
                 title = "Error while reading data from file"
-                message = f"{str(error_log)}"
+                message = str(error_log)
                 PrintMessageInput([window_title, title, message])
                 return True
 
