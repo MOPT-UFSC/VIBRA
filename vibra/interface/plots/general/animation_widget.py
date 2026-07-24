@@ -14,7 +14,12 @@ from vibra.interface.formatters.icons import Icon
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.ui_generated.plots.general.animation_widget_ui import AnimationWidget_UI
-from vibra.interface.viewer_3d.plot_setup import FrequencyDisplacementPlotSetup, FrequencyPressurePlotSetup, TransientPressurePlotSetup
+from vibra.interface.viewer_3d.plot_setup import (
+    FrequencyDisplacementPlotSetup,
+    FrequencyPressurePlotSetup,
+    PlotSetup,
+    TransientPressurePlotSetup,
+)
 
 
 class AnimationWidget(AnimationWidget_UI):
@@ -191,8 +196,6 @@ class AnimationWidget(AnimationWidget_UI):
         self.update_animation_parameters(sampling_time, frames_number)
         self.phase_slider.valueChanged.connect(self.time_frame_slider_callback)
 
-        self.label_phase_angle.setText("0s")
-
     def update_animation_parameters(self, sampling_time: float, frames_number: int):
         self.sampling_time = sampling_time
         self.fps = max(1, frames_number // 10)
@@ -226,7 +229,7 @@ class AnimationWidget(AnimationWidget_UI):
 
         app().main_window.results_widget.update_color_and_deformation(clear_cache=clear_cache)
 
-    def reset_sliders(self):
+    def reset_sliders(self, plot_setup: None | PlotSetup = None):
         # block the slider signal to avoid multiple render updates
         self.phase_slider.blockSignals(True)
 
@@ -234,7 +237,10 @@ class AnimationWidget(AnimationWidget_UI):
         self.phase_slider.setValue(0)
 
         # update labels
-        self.update_degree_label()
+        if isinstance(plot_setup, TransientPressurePlotSetup):
+            self.update_time_frame_label()
+        else:
+            self.update_degree_label()
 
         # unblocking the slider signals
         self.phase_slider.blockSignals(False)
@@ -274,7 +280,7 @@ class AnimationWidget(AnimationWidget_UI):
         self.label_phase_angle.setText(f"{value}°")
 
     def update_time_frame_label(self):
-        self.label_phase_angle.setText(f"{self.time: .4f}s")
+        self.label_phase_angle.setText(f"{self.time: .4e}s")
 
     def update_factor_label(self, max_value=None):
         value = self.magnification_factor_slider.value() / 16

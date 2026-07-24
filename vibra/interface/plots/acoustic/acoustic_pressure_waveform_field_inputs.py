@@ -101,6 +101,7 @@ class AcousticPressureWaveformFieldInputs(AcousticPressureWaveformFieldInputs_UI
         self.frame_animation.adjustSize()
 
         self.animation_widget.label_animation_phase.setText("Time step:")
+        self.animation_widget.label_phase_angle.setText(f"{0: .4e}s")
 
     def update_slider_configuration(self):
         if isinstance(self.frequencies, np.ndarray):
@@ -188,7 +189,7 @@ class AcousticPressureWaveformFieldInputs(AcousticPressureWaveformFieldInputs_UI
         self.plot_setup = plot_setup
 
         def plot_callback():
-            self.animation_widget.reset_sliders()
+            self.animation_widget.reset_sliders(plot_setup=plot_setup)
             app().main_window.results_widget.update_plot(plot_setup=self.plot_setup)
 
         LoadingWindow(plot_callback).run()
