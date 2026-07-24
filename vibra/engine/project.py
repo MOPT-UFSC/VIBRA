@@ -144,8 +144,8 @@ class Project:
         self.reset_solution()
         self.project_reader.unpack_into_working_directory(path)
         self.model = self.project_reader.read_model(self.model)
-        self.model.name = path.stem
         self.assembler, self.solver = self.project_reader.read_assembler_and_solver(self.model)
+        self.model.name = path.stem
         self.save_path = path
         self.needs_saving = False
         return self
@@ -171,8 +171,6 @@ class Project:
         Writes project data to the working directory.
         """
         self.project_writer.write_model(self.model)
-        if isinstance(self.solver, ModalSolver) and (self.solver.solution is not None):
-            self.project_writer.write_modal_solution(self.model.solution)
         self.mark_project_as_modified()
 
     # TODO: use only "write_to_working_dir"
@@ -195,8 +193,7 @@ class Project:
         """
         self.save_path = Path(path)
         self.model.name = name
-        if self.project_paths.is_empty():
-            self.write_to_working_dir()
+        self.write_to_working_dir()
         self.project_writer.write_file(path)
         self.needs_saving = False
 

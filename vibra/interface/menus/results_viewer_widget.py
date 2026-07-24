@@ -67,6 +67,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.results_viewer_items.item_child_acoustic_pressure_field.clicked.connect(self.add_acoustic_harmonic_widget)
         self.results_viewer_items.item_child_acoustic_pressure_frequency_response.clicked.connect(self.add_acoustic_pressure_frequency_response_widget)
         self.results_viewer_items.item_child_acoustic_pressure_frf.clicked.connect(self.add_acoustic_pressure_frequency_response_function_widget)
+        self.results_viewer_items.item_child_decompose_acoustic_waves.clicked.connect(self.add_decompose_acoustic_pressure_waves_widget)
         self.results_viewer_items.item_child_allowable_pulsations_for_reciprocating_compressor.clicked.connect(self.add_allowable_pulsations_for_reciprocating_compressor_widget)
         self.results_viewer_items.item_child_allowable_pulsations_for_screw_compressor.clicked.connect(self.add_allowable_pulsations_for_screw_compressor_widget)
         self.results_viewer_items.item_child_acoustic_pressure_waveform.clicked.connect(self.add_acoustic_pressure_waveform_widget)
@@ -136,6 +137,14 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
     
     def add_acoustic_pressure_frequency_response_function_widget(self):
         self.current_widget = app().main_window.input_ui.plot_acoustic_pressure_frequency_response_function()
+
+        if app().main_window.results_widget.playing_animation:
+            app().main_window.results_widget.stop_animation()
+
+        self.add_widget(self.current_widget)
+
+    def add_decompose_acoustic_pressure_waves_widget(self):
+        self.current_widget = app().main_window.input_ui.decompose_acoustic_pressure_waves()
 
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()

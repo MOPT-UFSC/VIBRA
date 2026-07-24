@@ -8,10 +8,10 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from molde.colors import Color, color_names
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QColor, QIcon, QKeyEvent
+from PySide6.QtGui import QColor, QKeyEvent
 from PySide6.QtWidgets import QTableWidgetItem, QVBoxLayout
 
-from vibra import ICON_DIR, app
+from vibra import app
 from vibra.engine.mesher import gmsh_constants
 from vibra.engine.mesher.element_setup import (
     GMSH_HEX8,
@@ -29,6 +29,7 @@ from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.ui_generated.model.general.mesher_setup_inputs_ui import MesherSetupInputs_UI
 from vibra.interface.ui_generated.plots.general.mesh_quality_histogram_plot_ui import MeshQualityHistogramPlot_UI
 from vibra.utils.interface_utils import block_signals
+from vibra.interface.formatters.icons import Icon
 from vibra.utils.subprocess.subprocess_handler import SubProcessHandler, SubProcessStatus
 
 
@@ -188,10 +189,10 @@ class MesherSetupInputs(MesherSetupInputs_UI):
     def synchronize_button_callback(self):
         self.synchronize_sizes = not self.synchronize_sizes
         if self.synchronize_sizes:
-            icon = QIcon(str(ICON_DIR / "sync_disabled.png"))
+            icon = Icon(":/icons/sync_disabled.png")
             tool_tip = "Desynchronize the minimum and maximum sizes"
         else:
-            icon = QIcon(str(ICON_DIR / "sync_enabled.png"))
+            icon = Icon(":/icons/sync_enabled.png")
             tool_tip = "Synchronize the minimum and maximum sizes"
 
         self.doubleSpinBox_minimum_element_size.setDisabled(self.synchronize_sizes)

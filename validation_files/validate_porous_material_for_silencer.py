@@ -45,6 +45,7 @@ def load_external_mesh_and_solve():
 
     mesh = Mesh()
     mesh.import_external_nodal_coordinates(external_mesh.nodal_coordinates, index_zero=True)
+    mesh.import_external_faces_connectivity(external_mesh.faces_connectivities, index_zero=True, etype_tag=9)
     mesh.import_external_solids_connectivity(external_mesh.solids_connectivities, index_zero=True, etype_tag=4)
     mesh.export_nodal_coordinates("nodal_coordinates.dat")
     mesh.export_solid_elements_connectivity("solids_connectivity.dat")
@@ -157,11 +158,8 @@ def load_external_mesh_and_solve():
     input_particle_velocities = acoustic_post.get_particle_velocity_from_surface(1, 1)
     output_particle_velocities = acoustic_post.get_particle_velocity_from_surface(2, 1)
 
-    input_velocities = np.array(list(input_particle_velocities["Vx"].values()), dtype=complex)
-    output_velocities = np.array(list(output_particle_velocities["Vx"].values()), dtype=complex)
-
-    input_Vx = np.average(input_velocities, axis=0)
-    output_Vx = np.average(output_velocities, axis=0)
+    input_Vx = np.average(input_particle_velocities.Vx_array(), axis=0)
+    output_Vx = np.average(output_particle_velocities.Vx_array(), axis=0)
 
     mesh.process_face_elements_connected_to_nodes([1, 2])
     mesh.compute_nodal_areas()
@@ -262,7 +260,7 @@ def load_external_mesh_and_solve():
 
     fig6, ax6 = plt.subplots()
     title = "Particle velocity at node 8904"
-    ax6.plot(frequencies, data_type(output_particle_velocities["Vx"][8904 - 1]), "r", label="VIBRA")
+    ax6.plot(frequencies, data_type(output_particle_velocities.Vx[8904 - 1]), "r", label="VIBRA")
     ax6.plot(x_data_WB, data_type(y_data_WB), "k--", label="ANSYS")
     ax6.set_xlabel("Frequency [Hz]")
     ax6.set_ylabel(f"Particle velocity [m/s] - {type_label}")
@@ -275,7 +273,7 @@ def load_external_mesh_and_solve():
 
     fig7, ax7 = plt.subplots()
     title = "Particle velocity at node 8817"
-    ax7.plot(frequencies, data_type(input_particle_velocities["Vx"][8817 - 1]), "r", label="VIBRA")
+    ax7.plot(frequencies, data_type(input_particle_velocities.Vx[8817 - 1]), "r", label="VIBRA")
     ax7.plot(x_data_WB, data_type(y_data_WB), "k--", label="ANSYS")
     ax7.set_xlabel("Frequency [Hz]")
     ax7.set_ylabel(f"Particle velocity [m/s] - {type_label}")
@@ -315,7 +313,7 @@ def load_external_mesh_and_solve():
     Vx_8817_WB = velocity_at_node_8817[:, 1] + 1j * velocity_at_node_8817[:, 2]
     P_8817_WB = pressure_at_node_8817[:, 1] + 1j * pressure_at_node_8817[:, 2]
 
-    sound_int = np.real(nodal_solution[8817 - 1, :] * np.conj(input_particle_velocities["Vx"][8817 - 1])) / 2
+    sound_int = np.real(nodal_solution[8817 - 1, :] * np.conj(input_particle_velocities.Vx[8817 - 1])) / 2
     y_data_WB = np.real(P_8817_WB * np.conj(Vx_8817_WB)) / 2
 
     fig10, ax10 = plt.subplots()
@@ -334,7 +332,7 @@ def load_external_mesh_and_solve():
     Vx_8904_WB = velocity_at_node_8904[:, 1] + 1j * velocity_at_node_8904[:, 2]
     P_8904_WB = pressure_at_node_8904[:, 1] + 1j * pressure_at_node_8904[:, 2]
 
-    sound_int = np.real(nodal_solution[8904 - 1, :] * np.conj(output_particle_velocities["Vx"][8904 - 1])) / 2
+    sound_int = np.real(nodal_solution[8904 - 1, :] * np.conj(output_particle_velocities.Vx[8904 - 1])) / 2
     y_data_WB = np.real(P_8904_WB * np.conj(Vx_8904_WB)) / 2
 
     fig11, ax11 = plt.subplots()

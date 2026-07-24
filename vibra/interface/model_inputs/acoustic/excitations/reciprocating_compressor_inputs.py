@@ -13,7 +13,6 @@ from vibra.engine.properties.fluid import Fluid
 from vibra.interface import error_title
 from vibra.interface.common.common_interface import mesher_interface_callback, update_analysis_setup_in_file
 from vibra.interface.data_handler.export_model_results import ExportModelResults
-from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
@@ -58,7 +57,6 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self._initialize()
         self._config_widgets()
         self._create_connections()
-        self._paint_icons()
 
         self.load_compressor_excitation_info()
         self.geometry_selection_callback()
@@ -250,23 +248,10 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.treeWidget_compressor_excitation.itemClicked.connect(self.on_click_item)
         #
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
-        app().main_window.theme_changed.connect(self._paint_icons)
         #
         self.export_data_checkbox_callback()
         self.update_compressing_cylinders_setup()
         self.update_state_properties_at_discharge()
-
-    def _paint_icons(self):
-        icon_color = None
-        theme = app().config.user_preferences.interface_theme
-        from vibra import DARK_ICON_COLOR, LIGHT_ICON_COLOR
-        if theme == "dark":
-            icon_color = DARK_ICON_COLOR.to_qt()
-        else:
-            icon_color = LIGHT_ICON_COLOR.to_qt()
-
-        widgets = [self.pushButton_reset_entries]
-        change_icon_color_for_widgets(widgets, icon_color)
 
     def export_data_checkbox_callback(self):
         is_checked = self.checkBox_export_data.isChecked()

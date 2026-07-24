@@ -10,13 +10,14 @@ from molde import stylesheets
 from molde.render_widgets import CommonRenderWidget
 from PySide6.QtCore import QEvent, Qt, Signal
 from PySide6.QtGui import QAction
-from PySide6.QtWidgets import QAbstractButton, QFileDialog, QMenu, QMessageBox
+from PySide6.QtWidgets import QFileDialog, QMenu, QMessageBox
 
-from vibra import LIGHT_ICON_COLOR, SUPPORTED_GEOMETRY_EXTENSIONS, SUPPORTED_MESH_EXTENSIONS, TEMP_PROJECT_DIR, app
+from vibra import SUPPORTED_GEOMETRY_EXTENSIONS, SUPPORTED_MESH_EXTENSIONS, TEMP_PROJECT_DIR, app
 from vibra.engine.assemblers import AcousticAssembler
 from vibra.engine.solvers import HarmonicSolver
+from vibra.interface.data.icons.theme_resources import set_icon_theme
 from vibra.interface.data_handler.export_mesh_data import ExportMeshData
-from vibra.interface.formatters.icons import change_icon_color_for_widgets, get_vibra_icon
+from vibra.interface.formatters.icons import get_vibra_icon, Icon
 from vibra.interface.general.entity_visibility_handler import EntityVisibilityHandler
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.general.selection_handler import SelectionHandler
@@ -37,7 +38,6 @@ from vibra.interface.user_input.input_ui import InputUi
 from vibra.interface.user_input.render_user_preferences import RendererUserPreferencesInput
 from vibra.interface.viewer_3d.render_widgets import GeometryRenderWidget, MeshRenderWidget, ResultsRenderWidget
 from vibra.interface.welcome_widget import WelcomeWidget
-from vibra.utils.icons import load_icon
 from vibra.utils.interface_utils import GeometryColorMode, VisualizationFilter, block_signals, qt_extensions
 
 
@@ -238,18 +238,7 @@ class MainWindow(MainWindow_UI):
         app().config.user_preferences.interface_theme = theme
         stylesheets.set_theme(theme)
 
-        from vibra import DARK_ICON_COLOR, LIGHT_ICON_COLOR
-
-        if theme == "dark":
-            icon_color = DARK_ICON_COLOR.to_qt()
-        elif theme == "light":
-            icon_color = LIGHT_ICON_COLOR.to_qt()
-
-        widgets_type = [QAction, QAbstractButton]
-        widgets = list()
-        for widget_type in widgets_type:
-            widgets += self.findChildren(widget_type)
-        change_icon_color_for_widgets(widgets, icon_color)
+        set_icon_theme(theme)
 
         self.theme_changed.emit(theme)
 
@@ -294,8 +283,7 @@ class MainWindow(MainWindow_UI):
         self.update_renderer_font_size()
 
     def create_recents_menu(self):
-        color = LIGHT_ICON_COLOR.to_qt()
-        self.recent_icon = load_icon(":/icons/recent.png", color)
+        self.recent_icon = Icon(":/icons/recent.png")
 
         self.recents_menu = QMenu("Recent projects", self)
         self.recents_menu.setIcon(self.recent_icon)
@@ -343,10 +331,8 @@ class MainWindow(MainWindow_UI):
             self.section_plane.value_changed.emit()
 
     def action_theme_callback(self):
-        color = LIGHT_ICON_COLOR.to_qt()
-
-        self.theme_sun_icon = load_icon(":/icons/sun_icon.png", color)
-        self.theme_moon_icon = load_icon(":/icons/moon_icon.png", color)
+        self.theme_sun_icon = Icon(":/icons/sun_icon.png")
+        self.theme_moon_icon = Icon(":/icons/moon_icon.png")
 
         if app().config.user_preferences.interface_theme == "light":
             app().config.user_preferences.set_dark_theme()

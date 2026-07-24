@@ -20,6 +20,8 @@ from PySide6.QtWidgets import (QApplication, QComboBox, QDialog, QFrame,
     QPushButton, QSizePolicy, QSpacerItem, QTabWidget,
     QTreeWidget, QTreeWidgetItem, QWidget)
 
+from vibra.interface.formatters.icons import Icon
+
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
@@ -552,8 +554,7 @@ class Ui_Dialog(object):
         self.pushButton_load_uy_table.setMaximumSize(QSize(40, 26))
         self.pushButton_load_uy_table.setFont(font2)
         self.pushButton_load_uy_table.setStyleSheet(u"")
-        icon = QIcon()
-        icon.addFile(u":/icons/document_search_blue.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon = Icon(u":/icons/document_search_blue.png")
         self.pushButton_load_uy_table.setIcon(icon)
         self.pushButton_load_uy_table.setIconSize(QSize(20, 20))
         self.pushButton_load_uy_table.setAutoDefault(False)

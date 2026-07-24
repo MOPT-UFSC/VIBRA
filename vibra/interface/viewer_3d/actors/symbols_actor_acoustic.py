@@ -245,30 +245,25 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
         coords, normal = self._get_symbol_coords_and_normal(surface_id)
         self.add_symbol(sources.create_dissipation_model_source, coords, normal, color=color_names.ORANGE)
 
-    def _build_acoustic_transfer_element_data(
-        self, surface_id: int = -1
-    ):
+    def _build_acoustic_transfer_element_data(self, surface_id: int = -1):
         if surface_id == -1:
             return
 
         coords, normal = self._get_symbol_coords_and_normal(surface_id)
-        self.add_symbol(
-            sources.create_acoustic_transfer_element_data_source, coords, normal, color=color_names.TURQUOISE
-        )
+        self.add_symbol(sources.create_acoustic_transfer_element_data_source, coords, normal, color=color_names.TURQUOISE)
 
-    def _build_incident_plane_wave(
-        self, property_name: str, surface_id: int = -1, *args, **kwargs
-    ):
+    def _build_incident_plane_wave(self, property_name: str, surface_id: int = -1, *args, **kwargs):
         if surface_id == -1:
             return
 
-        surface_properties = app().project.model.properties.surface_properties
-        property = surface_properties[property_name, surface_id]
+        prop_data = app().project.model.properties._get_property(property_name, surface=surface_id)
+        if not isinstance(prop_data, dict):
+            return
 
-        wave_vector = property.get("wave_vector")
+        ipw_vector = prop_data.get("ipw_vector")
         coords, _ = self._get_symbol_coords_and_normal(surface_id)
 
-        self.add_symbol(sources.create_incident_plane_wave_source, coords, wave_vector, color=color_names.BLUE)
+        self.add_symbol(sources.create_incident_plane_wave_source, coords, ipw_vector, color=color_names.BLUE)
 
     def _build_mass_source(self, surface_id: int = -1, line_id: int = -1, point_id: int = -1, node_id: int = -1, *args, **kwargs):
         orientation = (0, 0, 0)

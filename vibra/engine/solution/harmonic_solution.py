@@ -44,7 +44,7 @@ class HarmonicSolution(CommonSolution):
         return self._immutable_array(_nodal_displacements)
 
     def get_nodal_displacement_at_column(self, column_index: int) -> Array1D:
-        return self.nodal_solution[self.displacement_dof, column_index]
+        return self.nodal_solution[self.displacement_dof, column_index].copy()
 
     def copy(self):
         return deepcopy(self)

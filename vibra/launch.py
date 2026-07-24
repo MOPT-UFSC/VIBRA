@@ -79,7 +79,7 @@ def main():
     from PySide6.QtCore import Qt
     from vtkmodules.vtkCommonCore import vtkLogger, vtkObject
 
-    import vibra.interface.data.resources_rc  # noqa: F401
+    import vibra.interface.data.icons.theme_resources  # noqa: F401
     from vibra.interface.application import Application
 
     configure_logs()
