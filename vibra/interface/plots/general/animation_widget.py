@@ -36,7 +36,6 @@ class AnimationWidget(AnimationWidget_UI):
 
     def _initialize(self):
         self.animating = False
-        self.fps = 30
         self.frames_number = 1
         self.sampling_time = 1
         self.current_render_widget = None
@@ -198,7 +197,6 @@ class AnimationWidget(AnimationWidget_UI):
 
     def update_animation_parameters(self, sampling_time: float, frames_number: int):
         self.sampling_time = sampling_time
-        self.fps = max(1, frames_number // 10)
         self.frames_number = frames_number
 
         self.phase_slider.setMaximum(frames_number)
@@ -260,7 +258,7 @@ class AnimationWidget(AnimationWidget_UI):
 
         if button_pressed:
             cycles = 0 if self.pushButton_animation_loop.isChecked() else self.cycles
-            app().main_window.results_widget.start_animation(fps=self.fps, frames=self.frames, cycles=cycles)
+            app().main_window.results_widget.start_animation(fps=30, frames=self.frames, cycles=cycles)
             return
 
         app().main_window.results_widget.stop_animation()
