@@ -1,5 +1,7 @@
 import logging
+from pathlib import Path
 
+import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QTableWidgetItem, QTreeWidgetItem
 
@@ -933,12 +935,9 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
 
         if read._cancel:
-            print('Deveria cancelar')
             self.complete = False              
             app().main_window.set_input_widget(self)
             return True
-
-        print("Não cancelou...")
 
     def get_temperature_and_pressure_SI_units(self, thermostate_side: str="left"):
 
@@ -1205,13 +1204,13 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
                 continue
 
             if value_1.lower() == "pressure":
-                self.lineEdit_pressure_left.setText(value_2)
-                self.comboBox_pressure_units.setCurrentText(value_3)
+                self.lineEdit_pressure_left.setText(str(value_3))
+                self.comboBox_pressure_units.setCurrentText(value_2)
                 continue
 
             if value_1.lower() == "temperature":
-                self.lineEdit_temperature_left.setText(value_2)
-                self.comboBox_temperature_units.setCurrentText(value_3)
+                self.lineEdit_temperature_left.setText(str(value_3))
+                self.comboBox_temperature_units.setCurrentText(value_2)
                 continue
 
             # label = value_1
@@ -1234,6 +1233,51 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         self.update_remainig_composition()
 
         app().main_window.set_input_widget(self)
+
+        self.process_composition_data_to_export()
+
+    def process_composition_data_to_export(self):
+
+        data = []
+
+        for i, (fluid_name, values) in enumerate(self.fluid_to_composition.items()):
+            _, molar_fraction, fluid_file = values
+            label = fluid_file.split(".")[0]
+
+            data.append((int(i + 1), label, fluid_name, molar_fraction))
+
+        Nf = len(data)
+        data.append((None, None, None, None))
+
+        pressure = float(self.lineEdit_pressure_left.text())
+        pressure_units = self.comboBox_pressure_units.currentText()
+
+        temperature = float(self.lineEdit_temperature_left.text())
+        temperature_units = self.comboBox_temperature_units.currentText()
+
+        data.append((Nf + 1, "Pressure", pressure_units, pressure))
+        data.append((Nf + 2, "Temperature", temperature_units, temperature))
+
+        path = Path.home() / "Desktop/tabela_composicao_exportada.xlsx"
+        header = ["Index", "Label", "Fluid name", "Molar fraction [%]"]
+        data_to_export = {"composicao_teste": data}
+
+        self.export_data_in_spreadsheet_format(header, data_to_export, str(path))
+
+    def export_data_in_spreadsheet_format(self, header, data_to_export: dict, export_path: str):
+
+        from pandas import ExcelWriter
+        from polars import DataFrame
+
+        with ExcelWriter(export_path) as writer:
+
+            for sheet_name, sheet_data in data_to_export.items():
+                if not isinstance(sheet_data, np.ndarray | list):
+                    continue
+
+                df = DataFrame(sheet_data, schema=header, orient="row")
+
+                df.to_pandas().to_excel(writer, sheet_name=sheet_name, index=False)
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:

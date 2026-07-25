@@ -30,8 +30,7 @@ class LoadFluidCompositionInputs(LoadFluidComposition_UI):
         self.complete = False
         self.fluid_composition_data: list[tuple[int, str, str, str]] = []
 
-        user_path = os.path.expanduser('~')
-        desktop_path = Path(os.path.join(os.path.join(user_path, 'Desktop')))
+        desktop_path = Path.home() / "Desktop"
         self.desktop_path = str(desktop_path)
         
     def _config_window(self):
@@ -92,6 +91,7 @@ class LoadFluidCompositionInputs(LoadFluidComposition_UI):
 
         wb = load_workbook(self.file_path)
         sheetnames = wb.sheetnames
+
         for sheetname in sheetnames:
 
             try:
@@ -99,9 +99,10 @@ class LoadFluidCompositionInputs(LoadFluidComposition_UI):
                     self.file_path,
                     sheet_name=sheetname,
                     columns=(0, 1, 2, 3),
-                ).to_numpy()
+                    has_header=True,
+                )
 
-                self.imported_data[sheetname] = sheet_data
+                self.imported_data[sheetname] = sheet_data.to_numpy()
                 self.comboBox_sheet_names.addItem(sheetname)
                
             except Exception as error_log:
