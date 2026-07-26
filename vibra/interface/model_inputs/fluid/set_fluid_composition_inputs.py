@@ -1,9 +1,10 @@
 import logging
+import platform
 from pathlib import Path
 
 import numpy as np
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QTableWidgetItem, QTreeWidgetItem
+from PySide6.QtWidgets import QAbstractItemView, QFileDialog, QHeaderView, QTableWidgetItem, QTreeWidgetItem
 
 from vibra import app
 from vibra.engine.properties.fluid import Fluid
@@ -27,10 +28,10 @@ from vibra.model.machines.reciprocating_compressor_model import ConnectionType
 
 
 class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, fluid_to_edit: None | Fluid = None, *args, **kwargs):
         super().__init__()
 
-        self.fluid_to_edit = kwargs.get("fluid_to_edit")
+        self.fluid_to_edit = fluid_to_edit
         self.state_properties: dict = kwargs.get("state_properties", {})
 
         app().main_window.set_input_widget(self)
@@ -48,7 +49,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         if LoadingWindow(self.initialize_refprop_interface).run():
             return
 
-        self.update_selected_fluid(fluid_to_edit = self.fluid_to_edit)
+        self.update_selected_fluid()
 
         while self.keep_window_open:
             self.exec()
@@ -60,6 +61,8 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         self.setWindowTitle("Vibra")
 
     def _initialize(self):
+
+        self.user_path = Path().home()
 
         self.fluid_to_row = {}
         self.fluid_to_composition = {}
@@ -166,12 +169,15 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         self.setWindowTitle(f"OpenPulse (REFPROP v{version})")
 
     def _create_connections(self):
+
         # QComboBox connections
         self.comboBox_pressure_units.currentIndexChanged.connect(self.configure_dynamic_validators)
         self.comboBox_temperature_units.currentIndexChanged.connect(self.configure_dynamic_validators)
         self.comboBox_distribution_type.currentIndexChanged.connect(self.distribution_type_changed_callback)
+
         # QLineEdit connections
         self.lineEdit_search_fluid.textChanged.connect(self._filter_refprop_fluids)
+
         # QPushButton connections
         self.pushButton_add_gas.clicked.connect(self.add_selected_fluid_button_callback)
         self.pushButton_get_fluid_properties.clicked.connect(self.get_fluid_data)
@@ -180,11 +186,15 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         self.pushButton_load_composition.clicked.connect(self.load_fluid_composition_callback)
         self.pushButton_remove_gas.clicked.connect(self.remove_selected_gas)
         self.pushButton_reset_fluid.clicked.connect(self.reset_fluid)
+        self.pushButton_export_fluid_composition.clicked.connect(self.export_fluid_composition_callback)
+
         # QSpinbox connections
         self.spinBox_number_of_fluids.valueChanged.connect(self.number_of_fluids_changed_callback)
+
         # QTableWidget connections
         self.tableWidget_new_fluid.cellClicked.connect(self.cell_clicked_on_composition_table)
         self.tableWidget_new_fluid.itemChanged.connect(self.item_changed_callback)
+
         # QTreeWidget connections
         self.treeWidget_refprop_fluids.itemClicked.connect(self.on_click_item_refprop_fluids)
         self.treeWidget_refprop_fluids.itemDoubleClicked.connect(self.on_double_click_item_refprop_fluids)
@@ -322,16 +332,16 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
                 self.lineEdit_temperature_right.setText("---")
                 self.lineEdit_temperature_right.setToolTip(tool_tip)
 
-    def update_selected_fluid(self, fluid_to_edit: None | Fluid = None ):
+    def update_selected_fluid(self):
 
-        if not isinstance(fluid_to_edit, Fluid):
+        if not isinstance(self.fluid_to_edit, Fluid):
             return
 
-        fluid_name = fluid_to_edit.name
-        pressure = fluid_to_edit.pressure
-        temperature = fluid_to_edit.temperature
-        key_mixture = fluid_to_edit.key_mixture
-        molar_fractions = fluid_to_edit.molar_fractions
+        fluid_name = self.fluid_to_edit.name
+        pressure = self.fluid_to_edit.pressure
+        temperature = self.fluid_to_edit.temperature
+        key_mixture = self.fluid_to_edit.key_mixture
+        molar_fractions = self.fluid_to_edit.molar_fractions
 
         fluid_file_names = key_mixture.split(";")
         self.lineEdit_fluid_name.setText(fluid_name)
@@ -1213,7 +1223,6 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
                 self.comboBox_temperature_units.setCurrentText(value_2)
                 continue
 
-            # label = value_1
             fluid_name = value_2
             molar_fraction = float(value_3)
 
@@ -1229,54 +1238,100 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             self.fluid_to_composition[fluid_name] = [str(molar_fraction), molar_fraction, fluid_file]
             comp += molar_fraction
 
+        for (i, state_property, property_units, value) in read.state_properties_data:
+
+            if state_property.lower() == "pressure":
+                self.lineEdit_pressure_left.setText(str(value))
+                self.comboBox_pressure_units.setCurrentText(property_units)
+                continue
+
+            if state_property.lower() == "temperature":
+                self.lineEdit_temperature_left.setText(str(value))
+                self.comboBox_temperature_units.setCurrentText(property_units)
+                continue
+
         self.load_fluid_composition_info()
         self.update_remainig_composition()
 
         app().main_window.set_input_widget(self)
 
-        self.process_composition_data_to_export()
+    def export_fluid_composition_callback(self):
 
-    def process_composition_data_to_export(self):
+        self.hide()
+        last_path = app().config.get_last_folder_for("fluid_composition_folder", default=self.user_path)
 
-        data = []
+        ext_filter = (
+            "Spreasheet file (*.xlsx)"
+            ";;Spreasheet file (*.xls)"
+            ";;All Files (*)"
+        )
+
+        kwargs = {}
+        if platform.system() == "Linux":
+            kwargs["options"] = QFileDialog.Option.DontUseNativeDialog
+
+        file_path, check = QFileDialog.getSaveFileName(
+            self,
+            "Export the fluid composition data in spreadsheet file",
+            str(last_path),
+            filter=ext_filter,
+            **kwargs,
+        )
+
+        if not check:
+            return True
+
+        app().config.write_last_folder_path_in_file("fluid_composition_folder", file_path)
+
+        data_to_export = self.get_fluid_composition_data_to_export()
+
+        self.export_data_in_spreadsheet_format(data_to_export, file_path)
+
+    def get_fluid_composition_data_to_export(self):
+
+        fluid_composition = []
 
         for i, (fluid_name, values) in enumerate(self.fluid_to_composition.items()):
             _, molar_fraction, fluid_file = values
             label = fluid_file.split(".")[0]
 
-            data.append((int(i + 1), label, fluid_name, molar_fraction))
+            fluid_composition.append((int(i + 1), label, fluid_name, molar_fraction))
 
-        Nf = len(data)
-        data.append((None, None, None, None))
+        header_fc = ["Index", "Label", "Fluid name", "Molar fraction [%]"]
 
-        pressure = float(self.lineEdit_pressure_left.text())
-        pressure_units = self.comboBox_pressure_units.currentText()
+        state_properties = []
 
-        temperature = float(self.lineEdit_temperature_left.text())
-        temperature_units = self.comboBox_temperature_units.currentText()
+        if self.lineEdit_pressure_left.text() != "":
+            pressure = float(self.lineEdit_pressure_left.text())
+            pressure_units = self.comboBox_pressure_units.currentText()
+            state_properties.append((1, "Pressure", pressure_units, pressure))
 
-        data.append((Nf + 1, "Pressure", pressure_units, pressure))
-        data.append((Nf + 2, "Temperature", temperature_units, temperature))
+        if self.lineEdit_temperature_left.text():
+            temperature = float(self.lineEdit_temperature_left.text())
+            temperature_units = self.comboBox_temperature_units.currentText()
+            state_properties.append((2, "Temperature", temperature_units, temperature))
 
-        path = Path.home() / "Desktop/tabela_composicao_exportada.xlsx"
-        header = ["Index", "Label", "Fluid name", "Molar fraction [%]"]
-        data_to_export = {"composicao_teste": data}
+        header_sp = ["Index", "State property", "Property units", "Value"]
 
-        self.export_data_in_spreadsheet_format(header, data_to_export, str(path))
+        data_to_export = {
+            "fluid_composition" : (header_fc, fluid_composition),
+            "state_properties" : (header_sp, state_properties),
+            }
 
-    def export_data_in_spreadsheet_format(self, header, data_to_export: dict, export_path: str):
+        return data_to_export
+
+    def export_data_in_spreadsheet_format(self, data_to_export: dict, export_path: str):
 
         from pandas import ExcelWriter
         from polars import DataFrame
 
         with ExcelWriter(export_path) as writer:
 
-            for sheet_name, sheet_data in data_to_export.items():
+            for sheet_name, (header, sheet_data) in data_to_export.items():
                 if not isinstance(sheet_data, np.ndarray | list):
                     continue
 
                 df = DataFrame(sheet_data, schema=header, orient="row")
-
                 df.to_pandas().to_excel(writer, sheet_name=sheet_name, index=False)
 
     def keyPressEvent(self, event):

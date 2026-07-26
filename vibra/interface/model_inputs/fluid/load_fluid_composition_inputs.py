@@ -28,11 +28,12 @@ class LoadFluidCompositionInputs(LoadFluidComposition_UI):
     def _initialize(self):
 
         self.complete = False
+        self.imported_data = {}
         self.fluid_composition_data: list[tuple[int, str, str, str]] = []
+        self.state_properties_data: list[tuple[int, str, str, str]] = []
 
-        desktop_path = Path.home() / "Desktop"
-        self.desktop_path = str(desktop_path)
-        
+        self.desktop_path = Path.home() / "Desktop"
+
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
@@ -47,6 +48,7 @@ class LoadFluidCompositionInputs(LoadFluidComposition_UI):
     def _config_widgets(self):
         self.lineEdit_file_path.setDisabled(True)
         self.comboBox_sheet_names.setDisabled(True)
+        self.comboBox_state_properties.setDisabled(True)
 
     def _load_file(self):
         if os.path.exists(self.file_path):
@@ -55,22 +57,18 @@ class LoadFluidCompositionInputs(LoadFluidComposition_UI):
 
     def search_button_callback(self):
 
-        last_geometry_file = app().config.get_last_folder_for("fluid_composition_folder")
-        if last_geometry_file is None:
-            initial_path = self.desktop_path
-        else:
-            initial_path = last_geometry_file
+        last_path = app().config.get_last_folder_for("fluid_composition_folder", default=self.desktop_path)
 
         file_path, check = QFileDialog.getOpenFileName(
-            None,
+            self,
             "Open file",
-            str(initial_path),
+            str(last_path),
             "Files (*.xlsx *.xls)",
         )
 
         if not check:
             return True
-        
+
         self.file_path = file_path
 
         app().config.write_last_folder_path_in_file("fluid_composition_folder", file_path)
@@ -83,16 +81,16 @@ class LoadFluidCompositionInputs(LoadFluidComposition_UI):
         if self.lineEdit_file_path.text() == "":
             return
 
-        self.imported_data = {}
+        self.imported_data.clear()
         self.comboBox_sheet_names.clear()
+        self.comboBox_state_properties.clear()
 
         from openpyxl import load_workbook
         from polars import read_excel
 
         wb = load_workbook(self.file_path)
-        sheetnames = wb.sheetnames
 
-        for sheetname in sheetnames:
+        for sheetname in wb.sheetnames:
 
             try:
                 sheet_data = read_excel(
@@ -102,9 +100,18 @@ class LoadFluidCompositionInputs(LoadFluidComposition_UI):
                     has_header=True,
                 )
 
+                if "state properties" in sheetname.lower().replace("_", " "):
+                    self.comboBox_state_properties.addItem(sheetname)
+                    if not self.comboBox_state_properties.isEnabled():
+                        self.comboBox_state_properties.setDisabled(False)
+                    
+                else:
+                    self.comboBox_sheet_names.addItem(sheetname)
+                    if not self.comboBox_sheet_names.isEnabled():
+                        self.comboBox_sheet_names.setDisabled(False)
+
                 self.imported_data[sheetname] = sheet_data.to_numpy()
-                self.comboBox_sheet_names.addItem(sheetname)
-               
+
             except Exception as error_log:
                 window_title = "Error"
                 title = "Error while reading data from file"
@@ -112,18 +119,23 @@ class LoadFluidCompositionInputs(LoadFluidComposition_UI):
                 PrintMessageInput([window_title, title, message])
                 return True
 
-        self.comboBox_sheet_names.setDisabled(False)
-               
     def confirm_button_callback(self):
-        if self.imported_data:
-            selection = self.comboBox_sheet_names.currentText()
-            self.fluid_composition_data = self.imported_data[selection]
-            self.complete = True
-            self.close()
+        if not self.imported_data:
+            return
+
+        composition_key = self.comboBox_sheet_names.currentText()
+        state_properties_key = self.comboBox_state_properties.currentText()
+
+        self.fluid_composition_data = self.imported_data.get(composition_key)
+        self.state_properties_data = self.imported_data.get(state_properties_key)
+
+        self.complete = True
+        self.close()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
             self.confirm_button_callback()
             return
-        elif event.key() == Qt.Key_Escape:
+
+        if event.key() == Qt.Key_Escape:
             self.close()
