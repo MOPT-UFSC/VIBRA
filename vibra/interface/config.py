@@ -91,7 +91,7 @@ class Config:
         path = str(Path(file_path).parent)
 
         key = f"last_{label}"
-        if "last_paths" in data.keys():
+        if "last_paths" in data:
             data["last_paths"][key] = path
         else:
             data["last_paths"] = {key : path}
@@ -101,7 +101,7 @@ class Config:
     def get_last_folder_for(self, label: str, default: Path | None = None) -> Path | None:
         data = self.get_config_data()
 
-        if "last_paths" not in data.keys():
+        if "last_paths" not in data:
             return default
 
         key = f"last_{label}"
@@ -110,7 +110,10 @@ class Config:
         if last_path is None:
             return default
 
-        return Path(data["last_paths"].get(key))
+        if not Path(last_path).exists():
+            return default
+
+        return Path(last_path)
 
     def write_refprop_path_in_file(self, path: str):
         data = self.get_config_data()
