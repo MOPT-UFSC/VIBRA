@@ -1061,7 +1061,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
                 title = f"Invalid entry to the {label}"
                 message = f"Dear user, you have typed an invalid value at the {label} input field."
                 message += "You should inform a valid float number to proceed.\n\n"
-                message += f"Details: {str(error_log)}"
+                message += "Details: " + str(error_log)
                 PrintMessageInput([error_title, title, message])
                 return None
 
@@ -1215,37 +1215,25 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         self.composition_file_path = read.file_path
 
         comp = 0
-        for (i, value_1, value_2, value_3) in read.fluid_composition_data:
+        for (i, label, fluid_name, value) in read.fluid_composition_data:
 
-            if value_1 is None:
+            if label is None:
                 continue
 
-            if value_1.lower() == "pressure":
-                self.lineEdit_pressure_left.setText(str(value_3))
-                self.comboBox_pressure_units.setCurrentText(value_2)
+            if not value:
                 continue
 
-            if value_1.lower() == "temperature":
-                self.lineEdit_temperature_left.setText(str(value_3))
-                self.comboBox_temperature_units.setCurrentText(value_2)
-                continue
-
-            fluid_name = value_2
-            molar_fraction = float(value_3)
-
+            molar_fraction = float(value)
             self.molar_fractions.append(molar_fraction)
 
             if fluid_name not in self.refprop_fluids:
-                continue
-
-            if not molar_fraction:
                 continue
 
             (fluid_file, _, _) = self.refprop_fluids[fluid_name]
             self.fluid_to_composition[fluid_name] = [str(molar_fraction), molar_fraction, fluid_file]
             comp += molar_fraction
 
-        for (i, state_property, property_units, value) in read.state_properties_data:
+        for (i, state_property, value, property_units) in read.state_properties_data:
 
             if state_property.lower() == "pressure":
                 self.lineEdit_pressure_left.setText(str(value))
@@ -1311,14 +1299,14 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         if self.lineEdit_pressure_left.text() != "":
             pressure = float(self.lineEdit_pressure_left.text())
             pressure_units = self.comboBox_pressure_units.currentText()
-            state_properties.append((1, "Pressure", pressure_units, pressure))
+            state_properties.append((1, "Pressure", pressure, pressure_units))
 
         if self.lineEdit_temperature_left.text():
             temperature = float(self.lineEdit_temperature_left.text())
             temperature_units = self.comboBox_temperature_units.currentText()
-            state_properties.append((2, "Temperature", temperature_units, temperature))
+            state_properties.append((2, "Temperature", temperature, temperature_units))
 
-        header_sp = ["Index", "State property", "Property units", "Value"]
+        header_sp = ["Index", "State property", "Value", "Property units"]
 
         data_to_export = {
             "fluid_composition" : (header_fc, fluid_composition),
