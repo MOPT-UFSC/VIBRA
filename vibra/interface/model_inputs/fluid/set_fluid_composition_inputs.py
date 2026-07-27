@@ -1004,11 +1004,14 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             return
 
         self.hide()
-        further_details = ""
 
         if self.errors:
-            for key, _error in self.errors.items():
-                further_details += f"{str(key)}: {str(_error)}\n\n"
+            further_details = ""
+
+            for key, error in self.errors.items():
+                _key = str(key)
+                _error = str(error)
+                further_details += f"{_key}: {_error}\n\n"
             
             title = "Error generated while processing fluid properties"
             message = "The following errors were found in while processing the fluid properties.\n\n"
@@ -1016,9 +1019,13 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             message += "It is recommended to check the fluid composition and state properties to proceed."
             PrintMessageInput([error_title, title, message])
 
-        else:
+        if self.warnings:
+            further_details = ""
+
+            _key = str(key)
+            _error = str(error)
             for key, _warning in self.warnings.items():
-                further_details += f"{str(key)}: {str(_warning)}\n\n"
+                further_details += f"{_key}: {_warning}\n\n"
 
             title = "Warning generated while processing fluid properties"
             message = "The following warnings were generated while processing the fluid properties.\n\n"
