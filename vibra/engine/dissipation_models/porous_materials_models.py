@@ -85,7 +85,7 @@ class PorousMaterialModels:
 
             fluid = self.properties._get_property("fluid", volume = volume_id)
 
-            if data["model"] in ["Delany-Bazley", "Delany-Bazley-Miki"]:
+            if data["model"] in ["Delany-Bazley", "Delany-Bazley-Miki", "User-defined (DBM)"]:
                 rho_eff, C_eff = self.get_Delany_Bazley_Miki_effective_properties(omega, fluid, data)
 
             elif data["model"] == "Jhonson-Champoux-Allard":
