@@ -336,12 +336,12 @@ class Mesh:
             return
 
         if nodes_per_element in [3, 4] and self.faces_connectivity.size:
-            self.element_topology = TETRAHEDRON_4       
+            self.element_topology = TETRAHEDRON_4
         elif nodes_per_element == 10:
             self.element_topology = TETRAHEDRON_10
         elif nodes_per_element == 8:
             self.element_topology = HEXAHEDRON_8
-        elif nodes_per_element ==  20:
+        elif nodes_per_element == 20:
             self.element_topology = HEXAHEDRON_20
 
     def process_downwards_adjacencies_from_mesh_data(self):
@@ -2415,7 +2415,7 @@ class Mesh:
         return self.surfaces_centers.get(surface_id)
 
     def get_element_face_normal(self, connect: np.ndarray):
-        
+
         coords = self.nodal_coordinates[connect, 1:]
 
         P1 = coords[0, :]
@@ -2434,7 +2434,6 @@ class Mesh:
         cross /= norm_cross
 
         if self.solids_connectivity.size:
-
             mask = np.sum(np.isin(self.solids_connectivity[:, 4:], connect), axis=1) == len(connect)
             solid_element_id = self.solids_connectivity[mask, 0]
             solid_connectivity = self.solids_connectivity[solid_element_id, 4:].flatten()
@@ -2448,6 +2447,58 @@ class Mesh:
                 print(f"The element face normal has been inverted -> corresponding solid element {solid_element_id}.")
 
         return cross
+
+    def get_element_face_normal_batched(self, face_connectivity: np.ndarray) -> np.ndarray:
+        """
+        This should work similar to the method `get_element_face_normal`.
+
+        While there the expected parameter is a single connectivity row,
+        containing only the node indexes, here we allow for 2D arrays with
+        multiple entries on each line and it is required to include the indexes
+        of the whole array, just like in `self.faces_connectivity`.
+
+        (The names are a bit misleading, we should try to fix it some day)
+        """
+
+        original_ndim = face_connectivity.ndim
+        if original_ndim == 1:
+            face_connectivity = face_connectivity.reshape(1, -1)
+
+        face_coords = self.nodal_coordinates[face_connectivity[:, 4:], 1:]
+        P1 = face_coords[:, 0, :]
+        P2 = face_coords[:, 1, :]
+        P3 = face_coords[:, 2, :]
+
+        P2P1 = np.array(P2 - P1)
+        P3P1 = np.array(P3 - P1)
+
+        cross = np.cross(P2P1, P3P1, axis=1)
+        norm_cross = np.linalg.norm(cross, axis=1).reshape(-1, 1)
+        cross /= norm_cross
+
+        if self.solids_connectivity.size:
+            solid_element_ids = np.array([self.face_to_solid_element[i] for i in face_connectivity[:, 0]])
+            solid_connectivity = self.solids_connectivity[solid_element_ids]
+            solid_coords = self.nodal_coordinates[solid_connectivity[:, 4:], 1:]
+
+            face_element_center = np.average(face_coords, axis=1)
+            solid_element_center = np.average(solid_coords, axis=1)
+            vector = solid_element_center - face_element_center
+
+            inverted_normal_mask = np.vecdot(cross, vector, axis=1) > 0
+            if np.any(inverted_normal_mask):
+                cross[inverted_normal_mask] *= -1
+
+                broken_face_ids = face_connectivity[inverted_normal_mask, 0]
+                broken_solid_ids = solid_connectivity[inverted_normal_mask, 0]
+
+                for f, s in zip(broken_face_ids, broken_solid_ids):
+                    print(f"Inverted normal found on face element {f} associated to solid element {s}.")
+
+            if original_ndim == 1:
+                cross = cross.ravel()
+
+            return cross
 
     def set_nodal_normals_data(self, surface_id: int, normals_data: dict):
         for node_id, nodal_normal in normals_data.items():
