@@ -40,7 +40,7 @@ class ModalSolver:
         if not is_symmetric:
             n_modes *= 2
 
-        est_operations = min(A.shape[0], max(2 * (n_modes + 1), 20))
+        est_operations = min(A.shape[0], max(3 * (n_modes + 1), 20))
 
         try:
             logging.info("Solving eigenproblem... [0/100]")
