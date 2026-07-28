@@ -62,7 +62,17 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
 
     @property
     def molar_fractions(self) -> list[float]:
-        return [molar_fraction for (_, molar_fraction, _) in self.fluid_to_composition.values()]
+        molar_fractions = []
+        for values in self.fluid_to_composition.values():
+            if len(values) != 2:
+                continue
+
+            if values[0] is None:
+                continue
+
+            molar_fractions.append(values[0])
+
+        return molar_fractions
 
     def _initialize(self):
 
@@ -353,8 +363,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
 
         for index, fluid_file_name in enumerate(fluid_file_names):
             final_name = self.refprop_interface.fluid_file_to_final_name[fluid_file_name]
-            molar_fraction = round(molar_fractions[index], 6)
-            self.fluid_to_composition[final_name] = [str(molar_fraction), molar_fractions[index], fluid_file_name]
+            self.fluid_to_composition[final_name] = [molar_fractions[index], fluid_file_name]
 
         self.load_fluid_composition_info()
         self.update_remainig_composition()
@@ -367,13 +376,13 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         fluid_file_name, _, _ = self.refprop_fluids[fluid_name]
 
         if isinstance(molar_fraction, float):
-            self.fluid_to_composition[fluid_name] = [str(molar_fraction), molar_fraction, fluid_file_name]
+            self.fluid_to_composition[fluid_name] = [molar_fraction, fluid_file_name]
 
             if molar_fraction == 0 and fluid_name in self.fluid_to_composition:
                 self.fluid_to_composition.pop(fluid_name)
 
         elif molar_fraction == "":
-            self.fluid_to_composition[fluid_name] = []
+            self.fluid_to_composition[fluid_name] = [None, fluid_file_name]
 
         self.update_remainig_composition()
 
@@ -383,10 +392,13 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         factor = self.get_percentual_factor()
 
         for composition_data in self.fluid_to_composition.values():
-            if len(composition_data) != 3:
+            if len(composition_data) != 2:
                 continue
 
-            self.remaining_molar_fraction -= factor * composition_data[1]
+            if not isinstance(composition_data[0], float):
+                continue
+
+            self.remaining_molar_fraction -= factor * composition_data[0]
 
         _remain = round(self.remaining_molar_fraction, 6)
         if _remain == 0:
@@ -539,23 +551,15 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             self.tableWidget_new_fluid.setItem(row, 0, QTableWidgetItem(fluid))
             self.tableWidget_new_fluid.item(row, 0).setTextAlignment(Qt.AlignCenter)
 
-            if len(composition_data) == 3:
-                molar_fraction = round(factor * composition_data[1], 7)
+            if len(composition_data) == 2:
+                if composition_data[0] is None:
+                    continue
+
+                molar_fraction = round(factor * composition_data[0], 7)
                 self.add_molar_fraction_to_cell(row, molar_fraction = str(molar_fraction))
 
         self.label_selected_fluid.setText("")
         self.tableWidget_new_fluid.blockSignals(False)
-
-    def check_composition_input(self, fluid_name, composition):
-
-        if isinstance(composition, float):
-            fluid_file_name, _, _ = self.refprop_fluids[fluid_name]
-            self.fluid_to_composition[fluid_name] = [str(composition), composition / 100, fluid_file_name]
-
-            if composition == 0 and fluid_name in self.fluid_to_composition:
-                self.fluid_to_composition.pop(fluid_name)
-
-            return False
 
     def on_click_item_refprop_fluids(self, item):
         self.selected_item = item
@@ -646,10 +650,13 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         key_mixture = ""
         molar_fractions = []
         for composition_data in self.fluid_to_composition.values():
-            if len(composition_data) != 3:
+            if len(composition_data) != 2:
                 continue
 
-            _, _fraction, file_name = composition_data
+            _fraction, file_name = composition_data
+            if _fraction is None:
+                continue
+
             key_mixture += file_name + ";"
             molar_fractions.append(_fraction)
 
@@ -1137,6 +1144,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
 
             if molar_fraction != "":
                 molar_fraction = float(molar_fraction)
+
             self.add_selected_fluid(selected_fluid, molar_fraction)
 
         self.tableWidget_new_fluid.blockSignals(False)
@@ -1213,23 +1221,24 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
 
         self.composition_file_path = read.file_path
 
-        comp = 0
         for (i, label, fluid_name, value) in read.fluid_composition_data:
 
             if label is None:
                 continue
 
-            if not value:
+            if value == 0:
                 continue
 
-            molar_fraction = float(value)
+            if not isinstance(value, str | float) or np.isnan(value):
+                molar_fraction = None
+            else:
+                molar_fraction = float(value)
 
             if fluid_name not in self.refprop_fluids:
                 continue
 
             (fluid_file, _, _) = self.refprop_fluids[fluid_name]
-            self.fluid_to_composition[fluid_name] = [str(molar_fraction), molar_fraction, fluid_file]
-            comp += molar_fraction
+            self.fluid_to_composition[fluid_name] = [molar_fraction, fluid_file]
 
         for (i, state_property, value, property_units) in read.state_properties_data:
 
@@ -1286,10 +1295,14 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         factor = self.get_percentual_factor()
 
         for i, (fluid_name, values) in enumerate(self.fluid_to_composition.items()):
-            _, molar_fraction, fluid_file = values
-            label = fluid_file.split(".")[0]
+            molar_fraction, fluid_file = values
+            if isinstance(molar_fraction, float):
+                _molar_fraction = factor * molar_fraction
+            else:
+                _molar_fraction = molar_fraction
 
-            fluid_composition.append((int(i + 1), label, fluid_name, factor * molar_fraction))
+            label = fluid_file.split(".")[0]
+            fluid_composition.append((int(i + 1), label, fluid_name, _molar_fraction))
 
         header_fc = ["Index", "Label", "Fluid name", "Molar fraction [%]"]
 
