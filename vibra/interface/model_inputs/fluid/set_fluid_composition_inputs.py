@@ -60,6 +60,10 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         self.setWindowModality(Qt.WindowModal)
         self.setWindowTitle("Vibra")
 
+    @property
+    def molar_fractions(self) -> list[float]:
+        return [molar_fraction for (_, molar_fraction, _) in self.fluid_to_composition.values()]
+
     def _initialize(self):
 
         self.user_path = Path().home()
@@ -67,7 +71,6 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         self.fluid_to_row = {}
         self.fluid_to_composition = {}
 
-        self.molar_fractions = []
         self.remaining_molar_fraction = 1
 
         self.errors = {}
@@ -275,8 +278,6 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         self.reciprocating_machine = state_properties.get("source")
         self.check_ideal_gas = state_properties.get("check_ideal_gas", True)
 
-        print("passei aqui...")
-
         pressure_unit = state_properties.get("pressure_unit", "kgf/cm² (a)")
         temperature_unit = state_properties.get("temperature_unit", "°C")
 
@@ -379,13 +380,13 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
     def update_remainig_composition(self):
 
         self.remaining_molar_fraction = 100.0
-        perc_factor = self.get_percentual_factor()
+        factor = self.get_percentual_factor()
 
         for composition_data in self.fluid_to_composition.values():
             if len(composition_data) != 3:
                 continue
 
-            self.remaining_molar_fraction -= perc_factor * composition_data[1]
+            self.remaining_molar_fraction -= factor * composition_data[1]
 
         _remain = round(self.remaining_molar_fraction, 6)
         if _remain == 0:
@@ -531,7 +532,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         self.tableWidget_new_fluid.setRowCount(len(self.fluid_to_composition))
         self.tableWidget_new_fluid.setColumnCount(2)
 
-        perc_factor = self.get_percentual_factor()
+        factor = self.get_percentual_factor()
 
         for row, (fluid, composition_data) in enumerate(self.fluid_to_composition.items()):
 
@@ -539,7 +540,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             self.tableWidget_new_fluid.item(row, 0).setTextAlignment(Qt.AlignCenter)
 
             if len(composition_data) == 3:
-                molar_fraction = round(perc_factor * composition_data[1], 7)
+                molar_fraction = round(factor * composition_data[1], 7)
                 self.add_molar_fraction_to_cell(row, molar_fraction = str(molar_fraction))
 
         self.label_selected_fluid.setText("")
@@ -1205,8 +1206,6 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         self.fluid_to_composition.clear()
         self.label_selected_fluid.clear()
 
-        self.molar_fractions.clear()
-
         read = LoadFluidCompositionInputs(file_path = self.composition_file_path)
 
         if not read.complete:
@@ -1224,7 +1223,6 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
                 continue
 
             molar_fraction = float(value)
-            self.molar_fractions.append(molar_fraction)
 
             if fluid_name not in self.refprop_fluids:
                 continue
@@ -1285,12 +1283,13 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
     def get_fluid_composition_data_to_export(self):
 
         fluid_composition = []
+        factor = self.get_percentual_factor()
 
         for i, (fluid_name, values) in enumerate(self.fluid_to_composition.items()):
             _, molar_fraction, fluid_file = values
             label = fluid_file.split(".")[0]
 
-            fluid_composition.append((int(i + 1), label, fluid_name, molar_fraction))
+            fluid_composition.append((int(i + 1), label, fluid_name, factor * molar_fraction))
 
         header_fc = ["Index", "Label", "Fluid name", "Molar fraction [%]"]
 
