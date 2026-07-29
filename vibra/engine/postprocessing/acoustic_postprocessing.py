@@ -121,16 +121,19 @@ class AcousticPostprocessing:
         plot_type: PressurePlotType,
         is_modal: bool = False,
     ):
+        if self.solution is None:
+            return
+
         if is_modal:
             nodal_solution = self.solution.modal_shapes
         else:
             nodal_solution = self.solution.nodal_solution
 
         if isinstance(nodal_solution, LazyArray) and not nodal_solution.is_valid():
-            return None
+            return
 
         if nodal_solution.shape[1] < index:
-            return None
+            return
 
         # selected nodal solution
         _nodal_solution = nodal_solution[:, index]
@@ -218,10 +221,12 @@ class AcousticPostprocessing:
 
         if isinstance(node_id, int):
             surface_ids = self.mesh.get_surfaces_from_node(node_id)
-            # if np.unique(surface_ids).size != 1:
-            #     print(f"The surfaces {surface_ids} contains the node: {node_id}")
+            if np.unique(surface_ids).size != 1:
+                print(f"The surfaces {surface_ids} contains the node: {node_id}")
 
-        particle_velocities_data = self.get_particle_velocity_from_surface(surface_ids[0], volume_id=volume_id)
+            surface_id = surface_ids[0]
+
+        particle_velocities_data = self.get_particle_velocity_from_surface(surface_id, volume_id=volume_id)
         particle_velocities_Vj: dict = getattr(particle_velocities_data, component_label)
 
         if isinstance(node_id, int):
@@ -306,7 +311,7 @@ class AcousticPostprocessing:
         frequencies = self.model.frequencies
         zeros = np.zeros_like(frequencies, dtype=complex)
 
-        rho, _ = self.model.get_fluid_properties_from_volume(volume_id, frequencies)
+        rho, _ = self.model.get_fluid_properties_from_volume(volume_id)
         if rho is None:
             return zeros, None
 

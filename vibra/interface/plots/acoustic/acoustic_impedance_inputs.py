@@ -251,12 +251,12 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
             if self.comboBox_normalized_impedance.currentText() == "Enabled":
 
                 if app().project.assembler.fluid_properties_from_volume:
-                    prop_data = app().project.assembler.fluid_properties_from_volume.get(volume_id)
+                    prop_data: dict = app().project.assembler.fluid_properties_from_volume.get(volume_id)
                     rho_f = prop_data.get("rho_f")
                     C_f = prop_data.get("C_f")
-                else:  
-                    frequencies = self.model.frequencies
-                    rho_f, C_f = self.model.get_fluid_properties_from_volume(volume_id, frequencies)
+
+                else:
+                    rho_f, C_f = self.model.get_fluid_properties_from_volume(volume_id)
 
                 Z0_f = rho_f * C_f
                 acoustic_impedance /= Z0_f
