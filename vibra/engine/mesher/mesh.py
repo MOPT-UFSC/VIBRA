@@ -2498,7 +2498,7 @@ class Mesh:
             if original_ndim == 1:
                 cross = cross.ravel()
 
-            return cross
+        return cross
 
     def set_nodal_normals_data(self, surface_id: int, normals_data: dict):
         for node_id, nodal_normal in normals_data.items():
