@@ -1,5 +1,5 @@
 # isort: skip_file
-import vibra  # this need to be at the start of the file 
+import vibra  # this need to be at the start of the file
 
 import logging
 import os
@@ -54,12 +54,14 @@ def configure_logs():
     All info logs are saved in the file, but only warnings or error
     are shown to users.
     """
-    file_formatter = logging.Formatter("%(asctime)s \t | %(levelname)s \t | %(message)s")
+    format = '[%(name)s] %(asctime)s | %(levelname)s | "%(message)s"'
+
+    file_formatter = logging.Formatter(format)
     file_handler = logging.FileHandler(vibra.USER_PATH / ".vibra.log", "w+")
     file_handler.setLevel(logging.INFO)
     file_handler.setFormatter(file_formatter)
 
-    stream_formatter = logging.Formatter(logging.BASIC_FORMAT)
+    stream_formatter = logging.Formatter(format)
     stream_handler = logging.StreamHandler()
     stream_handler.setLevel(logging.WARN)
     stream_handler.setFormatter(stream_formatter)
