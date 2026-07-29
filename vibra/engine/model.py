@@ -648,7 +648,7 @@ class Model:
         if self.analysis_id == AnalysisID.NO_ANALYSIS:
             raise errors.InvalidModelSetupError("An AnalysisID should be provided.")
 
-        for vol_id in self.mesh.elements_from_volume.keys():
+        for vol_id in self.mesh.elements_from_volume:
             pm_data = self.properties._get_property("porous_material_model", volume=vol_id)
             vt_data = self.properties._get_property("viscous_thermal_model", volume=vol_id)
             fluid = self.properties._get_property("fluid", volume=vol_id)
@@ -710,22 +710,30 @@ class Model:
         volumes_from_surface = self.mesh.volumes_from_surface[surface_id]
 
         if len(volumes_from_surface) == 1:
-            for key in self.properties.volume_properties.keys():
+            for key in self.properties.volume_properties:
                 property, volume_id = key
-                if volume_id == volumes_from_surface[0]:
-                    if property == "viscous_thermal_model":
-                        vt_model = ViscousThermalLossModels(self)
-                        vt_model.process_effective_properties()
-                        density = vt_model.effective_properties[volume_id]["rho_eff"]
-                        speed_of_sound = vt_model.effective_properties[volume_id]["rho_eff"]
-                        return density, speed_of_sound
+                if volume_id != volumes_from_surface[0]:
+                    continue
 
-                    elif property == "porous_material_model":
-                        pm_model = PorousMaterialModels(self)
-                        pm_model.process_effective_properties()
-                        density = pm_model.effective_properties[volume_id]["rho_eff"]
-                        speed_of_sound = pm_model.effective_properties[volume_id]["rho_eff"]
-                        return density, speed_of_sound
+                if property == "viscous_thermal_model":
+                    vt_model = ViscousThermalLossModels(self)
+                    vt_model.process_effective_properties()
+
+                    vt_properties: dict = vt_model.effective_properties.get(volume_id)
+                    density = vt_properties.get("rho_eff")
+                    speed_of_sound = vt_properties.get("C_eff")
+
+                    return density, speed_of_sound
+
+                elif property == "porous_material_model":
+                    pm_model = PorousMaterialModels(self)
+                    pm_model.process_effective_properties()
+
+                    pm_properties: dict = pm_model.effective_properties.get(volume_id)
+                    density = pm_properties.get("rho_eff")
+                    speed_of_sound = pm_properties.get("C_eff")
+
+                    return density, speed_of_sound
 
             fluid = self.properties._get_property("fluid", surface=surface_id)
 
@@ -749,27 +757,35 @@ class Model:
 
         return None, None
 
-    def get_fluid_properties_from_volume(self, volume_id: int, frequencies: np.ndarray):
+    def get_fluid_properties_from_volume(self, volume_id: int):
         """
         This method returns the fluid density and speed of sound properties
         from selected volume. The output data is in complex array form.
         """
-        for key in self.properties.volume_properties.keys():
+        for key in self.properties.volume_properties:
             property, vol_id = key
-            if vol_id == volume_id:
-                if property == "viscous_thermal_model":
-                    vt_model = ViscousThermalLossModels(self)
-                    vt_model.process_effective_properties()
-                    density = vt_model.effective_properties[volume_id]["rho_eff"]
-                    speed_of_sound = vt_model.effective_properties[volume_id]["rho_eff"]
-                    return density, speed_of_sound
+            if vol_id != volume_id:
+                continue
 
-                elif property == "porous_material_model":
-                    pm_model = PorousMaterialModels(self)
-                    pm_model.process_effective_properties()
-                    density = pm_model.effective_properties[volume_id]["rho_eff"]
-                    speed_of_sound = pm_model.effective_properties[volume_id]["rho_eff"]
-                    return density, speed_of_sound
+            if property == "viscous_thermal_model":
+                vt_model = ViscousThermalLossModels(self)
+                vt_model.process_effective_properties()
+
+                vt_properties: dict = vt_model.effective_properties.get(volume_id)
+                density = vt_properties.get("rho_eff")
+                speed_of_sound = vt_properties.get("C_eff")
+
+                return density, speed_of_sound
+
+            elif property == "porous_material_model":
+                pm_model = PorousMaterialModels(self)
+                pm_model.process_effective_properties()
+
+                pm_properties: dict = pm_model.effective_properties.get(volume_id)
+                density = pm_properties.get("rho_eff")
+                speed_of_sound = pm_properties.get("C_eff")
+
+                return density, speed_of_sound
 
         fluid = self.properties._get_property("fluid", volume=volume_id)
         proportional_damping = self.properties._get_property("proportional_damping", volume=vol_id)
