@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>1000</width>
-    <height>650</height>
+    <height>726</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -139,7 +139,7 @@
            <x>0</x>
            <y>0</y>
            <width>980</width>
-           <height>374</height>
+           <height>450</height>
           </rect>
          </property>
          <layout class="QGridLayout" name="gridLayout_2">
@@ -218,13 +218,13 @@
            <widget class="QFrame" name="frame_middle">
             <property name="minimumSize">
              <size>
-              <width>140</width>
+              <width>160</width>
               <height>0</height>
              </size>
             </property>
             <property name="maximumSize">
              <size>
-              <width>160</width>
+              <width>180</width>
               <height>16777215</height>
              </size>
             </property>
@@ -235,6 +235,60 @@
              <enum>QFrame::Shadow::Raised</enum>
             </property>
             <layout class="QGridLayout" name="gridLayout_18">
+             <item row="5" column="0">
+              <widget class="QPushButton" name="pushButton_add_gas">
+               <property name="minimumSize">
+                <size>
+                 <width>130</width>
+                 <height>30</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>140</width>
+                 <height>30</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
+               <property name="styleSheet">
+                <string notr="true"/>
+               </property>
+               <property name="text">
+                <string>Add gas</string>
+               </property>
+              </widget>
+             </item>
+             <item row="6" column="0">
+              <widget class="QPushButton" name="pushButton_remove_gas">
+               <property name="minimumSize">
+                <size>
+                 <width>130</width>
+                 <height>30</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>140</width>
+                 <height>30</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
+               <property name="styleSheet">
+                <string notr="true"/>
+               </property>
+               <property name="text">
+                <string>Remove gas</string>
+               </property>
+              </widget>
+             </item>
              <item row="3" column="0">
               <widget class="QLabel" name="label_remaining_composition">
                <property name="minimumSize">
@@ -273,46 +327,6 @@ QLineEdit:disabled{color: rgb(100, 100, 100); background-color: rgb(240, 240, 24
                </property>
               </widget>
              </item>
-             <item row="1" column="0">
-              <spacer name="verticalSpacer_8">
-               <property name="orientation">
-                <enum>Qt::Orientation::Vertical</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>20</width>
-                 <height>40</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item row="5" column="0">
-              <widget class="QPushButton" name="pushButton_add_gas">
-               <property name="minimumSize">
-                <size>
-                 <width>130</width>
-                 <height>30</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>140</width>
-                 <height>30</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <pointsize>10</pointsize>
-                </font>
-               </property>
-               <property name="styleSheet">
-                <string notr="true"/>
-               </property>
-               <property name="text">
-                <string>Add gas</string>
-               </property>
-              </widget>
-             </item>
              <item row="9" column="0">
               <widget class="QPushButton" name="pushButton_fluid_configuration_mode">
                <property name="minimumSize">
@@ -348,40 +362,39 @@ QLineEdit:disabled{color: rgb(100, 100, 100); background-color: rgb(240, 240, 24
                <property name="sizeHint" stdset="0">
                 <size>
                  <width>20</width>
-                 <height>40</height>
+                 <height>10</height>
                 </size>
                </property>
               </spacer>
              </item>
-             <item row="8" column="0">
-              <widget class="QPushButton" name="pushButton_load_composition">
-               <property name="minimumSize">
+             <item row="11" column="0">
+              <spacer name="verticalSpacer_9">
+               <property name="orientation">
+                <enum>Qt::Orientation::Vertical</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
                 <size>
-                 <width>130</width>
-                 <height>30</height>
+                 <width>20</width>
+                 <height>10</height>
                 </size>
                </property>
-               <property name="maximumSize">
-                <size>
-                 <width>140</width>
-                 <height>30</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <pointsize>10</pointsize>
-                </font>
-               </property>
-               <property name="styleSheet">
-                <string notr="true"/>
-               </property>
-               <property name="text">
-                <string>Load composition</string>
-               </property>
-              </widget>
+              </spacer>
              </item>
-             <item row="6" column="0">
-              <widget class="QPushButton" name="pushButton_remove_gas">
+             <item row="1" column="0">
+              <spacer name="verticalSpacer_8">
+               <property name="orientation">
+                <enum>Qt::Orientation::Vertical</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>20</width>
+                 <height>10</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item row="7" column="0">
+              <widget class="QPushButton" name="pushButton_reset_fluid">
                <property name="minimumSize">
                 <size>
                  <width>130</width>
@@ -403,7 +416,7 @@ QLineEdit:disabled{color: rgb(100, 100, 100); background-color: rgb(240, 240, 24
                 <string notr="true"/>
                </property>
                <property name="text">
-                <string>Remove gas</string>
+                <string>Reset fluid</string>
                </property>
               </widget>
              </item>
@@ -438,8 +451,8 @@ fraction [%]</string>
                </property>
               </widget>
              </item>
-             <item row="7" column="0">
-              <widget class="QPushButton" name="pushButton_reset_fluid">
+             <item row="8" column="0">
+              <widget class="QPushButton" name="pushButton_load_composition">
                <property name="minimumSize">
                 <size>
                  <width>130</width>
@@ -461,7 +474,34 @@ fraction [%]</string>
                 <string notr="true"/>
                </property>
                <property name="text">
-                <string>Reset fluid</string>
+                <string>Load composition</string>
+               </property>
+              </widget>
+             </item>
+             <item row="10" column="0">
+              <widget class="QPushButton" name="pushButton_export_fluid_composition">
+               <property name="minimumSize">
+                <size>
+                 <width>130</width>
+                 <height>30</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>140</width>
+                 <height>30</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
+               <property name="styleSheet">
+                <string notr="true"/>
+               </property>
+               <property name="text">
+                <string>Export compositon</string>
                </property>
               </widget>
              </item>

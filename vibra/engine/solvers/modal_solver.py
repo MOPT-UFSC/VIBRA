@@ -40,8 +40,12 @@ class ModalSolver:
         if not is_symmetric:
             n_modes *= 2
 
+        est_operations = min(A.shape[0], max(3 * (n_modes + 1), 20))
+
         try:
-            opinv = linear_solver.build_linear_operator(A - sigma * B)
+            logging.info("Solving eigenproblem... [0/100]")
+
+            opinv = linear_solver.build_linear_operator(A - sigma * B, est_operations=est_operations)
             eigenvalues, eigenvectors = eigs(A, M=B, k=n_modes, sigma=sigma, which=which, OPinv=opinv)
             linear_solver.clear_memory()
 

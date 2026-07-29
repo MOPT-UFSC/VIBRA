@@ -125,7 +125,7 @@ class Ui_Form(object):
         self.pushButton_animation_loop.setObjectName(u"pushButton_animation_loop")
         self.pushButton_animation_loop.setMinimumSize(QSize(40, 28))
         self.pushButton_animation_loop.setMaximumSize(QSize(16777215, 28))
-        icon = Icon(u":/icons/circular_arrows_icon.png")
+        icon = Icon(u":/icons/infinite_symbol.png")
         self.pushButton_animation_loop.setIcon(icon)
         self.pushButton_animation_loop.setIconSize(QSize(22, 22))
         self.pushButton_animation_loop.setCheckable(False)
