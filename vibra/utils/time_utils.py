@@ -26,7 +26,9 @@ def function_timer(func):
         start = perf_counter()
         result = func(*args, **kwargs)
         elapsed = perf_counter() - start
-        logger.info(f"{func.__name__} took {elapsed:.3f}s")
+        msg = f"{func.__name__} took {elapsed:.3f}s"
+        logger.info(msg)
+        print(msg)
         return result
 
     return wrapper
@@ -52,7 +54,9 @@ def context_timer(name: str, /):
     start = perf_counter()
     yield start
     elapsed = perf_counter() - start
-    logger.info(f"{name} took {elapsed:.3f}s")
+    msg = f"{name} took {elapsed:.3f}s"
+    logger.info(msg)
+    print(msg)
 
 
 @typing.overload
