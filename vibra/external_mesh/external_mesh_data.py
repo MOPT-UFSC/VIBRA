@@ -329,7 +329,7 @@ class ExternalMeshData():
             return 8, 20
 
 
-    def process_named_selection_elements(self, export=False):
+    def process_named_selection_elements(self, export: bool = False):
 
         start, end = 0, 0
         self.elements_from_named_selection = dict()
@@ -343,6 +343,7 @@ class ExternalMeshData():
 
             surface_id = 0
             connect = np.array(data, dtype=int)
+
             for ns_key, ns_nodes in self.nodes_from_named_selection.items():
 
                 surface_id += 1
@@ -353,21 +354,26 @@ class ExternalMeshData():
                 if np.sum(mask) == 0:
                     continue
 
-                for jj, _nodes in enumerate(connect[mask, 3:]):
+                element3d_indexes = connect[mask, 0]
+
+                for jj, connect_data in enumerate(connect[mask, :]):
+
+                    elem3d_connectivity = connect_data[3:]
+ 
                     if nodes_solid_element:
-                        indexes = aux_indexes[np.isin(_nodes, ns_nodes)]
+                        indexes = aux_indexes[np.isin(elem3d_connectivity, ns_nodes)]
                         row = np.sum(np.isin(faces_connect_indexes, indexes), axis=1) == nodes_face_element
-                        face_nodes = _nodes[faces_connect_indexes[row, :]].flatten()
+                        face_nodes = elem3d_connectivity[faces_connect_indexes[row, :]].flatten()
 
                     else:
-                        face_nodes = _nodes
+                        face_nodes = elem3d_connectivity
 
                     face_connectivity.append(face_nodes)
 
                 if face_connectivity:
 
                     end += len(face_connectivity)
-                    indexes = np.arange(1+start, end+1)
+                    element2d_indexes = np.arange(1+start, end+1)
                     start = end
 
                     connect_data = np.array(face_connectivity, dtype=int)
@@ -377,11 +383,12 @@ class ExternalMeshData():
                         if len(connect_data) < len(actual_connect_data):
                             continue
 
-                    self.elements_from_named_selection[ns_key] = {  
-                                                                  "element_indexes" : indexes,
-                                                                  "connectivity" : connect_data,
-                                                                  "surface_id" : surface_id,
-                                                                  }
+                    self.elements_from_named_selection[ns_key] = {
+                        "element2d_indexes": element2d_indexes,
+                        "element3d_indexes": element3d_indexes,
+                        "connectivity": connect_data,
+                        "surface_id": surface_id,
+                    }
 
                     if not export:
                         continue

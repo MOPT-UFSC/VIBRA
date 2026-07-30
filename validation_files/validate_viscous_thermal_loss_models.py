@@ -27,6 +27,9 @@ def load_external_mesh_and_solve():
     # define the known 'Named selections' from model
     named_selecion_to_tag = {"input_face": 1, "output_face": 2}
 
+    # define surfaces from each volume
+    surfaces_from_volume = {1: [1, 2]}
+
     t0 = time()
     external_mesh = ExternalMeshData()
     external_mesh.read_file(mesh_path)
@@ -40,19 +43,12 @@ def load_external_mesh_and_solve():
     mesh.import_external_nodal_coordinates(external_mesh.nodal_coordinates, index_zero=True)
     mesh.import_external_faces_connectivity(external_mesh.faces_connectivities, index_zero=True, etype_tag=9)
     mesh.import_external_solids_connectivity(external_mesh.solids_connectivities, index_zero=True, etype_tag=4)
+    mesh.map_face_elements_to_solid_elements()
+    mesh.map_surfaces_to_volumes(surfaces_from_volume)
+
+    # export the mesh data
     mesh.export_nodal_coordinates("nodal_coordinates.dat")
     mesh.export_solid_elements_connectivity("solids_connectivity.dat")
-
-    for named_selection, surf_data in external_mesh.elements_from_named_selection.items():
-        tag = named_selecion_to_tag[named_selection]
-        mesh.elements_from_surface[tag] = surf_data["element_indexes"] - 1
-        mesh.external_connectivity_from_surfaces[tag] = surf_data["connectivity"] - 1
-        ns_nodes = external_mesh.nodes_from_named_selection[named_selection]
-        mesh.external_nodes_from_surfaces[tag] = np.array(ns_nodes, dtype=int) - 1
-
-        mesh.volumes_from_surface[tag] = [1]
-
-    mesh.surfaces_from_volume[1] = [1, 2]
 
     # Define the fluid properties
 
