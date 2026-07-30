@@ -35,10 +35,6 @@ class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
         self.selected_frequency_index = None
 
     def _configure_widgets(self):
-        #
-        self.label_transparency.setVisible(False)
-        self.slider_transparency.setVisible(False)
-        #
         self.lineEdit_selected_frequency.setDisabled(True)
         self.lineEdit_selected_frequency.setProperty("status", "information")
         #
@@ -123,9 +119,8 @@ class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
         return units[self.comboBox_plotting_results.currentIndex()]
 
     def update_transparency_callback(self):
-        return
         transparency = self.slider_transparency.value() / 100
-        app().main_window.results_widget.set_tube_actors_transparency(transparency)
+        app().main_window.results_widget.set_analysis_actors_transparency(transparency)
 
     def update_plot(self):
         self.update_animation_widget_visibility()

@@ -57,8 +57,6 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
         self.frame_animation.adjustSize()
 
     def _configure_widgets(self):
-        #
-        self.frame_transparency.setVisible(False)
         self.lineEdit_natural_frequency.setDisabled(True)
         self.lineEdit_natural_frequency.setProperty("status", "information")
 
@@ -136,9 +134,8 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
         LoadingWindow(app().main_window.results_widget.update_plot).run(plot_setup=plot_setup)
 
     def update_transparency_callback(self):
-        return
         transparency = self.slider_transparency.value() / 100
-        app().main_window.results_widget.set_tube_actors_transparency(transparency)
+        app().main_window.results_widget.set_analysis_actors_transparency(transparency)
 
     def get_plot_type(self) -> PressurePlotType:
         plot_types = [

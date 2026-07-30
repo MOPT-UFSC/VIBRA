@@ -127,9 +127,8 @@ class AcousticPressureWaveformFieldInputs(AcousticPressureWaveformFieldInputs_UI
             pass
 
     def update_transparency_callback(self):
-        return
         transparency = self.slider_transparency.value() / 100
-        app().main_window.results_widget.set_tube_actors_transparency(transparency)
+        app().main_window.results_widget.set_analysis_actors_transparency(transparency)
 
     def reduced_loop_time_type_callback(self, update_plot: bool = False):
         index = self.comboBox_reduced_time.currentIndex()

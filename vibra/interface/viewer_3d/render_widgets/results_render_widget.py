@@ -55,6 +55,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self._animation_cache_lock = Lock()
         self.min_value = 0
         self.max_value = 0
+        self.transparency = 0
         self.is_animation_symetric = True
 
         self.set_default_render_tool()
@@ -170,6 +171,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         logging.info("Updating the results render... [98/100]")
         self.update()
+
+        self.set_analysis_actors_transparency(self.transparency)
 
     def configure_plot(self, plot_setup: PlotSetup):
         assert isinstance(plot_setup, PlotSetup)
@@ -437,6 +440,12 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             # in the function that caches the frames
             logging.warning(f"Cache miss on update_animation function for frame {frame}")
             self.cache_frame(frame)
+
+    def set_analysis_actors_transparency(self, transparency):
+        self.transparency = transparency
+        opacity = 1 - transparency
+        self.analysis_actor.GetProperty().SetOpacity(opacity)
+        self.update()
 
     def visualization_changed_callback(self):
         if not self.actors_exists():
