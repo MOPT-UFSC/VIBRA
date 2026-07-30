@@ -397,8 +397,8 @@ class AcousticAssembler:
             processed 2d elements.
         """
 
-        aux_connect = dict()
-        element_normals = dict()
+        elements_connectivities = []
+        elements_normals = []
 
         for key, data in self.properties.surface_properties.items():
 
@@ -431,31 +431,31 @@ class AcousticAssembler:
                 density = fluid.fluid_density
                 speed_of_sound = fluid.speed_of_sound
 
-            surf_elements = list(self.model.mesh.elements_from_surface.get(surface_id))
-            surf_connect = self.model.mesh.get_connectivity_from_surface(surface_id)
-
             data: dict
 
             # normalize data type to array
             p_inc = self.get_value_in_array_form(data.get("values")[0], flatten=True)
             Z_ipw = self.get_value_in_array_form(density * speed_of_sound, flatten=True)
 
-            for i, el in enumerate(surf_elements):
-                aux_connect[el] = surf_connect[i]
-                element_normals[el] = self.model.mesh.get_element_face_normal(surf_connect[i])
+            rows = self.model.mesh.faces_connectivity[:, 1] == surface_id
+            surface_elements_connectivities = self.model.mesh.faces_connectivity[rows, :]
+            surface_elements_normals = self.model.mesh.get_element_face_normal_batched(surface_elements_connectivities)
 
-        if aux_connect:
-            pw_data = {
-                "ipw_vector": ipw_vector,
-                "ipw_pressure": p_inc,
-                "ipw_impedance": Z_ipw,
-                "connectivities": np.array(list(aux_connect.values()), dtype=int),
-                "element_face_normals": np.array(list(element_normals.values()), dtype=float),
-            }
+            elements_connectivities.extend(surface_elements_connectivities[:, 4:])
+            elements_normals.extend(surface_elements_normals)
 
-            return IncidentPlaneWaveIntegrationData(**pw_data)
+        if not elements_connectivities:
+            return None
+    
+        pw_data = {
+            "ipw_vector": ipw_vector,
+            "ipw_pressure": p_inc,
+            "ipw_impedance": Z_ipw,
+            "connectivities": np.array(elements_connectivities, dtype=int),
+            "element_face_normals": np.array(elements_normals, dtype=float),
+        }
 
-        # return integration_data
+        return IncidentPlaneWaveIntegrationData(**pw_data)
 
 
     def get_mass_source_data_for_1d_element_integration(self) -> dict:
@@ -1426,7 +1426,7 @@ class AcousticAssembler:
         self.integration_data_Zas = self.get_impedance_data_for_element_integration("absorption_surface")
         if not self.integration_data_Zas:
             return
-        
+
         logging.info("Processing the impedance data to assemble damping matrix... [7/14]")
         connectivities = self.integration_data_Zas.get("connectivities")       
         Z_as = self.integration_data_Zas.get("surface_data")

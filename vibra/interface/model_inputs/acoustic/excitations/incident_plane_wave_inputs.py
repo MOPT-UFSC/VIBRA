@@ -1,9 +1,10 @@
 
+from enum import IntEnum
+
 import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
-from enum import IntEnum
 
 from vibra import app
 from vibra.interface import error_title
@@ -15,6 +16,7 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.acoustic.definitions.enums import StandardTabType
 from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
 from vibra.interface.ui_generated.model.acoustic.excitations.incident_plane_wave_inputs_ui import IncidentPlaneWaveInputs_UI
+from vibra.utils.time_utils import warn_delays
 
 
 class WaveDirection(IntEnum):
@@ -278,16 +280,13 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
         is_enabled = self.comboBox_wave_direction.currentIndex() == WaveDirection.BY_COMPONENTS
         self.frame_incident_wave_vector.setEnabled(is_enabled)
 
-    def get_average_surface_normal(self, surface_id: int):
-
-        normal = 0.
-        connectivity_from_surfaces = self.mesh.get_connectivity_from_surface(surface_id)
-        for connect in connectivity_from_surfaces:
-            normal += self.mesh.get_element_face_normal(connect)
-
-        normal /= len(connectivity_from_surfaces)
-
-        return normal
+    @warn_delays
+    def get_average_surface_normal(self, surface_id: int) -> np.ndarray[tuple[int, int, int]]:
+        assert self.mesh is not None
+        mask = self.mesh.faces_connectivity[:, 1] == surface_id
+        connectivity_from_surfaces = self.mesh.faces_connectivity[mask]
+        normals = self.mesh.get_element_face_normal_batched(connectivity_from_surfaces)
+        return np.sum(normals, axis=0) / len(connectivity_from_surfaces)
     
     def get_input_ipw_vector(self, surface_id: int):
 
