@@ -28,10 +28,11 @@ def get_spectral_data_from_array(data: np.ndarray, return_frequencies: bool=Fals
     return complex_values
 
 
-def is_frequencies_vector_equally_distributed(frequencies: list | np.ndarray, decimals: int = 12):
+def is_frequencies_vector_equally_distributed(frequencies: list | np.ndarray, decimals: int = 10):
 
+    f_min = frequencies[0]
     f_max = frequencies[-1]
-    f_step = frequencies[1] - frequencies[0]
+    f_step = (f_max - f_min) / (len(frequencies) - 1)
 
     shifted_freqs = [value for value in frequencies[1:]]
     shifted_freqs.append(f_max + f_step)

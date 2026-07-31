@@ -82,7 +82,6 @@ def update_analysis_setup_in_file(frequencies: np.ndarray):
     else:
         f_min = f_max = f_step = None
         frequency_spacing = FrequencySpacing.USER_DEFINED
-        frequencies = frequencies
 
     # transfer the analysis id to the
     analysis_id = app().project.model.analysis_id

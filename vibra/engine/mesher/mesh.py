@@ -9,6 +9,7 @@ from typing import Literal, Optional, Self
 # from time import perf_counter
 import gmsh
 import numpy as np
+from scipy.linalg import svd
 from vtkmodules.vtkCommonCore import vtkPoints
 from vtkmodules.vtkCommonDataModel import VTK_HEXAHEDRON, VTK_QUADRATIC_HEXAHEDRON, VTK_QUADRATIC_TETRA, VTK_TETRA, vtkUnstructuredGrid
 from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridWriter
@@ -788,6 +789,15 @@ class Mesh:
         for key, values in nodes_from_surface.items():
             self.external_nodes_from_surfaces[key] = np.unique(values).astype(int)
 
+    def map_surfaces_to_volumes(self, surfaces_from_volume: dict[int, list[int]]):
+        self.volumes_from_surface.clear()
+        self.surfaces_from_volume.clear()
+        for vol_id, surf_ids in surfaces_from_volume.items():
+            for surf_id in surf_ids:
+                self.volumes_from_surface[surf_id] = [vol_id]
+
+            self.surfaces_from_volume[vol_id] = surf_ids
+    
     def export_nodal_coordinates(self, filename):
         fmt = ["%i", "%.16f", "%.16f", "%.16f"]
         header = "Node index || Coordinate x [m] || Coordinate y [m] || Coordinate z [m]"
@@ -1032,7 +1042,7 @@ class Mesh:
                 continue
 
             # solve the SVD problem to find the axis
-            _, _, Vh = np.linalg.svd(normals_surface)
+            _, _, Vh = svd(normals_surface, full_matrices=False, compute_uv=True, overwrite_a=False)
 
             # define the last vector as the axis_candidate
             axis_candidate = Vh[-1]
