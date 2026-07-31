@@ -189,7 +189,10 @@ class AcousticPressureWaveformFieldInputs(AcousticPressureWaveformFieldInputs_UI
 
         def plot_callback():
             self.animation_widget.reset_sliders(plot_setup=plot_setup)
-            app().main_window.results_widget.update_plot(plot_setup=self.plot_setup)
+            app().main_window.results_widget.update_plot(
+                reset_camera=False,
+                plot_setup=self.plot_setup,
+            )
 
         LoadingWindow(plot_callback).run()
 

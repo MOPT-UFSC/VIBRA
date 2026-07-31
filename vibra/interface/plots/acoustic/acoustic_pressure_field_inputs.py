@@ -114,7 +114,10 @@ class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
         )
 
         self.animation_widget.reset_sliders()
-        LoadingWindow(app().main_window.results_widget.update_plot).run(plot_setup=plot_setup)
+        LoadingWindow(app().main_window.results_widget.update_plot).run(
+            reset_camera=False,
+            plot_setup=plot_setup,
+        )
 
     def get_colormap(self) -> str:
         index = self.comboBox_colormaps.currentIndex()

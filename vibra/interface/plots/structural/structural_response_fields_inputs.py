@@ -1,4 +1,3 @@
-from vibra.interface.viewer_3d.plot_setup import DisplacementPlotType
 import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QGridLayout, QTreeWidgetItem
@@ -8,7 +7,7 @@ from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.plots.general.animation_widget import AnimationWidget
 from vibra.interface.ui_generated.plots.structural.structural_response_fields_inputs_ui import StructuralResponseFieldsInputs_UI
 from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
-from vibra.interface.viewer_3d.plot_setup import FrequencyDisplacementPlotSetup
+from vibra.interface.viewer_3d.plot_setup import DisplacementPlotType, FrequencyDisplacementPlotSetup
 
 
 class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
@@ -143,9 +142,12 @@ class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
             magnification_factor=self.animation_widget.magnification_factor,
             index=self.selected_frequency_index,
             plot_type=self.get_plot_type(),
-            unit=self.get_plot_units()
+            unit=self.get_plot_units(),
         )
-        LoadingWindow(app().main_window.results_widget.update_plot).run(plot_setup=plot_setup)
+        LoadingWindow(app().main_window.results_widget.update_plot).run(
+            reset_camera=False,
+            plot_setup=plot_setup,
+        )
 
     def get_selected_frequency_index(self):
         if self.selected_frequency_index is not None:
