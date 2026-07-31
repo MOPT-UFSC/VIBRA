@@ -939,11 +939,11 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
             if values is None:
                 continue
 
-            dofs_mask = [False if value is None else True for value in values]
+            dofs_mask = [not value is None for value in values]
             if sum(dofs_mask) == 6:
                 continue
 
-            n_int = data.get("integrate")
+            n_int = data.get("integrate", 0)
             element_type = data.get("element_type")
             dof_labels = str(self.get_dofs_labels(dofs_mask, n_int))
 
