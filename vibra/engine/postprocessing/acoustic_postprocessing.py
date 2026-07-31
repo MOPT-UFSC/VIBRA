@@ -99,10 +99,8 @@ class AcousticPostprocessing:
             p_min_i = min(pressures)
             p_max_i = max(pressures)
 
-            if p_min_i < p_min:
-                p_min = p_min_i
-            if p_max_i > p_max:
-                p_max = p_max_i
+            p_min = min(p_min, p_min_i)
+            p_max = max(p_max, p_max_i)
 
         if plot_type == "absolute_animation":
             p_min = 0
