@@ -1042,7 +1042,7 @@ class Mesh:
                 continue
 
             # solve the SVD problem to find the axis
-            _, _, Vh = svd(normals_surface, full_matrices=False, compute_uv=True, overwrite_a=True)
+            _, _, Vh = svd(normals_surface, full_matrices=False, compute_uv=True, overwrite_a=False)
 
             # define the last vector as the axis_candidate
             axis_candidate = Vh[-1]
