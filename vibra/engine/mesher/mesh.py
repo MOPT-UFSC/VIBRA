@@ -9,6 +9,7 @@ from typing import Literal, Optional, Self
 # from time import perf_counter
 import gmsh
 import numpy as np
+from scipy.linalg import svd
 from vtkmodules.vtkCommonCore import vtkPoints
 from vtkmodules.vtkCommonDataModel import VTK_HEXAHEDRON, VTK_QUADRATIC_HEXAHEDRON, VTK_QUADRATIC_TETRA, VTK_TETRA, vtkUnstructuredGrid
 from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridWriter
@@ -1041,7 +1042,7 @@ class Mesh:
                 continue
 
             # solve the SVD problem to find the axis
-            _, _, Vh = np.linalg.svd(normals_surface)
+            _, _, Vh = svd(normals_surface, full_matrices=False, compute_uv=True, overwrite_a=True)
 
             # define the last vector as the axis_candidate
             axis_candidate = Vh[-1]
