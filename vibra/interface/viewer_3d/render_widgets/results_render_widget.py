@@ -50,6 +50,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             faces=True,
             solids=True,
         )
+        # dont't remove, transparency depends on it
+        self.renderer.SetUseDepthPeeling(True)
 
         self._animation_cached_data = dict()
         self._animation_cache_lock = Lock()
