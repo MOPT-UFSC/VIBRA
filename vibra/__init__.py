@@ -56,8 +56,8 @@ SUPPORTED_OUTPUT_DATA_EXTENSIONS = [
     "xlsx",
 ]
 
-LIGHT_ICON_COLOR = Color("#1a73e8")
-DARK_ICON_COLOR = Color("#5F9AF4")
+LIGHT_ICON_COLOR = Color("#0051A2")
+DARK_ICON_COLOR = Color("#84AAFF")
 
 
 def app() -> "Application":
