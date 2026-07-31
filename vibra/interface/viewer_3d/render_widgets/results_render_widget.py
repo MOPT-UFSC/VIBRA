@@ -390,12 +390,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
     @warn_delays
     def cache_frame(self, frame):
-        t0 = perf_counter()
         with self.update_lock:
             self.update_color_and_deformation(animation_frame=frame, clear_cache=False)
-
-        dt = perf_counter() - t0
-        print(f"Elapsed time to the compute animation frame: {dt} [s]")
 
         point_data = vtkPointData()
         point_position = vtkPoints()
