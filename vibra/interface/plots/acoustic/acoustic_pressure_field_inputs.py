@@ -35,9 +35,7 @@ class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
     def _initialize(self):
         self.selected_frequency_index = None
 
-    def _configure_widgets(self):  #
-        #
-        self.frame_transparency.setVisible(False)
+    def _configure_widgets(self):
         #
         self.lineEdit_selected_frequency.setDisabled(True)
         self.lineEdit_selected_frequency.setProperty("status", "information")
@@ -91,9 +89,8 @@ class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
             pass
 
     def update_transparency_callback(self):
-        return
         transparency = self.slider_transparency.value() / 100
-        app().main_window.results_widget.set_tube_actors_transparency(transparency)
+        app().main_window.results_widget.set_analysis_actors_transparency(transparency)
 
     def update_plot(self):
         self.update_animation_widget_visibility()
