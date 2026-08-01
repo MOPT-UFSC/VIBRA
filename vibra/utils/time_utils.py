@@ -4,6 +4,8 @@ from contextlib import contextmanager
 from functools import wraps
 from time import perf_counter
 
+logger = logging.getLogger(__name__)
+
 
 def function_timer(func):
     """
@@ -24,7 +26,9 @@ def function_timer(func):
         start = perf_counter()
         result = func(*args, **kwargs)
         elapsed = perf_counter() - start
-        logging.info(f"{func.__name__} took {elapsed:.3f}s")
+        msg = f"{func.__name__} took {elapsed:.3f}s"
+        logger.info(msg)
+        print(msg)
         return result
 
     return wrapper
@@ -50,7 +54,9 @@ def context_timer(name: str, /):
     start = perf_counter()
     yield start
     elapsed = perf_counter() - start
-    logging.info(f"{name} took {elapsed:.3f}s")
+    msg = f"{name} took {elapsed:.3f}s"
+    logger.info(msg)
+    print(msg)
 
 
 @typing.overload
@@ -91,7 +97,7 @@ def warn_delays(arg=None, /):
             elapsed = perf_counter() - start
 
             if elapsed >= maximum_time:
-                logging.warning(f"{func.__name__} took {elapsed:.3f}s. It should be less than {maximum_time:.3f}s.")
+                logger.warning(f"{func.__name__} took {elapsed:.3f}s. It should be less than {maximum_time:.3f}s.")
 
             return result
 
@@ -123,4 +129,4 @@ def warn_delay_since_start(name: str, /, maximum_time=0.1):
     elapsed = perf_counter() - INTIAL_TIME
 
     if elapsed >= maximum_time:
-        logging.warning(f"{name} took {elapsed:.3f}s since the software started. It should be less than {maximum_time:.3f}s.")
+        logger.warning(f"{name} took {elapsed:.3f}s since the software started. It should be less than {maximum_time:.3f}s.")

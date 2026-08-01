@@ -4,7 +4,6 @@ from PySide6.QtCore import Qt
 from vibra import app
 from vibra.interface.ui_generated.data_handler.export_mesh_ui import ExportMesh_UI
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.common.common_interface import mesher_interface_callback
 
 import os
@@ -29,7 +28,6 @@ class ExportMeshData(ExportMesh_UI):
         self._configure_window()
         self._reset_variables()
         self._create_connections()
-        self.update_icons_color()
         self.exec()
 
     def _configure_window(self):
@@ -50,7 +48,6 @@ class ExportMeshData(ExportMesh_UI):
     def _create_connections(self):
         self.pushButton_export_mesh.clicked.connect(self.export_mesh_data)
         self.pushButton_search_folder.clicked.connect(self.search_folder)
-        app().main_window.theme_changed.connect(self.update_icons_color)
 
     def search_folder(self):
         self.folder_path = QFileDialog.getExistingDirectory(None, 'Choose a folder to export the mesh data', str(self.temp_path))
@@ -111,17 +108,6 @@ class ExportMeshData(ExportMesh_UI):
             PrintMessageInput([window_title, title, message], auto_close=False)
             return False
     
-    def update_icons_color(self):
-        theme = app().config.user_preferences.interface_theme
-        from vibra import LIGHT_ICON_COLOR, DARK_ICON_COLOR
-        if theme == "dark":
-            icon_color = DARK_ICON_COLOR.to_qt()
-        elif theme == "light":
-            icon_color = LIGHT_ICON_COLOR.to_qt()
-
-        widgets = self.findChildren(QPushButton)
-        change_icon_color_for_widgets(widgets, icon_color)
-
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
             self.export_mesh_data()

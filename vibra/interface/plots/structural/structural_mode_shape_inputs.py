@@ -6,11 +6,11 @@ from PySide6.QtWidgets import QGridLayout, QTreeWidgetItem
 from vibra import app
 from vibra.engine.solution import ModalSolution
 from vibra.interface.common.common_interface import export_modal_analysis_results
-from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.plots.general.animation_widget import AnimationWidget
 from vibra.interface.ui_generated.plots.structural.structural_mode_shape_inputs_ui import StructuralModeShapeInputs_UI
 from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
+from vibra.interface.viewer_3d.plot_setup import DisplacementPlotType, FrequencyDisplacementPlotSetup
 
 
 class PlotStructuralModeShapeInputs(StructuralModeShapeInputs_UI):
@@ -18,7 +18,6 @@ class PlotStructuralModeShapeInputs(StructuralModeShapeInputs_UI):
         super().__init__(*args, **kwargs)
 
         self._initialize()
-        self._paint_icons()
         self._create_connections()
         self.add_animation_widget()
 
@@ -45,8 +44,6 @@ class PlotStructuralModeShapeInputs(StructuralModeShapeInputs_UI):
         self.treeWidget_frequencies.itemClicked.connect(self.on_click_item)
         self.treeWidget_frequencies.itemDoubleClicked.connect(self.on_click_item)
         #
-        app().main_window.theme_changed.connect(self._paint_icons)
-        #
         self.load_user_preference_colormap()
 
     def add_animation_widget(self):
@@ -59,9 +56,6 @@ class PlotStructuralModeShapeInputs(StructuralModeShapeInputs_UI):
         self.frame_animation.adjustSize()
 
     def _configure_qt_variables(self):
-        #
-        self.frame_transparency.setVisible(False)
-        #
         self.lineEdit_natural_frequency.setDisabled(True)
         self.lineEdit_natural_frequency.setProperty("status", "information")
         #
@@ -85,20 +79,6 @@ class PlotStructuralModeShapeInputs(StructuralModeShapeInputs_UI):
                 self.treeWidget_frequencies.setColumnWidth(i, widths[i])
 
             self.treeWidget_frequencies.headerItem().setTextAlignment(i, Qt.AlignCenter)
-
-    def _paint_icons(self):
-
-        icon_color = None
-        theme = app().config.user_preferences.interface_theme
-        from vibra import DARK_ICON_COLOR, LIGHT_ICON_COLOR
-        if theme == "dark":
-            icon_color = DARK_ICON_COLOR.to_qt()
-        else:
-            icon_color = LIGHT_ICON_COLOR.to_qt()
-
-        widgets = [self.pushButton_export_results]
-
-        change_icon_color_for_widgets(widgets, icon_color)
 
     def update_animation_widget_visibility(self):
         return
@@ -138,21 +118,29 @@ class PlotStructuralModeShapeInputs(StructuralModeShapeInputs_UI):
         self.update_animation_widget_visibility()
         if self.lineEdit_natural_frequency.text() == "":
             return
-        
-        self.mode_index = self.natural_frequencies.index(self.selected_natural_frequency)
 
+        self.mode_index = self.natural_frequencies.index(self.selected_natural_frequency)
         self.animation_widget.reset_sliders()
-        LoadingWindow(app().main_window.results_widget.update_plot).run()
+
+        plot_setup = FrequencyDisplacementPlotSetup(
+            phase=self.animation_widget.phase_in_radians,
+            magnification_factor=self.animation_widget.magnification_factor,
+            index=self.mode_index,
+            plot_type=self.get_plot_type(),
+        )
+        LoadingWindow(app().main_window.results_widget.update_plot).run(
+            reset_camera=False,
+            plot_setup=plot_setup,
+        )
 
     def update_displacements(self):
         pass
 
     def update_transparency_callback(self):
-        return
         transparency = self.slider_transparency.value() / 100
-        app().main_window.results_widget.set_tube_actors_transparency(transparency)
+        app().main_window.results_widget.set_analysis_actors_transparency(transparency)
 
-    def get_plot_type(self):
+    def get_plot_type(self) -> DisplacementPlotType:
         plot_types = [
             "u_sum",
             "u_x",
@@ -160,7 +148,7 @@ class PlotStructuralModeShapeInputs(StructuralModeShapeInputs_UI):
             "u_z",
         ]
         index = self.comboBox_plot_type.currentIndex()
-        return plot_types[index]
+        return DisplacementPlotType(plot_types[index])
 
     def load_natural_frequencies(self):
         solution = app().project.model.solution

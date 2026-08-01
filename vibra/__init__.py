@@ -13,8 +13,8 @@ from pathlib import Path
 from molde import Color
 from PySide6.QtWidgets import QApplication
 
-__version__ = "0.5.3"
-__release_date__ = "May 2026"
+__version__ = "0.6.0"
+__release_date__ = "Jul 2026"
 
 VERSION = __version__
 RELEASE_DATE = __release_date__
@@ -26,9 +26,9 @@ PROJECT_DIR = Path(__file__).parents[1]
 
 DEVELOPER_MODE = True
 
-ICON_DIR = VIBRA_DIR / "interface/data/icons/"
+ICON_DIR = VIBRA_DIR / "interface/data/icons"
+LOGO_DIR = VIBRA_DIR / "interface/data/logos"
 TEXTURE_DIR = VIBRA_DIR / "interface/data/textures/"
-UI_DIR = VIBRA_DIR / "interface/data/ui_files/"
 SYMBOLS_DIR = VIBRA_DIR / "interface/data/symbols/"
 EXAMPLES_DIR = VIBRA_DIR / "interface/data/examples/"
 
@@ -56,8 +56,8 @@ SUPPORTED_OUTPUT_DATA_EXTENSIONS = [
     "xlsx",
 ]
 
-LIGHT_ICON_COLOR = Color("#1a73e8")
-DARK_ICON_COLOR = Color("#5F9AF4")
+LIGHT_ICON_COLOR = Color("#0051A2")
+DARK_ICON_COLOR = Color("#84AAFF")
 
 
 def app() -> "Application":

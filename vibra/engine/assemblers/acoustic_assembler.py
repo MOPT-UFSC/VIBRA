@@ -10,6 +10,16 @@ import numpy as np
 from collections import defaultdict
 from scipy.sparse import csr_matrix, block_array
 from time import time
+from dataclasses import dataclass
+
+
+@dataclass
+class IncidentPlaneWaveIntegrationData:
+    ipw_vector: np.ndarray
+    ipw_pressure: np.ndarray
+    ipw_impedance: np.ndarray
+    connectivities: np.ndarray
+    element_face_normals: np.ndarray
 
 
 class AcousticAssembler:
@@ -375,7 +385,7 @@ class AcousticAssembler:
         return density, speed_of_sound
 
 
-    def get_plane_wave_surface_data_for_element_integration(self) -> dict:
+    def get_incident_plane_wave_surface_data_for_element_integration(self) -> dict:
         """ 
         This method processes the plane wave data for element face
         integration.
@@ -387,13 +397,8 @@ class AcousticAssembler:
             processed 2d elements.
         """
 
-        aux_connect = dict()
-        integration_data = dict()
-
-        k_wave = dict()
-        e_normals = dict()
-        pressures = dict()
-        plane_wave_impedances = dict()
+        elements_connectivities = []
+        elements_normals = []
 
         for key, data in self.properties.surface_properties.items():
 
@@ -404,10 +409,11 @@ class AcousticAssembler:
             rho_eff_pm, C_eff_pm = self.model.get_porous_material_model_effective_properties(surface_id)
             rho_eff_tv, C_eff_tv = self.model.get_viscous_thermal_model_effective_properties(surface_id)
 
-            wave_vector = np.array(data.get("wave_vector"), dtype=float)
-            norm_wave_vector = np.linalg.norm(wave_vector)
-            if norm_wave_vector > 1:
-                wave_vector /= norm_wave_vector
+            ipw_vector = np.array(data.get("ipw_vector"), dtype=float)
+            norm_ipw_vector = np.linalg.norm(ipw_vector)
+
+            if norm_ipw_vector:
+                ipw_vector /= norm_ipw_vector
 
             if isinstance(rho_eff_pm, np.ndarray):
                 density = rho_eff_pm
@@ -418,37 +424,38 @@ class AcousticAssembler:
                 speed_of_sound = C_eff_tv
 
             else:
-                fluid = self.model.properties._get_property("fluid", surface=surface_id)
+                fluid: Fluid = self.model.properties._get_property("fluid", surface=surface_id)
+                if not isinstance(fluid, Fluid):
+                    continue
+
                 density = fluid.fluid_density
                 speed_of_sound = fluid.speed_of_sound
-
-            surf_elements = list(self.model.mesh.elements_from_surface.get(surface_id))
-            surf_connect = self.model.mesh.get_connectivity_from_surface(surface_id)
 
             data: dict
 
             # normalize data type to array
             p_inc = self.get_value_in_array_form(data.get("values")[0], flatten=True)
-            Z = self.get_value_in_array_form(density * speed_of_sound, flatten=True)
+            Z_ipw = self.get_value_in_array_form(density * speed_of_sound, flatten=True)
 
-            for i, el in enumerate(surf_elements):
-                aux_connect[el] = surf_connect[i]
-                plane_wave_impedances[el] = Z
-                e_normals[el] = self.model.mesh.get_element_face_normal(surf_connect[i])
-                k_wave[el] = wave_vector
-                pressures[el] = p_inc
+            rows = self.model.mesh.faces_connectivity[:, 1] == surface_id
+            surface_elements_connectivities = self.model.mesh.faces_connectivity[rows, :]
+            surface_elements_normals = self.model.mesh.get_element_face_normal_batched(surface_elements_connectivities)
 
-        if aux_connect:
-            connectivities = np.array(list(aux_connect.values()), dtype=int)
-            integration_data = {
-                                "connectivities" : connectivities,
-                                "plane_wave_impedances" : plane_wave_impedances,
-                                "e_normals" : e_normals,
-                                "k_wave" : k_wave,
-                                "pressures" : pressures,
-                                }
+            elements_connectivities.extend(surface_elements_connectivities[:, 4:])
+            elements_normals.extend(surface_elements_normals)
 
-        return integration_data
+        if not elements_connectivities:
+            return None
+    
+        pw_data = {
+            "ipw_vector": ipw_vector,
+            "ipw_pressure": p_inc,
+            "ipw_impedance": Z_ipw,
+            "connectivities": np.array(elements_connectivities, dtype=int),
+            "element_face_normals": np.array(elements_normals, dtype=float),
+        }
+
+        return IncidentPlaneWaveIntegrationData(**pw_data)
 
 
     def get_mass_source_data_for_1d_element_integration(self) -> dict:
@@ -867,8 +874,8 @@ class AcousticAssembler:
             if not isinstance(data, dict):
                 continue
 
-            if not self.mass_source_vector_points.any():
-                self.mass_source_vector_points = np.zeros((self.total_dof, self.number_frequencies), dtype=complex)
+            if not self.mass_source_vector_lines.any():
+                self.mass_source_vector_lines = np.zeros((self.total_dof, self.number_frequencies), dtype=complex)
 
             values = data.get("values")
             if values is None:
@@ -943,8 +950,8 @@ class AcousticAssembler:
             if not isinstance(data, dict):
                 continue
 
-            if not self.mass_source_vector_points.any():
-                self.mass_source_vector_points = np.zeros((self.total_dof, self.number_frequencies), dtype=complex)
+            if not self.mass_source_vector_volumes.any():
+                self.mass_source_vector_volumes = np.zeros((self.total_dof, self.number_frequencies), dtype=complex)
 
             values = data.get("values")
             if values is None:
@@ -1367,42 +1374,40 @@ class AcousticAssembler:
         the global damping matrix.
         """
 
-        self.data_Zpw = dict()
-        self.ind_rows_Zpw = np.array([], dtype=int)
-        self.ind_cols_Zpw = np.array([], dtype=int)
+        self.data_Zipw = dict()
+        self.ind_rows_Zipw = np.array([], dtype=int)
+        self.ind_cols_Zipw = np.array([], dtype=int)
 
-        self.integration_data_pw = self.get_plane_wave_surface_data_for_element_integration()
-        if not self.integration_data_pw:
+        self.integration_data_ipw = self.get_incident_plane_wave_surface_data_for_element_integration()
+        if not isinstance(self.integration_data_ipw, IncidentPlaneWaveIntegrationData):
             return
 
         logging.info("Processing the impedance data to assemble damping matrix... [5/14]")
-        _k_wave = self.integration_data_pw.get("k_wave")
-        _e_normals = self.integration_data_pw.get("e_normals")
-        connectivities = self.integration_data_pw.get("connectivities")
-        _pw_impedances = self.integration_data_pw.get("plane_wave_impedances")
+        ipw_vector: np.ndarray = self.integration_data_ipw.ipw_vector
+        Z_ipw: np.ndarray = self.integration_data_ipw.ipw_impedance
+        connectivities: np.ndarray = self.integration_data_ipw.connectivities
+        element_normals: np.ndarray = self.integration_data_ipw.element_face_normals
 
         dof = self.element_2d.DOF_PER_ELEMENT
         self.total_dof_2d = self.element_2d.DOF_PER_NODE * len(self.element_2d.nodal_coordinates)
 
         nel = connectivities.shape[0]
         for j in range(self.number_frequencies):
-            self.data_Zpw[j] = np.zeros((nel, dof, dof), dtype=complex)
+            self.data_Zipw[j] = np.zeros((nel, dof, dof), dtype=complex)
 
         logging.info("Processing the impedance data to assemble damping matrix... [6/14]")
-        self.ind_rows_Zpw, self.ind_cols_Zpw = self.element_2d.generate_ind_rows_cols(connectivities)
+        self.ind_rows_Zipw, self.ind_cols_Zipw = self.element_2d.generate_ind_rows_cols(connectivities)
         int2d_NtN = self.element_2d.stacked_matrices_NtN()
 
-        e_normals = np.array(list(_e_normals.values())).reshape(-1, 1, 3)
-        k_wave = np.array(list(_k_wave.values())).reshape(-1, 3, 1)
-        pw_impedances = np.array(list(_pw_impedances.values()))
+        s_vector = ipw_vector.reshape(3, 1)
+        n_vectors = element_normals.reshape(-1, 1, 3)
 
-        n_k = e_normals @ k_wave
+        # the dot product between incident plane wave vector and the face element normal vector
+        n_k = np.dot(n_vectors, s_vector)
 
         for j in range(self.number_frequencies):
-            Z_pw = pw_impedances[:, j].reshape(-1, 1, 1)
-
             # the negative signal is being used to revert the signal from the elementary matrix
-            self.data_Zpw[j] = - int2d_NtN * (n_k / Z_pw)
+            self.data_Zipw[j] = -(n_k / Z_ipw[j]) * int2d_NtN
 
 
     def process_surface_impedance_data_to_assemble_damping_matrix(self):
@@ -1421,7 +1426,7 @@ class AcousticAssembler:
         self.integration_data_Zas = self.get_impedance_data_for_element_integration("absorption_surface")
         if not self.integration_data_Zas:
             return
-        
+
         logging.info("Processing the impedance data to assemble damping matrix... [7/14]")
         connectivities = self.integration_data_Zas.get("connectivities")       
         Z_as = self.integration_data_Zas.get("surface_data")
@@ -1628,10 +1633,10 @@ class AcousticAssembler:
             cols_Zout = np.append(cols_Zout, self.ind_cols_Zat)
             data_Zout = np.append(data_Zout, self.data_Zat[index].flatten())
 
-        if self.integration_data_pw:
-            rows_Zout = np.append(rows_Zout, self.ind_rows_Zpw) 
-            cols_Zout = np.append(cols_Zout, self.ind_cols_Zpw)
-            data_Zout = np.append(data_Zout, self.data_Zpw[index].flatten())
+        if isinstance(self.integration_data_ipw, IncidentPlaneWaveIntegrationData):
+            rows_Zout = np.append(rows_Zout, self.ind_rows_Zipw) 
+            cols_Zout = np.append(cols_Zout, self.ind_cols_Zipw)
+            data_Zout = np.append(data_Zout, self.data_Zipw[index].flatten())
 
         if self.integration_data_Zas:
             rows_Zout = np.append(rows_Zout, self.ind_rows_Zas) 
@@ -1765,39 +1770,27 @@ class AcousticAssembler:
                     int2d_N = self.element_2d.load_vector(i)
                     output[indices, :] += int2d_N @ complex_values.reshape(1, -1)
 
-        if self.integration_data_pw:
-            k_wave = self.integration_data_pw.get("k_wave")
-            e_normals = self.integration_data_pw.get("e_normals")
-            pressures = self.integration_data_pw.get("pressures")
-            connectivities_pw = self.integration_data_pw.get("connectivities")
-            pw_impedances = self.integration_data_pw.get("plane_wave_impedances")
+        if isinstance(self.integration_data_ipw, IncidentPlaneWaveIntegrationData):
+            p_inc: np.ndarray = self.integration_data_ipw.ipw_pressure
+            s_vector: np.ndarray = self.integration_data_ipw.ipw_vector
+            Z_ipw: np.ndarray = self.integration_data_ipw.ipw_impedance
+            connectivities: np.ndarray = self.integration_data_ipw.connectivities
+            element_normals: np.ndarray = self.integration_data_ipw.element_face_normals
 
-            self.element_2d.reorder_connect(connectivities_pw)
+            self.element_2d.reorder_connect(connectivities)
 
-            for i, (el_index, Z) in enumerate(pw_impedances.items()):
+            for i, n_vector in enumerate(element_normals):
 
                 int2d_N = self.element_2d.load_vector(i)
 
                 # element face connectivity
-                e_connect = connectivities_pw[i, :]
-
-                # element face normal
-                n = e_normals[el_index]
-
-                # incident wave vector
-                k = k_wave[el_index]
-
-                # incident pressure amplitude
-                p_inc = pressures[el_index]
-
-                # surface impedance
-                Z = pw_impedances[el_index]
+                indices = self.element_2d.connectivities[i, :]
 
                 # auxilar vector
-                aux = (p_inc / Z) * (n @ k )
+                aux: np.ndarray =  2 * np.dot(n_vector, s_vector) * p_inc / Z_ipw
 
-                # the negative signal is being used to revert the signal from the elementary load vector ???
-                output[e_connect, :] +=  2 * int2d_N @ aux.reshape(1, -1)
+                # assemble the acoustic load
+                output[indices, :] += int2d_N @ aux.reshape(1, -1)
 
         if self.prescribed_indexes:
             return output[self.unprescribed_indexes, :]

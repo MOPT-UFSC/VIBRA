@@ -20,6 +20,8 @@ from PySide6.QtWidgets import (QApplication, QComboBox, QFrame, QGridLayout,
     QScrollArea, QSizePolicy, QSlider, QSpacerItem,
     QTreeWidget, QTreeWidgetItem, QWidget)
 
+from vibra.interface.formatters.icons import Icon
+
 class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
@@ -184,8 +186,7 @@ class Ui_Form(object):
         self.pushButton_export_results.setObjectName(u"pushButton_export_results")
         self.pushButton_export_results.setMinimumSize(QSize(32, 28))
         self.pushButton_export_results.setMaximumSize(QSize(32, 16777215))
-        icon = QIcon()
-        icon.addFile(u":/icons/file_export_icon.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon = Icon(u":/icons/file_export_icon.png")
         self.pushButton_export_results.setIcon(icon)
         self.pushButton_export_results.setIconSize(QSize(18, 18))
 

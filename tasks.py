@@ -9,10 +9,21 @@ from importlib.metadata import version
 
 UI_FILES_PATH = Path("vibra/interface/data/ui_files")
 GENERATED_PATH = Path("vibra/interface/ui_generated")
-RESOURCE_DIR = Path("vibra/interface/data/icons") 
-QRC_PATH = RESOURCE_DIR / "resources.qrc" 
-QRC_PREFIX_NAME = "/icons/"
-QRC_PREFIX = f":{QRC_PREFIX_NAME}"
+RESOURCE_DIR = Path("vibra/interface/data/icons")
+RESOURCE_DIR_DARK = RESOURCE_DIR / "dark_theme"
+RESOURCE_DIR_LIGHT = RESOURCE_DIR / "light_theme"
+QRC_PATH_DARK = RESOURCE_DIR_DARK / "resources.qrc"
+QRC_PATH_LIGHT = RESOURCE_DIR_LIGHT / "resources.qrc"
+
+LOGO_DIR = Path("vibra/interface/data/logos")
+
+QRC_PREFIXES = {
+    "/icons/": ":/icons/",
+    "/logos/": ":/logos/",
+}
+
+RESOURCES_DIR = [RESOURCE_DIR_DARK, RESOURCE_DIR_LIGHT]
+QRC_PATHS = [QRC_PATH_DARK, QRC_PATH_LIGHT]
 
 
 @task
@@ -25,21 +36,46 @@ def qrc_codegen(c):
     if not RESOURCE_DIR.exists():
         print(f"❌ Directory '{RESOURCE_DIR}' not found.")
         return
+    
+    for dir, qrc_path in zip(RESOURCES_DIR, QRC_PATHS):
 
-    qrc_content = ['<RCC>', '    <qresource prefix="icons">']
+        qrc_content = ['<RCC>', '    <qresource prefix="icons">']
+        other_themes = [theme_dir for theme_dir in RESOURCES_DIR if theme_dir != dir]
 
-    for file_path in RESOURCE_DIR.rglob("*.png"):
-        if file_path.is_file():
-            relative_path = file_path.relative_to(RESOURCE_DIR)
-            qrc_content.append(f'        <file>{relative_path.as_posix()}</file>')
+        for file_path in dir.parent.rglob("*.png"):
+            if not file_path.is_file():
+                continue
 
-    qrc_content.append('    </qresource>')
-    qrc_content.append('</RCC>')
+            if any(other in file_path.parents for other in other_themes):
+                continue
 
-    with open(QRC_PATH, "w", encoding="utf-8") as qrc:
-        qrc.write("\n".join(qrc_content))
+            if dir in file_path.parents:
+                alias = file_path.relative_to(dir).as_posix()
+            else:
+                alias = file_path.relative_to(RESOURCE_DIR).as_posix()
 
-    print(f"✅ {QRC_PATH} generated successfully!")
+            disk_path = os.path.relpath(file_path, qrc_path.parent).replace(os.sep, "/")
+            qrc_content.append(f'        <file alias="{alias}">{disk_path}</file>')
+
+        qrc_content.append('    </qresource>')
+
+        qrc_content.append('    <qresource prefix="logos">')
+
+        for file_path in LOGO_DIR.rglob("*.png"):
+            if not file_path.is_file():
+                continue
+
+            alias = file_path.relative_to(LOGO_DIR).as_posix()
+            disk_path = os.path.relpath(file_path, qrc_path.parent).replace(os.sep, "/")
+            qrc_content.append(f'        <file alias="{alias}">{disk_path}</file>')
+
+        qrc_content.append('    </qresource>')
+        qrc_content.append('</RCC>')
+
+        with open(qrc_path, "w", encoding="utf-8") as qrc:
+            qrc.write("\n".join(qrc_content))
+
+        print(f"✅ {qrc_path} generated successfully!")
 
 
 @task(pre=[qrc_codegen])
@@ -49,11 +85,13 @@ def qrc_compile(c):
 
     Usage example: inv qrc-compile
     '''
-    rcc_path = RESOURCE_DIR / "resources_rc.py"
-    command = f"pyside6-rcc \"{str(QRC_PATH)}\" -o \"{str(rcc_path)}\""
-    result = c.run(command, warn=True)
-    if result.ok:
-        print(f"✅ {rcc_path} generated successfully!")
+    for dir, qrc_path in zip(RESOURCES_DIR, QRC_PATHS):
+
+        rcc_path = dir / "resources_rc.py"
+        command = f"pyside6-rcc \"{str(qrc_path)}\" -o \"{str(rcc_path)}\""
+        result = c.run(command, warn=True)
+        if result.ok:
+            print(f"✅ {rcc_path} generated successfully!")
 
 
 @task(pre=[qrc_compile])
@@ -119,6 +157,9 @@ def ui_compile(c):
                             # This is fixed using a global import o the application launch.
                             continue
                         modified_lines.append(line)
+
+                    # Make Designer resource icons follow the active theme.
+                    modified_lines = [rewrite_designer_icons("".join(modified_lines), ui_path)]
 
                     # Generate docstring with hierarchy
                     docstring = f'    """\n    Component Hierarchy:\n    {hierarchy}\n    """\n'
@@ -195,6 +236,54 @@ def clean_orphaned_files(root_dir: str, output_root: str) -> None:
         print(f"✅ Cleaned up {deleted_count} orphaned file(s)")
 
 
+THEMED_ICON_IMPORT = "from vibra.interface.formatters.icons import Icon\n"
+
+# Matches the ``QIcon() + addFile(":/icons/...")`` idiom emitted by pyside6-uic
+# for a single Normal/Off state, e.g.:
+#     icon1 = QIcon()
+#     icon1.addFile(u":/icons/import.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+DESIGNER_ICON_RE = re.compile(
+    r'(?m)^([ \t]*)(\w+) = QIcon\(\)\n[ \t]*\2\.addFile\(\s*u?"([^"]+)"[^\n]*\)\n'
+)
+
+
+def rewrite_designer_icons(text: str, ui_path: str) -> str:
+    """Make Designer resource icons follow the active icon theme.
+
+    Replaces the ``QIcon() + addFile(...)`` idiom emitted by pyside6-uic with
+    ``Icon(...)``, whose engine re-reads the active resource on each
+    repaint (so the same icon follows a ``set_icon_theme`` swap). Only the
+    single Normal/Off state form is converted; multi-state icons are left as a
+    default ``QIcon`` and reported.
+    """
+    if "QIcon.State.On" in text:
+        print(f"⚠️ {ui_path}: multi-state icon(s) detected; left as default QIcon (won't follow theme).")
+
+    new_text, count = DESIGNER_ICON_RE.subn(
+        lambda m: f'{m.group(1)}{m.group(2)} = Icon(u"{m.group(3)}")\n',
+        text,
+    )
+
+    if count == 0:
+        return new_text
+
+    if ".addFile(" in new_text:
+        print(f"⚠️ {ui_path}: leftover addFile() after icon rewrite; review (multi-file icon?).")
+
+    # Inject the Icon import once, just before the first class definition
+    # (safely after the import block, which may span multiple lines).
+    if THEMED_ICON_IMPORT not in new_text:
+        lines = new_text.splitlines(keepends=True)
+        insert_at = next(
+            (i for i, ln in enumerate(lines) if ln.startswith("class ")),
+            len(lines),
+        )
+        lines.insert(insert_at, THEMED_ICON_IMPORT + "\n")
+        new_text = "".join(lines)
+
+    return new_text
+
+
 def to_camel_case(filename: str) -> str:
     """Convert filename (snake_case or kebab-case) to CamelCase."""
     return "".join(word.capitalize() for word in re.split(r"[_\s-]+", filename))
@@ -253,23 +342,24 @@ def extract_widget_hierarchy(ui_path: str) -> str:
         return ""
 
 
-def get_relative_qrc_path(ui_path: Path) -> str:
-    return os.path.relpath(QRC_PATH, start=ui_path.parent)
+def get_relative_qrc_path(ui_path: Path, qrc_path: Path = QRC_PATH_DARK) -> str:
+    return os.path.relpath(qrc_path, start=ui_path.parent)
 
 
 def convert_to_qrc_path(icon_path: str) -> str:
     icon_path = Path(icon_path).as_posix()
-    if QRC_PREFIX_NAME in icon_path:
-        relative_icon_path = icon_path.split(QRC_PREFIX_NAME)[-1]
-        return f"{QRC_PREFIX}{relative_icon_path}"
+    for prefix_name, prefix in QRC_PREFIXES.items():
+        if prefix_name in icon_path:
+            relative_icon_path = icon_path.split(prefix_name)[-1]
+            return f"{prefix}{relative_icon_path}"
     return icon_path
-    
+
 
 def fix_ui_file_text(file_path: Path) -> None:
     updated_lines = []
     lines = file_path.open('r').readlines()
     for line in lines:
-        if QRC_PREFIX in line:
+        if any(prefix in line for prefix in QRC_PREFIXES.values()):
             updated_lines.append(line)
             continue
 
@@ -279,12 +369,14 @@ def fix_ui_file_text(file_path: Path) -> None:
             continue
 
         for path in find_relative_paths(line):
-            if QRC_PREFIX_NAME in path:
-                qrc_path = f'{QRC_PREFIX}{path.split(QRC_PREFIX_NAME)[-1]}'
-                line = line.replace(path, qrc_path)
-            
+            for prefix_name, prefix in QRC_PREFIXES.items():
+                if prefix_name in path:
+                    qrc_path = f'{prefix}{path.split(prefix_name)[-1]}'
+                    line = line.replace(path, qrc_path)
+                    break
+
         updated_lines.append(line)
-    
+
     file_path.open('w').writelines(updated_lines)
     print(f"✅ Fixed: {file_path}")
 

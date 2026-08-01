@@ -5,14 +5,14 @@ from typing import Dict, List
 
 import numpy as np
 from PySide6.QtCore import QItemSelectionModel, QPoint, Qt
-from PySide6.QtGui import QAction, QCloseEvent, QIcon
+from PySide6.QtGui import QAction, QCloseEvent
 from PySide6.QtWidgets import QAbstractItemView, QDialog, QDoubleSpinBox, QMenu, QTableWidgetItem, QTreeWidgetItem
 
-from vibra import ICON_DIR, app
+from vibra import app
 from vibra.engine.dissipation_models.porous_materials_models import PorousMaterialModels, get_DB_standard_constants, get_DBM_standard_constants
 from vibra.engine.properties.fluid import Fluid
 from vibra.interface import error_title
-from vibra.interface.formatters.icons import change_icon_color_for_widgets
+from vibra.interface.formatters.icons import Icon
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.acoustic.definitions.enums import AttributionBodiesType, PlotTypesTab
@@ -63,7 +63,6 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         self._config_window()
         self._configure_widgets()
         self._create_connections()
-        self._paint_icons()
         self.load_info()
         self.geometry_selection_callback()
 
@@ -121,7 +120,6 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         self.treeWidget_porous_material_model.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
-        app().main_window.theme_changed.connect(self._paint_icons)
         #
         self.update_attribution_type()
         self.update_plot_buttons_access()
@@ -143,13 +141,10 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             return
 
         menu = QMenu(self)
-        copy_icon = str(ICON_DIR / "copy_icon.png")
 
         action_DBM = QAction("Copy porous material", self)
-        action_DBM.setIcon(QIcon(copy_icon))
+        action_DBM.setIcon(Icon(":/icons/copy_icon.png"))
         menu.addAction(action_DBM)
-
-        change_icon_color_for_widgets([action_DBM], self.icon_color)
 
         action_DBM.triggered.connect(lambda: self.copy_DBM_porous_material_parameters(item))
         menu.exec_(self.tableWidget_DBM.viewport().mapToGlobal(pos))
@@ -160,13 +155,10 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             return
 
         menu = QMenu(self)
-        copy_icon = str(ICON_DIR / "copy_icon.png")
 
         action_JCAL = QAction("Copy porous material", self)
-        action_JCAL.setIcon(QIcon(copy_icon))
+        action_JCAL.setIcon(Icon(":/icons/copy_icon.png"))
         menu.addAction(action_JCAL)
-
-        change_icon_color_for_widgets([action_JCAL], self.icon_color)
 
         action_JCAL.triggered.connect(lambda: self.copy_JCAL_porous_material_parameters(item))
         menu.exec_(self.tableWidget_JCAL.viewport().mapToGlobal(pos))
@@ -194,18 +186,6 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             return
 
         self.load_porous_material_model_inputs(pm_data.get_data())
-
-    def _paint_icons(self):
-        self.icon_color = None
-        theme = app().config.user_preferences.interface_theme
-        from vibra import DARK_ICON_COLOR, LIGHT_ICON_COLOR
-        if theme == "dark":
-            self.icon_color = DARK_ICON_COLOR.to_qt()
-        else:
-            self.icon_color = LIGHT_ICON_COLOR.to_qt()
-
-        widgets = [self.pushButton_DB_equations]
-        change_icon_color_for_widgets(widgets, self.icon_color)
 
     def actions_to_finalize(self, close_window: bool = False):
         self.load_info()

@@ -85,8 +85,8 @@ def compute_hourglass_stiffness(K_unif: np.ndarray, coords: np.ndarray, dphi_t_a
     # O Ansys usa ~5% da rigidez média para HG
     kappa = (h_factor * 0.05 * np.trace(K_unif) / 24.0)
 
-    E = material.elasticity_modulus
-    vv = material.poisson_ratio
+    E = material.elasticity_modulus  # noqa: F841
+    vv = material.poisson_ratio  # noqa: F841
 
     # print()
     # print(dphi_t_an.shape)
@@ -115,7 +115,7 @@ def compute_hourglass_stiffness(K_unif: np.ndarray, coords: np.ndarray, dphi_t_a
 
 def calcular_k_stab_corrigido(coords, E, nu, eta=0.1):
     G = E / (2 * (1 + nu))
-    V_ref = 8.0 # Volume do cubo unitário pai
+    V_ref = 8.0 # Volume do cubo unitário pai  # noqa: F841
     
     # 1. Vetores de base Gamma (Modos de Hourglass teóricos)
     Gamma = np.array([
@@ -161,7 +161,7 @@ def calcular_k_stab_corrigido(coords, E, nu, eta=0.1):
     
     # Coeficiente de rigidez baseado em Belytschko & Bindeman (1993)
     # Para o hexaedro, o termo (b_i^T * b_i) controla a escala
-    L2_ref = np.sum(b**2) 
+    L2_ref = np.sum(b**2)  # noqa: F841
     
     for a in range(4):
         # Matriz externa 8x8 para o modo a

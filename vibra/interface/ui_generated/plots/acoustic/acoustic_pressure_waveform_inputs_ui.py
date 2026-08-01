@@ -19,6 +19,8 @@ from PySide6.QtWidgets import (QApplication, QComboBox, QFrame, QGridLayout,
     QLabel, QLineEdit, QPushButton, QSizePolicy,
     QSpacerItem, QWidget)
 
+from vibra.interface.formatters.icons import Icon
+
 class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
@@ -121,8 +123,7 @@ class Ui_Form(object):
         font3.setItalic(False)
         self.pushButton_export_data.setFont(font3)
         self.pushButton_export_data.setStyleSheet(u"")
-        icon = QIcon()
-        icon.addFile(u":/icons/save_as.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon = Icon(u":/icons/save_as.png")
         self.pushButton_export_data.setIcon(icon)
         self.pushButton_export_data.setIconSize(QSize(20, 20))
         self.pushButton_export_data.setFlat(False)

@@ -7,6 +7,7 @@ from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.plots.general.animation_widget import AnimationWidget
 from vibra.interface.ui_generated.plots.structural.structural_response_fields_inputs_ui import StructuralResponseFieldsInputs_UI
 from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
+from vibra.interface.viewer_3d.plot_setup import DisplacementPlotType, FrequencyDisplacementPlotSetup
 
 
 class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
@@ -33,10 +34,6 @@ class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
         self.selected_frequency_index = None
 
     def _configure_widgets(self):
-        #
-        self.label_transparency.setVisible(False)
-        self.slider_transparency.setVisible(False)
-        #
         self.lineEdit_selected_frequency.setDisabled(True)
         self.lineEdit_selected_frequency.setProperty("status", "information")
         #
@@ -107,23 +104,22 @@ class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
         except AttributeError:
             pass
 
-    def get_data_type(self):
+    def get_plot_type(self) -> DisplacementPlotType:
         prefixes = ["u", "v", "a"]
         suffixes = ["sum", "x", "y", "z"]
 
         ind_dformat = self.comboBox_plotting_results.currentIndex()
         ind_ptype = self.comboBox_plot_type.currentIndex()
 
-        return f"{prefixes[ind_dformat]}_{suffixes[ind_ptype]}"
+        return DisplacementPlotType(f"{prefixes[ind_dformat]}_{suffixes[ind_ptype]}")
 
     def get_plot_units(self) -> str:
-        units = ["m", "m/s", "m²/s"]
+        units = ["m", "m/s", "m/s²"]
         return units[self.comboBox_plotting_results.currentIndex()]
 
     def update_transparency_callback(self):
-        return
         transparency = self.slider_transparency.value() / 100
-        app().main_window.results_widget.set_tube_actors_transparency(transparency)
+        app().main_window.results_widget.set_analysis_actors_transparency(transparency)
 
     def update_plot(self):
         self.update_animation_widget_visibility()
@@ -138,16 +134,27 @@ class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
 
         if self.selected_frequency_index is None:
             return
-        
+
         self.animation_widget.reset_sliders()
-        LoadingWindow(app().main_window.results_widget.update_plot).run()
+
+        plot_setup = FrequencyDisplacementPlotSetup(
+            phase=self.animation_widget.phase_in_radians,
+            magnification_factor=self.animation_widget.magnification_factor,
+            index=self.selected_frequency_index,
+            plot_type=self.get_plot_type(),
+            unit=self.get_plot_units(),
+        )
+        LoadingWindow(app().main_window.results_widget.update_plot).run(
+            reset_camera=False,
+            plot_setup=plot_setup,
+        )
 
     def get_selected_frequency_index(self):
         if self.selected_frequency_index is not None:
             return self.selected_frequency_index
 
         return 0
-    
+
     def get_number_of_differentiations(self):
         return self.comboBox_plotting_results.currentIndex()
 

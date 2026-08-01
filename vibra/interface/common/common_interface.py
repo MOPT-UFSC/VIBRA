@@ -1,15 +1,51 @@
 from pathlib import Path
+from typing import Literal
+from enum import IntEnum
 
 import numpy as np
 from PySide6.QtWidgets import QDialog, QFileDialog, QPushButton, QWidget
 
 from vibra import app
-from vibra.interface import warning_title
 from vibra.engine.analysis_info import AnalysisID, FrequencySpacing
+from vibra.interface import error_title, warning_title
 from vibra.interface.data.data_manager import is_frequencies_vector_equally_distributed
-from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
 
+
+class InputType(IntEnum):
+    REAL_IMAGINARY = 0
+    MAGNITUDE_PHASE = 1
+
+
+def save_table_values(table_name: str, imported_values: np.ndarray, physical_domain: Literal["acoustic", "structural"]):
+    
+    # define the frequencies vector
+    frequencies = imported_values[:, 0]
+
+    if app().project.model.change_analysis_frequency_setup(list(frequencies)):
+        app().main_window.hide_dialogs()
+        title = "Project frequency setup cannot be modified"
+        message = "The following imported table of values has a frequency setup "
+        message += "different from the others already imported ones. The current "
+        message += "project frequency setup is not going to be modified."
+        message += f"\n\n{table_name}"
+        PrintMessageInput([error_title, title, message])
+        return True
+
+    update_analysis_setup_in_file(frequencies)
+
+    # real values vector
+    real_values = imported_values[:, 1]
+    
+    # imaginary values vector
+    imag_values = imported_values[:, 2]
+
+    data = np.array([frequencies, real_values, imag_values], dtype=float).T
+
+    app().project.model.properties.add_imported_tables(physical_domain, table_name, data)
+
+    return False
 
 def filter_outside_surfaces(surface_ids: list[int], bc_label: str) -> tuple[list[int], list[int]]:
 
@@ -46,7 +82,6 @@ def update_analysis_setup_in_file(frequencies: np.ndarray):
     else:
         f_min = f_max = f_step = None
         frequency_spacing = FrequencySpacing.USER_DEFINED
-        frequencies = frequencies
 
     # transfer the analysis id to the
     analysis_id = app().project.model.analysis_id

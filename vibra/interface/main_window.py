@@ -10,19 +10,21 @@ from molde import stylesheets
 from molde.render_widgets import CommonRenderWidget
 from PySide6.QtCore import QEvent, Qt, Signal
 from PySide6.QtGui import QAction
-from PySide6.QtWidgets import QAbstractButton, QFileDialog, QMenu, QMessageBox
+from PySide6.QtWidgets import QFileDialog, QMenu, QMessageBox
 
-from vibra import LIGHT_ICON_COLOR, SUPPORTED_GEOMETRY_EXTENSIONS, SUPPORTED_MESH_EXTENSIONS, TEMP_PROJECT_DIR, app
+from vibra import SUPPORTED_GEOMETRY_EXTENSIONS, SUPPORTED_MESH_EXTENSIONS, TEMP_PROJECT_DIR, app
 from vibra.engine.assemblers import AcousticAssembler
 from vibra.engine.solvers import HarmonicSolver
+from vibra.interface.data.icons.theme_resources import set_icon_theme
 from vibra.interface.data_handler.export_mesh_data import ExportMeshData
-from vibra.interface.formatters.icons import change_icon_color_for_widgets, get_vibra_icon
-from vibra.interface.model_inputs.general.choose_property_to_delete import ChoosePropertyToDelete
+from vibra.interface.formatters.icons import Icon, get_vibra_icon
+from vibra.interface.general.entity_visibility_handler import EntityVisibilityHandler
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.general.selection_handler import SelectionHandler
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.menus.model_setup_widget import ModelSetupWidget
 from vibra.interface.menus.results_viewer_widget import ResultsViewerWidget
+from vibra.interface.model_inputs.general.choose_property_to_delete import ChoosePropertyToDelete
 from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
 from vibra.interface.plots.acoustic.export_element_transfer_data_inputs import ExportElementTransferDataInputs
 from vibra.interface.project.save_project_data_selector import SaveProjectDataSelector
@@ -31,12 +33,11 @@ from vibra.interface.status_bar import StatusBar
 from vibra.interface.toolbars.analysis_toolbar import AnalysisToolbar
 from vibra.interface.toolbars.view_toolbar import ViewToolbar
 from vibra.interface.ui_generated.main_window_ui import MainWindow_UI
-from vibra.interface.user_input.input_ui import InputUi
 from vibra.interface.user_input.about_vibra import AboutVibraInput
+from vibra.interface.user_input.input_ui import InputUi
 from vibra.interface.user_input.render_user_preferences import RendererUserPreferencesInput
 from vibra.interface.viewer_3d.render_widgets import GeometryRenderWidget, MeshRenderWidget, ResultsRenderWidget
 from vibra.interface.welcome_widget import WelcomeWidget
-from vibra.utils.icons import load_icon
 from vibra.utils.interface_utils import GeometryColorMode, VisualizationFilter, block_signals, qt_extensions
 
 
@@ -49,7 +50,10 @@ class MainWindow(MainWindow_UI):
         super().__init__(parent)
 
         self.selection = SelectionHandler(app().project)
+        self.entity_visibility = EntityVisibilityHandler(app().project)
+
         self.selection.selection_changed.connect(self.selection_changed_callback)
+        self.entity_visibility.changed.connect(self.update_hidden_plots)
 
         self.hidden_mesh_faces = set()
         self.hidden_mesh_solids = set()
@@ -234,18 +238,7 @@ class MainWindow(MainWindow_UI):
         app().config.user_preferences.interface_theme = theme
         stylesheets.set_theme(theme)
 
-        from vibra import DARK_ICON_COLOR, LIGHT_ICON_COLOR
-
-        if theme == "dark":
-            icon_color = DARK_ICON_COLOR.to_qt()
-        elif theme == "light":
-            icon_color = LIGHT_ICON_COLOR.to_qt()
-
-        widgets_type = [QAction, QAbstractButton]
-        widgets = list()
-        for widget_type in widgets_type:
-            widgets += self.findChildren(widget_type)
-        change_icon_color_for_widgets(widgets, icon_color)
+        set_icon_theme(theme)
 
         self.theme_changed.emit(theme)
 
@@ -290,8 +283,7 @@ class MainWindow(MainWindow_UI):
         self.update_renderer_font_size()
 
     def create_recents_menu(self):
-        color = LIGHT_ICON_COLOR.to_qt()
-        self.recent_icon = load_icon(":/icons/recent.png", color)
+        self.recent_icon = Icon(":/icons/recent.png")
 
         self.recents_menu = QMenu("Recent projects", self)
         self.recents_menu.setIcon(self.recent_icon)
@@ -322,11 +314,12 @@ class MainWindow(MainWindow_UI):
         self.last_render_index = new_index
 
     def selection_changed_callback(self):
-        points = self.selection.geometry_points
-        lines = self.selection.geometry_lines
-        surfaces = self.selection.geometry_surfaces
-        volumes = self.selection.geometry_volumes
-        self.status_bar.set_selection(points, lines, surfaces, volumes)
+        self.status_bar.set_selection(
+            self.selection.geometry_points,
+            self.selection.geometry_lines,
+            self.selection.geometry_surfaces,
+            self.selection.geometry_volumes,
+        )
 
     def action_section_plane_callback(self, condition: bool):
         if condition:
@@ -338,20 +331,24 @@ class MainWindow(MainWindow_UI):
             self.section_plane.value_changed.emit()
 
     def action_theme_callback(self):
-        color = LIGHT_ICON_COLOR.to_qt()
-
-        self.theme_sun_icon = load_icon(":/icons/sun_icon.png", color)
-        self.theme_moon_icon = load_icon(":/icons/moon_icon.png", color)
+        self.theme_sun_icon = Icon(":/icons/sun_icon.png")
+        self.theme_moon_icon = Icon(":/icons/moon_icon.png")
 
         if app().config.user_preferences.interface_theme == "light":
             app().config.user_preferences.set_dark_theme()
             self.set_theme("dark")
             self.action_theme.setIcon(self.theme_sun_icon)
 
+            if hasattr(self.welcome_widget, "update_logo"):
+                self.welcome_widget.update_logo("vibra_colored_dark_background.png")
+
         elif app().config.user_preferences.interface_theme == "dark":
             app().config.user_preferences.set_light_theme()
             self.set_theme("light")
             self.action_theme.setIcon(self.theme_moon_icon)
+
+            if hasattr(self.welcome_widget, "update_logo"):
+                self.welcome_widget.update_logo("vibra_colored_light_background.png")
 
         app().config.update_config_file()
 
@@ -370,45 +367,36 @@ class MainWindow(MainWindow_UI):
         self.render_user_preferences = RendererUserPreferencesInput()
 
     def action_points_callback(self):
-        all_ids = app().project.model.mesh.all_point_ids()
-        self.selection.set_geometry_selection(points=all_ids)
+        self.selection.select_all_points()
+        self.action_model_workspace_callback()
 
     def action_faces_callback(self):
-        all_ids = app().project.model.mesh.all_surface_ids()
-        self.selection.set_geometry_selection(surfaces=all_ids)
+        self.selection.select_all_surfaces()
+        self.action_model_workspace_callback()
 
     def action_solid_callback(self):
-        all_ids = app().project.model.mesh.all_solid_ids()
-        self.selection.set_geometry_selection(volumes=all_ids)
+        self.selection.select_all_volumes()
+        self.action_model_workspace_callback()
 
     def action_all_entities_geometry_callback(self):
-        mesh = app().project.model.mesh
-        self.selection.set_geometry_selection(
-            points=mesh.all_point_ids(),
-            lines=mesh.all_line_ids(),
-            surfaces=mesh.all_surface_ids(),
-            volumes=mesh.all_solid_ids(),
-        )
+        self.selection.select_all_geometry()
+        self.action_model_workspace_callback()
 
     def action_all_entities_mesh_callback(self):
-        mesh = app().project.model.mesh
-        self.selection.set_mesh_selection(
-            nodes=mesh.all_node_ids(),
-            faces=mesh.all_face_element_ids(),
-            solids=mesh.all_solid_element_ids(),
-        )
+        self.selection.select_all_mesh()
+        self.action_mesh_workspace_callback()
 
     def action_nodes_callback(self):
-        all_ids = app().project.model.mesh.all_node_ids()
-        self.selection.set_mesh_selection(nodes=all_ids)
+        self.selection.select_all_nodes()
+        self.action_mesh_workspace_callback()
 
     def action_surface_elements_callback(self):
-        all_ids = app().project.model.mesh.all_face_element_ids()
-        self.selection.set_mesh_selection(faces=all_ids)
+        self.selection.select_all_faces()
+        self.action_mesh_workspace_callback()
 
     def action_solid_elements_callback(self):
-        all_ids = app().project.model.mesh.all_solid_element_ids()
-        self.selection.set_mesh_selection(solids=all_ids)
+        self.selection.select_all_solids()
+        self.action_mesh_workspace_callback()
 
     def action_clear_selection_callback(self):
         self.selection.clear_selection()
@@ -596,37 +584,14 @@ class MainWindow(MainWindow_UI):
                 ]
             )
 
-        volumes_to_hide = self.selection.calculate_volumes_to_hide()
-
-        self.hide_volumes(volumes_to_hide)
+        self.entity_visibility.hide_surfaces(self.selection.geometry_surfaces)
+        self.entity_visibility.hide_volumes(self.selection.geometry_volumes)
         self.selection.clear_selection()
-
-    def recompute_hidden_volumes(self):
-        self.selection.hidden_surfaces.clear()
-        self.hide_volumes(app().main_window.selection.hidden_volumes)
-
-    def hide_volumes(self, volumes: set[int]):
-        mesh = app().project.model.mesh
-
-        volumes = set(volumes)
-        selected_volume_surfaces = set()
-        visible_volume_surfaces = set()
-
-        for volume, surfaces in mesh.surfaces_from_volume.items():
-            if volume in volumes:
-                selected_volume_surfaces |= set(surfaces)
-            elif volume not in self.selection.hidden_volumes:
-                visible_volume_surfaces |= set(surfaces)
-        surfaces_to_keep_visible = set.intersection(selected_volume_surfaces, visible_volume_surfaces)
-
-        self.selection.hidden_volumes |= volumes
-        self.selection.hidden_surfaces |= selected_volume_surfaces - surfaces_to_keep_visible
-        self.update_hidden_plots()
 
     def has_hidden_part(self) -> bool:
         return any(
             [
-                len(self.selection.hidden_surfaces) != 0,
+                self.entity_visibility.has_hidden_entity(),
                 len(self.distinguished_solids) != 0,
                 self.section_plane.cutting,
                 bool(app().project.model.mesh.collapsed_elements_data),
@@ -646,9 +611,7 @@ class MainWindow(MainWindow_UI):
         self.visualization_changed.emit()
 
     def action_unhide_all_callback(self):
-        self.selection.hidden_surfaces.clear()
-        self.selection.hidden_volumes.clear()
-        self.update_hidden_plots()
+        self.entity_visibility.unhide_all()
 
     def action_save_callback(self):
         self.save_project_dialog()
@@ -694,20 +657,17 @@ class MainWindow(MainWindow_UI):
     def import_geometry_or_mesh_dialog(self):
         self.close_dialogs()
 
-        path = app().config.get_last_folder_for(
-            "geometry_mesh_folder",
-            default=Path().home(),
-        )
+        path = app().config.get_last_folder_for("geometry_mesh_folder", default=self.user_path)
+
+        geo = qt_extensions(SUPPORTED_GEOMETRY_EXTENSIONS)
+        mesh = qt_extensions(SUPPORTED_MESH_EXTENSIONS)
 
         ext_filter = (
-            "All Accepted Files ({geo} {mesh})"
-            ";;Geometry Files ({geo})"
-            ";;Mesh Files ({mesh})"
+            f"All Accepted Files ({geo} {mesh})"
+            f";;Geometry Files ({geo})"
+            f";;Mesh Files ({mesh})"
             ";;All Files (*)"
-        ).format(
-            geo=qt_extensions(SUPPORTED_GEOMETRY_EXTENSIONS),
-            mesh=qt_extensions(SUPPORTED_MESH_EXTENSIONS),
-        )  # fmt: skip
+        )
 
         load_path, check = QFileDialog.getOpenFileName(
             self,
@@ -742,16 +702,10 @@ class MainWindow(MainWindow_UI):
             raise ValueError(f"File extension {ext} not supported")
 
     def import_geometry_dialog(self):
-        path = app().config.get_last_folder_for(
-            "geometry_mesh_folder",
-            default=Path().home(),
-        )
+        path = app().config.get_last_folder_for("geometry_mesh_folder", default=self.user_path)
 
-        ext_filter = (
-            "Geometry Files ({geo});; All Files (*)"
-        ).format(
-            geo=qt_extensions(SUPPORTED_GEOMETRY_EXTENSIONS),
-        )  # fmt: skip
+        geo = qt_extensions(SUPPORTED_GEOMETRY_EXTENSIONS)
+        ext_filter = (f"Geometry Files ({geo});; All Files (*)")
 
         load_path, check = QFileDialog.getOpenFileName(
             self,
@@ -767,16 +721,10 @@ class MainWindow(MainWindow_UI):
         self.import_geometry(load_path)
 
     def import_mesh_dialog(self):
-        path = app().config.get_last_folder_for(
-            "geometry_mesh_folder",
-            default=Path().home(),
-        )
+        path = app().config.get_last_folder_for("geometry_mesh_folder", default=self.user_path)
 
-        ext_filter = (
-            "Mesh Files ({mesh});; All Files (*)"
-        ).format(
-            mesh=qt_extensions(SUPPORTED_MESH_EXTENSIONS),
-        )  # fmt: skip
+        mesh = qt_extensions(SUPPORTED_MESH_EXTENSIONS)
+        ext_filter = (f"Mesh Files ({mesh});; All Files (*)")
 
         load_path, check = QFileDialog.getOpenFileName(
             self,
@@ -804,10 +752,7 @@ class MainWindow(MainWindow_UI):
         if not obj.complete:
             return False
 
-        save_dir = app().config.get_last_folder_for(
-            "project_folder",
-            default=Path().home(),
-        )
+        save_dir = app().config.get_last_folder_for("project_folder", default=self.user_path)
 
         kwargs = dict()
         if platform.system() == "Linux":
@@ -863,10 +808,7 @@ class MainWindow(MainWindow_UI):
         print(message)
 
     def open_project_dialog(self):
-        path = app().config.get_last_folder_for(
-            "project_folder",
-            default=Path().home(),
-        )
+        path = app().config.get_last_folder_for("project_folder", default=self.user_path)
 
         project_path, check = QFileDialog.getOpenFileName(
             self,

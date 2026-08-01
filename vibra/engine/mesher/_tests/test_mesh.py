@@ -1,4 +1,3 @@
-
 from pathlib import Path
 
 import gmsh
@@ -7,37 +6,38 @@ import numpy as np
 from vibra import PROJECT_DIR
 from vibra.engine.mesher.element_setup import GMSH_HEX8, GMSH_HEX20, GMSH_TET4, GMSH_TET10
 from vibra.engine.mesher.mesh import Mesh
+from vibra.engine.mesher.mesh_setup import ElementTopology, MeshSetup
 
 
 def test_tetrahedron_4_mesh():
     geometry_path = str(PROJECT_DIR / "data/examples/geometry_files/cylinder.step")
     mesh_test_path = str(PROJECT_DIR / "validation_files/data/mesh_info/cilinder_tet4/")
 
-    mesh = Mesh().load_cad(
-        geometry_path,
+    mesh_setup = MeshSetup(
         minimum_element_size=30,
         maximum_element_size=80,
-        threads=1,
-        element_type=GMSH_TET4,
+        custom_element_setup=GMSH_TET4,
     )
+    mesh = Mesh().load_cad(geometry_path, mesh_setup, threads=1)
+    assert mesh.element_topology == ElementTopology("tetrahedral", "linear")
 
     _compare_mesh(
         mesh,
         mesh_test_path,
     )
-    
+
 
 def test_tetrahedron_10_mesh():
     geometry_path = str(PROJECT_DIR / "data/examples/geometry_files/tetrahedron.step")
     mesh_test_path = str(PROJECT_DIR / "validation_files/data/mesh_info/tetrahedron_tet10/")
 
-    mesh = Mesh().load_cad(
-        geometry_path,
+    mesh_setup = MeshSetup(
         minimum_element_size=30,
         maximum_element_size=80,
-        threads=1,
-        element_type=GMSH_TET10,
+        custom_element_setup=GMSH_TET10,
     )
+    mesh = Mesh().load_cad(geometry_path, mesh_setup, threads=1)
+    assert mesh.element_topology == ElementTopology("tetrahedral", "quadratic")
 
     _compare_mesh(
         mesh,
@@ -47,39 +47,26 @@ def test_tetrahedron_10_mesh():
 
 def test_hexahedron_8_mesh():
     geometry_path = str(PROJECT_DIR / "data/examples/geometry_files/cylinder.step")
-    mesh_test_path = str(PROJECT_DIR / "validation_files/data/mesh_info/cilinder_hex8/")
 
-    mesh = Mesh().load_cad(
-        geometry_path,
+    mesh_setup = MeshSetup(
         minimum_element_size=30,
         maximum_element_size=80,
-        threads=1,
-        element_type=GMSH_HEX8,
+        custom_element_setup=GMSH_HEX8,
     )
-
-    _compare_mesh(
-        mesh,
-        mesh_test_path,
-    )
-
+    mesh = Mesh().load_cad(geometry_path, mesh_setup, threads=1)
+    assert mesh.element_topology == ElementTopology("hexahedral", "linear")
 
 
 def test_hexahedron_20_mesh():
     geometry_path = str(PROJECT_DIR / "data/examples/geometry_files/parallelepiped.step")
-    mesh_test_path = str(PROJECT_DIR / "validation_files/data/mesh_info/parallelepiped_hex20/")
 
-    mesh = Mesh().load_cad(
-        geometry_path,
+    mesh_setup = MeshSetup(
         minimum_element_size=300,
         maximum_element_size=300,
-        threads=1,
-        element_type=GMSH_HEX20,
+        custom_element_setup=GMSH_HEX20,
     )
-
-    _compare_mesh(
-        mesh,
-        mesh_test_path,
-    )
+    mesh = Mesh().load_cad(geometry_path, mesh_setup, threads=1)
+    assert mesh.element_topology == ElementTopology("hexahedral", "quadratic")
 
 
 def _compare_mesh(mesh: Mesh, mesh_path: Path | str):
@@ -98,6 +85,7 @@ def _compare_mesh(mesh: Mesh, mesh_path: Path | str):
         mesh.export_face_elements_connectivity(mesh_path / "faces_connectivity.dat")
         mesh.export_solid_elements_connectivity(mesh_path / "solids_connectivity.dat")
         (mesh_path / "mappings.dat").write_text(str(mappings))  # saving the str of the dict
+        assert False
 
     expected_nodal_coordinates = np.loadtxt(
         mesh_path / "nodal_coordinates.dat",

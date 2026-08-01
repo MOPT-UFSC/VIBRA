@@ -17,7 +17,6 @@ from vibra.interface.analysis.solutions_step_display_input import SolutionStepsD
 from vibra.interface.analysis.user_defined_solution_steps_by_manual_input import UserDefinedSolutionStepsByManualInput
 from vibra.interface.analysis.user_defined_solution_steps_from_tabular_data_input import UserDefinedSolutionStepsFromTabularDataInput
 from vibra.interface.common.common_interface import check_mesh_related_issues#, mesher_interface_callback
-from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
@@ -42,7 +41,6 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         self.analysis_id = AnalysisID(analysis_id)
 
         self._initialize()
-        self._paint_icons()
         self._config_window()
         self._config_widgets()
         self._configure_validators()
@@ -74,26 +72,6 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         self.keep_window_open = True
         self.keep_window_open_after_enter_setup = False
         self.user_defined_solution_steps = list()
-
-    def _paint_icons(self):
-        icon_color = None
-        theme = app().config.user_preferences.interface_theme
-        from vibra import DARK_ICON_COLOR, LIGHT_ICON_COLOR
-        if theme == "dark":
-            icon_color = DARK_ICON_COLOR.to_qt()
-        else:
-            icon_color = LIGHT_ICON_COLOR.to_qt()
-
-        widgets = [
-            self.pushButton_enter_setup,
-            self.pushButton_exit,
-            self.pushButton_run_analysis,
-            self.pushButton_reset_frequency_settings,
-            self.pushButton_show_solution_steps_table, 
-            self.pushButton_solution_steps_configurator
-        ]
-
-        change_icon_color_for_widgets(widgets, icon_color)
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -140,9 +118,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         self.pushButton_run_analysis.clicked.connect(self.run_analysis)
         self.pushButton_show_solution_steps_table.clicked.connect(self.display_solution_steps_callback)
         self.pushButton_solution_steps_configurator.clicked.connect(self.solution_steps_setup_callback)
-        #
-        app().main_window.theme_changed.connect(self._paint_icons)
-
+        
     def update_display_table_visibility(self):
         frequencies_defined = isinstance(self.model.frequencies, list | np.ndarray)
         self.pushButton_show_solution_steps_table.setEnabled(frequencies_defined)
@@ -525,10 +501,17 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
 
                 analysis_setup_data.update(freq_data)
 
-        if AnalysisID(analysis_id).is_harmonic_structural():
+        is_harmonic_structural = AnalysisID(analysis_id).is_harmonic_structural()
+        if is_harmonic_structural:
             analysis_setup_data["global_damping"] = self.check_damping_inputs()
 
         analysis_setup = self.model.get_harmonic_analysis_setup(**analysis_setup_data)
+
+        if is_harmonic_structural:
+            # In order to avoid the division-by-zero error, we must filter out the zero frequency from the 
+            #  structural harmonic analysis if there is a prescribed velocity or acceleration in the model
+            if self.model.properties.is_there_a_prescribed_velocity_or_acceleration_in_the_model():
+                analysis_setup = self.model.modify_analysis_setup_to_filter_zero_frequency(analysis_setup)
 
         app().project.configure_analysis(analysis_setup)
 

@@ -1,4 +1,5 @@
 from enum import Enum, auto
+import logging
 from pypardiso.pardiso_wrapper import PyPardisoSolver, Matrix_type
 from scipy.sparse.linalg import LinearOperator
 from scipy.sparse import triu, issparse
@@ -23,15 +24,28 @@ class MumpsLinearOperator(LinearOperator):
 
 
 class PardisoLinearOperator(LinearOperator):
-    def __init__(self, ps, A, is_symmetric: bool):
+    def __init__(self, ps, A, is_symmetric: bool, est_operations: int | None = None):
         if is_symmetric:
             A = triu(A, format='csr')
+
+        self.calc_counter = 0
+        self.last_percentage = -1
+        self.estimated_operations = est_operations
+
         ps.factorize(A)
         self.factorized_A = ps.factorized_A
         self.solve = ps.solve
         LinearOperator.__init__(self, A.dtype, A.shape)
 
     def _matvec(self, x):
+        self.calc_counter += 1
+
+        if self.estimated_operations is not None:
+            percentage = min(99, 100 * self.calc_counter // self.estimated_operations)
+            if percentage != self.last_percentage:
+                logging.info(f"Solving the eigenproblem... [{percentage}/100]")
+                self.last_percentage = percentage
+
         return self.solve(self.factorized_A, x.astype(self.dtype))
 
 
@@ -47,9 +61,9 @@ class LinearSolver:
     def clear_memory(self):
         pass
 
-    def build_linear_operator(self, A) -> LinearOperator:
+    def build_linear_operator(self, A, **kwargs) -> LinearOperator:
         solver = self.get_solver_instance(A)
-        return self.linear_operator_class(solver, A, self.is_symmetric)
+        return self.linear_operator_class(solver, A, self.is_symmetric, **kwargs)
 
     def get_solver_instance(self, A, f=None):
         pass

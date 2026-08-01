@@ -185,8 +185,6 @@ class AcousticPressureWaveformInputs(AcousticPressureWaveformInputs_UI):
             dc_included = False,
             )
 
-        print(acoustic_pressure_waveform_vectors.shape)
-
         dt = time() - t0
         print(f"Elapsed time to process ifft: {dt : .6f} s")
         ##

@@ -21,7 +21,7 @@ class HarmonicSolution(CommonSolution):
     ):
         self.analysis_id = analysis_id
         self.frequencies = self._immutable_array(frequencies)
-        self.nodal_solution = self._immutable_array(nodal_solution)
+        self.nodal_solution: Array2D = self._immutable_array(nodal_solution)
         self.status = self._create_status(status)
         self.displacement_dof: Array2D = self._optional_immutable_array(displacement_dof)
         super().__init__()
@@ -44,7 +44,7 @@ class HarmonicSolution(CommonSolution):
         return self._immutable_array(_nodal_displacements)
 
     def get_nodal_displacement_at_column(self, column_index: int) -> Array1D:
-        return self.nodal_solution[self.displacement_dof, column_index]
+        return self.nodal_solution[self.displacement_dof, column_index].copy()
 
     def copy(self):
         return deepcopy(self)

@@ -7,6 +7,7 @@ from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.plots.general.animation_widget import AnimationWidget
 from vibra.interface.ui_generated.plots.acoustic.acoustic_pressure_field_inputs_ui import AcousticPressureFieldInputs_UI
 from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
+from vibra.interface.viewer_3d.plot_setup import FrequencyPressurePlotSetup, PlotSetup, PressurePlotType
 
 
 class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
@@ -22,7 +23,6 @@ class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
 
         self.load_user_preference_colormap()
         self.load_frequencies()
-        self.load_user_preference_colormap()
 
     def showEvent(self, event):
         super().showEvent(event)
@@ -35,9 +35,7 @@ class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
     def _initialize(self):
         self.selected_frequency_index = None
 
-    def _configure_widgets(self):#
-        #
-        self.frame_transparency.setVisible(False)
+    def _configure_widgets(self):
         #
         self.lineEdit_selected_frequency.setDisabled(True)
         self.lineEdit_selected_frequency.setProperty("status", "information")
@@ -91,9 +89,8 @@ class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
             pass
 
     def update_transparency_callback(self):
-        return
         transparency = self.slider_transparency.value() / 100
-        app().main_window.results_widget.set_tube_actors_transparency(transparency)
+        app().main_window.results_widget.set_analysis_actors_transparency(transparency)
 
     def update_plot(self):
         self.update_animation_widget_visibility()
@@ -109,8 +106,18 @@ class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
         if self.selected_frequency_index is None:
             return
 
+        plot_setup = FrequencyPressurePlotSetup(
+            phase=self.animation_widget.phase_in_radians,
+            index=self.selected_frequency_index,
+            plot_type=self.get_plot_type(),
+            unit="Pa",
+        )
+
         self.animation_widget.reset_sliders()
-        LoadingWindow(app().main_window.results_widget.update_plot).run()
+        LoadingWindow(app().main_window.results_widget.update_plot).run(
+            reset_camera=False,
+            plot_setup=plot_setup,
+        )
 
     def get_colormap(self) -> str:
         index = self.comboBox_colormaps.currentIndex()
@@ -118,7 +125,7 @@ class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
             return "jet"
         return COLORMAP_NAMES[index]
 
-    def get_plot_type(self):
+    def get_plot_type(self) -> PressurePlotType:
         plot_types = [
             "non_absolute_animation",
             "absolute_animation",
@@ -127,14 +134,14 @@ class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
             "imag_values",
         ]
         index = self.comboBox_plot_type.currentIndex()
-        return plot_types[index]
+        return PressurePlotType(plot_types[index])
 
     def load_frequencies(self):
         if isinstance(app().project.model.frequencies, np.ndarray):
             self.frequencies = app().project.model.frequencies
         else:
             return
-        
+
         self.indexes = np.arange(len(self.frequencies), dtype=int)
 
         self.treeWidget_frequencies.clear()

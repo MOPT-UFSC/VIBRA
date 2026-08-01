@@ -27,6 +27,9 @@ def load_external_mesh_and_solve():
     # define the known 'Named selections' from model
     named_selecion_to_tag = {"input_face": 1, "output_face": 2}
 
+    # define surfaces from each volume
+    surfaces_from_volume = {1: [1, 2]}
+
     t0 = time()
     external_mesh = ExternalMeshData()
     external_mesh.read_file(mesh_path)
@@ -38,20 +41,14 @@ def load_external_mesh_and_solve():
 
     mesh = Mesh()
     mesh.import_external_nodal_coordinates(external_mesh.nodal_coordinates, index_zero=True)
+    mesh.import_external_faces_connectivity(external_mesh.faces_connectivities, index_zero=True, etype_tag=9)
     mesh.import_external_solids_connectivity(external_mesh.solids_connectivities, index_zero=True, etype_tag=4)
+    mesh.map_face_elements_to_solid_elements()
+    mesh.map_surfaces_to_volumes(surfaces_from_volume)
+
+    # export the mesh data
     mesh.export_nodal_coordinates("nodal_coordinates.dat")
     mesh.export_solid_elements_connectivity("solids_connectivity.dat")
-
-    for named_selection, surf_data in external_mesh.elements_from_named_selection.items():
-        tag = named_selecion_to_tag[named_selection]
-        mesh.elements_from_surface[tag] = surf_data["element_indexes"] - 1
-        mesh.external_connectivity_from_surfaces[tag] = surf_data["connectivity"] - 1
-        ns_nodes = external_mesh.nodes_from_named_selection[named_selection]
-        mesh.external_nodes_from_surfaces[tag] = np.array(ns_nodes, dtype=int) - 1
-
-        mesh.volumes_from_surface[tag] = [1]
-
-    mesh.surfaces_from_volume[1] = [1, 2]
 
     # Define the fluid properties
 
@@ -167,11 +164,8 @@ def load_external_mesh_and_solve():
     input_particle_velocities = acoustic_post.get_particle_velocity_from_surface(1, 1)
     output_particle_velocities = acoustic_post.get_particle_velocity_from_surface(2, 1)
 
-    input_velocities = np.array(list(input_particle_velocities["Vx"].values()), dtype=complex)
-    output_velocities = np.array(list(output_particle_velocities["Vx"].values()), dtype=complex)
-
-    input_face_Vx = np.average(input_velocities, axis=0)
-    output_face_Vx = np.average(output_velocities, axis=0)
+    input_Vx = np.average(input_particle_velocities.Vx_array(), axis=0)
+    output_Vx = np.average(output_particle_velocities.Vx_array(), axis=0)
 
     mesh.process_face_elements_connected_to_nodes([1, 2])
     mesh.compute_nodal_areas()
@@ -272,7 +266,7 @@ def load_external_mesh_and_solve():
 
     fig6, ax6 = plt.subplots()
     title = "Particle velocity at node 4885"
-    ax6.plot(frequencies, data_type(input_particle_velocities["Vx"][4885 - 1]), "r", label="VIBRA")
+    ax6.plot(frequencies, data_type(input_particle_velocities.Vx[4885 - 1]), "r", label="VIBRA")
     ax6.plot(x_data_WB, data_type(y_data_WB), "k--", label="ANSYS")
     ax6.set_xlabel("Frequency [Hz]")
     ax6.set_ylabel(f"Particle velocity [m/s] - {type_label}")
@@ -285,7 +279,7 @@ def load_external_mesh_and_solve():
 
     fig7, ax7 = plt.subplots()
     title = "Particle velocity at node 4978"
-    ax7.plot(frequencies, data_type(output_particle_velocities["Vx"][4978 - 1]), "r", label="VIBRA")
+    ax7.plot(frequencies, data_type(output_particle_velocities.Vx[4978 - 1]), "r", label="VIBRA")
     ax7.plot(x_data_WB, data_type(y_data_WB), "k--", label="ANSYS")
     ax7.set_xlabel("Frequency [Hz]")
     ax7.set_ylabel(f"Particle velocity [m/s] - {type_label}")
@@ -298,7 +292,7 @@ def load_external_mesh_and_solve():
 
     fig8, ax8 = plt.subplots()
     title = "Input face particle velocity - average"
-    ax8.plot(frequencies, data_type(input_face_Vx), "r", label="VIBRA")
+    ax8.plot(frequencies, data_type(input_Vx), "r", label="VIBRA")
     ax8.plot(x_data_WB, data_type(y_data_WB), "k--", label="ANSYS")
     ax8.set_xlabel("Frequency [Hz]")
     ax8.set_ylabel(f"Particle velocity [m/s] - {type_label}")
@@ -311,7 +305,7 @@ def load_external_mesh_and_solve():
 
     fig9, ax9 = plt.subplots()
     title = "Output face particle velocity - average"
-    ax9.plot(frequencies, data_type(output_face_Vx), "r", label="VIBRA")
+    ax9.plot(frequencies, data_type(output_Vx), "r", label="VIBRA")
     ax9.plot(x_data_WB, data_type(y_data_WB), "k--", label="ANSYS")
     ax9.set_xlabel("Frequency [Hz]")
     ax9.set_ylabel(f"Particle velocity [m/s] - {type_label}")

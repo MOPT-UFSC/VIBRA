@@ -415,8 +415,8 @@ def get_incident_plane_wave_text(ipw_data: dict):
     else:
         tree_pw.add_item("P_inc", "Table of values")
 
-    wave_vector = ipw_data["wave_vector"]
-    tree_pw.add_item("Wave vector", np.round(wave_vector, 4))
+    ipw_vector = ipw_data["ipw_vector"]
+    tree_pw.add_item("Incident wave vector", np.round(ipw_vector, 4))
 
     return str(tree_pw)
 
@@ -632,14 +632,26 @@ def structural_boundary_conditions_info_text():
     if prescribed_dof is not None:
         values = prescribed_dof["values"]
         loaded_table = "table_names" in prescribed_dof.keys()
+
+    if isinstance(prescribed_dof, dict):
+        values = prescribed_dof["values"]
+        n_int = prescribed_dof.get("integrate", 0)
+        loaded_table = "table_names" in prescribed_dof.keys()
+
         if are_there_values_different_from_zero(values):
             property_label = "Prescribed DOF"
         else:
             property_label = "Constrained DOF"
 
-        text += structural_format(
-            property_label, values, ("u", "r"), ("m", "rad"), loaded_table
-        )
+        prefixes_dtype = ["u", "v", "a"]
+        prefix_dtype = prefixes_dtype[n_int]
+        dtypes = (prefix_dtype, f"{prefixes_dtype}r")
+
+        unit_suffixes = ["", "/s", "/s²"]
+        suffix_unit = unit_suffixes[n_int]        
+        units = (f"m{suffix_unit}", f"rad{suffix_unit}")
+
+        text += structural_format(property_label, values, dtypes, units, loaded_table)
 
     if nodal_loads is not None:
         values = nodal_loads["values"]
@@ -813,12 +825,25 @@ def mesh_structural_boundary_conditions_info_text():
     if all(condition is None for condition in boundary_conditions_list):
         return text
 
-    if prescribed_dof is not None:
+    if isinstance(prescribed_dof, dict):
         values = prescribed_dof["values"]
+        n_int = prescribed_dof.get("integrate", 0)
         loaded_table = "table_names" in prescribed_dof.keys()
-        text += structural_format(
-            "Prescribed dofs", values, ("u", "r"), ("m", "rad"), loaded_table
-        )
+
+        if are_there_values_different_from_zero(values):
+            property_label = "Prescribed DOF"
+        else:
+            property_label = "Constrained DOF"
+
+        prefixes_dtype = ["u", "v", "a"]
+        prefix_dtype = prefixes_dtype[n_int]
+        dtypes = (prefix_dtype, f"{prefixes_dtype}r")
+
+        unit_suffixes = ["", "/s", "/s²"]
+        suffix_unit = unit_suffixes[n_int]        
+        units = (f"m{suffix_unit}", f"rad{suffix_unit}")
+
+        text += structural_format(property_label, values, dtypes, units, loaded_table)
 
     if nodal_loads is not None:
         values = nodal_loads["values"]
@@ -873,10 +898,8 @@ def mesh_structural_format(property_name, values, labels, units, has_table):
     return str(tree)
 
 def problematic_nodes_info_text(self):
-    text = ""
+    ...
     
-    disconnected_nodes = 1
-
 # RESULTS RENDER WIDGET INFO TEXTS
 
 def analysis_info_text(frequency_index: int):

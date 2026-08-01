@@ -112,10 +112,11 @@ class ModelProperties:
         if isinstance(data, dict):
 
             values_list = list()
+            data_keys = list(data.keys())
             group_label = self.get_data_group_label(property)
 
-            if "real_values" in data.keys() and "imag_values" in data.keys():
-                for i, a in enumerate(data["real_values"]):
+            if "real_values" in data_keys and "imag_values" in data_keys:
+                for i, a in enumerate(data.get("real_values")):
 
                     if a is None:
                         values_list.append(None)
@@ -127,14 +128,25 @@ class ModelProperties:
                         else:
                             values_list.append(a + 1j*b)
 
-            elif "table_names" in data.keys():
+            elif "amplitude_values" in data_keys and "phase_values" in data_keys:
+                for i, amp in enumerate(data.get("amplitude_values")):
+
+                    if amp is None:
+                        values_list.append(None)
+
+                    else:
+                        phi_deg = data.get("phase_values")[i]
+                        complex_values = amp * np.exp(1j * phi_deg * np.pi / 180)
+                        values_list.append(complex(complex_values))
+
+            elif "table_names" in data_keys:
                 if group_label == "acoustic":
                     imported_tables = self.acoustic_imported_tables
                 else:
                     imported_tables = self.structural_imported_tables
 
                 frequencies_list = list()
-                for i, table_name in enumerate(data["table_names"]):
+                for i, table_name in enumerate(data.get("table_names")):
                     if table_name is None:
                         values_list.append(None)
                         continue
@@ -154,8 +166,8 @@ class ModelProperties:
 
                 data["tables_frequencies"] = frequencies_list
 
-            elif "values" in data.keys():
-                values_list = data["values"]
+            elif "values" in data_keys:
+                values_list = data.get("values")
 
             data["values"] =  values_list
 
@@ -280,8 +292,8 @@ class ModelProperties:
     def remove_material(self, material: Material):
         self.material_library.pop(material)
         to_remove = list()
-        for entity_name, property_name, tags, value in self.iterate_properties():
-            if value == material:
+        for entity_name, property_name, tags, prop_data in self.iterate_properties():
+            if prop_data == material:
                 to_remove.append((entity_name, tags))
 
         for entity_name, tags in to_remove:
@@ -294,8 +306,8 @@ class ModelProperties:
     def remove_fluid(self, fluid: Fluid):
         self.fluid_library.pop(fluid)
         to_remove = list()
-        for entity_name, property_name, tags, value in self.iterate_properties():
-            if value == fluid:
+        for entity_name, property_name, tags, prop_data in self.iterate_properties():
+            if prop_data == fluid:
                 to_remove.append((entity_name, tags))
 
         for entity_name, tags in to_remove:
@@ -456,36 +468,26 @@ class ModelProperties:
         """
         This method process the frequencies vectors from all imported tables.
         """
-        properties = [  
-            self.volume_properties,
-            self.surface_properties,
-            self.line_properties,
-            self.point_properties,
-            self.group_properties,
-            self.global_properties,
-            self.nodal_properties,
-            self.element_properties,
-            ]
 
         frequencies_from_tables = list()
 
-        for _property in properties:
-            for (prop_label, *_), prop_data in _property.items():
-                if not isinstance(prop_data, dict):
+        for _, _, _, prop_data in self.iterate_properties():
+
+            if not isinstance(prop_data, dict):
+                continue
+
+            tables_frequencies = prop_data.get("tables_frequencies")
+            if tables_frequencies is None:
+                continue
+
+            if not isinstance(tables_frequencies, list):
+                continue
+
+            for frequencies in tables_frequencies:
+                if frequencies in frequencies_from_tables:
                     continue
 
-                tables_frequencies = prop_data.get("tables_frequencies")
-                if tables_frequencies is None:
-                    continue
-
-                if not isinstance(tables_frequencies, list):
-                    continue
-
-                for frequencies in tables_frequencies:
-                    if frequencies in frequencies_from_tables:
-                        continue
-
-                    frequencies_from_tables.append(frequencies)
+                frequencies_from_tables.append(frequencies)
 
         return frequencies_from_tables
 
@@ -503,6 +505,17 @@ class ModelProperties:
             if property == property_to_check:
                 return True
 
+        return False
+    
+    def is_there_a_prescribed_velocity_or_acceleration_in_the_model(self) -> bool:
+        for _, property_name, _, data in self.iterate_properties():
+            if property_name != "prescribed_dof":
+                continue
+
+            if isinstance(data, dict):
+                if data.get("integrate"):
+                    return True
+        
         return False
     
     def get_entities_without_property(self, property: str, **kwargs):

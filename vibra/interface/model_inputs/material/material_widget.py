@@ -1,6 +1,5 @@
 from copy import deepcopy
 from enum import IntEnum
-from itertools import count
 from random import randint
 from typing import Optional
 
@@ -14,7 +13,6 @@ from vibra import app
 from vibra.engine.properties import MaterialLibrary
 from vibra.engine.properties.material import Material
 from vibra.errors import InvalidMaterialError
-from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.pick_color_input import PickColorInput
 from vibra.interface.ui_generated.model.material.material_widget_ui import MaterialWidget_UI
@@ -41,7 +39,6 @@ class MaterialWidget(MaterialWidget_UI):
 
         self._create_connections()
         self._config_widgets()
-        self._paint_icons()
         self.reload_table_of_materials()
 
     @ property
@@ -62,19 +59,6 @@ class MaterialWidget(MaterialWidget_UI):
         self.tableWidget_material_data.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.tableWidget_material_data.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectColumns)
         self.tableWidget_material_data.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
-
-    def _paint_icons(self):
-        icon_color = None
-        theme = app().config.user_preferences.interface_theme
-        from vibra import DARK_ICON_COLOR, LIGHT_ICON_COLOR
-
-        if theme == "dark":
-            icon_color = DARK_ICON_COLOR.to_qt()
-        else:
-            icon_color = LIGHT_ICON_COLOR.to_qt()
-
-        widgets = [self.pushButton_duplicate]
-        change_icon_color_for_widgets(widgets, icon_color)
 
     def reload_table_of_materials(self):
         number_of_rows = len(RowsEnum)

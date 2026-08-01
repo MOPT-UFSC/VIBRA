@@ -10,6 +10,12 @@
     <height>280</height>
    </rect>
   </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
   <property name="minimumSize">
    <size>
     <width>500</width>
@@ -26,8 +32,8 @@
    <string>Form</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="../../icons/resources.qrc">
-    <normaloff>:/icons/logo_vibra.png</normaloff>:/icons/logo_vibra.png</iconset>
+   <iconset>
+    <normaloff>:/logos/circles/vibra_circle_colored_other_background.png</normaloff>:/logos/circles/vibra_circle_colored_other_background.png</iconset>
   </property>
   <property name="styleSheet">
    <string notr="true">background-color: qlineargradient(spread:pad, x1:0.506, y1:0, x2:0.494318, y2:1, stop:0 #3e424d, stop:0.823864 #0b0f17, stop:1 #0b0f17);</string>
@@ -134,6 +140,12 @@
    </item>
    <item row="0" column="1">
     <widget class="QFrame" name="frame_main">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
      <property name="maximumSize">
       <size>
        <width>16777215</width>
@@ -150,12 +162,30 @@
       <enum>QFrame::Shadow::Raised</enum>
      </property>
      <layout class="QGridLayout" name="gridLayout_3">
+      <property name="topMargin">
+       <number>24</number>
+      </property>
+      <property name="bottomMargin">
+       <number>0</number>
+      </property>
       <item row="0" column="0">
        <widget class="QLabel" name="label">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>440</width>
+          <height>100</height>
+         </size>
+        </property>
         <property name="maximumSize">
          <size>
-          <width>360</width>
-          <height>120</height>
+          <width>440</width>
+          <height>100</height>
          </size>
         </property>
         <property name="font">
@@ -170,7 +200,7 @@
          <string/>
         </property>
         <property name="pixmap">
-         <pixmap resource="../../icons/resources.qrc">:/icons/azul cinza.png</pixmap>
+         <pixmap resource="../../icons/light_theme/resources.qrc">:/logos/vibra_colored_dark_background.png</pixmap>
         </property>
         <property name="scaledContents">
          <bool>true</bool>
@@ -186,7 +216,7 @@
   </layout>
  </widget>
  <resources>
-  <include location="../../icons/resources.qrc"/>
+  <include location="../../icons/light_theme/resources.qrc"/>
  </resources>
  <connections/>
 </ui>
