@@ -1,4 +1,5 @@
 import numpy as np
+import logging
 
 from vibra.engine.elements.solid_elements import Element3D
 from vibra.engine.properties.material import Material
@@ -7,6 +8,7 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from vibra.engine.model import Model
 
+from time import perf_counter
 # fmt: off
 
 
@@ -182,6 +184,34 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
         return detJAC, B
 
 
+    def get_stacked_nodal_coords(self) -> np.ndarray:
+        """
+        This method returns the nodal coordinates of all elements in form 
+        of a 3D matrix. Each plane of this matrix contains the nodal 
+        coordiantes from all nodes relative to the i-th element.
+
+        Parameter
+        ---------
+        all_int_points: bool, optional
+            Controls when the processing are executed in all 
+            integration points (default is False).
+
+        Returns
+        -------
+        stacked_coords: np.ndarray
+            A tridimensional matrix containing the nodal 
+            coordinates of all elements.
+
+        """
+        nel = self.connectivity.shape[0]
+        stacked_coords = np.zeros((nel, self.NODES_PER_ELEMENT, 3), dtype=float)
+
+        for j in range(self.NODES_PER_ELEMENT):
+            stacked_coords[:, j, :] = self.nodal_coordinates[self.connectivity[:, j+1], 1:4]
+
+        return stacked_coords
+
+
     def elementary_matrices(self, element_id: int, material: Material):
         """
         This method integrates the elementary stiffness and mass matrices
@@ -224,6 +254,76 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
 
         return Ke, Me
 
+
+    def stacked_elementary_matrices(self, material_properties: np.ndarray):
+        """
+        This method computes all mass and stiffness matrices in
+        stacked form.
+
+        Returns
+        -------
+        Ke: np.ndarray
+            The elementary stiffness stacked matrices.
+
+        Me: np.ndarray
+            The elementary mass stacked matrices.
+        """
+
+        # get constitutive law matrix D and the material's density
+        D, rho = self.get_constitutive_model_new(material_properties)
+
+        # stacked nodal coordinates
+        stacked_coords = self.get_stacked_nodal_coords()
+
+        # initialize variables
+        Ke = 0.
+        Me = 0.
+
+        n_el = len(self.connectivity)
+
+        # integration loop
+        for i in range(self.nint):
+
+            progress = int(25 + 55*(i / self.nint))
+            logging.info(f"Processing the elementary matrices data... [{progress}/100]")
+
+            # Jacobian matrices of all elements of the i-th integration point
+            stacked_jacs = self.dphi[i, :, :] @ stacked_coords
+
+            # Jacobian determinants and inverses of all elements
+            det_jacs, inv_jacs = self.get_detJAC_and_invJAC(stacked_jacs)
+
+            t0 = perf_counter()
+
+            # initialize the matrix of shape functions N
+            N = np.zeros((3, self.DOF_PER_ELEMENT), dtype=float)
+            N[0, 0::3] = self.phi[i, :]
+            N[1, 1::3] = self.phi[i, :]
+            N[2, 2::3] = self.phi[i, :]
+
+            # derivative of shape functions
+            dphi_t = inv_jacs @ self.dphi[i, :, :]
+
+            # initialize the B matrix
+            B = np.zeros((n_el, 6, self.DOF_PER_ELEMENT), dtype=float)
+
+            B[:, 0, 0::3] = dphi_t[:, 0, :]
+            B[:, 1, 1::3] = dphi_t[:, 1, :]
+            B[:, 2, 2::3] = dphi_t[:, 2, :]
+            B[:, 3, 0::3] = dphi_t[:, 1, :]
+            B[:, 3, 1::3] = dphi_t[:, 0, :]
+            B[:, 4, 0::3] = dphi_t[:, 2, :]
+            B[:, 4, 2::3] = dphi_t[:, 0, :]
+            B[:, 5, 1::3] = dphi_t[:, 2, :]
+            B[:, 5, 2::3] = dphi_t[:, 1, :]
+
+            Ke += B.transpose((0, 2, 1)) @ D @ B * (det_jacs * self.wps[i])
+            Me += rho * N.T @ N * (det_jacs * self.wps[i])
+
+            dt = perf_counter() - t0
+            print(f"Elapsed time in loop: {dt} s")
+        
+        return Ke, Me
  
     def process_stresses_at_integration_points(
         self,

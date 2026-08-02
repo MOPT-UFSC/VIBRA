@@ -2,6 +2,7 @@
 import numpy as np
 
 from vibra.engine.properties.material import Material
+from functools import cache
 
 
 class Element3D:
@@ -23,6 +24,47 @@ class Element3D:
     @property
     def midside_nodes_indexes_map(self):
         return dict()
+
+    # @cache
+    def get_constitutive_model_new(self, material_properties: np.ndarray, model_type: str = "linear-isotropic"):
+        """
+        This method returns the material constitutive model.
+        """
+        rho = material_properties[:, 0]
+        E = material_properties[:, 1]
+        vv = material_properties[:, 2]
+
+        rows = material_properties.shape[0]
+        const_law = np.zeros((rows, 6, 6), dtype=float)
+
+        if model_type == "linear-isotropic":
+            # Constititive model - Linear isotropic material
+
+            factor = E / ((1 + vv) * (1 - 2 * vv))
+            nn = (1 - 2 * vv) / 2
+            tt = 1 - vv
+
+            # const_law = np.array(
+            #     [
+            #     [tt, vv, vv,  0,  0,  0],
+            #     [vv, tt, vv,  0,  0,  0],
+            #     [vv, vv, tt,  0,  0,  0],
+            #     [ 0,  0,  0, nn,  0,  0],
+            #     [ 0,  0,  0,  0, nn,  0],
+            #     [ 0,  0,  0,  0,  0, nn],
+            #     ],
+            #     dtype=float)
+
+            const_law[:, (0,1,2), (0,1,2)] = tt[:, None]
+            const_law[:, (0,0,1,1,2,2), (1,2,0,2,0,1)] = vv[:, None]
+            const_law[:, (3,4,5), (3,4,5)] = nn[:, None]
+
+            D = factor.reshape(-1, 1, 1) * const_law
+
+            if rows == 1:
+                return D[0, :, :], rho.flatten()
+
+            return D, rho.reshape(-1, 1, 1)
 
 
     def get_constitutive_model(self, material: Material, model_type: str = "linear-isotropic"):

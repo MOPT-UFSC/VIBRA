@@ -34,7 +34,7 @@ class StructuralAssembler:
         self.unprescribed_dof_indexes = np.array([])
 
         self.surface_data_for_shell_elements = dict()
-        self.material_from_volume = dict()
+        self.material_from_volume: dict[int, Material] = dict()
 
 
     def define_structural_elements(self):
@@ -405,6 +405,36 @@ class StructuralAssembler:
             self.data_M[element_id, :, :] = Me
 
 
+    def get_materials_properties(self) -> np.ndarray:
+        materials_list = []
+        for material in self.material_from_volume.values():
+            if material in materials_list:
+                continue
+
+            materials_list.append(material)
+
+        if len(materials_list) == 1:
+            material: Material = materials_list[0]
+            materials_properties = np.array([
+                material.material_density, 
+                material.elasticity_modulus, 
+                material.poisson_ratio
+                ], dtype=float).reshape(1, -1)
+
+        else:
+
+            materials_properties = np.zeros((self.number_3d_elements, 3), dtype=float)
+
+            for vol_id, element_ids in self.model.mesh.elements_from_volume.items():
+                material = self.material_from_volume.get(vol_id)
+                if isinstance(material, Material):
+                    materials_properties[element_ids, 0] = material.material_density
+                    materials_properties[element_ids, 1] = material.elasticity_modulus
+                    materials_properties[element_ids, 2] = material.poisson_ratio
+
+        return materials_properties
+
+
     def compute_data_to_process_global_matrices_for_solid_elements(self, reorder: bool = True):
         """
         Calculates global matrices.
@@ -423,11 +453,40 @@ class StructuralAssembler:
         # global_matrices shape
         self.gm_shape = (self.total_dof, self.total_dof)
 
-        self.data_K = np.zeros((self.number_3d_elements, self.dof, self.dof), dtype=complex)
-        self.data_M = np.zeros((self.number_3d_elements, self.dof, self.dof), dtype=complex)
+        # process material properties for all elements
+        materials_properties = self.get_materials_properties()
+
+        # process global stiffness and mass matrices data
+        self.data_K, self.data_M = self.element_3d.stacked_elementary_matrices(materials_properties)
+
+
+    def compute_data_to_process_global_matrices_for_solid_elements_using_loop(self, reorder: bool = True):
+        """
+        Calculates global matrices.
+        """
+
+        self.active_2d_element_dof = list()
+
+        self.ind_rows, self.ind_cols = self.element_3d.generate_ind_rows_cols(reorder=reorder)
+
+        self.dof = self.element_3d.DOF_PER_ELEMENT
+        self.number_3d_elements = len(self.element_3d.connectivity)
+        self.total_dof = self.element_3d.DOF_PER_NODE * len(self.element_3d.nodal_coordinates)
+
+        self.displacement_dof = self.get_displacement_dof()
+
+        # global_matrices shape
+        self.gm_shape = (self.total_dof, self.total_dof)
+
+        self.data_K = np.zeros((self.number_3d_elements, self.dof, self.dof), dtype=float)
+        self.data_M = np.zeros((self.number_3d_elements, self.dof, self.dof), dtype=float)
 
         # initialize variable
         last_progress = 0
+
+        # # process material properties for all elements
+        # materials_properties = self.get_materials_properties()
+        # D, rho = self.element_3d.get_constitutive_model_new(materials_properties)
 
         # loop for 3d elements
         for element_id, vol_id, *_ in self.model.mesh.solids_connectivity:
@@ -449,12 +508,16 @@ class StructuralAssembler:
             self.data_M[element_id, :, :] = Me
 
 
-    def compute_data_to_process_global_matrices(self, reorder: bool = True):
+    def compute_data_to_process_global_matrices(self, reorder: bool = True, stacked_matrices: bool = False):
         """
         """
         if self.model.mesh.solids_connectivity.size:
             self.process_material_from_volumes()
-            self.compute_data_to_process_global_matrices_for_solid_elements(reorder = reorder)
+            if stacked_matrices:
+                self.compute_data_to_process_global_matrices_for_solid_elements(reorder = reorder)
+
+            else:
+                self.compute_data_to_process_global_matrices_for_solid_elements_using_loop(reorder = reorder)
 
         else:
             self.process_surface_data_for_shell_elements()
