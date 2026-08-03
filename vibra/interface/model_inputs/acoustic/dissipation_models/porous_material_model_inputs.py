@@ -42,6 +42,11 @@ class DBMConstants(IntEnum):
     USER_DEFINED = 2
 
 
+class FlowResistivityNormalization(IntEnum):
+    NONE = 0
+    BY_DENSITY = 1
+
+
 class JCALMaterialModel(IntEnum):
     JCA = 0
     JCAL = 1
@@ -319,7 +324,10 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
                     continue
 
                 elif key == "flow_resistivity":
-                    self.doubleSpinBox_flow_resistivity_DBM.setValue(value)   
+                    self.doubleSpinBox_flow_resistivity_DBM.setValue(value)  
+
+                elif key == "normalize_flow_resistivity":
+                    self.comboBox_normalize_flow_resistivity.setCurrentIndex(int(value))
 
                 else:
                     widget = getattr(self, f"doubleSpinBox_{key}_DBM")
@@ -598,6 +606,9 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         there_is_delany_model = False
         there_is_jca_model = False
 
+        DBM_models = ["Delany-Bazley", "Delany-Bazley-Miki", "User-defined (DBM)"]
+        JCAL_models = ["Jhonson-Champoux-Allard", "Jhonson-Champoux-Allard-Lafarge"]
+
         for _, (model_id, model_data) in enumerate(self.map_model_id_to_model.items()):
             model = model_data.model
             model_data_dict = model_data.get_data()
@@ -608,7 +619,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             model_item.setFlags(Qt.ItemIsSelectable)
             model_item.setToolTip(model)
         
-            if model in ["Delany-Bazley", "Delany-Bazley-Miki"]:
+            if model in DBM_models:
                 there_is_delany_model = True
 
                 self.tableWidget_DBM.setItem(0, delany_counter, model_id_item)
@@ -623,7 +634,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
                 delany_counter += 1
 
-            else:
+            elif model in JCAL_models:
                 there_is_jca_model = True
 
                 self.tableWidget_JCAL.setItem(0, jca_counter, model_id_item)
@@ -731,6 +742,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
     def get_Delany_Bazley_Miki_model_data(self, material_model: str) -> DelanyBazleyMikiData:
         return DelanyBazleyMikiData(
+            material_model,
             self.doubleSpinBox_C1_DBM.value(),
             self.doubleSpinBox_C2_DBM.value(),
             self.doubleSpinBox_C3_DBM.value(),
@@ -740,7 +752,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             self.doubleSpinBox_C7_DBM.value(),
             self.doubleSpinBox_C8_DBM.value(),
             self.doubleSpinBox_flow_resistivity_DBM.value(),
-            material_model,
+            normalize_flow_resistivity=self.comboBox_normalize_flow_resistivity.currentIndex() == FlowResistivityNormalization.BY_DENSITY,
         )
 
     def get_Jhonson_Champoux_Allard_Lafarge_model_data(self, material_model: str) -> JhonsonChampouxAllardLafargeData:
