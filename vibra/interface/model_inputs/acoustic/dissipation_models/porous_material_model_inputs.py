@@ -311,23 +311,22 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             user_defined = index == DBMConstants.USER_DEFINED
 
             # check if the DBM constants have been modified (to ensure the backwards compatibility)
-            if not user_defined:
-                if self.have_DBM_constants_modified(pm_data):
-                    user_defined = True
-                    index = DBMConstants.USER_DEFINED
+            if not user_defined and self.have_DBM_constants_modified(pm_data):
+                user_defined = True
+                index = DBMConstants.USER_DEFINED
 
             self.comboBox_DBM_constants.setCurrentIndex(index)
             self.tabWidget_main.setCurrentIndex(TabType.DBM_MODELS)
 
+            normalize_flow_resistivity = pm_data.get("normalize_flow_resistivity", False)
+            self.comboBox_normalize_flow_resistivity.setCurrentIndex(int(normalize_flow_resistivity))
+
             for key, value in pm_data.items():
-                if key == "model":
+                if key in ["model", "normalize_flow_resistivity"]:
                     continue
 
                 elif key == "flow_resistivity":
-                    self.doubleSpinBox_flow_resistivity_DBM.setValue(value)  
-
-                elif key == "normalize_flow_resistivity":
-                    self.comboBox_normalize_flow_resistivity.setCurrentIndex(int(value))
+                    self.doubleSpinBox_flow_resistivity_DBM.setValue(value)
 
                 else:
                     widget = getattr(self, f"doubleSpinBox_{key}_DBM")
