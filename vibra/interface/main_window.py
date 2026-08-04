@@ -8,6 +8,7 @@ from shutil import rmtree
 import gmsh
 from molde import stylesheets
 from molde.render_widgets import CommonRenderWidget
+from PIL import ImageQt
 from PySide6.QtCore import QEvent, Qt, Signal
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QFileDialog, QMenu, QMessageBox
@@ -954,6 +955,25 @@ class MainWindow(MainWindow_UI):
         action = self.analysis_toolbar.run_analysis_action
         if action.isEnabled():
             action.trigger()
+
+    def reset_solution_shortcut(self):
+        if is_focus_on_text_input():
+            return
+
+        action = self.analysis_toolbar.reset_solution_action
+        if action.isEnabled():
+            action.trigger()
+
+    def copy_screenshot_to_clipboard(self):
+        if is_focus_on_text_input():
+            return
+
+        widget = self.render_widgets_stack.currentWidget()
+        if not isinstance(widget, CommonRenderWidget):
+            return
+
+        image = widget.get_screenshot()
+        app().clipboard().setImage(ImageQt.ImageQt(image))
 
     def workspace_model_shortcut(self):
         if is_focus_on_text_input():
