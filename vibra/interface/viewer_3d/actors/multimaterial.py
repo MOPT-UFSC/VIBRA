@@ -374,7 +374,6 @@ class MultimaterialGeometryActor(vtkPropAssembly):
 
     def _create_fluid_actor(self):
         self.fluid_actor = self._new_actor_extraction("fluid")
-        self.fluid_actor.GetProperty().SetOpacity(0.8)
         self.fluid_actor.GetProperty().SetDiffuse(0.5)
         self.fluid_actor.GetProperty().SetAmbient(0.6)
 
