@@ -272,10 +272,9 @@ class AnalysisToolbar(QToolBar):
 
         app().project.write_to_working_dir()
 
-        subprocess_status = SubProcessHandler(
-            "utils/subprocess/analysis_subprocess.py",
-            extra_params="--resume" if is_resume else "",
-        ).run()
+        flag = "--continue-analysis" if is_resume else "--run-analysis"
+        command = f"{SubProcessHandler.get_executable()} {flag} {str(app().project.working_directory)}"
+        subprocess_status = SubProcessHandler(command).run()
 
         if subprocess_status != SubProcessStatus.SUCCESS:
             app().project.reset_solution()

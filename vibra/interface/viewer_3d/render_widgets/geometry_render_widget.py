@@ -98,7 +98,7 @@ class GeometryRenderWidget(CommonRenderWidget):
     def get_logo_for_current_theme(self) -> str:
         if app().config.user_preferences.interface_theme == "light":
             return "vibra_colored_light_background.png"
-        
+
         return "vibra_colored_dark_background.png"
 
     def set_theme(self, *args, **kwargs):
@@ -356,17 +356,15 @@ class GeometryRenderWidget(CommonRenderWidget):
         ctrl_pressed = modifiers & Qt.ControlModifier
         shift_pressed = modifiers & Qt.ShiftModifier
         alt_pressed = modifiers & Qt.AltModifier
-    
-        select_volume = any([
-            self.is_double_click,
-            shift_pressed,
-            app().main_window.selection.volume_selection_mode
-        ])
+
+        select_volume = any([self.is_double_click, shift_pressed, app().main_window.selection.volume_selection_mode])
 
         if select_volume:
             picked_surfaces.clear()
         else:
             picked_volumes.clear()
+
+        picked_volumes -= app().main_window.entity_visibility.get_hidden_volumes()
 
         app().main_window.selection.set_geometry_selection(
             points=picked_points,
