@@ -1,13 +1,12 @@
 import logging
-import gmsh
-from pathlib import Path
 import sys
-import traceback
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
-from vibra import TEMP_PROJECT_DIR
 from vibra.engine.mesher.mesh_setup import MeshSetup
 from vibra.engine.project import Project
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 logging.basicConfig(
     level=logging.INFO,
@@ -16,8 +15,8 @@ logging.basicConfig(
 )
 
 
-def main():
-    project = Project(TEMP_PROJECT_DIR)
+def main(working_dir: Path):
+    project = Project(working_dir)
 
     mesh_setup: Optional[MeshSetup] = project.project_reader.read_mesh_setup()
     geometry_path: Optional[Path] = project.project_reader.read_geometry_path()
@@ -38,7 +37,12 @@ def main():
     if project.model.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
         project.update_model_properties_file()
 
+
 if __name__ == "__main__":
+    import traceback
+
+    import gmsh
+
     try:
         main()
     except Exception:
