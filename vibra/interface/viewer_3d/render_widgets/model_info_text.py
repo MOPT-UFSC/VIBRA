@@ -972,13 +972,13 @@ def analysis_info_text(frequency_index: int):
         if frequencies is None:
             return ""
 
-        if frequency_index-1 >= len(frequencies):
+        if frequency_index >= len(frequencies):
             return ""
 
         analysis_method = analysis_setup.analysis_method.replace("_", " ")
         tree.add_item("Method", analysis_method)
 
-        frequency = frequencies[frequency_index - 1]
+        frequency = frequencies[frequency_index]
         tree.add_item("Frequency", f"{frequency:.4f}", "Hz")
 
     return str(tree)
