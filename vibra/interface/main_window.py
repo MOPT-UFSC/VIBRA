@@ -9,11 +9,21 @@ import gmsh
 from molde import stylesheets
 from molde.render_widgets import CommonRenderWidget
 from PySide6.QtCore import QEvent, Qt, Signal
-from PySide6.QtGui import QAction
-from PySide6.QtWidgets import QFileDialog, QMenu, QMessageBox
+from PySide6.QtGui import QAction, QKeySequence, QShortcut
+from PySide6.QtWidgets import (
+    QAbstractSpinBox,
+    QComboBox,
+    QFileDialog,
+    QLineEdit,
+    QMenu,
+    QMessageBox,
+    QPlainTextEdit,
+    QTextEdit,
+)
 
 from vibra import SUPPORTED_GEOMETRY_EXTENSIONS, SUPPORTED_MESH_EXTENSIONS, TEMP_PROJECT_DIR, app
 from vibra.engine.assemblers import AcousticAssembler
+from vibra.engine.mesher.mesh_setup import MeshSetup
 from vibra.engine.solvers import HarmonicSolver
 from vibra.interface.data.icons.theme_resources import set_icon_theme
 from vibra.interface.data_handler.export_mesh_data import ExportMeshData
@@ -39,6 +49,9 @@ from vibra.interface.user_input.render_user_preferences import RendererUserPrefe
 from vibra.interface.viewer_3d.render_widgets import GeometryRenderWidget, MeshRenderWidget, ResultsRenderWidget
 from vibra.interface.welcome_widget import WelcomeWidget
 from vibra.utils.interface_utils import GeometryColorMode, VisualizationFilter, block_signals, qt_extensions
+
+
+TEXT_INPUT_WIDGETS = (QLineEdit, QTextEdit, QPlainTextEdit, QComboBox, QAbstractSpinBox)
 
 
 class MainWindow(MainWindow_UI):
@@ -155,6 +168,7 @@ class MainWindow(MainWindow_UI):
         app().splash.update_progress(10)
         self._config_window()
         self._connect_actions()
+        self._create_global_shortcuts()
 
         app().splash.update_progress(30)
         self._load_menu_widgets()
@@ -943,6 +957,102 @@ class MainWindow(MainWindow_UI):
 
     def set_input_widget(self, dialog):
         self.dialog = dialog
+
+    def _create_global_shortcuts(self):
+        """
+        Registers global shortcuts that work from anywhere in the software:
+          - Ctrl+M  generates the mesh with the current mesh setup configuration
+          - Ctrl+R  runs the current analysis
+          - Q / W / E switch between the model, mesh and results workspaces
+          - Ctrl+A  selects all entities (geometry or mesh, depending on the workspace)
+
+        The shortcuts are disabled while typing in text fields.
+        """
+        self._global_shortcuts = list()
+
+        mappings = {
+            "Ctrl+M": self.generate_mesh_with_current_setup,
+            "Ctrl+R": self.run_analysis_shortcut,
+            "Q": self.workspace_model_shortcut,
+            "W": self.workspace_mesh_shortcut,
+            "E": self.workspace_results_shortcut,
+            "Ctrl+A": self.select_all_entities_shortcut,
+        }
+
+        for keys, callback in mappings.items():
+            shortcut = QShortcut(QKeySequence(keys), self)
+            shortcut.setContext(Qt.ShortcutContext.ApplicationShortcut)
+            shortcut.activated.connect(callback)
+            self._global_shortcuts.append(shortcut)
+
+        app().focusChanged.connect(self._update_global_shortcuts_enabled)
+
+    def _update_global_shortcuts_enabled(self, old_widget, new_widget):
+        typing = isinstance(new_widget, TEXT_INPUT_WIDGETS)
+        for shortcut in self._global_shortcuts:
+            shortcut.setEnabled(not typing)
+
+    def _is_focus_on_text_input(self) -> bool:
+        return isinstance(app().focusWidget(), TEXT_INPUT_WIDGETS)
+
+    def run_analysis_shortcut(self):
+        if self._is_focus_on_text_input():
+            return
+
+        action = self.analysis_toolbar.run_analysis_action
+        if action.isEnabled():
+            action.trigger()
+
+    def workspace_model_shortcut(self):
+        if self._is_focus_on_text_input():
+            return
+
+        self.action_model_workspace_callback()
+
+    def workspace_mesh_shortcut(self):
+        if self._is_focus_on_text_input():
+            return
+
+        self.action_mesh_workspace_callback()
+
+    def workspace_results_shortcut(self):
+        if self._is_focus_on_text_input():
+            return
+
+        self.action_results_workspace_callback()
+
+    def select_all_entities_shortcut(self):
+        if self._is_focus_on_text_input():
+            return
+
+        if self.action_mesh_workspace.isChecked():
+            self.selection.select_all_mesh()
+        else:
+            self.selection.select_all_geometry()
+        self.reload_visualization_filter()
+
+    def generate_mesh_with_current_setup(self):
+        """
+        Generates the mesh with the current mesh setup configuration.
+        When the mesh setup window is open, the mesh is generated using the
+        current values of its widgets.
+        """
+        if isinstance(self.dialog, MesherSetupInputs) and self.dialog.isVisible():
+            self.dialog.apply_callback()
+            return
+
+        model = app().project.model
+        if model.geometry_path is None or not isinstance(model.mesh_setup, MeshSetup):
+            return
+
+        mesh_setup = model.mesh_setup
+
+        def generate():
+            app().project.generate_mesh(mesh_setup)
+
+        LoadingWindow(generate).run()
+        self.action_mesh_workspace_callback()
+        self.update_plots()
 
     def action_capture_image_callback(self):
         self.capture_image()
