@@ -460,19 +460,16 @@ class Ui_Dialog(object):
         self.gridLayout_7.setSpacing(6)
         self.gridLayout_7.setObjectName(u"gridLayout_7")
         self.gridLayout_7.setContentsMargins(6, 6, 6, 6)
-        self.label_11 = QLabel(self.frame_5)
-        self.label_11.setObjectName(u"label_11")
-        self.label_11.setFont(font1)
-
-        self.gridLayout_7.addWidget(self.label_11, 1, 3, 1, 1)
-
-        self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_7.addItem(self.horizontalSpacer_4, 1, 0, 1, 1)
-
         self.horizontalSpacer_5 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.gridLayout_7.addItem(self.horizontalSpacer_5, 1, 4, 1, 1)
+
+        self.label_10 = QLabel(self.frame_5)
+        self.label_10.setObjectName(u"label_10")
+        self.label_10.setFont(font1)
+        self.label_10.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+
+        self.gridLayout_7.addWidget(self.label_10, 1, 1, 1, 1)
 
         self.doubleSpinBox_flow_resistivity_DBM = QDoubleSpinBox(self.frame_5)
         self.doubleSpinBox_flow_resistivity_DBM.setObjectName(u"doubleSpinBox_flow_resistivity_DBM")
@@ -485,26 +482,29 @@ class Ui_Dialog(object):
 
         self.gridLayout_7.addWidget(self.doubleSpinBox_flow_resistivity_DBM, 1, 2, 1, 1)
 
-        self.label_10 = QLabel(self.frame_5)
-        self.label_10.setObjectName(u"label_10")
-        self.label_10.setFont(font1)
-        self.label_10.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+        self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gridLayout_7.addWidget(self.label_10, 1, 1, 1, 1)
+        self.gridLayout_7.addItem(self.horizontalSpacer_4, 1, 0, 1, 1)
 
-        self.label_13 = QLabel(self.frame_5)
-        self.label_13.setObjectName(u"label_13")
-        self.label_13.setFont(font1)
-        self.label_13.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+        self.label_11 = QLabel(self.frame_5)
+        self.label_11.setObjectName(u"label_11")
+        self.label_11.setFont(font1)
 
-        self.gridLayout_7.addWidget(self.label_13, 0, 1, 1, 1)
+        self.gridLayout_7.addWidget(self.label_11, 1, 3, 1, 1)
 
         self.comboBox_normalize_flow_resistivity = QComboBox(self.frame_5)
         self.comboBox_normalize_flow_resistivity.addItem("")
         self.comboBox_normalize_flow_resistivity.addItem("")
         self.comboBox_normalize_flow_resistivity.setObjectName(u"comboBox_normalize_flow_resistivity")
 
-        self.gridLayout_7.addWidget(self.comboBox_normalize_flow_resistivity, 0, 2, 1, 1)
+        self.gridLayout_7.addWidget(self.comboBox_normalize_flow_resistivity, 2, 2, 1, 1)
+
+        self.label_13 = QLabel(self.frame_5)
+        self.label_13.setObjectName(u"label_13")
+        self.label_13.setFont(font1)
+        self.label_13.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+
+        self.gridLayout_7.addWidget(self.label_13, 2, 1, 1, 1)
 
 
         self.gridLayout_5.addWidget(self.frame_5, 2, 0, 1, 1)
@@ -1110,12 +1110,12 @@ class Ui_Dialog(object):
         self.pushButton_DB_equations.setToolTip(QCoreApplication.translate("Dialog", u"See the equations for Delany-Bazley porous material model.", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButton_DB_equations.setText("")
-        self.label_11.setText(QCoreApplication.translate("Dialog", u"[kg/m\u00b3.s]", None))
         self.label_10.setText(QCoreApplication.translate("Dialog", u"<html><head/><body><p>Flow resistivity <span style=\" font-size:11pt;\">\u03c3</span>:</p></body></html>", None))
-        self.label_13.setText(QCoreApplication.translate("Dialog", u"<html><head/><body><p>Normalize <span style=\" font-size:11pt;\">\u03c3</span>:</p></body></html>", None))
+        self.label_11.setText(QCoreApplication.translate("Dialog", u"[kg/m\u00b3.s]", None))
         self.comboBox_normalize_flow_resistivity.setItemText(0, QCoreApplication.translate("Dialog", u"None", None))
         self.comboBox_normalize_flow_resistivity.setItemText(1, QCoreApplication.translate("Dialog", u"By density", None))
 
+        self.label_13.setText(QCoreApplication.translate("Dialog", u"<html><head/><body><p>Normalize <span style=\" font-size:11pt;\">\u03c3</span>:</p></body></html>", None))
         self.label_51.setText(QCoreApplication.translate("Dialog", u"Constants from:", None))
         self.comboBox_DBM_constants.setItemText(0, QCoreApplication.translate("Dialog", u"Delany-Bazley", None))
         self.comboBox_DBM_constants.setItemText(1, QCoreApplication.translate("Dialog", u"Delany-Bazley-Miki", None))
@@ -1259,11 +1259,11 @@ class PorousMaterialModelInputs_UI(QDialog, Ui_Dialog):
                                                                         - pushButton_DB_equations: QPushButton
                                                             - frame_5: QFrame
                                                                 - (Layout): QGridLayout
-                                                                        - label_11: QLabel
-                                                                        - doubleSpinBox_flow_resistivity_DBM: QDoubleSpinBox
                                                                         - label_10: QLabel
-                                                                        - label_13: QLabel
+                                                                        - doubleSpinBox_flow_resistivity_DBM: QDoubleSpinBox
+                                                                        - label_11: QLabel
                                                                         - comboBox_normalize_flow_resistivity: QComboBox
+                                                                        - label_13: QLabel
                                                             - frame: QFrame
                                                                 - (Layout): QGridLayout
                                                                         - label_51: QLabel
