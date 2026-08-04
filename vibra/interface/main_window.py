@@ -961,10 +961,13 @@ class MainWindow(MainWindow_UI):
     def _create_global_shortcuts(self):
         """
         Registers global shortcuts that work from anywhere in the software:
-          - Ctrl+M  generates the mesh with the current mesh setup configuration
-          - Ctrl+R  runs the current analysis
-          - Q / W / E switch between the model, mesh and results workspaces
-          - Ctrl+A  selects all entities (geometry or mesh, depending on the workspace)
+          - Ctrl+M          generates the mesh with the current mesh setup configuration
+          - Ctrl+R          runs the current analysis
+          - Ctrl+A          selects all entities (geometry or mesh, depending on the workspace)
+          - Ctrl+Shift+S    saves the project with a new name
+          - Ctrl+I          imports a geometry file
+          - Q / W / E       switch between the model, mesh and results workspaces
+          - Ctrl+1..7 set the camera views (defined in the view toolbar)
 
         The shortcuts are disabled while typing in text fields.
         """
@@ -973,10 +976,12 @@ class MainWindow(MainWindow_UI):
         mappings = {
             "Ctrl+M": self.generate_mesh_with_current_setup,
             "Ctrl+R": self.run_analysis_shortcut,
+            "Ctrl+A": self.select_all_entities_shortcut,
+            "Ctrl+Shift+S": self.action_save_as_callback,
+            "Ctrl+I": self.action_import_geometry_callback,
             "Q": self.workspace_model_shortcut,
             "W": self.workspace_mesh_shortcut,
             "E": self.workspace_results_shortcut,
-            "Ctrl+A": self.select_all_entities_shortcut,
         }
 
         for keys, callback in mappings.items():
