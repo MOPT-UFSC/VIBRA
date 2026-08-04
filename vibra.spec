@@ -29,7 +29,7 @@ binaries += binaries_fastexcel
 hidden_imports += hidden_fastexcel
 
 a = Analysis(
-    ["vibra/launch.py"],
+    ["vibra/cli.py"],
     pathex=[],
     binaries=binaries,
     datas=datas,
