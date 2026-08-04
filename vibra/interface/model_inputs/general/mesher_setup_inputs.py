@@ -24,12 +24,12 @@ from vibra.engine.mesher.element_setup import (
     SubdivisionAlgorithms,
 )
 from vibra.engine.mesher.mesh_setup import MeshRefinementSetup, MeshSetup
+from vibra.interface.formatters.icons import Icon
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.ui_generated.model.general.mesher_setup_inputs_ui import MesherSetupInputs_UI
 from vibra.interface.ui_generated.plots.general.mesh_quality_histogram_plot_ui import MeshQualityHistogramPlot_UI
 from vibra.utils.interface_utils import block_signals
-from vibra.interface.formatters.icons import Icon
 from vibra.utils.subprocess.subprocess_handler import SubProcessHandler, SubProcessStatus
 
 
@@ -66,6 +66,7 @@ class RefinementTableColumns(IntEnum):
     ELEMENT_SIZE = 0
     SELECTION_TYPE = 1
     SELECTION_IDS = 2
+
 
 class MeshSetupTabs(IntEnum):
     GLOBAL_SETTINGS = 0
@@ -278,14 +279,13 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             selected_ids,
         )
 
-        
         new_refinement = []
         for refinement in self.tmp_refinement_parameters:
             refinement.remove_ids(selected_ids, selected_type)
 
             if not refinement.is_empty():
                 new_refinement.append(refinement)
-        
+
         self.tmp_refinement_parameters = new_refinement
 
         self.tmp_refinement_parameters.append(setup)
@@ -339,7 +339,8 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         app().project.configure_mesh(mesh_setup)
         app().project.write_to_working_dir()
 
-        status = SubProcessHandler("utils/subprocess/generate_mesh_subprocess.py").run()
+        command = f"{SubProcessHandler.get_executable()} --generate-mesh {str(app().project.working_directory)}"
+        status = SubProcessHandler(command).run()
         if status != SubProcessStatus.SUCCESS:
             return False
 
@@ -366,6 +367,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
                 if not self._generate_in_subprocess():
                     return False
             else:
+
                 def generate():
                     mesh_setup = self._get_mesh_setup()
                     app().project.generate_mesh(mesh_setup)
