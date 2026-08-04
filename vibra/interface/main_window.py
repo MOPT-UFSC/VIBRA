@@ -9,17 +9,8 @@ import gmsh
 from molde import stylesheets
 from molde.render_widgets import CommonRenderWidget
 from PySide6.QtCore import QEvent, Qt, Signal
-from PySide6.QtGui import QAction, QKeySequence, QShortcut
-from PySide6.QtWidgets import (
-    QAbstractSpinBox,
-    QComboBox,
-    QFileDialog,
-    QLineEdit,
-    QMenu,
-    QMessageBox,
-    QPlainTextEdit,
-    QTextEdit,
-)
+from PySide6.QtGui import QAction
+from PySide6.QtWidgets import QFileDialog, QMenu, QMessageBox
 
 from vibra import SUPPORTED_GEOMETRY_EXTENSIONS, SUPPORTED_MESH_EXTENSIONS, TEMP_PROJECT_DIR, app
 from vibra.engine.assemblers import AcousticAssembler
@@ -39,6 +30,7 @@ from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetup
 from vibra.interface.plots.acoustic.export_element_transfer_data_inputs import ExportElementTransferDataInputs
 from vibra.interface.project.save_project_data_selector import SaveProjectDataSelector
 from vibra.interface.section_plane_widget import SectionPlaneWidget
+from vibra.interface.shortcuts import is_focus_on_text_input, register_global_shortcuts
 from vibra.interface.status_bar import StatusBar
 from vibra.interface.toolbars.analysis_toolbar import AnalysisToolbar
 from vibra.interface.toolbars.view_toolbar import ViewToolbar
@@ -49,9 +41,6 @@ from vibra.interface.user_input.render_user_preferences import RendererUserPrefe
 from vibra.interface.viewer_3d.render_widgets import GeometryRenderWidget, MeshRenderWidget, ResultsRenderWidget
 from vibra.interface.welcome_widget import WelcomeWidget
 from vibra.utils.interface_utils import GeometryColorMode, VisualizationFilter, block_signals, qt_extensions
-
-
-TEXT_INPUT_WIDGETS = (QLineEdit, QTextEdit, QPlainTextEdit, QComboBox, QAbstractSpinBox)
 
 
 class MainWindow(MainWindow_UI):
@@ -168,7 +157,7 @@ class MainWindow(MainWindow_UI):
         app().splash.update_progress(10)
         self._config_window()
         self._connect_actions()
-        self._create_global_shortcuts()
+        register_global_shortcuts(self)
 
         app().splash.update_progress(30)
         self._load_menu_widgets()
@@ -958,50 +947,8 @@ class MainWindow(MainWindow_UI):
     def set_input_widget(self, dialog):
         self.dialog = dialog
 
-    def _create_global_shortcuts(self):
-        """
-        Registers global shortcuts that work from anywhere in the software:
-          - Ctrl+M          generates the mesh with the current mesh setup configuration
-          - Ctrl+R          runs the current analysis
-          - Ctrl+A          selects all entities (geometry or mesh, depending on the workspace)
-          - Ctrl+Shift+S    saves the project with a new name
-          - Ctrl+I          imports a geometry file
-          - Q / W / E       switch between the model, mesh and results workspaces
-          - Ctrl+1..7 set the camera views (defined in the view toolbar)
-
-        The shortcuts are disabled while typing in text fields.
-        """
-        self._global_shortcuts = list()
-
-        mappings = {
-            "Ctrl+M": self.generate_mesh_with_current_setup,
-            "Ctrl+R": self.run_analysis_shortcut,
-            "Ctrl+A": self.select_all_entities_shortcut,
-            "Ctrl+Shift+S": self.action_save_as_callback,
-            "Ctrl+I": self.action_import_geometry_callback,
-            "Q": self.workspace_model_shortcut,
-            "W": self.workspace_mesh_shortcut,
-            "E": self.workspace_results_shortcut,
-        }
-
-        for keys, callback in mappings.items():
-            shortcut = QShortcut(QKeySequence(keys), self)
-            shortcut.setContext(Qt.ShortcutContext.ApplicationShortcut)
-            shortcut.activated.connect(callback)
-            self._global_shortcuts.append(shortcut)
-
-        app().focusChanged.connect(self._update_global_shortcuts_enabled)
-
-    def _update_global_shortcuts_enabled(self, old_widget, new_widget):
-        typing = isinstance(new_widget, TEXT_INPUT_WIDGETS)
-        for shortcut in self._global_shortcuts:
-            shortcut.setEnabled(not typing)
-
-    def _is_focus_on_text_input(self) -> bool:
-        return isinstance(app().focusWidget(), TEXT_INPUT_WIDGETS)
-
     def run_analysis_shortcut(self):
-        if self._is_focus_on_text_input():
+        if is_focus_on_text_input():
             return
 
         action = self.analysis_toolbar.run_analysis_action
@@ -1009,25 +956,25 @@ class MainWindow(MainWindow_UI):
             action.trigger()
 
     def workspace_model_shortcut(self):
-        if self._is_focus_on_text_input():
+        if is_focus_on_text_input():
             return
 
         self.action_model_workspace_callback()
 
     def workspace_mesh_shortcut(self):
-        if self._is_focus_on_text_input():
+        if is_focus_on_text_input():
             return
 
         self.action_mesh_workspace_callback()
 
     def workspace_results_shortcut(self):
-        if self._is_focus_on_text_input():
+        if is_focus_on_text_input():
             return
 
         self.action_results_workspace_callback()
 
     def select_all_entities_shortcut(self):
-        if self._is_focus_on_text_input():
+        if is_focus_on_text_input():
             return
 
         if self.action_mesh_workspace.isChecked():
