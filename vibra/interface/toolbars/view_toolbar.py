@@ -38,31 +38,24 @@ class ViewToolbar(QToolBar):
 
     def _create_actions(self):
         self.action_top_view = QAction(self.top_icon, "Top View", self)
-        self.action_top_view.setShortcut("Ctrl+1")
         self.action_top_view.triggered.connect(self.set_top_view)
 
         self.action_bottom_view = QAction(self.bottom_icon, "Bottom View", self)
-        self.action_bottom_view.setShortcut("Ctrl+2")
         self.action_bottom_view.triggered.connect(self.set_bottom_view)
 
         self.action_right_view = QAction(self.right_icon, "Right View", self)
-        self.action_right_view.setShortcut("Ctrl+3")
         self.action_right_view.triggered.connect(self.set_right_view)
 
         self.action_left_view = QAction(self.left_icon, "Left View", self)
-        self.action_left_view.setShortcut("Ctrl+4")
         self.action_left_view.triggered.connect(self.set_left_view)
 
         self.action_front_view = QAction(self.front_icon, "Front View", self)
-        self.action_front_view.setShortcut("Ctrl+5")
         self.action_front_view.triggered.connect(self.set_front_view)
 
         self.action_back_view = QAction(self.back_icon, "Back View", self)
-        self.action_back_view.setShortcut("Ctrl+6")
         self.action_back_view.triggered.connect(self.set_back_view)
 
         self.action_isometric_view = QAction(self.isometric_icon, "Isometric View", self)
-        self.action_isometric_view.setShortcut("Ctrl+7")
         self.action_isometric_view.triggered.connect(self.set_isometric_view)
 
         self.action_zoom_to_fit = QAction(self.zoom_to_fit_icon, "Zoom To Fit", self)
@@ -103,17 +96,6 @@ class ViewToolbar(QToolBar):
 
         for action in self._render_tool_actions:
             action.setCheckable(True)
-
-        for action in (
-            self.action_top_view,
-            self.action_bottom_view,
-            self.action_right_view,
-            self.action_left_view,
-            self.action_front_view,
-            self.action_back_view,
-            self.action_isometric_view,
-        ):
-            action.setShortcutContext(Qt.ShortcutContext.ApplicationShortcut)
 
         self.action_selection_tool.setChecked(True)
 

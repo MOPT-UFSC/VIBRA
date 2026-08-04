@@ -270,9 +270,6 @@
    <property name="text">
     <string>Save</string>
    </property>
-   <property name="shortcut">
-    <string>Ctrl+S</string>
-   </property>
   </action>
   <action name="action_save_as">
    <property name="icon">
@@ -456,9 +453,6 @@
    <property name="text">
     <string>Hide Selection</string>
    </property>
-   <property name="shortcut">
-    <string>Ctrl+H</string>
-   </property>
   </action>
   <action name="action_unhide_all">
    <property name="icon">
@@ -467,9 +461,6 @@
    </property>
    <property name="text">
     <string>Unhide Selection</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+U</string>
    </property>
   </action>
   <action name="action_section_plane">

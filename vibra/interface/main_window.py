@@ -31,7 +31,7 @@ from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetup
 from vibra.interface.plots.acoustic.export_element_transfer_data_inputs import ExportElementTransferDataInputs
 from vibra.interface.project.save_project_data_selector import SaveProjectDataSelector
 from vibra.interface.section_plane_widget import SectionPlaneWidget
-from vibra.interface.shortcuts import is_focus_on_text_input, register_global_shortcuts
+from vibra.interface.shortcuts import is_focus_on_text_input, open_shortcuts_help, register_global_shortcuts
 from vibra.interface.status_bar import StatusBar
 from vibra.interface.toolbars.analysis_toolbar import AnalysisToolbar
 from vibra.interface.toolbars.view_toolbar import ViewToolbar
@@ -158,7 +158,6 @@ class MainWindow(MainWindow_UI):
         app().splash.update_progress(10)
         self._config_window()
         self._connect_actions()
-        register_global_shortcuts(self)
 
         app().splash.update_progress(30)
         self._load_menu_widgets()
@@ -168,6 +167,7 @@ class MainWindow(MainWindow_UI):
         self._create_basic_layout()
         self._configure_render_widgets_stack()
         self._configure_stacked_setup()
+        register_global_shortcuts(self)
 
         app().splash.update_progress(90)
         self.load_user_preferences()
@@ -1003,6 +1003,26 @@ class MainWindow(MainWindow_UI):
             self.selection.select_all_geometry()
         self.reload_visualization_filter()
 
+    def toggle_section_plane(self):
+        if is_focus_on_text_input():
+            return
+
+        if self.section_plane.isVisible():
+            return
+
+        active = self.action_section_plane.isChecked()
+        self.action_section_plane.blockSignals(True)
+        self.action_section_plane.setChecked(not active)
+        self.action_section_plane.blockSignals(False)
+        self.section_plane.cutting = not active
+        self.section_plane.value_changed.emit()
+
+    def show_shortcuts_help(self):
+        if is_focus_on_text_input():
+            return
+
+        open_shortcuts_help(self)
+
     def generate_mesh_with_current_setup(self):
         """
         Generates the mesh with the current mesh setup configuration.
@@ -1209,24 +1229,8 @@ class MainWindow(MainWindow_UI):
         LoadingWindow(update_plot_callback).run()
 
     def eventFilter(self, obj, event: QEvent):
-        modifiers = app().keyboardModifiers()
-        alt_pressed = modifiers & Qt.KeyboardModifier.AltModifier
         if event.type() == QEvent.Type.ShortcutOverride:
-            if event.key() == Qt.Key.Key_F5:
-                self.update_plots()
-
-            elif alt_pressed and (event.key() == Qt.Key.Key_P):
-                if self.section_plane.isVisible():
-                    return super(MainWindow, self).eventFilter(obj, event)
-
-                active = self.action_section_plane.isChecked()
-                self.action_section_plane.blockSignals(True)
-                self.action_section_plane.setChecked(not active)
-                self.action_section_plane.blockSignals(False)
-                self.section_plane.cutting = not active
-                self.section_plane.value_changed.emit()
-
-            elif event.key() == Qt.Key.Key_Delete:
+            if event.key() == Qt.Key.Key_Delete:
                 self.remove_property()
 
         return super(MainWindow, self).eventFilter(obj, event)
