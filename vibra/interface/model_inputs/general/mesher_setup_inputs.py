@@ -185,6 +185,8 @@ class MesherSetupInputs(MesherSetupInputs_UI):
                 value = self.doubleSpinBox_maximum_element_size.value()
                 self.doubleSpinBox_minimum_element_size.setValue(value)
 
+        self.update_mesh_refinement_table()
+
     def synchronize_button_callback(self):
         self.synchronize_sizes = not self.synchronize_sizes
         if self.synchronize_sizes:
@@ -406,13 +408,15 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         number_of_rows = len(refinement_parameters)
         self.tableWidget_refining_mesh_data.setRowCount(number_of_rows)
 
+        maximum_size = self.doubleSpinBox_maximum_element_size.value()
         for row, setup in enumerate(refinement_parameters):
             ids = ", ".join(str(i) for i in setup.entity_ids)
+            coarsening_color = color_names.YELLOW if setup.element_size > maximum_size else None
 
             self.tableWidget_refining_mesh_data.setItem(
                 row,
                 RefinementTableColumns.ELEMENT_SIZE,
-                self._item(setup.element_size),
+                self._item(setup.element_size, coarsening_color),
             )
             self.tableWidget_refining_mesh_data.setItem(
                 row,
