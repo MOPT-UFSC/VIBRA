@@ -717,7 +717,13 @@ class MainWindow(MainWindow_UI):
         if not check:
             return
 
+        current_fluid_library = app().project.model.properties.fluid_library
+        current_material_library = app().project.model.properties.material_library
+
         app().project.reset_project()
+        app().project.model.properties.fluid_library = current_fluid_library
+        app().project.model.properties.material_library = current_material_library
+
         self.import_geometry(load_path)
 
     def import_mesh_dialog(self):
@@ -736,7 +742,13 @@ class MainWindow(MainWindow_UI):
         if not check:
             return
 
+        current_fluid_library = app().project.model.properties.fluid_library
+        current_material_library = app().project.model.properties.material_library
+
         app().project.reset_project()
+        app().project.model.properties.fluid_library = current_fluid_library
+        app().project.model.properties.material_library = current_material_library
+
         self.import_mesh(load_path)
 
     def save_project_dialog(self):

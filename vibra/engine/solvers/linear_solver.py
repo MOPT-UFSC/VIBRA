@@ -76,7 +76,7 @@ class PardisoLinearSolver(LinearSolver):
         self.is_symmetric_assumption = kwargs.get('is_symmetric')
         self.mtype = kwargs.get('mtype')
         self.phase = kwargs.get('phase', 13)
-        self.size_limit_storage = kwargs.get('size_limit_storage', 5e7)
+        self.size_limit_storage = kwargs.get('size_limit_storage', 5e8)
         self._solver = None
         self.linear_operator_class = PardisoLinearOperator
 
