@@ -1,3 +1,4 @@
+from itertools import combinations
 from pathlib import Path
 
 import gmsh
@@ -6,7 +7,7 @@ import numpy as np
 from vibra import PROJECT_DIR
 from vibra.engine.mesher.element_setup import GMSH_HEX8, GMSH_HEX20, GMSH_TET4, GMSH_TET10
 from vibra.engine.mesher.mesh import Mesh
-from vibra.engine.mesher.mesh_setup import ElementTopology, MeshSetup
+from vibra.engine.mesher.mesh_setup import ElementTopology, MeshRefinementSetup, MeshSetup
 
 
 def test_tetrahedron_4_mesh():
@@ -67,6 +68,53 @@ def test_hexahedron_20_mesh():
     )
     mesh = Mesh().load_cad(geometry_path, mesh_setup, threads=1)
     assert mesh.element_topology == ElementTopology("hexahedral", "quadratic")
+
+
+def test_local_refinement_coarsening():
+    geometry_path = str(PROJECT_DIR / "data/examples/geometry_files/tetrahedron_double_volume.step")
+
+    mesh_setup = MeshSetup(
+        maximum_element_size=20,
+        merge_connected_volumes=False,
+        refinement_parameters=[MeshRefinementSetup("volumes", 40, [1])],
+        custom_element_setup=GMSH_TET4,
+    )
+    mesh = Mesh().load_cad(geometry_path, mesh_setup, threads=1)
+
+    mean_edges = _mean_edge_length_per_volume(mesh)
+    assert mean_edges[1] > mean_edges[2] * 1.2
+    assert mean_edges[2] < 30
+
+
+def test_local_refinement_refines():
+    geometry_path = str(PROJECT_DIR / "data/examples/geometry_files/tetrahedron_double_volume.step")
+
+    mesh_setup = MeshSetup(
+        maximum_element_size=20,
+        merge_connected_volumes=False,
+        refinement_parameters=[MeshRefinementSetup("volumes", 5, [2])],
+        custom_element_setup=GMSH_TET4,
+    )
+    mesh = Mesh().load_cad(geometry_path, mesh_setup, threads=1)
+
+    mean_edges = _mean_edge_length_per_volume(mesh)
+    assert mean_edges[2] < mean_edges[1] * 0.9
+
+
+def _mean_edge_length_per_volume(mesh: Mesh) -> dict[int, float]:
+    node_index = {int(node): i for i, node in enumerate(mesh.nodal_coordinates[:, 0])}
+    coords = mesh.nodal_coordinates[:, 1:]
+
+    mean_edges = {}
+    for volume_id in mesh.all_solid_ids():
+        rows = mesh.solids_connectivity[mesh.solids_connectivity[:, 1] == volume_id]
+        lengths = []
+        for connect in rows[:, 4:]:
+            for a, b in combinations(connect, 2):
+                lengths.append(np.linalg.norm(coords[node_index[int(a)]] - coords[node_index[int(b)]]))
+        mean_edges[volume_id] = float(np.mean(lengths))
+
+    return mean_edges
 
 
 def _compare_mesh(mesh: Mesh, mesh_path: Path | str):
