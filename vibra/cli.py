@@ -8,7 +8,7 @@ def run_interface(project_path: str | None = None, open_last: bool = False):
 
 
 def run_analysis(working_dir: str):
-    from vibra.utils.subprocess import analysis_subprocess
+    from vibra.cli_runners import analysis_subprocess
 
     try:
         analysis_subprocess.main(is_resume=False, working_dir=working_dir)
@@ -17,7 +17,7 @@ def run_analysis(working_dir: str):
 
 
 def continue_analysis(working_dir: str):
-    from vibra.utils.subprocess import analysis_subprocess
+    from vibra.cli_runners import analysis_subprocess
 
     try:
         analysis_subprocess.main(is_resume=True, working_dir=working_dir)
@@ -26,7 +26,7 @@ def continue_analysis(working_dir: str):
 
 
 def generate_mesh(working_dir: str):
-    from vibra.utils.subprocess import generate_mesh_subprocess
+    from vibra.cli_runners import generate_mesh_subprocess
 
     try:
         generate_mesh_subprocess.main(working_dir)
