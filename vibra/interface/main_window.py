@@ -948,22 +948,6 @@ class MainWindow(MainWindow_UI):
     def set_input_widget(self, dialog):
         self.dialog = dialog
 
-    def run_analysis_shortcut(self):
-        if is_focus_on_text_input():
-            return
-
-        action = self.analysis_toolbar.run_analysis_action
-        if action.isEnabled():
-            action.trigger()
-
-    def reset_solution_shortcut(self):
-        if is_focus_on_text_input():
-            return
-
-        action = self.analysis_toolbar.reset_solution_action
-        if action.isEnabled():
-            action.trigger()
-
     def copy_screenshot_to_clipboard(self):
         if is_focus_on_text_input():
             return
@@ -974,24 +958,6 @@ class MainWindow(MainWindow_UI):
 
         image = widget.get_screenshot()
         app().clipboard().setImage(ImageQt.ImageQt(image))
-
-    def workspace_model_shortcut(self):
-        if is_focus_on_text_input():
-            return
-
-        self.action_model_workspace_callback()
-
-    def workspace_mesh_shortcut(self):
-        if is_focus_on_text_input():
-            return
-
-        self.action_mesh_workspace_callback()
-
-    def workspace_results_shortcut(self):
-        if is_focus_on_text_input():
-            return
-
-        self.action_results_workspace_callback()
 
     def select_all_entities_shortcut(self):
         if is_focus_on_text_input():

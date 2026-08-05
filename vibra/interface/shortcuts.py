@@ -22,22 +22,25 @@ TEXT_INPUT_WIDGETS = (QLineEdit, QTextEdit, QPlainTextEdit, QComboBox, QAbstract
 #   - kind "callback" -> application-wide QShortcut wired to a main window method
 #   - kind "action"   -> applied to an existing QAction (dotted path on the main window)
 SHORTCUTS = {
-    "Ctrl+M": ("callback", "generate_mesh_with_current_setup", "Generate the mesh"),
-    "Ctrl+R": ("callback", "run_analysis_shortcut", "Run the analysis"),
+    "Ctrl+Shift+G": ("callback", "generate_mesh_with_current_setup", "Generate the mesh"),
+    "Ctrl+R": ("action", "analysis_toolbar.run_analysis_action", "Run the analysis"),
     "Ctrl+A": ("callback", "select_all_entities_shortcut", "Select all entities"),
-    "Ctrl+E": ("callback", "action_export_mesh_callback", "Export the mesh"),
+    "Ctrl+E": ("action", "action_export_mesh", "Export the mesh"),
     "Ctrl+C": ("callback", "copy_screenshot_to_clipboard", "Copy screenshot to clipboard"),
-    "Ctrl+D": ("callback", "reset_solution_shortcut", "Reset the solution"),
-    "Ctrl+N": ("callback", "action_new_project_callback", "New project"),
-    "Ctrl+W": ("callback", "action_home_exit_callback", "Go to home"),
-    "Ctrl+Shift+S": ("callback", "action_save_as_callback", "Save the project as"),
-    "Ctrl+I": ("callback", "action_import_geometry_callback", "Import geometry"),
+    "Ctrl+P": ("action", "action_capture_image", "Capture the image"),
+    "Ctrl+D": ("action", "analysis_toolbar.reset_solution_action", "Reset the solution"),
+    "Ctrl+N": ("action", "action_new_project", "New project"),
+    "Ctrl+O": ("action", "action_open_project", "Open a project"),
+    "Ctrl+W": ("action", "action_home_exit", "Go to home"),
+    "Ctrl+Shift+S": ("action", "action_save_as", "Save the project as"),
+    "Ctrl+I": ("action", "action_import_geometry", "Import geometry"),
+    "Ctrl+Shift+I": ("action", "action_import_mesh", "Import mesh"),
     "F5": ("callback", "update_plots", "Refresh the plots"),
     "Alt+P": ("callback", "toggle_section_plane", "Toggle the section plane"),
     "?": ("callback", "show_shortcuts_help", "Show this shortcut list"),
-    "Q": ("callback", "workspace_model_shortcut", "Model workspace"),
-    "W": ("callback", "workspace_mesh_shortcut", "Mesh workspace"),
-    "E": ("callback", "workspace_results_shortcut", "Results workspace"),
+    "Q": ("action", "action_model_workspace", "Model workspace"),
+    "W": ("action", "action_mesh_workspace", "Mesh workspace"),
+    "E": ("action", "action_results_workspace", "Results workspace"),
     "Ctrl+S": ("action", "action_save", "Save the project"),
     "Ctrl+H": ("action", "action_hide_selection", "Hide the selection"),
     "Ctrl+U": ("action", "action_unhide_all", "Unhide everything"),
@@ -57,7 +60,9 @@ SHORTCUTS = {
 #     their Delete-row behavior)
 #   - Space on the play/pause buttons of the ModalAnalysisBar classes (currently
 #     not instantiated)
-#   - Ctrl+C in the plot navigation toolbar
+# The plot navigation toolbar keeps its own Ctrl+C (copy graph) shortcut; it is
+# window-scoped and coexists with the app-wide Ctrl+C, which is disabled while
+# typing in text fields.
 
 
 def register_global_shortcuts(main_window):
@@ -65,11 +70,16 @@ def register_global_shortcuts(main_window):
     Registers all shortcuts from the SHORTCUTS registry. This is the single
     source of truth for the application keymap.
 
-    Callback entries become application-wide QShortcuts that are disabled while
-    typing in text fields. Action entries set the shortcut of an existing
-    QAction (resolved through the dotted path) and make it application-wide.
+    Callback entries become application-wide QShortcuts. Action entries set the
+    shortcut of an existing QAction (resolved through the dotted path) and make
+    it application-wide, so Qt also shows the shortcut next to the toolbar
+    button and in the menu. While typing in a text field, both QShortcuts and
+    the guarded QActions are disabled (the enabled state of the actions is
+    restored afterwards).
     """
     qshortcuts = list()
+    actions = list()
+    action_states = dict()
 
     for keys, (kind, target, description) in SHORTCUTS.items():
         if kind == "callback":
@@ -82,6 +92,7 @@ def register_global_shortcuts(main_window):
             action = _resolve_action(main_window, target)
             action.setShortcut(QKeySequence(keys))
             action.setShortcutContext(Qt.ShortcutContext.ApplicationShortcut)
+            actions.append(action)
 
         else:
             raise ValueError(f"Unknown shortcut kind: {kind!r}")
@@ -92,6 +103,12 @@ def register_global_shortcuts(main_window):
         typing = isinstance(new_widget, TEXT_INPUT_WIDGETS)
         for shortcut in qshortcuts:
             shortcut.setEnabled(not typing)
+        for action in actions:
+            if typing:
+                action_states[action] = action.isEnabled()
+                action.setEnabled(False)
+            elif action in action_states:
+                action.setEnabled(action_states.pop(action))
 
     app().focusChanged.connect(update_shortcuts_enabled)
 
