@@ -24,8 +24,11 @@ from vibra.engine.mesher.element_setup import (
     SubdivisionAlgorithms,
 )
 from vibra.engine.mesher.mesh_setup import MeshRefinementSetup, MeshSetup
+from vibra.errors import InvalidMeshSetupError
+from vibra.interface import error_title
 from vibra.interface.formatters.icons import Icon
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
+from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.ui_generated.model.general.mesher_setup_inputs_ui import MesherSetupInputs_UI
 from vibra.interface.ui_generated.plots.general.mesh_quality_histogram_plot_ui import MeshQualityHistogramPlot_UI
@@ -121,6 +124,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.comboBox_element_order.currentIndexChanged.connect(self.element_topology_changed_callback)
         #
         self.doubleSpinBox_maximum_element_size.valueChanged.connect(self.maximum_element_size_changed_callback)
+        self.doubleSpinBox_minimum_element_size.valueChanged.connect(self.minimum_element_size_changed_callback)
         #
         self.pushButton_add.clicked.connect(self.add_button_callback)
         self.pushButton_apply.clicked.connect(self.apply_callback)
@@ -152,6 +156,8 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.pushButton_apply_and_close.setAutoDefault(False)
         #
         self.pushButton_plot_histogram.setDisabled(True)
+        #
+        self.doubleSpinBox_minimum_element_size.setMaximum(self.doubleSpinBox_maximum_element_size.value())
 
     def _load_current_mesh_setup(self):
         mesh_setup = app().project.model.mesh_setup
@@ -180,12 +186,20 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             self.doubleSpinBox_minimum_element_size.setValue(int(0.9 * element_size))
 
     def maximum_element_size_changed_callback(self):
-        if self.synchronize_sizes:
-            with block_signals(self.doubleSpinBox_minimum_element_size):
-                value = self.doubleSpinBox_maximum_element_size.value()
+        value = self.doubleSpinBox_maximum_element_size.value()
+
+        with block_signals(self.doubleSpinBox_minimum_element_size):
+            self.doubleSpinBox_minimum_element_size.setMaximum(value)
+            if self.synchronize_sizes:
                 self.doubleSpinBox_minimum_element_size.setValue(value)
 
         self.update_mesh_refinement_table()
+
+    def minimum_element_size_changed_callback(self):
+        maximum = self.doubleSpinBox_maximum_element_size.value()
+        if self.doubleSpinBox_minimum_element_size.value() > maximum:
+            with block_signals(self.doubleSpinBox_minimum_element_size):
+                self.doubleSpinBox_minimum_element_size.setValue(maximum)
 
     def synchronize_button_callback(self):
         self.synchronize_sizes = not self.synchronize_sizes
@@ -413,7 +427,12 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
             return True
 
-        self.complete = generate_mesh()
+        try:
+            self.complete = generate_mesh()
+        except InvalidMeshSetupError as e:
+            PrintMessageInput([error_title, "Invalid mesh setup", str(e)])
+            self.show()
+            return
 
         if close_window:
             self.close()
