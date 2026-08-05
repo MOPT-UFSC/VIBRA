@@ -163,6 +163,9 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
         if self.check_inputs():
             return
 
+        acoustic_postprocessing = app().project.get_acoustic_postprocessing()
+        acoustic_postprocessing.compute_forces_due_to_pressure_field(self.nodal_solution)
+
         self.join_model_data()
         self.plotter = FrequencyResponsePlotter(close_dialogs=True)
 

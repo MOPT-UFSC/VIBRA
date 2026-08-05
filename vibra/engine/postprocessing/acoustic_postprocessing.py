@@ -632,14 +632,14 @@ class AcousticPostprocessing:
 
         forces = 0.
 
-        for surface_id in [169, 357]:
+        for surface_id in [414, 419]:
             # surf_connect = self.model.mesh.get_connectivity_from_surface(surface_id)
 
             rows = self.model.mesh.faces_connectivity[:, 1] == surface_id
             surface_elements_connectivities = self.model.mesh.faces_connectivity[rows, :]
             surface_elements_normals = self.model.mesh.get_element_face_normal_batched(surface_elements_connectivities)
 
-            element_2d.reorder_connect(surface_elements_connectivities)
+            element_2d.reorder_connect(surface_elements_connectivities[:, 4:])
             forces += element_2d.acoustic_pressure_load(surface_elements_normals.reshape(-1, 3, 1), nodal_solution)
 
 def plot_graph(matrix):
