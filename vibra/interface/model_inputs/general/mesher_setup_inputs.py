@@ -100,6 +100,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.bad_elements_showed = False
         self.synchronize_sizes = False
         self.tmp_refinement_parameters: list[MeshRefinementSetup] = list()
+        self.last_synced_ids: set[int] = set()
 
         self.gmsh_labels = {
             0: "gamma",
@@ -150,7 +151,6 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.pushButton_apply.setAutoDefault(False)
         self.pushButton_apply_and_close.setAutoDefault(False)
         #
-        self.lineEdit_selected_ids.setDisabled(True)
         self.pushButton_plot_histogram.setDisabled(True)
 
     def _load_current_mesh_setup(self):
@@ -202,22 +202,37 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.maximum_element_size_changed_callback()
 
     def geometry_selection_callback(self):
-        faces = app().main_window.selection.geometry_surfaces
         volumes = app().main_window.selection.geometry_volumes
+        surfaces = app().main_window.selection.geometry_surfaces
 
         if volumes:
-            selection = volumes
-            self.label_selected_ids.setText("Selected volume IDs:")
-        elif faces:
-            selection = faces
-            self.label_selected_ids.setText("Selected surface IDs:")
+            self.comboBox_refinement_entity_type.setCurrentText("Volume")
+            selection = set(volumes)
+        elif surfaces:
+            self.comboBox_refinement_entity_type.setCurrentText("Surface")
+            selection = set(surfaces)
         else:
             self.lineEdit_selected_ids.setText("")
+            self.last_synced_ids = set()
             return
 
-        if selection:
-            text = ", ".join([str(i) for i in selection])
-            self.lineEdit_selected_ids.setText(text)
+        current_ids = set(self.get_selected_ids())
+        manually_edited = current_ids != self.last_synced_ids
+
+        if manually_edited:
+            merged_ids = selection | current_ids
+            self.last_synced_ids = set(merged_ids)
+        else:
+            merged_ids = selection
+            self.last_synced_ids = set(selection)
+
+        text = ", ".join(str(i) for i in sorted(merged_ids))
+        self.lineEdit_selected_ids.setText(text)
+
+    def get_selected_entity_type(self) -> str:
+        if self.comboBox_refinement_entity_type.currentText() == "Volume":
+            return "volumes"
+        return "surfaces"
 
     def tab_event_callback(self):
         mesh_quality_tab = self.tabWidget_main.currentIndex() == MeshSetupTabs.MESH_QUALITY
@@ -242,8 +257,10 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             return
 
         if selection_type == "volumes":
+            self.comboBox_refinement_entity_type.setCurrentText("Volume")
             app().main_window.selection.set_geometry_selection(volumes=selected_ids)
         else:
+            self.comboBox_refinement_entity_type.setCurrentText("Surface")
             app().main_window.selection.set_geometry_selection(surfaces=selected_ids)
 
     def get_selected_ids(self):
@@ -261,14 +278,12 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         if self.lineEdit_selected_ids.text() == "":
             return
 
-        if app().main_window.selection.geometry_volumes:
-            selected_type = "volumes"
-        else:
-            selected_type = "surfaces"
-
+        selected_type = self.get_selected_entity_type()
         selected_ids = self.get_selected_ids()
+
         refined_size = self.doubleSpinBox_refined_element_size.value()
         self.lineEdit_selected_ids.setText("")
+        self.last_synced_ids = set()
 
         if not selected_ids:
             return

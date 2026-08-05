@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'mesher_setup_inputs.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.9.2
+## Created by: Qt User Interface Compiler version 6.10.1
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -396,9 +396,14 @@ class Ui_Dialog(object):
         self.gridLayout_8.setObjectName(u"gridLayout_8")
         self.gridLayout_8.setHorizontalSpacing(6)
         self.gridLayout_8.setContentsMargins(4, 4, 4, 4)
-        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        self.lineEdit_selected_ids = QLineEdit(self.frame_13)
+        self.lineEdit_selected_ids.setObjectName(u"lineEdit_selected_ids")
+        self.lineEdit_selected_ids.setMinimumSize(QSize(0, 28))
+        self.lineEdit_selected_ids.setMaximumSize(QSize(200, 16777215))
+        self.lineEdit_selected_ids.setFont(font1)
+        self.lineEdit_selected_ids.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.gridLayout_8.addItem(self.horizontalSpacer_3, 2, 0, 1, 1)
+        self.gridLayout_8.addWidget(self.lineEdit_selected_ids, 1, 2, 1, 1)
 
         self.label_7 = QLabel(self.frame_13)
         self.label_7.setObjectName(u"label_7")
@@ -439,18 +444,29 @@ class Ui_Dialog(object):
 
         self.gridLayout_8.addWidget(self.label_selected_ids, 1, 1, 1, 1)
 
-        self.lineEdit_selected_ids = QLineEdit(self.frame_13)
-        self.lineEdit_selected_ids.setObjectName(u"lineEdit_selected_ids")
-        self.lineEdit_selected_ids.setMinimumSize(QSize(0, 28))
-        self.lineEdit_selected_ids.setMaximumSize(QSize(200, 16777215))
-        self.lineEdit_selected_ids.setFont(font1)
-        self.lineEdit_selected_ids.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gridLayout_8.addWidget(self.lineEdit_selected_ids, 1, 2, 1, 1)
+        self.gridLayout_8.addItem(self.horizontalSpacer_3, 2, 0, 1, 1)
 
         self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.gridLayout_8.addItem(self.horizontalSpacer_4, 2, 4, 1, 1)
+
+        self.comboBox_refinement_entity_type = QComboBox(self.frame_13)
+        self.comboBox_refinement_entity_type.addItem("")
+        self.comboBox_refinement_entity_type.addItem("")
+        self.comboBox_refinement_entity_type.setObjectName(u"comboBox_refinement_entity_type")
+        sizePolicy = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.comboBox_refinement_entity_type.sizePolicy().hasHeightForWidth())
+        self.comboBox_refinement_entity_type.setSizePolicy(sizePolicy)
+        self.comboBox_refinement_entity_type.setMinimumSize(QSize(1, 28))
+        self.comboBox_refinement_entity_type.setMaximumSize(QSize(90, 16777215))
+        self.comboBox_refinement_entity_type.setFont(font1)
+        self.comboBox_refinement_entity_type.setMinimumContentsLength(0)
+
+        self.gridLayout_8.addWidget(self.comboBox_refinement_entity_type, 1, 3, 1, 1)
 
 
         self.gridLayout_7.addWidget(self.frame_13, 0, 1, 1, 1)
@@ -730,6 +746,7 @@ class Ui_Dialog(object):
 
         self.comboBox_volumes_interface_behavior.setCurrentIndex(1)
         self.tabWidget_main.setCurrentIndex(0)
+        self.comboBox_refinement_entity_type.setCurrentIndex(0)
         self.comboBox_3d_algorithm.setCurrentIndex(0)
         self.pushButton_apply_and_close.setDefault(False)
         self.pushButton_apply.setDefault(False)
@@ -780,10 +797,13 @@ class Ui_Dialog(object):
         ___qtablewidgetitem2.setText(QCoreApplication.translate("Dialog", u"Selection ID", None));
         self.pushButton_add.setText(QCoreApplication.translate("Dialog", u"Add", None))
         self.pushButton_delete.setText(QCoreApplication.translate("Dialog", u"Delete", None))
+        self.lineEdit_selected_ids.setText("")
         self.label_7.setText(QCoreApplication.translate("Dialog", u"Refined element size: ", None))
         self.label_8.setText(QCoreApplication.translate("Dialog", u"[mm]", None))
-        self.label_selected_ids.setText(QCoreApplication.translate("Dialog", u"Selected ID:", None))
-        self.lineEdit_selected_ids.setText("")
+        self.label_selected_ids.setText(QCoreApplication.translate("Dialog", u"Selected entities ID:", None))
+        self.comboBox_refinement_entity_type.setItemText(0, QCoreApplication.translate("Dialog", u"Surface", None))
+        self.comboBox_refinement_entity_type.setItemText(1, QCoreApplication.translate("Dialog", u"Volume", None))
+
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_local_refining), QCoreApplication.translate("Dialog", u"Local refining", None))
         self.label_13.setText(QCoreApplication.translate("Dialog", u"Recombination algorithm:", None))
         self.label_12.setText(QCoreApplication.translate("Dialog", u"Subdivision algorithm:", None))
@@ -893,11 +913,12 @@ class MesherSetupInputs_UI(QDialog, Ui_Dialog):
                                                                     - pushButton_delete: QPushButton
                                                         - frame_13: QFrame
                                                             - (Layout): QGridLayout
+                                                                    - lineEdit_selected_ids: QLineEdit
                                                                     - label_7: QLabel
                                                                     - doubleSpinBox_refined_element_size: QDoubleSpinBox
                                                                     - label_8: QLabel
                                                                     - label_selected_ids: QLabel
-                                                                    - lineEdit_selected_ids: QLineEdit
+                                                                    - comboBox_refinement_entity_type: QComboBox
                                             - tab_advanced_controls: QWidget
                                                 - (Layout): QGridLayout
                                                         - label_13: QLabel
