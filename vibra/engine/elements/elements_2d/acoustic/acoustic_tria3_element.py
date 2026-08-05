@@ -390,6 +390,71 @@ class ACT_TRIANGLE_3(Element2D):
         return We.flatten()
 
 
+    def acoustic_pressure_load(self, e_normals: np.ndarray, nodal_solution: np.ndarray) -> np.ndarray:
+        """ 
+        This method computes the elementary load vector.
+
+        Parameters
+        ----------
+        el_index: int
+            The element index.
+
+        load: float, optional
+            The load vector.
+
+        Returns
+        -------
+        Fe: np.ndarray
+            The elementary load vector.
+        """
+
+        """
+        This method processes all elementary matrices and returns them
+        in the stacked array form.
+
+        Returns
+        -------
+        int2d_NtN: np.ndarray
+            The array containing the stacked elementary matrices.
+        """
+
+        # NOTE: the shape functions' derivatives are constant for all
+        # integration points; this is why the Jacobian matrix-related
+        # calculations are being performed out of the integration loop.
+
+        # compute local coordinates for all elements
+        local_coords = self.get_stacked_local_coordinates()
+
+        # Jacobian matrices of all elements
+        JAC_stacked = self.dphi @ local_coords
+
+        # Jacobian determinants and inverses of all elements
+        det_jacs = self.get_detJAC(JAC_stacked)
+
+        # initialize variable
+        pressure_load = 0.
+
+        pressures = np.array([
+            nodal_solution[self.connectivities[:, 0], :], 
+            nodal_solution[self.connectivities[:, 1], :], 
+            nodal_solution[self.connectivities[:, 2], :]
+            ],
+            dtype=complex,
+        )
+
+        Pe = pressures.transpose(1, 0, 2)
+
+        # integration loop
+        for i in range(self.nint):
+
+            # shape functions
+            N = self.phi[i, :, :]
+
+            pressure_load += np.sum(e_normals @ (N @ Pe) * (det_jacs * self.wps[i]), axis=0)
+
+        return pressure_load
+
+
     def reorder_connect(self, connect_face):
         """
         Reordering connectivity matrix to adequate 
