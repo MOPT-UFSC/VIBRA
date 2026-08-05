@@ -2,6 +2,7 @@ import builtins
 import os
 import platform
 import runpy
+import signal
 import sys
 from pathlib import Path
 
@@ -67,6 +68,7 @@ def main(script_path: str | Path):
     main_window = MainWindow(script_path=script_path)
     main_window.show()
 
+    signal.signal(signal.SIGINT, signal.SIG_DFL)
     sys.exit(app.exec())
 
 
