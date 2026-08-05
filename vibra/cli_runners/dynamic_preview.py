@@ -1,3 +1,4 @@
+import builtins
 import os
 import platform
 import runpy
@@ -16,6 +17,7 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         self.script_path = Path(script_path)
+        self.script_cache = {}
 
         self.render_widget = PreviewRenderWidget()
         self.setCentralWidget(self.render_widget)
@@ -33,8 +35,13 @@ class MainWindow(QMainWindow):
             return
         self.last_modification_time = modification_time
 
+        # Hack to make @preview_cache decorator work
+        if not hasattr(builtins, "__HOT_RELOAD_CACHE__"):
+            builtins.__HOT_RELOAD_CACHE__ = self.script_cache
+
         print("\033[H\033[2J", end="")
         script_variables = runpy.run_path(self.script_path)
+
         for var in script_variables.values():
             if isinstance(var, Project):
                 self.render_widget.model = var.model
