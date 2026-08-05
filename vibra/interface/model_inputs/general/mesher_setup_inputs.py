@@ -180,12 +180,10 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             self.doubleSpinBox_minimum_element_size.setValue(int(0.9 * element_size))
 
     def maximum_element_size_changed_callback(self):
-        if not self.synchronize_sizes:
-            return
-
-        with block_signals(self.doubleSpinBox_minimum_element_size):
-            value = self.doubleSpinBox_maximum_element_size.value()
-            self.doubleSpinBox_minimum_element_size.setValue(value)
+        if self.synchronize_sizes:
+            with block_signals(self.doubleSpinBox_minimum_element_size):
+                value = self.doubleSpinBox_maximum_element_size.value()
+                self.doubleSpinBox_minimum_element_size.setValue(value)
 
     def synchronize_button_callback(self):
         self.synchronize_sizes = not self.synchronize_sizes
@@ -272,6 +270,23 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
         if not selected_ids:
             return
+
+        maximum_size = self.doubleSpinBox_maximum_element_size.value()
+        if refined_size > maximum_size:
+            read = GetUserConfirmationInput(
+                "Inverted mesh refinement",
+                f"The refined element size ({refined_size} mm) is larger than the global maximum "
+                f"({maximum_size} mm). Vibra will coarsen the selected {selected_type} to "
+                f"{refined_size} mm and keep all other {selected_type} at the global maximum "
+                f"({maximum_size} mm). Continue?",
+                buttons_config={
+                    "left_button_label": "Cancel",
+                    "right_button_label": "Continue",
+                },
+                window_title="Vibra",
+            )
+            if read._cancel:
+                return
 
         setup = MeshRefinementSetup(
             selected_type,

@@ -860,10 +860,21 @@ class Mesh:
         writer.Write()
 
     def _local_mesh_refine(self, global_size: float, refinement_setups: list[MeshRefinementSetup]):
+        setup_sizes = [setup.element_size for setup in refinement_setups]
+        max_size = max([global_size, *setup_sizes])
+        coarsening = max_size > global_size
+
+        if coarsening:
+            # Allow mesh sizes larger than the ones derived from the imported
+            # geometry points, otherwise gmsh caps the size and "unrefinement"
+            # has no effect. Note that with merge_connected_volumes enabled the
+            # size transition is graded across merged shared faces (expected).
+            gmsh.option.setNumber("Mesh.MeshSizeFromPoints", 0)
+
         gmsh.model.mesh.field.add("Constant")
         gmsh.model.mesh.field.setNumbers(1, "SurfacesList", [])
         gmsh.model.mesh.field.setNumbers(1, "VolumesList", [])
-        gmsh.model.mesh.field.setNumber(1, "VOut", global_size)
+        gmsh.model.mesh.field.setNumber(1, "VOut", max_size)
 
         fields_list = [1]
         for setup in refinement_setups:
@@ -874,6 +885,9 @@ class Mesh:
                     option = "VolumesList"
                 case _:
                     continue
+
+            if coarsening and setup.element_size >= max_size:
+                continue
 
             threshold_type = gmsh.model.mesh.field.add("Constant")
             gmsh.model.mesh.field.setNumbers(
@@ -888,9 +902,38 @@ class Mesh:
             )
             fields_list.append(threshold_type)
 
+        if coarsening:
+            self._add_inverted_refinement_fields(global_size, max_size, refinement_setups, fields_list)
+
         minimum_field = gmsh.model.mesh.field.add("Min")
         gmsh.model.mesh.field.setNumbers(minimum_field, "FieldsList", fields_list)
         gmsh.model.mesh.field.setAsBackgroundMesh(minimum_field)
+
+    def _add_inverted_refinement_fields(
+        self,
+        global_size: float,
+        max_size: float,
+        refinement_setups: list[MeshRefinementSetup],
+        fields_list: list[int],
+    ):
+        """Keeps the volumes not covered by any refinement setup at the global
+        size when the background field is raised to the coarsest size."""
+        volume_setups = [setup for setup in refinement_setups if setup.entity_type == "volumes"]
+        if not volume_setups:
+            return
+
+        listed_volumes = set()
+        for setup in volume_setups:
+            listed_volumes |= set(setup.entity_ids)
+
+        complement_volumes = [vol for dim, vol in gmsh.model.getEntities(3) if vol not in listed_volumes]
+        if not complement_volumes:
+            return
+
+        complement_field = gmsh.model.mesh.field.add("Constant")
+        gmsh.model.mesh.field.setNumbers(complement_field, "VolumesList", complement_volumes)
+        gmsh.model.mesh.field.setNumber(complement_field, "VIn", global_size)
+        fields_list.append(complement_field)
 
     def clear_mesh_data(self):
         self.nodal_coordinates = np.zeros((0, 4), dtype=float)
