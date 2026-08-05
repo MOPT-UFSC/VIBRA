@@ -34,3 +34,7 @@ class PreviewRenderWidget(CommonRenderWidget):
 
         self.renderer.ResetCamera()
         self.update()
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.renderer.ResetCamera()
