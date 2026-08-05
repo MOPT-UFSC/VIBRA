@@ -45,7 +45,7 @@ class MainWindow(QMainWindow):
 
         for var in script_variables.values():
             if isinstance(var, Project):
-                self.render_widget.model = var.model
+                self.render_widget.update_model(var.model)
                 self.setWindowTitle(var.model.name)
                 break
         else:
