@@ -1,4 +1,3 @@
-from imageio.core.request import Mode
 from molde.render_widgets import CommonRenderWidget
 
 from vibra.interface.viewer_3d.actors.mesh_actor import MeshActor
