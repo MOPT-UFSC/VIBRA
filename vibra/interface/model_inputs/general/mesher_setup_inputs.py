@@ -9,7 +9,7 @@ from matplotlib.figure import Figure
 from molde.colors import Color, color_names
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QKeyEvent
-from PySide6.QtWidgets import QTableWidgetItem, QVBoxLayout
+from PySide6.QtWidgets import QDoubleSpinBox, QTableWidgetItem, QVBoxLayout
 
 from vibra import app
 from vibra.engine.mesher import gmsh_constants
@@ -124,7 +124,6 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.comboBox_element_order.currentIndexChanged.connect(self.element_topology_changed_callback)
         #
         self.doubleSpinBox_maximum_element_size.valueChanged.connect(self.maximum_element_size_changed_callback)
-        self.doubleSpinBox_minimum_element_size.valueChanged.connect(self.minimum_element_size_changed_callback)
         #
         self.pushButton_add.clicked.connect(self.add_button_callback)
         self.pushButton_apply.clicked.connect(self.apply_callback)
@@ -157,7 +156,26 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         #
         self.pushButton_plot_histogram.setDisabled(True)
         #
-        self.doubleSpinBox_minimum_element_size.setMaximum(self.doubleSpinBox_maximum_element_size.value())
+        self.doubleSpinBox_maximum_element_size.setKeyboardTracking(False)
+        self.doubleSpinBox_minimum_element_size.setKeyboardTracking(False)
+
+        minimum_spinbox = self.doubleSpinBox_minimum_element_size
+        maximum_spinbox = self.doubleSpinBox_maximum_element_size
+
+        def step_by(spinbox, steps):
+            if steps > 0:
+                value = spinbox.value()
+                step = spinbox.singleStep()
+                maximum = maximum_spinbox.value()
+                if value >= maximum:
+                    return
+                if value + step * steps > maximum:
+                    with block_signals(spinbox):
+                        spinbox.setValue(maximum)
+                    return
+            QDoubleSpinBox.stepBy(spinbox, steps)
+
+        minimum_spinbox.stepBy = step_by.__get__(minimum_spinbox)
 
     def _load_current_mesh_setup(self):
         mesh_setup = app().project.model.mesh_setup
@@ -186,20 +204,11 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             self.doubleSpinBox_minimum_element_size.setValue(int(0.9 * element_size))
 
     def maximum_element_size_changed_callback(self):
-        value = self.doubleSpinBox_maximum_element_size.value()
-
-        with block_signals(self.doubleSpinBox_minimum_element_size):
-            self.doubleSpinBox_minimum_element_size.setMaximum(value)
-            if self.synchronize_sizes:
-                self.doubleSpinBox_minimum_element_size.setValue(value)
+        if self.synchronize_sizes:
+            with block_signals(self.doubleSpinBox_minimum_element_size):
+                self.doubleSpinBox_minimum_element_size.setValue(self.doubleSpinBox_maximum_element_size.value())
 
         self.update_mesh_refinement_table()
-
-    def minimum_element_size_changed_callback(self):
-        maximum = self.doubleSpinBox_maximum_element_size.value()
-        if self.doubleSpinBox_minimum_element_size.value() > maximum:
-            with block_signals(self.doubleSpinBox_minimum_element_size):
-                self.doubleSpinBox_minimum_element_size.setValue(maximum)
 
     def synchronize_button_callback(self):
         self.synchronize_sizes = not self.synchronize_sizes
@@ -304,6 +313,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
         maximum_size = self.doubleSpinBox_maximum_element_size.value()
         if refined_size > maximum_size:
+            self.hide()
             read = GetUserConfirmationInput(
                 "Inverted mesh refinement",
                 f"The refined element size ({refined_size} mm) is larger than the global maximum "
@@ -316,6 +326,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
                 },
                 window_title="Vibra",
             )
+            self.show()
             if read._cancel:
                 return
 
@@ -430,6 +441,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         try:
             self.complete = generate_mesh()
         except InvalidMeshSetupError as e:
+            self.hide()
             PrintMessageInput([error_title, "Invalid mesh setup", str(e)])
             self.show()
             return
