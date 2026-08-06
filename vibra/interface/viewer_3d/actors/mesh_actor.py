@@ -14,9 +14,11 @@ from vtkmodules.vtkCommonDataModel import (
 )
 from vtkmodules.vtkRenderingCore import vtkActor, vtkDataSetMapper, vtkPropAssembly
 
+from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.mesh_setup import ElementTopology
 from vibra.engine.model import Model
 from vibra.engine.properties import Fluid, Material
+from vibra.utils.math_functions import inside_plane
 from vibra.utils.time_utils import function_timer
 
 
@@ -28,7 +30,7 @@ class MeshActor(vtkPropAssembly):
         self.last_mesh_id = 0
 
     @property
-    def mesh(self):
+    def mesh(self) -> Mesh | None:
         if self.model is None:
             return
 
@@ -69,8 +71,8 @@ class MeshActor(vtkPropAssembly):
             return
         self.last_mesh_id = mesh_id
 
-        coords = self.mesh.nodal_coordinates
-        self.points.SetData(numpy_to_vtk(coords[:, 1:]))
+        coordinates = self.mesh.nodal_coordinates[:, 1:]
+        self.points.SetData(numpy_to_vtk(coordinates))
 
         connectivity = self.mesh.faces_connectivity[:, 4:]
         n_cells = len(connectivity)
@@ -90,13 +92,25 @@ class MeshActor(vtkPropAssembly):
         if self.mesh is None:
             return
 
+        origin = np.array([0, 0, 0])
+        normal = np.array([0, 0, -1])
+
         plane = vtkPlane()
-        plane.SetOrigin((0, 0, 0))
-        plane.SetNormal((0, 0, -1))
+        plane.SetOrigin(origin)
+        plane.SetNormal(normal)
 
         self.surfaces_mapper.RemoveAllClippingPlanes()
         self.surfaces_mapper.AddClippingPlane(plane)
         self.surfaces_mapper.Modified()
+        self.surfaces_actor.Modified()
+
+        coordinates = self.mesh.nodal_coordinates[:, 1:]
+        connectivity = self.mesh.solids_connectivity[:, 4:]
+        mask = inside_plane(coordinates, origin, normal).flatten()
+
+        elements_inside_plane = np.all(mask[connectivity], axis=1)
+        elements_outside_plane = ~np.any(mask[connectivity], axis=1)
+        elements_in_middle = ~(elements_inside_plane & elements_outside_plane)
 
     @function_timer
     def clear_colors(self):
