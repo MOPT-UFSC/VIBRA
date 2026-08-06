@@ -1,3 +1,5 @@
+from typing import Sequence
+
 import numpy as np
 from molde import Color
 from vtkmodules.util.numpy_support import numpy_to_vtk, numpy_to_vtkIdTypeArray, vtk_to_numpy
@@ -13,7 +15,6 @@ from vtkmodules.vtkRenderingCore import vtkActor, vtkDataSetMapper, vtkPropAssem
 
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
-from vibra.engine.properties import Fluid, Material
 from vibra.utils.math_functions import inside_plane
 from vibra.utils.preview_utils import SectionPlaneConfig
 from vibra.utils.time_utils import function_timer
@@ -37,7 +38,7 @@ class MeshActor(vtkPropAssembly):
     def update(self):
         self.build_surface()
         self.update_section_plane()
-        self.clear_colors()
+        self.update_colors()
 
     def create_variables(self):
         self.points = vtkPoints()
@@ -154,16 +155,9 @@ class MeshActor(vtkPropAssembly):
         view[:] = self.mesh.solids_connectivity[elements_in_middle, 0]
 
     @function_timer
-    def clear_colors(self):
+    def update_colors(self):
         if self.model is None:
-            return
-
-        for v in self.model.properties.volume_properties.values():
-            if isinstance(v, Fluid | Material):
-                self.set_color(Color.from_rgb(*v.color))
-                return
-
-        self.set_color(Color(255, 255, 255))
+            pass
 
     def set_color(self, color: Color):
         rgb = color.to_rgb()
@@ -173,6 +167,36 @@ class MeshActor(vtkPropAssembly):
 
         self.surface_colors.Modified()
         self.section_colors.Modified()
+
+    def paint_surfaces(self, color: Color, surfaces: Sequence[int]):
+        if self.mesh is None:
+            return
+
+        surface_ids = vtk_to_numpy(self.surface_ids)
+        surface_colors = vtk_to_numpy(self.surface_colors)
+
+        selected_elements, *_ = np.where(np.isin(self.mesh.faces_connectivity[:, 1], surfaces))
+        paint_position_mask = np.isin(surface_ids, selected_elements)
+        surface_colors[paint_position_mask] = color.to_rgb()
+        self.surface_colors.Modified()
+
+    def paint_volumes(self, color: Color, volumes: Sequence[int]):
+        if self.mesh is None:
+            return
+
+        surfaces = np.unique([self.mesh.surfaces_from_volume[v] for v in volumes if (v in self.mesh.surfaces_from_volume)])
+        self.paint_surfaces(color, surfaces)
+
+        section_ids = vtk_to_numpy(self.section_ids)
+        section_colors = vtk_to_numpy(self.section_colors)
+
+        selected_elements, *_ = np.where(np.isin(self.mesh.solids_connectivity[:, 1], volumes))
+        paint_position_mask = np.isin(section_ids, selected_elements)
+        section_colors[paint_position_mask] = color.to_rgb()
+        self.section_colors.Modified()
+
+    def _clear_colors(self):
+        self.set_color(Color(255, 255, 255))
 
     def _clear_data(self):
         self.last_mesh_id = 0
