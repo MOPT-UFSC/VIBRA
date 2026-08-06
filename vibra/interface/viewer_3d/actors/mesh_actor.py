@@ -21,7 +21,6 @@ from vibra.engine.properties import Fluid, Material
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.utils.math_functions import inside_plane
 from vibra.utils.preview_utils import SectionPlaneConfig
-from vibra.utils.time_utils import function_timer
 
 
 class MeshActor(vtkPropAssembly):
@@ -94,7 +93,6 @@ class MeshActor(vtkPropAssembly):
         self.section_actor.SetMapper(self.section_mapper)
         self.AddPart(self.section_actor)
 
-    @function_timer
     def build_surface(self):
         if self.mesh is None:
             self._clear_data()
@@ -124,7 +122,6 @@ class MeshActor(vtkPropAssembly):
         view = vtk_to_numpy(self.surface_ids)
         view[:] = self.mesh.faces_connectivity[:, 0]
 
-    @function_timer
     def update_section_plane(self):
         if self.mesh is None:
             return
@@ -165,7 +162,6 @@ class MeshActor(vtkPropAssembly):
         view = vtk_to_numpy(self.section_ids)
         view[:] = self.mesh.solids_connectivity[elements_in_middle, 0]
 
-    @function_timer
     def update_colors(self):
         self._clear_colors()
 
