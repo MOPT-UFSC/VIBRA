@@ -31,16 +31,13 @@ def generate_mesh(working_dir: str):
     try:
         generate_mesh_subprocess.main(working_dir)
     except Exception:
-        print("Working dir does not propperly configure an analysis.")
+        print("Working dir does not propperly configure a mesh.")
 
 
 def preview(script_path: str):
     from vibra.cli_runners import dynamic_preview
 
-    try:
-        dynamic_preview.main(script_path)
-    except Exception:
-        print("Working dir does not propperly configure an analysis.")
+    dynamic_preview.main(script_path)
 
 
 def main():
