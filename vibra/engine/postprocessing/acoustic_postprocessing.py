@@ -639,6 +639,8 @@ class AcousticPostprocessing:
 
         t0 = perf_counter()
 
+        self.mesh.element_normals_data.clear()
+
         for surface_id in surface_ids:
 
             if len(self.model.mesh.volumes_from_surface.get(surface_id)) != 1:
@@ -647,11 +649,20 @@ class AcousticPostprocessing:
             # surf_connect = self.model.mesh.get_connectivity_from_surface(surface_id)
 
             rows = self.model.mesh.faces_connectivity[:, 1] == surface_id
+
             surface_elements_connectivities = self.model.mesh.faces_connectivity[rows, :]
             surface_elements_normals = self.model.mesh.get_element_face_normal_batched(surface_elements_connectivities)
 
             element_2d.reorder_connect(surface_elements_connectivities[:, 4:])
             acoustic_loads += element_2d.acoustic_pressure_load(surface_elements_normals.reshape(-1, 3, 1), nodal_solution)
+
+            element_normals_data = {}
+            element_center_coords = self.mesh.get_element2d_center_coordinates(surface_elements_connectivities)
+
+            for i, element_id in enumerate(surface_elements_connectivities[:, 0]):
+                element_normals_data[int(element_id)] = (element_center_coords[i, :], surface_elements_normals[i, :])
+
+            self.mesh.set_elements_normals_data(surface_id, element_normals_data)
 
         dt = perf_counter() - t0
         print(f"Elapsed time to compute all surfaces: {dt} s")

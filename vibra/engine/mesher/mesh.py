@@ -105,6 +105,8 @@ class Mesh:
         self.normals_surface = dict()
         self.curvatures_surface = dict()
         self.nodal_normals_data = dict()
+        self.element_normals_data = dict()
+
         self.solid_elements_center = dict()
         self.surfaces_centers = dict()
         self.surface_area_from_element_integration = dict()
@@ -1395,6 +1397,8 @@ class Mesh:
 
     def process_mesh_related_mappings(self, label: str = "Loading"):
 
+        print("process_mesh_related_mappings")
+
         logging.info(f"{label} mesh... [70/100]")
         self.map_elements_from_volumes()
 
@@ -1564,6 +1568,8 @@ class Mesh:
             solid_id, *_ = correspondent_solids
             self.face_to_solid_element[face_id] = solid_id
             self.solid_to_face_elements[solid_id].append(face_id)
+
+        print(f"Map face to solid elements >>> {len(self.face_to_solid_element)}")
 
     def get_collapsed_elements(self):
 
@@ -2510,9 +2516,17 @@ class Mesh:
 
         return cross
 
+    def get_element2d_center_coordinates(self, connectivities: np.ndarray):
+        element_center_coords = np.array([self.nodal_coordinates[node_ids, 1:] for node_ids in connectivities[:, 4:].T])
+        return element_center_coords.transpose(1, 0, 2)
+
     def set_nodal_normals_data(self, surface_id: int, normals_data: dict):
         for node_id, nodal_normal in normals_data.items():
             self.nodal_normals_data[surface_id, node_id] = nodal_normal
+
+    def set_elements_normals_data(self, surface_id: int, normals_data: dict):
+        for element_id, (element_center, e_normal) in normals_data.items():
+            self.element_normals_data[surface_id, element_id] = (e_normal, element_center)
 
     def get_principal_diagonal_structure_parallelepiped(self):
         """
