@@ -2,7 +2,23 @@ import builtins
 import functools
 import hashlib
 import inspect
+from dataclasses import dataclass
+from enum import Enum, auto
 from typing import TypeVar
+
+
+@dataclass
+class SectionPlaneConfig:
+    class SectionPlaneMode(Enum):
+        DISABLED = auto()
+        PREVIEWING = auto()
+        CUTTING = auto()
+
+    position: tuple[float, float, float]
+    normal: tuple[float, float, float]
+    invert_value: bool = False
+    mode: SectionPlaneMode = SectionPlaneMode.CUTTING
+
 
 T = TypeVar("T")
 
