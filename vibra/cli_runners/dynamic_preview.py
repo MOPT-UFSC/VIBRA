@@ -11,6 +11,7 @@ from PySide6.QtWidgets import QApplication, QMainWindow
 
 from vibra.engine.project import Project
 from vibra.interface.viewer_3d.render_widgets.preview_render_widget import PreviewRenderWidget
+from vibra.utils.preview_utils import SectionPlaneConfig
 
 
 class MainWindow(QMainWindow):
@@ -43,13 +44,17 @@ class MainWindow(QMainWindow):
         print("\033[H\033[2J", end="")
         script_variables = runpy.run_path(self.script_path)
 
+        self.render_widget.update_model(None)
+        self.render_widget.update_section_plane(None)
+
         for var in script_variables.values():
-            if isinstance(var, Project):
-                self.render_widget.update_model(var.model)
-                self.setWindowTitle(var.model.name)
-                break
-        else:
-            return
+            match var:
+                case Project() as project:
+                    self.render_widget.update_model(project.model)
+                    self.setWindowTitle(project.model.name)
+
+                case SectionPlaneConfig() as section_plane:
+                    self.render_widget.update_section_plane(section_plane)
 
         self.render_widget.update_plot()
 

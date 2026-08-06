@@ -14,7 +14,7 @@ class SectionPlaneConfig:
         PREVIEWING = auto()
         CUTTING = auto()
 
-    position: tuple[float, float, float]
+    origin: tuple[float, float, float]
     normal: tuple[float, float, float]
     invert_value: bool = False
     mode: SectionPlaneMode = SectionPlaneMode.CUTTING

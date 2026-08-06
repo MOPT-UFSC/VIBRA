@@ -18,12 +18,14 @@ from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.engine.properties import Fluid, Material
 from vibra.utils.math_functions import inside_plane
+from vibra.utils.preview_utils import SectionPlaneConfig
 from vibra.utils.time_utils import function_timer
 
 
 class MeshActor(vtkPropAssembly):
     def __init__(self, model: Model):
         self.model = model
+        self.section_plane: SectionPlaneConfig | None = None
 
         self.create_variables()
         self.last_mesh_id = 0
@@ -105,12 +107,12 @@ class MeshActor(vtkPropAssembly):
         if self.mesh is None:
             return
 
-        origin = np.array([0, 0, 0])
-        normal = np.array([0, 0, -1])
+        if self.section_plane is None:
+            return
 
         plane = vtkPlane()
-        plane.SetOrigin(origin)
-        plane.SetNormal(normal)
+        plane.SetOrigin(self.section_plane.origin)
+        plane.SetNormal(self.section_plane.normal)
 
         self.surface_mapper.RemoveAllClippingPlanes()
         self.surface_mapper.AddClippingPlane(plane)
@@ -119,7 +121,7 @@ class MeshActor(vtkPropAssembly):
 
         coordinates = self.mesh.nodal_coordinates[:, 1:]
         connectivity = self.mesh.solids_connectivity[:, 4:]
-        mask = inside_plane(coordinates, origin, normal).flatten()
+        mask = inside_plane(coordinates, self.section_plane.origin, self.section_plane.normal).flatten()
 
         elements_inside_plane = np.all(mask[connectivity], axis=1)
         elements_outside_plane = ~np.any(mask[connectivity], axis=1)

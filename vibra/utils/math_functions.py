@@ -18,11 +18,14 @@ def inside_plane(
     test_points: np.ndarray[float],
     origin: np.ndarray[float],
     normal: np.ndarray[float],
-):
-    return np.dot(
-        np.array(test_points) - np.array(origin),
-        np.array(normal),
-    ) >= 0
+) -> np.ndarray[bool]:
+    return (
+        np.dot(
+            np.array(test_points) - np.array(origin),
+            np.array(normal),
+        )
+        >= 0
+    )
 
 
 def points_in_between(
