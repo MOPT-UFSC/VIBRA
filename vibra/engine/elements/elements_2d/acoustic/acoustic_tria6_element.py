@@ -414,20 +414,7 @@ class ACT_TRIANGLE_6(Element2D):
         """
 
         # stack all elements nodal pressures 
-        pressures = np.array([
-            nodal_solution[self.connectivities[:, 0], :], 
-            nodal_solution[self.connectivities[:, 1], :], 
-            nodal_solution[self.connectivities[:, 2], :],
-            nodal_solution[self.connectivities[:, 3], :],
-            nodal_solution[self.connectivities[:, 4], :],
-            nodal_solution[self.connectivities[:, 5], :],
-            nodal_solution[self.connectivities[:, 6], :],
-            nodal_solution[self.connectivities[:, 7], :],
-            nodal_solution[self.connectivities[:, 8], :],
-            nodal_solution[self.connectivities[:, 9], :],
-            ],
-            dtype=complex,
-        )
+        pressures = np.array([nodal_solution[node_ids, :] for node_ids in self.connectivities.T], dtype=complex)
 
         # stack the element nodal pressures in format [n_el, DOFS_PER_ELEMENT, n_freq]
         Pe = pressures.transpose(1, 0, 2)
