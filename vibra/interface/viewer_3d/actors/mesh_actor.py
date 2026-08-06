@@ -1,3 +1,5 @@
+from collections import defaultdict
+from itertools import chain
 from typing import Sequence
 
 import numpy as np
@@ -15,6 +17,8 @@ from vtkmodules.vtkRenderingCore import vtkActor, vtkDataSetMapper, vtkPropAssem
 
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
+from vibra.engine.properties import Fluid, Material
+from vibra.engine.properties.model_properties import ModelProperties
 from vibra.utils.math_functions import inside_plane
 from vibra.utils.preview_utils import SectionPlaneConfig
 from vibra.utils.time_utils import function_timer
@@ -34,6 +38,13 @@ class MeshActor(vtkPropAssembly):
             return
 
         return self.model.mesh
+
+    @property
+    def properties(self) -> ModelProperties | None:
+        if self.model is None:
+            return
+
+        return self.model.properties
 
     def update(self):
         self.build_surface()
@@ -156,8 +167,30 @@ class MeshActor(vtkPropAssembly):
 
     @function_timer
     def update_colors(self):
-        if self.model is None:
-            pass
+        self._clear_colors()
+
+        if self.properties is None:
+            return
+
+        surface_colors = defaultdict(list)
+        volume_colors = defaultdict(list)
+
+        for entity, property, tag, value in self.properties.iterate_properties():
+            if not isinstance(value, Material | Fluid):
+                continue
+
+            color = Color.from_rgb(*value.color)
+            match entity:
+                case "surface":
+                    surface_colors[color].append(tag)
+                case "volume":
+                    volume_colors[color].append(tag)
+
+        for color, tags in surface_colors.items():
+            self.paint_surfaces(color, tags)
+
+        for color, tags in volume_colors.items():
+            self.paint_volumes(color, tags)
 
     def set_color(self, color: Color):
         rgb = color.to_rgb()
@@ -167,6 +200,8 @@ class MeshActor(vtkPropAssembly):
 
         self.surface_colors.Modified()
         self.section_colors.Modified()
+        self.surface_mapper.Modified()
+        self.section_mapper.Modified()
 
     def paint_surfaces(self, color: Color, surfaces: Sequence[int]):
         if self.mesh is None:
@@ -184,7 +219,8 @@ class MeshActor(vtkPropAssembly):
         if self.mesh is None:
             return
 
-        surfaces = np.unique([self.mesh.surfaces_from_volume[v] for v in volumes if (v in self.mesh.surfaces_from_volume)])
+        surface_groups = [self.mesh.surfaces_from_volume[v] for v in volumes if (v in self.mesh.surfaces_from_volume)]
+        surfaces = list(chain.from_iterable(surface_groups))
         self.paint_surfaces(color, surfaces)
 
         section_ids = vtk_to_numpy(self.section_ids)
@@ -205,10 +241,12 @@ class MeshActor(vtkPropAssembly):
         self.surface_cells.Modified()
 
         self.surface_colors.SetNumberOfTuples(0)
+        self.surface_ids.SetNumberOfTuples(0)
         self.surface_colors.Modified()
 
         self.section_cells.Reset()
         self.section_cells.Modified()
 
         self.section_colors.SetNumberOfTuples(0)
+        self.section_ids.SetNumberOfTuples(0)
         self.section_colors.Modified()
