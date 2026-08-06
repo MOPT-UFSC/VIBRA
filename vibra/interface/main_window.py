@@ -665,7 +665,12 @@ class MainWindow(MainWindow_UI):
         geo = qt_extensions(SUPPORTED_GEOMETRY_EXTENSIONS)
         mesh = qt_extensions(SUPPORTED_MESH_EXTENSIONS)
 
-        ext_filter = f"All Accepted Files ({geo} {mesh});;Geometry Files ({geo});;Mesh Files ({mesh});;All Files (*)"
+        ext_filter = (
+            f"All Accepted Files ({geo} {mesh})"
+            f";;Geometry Files ({geo})"
+            f";;Mesh Files ({mesh})"
+            ";;All Files (*)"
+        )  # fmt: skip
 
         load_path, check = QFileDialog.getOpenFileName(
             self,

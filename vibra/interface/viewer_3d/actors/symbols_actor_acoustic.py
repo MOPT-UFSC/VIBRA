@@ -43,7 +43,11 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
     def _call_build_functions(self, property_name: str, surface_id: int = -1, line_id: int = -1, point_id: int = -1, node_id: int = -1):
         if property_name in self.prop_name_to_build_func.keys():
             self.prop_name_to_build_func[property_name](
-                property_name=property_name, surface_id=surface_id, line_id=line_id, point_id=point_id, node_id=node_id
+                property_name=property_name,
+                surface_id=surface_id,
+                line_id=line_id,
+                point_id=point_id,
+                node_id=node_id,
             )
 
     def build(self):
