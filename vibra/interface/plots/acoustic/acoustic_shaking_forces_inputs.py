@@ -12,14 +12,17 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
 from vibra.interface.numeric_checks.unit_utilities import convert_length_unit, units_abreviations
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
-from vibra.interface.ui_generated.plots.acoustic.acoustic_pressure_frequency_response_inputs_ui import AcousticPressureFrequencyResponseInputs_UI
+from vibra.interface.ui_generated.plots.acoustic.acoustic_shaking_forces_inputs_ui import AcousticShakingForcesInputs_UI
 
 
 class SelectionType(IntEnum):
-    SURFACES = 0
-    LINES = 1
-    POINTS = 2
-    NODES = 3
+    ALL_SURFACES = 0
+    SELECTED_SURFACES = 1
+
+
+class OutputMode(IntEnum):
+    RESULTING_LOADS = 0
+    INDIVIDUAL_LOADS = 1
 
 
 class CutoffFrequency(IntEnum):
@@ -28,7 +31,7 @@ class CutoffFrequency(IntEnum):
     AUTOMATIC = 2
 
 
-class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseInputs_UI):
+class AcousticShakingForcesInputs(AcousticShakingForcesInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -60,7 +63,6 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
 
     def showEvent(self, event):
         super().showEvent(event)
-        self.update_render_according_to_selector()
 
     def _load_analysis_setup_and_solution(self):
         self.analysis_method = ""
@@ -72,8 +74,7 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
     def _initialize(self):
         self.exporter = None
         self.plotter = None
-        self.unit_label = "Pa"
-        self.selection_types = ["surfaces", "lines", "points", "nodes"]
+        self.unit_label = "N"
 
     def _config_widgets(self):
         #
@@ -84,16 +85,17 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
         self.lineEdit_cutoff_frequency.setValidator(StrictDoubleValidator(0, 1e8, 6))
 
     def _create_connections(self):
-        #
-        self.comboBox_selector_filter.currentIndexChanged.connect(self.update_render_according_to_selector)
+
+        # QComboBox connections
         self.comboBox_cutoff_frequency.currentIndexChanged.connect(self.compute_pipe_cutoff_frequency_callback)
         self.comboBox_cutoff_frequency_options.currentIndexChanged.connect(self.cutoff_frequency_options_callback)
-        #
+        self.comboBox_selector_filter.currentIndexChanged.connect(self.selection_mode_callback)
+
+        # QPushButton connections
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
-        #
+
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
-        #
         self.update_cutoff_related_widgets_visibility()
 
     def geometry_selection_callback(self):
@@ -102,50 +104,26 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
             return
 
         surfaces = app().main_window.selection.geometry_surfaces
-        lines = app().main_window.selection.geometry_lines
-        points = app().main_window.selection.geometry_points
-        nodes = app().main_window.selection.mesh_nodes
+        if not surfaces:
+            return
 
-        index = self.comboBox_selector_filter.currentIndex()
-        if surfaces and index == SelectionType.SURFACES:
-            text = ", ".join([str(i) for i in surfaces])
-            self.lineEdit_selection_id.setText(text)
+        self.comboBox_selector_filter.setCurrentIndex(SelectionType.SELECTED_SURFACES)
 
-        elif lines and index == SelectionType.LINES:
-            text = ", ".join([str(i) for i in lines])
-            self.lineEdit_selection_id.setText(text)
-
-        elif points and index == SelectionType.POINTS:
-            text = ", ".join([str(i) for i in points])
-            self.lineEdit_selection_id.setText(text)
-
-        elif nodes and index == SelectionType.NODES:
-            text = ", ".join([str(i) for i in nodes])
-            self.lineEdit_selection_id.setText(text)
-
-        elif not any([nodes, points, lines, surfaces]):
-            self.lineEdit_selection_id.setText("")
-
-    def update_render_according_to_selector(self):
-
-        self.geometry_selection_callback()
-
-        if self.comboBox_selector_filter.currentIndex() == 3:
-            app().main_window.show_mesh_render_widget()
-        else:
-            app().main_window.show_geometry_render_widget()
+        text = ", ".join([str(i) for i in surfaces])
+        self.lineEdit_selection_id.setText(text)
 
     def check_inputs(self):
 
-        index = self.comboBox_selector_filter.currentIndex()
-        selection = self.selection_types[index]
+        if self.comboBox_selector_filter.currentIndex() == SelectionType.ALL_SURFACES:
+            error_data = None
+            self.selected_ids = np.unique(self.mesh.faces_connectivity[:, 1]).astype(int)
 
-        input_ids = self.lineEdit_selection_id.text()
-        self.selected_ids, error_data = self.mesh.check_selected_ids(
-            input_ids,
-            selection = selection,
-            single_id = False,
-            )
+        else:
+            self.selected_ids, error_data = self.mesh.check_selected_ids(
+                self.lineEdit_selection_id.text(),
+                selection = "surfaces",
+                single_id = False,
+                )
 
         if error_data is not None:
             self.lineEdit_selection_id.setFocus()
@@ -182,31 +160,33 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
         self.exporter = ExportModelResults()
         self.exporter._set_data_to_export(self.model_results)
 
-    def get_response(self, selected_id: int):
+    def process_acoustic_loads(self) -> dict:
 
-        index = self.comboBox_selector_filter.currentIndex()
+        load_data = {}
+        acoustic_postprocessing = app().project.get_acoustic_postprocessing()
+        # all_surfaces = self.comboBox_selector_filter.currentIndex() == SelectionType.ALL_SURFACES
 
-        if index == SelectionType.SURFACES:
-            rows = self.mesh.get_nodes_from_surface(selected_id)
-        elif index == SelectionType.LINES:
-            rows = self.mesh.get_nodes_from_line(selected_id)
-        elif index == SelectionType.POINTS:
-            rows = self.mesh.nodes_from_points.get(selected_id)
-        elif index == SelectionType.NODES:
-            rows = selected_id
+        if self.comboBox_output_mode.currentIndex() == OutputMode.RESULTING_LOADS:
+            acoustic_load = acoustic_postprocessing.calculate_loads_caused_by_acoustic_pressure_field(
+                self.nodal_solution,
+                surface_ids=self.selected_ids,
+                )
+
+            if self.comboBox_selector_filter.currentIndex() == SelectionType.ALL_SURFACES:
+                load_data["all_surfaces"] = acoustic_load
+            else:
+                load_data[tuple(self.selected_ids)] = acoustic_load
+            
         else:
-            return None
+            for surface_id in self.selected_ids:
+                acoustic_load = acoustic_postprocessing.calculate_loads_caused_by_acoustic_pressure_field(
+                    self.nodal_solution,
+                    surface_ids=[surface_id],
+                    )
 
-        if isinstance(rows, int):
-            response = self.nodal_solution[rows,:]
-        else:
-            response = np.average(self.nodal_solution[rows,:], axis=0)
+                load_data[surface_id] = acoustic_load
 
-        if complex(0) in response:
-            response += 1e-12
-        #     response += np.ones(len(response), dtype=float)*(1e-12)
-
-        return response
+        return load_data
 
     def update_cutoff_related_widgets_visibility(self):
         index = self.comboBox_cutoff_frequency_options.currentIndex()
@@ -231,7 +211,7 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
 
     def map_cylindrical_surfaces_to_fluids(self):
 
-        self.map_curvatures_to_fluid = dict()
+        self.map_curvatures_to_fluid = {}
         self.comboBox_cutoff_frequency.clear()
         self.comboBox_cutoff_frequency.blockSignals(True)
 
@@ -262,22 +242,22 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
 
     def compute_pipe_cutoff_frequency_callback(self):
         if self.comboBox_cutoff_frequency.currentText() == "":
-            return None
+            return
         
         if not self.map_curvatures_to_fluid:
-            return None
+            return
         
         key = float(self.comboBox_cutoff_frequency.currentText())
         data = self.map_curvatures_to_fluid.get(key)
         if data is None:
-            return None
+            return
 
         d_in, fluid = data
         if not isinstance(fluid, Fluid):
-            return None
+            return
 
         if d_in == 0:
-            return None
+            return
 
         # speed of sound in m/s
         Co = fluid.speed_of_sound
@@ -288,35 +268,71 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
 
         self.lineEdit_cutoff_frequency.setText(str(f_cut))
 
+    def selection_mode_callback(self):
+
+        all_surfaces = self.comboBox_selector_filter.currentIndex() == SelectionType.ALL_SURFACES
+        self.comboBox_output_mode.setDisabled(all_surfaces)
+        self.lineEdit_selection_id.setDisabled(all_surfaces)
+
+        if all_surfaces:
+            self.lineEdit_selection_id.setText("All surfaces")
+            self.comboBox_output_mode.setCurrentIndex(OutputMode.RESULTING_LOADS)
+            return
+
+        self.lineEdit_selection_id.clear()
+        self.geometry_selection_callback()
+
     def join_model_data(self):
 
-        index = self.comboBox_selector_filter.currentIndex()
-        selection_type = self.selection_types[index][:-1]
+        ind = 0
+        self.model_results = {}
+        self.title = "Acoustic shaking forces"
 
-        self.model_results = dict()
-        self.title = "Acoustic frequency response"
+        acoustic_loads = self.process_acoustic_loads()
 
-        for i, selected_id in enumerate(self.selected_ids):
+        for i, (surfaces, loads) in enumerate(acoustic_loads.items()):
+            for j, load_label in enumerate(["Fx", "Fy", "Fz"]):
 
-            key = (selection_type, (selected_id))
-            legend_label = f"Acoustic pressure at {selection_type} [{selected_id}]"
+                ind += 1
+                y_data = loads[j, :]
+                key = ("surface", (load_label, surfaces))
 
-            y_data = self.get_response(selected_id)
-            if y_data is None:
-                continue
+                self.model_results[key] = { 
+                    "x_data" : self.frequencies,
+                    "y_data" : y_data,
+                    "x_label" : "Frequency [Hz]",
+                    "y_label" : "Acoustic loads",
+                    "title" : self.title,
+                    "data_type" : "acoustic loads",
+                    "legend" : self.get_legend_label(load_label, surfaces),
+                    "unit" : self.unit_label,
+                    "color" : get_color(3 * i + j),
+                    "linestyle" : "-",
+                    }
 
-            self.model_results[key] = { 
-                "x_data" : self.frequencies,
-                "y_data" : y_data,
-                "x_label" : "Frequency [Hz]",
-                "y_label" : "Acoustic pressure",
-                "title" : self.title,
-                "data_type" : "acoustic pressure",
-                "legend" : legend_label,
-                "unit" : self.unit_label,
-                "color" : get_color(i),
-                "linestyle" : "-",
-                }
+    def get_legend_label(self, load_label: str, surfaces: list[int] | int | str):
+
+        legend_label = ""
+        if isinstance(surfaces, str):
+            legend_label = f"Acoustic load {load_label} at all surfaces"
+
+        elif isinstance(surfaces, int):
+            legend_label = f"Acoustic load {load_label} at surface ({surfaces})"
+
+        else:
+
+            if len(surfaces) == 1:
+                legend_label = f"Acoustic load {load_label} at surface ({surfaces[0]})"
+
+            else:
+                if len(surfaces) <= 5:
+                    text = ", ".join([str(i) for i in surfaces])
+                else:
+                    text = ", ".join([str(i) for i in surfaces[:5]]) + ", ..."
+
+                legend_label = f"Acoustic load {load_label} at surfaces ({text})"
+
+        return legend_label
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:

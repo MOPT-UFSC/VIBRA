@@ -194,9 +194,6 @@ class AcousticPressureWaveformFieldInputs(AcousticPressureWaveformFieldInputs_UI
                 plot_setup=self.plot_setup,
             )
 
-        # acoustic_postprocessing = app().project.get_acoustic_postprocessing()
-        # acoustic_postprocessing.compute_forces_due_to_pressure_field(self.nodal_solution)
-
         LoadingWindow(plot_callback).run()
 
     def get_plot_type(self) -> PressurePlotType:

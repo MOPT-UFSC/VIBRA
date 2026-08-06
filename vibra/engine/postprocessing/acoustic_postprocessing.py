@@ -626,13 +626,24 @@ class AcousticPostprocessing:
 
         return frequencies, noise_reduction
 
-    def compute_forces_due_to_pressure_field(self, nodal_solution: np.ndarray):
+    def calculate_loads_caused_by_acoustic_pressure_field(self, nodal_solution: np.ndarray, surface_ids: list[int] | None = None):
+
+        from time import perf_counter
 
         _, element_2d, _ = self.model.get_acoustic_elements()
 
-        forces = 0.
+        acoustic_loads = 0.
 
-        for surface_id in [414, 419]:
+        if surface_ids is None:
+            surface_ids = np.unique(self.model.mesh.faces_connectivity[:, 1]).astype(int)
+
+        t0 = perf_counter()
+
+        for surface_id in surface_ids:
+
+            if len(self.model.mesh.volumes_from_surface.get(surface_id)) != 1:
+                continue
+
             # surf_connect = self.model.mesh.get_connectivity_from_surface(surface_id)
 
             rows = self.model.mesh.faces_connectivity[:, 1] == surface_id
@@ -640,7 +651,12 @@ class AcousticPostprocessing:
             surface_elements_normals = self.model.mesh.get_element_face_normal_batched(surface_elements_connectivities)
 
             element_2d.reorder_connect(surface_elements_connectivities[:, 4:])
-            forces += element_2d.acoustic_pressure_load(surface_elements_normals.reshape(-1, 3, 1), nodal_solution)
+            acoustic_loads += element_2d.acoustic_pressure_load(surface_elements_normals.reshape(-1, 3, 1), nodal_solution)
+
+        dt = perf_counter() - t0
+        print(f"Elapsed time to compute all surfaces: {dt} s")
+
+        return acoustic_loads
 
 def plot_graph(matrix):
     """ """
