@@ -1,7 +1,7 @@
 import numpy as np
 from molde import Color
-from vtkmodules.util.numpy_support import numpy_to_vtk, numpy_to_vtkIdTypeArray
-from vtkmodules.vtkCommonCore import vtkPoints, vtkUnsignedCharArray
+from vtkmodules.util.numpy_support import numpy_to_vtk, numpy_to_vtkIdTypeArray, vtk_to_numpy
+from vtkmodules.vtkCommonCore import vtkIntArray, vtkPoints, vtkUnsignedCharArray
 from vtkmodules.vtkCommonDataModel import (
     VTK_TETRA,
     VTK_TRIANGLE,
@@ -47,9 +47,13 @@ class MeshActor(vtkPropAssembly):
         self.surface_colors.SetName("color")
         self.surface_colors.SetNumberOfComponents(3)
 
+        self.surface_ids = vtkIntArray()
+        self.surface_ids.SetName("ids")
+
         self.surface_data = vtkUnstructuredGrid()
         self.surface_data.SetPoints(self.points)
         self.surface_data.GetCellData().SetScalars(self.surface_colors)
+        self.surface_data.GetCellData().AddArray(self.surface_ids)
 
         self.surface_mapper = vtkDataSetMapper()
         self.surface_mapper.SetInputData(self.surface_data)
@@ -63,9 +67,13 @@ class MeshActor(vtkPropAssembly):
         self.section_colors.SetName("color")
         self.section_colors.SetNumberOfComponents(3)
 
+        self.section_ids = vtkIntArray()
+        self.section_ids.SetName("ids")
+
         self.section_data = vtkUnstructuredGrid()
         self.section_data.SetPoints(self.points)
         self.section_data.GetCellData().SetScalars(self.section_colors)
+        self.section_data.GetCellData().AddArray(self.section_ids)
 
         self.section_mapper = vtkDataSetMapper()
         self.section_mapper.SetInputData(self.section_data)
@@ -99,6 +107,10 @@ class MeshActor(vtkPropAssembly):
         self.surface_data.SetCells(cell_type, self.surface_cells)
         self.surface_colors.SetNumberOfTuples(n_cells)
         self.surface_mapper.Modified()
+
+        self.surface_ids.SetNumberOfTuples(n_cells)
+        view = vtk_to_numpy(self.surface_ids)
+        view[:] = self.mesh.faces_connectivity[:, 0]
 
     @function_timer
     def update_section_plane(self):
@@ -136,6 +148,10 @@ class MeshActor(vtkPropAssembly):
         self.section_data.SetCells(cell_type, self.section_cells)
         self.section_colors.SetNumberOfTuples(n_cells)
         self.section_mapper.Modified()
+
+        self.section_ids.SetNumberOfTuples(n_cells)
+        view = vtk_to_numpy(self.section_ids)
+        view[:] = self.mesh.solids_connectivity[elements_in_middle, 0]
 
     @function_timer
     def clear_colors(self):
