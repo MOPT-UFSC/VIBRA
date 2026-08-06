@@ -2,9 +2,12 @@ import builtins
 import functools
 import hashlib
 import inspect
+from typing import TypeVar
+
+T = TypeVar("T")
 
 
-def preview_cache(func):
+def preview_cache(func: T) -> T:
     source_code = inspect.getsource(func)
     func_hash = hashlib.md5(source_code.encode("utf-8")).hexdigest()
 
