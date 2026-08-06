@@ -161,12 +161,16 @@ class AcousticShakingForcesInputs(AcousticShakingForcesInputs_UI):
         if self.check_selected_surfaces():
             return
 
+        # reset the element normals data
+        self.mesh.element_normals_data.clear()
+
+        self.join_model_data()
+
         show_normals = (self.comboBox_element_normals.currentText() == "Show")
         app().main_window.results_widget.visualization_filter.element_normal_symbols = show_normals
         if show_normals:
             app().main_window.update_symbols()
 
-        self.join_model_data()
         self.plotter = FrequencyResponsePlotter(close_dialogs=True)
 
         f_cut = None

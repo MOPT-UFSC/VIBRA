@@ -639,8 +639,6 @@ class AcousticPostprocessing:
 
         t0 = perf_counter()
 
-        self.mesh.element_normals_data.clear()
-
         for surface_id in surface_ids:
 
             if len(self.model.mesh.volumes_from_surface.get(surface_id)) != 1:
