@@ -140,7 +140,7 @@ class Project:
         Unpacks the vibra file into the working directory and reads data from it.
         """
         logging.info("Loading the project data... [25%]")
-        path = Path(path)
+        path = Path(path).expanduser()
         self.reset_solution()
         self.project_reader.unpack_into_working_directory(path)
         self.model = self.project_reader.read_model(self.model)
