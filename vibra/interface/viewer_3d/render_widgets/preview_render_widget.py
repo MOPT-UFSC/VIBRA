@@ -36,6 +36,7 @@ class PreviewRenderWidget(CommonRenderWidget):
     def update_plot(self):
         self.mesh_actor.update()
 
+        self.renderer.ResetCamera()
         self.update()
 
     def resizeEvent(self, event):
