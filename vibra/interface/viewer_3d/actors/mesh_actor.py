@@ -3,9 +3,6 @@ from molde import Color
 from vtkmodules.util.numpy_support import numpy_to_vtk, numpy_to_vtkIdTypeArray
 from vtkmodules.vtkCommonCore import vtkPoints, vtkUnsignedCharArray
 from vtkmodules.vtkCommonDataModel import (
-    VTK_HEXAHEDRON,
-    VTK_QUADRATIC_HEXAHEDRON,
-    VTK_QUADRATIC_TETRA,
     VTK_TETRA,
     VTK_TRIANGLE,
     vtkCellArray,
@@ -107,6 +104,7 @@ class MeshActor(vtkPropAssembly):
         if self.mesh is None:
             return
 
+        self.surface_mapper.RemoveAllClippingPlanes()
         if self.section_plane is None:
             return
 
@@ -114,7 +112,6 @@ class MeshActor(vtkPropAssembly):
         plane.SetOrigin(self.section_plane.origin)
         plane.SetNormal(self.section_plane.normal)
 
-        self.surface_mapper.RemoveAllClippingPlanes()
         self.surface_mapper.AddClippingPlane(plane)
         self.surface_mapper.Modified()
         self.surface_actor.Modified()
