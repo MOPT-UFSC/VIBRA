@@ -15,7 +15,6 @@ from vtkmodules.vtkCommonDataModel import (
 from vtkmodules.vtkRenderingCore import vtkActor, vtkDataSetMapper, vtkPropAssembly
 
 from vibra.engine.mesher.mesh import Mesh
-from vibra.engine.mesher.mesh_setup import ElementTopology
 from vibra.engine.model import Model
 from vibra.engine.properties import Fluid, Material
 from vibra.utils.math_functions import inside_plane
@@ -37,32 +36,47 @@ class MeshActor(vtkPropAssembly):
         return self.model.mesh
 
     def update(self):
-        self.build_surfaces()
+        self.build_surface()
         self.update_section_plane()
         self.clear_colors()
 
     def create_variables(self):
         self.points = vtkPoints()
+
         self.surface_cells = vtkCellArray()
+        self.surface_colors = vtkUnsignedCharArray()
+        self.surface_colors.SetName("color")
+        self.surface_colors.SetNumberOfComponents(3)
+
+        self.surface_data = vtkUnstructuredGrid()
+        self.surface_data.SetPoints(self.points)
+        self.surface_data.GetCellData().SetScalars(self.surface_colors)
+
+        self.surface_mapper = vtkDataSetMapper()
+        self.surface_mapper.SetInputData(self.surface_data)
+
+        self.surface_actor = vtkActor()
+        self.surface_actor.SetMapper(self.surface_mapper)
+        self.AddPart(self.surface_actor)
+
         self.section_cells = vtkCellArray()
+        self.section_colors = vtkUnsignedCharArray()
+        self.section_colors.SetName("color")
+        self.section_colors.SetNumberOfComponents(3)
 
-        self.colors = vtkUnsignedCharArray()
-        self.colors.SetName("color")
-        self.colors.SetNumberOfComponents(3)
+        self.section_data = vtkUnstructuredGrid()
+        self.section_data.SetPoints(self.points)
+        self.section_data.GetCellData().SetScalars(self.section_colors)
 
-        self.data = vtkUnstructuredGrid()
-        self.data.SetPoints(self.points)
-        self.data.GetCellData().SetScalars(self.colors)
+        self.section_mapper = vtkDataSetMapper()
+        self.section_mapper.SetInputData(self.section_data)
 
-        self.surfaces_mapper = vtkDataSetMapper()
-        self.surfaces_mapper.SetInputData(self.data)
-
-        self.surfaces_actor = vtkActor()
-        self.surfaces_actor.SetMapper(self.surfaces_mapper)
-        self.AddPart(self.surfaces_actor)
+        self.section_actor = vtkActor()
+        self.section_actor.SetMapper(self.section_mapper)
+        self.AddPart(self.section_actor)
 
     @function_timer
-    def build_surfaces(self):
+    def build_surface(self):
         if self.mesh is None:
             return
 
@@ -82,10 +96,9 @@ class MeshActor(vtkPropAssembly):
         vtk_id_array = numpy_to_vtkIdTypeArray(helper.flatten())
         self.surface_cells.SetCells(n_cells, vtk_id_array)
 
-        self.data.SetCells(cell_type, self.surface_cells)
-        self.colors.SetNumberOfTuples(n_cells)
-
-        self.surfaces_mapper.Modified()
+        self.surface_data.SetCells(cell_type, self.surface_cells)
+        self.surface_colors.SetNumberOfTuples(n_cells)
+        self.surface_mapper.Modified()
 
     @function_timer
     def update_section_plane(self):
@@ -99,10 +112,10 @@ class MeshActor(vtkPropAssembly):
         plane.SetOrigin(origin)
         plane.SetNormal(normal)
 
-        self.surfaces_mapper.RemoveAllClippingPlanes()
-        self.surfaces_mapper.AddClippingPlane(plane)
-        self.surfaces_mapper.Modified()
-        self.surfaces_actor.Modified()
+        self.surface_mapper.RemoveAllClippingPlanes()
+        self.surface_mapper.AddClippingPlane(plane)
+        self.surface_mapper.Modified()
+        self.surface_actor.Modified()
 
         coordinates = self.mesh.nodal_coordinates[:, 1:]
         connectivity = self.mesh.solids_connectivity[:, 4:]
@@ -110,7 +123,19 @@ class MeshActor(vtkPropAssembly):
 
         elements_inside_plane = np.all(mask[connectivity], axis=1)
         elements_outside_plane = ~np.any(mask[connectivity], axis=1)
-        elements_in_middle = ~(elements_inside_plane & elements_outside_plane)
+        elements_in_middle = ~(elements_inside_plane | elements_outside_plane)
+
+        filtered_connectivity = connectivity[elements_in_middle]
+        n_cells = len(filtered_connectivity)
+        cell_type = VTK_TETRA
+
+        helper = np.insert(filtered_connectivity, 0, filtered_connectivity.shape[1], axis=1)
+        vtk_id_array = numpy_to_vtkIdTypeArray(helper.flatten())
+        self.section_cells.SetCells(n_cells, vtk_id_array)
+
+        self.section_data.SetCells(cell_type, self.section_cells)
+        self.section_colors.SetNumberOfTuples(n_cells)
+        self.section_mapper.Modified()
 
     @function_timer
     def clear_colors(self):
@@ -126,8 +151,9 @@ class MeshActor(vtkPropAssembly):
 
     def set_color(self, color: Color):
         rgb = color.to_rgb()
-        for i in range(self.colors.GetNumberOfComponents()):
-            self.colors.FillComponent(i, rgb[i])
+        for i in range(self.surface_colors.GetNumberOfComponents()):
+            self.surface_colors.FillComponent(i, rgb[i])
+            self.section_colors.FillComponent(i, rgb[i])
 
-        self.colors.Modified()
-        self.surfaces_mapper.Modified()
+        self.surface_colors.Modified()
+        self.section_colors.Modified()
