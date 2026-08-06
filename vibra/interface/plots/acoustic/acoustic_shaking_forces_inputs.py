@@ -7,6 +7,7 @@ from PySide6.QtGui import QCloseEvent
 from vibra import app
 from vibra.engine import AnalysisID
 from vibra.engine.properties.fluid import Fluid
+from vibra.interface import error_title
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
@@ -90,6 +91,7 @@ class AcousticShakingForcesInputs(AcousticShakingForcesInputs_UI):
         self.comboBox_cutoff_frequency.currentIndexChanged.connect(self.compute_pipe_cutoff_frequency_callback)
         self.comboBox_cutoff_frequency_options.currentIndexChanged.connect(self.cutoff_frequency_options_callback)
         self.comboBox_selector_filter.currentIndexChanged.connect(self.selection_mode_callback)
+        self.comboBox_element_normals.currentIndexChanged.connect(self.toggle_element_normals_symbols_visibility)
 
         # QPushButton connections
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
@@ -111,6 +113,11 @@ class AcousticShakingForcesInputs(AcousticShakingForcesInputs_UI):
 
         text = ", ".join([str(i) for i in surfaces])
         self.lineEdit_selection_id.setText(text)
+
+    def toggle_element_normals_symbols_visibility(self):
+        show_normals = (self.comboBox_element_normals.currentText() == "Show")
+        app().main_window.results_widget.visualization_filter.element_normal_symbols = show_normals
+        app().main_window.update_symbols()
 
     def check_inputs(self):
 
@@ -136,10 +143,28 @@ class AcousticShakingForcesInputs(AcousticShakingForcesInputs_UI):
                 line_edit.setFocus()
                 return True
 
+    def check_selected_surfaces(self):
+        for surface_id in self.selected_ids:
+            if len(self.mesh.volumes_from_surface.get(surface_id)) == 1:
+                return False
+
+        title = "Invalid surfaces selected"
+        message = "Only internal surfaces have been selected. Selected external surfaces to proceed with shaking forces calculations."
+        PrintMessageInput([error_title, title, message])
+        return True
+
     def plot_data_callback(self):
 
         if self.check_inputs():
             return
+
+        if self.check_selected_surfaces():
+            return
+
+        show_normals = (self.comboBox_element_normals.currentText() == "Show")
+        app().main_window.results_widget.visualization_filter.element_normal_symbols = show_normals
+        if show_normals:
+            app().main_window.update_symbols()
 
         self.join_model_data()
         self.plotter = FrequencyResponsePlotter(close_dialogs=True)
@@ -164,13 +189,15 @@ class AcousticShakingForcesInputs(AcousticShakingForcesInputs_UI):
 
         load_data = {}
         acoustic_postprocessing = app().project.get_acoustic_postprocessing()
-        # all_surfaces = self.comboBox_selector_filter.currentIndex() == SelectionType.ALL_SURFACES
 
         if self.comboBox_output_mode.currentIndex() == OutputMode.RESULTING_LOADS:
             acoustic_load = acoustic_postprocessing.calculate_loads_caused_by_acoustic_pressure_field(
                 self.nodal_solution,
                 surface_ids=self.selected_ids,
             )
+
+            if isinstance(acoustic_load, float):
+                return {}
 
             if self.comboBox_selector_filter.currentIndex() == SelectionType.ALL_SURFACES:
                 load_data["all_surfaces"] = acoustic_load
@@ -184,10 +211,10 @@ class AcousticShakingForcesInputs(AcousticShakingForcesInputs_UI):
                     surface_ids=[surface_id],
                     )
 
-                load_data[surface_id] = acoustic_load
+                if isinstance(acoustic_load, float):
+                    continue
 
-        app().main_window.results_widget.visualization_filter.element_normal_symbols = True
-        app().main_window.update_symbols()
+                load_data[surface_id] = acoustic_load
 
         return load_data
 
