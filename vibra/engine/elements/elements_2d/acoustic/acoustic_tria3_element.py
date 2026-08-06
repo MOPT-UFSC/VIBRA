@@ -392,31 +392,33 @@ class ACT_TRIANGLE_3(Element2D):
 
     def acoustic_pressure_load(self, e_normals: np.ndarray, nodal_solution: np.ndarray) -> np.ndarray:
         """ 
-        This method computes the elementary load vector.
+        This method computes the acoustic pressure loads over a surface.
 
         Parameters
         ----------
-        el_index: int
-            The element index.
+        e_normals: np.ndarray
+            The stacked surface elements normals vectors.
 
-        load: float, optional
-            The load vector.
-
-        Returns
-        -------
-        Fe: np.ndarray
-            The elementary load vector.
-        """
-
-        """
-        This method processes all elementary matrices and returns them
-        in the stacked array form.
+        nodal_solution: np.ndarray
+            The acoustic nodal_solution array.
 
         Returns
         -------
-        int2d_NtN: np.ndarray
-            The array containing the stacked elementary matrices.
+        acoustic_load: np.ndarray
+            The acoustic presure loads integrated over a surface.
         """
+
+        # stack all elements nodal pressures 
+        pressures = np.array([
+            nodal_solution[self.connectivities[:, 0], :], 
+            nodal_solution[self.connectivities[:, 1], :], 
+            nodal_solution[self.connectivities[:, 2], :],
+            ],
+            dtype=complex,
+        )
+
+        # stack the element nodal pressures in format [n_el, DOFS_PER_ELEMENT, n_freq]
+        Pe = pressures.transpose(1, 0, 2)
 
         # NOTE: the shape functions' derivatives are constant for all
         # integration points; this is why the Jacobian matrix-related
@@ -432,17 +434,7 @@ class ACT_TRIANGLE_3(Element2D):
         det_jacs = self.get_detJAC(JAC_stacked)
 
         # initialize variable
-        pressure_load = 0.
-
-        pressures = np.array([
-            nodal_solution[self.connectivities[:, 0], :], 
-            nodal_solution[self.connectivities[:, 1], :], 
-            nodal_solution[self.connectivities[:, 2], :]
-            ],
-            dtype=complex,
-        )
-
-        Pe = pressures.transpose(1, 0, 2)
+        acoustic_load = 0.
 
         # integration loop
         for i in range(self.nint):
@@ -450,9 +442,9 @@ class ACT_TRIANGLE_3(Element2D):
             # shape functions
             N = self.phi[i, :, :]
 
-            pressure_load += np.sum(e_normals @ (N @ Pe) * (det_jacs * self.wps[i]), axis=0)
+            acoustic_load += np.sum(-e_normals @ (N @ Pe) * (det_jacs * self.wps[i]), axis=0)
 
-        return pressure_load
+        return acoustic_load
 
 
     def reorder_connect(self, connect_face):
