@@ -97,6 +97,7 @@ class MeshActor(vtkActor):
 
         self.mapper.Modified()
 
+    @function_timer
     def clear_colors(self):
         if self.model is None:
             return
@@ -112,6 +113,8 @@ class MeshActor(vtkActor):
         rgb = color.to_rgb()
         for i in range(self.colors.GetNumberOfComponents()):
             self.colors.FillComponent(i, rgb[i])
+        
+        self.colors.Modified()
         self.mapper.Modified()
 
     def paint_surfaces(self, surfaces: np.ndarray[int]):
