@@ -2517,8 +2517,9 @@ class Mesh:
         return cross
 
     def get_element2d_center_coordinates(self, connectivities: np.ndarray):
-        element_center_coords = np.array([self.nodal_coordinates[node_ids, 1:] for node_ids in connectivities[:, 4:].T])
-        return element_center_coords.transpose(1, 0, 2)
+        element_nodes_coords = np.array([self.nodal_coordinates[node_ids, 1:] for node_ids in connectivities[:, 4:].T])
+        element_nodes_coords = element_nodes_coords.transpose(1, 0, 2)
+        return np.average(element_nodes_coords, axis=1)
 
     def set_nodal_normals_data(self, surface_id: int, normals_data: dict):
         for node_id, nodal_normal in normals_data.items():
