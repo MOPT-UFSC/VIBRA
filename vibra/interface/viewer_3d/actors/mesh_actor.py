@@ -7,10 +7,12 @@ from vtkmodules.vtkCommonDataModel import (
     VTK_QUADRATIC_HEXAHEDRON,
     VTK_QUADRATIC_TETRA,
     VTK_TETRA,
+    VTK_TRIANGLE,
     vtkCellArray,
+    vtkPlane,
     vtkUnstructuredGrid,
 )
-from vtkmodules.vtkRenderingCore import vtkActor, vtkDataSetMapper
+from vtkmodules.vtkRenderingCore import vtkActor, vtkDataSetMapper, vtkPropAssembly
 
 from vibra.engine.mesher.mesh_setup import ElementTopology
 from vibra.engine.model import Model
@@ -18,19 +20,29 @@ from vibra.engine.properties import Fluid, Material
 from vibra.utils.time_utils import function_timer
 
 
-class MeshActor(vtkActor):
+class MeshActor(vtkPropAssembly):
     def __init__(self, model: Model):
         self.model = model
 
         self.create_variables()
         self.last_mesh_id = 0
 
+    @property
+    def mesh(self):
+        if self.model is None:
+            return
+
+        return self.model.mesh
+
     def update(self):
-        self.build_mesh()
+        self.build_surfaces()
+        self.update_section_plane()
         self.clear_colors()
 
     def create_variables(self):
         self.points = vtkPoints()
+        self.surface_cells = vtkCellArray()
+        self.section_cells = vtkCellArray()
 
         self.colors = vtkUnsignedCharArray()
         self.colors.SetName("color")
@@ -40,62 +52,51 @@ class MeshActor(vtkActor):
         self.data.SetPoints(self.points)
         self.data.GetCellData().SetScalars(self.colors)
 
-        self.mapper = vtkDataSetMapper()
-        self.mapper.SetInputData(self.data)
-        self.SetMapper(self.mapper)
+        self.surfaces_mapper = vtkDataSetMapper()
+        self.surfaces_mapper.SetInputData(self.data)
+
+        self.surfaces_actor = vtkActor()
+        self.surfaces_actor.SetMapper(self.surfaces_mapper)
+        self.AddPart(self.surfaces_actor)
 
     @function_timer
-    def build_mesh(self):
-        if self.model is None:
+    def build_surfaces(self):
+        if self.mesh is None:
             return
 
-        if self.model.mesh is None:
-            return
-
-        mesh_id = id(self.model.mesh)
+        mesh_id = id(self.mesh)
         if mesh_id == self.last_mesh_id:
             return
         self.last_mesh_id = mesh_id
 
-        coords = self.model.mesh.nodal_coordinates
+        coords = self.mesh.nodal_coordinates
         self.points.SetData(numpy_to_vtk(coords[:, 1:]))
 
-        match self.model.mesh.element_topology:
-            case ElementTopology("tetrahedral", "linear"):
-                cell_type = VTK_TETRA
-                solids_connectivity = self.model.mesh.solids_connectivity
+        connectivity = self.mesh.faces_connectivity[:, 4:]
+        n_cells = len(connectivity)
+        cell_type = VTK_TRIANGLE
 
-            case ElementTopology("tetrahedral", "quadratic"):
-                cell_type = VTK_QUADRATIC_TETRA
-                nodes_order = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 12)
-                solids_connectivity = self.model.mesh.solids_connectivity[:, nodes_order]
-
-            case ElementTopology("hexahedral", "linear"):
-                cell_type = VTK_HEXAHEDRON
-                solids_connectivity = self.model.mesh.solids_connectivity
-
-            case ElementTopology("hexahedral", "quadratic"):
-                cell_type = VTK_QUADRATIC_HEXAHEDRON
-                nodes_order = (
-                    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 
-                    15, 17, 13, 20, 22, 23, 21, 14, 16, 18, 19
-                )  # fmt: skip
-                solids_connectivity = self.model.mesh.solids_connectivity[:, nodes_order]
-
-            case unknown:
-                raise NotImplementedError(f"Unknown topology {unknown}.")
-
-        cell_connectivity = solids_connectivity[:, 4:]
-        n_cells = len(cell_connectivity)
-        helper = np.insert(cell_connectivity, 0, cell_connectivity.shape[1], axis=1)
+        helper = np.insert(connectivity, 0, connectivity.shape[1], axis=1)
         vtk_id_array = numpy_to_vtkIdTypeArray(helper.flatten())
+        self.surface_cells.SetCells(n_cells, vtk_id_array)
 
-        cells = vtkCellArray()
-        cells.SetCells(n_cells, vtk_id_array)
-        self.data.SetCells(cell_type, cells)
+        self.data.SetCells(cell_type, self.surface_cells)
         self.colors.SetNumberOfTuples(n_cells)
 
-        self.mapper.Modified()
+        self.surfaces_mapper.Modified()
+
+    @function_timer
+    def update_section_plane(self):
+        if self.mesh is None:
+            return
+
+        plane = vtkPlane()
+        plane.SetOrigin((0, 0, 0))
+        plane.SetNormal((0, 0, -1))
+
+        self.surfaces_mapper.RemoveAllClippingPlanes()
+        self.surfaces_mapper.AddClippingPlane(plane)
+        self.surfaces_mapper.Modified()
 
     @function_timer
     def clear_colors(self):
@@ -113,12 +114,6 @@ class MeshActor(vtkActor):
         rgb = color.to_rgb()
         for i in range(self.colors.GetNumberOfComponents()):
             self.colors.FillComponent(i, rgb[i])
-        
+
         self.colors.Modified()
-        self.mapper.Modified()
-
-    def paint_surfaces(self, surfaces: np.ndarray[int]):
-        pass
-
-    def paint_volumes(self, volumes: np.ndarray[int]):
-        pass
+        self.surfaces_mapper.Modified()
