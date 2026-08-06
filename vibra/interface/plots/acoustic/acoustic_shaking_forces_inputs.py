@@ -170,7 +170,7 @@ class AcousticShakingForcesInputs(AcousticShakingForcesInputs_UI):
             acoustic_load = acoustic_postprocessing.calculate_loads_caused_by_acoustic_pressure_field(
                 self.nodal_solution,
                 surface_ids=self.selected_ids,
-                )
+            )
 
             if self.comboBox_selector_filter.currentIndex() == SelectionType.ALL_SURFACES:
                 load_data["all_surfaces"] = acoustic_load
@@ -185,6 +185,9 @@ class AcousticShakingForcesInputs(AcousticShakingForcesInputs_UI):
                     )
 
                 load_data[surface_id] = acoustic_load
+
+        app().main_window.results_widget.visualization_filter.element_normal_symbols = True
+        app().main_window.update_symbols()
 
         return load_data
 

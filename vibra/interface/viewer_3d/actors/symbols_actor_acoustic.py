@@ -1,7 +1,8 @@
 from collections import defaultdict
+
 import numpy as np
-from molde.colors import color_names
 from molde.actors import CommonSymbolsActorVariableSize
+from molde.colors import color_names
 
 from vibra import app
 from vibra.interface.viewer_3d import sources
@@ -42,16 +43,13 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
     def _call_build_functions(self, property_name: str, surface_id: int = -1, line_id: int = -1, point_id: int = -1, node_id: int = -1):
         if property_name in self.prop_name_to_build_func.keys():
             self.prop_name_to_build_func[property_name](
-                property_name=property_name,
-                surface_id=surface_id,
-                line_id=line_id,
-                point_id=point_id,
-                node_id=node_id
+                property_name=property_name, surface_id=surface_id, line_id=line_id, point_id=point_id, node_id=node_id
             )
 
     def build(self):
         self.clear_symbols()
         self._build_nodal_normals()
+        self._build_element_normals()
 
         point_properties = app().project.model.properties.point_properties
         for property_name, point_id in point_properties.keys():
@@ -150,7 +148,7 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
         mesh = app().project.model.mesh
         node = mesh.nodal_coordinates[node_id]
         return node
-    
+
     def _build_nodal_normals(self):
         if not app().main_window.results_widget.visualization_filter.nodal_normal_symbols:
             return
@@ -159,6 +157,20 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
         for (_, node_id), normal_vector in mesh.nodal_normals_data.items():
             coords = mesh.nodal_coordinates[node_id, 1:]
             self.add_symbol(sources.create_outwards_arrow_source, coords, normal_vector, color=color_names.GRAY)
+
+    def _build_element_normals(self):
+        if not app().main_window.results_widget.visualization_filter.element_normal_symbols:
+            return
+
+        mesh = app().project.model.mesh
+        for normal, centers in mesh.element_normals_data.values():
+            center = np.average(centers, axis=0).flatten()
+            self.add_symbol(
+                sources.create_outwards_arrow_source,
+                center,
+                normal,
+                color=color_names.GRAY,
+            )
 
     def _build_surface_velocity(self, surface_id: int = -1, *args, **kwargs):
         # how to display this symbol without normal???
@@ -171,43 +183,39 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
     def _build_specific_impedance(self, property_name: str, surface_id: int = -1, *args, **kwargs):
         if surface_id == -1:
             return
-        
+
         surface_properties = app().project.model.properties.surface_properties
         property = surface_properties[property_name, surface_id]
 
         coords, normal = self._get_symbol_coords_and_normal(surface_id)
-        shape = (
-            sources.create_anechoic_termination_source
-            if "anechoic_termination" in property.keys()
-            else sources.create_impedance_source
-        )
+        shape = sources.create_anechoic_termination_source if "anechoic_termination" in property.keys() else sources.create_impedance_source
         self.add_symbol(shape, coords, normal, color=color_names.PURPLE_2)
 
     def _build_transfer_impedance(self, surface_id: int = -1, *args, **kwargs):
         if surface_id == -1:
             return
-        
+
         coords, normal = self._get_symbol_coords_and_normal(surface_id)
         self.add_symbol(sources.create_transfer_impedance_source, coords, normal, color=color_names.PURPLE_2)
 
     def _build_perforated_plate_model(self, surface_id: int = -1, *args, **kwargs):
         if surface_id == -1:
             return
-        
+
         coords, normal = self._get_symbol_coords_and_normal(surface_id)
         self.add_symbol(sources.create_perforated_plate_source, coords, normal, color=color_names.RED)
 
     def _build_mass_flow_rate(self, surface_id: int = -1, *args, **kwargs):
         if surface_id == -1:
             return
-        
+
         coords, normal = self._get_symbol_coords_and_normal(surface_id)
         self.add_symbol(sources.create_mass_flow_rate_source, coords, normal, color=color_names.PINK)
 
     def _build_dof_decoupling(self, surface_id: int = -1, *args, **kwargs):
         if surface_id == -1:
             return
-        
+
         surface_properties = app().project.model.properties.surface_properties
         if ("perforated_plate_model", surface_id) in surface_properties.keys():
             return
@@ -220,14 +228,14 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
     def _build_absorption_surface(self, surface_id: int = -1, *args, **kwargs):
         if surface_id == -1:
             return
-        
+
         coords, normal = self._get_symbol_coords_and_normal(surface_id)
         self.add_symbol(sources.create_absorption_surface_source, coords, normal, color=color_names.GREEN)
 
     def _build_acoustic_pressure(self, surface_id: int = -1, *args, **kwargs):
         if surface_id == -1:
             return
-        
+
         coords, normal = self._get_symbol_coords_and_normal(surface_id)
         self.add_symbol(sources.create_acoustic_pressure_source, coords, normal, color=color_names.RED_2)
 
