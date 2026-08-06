@@ -167,8 +167,7 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
             return
 
         mesh = app().project.model.mesh
-        for normal, centers in mesh.element_normals_data.values():
-            center = np.average(centers, axis=0).flatten()
+        for normal, center in mesh.element_normals_data.values():
             self.add_symbol(
                 sources.create_outwards_arrow_source,
                 center,
