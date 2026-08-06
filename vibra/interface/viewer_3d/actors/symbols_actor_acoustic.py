@@ -152,14 +152,14 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
         return node
     
     def _build_nodal_normals(self):
-        if not app().main_window.results_widget.visualization_filter.normal_symbols:
+        if not app().main_window.results_widget.visualization_filter.nodal_normal_symbols:
             return
 
         mesh = app().project.model.mesh
         for (_, node_id), normal_vector in mesh.nodal_normals_data.items():
             coords = mesh.nodal_coordinates[node_id, 1:]
             self.add_symbol(sources.create_outwards_arrow_source, coords, normal_vector, color=color_names.GRAY)
-    
+
     def _build_surface_velocity(self, surface_id: int = -1, *args, **kwargs):
         # how to display this symbol without normal???
         if surface_id is None or surface_id == -1:

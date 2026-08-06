@@ -490,8 +490,8 @@ class MainWindow(MainWindow_UI):
 
         self.reload_visualization_filter()
 
-        if self.results_widget.visualization_filter.normal_symbols:
-            self.results_widget.visualization_filter.normal_symbols = False
+        if self.results_widget.visualization_filter.nodal_normal_symbols:
+            self.results_widget.visualization_filter.nodal_normal_symbols = False
             self.update_symbols()
 
     def action_mesh_workspace_callback(self):
