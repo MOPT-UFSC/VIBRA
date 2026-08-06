@@ -6,12 +6,28 @@ import signal
 import sys
 from pathlib import Path
 
-from PySide6.QtCore import QTimer
+from PySide6.QtCore import QThread, QTimer, Signal
 from PySide6.QtWidgets import QApplication, QMainWindow
 
 from vibra.engine.project import Project
 from vibra.interface.viewer_3d.render_widgets.preview_render_widget import PreviewRenderWidget
 from vibra.utils.preview_utils import SectionPlaneConfig
+
+
+class ScriptRunner(QThread):
+    finished_script = Signal(dict)
+
+    def __init__(self, script_path: Path, script_cache: dict):
+        super().__init__()
+        self.script_path = script_path
+        self.script_cache = script_cache
+
+    def run(self):
+        script_variables = {}
+        try:
+            script_variables = runpy.run_path(self.script_path)
+        finally:
+            self.finished_script.emit(script_variables)
 
 
 class MainWindow(QMainWindow):
@@ -26,6 +42,7 @@ class MainWindow(QMainWindow):
         self.setBaseSize(800, 450)
 
         self.last_modification_time = 0
+        self.script_runner: ScriptRunner | None = None
 
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update)
@@ -35,6 +52,11 @@ class MainWindow(QMainWindow):
         modification_time = self._modification_time(self.script_path)
         if modification_time <= self.last_modification_time:
             return
+
+        if self.script_runner is not None and self.script_runner.isRunning():
+            self.last_modification_time = modification_time
+            return
+
         self.last_modification_time = modification_time
 
         # Hack to make @preview_cache decorator work
@@ -42,8 +64,12 @@ class MainWindow(QMainWindow):
             builtins.__HOT_RELOAD_CACHE__ = self.script_cache
 
         print("\033[H\033[2J", end="")
-        script_variables = runpy.run_path(self.script_path)
 
+        self.script_runner = ScriptRunner(self.script_path, self.script_cache)
+        self.script_runner.finished_script.connect(self.on_script_finished)
+        self.script_runner.start()
+
+    def on_script_finished(self, script_variables: dict):
         self.render_widget.update_model(None)
         self.render_widget.update_section_plane(None)
 
