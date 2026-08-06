@@ -34,9 +34,6 @@ class PreviewRenderWidget(CommonRenderWidget):
 
     @function_timer
     def update_plot(self):
-        if self.model is None:
-            return
-
         self.mesh_actor.update()
 
         self.renderer.ResetCamera()

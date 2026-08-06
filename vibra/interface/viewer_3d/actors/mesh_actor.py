@@ -77,6 +77,7 @@ class MeshActor(vtkPropAssembly):
     @function_timer
     def build_surface(self):
         if self.mesh is None:
+            self._clear_data()
             return
 
         mesh_id = id(self.mesh)
@@ -155,4 +156,19 @@ class MeshActor(vtkPropAssembly):
             self.section_colors.FillComponent(i, rgb[i])
 
         self.surface_colors.Modified()
+        self.section_colors.Modified()
+
+    def _clear_data(self):
+        self.last_mesh_id = 0
+
+        self.surface_cells.Reset()
+        self.surface_cells.Modified()
+
+        self.surface_colors.SetNumberOfTuples(0)
+        self.surface_colors.Modified()
+
+        self.section_cells.Reset()
+        self.section_cells.Modified()
+
+        self.section_colors.SetNumberOfTuples(0)
         self.section_colors.Modified()
