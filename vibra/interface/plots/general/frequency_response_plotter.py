@@ -75,8 +75,8 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
         self.importer = None
         self.exporter = None
 
-        self.model_results_data = dict()
-        self.imported_results_data = dict()
+        self.model_results_data = {}
+        self.imported_results_data = {}
 
         self.title = ""
         self.font_weight = "normal"
@@ -164,8 +164,8 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
         else:
             self.comboBox_plot_type.setCurrentIndex(PlotType.LOG_Y)
 
-        if self.plot_type_index == self.cache_plot_type:
-            self.plot_data_in_freq_domain()
+        # if self.plot_type_index != self.cache_plot_type:
+        self.plot_data_in_freq_domain()
 
     def plot_type_changed_callback(self):
         self.plot_type_index = self.comboBox_plot_type.currentIndex()
@@ -401,8 +401,8 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
     def plot_data_in_freq_domain(self):
 
         self.ax.cla()
-        self.legends = list()
-        self.plots = list()
+        self.legends = []
+        self.plots = []
 
         if self._layout is None:
             from vibra.interface.plots.general.custom_navigation_toolbar import CustomNavigationToolbar
@@ -415,7 +415,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
             self.widget_plot.setLayout(self._layout)
 
         for current_data in [self.model_results_data, self.imported_results_data]:
-            for _, data in current_data.items():
+            for data in current_data.values():
 
                 self.load_data_to_plot(data)
 
@@ -425,7 +425,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
 
                     has_single_point = len(self.x_data) == 1
 
-                    if self.linear_plot:
+                    if self.linear_plot or np.sum(self.mask_x + self.mask_y) == 0:
                         _plot = self.call_lin_lin_plot()
 
                     elif True in (self.mask_x + self.mask_y):
@@ -581,7 +581,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
             self.plot_data_in_freq_domain()
         
     def reset_imported_results_data_to_plot(self):
-        self.imported_results_data = dict()
+        self.imported_results_data = {}
         self.plot_data_in_freq_domain()
 
     def set_cutoff_frequency(self, f_cut: float):
