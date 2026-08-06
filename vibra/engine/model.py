@@ -892,6 +892,10 @@ class Model:
                     return True
         return False
 
+    def is_element2d_triangular(self):
+        _, acoustic_element_2d, _ = self.get_acoustic_elements()
+        return isinstance(acoustic_element_2d, ACT_TRIANGLE_3 | ACT_TRIANGLE_6)
+
     def get_downstream_pressure_and_particle_velocity(self, surface_id: int):
         """
         This method computes the downstream pressure and particle velocity
