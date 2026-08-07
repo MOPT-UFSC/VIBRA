@@ -270,7 +270,10 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
 
             logging.info("Processing degress of freedom decoupling... [90/100]")
             app().main_window.update_geometry_information()
-        
+
+            logging.info("Processing degress of freedom decoupling... [92/100]")
+            app().project.model.mesh.process_disconnected_nodes_criterion()
+
             logging.info("Processing degress of freedom decoupling... [95/100]")
             app().main_window.update_plots()
 
