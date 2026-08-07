@@ -200,11 +200,11 @@ class Mesh:
             logging.info("Loading geometry... [10/100]")
             gmsh.open(str(path))
 
-        logging.info("Configuring mesh... [20/100]")
-        self._configure_mesh(mesh_setup)
-
         if mesh_setup.merge_connected_volumes:
             self._merge_nodes_from_adjacent_volumes()
+
+        logging.info("Configuring mesh... [20/100]")
+        self._configure_mesh(mesh_setup)
 
         logging.info("Processing geometry data... [25/100]")
         self.process_geometry_information()
@@ -274,6 +274,7 @@ class Mesh:
     def _merge_nodes_from_adjacent_volumes(self):
         """This method merges all nodes from adjacent volumes."""
         # lines_list = gmsh.model.getEntities(1)
+        gmsh.model.occ.synchronize()
         volumes_list = gmsh.model.getEntities(3)
         # gmsh.model.occ.fragment(lines_list, lines_list)
         gmsh.model.occ.fragment(volumes_list, volumes_list)
@@ -867,8 +868,7 @@ class Mesh:
         if coarsening:
             # Allow mesh sizes larger than the ones derived from the imported
             # geometry points, otherwise gmsh caps the size and "unrefinement"
-            # has no effect. Note that with merge_connected_volumes enabled the
-            # size transition is graded across merged shared faces (expected).
+            # has no effect.
             gmsh.option.setNumber("Mesh.MeshSizeFromPoints", 0)
 
         gmsh.model.mesh.field.add("Constant")
@@ -903,37 +903,137 @@ class Mesh:
             fields_list.append(threshold_type)
 
         if coarsening:
-            self._add_inverted_refinement_fields(global_size, max_size, refinement_setups, fields_list)
+            background_field = self._add_coarsening_background_field(global_size, max_size, refinement_setups)
+            fields_list.append(background_field)
 
         minimum_field = gmsh.model.mesh.field.add("Min")
         gmsh.model.mesh.field.setNumbers(minimum_field, "FieldsList", fields_list)
         gmsh.model.mesh.field.setAsBackgroundMesh(minimum_field)
 
-    def _add_inverted_refinement_fields(
+    def _add_coarsening_background_field(
         self,
         global_size: float,
         max_size: float,
         refinement_setups: list[MeshRefinementSetup],
-        fields_list: list[int],
-    ):
-        """Keeps the volumes not covered by any refinement setup at the global
-        size when the background field is raised to the coarsest size."""
-        volume_setups = [setup for setup in refinement_setups if setup.entity_type == "volumes"]
-        if not volume_setups:
-            return
+    ) -> int:
+        """Builds the background field for coarsening.
 
-        listed_volumes = set()
-        for setup in volume_setups:
-            listed_volumes |= set(setup.entity_ids)
+        Volumes targeted by a coarsening setup stay at the coarsest size and
+        their boundary faces are listed explicitly (IncludeBoundary disabled),
+        so the coarse size cannot leak onto a neighbouring volume through a
+        shared face. Coarsened surfaces produce a smooth coarse region around
+        them (a distance threshold) instead of coarsening the whole adjacent
+        volume. Every other entity is pinned to the global size.
+        """
+        all_volumes = {tag for dim, tag in gmsh.model.getEntities(3)}
+        all_faces = {tag for dim, tag in gmsh.model.getEntities(2)}
 
-        complement_volumes = [vol for dim, vol in gmsh.model.getEntities(3) if vol not in listed_volumes]
-        if not complement_volumes:
-            return
+        coarsened_volumes, coarsened_faces = self._get_coarsened_entities(refinement_setups, global_size)
 
-        complement_field = gmsh.model.mesh.field.add("Constant")
-        gmsh.model.mesh.field.setNumbers(complement_field, "VolumesList", complement_volumes)
-        gmsh.model.mesh.field.setNumber(complement_field, "VIn", global_size)
-        fields_list.append(complement_field)
+        adjacent_volumes = set()
+        for face in coarsened_faces:
+            upward, _ = gmsh.model.getAdjacencies(2, face)
+            adjacent_volumes.update(int(volume) for volume in upward)
+        unpinned_volumes = coarsened_volumes | adjacent_volumes
+
+        faces_to_coarsen = self._get_faces_to_coarsen(coarsened_faces, coarsened_volumes)
+
+        pinned_volumes = all_volumes - unpinned_volumes
+        pinned_faces = all_faces - faces_to_coarsen
+        pinned_curves, pinned_points = self._get_pinned_boundary_entities(all_faces, pinned_faces)
+
+        background_field = gmsh.model.mesh.field.add("Constant")
+        # The lists come from sets (arbitrary iteration order); sorting keeps
+        # the field configuration deterministic across runs.
+        gmsh.model.mesh.field.setNumbers(background_field, "VolumesList", sorted(pinned_volumes))
+        gmsh.model.mesh.field.setNumbers(background_field, "SurfacesList", sorted(pinned_faces))
+        gmsh.model.mesh.field.setNumbers(background_field, "CurvesList", sorted(pinned_curves))
+        gmsh.model.mesh.field.setNumbers(background_field, "PointsList", sorted(pinned_points))
+        gmsh.model.mesh.field.setNumber(background_field, "VIn", global_size)
+        gmsh.model.mesh.field.setNumber(background_field, "VOut", max_size)
+        gmsh.model.mesh.field.setNumber(background_field, "IncludeBoundary", 0)
+        gmsh.model.mesh.field.setNumber(background_field, "IncludeEmbedded", 0)
+
+        extra_fields = [background_field]
+        if coarsened_faces:
+            distance_field = gmsh.model.mesh.field.add("Distance")
+            gmsh.model.mesh.field.setNumbers(distance_field, "SurfacesList", sorted(coarsened_faces))
+            gmsh.model.mesh.field.setNumber(distance_field, "Sampling", 40)
+            for setup in refinement_setups:
+                if setup.entity_type != "surfaces" or setup.element_size <= global_size:
+                    continue
+                threshold_field = gmsh.model.mesh.field.add("Threshold")
+                gmsh.model.mesh.field.setNumber(threshold_field, "InField", distance_field)
+                gmsh.model.mesh.field.setNumber(threshold_field, "DistMin", setup.element_size * 0.2)
+                gmsh.model.mesh.field.setNumber(threshold_field, "DistMax", setup.element_size * 3.0)
+                gmsh.model.mesh.field.setNumber(threshold_field, "SizeMin", setup.element_size)
+                gmsh.model.mesh.field.setNumber(threshold_field, "SizeMax", global_size)
+                extra_fields.append(threshold_field)
+
+        if len(extra_fields) == 1:
+            return extra_fields[0]
+        combiner = gmsh.model.mesh.field.add("Min")
+        gmsh.model.mesh.field.setNumbers(combiner, "FieldsList", extra_fields)
+        return combiner
+
+    def _get_coarsened_entities(
+        self,
+        refinement_setups: list[MeshRefinementSetup],
+        global_size: float,
+    ) -> tuple[set[int], set[int]]:
+        """Returns the volumes and surfaces explicitly coarsened by a setup."""
+        coarsened_volumes: set[int] = set()
+        coarsened_faces: set[int] = set()
+        for setup in refinement_setups:
+            if setup.element_size <= global_size:
+                continue
+            if setup.entity_type == "volumes":
+                coarsened_volumes.update(setup.entity_ids)
+            elif setup.entity_type == "surfaces":
+                coarsened_faces.update(setup.entity_ids)
+        return coarsened_volumes, coarsened_faces
+
+    def _get_faces_to_coarsen(
+        self,
+        coarsened_faces: set[int],
+        coarsened_volumes: set[int],
+    ) -> set[int]:
+        """Faces left at the coarsest size.
+
+        The coarsened faces and the boundary faces of the volumes directly
+        targeted by a coarsening setup stay coarse. The surrounding region of a
+        coarsened surface is sized by a distance threshold instead of the whole
+        adjacent volume, and every other face is pinned to the global size.
+        """
+        faces_to_coarsen = set(coarsened_faces)
+        for volume in coarsened_volumes:
+            for dim, face in gmsh.model.getBoundary([(3, volume)], recursive=False, oriented=False):
+                faces_to_coarsen.add(face)
+        return faces_to_coarsen
+
+    def _get_pinned_boundary_entities(
+        self,
+        all_faces: set[int],
+        pinned_faces: set[int],
+    ) -> tuple[set[int], set[int]]:
+        """Curves and points that must be pinned to the global size.
+
+        The boundary of the pinned faces must be pinned as well, otherwise it
+        would stay at the coarse size and constrain the finer mesh on the
+        pinned faces.
+        """
+        faces_per_curve: dict[int, set[int]] = {}
+        faces_per_point: dict[int, set[int]] = {}
+        for face in all_faces:
+            for dim, tag in gmsh.model.getBoundary([(2, face)], recursive=True, oriented=False):
+                if dim == 1:
+                    faces_per_curve.setdefault(tag, set()).add(face)
+                elif dim == 0:
+                    faces_per_point.setdefault(tag, set()).add(face)
+
+        pinned_curves = {curve for curve, faces in faces_per_curve.items() if faces <= pinned_faces}
+        pinned_points = {point for point, faces in faces_per_point.items() if faces <= pinned_faces}
+        return pinned_curves, pinned_points
 
     def clear_mesh_data(self):
         self.nodal_coordinates = np.zeros((0, 4), dtype=float)
