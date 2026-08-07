@@ -111,19 +111,10 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
 
         return
 
-    def apply_callback(self, close_window: bool = False):
+    def map_volumes_to_surfaces(self, surface_ids: list[int]):
 
-        if self.tabWidget_main.currentIndex() == SetupTabType.LIST:
-            return
-
-        input_ids = self.lineEdit_selection_id.text()
-        surface_ids, message_log = self.mesh.check_selected_ids(input_ids, selection="surfaces")
-
-        if message_log is not None:
-            self.hide()
-            self.lineEdit_selection_id.setFocus()
-            PrintMessageInput(message_log)
-            return
+        from collections import defaultdict
+        surfaces_from_volume = defaultdict(list)
 
         for surface_id in surface_ids:
 
@@ -146,7 +137,50 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
                 PrintMessageInput([warning_title, title, message])
                 return
 
-            data = {"volume_to_decouple" : volumes_from_surface[0]}
+            for volume_id in volumes_from_surface:
+                if surface_id in surfaces_from_volume.get(volume_id, []):
+                    continue
+
+                surfaces_from_volume[volume_id].append(surface_id)
+
+        return surfaces_from_volume
+
+    def is_there_a_common_volume(self, surface_ids: list[int]):
+        volume_to_surfaces_map = self.map_volumes_to_surfaces(surface_ids)
+        for vol_id, surf_ids in volume_to_surfaces_map.items():
+            if len(surf_ids) == len(surface_ids):
+                return vol_id
+
+    def apply_callback(self, close_window: bool = False):
+
+        if self.tabWidget_main.currentIndex() == SetupTabType.LIST:
+            return
+
+        input_ids = self.lineEdit_selection_id.text()
+        surface_ids, message_log = self.mesh.check_selected_ids(input_ids, selection="surfaces")
+
+        if message_log is not None:
+            self.hide()
+            self.lineEdit_selection_id.setFocus()
+            PrintMessageInput(message_log)
+            return      
+
+        volume_id = self.is_there_a_common_volume(surface_ids)
+
+        for surface_id in surface_ids:
+
+            if volume_id is None:
+                volumes_from_surface = self.model.mesh.volumes_from_surface.get(surface_id)
+                if volumes_from_surface != 2:
+                    continue
+
+                n_el1 = len(self.mesh.elements_from_volume.get(volumes_from_surface[0]))
+                n_el2 = len(self.mesh.elements_from_volume.get(volumes_from_surface[1]))
+
+                volume_id = volumes_from_surface[0] if n_el1 > n_el2 else volumes_from_surface[1]
+            
+            data = {"volume_to_decouple" : volume_id}
+
             self.properties._set_property("degrees_of_freedom_decoupling", data, surface=surface_id)
 
         self.assignment_complete = True
@@ -271,8 +305,8 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
             logging.info("Processing degress of freedom decoupling... [90/100]")
             app().main_window.update_geometry_information()
 
-            logging.info("Processing degress of freedom decoupling... [92/100]")
-            app().project.model.mesh.process_disconnected_nodes_criterion()
+            # logging.info("Processing degress of freedom decoupling... [92/100]")
+            # app().project.model.mesh.process_disconnected_nodes_criterion()
 
             logging.info("Processing degress of freedom decoupling... [95/100]")
             app().main_window.update_plots()
