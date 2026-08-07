@@ -895,13 +895,13 @@
              </item>
             </layout>
            </widget>
-           <widget class="QWidget" name="tab_local_refining">
+           <widget class="QWidget" name="tab_local_mesh_size_control">
             <attribute name="title">
-             <string>Local refining</string>
+             <string>Local size control</string>
             </attribute>
             <layout class="QGridLayout" name="gridLayout_7">
              <item row="2" column="1">
-              <widget class="QTableWidget" name="tableWidget_refining_mesh_data">
+              <widget class="QTableWidget" name="tableWidget_local_mesh_size_control_data">
                <property name="maximumSize">
                 <size>
                  <width>16777215</width>
@@ -1098,7 +1098,7 @@
                    </font>
                   </property>
                   <property name="text">
-                   <string>Refined element size: </string>
+                    <string>Element size: </string>
                   </property>
                   <property name="alignment">
                    <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
@@ -1106,7 +1106,7 @@
                  </widget>
                 </item>
                 <item row="2" column="2">
-                 <widget class="QDoubleSpinBox" name="doubleSpinBox_refined_element_size">
+                 <widget class="QDoubleSpinBox" name="doubleSpinBox_local_mesh_size_control_element_size">
                   <property name="minimumSize">
                    <size>
                     <width>0</width>
@@ -1215,8 +1215,8 @@
                   </property>
                  </spacer>
                 </item>
-                 <item row="1" column="3">
-                  <widget class="QComboBox" name="comboBox_refinement_entity_type">
+                <item row="1" column="3">
+                 <widget class="QComboBox" name="comboBox_local_mesh_size_control_entity_type">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                     <horstretch>0</horstretch>
@@ -1990,8 +1990,8 @@
   <tabstop>comboBox_volumes_interface_behavior</tabstop>
   <tabstop>tabWidget_main</tabstop>
   <tabstop>lineEdit_selected_ids</tabstop>
-  <tabstop>doubleSpinBox_refined_element_size</tabstop>
-  <tabstop>tableWidget_refining_mesh_data</tabstop>
+  <tabstop>doubleSpinBox_local_mesh_size_control_element_size</tabstop>
+  <tabstop>tableWidget_local_mesh_size_control_data</tabstop>
   <tabstop>pushButton_delete</tabstop>
   <tabstop>pushButton_add</tabstop>
   <tabstop>tableWidget_mesh_quality</tabstop>

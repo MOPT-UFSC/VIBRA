@@ -14,7 +14,7 @@ from vtkmodules.vtkCommonCore import vtkPoints
 from vtkmodules.vtkCommonDataModel import VTK_HEXAHEDRON, VTK_QUADRATIC_HEXAHEDRON, VTK_QUADRATIC_TETRA, VTK_TETRA, vtkUnstructuredGrid
 from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridWriter
 
-from vibra.engine.mesher.mesh_setup import HEXAHEDRON_8, HEXAHEDRON_20, TETRAHEDRON_4, TETRAHEDRON_10, ElementTopology, MeshRefinementSetup, MeshSetup
+from vibra.engine.mesher.mesh_setup import HEXAHEDRON_8, HEXAHEDRON_20, TETRAHEDRON_4, TETRAHEDRON_10, ElementTopology, LocalMeshSizeControlSetup, MeshSetup
 from vibra.errors import MeshingAlgorithmError
 from vibra.interface.numeric_checks.unit_utilities import convert_length_unit
 
@@ -249,10 +249,10 @@ class Mesh:
         return self
 
     def _configure_mesh(self, mesh_setup: MeshSetup):
-        if mesh_setup.refinement_parameters:
-            self._local_mesh_refine(
+        if mesh_setup.local_mesh_size_control_parameters:
+            self._apply_local_mesh_size_control(
                 mesh_setup.maximum_element_size,
-                mesh_setup.refinement_parameters,
+                mesh_setup.local_mesh_size_control_parameters,
             )
         else:
             gmsh.option.setNumber("Mesh.MeshSizeMin", mesh_setup.minimum_element_size)
@@ -860,14 +860,14 @@ class Mesh:
         writer.SetInputData(vtk_dataset)
         writer.Write()
 
-    def _local_mesh_refine(self, global_size: float, refinement_setups: list[MeshRefinementSetup]):
-        setup_sizes = [setup.element_size for setup in refinement_setups]
+    def _apply_local_mesh_size_control(self, global_size: float, size_control_setups: list[LocalMeshSizeControlSetup]):
+        setup_sizes = [setup.element_size for setup in size_control_setups]
         max_size = max([global_size, *setup_sizes])
         coarsening = max_size > global_size
 
         if coarsening:
             # Allow mesh sizes larger than the ones derived from the imported
-            # geometry points, otherwise gmsh caps the size and "unrefinement"
+            # geometry points, otherwise gmsh caps the size and coarsening
             # has no effect.
             gmsh.option.setNumber("Mesh.MeshSizeFromPoints", 0)
 
@@ -877,7 +877,7 @@ class Mesh:
         gmsh.model.mesh.field.setNumber(1, "VOut", max_size)
 
         fields_list = [1]
-        for setup in refinement_setups:
+        for setup in size_control_setups:
             match setup.entity_type:
                 case "surfaces":
                     option = "SurfacesList"
@@ -903,7 +903,7 @@ class Mesh:
             fields_list.append(threshold_type)
 
         if coarsening:
-            background_field = self._add_coarsening_background_field(global_size, max_size, refinement_setups)
+            background_field = self._add_coarsening_background_field(global_size, max_size, size_control_setups)
             fields_list.append(background_field)
 
         minimum_field = gmsh.model.mesh.field.add("Min")
@@ -914,7 +914,7 @@ class Mesh:
         self,
         global_size: float,
         max_size: float,
-        refinement_setups: list[MeshRefinementSetup],
+        size_control_setups: list[LocalMeshSizeControlSetup],
     ) -> int:
         """Builds the background field for coarsening.
 
@@ -928,7 +928,7 @@ class Mesh:
         all_volumes = {tag for dim, tag in gmsh.model.getEntities(3)}
         all_faces = {tag for dim, tag in gmsh.model.getEntities(2)}
 
-        coarsened_volumes, coarsened_faces = self._get_coarsened_entities(refinement_setups, global_size)
+        coarsened_volumes, coarsened_faces = self._get_coarsened_entities(size_control_setups, global_size)
 
         adjacent_volumes = set()
         for face in coarsened_faces:
@@ -959,7 +959,7 @@ class Mesh:
             distance_field = gmsh.model.mesh.field.add("Distance")
             gmsh.model.mesh.field.setNumbers(distance_field, "SurfacesList", sorted(coarsened_faces))
             gmsh.model.mesh.field.setNumber(distance_field, "Sampling", 40)
-            for setup in refinement_setups:
+            for setup in size_control_setups:
                 if setup.entity_type != "surfaces" or setup.element_size <= global_size:
                     continue
                 threshold_field = gmsh.model.mesh.field.add("Threshold")
@@ -978,13 +978,13 @@ class Mesh:
 
     def _get_coarsened_entities(
         self,
-        refinement_setups: list[MeshRefinementSetup],
+        size_control_setups: list[LocalMeshSizeControlSetup],
         global_size: float,
     ) -> tuple[set[int], set[int]]:
         """Returns the volumes and surfaces explicitly coarsened by a setup."""
         coarsened_volumes: set[int] = set()
         coarsened_faces: set[int] = set()
-        for setup in refinement_setups:
+        for setup in size_control_setups:
             if setup.element_size <= global_size:
                 continue
             if setup.entity_type == "volumes":

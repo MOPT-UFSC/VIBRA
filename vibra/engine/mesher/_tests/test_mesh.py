@@ -7,7 +7,7 @@ import numpy as np
 from vibra import PROJECT_DIR
 from vibra.engine.mesher.element_setup import GMSH_HEX8, GMSH_HEX20, GMSH_TET4, GMSH_TET10
 from vibra.engine.mesher.mesh import Mesh
-from vibra.engine.mesher.mesh_setup import ElementTopology, MeshRefinementSetup, MeshSetup
+from vibra.engine.mesher.mesh_setup import ElementTopology, LocalMeshSizeControlSetup, MeshSetup
 
 
 def test_tetrahedron_4_mesh():
@@ -70,13 +70,13 @@ def test_hexahedron_20_mesh():
     assert mesh.element_topology == ElementTopology("hexahedral", "quadratic")
 
 
-def test_local_refinement_coarsening():
+def test_local_mesh_size_control_coarsening():
     geometry_path = str(PROJECT_DIR / "data/examples/geometry_files/tetrahedron_double_volume.step")
 
     mesh_setup = MeshSetup(
         maximum_element_size=20,
         merge_connected_volumes=False,
-        refinement_parameters=[MeshRefinementSetup("volumes", 40, [1])],
+        local_mesh_size_control_parameters=[LocalMeshSizeControlSetup("volumes", 40, [1])],
         custom_element_setup=GMSH_TET4,
     )
     mesh = Mesh().load_cad(geometry_path, mesh_setup, threads=1)
@@ -86,13 +86,13 @@ def test_local_refinement_coarsening():
     assert mean_edges[2] < 30
 
 
-def test_local_refinement_refines():
+def test_local_mesh_size_control_refines():
     geometry_path = str(PROJECT_DIR / "data/examples/geometry_files/tetrahedron_double_volume.step")
 
     mesh_setup = MeshSetup(
         maximum_element_size=20,
         merge_connected_volumes=False,
-        refinement_parameters=[MeshRefinementSetup("volumes", 5, [2])],
+        local_mesh_size_control_parameters=[LocalMeshSizeControlSetup("volumes", 5, [2])],
         custom_element_setup=GMSH_TET4,
     )
     mesh = Mesh().load_cad(geometry_path, mesh_setup, threads=1)

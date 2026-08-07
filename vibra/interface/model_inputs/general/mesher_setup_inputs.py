@@ -23,7 +23,7 @@ from vibra.engine.mesher.element_setup import (
     MeshAlgorithms3D,
     SubdivisionAlgorithms,
 )
-from vibra.engine.mesher.mesh_setup import MeshRefinementSetup, MeshSetup
+from vibra.engine.mesher.mesh_setup import LocalMeshSizeControlSetup, MeshSetup
 from vibra.errors import InvalidMeshSetupError
 from vibra.interface import error_title
 from vibra.interface.formatters.icons import Icon
@@ -65,7 +65,7 @@ class QualityTableColumns(IntEnum):
     BAD_ELEMENTS = 3
 
 
-class RefinementTableColumns(IntEnum):
+class LocalMeshSizeControlTableColumns(IntEnum):
     ELEMENT_SIZE = 0
     SELECTION_TYPE = 1
     SELECTION_IDS = 2
@@ -73,7 +73,7 @@ class RefinementTableColumns(IntEnum):
 
 class MeshSetupTabs(IntEnum):
     GLOBAL_SETTINGS = 0
-    LOCAL_REFINING = 1
+    LOCAL_MESH_SIZE_CONTROL = 1
     ADVANCED_CONTROLS = 2
     MESH_QUALITY = 3
 
@@ -102,7 +102,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.keep_window_open = True
         self.bad_elements_showed = False
         self.synchronize_sizes = False
-        self.tmp_refinement_parameters: list[MeshRefinementSetup] = list()
+        self.tmp_local_mesh_size_control_parameters: list[LocalMeshSizeControlSetup] = list()
         self.last_synced_ids: set[int] = set()
 
         self.gmsh_labels = {
@@ -136,7 +136,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         # #
         # self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         # #
-        self.tableWidget_refining_mesh_data.itemClicked.connect(self.mesh_refinement_item_clicked_callback)
+        self.tableWidget_local_mesh_size_control_data.itemClicked.connect(self.local_mesh_size_control_item_clicked_callback)
         self.tableWidget_mesh_quality.itemClicked.connect(self.mesh_quality_item_clicked_callback)
         #
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
@@ -184,7 +184,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             self._show_quality_table(False)
             return
 
-        self.tmp_refinement_parameters = deepcopy(mesh_setup.refinement_parameters)
+        self.tmp_local_mesh_size_control_parameters = deepcopy(mesh_setup.local_mesh_size_control_parameters)
         self.update_interface_controls(mesh_setup.element_setup)
 
         self.doubleSpinBox_maximum_element_size.setValue(mesh_setup.maximum_element_size)
@@ -194,7 +194,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.comboBox_volumes_interface_behavior.setCurrentIndex(int(mesh_setup.merge_connected_volumes))
         self.comboBox_mesh_quality_metrics.setCurrentIndex(int(mesh_setup.compute_quality_metrics))
 
-        self.update_mesh_refinement_table()
+        self.update_local_mesh_size_control_table()
         self.update_mesh_quality_table()
 
     def _load_initial_element_size(self):
@@ -208,7 +208,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             with block_signals(self.doubleSpinBox_minimum_element_size):
                 self.doubleSpinBox_minimum_element_size.setValue(self.doubleSpinBox_maximum_element_size.value())
 
-        self.update_mesh_refinement_table()
+        self.update_local_mesh_size_control_table()
 
     def synchronize_button_callback(self):
         self.synchronize_sizes = not self.synchronize_sizes
@@ -229,10 +229,10 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         surfaces = app().main_window.selection.geometry_surfaces
 
         if volumes:
-            self.comboBox_refinement_entity_type.setCurrentText("Volume")
+            self.comboBox_local_mesh_size_control_entity_type.setCurrentText("Volume")
             selection = set(volumes)
         elif surfaces:
-            self.comboBox_refinement_entity_type.setCurrentText("Surface")
+            self.comboBox_local_mesh_size_control_entity_type.setCurrentText("Surface")
             selection = set(surfaces)
         else:
             self.lineEdit_selected_ids.setText("")
@@ -253,7 +253,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.lineEdit_selected_ids.setText(text)
 
     def get_selected_entity_type(self) -> str:
-        if self.comboBox_refinement_entity_type.currentText() == "Volume":
+        if self.comboBox_local_mesh_size_control_entity_type.currentText() == "Volume":
             return "volumes"
         return "surfaces"
 
@@ -262,28 +262,28 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.pushButton_apply.setDisabled(mesh_quality_tab)
         self.pushButton_apply_and_close.setDisabled(mesh_quality_tab)
 
-    def mesh_refinement_item_clicked_callback(self, item: QTableWidgetItem):
+    def local_mesh_size_control_item_clicked_callback(self, item: QTableWidgetItem):
         row = item.row()
         if not isinstance(row, int):
             return
 
-        str_element_size = self.tableWidget_refining_mesh_data.item(row, RefinementTableColumns.ELEMENT_SIZE).text()
-        selection_type = self.tableWidget_refining_mesh_data.item(row, RefinementTableColumns.SELECTION_TYPE).text()
-        str_selected_ids = self.tableWidget_refining_mesh_data.item(row, RefinementTableColumns.SELECTION_IDS).text()
+        str_element_size = self.tableWidget_local_mesh_size_control_data.item(row, LocalMeshSizeControlTableColumns.ELEMENT_SIZE).text()
+        selection_type = self.tableWidget_local_mesh_size_control_data.item(row, LocalMeshSizeControlTableColumns.SELECTION_TYPE).text()
+        str_selected_ids = self.tableWidget_local_mesh_size_control_data.item(row, LocalMeshSizeControlTableColumns.SELECTION_IDS).text()
 
         if str_element_size != "":
             element_size = float(str_element_size)
-            self.doubleSpinBox_refined_element_size.setValue(element_size)
+            self.doubleSpinBox_local_mesh_size_control_element_size.setValue(element_size)
 
         selected_ids = [int(_id) for _id in str_selected_ids.split(",")]
         if not selected_ids:
             return
 
         if selection_type == "volumes":
-            self.comboBox_refinement_entity_type.setCurrentText("Volume")
+            self.comboBox_local_mesh_size_control_entity_type.setCurrentText("Volume")
             app().main_window.selection.set_geometry_selection(volumes=selected_ids)
         else:
-            self.comboBox_refinement_entity_type.setCurrentText("Surface")
+            self.comboBox_local_mesh_size_control_entity_type.setCurrentText("Surface")
             app().main_window.selection.set_geometry_selection(surfaces=selected_ids)
 
     def get_selected_ids(self):
@@ -304,7 +304,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         selected_type = self.get_selected_entity_type()
         selected_ids = self.get_selected_ids()
 
-        refined_size = self.doubleSpinBox_refined_element_size.value()
+        controlled_size = self.doubleSpinBox_local_mesh_size_control_element_size.value()
         self.lineEdit_selected_ids.setText("")
         self.last_synced_ids = set()
 
@@ -312,13 +312,13 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             return
 
         maximum_size = self.doubleSpinBox_maximum_element_size.value()
-        if refined_size > maximum_size:
+        if controlled_size > maximum_size:
             self.hide()
             read = GetUserConfirmationInput(
-                "Inverted mesh refinement",
-                f"The refined element size ({refined_size} mm) is larger than the global maximum "
+                "Inverted local mesh size control",
+                f"The controlled element size ({controlled_size} mm) is larger than the global maximum "
                 f"({maximum_size} mm). Vibra will coarsen the selected {selected_type} to "
-                f"{refined_size} mm and keep all other {selected_type} at the global maximum "
+                f"{controlled_size} mm and keep all other {selected_type} at the global maximum "
                 f"({maximum_size} mm). Continue?",
                 buttons_config={
                     "left_button_label": "Cancel",
@@ -330,28 +330,28 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             if read._cancel:
                 return
 
-        setup = MeshRefinementSetup(
+        setup = LocalMeshSizeControlSetup(
             selected_type,
-            refined_size,
+            controlled_size,
             selected_ids,
         )
 
-        new_refinement = []
-        for refinement in self.tmp_refinement_parameters:
-            refinement.remove_ids(selected_ids, selected_type)
+        new_size_controls = []
+        for control in self.tmp_local_mesh_size_control_parameters:
+            control.remove_ids(selected_ids, selected_type)
 
-            if not refinement.is_empty():
-                new_refinement.append(refinement)
+            if not control.is_empty():
+                new_size_controls.append(control)
 
-        self.tmp_refinement_parameters = new_refinement
+        self.tmp_local_mesh_size_control_parameters = new_size_controls
 
-        self.tmp_refinement_parameters.append(setup)
-        self.update_mesh_refinement_table()
+        self.tmp_local_mesh_size_control_parameters.append(setup)
+        self.update_local_mesh_size_control_table()
 
     def remove_callback(self):
-        current_row = self.tableWidget_refining_mesh_data.currentRow()
-        self.tmp_refinement_parameters.pop(current_row)
-        self.update_mesh_refinement_table()
+        current_row = self.tableWidget_local_mesh_size_control_data.currentRow()
+        self.tmp_local_mesh_size_control_parameters.pop(current_row)
+        self.update_local_mesh_size_control_table()
 
     def update_interface_controls(self, element_setup: ElementSetup):
 
@@ -433,7 +433,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
             LoadingWindow(self.actions_to_finalize).run()
 
-            self.update_mesh_refinement_table()
+            self.update_local_mesh_size_control_table()
             self.update_mesh_quality_table()
 
             return True
@@ -449,29 +449,29 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         if close_window:
             self.close()
 
-    def update_mesh_refinement_table(self):
-        refinement_parameters = self.tmp_refinement_parameters
-        number_of_rows = len(refinement_parameters)
-        self.tableWidget_refining_mesh_data.setRowCount(number_of_rows)
+    def update_local_mesh_size_control_table(self):
+        size_control_parameters = self.tmp_local_mesh_size_control_parameters
+        number_of_rows = len(size_control_parameters)
+        self.tableWidget_local_mesh_size_control_data.setRowCount(number_of_rows)
 
         maximum_size = self.doubleSpinBox_maximum_element_size.value()
-        for row, setup in enumerate(refinement_parameters):
+        for row, setup in enumerate(size_control_parameters):
             ids = ", ".join(str(i) for i in setup.entity_ids)
             coarsening_color = color_names.YELLOW if setup.element_size > maximum_size else None
 
-            self.tableWidget_refining_mesh_data.setItem(
+            self.tableWidget_local_mesh_size_control_data.setItem(
                 row,
-                RefinementTableColumns.ELEMENT_SIZE,
+                LocalMeshSizeControlTableColumns.ELEMENT_SIZE,
                 self._item(setup.element_size, coarsening_color),
             )
-            self.tableWidget_refining_mesh_data.setItem(
+            self.tableWidget_local_mesh_size_control_data.setItem(
                 row,
-                RefinementTableColumns.SELECTION_TYPE,
+                LocalMeshSizeControlTableColumns.SELECTION_TYPE,
                 self._item(setup.entity_type),
             )
-            self.tableWidget_refining_mesh_data.setItem(
+            self.tableWidget_local_mesh_size_control_data.setItem(
                 row,
-                RefinementTableColumns.SELECTION_IDS,
+                LocalMeshSizeControlTableColumns.SELECTION_IDS,
                 self._item(ids),
             )
 
@@ -596,7 +596,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             merge_connected_volumes=merge_connected_volumes,
             compute_quality_metrics=compute_quality_metrics,
             custom_element_setup=self._get_custom_element_setup(),
-            refinement_parameters=self._get_refinement_parameters(),
+            local_mesh_size_control_parameters=self._get_local_mesh_size_control_parameters(),
         )
 
     def _get_custom_element_setup(self) -> ElementSetup:
@@ -628,8 +628,8 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
         return custom_element_setup
 
-    def _get_refinement_parameters(self) -> list[MeshRefinementSetup]:
-        return deepcopy(self.tmp_refinement_parameters)
+    def _get_local_mesh_size_control_parameters(self) -> list[LocalMeshSizeControlSetup]:
+        return deepcopy(self.tmp_local_mesh_size_control_parameters)
 
     def actions_to_finalize(self):
         if self.close_after_generate:
@@ -817,18 +817,18 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         app().main_window.distinguish_mesh_solids(mesh_bad_elements)
         self.bad_elements_showed = True
 
-    def check_unprocessed_mesh_refining(self):
+    def check_unprocessed_local_mesh_size_control(self):
         mesh_setup = app().project.model.mesh_setup
         if mesh_setup is None:
             return
 
-        if mesh_setup.refinement_parameters == self.tmp_refinement_parameters:
+        if mesh_setup.local_mesh_size_control_parameters == self.tmp_local_mesh_size_control_parameters:
             return
 
         self.hide()
 
-        title = "Unprocessed mesh refinement"
-        message = "The mesh refinement configuration has been modified, but the mesh itself "
+        title = "Unprocessed local mesh size control"
+        message = "The local mesh size control configuration has been modified, but the mesh itself "
         message += "has not been processed. Would you like to generate the new mesh?"
 
         buttons_config = {
@@ -862,7 +862,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
     def closeEvent(self, a0):
         self.keep_window_open = False
-        self.check_unprocessed_mesh_refining()
+        self.check_unprocessed_local_mesh_size_control()
 
         if self.bad_elements_showed:
             app().main_window.distinguish_mesh_solids([])
