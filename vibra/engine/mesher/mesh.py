@@ -187,6 +187,28 @@ class Mesh:
         else:
             return 1
 
+    def _remove_orphan_points(self, print_log: bool = True):
+
+        orphan_points = []
+        for dim, tag in gmsh.model.getEntities(dim=0):
+            upward, _ = gmsh.model.getAdjacencies(dim, tag)
+
+            if len(upward) == 0:
+                orphan_points.append(tag)
+
+        if not orphan_points:
+            return
+
+        if print_log:
+            for orphan_point in orphan_points:
+                point_coords = gmsh.model.getValue(0, orphan_point, [])
+                print("The following orphan points have been detected:")
+                print(f"Point {orphan_point}: ({point_coords[0]}, {point_coords[1]}, {point_coords[2]})")
+
+        dim_tags = [(0, orphan_point) for orphan_point in orphan_points]
+        gmsh.model.occ.remove(dim_tags, recursive=False)
+        gmsh.model.occ.synchronize()
+
     def load_cad(self, path: str | Path, mesh_setup: MeshSetup, threads: int = 0) -> Self:
         if not gmsh.is_initialized():
             gmsh.initialize("", False, interruptible=False)
@@ -209,6 +231,9 @@ class Mesh:
             self._merge_nodes_from_adjacent_volumes()
 
         logging.info("Processing geometry data... [25/100]")
+        self._remove_orphan_points()
+
+        logging.info("Processing geometry data... [30/100]")
         self.process_geometry_information()
 
         logging.info("Processing geometry data... [35/100]")
@@ -1139,7 +1164,7 @@ class Mesh:
         self.process_mesh_related_mappings("Post-processing")
 
         logging.info("Post-processing mesh... [80/100]")
-        self.disconnected_nodes_data = self.process_disconnected_nodes_criterion()
+        self.process_disconnected_nodes_criterion()
 
         logging.info("Post-processing mesh... [90/100]")
         self.collapsed_3d_elements, self.collapsed_2d_elements, self.collapsed_1d_elements = self.get_collapsed_elements()
@@ -1599,38 +1624,42 @@ class Mesh:
         )
         return mask
 
-    def process_disconnected_nodes_criterion(self):
+    def process_disconnected_nodes_criterion(self, print_log: bool = True):
         """
         This method processes the disconnected nodes criterion for volumes,
         surfaces and lines-related elements.
         """
 
-        disconnected_nodes_data = dict()
+        self.disconnected_nodes_data.clear()
+
         if self.geometry_information.get("volumes"):
+            all_node_ids = self.nodal_coordinates[:, 0].astype(int)
             nodes_from_3d_elements = np.unique(self.solids_connectivity[:, 4:].flatten())
-            if nodes_from_3d_elements.size:
-                if self.nodes_from_volumes.size != nodes_from_3d_elements.size:
-                    mask_3d = np.isin(self.nodes_from_volumes, nodes_from_3d_elements, invert=True)
-                    if mask_3d.any():
-                        disconnected_nodes_data["elements_3D"] = [int(node_id) for node_id in self.nodes_from_volumes[mask_3d]]
+            if nodes_from_3d_elements.size and nodes_from_3d_elements.size != all_node_ids.size:
+                mask_3d = np.isin(all_node_ids, nodes_from_3d_elements, invert=True)
+                if mask_3d.any():
+                    self.disconnected_nodes_data["elements_3D"] = [int(node_id) for node_id in all_node_ids[mask_3d]]
 
-        if self.geometry_information.get("surfaces"):
+        if self.geometry_information.get("surfaces") and self.nodes_from_surfaces.size:
             nodes_from_2d_elements = np.unique(self.faces_connectivity[:, 4:].flatten())
-            if nodes_from_2d_elements.size:
-                if self.nodes_from_surfaces.size != nodes_from_2d_elements.size:
-                    mask_2d = np.isin(self.nodes_from_surfaces, nodes_from_2d_elements, invert=True)
-                    if mask_2d.any():
-                        disconnected_nodes_data["elements_2D"] = [int(node_id) for node_id in self.nodes_from_surfaces[mask_2d]]
+            if self.nodes_from_surfaces.size != nodes_from_2d_elements.size:
+                mask_2d = np.isin(self.nodes_from_surfaces, nodes_from_2d_elements, invert=True)
+                if mask_2d.any():
+                    self.disconnected_nodes_data["elements_2D"] = [int(node_id) for node_id in self.nodes_from_surfaces[mask_2d]]
 
-        if self.geometry_information.get("lines"):
+        if self.geometry_information.get("lines") and self.nodes_from_lines.size:
             nodes_from_1d_elements = np.unique(self.lines_connectivity[:, 4:].flatten())
-            if nodes_from_1d_elements.size:
-                if self.nodes_from_lines.size != nodes_from_1d_elements.size:
-                    mask_1d = np.isin(self.nodes_from_lines, nodes_from_1d_elements, invert=True)
-                    if mask_1d.any():
-                        disconnected_nodes_data["elements_1D"] = [int(node_id) for node_id in self.nodes_from_lines[mask_1d]]
+            if self.nodes_from_lines.size != nodes_from_1d_elements.size:
+                mask_1d = np.isin(self.nodes_from_lines, nodes_from_1d_elements, invert=True)
+                if mask_1d.any():
+                    self.disconnected_nodes_data["elements_1D"] = [int(node_id) for node_id in self.nodes_from_lines[mask_1d]]
 
-        return disconnected_nodes_data
+        if not print_log:
+            return
+
+        for key, data in self.disconnected_nodes_data.items():
+            print("The following disconnected nodes have been detected:")
+            print(f">> {len(data)} nodes of {key}: ({data})")
 
     def get_list_of_disconnected_nodes(self):
         """
