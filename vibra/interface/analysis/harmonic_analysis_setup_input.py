@@ -16,9 +16,10 @@ from vibra.interface import error_title
 from vibra.interface.analysis.solutions_step_display_input import SolutionStepsDisplayInput
 from vibra.interface.analysis.user_defined_solution_steps_by_manual_input import UserDefinedSolutionStepsByManualInput
 from vibra.interface.analysis.user_defined_solution_steps_from_tabular_data_input import UserDefinedSolutionStepsFromTabularDataInput
-from vibra.interface.common.common_interface import check_mesh_related_issues#, mesher_interface_callback
+from vibra.interface.common.common_interface import check_mesh_related_issues  #, mesher_interface_callback
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.general.utils import clear_style_sheet
 from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
 from vibra.interface.ui_generated.analysis.harmonic_analysis_setup_input_ui import HarmonicAnalysisSetupInput_UI
 
@@ -352,9 +353,8 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
                 self.lineEdit_fmax.setFocus()
                 self.lineEdit_fmax.setStyleSheet("border-color: rgb(255,0,0); border-width: 2px")
                 return True
-            
-        self.lineEdit_fmin.setStyleSheet("")
-        self.lineEdit_fmax.setStyleSheet("")
+
+        clear_style_sheet([self.lineEdit_fmin, self.lineEdit_fmax])
 
         return False
 

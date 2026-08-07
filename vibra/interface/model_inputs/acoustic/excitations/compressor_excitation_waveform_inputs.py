@@ -17,6 +17,7 @@ from vibra.interface.data.data_manager import get_spectral_data_from_array
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.general.utils import clear_style_sheet
 from vibra.interface.plots.general.frequency_response_plotter import DataFormat, FrequencyResponsePlotter
 from vibra.interface.ui_generated.model.acoustic.excitations.compressor_excitation_waveform_inputs_ui import CompressorExcitationWaveformInputs_UI
 from vibra.utils.signal_processing import extend_signal, get_window_and_correction_factor, process_one_sided_spectrum
@@ -206,7 +207,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
             line_edit.setStyleSheet("""border-color: rgb(240, 10, 10); border-width: 2px;""")
             return None
 
-        line_edit.setStyleSheet("")
+        clear_style_sheet(line_edit)
 
         return value
 
