@@ -570,16 +570,6 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         self.ti_data["table_paths"] = [table_path]
         self.ti_data["values"] = [complex_values]
 
-    def decouple_degrees_of_freedom(self, surface_id: int):
-
-        volumes_from_surface = self.mesh.volumes_from_surface.get(surface_id)
-        if volumes_from_surface is None:
-            return 
-
-        volume_id = volumes_from_surface[0]
-        data = {"volume_to_decouple" : volume_id}
-        self.properties._set_property("degrees_of_freedom_decoupling", data, surface=surface_id)
-
     def process_table_file_removal(self, table_names: list):
         for table_name in table_names:
             self.properties.remove_imported_tables("acoustic", table_name)
