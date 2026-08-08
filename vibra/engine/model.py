@@ -382,11 +382,7 @@ class Model:
                     return False
 
         disconnected_nodes = bool(self.mesh.disconnected_nodes_data)
-        collapsed_elements = bool(
-            self.mesh.collapsed_3d_elements 
-            or self.mesh.collapsed_2d_elements 
-            or self.mesh.collapsed_1d_elements
-        )  # fmt: skip
+        collapsed_elements = bool(self.mesh.collapsed_elements_data)
 
         if disconnected_nodes or collapsed_elements:
             return False
