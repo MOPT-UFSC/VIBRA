@@ -14,6 +14,7 @@ from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.model_inputs.structural.definitions.enums import SetupTabType
 from vibra.interface.ui_generated.model.dof_decoupling.degrees_of_freedom_decoupling_inputs_ui import DegreesOfFreedomDecouplingInputs_UI
 from vibra.utils.bidict import bidict
+from collections import defaultdict
 
 
 class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
@@ -111,9 +112,8 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
 
         return
 
-    def map_volumes_to_surfaces(self, surface_ids: list[int]):
+    def map_volumes_to_surfaces(self, surface_ids: list[int]) -> None | dict:
 
-        from collections import defaultdict
         surfaces_from_volume = defaultdict(list)
 
         for surface_id in surface_ids:
@@ -143,13 +143,27 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
 
                 surfaces_from_volume[volume_id].append(surface_id)
 
-        return surfaces_from_volume
-
-    def is_there_a_common_volume(self, surface_ids: list[int]):
-        volume_to_surfaces_map = self.map_volumes_to_surfaces(surface_ids)
-        for vol_id, surf_ids in volume_to_surfaces_map.items():
+        # check if there is a common volume touching the selected surfaces
+        for vol_id, surf_ids in surfaces_from_volume.items():
             if len(surf_ids) == len(surface_ids):
-                return vol_id
+                return {surf_id : vol_id for surf_id in surface_ids}
+
+        surface_to_volume_map = {}
+
+        # select volumes with reduced number of solid elements to decouple the DOF
+        for surf_id in surface_ids:
+            volumes_from_surface = self.model.mesh.volumes_from_surface.get(surface_id)
+            if volumes_from_surface != 2:
+                continue
+
+            n_el1 = len(self.mesh.elements_from_volume.get(volumes_from_surface[0]))
+            n_el2 = len(self.mesh.elements_from_volume.get(volumes_from_surface[1]))
+
+            vol_id = volumes_from_surface[0] if n_el1 > n_el2 else volumes_from_surface[1]
+
+            surface_to_volume_map[surf_id] = vol_id
+
+        return surface_to_volume_map
 
     def apply_callback(self, close_window: bool = False):
 
@@ -163,24 +177,14 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
             self.hide()
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(message_log)
-            return      
+            return
 
-        volume_id = self.is_there_a_common_volume(surface_ids)
+        volume_to_surface_map = self.map_volumes_to_surfaces(surface_ids)
+        if volume_to_surface_map is None:
+            return
 
-        for surface_id in surface_ids:
-
-            if volume_id is None:
-                volumes_from_surface = self.model.mesh.volumes_from_surface.get(surface_id)
-                if volumes_from_surface != 2:
-                    continue
-
-                n_el1 = len(self.mesh.elements_from_volume.get(volumes_from_surface[0]))
-                n_el2 = len(self.mesh.elements_from_volume.get(volumes_from_surface[1]))
-
-                volume_id = volumes_from_surface[0] if n_el1 > n_el2 else volumes_from_surface[1]
-            
+        for surface_id, volume_id in volume_to_surface_map.items():
             data = {"volume_to_decouple" : volume_id}
-
             self.properties._set_property("degrees_of_freedom_decoupling", data, surface=surface_id)
 
         self.assignment_complete = True
