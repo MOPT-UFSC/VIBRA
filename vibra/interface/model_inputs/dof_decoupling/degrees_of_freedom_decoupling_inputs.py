@@ -175,26 +175,32 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
                 continue
 
             for line_from_surface in lines_from_surface:
-                for (property, line_id) in line_properties.keys():
-                    if line_from_surface == line_id:
-                        self.properties._remove_line_property(property, line_id)
+                for (property, line_id) in line_properties:
+                    if line_from_surface != line_id:
+                        continue
+
+                    self.properties._remove_line_property(property, line_id)
 
     def remove_callback(self):
 
-        if self.lineEdit_selection_id.text() != "":
+        for selected_item in self.treeWidget_dof_decoupling.selectedItems():
+            if selected_item.text():
+                surface_id = int(selected_item)
 
-            surface_id = int(self.lineEdit_selection_id.text())
             data = self.properties._get_property("degrees_of_freedom_decoupling", surface=surface_id)
-            if isinstance(data, dict):
-                new_surface_id = data.get("new_surface_id")
-                if isinstance(new_surface_id, int):   
-                    self.remove_all_surface_properties_from_surface([new_surface_id])
-                    self.remove_all_line_properties_boundind_surface([new_surface_id]) 
+            if not isinstance(data, dict):
+                continue
 
+            new_surface_id = data.get("new_surface_id")
+            if not isinstance(new_surface_id, int):
+                continue
+
+            self.remove_all_surface_properties_from_surface([new_surface_id])
+            self.remove_all_line_properties_boundind_surface([new_surface_id]) 
             self.properties._remove_surface_property("degrees_of_freedom_decoupling", surface_id)
 
-            self.actions_to_finalize()
-            self.restore_mesh_data_modified_by_decoupling()
+        self.actions_to_finalize()
+        self.restore_mesh_data_modified_by_decoupling()
 
     def reset_callback(self):
 
