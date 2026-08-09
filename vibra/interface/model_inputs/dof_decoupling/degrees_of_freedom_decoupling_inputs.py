@@ -184,8 +184,8 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
     def remove_callback(self):
 
         for selected_item in self.treeWidget_dof_decoupling.selectedItems():
-            if selected_item.text():
-                surface_id = int(selected_item)
+            if selected_item.text(0):
+                surface_id = int(selected_item.text(0))
 
             data = self.properties._get_property("degrees_of_freedom_decoupling", surface=surface_id)
             if not isinstance(data, dict):

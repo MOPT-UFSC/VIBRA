@@ -1601,6 +1601,9 @@ class Mesh:
         print(f"Map face to solid elements >>> {len(self.face_to_solid_element)}")
         print(f"Difference: {len(self.faces_connectivity) - len(self.face_to_solid_element)}")
 
+        rows = np.isin(np.unique(self.faces_connectivity[:, 0].flatten()), list(self.face_to_solid_element.keys()), invert=True)
+
+        np.savetxt("non_mapped_2d_elements.dat", self.faces_connectivity[rows, :], delimiter=",", fmt="%i")
 
     def get_collapsed_elements(self):
 
@@ -1646,9 +1649,6 @@ class Mesh:
                 if mask_3d.any():
                     self.disconnected_nodes_data["elements_3D"] = [int(node_id) for node_id in all_node_ids[mask_3d]]
 
-            print(f"Solids connectivity: {len(self.solids_connectivity)}", all_node_ids.size, nodes_from_3d_elements.size)
-            print(all_node_ids.size - nodes_from_3d_elements.size)
-
         if self.geometry_information.get("surfaces") and self.nodes_from_surfaces.size:
             nodes_from_2d_elements = np.unique(self.faces_connectivity[:, 4:].flatten())
             if self.nodes_from_surfaces.size != nodes_from_2d_elements.size:
@@ -1668,8 +1668,12 @@ class Mesh:
         if not print_log:
             return
 
+        if not self.disconnected_nodes_data:
+            return
+
+        print("\nThe following disconnected nodes have been detected:")
+
         for key, data in self.disconnected_nodes_data.items():
-            print("\nThe following disconnected nodes have been detected:")
             print(f">> {len(data)} nodes of {key}: {data[:10]}" + ", ..." if len(data) > 10 else "")
 
     def get_list_of_disconnected_nodes(self):

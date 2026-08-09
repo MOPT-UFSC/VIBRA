@@ -572,16 +572,16 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
         ## Temporarily highlights nodes from non-mapped 2D elements after mesh processing
 
-        mesh = app().project.model.mesh
-        rows = np.isin(np.unique(mesh.faces_connectivity[:, 0].flatten()), list(mesh.face_to_solid_element.keys()), invert=True)
-        elements_2d = mesh.faces_connectivity[rows, 0]
-        if elements_2d.size:
-            mesh.collapsed_elements_data["collapsed_2d_elements"] = [int(element_id) for element_id in elements_2d]
-            # print(f"Difference: {len(mesh.faces_connectivity) - len(mesh.face_to_solid_element)}")
-            mesh.nodes_from_collapsed_elements = mesh.get_list_of_nodes_from_collapsed_elements()
-            # app().main_window.selection.set_mesh_selection(faces=elements_2d)
+        # mesh = app().project.model.mesh
+        # rows = np.isin(np.unique(mesh.faces_connectivity[:, 0].flatten()), list(mesh.face_to_solid_element.keys()), invert=True)
+        # elements_2d = mesh.faces_connectivity[rows, 0]
+        # if elements_2d.size:
+        #     mesh.collapsed_elements_data["collapsed_2d_elements"] = [int(element_id) for element_id in elements_2d]
+        #     mesh.nodes_from_collapsed_elements = mesh.get_list_of_nodes_from_collapsed_elements()
+        #     # app().main_window.selection.set_mesh_selection(faces=elements_2d)
+        #     print(f"Difference (???): {len(mesh.faces_connectivity) - len(mesh.face_to_solid_element)} elements")
 
-        ##
+        # ##
 
         logging.info("Updating render... [95/100]")
         app().main_window.action_mesh_workspace_callback()
