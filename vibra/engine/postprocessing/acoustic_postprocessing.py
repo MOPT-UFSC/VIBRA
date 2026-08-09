@@ -11,7 +11,9 @@ import numpy as np
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.engine.postprocessing.acoustic_post_solution_dataclass import NodalParticleVelocities
+from vibra.engine.properties.fluid import Fluid
 from vibra.engine.solution import HarmonicSolution, Solution
+from vibra.interface.numeric_checks.unit_utilities import convert_pressure_unit
 from vibra.interface.viewer_3d.plot_setup import PressurePlotType
 from vibra.utils.lazy_array import LazyArray
 from vibra.utils.signal_processing import process_multiple_iffts_from_one_sided_spectrum_signals
@@ -183,6 +185,31 @@ class AcousticPostprocessing:
                 min_value, max_value = min_max_values
 
         return time_vector[:n], acoustic_pressures, min_value, max_value
+
+    def compute_allowable_pulsation_field_for_screw_compressor(self):
+
+        time_vector, self.waveforms = self.compute_multiple_ifft()
+
+        delta_pressure = np.max(self.waveforms, axis=1) - np.min(self.waveforms, axis=1)
+
+        # avg_pressures = np.zeros(len(self.mesh.nodal_coordinates), dtype=float)
+
+        for vol_id, elements in self.model.mesh.elements_from_volume.items():
+            fluid = self.model.properties._get_property("fluid", volume=vol_id)
+            if not isinstance(fluid, Fluid):
+                continue
+
+            node_ids = np.unique(self.model.mesh.solids_connectivity[elements, 4:].flatten()).astype(int)
+
+            avg_pressures = convert_pressure_unit(fluid.pressure, "Pa (a)", "kPa (a)")
+
+        delta_pressure = convert_pressure_unit(delta_pressure, "Pa (a)", "kPa (a)")
+
+        allowable_limits = 2 * min(2, np.min(28.6 / (avg_pressures**(1/3)))) / 100
+        print(avg_pressures)
+        print(allowable_limits)
+
+        return delta_pressure, 0, np.min(allowable_limits * avg_pressures)
 
     @cache
     def compute_multiple_ifft(self) -> tuple[np.ndarray, np.ndarray]:

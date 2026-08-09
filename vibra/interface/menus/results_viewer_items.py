@@ -45,6 +45,7 @@ class ResultsViewerItems(CommonMenuItems):
         self.item_child_acoustic_shaking_forces = self.add_item("Acoustic Shaking Forces")
         self.item_child_allowable_pulsations_for_reciprocating_compressor = self.add_item("Allowable Pulsation (Reciprocating Compressor)")
         self.item_child_allowable_pulsations_for_screw_compressor = self.add_item("Allowable Pulsation (Screw Compressor)")
+        self.item_child_allowable_pulsations_field_for_screw_compressor = self.add_item("Allowable Pulsation Field (Screw Compressor)")
         self.item_child_TL_NR = self.add_item("Transmission Loss or Attenuation")
         self.item_child_particle_velocity = self.add_item("Particle Velocity")
         self.item_child_acoustic_impedance = self.add_item("Acoustic Impedance")
@@ -109,6 +110,7 @@ class ResultsViewerItems(CommonMenuItems):
         self.item_child_decompose_acoustic_waves.setDisabled(key)
         self.item_child_allowable_pulsations_for_reciprocating_compressor.setDisabled(key)
         self.item_child_allowable_pulsations_for_screw_compressor.setDisabled(key)
+        self.item_child_allowable_pulsations_field_for_screw_compressor.setDisabled(key)
         self.item_child_TL_NR.setDisabled(key)
         self.item_child_particle_velocity.setDisabled(key)
         self.item_child_acoustic_impedance.setDisabled(key)
@@ -194,6 +196,7 @@ class ResultsViewerItems(CommonMenuItems):
             self.item_child_decompose_acoustic_waves.setDisabled(False)
             self.item_child_allowable_pulsations_for_reciprocating_compressor.setDisabled(False)
             self.item_child_allowable_pulsations_for_screw_compressor.setDisabled(False)
+            self.item_child_allowable_pulsations_field_for_screw_compressor.setDisabled(False)
             self.item_child_acoustic_pressure_waveform.setDisabled(False)
             self.item_child_acoustic_pressure_waveform_field.setDisabled(False)
             self.item_child_TL_NR.setDisabled(False)
@@ -224,6 +227,7 @@ class ResultsViewerItems(CommonMenuItems):
                         break
 
         self.item_child_allowable_pulsations_for_screw_compressor.setHidden(not compressor_exists)
+        self.item_child_allowable_pulsations_field_for_screw_compressor.setHidden(not compressor_exists)
 
     def update_tree_visibility_after_solution(self):
         """ Expands and collapses the Top Level Items on 
