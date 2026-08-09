@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from collections import defaultdict
 from functools import cache
 
 # from time import perf_counter
@@ -188,26 +189,48 @@ class AcousticPostprocessing:
 
     def compute_allowable_pulsation_field_for_screw_compressor(self):
 
-        time_vector, self.waveforms = self.compute_multiple_ifft()
+        _, self.waveforms = self.compute_multiple_ifft()
 
         delta_pressure = np.max(self.waveforms, axis=1) - np.min(self.waveforms, axis=1)
 
-        # avg_pressures = np.zeros(len(self.mesh.nodal_coordinates), dtype=float)
+        volumes_to_fluid_map: dict[Fluid, list[int]] = defaultdict(list)
 
         for vol_id, elements in self.model.mesh.elements_from_volume.items():
             fluid = self.model.properties._get_property("fluid", volume=vol_id)
             if not isinstance(fluid, Fluid):
                 continue
 
-            node_ids = np.unique(self.model.mesh.solids_connectivity[elements, 4:].flatten()).astype(int)
+            volumes_to_fluid_map[fluid.identifier].append(vol_id)
 
-            avg_pressures = convert_pressure_unit(fluid.pressure, "Pa (a)", "kPa (a)")
+        if len(volumes_to_fluid_map) == 1:
+            fluid_id = next(iter(volumes_to_fluid_map.keys()))
+            _fluid = self.model.properties.fluid_library.get(fluid_id)
+            fluid_pressures = _fluid.pressure
 
+        else:
+
+            fluid_pressures = np.zeros(len(self.mesh.nodal_coordinates), dtype=float)
+
+            for fluid_id, volume_ids in volumes_to_fluid_map.items():
+                _fluid = self.model.properties.fluid_library.get(fluid_id)
+                if _fluid is None:
+                    continue
+
+                for vol_id in volume_ids:
+                    elements = self.model.mesh.elements_from_volume.get(vol_id)
+                    node_ids = np.unique(self.model.mesh.solids_connectivity[elements, 4:].flatten()).astype(int)
+                    fluid_pressures[[node_ids]] = _fluid.pressure
+
+        # avoid the division-by-zero error
+        if isinstance(fluid_pressures, np.ndarray):
+            zeros_mask = fluid_pressures == 0
+            if np.any(zeros_mask):
+                fluid_pressures[zeros_mask] = np.average(fluid_pressures[~zeros_mask])
+
+        avg_pressures = convert_pressure_unit(fluid_pressures, "Pa (a)", "kPa (a)")
         delta_pressure = convert_pressure_unit(delta_pressure, "Pa (a)", "kPa (a)")
 
-        allowable_limits = 2 * min(2, np.min(28.6 / (avg_pressures**(1/3)))) / 100
-        print(avg_pressures)
-        print(allowable_limits)
+        allowable_limits = min(2, np.min(28.6 / (avg_pressures**(1/3)))) / 100
 
         return delta_pressure, 0, np.min(allowable_limits * avg_pressures)
 
