@@ -38,14 +38,14 @@ class ResultsViewerItems(CommonMenuItems):
         self.item_top_results_viewer_acoustic = self.add_top_item("Results Viewer - Acoustic")
         self.item_child_acoustic_mode_shapes = self.add_item("Acoustic Mode Shapes")
         self.item_child_acoustic_pressure_field = self.add_item("Acoustic Pressure Field")
-        self.item_child_acoustic_pressure_waveform_field = self.add_item("Acoustic Pressure Waveform Field")
-        self.item_child_acoustic_pressure_waveform = self.add_item("Acoustic Pressure Waveform")
+        self.item_child_acoustic_pressure_waveform_2d_plot = self.add_item("Acoustic Pressure Waveform (2D PLot)")
+        self.item_child_acoustic_pressure_waveform_3d_plot = self.add_item("Acoustic Pressure Waveform (3D PLot)")
         self.item_child_acoustic_pressure_frequency_response = self.add_item("Acoustic Pressure Frequency Response")
         self.item_child_acoustic_pressure_frf = self.add_item("Acoustic Presssure FRF")
         self.item_child_acoustic_shaking_forces = self.add_item("Acoustic Shaking Forces")
-        self.item_child_allowable_pulsations_for_reciprocating_compressor = self.add_item("Allowable Pulsation 2D (Reciprocating Compressor)")
-        self.item_child_allowable_pulsations_for_screw_compressor = self.add_item("Allowable Pulsation 2D (Screw Compressor)")
-        self.item_child_allowable_pulsations_field_for_screw_compressor = self.add_item("Allowable Pulsation 3D (Screw Compressor)")
+        self.item_child_allowable_pulsations_screw_compressor_2d_plot = self.add_item("Allowable Pulsations - Screw Compressor (2D Plot)")
+        self.item_child_allowable_pulsations_screw_compressor_3d_plot = self.add_item("Allowable Pulsations - Screw Compressor (3D Plot)")
+        self.item_child_allowable_pulsations_for_reciprocating_compressor = self.add_item("Allowable Pulsations - Recip. Compressor (2D Plot)")
         self.item_child_TL_NR = self.add_item("Transmission Loss or Attenuation")
         self.item_child_particle_velocity = self.add_item("Particle Velocity")
         self.item_child_acoustic_impedance = self.add_item("Acoustic Impedance")
@@ -109,24 +109,24 @@ class ResultsViewerItems(CommonMenuItems):
         self.item_child_acoustic_shaking_forces.setDisabled(key)
         self.item_child_decompose_acoustic_waves.setDisabled(key)
         self.item_child_allowable_pulsations_for_reciprocating_compressor.setDisabled(key)
-        self.item_child_allowable_pulsations_for_screw_compressor.setDisabled(key)
-        self.item_child_allowable_pulsations_field_for_screw_compressor.setDisabled(key)
+        self.item_child_allowable_pulsations_screw_compressor_2d_plot.setDisabled(key)
+        self.item_child_allowable_pulsations_screw_compressor_3d_plot.setDisabled(key)
         self.item_child_TL_NR.setDisabled(key)
         self.item_child_particle_velocity.setDisabled(key)
         self.item_child_acoustic_impedance.setDisabled(key)
         self.item_child_absorption_coefficient.setDisabled(key)
 
         if AnalysisID(app().project.model.analysis_id).is_modal():
-            self.item_child_acoustic_pressure_waveform.setHidden(True)
-            self.item_child_acoustic_pressure_waveform_field.setHidden(True)
+            self.item_child_acoustic_pressure_waveform_2d_plot.setHidden(True)
+            self.item_child_acoustic_pressure_waveform_3d_plot.setHidden(True)
 
         elif app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
             # only allow waveform plots for equally distributed solution steps 
             # with a compressor as the main excitation source
             cond_A = self.project.model.has_spectral_content_been_modified()
             cond_B = not self.project.model.is_there_a_compressor_excitation_in_model()
-            self.item_child_acoustic_pressure_waveform.setHidden(cond_A or cond_B)
-            self.item_child_acoustic_pressure_waveform_field.setHidden(cond_A or cond_B)
+            self.item_child_acoustic_pressure_waveform_2d_plot.setHidden(cond_A or cond_B)
+            self.item_child_acoustic_pressure_waveform_3d_plot.setHidden(cond_A or cond_B)
 
     def modify_structural_results_viewer_items(self, key: bool):
         self.item_top_results_viewer_structural.setHidden(key)
@@ -195,17 +195,17 @@ class ResultsViewerItems(CommonMenuItems):
             self.item_child_acoustic_shaking_forces.setDisabled(False)
             self.item_child_decompose_acoustic_waves.setDisabled(False)
             self.item_child_allowable_pulsations_for_reciprocating_compressor.setDisabled(False)
-            self.item_child_allowable_pulsations_for_screw_compressor.setDisabled(False)
-            self.item_child_allowable_pulsations_field_for_screw_compressor.setDisabled(False)
-            self.item_child_acoustic_pressure_waveform.setDisabled(False)
-            self.item_child_acoustic_pressure_waveform_field.setDisabled(False)
+            self.item_child_allowable_pulsations_screw_compressor_2d_plot.setDisabled(False)
+            self.item_child_allowable_pulsations_screw_compressor_3d_plot.setDisabled(False)
+            self.item_child_acoustic_pressure_waveform_2d_plot.setDisabled(False)
+            self.item_child_acoustic_pressure_waveform_3d_plot.setDisabled(False)
             self.item_child_TL_NR.setDisabled(False)
             self.item_child_particle_velocity.setDisabled(False)
             self.item_child_acoustic_impedance.setDisabled(False)
             self.item_child_absorption_coefficient.setDisabled(False)
 
         self.update_allowable_pulsation_criteria_visibility_for_reciprocating_compressor(analysis_id)
-        self.update_allowable_pulsation_criteria_visibility_for_screw_compressor(analysis_id)
+        self.update_allowable_pulsation_criteria_visibility_screw_compressor(analysis_id)
         self.update_tree_visibility_after_solution()
         self.update_results_items_warnings()
 
@@ -216,7 +216,7 @@ class ResultsViewerItems(CommonMenuItems):
 
         self.item_child_allowable_pulsations_for_reciprocating_compressor.setHidden(not compressor_exists)
 
-    def update_allowable_pulsation_criteria_visibility_for_screw_compressor(self, analysis_id: int):
+    def update_allowable_pulsation_criteria_visibility_screw_compressor(self, analysis_id: int):
         compressor_exists = False
         if analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
             for (prop_label, *args), prop_data in app().project.model.properties.surface_properties.items():
@@ -226,8 +226,8 @@ class ResultsViewerItems(CommonMenuItems):
                         compressor_exists = True
                         break
 
-        self.item_child_allowable_pulsations_for_screw_compressor.setHidden(not compressor_exists)
-        self.item_child_allowable_pulsations_field_for_screw_compressor.setHidden(not compressor_exists)
+        self.item_child_allowable_pulsations_screw_compressor_2d_plot.setHidden(not compressor_exists)
+        self.item_child_allowable_pulsations_screw_compressor_3d_plot.setHidden(not compressor_exists)
 
     def update_tree_visibility_after_solution(self):
         """ Expands and collapses the Top Level Items on 
