@@ -39,14 +39,15 @@ class DegreesOfFreedomDecoupling:
 
         for key, data in self.properties.surface_properties.items():
             (property, surface_id) = key
-            if property == "degrees_of_freedom_decoupling":
+            if property != "degrees_of_freedom_decoupling":
+                continue
 
-                data: dict
-                max_surface_id += 1
-                vol_id =  data.get("volume_to_decouple")
+            data: dict
+            max_surface_id += 1
+            vol_id = data.get("volume_to_decouple")
 
-                if isinstance(vol_id, int):    
-                    self.decouple_info[surface_id] = vol_id
+            if isinstance(vol_id, int):    
+                self.decouple_info[surface_id] = vol_id
 
 
     def process_mappings_for_all_new_entities(self):

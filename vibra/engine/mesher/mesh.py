@@ -1639,11 +1639,14 @@ class Mesh:
         surfaces and lines-related elements.
         """
 
+        print("process_disconnected_nodes_criterion")
+
         self.disconnected_nodes_data.clear()
 
         if self.geometry_information.get("volumes"):
             all_node_ids = self.nodal_coordinates[:, 0].astype(int)
             nodes_from_3d_elements = np.unique(self.solids_connectivity[:, 4:].flatten())
+            print(all_node_ids.size, nodes_from_3d_elements.size)
             if nodes_from_3d_elements.size and nodes_from_3d_elements.size != all_node_ids.size:
                 mask_3d = np.isin(all_node_ids, nodes_from_3d_elements, invert=True)
                 if mask_3d.any():

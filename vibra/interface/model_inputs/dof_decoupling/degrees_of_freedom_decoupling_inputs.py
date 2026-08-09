@@ -14,6 +14,7 @@ from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.model_inputs.structural.definitions.enums import SetupTabType
 from vibra.interface.ui_generated.model.dof_decoupling.degrees_of_freedom_decoupling_inputs_ui import DegreesOfFreedomDecouplingInputs_UI
 from vibra.utils.bidict import bidict
+from collections import defaultdict
 
 
 class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
@@ -111,19 +112,9 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
 
         return
 
-    def apply_callback(self, close_window: bool = False):
+    def map_volumes_to_surfaces(self, surface_ids: list[int]) -> None | dict:
 
-        if self.tabWidget_main.currentIndex() == SetupTabType.LIST:
-            return
-
-        input_ids = self.lineEdit_selection_id.text()
-        surface_ids, message_log = self.mesh.check_selected_ids(input_ids, selection="surfaces")
-
-        if message_log is not None:
-            self.hide()
-            self.lineEdit_selection_id.setFocus()
-            PrintMessageInput(message_log)
-            return
+        surfaces_from_volume = defaultdict(list)
 
         for surface_id in surface_ids:
 
@@ -146,7 +137,54 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
                 PrintMessageInput([warning_title, title, message])
                 return
 
-            data = {"volume_to_decouple" : volumes_from_surface[0]}
+            for volume_id in volumes_from_surface:
+                if surface_id in surfaces_from_volume.get(volume_id, []):
+                    continue
+
+                surfaces_from_volume[volume_id].append(surface_id)
+
+        # check if there is a common volume touching the selected surfaces
+        for vol_id, surf_ids in surfaces_from_volume.items():
+            if len(surf_ids) == len(surface_ids):
+                return {surf_id : vol_id for surf_id in surface_ids}
+
+        surface_to_volume_map = {}
+
+        # select volumes with reduced number of solid elements to decouple the DOF
+        for surf_id in surface_ids:
+            volumes_from_surface = self.model.mesh.volumes_from_surface.get(surface_id)
+            if volumes_from_surface != 2:
+                continue
+
+            n_el1 = len(self.mesh.elements_from_volume.get(volumes_from_surface[0]))
+            n_el2 = len(self.mesh.elements_from_volume.get(volumes_from_surface[1]))
+
+            vol_id = volumes_from_surface[0] if n_el1 > n_el2 else volumes_from_surface[1]
+
+            surface_to_volume_map[surf_id] = vol_id
+
+        return surface_to_volume_map
+
+    def apply_callback(self, close_window: bool = False):
+
+        if self.tabWidget_main.currentIndex() == SetupTabType.LIST:
+            return
+
+        input_ids = self.lineEdit_selection_id.text()
+        surface_ids, message_log = self.mesh.check_selected_ids(input_ids, selection="surfaces")
+
+        if message_log is not None:
+            self.hide()
+            self.lineEdit_selection_id.setFocus()
+            PrintMessageInput(message_log)
+            return
+
+        volume_to_surface_map = self.map_volumes_to_surfaces(surface_ids)
+        if volume_to_surface_map is None:
+            return
+
+        for surface_id, volume_id in volume_to_surface_map.items():
+            data = {"volume_to_decouple" : volume_id}
             self.properties._set_property("degrees_of_freedom_decoupling", data, surface=surface_id)
 
         self.assignment_complete = True
@@ -277,8 +315,8 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
             logging.info("Processing degress of freedom decoupling... [90/100]")
             app().main_window.update_geometry_information()
 
-            logging.info("Processing degress of freedom decoupling... [92/100]")
-            app().project.model.mesh.process_disconnected_nodes_criterion()
+            # logging.info("Processing degress of freedom decoupling... [92/100]")
+            # app().project.model.mesh.process_disconnected_nodes_criterion()
 
             logging.info("Processing degress of freedom decoupling... [95/100]")
             app().main_window.update_plots()
