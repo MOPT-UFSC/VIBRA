@@ -70,10 +70,10 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.results_viewer_items.item_child_acoustic_shaking_forces.clicked.connect(self.add_acoustic_shaking_forces_widget)
         self.results_viewer_items.item_child_decompose_acoustic_waves.clicked.connect(self.add_decompose_acoustic_pressure_waves_widget)
         self.results_viewer_items.item_child_allowable_pulsations_for_reciprocating_compressor.clicked.connect(self.add_allowable_pulsations_for_reciprocating_compressor_widget)
-        self.results_viewer_items.item_child_allowable_pulsations_for_screw_compressor.clicked.connect(self.add_allowable_pulsations_for_screw_compressor_widget)
+        self.results_viewer_items.item_child_allowable_pulsations_for_screw_compressor.clicked.connect(self.add_allowable_pulsations_2d_for_screw_compressor_widget)
         self.results_viewer_items.item_child_acoustic_pressure_waveform.clicked.connect(self.add_acoustic_pressure_waveform_widget)
         self.results_viewer_items.item_child_acoustic_pressure_waveform_field.clicked.connect(self.add_acoustic_pressure_waveform_widget_field)
-        self.results_viewer_items.item_child_allowable_pulsations_field_for_screw_compressor.clicked.connect(self.add_allowable_pulsation_field_for_screw_compressor)
+        self.results_viewer_items.item_child_allowable_pulsations_field_for_screw_compressor.clicked.connect(self.add_allowable_pulsation_3d_for_screw_compressor)
         self.results_viewer_items.item_child_TL_NR.clicked.connect(self.add_TL_NR_widget)
         self.results_viewer_items.item_child_acoustic_mode_shapes.clicked.connect(self.add_acoustic_modal_widget)
         self.results_viewer_items.item_child_particle_velocity.clicked.connect(self.add_particle_velocity_plot_widget)
@@ -169,14 +169,6 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
 
         self.add_widget(self.current_widget)
 
-    def add_allowable_pulsations_for_screw_compressor_widget(self):
-        self.current_widget = app().main_window.input_ui.plot_allowable_pulsation_criteria_for_screw_compressor()
-
-        if app().main_window.results_widget.playing_animation:
-            app().main_window.results_widget.stop_animation()
-
-        self.add_widget(self.current_widget)
-
     def add_acoustic_pressure_waveform_widget(self):
         self.current_widget = app().main_window.input_ui.plot_acoustic_pressure_waveform()
         
@@ -194,14 +186,21 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.add_widget(self.current_widget)
         self.current_widget.plot_data_callback()
 
-    def add_allowable_pulsation_field_for_screw_compressor(self):
-        self.current_widget = app().main_window.input_ui.plot_allowable_pulsation_field_for_screw_compressor()
+    def add_allowable_pulsations_2d_for_screw_compressor_widget(self):
+        self.current_widget = app().main_window.input_ui.plot_allowable_pulsation_2d_for_screw_compressor()
+
+        if app().main_window.results_widget.playing_animation:
+            app().main_window.results_widget.stop_animation()
+
+        self.add_widget(self.current_widget)
+
+    def add_allowable_pulsation_3d_for_screw_compressor(self):
+        self.current_widget = app().main_window.input_ui.plot_allowable_pulsation_3d_for_screw_compressor()
         
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
 
         self.add_widget(self.current_widget)
-        self.current_widget.plot_data_callback()
 
     def add_TL_NR_widget(self):
         self.current_widget = app().main_window.input_ui.plot_TL_NR()
