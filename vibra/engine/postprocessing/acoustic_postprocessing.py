@@ -187,8 +187,8 @@ class AcousticPostprocessing:
 
         return time_vector[:n], acoustic_pressures, min_value, max_value
 
+    @cache
     def compute_allowable_pulsation_field_for_screw_compressor(self):
-
         _, self.waveforms = self.compute_multiple_ifft()
 
         delta_pressure = np.max(self.waveforms, axis=1) - np.min(self.waveforms, axis=1)
@@ -208,7 +208,6 @@ class AcousticPostprocessing:
             fluid_pressures = _fluid.pressure
 
         else:
-
             fluid_pressures = np.zeros(len(self.mesh.nodal_coordinates), dtype=float)
 
             for fluid_id, volume_ids in volumes_to_fluid_map.items():
@@ -230,7 +229,7 @@ class AcousticPostprocessing:
         avg_pressures = convert_pressure_unit(fluid_pressures, "Pa (a)", "kPa (a)")
         delta_pressure = convert_pressure_unit(delta_pressure, "Pa (a)", "kPa (a)")
 
-        allowable_limits = min(2, np.min(28.6 / (avg_pressures**(1/3)))) / 100
+        allowable_limits = min(2, np.min(28.6 / (avg_pressures ** (1 / 3)))) / 100
 
         return delta_pressure, 0, np.min(allowable_limits * avg_pressures)
 
@@ -682,7 +681,7 @@ class AcousticPostprocessing:
 
         _, element_2d, _ = self.model.get_acoustic_elements()
 
-        acoustic_loads = 0.
+        acoustic_loads = 0.0
 
         if surface_ids is None:
             surface_ids = np.unique(self.model.mesh.faces_connectivity[:, 1]).astype(int)
@@ -690,7 +689,6 @@ class AcousticPostprocessing:
         t0 = perf_counter()
 
         for surface_id in surface_ids:
-
             if len(self.model.mesh.volumes_from_surface.get(surface_id)) != 1:
                 continue
 
