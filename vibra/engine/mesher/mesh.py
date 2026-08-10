@@ -15,7 +15,7 @@ from vtkmodules.vtkCommonDataModel import VTK_HEXAHEDRON, VTK_QUADRATIC_HEXAHEDR
 from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridWriter
 
 from vibra.engine.mesher.mesh_setup import HEXAHEDRON_8, HEXAHEDRON_20, TETRAHEDRON_4, TETRAHEDRON_10, ElementTopology, LocalMeshSizeControlSetup, MeshSetup
-from vibra.errors import MeshingAlgorithmError
+from vibra.errors import InvalidMeshSetupError, MeshingAlgorithmError
 from vibra.interface.numeric_checks.unit_utilities import convert_length_unit
 
 MeshQualityParams = Literal["gamma", "volume", "minSJ", "aspectRatio"]
@@ -865,6 +865,8 @@ class Mesh:
         max_size = max([global_size, *setup_sizes])
         coarsening = max_size > global_size
 
+        self._check_local_mesh_size_control_ids(size_control_setups)
+
         if coarsening:
             # Allow mesh sizes larger than the ones derived from the imported
             # geometry points, otherwise gmsh caps the size and coarsening
@@ -909,6 +911,19 @@ class Mesh:
         minimum_field = gmsh.model.mesh.field.add("Min")
         gmsh.model.mesh.field.setNumbers(minimum_field, "FieldsList", fields_list)
         gmsh.model.mesh.field.setAsBackgroundMesh(minimum_field)
+
+    def _check_local_mesh_size_control_ids(self, size_control_setups: list[LocalMeshSizeControlSetup]):
+        """Raises InvalidMeshSetupError if a size control setup references
+        an entity that does not exist in the loaded geometry."""
+        self.process_geometry_information()
+
+        for setup in size_control_setups:
+            if setup.entity_type not in ("surfaces", "volumes"):
+                continue
+
+            _, error_data = self.check_selected_ids(setup.entity_ids, selection=setup.entity_type)
+            if error_data is not None:
+                raise InvalidMeshSetupError(error_data[2])
 
     def _add_coarsening_background_field(
         self,
@@ -2725,28 +2740,28 @@ class Mesh:
             _size = len(all_ids)
 
             if len(list_ids) == 0:
-                message = "An empty input field has been detected for the Selection ID. "
-                message += "You should enter a valid Selection ID to proceed."
+                message = "The Selected ID field is empty. "
+                message += "Please enter one or more valid IDs to proceed."
 
             elif len(list_ids) >= 1:
                 if single_id and len(list_ids) > 1:
-                    message = "Multiple Selected IDs"
+                    message = "Only one Selected ID is allowed here."
 
                 else:
                     try:
                         for _id in list_ids:
                             if _id not in all_ids:
-                                message = "Dear user, you have typed an invalid entry at the Selected ID input field. "
-                                message += f"The input value(s) must be integer(s) number(s) N such that N <= {_size}."
+                                message = f"The selected ID does not exist in the geometry. "
+                                message += f"Please enter a valid ID between 1 and {_size}."
                                 break
 
                     except Exception as error_log:
-                        message = "Dear user, you have typed an invalid entry at the Selected ID input field. "
-                        message += f"The input value(s) must be integer(s) number(s) N such that N <= {_size}."
+                        message = "The selected ID must be an integer. "
+                        message += f"Please enter a valid ID between 1 and {_size}."
                         message += f"\n\n{str(error_log)}"
 
         except Exception as log_error:
-            message = "Wrong input for the Selected ID's. "
+            message = "Invalid input for the Selected ID. "
             message += f"\n\n{str(log_error)}"
 
         if message != "":

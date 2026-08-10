@@ -304,12 +304,23 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         selected_type = self.get_selected_entity_type()
         selected_ids = self.get_selected_ids()
 
+        if not selected_ids:
+            return
+
+        mesh = app().project.model.mesh
+        if mesh is None:
+            return
+
+        _, error_data = mesh.check_selected_ids(selected_ids, selection=selected_type)
+        if error_data is not None:
+            self.hide()
+            PrintMessageInput(error_data)
+            self.show()
+            return
+
         controlled_size = self.doubleSpinBox_local_mesh_size_control_element_size.value()
         self.lineEdit_selected_ids.setText("")
         self.last_synced_ids = set()
-
-        if not selected_ids:
-            return
 
         setup = LocalMeshSizeControlSetup(
             selected_type,
