@@ -203,7 +203,7 @@ class AcousticPostprocessing:
             volumes_to_fluid_map[fluid.identifier].append(vol_id)
 
         if len(volumes_to_fluid_map) == 1:
-            fluid_id = next(iter(volumes_to_fluid_map.keys()))
+            fluid_id = next(iter(volumes_to_fluid_map))
             _fluid = self.model.properties.fluid_library.get(fluid_id)
             fluid_pressures = _fluid.pressure
 
@@ -382,7 +382,7 @@ class AcousticPostprocessing:
         node_to_index = dict(zip(filtered_nodes, np.arange(filtered_nodes.size, dtype=int)))
         solution = self.solution.nodal_solution[filtered_nodes, :]
 
-        pv_data = dict()
+        pv_data = {}
         for node_id, solid_element_ids in map_elements_to_nodes.items():
             Vk = 0.0
             for element_id in solid_element_ids:
@@ -420,7 +420,7 @@ class AcousticPostprocessing:
 
         nodal_particle_velocities = NodalParticleVelocities()
 
-        for key in input_particle_velocity_data.keys():
+        for key in input_particle_velocity_data:
             particle_velocity = input_particle_velocity_data.get(key)
             if particle_velocity is None:
                 continue
@@ -716,12 +716,3 @@ class AcousticPostprocessing:
         print(f"Elapsed time to compute all surfaces: {dt} s")
 
         return acoustic_loads
-
-def plot_graph(matrix):
-    """ """
-    import matplotlib.pyplot as plt
-
-    plt.ion()
-    plt.cla()
-    plt.spy(matrix, color=(0.25, 0.25, 0.25))
-    plt.show()
