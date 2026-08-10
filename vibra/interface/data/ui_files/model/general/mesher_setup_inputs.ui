@@ -1098,7 +1098,7 @@
                    </font>
                   </property>
                   <property name="text">
-                    <string>Element size: </string>
+                   <string>Element size: </string>
                   </property>
                   <property name="alignment">
                    <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
@@ -1215,7 +1215,7 @@
                   </property>
                  </spacer>
                 </item>
-                <item row="1" column="3">
+                <item row="1" column="3" colspan="2">
                  <widget class="QComboBox" name="comboBox_local_mesh_size_control_entity_type">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -1248,12 +1248,12 @@
                   </property>
                   <item>
                    <property name="text">
-                    <string>Surface</string>
+                    <string>Surfaces</string>
                    </property>
                   </item>
                   <item>
                    <property name="text">
-                    <string>Volume</string>
+                    <string>Volumes</string>
                    </property>
                   </item>
                  </widget>
