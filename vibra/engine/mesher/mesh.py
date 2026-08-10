@@ -75,9 +75,9 @@ class Mesh:
 
         self.disconnected_nodes_data = dict()
         self.collapsed_elements_data = dict()
-        self.collapsed_3d_elements = set()
-        self.collapsed_2d_elements = set()
-        self.collapsed_1d_elements = set()
+
+        self.disconnected_nodes = []
+        self.nodes_from_collapsed_elements = []
 
         self.nodes_from_points = dict()
         self.points_from_nodes = dict()
@@ -105,6 +105,8 @@ class Mesh:
         self.normals_surface = dict()
         self.curvatures_surface = dict()
         self.nodal_normals_data = dict()
+        self.element_normals_data = dict()
+
         self.solid_elements_center = dict()
         self.surfaces_centers = dict()
         self.surface_area_from_element_integration = dict()
@@ -185,6 +187,28 @@ class Mesh:
         else:
             return 1
 
+    def _remove_orphan_points(self, print_log: bool = True):
+
+        orphan_points = []
+        for dim, tag in gmsh.model.getEntities(dim=0):
+            upward, _ = gmsh.model.getAdjacencies(dim, tag)
+
+            if len(upward) == 0:
+                orphan_points.append(tag)
+
+        if not orphan_points:
+            return
+
+        if print_log:
+            for orphan_point in orphan_points:
+                point_coords = gmsh.model.getValue(0, orphan_point, [])
+                print("The following orphan points have been detected:")
+                print(f"Point {orphan_point}: ({point_coords[0]}, {point_coords[1]}, {point_coords[2]})")
+
+        dim_tags = [(0, orphan_point) for orphan_point in orphan_points]
+        gmsh.model.occ.remove(dim_tags, recursive=False)
+        gmsh.model.occ.synchronize()
+
     def load_cad(self, path: str | Path, mesh_setup: MeshSetup, threads: int = 0) -> Self:
         if not gmsh.is_initialized():
             gmsh.initialize("", False, interruptible=False)
@@ -207,6 +231,9 @@ class Mesh:
         self._configure_mesh(mesh_setup)
 
         logging.info("Processing geometry data... [25/100]")
+        self._remove_orphan_points()
+
+        logging.info("Processing geometry data... [30/100]")
         self.process_geometry_information()
 
         logging.info("Processing geometry data... [35/100]")
@@ -1041,9 +1068,9 @@ class Mesh:
 
         self.disconnected_nodes_data.clear()
         self.collapsed_elements_data.clear()
-        self.collapsed_1d_elements.clear()
-        self.collapsed_2d_elements.clear()
-        self.collapsed_3d_elements.clear()
+
+        self.disconnected_nodes.clear()
+        self.nodes_from_collapsed_elements.clear()
 
         self.nodes_from_points.clear()
         self.points_from_nodes.clear()
@@ -1274,11 +1301,10 @@ class Mesh:
         self.process_mesh_related_mappings("Post-processing")
 
         logging.info("Post-processing mesh... [80/100]")
-        self.disconnected_nodes_data = self.process_disconnected_nodes_criterion()
+        self.process_disconnected_nodes_criterion()
 
         logging.info("Post-processing mesh... [90/100]")
-        self.collapsed_3d_elements, self.collapsed_2d_elements, self.collapsed_1d_elements = self.get_collapsed_elements()
-        self.collapsed_elements_data = self.get_collapsed_elements_data()
+        self.process_collapsed_elements_data_criterion()
 
     def cache_mesh_information(self):
         self.cache_nodal_coordinates = deepcopy(self.nodal_coordinates)
@@ -1532,6 +1558,8 @@ class Mesh:
 
     def process_mesh_related_mappings(self, label: str = "Loading"):
 
+        print("process_mesh_related_mappings")
+
         logging.info(f"{label} mesh... [70/100]")
         self.map_elements_from_volumes()
 
@@ -1652,6 +1680,10 @@ class Mesh:
             self.face_to_solid_element[e2d_id] = e3d_id
             self.solid_to_face_elements[e3d_id].append(e2d_id)
 
+        print(f"Map face to solid elements >>> {len(self.face_to_solid_element)}")
+        print(f"Number of surface elements >>> {len(self.faces_connectivity)}")
+        print(f"Difference: {len(self.faces_connectivity) - len(self.face_to_solid_element)}")
+
     def map_face_elements_to_solid_elements(self):
         """
         This method implements a faster algorithm when compared with
@@ -1702,6 +1734,14 @@ class Mesh:
             self.face_to_solid_element[face_id] = solid_id
             self.solid_to_face_elements[solid_id].append(face_id)
 
+        print(f"Number of surface elements >>> {len(self.faces_connectivity)}")
+        print(f"Map face to solid elements >>> {len(self.face_to_solid_element)}")
+        print(f"Difference: {len(self.faces_connectivity) - len(self.face_to_solid_element)}")
+
+        rows = np.isin(np.unique(self.faces_connectivity[:, 0].flatten()), list(self.face_to_solid_element.keys()), invert=True)
+
+        np.savetxt("non_mapped_2d_elements.dat", self.faces_connectivity[rows, :], delimiter=",", fmt="%i")
+
     def get_collapsed_elements(self):
 
         logging.info("Checking collapsed 3D elements... [90/100]")
@@ -1730,94 +1770,117 @@ class Mesh:
         )
         return mask
 
-    def process_disconnected_nodes_criterion(self):
+    def process_disconnected_nodes_criterion(self, print_log: bool = True):
         """
         This method processes the disconnected nodes criterion for volumes,
         surfaces and lines-related elements.
         """
 
-        disconnected_nodes_data = dict()
+        self.disconnected_nodes_data.clear()
+
         if self.geometry_information.get("volumes"):
+            all_node_ids = self.nodal_coordinates[:, 0].astype(int)
             nodes_from_3d_elements = np.unique(self.solids_connectivity[:, 4:].flatten())
-            if nodes_from_3d_elements.size:
-                if self.nodes_from_volumes.size != nodes_from_3d_elements.size:
-                    mask_3d = np.isin(self.nodes_from_volumes, nodes_from_3d_elements, invert=True)
-                    if mask_3d.any():
-                        disconnected_nodes_data["elements_3D"] = [int(node_id) for node_id in self.nodes_from_volumes[mask_3d]]
+            if nodes_from_3d_elements.size and nodes_from_3d_elements.size != all_node_ids.size:
+                mask_3d = np.isin(all_node_ids, nodes_from_3d_elements, invert=True)
+                if mask_3d.any():
+                    self.disconnected_nodes_data["elements_3D"] = [int(node_id) for node_id in all_node_ids[mask_3d]]
 
-        if self.geometry_information.get("surfaces"):
+        if self.geometry_information.get("surfaces") and self.nodes_from_surfaces.size:
             nodes_from_2d_elements = np.unique(self.faces_connectivity[:, 4:].flatten())
-            if nodes_from_2d_elements.size:
-                if self.nodes_from_surfaces.size != nodes_from_2d_elements.size:
-                    mask_2d = np.isin(self.nodes_from_surfaces, nodes_from_2d_elements, invert=True)
-                    if mask_2d.any():
-                        disconnected_nodes_data["elements_2D"] = [int(node_id) for node_id in self.nodes_from_surfaces[mask_2d]]
+            if self.nodes_from_surfaces.size != nodes_from_2d_elements.size:
+                mask_2d = np.isin(self.nodes_from_surfaces, nodes_from_2d_elements, invert=True)
+                if mask_2d.any():
+                    self.disconnected_nodes_data["elements_2D"] = [int(node_id) for node_id in self.nodes_from_surfaces[mask_2d]]
 
-        if self.geometry_information.get("lines"):
+        if self.geometry_information.get("lines") and self.nodes_from_lines.size:
             nodes_from_1d_elements = np.unique(self.lines_connectivity[:, 4:].flatten())
-            if nodes_from_1d_elements.size:
-                if self.nodes_from_lines.size != nodes_from_1d_elements.size:
-                    mask_1d = np.isin(self.nodes_from_lines, nodes_from_1d_elements, invert=True)
-                    if mask_1d.any():
-                        disconnected_nodes_data["elements_1D"] = [int(node_id) for node_id in self.nodes_from_lines[mask_1d]]
+            if self.nodes_from_lines.size != nodes_from_1d_elements.size:
+                mask_1d = np.isin(self.nodes_from_lines, nodes_from_1d_elements, invert=True)
+                if mask_1d.any():
+                    self.disconnected_nodes_data["elements_1D"] = [int(node_id) for node_id in self.nodes_from_lines[mask_1d]]
 
-        return disconnected_nodes_data
+        self.disconnected_nodes = self.get_list_of_disconnected_nodes()
+
+        if not print_log:
+            return
+
+        if not self.disconnected_nodes_data:
+            return
+
+        print("\nThe following disconnected nodes have been detected:")
+
+        for key, data in self.disconnected_nodes_data.items():
+            print(f">> {len(data)} nodes of {key}: {data[:10]}" + ", ..." if len(data) > 10 else "")
 
     def get_list_of_disconnected_nodes(self):
         """
         This method returns the disconnected nodes list if they exist.
         """
-        disconnected_nodes = self.disconnected_nodes_data.get("elements_3D")
-        if isinstance(disconnected_nodes, list) and len(disconnected_nodes):
-            return disconnected_nodes
 
-        disconnected_nodes = self.disconnected_nodes_data.get("elements_2D")
-        if isinstance(disconnected_nodes, list) and len(disconnected_nodes):
-            return disconnected_nodes
+        disconnected_nodes = []
 
-        disconnected_nodes = self.disconnected_nodes_data.get("elements_1D")
-        if isinstance(disconnected_nodes, list) and len(disconnected_nodes):
-            return disconnected_nodes
+        disconnected_nodes_3d = self.disconnected_nodes_data.get("elements_3D")
+        if isinstance(disconnected_nodes_3d, list) and len(disconnected_nodes_3d):
+            disconnected_nodes.extend(disconnected_nodes_3d)
 
-        return list()
+        disconnected_nodes_2d = self.disconnected_nodes_data.get("elements_2D")
+        if isinstance(disconnected_nodes_2d, list) and len(disconnected_nodes_2d):
+            disconnected_nodes.extend(disconnected_nodes_2d)
+
+        disconnected_nodes_1d = self.disconnected_nodes_data.get("elements_1D")
+        if isinstance(disconnected_nodes_1d, list) and len(disconnected_nodes_1d):
+            disconnected_nodes.extend(disconnected_nodes_1d)
+
+        if not disconnected_nodes:
+            return []
+
+        return [int(node_id) for node_id in np.unique(disconnected_nodes)]
 
     def get_list_of_nodes_from_collapsed_elements(self):
         """
         This method returns a list containing the nodes from collapsed elements.
         """
-        nodes_from_collapsed_1d_elements = self.lines_connectivity[np.array(list(self.collapsed_1d_elements), dtype=int), 4:].flatten()
-        nodes_from_collapsed_2d_elements = self.faces_connectivity[np.array(list(self.collapsed_2d_elements), dtype=int), 4:].flatten()
-        nodes_from_collapsed_3d_elements = self.solids_connectivity[np.array(list(self.collapsed_3d_elements), dtype=int), 4:].flatten()
 
-        nodes_from_collapsed_elements = np.concatenate(
-            [
-                nodes_from_collapsed_1d_elements,
-                nodes_from_collapsed_2d_elements,
-                nodes_from_collapsed_3d_elements,
-            ]
-        )
+        nodes_from_collapsed_elements = []
 
-        nodes_from_collapsed_elements = np.unique(nodes_from_collapsed_elements)
+        collapsed_1d_elements = self.collapsed_elements_data.get("collapsed_1d_elements", [])
+        collapsed_2d_elements = self.collapsed_elements_data.get("collapsed_2d_elements", [])
+        collapsed_3d_elements = self.collapsed_elements_data.get("collapsed_3d_elements", [])
 
-        return nodes_from_collapsed_elements
+        if collapsed_1d_elements:
+            nodes_1d_elements = self.lines_connectivity[collapsed_1d_elements, 4:].flatten()
+            nodes_from_collapsed_elements.extend(nodes_1d_elements)
 
-    def get_collapsed_elements_data(self) -> dict:
+        if collapsed_2d_elements:
+            nodes_2d_elements = self.faces_connectivity[collapsed_2d_elements, 4:].flatten()
+            nodes_from_collapsed_elements.extend(nodes_2d_elements)
+
+        if collapsed_3d_elements:
+            nodes_3d_elements = self.solids_connectivity[collapsed_3d_elements, 4:].flatten()
+            nodes_from_collapsed_elements.extend(nodes_3d_elements)
+
+        if not nodes_from_collapsed_elements:
+            return []
+        
+        return [int(node_id) for node_id in np.unique(nodes_from_collapsed_elements)]
+
+    def process_collapsed_elements_data_criterion(self):
         """
         This method returns the collapsed elements data in form of a dictionary.
         """
-        collapsed_elements_data = dict()
-        collapsed_1d_elements = list(self.collapsed_1d_elements)
-        collapsed_2d_elements = list(self.collapsed_2d_elements)
-        collapsed_3d_elements = list(self.collapsed_3d_elements)
+
+        self.collapsed_elements_data.clear()
+        collapsed_3d_elements, collapsed_2d_elements, collapsed_1d_elements = self.get_collapsed_elements()
 
         if collapsed_1d_elements or collapsed_2d_elements or collapsed_3d_elements:
-            collapsed_elements_data = {
-                "collpased_1d_elements": collapsed_1d_elements,
-                "collpased_2d_elements": collapsed_2d_elements,
-                "collpased_3d_elements": collapsed_3d_elements,
+            self.collapsed_elements_data = {
+                "collpased_1d_elements": list(collapsed_1d_elements),
+                "collpased_2d_elements": list(collapsed_2d_elements),
+                "collpased_3d_elements": list(collapsed_3d_elements),
             }
 
-        return collapsed_elements_data
+        self.nodes_from_collapsed_elements = self.get_list_of_nodes_from_collapsed_elements()
 
     def get_face_elements_connected_to_nodes(self, node_ids: list[int] | np.ndarray, surface_id: int | None = None) -> dict:
         """
@@ -2647,9 +2710,18 @@ class Mesh:
 
         return cross
 
+    def get_element2d_center_coordinates(self, connectivities: np.ndarray):
+        element_nodes_coords = np.array([self.nodal_coordinates[node_ids, 1:] for node_ids in connectivities[:, 4:].T])
+        element_nodes_coords = element_nodes_coords.transpose(1, 0, 2)
+        return np.average(element_nodes_coords, axis=1)
+
     def set_nodal_normals_data(self, surface_id: int, normals_data: dict):
         for node_id, nodal_normal in normals_data.items():
             self.nodal_normals_data[surface_id, node_id] = nodal_normal
+
+    def set_elements_normals_data(self, surface_id: int, normals_data: dict):
+        for element_id, (element_center, e_normal) in normals_data.items():
+            self.element_normals_data[surface_id, element_id] = (e_normal, element_center)
 
     def get_principal_diagonal_structure_parallelepiped(self):
         """

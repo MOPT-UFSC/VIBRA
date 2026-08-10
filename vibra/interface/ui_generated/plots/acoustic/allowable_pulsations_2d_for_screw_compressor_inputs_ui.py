@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'allowable_pulsations_for_screw_compressor_inputs.ui'
+## Form generated from reading UI file 'allowable_pulsations_2d_for_screw_compressor_inputs.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.9.2
 ##
@@ -471,7 +471,7 @@ class Ui_Form(object):
 
 
 
-class AllowablePulsationsForScrewCompressorInputs_UI(QWidget, Ui_Form):
+class AllowablePulsations2dForScrewCompressorInputs_UI(QWidget, Ui_Form):
     """
     Component Hierarchy:
     - Form: QWidget

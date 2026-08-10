@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'acoustic_pressure_waveform_inputs.ui'
+## Form generated from reading UI file 'acoustic_pressure_waveform_2d_plot_inputs.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.9.2
 ##
@@ -243,7 +243,7 @@ class Ui_Form(object):
 
 
 
-class AcousticPressureWaveformInputs_UI(QWidget, Ui_Form):
+class AcousticPressureWaveform2dPlotInputs_UI(QWidget, Ui_Form):
     """
     Component Hierarchy:
     - Form: QWidget

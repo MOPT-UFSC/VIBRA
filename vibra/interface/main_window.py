@@ -490,8 +490,11 @@ class MainWindow(MainWindow_UI):
 
         self.reload_visualization_filter()
 
-        if self.results_widget.visualization_filter.normal_symbols:
-            self.results_widget.visualization_filter.normal_symbols = False
+        nodal_normals = self.results_widget.visualization_filter.nodal_normal_symbols
+        element_normals = self.results_widget.visualization_filter.element_normal_symbols
+        if nodal_normals or element_normals:
+            self.results_widget.visualization_filter.nodal_normal_symbols = False
+            self.results_widget.visualization_filter.element_normal_symbols = False
             self.update_symbols()
 
     def action_mesh_workspace_callback(self):
@@ -667,7 +670,7 @@ class MainWindow(MainWindow_UI):
             f";;Geometry Files ({geo})"
             f";;Mesh Files ({mesh})"
             ";;All Files (*)"
-        )
+        )  # fmt: skip
 
         load_path, check = QFileDialog.getOpenFileName(
             self,
@@ -705,7 +708,7 @@ class MainWindow(MainWindow_UI):
         path = app().config.get_last_folder_for("geometry_mesh_folder", default=self.user_path)
 
         geo = qt_extensions(SUPPORTED_GEOMETRY_EXTENSIONS)
-        ext_filter = (f"Geometry Files ({geo});; All Files (*)")
+        ext_filter = f"Geometry Files ({geo});; All Files (*)"
 
         load_path, check = QFileDialog.getOpenFileName(
             self,
@@ -730,7 +733,7 @@ class MainWindow(MainWindow_UI):
         path = app().config.get_last_folder_for("geometry_mesh_folder", default=self.user_path)
 
         mesh = qt_extensions(SUPPORTED_MESH_EXTENSIONS)
-        ext_filter = (f"Mesh Files ({mesh});; All Files (*)")
+        ext_filter = f"Mesh Files ({mesh});; All Files (*)"
 
         load_path, check = QFileDialog.getOpenFileName(
             self,

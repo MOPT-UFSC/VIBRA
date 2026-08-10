@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from collections import defaultdict
 from functools import cache
 
 # from time import perf_counter
@@ -11,7 +12,9 @@ import numpy as np
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.engine.postprocessing.acoustic_post_solution_dataclass import NodalParticleVelocities
+from vibra.engine.properties.fluid import Fluid
 from vibra.engine.solution import HarmonicSolution, Solution
+from vibra.interface.numeric_checks.unit_utilities import convert_pressure_unit
 from vibra.interface.viewer_3d.plot_setup import PressurePlotType
 from vibra.utils.lazy_array import LazyArray
 from vibra.utils.signal_processing import process_multiple_iffts_from_one_sided_spectrum_signals
@@ -185,6 +188,52 @@ class AcousticPostprocessing:
         return time_vector[:n], acoustic_pressures, min_value, max_value
 
     @cache
+    def compute_allowable_pulsation_field_for_screw_compressor(self):
+        _, self.waveforms = self.compute_multiple_ifft()
+
+        delta_pressure = np.max(self.waveforms, axis=1) - np.min(self.waveforms, axis=1)
+
+        volumes_to_fluid_map: dict[Fluid, list[int]] = defaultdict(list)
+
+        for vol_id, elements in self.model.mesh.elements_from_volume.items():
+            fluid = self.model.properties._get_property("fluid", volume=vol_id)
+            if not isinstance(fluid, Fluid):
+                continue
+
+            volumes_to_fluid_map[fluid.identifier].append(vol_id)
+
+        if len(volumes_to_fluid_map) == 1:
+            fluid_id = next(iter(volumes_to_fluid_map))
+            _fluid = self.model.properties.fluid_library.get(fluid_id)
+            fluid_pressures = _fluid.pressure
+
+        else:
+            fluid_pressures = np.zeros(len(self.mesh.nodal_coordinates), dtype=float)
+
+            for fluid_id, volume_ids in volumes_to_fluid_map.items():
+                _fluid = self.model.properties.fluid_library.get(fluid_id)
+                if _fluid is None:
+                    continue
+
+                for vol_id in volume_ids:
+                    elements = self.model.mesh.elements_from_volume.get(vol_id)
+                    node_ids = np.unique(self.model.mesh.solids_connectivity[elements, 4:].flatten()).astype(int)
+                    fluid_pressures[[node_ids]] = _fluid.pressure
+
+        # avoid the division-by-zero error
+        if isinstance(fluid_pressures, np.ndarray):
+            zeros_mask = fluid_pressures == 0
+            if np.any(zeros_mask):
+                fluid_pressures[zeros_mask] = np.average(fluid_pressures[~zeros_mask])
+
+        avg_pressures = convert_pressure_unit(fluid_pressures, "Pa (a)", "kPa (a)")
+        delta_pressure = convert_pressure_unit(delta_pressure, "Pa (a)", "kPa (a)")
+
+        allowable_limits = min(2, np.min(28.6 / (avg_pressures ** (1 / 3)))) / 100
+
+        return delta_pressure, 0, np.min(allowable_limits * avg_pressures)
+
+    @cache
     def compute_multiple_ifft(self) -> tuple[np.ndarray, np.ndarray]:
         assert isinstance(self.solution, HarmonicSolution)
         assert self.solution.analysis_id.is_acoustic()  # for now, I guess
@@ -332,7 +381,7 @@ class AcousticPostprocessing:
         node_to_index = dict(zip(filtered_nodes, np.arange(filtered_nodes.size, dtype=int)))
         solution = self.solution.nodal_solution[filtered_nodes, :]
 
-        pv_data = dict()
+        pv_data = {}
         for node_id, solid_element_ids in map_elements_to_nodes.items():
             Vk = 0.0
             for element_id in solid_element_ids:
@@ -370,7 +419,7 @@ class AcousticPostprocessing:
 
         nodal_particle_velocities = NodalParticleVelocities()
 
-        for key in input_particle_velocity_data.keys():
+        for key in input_particle_velocity_data:
             particle_velocity = input_particle_velocity_data.get(key)
             if particle_velocity is None:
                 continue
@@ -626,12 +675,42 @@ class AcousticPostprocessing:
 
         return frequencies, noise_reduction
 
+    def calculate_loads_caused_by_acoustic_pressure_field(self, nodal_solution: np.ndarray, surface_ids: list[int] | None = None):
 
-def plot_graph(matrix):
-    """ """
-    import matplotlib.pyplot as plt
+        from time import perf_counter
 
-    plt.ion()
-    plt.cla()
-    plt.spy(matrix, color=(0.25, 0.25, 0.25))
-    plt.show()
+        _, element_2d, _ = self.model.get_acoustic_elements()
+
+        acoustic_loads = 0.0
+
+        if surface_ids is None:
+            surface_ids = np.unique(self.model.mesh.faces_connectivity[:, 1]).astype(int)
+
+        t0 = perf_counter()
+
+        for surface_id in surface_ids:
+            if len(self.model.mesh.volumes_from_surface.get(surface_id)) != 1:
+                continue
+
+            # surf_connect = self.model.mesh.get_connectivity_from_surface(surface_id)
+
+            rows = self.model.mesh.faces_connectivity[:, 1] == surface_id
+
+            surface_elements_connectivities = self.model.mesh.faces_connectivity[rows, :]
+            surface_elements_normals = self.model.mesh.get_element_face_normal_batched(surface_elements_connectivities)
+
+            element_2d.reorder_connect(surface_elements_connectivities[:, 4:])
+            acoustic_loads += element_2d.acoustic_pressure_load(surface_elements_normals.reshape(-1, 3, 1), nodal_solution)
+
+            element_normals_data = {}
+            element_center_coords = self.mesh.get_element2d_center_coordinates(surface_elements_connectivities)
+
+            for i, element_id in enumerate(surface_elements_connectivities[:, 0]):
+                element_normals_data[int(element_id)] = (element_center_coords[i, :], surface_elements_normals[i, :])
+
+            self.mesh.set_elements_normals_data(surface_id, element_normals_data)
+
+        dt = perf_counter() - t0
+        print(f"Elapsed time to compute all surfaces: {dt} s")
+
+        return acoustic_loads
