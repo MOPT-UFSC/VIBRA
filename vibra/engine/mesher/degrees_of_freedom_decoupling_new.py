@@ -24,8 +24,8 @@ class DegreesOfFreedomDecoupling:
     def initialize(self):
         self.decouple_info = {}
         self.nodes_mapping = {}
+        self.volumes_from_node = defaultdict(list)
         self.volume_to_surfaces_map = defaultdict(list)
-
 
     def gathering_decoupling_information(self):
         """ This method gathers all existing decoupling 
@@ -34,6 +34,7 @@ class DegreesOfFreedomDecoupling:
         self.decouple_info.clear()
         self.nodes_mapping.clear()
         self.volume_to_surfaces_map.clear()
+        self.volumes_from_node.clear()
 
         if self.mesh.cache_nodal_coordinates is None:
             return
@@ -170,6 +171,19 @@ class DegreesOfFreedomDecoupling:
 
         nodes_from_surfaces = list(nodes_from_surfaces)
 
+        self.map_nodes_to_volumes(nodes_from_surfaces)
+
+        count = 0
+        data = np.zeros((len(self.volumes_from_node), 2), dtype=int)
+
+        for node_id, vol_ids in self.volumes_from_node.items():
+            data[:, :] = [node_id, len(vol_ids)]
+            count += len(vol_ids)
+
+        np.savetxt("nodes_from_surface.dat", data, fmt="%i", delimiter=",")
+
+        print(f"Mapping nodes to volumes: {len(self.volumes_from_node)} {count} {len(nodes_from_surfaces)}")
+
         # create the twin nodes indexes
         twin_nodes = np.arange(0, len(nodes_from_surfaces), dtype=int) + int(max_node_id) + 1
 
@@ -183,6 +197,24 @@ class DegreesOfFreedomDecoupling:
 
         # append the twin nodes data in the nodal coordinates matrix
         self.mesh.nodal_coordinates = np.append(nodal_coordinates, coords_from_twin_nodes, axis=0)
+
+
+    def map_nodes_to_volumes(self, node_ids: list[int]):
+        volumes_to_decouple = list(self.decouple_info.values())
+        mask = np.any(np.isin(self.mesh.solids_connectivity[:, 4:], node_ids), axis=1)
+        for _, vol_id, _, _, *connect in self.mesh.solids_connectivity[mask, :]:
+            if vol_id not in volumes_to_decouple:
+                continue
+
+            for node_id in connect:
+                if node_id not in node_ids:
+                    continue
+
+                node_volumes = self.volumes_from_node[node_id]
+                if vol_id in node_volumes:
+                    continue
+
+                node_volumes.append(vol_id)
 
 
     def export_nodes_mapping(self):
