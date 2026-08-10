@@ -14,8 +14,9 @@ class ResultsViewerItems(CommonMenuItems):
     in the items menu, located on the left side of the interface.
 
     """
+
     def __init__(self):
-        super().__init__()
+        super().__init__(selectable=True)  # prevents reselecting the same item
 
         self.project = app().project
 
@@ -54,8 +55,8 @@ class ResultsViewerItems(CommonMenuItems):
 
         self.top_level_items = [
             self.item_top_results_viewer_acoustic,
-            self.item_top_results_viewer_structural
-            ]
+            self.item_top_results_viewer_structural,
+        ]
 
     def _create_connections(self):
         """
@@ -73,7 +74,7 @@ class ResultsViewerItems(CommonMenuItems):
 
                 function_name = item_child_name + "_callback"
                 function_exists = hasattr(self, function_name)
-            
+
                 if not function_exists:
                     continue
 
@@ -121,7 +122,7 @@ class ResultsViewerItems(CommonMenuItems):
             self.item_child_acoustic_pressure_waveform_3d_plot.setHidden(True)
 
         elif app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
-            # only allow waveform plots for equally distributed solution steps 
+            # only allow waveform plots for equally distributed solution steps
             # with a compressor as the main excitation source
             cond_A = self.project.model.has_spectral_content_been_modified()
             cond_B = not self.project.model.is_there_a_compressor_excitation_in_model()
@@ -135,7 +136,7 @@ class ResultsViewerItems(CommonMenuItems):
         # self.item_child_reaction_frequency_response.setDisabled(key)
         # self.item_child_stress_field.setDisabled(key)
         self.item_child_structural_mode_shapes.setDisabled(key)
-    
+
     def update_structural_analysis_visibility_items(self):
         self.item_top_results_viewer_structural.setHidden(False)
         self.item_top_results_viewer_acoustic.setHidden(True)
@@ -165,7 +166,7 @@ class ResultsViewerItems(CommonMenuItems):
         elif analysis_id.is_acoustic():
             self.update_acoustic_analysis_visibility_items()
 
-        elif analysis_id.is_coupled():    
+        elif analysis_id.is_coupled():
             self.update_coupled_analysis_visibility_items()
 
         if analysis_id == AnalysisID.STRUCTURAL_HARMONIC:
@@ -174,13 +175,13 @@ class ResultsViewerItems(CommonMenuItems):
             # self.item_child_reaction_frequency_response.setDisabled(False)
             # self.item_child_stress_field.setDisabled(False)
             # self.item_child_stress_frequency_response.setDisabled(False)
-        
+
         elif analysis_id == AnalysisID.STRUCTURAL_MODAL:
             self.item_child_structural_mode_shapes.setDisabled(False)
-        
+
         elif analysis_id == AnalysisID.ACOUSTIC_MODAL:
             self.item_child_acoustic_mode_shapes.setDisabled(False)
-        
+
         elif analysis_id in [AnalysisID.ACOUSTIC_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
             if analysis_id == AnalysisID.COUPLED_HARMONIC:
                 self.item_child_structural_results_fields.setDisabled(False)
@@ -230,8 +231,8 @@ class ResultsViewerItems(CommonMenuItems):
         self.item_child_allowable_pulsations_screw_compressor_3d_plot.setHidden(not compressor_exists)
 
     def update_tree_visibility_after_solution(self):
-        """ Expands and collapses the Top Level Items on 
-            the menu after the solution is done.
+        """Expands and collapses the Top Level Items on
+        the menu after the solution is done.
         """
         analysis_id = app().project.model.analysis_id
 
@@ -245,19 +246,19 @@ class ResultsViewerItems(CommonMenuItems):
             self.expandItem(self.item_top_results_viewer_structural)
             self.expandItem(self.item_top_results_viewer_acoustic)
 
-    def set_theme(self, theme : str):
+    def set_theme(self, theme: str):
 
         if theme == "dark":
-            self.line_color = Color(26,115,232,150).to_qt()
-            self.background_color = Color(60,60,70).to_qt()
+            self.line_color = Color(26, 115, 232, 150).to_qt()
+            self.background_color = Color(60, 60, 70).to_qt()
         else:
-            self.line_color = Color(26,115,232,150).to_qt()
-            self.background_color = Color(225,230,230).to_qt()
-    
+            self.line_color = Color(26, 115, 232, 150).to_qt()
+            self.background_color = Color(225, 230, 230).to_qt()
+
         border_role = Qt.UserRole + 1
         border_pen = QPen(self.line_color)
         border_pen.setWidth(1)
-            
+
         for item in self.top_level_items:
             item.setBackground(0, self.background_color)
             item.setData(0, border_role, border_pen)
@@ -270,7 +271,6 @@ class ResultsViewerItems(CommonMenuItems):
         for top_level_item in self.top_level_items:
             top_level_item.set_warning(warning)
             for index in range(top_level_item.childCount()):
-
                 item_child: ChildTreeWidgetItem = top_level_item.child(index)
                 if item_child.isDisabled():
                     item_child.setToolTip(0, "")

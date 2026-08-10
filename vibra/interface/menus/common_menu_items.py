@@ -1,22 +1,15 @@
-from PySide6.QtWidgets import QTreeWidget, QTreeWidgetItem
-from PySide6.QtGui import QIcon, QFont
-from PySide6.QtCore import Qt
-
-from vibra.interface.menus.border_item_delegate import BorderItemDelegate
-from vibra import ICON_DIR
-from vibra.interface.menus.tool_tip import ToolTip
+from pathlib import Path
 
 from molde import Color
 from molde.colors import color_names
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QFont, QIcon
+from PySide6.QtWidgets import QTreeWidget, QTreeWidgetItem
 
-from pathlib import Path
+from vibra import ICON_DIR
+from vibra.interface.menus.border_item_delegate import BorderItemDelegate
+from vibra.interface.menus.tool_tip import ToolTip
 
-# class MyDelegate(QItemDelegate):      
-#     def __init__(self):    
-#         QItemDelegate.__init__(self)  
-
-#     def sizeHint(self, option, index):  
-#         return QSize(32,32)
 
 class CommonMenuItems(QTreeWidget):
     """Common Menu Items
@@ -25,14 +18,15 @@ class CommonMenuItems(QTreeWidget):
 
     """
 
-    def __init__(self):
+    def __init__(self, selectable: bool = False):
         super().__init__()
 
         self._last_top_level = None
         self._callback_list = dict()
+        self._last_item = None
+        self._selectable = selectable
 
         self._config_tree()
-        
 
     def add_top_item(self, name, icon=None, expanded=True):
         item = TopTreeWidgetItem(name)
@@ -50,8 +44,8 @@ class CommonMenuItems(QTreeWidget):
         self._last_top_level.addChild(item)
         item.setFont(0, self.font_item)
 
-        # if callable(callback):
-        #     item.clicked.connect(callback)
+        if callable(callback):
+            item.clicked.connect(callback)
 
         return item
 
@@ -66,16 +60,21 @@ class CommonMenuItems(QTreeWidget):
         delegate = BorderItemDelegate(self, Qt.UserRole + 1)
         self.setItemDelegate(delegate)
         self.itemClicked.connect(self.item_clicked_callback)
-        
-        # self.setItemDelegate(MyDelegate())
 
-    def item_clicked_callback(self, item, _):
+    def item_clicked_callback(self, item: "ChildTreeWidgetItem", _):
         if item.isDisabled():
             return
-        
+
+        if not self._selectable:
+            item.setSelected(False)
+
+        elif item == self._last_item:
+            return
+
         if not hasattr(item, "clicked"):
             return
-        
+
+        self._last_item = item
         item.clicked.emit()
 
 
@@ -84,14 +83,14 @@ class CommonMenuItems(QTreeWidget):
 
 
 class CustomBoundSignal:
-    '''
-    Copies the funcionality of pyqtBoundSignal and is meant 
+    """
+    Copies the funcionality of pyqtBoundSignal and is meant
     to be used in objects that are not instances of QObjects.
-    '''
+    """
 
     def __init__(self) -> None:
         self.callbacks = set()
-    
+
     def connect(self, function):
         self.callbacks.add(function)
 
@@ -121,20 +120,7 @@ class TopTreeWidgetItem(QTreeWidgetItem):
         font.setPointSize(10)
         self.setFont(0, font)
         self.setTextAlignment(0, Qt.AlignHCenter | Qt.AlignVCenter)
-        self.setFlags(Qt.ItemIsDragEnabled|Qt.ItemIsUserCheckable|Qt.ItemIsEnabled)
-
-        # border_role = Qt.UserRole + 1
-        # border_pen = QPen(self.line_color)
-        # border_pen.setWidth(1)
-
-        # linear_gradient = QLinearGradient(0, 0, 400, 0)
-        # linear_gradient.setColorAt(0, QColor(240, 240, 240))#, 150))
-        # linear_gradient.setColorAt(1, QColor(102, 204, 255))#, 100))
-
-        # self.setData(0, border_role, border_pen)
-        # self.setForeground(0, self.foreground_color)
-        # self.setBackground(0, linear_gradient)
-        # self.setBackground(0, self.background_color)
+        self.setFlags(Qt.ItemIsDragEnabled | Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
 
     def set_warning(self, warning: bool):
         if warning:
@@ -159,7 +145,7 @@ class ChildTreeWidgetItem(QTreeWidgetItem):
         self.tool_tips = ToolTip()
         self.property_name = ""
         self.should_paint = False
-    
+
     def set_property_name(self, name: str):
         name = name.lower()
         name = name.strip()
@@ -188,7 +174,7 @@ class ChildTreeWidgetItem(QTreeWidgetItem):
             font.setBold(True)
             self.setFont(0, font)
             self.setForeground(0, Color(*color_names.RED.to_rgb()).to_qt())
-            #TODO: change the icon
+            # TODO: change the icon
             error_icon = QIcon(str(Path(ICON_DIR / "model_setup_items/error_red.png")))
             self.setIcon(0, error_icon)
         else:
@@ -206,11 +192,11 @@ class ChildTreeWidgetItem(QTreeWidgetItem):
             self.setIcon(0, QIcon(path_image))
         else:
             self.setIcon(0, QIcon())
-    
+
     def set_tool_tip(self, property_name: str = "", requirement: bool = False, message_requirement: str = ""):
         if requirement and message_requirement == "":
             message_requirement = "<b style='color:red'>Required for the selected configuration.</b>"
-        
+
         tool_tip = self.tool_tips.get_tooltip_QTextEdit(property_name)
         if tool_tip is not None:
             self.setToolTip(0, message_requirement + tool_tip.toHtml())
