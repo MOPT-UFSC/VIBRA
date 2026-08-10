@@ -2,9 +2,6 @@
     <qresource prefix="icons">
         <file alias="autoplay_icon.png">../autoplay_icon.png</file>
         <file alias="circular_arrows_icon.png">../circular_arrows_icon.png</file>
-        <file alias="cursors/pan_cursor.png">../cursors/pan_cursor.png</file>
-        <file alias="cursors/rotation_cursor.png">../cursors/rotation_cursor.png</file>
-        <file alias="cursors/zoom_cursor.png">../cursors/zoom_cursor.png</file>
         <file alias="add_narrow.png">add_narrow.png</file>
         <file alias="add_notes.png">add_notes.png</file>
         <file alias="add_row_below.png">add_row_below.png</file>
@@ -57,8 +54,8 @@
         <file alias="save.png">save.png</file>
         <file alias="save_as.png">save_as.png</file>
         <file alias="save_as_2.png">save_as_2.png</file>
-        <file alias="selection_icon.png">selection_icon.png</file>
         <file alias="select_all_icon.png">select_all_icon.png</file>
+        <file alias="selection_icon.png">selection_icon.png</file>
         <file alias="settings.png">settings.png</file>
         <file alias="settings_applications.png">settings_applications.png</file>
         <file alias="settings_b_roll.png">settings_b_roll.png</file>
@@ -70,6 +67,9 @@
         <file alias="visibility.png">visibility.png</file>
         <file alias="visibility_off.png">visibility_off.png</file>
         <file alias="zoom_icon.png">zoom_icon.png</file>
+        <file alias="cursors/pan_cursor.png">../cursors/pan_cursor.png</file>
+        <file alias="cursors/rotation_cursor.png">../cursors/rotation_cursor.png</file>
+        <file alias="cursors/zoom_cursor.png">../cursors/zoom_cursor.png</file>
         <file alias="figures/effective_acoustic_impedance_for_DBM_porous_material_models.png">../figures/effective_acoustic_impedance_for_DBM_porous_material_models.png</file>
         <file alias="figures/effective_wavenumber_for_DBM_porous_material_models.png">../figures/effective_wavenumber_for_DBM_porous_material_models.png</file>
         <file alias="model_setup_items/absorption_surface.png">../model_setup_items/absorption_surface.png</file>
@@ -95,14 +95,12 @@
         <file alias="model_setup_items/material.png">../model_setup_items/material.png</file>
         <file alias="model_setup_items/mesh_setup.png">../model_setup_items/mesh_setup.png</file>
         <file alias="model_setup_items/mesh_setup1.png">../model_setup_items/mesh_setup1.png</file>
-        <file alias="model_setup_items/nodal_loads.png">../model_setup_items/nodal_loads.png</file>
         <file alias="model_setup_items/normal_pressure_load.png">../model_setup_items/normal_pressure_load.png</file>
         <file alias="model_setup_items/normal_pressure_load1.png">../model_setup_items/normal_pressure_load1.png</file>
         <file alias="model_setup_items/normal_pressure_load3.png">../model_setup_items/normal_pressure_load3.png</file>
         <file alias="model_setup_items/other_compressor.png">../model_setup_items/other_compressor.png</file>
         <file alias="model_setup_items/perforated_plate_model.png">../model_setup_items/perforated_plate_model.png</file>
         <file alias="model_setup_items/porous_material_model.png">../model_setup_items/porous_material_model.png</file>
-        <file alias="model_setup_items/prescribed_dof.png">../model_setup_items/prescribed_dof.png</file>
         <file alias="model_setup_items/proportional_damping.png">../model_setup_items/proportional_damping.png</file>
         <file alias="model_setup_items/reciprocating_compressor_excitation.png">../model_setup_items/reciprocating_compressor_excitation.png</file>
         <file alias="model_setup_items/reciprocating_compressor_excitation2.png">../model_setup_items/reciprocating_compressor_excitation2.png</file>
@@ -121,6 +119,8 @@
         <file alias="model_setup_items/warning_yellow.png">../model_setup_items/warning_yellow.png</file>
         <file alias="model_setup_items/warning_yellow2.png">../model_setup_items/warning_yellow2.png</file>
         <file alias="model_setup_items/weight.png">../model_setup_items/weight.png</file>
+        <file alias="model_setup_items/nodal_loads.png">../model_setup_items/nodal_loads.png</file>
+        <file alias="model_setup_items/prescribed_dof.png">../model_setup_items/prescribed_dof.png</file>
         <file alias="warnings/black_warning.png">../warnings/black_warning.png</file>
         <file alias="warnings/error_blue.png">../warnings/error_blue.png</file>
         <file alias="warnings/error_icon1.png">../warnings/error_icon1.png</file>
