@@ -13,9 +13,7 @@ from vibra.interface.general.utils import clear_style_sheet
 from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
 from vibra.interface.numeric_checks.unit_utilities import convert_length_unit, units_abreviations
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
-from vibra.interface.ui_generated.plots.acoustic.acoustic_pressure_frequency_response_function_inputs_ui import (
-    AcousticPressureFrequencyResponseFunctionInputs_UI,
-)
+from vibra.interface.ui_generated.plots.acoustic.acoustic_pressure_frf_inputs_ui import AcousticPressureFrfInputs_UI
 
 
 class CutoffFrequency(IntEnum):
@@ -24,7 +22,7 @@ class CutoffFrequency(IntEnum):
     AUTOMATIC = 2
 
 
-class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyResponseFunctionInputs_UI):
+class AcousticPressureFRFInputs(AcousticPressureFrfInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
