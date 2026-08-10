@@ -289,14 +289,12 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         if self.lineEdit_selected_ids.text() == "":
             return []
 
-        selected_ids = []
-
         try:
             str_selected_ids = self.lineEdit_selected_ids.text()
             selected_ids = [int(_id) for _id in str_selected_ids.split(",")]
         except Exception:
-            return
-        
+            return []
+
         return selected_ids
 
     def add_button_callback(self):
