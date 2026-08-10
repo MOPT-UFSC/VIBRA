@@ -619,7 +619,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         match self.plot_setup:
             case FrequencyDisplacementPlotSetup() | FrequencyPressurePlotSetup():
-                text += analysis_info_text(self.plot_setup.index + 1)
+                text += analysis_info_text(self.plot_setup.index)
 
         self.set_info_text(text)
         self.update()

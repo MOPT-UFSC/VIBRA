@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>531</width>
-    <height>559</height>
+    <height>586</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -106,7 +106,7 @@
            <x>0</x>
            <y>0</y>
            <width>494</width>
-           <height>540</height>
+           <height>560</height>
           </rect>
          </property>
          <layout class="QGridLayout" name="gridLayout_20">
@@ -425,12 +425,148 @@
             </layout>
            </widget>
           </item>
-          <item row="0" column="0">
+          <item row="3" column="0">
+           <widget class="QFrame" name="frame_plot_buttons">
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>48</height>
+             </size>
+            </property>
+            <property name="frameShape">
+             <enum>QFrame::Shape::NoFrame</enum>
+            </property>
+            <property name="frameShadow">
+             <enum>QFrame::Shadow::Raised</enum>
+            </property>
+            <layout class="QGridLayout" name="gridLayout_19">
+             <item row="0" column="1">
+              <widget class="QLabel" name="label_50">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>28</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>28</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
+               <property name="text">
+                <string>Plot selector:</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="2">
+              <widget class="QComboBox" name="comboBox_plot_type">
+               <property name="minimumSize">
+                <size>
+                 <width>160</width>
+                 <height>28</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>200</width>
+                 <height>28</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
+               <item>
+                <property name="text">
+                 <string> Fluid density</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string> Speed of sound</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string> Surface impedance</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string> Absorption coefficient</string>
+                </property>
+               </item>
+              </widget>
+             </item>
+             <item row="0" column="4">
+              <spacer name="horizontalSpacer_19">
+               <property name="orientation">
+                <enum>Qt::Orientation::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item row="0" column="3">
+              <widget class="QPushButton" name="pushButton_plot_data">
+               <property name="minimumSize">
+                <size>
+                 <width>80</width>
+                 <height>28</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>220</width>
+                 <height>28</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
+               <property name="text">
+                <string>Plot data</string>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="0">
+              <spacer name="horizontalSpacer_20">
+               <property name="orientation">
+                <enum>Qt::Orientation::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item row="0" column="0" rowspan="2">
            <widget class="QTabWidget" name="tabWidget_main">
             <property name="minimumSize">
              <size>
               <width>0</width>
-              <height>300</height>
+              <height>320</height>
              </size>
             </property>
             <property name="maximumSize">
@@ -947,7 +1083,7 @@
                     <string/>
                    </property>
                    <property name="icon">
-                    <iconset resource="../../../../icons/resources.qrc">
+                    <iconset resource="../../../../icons/dark_theme/resources.qrc">
                      <normaloff>:/icons/help.png</normaloff>:/icons/help.png</iconset>
                    </property>
                    <property name="iconSize">
@@ -972,7 +1108,7 @@
                 <property name="maximumSize">
                  <size>
                   <width>16777215</width>
-                  <height>48</height>
+                  <height>80</height>
                  </size>
                 </property>
                 <property name="frameShape">
@@ -997,7 +1133,7 @@
                  <property name="spacing">
                   <number>6</number>
                  </property>
-                 <item row="0" column="4">
+                 <item row="1" column="4">
                   <spacer name="horizontalSpacer_5">
                    <property name="orientation">
                     <enum>Qt::Orientation::Horizontal</enum>
@@ -1010,20 +1146,7 @@
                    </property>
                   </spacer>
                  </item>
-                 <item row="0" column="0">
-                  <spacer name="horizontalSpacer_4">
-                   <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>40</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                  </spacer>
-                 </item>
-                 <item row="0" column="1">
+                 <item row="1" column="1">
                   <widget class="QLabel" name="label_10">
                    <property name="font">
                     <font>
@@ -1033,9 +1156,12 @@
                    <property name="text">
                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Flow resistivity &lt;span style=&quot; font-size:11pt;&quot;&gt;σ&lt;/span&gt;:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
+                   <property name="alignment">
+                    <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                   </property>
                   </widget>
                  </item>
-                 <item row="0" column="2">
+                 <item row="1" column="2">
                   <widget class="QDoubleSpinBox" name="doubleSpinBox_flow_resistivity_DBM">
                    <property name="minimumSize">
                     <size>
@@ -1063,7 +1189,20 @@
                    </property>
                   </widget>
                  </item>
-                 <item row="0" column="3">
+                 <item row="1" column="0">
+                  <spacer name="horizontalSpacer_4">
+                   <property name="orientation">
+                    <enum>Qt::Orientation::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
+                 </item>
+                 <item row="1" column="3">
                   <widget class="QLabel" name="label_11">
                    <property name="font">
                     <font>
@@ -1072,6 +1211,38 @@
                    </property>
                    <property name="text">
                     <string>[kg/m³.s]</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item row="2" column="2">
+                  <widget class="QComboBox" name="comboBox_normalize_flow_resistivity">
+                   <property name="currentIndex">
+                    <number>1</number>
+                   </property>
+                   <item>
+                    <property name="text">
+                     <string>None</string>
+                    </property>
+                   </item>
+                   <item>
+                    <property name="text">
+                     <string>By density</string>
+                    </property>
+                   </item>
+                  </widget>
+                 </item>
+                 <item row="2" column="1">
+                  <widget class="QLabel" name="label_13">
+                   <property name="font">
+                    <font>
+                     <pointsize>10</pointsize>
+                    </font>
+                   </property>
+                   <property name="text">
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Normalize &lt;span style=&quot; font-size:11pt;&quot;&gt;σ&lt;/span&gt;:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   </property>
+                   <property name="alignment">
+                    <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
                    </property>
                   </widget>
                  </item>
@@ -2032,142 +2203,6 @@
             </widget>
            </widget>
           </item>
-          <item row="3" column="0">
-           <widget class="QFrame" name="frame_plot_buttons">
-            <property name="maximumSize">
-             <size>
-              <width>16777215</width>
-              <height>48</height>
-             </size>
-            </property>
-            <property name="frameShape">
-             <enum>QFrame::Shape::NoFrame</enum>
-            </property>
-            <property name="frameShadow">
-             <enum>QFrame::Shadow::Raised</enum>
-            </property>
-            <layout class="QGridLayout" name="gridLayout_19">
-             <item row="0" column="1">
-              <widget class="QLabel" name="label_50">
-               <property name="minimumSize">
-                <size>
-                 <width>0</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>16777215</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <pointsize>10</pointsize>
-                </font>
-               </property>
-               <property name="text">
-                <string>Plot selector:</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="2">
-              <widget class="QComboBox" name="comboBox_plot_type">
-               <property name="minimumSize">
-                <size>
-                 <width>160</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>200</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <pointsize>10</pointsize>
-                </font>
-               </property>
-               <item>
-                <property name="text">
-                 <string> Fluid density</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string> Speed of sound</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string> Surface impedance</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string> Absorption coefficient</string>
-                </property>
-               </item>
-              </widget>
-             </item>
-             <item row="0" column="4">
-              <spacer name="horizontalSpacer_19">
-               <property name="orientation">
-                <enum>Qt::Orientation::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item row="0" column="3">
-              <widget class="QPushButton" name="pushButton_plot_data">
-               <property name="minimumSize">
-                <size>
-                 <width>80</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>220</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <pointsize>10</pointsize>
-                </font>
-               </property>
-               <property name="text">
-                <string>Plot data</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="0">
-              <spacer name="horizontalSpacer_20">
-               <property name="orientation">
-                <enum>Qt::Orientation::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-            </layout>
-           </widget>
-          </item>
          </layout>
         </widget>
        </widget>
@@ -2610,7 +2645,7 @@
   <tabstop>pushButton_remove</tabstop>
  </tabstops>
  <resources>
-  <include location="../../../../icons/resources.qrc"/>
+  <include location="../../../../icons/dark_theme/resources.qrc"/>
  </resources>
  <connections/>
 </ui>
