@@ -311,25 +311,6 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         if not selected_ids:
             return
 
-        maximum_size = self.doubleSpinBox_maximum_element_size.value()
-        if controlled_size > maximum_size:
-            self.hide()
-            read = GetUserConfirmationInput(
-                "Inverted local mesh size control",
-                f"The controlled element size ({controlled_size} mm) is larger than the global maximum "
-                f"({maximum_size} mm). Vibra will coarsen the selected {selected_type} to "
-                f"{controlled_size} mm and keep all other {selected_type} at the global maximum "
-                f"({maximum_size} mm). Continue?",
-                buttons_config={
-                    "left_button_label": "Cancel",
-                    "right_button_label": "Continue",
-                },
-                window_title="Vibra",
-            )
-            self.show()
-            if read._cancel:
-                return
-
         setup = LocalMeshSizeControlSetup(
             selected_type,
             controlled_size,
@@ -454,15 +435,13 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         number_of_rows = len(size_control_parameters)
         self.tableWidget_local_mesh_size_control_data.setRowCount(number_of_rows)
 
-        maximum_size = self.doubleSpinBox_maximum_element_size.value()
         for row, setup in enumerate(size_control_parameters):
             ids = ", ".join(str(i) for i in setup.entity_ids)
-            coarsening_color = color_names.YELLOW if setup.element_size > maximum_size else None
 
             self.tableWidget_local_mesh_size_control_data.setItem(
                 row,
                 LocalMeshSizeControlTableColumns.ELEMENT_SIZE,
-                self._item(setup.element_size, coarsening_color),
+                self._item(setup.element_size),
             )
             self.tableWidget_local_mesh_size_control_data.setItem(
                 row,
