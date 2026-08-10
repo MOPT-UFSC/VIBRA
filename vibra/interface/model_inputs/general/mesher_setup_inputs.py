@@ -102,7 +102,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.keep_window_open = True
         self.bad_elements_showed = False
         self.synchronize_sizes = False
-        self.tmp_local_mesh_size_control_parameters: list[LocalMeshSizeControlSetup] = list()
+        self.tmp_local_mesh_size_control_parameters: list[LocalMeshSizeControlSetup] = []
         self.last_synced_ids: set[int] = set()
 
         self.gmsh_labels = {
@@ -229,10 +229,10 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         surfaces = app().main_window.selection.geometry_surfaces
 
         if volumes:
-            self.comboBox_local_mesh_size_control_entity_type.setCurrentText("Volume")
+            self.comboBox_local_mesh_size_control_entity_type.setCurrentText("Volumes")
             selection = set(volumes)
         elif surfaces:
-            self.comboBox_local_mesh_size_control_entity_type.setCurrentText("Surface")
+            self.comboBox_local_mesh_size_control_entity_type.setCurrentText("Surfaces")
             selection = set(surfaces)
         else:
             self.lineEdit_selected_ids.setText("")
@@ -253,9 +253,8 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.lineEdit_selected_ids.setText(text)
 
     def get_selected_entity_type(self) -> str:
-        if self.comboBox_local_mesh_size_control_entity_type.currentText() == "Volume":
-            return "volumes"
-        return "surfaces"
+        volumes_selection = self.comboBox_local_mesh_size_control_entity_type.currentText() == "Volumes"
+        return "volumes" if volumes_selection else "surfaces"
 
     def tab_event_callback(self):
         mesh_quality_tab = self.tabWidget_main.currentIndex() == MeshSetupTabs.MESH_QUALITY
@@ -280,22 +279,25 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             return
 
         if selection_type == "volumes":
-            self.comboBox_local_mesh_size_control_entity_type.setCurrentText("Volume")
+            self.comboBox_local_mesh_size_control_entity_type.setCurrentText("Volumes")
             app().main_window.selection.set_geometry_selection(volumes=selected_ids)
         else:
-            self.comboBox_local_mesh_size_control_entity_type.setCurrentText("Surface")
+            self.comboBox_local_mesh_size_control_entity_type.setCurrentText("Surfaces")
             app().main_window.selection.set_geometry_selection(surfaces=selected_ids)
 
     def get_selected_ids(self):
-        selected_ids = list()
         if self.lineEdit_selected_ids.text() == "":
-            return selected_ids
+            return []
+
+        selected_ids = []
 
         try:
             str_selected_ids = self.lineEdit_selected_ids.text()
             selected_ids = [int(_id) for _id in str_selected_ids.split(",")]
-        finally:
-            return selected_ids
+        except Exception:
+            return
+        
+        return selected_ids
 
     def add_button_callback(self):
         if self.lineEdit_selected_ids.text() == "":
@@ -489,7 +491,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
                 self._show_quality_table(False)
                 return
 
-            bad_elements = mesh.mesh_quality_data.get("bad_elements", dict())
+            bad_elements = mesh.mesh_quality_data.get("bad_elements", {})
             for metric in bad_elements.values():
                 broken = metric.size != 0
                 has_bad_elements = has_bad_elements or broken
@@ -511,7 +513,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
                         item = self._item(f"{std:.3f}")
 
                     case QualityTableColumns.BAD_ELEMENTS:
-                        n_bad_elements = len(bad_elements.get(gmsh_label, list()))
+                        n_bad_elements = len(bad_elements.get(gmsh_label, []))
                         item = self._item(n_bad_elements)
 
                     case _:
@@ -796,7 +798,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         if gmsh_label is None:
             return
 
-        bad_elements_data = mesh.mesh_quality_data.get("bad_elements", dict())
+        bad_elements_data = mesh.mesh_quality_data.get("bad_elements", {})
         if not bad_elements_data:
             return
 
