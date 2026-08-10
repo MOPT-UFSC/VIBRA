@@ -11,6 +11,7 @@ from vibra.engine.properties.fluid import Fluid
 from vibra.interface import error_title
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.general.utils import clear_style_sheet
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
 from vibra.interface.numeric_checks.unit_utilities import convert_length_unit, units_abreviations
@@ -123,11 +124,8 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
         self.highlight_selected_line_edit()
 
     def highlight_selected_line_edit(self):
-        if self.current_lineEdit == self.lineEdit_input_surface_id:
-            self.lineEdit_output_surface_id.setStyleSheet("")
-        else:
-            self.lineEdit_input_surface_id.setStyleSheet("")
-
+        line_edits = [self.lineEdit_input_surface_id, self.lineEdit_output_surface_id]
+        clear_style_sheet([line_edit for line_edit in line_edits if line_edit is not self.current_lineEdit])
         self.current_lineEdit.setStyleSheet("""border-color: rgb(32, 207, 255); border-width: 2px;""")
 
     def alternate_selected_line_edit(self):
