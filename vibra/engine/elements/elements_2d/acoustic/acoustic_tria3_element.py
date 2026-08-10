@@ -390,6 +390,57 @@ class ACT_TRIANGLE_3(Element2D):
         return We.flatten()
 
 
+    def acoustic_pressure_load(self, e_normals: np.ndarray, nodal_solution: np.ndarray) -> np.ndarray:
+        """ 
+        This method computes the acoustic pressure loads over a surface.
+
+        Parameters
+        ----------
+        e_normals: np.ndarray
+            The stacked surface elements normals vectors.
+
+        nodal_solution: np.ndarray
+            The acoustic nodal_solution array.
+
+        Returns
+        -------
+        acoustic_load: np.ndarray
+            The acoustic presure loads integrated over a surface.
+        """
+
+        # stack all elements nodal pressures 
+        pressures = np.array([nodal_solution[node_ids, :] for node_ids in self.connectivities.T], dtype=complex)
+
+        # stack the element nodal pressures in format [n_el, DOFS_PER_ELEMENT, n_freq]
+        Pe = pressures.transpose(1, 0, 2)
+
+        # NOTE: the shape functions' derivatives are constant for all
+        # integration points; this is why the Jacobian matrix-related
+        # calculations are being performed out of the integration loop.
+
+        # compute local coordinates for all elements
+        local_coords = self.get_stacked_local_coordinates()
+
+        # Jacobian matrices of all elements
+        JAC_stacked = self.dphi @ local_coords
+
+        # Jacobian determinants and inverses of all elements
+        det_jacs = self.get_detJAC(JAC_stacked)
+
+        # initialize variable
+        acoustic_load = 0.
+
+        # integration loop
+        for i in range(self.nint):
+
+            # shape functions
+            N = self.phi[i, :, :]
+
+            acoustic_load += np.sum(-e_normals @ (N @ Pe) * (det_jacs * self.wps[i]), axis=0)
+
+        return acoustic_load
+
+
     def reorder_connect(self, connect_face):
         """
         Reordering connectivity matrix to adequate 

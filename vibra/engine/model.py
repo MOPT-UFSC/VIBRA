@@ -43,7 +43,7 @@ from vibra.engine.elements.elements_3d import (
     STRUCT_TETRAHEDRON_10S,
 )
 from vibra.engine.geometry.geometry import LengthUnits
-from vibra.engine.mesher.degrees_of_freedom_decoupling import DegreesOfFreedomDecoupling
+from vibra.engine.mesher.degrees_of_freedom_decoupling_new import DegreesOfFreedomDecoupling
 from vibra.engine.mesher.element_setup import GMSH_VISUAL_MESH
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.mesh_setup import HEXAHEDRON_8, HEXAHEDRON_20, TETRAHEDRON_4, TETRAHEDRON_10, ElementTopology, MeshSetup
@@ -382,11 +382,7 @@ class Model:
                     return False
 
         disconnected_nodes = bool(self.mesh.disconnected_nodes_data)
-        collapsed_elements = bool(
-            self.mesh.collapsed_3d_elements 
-            or self.mesh.collapsed_2d_elements 
-            or self.mesh.collapsed_1d_elements
-        )  # fmt: skip
+        collapsed_elements = bool(self.mesh.collapsed_elements_data)
 
         if disconnected_nodes or collapsed_elements:
             return False
@@ -891,6 +887,10 @@ class Model:
                 if isinstance(prop_data, dict):
                     return True
         return False
+
+    def is_element2d_triangular(self):
+        _, acoustic_element_2d, _ = self.get_acoustic_elements()
+        return isinstance(acoustic_element_2d, ACT_TRIANGLE_3 | ACT_TRIANGLE_6)
 
     def get_downstream_pressure_and_particle_velocity(self, surface_id: int):
         """

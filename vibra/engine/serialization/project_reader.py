@@ -260,6 +260,7 @@ class ProjectReader:
         mesh.process_upwards_adjacencies_from_entities()
         mesh.process_mesh_related_mappings()
         mesh.update_element_topology_based_on_connectivity()
+        mesh.process_disconnected_nodes_criterion()
         mesh.mesh_quality_data = self.read_mesh_quality_metrics()
 
         return mesh
