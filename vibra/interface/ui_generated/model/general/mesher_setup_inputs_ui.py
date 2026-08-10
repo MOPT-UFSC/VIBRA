@@ -466,7 +466,7 @@ class Ui_Dialog(object):
         self.comboBox_local_mesh_size_control_entity_type.setFont(font1)
         self.comboBox_local_mesh_size_control_entity_type.setMinimumContentsLength(0)
 
-        self.gridLayout_8.addWidget(self.comboBox_local_mesh_size_control_entity_type, 1, 3, 1, 1)
+        self.gridLayout_8.addWidget(self.comboBox_local_mesh_size_control_entity_type, 1, 3, 1, 2)
 
 
         self.gridLayout_7.addWidget(self.frame_13, 0, 1, 1, 1)
@@ -801,8 +801,8 @@ class Ui_Dialog(object):
         self.label_7.setText(QCoreApplication.translate("Dialog", u"Element size: ", None))
         self.label_8.setText(QCoreApplication.translate("Dialog", u"[mm]", None))
         self.label_selected_ids.setText(QCoreApplication.translate("Dialog", u"Selected entities ID:", None))
-        self.comboBox_local_mesh_size_control_entity_type.setItemText(0, QCoreApplication.translate("Dialog", u"Surface", None))
-        self.comboBox_local_mesh_size_control_entity_type.setItemText(1, QCoreApplication.translate("Dialog", u"Volume", None))
+        self.comboBox_local_mesh_size_control_entity_type.setItemText(0, QCoreApplication.translate("Dialog", u"Surfaces", None))
+        self.comboBox_local_mesh_size_control_entity_type.setItemText(1, QCoreApplication.translate("Dialog", u"Volumes", None))
 
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_local_mesh_size_control), QCoreApplication.translate("Dialog", u"Local size control", None))
         self.label_13.setText(QCoreApplication.translate("Dialog", u"Recombination algorithm:", None))
