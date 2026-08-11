@@ -20,18 +20,14 @@ class ResultsDisplayWidget(ResultsDisplayWidget_UI):
         self.lineEdit_min_pressure.setValidator(StrictDoubleValidator(-1e-14, 1e14, 14))
         self.lineEdit_max_pressure.setValidator(StrictDoubleValidator(-1e-14, 1e14, 14))
 
-        render_wiget = app().main_window.results_widget
-        min_value = f"{render_wiget.min_value:.1e}"
-        max_value = f"{render_wiget.max_value:.1e}"
-
-        self.lineEdit_min_pressure.setText(min_value)
-        self.lineEdit_max_pressure.setText(max_value)
+        self.load_pressures()
 
     def create_connections(self):
         self.comboBox_colormaps.currentIndexChanged.connect(self.update_colormap_type)
         self.slider_transparency.valueChanged.connect(self.update_transparency_callback)
         self.lineEdit_min_pressure.textChanged.connect(self.update_min_pressure)
         self.lineEdit_max_pressure.textChanged.connect(self.update_max_pressure)
+        self.pushButton_reset_pressures.clicked.connect(self.reset_pressures)
 
     def update_colormap_type(self):
         app().config.user_preferences.color_map = self.get_colormap()
@@ -60,11 +56,27 @@ class ResultsDisplayWidget(ResultsDisplayWidget_UI):
         except Exception:
             self.comboBox_colormaps.setCurrentIndex(0)
 
+    def load_pressures(self):
+        self.blockSignals(True)
+
+        render_widget = app().main_window.results_widget
+        min_value = f"{render_widget.min_value:.1e}"
+        max_value = f"{render_widget.max_value:.1e}"
+
+        self.lineEdit_min_pressure.setText(min_value)
+        self.lineEdit_max_pressure.setText(max_value)
+
+        self.blockSignals(False)
+
     def update_min_pressure(self):
         render_widget = app().main_window.results_widget
         render_widget.user_changed_pressure_values = True
 
-        min_value = self.lineEdit_min_pressure.text()
+        min_value, max_value = self.lineEdit_min_pressure.text(), self.lineEdit_max_pressure.text()
+        if min_value >= max_value:
+            self.reset_pressures()
+            return
+
         render_widget.set_min_value(min_value)
 
         self.pressure_value_changed.emit()
@@ -73,7 +85,18 @@ class ResultsDisplayWidget(ResultsDisplayWidget_UI):
         render_widget = app().main_window.results_widget
         render_widget.user_changed_pressure_values = True
 
-        max_value = self.lineEdit_max_pressure.text()
+        min_value, max_value = self.lineEdit_min_pressure.text(), self.lineEdit_max_pressure.text()
+        if max_value <= min_value:
+            self.reset_pressures()
+            return
+
         render_widget.set_max_value(max_value)
 
+        self.pressure_value_changed.emit() 
+
+    def reset_pressures(self):
+        render_widget = app().main_window.results_widget
+        render_widget.user_changed_pressure_values = False
+
         self.pressure_value_changed.emit()
+        self.load_pressures()
