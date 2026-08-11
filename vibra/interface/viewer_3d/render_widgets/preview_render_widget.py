@@ -3,12 +3,7 @@ from molde.render_widgets import CommonRenderWidget
 from vibra.engine.model import Model
 from vibra.interface.viewer_3d.actors.mesh_actor import MeshActor
 from vibra.utils.preview_utils import SectionPlaneConfig
-from vibra.utils.time_utils import function_timer
-
-
-class RenderUpdateManager:
-    def need_mesh_update(self, mesh) -> bool:
-        return False
+from vibra.utils.time_utils import context_timer, function_timer
 
 
 class PreviewRenderWidget(CommonRenderWidget):
@@ -37,7 +32,8 @@ class PreviewRenderWidget(CommonRenderWidget):
         self.mesh_actor.update()
 
         self.renderer.ResetCamera()
-        self.update()
+        with context_timer("render"):
+            self.update()
 
     def resizeEvent(self, event):
         super().resizeEvent(event)

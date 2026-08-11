@@ -3,6 +3,7 @@ from itertools import chain
 from typing import Sequence
 
 import numpy as np
+import xxhash
 from molde import Color
 from vtkmodules.util.numpy_support import numpy_to_vtk, numpy_to_vtkIdTypeArray, vtk_to_numpy
 from vtkmodules.vtkCommonCore import vtkIntArray, vtkPoints, vtkUnsignedCharArray
@@ -21,10 +22,11 @@ from vibra.engine.properties import Fluid, Material
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.utils.math_functions import inside_plane
 from vibra.utils.preview_utils import SectionPlaneConfig
+from vibra.utils.time_utils import function_timer
 
 
 class MeshActor(vtkPropAssembly):
-    def __init__(self, model: Model):
+    def __init__(self, model: Model | None):
         self.model = model
         self.section_plane: SectionPlaneConfig | None = None
 
@@ -163,7 +165,9 @@ class MeshActor(vtkPropAssembly):
         view[:] = self.mesh.solids_connectivity[elements_in_middle, 0]
 
     def update_colors(self):
-        self._clear_colors()
+        self._surface_colors_hash = self._array_hash(vtk_to_numpy(self.surface_colors))
+        self._section_colors_hash = self._array_hash(vtk_to_numpy(self.section_colors))
+        self.set_color(Color(255, 255, 255), update=False)
 
         if self.properties is None:
             return
@@ -188,20 +192,23 @@ class MeshActor(vtkPropAssembly):
         for color, tags in volume_colors.items():
             self.paint_volumes(color, tags)
 
-    def set_color(self, color: Color):
+    @function_timer
+    def set_color(self, color: Color, update=True):
         rgb = color.to_rgb()
         for i in range(self.surface_colors.GetNumberOfComponents()):
             self.surface_colors.FillComponent(i, rgb[i])
             self.section_colors.FillComponent(i, rgb[i])
 
-        self.surface_colors.Modified()
-        self.section_colors.Modified()
-        self.surface_mapper.Modified()
-        self.section_mapper.Modified()
+        if update:
+            self.surface_colors.Modified()
+            self.section_colors.Modified()
 
+    @function_timer
     def paint_surfaces(self, color: Color, surfaces: Sequence[int]):
         if self.mesh is None:
             return
+
+        assert self.mesh.faces_connectivity is not None
 
         surface_ids = vtk_to_numpy(self.surface_ids)
         surface_colors = vtk_to_numpy(self.surface_colors)
@@ -209,8 +216,11 @@ class MeshActor(vtkPropAssembly):
         selected_elements, *_ = np.where(np.isin(self.mesh.faces_connectivity[:, 1], surfaces))
         paint_position_mask = np.isin(surface_ids, selected_elements)
         surface_colors[paint_position_mask] = color.to_rgb()
-        self.surface_colors.Modified()
 
+        if self._surface_colors_hash != self._array_hash(surface_colors):
+            self.surface_colors.Modified()
+
+    @function_timer
     def paint_volumes(self, color: Color, volumes: Sequence[int]):
         if self.mesh is None:
             return
@@ -225,10 +235,18 @@ class MeshActor(vtkPropAssembly):
         selected_elements, *_ = np.where(np.isin(self.mesh.solids_connectivity[:, 1], volumes))
         paint_position_mask = np.isin(section_ids, selected_elements)
         section_colors[paint_position_mask] = color.to_rgb()
-        self.section_colors.Modified()
 
-    def _clear_colors(self):
-        self.set_color(Color(255, 255, 255))
+        if self._section_colors_hash != self._array_hash(section_colors):
+            self.section_colors.Modified()
+
+    def _get_parts(self) -> list[vtkActor]:
+        return list(self.GetParts())  # pyright: ignore[reportArgumentType]
+
+    def _array_hash(self, *arrays: np.ndarray) -> str:
+        hasher = xxhash.xxh128()
+        for array in arrays:
+            hasher.update(array)
+        return hasher.hexdigest()
 
     def _clear_data(self):
         self.last_mesh_id = 0
