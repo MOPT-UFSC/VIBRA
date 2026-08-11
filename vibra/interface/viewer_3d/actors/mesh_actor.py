@@ -100,6 +100,9 @@ class MeshActor(vtkPropAssembly):
             self._clear_data()
             return
 
+        assert self.mesh.nodal_coordinates is not None
+        assert self.mesh.faces_connectivity is not None
+
         mesh_id = id(self.mesh)
         if mesh_id == self.last_mesh_id:
             return
@@ -127,6 +130,10 @@ class MeshActor(vtkPropAssembly):
     def update_section_plane(self):
         if self.mesh is None:
             return
+
+        assert self.mesh.nodal_coordinates is not None
+        assert self.mesh.faces_connectivity is not None
+        assert self.mesh.solids_connectivity is not None
 
         self.surface_mapper.RemoveAllClippingPlanes()
         if self.section_plane is None:
@@ -224,6 +231,8 @@ class MeshActor(vtkPropAssembly):
     def paint_volumes(self, color: Color, volumes: Sequence[int]):
         if self.mesh is None:
             return
+
+        assert self.mesh.solids_connectivity is not None
 
         surface_groups = [self.mesh.surfaces_from_volume[v] for v in volumes if (v in self.mesh.surfaces_from_volume)]
         surfaces = list(chain.from_iterable(surface_groups))
