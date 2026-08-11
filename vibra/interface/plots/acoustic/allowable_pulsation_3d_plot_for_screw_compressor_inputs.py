@@ -68,6 +68,9 @@ class AllowablePulsations3DPlotForScrewCompressorInputs(AllowablePulsations3dPlo
         # QComboBox connection
         self.comboBox_colormaps.currentIndexChanged.connect(self.update_colormap_type)
 
+        # QCheckBox connection
+        self.checkBox_pre_study_analysis.stateChanged.connect(self.penalize_allowable_pulsation_callback)
+
         # QPushButton
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
 
@@ -94,6 +97,13 @@ class AllowablePulsations3DPlotForScrewCompressorInputs(AllowablePulsations3dPlo
     def update_transparency_callback(self):
         transparency = self.slider_transparency.value() / 100
         app().main_window.results_widget.set_analysis_actors_transparency(transparency)
+
+    def penalize_allowable_pulsation_callback(self):
+        curent_render_widget = app().main_window.get_current_render_widget()
+        results_render_widget = app().main_window.results_widget
+
+        if curent_render_widget == results_render_widget:
+            self.plot_data_callback()
 
     def plot_data_callback(self):
 
