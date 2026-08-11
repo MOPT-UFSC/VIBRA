@@ -19,6 +19,7 @@ class AllowablePulsations3DPlotForScrewCompressorInputs(AllowablePulsations3dPlo
         app().main_window.show_geometry_render_widget()
 
         self._reset_variables()
+        self._add_penalization_values_to_combo_box()
         self._create_connections()
 
         self.load_user_preference_colormap()
@@ -63,16 +64,29 @@ class AllowablePulsations3DPlotForScrewCompressorInputs(AllowablePulsations3dPlo
         self.time_vector = None
         self.plot_setup = None
 
+    def _add_penalization_values_to_combo_box(self):
+        self.comboBox_penalization_factor.clear()
+
+        for value in range(0, 100, 5):
+            self.comboBox_penalization_factor.addItem(str(value))
+
+        tool_tip = "Use this to reduced the allowable pulsation criteria by (1 - penalization) factor. "
+        self.comboBox_penalization_factor.setToolTip(tool_tip)
+        self.label_penalization_factor.setToolTip(tool_tip)
+
     def _create_connections(self):
 
         # QComboBox connection
         self.comboBox_colormaps.currentIndexChanged.connect(self.update_colormap_type)
 
-        # QPushButton
+        # QPushButton connection
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
 
         # QSlider connection
         self.slider_transparency.valueChanged.connect(self.update_transparency_callback)
+
+        # QSpinBox connection
+        self.comboBox_penalization_factor.currentIndexChanged.connect(self.penalize_allowable_pulsation_callback)
 
     def load_user_preference_colormap(self):
         try:
@@ -95,11 +109,19 @@ class AllowablePulsations3DPlotForScrewCompressorInputs(AllowablePulsations3dPlo
         transparency = self.slider_transparency.value() / 100
         app().main_window.results_widget.set_analysis_actors_transparency(transparency)
 
+    def penalize_allowable_pulsation_callback(self):
+        curent_render_widget = app().main_window.get_current_render_widget()
+        results_render_widget = app().main_window.results_widget
+
+        if curent_render_widget == results_render_widget:
+            self.plot_data_callback()
+
     def plot_data_callback(self):
 
         plot_setup = AllowablePulsationForScrewCompressorsPlotSetup(
             plot_type=self.get_plot_type(),
             unit="kPa",
+            penalization_factor=int(self.comboBox_penalization_factor.currentText())
         )
 
         if plot_setup == self.plot_setup:

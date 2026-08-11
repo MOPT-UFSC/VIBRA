@@ -34,6 +34,7 @@ from ..actors import (
 )
 from .model_info_text import (
     analysis_info_text,
+    allowable_pulsation_for_screw_compressor_info_text,
 )
 
 
@@ -56,9 +57,12 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         self._animation_cached_data = dict()
         self._animation_cache_lock = Lock()
+
         self.min_value = 0
         self.max_value = 0
         self.transparency = 0
+        self.screw_compressor_allowable_pulsation_criterion = 0
+
         self.is_animation_symetric = True
 
         self.set_default_render_tool()
@@ -369,6 +373,12 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         color_scalars, min_value, max_value = data
 
+        # apply the penalization factor, if necessary
+        penalization_factor = self.plot_setup.penalization_factor / 100
+        max_value *= (1 - penalization_factor)
+
+        self.screw_compressor_allowable_pulsation_criterion = max_value
+
         if clear_cache:
             self.min_value = min_value
             self.max_value = max_value
@@ -650,6 +660,12 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         match self.plot_setup:
             case FrequencyDisplacementPlotSetup() | FrequencyPressurePlotSetup():
                 text += analysis_info_text(self.plot_setup.index)
+
+            case AllowablePulsationForScrewCompressorsPlotSetup():
+                text += allowable_pulsation_for_screw_compressor_info_text(
+                    self.screw_compressor_allowable_pulsation_criterion, 
+                    self.plot_setup.penalization_factor,
+                    )
 
         self.set_info_text(text)
         self.update()

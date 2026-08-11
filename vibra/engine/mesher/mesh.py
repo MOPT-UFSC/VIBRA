@@ -1542,8 +1542,6 @@ class Mesh:
 
     def process_mesh_related_mappings(self, label: str = "Loading"):
 
-        print("process_mesh_related_mappings")
-
         logging.info(f"{label} mesh... [70/100]")
         self.map_elements_from_volumes()
 
@@ -1664,10 +1662,6 @@ class Mesh:
             self.face_to_solid_element[e2d_id] = e3d_id
             self.solid_to_face_elements[e3d_id].append(e2d_id)
 
-        print(f"Map face to solid elements >>> {len(self.face_to_solid_element)}")
-        print(f"Number of surface elements >>> {len(self.faces_connectivity)}")
-        print(f"Difference: {len(self.faces_connectivity) - len(self.face_to_solid_element)}")
-
     def map_face_elements_to_solid_elements(self):
         """
         This method implements a faster algorithm when compared with
@@ -1718,13 +1712,16 @@ class Mesh:
             self.face_to_solid_element[face_id] = solid_id
             self.solid_to_face_elements[solid_id].append(face_id)
 
-        print(f"Number of surface elements >>> {len(self.faces_connectivity)}")
-        print(f"Map face to solid elements >>> {len(self.face_to_solid_element)}")
-        print(f"Difference: {len(self.faces_connectivity) - len(self.face_to_solid_element)}")
+        number_2d_elements = len(self.faces_connectivity)
+        elements_map_size = len(self.face_to_solid_element)
 
-        rows = np.isin(np.unique(self.faces_connectivity[:, 0].flatten()), list(self.face_to_solid_element.keys()), invert=True)
+        if number_2d_elements - elements_map_size:
+            print(f"Number of surface elements >>> {number_2d_elements}")
+            print(f"Map face to solid elements >>> {elements_map_size}")
+            print(f"Difference: {number_2d_elements - elements_map_size}")
 
-        np.savetxt("non_mapped_2d_elements.dat", self.faces_connectivity[rows, :], delimiter=",", fmt="%i")
+            # rows = np.isin(np.unique(self.faces_connectivity[:, 0].flatten()), list(self.face_to_solid_element.keys()), invert=True)
+            # np.savetxt("non_mapped_2d_elements.dat", self.faces_connectivity[rows, :], delimiter=",", fmt="%i")
 
     def get_collapsed_elements(self):
 
@@ -1789,13 +1786,19 @@ class Mesh:
         if not print_log:
             return
 
-        if not self.disconnected_nodes_data:
-            return
-
-        print("\nThe following disconnected nodes have been detected:")
-
         for key, data in self.disconnected_nodes_data.items():
-            print(f">> {len(data)} nodes of {key}: {data[:10]}" + ", ..." if len(data) > 10 else "")
+            n_nodes = len(data)
+            if n_nodes == 0:
+                continue
+
+            nodes_list = data if n_nodes < 10 else data[:10]
+
+            message = f">> At least {n_nodes} disconnected nodes have been detected for {key}:\n"
+            message += f"Nodes list: {nodes_list}"
+            if n_nodes > 10:
+                message += ", ..."
+
+            print(message)
 
     def get_list_of_disconnected_nodes(self):
         """
