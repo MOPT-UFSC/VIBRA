@@ -1,4 +1,5 @@
 import numpy as np
+from typing_extensions import Sequence
 
 
 def lerp(a, b, t):
@@ -15,10 +16,10 @@ def bounds_distance(bounds):
 
 
 def inside_plane(
-    test_points: np.ndarray[float],
-    origin: np.ndarray[float],
-    normal: np.ndarray[float],
-) -> np.ndarray[bool]:
+    test_points: Sequence[float],
+    origin: Sequence[float],
+    normal: Sequence[float],
+) -> np.typing.NDArray[np.bool_]:
     return (
         np.dot(
             np.array(test_points) - np.array(origin),
