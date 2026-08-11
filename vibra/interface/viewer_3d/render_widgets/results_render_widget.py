@@ -374,8 +374,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         color_scalars, min_value, max_value = data
 
         # apply the penalization factor, if necessary
-        penalization_factor = 0.7 if self.plot_setup.pre_study_analysis else 1.0
-        max_value *= penalization_factor
+        penalization_factor = self.plot_setup.penalization_factor / 100
+        max_value *= (1 - penalization_factor)
 
         self.screw_compressor_allowable_pulsation_criterion = max_value
 
@@ -664,7 +664,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             case AllowablePulsationForScrewCompressorsPlotSetup():
                 text += allowable_pulsation_for_screw_compressor_info_text(
                     self.screw_compressor_allowable_pulsation_criterion, 
-                    self.plot_setup.pre_study_analysis,
+                    self.plot_setup.penalization_factor,
                     )
 
         self.set_info_text(text)

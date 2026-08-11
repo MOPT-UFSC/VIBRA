@@ -15,9 +15,9 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFrame,
-    QGridLayout, QLabel, QPushButton, QSizePolicy,
-    QSlider, QSpacerItem, QWidget)
+from PySide6.QtWidgets import (QApplication, QComboBox, QFrame, QGridLayout,
+    QLabel, QPushButton, QSizePolicy, QSlider,
+    QSpacerItem, QWidget)
 
 class Ui_Form(object):
     def setupUi(self, Form):
@@ -80,6 +80,33 @@ class Ui_Form(object):
         self.gridLayout_13 = QGridLayout(self.frame_9)
         self.gridLayout_13.setObjectName(u"gridLayout_13")
         self.gridLayout_13.setContentsMargins(0, 6, 0, 0)
+        self.slider_transparency = QSlider(self.frame_9)
+        self.slider_transparency.setObjectName(u"slider_transparency")
+        self.slider_transparency.setMinimumSize(QSize(176, 0))
+        self.slider_transparency.setMaximumSize(QSize(200, 16777215))
+        self.slider_transparency.setOrientation(Qt.Orientation.Horizontal)
+
+        self.gridLayout_13.addWidget(self.slider_transparency, 2, 2, 1, 1)
+
+        self.horizontalSpacer_13 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_13.addItem(self.horizontalSpacer_13, 0, 0, 1, 1)
+
+        self.horizontalSpacer_12 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_13.addItem(self.horizontalSpacer_12, 0, 4, 1, 1)
+
+        self.label_4 = QLabel(self.frame_9)
+        self.label_4.setObjectName(u"label_4")
+        self.label_4.setMinimumSize(QSize(120, 26))
+        self.label_4.setMaximumSize(QSize(140, 26))
+        font1 = QFont()
+        font1.setPointSize(10)
+        self.label_4.setFont(font1)
+        self.label_4.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+
+        self.gridLayout_13.addWidget(self.label_4, 2, 1, 1, 1)
+
         self.frame_11 = QFrame(self.frame_9)
         self.frame_11.setObjectName(u"frame_11")
         self.frame_11.setMinimumSize(QSize(176, 0))
@@ -105,75 +132,49 @@ class Ui_Form(object):
         self.comboBox_colormaps.setObjectName(u"comboBox_colormaps")
         self.comboBox_colormaps.setMinimumSize(QSize(120, 26))
         self.comboBox_colormaps.setMaximumSize(QSize(200, 26))
-        font1 = QFont()
-        font1.setPointSize(10)
         self.comboBox_colormaps.setFont(font1)
 
         self.gridLayout_14.addWidget(self.comboBox_colormaps, 0, 0, 1, 1)
 
 
-        self.gridLayout_13.addWidget(self.frame_11, 0, 3, 1, 1)
+        self.gridLayout_13.addWidget(self.frame_11, 1, 2, 1, 1)
+
+        self.comboBox_penalization_factor = QComboBox(self.frame_9)
+        self.comboBox_penalization_factor.setObjectName(u"comboBox_penalization_factor")
+        self.comboBox_penalization_factor.setMinimumSize(QSize(0, 26))
+        self.comboBox_penalization_factor.setMaximumSize(QSize(16777215, 26))
+
+        self.gridLayout_13.addWidget(self.comboBox_penalization_factor, 0, 2, 1, 1)
+
+        self.label_penalization_factor = QLabel(self.frame_9)
+        self.label_penalization_factor.setObjectName(u"label_penalization_factor")
+        self.label_penalization_factor.setMinimumSize(QSize(120, 26))
+        self.label_penalization_factor.setMaximumSize(QSize(140, 26))
+        self.label_penalization_factor.setFont(font1)
+        self.label_penalization_factor.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+
+        self.gridLayout_13.addWidget(self.label_penalization_factor, 0, 1, 1, 1)
 
         self.label_6 = QLabel(self.frame_9)
         self.label_6.setObjectName(u"label_6")
-        self.label_6.setMinimumSize(QSize(110, 26))
-        self.label_6.setMaximumSize(QSize(110, 26))
+        self.label_6.setMinimumSize(QSize(120, 26))
+        self.label_6.setMaximumSize(QSize(140, 26))
         self.label_6.setFont(font1)
         self.label_6.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
-        self.gridLayout_13.addWidget(self.label_6, 0, 1, 1, 1)
+        self.gridLayout_13.addWidget(self.label_6, 1, 1, 1, 1)
 
-        self.horizontalSpacer_13 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        self.label_8 = QLabel(self.frame_9)
+        self.label_8.setObjectName(u"label_8")
+        self.label_8.setMinimumSize(QSize(0, 26))
+        self.label_8.setMaximumSize(QSize(16777215, 26))
+        self.label_8.setFont(font1)
+        self.label_8.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
 
-        self.gridLayout_13.addItem(self.horizontalSpacer_13, 0, 0, 1, 1)
-
-        self.horizontalSpacer_11 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_13.addItem(self.horizontalSpacer_11, 0, 4, 1, 1)
-
-        self.label_4 = QLabel(self.frame_9)
-        self.label_4.setObjectName(u"label_4")
-        self.label_4.setMinimumSize(QSize(110, 26))
-        self.label_4.setMaximumSize(QSize(110, 26))
-        self.label_4.setFont(font1)
-        self.label_4.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
-
-        self.gridLayout_13.addWidget(self.label_4, 1, 1, 1, 1)
-
-        self.slider_transparency = QSlider(self.frame_9)
-        self.slider_transparency.setObjectName(u"slider_transparency")
-        self.slider_transparency.setMinimumSize(QSize(176, 0))
-        self.slider_transparency.setMaximumSize(QSize(200, 16777215))
-        self.slider_transparency.setOrientation(Qt.Orientation.Horizontal)
-
-        self.gridLayout_13.addWidget(self.slider_transparency, 1, 3, 1, 1)
-
-        self.frame_14 = QFrame(self.frame_9)
-        self.frame_14.setObjectName(u"frame_14")
-        self.frame_14.setFrameShape(QFrame.Shape.NoFrame)
-        self.frame_14.setFrameShadow(QFrame.Shadow.Raised)
-        self.gridLayout_16 = QGridLayout(self.frame_14)
-        self.gridLayout_16.setObjectName(u"gridLayout_16")
-        self.horizontalSpacer_18 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_16.addItem(self.horizontalSpacer_18, 0, 2, 1, 1)
-
-        self.horizontalSpacer_17 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_16.addItem(self.horizontalSpacer_17, 0, 0, 1, 1)
-
-        self.checkBox_pre_study_analysis = QCheckBox(self.frame_14)
-        self.checkBox_pre_study_analysis.setObjectName(u"checkBox_pre_study_analysis")
-        self.checkBox_pre_study_analysis.setMinimumSize(QSize(140, 0))
-        self.checkBox_pre_study_analysis.setFont(font1)
-
-        self.gridLayout_16.addWidget(self.checkBox_pre_study_analysis, 0, 1, 1, 1)
+        self.gridLayout_13.addWidget(self.label_8, 0, 3, 1, 1)
 
 
-        self.gridLayout_13.addWidget(self.frame_14, 2, 0, 1, 5)
-
-
-        self.gridLayout_8.addWidget(self.frame_9, 0, 0, 1, 1)
+        self.gridLayout_8.addWidget(self.frame_9, 0, 1, 1, 1)
 
         self.frame_3 = QFrame(self.frame_main)
         self.frame_3.setObjectName(u"frame_3")
@@ -196,7 +197,7 @@ class Ui_Form(object):
         self.gridLayout_47.addWidget(self.pushButton_plot_data, 0, 0, 1, 1)
 
 
-        self.gridLayout_8.addWidget(self.frame_3, 1, 0, 1, 1)
+        self.gridLayout_8.addWidget(self.frame_3, 1, 1, 1, 1)
 
 
         self.gridLayout_4.addWidget(self.frame_main, 1, 0, 1, 1)
@@ -210,6 +211,7 @@ class Ui_Form(object):
     def retranslateUi(self, Form):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Form", None))
         self.label.setText(QCoreApplication.translate("Form", u"Allowable pulsations field plot for screw compressors", None))
+        self.label_4.setText(QCoreApplication.translate("Form", u"Transparency:", None))
         self.comboBox_colormaps.setItemText(0, QCoreApplication.translate("Form", u"Jet scale", None))
         self.comboBox_colormaps.setItemText(1, QCoreApplication.translate("Form", u"Viridis scale", None))
         self.comboBox_colormaps.setItemText(2, QCoreApplication.translate("Form", u"Inferno scale", None))
@@ -222,12 +224,9 @@ class Ui_Form(object):
         self.comboBox_colormaps.setItemText(9, QCoreApplication.translate("Form", u"PuOr diverging scale", None))
         self.comboBox_colormaps.setItemText(10, QCoreApplication.translate("Form", u"Grayscale", None))
 
+        self.label_penalization_factor.setText(QCoreApplication.translate("Form", u"Penalization factor:", None))
         self.label_6.setText(QCoreApplication.translate("Form", u"Colormaps:", None))
-        self.label_4.setText(QCoreApplication.translate("Form", u"Transparency:", None))
-#if QT_CONFIG(tooltip)
-        self.checkBox_pre_study_analysis.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>This option reduces the allowable pulsation levels to 70% of the value calculated by the previous equation.</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.checkBox_pre_study_analysis.setText(QCoreApplication.translate("Form", u"Pre-study analysis", None))
+        self.label_8.setText(QCoreApplication.translate("Form", u"[%]", None))
         self.pushButton_plot_data.setText(QCoreApplication.translate("Form", u"Plot data", None))
     # retranslateUi
 
@@ -245,15 +244,15 @@ class AllowablePulsations3dPlotForScrewCompressorInputs_UI(QWidget, Ui_Form):
                     - (Layout): QGridLayout
                             - frame_9: QFrame
                                 - (Layout): QGridLayout
+                                        - slider_transparency: QSlider
+                                        - label_4: QLabel
                                         - frame_11: QFrame
                                             - (Layout): QGridLayout
                                                     - comboBox_colormaps: QComboBox
+                                        - comboBox_penalization_factor: QComboBox
+                                        - label_penalization_factor: QLabel
                                         - label_6: QLabel
-                                        - label_4: QLabel
-                                        - slider_transparency: QSlider
-                                        - frame_14: QFrame
-                                            - (Layout): QGridLayout
-                                                    - checkBox_pre_study_analysis: QCheckBox
+                                        - label_8: QLabel
                             - frame_3: QFrame
                                 - (Layout): QGridLayout
                                         - pushButton_plot_data: QPushButton

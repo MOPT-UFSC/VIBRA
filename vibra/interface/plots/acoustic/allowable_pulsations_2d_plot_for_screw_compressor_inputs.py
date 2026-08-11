@@ -24,6 +24,7 @@ class AllowablePulsations2DPlotForScrewCompressorInputs(AllowablePulsations2dFor
         app().main_window.show_geometry_render_widget()
 
         self._reset_variables()
+        self._add_penalization_values_to_combo_box()
         self._create_connections()
 
         self._load_analysis_setup_and_solution()
@@ -56,21 +57,32 @@ class AllowablePulsations2DPlotForScrewCompressorInputs(AllowablePulsations2dFor
         self.fluid_dialog = None
         self.selected_fluid = None
 
-        self.model_results = dict()
+        self.model_results = {}
 
         self.unit_label = "Pa"
         self.selection_types = ["surfaces", "lines", "points", "nodes"]
 
+    def _add_penalization_values_to_combo_box(self):
+        self.comboBox_penalization_factor.clear()
+
+        for value in range(0, 100, 5):
+            self.comboBox_penalization_factor.addItem(str(value))
+
+        tool_tip = "Use this to reduced the allowable pulsation criteria by (1 - penalization) factor. "
+        self.comboBox_penalization_factor.setToolTip(tool_tip)
+        self.label_penalization_factor.setToolTip(tool_tip)
+
     def _create_connections(self):
-        #
+
+        # QComboBox connection
         self.comboBox_selector_filter.currentIndexChanged.connect(self.selection_filter_callback)
-        #
+
+        # QPushButton connection
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
         self.pushButton_get_fluid.clicked.connect(self.get_fluid_callback)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
-        #
+
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
-        #
         self.geometry_selection_callback()
 
     def geometry_selection_callback(self):
@@ -342,7 +354,11 @@ class AllowablePulsations2DPlotForScrewCompressorInputs(AllowablePulsations2dFor
         pulsation_criteria_peak = (allowable_levels_percentual / 200) * P_AM * aux_ones
 
         # penalization factor for pre-study analysis
-        factor = 0.7 if self.checkBox_pre_study_analysis.isChecked() else 1.0
+        penalization_factor = int(self.comboBox_penalization_factor.currentText())
+        factor = penalization_factor / 100
+
+        if penalization_factor:
+            title += f" (penalized in {penalization_factor}%)"
 
         key = ("allowable pulsation limits (upper)", (None))
         legend_label_upper = "Allowable pulsation (upper bound)"
