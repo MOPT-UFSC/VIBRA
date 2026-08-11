@@ -86,6 +86,21 @@ def test_local_mesh_size_control_coarsening():
     assert mean_edges[2] < 30
 
 
+def test_local_mesh_size_control_coarsening_connected():
+    geometry_path = str(PROJECT_DIR / "data/examples/geometry_files/tetrahedron_double_volume.step")
+
+    mesh_setup = MeshSetup(
+        maximum_element_size=20,
+        local_mesh_size_control_parameters=[LocalMeshSizeControlSetup("volumes", 40, [1])],
+        custom_element_setup=GMSH_TET4,
+    )
+    mesh = Mesh().load_cad(geometry_path, mesh_setup, threads=1)
+
+    mean_edges = _mean_edge_length_per_volume(mesh)
+    assert mean_edges[1] > mean_edges[2] * 1.2
+    assert mean_edges[2] < 30
+
+
 def test_local_mesh_size_control_refines():
     geometry_path = str(PROJECT_DIR / "data/examples/geometry_files/tetrahedron_double_volume.step")
 

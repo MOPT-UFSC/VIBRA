@@ -929,7 +929,7 @@ class Mesh:
             coarsened_faces = self._get_faces_to_coarsen(targeted_faces, targeted_volumes) # needed beacause faces of targeted volumes would be pinned otherwise
             pinned_faces = all_faces - coarsened_faces
             
-            pinned_curves, pinned_points = self._get_pinned_boundary_entities(all_faces, pinned_faces, targeted_faces)
+            pinned_curves, pinned_points = self._get_pinned_boundary_entities(all_faces, pinned_faces, coarsened_faces)
 
             global_size_control_field = gmsh.model.mesh.field.add("Constant")
             gmsh.model.mesh.field.setNumbers(global_size_control_field, "VolumesList", sorted(pinned_volumes))
@@ -991,48 +991,32 @@ class Mesh:
     ) -> set[int]:
         """Faces left at the coarsest size.
 
-        The coarsened faces and the boundary faces of the volumes directly
-        targeted by a coarsening setup stay coarse; every other face is pinned
-        to the global size.
-
-        A face shared with a volume that is not coarsened is meshed once and
-        used by both volumes, so leaving it coarse would force large elements
-        onto the neighbouring volume. Such shared faces are therefore pinned to
-        the global size as well, except for the faces explicitly targeted by a
-        coarsening setup.
+        The explicitly targeted faces and every boundary face of the volumes
+        directly targeted by a coarsening setup stay coarse; every other face
+        is pinned to the global size. A face shared with a volume that is not
+        coarsened is left coarse as well: it is meshed once, and the coarse
+        size carries over to the neighbouring volume, which grades back down to
+        the global size.
         """
         faces_to_coarsen = set(targeted_faces)
         for volume in targeted_volumes:
             for dim, face in gmsh.model.getBoundary([(3, volume)], recursive=False, oriented=False):
                 faces_to_coarsen.add(face)
-        return {
-            face
-            for face in faces_to_coarsen
-            if face in targeted_faces
-            or all(
-                adjacent in targeted_volumes
-                for adjacent in gmsh.model.getAdjacencies(2, face)[0]
-            )
-        }
+        return faces_to_coarsen
 
     def _get_pinned_boundary_entities(
         self,
         all_faces: set[int],
         pinned_faces: set[int],
-        targeted_faces: set[int],
+        coarsened_faces: set[int],
     ) -> tuple[set[int], set[int]]:
         """Curves and points that must be pinned to the global size.
 
         The boundary of a pinned face must be pinned as well, otherwise it
         would stay at the coarse size and constrain the finer mesh on the
-        pinned face. A curve shared between a pinned and a coarse face is
-        pinned too, so that the coarse size cannot leak onto the pinned face
-        through its boundary.
-
-        Curves on the boundary of a surface explicitly targeted by a coarsening
-        setup are kept coarse instead: they are part of the coarse region that
-        the setup is meant to create, and pinning them to the global size would
-        prevent the surface from being coarsened at all.
+        pinned face. A curve shared between a pinned and a coarse face is kept
+        coarse instead, so that the coarse size carries over onto the coarse
+        face through its boundary.
         """
         faces_per_curve: dict[int, set[int]] = {}
         faces_per_point: dict[int, set[int]] = {}
@@ -1047,12 +1031,12 @@ class Mesh:
         pinned_curves = {
             curve
             for curve, faces in faces_per_curve.items()
-            if (faces & pinned_faces) and not (faces & targeted_faces)
+            if (faces & pinned_faces) and not (faces & coarsened_faces)
         }
         pinned_points = {
             point
             for point, faces in faces_per_point.items()
-            if (faces & pinned_faces) and not (faces & targeted_faces)
+            if (faces & pinned_faces) and not (faces & coarsened_faces)
         }
         return pinned_curves, pinned_points
 
