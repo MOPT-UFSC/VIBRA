@@ -983,6 +983,18 @@ def analysis_info_text(frequency_index: int):
 
     return str(tree)
 
+def allowable_pulsation_for_screw_compressor_info_text(value: float, pre_study_analysis: bool):
+    analysis_setup = app().project.model.analysis_setup
+    analysis_id = analysis_setup.analysis_id
+    if AnalysisID.ACOUSTIC_HARMONIC != analysis_id:
+        return ""
+
+    tree = TreeInfo("Allowable pulsation for screw compressor systems")
+    tree.add_item("Allowable level (p-p)", value, "kPa")
+    tree.add_item("Pre-study analysis:", "Yes" if pre_study_analysis else "No")
+
+    return str(tree)
+
 def structural_format(property_name, values, labels, units, has_table):
     if all_none(values):
         return ""

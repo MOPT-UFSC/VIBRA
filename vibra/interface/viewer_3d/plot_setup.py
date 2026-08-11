@@ -60,6 +60,7 @@ class TransientPressurePlotSetup:
 class AllowablePulsationForScrewCompressorsPlotSetup:
     plot_type: PressurePlotType
     unit: str = "--"
+    pre_study_analysis: bool = False
 
 
 # Do not forget to add the type here

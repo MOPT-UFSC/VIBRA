@@ -100,6 +100,7 @@ class AllowablePulsations3DPlotForScrewCompressorInputs(AllowablePulsations3dPlo
         plot_setup = AllowablePulsationForScrewCompressorsPlotSetup(
             plot_type=self.get_plot_type(),
             unit="kPa",
+            pre_study_analysis=self.checkBox_pre_study_analysis.isChecked()
         )
 
         if plot_setup == self.plot_setup:
