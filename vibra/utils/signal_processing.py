@@ -1,11 +1,20 @@
-
-
-import matplotlib.pyplot as plt
 import numpy as np
-from scipy import signal
 
 
-def process_ifft_from_one_sided_spectrum_signal(frequencies: np.ndarray, Xf_data: np.ndarray, dc_included: bool=False):
+def plt():
+    """
+    Matplotlib imports usually take a long time to run.
+    This is a trick to only import plt when it actually
+    need to be used.
+    The only difference is that now you need to call plt like a function
+    like `plt().plot([1,2,3])` instead of `plt.plot([1,2,3])`
+    """
+    import matplotlib.pyplot
+
+    return matplotlib.pyplot
+
+
+def process_ifft_from_one_sided_spectrum_signal(frequencies: np.ndarray, Xf_data: np.ndarray, dc_included: bool = False):
     """
     If n is even, the length of the transformed axis is (n/2)+1. If n is odd, the length is (n+1)/2.
     """
@@ -28,7 +37,7 @@ def process_ifft_from_one_sided_spectrum_signal(frequencies: np.ndarray, Xf_data
     dt = 1 / f_s
 
     # process the ifft from signal Xf
-    x_t = np.fft.irfft(Xf)# * (2*(N-1))
+    x_t = np.fft.irfft(Xf)  # * (2*(N-1))
     N_t = len(x_t)
 
     # corrects the signal amplitude
@@ -40,7 +49,7 @@ def process_ifft_from_one_sided_spectrum_signal(frequencies: np.ndarray, Xf_data
     return time, x_t
 
 
-def process_multiple_iffts_from_one_sided_spectrum_signals(frequencies: np.ndarray, Xf_data: np.ndarray, dc_included: bool=False):
+def process_multiple_iffts_from_one_sided_spectrum_signals(frequencies: np.ndarray, Xf_data: np.ndarray, dc_included: bool = False):
     """
     If n is even, the length of the transformed axis is (n/2)+1. If n is odd, the length is (n+1)/2.
     """
@@ -63,7 +72,7 @@ def process_multiple_iffts_from_one_sided_spectrum_signals(frequencies: np.ndarr
     dt = 1 / f_s
 
     # process the ifft from signal Xf
-    x_t = np.fft.irfft(Xf, axis=1)# * (2*(N-1))
+    x_t = np.fft.irfft(Xf, axis=1)  # * (2*(N-1))
     N_t = x_t[0, :].size
 
     # corrects the signal amplitude
@@ -100,7 +109,7 @@ def process_two_sided_spectrum(x_data: np.ndarray, dt: float):
 
     # process the one-sided spectrum
     Xf_data = np.fft.fft(x_data) / len(x_data)
-    
+
     freq_vector = np.fft.fftshift(freq_vector)
     Xf_data = np.fft.fftshift(Xf_data)
 
@@ -110,6 +119,7 @@ def process_two_sided_spectrum(x_data: np.ndarray, dt: float):
 
 
 def get_window_and_correction_factor(window_type: str, correction_type: str, N: int):
+    from scipy import signal
 
     if window_type == "rectangular":
         window_type = "boxcar"
@@ -121,20 +131,10 @@ def get_window_and_correction_factor(window_type: str, correction_type: str, N: 
     window = signal.get_window(window_type, N)
 
     if correction_type == "amplitude":
-        correction_factors = {  
-            "boxcar" : 1,
-            "hann" : 2,
-            "flattop" : 4.18,
-            "hamming" : 1.85  
-            }
+        correction_factors = {"boxcar": 1, "hann": 2, "flattop": 4.18, "hamming": 1.85}
 
     else:
-        correction_factors = {  
-            "boxcar" : 1,
-            "hann" : np.sqrt(8/3),
-            "flattop" : 2.26,
-            "hamming" : 1.59
-            }
+        correction_factors = {"boxcar": 1, "hann": np.sqrt(8 / 3), "flattop": 2.26, "hamming": 1.59}
 
     return window, correction_factors.get(window_type)
 
@@ -145,46 +145,46 @@ def check_if_signal_energy_is_conserved(x_data: np.ndarray, Xf_data: np.ndarray)
 
     if round(x_rms, 8) != round(Xf_rms, 8):
         message = "Both domains do not have the same rms/energy values.\n"
-        message += f"RMS value (x_data): {round(x_rms,8)} \n"
-        message += f"RMS value (Xf_data): {round(Xf_rms,8)}"
+        message += f"RMS value (x_data): {round(x_rms, 8)} \n"
+        message += f"RMS value (Xf_data): {round(Xf_rms, 8)}"
         print(message)
 
 
 def plot(x, y, x_label, y_label, title, label="", absolute=False):
 
-    fig = plt.figure(figsize=[8, 6])
-    ax = fig.add_subplot(1,1,1)
+    fig = plt().figure(figsize=[8, 6])
+    ax = fig.add_subplot(1, 1, 1)
 
     if absolute:
         y = np.abs(y)
 
-    ax.plot(x, y, color=[0,0,1], linewidth = 1, label = label)
+    ax.plot(x, y, color=[0, 0, 1], linewidth=1, label=label)
 
-    ax.set_xlabel(x_label, fontsize = 11, fontweight = 'bold')
-    ax.set_ylabel(y_label, fontsize = 11, fontweight = 'bold')
-    ax.set_title(title, fontsize = 12, fontweight = 'bold')
+    ax.set_xlabel(x_label, fontsize=11, fontweight="bold")
+    ax.set_ylabel(y_label, fontsize=11, fontweight="bold")
+    ax.set_title(title, fontsize=12, fontweight="bold")
 
-    plt.grid()
-    plt.show()
+    plt().grid()
+    plt().show()
 
 
 def plot_original_and_windowed_spectrums(freq: np.ndarray, Xf: np.ndarray, Xf_w: np.ndarray):
-    fig = plt.figure(figsize=[8, 6])
-    ax = fig.add_subplot(1,1,1)
+    fig = plt().figure(figsize=[8, 6])
+    ax = fig.add_subplot(1, 1, 1)
 
-    ax.semilogy(freq, np.abs(Xf), color=[0,0,1], linewidth = 1, label = "non-windowed signal")
-    ax.semilogy(freq, np.abs(Xf_w), color=[1,0,0], linewidth = 1, label = "windowed signal")
+    ax.semilogy(freq, np.abs(Xf), color=[0, 0, 1], linewidth=1, label="non-windowed signal")
+    ax.semilogy(freq, np.abs(Xf_w), color=[1, 0, 0], linewidth=1, label="windowed signal")
 
-    ax.set_xlabel("Frequency [Hz]", fontsize = 11, fontweight = 'bold')
-    ax.set_ylabel("Amplitude [--]", fontsize = 11, fontweight = 'bold')
-    ax.set_title("", fontsize = 12, fontweight = 'bold')
+    ax.set_xlabel("Frequency [Hz]", fontsize=11, fontweight="bold")
+    ax.set_ylabel("Amplitude [--]", fontsize=11, fontweight="bold")
+    ax.set_title("", fontsize=12, fontweight="bold")
 
-    plt.legend()
-    plt.grid()
-    plt.show()
+    plt().legend()
+    plt().grid()
+    plt().show()
 
 
-def example_of_simulated_signal(df_req, window_type: str="hann", correction_type: str="energy"):
+def example_of_simulated_signal(df_req, window_type: str = "hann", correction_type: str = "energy"):
 
     # angular resolution
     d_theta = 1
@@ -208,7 +208,7 @@ def example_of_simulated_signal(df_req, window_type: str="hann", correction_type
     T_req = 1 / df_req
 
     # number of revolutions to 'reach' the required frequency resolution
-    N_rev = int(np.ceil(T_req/T_rev))
+    N_rev = int(np.ceil(T_req / T_rev))
 
     # signal time block
     T = N_rev * T_rev
@@ -217,7 +217,7 @@ def example_of_simulated_signal(df_req, window_type: str="hann", correction_type
     N = int(T / dt)
 
     # create the time vector
-    time = np.arange(0, N+1) * dt
+    time = np.arange(0, N + 1) * dt
 
     # amplitudes
     amplitudes = [4, 6, 3, 1, 0.5, 0.2, 0.1, 0.05, 0.01]
@@ -226,7 +226,7 @@ def example_of_simulated_signal(df_req, window_type: str="hann", correction_type
     phases = np.random.randint(0, 360, len(amplitudes)) * (np.pi / 180)
 
     # compose the signal
-    x_data = 0.
+    x_data = 0.0
     for i in range(len(amplitudes)):
         n = i + 1
         omega = 2 * np.pi * f_rot * N_lobes * n
