@@ -151,9 +151,9 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
         surface_to_volume_map = {}
 
         # select volumes with reduced number of solid elements to decouple the DOF
-        for surf_id in surface_ids:
-            volumes_from_surface = self.model.mesh.volumes_from_surface.get(surface_id)
-            if volumes_from_surface != 2:
+        for _surface_id in surface_ids:
+            volumes_from_surface = self.model.mesh.volumes_from_surface.get(_surface_id)
+            if len(volumes_from_surface) != 2:
                 continue
 
             n_el1 = len(self.mesh.elements_from_volume.get(volumes_from_surface[0]))
@@ -161,7 +161,7 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
 
             vol_id = volumes_from_surface[0] if n_el1 > n_el2 else volumes_from_surface[1]
 
-            surface_to_volume_map[surf_id] = vol_id
+            surface_to_volume_map[_surface_id] = vol_id
 
         return surface_to_volume_map
 
