@@ -1665,13 +1665,19 @@ class Mesh:
         if not print_log:
             return
 
-        if not self.disconnected_nodes_data:
-            return
-
-        print("\nThe following disconnected nodes have been detected:")
-
         for key, data in self.disconnected_nodes_data.items():
-            print(f">> {len(data)} nodes of {key}: {data[:10]}" + ", ..." if len(data) > 10 else "")
+            n_nodes = len(data)
+            if n_nodes == 0:
+                continue
+
+            nodes_list = data if n_nodes < 10 else data[:10]
+
+            message = f">> At least {n_nodes} disconnected nodes have been detected for {key}:\n"
+            message += f"Nodes list: {nodes_list}"
+            if n_nodes > 10:
+                message += ", ..."
+
+            print(message)
 
     def get_list_of_disconnected_nodes(self):
         """
