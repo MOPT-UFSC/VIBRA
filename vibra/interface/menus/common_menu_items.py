@@ -49,6 +49,12 @@ class CommonMenuItems(QTreeWidget):
 
         return item
 
+    def clear_last_item(self):
+        self._last_item = None
+        item = self.currentItem()
+        if item is not None:
+            item.setSelected(False)
+
     def _config_tree(self):
 
         self.font_item = QFont()
