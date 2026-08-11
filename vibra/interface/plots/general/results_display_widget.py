@@ -70,7 +70,6 @@ class ResultsDisplayWidget(ResultsDisplayWidget_UI):
 
     def update_min_pressure(self):
         render_widget = app().main_window.results_widget
-        render_widget.user_changed_pressure_values = True
 
         min_value, max_value = self.lineEdit_min_pressure.text(), self.lineEdit_max_pressure.text()
         if min_value >= max_value:
@@ -83,7 +82,6 @@ class ResultsDisplayWidget(ResultsDisplayWidget_UI):
 
     def update_max_pressure(self):
         render_widget = app().main_window.results_widget
-        render_widget.user_changed_pressure_values = True
 
         min_value, max_value = self.lineEdit_min_pressure.text(), self.lineEdit_max_pressure.text()
         if max_value <= min_value:

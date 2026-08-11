@@ -42,8 +42,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>371</width>
-        <height>717</height>
+        <width>357</width>
+        <height>768</height>
        </rect>
       </property>
       <layout class="QGridLayout" name="gridLayout_6">
@@ -185,7 +185,7 @@
           <property name="spacing">
            <number>4</number>
           </property>
-          <item row="4" column="0">
+          <item row="2" column="0">
            <widget class="QFrame" name="frame_3">
             <property name="minimumSize">
              <size>
@@ -322,318 +322,6 @@
                 </property>
                </item>
               </widget>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item row="3" column="0">
-           <widget class="QFrame" name="frame_transparency">
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>40</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>16777215</width>
-              <height>40</height>
-             </size>
-            </property>
-            <property name="frameShape">
-             <enum>QFrame::Shape::NoFrame</enum>
-            </property>
-            <property name="frameShadow">
-             <enum>QFrame::Shadow::Raised</enum>
-            </property>
-            <layout class="QGridLayout" name="gridLayout_8">
-             <property name="leftMargin">
-              <number>0</number>
-             </property>
-             <property name="topMargin">
-              <number>0</number>
-             </property>
-             <property name="rightMargin">
-              <number>0</number>
-             </property>
-             <property name="bottomMargin">
-              <number>0</number>
-             </property>
-             <item row="0" column="1">
-              <widget class="QLabel" name="label_3">
-               <property name="minimumSize">
-                <size>
-                 <width>90</width>
-                 <height>26</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>90</width>
-                 <height>26</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <pointsize>10</pointsize>
-                </font>
-               </property>
-               <property name="text">
-                <string>Transparency:</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="2">
-              <widget class="QSlider" name="slider_transparency">
-               <property name="minimumSize">
-                <size>
-                 <width>176</width>
-                 <height>0</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>200</width>
-                 <height>16777215</height>
-                </size>
-               </property>
-               <property name="orientation">
-                <enum>Qt::Orientation::Horizontal</enum>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="3">
-              <spacer name="horizontalSpacer_6">
-               <property name="orientation">
-                <enum>Qt::Orientation::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item row="0" column="0">
-              <spacer name="horizontalSpacer_7">
-               <property name="orientation">
-                <enum>Qt::Orientation::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item row="2" column="0">
-           <widget class="QFrame" name="frame_4">
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>40</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>16777215</width>
-              <height>40</height>
-             </size>
-            </property>
-            <property name="frameShape">
-             <enum>QFrame::Shape::NoFrame</enum>
-            </property>
-            <property name="frameShadow">
-             <enum>QFrame::Shadow::Raised</enum>
-            </property>
-            <layout class="QGridLayout" name="gridLayout_13">
-             <property name="leftMargin">
-              <number>0</number>
-             </property>
-             <property name="topMargin">
-              <number>0</number>
-             </property>
-             <property name="rightMargin">
-              <number>0</number>
-             </property>
-             <property name="bottomMargin">
-              <number>0</number>
-             </property>
-             <item row="0" column="2">
-              <widget class="QFrame" name="frame_7">
-               <property name="minimumSize">
-                <size>
-                 <width>176</width>
-                 <height>0</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>176</width>
-                 <height>16777215</height>
-                </size>
-               </property>
-               <property name="frameShape">
-                <enum>QFrame::Shape::NoFrame</enum>
-               </property>
-               <property name="frameShadow">
-                <enum>QFrame::Shadow::Raised</enum>
-               </property>
-               <layout class="QGridLayout" name="gridLayout_14">
-                <property name="leftMargin">
-                 <number>0</number>
-                </property>
-                <property name="topMargin">
-                 <number>0</number>
-                </property>
-                <property name="rightMargin">
-                 <number>0</number>
-                </property>
-                <property name="bottomMargin">
-                 <number>0</number>
-                </property>
-                <property name="spacing">
-                 <number>0</number>
-                </property>
-                <item row="0" column="0">
-                 <widget class="QComboBox" name="comboBox_colormaps">
-                  <property name="minimumSize">
-                   <size>
-                    <width>120</width>
-                    <height>26</height>
-                   </size>
-                  </property>
-                  <property name="maximumSize">
-                   <size>
-                    <width>200</width>
-                    <height>26</height>
-                   </size>
-                  </property>
-                  <property name="font">
-                   <font>
-                    <pointsize>10</pointsize>
-                   </font>
-                  </property>
-                  <item>
-                   <property name="text">
-                    <string> Jet scale</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string> Viridis scale</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string> Inferno scale</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string> Magma scale</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string> Plasma scale</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>BWR diverging scale</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>PiYG diverging scale</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>PRGn diverging scale</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>BrBG diverging scale</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>PuOr diverging scale</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string> Grayscale</string>
-                   </property>
-                  </item>
-                 </widget>
-                </item>
-               </layout>
-              </widget>
-             </item>
-             <item row="0" column="3">
-              <spacer name="horizontalSpacer_12">
-               <property name="orientation">
-                <enum>Qt::Orientation::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item row="0" column="1">
-              <widget class="QLabel" name="label_6">
-               <property name="minimumSize">
-                <size>
-                 <width>90</width>
-                 <height>26</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>90</width>
-                 <height>26</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <pointsize>10</pointsize>
-                </font>
-               </property>
-               <property name="text">
-                <string>Colormaps:</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="0">
-              <spacer name="horizontalSpacer_13">
-               <property name="orientation">
-                <enum>Qt::Orientation::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
              </item>
             </layout>
            </widget>
@@ -898,7 +586,7 @@
          </layout>
         </widget>
        </item>
-       <item row="2" column="0">
+       <item row="3" column="0">
         <widget class="QFrame" name="frame_animation">
          <property name="minimumSize">
           <size>
@@ -914,6 +602,28 @@
          </property>
         </widget>
        </item>
+       <item row="2" column="0">
+        <widget class="QFrame" name="frame_color">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>228</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>228</height>
+          </size>
+         </property>
+         <property name="frameShape">
+          <enum>QFrame::Shape::StyledPanel</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Shadow::Raised</enum>
+         </property>
+        </widget>
+       </item>
       </layout>
      </widget>
     </widget>
@@ -923,8 +633,6 @@
  <tabstops>
   <tabstop>lineEdit_selected_frequency</tabstop>
   <tabstop>treeWidget_frequencies</tabstop>
-  <tabstop>comboBox_colormaps</tabstop>
-  <tabstop>slider_transparency</tabstop>
  </tabstops>
  <resources/>
  <connections/>

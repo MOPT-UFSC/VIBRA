@@ -117,7 +117,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.top_widget.setFixedHeight(220)
         self.current_widget = self.plot_acoustic_harmonic
         self.plot_acoustic_harmonic.load_frequencies()
-        self.plot_acoustic_harmonic.load_user_preference_colormap()
+        self.plot_acoustic_harmonic.configure_results_display_widget()
         self.add_widget(self.plot_acoustic_harmonic)
 
     def add_structural_frequency_response_widget(self):

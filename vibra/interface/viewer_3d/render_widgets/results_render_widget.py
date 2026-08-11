@@ -59,6 +59,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.max_value = 0
         self.transparency = 0
         self.is_animation_symetric = True
+        self.user_changed_pressure_values = False
 
         self.set_default_render_tool()
         self.remove_all_actors()
@@ -254,12 +255,13 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         color_scalars, min_value, max_value, complex_result = data
         self.is_animation_symetric = not complex_result
-        if clear_cache:
+
+        if clear_cache and not self.user_changed_pressure_values:
             self.min_value = min_value
             self.max_value = max_value
 
         colormap = app().config.user_preferences.color_map
-        self.analysis_actor.plot_color_bar(color_scalars, min_value, max_value, colormap)
+        self.analysis_actor.plot_color_bar(color_scalars, self.min_value, self.max_value, colormap)
         self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.update()
 
@@ -363,8 +365,9 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             timestamp = time()
             self.timestamp = timestamp
             self._animation_cached_data.clear()
-            self.min_value = 0
-            self.max_value = 0
+            if not self.user_changed_pressure_values:
+                self.min_value = 0
+                self.max_value = 0
         return timestamp
 
     def cache_animation_frames(self):
@@ -658,3 +661,11 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         tool = RenderTool()
         self.set_interactor_style(tool)
         tool.update_mouse_cursor_in_render_widgets(tool.current_cursor)
+
+    def set_min_value(self, min_value: str | float):
+        self.min_value = float(min_value)
+        self.user_changed_pressure_values = True
+
+    def set_max_value(self, max_value: str | float):
+        self.max_value = float(max_value)
+        self.user_changed_pressure_values = True

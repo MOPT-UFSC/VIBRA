@@ -157,8 +157,8 @@ class MainWindow(MainWindow_UI):
         self._connect_actions()
 
         app().splash.update_progress(30)
-        self._load_menu_widgets()
         self._load_render_widgets()
+        self._load_menu_widgets()
 
         app().splash.update_progress(60)
         self._create_basic_layout()
