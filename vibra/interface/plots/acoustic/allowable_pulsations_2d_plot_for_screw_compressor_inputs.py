@@ -354,18 +354,19 @@ class AllowablePulsations2DPlotForScrewCompressorInputs(AllowablePulsations2dFor
         pulsation_criteria_peak = (allowable_levels_percentual / 200) * P_AM * aux_ones
 
         # penalization factor for pre-study analysis
-        penalization_factor = int(self.comboBox_penalization_factor.currentText())
-        factor = penalization_factor / 100
+        factor = int(self.comboBox_penalization_factor.currentText())
 
-        if penalization_factor:
-            title += f" (penalized in {penalization_factor}%)"
+        if factor:
+            title += f" (penalized in {factor}%)"
 
         key = ("allowable pulsation limits (upper)", (None))
         legend_label_upper = "Allowable pulsation (upper bound)"
 
+        criteria_values = (1 - (factor / 100)) * pulsation_criteria_peak
+
         self.model_results[key] = { 
             "x_data" : time_vector,
-            "y_data" : factor * pulsation_criteria_peak,
+            "y_data" : criteria_values,
             "x_label" : "Time [s]",
             "y_label" : "Acoustic pressure",
             "title" : title,
@@ -381,7 +382,7 @@ class AllowablePulsations2DPlotForScrewCompressorInputs(AllowablePulsations2dFor
 
         self.model_results[key] = { 
             "x_data" : time_vector,
-            "y_data" : -factor * pulsation_criteria_peak,
+            "y_data" : -criteria_values,
             "x_label" : "Time [s]",
             "y_label" : "Acoustic pressure",
             "title" : title,
