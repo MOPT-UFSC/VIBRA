@@ -30,7 +30,7 @@ class MeshActor(vtkPropAssembly):
         self.model = model
         self.section_plane: SectionPlaneConfig | None = None
 
-        self.create_variables()
+        self._create_variables()
         self.last_mesh_id = 0
 
     @property
@@ -48,13 +48,16 @@ class MeshActor(vtkPropAssembly):
         return self.model.properties
 
     def update(self):
-        self.build_surface()
+        self.update_surface()
         self.update_section_plane()
         self.update_colors()
 
-    def create_variables(self):
+    def _create_variables(self):
         self.points = vtkPoints()
+        self._create_surface_variables()
+        self._create_section_variables()
 
+    def _create_surface_variables(self):
         self.surface_cells = vtkCellArray()
         self.surface_colors = vtkUnsignedCharArray()
         self.surface_colors.SetName("color")
@@ -75,6 +78,7 @@ class MeshActor(vtkPropAssembly):
         self.surface_actor.SetMapper(self.surface_mapper)
         self.AddPart(self.surface_actor)
 
+    def _create_section_variables(self):
         self.section_cells = vtkCellArray()
         self.section_colors = vtkUnsignedCharArray()
         self.section_colors.SetName("color")
@@ -95,7 +99,7 @@ class MeshActor(vtkPropAssembly):
         self.section_actor.SetMapper(self.section_mapper)
         self.AddPart(self.section_actor)
 
-    def build_surface(self):
+    def update_surface(self):
         if self.mesh is None:
             self._clear_data()
             return
@@ -149,7 +153,11 @@ class MeshActor(vtkPropAssembly):
 
         coordinates = self.mesh.nodal_coordinates[:, 1:]
         connectivity = self.mesh.solids_connectivity[:, 4:]
-        mask = inside_plane(coordinates, self.section_plane.origin, self.section_plane.normal).flatten()
+        mask = inside_plane(
+            coordinates,  # pyright: ignore[reportArgumentType]
+            self.section_plane.origin,
+            self.section_plane.normal,
+        ).flatten()
 
         elements_inside_plane = np.all(mask[connectivity], axis=1)
         elements_outside_plane = ~np.any(mask[connectivity], axis=1)
