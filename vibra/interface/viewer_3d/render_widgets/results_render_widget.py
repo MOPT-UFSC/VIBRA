@@ -57,6 +57,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self._animation_cache_lock = Lock()
         self.min_value = 0
         self.max_value = 0
+        self.user_min_value = None
+        self.user_max_value = None
         self.transparency = 0
         self.is_animation_symetric = True
         self.user_changed_pressure_values = False
@@ -253,15 +255,20 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if data is None:
             return
 
-        color_scalars, min_value, max_value, complex_result = data
+        color_scalars, self.min_value, self.max_value, complex_result = data
         self.is_animation_symetric = not complex_result
 
-        if clear_cache and not self.user_changed_pressure_values:
-            self.min_value = min_value
-            self.max_value = max_value
+        min_value = self.min_value
+        max_value = self.max_value
+
+        if self.user_min_value is not None:
+            min_value = self.user_min_value
+
+        if self.user_max_value is not None:
+            max_value = self.user_max_value
 
         colormap = app().config.user_preferences.color_map
-        self.analysis_actor.plot_color_bar(color_scalars, self.min_value, self.max_value, colormap)
+        self.analysis_actor.plot_color_bar(color_scalars, min_value, max_value, colormap)
         self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.update()
 
@@ -341,9 +348,6 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             animation_widget.update_animation_parameters(sampling_time, time_vector.size)
 
         self.is_animation_symetric = False
-        if clear_cache:
-            self.min_value = min_value
-            self.max_value = max_value
 
         colormap = app().config.user_preferences.color_map
         self.analysis_actor.plot_color_bar(color_scalars, min_value, max_value, colormap)
@@ -662,10 +666,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.set_interactor_style(tool)
         tool.update_mouse_cursor_in_render_widgets(tool.current_cursor)
 
-    def set_min_value(self, min_value: str | float):
-        self.min_value = float(min_value)
-        self.user_changed_pressure_values = True
+    def set_min_value(self, min_value: float | None):
+        self.user_min_value = min_value
 
-    def set_max_value(self, max_value: str | float):
-        self.max_value = float(max_value)
-        self.user_changed_pressure_values = True
+    def set_max_value(self, max_value: float | None):
+        self.user_max_value = max_value
