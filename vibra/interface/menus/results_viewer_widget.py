@@ -97,6 +97,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.current_widget = self.plot_structural_modal
         self.plot_structural_modal.load_natural_frequencies()
         self.plot_structural_modal.configure_results_display_widget()
+
         self.add_widget(self.plot_structural_modal)
 
     def add_structural_harmonic_widget(self):
@@ -104,6 +105,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.current_widget = self.plot_structural_harmonic
         self.plot_structural_harmonic.load_frequencies()
         self.plot_structural_harmonic.configure_results_display_widget()
+
         self.add_widget(self.plot_structural_harmonic)
 
     def add_acoustic_modal_widget(self):
