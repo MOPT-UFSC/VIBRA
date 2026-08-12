@@ -31,21 +31,13 @@ class PreviewRenderWidget(CommonRenderWidget):
         self.mesh_actor = MeshActor(self.model)
         self.add_actors(self.mesh_actor)
 
-        self.symbols = SymbolsActor(self.model)
+        self.symbols = SymbolsActor(self.renderer.GetActiveCamera())
         for i in range(10):
             self.symbols.add_entity(
-                sources.create_cube_source,
+                sources.create_impedance_source,
                 (0, np.cos(i), np.sin(i)),
-                (0, 1, 1),
+                (0, 0, 1),
                 Color(255, 0, 0),
-                0.5,
-            )
-        for i in range(10):
-            self.symbols.add_entity(
-                sources.create_cone_source,
-                (np.cos(i), np.sin(i), 0),
-                (0, 1, 0),
-                Color(0, 255, 0),
                 0.5,
             )
         self.add_actors(self.symbols)
