@@ -300,11 +300,17 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if data is None:
             return
 
-        displacements, color_scalars, min_value, max_value, complex_result = data
+        displacements, color_scalars, self.min_value, self.max_value, complex_result = data
         self.is_animation_symetric = not complex_result
-        if clear_cache:
-            self.min_value = min_value
-            self.max_value = max_value
+
+        min_value = self.min_value
+        max_value = self.max_value
+
+        if self.user_min_value is not None:
+            min_value = self.user_min_value
+
+        if self.user_max_value is not None:
+            max_value = self.user_max_value
 
         self.analysis_actor.apply_deformation(displacements, self.plot_setup.magnification_factor, max_value)
         self.edges_actor.extract_data(self.analysis_actor.data)
@@ -339,7 +345,16 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if data is None:
             return
 
-        time_vector, color_scalars, min_value, max_value = data
+        time_vector, color_scalars, self.min_value, self.max_value = data
+
+        min_value = self.min_value
+        max_value = self.max_value
+
+        if self.user_min_value is not None:
+            min_value = self.user_min_value
+
+        if self.user_max_value is not None:
+            max_value = self.user_max_value
 
         animation_widget = app().main_window.results_viewer_widget.get_animation_widget()
 
