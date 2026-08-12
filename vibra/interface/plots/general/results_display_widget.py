@@ -18,7 +18,7 @@ class ResultsDisplayWidget(ResultsDisplayWidget_UI):
         self.update_min_enabled(False)
         self.update_max_enabled(False)
 
-    def configure_widget(self, bottom: float = -1e-14, top: float = 1e14, decimals: int = 14):
+    def configure_widget(self, bottom: float = -1e14, top: float = 1e14, decimals: int = 14):
         self.lineEdit_min_pressure.setValidator(StrictDoubleValidator(bottom, top, decimals))
         self.lineEdit_max_pressure.setValidator(StrictDoubleValidator(bottom, top, decimals))
 
