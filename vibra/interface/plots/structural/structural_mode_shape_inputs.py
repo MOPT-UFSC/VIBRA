@@ -38,7 +38,7 @@ class PlotStructuralModeShapeInputs(StructuralModeShapeInputs_UI):
         self.comboBox_plot_type.currentIndexChanged.connect(self.update_plot)
         #
         self.pushButton_export_results.clicked.connect(self.export_results_callback)
-        #        
+        #
         self.treeWidget_frequencies.itemClicked.connect(self.on_click_item)
         self.treeWidget_frequencies.itemDoubleClicked.connect(self.on_click_item)
         #
@@ -130,6 +130,9 @@ class PlotStructuralModeShapeInputs(StructuralModeShapeInputs_UI):
         ]
         index = self.comboBox_plot_type.currentIndex()
         return DisplacementPlotType(plot_types[index])
+
+    def configure_results_display_widget(self):
+        self.results_display_widget.configure_widget()
 
     def load_natural_frequencies(self):
         solution = app().project.model.solution

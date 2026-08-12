@@ -45,7 +45,7 @@ class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
         #
         self.comboBox_plot_type.currentIndexChanged.connect(self.update_plot)
         self.comboBox_plotting_results.currentIndexChanged.connect(self.update_plotting_results_combo_box_items)
-        #        
+        #
         self.treeWidget_frequencies.itemClicked.connect(self.on_click_item)
         self.treeWidget_frequencies.itemDoubleClicked.connect(self.on_click_item)
         #
@@ -142,6 +142,9 @@ class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
 
     def get_number_of_differentiations(self):
         return self.comboBox_plotting_results.currentIndex()
+
+    def configure_results_display_widget(self):
+        self.results_display_widget.configure_widget()
 
     def load_frequencies(self):
         self.treeWidget_frequencies.setDisabled(False)
