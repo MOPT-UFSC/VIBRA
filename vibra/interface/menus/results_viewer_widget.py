@@ -96,14 +96,14 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.top_widget.setFixedHeight(120)
         self.current_widget = self.plot_structural_modal
         self.plot_structural_modal.load_natural_frequencies()
-        self.plot_structural_modal.load_user_preference_colormap()
+        self.plot_structural_modal.results_display_widget.configure_widget()
         self.add_widget(self.plot_structural_modal)
 
     def add_structural_harmonic_widget(self):
         self.top_widget.setFixedHeight(120)
         self.current_widget = self.plot_structural_harmonic
         self.plot_structural_harmonic.load_frequencies()
-        self.plot_structural_harmonic.load_user_preference_colormap()
+        self.plot_structural_harmonic.results_display_widget.configure_widget()
         self.add_widget(self.plot_structural_harmonic)
 
     def add_acoustic_modal_widget(self):
