@@ -1,3 +1,4 @@
+import numpy as np
 from molde.colors.color import Color
 from molde.render_widgets import CommonRenderWidget
 from vtkmodules.util.numpy_support import vtk_to_numpy
@@ -5,7 +6,9 @@ from vtkmodules.vtkCommonDataModel import vtkSelectionNode
 from vtkmodules.vtkRenderingCore import vtkHardwarePicker, vtkHardwareSelector
 
 from vibra.engine.model import Model
+from vibra.interface.viewer_3d import sources
 from vibra.interface.viewer_3d.actors.mesh_actor import MeshActor
+from vibra.interface.viewer_3d.actors.symbols_actor import SymbolsActor
 from vibra.utils.preview_utils import SectionPlaneConfig
 from vibra.utils.time_utils import context_timer, function_timer
 
@@ -28,6 +31,25 @@ class PreviewRenderWidget(CommonRenderWidget):
         self.mesh_actor = MeshActor(self.model)
         self.add_actors(self.mesh_actor)
 
+        self.symbols = SymbolsActor(self.model)
+        for i in range(10):
+            self.symbols.add_entity(
+                sources.create_cube_source,
+                (0, np.cos(i), np.sin(i)),
+                (0, 1, 1),
+                Color(255, 0, 0),
+                0.5,
+            )
+        for i in range(10):
+            self.symbols.add_entity(
+                sources.create_cone_source,
+                (np.cos(i), np.sin(i), 0),
+                (0, 1, 0),
+                Color(0, 255, 0),
+                0.5,
+            )
+        self.add_actors(self.symbols)
+
     def update_model(self, model: Model | None):
         self.model = model
         self.mesh_actor.model = model
@@ -39,6 +61,7 @@ class PreviewRenderWidget(CommonRenderWidget):
     @function_timer
     def update_plot(self):
         self.mesh_actor.update()
+        self.symbols.build()
 
         self.renderer.ResetCamera()
         with context_timer("render"):
@@ -48,8 +71,8 @@ class PreviewRenderWidget(CommonRenderWidget):
         super().resizeEvent(event)
         self.renderer.ResetCamera()
 
-    @function_timer
     def click(self, x, y):
+        return
         self.picker.Pick(x, y, 0, self.renderer)
 
         actor = self.picker.GetActor()
