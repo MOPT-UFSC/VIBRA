@@ -19,36 +19,36 @@ class ResultsDisplayWidget(ResultsDisplayWidget_UI):
         self.update_max_enabled(False)
 
     def configure_widget(self, bottom: float = -1e14, top: float = 1e14, decimals: int = 14):
-        self.lineEdit_min_pressure.setValidator(StrictDoubleValidator(bottom, top, decimals))
-        self.lineEdit_max_pressure.setValidator(StrictDoubleValidator(bottom, top, decimals))
+        self.lineEdit_min_color_value.setValidator(StrictDoubleValidator(bottom, top, decimals))
+        self.lineEdit_max_color_value.setValidator(StrictDoubleValidator(bottom, top, decimals))
 
     def create_connections(self):
         self.comboBox_colormaps.currentIndexChanged.connect(self.update_colormap_type)
         self.slider_transparency.valueChanged.connect(self.update_transparency_callback)
-        self.lineEdit_min_pressure.editingFinished.connect(self.update_pressures)
-        self.lineEdit_max_pressure.editingFinished.connect(self.update_pressures)
-        self.min_pressure_check_box.stateChanged.connect(self.update_min_enabled)
-        self.max_pressure_check_box.stateChanged.connect(self.update_max_enabled)
+        self.lineEdit_min_color_value.editingFinished.connect(self.update_color_ranges)
+        self.lineEdit_max_color_value.editingFinished.connect(self.update_color_ranges)
+        self.min_color_check_box.stateChanged.connect(self.update_min_enabled)
+        self.max_color_check_box.stateChanged.connect(self.update_max_enabled)
 
     def update_min_enabled(self, value):
         if value:
             render_widget = app().main_window.results_widget
-            self.lineEdit_min_pressure.setText(f"{render_widget.min_value:.1e}")
+            self.lineEdit_min_color_value.setText(f"{render_widget.min_value:.1e}")
         else:
-            self.lineEdit_min_pressure.clear()
+            self.lineEdit_min_color_value.clear()
 
-        self.lineEdit_min_pressure.setEnabled(value)
-        self.update_pressures()
+        self.lineEdit_min_color_value.setEnabled(value)
+        self.update_color_ranges()
 
     def update_max_enabled(self, value):
         if value:
             render_widget = app().main_window.results_widget
-            self.lineEdit_max_pressure.setText(f"{render_widget.max_value:.1e}")
+            self.lineEdit_max_color_value.setText(f"{render_widget.max_value:.1e}")
         else:
-            self.lineEdit_max_pressure.clear()
+            self.lineEdit_max_color_value.clear()
 
-        self.lineEdit_max_pressure.setEnabled(value)
-        self.update_pressures()
+        self.lineEdit_max_color_value.setEnabled(value)
+        self.update_color_ranges()
 
     def update_colormap_type(self):
         app().config.user_preferences.color_map = self.get_colormap()
@@ -77,33 +77,21 @@ class ResultsDisplayWidget(ResultsDisplayWidget_UI):
         except Exception:
             self.comboBox_colormaps.setCurrentIndex(0)
 
-    def min_pressure(self) -> float | None:
+    def min_color_value(self) -> float | None:
         try:
-            return float(self.lineEdit_min_pressure.text().replace(",", "."))
+            return float(self.lineEdit_min_color_value.text().replace(",", "."))
         except ValueError:
             return None
 
-    def max_pressure(self) -> float | None:
+    def max_color_value(self) -> float | None:
         try:
-            return float(self.lineEdit_max_pressure.text().replace(",", "."))
+            return float(self.lineEdit_max_color_value.text().replace(",", "."))
         except ValueError:
             return None
 
-    def get_pressure_range(self) -> tuple[float, float] | None:
-        try:
-            min_value = float(self.lineEdit_min_pressure.text().replace(",", "."))
-            max_value = float(self.lineEdit_max_pressure.text().replace(",", "."))
-        except ValueError:
-            return None
-
-        if min_value >= max_value:
-            return None
-
-        return min_value, max_value
-
-    def update_pressures(self):
-        min_value = self.min_pressure()
-        max_value = self.max_pressure()
+    def update_color_ranges(self):
+        min_value = self.min_color_value()
+        max_value = self.max_color_value()
 
         render_widget = app().main_window.results_widget
         render_widget.set_min_value(min_value)
