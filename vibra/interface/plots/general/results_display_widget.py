@@ -4,6 +4,7 @@ from vibra import app
 from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
 from vibra.interface.ui_generated.plots.general.results_display_widget_ui import ResultsDisplayWidget_UI
 from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
+from vibra.utils.interface_utils import block_signals
 
 
 class ResultsDisplayWidget(ResultsDisplayWidget_UI):
@@ -15,12 +16,12 @@ class ResultsDisplayWidget(ResultsDisplayWidget_UI):
 
         self.create_connections()
         self.load_user_preference_colormap()
-        self.update_min_enabled(False)
-        self.update_max_enabled(False)
 
     def configure_widget(self, bottom: float = -1e14, top: float = 1e14, decimals: int = 14):
         self.lineEdit_min_color_value.setValidator(StrictDoubleValidator(bottom, top, decimals))
         self.lineEdit_max_color_value.setValidator(StrictDoubleValidator(bottom, top, decimals))
+        self.update_min_enabled(False)
+        self.update_max_enabled(False)
 
     def create_connections(self):
         self.comboBox_colormaps.currentIndexChanged.connect(self.update_colormap_type)
@@ -40,6 +41,9 @@ class ResultsDisplayWidget(ResultsDisplayWidget_UI):
         self.lineEdit_min_color_value.setEnabled(value)
         self.update_color_ranges()
 
+        with block_signals(self):
+            self.min_color_check_box.setChecked(value)
+
     def update_max_enabled(self, value):
         if value:
             render_widget = app().main_window.results_widget
@@ -49,6 +53,9 @@ class ResultsDisplayWidget(ResultsDisplayWidget_UI):
 
         self.lineEdit_max_color_value.setEnabled(value)
         self.update_color_ranges()
+
+        with block_signals(self):
+            self.max_color_check_box.setChecked(value)
 
     def update_colormap_type(self):
         app().config.user_preferences.color_map = self.get_colormap()

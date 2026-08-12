@@ -35,42 +35,20 @@ class Ui_Form(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents_2 = QWidget()
         self.scrollAreaWidgetContents_2.setObjectName(u"scrollAreaWidgetContents_2")
-        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, 0, 357, 768))
+        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, 0, 359, 768))
         self.gridLayout_6 = QGridLayout(self.scrollAreaWidgetContents_2)
         self.gridLayout_6.setObjectName(u"gridLayout_6")
         self.gridLayout_6.setHorizontalSpacing(2)
         self.gridLayout_6.setVerticalSpacing(4)
         self.gridLayout_6.setContentsMargins(0, 0, 0, 0)
-        self.frame = QFrame(self.scrollAreaWidgetContents_2)
-        self.frame.setObjectName(u"frame")
-        self.frame.setMinimumSize(QSize(0, 40))
-        self.frame.setMaximumSize(QSize(16777215, 40))
-        self.frame.setFrameShape(QFrame.Shape.Box)
-        self.frame.setFrameShadow(QFrame.Shadow.Raised)
-        self.frame.setLineWidth(1)
-        self.gridLayout = QGridLayout(self.frame)
-        self.gridLayout.setSpacing(0)
-        self.gridLayout.setObjectName(u"gridLayout")
-        self.gridLayout.setContentsMargins(10, 0, -1, 0)
-        self.label = QLabel(self.frame)
-        self.label.setObjectName(u"label")
-        self.label.setMinimumSize(QSize(0, 0))
-        self.label.setMaximumSize(QSize(16777215, 16777215))
-        font = QFont()
-        font.setFamilies([u"Segoe UI"])
-        font.setPointSize(10)
-        font.setBold(False)
-        font.setItalic(False)
-        self.label.setFont(font)
-        self.label.setFrameShape(QFrame.Shape.NoFrame)
-        self.label.setFrameShadow(QFrame.Shadow.Raised)
-        self.label.setTextFormat(Qt.TextFormat.AutoText)
-        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.frame_color = QFrame(self.scrollAreaWidgetContents_2)
+        self.frame_color.setObjectName(u"frame_color")
+        self.frame_color.setMinimumSize(QSize(0, 228))
+        self.frame_color.setMaximumSize(QSize(16777215, 228))
+        self.frame_color.setFrameShape(QFrame.Shape.StyledPanel)
+        self.frame_color.setFrameShadow(QFrame.Shadow.Raised)
 
-        self.gridLayout.addWidget(self.label, 0, 0, 1, 1)
-
-
-        self.gridLayout_6.addWidget(self.frame, 0, 0, 1, 1)
+        self.gridLayout_6.addWidget(self.frame_color, 3, 0, 1, 1)
 
         self.frame_2 = QFrame(self.scrollAreaWidgetContents_2)
         self.frame_2.setObjectName(u"frame_2")
@@ -98,9 +76,9 @@ class Ui_Form(object):
         self.label_color_scalling.setObjectName(u"label_color_scalling")
         self.label_color_scalling.setMinimumSize(QSize(90, 26))
         self.label_color_scalling.setMaximumSize(QSize(90, 26))
-        font1 = QFont()
-        font1.setPointSize(10)
-        self.label_color_scalling.setFont(font1)
+        font = QFont()
+        font.setPointSize(10)
+        self.label_color_scalling.setFont(font)
         self.label_color_scalling.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_9.addWidget(self.label_color_scalling, 0, 1, 1, 1)
@@ -122,7 +100,7 @@ class Ui_Form(object):
         self.comboBox_plot_type.setObjectName(u"comboBox_plot_type")
         self.comboBox_plot_type.setMinimumSize(QSize(176, 26))
         self.comboBox_plot_type.setMaximumSize(QSize(200, 26))
-        self.comboBox_plot_type.setFont(font1)
+        self.comboBox_plot_type.setFont(font)
 
         self.gridLayout_9.addWidget(self.comboBox_plot_type, 0, 2, 1, 1)
 
@@ -149,12 +127,12 @@ class Ui_Form(object):
         self.lineEdit_selected_frequency.setEnabled(False)
         self.lineEdit_selected_frequency.setMinimumSize(QSize(160, 28))
         self.lineEdit_selected_frequency.setMaximumSize(QSize(180, 28))
-        font2 = QFont()
-        font2.setFamilies([u"MS Shell Dlg 2"])
-        font2.setPointSize(10)
-        font2.setBold(False)
-        font2.setItalic(False)
-        self.lineEdit_selected_frequency.setFont(font2)
+        font1 = QFont()
+        font1.setFamilies([u"MS Shell Dlg 2"])
+        font1.setPointSize(10)
+        font1.setBold(False)
+        font1.setItalic(False)
+        self.lineEdit_selected_frequency.setFont(font1)
         self.lineEdit_selected_frequency.setStyleSheet(u"")
         self.lineEdit_selected_frequency.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
@@ -168,7 +146,7 @@ class Ui_Form(object):
         self.label_4.setObjectName(u"label_4")
         self.label_4.setMinimumSize(QSize(0, 28))
         self.label_4.setMaximumSize(QSize(16777215, 28))
-        self.label_4.setFont(font1)
+        self.label_4.setFont(font)
         self.label_4.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout_4.addWidget(self.label_4, 0, 1, 1, 1)
@@ -177,7 +155,7 @@ class Ui_Form(object):
         self.label_5.setObjectName(u"label_5")
         self.label_5.setMinimumSize(QSize(0, 28))
         self.label_5.setMaximumSize(QSize(16777215, 28))
-        self.label_5.setFont(font1)
+        self.label_5.setFont(font)
         self.label_5.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout_4.addWidget(self.label_5, 0, 3, 1, 1)
@@ -196,20 +174,20 @@ class Ui_Form(object):
         self.gridLayout_3.setObjectName(u"gridLayout_3")
         self.gridLayout_3.setContentsMargins(0, 0, 0, 0)
         self.treeWidget_frequencies = QTreeWidget(self.frame_treeWidget)
-        font3 = QFont()
-        font3.setFamilies([u"MS Shell Dlg 2"])
-        font3.setPointSize(10)
+        font2 = QFont()
+        font2.setFamilies([u"MS Shell Dlg 2"])
+        font2.setPointSize(10)
         __qtreewidgetitem = QTreeWidgetItem()
         __qtreewidgetitem.setText(1, u"Frequency [Hz]");
         __qtreewidgetitem.setTextAlignment(1, Qt.AlignCenter);
-        __qtreewidgetitem.setFont(1, font2);
+        __qtreewidgetitem.setFont(1, font1);
         __qtreewidgetitem.setTextAlignment(0, Qt.AlignCenter);
-        __qtreewidgetitem.setFont(0, font3);
+        __qtreewidgetitem.setFont(0, font2);
         self.treeWidget_frequencies.setHeaderItem(__qtreewidgetitem)
         self.treeWidget_frequencies.setObjectName(u"treeWidget_frequencies")
         self.treeWidget_frequencies.setMinimumSize(QSize(260, 160))
         self.treeWidget_frequencies.setMaximumSize(QSize(260, 240))
-        self.treeWidget_frequencies.setFont(font2)
+        self.treeWidget_frequencies.setFont(font1)
         self.treeWidget_frequencies.setAlternatingRowColors(True)
         self.treeWidget_frequencies.setIndentation(0)
 
@@ -221,22 +199,44 @@ class Ui_Form(object):
 
         self.gridLayout_6.addWidget(self.frame_2, 1, 0, 1, 1)
 
+        self.frame = QFrame(self.scrollAreaWidgetContents_2)
+        self.frame.setObjectName(u"frame")
+        self.frame.setMinimumSize(QSize(0, 40))
+        self.frame.setMaximumSize(QSize(16777215, 40))
+        self.frame.setFrameShape(QFrame.Shape.Box)
+        self.frame.setFrameShadow(QFrame.Shadow.Raised)
+        self.frame.setLineWidth(1)
+        self.gridLayout = QGridLayout(self.frame)
+        self.gridLayout.setSpacing(0)
+        self.gridLayout.setObjectName(u"gridLayout")
+        self.gridLayout.setContentsMargins(10, 0, -1, 0)
+        self.label = QLabel(self.frame)
+        self.label.setObjectName(u"label")
+        self.label.setMinimumSize(QSize(0, 0))
+        self.label.setMaximumSize(QSize(16777215, 16777215))
+        font3 = QFont()
+        font3.setFamilies([u"Segoe UI"])
+        font3.setPointSize(10)
+        font3.setBold(False)
+        font3.setItalic(False)
+        self.label.setFont(font3)
+        self.label.setFrameShape(QFrame.Shape.NoFrame)
+        self.label.setFrameShadow(QFrame.Shadow.Raised)
+        self.label.setTextFormat(Qt.TextFormat.AutoText)
+        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout.addWidget(self.label, 0, 0, 1, 1)
+
+
+        self.gridLayout_6.addWidget(self.frame, 0, 0, 1, 1)
+
         self.frame_animation = QFrame(self.scrollAreaWidgetContents_2)
         self.frame_animation.setObjectName(u"frame_animation")
         self.frame_animation.setMinimumSize(QSize(0, 228))
         self.frame_animation.setFrameShape(QFrame.Shape.Box)
         self.frame_animation.setFrameShadow(QFrame.Shadow.Raised)
 
-        self.gridLayout_6.addWidget(self.frame_animation, 3, 0, 1, 1)
-
-        self.frame_color = QFrame(self.scrollAreaWidgetContents_2)
-        self.frame_color.setObjectName(u"frame_color")
-        self.frame_color.setMinimumSize(QSize(0, 228))
-        self.frame_color.setMaximumSize(QSize(16777215, 228))
-        self.frame_color.setFrameShape(QFrame.Shape.StyledPanel)
-        self.frame_color.setFrameShadow(QFrame.Shadow.Raised)
-
-        self.gridLayout_6.addWidget(self.frame_color, 2, 0, 1, 1)
+        self.gridLayout_6.addWidget(self.frame_animation, 2, 0, 1, 1)
 
         self.scrollArea.setWidget(self.scrollAreaWidgetContents_2)
 
@@ -251,7 +251,6 @@ class Ui_Form(object):
 
     def retranslateUi(self, Form):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Plot pressure field", None))
-        self.label.setText(QCoreApplication.translate("Form", u"Select the frequency to be plotted", None))
         self.label_color_scalling.setText(QCoreApplication.translate("Form", u"Plot type:", None))
         self.comboBox_plot_type.setItemText(0, QCoreApplication.translate("Form", u"Non-absolute (animation)", None))
         self.comboBox_plot_type.setItemText(1, QCoreApplication.translate("Form", u"Absolute (animation)", None))
@@ -264,6 +263,7 @@ class Ui_Form(object):
         self.label_5.setText(QCoreApplication.translate("Form", u"[Hz]", None))
         ___qtreewidgetitem = self.treeWidget_frequencies.headerItem()
         ___qtreewidgetitem.setText(0, QCoreApplication.translate("Form", u"Index", None));
+        self.label.setText(QCoreApplication.translate("Form", u"Select the frequency to be plotted", None))
     # retranslateUi
 
 
@@ -276,9 +276,7 @@ class AcousticPressureFieldInputs_UI(QWidget, Ui_Form):
                 - scrollArea: QScrollArea
                     - scrollAreaWidgetContents_2: QWidget
                         - (Layout): QGridLayout
-                                - frame: QFrame
-                                    - (Layout): QGridLayout
-                                            - label: QLabel
+                                - frame_color: QFrame
                                 - frame_2: QFrame
                                     - (Layout): QGridLayout
                                             - frame_3: QFrame
@@ -293,8 +291,10 @@ class AcousticPressureFieldInputs_UI(QWidget, Ui_Form):
                                             - frame_treeWidget: QFrame
                                                 - (Layout): QGridLayout
                                                         - treeWidget_frequencies: QTreeWidget
+                                - frame: QFrame
+                                    - (Layout): QGridLayout
+                                            - label: QLabel
                                 - frame_animation: QFrame
-                                - frame_color: QFrame
     """
 
     def __init__(self, *args, **kwargs):

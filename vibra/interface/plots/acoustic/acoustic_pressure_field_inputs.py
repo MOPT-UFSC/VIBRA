@@ -62,12 +62,12 @@ class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
         self.animation_widget = AnimationWidget()
         self.grid_layout.addWidget(self.animation_widget)
         self.frame_animation.adjustSize()
-    
+
     def add_color_widget(self):
         grid_layout = QGridLayout()
         grid_layout.setContentsMargins(0, 0, 0, 0)
         self.frame_color.setLayout(grid_layout)
-        
+
         self.results_display_widget = ResultsDisplayWidget()
         grid_layout.addWidget(self.results_display_widget)
         self.frame_color.adjustSize()
