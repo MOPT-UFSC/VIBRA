@@ -10,6 +10,7 @@ from vibra.engine import AnalysisID
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
 from vibra.interface.plots.general.animation_widget import AnimationWidget
+from vibra.interface.plots.general.results_display_widget import ResultsDisplayWidget
 from vibra.interface.ui_generated.plots.acoustic.acoustic_pressure_waveform_field_inputs_ui import AcousticPressureWaveformFieldInputs_UI
 from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
 from vibra.interface.viewer_3d.plot_setup import PressurePlotType, TransientPressurePlotSetup
@@ -28,11 +29,11 @@ class AcousticPressureWaveformFieldInputs(AcousticPressureWaveformFieldInputs_UI
         app().main_window.show_geometry_render_widget()
 
         self._reset_variables()
-        self._create_connections()
         self.add_animation_widget()
+        self.add_color_widget()
+        self._create_connections()
         self._configure_validators()
 
-        self.load_user_preference_colormap()
         self._load_analysis_setup_and_solution()
 
     @property
@@ -78,15 +79,16 @@ class AcousticPressureWaveformFieldInputs(AcousticPressureWaveformFieldInputs_UI
 
     def _create_connections(self):
         #
-        self.comboBox_colormaps.currentIndexChanged.connect(self.update_colormap_type)
         self.comboBox_plot_type.currentIndexChanged.connect(self.plot_data_callback)
         self.comboBox_reduced_time.currentIndexChanged.connect(lambda: self.reduced_loop_time_type_callback(True))
         #
         self.lineEdit_animation_time.editingFinished.connect(self.plot_data_callback)
         #
-        self.slider_transparency.valueChanged.connect(self.update_transparency_callback)
-        #
+        self.results_display_widget.colormap_changed.connect(self.animation_widget.update_color_and_deformation)
+        self.results_display_widget.pressure_value_changed.connect(self.animation_widget.update_color_and_deformation)
+
         self.reduced_loop_time_type_callback()
+
 
     def add_animation_widget(self):
 
@@ -101,6 +103,15 @@ class AcousticPressureWaveformFieldInputs(AcousticPressureWaveformFieldInputs_UI
         self.animation_widget.label_animation_phase.setText("Time step:")
         self.animation_widget.label_phase_angle.setText(f"{0: .4e}s")
 
+    def add_color_widget(self):
+        grid_layout = QGridLayout()
+        grid_layout.setContentsMargins(0, 0, 0, 0)
+        self.frame_color.setLayout(grid_layout)
+
+        self.results_display_widget = ResultsDisplayWidget()
+        grid_layout.addWidget(self.results_display_widget)
+        self.frame_color.adjustSize()
+
     def update_slider_configuration(self):
         if isinstance(self.frequencies, np.ndarray):
             N_steps = 2 * len(self.frequencies)
@@ -109,15 +120,6 @@ class AcousticPressureWaveformFieldInputs(AcousticPressureWaveformFieldInputs_UI
 
         self.animation_widget.configure_animation_widget_for_transient_plot(T, N_steps)
 
-    def load_user_preference_colormap(self):
-        try:
-            colormap = app().config.user_preferences.color_map
-            if colormap in COLORMAP_NAMES:
-                index = COLORMAP_NAMES.index(colormap)
-                self.comboBox_colormaps.setCurrentIndex(index)
-        except Exception:
-            self.comboBox_colormaps.setCurrentIndex(0)
-
     def update_colormap_type(self):
         app().config.user_preferences.color_map = self.get_colormap()
         app().config.update_config_file()
@@ -125,10 +127,6 @@ class AcousticPressureWaveformFieldInputs(AcousticPressureWaveformFieldInputs_UI
             self.animation_widget.update_color_and_deformation()
         except AttributeError:
             pass
-
-    def update_transparency_callback(self):
-        transparency = self.slider_transparency.value() / 100
-        app().main_window.results_widget.set_analysis_actors_transparency(transparency)
 
     def reduced_loop_time_type_callback(self, update_plot: bool = False):
         index = self.comboBox_reduced_time.currentIndex()
