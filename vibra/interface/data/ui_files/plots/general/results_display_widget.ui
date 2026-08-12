@@ -113,6 +113,9 @@
           <pointsize>10</pointsize>
          </font>
         </property>
+        <property name="toolTip">
+         <string>Minimum colorbar value</string>
+        </property>
         <property name="lineWidth">
          <number>0</number>
         </property>
@@ -251,6 +254,9 @@
          <font>
           <pointsize>10</pointsize>
          </font>
+        </property>
+        <property name="toolTip">
+         <string>Maximum colorbar value</string>
         </property>
         <property name="text">
          <string>Max. Color:</string>
