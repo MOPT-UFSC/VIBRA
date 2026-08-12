@@ -15,15 +15,15 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QComboBox, QFrame, QGridLayout,
-    QLabel, QLineEdit, QPushButton, QSizePolicy,
-    QSlider, QSpacerItem, QWidget)
+from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QFrame,
+    QGridLayout, QLabel, QLineEdit, QPushButton,
+    QSizePolicy, QSlider, QSpacerItem, QWidget)
 
 class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(400, 239)
+        Form.resize(400, 242)
         self.gridLayout = QGridLayout(Form)
         self.gridLayout.setObjectName(u"gridLayout")
         self.frame_4 = QFrame(Form)
@@ -98,9 +98,9 @@ class Ui_Form(object):
         self.gridLayout_3 = QGridLayout(self.frame_2)
         self.gridLayout_3.setObjectName(u"gridLayout_3")
         self.gridLayout_3.setContentsMargins(0, 0, 0, 0)
-        self.horizontalSpacer_10 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        self.horizontalSpacer_5 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gridLayout_3.addItem(self.horizontalSpacer_10, 0, 4, 1, 1)
+        self.gridLayout_3.addItem(self.horizontalSpacer_5, 0, 0, 1, 1)
 
         self.lineEdit_min_pressure = QLineEdit(self.frame_2)
         self.lineEdit_min_pressure.setObjectName(u"lineEdit_min_pressure")
@@ -115,9 +115,10 @@ class Ui_Form(object):
 
         self.gridLayout_3.addWidget(self.lineEdit_min_pressure, 0, 2, 1, 1)
 
-        self.horizontalSpacer_5 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        self.min_pressure_check_box = QCheckBox(self.frame_2)
+        self.min_pressure_check_box.setObjectName(u"min_pressure_check_box")
 
-        self.gridLayout_3.addItem(self.horizontalSpacer_5, 0, 0, 1, 1)
+        self.gridLayout_3.addWidget(self.min_pressure_check_box, 0, 3, 1, 1)
 
         self.label_2 = QLabel(self.frame_2)
         self.label_2.setObjectName(u"label_2")
@@ -129,11 +130,9 @@ class Ui_Form(object):
 
         self.gridLayout_3.addWidget(self.label_2, 0, 1, 1, 1)
 
-        self.label_6 = QLabel(self.frame_2)
-        self.label_6.setObjectName(u"label_6")
-        self.label_6.setFont(font)
+        self.horizontalSpacer_10 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gridLayout_3.addWidget(self.label_6, 0, 3, 1, 1)
+        self.gridLayout_3.addItem(self.horizontalSpacer_10, 0, 4, 1, 1)
 
 
         self.gridLayout.addWidget(self.frame_2, 3, 0, 1, 1)
@@ -188,6 +187,11 @@ class Ui_Form(object):
 
         self.gridLayout_2.addItem(self.horizontalSpacer_4, 0, 4, 1, 1)
 
+        self.max_pressure_check_box = QCheckBox(self.frame)
+        self.max_pressure_check_box.setObjectName(u"max_pressure_check_box")
+
+        self.gridLayout_2.addWidget(self.max_pressure_check_box, 0, 3, 1, 1)
+
         self.lineEdit_max_pressure = QLineEdit(self.frame)
         self.lineEdit_max_pressure.setObjectName(u"lineEdit_max_pressure")
         sizePolicy.setHeightForWidth(self.lineEdit_max_pressure.sizePolicy().hasHeightForWidth())
@@ -210,12 +214,6 @@ class Ui_Form(object):
         self.label.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_2.addWidget(self.label, 0, 1, 1, 1)
-
-        self.label_5 = QLabel(self.frame)
-        self.label_5.setObjectName(u"label_5")
-        self.label_5.setFont(font)
-
-        self.gridLayout_2.addWidget(self.label_5, 0, 3, 1, 1)
 
 
         self.gridLayout.addWidget(self.frame, 2, 0, 1, 1)
@@ -260,11 +258,11 @@ class Ui_Form(object):
         self.comboBox_colormaps.setItemText(10, QCoreApplication.translate("Form", u" Grayscale", None))
 
         self.label_3.setText(QCoreApplication.translate("Form", u"Colormaps:", None))
+        self.min_pressure_check_box.setText(QCoreApplication.translate("Form", u"[Pa]", None))
         self.label_2.setText(QCoreApplication.translate("Form", u"Min pressure:", None))
-        self.label_6.setText(QCoreApplication.translate("Form", u"[Pa]", None))
         self.label_4.setText(QCoreApplication.translate("Form", u"Transparency:", None))
+        self.max_pressure_check_box.setText(QCoreApplication.translate("Form", u"[Pa]", None))
         self.label.setText(QCoreApplication.translate("Form", u"Max pressure:", None))
-        self.label_5.setText(QCoreApplication.translate("Form", u"[Pa]", None))
         self.pushButton_reset_pressures.setText(QCoreApplication.translate("Form", u"Reset pressures", None))
     # retranslateUi
 
@@ -284,17 +282,17 @@ class ResultsDisplayWidget_UI(QWidget, Ui_Form):
                 - frame_2: QFrame
                     - (Layout): QGridLayout
                             - lineEdit_min_pressure: QLineEdit
+                            - min_pressure_check_box: QCheckBox
                             - label_2: QLabel
-                            - label_6: QLabel
                 - frame_transparency: QFrame
                     - (Layout): QGridLayout
                             - label_4: QLabel
                             - slider_transparency: QSlider
                 - frame: QFrame
                     - (Layout): QGridLayout
+                            - max_pressure_check_box: QCheckBox
                             - lineEdit_max_pressure: QLineEdit
                             - label: QLabel
-                            - label_5: QLabel
                 - frame_3: QFrame
                     - (Layout): QGridLayout
                             - pushButton_reset_pressures: QPushButton
