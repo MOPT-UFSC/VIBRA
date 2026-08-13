@@ -74,6 +74,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.create_axes()
         self.create_color_bar()
         self.create_scale_bar()
+        self.colorbar_actor.SetLabelFormat("%+0.1e")
         self.update_plot()
 
     def showEvent(self, event):
@@ -685,9 +686,9 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
             case AllowablePulsationForScrewCompressorsPlotSetup():
                 text += allowable_pulsation_for_screw_compressor_info_text(
-                    self.screw_compressor_allowable_pulsation_criterion, 
+                    self.screw_compressor_allowable_pulsation_criterion,
                     self.plot_setup.penalization_factor,
-                    )
+                )
 
         self.set_info_text(text)
         self.update()
