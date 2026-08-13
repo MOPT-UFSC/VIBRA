@@ -3,6 +3,8 @@ from pathlib import Path
 
 from PySide6.QtWidgets import QFileDialog
 
+from collections import defaultdict
+
 
 class FileDialogService:
     @staticmethod
@@ -74,26 +76,32 @@ class FileDialogService:
     def _generate_file_extensions_str(file_extensions: list[str], all_files=True):
         file_extensions.sort(key=FileDialogService._sort_extensions)
 
-        extensions_control = ";;".join(f"{FileDialogService._get_file_label(ext)} (*.{ext.lower()})" for ext in file_extensions)
-
         if not all_files or len(file_extensions) == 1:
-            return extensions_control
+            return ";;".join(f"{FileDialogService._get_file_label(ext)} (*.{ext.lower()})" for ext in file_extensions)
 
-        all_files_string = f"All files ({' '.join(f'*.{ext}' for ext in file_extensions)});;"
+        ext_dict = defaultdict(list)
+        for ext in file_extensions:
+            ext_str = f"*.{ext}"
+            ext_dict["All files"].append(ext_str)
+            ext_dict[FileDialogService._get_file_label(ext)].append(ext_str)
 
-        return all_files_string + extensions_control
+        ext_str = ""
+        for label, extensions in ext_dict.items():
+            ext_str += f"{label} ({" ".join(extensions)});;"
 
+        return ext_str
+                
     @staticmethod
     def _get_file_label(extension: str) -> str:
-        extension = extension.lower()
+        extension = extension.lower() 
 
         match extension:
             case "xlsx" | "xls":
-                return "Spreadsheet"
+                return "Spreadsheet files"
             case "dat" | "csv" | "txt":
-                return "Text file"
+                return "Text files"
             case "vibra":
-                return "Project file"
+                return "Project files"
             case "iges" | "igs" | "step" | "stp":
                 return "Geometry files"
             case "msh" | "bdf" | "nas":
@@ -126,7 +134,13 @@ class FileDialogService:
                 return 2
             case "txt":
                 return 3
-            case "vibra":
+            case "csv":
                 return 4
-            case _:
+            case "vibra":
                 return 5
+            case "iges" | "igs" | "step" | "stp":
+                return 6
+            case "msh" | "bdf" | "nas":
+                return 7
+            case _:
+                return 8
