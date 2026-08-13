@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QFileDialog
 
 class FileDialogService:
     @staticmethod
-    def open_file(file_extensions: list[str], caption: str = "Open file", last_folder: str = None) -> Path | None:
+    def open_file(file_extensions: list[str], caption: str = "Open file", last_folder: str | Path = None) -> Path | None:
         last_folder, caption, filter_str, kwargs = FileDialogService._build_dialog_kwargs(file_extensions, caption, last_folder)
 
         path, selected_filter = QFileDialog.getOpenFileName(None, caption, str(last_folder), filter_str, **kwargs)
@@ -92,8 +92,12 @@ class FileDialogService:
                 return "Spreadsheet"
             case "dat" | "csv" | "txt":
                 return "Text file"
-            case "pulse":
+            case "vibra":
                 return "Project file"
+            case "iges" | "igs" | "step" | "stp":
+                return "Geometry files"
+            case "msh" | "bdf" | "nas":
+                return "Mesh files"
             case _:
                 return f"{extension.title()} file"
 
@@ -122,7 +126,7 @@ class FileDialogService:
                 return 2
             case "txt":
                 return 3
-            case "pulse":
+            case "vibra":
                 return 4
             case _:
                 return 5
