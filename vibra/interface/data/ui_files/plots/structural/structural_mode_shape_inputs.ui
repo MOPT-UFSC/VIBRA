@@ -47,9 +47,9 @@
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>-63</y>
+        <y>0</y>
         <width>382</width>
-        <height>780</height>
+        <height>808</height>
        </rect>
       </property>
       <layout class="QGridLayout" name="gridLayout_7">
@@ -457,6 +457,12 @@
           </item>
           <item row="1" column="0">
            <widget class="QFrame" name="frame_4">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>200</height>
+             </size>
+            </property>
             <property name="maximumSize">
              <size>
               <width>16777215</width>
