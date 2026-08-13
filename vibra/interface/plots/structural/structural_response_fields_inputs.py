@@ -121,6 +121,7 @@ class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
             return
 
         self.animation_widget.reset_sliders()
+        self.results_display_widget.configure_validators(-1e14, 1e14)
 
         plot_setup = FrequencyDisplacementPlotSetup(
             phase=self.animation_widget.phase_in_radians,

@@ -100,6 +100,11 @@ class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
         if self.selected_frequency_index is None:
             return
 
+        if self.get_plot_type() in [PressurePlotType.ABSOLUTE_ANIMATION, PressurePlotType.ABSOLUTE_VALUES]:
+            self.results_display_widget.configure_validators(0, 1e14)
+        else:
+            self.results_display_widget.configure_validators(-1e14, 1e14)
+
         plot_setup = FrequencyPressurePlotSetup(
             phase=self.animation_widget.phase_in_radians,
             index=self.selected_frequency_index,

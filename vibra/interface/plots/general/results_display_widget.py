@@ -1,3 +1,4 @@
+import numpy as np
 from PySide6.QtCore import Signal
 
 from vibra import app
@@ -18,10 +19,25 @@ class ResultsDisplayWidget(ResultsDisplayWidget_UI):
         self.load_user_preference_colormap()
 
     def configure_widget(self, bottom: float = -1e14, top: float = 1e14, decimals: int = 14):
-        self.lineEdit_min_color_value.setValidator(StrictDoubleValidator(bottom, top, decimals))
-        self.lineEdit_max_color_value.setValidator(StrictDoubleValidator(bottom, top, decimals))
         self.update_min_enabled(False)
         self.update_max_enabled(False)
+        self.configure_validators(bottom, top, decimals)
+
+    def configure_validators(self, bottom: float = -1e14, top: float = 1e14, decimals: int = 14):
+        validator = StrictDoubleValidator(bottom, top, decimals)
+        self.lineEdit_min_color_value.setValidator(validator)
+        self.lineEdit_max_color_value.setValidator(validator)
+
+        min_ = self.min_color_value()
+        max_ = self.max_color_value()
+
+        if min_ is not None:
+            min_ = np.clip(min_, bottom, top)
+            self.lineEdit_min_color_value.setText(str(min_))
+
+        if max_ is not None:
+            max_ = np.clip(max_, bottom, top)
+            self.lineEdit_max_color_value.setText(str(max_))
 
     def create_connections(self):
         self.comboBox_colormaps.currentIndexChanged.connect(self.update_colormap_type)
