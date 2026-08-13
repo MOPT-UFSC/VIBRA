@@ -23,8 +23,8 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(401, 579)
-        Form.setMaximumSize(QSize(16777215, 600))
+        Form.resize(401, 756)
+        Form.setMaximumSize(QSize(16777215, 1000))
         self.gridLayout_2 = QGridLayout(Form)
         self.gridLayout_2.setSpacing(2)
         self.gridLayout_2.setObjectName(u"gridLayout_2")
@@ -35,7 +35,7 @@ class Ui_Form(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents_2 = QWidget()
         self.scrollAreaWidgetContents_2.setObjectName(u"scrollAreaWidgetContents_2")
-        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, 0, 383, 688))
+        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, 0, 397, 752))
         self.gridLayout_6 = QGridLayout(self.scrollAreaWidgetContents_2)
         self.gridLayout_6.setObjectName(u"gridLayout_6")
         self.gridLayout_6.setHorizontalSpacing(2)
@@ -43,8 +43,9 @@ class Ui_Form(object):
         self.gridLayout_6.setContentsMargins(0, 0, 0, 0)
         self.frame_color = QFrame(self.scrollAreaWidgetContents_2)
         self.frame_color.setObjectName(u"frame_color")
-        self.frame_color.setMinimumSize(QSize(0, 228))
-        self.frame_color.setFrameShape(QFrame.Shape.StyledPanel)
+        self.frame_color.setMinimumSize(QSize(0, 168))
+        self.frame_color.setMaximumSize(QSize(16777215, 168))
+        self.frame_color.setFrameShape(QFrame.Shape.Box)
         self.frame_color.setFrameShadow(QFrame.Shadow.Raised)
 
         self.gridLayout_6.addWidget(self.frame_color, 3, 0, 1, 1)

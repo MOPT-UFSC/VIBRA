@@ -23,12 +23,41 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(411, 473)
+        Form.resize(378, 665)
         Form.setMinimumSize(QSize(0, 200))
         self.gridLayout_4 = QGridLayout(Form)
         self.gridLayout_4.setObjectName(u"gridLayout_4")
         self.gridLayout_4.setVerticalSpacing(4)
         self.gridLayout_4.setContentsMargins(4, 4, 4, 4)
+        self.frame = QFrame(Form)
+        self.frame.setObjectName(u"frame")
+        self.frame.setMinimumSize(QSize(0, 40))
+        self.frame.setMaximumSize(QSize(520, 40))
+        self.frame.setFrameShape(QFrame.Shape.Box)
+        self.frame.setFrameShadow(QFrame.Shadow.Raised)
+        self.frame.setLineWidth(1)
+        self.gridLayout_2 = QGridLayout(self.frame)
+        self.gridLayout_2.setSpacing(0)
+        self.gridLayout_2.setObjectName(u"gridLayout_2")
+        self.gridLayout_2.setContentsMargins(0, 0, 0, 0)
+        self.label = QLabel(self.frame)
+        self.label.setObjectName(u"label")
+        self.label.setMinimumSize(QSize(0, 30))
+        self.label.setMaximumSize(QSize(452, 30))
+        font = QFont()
+        font.setFamilies([u"Segoe UI"])
+        font.setPointSize(10)
+        font.setBold(False)
+        font.setItalic(False)
+        self.label.setFont(font)
+        self.label.setTextFormat(Qt.TextFormat.AutoText)
+        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_2.addWidget(self.label, 0, 0, 1, 1)
+
+
+        self.gridLayout_4.addWidget(self.frame, 0, 0, 1, 1)
+
         self.frame_main = QFrame(Form)
         self.frame_main.setObjectName(u"frame_main")
         self.frame_main.setMinimumSize(QSize(0, 100))
@@ -58,9 +87,9 @@ class Ui_Form(object):
         self.label_8.setObjectName(u"label_8")
         self.label_8.setMinimumSize(QSize(0, 26))
         self.label_8.setMaximumSize(QSize(16777215, 26))
-        font = QFont()
-        font.setPointSize(10)
-        self.label_8.setFont(font)
+        font1 = QFont()
+        font1.setPointSize(10)
+        self.label_8.setFont(font1)
         self.label_8.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_13.addWidget(self.label_8, 1, 3, 1, 1)
@@ -69,7 +98,7 @@ class Ui_Form(object):
         self.label_penalization_factor.setObjectName(u"label_penalization_factor")
         self.label_penalization_factor.setMinimumSize(QSize(120, 26))
         self.label_penalization_factor.setMaximumSize(QSize(140, 26))
-        self.label_penalization_factor.setFont(font)
+        self.label_penalization_factor.setFont(font1)
         self.label_penalization_factor.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_13.addWidget(self.label_penalization_factor, 1, 1, 1, 1)
@@ -102,7 +131,7 @@ class Ui_Form(object):
         self.pushButton_plot_data.setObjectName(u"pushButton_plot_data")
         self.pushButton_plot_data.setMinimumSize(QSize(100, 32))
         self.pushButton_plot_data.setMaximumSize(QSize(100, 32))
-        self.pushButton_plot_data.setFont(font)
+        self.pushButton_plot_data.setFont(font1)
         self.pushButton_plot_data.setStyleSheet(u"")
         self.pushButton_plot_data.setFlat(False)
 
@@ -114,43 +143,18 @@ class Ui_Form(object):
 
         self.gridLayout_4.addWidget(self.frame_main, 1, 0, 1, 1)
 
-        self.frame = QFrame(Form)
-        self.frame.setObjectName(u"frame")
-        self.frame.setMinimumSize(QSize(0, 40))
-        self.frame.setMaximumSize(QSize(520, 40))
-        self.frame.setFrameShape(QFrame.Shape.Box)
-        self.frame.setFrameShadow(QFrame.Shadow.Raised)
-        self.frame.setLineWidth(1)
-        self.gridLayout_2 = QGridLayout(self.frame)
-        self.gridLayout_2.setSpacing(0)
-        self.gridLayout_2.setObjectName(u"gridLayout_2")
-        self.gridLayout_2.setContentsMargins(0, 0, 0, 0)
-        self.label = QLabel(self.frame)
-        self.label.setObjectName(u"label")
-        self.label.setMinimumSize(QSize(0, 30))
-        self.label.setMaximumSize(QSize(452, 30))
-        font1 = QFont()
-        font1.setFamilies([u"Segoe UI"])
-        font1.setPointSize(10)
-        font1.setBold(False)
-        font1.setItalic(False)
-        self.label.setFont(font1)
-        self.label.setTextFormat(Qt.TextFormat.AutoText)
-        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.gridLayout_2.addWidget(self.label, 0, 0, 1, 1)
-
-
-        self.gridLayout_4.addWidget(self.frame, 0, 0, 1, 1)
-
         self.frame_color = QFrame(Form)
         self.frame_color.setObjectName(u"frame_color")
-        self.frame_color.setMinimumSize(QSize(0, 228))
-        self.frame_color.setMaximumSize(QSize(16777215, 230))
-        self.frame_color.setFrameShape(QFrame.Shape.StyledPanel)
+        self.frame_color.setMinimumSize(QSize(0, 168))
+        self.frame_color.setMaximumSize(QSize(16777215, 168))
+        self.frame_color.setFrameShape(QFrame.Shape.Box)
         self.frame_color.setFrameShadow(QFrame.Shadow.Raised)
 
         self.gridLayout_4.addWidget(self.frame_color, 2, 0, 1, 1)
+
+        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.gridLayout_4.addItem(self.verticalSpacer, 3, 0, 1, 1)
 
 
         self.retranslateUi(Form)
@@ -160,10 +164,10 @@ class Ui_Form(object):
 
     def retranslateUi(self, Form):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Form", None))
+        self.label.setText(QCoreApplication.translate("Form", u"Allowable pulsations field plot for screw compressors", None))
         self.label_8.setText(QCoreApplication.translate("Form", u"[%]", None))
         self.label_penalization_factor.setText(QCoreApplication.translate("Form", u"Penalization factor:", None))
         self.pushButton_plot_data.setText(QCoreApplication.translate("Form", u"Plot data", None))
-        self.label.setText(QCoreApplication.translate("Form", u"Allowable pulsations field plot for screw compressors", None))
     # retranslateUi
 
 
@@ -173,6 +177,9 @@ class AllowablePulsations3dPlotForScrewCompressorInputs_UI(QWidget, Ui_Form):
     Component Hierarchy:
     - Form: QWidget
         - (Layout): QGridLayout
+                - frame: QFrame
+                    - (Layout): QGridLayout
+                            - label: QLabel
                 - frame_main: QFrame
                     - (Layout): QGridLayout
                             - frame_9: QFrame
@@ -183,9 +190,6 @@ class AllowablePulsations3dPlotForScrewCompressorInputs_UI(QWidget, Ui_Form):
                             - frame_3: QFrame
                                 - (Layout): QGridLayout
                                         - pushButton_plot_data: QPushButton
-                - frame: QFrame
-                    - (Layout): QGridLayout
-                            - label: QLabel
                 - frame_color: QFrame
     """
 
