@@ -7,8 +7,20 @@
     <x>0</x>
     <y>0</y>
     <width>368</width>
-    <height>158</height>
+    <height>160</height>
    </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>0</width>
+    <height>160</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>16777215</width>
+    <height>160</height>
+   </size>
   </property>
   <property name="windowTitle">
    <string>Form</string>
@@ -61,6 +73,9 @@
       </property>
       <property name="bottomMargin">
        <number>0</number>
+      </property>
+      <property name="spacing">
+       <number>6</number>
       </property>
       <item row="3" column="4">
        <widget class="QCheckBox" name="min_color_check_box">
@@ -300,13 +315,13 @@
         <property name="minimumSize">
          <size>
           <width>160</width>
-          <height>0</height>
+          <height>26</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
           <width>160</width>
-          <height>16777215</height>
+          <height>26</height>
          </size>
         </property>
         <property name="orientation">
@@ -328,13 +343,13 @@
         <property name="minimumSize">
          <size>
           <width>160</width>
-          <height>0</height>
+          <height>26</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
           <width>160</width>
-          <height>16777215</height>
+          <height>26</height>
          </size>
         </property>
         <property name="font">
@@ -358,13 +373,13 @@
         <property name="minimumSize">
          <size>
           <width>160</width>
-          <height>0</height>
+          <height>26</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
           <width>160</width>
-          <height>16777215</height>
+          <height>26</height>
          </size>
         </property>
         <property name="font">

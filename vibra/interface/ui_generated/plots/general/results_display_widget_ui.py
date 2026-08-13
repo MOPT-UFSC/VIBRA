@@ -23,7 +23,9 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(368, 158)
+        Form.resize(368, 160)
+        Form.setMinimumSize(QSize(0, 160))
+        Form.setMaximumSize(QSize(16777215, 160))
         self.gridLayout = QGridLayout(Form)
         self.gridLayout.setSpacing(4)
         self.gridLayout.setObjectName(u"gridLayout")
@@ -35,6 +37,7 @@ class Ui_Form(object):
         self.frame_4.setFrameShape(QFrame.Shape.NoFrame)
         self.frame_4.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_15 = QGridLayout(self.frame_4)
+        self.gridLayout_15.setSpacing(6)
         self.gridLayout_15.setObjectName(u"gridLayout_15")
         self.gridLayout_15.setContentsMargins(0, 0, 0, 0)
         self.min_color_check_box = QCheckBox(self.frame_4)
@@ -115,8 +118,8 @@ class Ui_Form(object):
 
         self.slider_transparency = QSlider(self.frame_4)
         self.slider_transparency.setObjectName(u"slider_transparency")
-        self.slider_transparency.setMinimumSize(QSize(160, 0))
-        self.slider_transparency.setMaximumSize(QSize(160, 16777215))
+        self.slider_transparency.setMinimumSize(QSize(160, 26))
+        self.slider_transparency.setMaximumSize(QSize(160, 26))
         self.slider_transparency.setOrientation(Qt.Orientation.Horizontal)
 
         self.gridLayout_15.addWidget(self.slider_transparency, 1, 2, 1, 1)
@@ -129,8 +132,8 @@ class Ui_Form(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.lineEdit_max_color_value.sizePolicy().hasHeightForWidth())
         self.lineEdit_max_color_value.setSizePolicy(sizePolicy)
-        self.lineEdit_max_color_value.setMinimumSize(QSize(160, 0))
-        self.lineEdit_max_color_value.setMaximumSize(QSize(160, 16777215))
+        self.lineEdit_max_color_value.setMinimumSize(QSize(160, 26))
+        self.lineEdit_max_color_value.setMaximumSize(QSize(160, 26))
         self.lineEdit_max_color_value.setFont(font)
 
         self.gridLayout_15.addWidget(self.lineEdit_max_color_value, 2, 2, 1, 1)
@@ -140,8 +143,8 @@ class Ui_Form(object):
         self.lineEdit_min_color_value.setEnabled(False)
         sizePolicy.setHeightForWidth(self.lineEdit_min_color_value.sizePolicy().hasHeightForWidth())
         self.lineEdit_min_color_value.setSizePolicy(sizePolicy)
-        self.lineEdit_min_color_value.setMinimumSize(QSize(160, 0))
-        self.lineEdit_min_color_value.setMaximumSize(QSize(160, 16777215))
+        self.lineEdit_min_color_value.setMinimumSize(QSize(160, 26))
+        self.lineEdit_min_color_value.setMaximumSize(QSize(160, 26))
         self.lineEdit_min_color_value.setFont(font)
 
         self.gridLayout_15.addWidget(self.lineEdit_min_color_value, 3, 2, 1, 1)
