@@ -19,6 +19,7 @@ from vibra.interface.viewer_3d.plot_setup import (
     NoPlotSetup,
     PlotSetup,
     TransientPressurePlotSetup,
+    AllowablePulsationForScrewCompressorsPlotSetup,
 )
 from vibra.interface.viewer_3d.render_tools import RenderTool, SelectionTool
 from vibra.utils.interface_utils import VisualizationFilter
@@ -33,6 +34,7 @@ from ..actors import (
 )
 from .model_info_text import (
     analysis_info_text,
+    allowable_pulsation_for_screw_compressor_info_text,
 )
 
 
@@ -55,11 +57,14 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         self._animation_cached_data = dict()
         self._animation_cache_lock = Lock()
+
         self.min_value = 0
         self.max_value = 0
         self.user_min_value = None
         self.user_max_value = None
         self.transparency = 0
+        self.screw_compressor_allowable_pulsation_criterion = 0
+
         self.is_animation_symetric = True
         self.user_changed_pressure_values = False
 
@@ -221,6 +226,9 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             case TransientPressurePlotSetup():
                 self._plot_transient_pressure(animation_frame, clear_cache)
 
+            case AllowablePulsationForScrewCompressorsPlotSetup():
+                self._plot_allowable_pulsation_for_screw_compressor(clear_cache)
+
             case _:
                 raise NotImplementedError(f'Plot setup "{self.plot_setup}" not implemented.')
 
@@ -363,6 +371,38 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             animation_widget.update_animation_parameters(sampling_time, time_vector.size)
 
         self.is_animation_symetric = False
+
+        colormap = app().config.user_preferences.color_map
+        self.analysis_actor.plot_color_bar(color_scalars, min_value, max_value, colormap)
+        self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
+        self.update()
+
+    def _plot_allowable_pulsation_for_screw_compressor(
+        self,
+        clear_cache: bool = True,
+    ):
+
+        assert isinstance(self.plot_setup, AllowablePulsationForScrewCompressorsPlotSetup)
+
+        postprocessing = app().project.get_acoustic_postprocessing()
+        assert isinstance(postprocessing, AcousticPostprocessing)
+
+        data = postprocessing.compute_allowable_pulsation_field_for_screw_compressor()
+
+        if data is None:
+            return
+
+        color_scalars, min_value, max_value = data
+
+        # apply the penalization factor, if necessary
+        penalization_factor = self.plot_setup.penalization_factor / 100
+        max_value *= (1 - penalization_factor)
+
+        self.screw_compressor_allowable_pulsation_criterion = max_value
+
+        if clear_cache:
+            self.min_value = min_value
+            self.max_value = max_value
 
         colormap = app().config.user_preferences.color_map
         self.analysis_actor.plot_color_bar(color_scalars, min_value, max_value, colormap)
@@ -642,6 +682,12 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         match self.plot_setup:
             case FrequencyDisplacementPlotSetup() | FrequencyPressurePlotSetup():
                 text += analysis_info_text(self.plot_setup.index)
+
+            case AllowablePulsationForScrewCompressorsPlotSetup():
+                text += allowable_pulsation_for_screw_compressor_info_text(
+                    self.screw_compressor_allowable_pulsation_criterion, 
+                    self.plot_setup.penalization_factor,
+                    )
 
         self.set_info_text(text)
         self.update()

@@ -15,6 +15,7 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.ui_generated.plots.general.animation_widget_ui import AnimationWidget_UI
 from vibra.interface.viewer_3d.plot_setup import (
+    AllowablePulsationForScrewCompressorsPlotSetup,
     FrequencyDisplacementPlotSetup,
     FrequencyPressurePlotSetup,
     PlotSetup,
@@ -222,6 +223,8 @@ class AnimationWidget(AnimationWidget_UI):
                 plot_setup.magnification_factor = self.magnification_factor
             case TransientPressurePlotSetup():
                 plot_setup.time_index = self.time_index
+            case AllowablePulsationForScrewCompressorsPlotSetup():
+                pass    
             case _:
                 return
 

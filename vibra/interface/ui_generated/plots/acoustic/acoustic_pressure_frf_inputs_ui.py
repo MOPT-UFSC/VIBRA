@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'acoustic_pressure_frequency_response_function_inputs.ui'
+## Form generated from reading UI file 'acoustic_pressure_frf_inputs.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.9.2
 ##
@@ -312,7 +312,7 @@ class Ui_Form(object):
 
     def retranslateUi(self, Form):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Form", None))
-        self.label.setText(QCoreApplication.translate("Form", u"Plot acoustic pressure frequency response function", None))
+        self.label.setText(QCoreApplication.translate("Form", u"Plot acoustic pressure FRF", None))
         self.pushButton_plot_data.setText(QCoreApplication.translate("Form", u"Plot data", None))
         self.comboBox_cutoff_frequency_options.setItemText(0, QCoreApplication.translate("Form", u"Disabled", None))
         self.comboBox_cutoff_frequency_options.setItemText(1, QCoreApplication.translate("Form", u"User-defined", None))
@@ -348,7 +348,7 @@ class Ui_Form(object):
 
 
 
-class AcousticPressureFrequencyResponseFunctionInputs_UI(QWidget, Ui_Form):
+class AcousticPressureFrfInputs_UI(QWidget, Ui_Form):
     """
     Component Hierarchy:
     - Form: QWidget

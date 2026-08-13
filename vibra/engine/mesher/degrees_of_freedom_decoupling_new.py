@@ -24,8 +24,8 @@ class DegreesOfFreedomDecoupling:
     def initialize(self):
         self.decouple_info = {}
         self.nodes_mapping = {}
+        self.volumes_from_node = defaultdict(list)
         self.volume_to_surfaces_map = defaultdict(list)
-
 
     def gathering_decoupling_information(self):
         """ This method gathers all existing decoupling 
@@ -34,6 +34,7 @@ class DegreesOfFreedomDecoupling:
         self.decouple_info.clear()
         self.nodes_mapping.clear()
         self.volume_to_surfaces_map.clear()
+        self.volumes_from_node.clear()
 
         if self.mesh.cache_nodal_coordinates is None:
             return
@@ -170,6 +171,9 @@ class DegreesOfFreedomDecoupling:
 
         nodes_from_surfaces = list(nodes_from_surfaces)
 
+        # self.map_nodes_to_volumes()
+        # self.map_lines_to_decoupled_surfaces()
+
         # create the twin nodes indexes
         twin_nodes = np.arange(0, len(nodes_from_surfaces), dtype=int) + int(max_node_id) + 1
 
@@ -183,6 +187,56 @@ class DegreesOfFreedomDecoupling:
 
         # append the twin nodes data in the nodal coordinates matrix
         self.mesh.nodal_coordinates = np.append(nodal_coordinates, coords_from_twin_nodes, axis=0)
+
+
+    def map_nodes_to_volumes(self):
+
+        for surface_id, volume_to_decouple in self.decouple_info.items():
+            mask_2d = self.mesh.cache_faces_connectivity[:, 1] == surface_id
+            surface_nodes = np.unique(self.mesh.cache_faces_connectivity[mask_2d, 4:].flatten())
+            mask_3d = np.any(np.isin(self.mesh.cache_solids_connectivity[:, 4:], surface_nodes), axis=1)
+            for _, vol_id, _, _, *connect in self.mesh.cache_solids_connectivity[mask_3d, :]:
+                if vol_id != volume_to_decouple:
+                    continue
+
+                for node_id in connect:
+                    if node_id not in surface_nodes:
+                        continue
+
+                    if vol_id in self.volumes_from_node[node_id]:
+                        continue
+
+                    self.volumes_from_node[node_id].append(vol_id)
+
+                    count = 0
+
+        data = np.zeros((len(self.volumes_from_node), 2), dtype=int)
+
+        for i, (node_id, vol_ids) in enumerate(self.volumes_from_node.items()):
+            data[i, :] = [node_id, len(vol_ids)]
+            count += len(vol_ids)
+
+        # np.savetxt("nodes_from_surface.dat", data, fmt="%i", delimiter=",")
+
+
+    def map_lines_to_decoupled_surfaces(self):
+        lines_to_surface = defaultdict(int)
+        for surface in self.decouple_info:
+            for line_id in self.mesh.cache_lines_from_surface.get(surface):
+                lines_to_surface[line_id] += 1
+
+        n_duplicates = 0
+
+        for line_id, count in lines_to_surface.items():
+            if count <= 2:
+                continue
+
+            mask = self.mesh.lines_connectivity[:, 1] == line_id
+            if not mask.any():
+                continue
+
+            line_nodes = np.unique(self.mesh.lines_connectivity[mask, 4:].flatten())
+            n_duplicates += line_nodes.size * (count - 1)
 
 
     def export_nodes_mapping(self):

@@ -336,31 +336,31 @@ class Ui_Dialog(object):
         self.gridLayout_9.addWidget(self.frame_6, 0, 0, 1, 1)
 
         self.tabWidget_main.addTab(self.tab_global_settings, "")
-        self.tab_local_refining = QWidget()
-        self.tab_local_refining.setObjectName(u"tab_local_refining")
-        self.gridLayout_7 = QGridLayout(self.tab_local_refining)
+        self.tab_local_mesh_size_control = QWidget()
+        self.tab_local_mesh_size_control.setObjectName(u"tab_local_mesh_size_control")
+        self.gridLayout_7 = QGridLayout(self.tab_local_mesh_size_control)
         self.gridLayout_7.setObjectName(u"gridLayout_7")
-        self.tableWidget_refining_mesh_data = QTableWidget(self.tab_local_refining)
-        if (self.tableWidget_refining_mesh_data.columnCount() < 3):
-            self.tableWidget_refining_mesh_data.setColumnCount(3)
+        self.tableWidget_local_mesh_size_control_data = QTableWidget(self.tab_local_mesh_size_control)
+        if (self.tableWidget_local_mesh_size_control_data.columnCount() < 3):
+            self.tableWidget_local_mesh_size_control_data.setColumnCount(3)
         __qtablewidgetitem = QTableWidgetItem()
-        self.tableWidget_refining_mesh_data.setHorizontalHeaderItem(0, __qtablewidgetitem)
+        self.tableWidget_local_mesh_size_control_data.setHorizontalHeaderItem(0, __qtablewidgetitem)
         __qtablewidgetitem1 = QTableWidgetItem()
-        self.tableWidget_refining_mesh_data.setHorizontalHeaderItem(1, __qtablewidgetitem1)
+        self.tableWidget_local_mesh_size_control_data.setHorizontalHeaderItem(1, __qtablewidgetitem1)
         __qtablewidgetitem2 = QTableWidgetItem()
-        self.tableWidget_refining_mesh_data.setHorizontalHeaderItem(2, __qtablewidgetitem2)
-        self.tableWidget_refining_mesh_data.setObjectName(u"tableWidget_refining_mesh_data")
-        self.tableWidget_refining_mesh_data.setMaximumSize(QSize(16777215, 16777215))
-        self.tableWidget_refining_mesh_data.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        self.tableWidget_refining_mesh_data.setShowGrid(False)
-        self.tableWidget_refining_mesh_data.horizontalHeader().setDefaultSectionSize(160)
-        self.tableWidget_refining_mesh_data.horizontalHeader().setStretchLastSection(True)
-        self.tableWidget_refining_mesh_data.verticalHeader().setVisible(False)
-        self.tableWidget_refining_mesh_data.verticalHeader().setStretchLastSection(False)
+        self.tableWidget_local_mesh_size_control_data.setHorizontalHeaderItem(2, __qtablewidgetitem2)
+        self.tableWidget_local_mesh_size_control_data.setObjectName(u"tableWidget_local_mesh_size_control_data")
+        self.tableWidget_local_mesh_size_control_data.setMaximumSize(QSize(16777215, 16777215))
+        self.tableWidget_local_mesh_size_control_data.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.tableWidget_local_mesh_size_control_data.setShowGrid(False)
+        self.tableWidget_local_mesh_size_control_data.horizontalHeader().setDefaultSectionSize(160)
+        self.tableWidget_local_mesh_size_control_data.horizontalHeader().setStretchLastSection(True)
+        self.tableWidget_local_mesh_size_control_data.verticalHeader().setVisible(False)
+        self.tableWidget_local_mesh_size_control_data.verticalHeader().setStretchLastSection(False)
 
-        self.gridLayout_7.addWidget(self.tableWidget_refining_mesh_data, 2, 1, 1, 1)
+        self.gridLayout_7.addWidget(self.tableWidget_local_mesh_size_control_data, 2, 1, 1, 1)
 
-        self.frame_11 = QFrame(self.tab_local_refining)
+        self.frame_11 = QFrame(self.tab_local_mesh_size_control)
         self.frame_11.setObjectName(u"frame_11")
         self.frame_11.setMinimumSize(QSize(0, 48))
         self.frame_11.setFrameShape(QFrame.Shape.NoFrame)
@@ -388,7 +388,7 @@ class Ui_Dialog(object):
 
         self.gridLayout_7.addWidget(self.frame_11, 3, 1, 1, 1)
 
-        self.frame_13 = QFrame(self.tab_local_refining)
+        self.frame_13 = QFrame(self.tab_local_mesh_size_control)
         self.frame_13.setObjectName(u"frame_13")
         self.frame_13.setMinimumSize(QSize(0, 68))
         self.frame_13.setFrameShape(QFrame.Shape.NoFrame)
@@ -396,9 +396,14 @@ class Ui_Dialog(object):
         self.gridLayout_8.setObjectName(u"gridLayout_8")
         self.gridLayout_8.setHorizontalSpacing(6)
         self.gridLayout_8.setContentsMargins(4, 4, 4, 4)
-        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        self.lineEdit_selected_ids = QLineEdit(self.frame_13)
+        self.lineEdit_selected_ids.setObjectName(u"lineEdit_selected_ids")
+        self.lineEdit_selected_ids.setMinimumSize(QSize(0, 28))
+        self.lineEdit_selected_ids.setMaximumSize(QSize(200, 16777215))
+        self.lineEdit_selected_ids.setFont(font1)
+        self.lineEdit_selected_ids.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.gridLayout_8.addItem(self.horizontalSpacer_3, 2, 0, 1, 1)
+        self.gridLayout_8.addWidget(self.lineEdit_selected_ids, 1, 2, 1, 1)
 
         self.label_7 = QLabel(self.frame_13)
         self.label_7.setObjectName(u"label_7")
@@ -409,19 +414,19 @@ class Ui_Dialog(object):
 
         self.gridLayout_8.addWidget(self.label_7, 2, 1, 1, 1)
 
-        self.doubleSpinBox_refined_element_size = QDoubleSpinBox(self.frame_13)
-        self.doubleSpinBox_refined_element_size.setObjectName(u"doubleSpinBox_refined_element_size")
-        self.doubleSpinBox_refined_element_size.setMinimumSize(QSize(0, 28))
-        self.doubleSpinBox_refined_element_size.setMaximumSize(QSize(200, 16777215))
-        self.doubleSpinBox_refined_element_size.setFont(font1)
-        self.doubleSpinBox_refined_element_size.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.doubleSpinBox_refined_element_size.setDecimals(2)
-        self.doubleSpinBox_refined_element_size.setMinimum(0.010000000000000)
-        self.doubleSpinBox_refined_element_size.setMaximum(2000.000000000000000)
-        self.doubleSpinBox_refined_element_size.setSingleStep(1.000000000000000)
-        self.doubleSpinBox_refined_element_size.setValue(10.000000000000000)
+        self.doubleSpinBox_local_mesh_size_control_element_size = QDoubleSpinBox(self.frame_13)
+        self.doubleSpinBox_local_mesh_size_control_element_size.setObjectName(u"doubleSpinBox_local_mesh_size_control_element_size")
+        self.doubleSpinBox_local_mesh_size_control_element_size.setMinimumSize(QSize(0, 28))
+        self.doubleSpinBox_local_mesh_size_control_element_size.setMaximumSize(QSize(200, 16777215))
+        self.doubleSpinBox_local_mesh_size_control_element_size.setFont(font1)
+        self.doubleSpinBox_local_mesh_size_control_element_size.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.doubleSpinBox_local_mesh_size_control_element_size.setDecimals(2)
+        self.doubleSpinBox_local_mesh_size_control_element_size.setMinimum(0.010000000000000)
+        self.doubleSpinBox_local_mesh_size_control_element_size.setMaximum(2000.000000000000000)
+        self.doubleSpinBox_local_mesh_size_control_element_size.setSingleStep(1.000000000000000)
+        self.doubleSpinBox_local_mesh_size_control_element_size.setValue(10.000000000000000)
 
-        self.gridLayout_8.addWidget(self.doubleSpinBox_refined_element_size, 2, 2, 1, 1)
+        self.gridLayout_8.addWidget(self.doubleSpinBox_local_mesh_size_control_element_size, 2, 2, 1, 1)
 
         self.label_8 = QLabel(self.frame_13)
         self.label_8.setObjectName(u"label_8")
@@ -439,23 +444,34 @@ class Ui_Dialog(object):
 
         self.gridLayout_8.addWidget(self.label_selected_ids, 1, 1, 1, 1)
 
-        self.lineEdit_selected_ids = QLineEdit(self.frame_13)
-        self.lineEdit_selected_ids.setObjectName(u"lineEdit_selected_ids")
-        self.lineEdit_selected_ids.setMinimumSize(QSize(0, 28))
-        self.lineEdit_selected_ids.setMaximumSize(QSize(200, 16777215))
-        self.lineEdit_selected_ids.setFont(font1)
-        self.lineEdit_selected_ids.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gridLayout_8.addWidget(self.lineEdit_selected_ids, 1, 2, 1, 1)
+        self.gridLayout_8.addItem(self.horizontalSpacer_3, 2, 0, 1, 1)
 
         self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.gridLayout_8.addItem(self.horizontalSpacer_4, 2, 4, 1, 1)
 
+        self.comboBox_local_mesh_size_control_entity_type = QComboBox(self.frame_13)
+        self.comboBox_local_mesh_size_control_entity_type.addItem("")
+        self.comboBox_local_mesh_size_control_entity_type.addItem("")
+        self.comboBox_local_mesh_size_control_entity_type.setObjectName(u"comboBox_local_mesh_size_control_entity_type")
+        sizePolicy = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.comboBox_local_mesh_size_control_entity_type.sizePolicy().hasHeightForWidth())
+        self.comboBox_local_mesh_size_control_entity_type.setSizePolicy(sizePolicy)
+        self.comboBox_local_mesh_size_control_entity_type.setMinimumSize(QSize(1, 28))
+        self.comboBox_local_mesh_size_control_entity_type.setMaximumSize(QSize(90, 16777215))
+        self.comboBox_local_mesh_size_control_entity_type.setFont(font1)
+        self.comboBox_local_mesh_size_control_entity_type.setMinimumContentsLength(0)
+
+        self.gridLayout_8.addWidget(self.comboBox_local_mesh_size_control_entity_type, 1, 3, 1, 2)
+
 
         self.gridLayout_7.addWidget(self.frame_13, 0, 1, 1, 1)
 
-        self.tabWidget_main.addTab(self.tab_local_refining, "")
+        self.tabWidget_main.addTab(self.tab_local_mesh_size_control, "")
         self.tab_advanced_controls = QWidget()
         self.tab_advanced_controls.setObjectName(u"tab_advanced_controls")
         self.gridLayout_13 = QGridLayout(self.tab_advanced_controls)
@@ -717,9 +733,9 @@ class Ui_Dialog(object):
         QWidget.setTabOrder(self.comboBox_element_order, self.comboBox_volumes_interface_behavior)
         QWidget.setTabOrder(self.comboBox_volumes_interface_behavior, self.tabWidget_main)
         QWidget.setTabOrder(self.tabWidget_main, self.lineEdit_selected_ids)
-        QWidget.setTabOrder(self.lineEdit_selected_ids, self.doubleSpinBox_refined_element_size)
-        QWidget.setTabOrder(self.doubleSpinBox_refined_element_size, self.tableWidget_refining_mesh_data)
-        QWidget.setTabOrder(self.tableWidget_refining_mesh_data, self.pushButton_delete)
+        QWidget.setTabOrder(self.lineEdit_selected_ids, self.doubleSpinBox_local_mesh_size_control_element_size)
+        QWidget.setTabOrder(self.doubleSpinBox_local_mesh_size_control_element_size, self.tableWidget_local_mesh_size_control_data)
+        QWidget.setTabOrder(self.tableWidget_local_mesh_size_control_data, self.pushButton_delete)
         QWidget.setTabOrder(self.pushButton_delete, self.pushButton_add)
         QWidget.setTabOrder(self.pushButton_add, self.tableWidget_mesh_quality)
         QWidget.setTabOrder(self.tableWidget_mesh_quality, self.pushButton_plot_histogram)
@@ -730,6 +746,7 @@ class Ui_Dialog(object):
 
         self.comboBox_volumes_interface_behavior.setCurrentIndex(1)
         self.tabWidget_main.setCurrentIndex(0)
+        self.comboBox_local_mesh_size_control_entity_type.setCurrentIndex(0)
         self.comboBox_3d_algorithm.setCurrentIndex(0)
         self.pushButton_apply_and_close.setDefault(False)
         self.pushButton_apply.setDefault(False)
@@ -772,19 +789,22 @@ class Ui_Dialog(object):
         self.pushButton_syncrhonize.setText("")
         self.label_34.setText(QCoreApplication.translate("Dialog", u"[mm]", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_global_settings), QCoreApplication.translate("Dialog", u"Global settings", None))
-        ___qtablewidgetitem = self.tableWidget_refining_mesh_data.horizontalHeaderItem(0)
+        ___qtablewidgetitem = self.tableWidget_local_mesh_size_control_data.horizontalHeaderItem(0)
         ___qtablewidgetitem.setText(QCoreApplication.translate("Dialog", u"Element size [mm]", None));
-        ___qtablewidgetitem1 = self.tableWidget_refining_mesh_data.horizontalHeaderItem(1)
+        ___qtablewidgetitem1 = self.tableWidget_local_mesh_size_control_data.horizontalHeaderItem(1)
         ___qtablewidgetitem1.setText(QCoreApplication.translate("Dialog", u"Selection type", None));
-        ___qtablewidgetitem2 = self.tableWidget_refining_mesh_data.horizontalHeaderItem(2)
+        ___qtablewidgetitem2 = self.tableWidget_local_mesh_size_control_data.horizontalHeaderItem(2)
         ___qtablewidgetitem2.setText(QCoreApplication.translate("Dialog", u"Selection ID", None));
         self.pushButton_add.setText(QCoreApplication.translate("Dialog", u"Add", None))
         self.pushButton_delete.setText(QCoreApplication.translate("Dialog", u"Delete", None))
-        self.label_7.setText(QCoreApplication.translate("Dialog", u"Refined element size: ", None))
-        self.label_8.setText(QCoreApplication.translate("Dialog", u"[mm]", None))
-        self.label_selected_ids.setText(QCoreApplication.translate("Dialog", u"Selected ID:", None))
         self.lineEdit_selected_ids.setText("")
-        self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_local_refining), QCoreApplication.translate("Dialog", u"Local refining", None))
+        self.label_7.setText(QCoreApplication.translate("Dialog", u"Element size: ", None))
+        self.label_8.setText(QCoreApplication.translate("Dialog", u"[mm]", None))
+        self.label_selected_ids.setText(QCoreApplication.translate("Dialog", u"Selected entities ID:", None))
+        self.comboBox_local_mesh_size_control_entity_type.setItemText(0, QCoreApplication.translate("Dialog", u"Surfaces", None))
+        self.comboBox_local_mesh_size_control_entity_type.setItemText(1, QCoreApplication.translate("Dialog", u"Volumes", None))
+
+        self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_local_mesh_size_control), QCoreApplication.translate("Dialog", u"Local size control", None))
         self.label_13.setText(QCoreApplication.translate("Dialog", u"Recombination algorithm:", None))
         self.label_12.setText(QCoreApplication.translate("Dialog", u"Subdivision algorithm:", None))
         self.label_6.setText(QCoreApplication.translate("Dialog", u"2D algorithm:", None))
@@ -884,20 +904,21 @@ class MesherSetupInputs_UI(QDialog, Ui_Dialog):
                                                                     - label_33: QLabel
                                                                     - pushButton_syncrhonize: QPushButton
                                                                     - label_34: QLabel
-                                            - tab_local_refining: QWidget
+                                            - tab_local_mesh_size_control: QWidget
                                                 - (Layout): QGridLayout
-                                                        - tableWidget_refining_mesh_data: QTableWidget
+                                                        - tableWidget_local_mesh_size_control_data: QTableWidget
                                                         - frame_11: QFrame
                                                             - (Layout): QGridLayout
                                                                     - pushButton_add: QPushButton
                                                                     - pushButton_delete: QPushButton
                                                         - frame_13: QFrame
                                                             - (Layout): QGridLayout
+                                                                    - lineEdit_selected_ids: QLineEdit
                                                                     - label_7: QLabel
-                                                                    - doubleSpinBox_refined_element_size: QDoubleSpinBox
+                                                                    - doubleSpinBox_local_mesh_size_control_element_size: QDoubleSpinBox
                                                                     - label_8: QLabel
                                                                     - label_selected_ids: QLabel
-                                                                    - lineEdit_selected_ids: QLineEdit
+                                                                    - comboBox_local_mesh_size_control_entity_type: QComboBox
                                             - tab_advanced_controls: QWidget
                                                 - (Layout): QGridLayout
                                                         - label_13: QLabel

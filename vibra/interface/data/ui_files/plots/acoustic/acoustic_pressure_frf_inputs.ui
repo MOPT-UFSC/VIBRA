@@ -109,7 +109,7 @@
          </font>
         </property>
         <property name="text">
-         <string>Plot acoustic pressure frequency response function</string>
+         <string>Plot acoustic pressure FRF</string>
         </property>
         <property name="textFormat">
          <enum>Qt::TextFormat::AutoText</enum>
@@ -484,7 +484,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="../../../icons/resources.qrc">
+            <iconset resource="../../../icons/dark_theme/resources.qrc">
              <normaloff>:/icons/save_as.png</normaloff>:/icons/save_as.png</iconset>
            </property>
            <property name="iconSize">
@@ -600,7 +600,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="../../../icons/resources.qrc">
+            <iconset resource="../../../icons/dark_theme/resources.qrc">
              <normaloff>:/icons/invert_icon.png</normaloff>:/icons/invert_icon.png</iconset>
            </property>
            <property name="iconSize">
@@ -825,7 +825,7 @@
   </layout>
  </widget>
  <resources>
-  <include location="../../../icons/resources.qrc"/>
+  <include location="../../../icons/dark_theme/resources.qrc"/>
  </resources>
  <connections/>
 </ui>

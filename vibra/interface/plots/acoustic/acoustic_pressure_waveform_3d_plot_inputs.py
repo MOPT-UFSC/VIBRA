@@ -11,7 +11,7 @@ from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
 from vibra.interface.plots.general.animation_widget import AnimationWidget
 from vibra.interface.plots.general.results_display_widget import ResultsDisplayWidget
-from vibra.interface.ui_generated.plots.acoustic.acoustic_pressure_waveform_field_inputs_ui import AcousticPressureWaveformFieldInputs_UI
+from vibra.interface.ui_generated.plots.acoustic.acoustic_pressure_waveform_3d_plot_inputs_ui import AcousticPressureWaveform3dPlotInputs_UI
 from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
 from vibra.interface.viewer_3d.plot_setup import PressurePlotType, TransientPressurePlotSetup
 
@@ -22,7 +22,7 @@ class ReduceLoopType(IntEnum):
     ROTATIONAL_SPEED = 2
 
 
-class AcousticPressureWaveformFieldInputs(AcousticPressureWaveformFieldInputs_UI):
+class AcousticPressureWaveform3DPlotInputs(AcousticPressureWaveform3dPlotInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -52,13 +52,14 @@ class AcousticPressureWaveformFieldInputs(AcousticPressureWaveformFieldInputs_UI
     def nodal_solution(self):
         return app().project.model.solution.nodal_solution
 
-    def showEvent(self, event):
-        super().showEvent(event)
+    def show_results_render(self):
+        curent_render_widget = app().main_window.get_current_render_widget()
+        results_render_widget = app().main_window.results_widget
 
-        render_widget = app().main_window.results_widget
-        app().main_window.render_widgets_stack.setCurrentWidget(render_widget)
-        app().main_window.render_widget_changed.emit()
-        app().main_window.view_toolbar.disable_selection_tool()
+        if curent_render_widget != results_render_widget:
+            app().main_window.render_widgets_stack.setCurrentWidget(results_render_widget)
+            app().main_window.render_widget_changed.emit()
+            app().main_window.view_toolbar.disable_selection_tool()
 
     def _configure_validators(self):
         self.lineEdit_animation_time.setValidator(StrictDoubleValidator(1e-5, 1e8, 8))
@@ -81,11 +82,15 @@ class AcousticPressureWaveformFieldInputs(AcousticPressureWaveformFieldInputs_UI
         #
         self.comboBox_plot_type.currentIndexChanged.connect(self.plot_data_callback)
         self.comboBox_reduced_time.currentIndexChanged.connect(lambda: self.reduced_loop_time_type_callback(True))
-        #
+
+        # QLineEdit connections
         self.lineEdit_animation_time.editingFinished.connect(self.plot_data_callback)
         #
         self.results_display_widget.colormap_changed.connect(self.animation_widget.update_color_and_deformation)
         self.results_display_widget.pressure_value_changed.connect(self.animation_widget.update_color_and_deformation)
+
+        # QPushButton connections
+        self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
 
         self.reduced_loop_time_type_callback()
 
@@ -193,6 +198,8 @@ class AcousticPressureWaveformFieldInputs(AcousticPressureWaveformFieldInputs_UI
             )
 
         LoadingWindow(plot_callback).run()
+
+        self.show_results_render()
 
     def get_plot_type(self) -> PressurePlotType:
         plot_types = [

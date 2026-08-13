@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'acoustic_pressure_waveform_field_inputs.ui'
+## Form generated from reading UI file 'acoustic_pressure_waveform_3d_plot_inputs.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.9.2
 ##
@@ -16,15 +16,15 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QComboBox, QFrame, QGridLayout,
-    QLabel, QLineEdit, QScrollArea, QSizePolicy,
-    QSpacerItem, QWidget)
+    QLabel, QLineEdit, QPushButton, QScrollArea,
+    QSizePolicy, QSpacerItem, QWidget)
 
 class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(401, 520)
-        Form.setMaximumSize(QSize(16777215, 520))
+        Form.resize(401, 579)
+        Form.setMaximumSize(QSize(16777215, 600))
         self.gridLayout_2 = QGridLayout(Form)
         self.gridLayout_2.setSpacing(2)
         self.gridLayout_2.setObjectName(u"gridLayout_2")
@@ -51,8 +51,8 @@ class Ui_Form(object):
 
         self.frame_main = QFrame(self.scrollAreaWidgetContents_2)
         self.frame_main.setObjectName(u"frame_main")
-        self.frame_main.setMinimumSize(QSize(0, 140))
-        self.frame_main.setMaximumSize(QSize(16777215, 200))
+        self.frame_main.setMinimumSize(QSize(0, 260))
+        self.frame_main.setMaximumSize(QSize(16777215, 260))
         self.frame_main.setSizeIncrement(QSize(0, 0))
         self.frame_main.setBaseSize(QSize(0, 0))
         self.frame_main.setFrameShape(QFrame.Shape.Box)
@@ -64,7 +64,7 @@ class Ui_Form(object):
         self.frame_4 = QFrame(self.frame_main)
         self.frame_4.setObjectName(u"frame_4")
         self.frame_4.setMinimumSize(QSize(0, 120))
-        self.frame_4.setMaximumSize(QSize(16777215, 200))
+        self.frame_4.setMaximumSize(QSize(16777215, 300))
         self.frame_4.setFrameShape(QFrame.Shape.NoFrame)
         self.frame_4.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_13 = QGridLayout(self.frame_4)
@@ -147,6 +147,29 @@ class Ui_Form(object):
 
         self.gridLayout_5.addWidget(self.frame_4, 0, 0, 1, 1)
 
+        self.frame_3 = QFrame(self.frame_main)
+        self.frame_3.setObjectName(u"frame_3")
+        self.frame_3.setMinimumSize(QSize(0, 52))
+        self.frame_3.setMaximumSize(QSize(16777215, 52))
+        self.frame_3.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_3.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_47 = QGridLayout(self.frame_3)
+        self.gridLayout_47.setSpacing(2)
+        self.gridLayout_47.setObjectName(u"gridLayout_47")
+        self.gridLayout_47.setContentsMargins(2, 2, 2, 2)
+        self.pushButton_plot_data = QPushButton(self.frame_3)
+        self.pushButton_plot_data.setObjectName(u"pushButton_plot_data")
+        self.pushButton_plot_data.setMinimumSize(QSize(100, 32))
+        self.pushButton_plot_data.setMaximumSize(QSize(100, 32))
+        self.pushButton_plot_data.setFont(font)
+        self.pushButton_plot_data.setStyleSheet(u"")
+        self.pushButton_plot_data.setFlat(False)
+
+        self.gridLayout_47.addWidget(self.pushButton_plot_data, 0, 0, 1, 1)
+
+
+        self.gridLayout_5.addWidget(self.frame_3, 1, 0, 1, 1)
+
 
         self.gridLayout_6.addWidget(self.frame_main, 1, 0, 1, 1)
 
@@ -212,12 +235,13 @@ class Ui_Form(object):
         self.label_animation_time.setText(QCoreApplication.translate("Form", u"Animation time:", None))
         self.label_animation_time_unit.setText(QCoreApplication.translate("Form", u"[s]", None))
         self.label_color_scalling.setText(QCoreApplication.translate("Form", u"Plot type:", None))
+        self.pushButton_plot_data.setText(QCoreApplication.translate("Form", u"Plot data", None))
         self.label.setText(QCoreApplication.translate("Form", u"Acoustic pressure waveform field", None))
     # retranslateUi
 
 
 
-class AcousticPressureWaveformFieldInputs_UI(QWidget, Ui_Form):
+class AcousticPressureWaveform3dPlotInputs_UI(QWidget, Ui_Form):
     """
     Component Hierarchy:
     - Form: QWidget
@@ -237,6 +261,9 @@ class AcousticPressureWaveformFieldInputs_UI(QWidget, Ui_Form):
                                                         - lineEdit_animation_time: QLineEdit
                                                         - label_animation_time_unit: QLabel
                                                         - label_color_scalling: QLabel
+                                            - frame_3: QFrame
+                                                - (Layout): QGridLayout
+                                                        - pushButton_plot_data: QPushButton
                                 - frame: QFrame
                                     - (Layout): QGridLayout
                                             - label: QLabel

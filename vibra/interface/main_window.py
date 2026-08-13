@@ -411,6 +411,7 @@ class MainWindow(MainWindow_UI):
     def configure_results_render_widget(self):
         self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
         self.results_viewer_widget.hide_bottom_widget()
+        self.results_viewer_widget.results_viewer_items.clear_last_item()
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
 
         self.action_results_workspace.setEnabled(True)
