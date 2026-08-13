@@ -991,7 +991,7 @@ def allowable_pulsation_for_screw_compressor_info_text(value: float, penalizatio
 
     tree = TreeInfo("Allowable pulsation for screw compressor systems")
     tree.add_item("Allowable level (p-p)", value, "kPa")
-    tree.add_item("Penalization factor:", penalization_factor, "%")
+    tree.add_item("Penalization factor", penalization_factor, "%")
 
     return str(tree)
 

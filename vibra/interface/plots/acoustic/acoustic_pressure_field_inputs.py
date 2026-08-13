@@ -5,6 +5,7 @@ from PySide6.QtWidgets import QGridLayout, QTreeWidgetItem
 from vibra import app
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.plots.general.animation_widget import AnimationWidget
+from vibra.interface.plots.general.results_display_widget import ResultsDisplayWidget
 from vibra.interface.ui_generated.plots.acoustic.acoustic_pressure_field_inputs_ui import AcousticPressureFieldInputs_UI
 from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
 from vibra.interface.viewer_3d.plot_setup import FrequencyPressurePlotSetup, PlotSetup, PressurePlotType
@@ -18,10 +19,10 @@ class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
 
         self._initialize()
         self._configure_widgets()
-        self._create_connections()
         self.add_animation_widget()
+        self.add_color_widget()
+        self._create_connections()
 
-        self.load_user_preference_colormap()
         self.load_frequencies()
 
     def showEvent(self, event):
@@ -45,17 +46,15 @@ class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
             self.treeWidget_frequencies.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def _create_connections(self):
-        #
-        self.comboBox_colormaps.currentIndexChanged.connect(self.update_colormap_type)
         self.comboBox_plot_type.currentIndexChanged.connect(self.update_plot)
-        #
-        self.slider_transparency.valueChanged.connect(self.update_transparency_callback)
         #
         self.treeWidget_frequencies.itemClicked.connect(self.on_click_item)
         self.treeWidget_frequencies.itemDoubleClicked.connect(self.on_click_item)
+        #
+        self.results_display_widget.colormap_changed.connect(self.animation_widget.update_color_and_deformation)
+        self.results_display_widget.pressure_value_changed.connect(self.animation_widget.update_color_and_deformation)
 
     def add_animation_widget(self):
-
         self.grid_layout = QGridLayout()
         self.grid_layout.setContentsMargins(0, 0, 0, 0)
         self.frame_animation.setLayout(self.grid_layout)
@@ -64,29 +63,24 @@ class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
         self.grid_layout.addWidget(self.animation_widget)
         self.frame_animation.adjustSize()
 
+    def add_color_widget(self):
+        grid_layout = QGridLayout()
+        grid_layout.setContentsMargins(0, 0, 0, 0)
+        self.frame_color.setLayout(grid_layout)
+
+        self.results_display_widget = ResultsDisplayWidget()
+        grid_layout.addWidget(self.results_display_widget)
+        self.frame_color.adjustSize()
+
+    def configure_results_display_widget(self):
+        self.results_display_widget.configure_widget()
+
     def update_animation_widget_visibility(self):
         index = self.comboBox_plot_type.currentIndex()
         if index >= 2:
             self.animation_widget.setDisabled(True)
         else:
             self.animation_widget.setDisabled(False)
-
-    def load_user_preference_colormap(self):
-        try:
-            colormap = app().config.user_preferences.color_map
-            if colormap in COLORMAP_NAMES:
-                index = COLORMAP_NAMES.index(colormap)
-                self.comboBox_colormaps.setCurrentIndex(index)
-        except Exception:
-            self.comboBox_colormaps.setCurrentIndex(0)
-
-    def update_colormap_type(self):
-        app().config.user_preferences.color_map = self.get_colormap()
-        app().config.update_config_file()
-        try:
-            self.animation_widget.update_color_and_deformation()
-        except AttributeError:
-            pass
 
     def update_transparency_callback(self):
         transparency = self.slider_transparency.value() / 100
@@ -105,6 +99,11 @@ class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
 
         if self.selected_frequency_index is None:
             return
+
+        if self.get_plot_type() in [PressurePlotType.ABSOLUTE_ANIMATION, PressurePlotType.ABSOLUTE_VALUES]:
+            self.results_display_widget.configure_validators(0, 1e14)
+        else:
+            self.results_display_widget.configure_validators(-1e14, 1e14)
 
         plot_setup = FrequencyPressurePlotSetup(
             phase=self.animation_widget.phase_in_radians,

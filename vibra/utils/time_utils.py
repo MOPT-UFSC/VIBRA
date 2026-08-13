@@ -97,7 +97,7 @@ def warn_delays(arg=None, /):
             elapsed = perf_counter() - start
 
             if elapsed >= maximum_time:
-                logger.warning(f"{func.__name__} took {elapsed:.3f}s. It should be less than {maximum_time:.3f}s.")
+                logger.info(f"{func.__name__} took {elapsed:.3f}s. It should be less than {maximum_time:.3f}s.")
 
             return result
 
@@ -129,4 +129,4 @@ def warn_delay_since_start(name: str, /, maximum_time=0.1):
     elapsed = perf_counter() - INTIAL_TIME
 
     if elapsed >= maximum_time:
-        logger.warning(f"{name} took {elapsed:.3f}s since the software started. It should be less than {maximum_time:.3f}s.")
+        logger.info(f"{name} took {elapsed:.3f}s since the software started. It should be less than {maximum_time:.3f}s.")

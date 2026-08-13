@@ -478,7 +478,7 @@ class Ui_Dialog(object):
         self.doubleSpinBox_flow_resistivity_DBM.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.doubleSpinBox_flow_resistivity_DBM.setDecimals(6)
         self.doubleSpinBox_flow_resistivity_DBM.setMaximum(100000.000000000000000)
-        self.doubleSpinBox_flow_resistivity_DBM.setValue(1518.506599999999935)
+        self.doubleSpinBox_flow_resistivity_DBM.setValue(4000.000000000000000)
 
         self.gridLayout_7.addWidget(self.doubleSpinBox_flow_resistivity_DBM, 1, 2, 1, 1)
 
