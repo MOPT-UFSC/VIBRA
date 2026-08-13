@@ -1,15 +1,12 @@
 from molde import MOLDE_DIR, Color
-from molde.colors import Color, color_names
-from vtkmodules.vtkCommonCore import VTK_FONT_FILE, vtkPoints, vtkUnsignedCharArray
-from vtkmodules.vtkCommonDataModel import VTK_VERTEX, vtkPlane, vtkPolyData
+from vtkmodules.vtkCommonCore import VTK_FONT_FILE, vtkUnsignedCharArray
 from vtkmodules.vtkCommonTransforms import vtkTransform
-from vtkmodules.vtkFiltersGeneral import vtkTransformPolyDataFilter
 from vtkmodules.vtkFiltersSources import vtkSphereSource
 from vtkmodules.vtkRenderingAnnotation import vtkLegendBoxActor
-from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper, vtkTextProperty
+from vtkmodules.vtkRenderingCore import vtkTextProperty
 
 from vibra import app
-from vibra.utils.vtk_utils import fill_array, transform_polydata
+from vibra.utils.vtk_utils import transform_polydata
 
 
 class LegendActor(vtkLegendBoxActor):

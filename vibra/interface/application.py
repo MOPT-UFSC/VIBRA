@@ -3,6 +3,7 @@ from PySide6.QtWidgets import QApplication
 from vibra import TEMP_PROJECT_DIR
 from vibra.interface.splash_screen import SplashScreen
 from vibra.utils.time_utils import warn_delay_since_start
+from vibra.interface.data.icons.theme_resources import set_icon_theme
 
 
 class Application(QApplication):
@@ -20,6 +21,7 @@ class Application(QApplication):
         from vibra.interface.config import Config
 
         self.config = Config()
+        set_icon_theme(self.config.user_preferences.interface_theme)
 
         from vibra.engine.project import Project
 

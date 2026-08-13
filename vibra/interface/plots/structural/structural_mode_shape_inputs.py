@@ -6,11 +6,11 @@ from PySide6.QtWidgets import QGridLayout, QTreeWidgetItem
 from vibra import app
 from vibra.engine.solution import ModalSolution
 from vibra.interface.common.common_interface import export_modal_analysis_results
-from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.plots.general.animation_widget import AnimationWidget
+from vibra.interface.plots.general.results_display_widget import ResultsDisplayWidget
 from vibra.interface.ui_generated.plots.structural.structural_mode_shape_inputs_ui import StructuralModeShapeInputs_UI
-from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
+from vibra.interface.viewer_3d.plot_setup import DisplacementPlotType, FrequencyDisplacementPlotSetup
 
 
 class PlotStructuralModeShapeInputs(StructuralModeShapeInputs_UI):
@@ -18,9 +18,9 @@ class PlotStructuralModeShapeInputs(StructuralModeShapeInputs_UI):
         super().__init__(*args, **kwargs)
 
         self._initialize()
-        self._paint_icons()
-        self._create_connections()
         self.add_animation_widget()
+        self.add_color_widget()
+        self._create_connections()
 
     def showEvent(self, event):
         super().showEvent(event)
@@ -35,19 +35,15 @@ class PlotStructuralModeShapeInputs(StructuralModeShapeInputs_UI):
 
     def _create_connections(self):
         #
-        self.comboBox_colormaps.currentIndexChanged.connect(self.update_colormap_type)
         self.comboBox_plot_type.currentIndexChanged.connect(self.update_plot)
         #
         self.pushButton_export_results.clicked.connect(self.export_results_callback)
         #
-        self.slider_transparency.valueChanged.connect(self.update_transparency_callback)
-        #
         self.treeWidget_frequencies.itemClicked.connect(self.on_click_item)
         self.treeWidget_frequencies.itemDoubleClicked.connect(self.on_click_item)
         #
-        app().main_window.theme_changed.connect(self._paint_icons)
-        #
-        self.load_user_preference_colormap()
+        self.results_display_widget.colormap_changed.connect(self.animation_widget.update_color_and_deformation)
+        self.results_display_widget.pressure_value_changed.connect(self.animation_widget.update_color_and_deformation)
 
     def add_animation_widget(self):
         self.grid_layout = QGridLayout()
@@ -58,10 +54,16 @@ class PlotStructuralModeShapeInputs(StructuralModeShapeInputs_UI):
         self.grid_layout.addWidget(self.animation_widget)
         self.frame_animation.adjustSize()
 
+    def add_color_widget(self):
+        grid_layout = QGridLayout()
+        grid_layout.setContentsMargins(0, 0, 0, 0)
+        self.frame_color.setLayout(grid_layout)
+
+        self.results_display_widget = ResultsDisplayWidget()
+        grid_layout.addWidget(self.results_display_widget)
+        self.frame_color.adjustSize()
+
     def _configure_qt_variables(self):
-        #
-        self.frame_transparency.setVisible(False)
-        #
         self.lineEdit_natural_frequency.setDisabled(True)
         self.lineEdit_natural_frequency.setProperty("status", "information")
         #
@@ -86,20 +88,6 @@ class PlotStructuralModeShapeInputs(StructuralModeShapeInputs_UI):
 
             self.treeWidget_frequencies.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
-    def _paint_icons(self):
-
-        icon_color = None
-        theme = app().config.user_preferences.interface_theme
-        from vibra import DARK_ICON_COLOR, LIGHT_ICON_COLOR
-        if theme == "dark":
-            icon_color = DARK_ICON_COLOR.to_qt()
-        else:
-            icon_color = LIGHT_ICON_COLOR.to_qt()
-
-        widgets = [self.pushButton_export_results]
-
-        change_icon_color_for_widgets(widgets, icon_color)
-
     def update_animation_widget_visibility(self):
         return
         index = self.comboBox_plot_type.currentIndex()
@@ -108,29 +96,6 @@ class PlotStructuralModeShapeInputs(StructuralModeShapeInputs_UI):
         else:
             self.animation_widget.setDisabled(False)
 
-    def load_user_preference_colormap(self):
-        try:
-            colormap = app().config.user_preferences.color_map
-            if colormap in COLORMAP_NAMES:
-                index = COLORMAP_NAMES.index(colormap)
-                self.comboBox_colormaps.setCurrentIndex(index)
-        except Exception:
-            self.comboBox_colormaps.setCurrentIndex(0)
-
-    def update_colormap_type(self):
-        app().config.user_preferences.color_map = self.get_colormap()
-        app().config.update_config_file()
-        try:
-            self.animation_widget.update_color_and_deformation()
-        except AttributeError:
-            pass
-
-    def get_colormap(self) -> str:
-        index = self.comboBox_colormaps.currentIndex()
-        if not (0 <= index < len(COLORMAP_NAMES)):
-            return "jet"
-        return COLORMAP_NAMES[index]
-
     def export_results_callback(self):
         export_modal_analysis_results(self, self.modes_to_frequencies, "structural")
 
@@ -138,21 +103,26 @@ class PlotStructuralModeShapeInputs(StructuralModeShapeInputs_UI):
         self.update_animation_widget_visibility()
         if self.lineEdit_natural_frequency.text() == "":
             return
-        
-        self.mode_index = self.natural_frequencies.index(self.selected_natural_frequency)
 
+        self.mode_index = self.natural_frequencies.index(self.selected_natural_frequency)
         self.animation_widget.reset_sliders()
-        LoadingWindow(app().main_window.results_widget.update_plot).run()
+        self.results_display_widget.configure_validators(-1e14, 1e14)
+
+        plot_setup = FrequencyDisplacementPlotSetup(
+            phase=self.animation_widget.phase_in_radians,
+            magnification_factor=self.animation_widget.magnification_factor,
+            index=self.mode_index,
+            plot_type=self.get_plot_type(),
+        )
+        LoadingWindow(app().main_window.results_widget.update_plot).run(
+            reset_camera=False,
+            plot_setup=plot_setup,
+        )
 
     def update_displacements(self):
         pass
 
-    def update_transparency_callback(self):
-        return
-        transparency = self.slider_transparency.value() / 100
-        app().main_window.results_widget.set_tube_actors_transparency(transparency)
-
-    def get_plot_type(self):
+    def get_plot_type(self) -> DisplacementPlotType:
         plot_types = [
             "u_sum",
             "u_x",
@@ -160,7 +130,10 @@ class PlotStructuralModeShapeInputs(StructuralModeShapeInputs_UI):
             "u_z",
         ]
         index = self.comboBox_plot_type.currentIndex()
-        return plot_types[index]
+        return DisplacementPlotType(plot_types[index])
+
+    def configure_results_display_widget(self):
+        self.results_display_widget.configure_widget()
 
     def load_natural_frequencies(self):
         solution = app().project.model.solution

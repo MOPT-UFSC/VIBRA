@@ -32,7 +32,7 @@ class HarmonicAnalysisSetup:
             return np.array(self.solution_steps_mask, dtype=bool)
         return np.ones(self.f_size, dtype=bool)
 
-    def get_frequencies(self) -> np.ndarray:
+    def get_frequencies(self, tolerance: float = 1e-5) -> np.ndarray:
         if self.frequency_spacing == FrequencySpacing.USER_DEFINED:
             if isinstance(self.frequencies, list):
                 return np.array(self.frequencies, dtype=float)
@@ -45,7 +45,8 @@ class HarmonicAnalysisSetup:
             self.f_step,
             dtype=float,
         )
-        mask = frequencies <= self.f_max
+        mask = frequencies <= self.f_max + tolerance
+
         return frequencies[mask]
 
     def as_dict(self):

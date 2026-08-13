@@ -40,8 +40,12 @@ class ModalSolver:
         if not is_symmetric:
             n_modes *= 2
 
+        est_operations = min(A.shape[0], max(3 * (n_modes + 1), 20))
+
         try:
-            opinv = linear_solver.build_linear_operator(A - sigma * B)
+            logging.info("Solving eigenproblem... [0/100]")
+
+            opinv = linear_solver.build_linear_operator(A - sigma * B, est_operations=est_operations)
             eigenvalues, eigenvectors = eigs(A, M=B, k=n_modes, sigma=sigma, which=which, OPinv=opinv)
             linear_solver.clear_memory()
 
@@ -103,11 +107,11 @@ class ModalSolver:
             self.displacement_dof = self.assembler.displacement_dof
 
         self.solution = ModalSolution(
-            analysis_id = self.assembler.model.analysis_id,
-            natural_frequencies = self.natural_frequencies,
-            modal_shapes = self.nodal_solution,
-            displacement_dof = self.displacement_dof,
-            complex_natural_frequencies = cnf,
+            analysis_id=self.assembler.model.analysis_id,
+            natural_frequencies=self.natural_frequencies,
+            modal_shapes=self.nodal_solution,
+            displacement_dof=self.displacement_dof,
+            complex_natural_frequencies=cnf,
         )
 
         return self.solution

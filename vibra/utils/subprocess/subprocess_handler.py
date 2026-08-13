@@ -21,32 +21,24 @@ class SubProcessStatus(Enum):
 
 
 class SubProcessHandler:
-    """Run the configured project analysis in a separate Python process."""
+    """
+    Run a separate process and deals with its outputs.
+    """
 
-    def __init__(self, path: Path | str, extra_params: str = ""):
-        process_script = Path(path).expanduser()
-
-        if not process_script.is_absolute():
-            process_script = VIBRA_DIR / process_script
-
-        process_script = process_script.resolve(strict=False)
-
-        if not process_script.exists():
-            raise FileNotFoundError(f"Subprocess script path does not exist: {process_script}")
-
-        if not process_script.is_file():
-            raise IsADirectoryError(f"Subprocess script path is not a file: {process_script}")
-
-        if process_script.suffix != ".py":
-            raise ValueError(f"Subprocess script path must point to a Python file: {process_script}")
-
-        self.process_script = process_script
-        self.extra_params = extra_params
+    def __init__(self, command: str):
+        self.command = command
 
     def run(self) -> SubProcessStatus:
         self._subprocess: subprocess.Popen | None = None
         self._interrupted: bool = False
         return LoadingWindow(self._run_subprocess, self._interrupt_subprocess).run()
+
+    @classmethod
+    def get_executable(cls) -> str:
+        if getattr(sys, "frozen", False):
+            return sys.executable
+        else:
+            return f"{sys.executable} {sys.argv[0]}"
 
     def _interrupt_subprocess(self, by_user=True):
         if self._subprocess is None or self._subprocess.poll() is not None:
@@ -64,10 +56,7 @@ class SubProcessHandler:
         logging.info("Launching subprocess... (15%)")
 
         try:
-            commands = [sys.executable, str(self.process_script)]
-            if self.extra_params:
-                commands.append(str(self.extra_params))
-
+            commands = self.command.split()
             self._subprocess = subprocess.Popen(
                 commands,
                 stdout=subprocess.PIPE,

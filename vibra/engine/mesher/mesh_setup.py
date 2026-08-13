@@ -17,16 +17,16 @@ class ElementTopology:
 class MeshSetup:
     minimum_element_size: float = 0
     maximum_element_size: float = float("inf")
-    geometry_tolerance: float = 1e-6
+    geometry_tolerance: float = 1e-8
     size_factor: float = 1
     element_geometry: Literal["tetrahedral", "hexahedral"] = "tetrahedral"
     element_order: Literal["linear", "quadratic"] = "linear"
 
     compute_quality_metrics: bool = False
-    merge_connected_volumes: bool = False
+    merge_connected_volumes: bool = True
 
     # Advanced stuff
-    refinement_parameters: list[MeshRefinementSetup] = field(default_factory=list)
+    local_mesh_size_control_parameters: list[LocalMeshSizeControlSetup] = field(default_factory=list)
     custom_element_setup: Optional[ElementSetup] = None
     random_seed: int = 1234
 
@@ -58,7 +58,7 @@ class MeshSetup:
 
 
 @dataclass
-class MeshRefinementSetup:
+class LocalMeshSizeControlSetup:
     entity_type: Literal["lines", "surfaces", "volumes"]
     element_size: float
     entity_ids: list[int]

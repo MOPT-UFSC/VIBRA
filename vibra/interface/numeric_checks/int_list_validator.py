@@ -17,7 +17,7 @@ class IntListValidator(QValidator):
 
         for i in string.strip(", ").split(","):
             try:
-                val = int(i)
+                int(i)
             except Exception:
                 return QValidator.State.Intermediate, string, pos
 

@@ -1,11 +1,12 @@
 import logging
 import re
 from time import sleep
+from typing import Callable, Generic, ParamSpec, TypeVar
 
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
 
-from vibra import UI_DIR, app
+from vibra import app
 from vibra.interface.ui_generated.messages.loading_window_ui import LoadingWindow_UI
 
 # Catches every message that contains something like [n/N]
@@ -14,8 +15,11 @@ PROGRESS_FRACTION_REGEX = re.compile(r"\[\d+/\d+\]")
 # Catches every message that contains something like n%
 PROGRESS_PERCENTAGE_REGEX = re.compile(r"\d+%")
 
+T = TypeVar("T")
+P = ParamSpec("P")
 
-class LoadingWindow(LoadingWindow_UI):
+
+class LoadingWindow(LoadingWindow_UI, Generic[P, T]):
     """
     This function is intended to be called for functions that take
     a long time to run and should run together with a progress bar.
@@ -57,7 +61,7 @@ class LoadingWindow(LoadingWindow_UI):
     update the progress bar and progress label.
     """
 
-    def __init__(self, _function, _interrupt=None):
+    def __init__(self, _function: Callable[P, T], _interrupt=None):
         super().__init__()
 
         self._function = _function
@@ -91,7 +95,7 @@ class LoadingWindow(LoadingWindow_UI):
         pos_y = int((desktop_geometry.height() - self.height()) / 2)
         self.setGeometry(pos_x, pos_y, self.width(), self.height())
 
-    def run(self, *args, **kwargs):
+    def run(self, *args: P.args, **kwargs: P.kwargs) -> T:
         self.show()
 
         # Changes the cursor to wait
@@ -129,9 +133,9 @@ class LoadingWindow(LoadingWindow_UI):
 
         return return_value
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args: P.args, **kwargs: P.kwargs):
         return self.run(*args, **kwargs)
-    
+
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Escape:
             self.stop_processing_callback()

@@ -5,8 +5,9 @@ from PySide6.QtWidgets import QGridLayout, QTreeWidgetItem
 from vibra import app
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.plots.general.animation_widget import AnimationWidget
+from vibra.interface.plots.general.results_display_widget import ResultsDisplayWidget
 from vibra.interface.ui_generated.plots.structural.structural_response_fields_inputs_ui import StructuralResponseFieldsInputs_UI
-from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
+from vibra.interface.viewer_3d.plot_setup import DisplacementPlotType, FrequencyDisplacementPlotSetup
 
 
 class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
@@ -15,11 +16,11 @@ class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
 
         self._initialize()
         self._configure_widgets()
-        self._create_connections()
         self.add_animation_widget()
+        self.add_color_widget()
+        self._create_connections()
 
         self.load_frequencies()
-        self.load_user_preference_colormap()
 
     def showEvent(self, event):
         super().showEvent(event)
@@ -33,10 +34,6 @@ class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
         self.selected_frequency_index = None
 
     def _configure_widgets(self):
-        #
-        self.label_transparency.setVisible(False)
-        self.slider_transparency.setVisible(False)
-        #
         self.lineEdit_selected_frequency.setDisabled(True)
         self.lineEdit_selected_frequency.setProperty("status", "information")
         #
@@ -46,20 +43,17 @@ class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
 
     def _create_connections(self):
         #
-        self.comboBox_colormaps.currentIndexChanged.connect(self.update_colormap_type)
         self.comboBox_plot_type.currentIndexChanged.connect(self.update_plot)
         self.comboBox_plotting_results.currentIndexChanged.connect(self.update_plotting_results_combo_box_items)
-        #
-        self.slider_transparency.valueChanged.connect(self.update_transparency_callback)
         #
         self.treeWidget_frequencies.itemClicked.connect(self.on_click_item)
         self.treeWidget_frequencies.itemDoubleClicked.connect(self.on_click_item)
         #
+        self.results_display_widget.colormap_changed.connect(self.animation_widget.update_color_and_deformation)
+        self.results_display_widget.pressure_value_changed.connect(self.animation_widget.update_color_and_deformation)
         self.update_animation_widget_visibility()
-        self.load_user_preference_colormap()
 
     def add_animation_widget(self):
-
         self.grid_layout = QGridLayout()
         self.grid_layout.setContentsMargins(0, 0, 0, 0)
         self.frame_animation.setLayout(self.grid_layout)
@@ -67,6 +61,15 @@ class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
         self.animation_widget = AnimationWidget()
         self.grid_layout.addWidget(self.animation_widget)
         self.frame_animation.adjustSize()
+
+    def add_color_widget(self):
+        grid_layout = QGridLayout()
+        grid_layout.setContentsMargins(0, 0, 0, 0)
+        self.frame_color.setLayout(grid_layout)
+
+        self.results_display_widget = ResultsDisplayWidget()
+        grid_layout.addWidget(self.results_display_widget)
+        self.frame_color.adjustSize()
 
     def update_plotting_results_combo_box_items(self):
         prefixes = ["u", "v", "a"]
@@ -90,40 +93,18 @@ class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
         else:
             self.animation_widget.setDisabled(False)
 
-    def load_user_preference_colormap(self):
-        try:
-            colormap = app().config.user_preferences.color_map
-            if colormap in COLORMAP_NAMES:
-                index = COLORMAP_NAMES.index(colormap)
-                self.comboBox_colormaps.setCurrentIndex(index)
-        except Exception:
-            self.comboBox_colormaps.setCurrentIndex(0)
-
-    def update_colormap_type(self):
-        app().config.user_preferences.color_map = self.get_colormap()
-        app().config.update_config_file()
-        try:
-            self.animation_widget.update_color_and_deformation()
-        except AttributeError:
-            pass
-
-    def get_data_type(self):
+    def get_plot_type(self) -> DisplacementPlotType:
         prefixes = ["u", "v", "a"]
         suffixes = ["sum", "x", "y", "z"]
 
         ind_dformat = self.comboBox_plotting_results.currentIndex()
         ind_ptype = self.comboBox_plot_type.currentIndex()
 
-        return f"{prefixes[ind_dformat]}_{suffixes[ind_ptype]}"
+        return DisplacementPlotType(f"{prefixes[ind_dformat]}_{suffixes[ind_ptype]}")
 
     def get_plot_units(self) -> str:
-        units = ["m", "m/s", "m²/s"]
+        units = ["m", "m/s", "m/s²"]
         return units[self.comboBox_plotting_results.currentIndex()]
-
-    def update_transparency_callback(self):
-        return
-        transparency = self.slider_transparency.value() / 100
-        app().main_window.results_widget.set_tube_actors_transparency(transparency)
 
     def update_plot(self):
         self.update_animation_widget_visibility()
@@ -138,25 +119,33 @@ class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
 
         if self.selected_frequency_index is None:
             return
-        
+
         self.animation_widget.reset_sliders()
-        LoadingWindow(app().main_window.results_widget.update_plot).run()
+        self.results_display_widget.configure_validators(-1e14, 1e14)
+
+        plot_setup = FrequencyDisplacementPlotSetup(
+            phase=self.animation_widget.phase_in_radians,
+            magnification_factor=self.animation_widget.magnification_factor,
+            index=self.selected_frequency_index,
+            plot_type=self.get_plot_type(),
+            unit=self.get_plot_units(),
+        )
+        LoadingWindow(app().main_window.results_widget.update_plot).run(
+            reset_camera=False,
+            plot_setup=plot_setup,
+        )
 
     def get_selected_frequency_index(self):
         if self.selected_frequency_index is not None:
             return self.selected_frequency_index
 
         return 0
-    
+
     def get_number_of_differentiations(self):
         return self.comboBox_plotting_results.currentIndex()
 
-    def get_colormap(self) -> str:
-        index = self.comboBox_colormaps.currentIndex()
-        if not (0 <= index < len(COLORMAP_NAMES)):
-            return "jet"
-
-        return COLORMAP_NAMES[index]
+    def configure_results_display_widget(self):
+        self.results_display_widget.configure_widget()
 
     def load_frequencies(self):
         self.treeWidget_frequencies.setDisabled(False)

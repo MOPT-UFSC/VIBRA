@@ -5,14 +5,19 @@ from typing import Dict, List
 
 import numpy as np
 from PySide6.QtCore import QItemSelectionModel, QPoint, Qt
-from PySide6.QtGui import QAction, QCloseEvent, QIcon
+from PySide6.QtGui import QAction, QCloseEvent
 from PySide6.QtWidgets import QAbstractItemView, QDialog, QDoubleSpinBox, QMenu, QTableWidgetItem, QTreeWidgetItem
 
-from vibra import ICON_DIR, app
-from vibra.engine.dissipation_models.porous_materials_models import PorousMaterialModels, get_DB_standard_constants, get_DBM_standard_constants
+from vibra import app
+from vibra.engine.dissipation_models.porous_materials_models import (
+    PorousMaterialModels,
+    get_DB_standard_constants,
+    get_DBM_standard_constants,
+    get_user_defined_constants,
+)
 from vibra.engine.properties.fluid import Fluid
 from vibra.interface import error_title
-from vibra.interface.formatters.icons import change_icon_color_for_widgets
+from vibra.interface.formatters.icons import Icon
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.acoustic.definitions.enums import AttributionBodiesType, PlotTypesTab
@@ -42,6 +47,11 @@ class DBMConstants(IntEnum):
     USER_DEFINED = 2
 
 
+class FlowResistivityNormalization(IntEnum):
+    NONE = 0
+    BY_DENSITY = 1
+
+
 class JCALMaterialModel(IntEnum):
     JCA = 0
     JCAL = 1
@@ -63,7 +73,6 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         self._config_window()
         self._configure_widgets()
         self._create_connections()
-        self._paint_icons()
         self.load_info()
         self.geometry_selection_callback()
 
@@ -121,7 +130,6 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         self.treeWidget_porous_material_model.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
-        app().main_window.theme_changed.connect(self._paint_icons)
         #
         self.update_attribution_type()
         self.update_plot_buttons_access()
@@ -143,13 +151,10 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             return
 
         menu = QMenu(self)
-        copy_icon = str(ICON_DIR / "copy_icon.png")
 
         action_DBM = QAction("Copy porous material", self)
-        action_DBM.setIcon(QIcon(copy_icon))
+        action_DBM.setIcon(Icon(":/icons/copy_icon.png"))
         menu.addAction(action_DBM)
-
-        change_icon_color_for_widgets([action_DBM], self.icon_color)
 
         action_DBM.triggered.connect(lambda: self.copy_DBM_porous_material_parameters(item))
         menu.exec_(self.tableWidget_DBM.viewport().mapToGlobal(pos))
@@ -160,13 +165,10 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             return
 
         menu = QMenu(self)
-        copy_icon = str(ICON_DIR / "copy_icon.png")
 
         action_JCAL = QAction("Copy porous material", self)
-        action_JCAL.setIcon(QIcon(copy_icon))
+        action_JCAL.setIcon(Icon(":/icons/copy_icon.png"))
         menu.addAction(action_JCAL)
-
-        change_icon_color_for_widgets([action_JCAL], self.icon_color)
 
         action_JCAL.triggered.connect(lambda: self.copy_JCAL_porous_material_parameters(item))
         menu.exec_(self.tableWidget_JCAL.viewport().mapToGlobal(pos))
@@ -194,18 +196,6 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             return
 
         self.load_porous_material_model_inputs(pm_data.get_data())
-
-    def _paint_icons(self):
-        self.icon_color = None
-        theme = app().config.user_preferences.interface_theme
-        from vibra import DARK_ICON_COLOR, LIGHT_ICON_COLOR
-        if theme == "dark":
-            self.icon_color = DARK_ICON_COLOR.to_qt()
-        else:
-            self.icon_color = LIGHT_ICON_COLOR.to_qt()
-
-        widgets = [self.pushButton_DB_equations]
-        change_icon_color_for_widgets(widgets, self.icon_color)
 
     def actions_to_finalize(self, close_window: bool = False):
         self.load_info()
@@ -326,20 +316,22 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             user_defined = index == DBMConstants.USER_DEFINED
 
             # check if the DBM constants have been modified (to ensure the backwards compatibility)
-            if not user_defined:
-                if self.have_DBM_constants_modified(pm_data):
-                    user_defined = True
-                    index = DBMConstants.USER_DEFINED
+            if not user_defined and self.have_DBM_constants_modified(pm_data):
+                user_defined = True
+                index = DBMConstants.USER_DEFINED
 
             self.comboBox_DBM_constants.setCurrentIndex(index)
             self.tabWidget_main.setCurrentIndex(TabType.DBM_MODELS)
 
+            normalize_flow_resistivity = pm_data.get("normalize_flow_resistivity", False)
+            self.comboBox_normalize_flow_resistivity.setCurrentIndex(int(normalize_flow_resistivity))
+
             for key, value in pm_data.items():
-                if key == "model":
+                if key in ["model", "normalize_flow_resistivity"]:
                     continue
 
                 elif key == "flow_resistivity":
-                    self.doubleSpinBox_flow_resistivity_DBM.setValue(value)   
+                    self.doubleSpinBox_flow_resistivity_DBM.setValue(value)
 
                 else:
                     widget = getattr(self, f"doubleSpinBox_{key}_DBM")
@@ -539,6 +531,9 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         elif index == DBMConstants.DELANY_BAZLEY_MIKI:
             model_constants = get_DBM_standard_constants()
 
+        elif index == DBMConstants.USER_DEFINED:
+            model_constants = get_user_defined_constants()
+
         for key, value in model_constants.items():
             widget = getattr(self, f"doubleSpinBox_{key}_DBM")
             if not isinstance(widget, QDoubleSpinBox):
@@ -618,6 +613,9 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         there_is_delany_model = False
         there_is_jca_model = False
 
+        DBM_models = ["Delany-Bazley", "Delany-Bazley-Miki", "User-defined (DBM)"]
+        JCAL_models = ["Jhonson-Champoux-Allard", "Jhonson-Champoux-Allard-Lafarge"]
+
         for _, (model_id, model_data) in enumerate(self.map_model_id_to_model.items()):
             model = model_data.model
             model_data_dict = model_data.get_data()
@@ -628,7 +626,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             model_item.setFlags(Qt.ItemIsSelectable)
             model_item.setToolTip(model)
         
-            if model in ["Delany-Bazley", "Delany-Bazley-Miki"]:
+            if model in DBM_models:
                 there_is_delany_model = True
 
                 self.tableWidget_DBM.setItem(0, delany_counter, model_id_item)
@@ -643,7 +641,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
                 delany_counter += 1
 
-            else:
+            elif model in JCAL_models:
                 there_is_jca_model = True
 
                 self.tableWidget_JCAL.setItem(0, jca_counter, model_id_item)
@@ -751,6 +749,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
     def get_Delany_Bazley_Miki_model_data(self, material_model: str) -> DelanyBazleyMikiData:
         return DelanyBazleyMikiData(
+            material_model,
             self.doubleSpinBox_C1_DBM.value(),
             self.doubleSpinBox_C2_DBM.value(),
             self.doubleSpinBox_C3_DBM.value(),
@@ -760,7 +759,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             self.doubleSpinBox_C7_DBM.value(),
             self.doubleSpinBox_C8_DBM.value(),
             self.doubleSpinBox_flow_resistivity_DBM.value(),
-            material_model,
+            normalize_flow_resistivity=self.comboBox_normalize_flow_resistivity.currentIndex() == FlowResistivityNormalization.BY_DENSITY,
         )
 
     def get_Jhonson_Champoux_Allard_Lafarge_model_data(self, material_model: str) -> JhonsonChampouxAllardLafargeData:

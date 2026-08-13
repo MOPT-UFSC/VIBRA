@@ -1,7 +1,7 @@
 from copy import deepcopy
 
 import numpy as np
-from PySide6.QtGui import QIcon, Qt
+from PySide6.QtGui import Qt
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QHeaderView,
@@ -10,13 +10,10 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from vibra import ICON_DIR, app
+from vibra import app
 from vibra.engine.analysis_info import HarmonicAnalysisSetup
 from vibra.interface import error_title, warning_title
-from vibra.interface.formatters.icons import (
-    change_icon_color,
-    change_icon_color_for_widgets,
-)
+from vibra.interface.formatters.icons import Icon
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.ui_generated.analysis.user_defined_solution_steps_by_manual_input_ui import (
@@ -33,7 +30,6 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
 
         self._initialize()
         self._config_window()
-        self._paint_icons()
 
         self._create_connections()
         self._load_analysis_setup()
@@ -56,7 +52,7 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
         self.user_defined_solution_steps = list()
         self.index_to_push_buttons = dict()
 
-        self.remove_icon = QIcon(str(ICON_DIR / "delete.png"))
+        self.remove_icon = Icon(":/icons/delete.png")
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -70,27 +66,7 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
         self.pushButton_okay.clicked.connect(self.confirm_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
         #
-        app().main_window.theme_changed.connect(self._paint_icons)
-        #
         self.reset_table()
-
-    def _paint_icons(self):
-        icon_color = None
-        theme = app().config.user_preferences.interface_theme
-        
-        from vibra import DARK_ICON_COLOR, LIGHT_ICON_COLOR
-        if theme == "dark":
-            icon_color = DARK_ICON_COLOR.to_qt()
-        else:
-            icon_color = LIGHT_ICON_COLOR.to_qt()
-
-        widgets = [
-            self.pushButton_add, 
-            self.pushButton_reset
-            ]
-
-        change_icon_color_for_widgets(widgets, icon_color)
-        change_icon_color(self.remove_icon, icon_color)
 
     def reset_callback(self):
 

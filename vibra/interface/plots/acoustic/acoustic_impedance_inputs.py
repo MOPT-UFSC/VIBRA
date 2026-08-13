@@ -90,7 +90,7 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
 
     def toggle_nodal_normals_symbols_visibility(self):
         show_normals = (self.comboBox_nodal_normals.currentText() == "Show")
-        app().main_window.results_widget.visualization_filter.normal_symbols = show_normals
+        app().main_window.results_widget.visualization_filter.nodal_normal_symbols = show_normals
         app().main_window.update_symbols()
 
     def geometry_selection_callback(self):
@@ -207,7 +207,7 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
         self.join_model_data()
 
         show_normals = (self.comboBox_nodal_normals.currentText() == "Show")
-        app().main_window.results_widget.visualization_filter.normal_symbols = show_normals
+        app().main_window.results_widget.visualization_filter.nodal_normal_symbols = show_normals
         if show_normals:
             app().main_window.update_symbols()
 
@@ -251,12 +251,12 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
             if self.comboBox_normalized_impedance.currentText() == "Enabled":
 
                 if app().project.assembler.fluid_properties_from_volume:
-                    prop_data = app().project.assembler.fluid_properties_from_volume.get(volume_id)
+                    prop_data: dict = app().project.assembler.fluid_properties_from_volume.get(volume_id)
                     rho_f = prop_data.get("rho_f")
                     C_f = prop_data.get("C_f")
-                else:  
-                    frequencies = self.model.frequencies
-                    rho_f, C_f = self.model.get_fluid_properties_from_volume(volume_id, frequencies)
+
+                else:
+                    rho_f, C_f = self.model.get_fluid_properties_from_volume(volume_id)
 
                 Z0_f = rho_f * C_f
                 acoustic_impedance /= Z0_f

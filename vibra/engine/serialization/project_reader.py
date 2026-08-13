@@ -14,15 +14,13 @@ from vibra.engine.analysis_info import AnalysisID, AnalysisSetup, HarmonicAnalys
 from vibra.engine.assemblers import AcousticAssembler, StructuralAssembler
 from vibra.engine.mesher.element_setup import ElementSetup
 from vibra.engine.mesher.mesh import Mesh
-from vibra.engine.mesher.mesh_setup import MeshRefinementSetup, MeshSetup
+from vibra.engine.mesher.mesh_setup import LocalMeshSizeControlSetup, MeshSetup
 from vibra.engine.model import Model
 from vibra.engine.properties import Fluid, FluidLibrary, Material, MaterialLibrary
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.engine.serialization.file_helpers import read_image, read_json
 from vibra.engine.solution import HarmonicSolution, ModalSolution, Solution
-from vibra.engine.solution.lazy_harmonic_solution import LazyHarmonicSolution
 from vibra.engine.solvers import HarmonicSolver, ModalSolver
-from vibra.project_files.lazy_hdf5_matrix import LazyHDF5MatrixLoader
 
 from .project_paths import ProjectPaths
 
@@ -109,7 +107,7 @@ class ProjectReader:
             return None
 
         analysis_id = AnalysisID(analysis_setup_dict.get("analysis_id", AnalysisID.NO_ANALYSIS))
-        analysis_setup_dict.update({"analysis_id" : analysis_id})
+        analysis_setup_dict.update({"analysis_id": analysis_id})
 
         if analysis_id.is_harmonic():
             return HarmonicAnalysisSetup(**analysis_setup_dict)
@@ -131,7 +129,11 @@ class ProjectReader:
         if not mesh_setup_dict:
             return None
 
-        refinement_parameters = [MeshRefinementSetup(*refinement) for refinement in mesh_setup_dict["mesh_refinement_parameters"]]
+        size_controls = mesh_setup_dict.get(
+            "local_mesh_size_control_parameters",
+            mesh_setup_dict.get("mesh_refinement_parameters", []),
+        )
+        size_control_parameters = [LocalMeshSizeControlSetup(*refinement) for refinement in size_controls]
 
         custom_element = mesh_setup_dict.get("custom_element_setup")
         if custom_element is not None:
@@ -156,7 +158,7 @@ class ProjectReader:
             element_order=element_order,
             compute_quality_metrics=mesh_setup_dict.get("compute_quality_metrics", False),
             merge_connected_volumes=mesh_setup_dict.get("merge_connected_volumes", False),
-            refinement_parameters=refinement_parameters,
+            local_mesh_size_control_parameters=size_control_parameters,
             custom_element_setup=custom_element,
             random_seed=mesh_setup_dict.get("random_seed", 1234),
         )
@@ -262,6 +264,7 @@ class ProjectReader:
         mesh.process_upwards_adjacencies_from_entities()
         mesh.process_mesh_related_mappings()
         mesh.update_element_topology_based_on_connectivity()
+        mesh.process_disconnected_nodes_criterion()
         mesh.mesh_quality_data = self.read_mesh_quality_metrics()
 
         return mesh
@@ -412,17 +415,42 @@ class ProjectReader:
 
     def read_solution(self, model: Model) -> Optional[Solution]:
         if model.analysis_id.is_harmonic():
-            return self.read_harmonic_solution()
+            return self.read_harmonic_solution(model)
         elif model.analysis_id.is_modal():
             return self.read_modal_solution(model)
         else:
             return None
 
-    def read_harmonic_solution(self) -> Optional[HarmonicSolution]:
+    def read_harmonic_solution(self, model: Model) -> Optional[HarmonicSolution]:
         if not self.project_paths.harmonic_solution_filepath.exists():
             return None
 
-        return LazyHarmonicSolution(self.project_paths)
+        with h5py.File(self.project_paths.harmonic_solution_filepath, "r") as file:
+            file: h5py.File
+
+            logging.info("Reading harmonic solution [5/100]")
+
+            frequencies = np.array(file["frequencies"])
+            logging.info("Reading harmonic solution [20/100]")
+
+            solution = np.array(file["solution"])
+            logging.info("Reading harmonic solution [80/100]")
+
+            solution_status = np.array(file["solution_status"])
+            logging.info("Reading harmonic solution [90/100]")
+
+            displacement_dof = file.get("displacement_dof")
+            if displacement_dof is not None:
+                displacement_dof = np.array(displacement_dof)
+            logging.info("Reading harmonic solution [95/100]")
+
+            return HarmonicSolution(
+                analysis_id=model.analysis_id,
+                frequencies=frequencies,
+                nodal_solution=solution,
+                status=solution_status,
+                displacement_dof=displacement_dof,
+            )
 
     def read_modal_solution(self, model: Model) -> Optional[ModalSolution]:
         if not self.project_paths.modal_solution_filepath.exists():
@@ -453,23 +481,14 @@ class ProjectReader:
 
         if model.analysis_id.is_harmonic():
             solver = HarmonicSolver(assembler)
-            if self.project_paths.harmonic_solution_filepath.exists():
-                solver.nodal_solution = LazyHDF5MatrixLoader(self.project_paths.harmonic_solution_filepath)
-
+            solver.solution = model.solution
         elif model.analysis_id.is_modal():
             solver = ModalSolver(assembler)
-            if self.project_paths.modal_solution_filepath.exists():
-                solver.nodal_solution = LazyHDF5MatrixLoader(self.project_paths.modal_solution_filepath)
-
+            solver.solution = model.solution
         else:
             return None, None
 
         return assembler, solver
-
-    def get_solution_loader(self) -> Optional[LazyHDF5MatrixLoader]:
-        if not self.project_paths.harmonic_solution_filepath.exists():
-            return None
-        return LazyHDF5MatrixLoader(self.project_paths.harmonic_solution_filepath)
 
     def _property_key(self, str: str) -> tuple[str, int | tuple[int, ...]]:
         """

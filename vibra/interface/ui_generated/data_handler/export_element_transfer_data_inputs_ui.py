@@ -19,6 +19,8 @@ from PySide6.QtWidgets import (QApplication, QComboBox, QDialog, QFrame,
     QGridLayout, QLabel, QLineEdit, QPushButton,
     QSizePolicy, QSpacerItem, QWidget)
 
+from vibra.interface.formatters.icons import Icon
+
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
@@ -99,8 +101,7 @@ class Ui_Dialog(object):
         font1.setItalic(False)
         self.pushButton_invert_selection.setFont(font1)
         self.pushButton_invert_selection.setStyleSheet(u"")
-        icon = QIcon()
-        icon.addFile(u":/icons/invert_icon.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon = Icon(u":/icons/invert_icon.png")
         self.pushButton_invert_selection.setIcon(icon)
         self.pushButton_invert_selection.setIconSize(QSize(22, 22))
         self.pushButton_invert_selection.setFlat(False)
@@ -245,8 +246,7 @@ class Ui_Dialog(object):
         self.pushButton_search.setMaximumSize(QSize(40, 30))
         self.pushButton_search.setFont(font2)
         self.pushButton_search.setStyleSheet(u"")
-        icon1 = QIcon()
-        icon1.addFile(u":/icons/new_file.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon1 = Icon(u":/icons/new_file.png")
         self.pushButton_search.setIcon(icon1)
         self.pushButton_search.setIconSize(QSize(20, 20))
 

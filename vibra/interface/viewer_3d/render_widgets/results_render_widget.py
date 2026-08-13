@@ -1,6 +1,7 @@
 import logging
 from threading import Lock
-from time import time
+from time import perf_counter, time
+from typing import Optional
 
 import numpy as np
 from molde.render_widgets import AnimatedRenderWidget
@@ -8,14 +9,20 @@ from PySide6.QtWidgets import QFileDialog
 from vtkmodules.vtkCommonCore import vtkPoints
 from vtkmodules.vtkCommonDataModel import vtkPointData
 
-from vibra import ICON_DIR, app
+from vibra import LOGO_DIR, app
 from vibra.engine import AnalysisID
 from vibra.engine.postprocessing import AcousticPostprocessing, StructuralPostprocessing
 from vibra.interface.loading_window import LoadingWindow
-from vibra.interface.plots.general.animation_widget import AnimationWidget
+from vibra.interface.viewer_3d.plot_setup import (
+    FrequencyDisplacementPlotSetup,
+    FrequencyPressurePlotSetup,
+    NoPlotSetup,
+    PlotSetup,
+    TransientPressurePlotSetup,
+    AllowablePulsationForScrewCompressorsPlotSetup,
+)
 from vibra.interface.viewer_3d.render_tools import RenderTool, SelectionTool
 from vibra.utils.interface_utils import VisualizationFilter
-from vibra.utils.math_functions import lerp
 from vibra.utils.time_utils import warn_delays
 
 from ..actors import (
@@ -27,6 +34,7 @@ from ..actors import (
 )
 from .model_info_text import (
     analysis_info_text,
+    allowable_pulsation_for_screw_compressor_info_text,
 )
 
 
@@ -39,39 +47,54 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         app().main_window.section_plane.value_changed.connect(self.update_color_and_deformation)
         app().main_window.visualization_changed.connect(self.visualization_changed_callback)
 
+        self.plot_setup: PlotSetup = NoPlotSetup()
         self.visualization_filter = VisualizationFilter(
             faces=True,
             solids=True,
         )
+        # dont't remove, transparency depends on it
+        self.renderer.SetUseDepthPeeling(True)
 
         self._animation_cached_data = dict()
         self._animation_cache_lock = Lock()
+
         self.min_value = 0
         self.max_value = 0
-        self.complex_result = False
-        self.frequency_index = None
-        self.mode_index = None
+        self.user_min_value = None
+        self.user_max_value = None
+        self.transparency = 0
+        self.screw_compressor_allowable_pulsation_criterion = 0
+
+        self.is_animation_symetric = True
+        self.user_changed_pressure_values = False
 
         self.set_default_render_tool()
         self.remove_all_actors()
-        self.create_logos()
+        self.update_logo()
         self.create_axes()
         self.create_color_bar()
         self.create_scale_bar()
+        self.colorbar_actor.SetLabelFormat("%+0.1e")
         self.update_plot()
 
     def showEvent(self, event):
         super().showEvent(event)
         self.update_section_plane()
 
-    def create_logos(self):
+    def update_logo(self):
         if hasattr(self, "vibra_logo"):
             self.renderer.RemoveViewProp(self.vibra_logo)
 
-        path = ICON_DIR / "logo_vibra_comp.png"
+        path = LOGO_DIR / self.get_logo_for_current_theme()
         self.vibra_logo = self.create_logo(path)
         self.vibra_logo.SetPosition(0.895, 0.91)
         self.vibra_logo.SetPosition2(0.10, 0.10)
+
+    def get_logo_for_current_theme(self) -> str:
+        if app().config.user_preferences.interface_theme == "light":
+            return "vibra_colored_light_background.png"
+
+        return "vibra_colored_dark_background.png"
 
     def update_theme(self):
         user_preferences = app().config.user_preferences
@@ -94,7 +117,17 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.scale_bar_actor.GetLegendTitleProperty().SetColor(font_color.to_rgb_f())
             self.scale_bar_actor.GetLegendLabelProperty().SetColor(font_color.to_rgb_f())
 
-    def update_plot(self, reset_camera: bool = False):
+        self.update_logo()
+
+    def update_plot(
+        self,
+        reset_camera: bool = True,
+        *,
+        plot_setup: Optional[PlotSetup] = None,
+    ):
+        if plot_setup is not None:
+            self.configure_plot(plot_setup)
+
         mesh = app().project.model.mesh
         if mesh is None:
             return
@@ -150,6 +183,238 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         logging.info("Updating the results render... [98/100]")
         self.update()
 
+        self.set_analysis_actors_transparency(self.transparency)
+
+    def configure_plot(self, plot_setup: PlotSetup):
+        assert isinstance(plot_setup, PlotSetup)
+        self.plot_setup = plot_setup
+
+    def _interpolate_phase(self, frame: int) -> float:
+        return np.interp(
+            frame,
+            (0, self._animation_total_frames - 1),
+            (0, 2 * np.pi),
+        )
+
+    def _interpolate_time_index(self, frame: int) -> int:
+        return np.interp(
+            frame,
+            (0, self._animation_total_frames - 1),
+            (0, 2 * len(app().project.model.frequencies) - 1),
+        ).astype(int)
+
+    def update_color_and_deformation(
+        self,
+        animation_frame: Optional[int] = None,
+        clear_cache: bool = True,
+    ):
+        if not self.actors_exists():
+            return
+
+        if clear_cache:
+            self.clear_cache()
+
+        match self.plot_setup:
+            case NoPlotSetup():
+                self._plot_empty()
+
+            case FrequencyPressurePlotSetup():
+                self._plot_frequency_pressure(animation_frame, clear_cache)
+
+            case FrequencyDisplacementPlotSetup():
+                self._plot_frequency_displacement(animation_frame, clear_cache)
+
+            case TransientPressurePlotSetup():
+                self._plot_transient_pressure(animation_frame, clear_cache)
+
+            case AllowablePulsationForScrewCompressorsPlotSetup():
+                self._plot_allowable_pulsation_for_screw_compressor(clear_cache)
+
+            case _:
+                raise NotImplementedError(f'Plot setup "{self.plot_setup}" not implemented.')
+
+    def _plot_empty(self):
+        assert isinstance(self.plot_setup, NoPlotSetup)
+
+    def _plot_frequency_pressure(
+        self,
+        animation_frame: Optional[int],
+        clear_cache: bool = True,
+    ):
+        assert isinstance(self.plot_setup, FrequencyPressurePlotSetup)
+
+        postprocessing = app().project.get_acoustic_postprocessing()
+        assert isinstance(postprocessing, AcousticPostprocessing)
+
+        analysis_id = app().project.model.analysis_id
+        assert analysis_id.is_acoustic()
+
+        if animation_frame is None:
+            phase = self.plot_setup.phase
+        else:
+            phase = self._interpolate_phase(animation_frame)
+
+        data = postprocessing.compute_acoustic_pressure_field(
+            self.plot_setup.index,
+            phase,
+            self.plot_setup.plot_type,
+            is_modal=analysis_id.is_modal(),
+        )
+
+        if data is None:
+            return
+
+        color_scalars, self.min_value, self.max_value, complex_result = data
+        self.is_animation_symetric = not complex_result
+
+        min_value = self.min_value
+        max_value = self.max_value
+
+        if self.user_min_value is not None:
+            min_value = self.user_min_value
+
+        if self.user_max_value is not None:
+            max_value = self.user_max_value
+
+        colormap = app().config.user_preferences.color_map
+        self.analysis_actor.plot_color_bar(color_scalars, min_value, max_value, colormap)
+        self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
+        self.update()
+
+    def _plot_frequency_displacement(
+        self,
+        animation_frame: Optional[int] = None,
+        clear_cache: bool = True,
+    ):
+        assert isinstance(self.plot_setup, FrequencyDisplacementPlotSetup)
+
+        postprocessing = app().project.get_structural_postprocessing()
+        assert isinstance(postprocessing, StructuralPostprocessing)
+
+        analysis_id = app().project.model.analysis_id
+        assert analysis_id.is_structural()
+
+        if animation_frame is None:
+            phase = self.plot_setup.phase
+        else:
+            phase = self._interpolate_phase(animation_frame)
+
+        data = postprocessing.compute_structural_response_field(
+            self.plot_setup.index,
+            phase,
+            self.plot_setup.plot_type,
+            is_modal=analysis_id.is_modal(),
+        )
+
+        if data is None:
+            return
+
+        displacements, color_scalars, self.min_value, self.max_value, complex_result = data
+        self.is_animation_symetric = not complex_result
+
+        min_value = self.min_value
+        max_value = self.max_value
+
+        if self.user_min_value is not None:
+            min_value = self.user_min_value
+
+        if self.user_max_value is not None:
+            max_value = self.user_max_value
+
+        self.analysis_actor.apply_deformation(displacements, self.plot_setup.magnification_factor, max_value)
+        self.edges_actor.extract_data(self.analysis_actor.data)
+
+        colormap = app().config.user_preferences.color_map
+        self.analysis_actor.plot_color_bar(color_scalars, min_value, max_value, colormap)
+        self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
+        self.update()
+
+    def _plot_transient_pressure(
+        self,
+        animation_frame: Optional[int] = None,
+        clear_cache: bool = True,
+    ):
+
+        assert isinstance(self.plot_setup, TransientPressurePlotSetup)
+
+        postprocessing = app().project.get_acoustic_postprocessing()
+        assert isinstance(postprocessing, AcousticPostprocessing)
+
+        if animation_frame is None:
+            time_index = self.plot_setup.time_index
+        else:
+            time_index = animation_frame
+
+        data = postprocessing.compute_acoustic_transient_pressure_field(
+            time_index,
+            self.plot_setup.plot_type,
+            reduced_loop_time=self.plot_setup.reduced_loop_time,
+        )
+
+        if data is None:
+            return
+
+        time_vector, color_scalars, self.min_value, self.max_value = data
+
+        min_value = self.min_value
+        max_value = self.max_value
+
+        if self.user_min_value is not None:
+            min_value = self.user_min_value
+
+        if self.user_max_value is not None:
+            max_value = self.user_max_value
+
+        animation_widget = app().main_window.results_viewer_widget.get_animation_widget()
+
+        if animation_widget is not None:
+            sampling_time = time_vector[-1] - time_vector[0]
+            animation_widget.update_animation_parameters(sampling_time, time_vector.size)
+
+        self.is_animation_symetric = False
+
+        colormap = app().config.user_preferences.color_map
+        self.analysis_actor.plot_color_bar(color_scalars, min_value, max_value, colormap)
+        self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
+        self.update()
+
+    def _plot_allowable_pulsation_for_screw_compressor(
+        self,
+        clear_cache: bool = True,
+    ):
+
+        assert isinstance(self.plot_setup, AllowablePulsationForScrewCompressorsPlotSetup)
+
+        postprocessing = app().project.get_acoustic_postprocessing()
+        assert isinstance(postprocessing, AcousticPostprocessing)
+
+        data = postprocessing.compute_allowable_pulsation_field_for_screw_compressor()
+
+        if data is None:
+            return
+
+        color_scalars, self.min_value, self.max_value = data
+
+        # apply the penalization factor, if necessary
+        penalization_factor = self.plot_setup.penalization_factor / 100
+        self.max_value *= (1 - penalization_factor)
+
+        self.screw_compressor_allowable_pulsation_criterion = self.max_value
+
+        min_value = self.min_value
+        max_value = self.max_value
+
+        if self.user_min_value is not None:
+            min_value = self.user_min_value
+
+        if self.user_max_value is not None:
+            max_value = self.user_max_value
+
+        colormap = app().config.user_preferences.color_map
+        self.analysis_actor.plot_color_bar(color_scalars, min_value, max_value, colormap)
+        self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
+        self.update()
+
     def enable_scale_bar(self):
         self.scale_bar_actor.VisibilityOn()
 
@@ -165,8 +430,9 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             timestamp = time()
             self.timestamp = timestamp
             self._animation_cached_data.clear()
-            self.min_value = 0
-            self.max_value = 0
+            if not self.user_changed_pressure_values:
+                self.min_value = 0
+                self.max_value = 0
         return timestamp
 
     def cache_animation_frames(self):
@@ -192,24 +458,16 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
     @warn_delays
     def cache_frame(self, frame):
-        t = frame / (self._animation_total_frames - 1)
-        phase = lerp(0, 2 * np.pi, t)
-
         with self.update_lock:
-            self.update_color_and_deformation(
-                phase=phase,
-                clear_cache=False,
-            )
+            self.update_color_and_deformation(animation_frame=frame, clear_cache=False)
 
         point_data = vtkPointData()
         point_position = vtkPoints()
         point_data.DeepCopy(self.analysis_actor.data.GetPointData())
         point_position.DeepCopy(self.analysis_actor.data.GetPoints())
-        self._animation_cached_data[frame] = (
-            point_data,
-            point_position,
-        )
-        if not self.complex_result:
+        self._animation_cached_data[frame] = (point_data, point_position)
+
+        if self.is_animation_symetric:
             mirrored_frame = self._animation_total_frames - frame - 1
             self._animation_cached_data[mirrored_frame] = self._animation_cached_data[frame]
 
@@ -218,8 +476,9 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
     def stop_animation(self, *args, **kwargs):
         animation_widget = app().main_window.results_viewer_widget.get_animation_widget()
-        animation_widget.pushButton_animate.setChecked(False)
-        animation_widget.update_animate_button_icons(False)
+        if animation_widget is not None:
+            animation_widget.pushButton_animate.setChecked(False)
+            animation_widget.update_animate_button_icons(False)
         super().stop_animation(*args, **kwargs)
 
     def update_animation(self, frame):
@@ -248,113 +507,15 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             logging.warning(f"Cache miss on update_animation function for frame {frame}")
             self.cache_frame(frame)
 
-    def update_color_and_deformation(self, phase: float = 0.0, clear_cache: bool = True):
-
-        self.unit_label = "--"
+    def set_analysis_actors_transparency(self, transparency):
         if not self.actors_exists():
             return
 
-        if app().project.model.solution is None:
-            return
+        assert self.analysis_actor is not None
 
-        if clear_cache:
-            self.clear_cache()
-
-        displacements = None
-        colormap = app().config.user_preferences.color_map
-        analysis_id = app().project.model.analysis_id
-
-        if analysis_id == AnalysisID.NO_ANALYSIS:
-            return
-
-        elif analysis_id == AnalysisID.STRUCTURAL_MODAL:
-            analysis_widget = app().main_window.results_viewer_widget.plot_structural_modal
-            self.mode_index = analysis_widget.current_mode_index()
-            displacement_type = analysis_widget.get_plot_type()
-
-            postprocessing = app().project.get_structural_postprocessing()
-            if not isinstance(postprocessing, StructuralPostprocessing):
-                return
-
-            data = postprocessing.compute_structural_response_field(self.mode_index, phase, displacement_type, is_modal=True)
-            if data is None:
-                return
-
-            displacements, color_scalars, min_value, max_value, self.complex_result = data
-            if clear_cache:
-                self.min_value = min_value
-                self.max_value = max_value
-
-        elif analysis_id == AnalysisID.STRUCTURAL_HARMONIC:
-            analysis_widget = app().main_window.results_viewer_widget.plot_structural_harmonic
-            self.frequency_index = analysis_widget.get_selected_frequency_index()
-            self.differentiate = analysis_widget.get_number_of_differentiations()
-            data_type = analysis_widget.get_data_type()
-            self.unit_label = analysis_widget.get_plot_units()
-
-            postprocessing = app().project.get_structural_postprocessing()
-            if not isinstance(postprocessing, StructuralPostprocessing):
-                return
-
-            data = postprocessing.compute_structural_response_field(self.frequency_index, phase, data_type, self.differentiate)
-            if data is None:
-                return
-
-            displacements, color_scalars, min_value, max_value, self.complex_result = data
-            if clear_cache:
-                self.min_value = min_value
-                self.max_value = max_value
-
-        elif analysis_id == AnalysisID.ACOUSTIC_MODAL:
-            analysis_widget = app().main_window.results_viewer_widget.plot_acoustic_modal
-            self.mode_index = analysis_widget.current_mode_index()
-            plot_type = analysis_widget.get_plot_type()
-
-            postprocessing = app().project.get_acoustic_postprocessing()
-            if not isinstance(postprocessing, AcousticPostprocessing):
-                return
-
-            data = postprocessing.compute_acoustic_pressure_field(self.mode_index, phase, plot_type, is_modal=True)
-            if data is None:
-                return
-
-            color_scalars, min_value, max_value, self.complex_result = data
-            if clear_cache:
-                self.min_value = min_value
-                self.max_value = max_value
-
-        elif analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
-            analysis_widget = app().main_window.results_viewer_widget.plot_acoustic_harmonic
-            self.frequency_index = analysis_widget.get_selected_frequency_index()
-            plot_type = analysis_widget.get_plot_type()
-            self.unit_label = "Pa"
-
-            postprocessing = app().project.get_acoustic_postprocessing()
-            if not isinstance(postprocessing, AcousticPostprocessing):
-                return
-
-            data = postprocessing.compute_acoustic_pressure_field(self.frequency_index, phase, plot_type)
-            if data is None:
-                return
-
-            color_scalars, min_value, max_value, self.complex_result = data
-            if clear_cache:
-                self.min_value = min_value
-                self.max_value = max_value
-
-        else:
-            raise ValueError(f"Unknown analysis: {analysis_id}")
-
-        if displacements is not None:
-            animation_widget = app().main_window.results_viewer_widget.get_animation_widget()
-            if isinstance(animation_widget, AnimationWidget):
-                animation_widget.update_factor_label(max_value=max_value)
-
-            self.analysis_actor.apply_deformation(displacements, animation_widget.magnification_factor,max_value)
-            self.edges_actor.extract_data(self.analysis_actor.data)
-
-        self.analysis_actor.plot_color_bar(color_scalars, min_value, max_value, colormap)
-        self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
+        self.transparency = transparency
+        opacity = 1 - transparency
+        self.analysis_actor.GetProperty().SetOpacity(opacity)
         self.update()
 
     def visualization_changed_callback(self):
@@ -529,14 +690,15 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if analysis_id == AnalysisID.NO_ANALYSIS:
             return
 
-        if self.frequency_index is None and self.mode_index is None:
-            return
+        match self.plot_setup:
+            case FrequencyDisplacementPlotSetup() | FrequencyPressurePlotSetup():
+                text += analysis_info_text(self.plot_setup.index)
 
-        if AnalysisID(analysis_id).is_harmonic():
-            text += analysis_info_text(self.frequency_index + 1)
-
-        if AnalysisID(analysis_id).is_modal():
-            text += analysis_info_text(self.mode_index)
+            case AllowablePulsationForScrewCompressorsPlotSetup():
+                text += allowable_pulsation_for_screw_compressor_info_text(
+                    self.screw_compressor_allowable_pulsation_criterion,
+                    self.plot_setup.penalization_factor,
+                )
 
         self.set_info_text(text)
         self.update()
@@ -545,7 +707,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if not hasattr(self, "colorbar_actor"):
             return
 
-        self.colorbar_actor.SetTitle(f"Unit: [{self.unit_label}]")
+        self.colorbar_actor.SetTitle(f"Unit: [{self.plot_setup.unit}]")
         self.update()
 
     def update_renderer_font_size(self):
@@ -575,3 +737,9 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         tool = RenderTool()
         self.set_interactor_style(tool)
         tool.update_mouse_cursor_in_render_widgets(tool.current_cursor)
+
+    def set_min_value(self, min_value: float | None):
+        self.user_min_value = min_value
+
+    def set_max_value(self, max_value: float | None):
+        self.user_max_value = max_value

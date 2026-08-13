@@ -2,6 +2,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 from enum import IntEnum, auto
 from functools import partial, wraps
+from typing import Generator, TypeVar
 
 import numpy as np
 from PySide6.QtCore import QTimer
@@ -26,24 +27,28 @@ class VisualizationFilter:
     solids: bool = False
     symbols: bool = False
     ghost: bool = True
-    normal_symbols: bool = False
+    nodal_normal_symbols: bool = False
+    element_normal_symbols: bool = False
     color_mode: GeometryColorMode = GeometryColorMode.COLORED
 
     @classmethod
     def all_false(cls):
         # It is dumb, but it works
-        args = [False] * 7
+        args = [False] * 8
         return cls(*args)
 
     @classmethod
     def all_true(cls):
         # It is dumb, but it works
-        args = [True] * 7
+        args = [True] * 8
         return cls(*args)
 
 
+T = TypeVar("T", bound=QWidget)
+
+
 @contextmanager
-def block_signals(widget: QWidget):
+def block_signals(widget: T) -> Generator[T, None, None]:
     widget.blockSignals(True)
     try:
         yield widget

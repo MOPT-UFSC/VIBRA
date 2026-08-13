@@ -1,21 +1,21 @@
-from PySide6.QtWidgets import QFileDialog
-# from PySide6.QtGui import QCloseEvent
-from PySide6.QtCore import Qt
-
-from vibra import app
-from vibra.interface.ui_generated.model.fluid.load_fluid_composition_ui import LoadFluidComposition_UI
-from vibra.interface.general.print_message_input import PrintMessageInput
-
 import os
 from pathlib import Path
 
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QFileDialog
+
+from vibra import app
+from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.ui_generated.model.fluid.load_fluid_composition_ui import LoadFluidComposition_UI
+
+
 class LoadFluidCompositionInputs(LoadFluidComposition_UI):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, file_path: str = ""):
         super().__init__()
 
         app().main_window.set_input_widget(self)
 
-        self.file_path = kwargs.get("file_path", "")
+        self.file_path = file_path
        
         self._initialize()
         self._config_window()
@@ -28,12 +28,12 @@ class LoadFluidCompositionInputs(LoadFluidComposition_UI):
     def _initialize(self):
 
         self.complete = False
-        self.fluid_composition_data = None
+        self.imported_data = {}
+        self.fluid_composition_data: list[tuple[int, str, str, str]] = []
+        self.state_properties_data: list[tuple[int, str, str, str]] = []
 
-        user_path = os.path.expanduser('~')
-        desktop_path = Path(os.path.join(os.path.join(user_path, 'Desktop')))
-        self.desktop_path = str(desktop_path)
-        
+        self.desktop_path = Path.home() / "Desktop"
+
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
@@ -48,6 +48,7 @@ class LoadFluidCompositionInputs(LoadFluidComposition_UI):
     def _config_widgets(self):
         self.lineEdit_file_path.setDisabled(True)
         self.comboBox_sheet_names.setDisabled(True)
+        self.comboBox_state_properties.setDisabled(True)
 
     def _load_file(self):
         if os.path.exists(self.file_path):
@@ -56,22 +57,18 @@ class LoadFluidCompositionInputs(LoadFluidComposition_UI):
 
     def search_button_callback(self):
 
-        last_geometry_file = app().config.get_last_folder_for("fluid_composition_folder")
-        if last_geometry_file is None:
-            initial_path = self.desktop_path
-        else:
-            initial_path = last_geometry_file
+        last_path = app().config.get_last_folder_for("fluid_composition_folder", default=self.desktop_path)
 
         file_path, check = QFileDialog.getOpenFileName(
-            None,
+            self,
             "Open file",
-            str(initial_path),
+            str(last_path),
             "Files (*.xlsx *.xls)",
         )
 
         if not check:
             return True
-        
+
         self.file_path = file_path
 
         app().config.write_last_folder_path_in_file("fluid_composition_folder", file_path)
@@ -84,45 +81,61 @@ class LoadFluidCompositionInputs(LoadFluidComposition_UI):
         if self.lineEdit_file_path.text() == "":
             return
 
-        self.imported_data = dict()
+        self.imported_data.clear()
         self.comboBox_sheet_names.clear()
+        self.comboBox_state_properties.clear()
 
-        from polars import read_excel
         from openpyxl import load_workbook
+        from polars import read_excel
 
         wb = load_workbook(self.file_path)
-        sheetnames = wb.sheetnames
-        for sheetname in sheetnames:
+
+        for sheetname in wb.sheetnames:
 
             try:
                 sheet_data = read_excel(
-                                        self.file_path, 
-                                        sheet_name = sheetname, 
-                                        columns = [0,1,2,3]
-                                        ).to_numpy()
-                
-                self.imported_data[sheetname] = sheet_data
-                self.comboBox_sheet_names.addItem(sheetname)
-                
+                    self.file_path,
+                    sheet_name=sheetname,
+                    columns=(0, 1, 2, 3),
+                    has_header=True,
+                )
+
+                if "state properties" in sheetname.lower().replace("_", " "):
+                    self.comboBox_state_properties.addItem(sheetname)
+                    if not self.comboBox_state_properties.isEnabled():
+                        self.comboBox_state_properties.setDisabled(False)
+                    
+                else:
+                    self.comboBox_sheet_names.addItem(sheetname)
+                    if not self.comboBox_sheet_names.isEnabled():
+                        self.comboBox_sheet_names.setDisabled(False)
+
+                self.imported_data[sheetname] = sheet_data.to_numpy()
+
             except Exception as error_log:
                 window_title = "Error"
                 title = "Error while reading data from file"
-                message = f"{str(error_log)}"
+                message = str(error_log)
                 PrintMessageInput([window_title, title, message])
                 return True
 
-        self.comboBox_sheet_names.setDisabled(False)
-               
     def confirm_button_callback(self):
-        if self.imported_data:
-            selection = self.comboBox_sheet_names.currentText()
-            self.fluid_composition_data = self.imported_data[selection]
-            self.complete = True
-            self.close()
+        if not self.imported_data:
+            return
+
+        composition_key = self.comboBox_sheet_names.currentText()
+        state_properties_key = self.comboBox_state_properties.currentText()
+
+        self.fluid_composition_data = self.imported_data.get(composition_key)
+        self.state_properties_data = self.imported_data.get(state_properties_key)
+
+        self.complete = True
+        self.close()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
             self.confirm_button_callback()
             return
-        elif event.key() == Qt.Key_Escape:
+
+        if event.key() == Qt.Key_Escape:
             self.close()

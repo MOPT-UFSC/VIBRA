@@ -5,6 +5,7 @@ from copy import deepcopy
 from enum import IntEnum
 from pathlib import Path
 from typing import Dict, List
+from vibra.interface import warning_title
 
 import numpy as np
 from PySide6.QtCore import QItemSelectionModel, QPoint, Qt
@@ -18,7 +19,6 @@ from vibra.interface import error_title
 from vibra.interface.common.common_interface import update_analysis_setup_in_file
 from vibra.interface.data.data_manager import get_spectral_data_from_array
 from vibra.interface.data_handler.data_importer import DataImporter
-from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
@@ -63,7 +63,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         self._config_window()
         self._config_widgets()
         self._create_connections()
-        self._paint_icons()
         self.load_model_info()
 
         while self.keep_window_open:
@@ -125,7 +124,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         self.edit_tableWidget.cellDoubleClicked.connect(self.edit_fluid_or_transfer_impedance)
         #
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
-        app().main_window.theme_changed.connect(self._paint_icons)
         #
         self.geometry_selection_callback()
         self.include_effects_callback()
@@ -311,18 +309,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
         self.treeWidget_perforated_plate_model.header().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         
-    def _paint_icons(self):
-        icon_color = None
-        theme = app().config.user_preferences.interface_theme
-        from vibra import DARK_ICON_COLOR, LIGHT_ICON_COLOR
-        if theme == "dark":
-            icon_color = DARK_ICON_COLOR.to_qt()
-        else:
-            icon_color = LIGHT_ICON_COLOR.to_qt()
-
-        widgets = [self.pushButton_clean_inputs, self.pushButton_load_path]
-        change_icon_color_for_widgets(widgets, icon_color)
-
     def tab_event_callback(self):
         current_tab = self.tabWidget_main.currentIndex()
         tab_list = current_tab == PPMMainTabType.LIST
@@ -761,6 +747,59 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
         return surface_ids
 
+    def map_volumes_to_surfaces(self, surface_ids: list[int]) -> None | dict:
+
+        surfaces_from_volume = defaultdict(list)
+
+        for surface_id in surface_ids:
+
+            message = ""
+            volumes_from_surface = self.model.mesh.volumes_from_surface.get(surface_id)
+
+            if volumes_from_surface is None:
+                message = "The selected surface is not connected to any volume. "
+                message += "You must select an internal surface connected "
+                message += "with two volumes to proceed with dofs decoupling."
+
+            elif len(volumes_from_surface) == 1:
+                message = "The selected surface is connected to one volume, this means that an external " 
+                message += "surface has been selected. You must select an internal surface connected "
+                message += "with two volumes to proceed with dofs decoupling."
+
+            if message != "":
+                self.hide()
+                title = "Invalid surface selected"
+                PrintMessageInput([warning_title, title, message])
+                return
+
+            for volume_id in volumes_from_surface:
+                if surface_id in surfaces_from_volume.get(volume_id, []):
+                    continue
+
+                surfaces_from_volume[volume_id].append(surface_id)
+
+        # check if there is a common volume touching the selected surfaces
+        for vol_id, surf_ids in surfaces_from_volume.items():
+            if len(surf_ids) == len(surface_ids):
+                return {surf_id : vol_id for surf_id in surface_ids}
+
+        surface_to_volume_map = {}
+
+        # select volumes with reduced number of solid elements to decouple the DOF
+        for _surface_id in surface_ids:
+            volumes_from_surface = self.model.mesh.volumes_from_surface.get(_surface_id)
+            if len(volumes_from_surface) != 2:
+                continue
+
+            n_el1 = len(self.mesh.elements_from_volume.get(volumes_from_surface[0]))
+            n_el2 = len(self.mesh.elements_from_volume.get(volumes_from_surface[1]))
+
+            vol_id = volumes_from_surface[0] if n_el1 > n_el2 else volumes_from_surface[1]
+
+            surface_to_volume_map[_surface_id] = vol_id
+
+        return surface_to_volume_map
+
     def apply_callback(self, close_window: bool = False):
 
         if self.tabWidget_main.currentIndex() != SetupTabType.SETUP:
@@ -776,12 +815,22 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         if not model:
             return
 
+        volume_to_surface_map = self.map_volumes_to_surfaces(surface_ids)
+        if volume_to_surface_map is None:
+            return
+
         for surface_id in surface_ids:
+            volume_id = volume_to_surface_map.get(surface_id)
+            if volume_id is None:
+                continue
+
+            data = {"volume_to_decouple" : volume_id}
+
             if "User-defined" in self.comboBox_include_effects.currentText():
                 self.include_user_defined_transfer_impedance(model, surface_id)
 
             self.properties._set_property("perforated_plate_model", model.get_data(), surface=surface_id)
-            self.decouple_degrees_of_freedom(surface_id)
+            self.properties._set_property("degrees_of_freedom_decoupling", data, surface=surface_id)
 
         self.assignment_complete = True
         self.clear_line_edit_selection_id()
@@ -820,16 +869,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         table_path = self.lineEdit_user_defined_transfer_impedance_path.text()
 
         model.set_table_data([table_name], [table_path], [complex_values])
-
-    def decouple_degrees_of_freedom(self, surface_id: int):
-
-        volumes_from_surface = self.mesh.volumes_from_surface.get(surface_id)
-        if volumes_from_surface is None:
-            return 
-
-        volume_id = volumes_from_surface[0]
-        data = {"volume_to_decouple" : volume_id}
-        self.properties._set_property("degrees_of_freedom_decoupling", data, surface=surface_id)
 
     def process_table_file_removal(self, table_names: list):
         for table_name in table_names:
@@ -980,9 +1019,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             logging.info("Processing the post-assignment actions... [60/100]")
             app().project.update_model_properties_file()
 
-            logging.info("Processing the post-assignment actions... [70/100]")
-            app().main_window.recompute_hidden_volumes()
-
             logging.info("Processing the post-assignment actions... [80/100]")
             app().main_window.update_info_text()
 
@@ -1015,10 +1051,12 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
             logging.info("Processing degress of freedom decoupling... [90/100]")
             app().main_window.update_geometry_information()
-        
+
+            logging.info("Processing degress of freedom decoupling... [92/100]")
+            app().project.model.mesh.process_disconnected_nodes_criterion()
+
             logging.info("Processing degress of freedom decoupling... [95/100]")
             app().main_window.update_plots()
-            app().main_window.recompute_hidden_volumes()
 
         LoadingWindow(callback).run()
 

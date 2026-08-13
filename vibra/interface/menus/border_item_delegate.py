@@ -1,6 +1,7 @@
+from PySide6.QtCore import QSize, Qt
+from PySide6.QtGui import QIcon, QPainter, QPixmap
 from PySide6.QtWidgets import QStyledItemDelegate, QStyleOptionViewItem
-from PySide6.QtGui import QColor, QIcon, QPainter, QPixmap
-from PySide6.QtCore import QPoint, QRect, Qt, QSize
+
 
 class BorderItemDelegate(QStyledItemDelegate):
     def __init__(self, parent, borderRole):

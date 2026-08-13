@@ -1,8 +1,7 @@
+import os
 from collections import defaultdict
 from pathlib import Path
-from time import time
 
-import os
 import numpy as np
 
 
@@ -49,12 +48,12 @@ class ExternalMeshData():
             if "NUMOFF,NODE," in line:
                 line = line.replace(" ", "")
                 number_nodes = int(line.split("NUMOFF,NODE,")[1])
-                nodal_coordinates = np.zeros((number_nodes, 4), dtype=float)
+                nodal_coordinates = np.zeros((number_nodes, 4), dtype=float)  # noqa: F841
                 continue
 
             if "NUMOFF,ELEM," in line:
                 line = line.replace(" ", "")
-                number_elements = int(line.split("NUMOFF,ELEM,")[1])
+                number_elements = int(line.split("NUMOFF,ELEM,")[1])  # noqa: F841
                 # nodal_coordinates = np.zeros((number_elements, 4), dtype=float)
                 continue
 
@@ -103,7 +102,7 @@ class ExternalMeshData():
                     if len(coordinates) == 4:
                         self.nodal_coordinates.append(coordinates)
 
-                except:
+                except Exception:
                     self.modo = None
                     pass
 
@@ -195,7 +194,7 @@ class ExternalMeshData():
                         else:
                             continue
 
-                except:
+                except Exception:
                     self.modo = None
                     pass   
 
@@ -211,7 +210,7 @@ class ExternalMeshData():
                     for ns_node_id in [int(valor) for valor in line.split()]:
                         self.nodes_from_named_selection[self.named_selection].append(ns_node_id)
 
-                except:
+                except Exception:
                     self.modo = None
 
         self.post_process_nodal_coordinates()
@@ -330,7 +329,7 @@ class ExternalMeshData():
             return 8, 20
 
 
-    def process_named_selection_elements(self, export=False):
+    def process_named_selection_elements(self, export: bool = False):
 
         start, end = 0, 0
         self.elements_from_named_selection = dict()
@@ -344,6 +343,7 @@ class ExternalMeshData():
 
             surface_id = 0
             connect = np.array(data, dtype=int)
+
             for ns_key, ns_nodes in self.nodes_from_named_selection.items():
 
                 surface_id += 1
@@ -354,21 +354,26 @@ class ExternalMeshData():
                 if np.sum(mask) == 0:
                     continue
 
-                for jj, _nodes in enumerate(connect[mask, 3:]):
+                element3d_indexes = connect[mask, 0]
+
+                for jj, connect_data in enumerate(connect[mask, :]):
+
+                    elem3d_connectivity = connect_data[3:]
+ 
                     if nodes_solid_element:
-                        indexes = aux_indexes[np.isin(_nodes, ns_nodes)]
+                        indexes = aux_indexes[np.isin(elem3d_connectivity, ns_nodes)]
                         row = np.sum(np.isin(faces_connect_indexes, indexes), axis=1) == nodes_face_element
-                        face_nodes = _nodes[faces_connect_indexes[row, :]].flatten()
+                        face_nodes = elem3d_connectivity[faces_connect_indexes[row, :]].flatten()
 
                     else:
-                        face_nodes = _nodes
+                        face_nodes = elem3d_connectivity
 
                     face_connectivity.append(face_nodes)
 
                 if face_connectivity:
 
                     end += len(face_connectivity)
-                    indexes = np.arange(1+start, end+1)
+                    element2d_indexes = np.arange(1+start, end+1)
                     start = end
 
                     connect_data = np.array(face_connectivity, dtype=int)
@@ -378,11 +383,12 @@ class ExternalMeshData():
                         if len(connect_data) < len(actual_connect_data):
                             continue
 
-                    self.elements_from_named_selection[ns_key] = {  
-                                                                  "element_indexes" : indexes,
-                                                                  "connectivity" : connect_data,
-                                                                  "surface_id" : surface_id,
-                                                                  }
+                    self.elements_from_named_selection[ns_key] = {
+                        "element2d_indexes": element2d_indexes,
+                        "element3d_indexes": element3d_indexes,
+                        "connectivity": connect_data,
+                        "surface_id": surface_id,
+                    }
 
                     if not export:
                         continue

@@ -26,7 +26,7 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
-        Dialog.resize(1000, 650)
+        Dialog.resize(1000, 726)
         Dialog.setMinimumSize(QSize(1000, 650))
         Dialog.setMaximumSize(QSize(1200, 800))
         self.gridLayout_11 = QGridLayout(Dialog)
@@ -70,7 +70,7 @@ class Ui_Dialog(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 980, 374))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 980, 450))
         self.gridLayout_2 = QGridLayout(self.scrollAreaWidgetContents)
         self.gridLayout_2.setSpacing(4)
         self.gridLayout_2.setObjectName(u"gridLayout_2")
@@ -102,20 +102,40 @@ class Ui_Dialog(object):
 
         self.frame_middle = QFrame(self.scrollAreaWidgetContents)
         self.frame_middle.setObjectName(u"frame_middle")
-        self.frame_middle.setMinimumSize(QSize(140, 0))
-        self.frame_middle.setMaximumSize(QSize(160, 16777215))
+        self.frame_middle.setMinimumSize(QSize(160, 0))
+        self.frame_middle.setMaximumSize(QSize(180, 16777215))
         self.frame_middle.setFrameShape(QFrame.Shape.NoFrame)
         self.frame_middle.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_18 = QGridLayout(self.frame_middle)
         self.gridLayout_18.setObjectName(u"gridLayout_18")
+        self.pushButton_add_gas = QPushButton(self.frame_middle)
+        self.pushButton_add_gas.setObjectName(u"pushButton_add_gas")
+        self.pushButton_add_gas.setMinimumSize(QSize(130, 30))
+        self.pushButton_add_gas.setMaximumSize(QSize(140, 30))
+        font2 = QFont()
+        font2.setPointSize(10)
+        self.pushButton_add_gas.setFont(font2)
+        self.pushButton_add_gas.setStyleSheet(u"")
+
+        self.gridLayout_18.addWidget(self.pushButton_add_gas, 5, 0, 1, 1)
+
+        self.pushButton_remove_gas = QPushButton(self.frame_middle)
+        self.pushButton_remove_gas.setObjectName(u"pushButton_remove_gas")
+        self.pushButton_remove_gas.setMinimumSize(QSize(130, 30))
+        self.pushButton_remove_gas.setMaximumSize(QSize(140, 30))
+        self.pushButton_remove_gas.setFont(font2)
+        self.pushButton_remove_gas.setStyleSheet(u"")
+
+        self.gridLayout_18.addWidget(self.pushButton_remove_gas, 6, 0, 1, 1)
+
         self.label_remaining_composition = QLabel(self.frame_middle)
         self.label_remaining_composition.setObjectName(u"label_remaining_composition")
         self.label_remaining_composition.setMinimumSize(QSize(130, 28))
         self.label_remaining_composition.setMaximumSize(QSize(140, 28))
-        font2 = QFont()
-        font2.setPointSize(10)
-        font2.setItalic(False)
-        self.label_remaining_composition.setFont(font2)
+        font3 = QFont()
+        font3.setPointSize(10)
+        font3.setItalic(False)
+        self.label_remaining_composition.setFont(font3)
         self.label_remaining_composition.setStyleSheet(u"QLineEdit{color: rgb(0, 0, 0); background-color: rgb(250, 250, 250)}\n"
 "QLineEdit:disabled{color: rgb(100, 100, 100); background-color: rgb(240, 240, 240)}")
         self.label_remaining_composition.setFrameShape(QFrame.Shape.Box)
@@ -124,51 +144,35 @@ class Ui_Dialog(object):
 
         self.gridLayout_18.addWidget(self.label_remaining_composition, 3, 0, 1, 1)
 
-        self.verticalSpacer_8 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-
-        self.gridLayout_18.addItem(self.verticalSpacer_8, 1, 0, 1, 1)
-
-        self.pushButton_add_gas = QPushButton(self.frame_middle)
-        self.pushButton_add_gas.setObjectName(u"pushButton_add_gas")
-        self.pushButton_add_gas.setMinimumSize(QSize(130, 30))
-        self.pushButton_add_gas.setMaximumSize(QSize(140, 30))
-        font3 = QFont()
-        font3.setPointSize(10)
-        self.pushButton_add_gas.setFont(font3)
-        self.pushButton_add_gas.setStyleSheet(u"")
-
-        self.gridLayout_18.addWidget(self.pushButton_add_gas, 5, 0, 1, 1)
-
         self.pushButton_fluid_configuration_mode = QPushButton(self.frame_middle)
         self.pushButton_fluid_configuration_mode.setObjectName(u"pushButton_fluid_configuration_mode")
         self.pushButton_fluid_configuration_mode.setMinimumSize(QSize(130, 30))
         self.pushButton_fluid_configuration_mode.setMaximumSize(QSize(140, 30))
-        self.pushButton_fluid_configuration_mode.setFont(font3)
+        self.pushButton_fluid_configuration_mode.setFont(font2)
         self.pushButton_fluid_configuration_mode.setStyleSheet(u"")
 
         self.gridLayout_18.addWidget(self.pushButton_fluid_configuration_mode, 9, 0, 1, 1)
 
-        self.verticalSpacer_7 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        self.verticalSpacer_7 = QSpacerItem(20, 10, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.gridLayout_18.addItem(self.verticalSpacer_7, 4, 0, 1, 1)
 
-        self.pushButton_load_composition = QPushButton(self.frame_middle)
-        self.pushButton_load_composition.setObjectName(u"pushButton_load_composition")
-        self.pushButton_load_composition.setMinimumSize(QSize(130, 30))
-        self.pushButton_load_composition.setMaximumSize(QSize(140, 30))
-        self.pushButton_load_composition.setFont(font3)
-        self.pushButton_load_composition.setStyleSheet(u"")
+        self.verticalSpacer_9 = QSpacerItem(20, 10, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
-        self.gridLayout_18.addWidget(self.pushButton_load_composition, 8, 0, 1, 1)
+        self.gridLayout_18.addItem(self.verticalSpacer_9, 11, 0, 1, 1)
 
-        self.pushButton_remove_gas = QPushButton(self.frame_middle)
-        self.pushButton_remove_gas.setObjectName(u"pushButton_remove_gas")
-        self.pushButton_remove_gas.setMinimumSize(QSize(130, 30))
-        self.pushButton_remove_gas.setMaximumSize(QSize(140, 30))
-        self.pushButton_remove_gas.setFont(font3)
-        self.pushButton_remove_gas.setStyleSheet(u"")
+        self.verticalSpacer_8 = QSpacerItem(20, 10, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
-        self.gridLayout_18.addWidget(self.pushButton_remove_gas, 6, 0, 1, 1)
+        self.gridLayout_18.addItem(self.verticalSpacer_8, 1, 0, 1, 1)
+
+        self.pushButton_reset_fluid = QPushButton(self.frame_middle)
+        self.pushButton_reset_fluid.setObjectName(u"pushButton_reset_fluid")
+        self.pushButton_reset_fluid.setMinimumSize(QSize(130, 30))
+        self.pushButton_reset_fluid.setMaximumSize(QSize(140, 30))
+        self.pushButton_reset_fluid.setFont(font2)
+        self.pushButton_reset_fluid.setStyleSheet(u"")
+
+        self.gridLayout_18.addWidget(self.pushButton_reset_fluid, 7, 0, 1, 1)
 
         self.label_title_remaining_fraction = QLabel(self.frame_middle)
         self.label_title_remaining_fraction.setObjectName(u"label_title_remaining_fraction")
@@ -182,14 +186,23 @@ class Ui_Dialog(object):
 
         self.gridLayout_18.addWidget(self.label_title_remaining_fraction, 2, 0, 1, 1)
 
-        self.pushButton_reset_fluid = QPushButton(self.frame_middle)
-        self.pushButton_reset_fluid.setObjectName(u"pushButton_reset_fluid")
-        self.pushButton_reset_fluid.setMinimumSize(QSize(130, 30))
-        self.pushButton_reset_fluid.setMaximumSize(QSize(140, 30))
-        self.pushButton_reset_fluid.setFont(font3)
-        self.pushButton_reset_fluid.setStyleSheet(u"")
+        self.pushButton_load_composition = QPushButton(self.frame_middle)
+        self.pushButton_load_composition.setObjectName(u"pushButton_load_composition")
+        self.pushButton_load_composition.setMinimumSize(QSize(130, 30))
+        self.pushButton_load_composition.setMaximumSize(QSize(140, 30))
+        self.pushButton_load_composition.setFont(font2)
+        self.pushButton_load_composition.setStyleSheet(u"")
 
-        self.gridLayout_18.addWidget(self.pushButton_reset_fluid, 7, 0, 1, 1)
+        self.gridLayout_18.addWidget(self.pushButton_load_composition, 8, 0, 1, 1)
+
+        self.pushButton_export_fluid_composition = QPushButton(self.frame_middle)
+        self.pushButton_export_fluid_composition.setObjectName(u"pushButton_export_fluid_composition")
+        self.pushButton_export_fluid_composition.setMinimumSize(QSize(130, 30))
+        self.pushButton_export_fluid_composition.setMaximumSize(QSize(140, 30))
+        self.pushButton_export_fluid_composition.setFont(font2)
+        self.pushButton_export_fluid_composition.setStyleSheet(u"")
+
+        self.gridLayout_18.addWidget(self.pushButton_export_fluid_composition, 10, 0, 1, 1)
 
 
         self.gridLayout_2.addWidget(self.frame_middle, 0, 1, 1, 1)
@@ -493,7 +506,7 @@ class Ui_Dialog(object):
         self.spinBox_number_of_fluids.setObjectName(u"spinBox_number_of_fluids")
         self.spinBox_number_of_fluids.setMinimumSize(QSize(100, 28))
         self.spinBox_number_of_fluids.setMaximumSize(QSize(16777215, 28))
-        self.spinBox_number_of_fluids.setFont(font3)
+        self.spinBox_number_of_fluids.setFont(font2)
         self.spinBox_number_of_fluids.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.spinBox_number_of_fluids.setMinimum(1)
         self.spinBox_number_of_fluids.setMaximum(100)
@@ -550,7 +563,7 @@ class Ui_Dialog(object):
         self.comboBox_distribution_type.setObjectName(u"comboBox_distribution_type")
         self.comboBox_distribution_type.setMinimumSize(QSize(100, 28))
         self.comboBox_distribution_type.setMaximumSize(QSize(16777215, 28))
-        self.comboBox_distribution_type.setFont(font3)
+        self.comboBox_distribution_type.setFont(font2)
 
         self.gridLayout_6.addWidget(self.comboBox_distribution_type, 0, 5, 1, 1)
 
@@ -562,7 +575,7 @@ class Ui_Dialog(object):
         self.doubleSpinBox_decay_factor.setObjectName(u"doubleSpinBox_decay_factor")
         self.doubleSpinBox_decay_factor.setMinimumSize(QSize(100, 28))
         self.doubleSpinBox_decay_factor.setMaximumSize(QSize(16777215, 28))
-        self.doubleSpinBox_decay_factor.setFont(font3)
+        self.doubleSpinBox_decay_factor.setFont(font2)
         self.doubleSpinBox_decay_factor.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.doubleSpinBox_decay_factor.setDecimals(4)
         self.doubleSpinBox_decay_factor.setMaximum(0.900000000000000)
@@ -577,7 +590,7 @@ class Ui_Dialog(object):
         self.comboBox_color_scale.setObjectName(u"comboBox_color_scale")
         self.comboBox_color_scale.setMinimumSize(QSize(100, 28))
         self.comboBox_color_scale.setMaximumSize(QSize(16777215, 28))
-        self.comboBox_color_scale.setFont(font3)
+        self.comboBox_color_scale.setFont(font2)
 
         self.gridLayout_6.addWidget(self.comboBox_color_scale, 0, 9, 1, 1)
 
@@ -604,7 +617,7 @@ class Ui_Dialog(object):
         self.pushButton_cancel.setObjectName(u"pushButton_cancel")
         self.pushButton_cancel.setMinimumSize(QSize(160, 30))
         self.pushButton_cancel.setMaximumSize(QSize(160, 30))
-        self.pushButton_cancel.setFont(font3)
+        self.pushButton_cancel.setFont(font2)
         self.pushButton_cancel.setStyleSheet(u"")
 
         self.gridLayout_4.addWidget(self.pushButton_cancel, 0, 0, 1, 1)
@@ -613,7 +626,7 @@ class Ui_Dialog(object):
         self.pushButton_get_fluid_properties.setObjectName(u"pushButton_get_fluid_properties")
         self.pushButton_get_fluid_properties.setMinimumSize(QSize(160, 30))
         self.pushButton_get_fluid_properties.setMaximumSize(QSize(160, 30))
-        self.pushButton_get_fluid_properties.setFont(font3)
+        self.pushButton_get_fluid_properties.setFont(font2)
         self.pushButton_get_fluid_properties.setStyleSheet(u"")
 
         self.gridLayout_4.addWidget(self.pushButton_get_fluid_properties, 0, 1, 1, 1)
@@ -644,14 +657,15 @@ class Ui_Dialog(object):
         ___qtablewidgetitem.setText(QCoreApplication.translate("Dialog", u"Fluid name", None));
         ___qtablewidgetitem1 = self.tableWidget_new_fluid.horizontalHeaderItem(1)
         ___qtablewidgetitem1.setText(QCoreApplication.translate("Dialog", u"Molar fraction [%]", None));
-        self.label_remaining_composition.setText("")
         self.pushButton_add_gas.setText(QCoreApplication.translate("Dialog", u"Add gas", None))
-        self.pushButton_fluid_configuration_mode.setText(QCoreApplication.translate("Dialog", u"Single fluid mode", None))
-        self.pushButton_load_composition.setText(QCoreApplication.translate("Dialog", u"Load composition", None))
         self.pushButton_remove_gas.setText(QCoreApplication.translate("Dialog", u"Remove gas", None))
+        self.label_remaining_composition.setText("")
+        self.pushButton_fluid_configuration_mode.setText(QCoreApplication.translate("Dialog", u"Single fluid mode", None))
+        self.pushButton_reset_fluid.setText(QCoreApplication.translate("Dialog", u"Reset fluid", None))
         self.label_title_remaining_fraction.setText(QCoreApplication.translate("Dialog", u"Remaining molar \n"
 "fraction [%]", None))
-        self.pushButton_reset_fluid.setText(QCoreApplication.translate("Dialog", u"Reset fluid", None))
+        self.pushButton_load_composition.setText(QCoreApplication.translate("Dialog", u"Load composition", None))
+        self.pushButton_export_fluid_composition.setText(QCoreApplication.translate("Dialog", u"Export compositon", None))
         self.label_seach_fluid.setText(QCoreApplication.translate("Dialog", u"Search fluid:", None))
         ___qtreewidgetitem = self.treeWidget_refprop_fluids.headerItem()
         ___qtreewidgetitem.setText(0, QCoreApplication.translate("Dialog", u"Fluids from refprop library", None));
@@ -728,13 +742,14 @@ class SetFluidCompositionInput_UI(QDialog, Ui_Dialog):
                                             - tableWidget_new_fluid: QTableWidget
                                             - frame_middle: QFrame
                                                 - (Layout): QGridLayout
-                                                        - label_remaining_composition: QLabel
                                                         - pushButton_add_gas: QPushButton
-                                                        - pushButton_fluid_configuration_mode: QPushButton
-                                                        - pushButton_load_composition: QPushButton
                                                         - pushButton_remove_gas: QPushButton
-                                                        - label_title_remaining_fraction: QLabel
+                                                        - label_remaining_composition: QLabel
+                                                        - pushButton_fluid_configuration_mode: QPushButton
                                                         - pushButton_reset_fluid: QPushButton
+                                                        - label_title_remaining_fraction: QLabel
+                                                        - pushButton_load_composition: QPushButton
+                                                        - pushButton_export_fluid_composition: QPushButton
                                             - frame_refprop_fluids: QFrame
                                                 - (Layout): QGridLayout
                                                         - frame_search_fluids: QFrame

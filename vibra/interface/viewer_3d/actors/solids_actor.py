@@ -95,7 +95,7 @@ class SolidsActor(vtkActor):
         coordinates = self.get_coordinates()
         points.SetData(numpy_to_vtk(coordinates))
 
-        hidden_volumes = app().main_window.selection.hidden_volumes if self.allow_hidding else set()
+        hidden_volumes = app().main_window.entity_visibility.get_hidden_volumes()
         self.visible_indexes = dict()
 
         for i, volume, _, _, *nodes in nodes_connectivity:

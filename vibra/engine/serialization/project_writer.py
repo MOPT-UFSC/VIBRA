@@ -20,9 +20,9 @@ from vibra.engine.properties.libraries.material_library import MaterialLibrary
 from vibra.engine.properties.material import Material
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.engine.serialization.file_helpers import read_json, update_json, write_image, write_json
+from vibra.engine.serialization.lazy_hdf5_matrix import LazyHDF5MatrixWriter
 from vibra.engine.solution import HarmonicSolution, ModalSolution
 from vibra.engine.solution.lazy_harmonic_solution import LazyHarmonicSolution
-from vibra.project_files.lazy_hdf5_matrix import LazyHDF5MatrixWriter
 
 from .project_hasher import HashEnum, ProjectHasher
 from .project_paths import ProjectPaths
@@ -31,6 +31,7 @@ from .project_paths import ProjectPaths
 class ProjectWriter:
     def __init__(self, project_paths: ProjectPaths):
         self.project_paths = project_paths
+        self.use_hash = True
 
     def write_file(self, vibra_path: Path | str):
         logging.info(f'Writing working directory "{self.project_paths.working_directory}" into file "{vibra_path}".')
@@ -63,6 +64,9 @@ class ProjectWriter:
         if model.mesh is not None:
             self.write_mesh(model.mesh)
 
+        if model.solution is not None:
+            self.write_solution(model.solution)
+
     def write_project_setup(self, model: Model):
         logging.info("Writing project setup.")
 
@@ -87,9 +91,9 @@ class ProjectWriter:
             project_setup["mesh_setup"].update(
                 asdict(mesh_setup),
             )
-            project_setup["mesh_setup"]["mesh_refinement_parameters"] = [
+            project_setup["mesh_setup"]["local_mesh_size_control_parameters"] = [
                 (i.entity_type, i.element_size, i.entity_ids) 
-                for i in mesh_setup.refinement_parameters
+                for i in mesh_setup.local_mesh_size_control_parameters
             ]  # fmt: skip
 
         write_json(self.project_paths.project_setup_filepath, project_setup)
@@ -135,7 +139,7 @@ class ProjectWriter:
         ]
         required_paths_exist = all([i.exists() for i in required_paths])
 
-        if (previous_hash == current_hash) and required_paths_exist:
+        if (current_hash == previous_hash) and self.use_hash and required_paths_exist:
             logging.info("Mesh was not written since it did not changed.")
             return
 
@@ -255,7 +259,7 @@ class ProjectWriter:
         previous_hash = self._read_hash(HashEnum.TABLES)
 
         if self.project_paths.imported_table_data_filepath.exists():
-            if current_hash == previous_hash:
+            if (current_hash == previous_hash) and self.use_hash:
                 logging.info("Mesh was not written since it did not changed.")
                 return
 
@@ -272,6 +276,15 @@ class ProjectWriter:
         logging.info("Writing thumbnail")
         write_image(self.project_paths.thumbnail_filepath, thumbnail)
 
+    def write_solution(self, solution: ModalSolution | HarmonicSolution):
+        match solution:
+            case ModalSolution():
+                self.write_modal_solution(solution)
+            case HarmonicSolution():
+                self.write_harmonic_solution(solution)
+            case _:
+                raise ValueError(f'Invalid solution type "{solution}"')
+
     def write_harmonic_solution(self, solution: HarmonicSolution):
         # In this case the solution was already saved
         if isinstance(solution, LazyHarmonicSolution):
@@ -283,29 +296,14 @@ class ProjectWriter:
         previous_hash = self._read_hash(HashEnum.HARMONIC_SOLUTION)
 
         if self.project_paths.imported_table_data_filepath.exists():
-            if current_hash == previous_hash:
+            if (current_hash == previous_hash) and self.use_hash:
                 logging.info("Harmonic solution was not written since it did not changed.")
                 return
 
         with h5py.File(self.project_paths.harmonic_solution_filepath, "w") as file:
             file: h5py.File
 
-            # H5PY recommends chunks of at most 1mb for large files.
-            # https://docs.h5py.org/en/stable/high/dataset.html#chunked-storage
-
-            rows, cols = solution.nodal_solution.shape
-            chunk_rows = min(rows, 2**20)
-            chunk_cols = 1
-
-            # This dataset may be very big, so it is important to carefully
-            # configure its parameters for better performance.
-            # The others can use the default configuration.
-            file.create_dataset(
-                "solution",
-                data=solution.nodal_solution,
-                chunks=(chunk_rows, chunk_cols),
-            )
-
+            file.create_dataset("solution", data=solution.nodal_solution)
             file["frequencies"] = solution.frequencies
             file["solution_status"] = np.ones_like(solution.frequencies, dtype=bool)
 
@@ -321,7 +319,7 @@ class ProjectWriter:
         previous_hash = self._read_hash(HashEnum.MODAL_SOLUTION)
 
         if self.project_paths.imported_table_data_filepath.exists():
-            if current_hash == previous_hash:
+            if (current_hash == previous_hash) and self.use_hash:
                 logging.info("Modal solution was not written since it did not changed.")
                 return
 
