@@ -23,7 +23,7 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(411, 724)
+        Form.resize(411, 473)
         Form.setMinimumSize(QSize(0, 200))
         self.gridLayout_4 = QGridLayout(Form)
         self.gridLayout_4.setObjectName(u"gridLayout_4")
@@ -76,7 +76,7 @@ class Ui_Form(object):
 
         self.comboBox_penalization_factor = QComboBox(self.frame_9)
         self.comboBox_penalization_factor.setObjectName(u"comboBox_penalization_factor")
-        self.comboBox_penalization_factor.setMinimumSize(QSize(0, 26))
+        self.comboBox_penalization_factor.setMinimumSize(QSize(80, 26))
         self.comboBox_penalization_factor.setMaximumSize(QSize(16777215, 26))
 
         self.gridLayout_13.addWidget(self.comboBox_penalization_factor, 1, 2, 1, 1)
