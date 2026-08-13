@@ -1,14 +1,15 @@
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import QGridLayout
 
 from vibra import app
 from vibra.engine import AnalysisID
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.plots.general.animation_widget import AnimationWidget
+from vibra.interface.plots.general.results_display_widget import ResultsDisplayWidget
 from vibra.interface.ui_generated.plots.acoustic.allowable_pulsations_3d_plot_for_screw_compressor_inputs_ui import (
     AllowablePulsations3dPlotForScrewCompressorInputs_UI,
 )
-from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
 from vibra.interface.viewer_3d.plot_setup import AllowablePulsationForScrewCompressorsPlotSetup, PressurePlotType
 
 
@@ -17,15 +18,15 @@ class AllowablePulsations3DPlotForScrewCompressorInputs(AllowablePulsations3dPlo
         super().__init__(*args, **kwargs)
 
         app().main_window.show_geometry_render_widget()
+        self.animation_widget = AnimationWidget()
 
         self._reset_variables()
         self._add_penalization_values_to_combo_box()
+        self.add_color_widget()
         self._create_connections()
 
-        self.load_user_preference_colormap()
         self._load_analysis_setup_and_solution()
 
-        self.animation_widget = AnimationWidget()
 
     @property
     def model(self):
@@ -74,40 +75,23 @@ class AllowablePulsations3DPlotForScrewCompressorInputs(AllowablePulsations3dPlo
         self.comboBox_penalization_factor.setToolTip(tool_tip)
         self.label_penalization_factor.setToolTip(tool_tip)
 
+    def add_color_widget(self):
+        grid_layout = QGridLayout()
+        grid_layout.setContentsMargins(0, 0, 0, 0)
+        self.frame_color.setLayout(grid_layout)
+
+        self.results_display_widget = ResultsDisplayWidget()
+        grid_layout.addWidget(self.results_display_widget)
+        self.frame_color.adjustSize()
+
     def _create_connections(self):
-
-        # QComboBox connection
-        self.comboBox_colormaps.currentIndexChanged.connect(self.update_colormap_type)
-
         # QPushButton connection
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
-
-        # QSlider connection
-        self.slider_transparency.valueChanged.connect(self.update_transparency_callback)
-
         # QSpinBox connection
         self.comboBox_penalization_factor.currentIndexChanged.connect(self.penalize_allowable_pulsation_callback)
-
-    def load_user_preference_colormap(self):
-        try:
-            colormap = app().config.user_preferences.color_map
-            if colormap in COLORMAP_NAMES:
-                index = COLORMAP_NAMES.index(colormap)
-                self.comboBox_colormaps.setCurrentIndex(index)
-        except Exception:
-            self.comboBox_colormaps.setCurrentIndex(0)
-
-    def update_colormap_type(self):
-        app().config.user_preferences.color_map = self.get_colormap()
-        app().config.update_config_file()
-        try:
-            self.animation_widget.update_color_and_deformation()
-        except AttributeError:
-            pass
-
-    def update_transparency_callback(self):
-        transparency = self.slider_transparency.value() / 100
-        app().main_window.results_widget.set_analysis_actors_transparency(transparency)
+        #
+        self.results_display_widget.colormap_changed.connect(self.animation_widget.update_color_and_deformation)
+        self.results_display_widget.pressure_value_changed.connect(self.animation_widget.update_color_and_deformation)
 
     def penalize_allowable_pulsation_callback(self):
         curent_render_widget = app().main_window.get_current_render_widget()
@@ -121,7 +105,7 @@ class AllowablePulsations3DPlotForScrewCompressorInputs(AllowablePulsations3dPlo
         plot_setup = AllowablePulsationForScrewCompressorsPlotSetup(
             plot_type=self.get_plot_type(),
             unit="kPa",
-            penalization_factor=int(self.comboBox_penalization_factor.currentText())
+            penalization_factor=int(self.comboBox_penalization_factor.currentText()),
         )
 
         if plot_setup == self.plot_setup:
@@ -141,13 +125,6 @@ class AllowablePulsations3DPlotForScrewCompressorInputs(AllowablePulsations3dPlo
 
     def get_plot_type(self) -> PressurePlotType:
         return PressurePlotType("non_absolute_animation")
-
-    def get_colormap(self) -> str:
-        index = self.comboBox_colormaps.currentIndex()
-        if not (0 <= index < len(COLORMAP_NAMES)):
-            return "jet"
-
-        return COLORMAP_NAMES[index]
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:

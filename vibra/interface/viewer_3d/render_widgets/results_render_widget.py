@@ -393,17 +393,22 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if data is None:
             return
 
-        color_scalars, min_value, max_value = data
+        color_scalars, self.min_value, self.max_value = data
 
         # apply the penalization factor, if necessary
         penalization_factor = self.plot_setup.penalization_factor / 100
-        max_value *= (1 - penalization_factor)
+        self.max_value *= (1 - penalization_factor)
 
-        self.screw_compressor_allowable_pulsation_criterion = max_value
+        self.screw_compressor_allowable_pulsation_criterion = self.max_value
 
-        if clear_cache:
-            self.min_value = min_value
-            self.max_value = max_value
+        min_value = self.min_value
+        max_value = self.max_value
+
+        if self.user_min_value is not None:
+            min_value = self.user_min_value
+
+        if self.user_max_value is not None:
+            max_value = self.user_max_value
 
         colormap = app().config.user_preferences.color_map
         self.analysis_actor.plot_color_bar(color_scalars, min_value, max_value, colormap)
@@ -503,6 +508,11 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.cache_frame(frame)
 
     def set_analysis_actors_transparency(self, transparency):
+        if not self.actors_exists():
+            return
+
+        assert self.analysis_actor is not None
+
         self.transparency = transparency
         opacity = 1 - transparency
         self.analysis_actor.GetProperty().SetOpacity(opacity)
