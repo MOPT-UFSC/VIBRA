@@ -35,7 +35,7 @@ class Ui_Form(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents_2 = QWidget()
         self.scrollAreaWidgetContents_2.setObjectName(u"scrollAreaWidgetContents_2")
-        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, 0, 383, 648))
+        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, 0, 383, 688))
         self.gridLayout_6 = QGridLayout(self.scrollAreaWidgetContents_2)
         self.gridLayout_6.setObjectName(u"gridLayout_6")
         self.gridLayout_6.setHorizontalSpacing(2)
@@ -51,7 +51,7 @@ class Ui_Form(object):
 
         self.frame_main = QFrame(self.scrollAreaWidgetContents_2)
         self.frame_main.setObjectName(u"frame_main")
-        self.frame_main.setMinimumSize(QSize(0, 260))
+        self.frame_main.setMinimumSize(QSize(0, 180))
         self.frame_main.setMaximumSize(QSize(16777215, 260))
         self.frame_main.setSizeIncrement(QSize(0, 0))
         self.frame_main.setBaseSize(QSize(0, 0))

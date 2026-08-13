@@ -26,7 +26,7 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(400, 726)
+        Form.resize(461, 726)
         self.gridLayout_2 = QGridLayout(Form)
         self.gridLayout_2.setSpacing(2)
         self.gridLayout_2.setObjectName(u"gridLayout_2")
@@ -37,7 +37,7 @@ class Ui_Form(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, -58, 382, 780))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 443, 820))
         self.gridLayout_6 = QGridLayout(self.scrollAreaWidgetContents)
         self.gridLayout_6.setObjectName(u"gridLayout_6")
         self.gridLayout_6.setHorizontalSpacing(2)
@@ -223,7 +223,7 @@ class Ui_Form(object):
         __qtreewidgetitem.setText(0, u"1");
         self.treeWidget_frequencies.setHeaderItem(__qtreewidgetitem)
         self.treeWidget_frequencies.setObjectName(u"treeWidget_frequencies")
-        self.treeWidget_frequencies.setMinimumSize(QSize(260, 160))
+        self.treeWidget_frequencies.setMinimumSize(QSize(260, 200))
         self.treeWidget_frequencies.setMaximumSize(QSize(16777215, 240))
         self.treeWidget_frequencies.setFont(font3)
         self.treeWidget_frequencies.setAlternatingRowColors(True)

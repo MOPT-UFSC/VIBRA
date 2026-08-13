@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
+    <width>461</width>
     <height>726</height>
    </rect>
   </property>
@@ -41,9 +41,9 @@
       <property name="geometry">
        <rect>
         <x>0</x>
-        <y>-58</y>
-        <width>382</width>
-        <height>780</height>
+        <y>0</y>
+        <width>443</width>
+        <height>820</height>
        </rect>
       </property>
       <layout class="QGridLayout" name="gridLayout_6">
@@ -571,7 +571,7 @@
                <property name="minimumSize">
                 <size>
                  <width>260</width>
-                 <height>160</height>
+                 <height>200</height>
                 </size>
                </property>
                <property name="maximumSize">
