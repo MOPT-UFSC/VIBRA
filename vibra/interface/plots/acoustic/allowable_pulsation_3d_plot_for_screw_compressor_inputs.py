@@ -67,9 +67,20 @@ class AllowablePulsations3DPlotForScrewCompressorInputs(AllowablePulsations3dPlo
 
     def _add_penalization_values_to_combo_box(self):
         self.comboBox_penalization_factor.clear()
+        self.comboBox_penalization_factor.setFixedWidth(60)
 
-        for value in range(0, 100, 5):
-            self.comboBox_penalization_factor.addItem(str(value))
+        item_values = [str(value) for value in range(0, 100, 5)]
+        self.comboBox_penalization_factor.addItems(item_values)
+
+        # centralizes the displayed text of the combo box
+        self.comboBox_penalization_factor.setEditable(True)
+        line_edit = self.comboBox_penalization_factor.lineEdit()
+        line_edit.setAlignment(Qt.AlignCenter)
+        line_edit.setReadOnly(True)
+
+        # centralizes the displayed texts of all items
+        for i in range(self.comboBox_penalization_factor.count()):
+            self.comboBox_penalization_factor.setItemData(i, Qt.AlignCenter, Qt.TextAlignmentRole)
 
         tool_tip = "Use this to reduced the allowable pulsation criteria by (1 - penalization) factor. "
         self.comboBox_penalization_factor.setToolTip(tool_tip)
