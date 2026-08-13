@@ -4,7 +4,7 @@
 <a href="https://doi.org/10.5281/zenodo.20936528"><img src="https://zenodo.org/badge/662679851.svg" alt="DOI"></a>
 
 # Vibra: Vibroacoustic Analysis using FEM
-*V0.5.3 May 2026*
+*v0.6.1 Aug 2026*
 
 Vibra is an open-source software developed in Python for modeling vibroacoustic problems using the Finite Element Method (FEM). In its current version, the software has been validated for performing modal analysis, complex modal analysis, and time-harmonic analysis of linear acoustic problems. Built-in support for Gmsh functions enables the generation of high-quality meshes, ensuring continuity between regions and allowing for local refinements. Typical acoustic boundary conditions—Dirichlet, Neumann, and Robin—are implemented, as well as transfer impedance conditions between media, which can be used, for example, to model perforated panels. Porous material models are also available, including Delany-Bazley, Delany-Bazley-Miki, JCA, and JCAL. The software is integrated with the NIST REPROP library, which can be adopted for determining the properties of working fluid mixtures (if you use this feature, you need a license from NIST). The acoustic analyses are validated through comparisons with commercial softwares. VIBRA already includes structural elements (solid and DKT plate), but the structural analysis is still under validation. In our upcoming versions, we will have the structural analysis validated and also include fluid–structure interaction analyses.
 

@@ -15,9 +15,9 @@ from vibra.interface import error_title
 from vibra.interface.common.common_interface import update_analysis_setup_in_file
 from vibra.interface.data.data_manager import get_spectral_data_from_array
 from vibra.interface.data_handler.data_importer import DataImporter
-from vibra.interface.formatters.icons import change_icon_color_for_widgets
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.general.utils import clear_style_sheet
 from vibra.interface.plots.general.frequency_response_plotter import DataFormat, FrequencyResponsePlotter
 from vibra.interface.ui_generated.model.acoustic.excitations.compressor_excitation_waveform_inputs_ui import CompressorExcitationWaveformInputs_UI
 from vibra.utils.signal_processing import extend_signal, get_window_and_correction_factor, process_one_sided_spectrum
@@ -108,10 +108,8 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         self.treeWidget_surface_velocity.itemClicked.connect(self.on_click_item)
         self.treeWidget_surface_velocity.itemDoubleClicked.connect(self.on_doubleclick_item)
         #
-        app().main_window.theme_changed.connect(self.paint_icons_callback)
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         #
-        self.paint_icons_callback()
         self.data_source_callback()
         self.geometry_selection_callback()
 
@@ -184,23 +182,6 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
             self.tabWidget_main.setCurrentIndex(TabIndex.SETUP)
             self.lineEdit_frequency_resolution.setText("not calculated")
 
-    def paint_icons_callback(self):
-        icon_color = None
-        theme = app().config.user_preferences.interface_theme
-
-        from vibra import DARK_ICON_COLOR, LIGHT_ICON_COLOR
-        if theme == "dark":
-            icon_color = DARK_ICON_COLOR.to_qt()
-        else:
-            icon_color = LIGHT_ICON_COLOR.to_qt()
-
-        widgets = [
-            self.pushButton_load_table,
-            self.pushButton_reproduce_audio,
-            ]
-
-        change_icon_color_for_widgets(widgets, icon_color)
-
     def check_inputs(self, line_edit: QLineEdit, label: str):
 
         message = ""
@@ -226,7 +207,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
             line_edit.setStyleSheet("""border-color: rgb(240, 10, 10); border-width: 2px;""")
             return None
 
-        line_edit.setStyleSheet("")
+        clear_style_sheet(line_edit)
 
         return value
 

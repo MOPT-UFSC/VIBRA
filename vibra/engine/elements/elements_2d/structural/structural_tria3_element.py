@@ -1,13 +1,15 @@
 #fmt: off
 
+from typing import TYPE_CHECKING
+
 from vibra.engine.elements.surface_elements import Element2D
 from vibra.engine.properties.material import Material
 
-from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from vibra.engine.model import Model
 
 import numpy as np
+
 np.set_printoptions(precision=18)#threshold=sys.maxsize)
 
 
@@ -72,7 +74,7 @@ def get_batoz_constants(x_loc: np.ndarray, y_loc: np.ndarray):
     x_12, x_23, x_31 = x_loc[0] - x_loc[1], x_loc[1] - x_loc[2], x_loc[2] - x_loc[0]
     y_12, y_23, y_31 = y_loc[0] - y_loc[1], y_loc[1] - y_loc[2], y_loc[2] - y_loc[0]
     l_12, l_23, l_31 = x_12**2 + y_12**2, x_23**2 + y_23**2, x_31**2 + y_31**2
-    y_21, y_32, y_13 = y_loc[1] - y_loc[0], y_loc[2] - y_loc[1], y_loc[0] - y_loc[2]
+    y_21, y_32, y_13 = y_loc[1] - y_loc[0], y_loc[2] - y_loc[1], y_loc[0] - y_loc[2]  # noqa: F841
 
     # # Derivative of element area with respect to local coordinates
     # dA = np.array([[-y_12 - y_31, y_31, y_12], [x_31 + x_12, -x_31, -x_12]])/2
@@ -942,7 +944,6 @@ def elementary_matrices(nodal_coords: np.ndarray):
 
 if __name__ == "__main__":
     
-    from vibra import PROJECT_DIR
 
     nodal_coords = np.array([[1.0, 0.0, 0.0],
                              [0.0, 1.0, 0.0],

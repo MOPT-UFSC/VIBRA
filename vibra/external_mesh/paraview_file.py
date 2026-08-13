@@ -90,7 +90,7 @@ class ParaviewFile:
         my_vtk_dataset.Allocate(nel)
         
         # Inicializa um array numpy para os valores dos nós (complexos)
-        unod1 = np.zeros((nnode, 3), dtype=complex)
+        unod1 = np.zeros((nnode, 3), dtype=complex)  # noqa: F841
 
         # Criação de um array VTK para armazenar os valores dos nós
         array1 = vtkDoubleArray()

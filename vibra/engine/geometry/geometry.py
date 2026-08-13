@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Iterator, Literal
+from typing import Literal
 
 import gmsh
 import numpy as np

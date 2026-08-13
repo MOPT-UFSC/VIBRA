@@ -1,4 +1,3 @@
-
 import io
 from functools import partial
 from pathlib import Path
@@ -9,7 +8,8 @@ from PySide6.QtCore import QByteArray, QSize, Qt, Signal
 from PySide6.QtGui import QIcon, QImage, QPixmap
 from PySide6.QtWidgets import QBoxLayout, QHBoxLayout, QLabel, QPushButton, QVBoxLayout, QWidget
 
-from vibra import EXAMPLES_DIR, ICON_DIR, app
+from vibra import EXAMPLES_DIR, LOGO_DIR, app
+from vibra.interface.formatters.icons import Icon
 
 
 class WelcomeWidget(QWidget):
@@ -27,22 +27,32 @@ class WelcomeWidget(QWidget):
         self.setup_example_projects(self.widget_layout)
 
     def setup_image(self, layout):
-        image_label = QLabel(self)
-        image_label.setAlignment(Qt.AlignCenter)
-        pixmap = QPixmap(str(ICON_DIR / "azul cinza.png")).scaled(350, 350, Qt.KeepAspectRatio)
-        image_label.setPixmap(pixmap)
-        image_label.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(image_label)
+        self.logo_label = QLabel(self)
+        self.logo_label.setAlignment(Qt.AlignCenter)
+        if app().config.user_preferences.interface_theme == "light":
+            logo = "vibra_colored_light_background.png"
+        else:
+            logo = "vibra_colored_dark_background.png"
+
+        pixmap = QPixmap(str(LOGO_DIR / logo)).scaled(
+            500,
+            210,
+            Qt.KeepAspectRatio,
+            Qt.SmoothTransformation,
+        )
+        self.logo_label.setPixmap(pixmap)
+        self.logo_label.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(self.logo_label)
 
         layout.addStretch()
 
     def setup_labels(self, layout):
         labels_layout = QHBoxLayout()
 
-        new_item = WelcomeItem("New Project", QIcon(str(ICON_DIR / "new_file.png")))
+        new_item = WelcomeItem("New Project", Icon(":/icons/new_file.png"))
         new_item.clicked.connect(self.new_project)
 
-        open_item = WelcomeItem("Open Project", QIcon(str(ICON_DIR / "import.png")))
+        open_item = WelcomeItem("Open Project", Icon(":/icons/import.png"))
         open_item.clicked.connect(self.open_project)
 
         labels_layout.addWidget(new_item)
@@ -51,6 +61,17 @@ class WelcomeWidget(QWidget):
 
         layout.addLayout(labels_layout)
         layout.addStretch()
+
+    def update_logo(self, path: str):
+        logo_path = LOGO_DIR / path
+
+        pixmap = QPixmap(str(logo_path)).scaled(
+            500, 210,
+            Qt.KeepAspectRatio,
+            Qt.SmoothTransformation
+        )
+
+        self.logo_label.setPixmap(pixmap)
 
     def update_recent_projects(self):
         if not self.recents_layout.isEmpty():

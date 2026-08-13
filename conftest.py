@@ -27,6 +27,20 @@ def fluid() -> Fluid:
 
 
 @pytest.fixture(scope="module")
+def material() -> Material:
+    (
+        Material(
+            name="Carbon_Steel",
+            material_density=7850,
+            elasticity_modulus=200e9,
+            poisson_ratio=0.3,
+            thermal_expansion_coefficient=1.2e-5,
+            color=[170, 170, 170],  # Light Gray
+        ),
+    )
+
+
+@pytest.fixture(scope="module")
 def acoustic_model(fluid: Fluid) -> Model:
     path = str(PROJECT_DIR / "data/examples/geometry_files/cylinder.step")
     mesh_setup = MeshSetup(minimum_element_size=50, maximum_element_size=50)
@@ -61,11 +75,11 @@ def viscous_thermal_acoustic_model(acoustic_model: Model) -> Model:
     }
     acoustic_model.set_viscous_thermal_model_data(viscous_thermal_model_data, volume=1)
     analysis_setup = acoustic_model.get_harmonic_analysis_setup(
-        analysis_id = AnalysisID.ACOUSTIC_HARMONIC,
-        frequency_spacing = FrequencySpacing.EQUALLY_DISTRIBUTED,
-        f_min = 100,
-        f_max = 300,
-        f_step = 100,
+        analysis_id=AnalysisID.ACOUSTIC_HARMONIC,
+        frequency_spacing=FrequencySpacing.EQUALLY_DISTRIBUTED,
+        f_min=100,
+        f_max=300,
+        f_step=100,
     )
 
     acoustic_model.set_analysis_setup(analysis_setup)
@@ -126,11 +140,11 @@ def structural_model(material: Material) -> Model:
 @pytest.fixture(scope="module")
 def structural_harmonic_analysis(structural_model: Model) -> Model:
     analysis_setup = structural_model.get_harmonic_analysis_setup(
-        analysis_id = AnalysisID.STRUCTURAL_HARMONIC,
-        frequency_spacing = FrequencySpacing.EQUALLY_DISTRIBUTED,
-        f_min = 100,
-        f_max = 500,
-        f_step = 200,
+        analysis_id=AnalysisID.STRUCTURAL_HARMONIC,
+        frequency_spacing=FrequencySpacing.EQUALLY_DISTRIBUTED,
+        f_min=100,
+        f_max=500,
+        f_step=200,
     )
 
     structural_model.set_analysis_setup(analysis_setup)

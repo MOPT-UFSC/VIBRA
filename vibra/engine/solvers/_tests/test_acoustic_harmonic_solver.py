@@ -5,6 +5,7 @@ from vibra.engine.analysis_info import (
     AnalysisID,
     FrequencySpacing,
 )
+from vibra.engine.serialization.project_paths import ProjectPaths
 from vibra.engine.solution import HarmonicSolution, LazyHarmonicSolution
 
 if TYPE_CHECKING:
@@ -12,33 +13,29 @@ if TYPE_CHECKING:
 
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.solvers import HarmonicSolver
-from vibra.project_files.project_file import ProjectFile
 
 
 def test_regression_acoustic_harmonic_solver_solution(datadir, viscous_thermal_acoustic_model: "Model"):
     assembler = AcousticAssembler(viscous_thermal_acoustic_model)
     assembler.assemble_global_matrices_and_excitations()
-    project_file = ProjectFile(str(datadir))
-    harmonic_solver = HarmonicSolver(assembler, project_file)
 
+    project_paths = ProjectPaths(datadir)
+    harmonic_solver = HarmonicSolver(assembler, project_paths)
     frequencies = viscous_thermal_acoustic_model.frequencies
 
     # Solve and store solutions into hdf5 files
-    solution = harmonic_solver.solve_direct()
+    # but returns in-memory data
+    in_memory_solution = harmonic_solver.solve_direct()
 
-    assembler = AcousticAssembler(viscous_thermal_acoustic_model)
-    assembler.assemble_global_matrices_and_excitations()
-    in_memory_harmonic_solver = HarmonicSolver(assembler)
+    # Reads the written data lazily
+    lazy_solution = LazyHarmonicSolution(project_paths)
 
-    # Solve and store solution in memory
-    in_memory_solution = in_memory_harmonic_solver.solve_direct()
-
-    assert isinstance(solution, LazyHarmonicSolution)
-    assert isinstance(in_memory_solution, HarmonicSolution)
+    assert type(lazy_solution) is LazyHarmonicSolution
+    assert type(in_memory_solution) is HarmonicSolution
 
     for i, _ in enumerate(frequencies):
         assert np.allclose(
-            solution.nodal_solution[:, i],
+            lazy_solution.nodal_solution[:, i],
             in_memory_solution.nodal_solution[:, i],
         )
 

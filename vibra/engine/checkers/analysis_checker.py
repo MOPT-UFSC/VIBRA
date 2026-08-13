@@ -100,15 +100,15 @@ class AnalysisChecker:
             raise errors.InvalidMeshSetupError("No mesh was provided")
 
         if mesh.disconnected_nodes_data:
-            text = "Collapsed elements have been detected during the mesh post-processing. \n"
-            text += "The model solution will stay deactivated until the collapsed-related \n"
-            text += "issues have been addressed."
+            text = "Disconnected nodes have been detected during the mesh post-processing. \n"
+            text += "The model solution will stay deactivated until the meshing-related issues \n"
+            text += "have been addressed."
             raise errors.InvalidMeshSetupError(text)
 
         if mesh.collapsed_elements_data:
-            text += "Disconnected nodes have been detected during the mesh post-processing. \n"
-            text += "The model solution will stay deactivated until the meshing-related issues \n"
-            text += "have been addressed."
+            text += "Collapsed elements have been detected during the mesh post-processing. \n"
+            text += "The model solution will stay deactivated until the collapsed-related \n"
+            text += "issues have been addressed."
             raise errors.InvalidMeshSetupError(text)
 
     def check_materials_volumes(self):

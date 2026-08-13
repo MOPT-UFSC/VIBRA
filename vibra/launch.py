@@ -1,5 +1,5 @@
 # isort: skip_file
-import vibra  # this need to be at the start of the file 
+import vibra  # this need to be at the start of the file
 
 import logging
 import os
@@ -54,12 +54,14 @@ def configure_logs():
     All info logs are saved in the file, but only warnings or error
     are shown to users.
     """
-    file_formatter = logging.Formatter("%(asctime)s \t | %(levelname)s \t | %(message)s")
+    format = '[%(name)s] %(asctime)s | %(levelname)s | "%(message)s"'
+
+    file_formatter = logging.Formatter(format)
     file_handler = logging.FileHandler(vibra.USER_PATH / ".vibra.log", "w+")
     file_handler.setLevel(logging.INFO)
     file_handler.setFormatter(file_formatter)
 
-    stream_formatter = logging.Formatter(logging.BASIC_FORMAT)
+    stream_formatter = logging.Formatter(format)
     stream_handler = logging.StreamHandler()
     stream_handler.setLevel(logging.WARN)
     stream_handler.setFormatter(stream_formatter)
@@ -75,11 +77,11 @@ def main():
     The main function starts the Vibra software.
     This will create the Application and also pass the terminal arguments to it.
     """
-    # Import enabling compiled qt resources to be found from path `:/icons/{filepath_relative_to_qrc}`
+    # Import enabling compiled qt resources to be found from path `:/data/{filepath_relative_to_qrc}`
     from PySide6.QtCore import Qt
     from vtkmodules.vtkCommonCore import vtkLogger, vtkObject
 
-    import vibra.interface.data.icons.resources_rc  # noqa: F401
+    import vibra.interface.data.icons.theme_resources  # noqa: F401
     from vibra.interface.application import Application
 
     configure_logs()

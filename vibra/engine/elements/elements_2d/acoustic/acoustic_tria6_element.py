@@ -39,7 +39,7 @@ def get_local_coordinates(coords: np.ndarray) -> np.ndarray:
 
     unit_x_axis = loc_x_axis / np.linalg.norm(loc_x_axis)
     unit_y_axis = loc_y_axis / np.linalg.norm(loc_y_axis)
-    unit_z_axis = loc_z_axis / np.linalg.norm(loc_z_axis)
+    unit_z_axis = loc_z_axis / np.linalg.norm(loc_z_axis)  # noqa: F841
 
     x1 = 0.
     x2 = np.dot(vec_12, unit_x_axis)
@@ -395,6 +395,53 @@ class ACT_TRIANGLE_6(Element2D):
         return We.flatten()
 
 
+    def acoustic_pressure_load(self, e_normals: np.ndarray, nodal_solution: np.ndarray) -> np.ndarray:
+        """ 
+        This method computes the acoustic pressure loads over a surface.
+
+        Parameters
+        ----------
+        e_normals: np.ndarray
+            The stacked surface elements normals vectors.
+
+        nodal_solution: np.ndarray
+            The acoustic nodal_solution array.
+
+        Returns
+        -------
+        acoustic_load: np.ndarray
+            The acoustic presure loads integrated over a surface.
+        """
+
+        # stack all elements nodal pressures 
+        pressures = np.array([nodal_solution[node_ids, :] for node_ids in self.connectivities.T], dtype=complex)
+
+        # stack the element nodal pressures in format [n_el, DOFS_PER_ELEMENT, n_freq]
+        Pe = pressures.transpose(1, 0, 2)
+
+        # compute local coordinates for all elements
+        local_coords = self.get_stacked_local_coordinates()
+
+        # initialize variable
+        acoustic_load = 0.
+
+        # integration loop
+        for i in range(self.nint):
+
+            # Jacobian matrices of all elements
+            JAC_stacked = self.dphi[i, :, :] @ local_coords
+
+            # Jacobian determinants and inverses of all elements
+            det_jacs, _ = self.get_detJAC_and_invJAC(JAC_stacked)
+
+            # shape functions
+            N = self.phi[i, :, :]
+
+            acoustic_load += np.sum(-e_normals @ (N @ Pe) * (det_jacs * self.wps[i]), axis=0)
+
+        return acoustic_load
+
+
     def get_stacked_element_face_normals(self) -> np.ndarray:
         """
         This method processes the stacked element face normals.
@@ -658,7 +705,7 @@ def forceF6(ee, coord, connect_face, c_0, rho, Vn):
 
     unit_x_axis = loc_x_axis/np.linalg.norm(loc_x_axis)
     unit_y_axis = loc_y_axis/np.linalg.norm(loc_y_axis)
-    unit_z_axis = loc_z_axis/np.linalg.norm(loc_z_axis)
+    unit_z_axis = loc_z_axis/np.linalg.norm(loc_z_axis)  # noqa: F841
 
     x1 = 0 
     x2 = np.dot(vec21,unit_x_axis)

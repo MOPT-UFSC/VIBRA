@@ -35,16 +35,20 @@ from vibra.interface.model_inputs.structural.excitations.dof_prescription_inputs
 from vibra.interface.model_inputs.structural.excitations.nodal_loads_inputs import NodalLoadsInputs
 from vibra.interface.model_inputs.structural.excitations.normal_pressure_load_inputs import NormalPressureLoadInputs
 from vibra.interface.model_inputs.structural.surface_thickness_inputs import SurfaceThicknessInputs
-from vibra.interface.plots.acoustic.acoustic_frequency_response_function_inputs import AcousticPressureFrequencyResponseFunctionInputs
+from vibra.interface.plots.acoustic.acoustic_pressure_frf_inputs import AcousticPressureFRFInputs
+from vibra.interface.plots.acoustic.acoustic_waves_decomposition_inputs import AcousticWavesDecompositionInputs
 from vibra.interface.plots.acoustic.acoustic_impedance_inputs import AcousticImpedanceInputs
 from vibra.interface.plots.acoustic.acoustic_mode_shape_inputs import AcousticModeShapeInputs
 
 #
 from vibra.interface.plots.acoustic.acoustic_pressure_field_inputs import AcousticPressureFieldInputs
 from vibra.interface.plots.acoustic.acoustic_pressure_frequency_response_inputs import AcousticPressureFrequencyResponseInputs
-from vibra.interface.plots.acoustic.acoustic_pressure_waveform_inputs import AcousticPressureWaveformInputs
+from vibra.interface.plots.acoustic.acoustic_pressure_waveform_2d_plot_inputs import AcousticPressureWaveform2DPlotInputs
+from vibra.interface.plots.acoustic.acoustic_pressure_waveform_3d_plot_inputs import AcousticPressureWaveform3DPlotInputs
+from vibra.interface.plots.acoustic.allowable_pulsation_3d_plot_for_screw_compressor_inputs import AllowablePulsations3DPlotForScrewCompressorInputs
+from vibra.interface.plots.acoustic.acoustic_shaking_forces_inputs import AcousticShakingForcesInputs
 from vibra.interface.plots.acoustic.allowable_pulsations_for_reciprocating_compressor import AllowablePulsationsForReciprocatingCompressorInputs
-from vibra.interface.plots.acoustic.allowable_pulsations_for_screw_compressor import AllowablePulsationsForScrewCompressorInputs
+from vibra.interface.plots.acoustic.allowable_pulsations_2d_plot_for_screw_compressor_inputs import AllowablePulsations2DPlotForScrewCompressorInputs
 from vibra.interface.plots.acoustic.particle_velocity_inputs import ParticleVelocityInputs
 
 #
@@ -219,19 +223,31 @@ class InputUi:
 
     def plot_acoustic_pressure_frequency_response_function(self):
         if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
-            return self.process_input(AcousticPressureFrequencyResponseFunctionInputs)
+            return self.process_input(AcousticPressureFRFInputs)
+
+    def plot_acoustic_shaking_forces(self):
+        if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
+            return self.process_input(AcousticShakingForcesInputs)
+
+    def plot_acoustic_pressure_waveform_2d(self):
+        if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
+            return self.process_input(AcousticPressureWaveform2DPlotInputs)
+
+    def plot_acoustic_pressure_waveform_3d(self):
+        if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
+            return self.process_input(AcousticPressureWaveform3DPlotInputs)
 
     def plot_allowable_pulsation_criteria_for_reciprocating_compressor(self):
         if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
             return self.process_input(AllowablePulsationsForReciprocatingCompressorInputs)
 
-    def plot_allowable_pulsation_criteria_for_screw_compressor(self):
+    def plot_allowable_pulsation_2d_for_screw_compressor(self):
         if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
-            return self.process_input(AllowablePulsationsForScrewCompressorInputs)
+            return self.process_input(AllowablePulsations2DPlotForScrewCompressorInputs)
 
-    def plot_acoustic_pressure_waveform(self):
+    def plot_allowable_pulsation_3d_for_screw_compressor(self):
         if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
-            return self.process_input(AcousticPressureWaveformInputs)
+            return self.process_input(AllowablePulsations3DPlotForScrewCompressorInputs)
 
     def plot_TL_NR(self):
         if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
@@ -248,6 +264,10 @@ class InputUi:
     def plot_absorption_coefficient_from_surface(self):
         if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
             return self.process_input(SurfaceAbsorptionCoefficientInputs)
+
+    def decompose_acoustic_pressure_waves(self):
+        if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
+            return self.process_input(AcousticWavesDecompositionInputs)
 
     def empty_project_action_message(self):
         title = "EMPTY PROJECT"

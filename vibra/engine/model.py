@@ -1,6 +1,5 @@
 import logging
 from copy import deepcopy
-from dataclasses import asdict
 from numbers import Number
 from pathlib import Path
 from typing import Callable, Optional
@@ -44,10 +43,10 @@ from vibra.engine.elements.elements_3d import (
     STRUCT_TETRAHEDRON_10S,
 )
 from vibra.engine.geometry.geometry import LengthUnits
-from vibra.engine.mesh_modifiers.degrees_of_freedom_decoupling import DegreesOfFreedomDecoupling
-from vibra.engine.mesher.element_setup import DEFAULT_ELEMENT_SETUP
+from vibra.engine.mesher.degrees_of_freedom_decoupling_new import DegreesOfFreedomDecoupling
+from vibra.engine.mesher.element_setup import GMSH_VISUAL_MESH
 from vibra.engine.mesher.mesh import Mesh
-from vibra.engine.mesher.mesh_setup import MeshSetup, HEXAHEDRON_8, HEXAHEDRON_20, TETRAHEDRON_4, TETRAHEDRON_10, ElementTopology
+from vibra.engine.mesher.mesh_setup import HEXAHEDRON_8, HEXAHEDRON_20, TETRAHEDRON_4, TETRAHEDRON_10, ElementTopology, MeshSetup
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.engine.solution import HarmonicSolution, Solution
@@ -143,7 +142,7 @@ class Model:
             return self.analysis_setup.global_damping
 
         return (None, None, None)
-    
+
     @property
     def outdated_solution(self):
         if isinstance(self.analysis_setup, ModalAnalysisSetup | HarmonicAnalysisSetup):
@@ -208,29 +207,24 @@ class Model:
         self.mesh = Mesh(length_unit=self.length_unit, geometry_qf=self.geometry_qf)
 
     def process_visual_geometry_mesh(self, path: str):
-        self.initialize_mesh()
+        self.mesh = Mesh(length_unit=self.length_unit, geometry_qf=self.geometry_qf)
 
         try:
             try:
                 element_size = self.mesh.compute_initial_mesh_size(path)
-                self.mesh.load_cad(
-                    path,
-                    dimension=2,
+                mesh_setup = MeshSetup(
                     minimum_element_size=element_size * 0.4,
                     maximum_element_size=element_size,
-                    ElementSetup=DEFAULT_ELEMENT_SETUP,
+                    custom_element_setup=GMSH_VISUAL_MESH,
                 )
+                self.mesh.load_cad(path, mesh_setup)
 
             except Exception:
-                self.mesh = Mesh(length_unit=self.length_unit, geometry_qf=self.geometry_qf)
-
                 element_size = 10
-                self.mesh.load_cad(
-                    path,
-                    dimension=2,
+                mesh_setup = MeshSetup(
                     minimum_element_size=element_size * 0.5,
                     maximum_element_size=element_size,
-                    ElementSetup=DEFAULT_ELEMENT_SETUP,
+                    custom_element_setup=GMSH_VISUAL_MESH,
                 )
 
             self.initial_element_size = element_size
@@ -279,7 +273,8 @@ class Model:
             raise IncompleteSetupError(message, context=context)
 
         logging.info("Processing mesh [80/100]")
-        self.mesh.load_cad(self.geometry_path, **asdict(self.mesh_setup))
+        self.mesh = Mesh(length_unit=self.length_unit, geometry_qf=self.geometry_qf)
+        self.mesh.load_cad(self.geometry_path, self.mesh_setup)
 
         if self.disable_resume_callback is not None:
             self.disable_resume_callback()
@@ -307,14 +302,14 @@ class Model:
         if len(table_frequencies) != 1:
             return all_true
 
-        mask = list()
+        solution_steps_mask = list()
         _table_frequencies = np.array(table_frequencies[0], dtype=float)
 
         for freq in _table_frequencies:
             diff_abs = np.min(np.abs(frequencies - freq)) < tol
-            mask.append(bool(diff_abs))
+            solution_steps_mask.append(bool(diff_abs))
 
-        return mask
+        return solution_steps_mask
 
     def has_spectral_content_been_modified(self):
         if isinstance(self.analysis_setup, ModalAnalysisSetup):
@@ -323,6 +318,53 @@ class Model:
         cond_A = self.analysis_setup.frequency_spacing == FrequencySpacing.USER_DEFINED
         cond_B = len(self.solution_steps_mask) != int(sum(self.solution_steps_mask))
         return cond_A or cond_B
+
+    def modify_analysis_setup_to_filter_zero_frequency(self, analysis_setup: AnalysisSetup) -> AnalysisSetup:
+
+        if not isinstance(analysis_setup, HarmonicAnalysisSetup):
+            return analysis_setup
+        
+        if not analysis_setup.analysis_id == AnalysisID.STRUCTURAL_HARMONIC:
+            return analysis_setup
+
+        table_exists = self.properties.check_if_there_are_tables_at_the_model()
+
+        if table_exists:
+            tabular_frequency_data = self.get_tabular_frequency_setup()
+            if tabular_frequency_data is None:
+                return analysis_setup
+
+            _frequencies = np.array(tabular_frequency_data[-1], dtype=float)
+
+        else:
+            _frequencies = analysis_setup.get_frequencies()
+
+        if not isinstance(_frequencies, np.ndarray):
+            return analysis_setup
+
+        if not any(_frequencies == 0):
+            return analysis_setup
+
+        current_mask = analysis_setup.solution_steps_mask
+        equally_spaced = analysis_setup.frequency_spacing == FrequencySpacing.EQUALLY_DISTRIBUTED
+
+        if analysis_setup.f_min == 0 and equally_spaced:
+            analysis_setup.f_min = analysis_setup.f_step
+            analysis_setup.frequencies = analysis_setup.get_frequencies()
+        else:
+            analysis_setup.frequencies = _frequencies[_frequencies != 0]
+
+        new_mask = list()
+        for j, freq in enumerate(_frequencies):
+            if freq == 0:
+                if table_exists:
+                    new_mask.append(False)
+            else:
+                new_mask.append(current_mask[j])
+
+        analysis_setup.solution_steps_mask = new_mask
+
+        return analysis_setup
 
     def is_the_mesh_setup_defined(self):
         if isinstance(self.geometry_path, str | Path):
@@ -340,11 +382,7 @@ class Model:
                     return False
 
         disconnected_nodes = bool(self.mesh.disconnected_nodes_data)
-        collapsed_elements = bool(
-            self.mesh.collapsed_3d_elements 
-            or self.mesh.collapsed_2d_elements 
-            or self.mesh.collapsed_1d_elements
-        )  # fmt: skip
+        collapsed_elements = bool(self.mesh.collapsed_elements_data)
 
         if disconnected_nodes or collapsed_elements:
             return False
@@ -453,7 +491,7 @@ class Model:
 
         return (f_min, f_max, f_step, frequencies)
 
-    def get_structural_elements(self):                        
+    def get_structural_elements(self):
         element_type = self.element_topology
 
         if element_type == TETRAHEDRON_4:
@@ -560,13 +598,25 @@ class Model:
                 else:
                     pass
 
+        n_int = 0
+        if "integrate" in data.keys():
+            n_int = data.get("integrate", 0)
+
         for node_gdof in global_dof:
             for j, gdof in enumerate(node_gdof):
                 values = data["values"][j]
                 if values is None:
                     continue
 
-                output_data[gdof] = values / den
+                if isinstance(values, np.ndarray):
+                    avg_value = values[self.solution_steps_mask] / den
+                else:
+                    avg_value = values / den
+
+                if n_int and isinstance(self.frequencies, np.ndarray):
+                    output_data[gdof] = avg_value / ((1j * 2 * np.pi * self.frequencies)**n_int)
+                else:
+                    output_data[gdof] = avg_value
 
         return output_data
 
@@ -594,7 +644,7 @@ class Model:
         if self.analysis_id == AnalysisID.NO_ANALYSIS:
             raise errors.InvalidModelSetupError("An AnalysisID should be provided.")
 
-        for vol_id in self.mesh.elements_from_volume.keys():
+        for vol_id in self.mesh.elements_from_volume:
             pm_data = self.properties._get_property("porous_material_model", volume=vol_id)
             vt_data = self.properties._get_property("viscous_thermal_model", volume=vol_id)
             fluid = self.properties._get_property("fluid", volume=vol_id)
@@ -656,22 +706,30 @@ class Model:
         volumes_from_surface = self.mesh.volumes_from_surface[surface_id]
 
         if len(volumes_from_surface) == 1:
-            for key in self.properties.volume_properties.keys():
+            for key in self.properties.volume_properties:
                 property, volume_id = key
-                if volume_id == volumes_from_surface[0]:
-                    if property == "viscous_thermal_model":
-                        vt_model = ViscousThermalLossModels(self)
-                        vt_model.process_effective_properties()
-                        density = vt_model.effective_properties[volume_id]["rho_eff"]
-                        speed_of_sound = vt_model.effective_properties[volume_id]["rho_eff"]
-                        return density, speed_of_sound
+                if volume_id != volumes_from_surface[0]:
+                    continue
 
-                    elif property == "porous_material_model":
-                        pm_model = PorousMaterialModels(self)
-                        pm_model.process_effective_properties()
-                        density = pm_model.effective_properties[volume_id]["rho_eff"]
-                        speed_of_sound = pm_model.effective_properties[volume_id]["rho_eff"]
-                        return density, speed_of_sound
+                if property == "viscous_thermal_model":
+                    vt_model = ViscousThermalLossModels(self)
+                    vt_model.process_effective_properties()
+
+                    vt_properties: dict = vt_model.effective_properties.get(volume_id)
+                    density = vt_properties.get("rho_eff")
+                    speed_of_sound = vt_properties.get("C_eff")
+
+                    return density, speed_of_sound
+
+                elif property == "porous_material_model":
+                    pm_model = PorousMaterialModels(self)
+                    pm_model.process_effective_properties()
+
+                    pm_properties: dict = pm_model.effective_properties.get(volume_id)
+                    density = pm_properties.get("rho_eff")
+                    speed_of_sound = pm_properties.get("C_eff")
+
+                    return density, speed_of_sound
 
             fluid = self.properties._get_property("fluid", surface=surface_id)
 
@@ -695,27 +753,35 @@ class Model:
 
         return None, None
 
-    def get_fluid_properties_from_volume(self, volume_id: int, frequencies: np.ndarray):
+    def get_fluid_properties_from_volume(self, volume_id: int):
         """
         This method returns the fluid density and speed of sound properties
         from selected volume. The output data is in complex array form.
         """
-        for key in self.properties.volume_properties.keys():
+        for key in self.properties.volume_properties:
             property, vol_id = key
-            if vol_id == volume_id:
-                if property == "viscous_thermal_model":
-                    vt_model = ViscousThermalLossModels(self)
-                    vt_model.process_effective_properties()
-                    density = vt_model.effective_properties[volume_id]["rho_eff"]
-                    speed_of_sound = vt_model.effective_properties[volume_id]["rho_eff"]
-                    return density, speed_of_sound
+            if vol_id != volume_id:
+                continue
 
-                elif property == "porous_material_model":
-                    pm_model = PorousMaterialModels(self)
-                    pm_model.process_effective_properties()
-                    density = pm_model.effective_properties[volume_id]["rho_eff"]
-                    speed_of_sound = pm_model.effective_properties[volume_id]["rho_eff"]
-                    return density, speed_of_sound
+            if property == "viscous_thermal_model":
+                vt_model = ViscousThermalLossModels(self)
+                vt_model.process_effective_properties()
+
+                vt_properties: dict = vt_model.effective_properties.get(volume_id)
+                density = vt_properties.get("rho_eff")
+                speed_of_sound = vt_properties.get("C_eff")
+
+                return density, speed_of_sound
+
+            elif property == "porous_material_model":
+                pm_model = PorousMaterialModels(self)
+                pm_model.process_effective_properties()
+
+                pm_properties: dict = pm_model.effective_properties.get(volume_id)
+                density = pm_properties.get("rho_eff")
+                speed_of_sound = pm_properties.get("C_eff")
+
+                return density, speed_of_sound
 
         fluid = self.properties._get_property("fluid", volume=volume_id)
         proportional_damping = self.properties._get_property("proportional_damping", volume=vol_id)
@@ -808,10 +874,10 @@ class Model:
                 impedance = si_data["values"][0]
 
         return impedance
-    
+
     def is_surface_impedance_frequency_dependent(self, surface_id: int) -> bool:
         """
-        This method verifies whether the acoustic impedance of the selected surface is 
+        This method verifies whether the acoustic impedance of the selected surface is
         frequency-dependent, returning True if positive and False otherwise.
         """
         properties = ["porous_material_model", "viscous_thermal_model", "proportional_damping"]
@@ -821,6 +887,10 @@ class Model:
                 if isinstance(prop_data, dict):
                     return True
         return False
+
+    def is_element2d_triangular(self):
+        _, acoustic_element_2d, _ = self.get_acoustic_elements()
+        return isinstance(acoustic_element_2d, ACT_TRIANGLE_3 | ACT_TRIANGLE_6)
 
     def get_downstream_pressure_and_particle_velocity(self, surface_id: int):
         """
@@ -855,8 +925,7 @@ class Model:
 
         if isinstance(pw_data, dict):
             values = pw_data.get("values")[0]
-            _wave_vector = pw_data.get("wave_vector")
-            wave_vector = np.array(_wave_vector, dtype=float)
+            s_vector = np.array(pw_data.get("ipw_vector"), dtype=float)
 
             if isinstance(values, complex | float):
                 P_inc = values * np.ones_like(frequencies, dtype=complex)
@@ -866,7 +935,7 @@ class Model:
             node_normals = self.mesh.get_stacked_normals_for_surface_elements(surface_id)
             avg_normal = np.average(node_normals, axis=0).flatten()
 
-            P_downstream = P_inc * (avg_normal @ wave_vector)
+            P_downstream = P_inc * (avg_normal @ s_vector)
             V_downstream = -P_downstream / Zo_in
 
         if isinstance(sv_data, dict):
