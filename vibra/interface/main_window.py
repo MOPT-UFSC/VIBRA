@@ -1,5 +1,4 @@
 import logging
-import platform
 import sys
 from functools import partial
 from pathlib import Path
@@ -10,7 +9,7 @@ from molde import stylesheets
 from molde.render_widgets import CommonRenderWidget
 from PySide6.QtCore import QEvent, Qt, Signal
 from PySide6.QtGui import QAction
-from PySide6.QtWidgets import QFileDialog, QMenu, QMessageBox
+from PySide6.QtWidgets import QMenu, QMessageBox
 
 from vibra import SUPPORTED_GEOMETRY_EXTENSIONS, SUPPORTED_MESH_EXTENSIONS, TEMP_PROJECT_DIR, app
 from vibra.engine.assemblers import AcousticAssembler
@@ -34,11 +33,12 @@ from vibra.interface.toolbars.analysis_toolbar import AnalysisToolbar
 from vibra.interface.toolbars.view_toolbar import ViewToolbar
 from vibra.interface.ui_generated.main_window_ui import MainWindow_UI
 from vibra.interface.user_input.about_vibra import AboutVibraInput
+from vibra.interface.user_input.data_handler.file_dialog_service import FileDialogService
 from vibra.interface.user_input.input_ui import InputUi
 from vibra.interface.user_input.render_user_preferences import RendererUserPreferencesInput
 from vibra.interface.viewer_3d.render_widgets import GeometryRenderWidget, MeshRenderWidget, ResultsRenderWidget
 from vibra.interface.welcome_widget import WelcomeWidget
-from vibra.utils.interface_utils import GeometryColorMode, VisualizationFilter, block_signals, qt_extensions
+from vibra.utils.interface_utils import GeometryColorMode, VisualizationFilter, block_signals
 
 
 class MainWindow(MainWindow_UI):
@@ -604,7 +604,6 @@ class MainWindow(MainWindow_UI):
         )
 
     def distinguish_mesh_solids(self, solid_elements):
-
         self.distinguished_solids = set(solid_elements)
         if any(solid_elements):
             self.show_mesh_render_widget()
@@ -663,34 +662,23 @@ class MainWindow(MainWindow_UI):
 
         path = app().config.get_last_folder_for("geometry_mesh_folder", default=self.user_path)
 
-        geo = qt_extensions(SUPPORTED_GEOMETRY_EXTENSIONS)
-        mesh = qt_extensions(SUPPORTED_MESH_EXTENSIONS)
+        extensions = SUPPORTED_GEOMETRY_EXTENSIONS + SUPPORTED_MESH_EXTENSIONS
 
-        ext_filter = (
-            f"All Accepted Files ({geo} {mesh})"
-            f";;Geometry Files ({geo})"
-            f";;Mesh Files ({mesh})"
-            ";;All Files (*)"
-        )  # fmt: skip
+        imported_path = FileDialogService.open_file(file_extensions=extensions, 
+                                    caption="Select a geometry or mesh file to start your project.", 
+                                    last_folder=path)
 
-        load_path, check = QFileDialog.getOpenFileName(
-            self,
-            "Select a geometry or mesh file to start your project.",
-            str(path),
-            filter=ext_filter,
-        )
-
-        if not check:
+        if imported_path is None:
             return True
 
         app().config.write_last_folder_path_in_file(
             "geometry_mesh_folder",
-            load_path,
+            imported_path,
         )
 
         self.setWindowTitle("New project")
         self.reset_temporary_vibra_folder()
-        self._import_geometry_or_mesh(load_path)
+        self._import_geometry_or_mesh(imported_path)
 
     def _import_geometry_or_mesh(self, load_path: Path):
         ext = Path(load_path).suffix.strip(".").lower()
@@ -708,17 +696,11 @@ class MainWindow(MainWindow_UI):
     def import_geometry_dialog(self):
         path = app().config.get_last_folder_for("geometry_mesh_folder", default=self.user_path)
 
-        geo = qt_extensions(SUPPORTED_GEOMETRY_EXTENSIONS)
-        ext_filter = f"Geometry Files ({geo});; All Files (*)"
+        imported_path = FileDialogService.open_file(file_extensions=SUPPORTED_GEOMETRY_EXTENSIONS,
+                                                    caption="Select a geometry file to import.",
+                                                    last_folder=path)
 
-        load_path, check = QFileDialog.getOpenFileName(
-            self,
-            "Select a geometry file to import.",
-            str(path),
-            filter=ext_filter,
-        )
-
-        if not check:
+        if imported_path is None:
             return
 
         current_fluid_library = app().project.model.properties.fluid_library
@@ -728,22 +710,16 @@ class MainWindow(MainWindow_UI):
         app().project.model.properties.fluid_library = current_fluid_library
         app().project.model.properties.material_library = current_material_library
 
-        self.import_geometry(load_path)
+        self.import_geometry(imported_path)
 
     def import_mesh_dialog(self):
         path = app().config.get_last_folder_for("geometry_mesh_folder", default=self.user_path)
 
-        mesh = qt_extensions(SUPPORTED_MESH_EXTENSIONS)
-        ext_filter = f"Mesh Files ({mesh});; All Files (*)"
+        imported_path = FileDialogService.open_file(file_extensions=SUPPORTED_MESH_EXTENSIONS,
+                                    caption="Select a mesh file to import.",
+                                    last_folder=path)
 
-        load_path, check = QFileDialog.getOpenFileName(
-            self,
-            "Select a mesh file to import.",
-            str(path),
-            filter=ext_filter,
-        )
-
-        if not check:
+        if imported_path is None:
             return
 
         current_fluid_library = app().project.model.properties.fluid_library
@@ -753,7 +729,7 @@ class MainWindow(MainWindow_UI):
         app().project.model.properties.fluid_library = current_fluid_library
         app().project.model.properties.material_library = current_material_library
 
-        self.import_mesh(load_path)
+        self.import_mesh(imported_path)
 
     def save_project_dialog(self):
         save_path = app().project.save_path
@@ -770,19 +746,11 @@ class MainWindow(MainWindow_UI):
 
         save_dir = app().config.get_last_folder_for("project_folder", default=self.user_path)
 
-        kwargs = dict()
-        if platform.system() == "Linux":
-            kwargs["options"] = QFileDialog.Option.DontUseNativeDialog
+        file_path = FileDialogService.save_file(file_extensions=["vibra"],
+                                    caption="Save As",
+                                    last_folder=save_dir)
 
-        file_path, check = QFileDialog.getSaveFileName(
-            self,
-            "Save As",
-            str(save_dir),
-            filter="Vibra File (*.vibra)",
-            **kwargs,
-        )
-
-        if not check:
+        if file_path is None:
             return False
 
         if obj.ignore_results_data:
@@ -791,9 +759,6 @@ class MainWindow(MainWindow_UI):
 
         if obj.ignore_mesh_data:
             app().project.project_writer.delete_mesh_data()
-
-        if not file_path.endswith(".vibra"):
-            file_path += ".vibra"
 
         self.save_project_as(file_path)
 
@@ -826,14 +791,11 @@ class MainWindow(MainWindow_UI):
     def open_project_dialog(self):
         path = app().config.get_last_folder_for("project_folder", default=self.user_path)
 
-        project_path, check = QFileDialog.getOpenFileName(
-            self,
-            "Open Project",
-            str(path),
-            filter="Vibra File (*.vibra)",
-        )
-
-        if not check:
+        project_path = FileDialogService.open_file(file_extensions=["vibra"],
+                                    caption="Open Project", 
+                                    last_folder=path)
+        
+        if project_path is None:
             return
 
         self.open_project(project_path)
@@ -964,13 +926,9 @@ class MainWindow(MainWindow_UI):
         self.capture_image()
 
     def capture_image(self):
-        path, check = QFileDialog.getSaveFileName(
-            self,
-            "PNG",
-            filter="PNG (*.png)",
-        )
+        path = FileDialogService.save_file(file_extensions=["png"], caption="PNG")
 
-        if not check:
+        if path is None:
             return
 
         widget = self.render_widgets_stack.currentWidget()
