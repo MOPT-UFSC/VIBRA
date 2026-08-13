@@ -41,6 +41,7 @@ class Ui_Form(object):
 
         self.lineEdit_min_color_value = QLineEdit(self.frame_2)
         self.lineEdit_min_color_value.setObjectName(u"lineEdit_min_color_value")
+        self.lineEdit_min_color_value.setEnabled(False)
         sizePolicy = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -96,6 +97,7 @@ class Ui_Form(object):
 
         self.lineEdit_max_color_value = QLineEdit(self.frame)
         self.lineEdit_max_color_value.setObjectName(u"lineEdit_max_color_value")
+        self.lineEdit_max_color_value.setEnabled(False)
         sizePolicy.setHeightForWidth(self.lineEdit_max_color_value.sizePolicy().hasHeightForWidth())
         self.lineEdit_max_color_value.setSizePolicy(sizePolicy)
         self.lineEdit_max_color_value.setMinimumSize(QSize(145, 0))

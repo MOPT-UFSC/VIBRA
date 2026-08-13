@@ -19,8 +19,8 @@ class ResultsDisplayWidget(ResultsDisplayWidget_UI):
         self.load_user_preference_colormap()
 
     def configure_widget(self, bottom: float = -1e14, top: float = 1e14, decimals: int = 14):
-        self.update_min_enabled(False)
-        self.update_max_enabled(False)
+        self.min_color_check_box.setChecked(False)
+        self.max_color_check_box.setChecked(False)
         self.configure_validators(bottom, top, decimals)
 
     def configure_validators(self, bottom: float = -1e14, top: float = 1e14, decimals: int = 14):
@@ -57,9 +57,6 @@ class ResultsDisplayWidget(ResultsDisplayWidget_UI):
         self.lineEdit_min_color_value.setEnabled(value)
         self.update_color_ranges()
 
-        with block_signals(self):
-            self.min_color_check_box.setChecked(value)
-
     def update_max_enabled(self, value):
         if value:
             render_widget = app().main_window.results_widget
@@ -69,9 +66,6 @@ class ResultsDisplayWidget(ResultsDisplayWidget_UI):
 
         self.lineEdit_max_color_value.setEnabled(value)
         self.update_color_ranges()
-
-        with block_signals(self):
-            self.max_color_check_box.setChecked(value)
 
     def update_colormap_type(self):
         app().config.user_preferences.color_map = self.get_colormap()
