@@ -294,6 +294,15 @@ class MeshRenderWidget(CommonRenderWidget):
         self.edges_actor.configure_appearance()
 
         mesh = app().project.model.mesh
+        # temporary
+        mesh_setup = app().project.model.mesh_setup
+        if mesh_setup is not None and mesh_setup.disconnected_surfaces:
+            disconnected_face_elements = []
+            for surface_id in mesh_setup.disconnected_surfaces:
+                disconnected_face_elements.extend(mesh.elements_from_surface.get(int(surface_id), []))
+            if disconnected_face_elements:
+                self.faces_actor.paint_cells(color_names.ORANGE, disconnected_face_elements)
+
         mesh_error = mesh.collapsed_elements_data or mesh.disconnected_nodes_data
         if mesh_error:
             self.add_problematic_mesh_legend()

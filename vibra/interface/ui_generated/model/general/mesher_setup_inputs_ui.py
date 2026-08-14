@@ -603,6 +603,102 @@ class Ui_Dialog(object):
         self.gridLayout_13.addItem(self.horizontalSpacer_10, 0, 2, 1, 1)
 
         self.tabWidget_main.addTab(self.tab_advanced_controls, "")
+        self.tab_disconnected_surfaces = QWidget()
+        self.tab_disconnected_surfaces.setObjectName(u"tab_disconnected_surfaces")
+        self.tab_disconnected_surfaces.setEnabled(True)
+        self.gridLayout_18 = QGridLayout(self.tab_disconnected_surfaces)
+        self.gridLayout_18.setObjectName(u"gridLayout_18")
+        self.gridLayout_18.setContentsMargins(6, 6, 6, 6)
+        self.frame_14 = QFrame(self.tab_disconnected_surfaces)
+        self.frame_14.setObjectName(u"frame_14")
+        self.frame_14.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_14.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_19 = QGridLayout(self.frame_14)
+        self.gridLayout_19.setObjectName(u"gridLayout_19")
+        self.gridLayout_19.setHorizontalSpacing(6)
+        self.gridLayout_19.setContentsMargins(4, 4, 4, 4)
+        self.label_disconnected_surface_id = QLabel(self.frame_14)
+        self.label_disconnected_surface_id.setObjectName(u"label_disconnected_surface_id")
+        self.label_disconnected_surface_id.setMinimumSize(QSize(160, 20))
+        self.label_disconnected_surface_id.setMaximumSize(QSize(16777215, 160))
+        self.label_disconnected_surface_id.setFont(font1)
+        self.label_disconnected_surface_id.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+
+        self.gridLayout_19.addWidget(self.label_disconnected_surface_id, 0, 0, 1, 1)
+
+        self.lineEdit_disconnected_surface_id = QLineEdit(self.frame_14)
+        self.lineEdit_disconnected_surface_id.setObjectName(u"lineEdit_disconnected_surface_id")
+        self.lineEdit_disconnected_surface_id.setMinimumSize(QSize(0, 28))
+        self.lineEdit_disconnected_surface_id.setMaximumSize(QSize(200, 16777215))
+        self.lineEdit_disconnected_surface_id.setFont(font1)
+        self.lineEdit_disconnected_surface_id.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_19.addWidget(self.lineEdit_disconnected_surface_id, 0, 1, 1, 1)
+
+        self.horizontalSpacer_18 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_19.addItem(self.horizontalSpacer_18, 0, 2, 1, 1)
+
+
+        self.gridLayout_18.addWidget(self.frame_14, 0, 1, 1, 1)
+
+        self.tableWidget_disconnected_surfaces_data = QTableWidget(self.tab_disconnected_surfaces)
+        if (self.tableWidget_disconnected_surfaces_data.columnCount() < 3):
+            self.tableWidget_disconnected_surfaces_data.setColumnCount(3)
+        __qtablewidgetitem3 = QTableWidgetItem()
+        self.tableWidget_disconnected_surfaces_data.setHorizontalHeaderItem(0, __qtablewidgetitem3)
+        __qtablewidgetitem4 = QTableWidgetItem()
+        self.tableWidget_disconnected_surfaces_data.setHorizontalHeaderItem(1, __qtablewidgetitem4)
+        __qtablewidgetitem5 = QTableWidgetItem()
+        self.tableWidget_disconnected_surfaces_data.setHorizontalHeaderItem(2, __qtablewidgetitem5)
+        self.tableWidget_disconnected_surfaces_data.setObjectName(u"tableWidget_disconnected_surfaces_data")
+        self.tableWidget_disconnected_surfaces_data.setMaximumSize(QSize(16777215, 16777215))
+        self.tableWidget_disconnected_surfaces_data.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.tableWidget_disconnected_surfaces_data.setShowGrid(False)
+        self.tableWidget_disconnected_surfaces_data.horizontalHeader().setDefaultSectionSize(160)
+        self.tableWidget_disconnected_surfaces_data.horizontalHeader().setStretchLastSection(True)
+        self.tableWidget_disconnected_surfaces_data.verticalHeader().setVisible(False)
+
+        self.gridLayout_18.addWidget(self.tableWidget_disconnected_surfaces_data, 2, 1, 1, 1)
+
+        self.frame_15 = QFrame(self.tab_disconnected_surfaces)
+        self.frame_15.setObjectName(u"frame_15")
+        self.frame_15.setMinimumSize(QSize(0, 48))
+        self.frame_15.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_15.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_20 = QGridLayout(self.frame_15)
+        self.gridLayout_20.setObjectName(u"gridLayout_20")
+        self.gridLayout_20.setContentsMargins(4, 4, 4, 4)
+        self.pushButton_add_disconnected_surface = QPushButton(self.frame_15)
+        self.pushButton_add_disconnected_surface.setObjectName(u"pushButton_add_disconnected_surface")
+        self.pushButton_add_disconnected_surface.setMinimumSize(QSize(68, 28))
+        self.pushButton_add_disconnected_surface.setMaximumSize(QSize(140, 16777215))
+        self.pushButton_add_disconnected_surface.setFont(font1)
+        self.pushButton_add_disconnected_surface.setAutoDefault(False)
+
+        self.gridLayout_20.addWidget(self.pushButton_add_disconnected_surface, 0, 1, 1, 1)
+
+        self.pushButton_delete_disconnected_surface = QPushButton(self.frame_15)
+        self.pushButton_delete_disconnected_surface.setObjectName(u"pushButton_delete_disconnected_surface")
+        self.pushButton_delete_disconnected_surface.setMinimumSize(QSize(68, 28))
+        self.pushButton_delete_disconnected_surface.setMaximumSize(QSize(140, 16777215))
+        self.pushButton_delete_disconnected_surface.setFont(font1)
+        self.pushButton_delete_disconnected_surface.setAutoDefault(False)
+
+        self.gridLayout_20.addWidget(self.pushButton_delete_disconnected_surface, 0, 0, 1, 1)
+
+
+        self.gridLayout_18.addWidget(self.frame_15, 3, 1, 1, 1)
+
+        self.label_disconnected_surfaces_hint = QLabel(self.tab_disconnected_surfaces)
+        self.label_disconnected_surfaces_hint.setObjectName(u"label_disconnected_surfaces_hint")
+        self.label_disconnected_surfaces_hint.setMinimumSize(QSize(0, 20))
+        self.label_disconnected_surfaces_hint.setFont(font1)
+        self.label_disconnected_surfaces_hint.setWordWrap(True)
+
+        self.gridLayout_18.addWidget(self.label_disconnected_surfaces_hint, 1, 1, 1, 1)
+
+        self.tabWidget_main.addTab(self.tab_disconnected_surfaces, "")
         self.tab_mesh_quality = QWidget()
         self.tab_mesh_quality.setObjectName(u"tab_mesh_quality")
         self.tab_mesh_quality.setEnabled(True)
@@ -611,24 +707,24 @@ class Ui_Dialog(object):
         self.tableWidget_mesh_quality = QTableWidget(self.tab_mesh_quality)
         if (self.tableWidget_mesh_quality.columnCount() < 4):
             self.tableWidget_mesh_quality.setColumnCount(4)
-        __qtablewidgetitem3 = QTableWidgetItem()
-        self.tableWidget_mesh_quality.setHorizontalHeaderItem(0, __qtablewidgetitem3)
-        __qtablewidgetitem4 = QTableWidgetItem()
-        self.tableWidget_mesh_quality.setHorizontalHeaderItem(1, __qtablewidgetitem4)
-        __qtablewidgetitem5 = QTableWidgetItem()
-        self.tableWidget_mesh_quality.setHorizontalHeaderItem(2, __qtablewidgetitem5)
         __qtablewidgetitem6 = QTableWidgetItem()
-        self.tableWidget_mesh_quality.setHorizontalHeaderItem(3, __qtablewidgetitem6)
+        self.tableWidget_mesh_quality.setHorizontalHeaderItem(0, __qtablewidgetitem6)
+        __qtablewidgetitem7 = QTableWidgetItem()
+        self.tableWidget_mesh_quality.setHorizontalHeaderItem(1, __qtablewidgetitem7)
+        __qtablewidgetitem8 = QTableWidgetItem()
+        self.tableWidget_mesh_quality.setHorizontalHeaderItem(2, __qtablewidgetitem8)
+        __qtablewidgetitem9 = QTableWidgetItem()
+        self.tableWidget_mesh_quality.setHorizontalHeaderItem(3, __qtablewidgetitem9)
         if (self.tableWidget_mesh_quality.rowCount() < 4):
             self.tableWidget_mesh_quality.setRowCount(4)
-        __qtablewidgetitem7 = QTableWidgetItem()
-        self.tableWidget_mesh_quality.setVerticalHeaderItem(0, __qtablewidgetitem7)
-        __qtablewidgetitem8 = QTableWidgetItem()
-        self.tableWidget_mesh_quality.setVerticalHeaderItem(1, __qtablewidgetitem8)
-        __qtablewidgetitem9 = QTableWidgetItem()
-        self.tableWidget_mesh_quality.setVerticalHeaderItem(2, __qtablewidgetitem9)
         __qtablewidgetitem10 = QTableWidgetItem()
-        self.tableWidget_mesh_quality.setVerticalHeaderItem(3, __qtablewidgetitem10)
+        self.tableWidget_mesh_quality.setVerticalHeaderItem(0, __qtablewidgetitem10)
+        __qtablewidgetitem11 = QTableWidgetItem()
+        self.tableWidget_mesh_quality.setVerticalHeaderItem(1, __qtablewidgetitem11)
+        __qtablewidgetitem12 = QTableWidgetItem()
+        self.tableWidget_mesh_quality.setVerticalHeaderItem(2, __qtablewidgetitem12)
+        __qtablewidgetitem13 = QTableWidgetItem()
+        self.tableWidget_mesh_quality.setVerticalHeaderItem(3, __qtablewidgetitem13)
         self.tableWidget_mesh_quality.setObjectName(u"tableWidget_mesh_quality")
         self.tableWidget_mesh_quality.setMaximumSize(QSize(654654, 16777215))
         self.tableWidget_mesh_quality.horizontalHeader().setCascadingSectionResizes(False)
@@ -737,7 +833,11 @@ class Ui_Dialog(object):
         QWidget.setTabOrder(self.doubleSpinBox_local_mesh_size_control_element_size, self.tableWidget_local_mesh_size_control_data)
         QWidget.setTabOrder(self.tableWidget_local_mesh_size_control_data, self.pushButton_delete)
         QWidget.setTabOrder(self.pushButton_delete, self.pushButton_add)
-        QWidget.setTabOrder(self.pushButton_add, self.tableWidget_mesh_quality)
+        QWidget.setTabOrder(self.pushButton_add, self.lineEdit_disconnected_surface_id)
+        QWidget.setTabOrder(self.lineEdit_disconnected_surface_id, self.tableWidget_disconnected_surfaces_data)
+        QWidget.setTabOrder(self.tableWidget_disconnected_surfaces_data, self.pushButton_delete_disconnected_surface)
+        QWidget.setTabOrder(self.pushButton_delete_disconnected_surface, self.pushButton_add_disconnected_surface)
+        QWidget.setTabOrder(self.pushButton_add_disconnected_surface, self.tableWidget_mesh_quality)
         QWidget.setTabOrder(self.tableWidget_mesh_quality, self.pushButton_plot_histogram)
         QWidget.setTabOrder(self.pushButton_plot_histogram, self.pushButton_show_bad_elements)
         QWidget.setTabOrder(self.pushButton_show_bad_elements, self.comboBox_volumes_interface_behavior)
@@ -838,22 +938,34 @@ class Ui_Dialog(object):
         self.comboBox_second_order_incomplete.setItemText(1, QCoreApplication.translate("Dialog", u"Yes", None))
 
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_advanced_controls), QCoreApplication.translate("Dialog", u"Advanced Controls", None))
-        ___qtablewidgetitem3 = self.tableWidget_mesh_quality.horizontalHeaderItem(0)
-        ___qtablewidgetitem3.setText(QCoreApplication.translate("Dialog", u"Worst Value", None));
-        ___qtablewidgetitem4 = self.tableWidget_mesh_quality.horizontalHeaderItem(1)
-        ___qtablewidgetitem4.setText(QCoreApplication.translate("Dialog", u"Average", None));
-        ___qtablewidgetitem5 = self.tableWidget_mesh_quality.horizontalHeaderItem(2)
-        ___qtablewidgetitem5.setText(QCoreApplication.translate("Dialog", u"Std. Deviation", None));
-        ___qtablewidgetitem6 = self.tableWidget_mesh_quality.horizontalHeaderItem(3)
-        ___qtablewidgetitem6.setText(QCoreApplication.translate("Dialog", u"Bad elements", None));
-        ___qtablewidgetitem7 = self.tableWidget_mesh_quality.verticalHeaderItem(0)
-        ___qtablewidgetitem7.setText(QCoreApplication.translate("Dialog", u"Gamma", None));
-        ___qtablewidgetitem8 = self.tableWidget_mesh_quality.verticalHeaderItem(1)
-        ___qtablewidgetitem8.setText(QCoreApplication.translate("Dialog", u"Volume", None));
-        ___qtablewidgetitem9 = self.tableWidget_mesh_quality.verticalHeaderItem(2)
-        ___qtablewidgetitem9.setText(QCoreApplication.translate("Dialog", u"Min SJ", None));
-        ___qtablewidgetitem10 = self.tableWidget_mesh_quality.verticalHeaderItem(3)
-        ___qtablewidgetitem10.setText(QCoreApplication.translate("Dialog", u"Aspect Ratio", None));
+        self.label_disconnected_surface_id.setText(QCoreApplication.translate("Dialog", u"Surface ID:", None))
+        self.lineEdit_disconnected_surface_id.setText("")
+        ___qtablewidgetitem3 = self.tableWidget_disconnected_surfaces_data.horizontalHeaderItem(0)
+        ___qtablewidgetitem3.setText(QCoreApplication.translate("Dialog", u"Surface ID", None));
+        ___qtablewidgetitem4 = self.tableWidget_disconnected_surfaces_data.horizontalHeaderItem(1)
+        ___qtablewidgetitem4.setText(QCoreApplication.translate("Dialog", u"Adjacent volumes", None));
+        ___qtablewidgetitem5 = self.tableWidget_disconnected_surfaces_data.horizontalHeaderItem(2)
+        ___qtablewidgetitem5.setText(QCoreApplication.translate("Dialog", u"Status", None));
+        self.pushButton_add_disconnected_surface.setText(QCoreApplication.translate("Dialog", u"Add", None))
+        self.pushButton_delete_disconnected_surface.setText(QCoreApplication.translate("Dialog", u"Delete", None))
+        self.label_disconnected_surfaces_hint.setText(QCoreApplication.translate("Dialog", u"Select the internal surfaces shared by two volumes to keep disconnected (the nodes will not be merged across them).", None))
+        self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_disconnected_surfaces), QCoreApplication.translate("Dialog", u"Interface disconnection", None))
+        ___qtablewidgetitem6 = self.tableWidget_mesh_quality.horizontalHeaderItem(0)
+        ___qtablewidgetitem6.setText(QCoreApplication.translate("Dialog", u"Worst Value", None));
+        ___qtablewidgetitem7 = self.tableWidget_mesh_quality.horizontalHeaderItem(1)
+        ___qtablewidgetitem7.setText(QCoreApplication.translate("Dialog", u"Average", None));
+        ___qtablewidgetitem8 = self.tableWidget_mesh_quality.horizontalHeaderItem(2)
+        ___qtablewidgetitem8.setText(QCoreApplication.translate("Dialog", u"Std. Deviation", None));
+        ___qtablewidgetitem9 = self.tableWidget_mesh_quality.horizontalHeaderItem(3)
+        ___qtablewidgetitem9.setText(QCoreApplication.translate("Dialog", u"Bad elements", None));
+        ___qtablewidgetitem10 = self.tableWidget_mesh_quality.verticalHeaderItem(0)
+        ___qtablewidgetitem10.setText(QCoreApplication.translate("Dialog", u"Gamma", None));
+        ___qtablewidgetitem11 = self.tableWidget_mesh_quality.verticalHeaderItem(1)
+        ___qtablewidgetitem11.setText(QCoreApplication.translate("Dialog", u"Volume", None));
+        ___qtablewidgetitem12 = self.tableWidget_mesh_quality.verticalHeaderItem(2)
+        ___qtablewidgetitem12.setText(QCoreApplication.translate("Dialog", u"Min SJ", None));
+        ___qtablewidgetitem13 = self.tableWidget_mesh_quality.verticalHeaderItem(3)
+        ___qtablewidgetitem13.setText(QCoreApplication.translate("Dialog", u"Aspect Ratio", None));
         self.pushButton_plot_histogram.setText(QCoreApplication.translate("Dialog", u"Plot Histogram", None))
         self.pushButton_show_bad_elements.setText(QCoreApplication.translate("Dialog", u"Show bad elements", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_mesh_quality), QCoreApplication.translate("Dialog", u"Mesh quality", None))
@@ -933,6 +1045,18 @@ class MesherSetupInputs_UI(QDialog, Ui_Dialog):
                                                         - label_15: QLabel
                                                         - comboBox_recombine_all: QComboBox
                                                         - comboBox_second_order_incomplete: QComboBox
+                                            - tab_disconnected_surfaces: QWidget
+                                                - (Layout): QGridLayout
+                                                        - frame_14: QFrame
+                                                            - (Layout): QGridLayout
+                                                                    - label_disconnected_surface_id: QLabel
+                                                                    - lineEdit_disconnected_surface_id: QLineEdit
+                                                        - tableWidget_disconnected_surfaces_data: QTableWidget
+                                                        - frame_15: QFrame
+                                                            - (Layout): QGridLayout
+                                                                    - pushButton_add_disconnected_surface: QPushButton
+                                                                    - pushButton_delete_disconnected_surface: QPushButton
+                                                        - label_disconnected_surfaces_hint: QLabel
                                             - tab_mesh_quality: QWidget
                                                 - (Layout): QGridLayout
                                                         - tableWidget_mesh_quality: QTableWidget

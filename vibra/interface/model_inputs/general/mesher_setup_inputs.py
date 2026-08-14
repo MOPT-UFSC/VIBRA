@@ -75,7 +75,8 @@ class MeshSetupTabs(IntEnum):
     GLOBAL_SETTINGS = 0
     LOCAL_MESH_SIZE_CONTROL = 1
     ADVANCED_CONTROLS = 2
-    MESH_QUALITY = 3
+    INTERFACE_DISCONNECTION = 3
+    MESH_QUALITY = 4
 
 
 class MesherSetupInputs(MesherSetupInputs_UI):
@@ -103,7 +104,9 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.bad_elements_showed = False
         self.synchronize_sizes = False
         self.tmp_local_mesh_size_control_parameters: list[LocalMeshSizeControlSetup] = []
+        self.tmp_disconnected_surfaces: set[int] = set()
         self.last_synced_ids: set[int] = set()
+        self.last_synced_disconnected_surfaces: set[int] = set()
 
         self.gmsh_labels = {
             0: "gamma",
@@ -123,6 +126,8 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.comboBox_element_geometry.currentIndexChanged.connect(self.element_topology_changed_callback)
         self.comboBox_element_order.currentIndexChanged.connect(self.element_topology_changed_callback)
         #
+        self.comboBox_volumes_interface_behavior.currentIndexChanged.connect(self.volumes_interface_behavior_changed_callback)
+        #
         self.doubleSpinBox_maximum_element_size.valueChanged.connect(self.maximum_element_size_changed_callback)
         #
         self.pushButton_add.clicked.connect(self.add_button_callback)
@@ -133,8 +138,10 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.pushButton_plot_histogram.clicked.connect(self.plot_mesh_parameter_histogram)
         self.pushButton_show_bad_elements.clicked.connect(self.plot_bad_elements)
         self.pushButton_syncrhonize.clicked.connect(self.synchronize_button_callback)
+        self.pushButton_add_disconnected_surface.clicked.connect(self.add_disconnected_surface_callback)
+        self.pushButton_delete_disconnected_surface.clicked.connect(self.delete_disconnected_surface_callback)
         # #
-        # self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
+        self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         # #
         self.tableWidget_local_mesh_size_control_data.itemClicked.connect(self.local_mesh_size_control_item_clicked_callback)
         self.tableWidget_mesh_quality.itemClicked.connect(self.mesh_quality_item_clicked_callback)
@@ -194,6 +201,10 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.comboBox_volumes_interface_behavior.setCurrentIndex(int(mesh_setup.merge_connected_volumes))
         self.comboBox_mesh_quality_metrics.setCurrentIndex(int(mesh_setup.compute_quality_metrics))
 
+        self.tmp_disconnected_surfaces = set(mesh_setup.disconnected_surfaces)
+        self.update_disconnected_surfaces_table()
+        self.volumes_interface_behavior_changed_callback()
+
         self.update_local_mesh_size_control_table()
         self.update_mesh_quality_table()
 
@@ -239,6 +250,13 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             self.last_synced_ids = set()
             return
 
+        if self.tabWidget_main.currentIndex() == MeshSetupTabs.INTERFACE_DISCONNECTION:
+            self.lineEdit_disconnected_surface_id.setText(
+                ", ".join(str(i) for i in sorted(selection))
+            )
+            self.last_synced_disconnected_surfaces = set(selection)
+            return
+
         current_ids = set(self.get_selected_ids())
         manually_edited = current_ids != self.last_synced_ids
 
@@ -260,6 +278,128 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         mesh_quality_tab = self.tabWidget_main.currentIndex() == MeshSetupTabs.MESH_QUALITY
         self.pushButton_apply.setDisabled(mesh_quality_tab)
         self.pushButton_apply_and_close.setDisabled(mesh_quality_tab)
+
+        if self.tabWidget_main.currentIndex() == MeshSetupTabs.INTERFACE_DISCONNECTION:
+            self._sync_disconnected_surface_line_edit()
+
+    def _sync_disconnected_surface_line_edit(self):
+        current_ids = self.get_disconnected_surface_selected_ids()
+        manually_edited = current_ids != self.last_synced_disconnected_surfaces
+        if manually_edited:
+            merged_ids = current_ids | self.tmp_disconnected_surfaces
+            self.tmp_disconnected_surfaces = set(merged_ids)
+        self.lineEdit_disconnected_surface_id.setText(
+            ", ".join(str(i) for i in sorted(self.tmp_disconnected_surfaces))
+        )
+        self.last_synced_disconnected_surfaces = set(self.tmp_disconnected_surfaces)
+        self.update_disconnected_surfaces_table()
+
+    def get_disconnected_surface_selected_ids(self) -> set[int]:
+        text = self.lineEdit_disconnected_surface_id.text().strip()
+        if text == "":
+            return set()
+        try:
+            return {int(_id) for _id in text.split(",") if _id.strip() != ""}
+        except ValueError:
+            return self.last_synced_disconnected_surfaces
+
+    def volumes_interface_behavior_changed_callback(self):
+        merge_nodes = self.comboBox_volumes_interface_behavior.currentText() == "Merge nodes"
+        self.tabWidget_main.setTabEnabled(MeshSetupTabs.INTERFACE_DISCONNECTION, merge_nodes)
+        if not merge_nodes:
+            self.tmp_disconnected_surfaces = set()
+            self.last_synced_disconnected_surfaces = set()
+            self.lineEdit_disconnected_surface_id.setText("")
+            self.update_disconnected_surfaces_table()
+
+    def add_disconnected_surface_callback(self):
+        selected_ids = self.get_disconnected_surface_selected_ids()
+        if not selected_ids:
+            return
+
+        surface_to_volume = self._get_surface_to_volume_mapping()
+        invalid_ids = {
+            _id
+            for _id in selected_ids
+            if len(surface_to_volume.get(_id, [])) < 2
+        }
+        if invalid_ids:
+            message = (
+                "The following surface(s) are not shared by at least two volumes, "
+                "so they cannot be disconnected: "
+                + ", ".join(str(_id) for _id in sorted(invalid_ids))
+                + "."
+            )
+            self.hide()
+            PrintMessageInput(["Warning", "Invalid disconnected surfaces", message])
+            self.show()
+            self.tmp_disconnected_surfaces |= set(selected_ids) - invalid_ids
+        else:
+            self.tmp_disconnected_surfaces |= set(selected_ids)
+
+        self.lineEdit_disconnected_surface_id.setText("")
+        self.last_synced_disconnected_surfaces = set(self.tmp_disconnected_surfaces)
+        self.update_disconnected_surfaces_table()
+
+    def delete_disconnected_surface_callback(self):
+        selected_rows = {
+            item.row() for item in self.tableWidget_disconnected_surfaces_data.selectedItems()
+        }
+        if not selected_rows:
+            return
+
+        surfaces_to_delete = set()
+        for row in selected_rows:
+            str_surface_id = self.tableWidget_disconnected_surfaces_data.item(row, 0).text()
+            if str_surface_id != "":
+                surfaces_to_delete.add(int(str_surface_id))
+
+        self.tmp_disconnected_surfaces -= surfaces_to_delete
+        self.lineEdit_disconnected_surface_id.setText("")
+        self.last_synced_disconnected_surfaces = set(self.tmp_disconnected_surfaces)
+        self.update_disconnected_surfaces_table()
+
+    def _get_surface_to_volume_mapping(self) -> dict[int, list[int]]:
+        surface_to_volume = {}
+        mesh = app().project.model.mesh
+        volumes_from_surface = getattr(mesh, "volumes_from_surface", None) if mesh is not None else None
+        if volumes_from_surface is not None:
+            surfaces_mapping = getattr(mesh, "surfaces_mapping", None) or {}
+            for surface_id, volumes in volumes_from_surface.items():
+                if isinstance(volumes, list):
+                    adjacent_volumes = list(volumes)
+                else:
+                    adjacent_volumes = list(volumes.keys())
+
+                twin_surface_id = surfaces_mapping.get(surface_id)
+                if twin_surface_id is not None:
+                    twin_volumes = volumes_from_surface.get(twin_surface_id)
+                    if isinstance(twin_volumes, list):
+                        twin_volume_ids = list(twin_volumes)
+                    elif twin_volumes is not None:
+                        twin_volume_ids = list(twin_volumes.keys())
+                    else:
+                        twin_volume_ids = []
+                    adjacent_volumes.extend(v for v in twin_volume_ids if v not in adjacent_volumes)
+
+                surface_to_volume[surface_id] = adjacent_volumes
+        return surface_to_volume
+
+    def update_disconnected_surfaces_table(self):
+        surface_to_volume = self._get_surface_to_volume_mapping()
+        self.tableWidget_disconnected_surfaces_data.setRowCount(len(self.tmp_disconnected_surfaces))
+        self.tableWidget_disconnected_surfaces_data.setColumnHidden(2, True)
+
+        for row, surface_id in enumerate(sorted(self.tmp_disconnected_surfaces)):
+            adjacent_volumes = surface_to_volume.get(surface_id, [])
+
+            item_surface_id = QTableWidgetItem(str(surface_id))
+            item_adjacent_volumes = QTableWidgetItem(", ".join(str(v) for v in adjacent_volumes))
+            for item in (item_surface_id, item_adjacent_volumes):
+                item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
+
+            self.tableWidget_disconnected_surfaces_data.setItem(row, 0, item_surface_id)
+            self.tableWidget_disconnected_surfaces_data.setItem(row, 1, item_adjacent_volumes)
 
     def local_mesh_size_control_item_clicked_callback(self, item: QTableWidgetItem):
         row = item.row()
@@ -576,6 +716,10 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         merge_connected_volumes = self.comboBox_volumes_interface_behavior.currentText() == "Merge nodes"
         compute_quality_metrics = self.comboBox_mesh_quality_metrics.currentText() == "Enabled"
 
+        disconnected_surfaces = []
+        if merge_connected_volumes:
+            disconnected_surfaces = sorted(self.tmp_disconnected_surfaces)
+
         return MeshSetup(
             minimum_element_size=self.doubleSpinBox_minimum_element_size.value(),
             maximum_element_size=self.doubleSpinBox_maximum_element_size.value(),
@@ -584,6 +728,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             element_geometry=element_geometry,
             element_order=element_order,
             merge_connected_volumes=merge_connected_volumes,
+            disconnected_surfaces=disconnected_surfaces,
             compute_quality_metrics=compute_quality_metrics,
             custom_element_setup=self._get_custom_element_setup(),
             local_mesh_size_control_parameters=self._get_local_mesh_size_control_parameters(),
