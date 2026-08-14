@@ -58,7 +58,6 @@ class MeshActor(vtkPropAssembly):
         self._create_section_variables()
 
     def _create_surface_variables(self):
-        self.surface_cells = vtkCellArray()
         self.surface_colors = vtkUnsignedCharArray()
         self.surface_colors.SetName("color")
         self.surface_colors.SetNumberOfComponents(3)
@@ -79,7 +78,6 @@ class MeshActor(vtkPropAssembly):
         self.AddPart(self.surface_actor)
 
     def _create_section_variables(self):
-        self.section_cells = vtkCellArray()
         self.section_colors = vtkUnsignedCharArray()
         self.section_colors.SetName("color")
         self.section_colors.SetNumberOfComponents(3)
@@ -119,17 +117,24 @@ class MeshActor(vtkPropAssembly):
         n_cells = len(connectivity)
         cell_type = VTK_TRIANGLE
 
-        helper = np.insert(connectivity, 0, connectivity.shape[1], axis=1)
-        vtk_id_array = numpy_to_vtkIdTypeArray(helper.flatten())
-        self.surface_cells.SetCells(n_cells, vtk_id_array)
-
-        self.surface_data.SetCells(cell_type, self.surface_cells)
+        cells = self._create_cells(connectivity)
+        self.surface_data.SetCells(cell_type, cells)
         self.surface_colors.SetNumberOfTuples(n_cells)
         self.surface_mapper.Modified()
 
         self.surface_ids.SetNumberOfTuples(n_cells)
         view = vtk_to_numpy(self.surface_ids)
         view[:] = self.mesh.faces_connectivity[:, 0]
+
+    def _create_cells(self, connectivity: np.ndarray) -> vtkCellArray:
+        if connectivity.ndim == 1:
+            connectivity = connectivity.reshape(-1, 1)
+
+        helper = np.insert(connectivity, 0, connectivity.shape[1], axis=1)
+        vtk_id_array = numpy_to_vtkIdTypeArray(helper.flatten())
+        cell_array = vtkCellArray()
+        cell_array.SetCells(connectivity.shape[0], vtk_id_array)
+        return cell_array
 
     def update_section_plane(self):
         if self.mesh is None:
@@ -167,11 +172,8 @@ class MeshActor(vtkPropAssembly):
         n_cells = len(filtered_connectivity)
         cell_type = VTK_TETRA
 
-        helper = np.insert(filtered_connectivity, 0, filtered_connectivity.shape[1], axis=1)
-        vtk_id_array = numpy_to_vtkIdTypeArray(helper.flatten())
-        self.section_cells.SetCells(n_cells, vtk_id_array)
-
-        self.section_data.SetCells(cell_type, self.section_cells)
+        cells = self._create_cells(filtered_connectivity)
+        self.section_data.SetCells(cell_type, cells)
         self.section_colors.SetNumberOfTuples(n_cells)
         self.section_mapper.Modified()
 
@@ -268,15 +270,9 @@ class MeshActor(vtkPropAssembly):
     def _clear_data(self):
         self.last_mesh_id = 0
 
-        self.surface_cells.Reset()
-        self.surface_cells.Modified()
-
         self.surface_colors.SetNumberOfTuples(0)
         self.surface_ids.SetNumberOfTuples(0)
         self.surface_colors.Modified()
-
-        self.section_cells.Reset()
-        self.section_cells.Modified()
 
         self.section_colors.SetNumberOfTuples(0)
         self.section_ids.SetNumberOfTuples(0)
