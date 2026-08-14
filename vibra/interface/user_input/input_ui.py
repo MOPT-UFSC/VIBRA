@@ -1,6 +1,7 @@
 
 from vibra import app
 from vibra.engine import AnalysisID
+from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 
 #
@@ -82,6 +83,42 @@ class InputUi:
 
         app().main_window.action_model_workspace_callback()
         obj = self.process_input(MesherSetupInputs)
+        if obj.complete:
+            self.model_setup_items.expand_menu_items()
+
+    def mesh_decoupling(self):
+        if self.model_setup_items.item_child_mesh_decoupling.isDisabled():
+            return
+
+        app().main_window.action_model_workspace_callback()
+
+        mesh_setup = app().project.model.mesh_setup
+        merge_nodes = bool(mesh_setup is not None and mesh_setup.merge_connected_volumes)
+        force_merge_nodes = False
+
+        if not merge_nodes:
+            title = "Mesh decoupling"
+            message = (
+                "To decouple the mesh, you can either decouple everything using the "
+                "'Volumes interface behavior' combo box ('Disconnect nodes') or be specific "
+                "and decouple only the desired interfaces ('Merge nodes' plus the "
+                "disconnected surfaces). Would you like to switch to 'Merge nodes' to "
+                "decouple specific interfaces?"
+            )
+            buttons_config = {
+                "left_button_label": "Cancel",
+                "right_button_label": "Switch",
+            }
+            read = GetUserConfirmationInput(title, message, buttons_config=buttons_config, window_title="Vibra")
+            if read._cancel:
+                return
+            force_merge_nodes = True
+
+        obj = self.process_input(
+            MesherSetupInputs,
+            start_on_disconnection_tab=True,
+            force_merge_nodes=force_merge_nodes,
+        )
         if obj.complete:
             self.model_setup_items.expand_menu_items()
 

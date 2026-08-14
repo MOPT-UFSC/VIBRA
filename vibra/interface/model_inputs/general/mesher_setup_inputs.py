@@ -80,10 +80,18 @@ class MeshSetupTabs(IntEnum):
 
 
 class MesherSetupInputs(MesherSetupInputs_UI):
-    def __init__(self, close_after_generate: bool = False, **kwargs):
+    def __init__(
+        self,
+        close_after_generate: bool = False,
+        start_on_disconnection_tab: bool = False,
+        force_merge_nodes: bool = False,
+        **kwargs,
+    ):
         super().__init__()
 
         self.close_after_generate = close_after_generate
+        self.start_on_disconnection_tab = start_on_disconnection_tab
+        self.force_merge_nodes = force_merge_nodes
 
         app().main_window.set_input_widget(self)
 
@@ -93,6 +101,11 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self._config_widgets()
         self._load_current_mesh_setup()
         self.update_combo_boxes_according_to_geometry_info()
+
+        if self.force_merge_nodes:
+            self.comboBox_volumes_interface_behavior.setCurrentIndex(1)
+        if self.start_on_disconnection_tab:
+            self.tabWidget_main.setCurrentIndex(MeshSetupTabs.INTERFACE_DISCONNECTION)
 
         while self.keep_window_open:
             self.exec()

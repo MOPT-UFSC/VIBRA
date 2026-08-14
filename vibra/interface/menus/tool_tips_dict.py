@@ -15,6 +15,13 @@ tool_tips["mesh_setup"] = (
     "using solid, surface, and line elements."
 )
 
+tool_tips["mesh_decoupling"] = (
+    "Decouple the nodes of selected surfaces shared by at least two volumes, "
+    "creating per-volume twin nodes at the interface. This is a permanent, "
+    "mesh-level modification that takes effect when the mesh is generated "
+    "(requires 'Merge nodes' in the volumes interface behavior)."
+)
+
 tool_tips["degrees_of_freedom_decoupling"] = (
     "This feature disconnects nodes from connected volumes and modifies the "
     "connectivity of all geometric entities. As a consequence, both structural "
