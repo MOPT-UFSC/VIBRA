@@ -111,7 +111,7 @@ class PardisoLinearSolver(LinearSolver):
                     self.mtype = Matrix_type.CNS
                 else:
                     self.mtype = Matrix_type.RNS
-        print(f"Instantiating Pardiso Solver with matrix flags: is_symmetric: {self.is_symmetric}, is_complex: {is_complex}, mtype: {self.mtype}")
+        logging.info(f"Instantiating Pardiso Solver with matrix flags: is_symmetric: {self.is_symmetric}, is_complex: {is_complex}, mtype: {self.mtype}")
         self._solver = PyPardisoSolver(self.mtype, self.phase, self.size_limit_storage)
         return self._solver
 
@@ -136,7 +136,7 @@ class MumpsLinearSolver(LinearSolver):
         from mumps import Context
         self.is_symmetric = check_symmetry(A)
         is_complex = check_complex(A, f)
-        print(f"Instantiating MUMPS Solver with matrix flags: is_symmetric: {self.is_symmetric}, is_complex: {is_complex}")
+        logging.info(f"Instantiating MUMPS Solver with matrix flags: is_symmetric: {self.is_symmetric}, is_complex: {is_complex}")
         self._solver = Context(self.verbose)
         return self._solver
     
