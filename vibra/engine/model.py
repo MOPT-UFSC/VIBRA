@@ -79,10 +79,10 @@ class Model:
         self.initial_element_size = None
         self.geometry_qf = 1.0
 
-        self.list_frequencies = list()
+        self.current_frequencies = []
 
-        self.decouple_info = dict()
-        self.nodes_mapping = dict()
+        self.decouple_info = {}
+        self.nodes_mapping = {}
 
         self.solid_acoustic_element = None
         self.surface_acoustic_element = None
@@ -131,7 +131,7 @@ class Model:
         if isinstance(self.analysis_setup, HarmonicAnalysisSetup):
             return self.analysis_setup.solution_steps_mask
 
-        return list()
+        return []
 
     @property
     def global_damping(self) -> Optional[np.ndarray]:
@@ -169,9 +169,9 @@ class Model:
         return analysis_setup
 
     def reset_dissipation_model_properties(self):
-        self.perforated_plate_impedance_data = dict()
-        self.porous_material_properties = dict()
-        self.viscous_thermal_model_properties = dict()
+        self.perforated_plate_impedance_data = {}
+        self.porous_material_properties = {}
+        self.viscous_thermal_model_properties = {}
 
     def set_length_unit(self, length_unit: str = "millimeter"):
         self.length_unit = length_unit
@@ -291,7 +291,7 @@ class Model:
             frequencies = deepcopy(self.frequencies)
 
         if frequencies is None:
-            return list()
+            return []
 
         all_true = [True for _ in range(len(frequencies))]
         table_frequencies = self.properties.process_all_tables_frequencies_vectors()
@@ -302,7 +302,7 @@ class Model:
         if len(table_frequencies) != 1:
             return all_true
 
-        solution_steps_mask = list()
+        solution_steps_mask = []
         _table_frequencies = np.array(table_frequencies[0], dtype=float)
 
         for freq in _table_frequencies:
@@ -354,7 +354,7 @@ class Model:
         else:
             analysis_setup.frequencies = _frequencies[_frequencies != 0]
 
-        new_mask = list()
+        new_mask = []
         for j, freq in enumerate(_frequencies):
             if freq == 0:
                 if table_exists:
@@ -466,15 +466,14 @@ class Model:
         if isinstance(frequencies, np.ndarray):
             frequencies = list(frequencies)
 
-        condition_1 = self.list_frequencies == list()
-        condition_2 = not self.properties.check_if_there_are_tables_at_the_model()
+        empty_list = self.current_frequencies == []
+        table_exists = not self.properties.check_if_there_are_tables_at_the_model()
 
-        if condition_1 or condition_2:
-            self.list_frequencies = frequencies
+        if empty_list or not table_exists:
+            self.current_frequencies = frequencies
             return False
 
-        if self.list_frequencies != frequencies:
-            return True
+        return not np.allclose(self.current_frequencies, frequencies, atol=1e-12)
 
     def get_tabular_frequency_setup(self) -> None | tuple:
         """
@@ -562,7 +561,7 @@ class Model:
         return global_dof
 
     def get_structural_property_data_from_nodes(self, nodes: np.ndarray, data: dict, selection: str):
-        output_data = dict()
+        output_data = {}
         if data["element_type"] == "2d_element":
             element_2d = self.structural_element_2d
             if element_2d is None:
@@ -581,7 +580,7 @@ class Model:
         global_dof = dof_per_node * nodes.reshape(-1, 1) + local_dof
 
         den = 1
-        if "nodal_attribution" in data.keys():
+        if "nodal_attribution" in data:
             nodal_attribution = data["nodal_attribution"]
             averaged = data["averaged"]
             if nodal_attribution and averaged:
@@ -599,7 +598,7 @@ class Model:
                     pass
 
         n_int = 0
-        if "integrate" in data.keys():
+        if "integrate" in data:
             n_int = data.get("integrate", 0)
 
         for node_gdof in global_dof:
@@ -627,14 +626,14 @@ class Model:
         """
 
         frequency_dependent = False
-        fluid_properties_from_volume = dict()
+        fluid_properties_from_volume = {}
 
         if self.frequencies is None:
             number_frequencies = 1
         elif isinstance(self.frequencies, np.ndarray):
             number_frequencies = self.frequencies.size
         else:
-            return dict(), False
+            return {}, False
 
         aux_ones = np.ones(number_frequencies, dtype=float)
 
@@ -734,7 +733,7 @@ class Model:
             fluid = self.properties._get_property("fluid", surface=surface_id)
 
         elif len(volumes_from_surface) > 1:
-            fluids = list()
+            fluids = []
             for volume_id in volumes_from_surface:
                 fluid = self.properties._get_property("fluid", volume=volume_id)
                 if not isinstance(fluid, Fluid):
@@ -861,16 +860,16 @@ class Model:
             impedance = density * speed_of_sound
 
         elif isinstance(si_data, dict):
-            if "real_values" in si_data.keys():
+            if "real_values" in si_data:
                 real_values = np.array(si_data["real_values"])
                 imag_values = np.array(si_data["imag_values"])
                 impedance = real_values + 1j * imag_values
 
-            elif "anechoic_termination" in si_data.keys():
+            elif "anechoic_termination" in si_data:
                 density, speed_of_sound = self.get_surface_density_and_speed_of_sound(surface_id)
                 impedance = density * speed_of_sound
 
-            elif "values" in si_data.keys():
+            elif "values" in si_data:
                 impedance = si_data["values"][0]
 
         return impedance
@@ -939,12 +938,12 @@ class Model:
             V_downstream = -P_downstream / Zo_in
 
         if isinstance(sv_data, dict):
-            if "real_values" in sv_data.keys():
+            if "real_values" in sv_data:
                 real_values = np.array(sv_data["real_values"])
                 imag_values = np.array(sv_data["imag_values"])
                 V_in = real_values + 1j * imag_values
 
-            elif "values" in sv_data.keys():
+            elif "values" in sv_data:
                 V_in = sv_data["values"][0]
                 V_in = V_in[self.solution_steps_mask]
 
@@ -983,12 +982,12 @@ class Model:
         rho_eff = None
         C_eff = None
 
-        for key in self.properties.volume_properties.keys():
+        for key in self.properties.volume_properties:
             prop, volume_id = key
             if prop != "porous_material_model":
                 continue
 
-            if volume_id not in self.mesh.surfaces_from_volume.keys():
+            if volume_id not in self.mesh.surfaces_from_volume:
                 continue
 
             if surface_id in self.mesh.surfaces_from_volume.get(volume_id):
@@ -1035,12 +1034,12 @@ class Model:
         rho_eff = None
         C_eff = None
 
-        for key in self.properties.volume_properties.keys():
+        for key in self.properties.volume_properties:
             prop, volume_id = key
             if prop != "viscous_thermal_model":
                 continue
 
-            if volume_id not in self.mesh.surfaces_from_volume.keys():
+            if volume_id not in self.mesh.surfaces_from_volume:
                 continue
 
             if surface_id in self.mesh.surfaces_from_volume.get(volume_id):
@@ -1104,12 +1103,12 @@ class Model:
 
         if attribution_filter is None:
             for _property in properties.values():
-                for property_label, *args in _property.keys():
+                for property_label, *args in _property:
                     if property_label == property_to_check:
                         return True
 
-        _property = properties.get(attribution_filter, dict())
-        for property_label, *args in _property.keys():
+        _property = properties.get(attribution_filter, {})
+        for property_label, *args in _property:
             if property_label == property_to_check:
                 return True
 
