@@ -1,9 +1,8 @@
 import platform
+from collections import defaultdict
 from pathlib import Path
 
 from PySide6.QtWidgets import QFileDialog
-
-from collections import defaultdict
 
 
 class FileDialogService:
@@ -76,21 +75,30 @@ class FileDialogService:
     def _generate_file_extensions_str(file_extensions: list[str], all_files=True):
         file_extensions.sort(key=FileDialogService._sort_extensions)
 
-        if not all_files or len(file_extensions) == 1:
-            return ";;".join(f"{FileDialogService._get_file_label(ext)} (*.{ext.lower()})" for ext in file_extensions)
-
         ext_dict = defaultdict(list)
-        for ext in file_extensions:
+        last_label = FileDialogService._get_file_label(file_extensions[0])
+        extensions_text = ''
+
+        for i, ext in enumerate(file_extensions):
             ext_str = f"*.{ext}"
+            current_label = FileDialogService._get_file_label(ext)
+
             ext_dict["All files"].append(ext_str)
-            ext_dict[FileDialogService._get_file_label(ext)].append(ext_str)
+            ext_dict[current_label].append(ext_str)
 
-        ext_str = ""
-        for label, extensions in ext_dict.items():
-            ext_str += f"{label} ({" ".join(extensions)});;"
+            if current_label != last_label or i == len(file_extensions) - 1:
+                extensions_text += FileDialogService._generate_qt_filter(last_label, ext_dict)
+                last_label = current_label
 
-        return ext_str
-                
+        if not all_files or len(file_extensions) == 1:
+            return extensions_text
+
+        return FileDialogService._generate_qt_filter("All files", ext_dict) + extensions_text
+
+    @staticmethod
+    def _generate_qt_filter(label: str, extensions_map: dict) -> str:
+        return f"{label} ({' '.join(extensions_map[label])});;"
+
     @staticmethod
     def _get_file_label(extension: str) -> str:
         extension = extension.lower() 
