@@ -5,7 +5,7 @@ from typing import Literal
 import numpy as np
 from PySide6.QtWidgets import QDialog, QPushButton, QWidget
 
-from vibra import SUPPORTED_OUTPUT_DATA_EXTENSIONS, SUPPORTED_TEXT_FILES, app
+from vibra import SUPPORTED_OUTPUT_DATA_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS, app
 from vibra.engine.analysis_info import AnalysisID, FrequencySpacing
 from vibra.interface import error_title, warning_title
 from vibra.interface.data.data_manager import is_frequencies_vector_equally_distributed
@@ -246,7 +246,7 @@ def export_modal_analysis_results(parent: QDialog | QWidget, modes_to_frequencie
         else:
             modal_data_to_export[i, :] = [mode, value]
 
-    if export_path.suffix[1:] in SUPPORTED_TEXT_FILES:
+    if export_path.suffix[1:] in SUPPORTED_TEXT_EXTENSIONS:
         np.savetxt(export_path, modal_data_to_export, fmt=fmt, delimiter=",", header=header)
 
     else:
