@@ -6,7 +6,7 @@ from .ghost_actor import *
 from .hollow_analysis_actor import *
 from .hollow_solids_actor import *
 from .lines_actor import *
-from .nodes_actor import *
+from .nodes_actor_old import *
 from .points_actor import *
 from .section_plane_actor import *
 from .selection_spheres import *

@@ -15,7 +15,7 @@ from ..actors.faces_actor import FacesActor
 from ..actors.ghost_actor import GhostActor
 from ..actors.hollow_solids_actor import HollowSolidsActor
 from ..actors.legend_actor import LegendActor
-from ..actors.nodes_actor import NodesActor
+from ..actors.nodes_actor_old import NodesActor
 from ..actors.section_plane_actor import SectionPlaneActor
 from ..actors.selection_spheres import SelectionSpheres
 from ..actors.solids_actor import SolidsActor
@@ -81,10 +81,10 @@ class MeshRenderWidget(CommonRenderWidget):
     def get_logo_for_current_theme(self) -> str:
         if app().config.user_preferences.interface_theme == "light":
             return "vibra_colored_light_background.png"
-        
-        
+
+
         return "vibra_colored_dark_background.png"
-    
+
     def set_theme(self, *args, **kwargs):
         self.update_theme()
 
