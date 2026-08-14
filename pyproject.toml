@@ -36,6 +36,7 @@ dev = [
     "invoke>=2.2.0,<3",
     "pyinstaller>=6.20.0",
     "tuna>=0.5.15",
+    "pyright>=1.1.411",
 ]
 
 [build-system]
@@ -60,3 +61,13 @@ line-length = 150
 [project.scripts]
 bump = "scripts.bump_version:main"
 icons = "scripts.paint_icons:main"
+
+[tool.pyright]
+reportExplicitAny = false
+reportUnknownMemberType = false
+reportAny = false
+reportUnknownArgumentType = false
+reportUnknownLambdaType = false
+reportUnknownParameterType = false
+reportUnknownReturnType = false
+reportUnknownVariableType = false
