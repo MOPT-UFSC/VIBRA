@@ -467,7 +467,7 @@ class Model:
             frequencies = list(frequencies)
 
         empty_list = self.current_frequencies == []
-        table_exists = not self.properties.check_if_there_are_tables_at_the_model()
+        table_exists = self.properties.check_if_there_are_tables_at_the_model()
 
         if empty_list or not table_exists:
             self.current_frequencies = frequencies
