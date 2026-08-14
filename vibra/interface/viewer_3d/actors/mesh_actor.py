@@ -1,12 +1,14 @@
 from collections import defaultdict
+from collections.abc import Sequence
+from dataclasses import dataclass
 from itertools import chain
-from typing import Sequence
+from typing import final
 
 import numpy as np
 import xxhash
 from molde import Color
 from vtkmodules.util.numpy_support import numpy_to_vtk, numpy_to_vtkIdTypeArray, vtk_to_numpy
-from vtkmodules.vtkCommonCore import vtkIntArray, vtkPoints, vtkUnsignedCharArray
+from vtkmodules.vtkCommonCore import vtkDataArray, vtkIntArray, vtkPoints, vtkUnsignedCharArray
 from vtkmodules.vtkCommonDataModel import (
     VTK_TETRA,
     VTK_TRIANGLE,
@@ -21,16 +23,34 @@ from vibra.engine.model import Model
 from vibra.engine.properties import Fluid, Material
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.utils.math_functions import inside_plane
-from vibra.utils.preview_utils import SectionPlaneConfig
 from vibra.utils.time_utils import function_timer
 
 
+@dataclass
+class CachedInfo:
+    mesh_id: int = 0
+    surface_colors_hash: str = ""
+    section_colors_hash: str = ""
+
+    @classmethod
+    def array_hash(cls, array: np.ndarray | vtkDataArray) -> str:
+        ndarray = vtk_to_numpy(array) if isinstance(array, vtkDataArray) else array
+        hasher = xxhash.xxh128()
+        hasher.update(ndarray)
+        return hasher.hexdigest()
+
+
+@final
 class MeshActor(vtkPropAssembly):
     def __init__(self, model: Model | None):
+        super().__init__()
+
         self.model = model
-        self.section_plane: SectionPlaneConfig | None = None
+        self.section_plane = None
+        self.cached_info = CachedInfo()
 
         self._create_variables()
+        self._configure_actors_parameters()
         self.last_mesh_id = 0
 
     @property
@@ -54,46 +74,37 @@ class MeshActor(vtkPropAssembly):
 
     def _create_variables(self):
         self.points = vtkPoints()
-        self._create_surface_variables()
-        self._create_section_variables()
 
-    def _create_surface_variables(self):
         self.surface_colors = vtkUnsignedCharArray()
+        self.surface_ids = vtkIntArray()
+        self.surface_data = vtkUnstructuredGrid()
+        self.surface_mapper = vtkDataSetMapper()
+        self.surface_actor = vtkActor()
+
+        self.section_colors = vtkUnsignedCharArray()
+        self.section_ids = vtkIntArray()
+        self.section_data = vtkUnstructuredGrid()
+        self.section_mapper = vtkDataSetMapper()
+        self.section_actor = vtkActor()
+
+    def _configure_actors_parameters(self):
         self.surface_colors.SetName("color")
         self.surface_colors.SetNumberOfComponents(3)
-
-        self.surface_ids = vtkIntArray()
         self.surface_ids.SetName("ids")
-
-        self.surface_data = vtkUnstructuredGrid()
         self.surface_data.SetPoints(self.points)
-        self.surface_data.GetCellData().SetScalars(self.surface_colors)
-        self.surface_data.GetCellData().AddArray(self.surface_ids)
-
-        self.surface_mapper = vtkDataSetMapper()
+        _ = self.surface_data.GetCellData().SetScalars(self.surface_colors)
+        _ = self.surface_data.GetCellData().AddArray(self.surface_ids)
         self.surface_mapper.SetInputData(self.surface_data)
-
-        self.surface_actor = vtkActor()
         self.surface_actor.SetMapper(self.surface_mapper)
         self.AddPart(self.surface_actor)
 
-    def _create_section_variables(self):
-        self.section_colors = vtkUnsignedCharArray()
         self.section_colors.SetName("color")
         self.section_colors.SetNumberOfComponents(3)
-
-        self.section_ids = vtkIntArray()
         self.section_ids.SetName("ids")
-
-        self.section_data = vtkUnstructuredGrid()
         self.section_data.SetPoints(self.points)
-        self.section_data.GetCellData().SetScalars(self.section_colors)
-        self.section_data.GetCellData().AddArray(self.section_ids)
-
-        self.section_mapper = vtkDataSetMapper()
+        _ = self.section_data.GetCellData().SetScalars(self.section_colors)
+        _ = self.section_data.GetCellData().AddArray(self.section_ids)
         self.section_mapper.SetInputData(self.section_data)
-
-        self.section_actor = vtkActor()
         self.section_actor.SetMapper(self.section_mapper)
         self.AddPart(self.section_actor)
 
@@ -106,9 +117,9 @@ class MeshActor(vtkPropAssembly):
         assert self.mesh.faces_connectivity is not None
 
         mesh_id = id(self.mesh)
-        if mesh_id == self.last_mesh_id:
+        if mesh_id == self.cached_info.mesh_id:
             return
-        self.last_mesh_id = mesh_id
+        self.cached_info.mesh_id = mesh_id
 
         coordinates = self.mesh.nodal_coordinates[:, 1:]
         self.points.SetData(numpy_to_vtk(coordinates))
@@ -182,8 +193,7 @@ class MeshActor(vtkPropAssembly):
         view[:] = self.mesh.solids_connectivity[elements_in_middle, 0]
 
     def update_colors(self):
-        self._surface_colors_hash = self._array_hash(vtk_to_numpy(self.surface_colors))
-        self._section_colors_hash = self._array_hash(vtk_to_numpy(self.section_colors))
+        self.cache_colors()
         self.set_color(Color(255, 255, 255), update=False)
 
         if self.properties is None:
@@ -202,6 +212,8 @@ class MeshActor(vtkPropAssembly):
                     surface_colors[color].append(tag)
                 case "volume":
                     volume_colors[color].append(tag)
+                case _:
+                    pass
 
         for color, tags in surface_colors.items():
             self.paint_surfaces(color, tags)
@@ -234,7 +246,7 @@ class MeshActor(vtkPropAssembly):
         paint_position_mask = np.isin(surface_ids, selected_elements)
         surface_colors[paint_position_mask] = color.to_rgb()
 
-        if self._surface_colors_hash != self._array_hash(surface_colors):
+        if self.cached_info.surface_colors_hash != CachedInfo.array_hash(surface_colors):
             self.surface_colors.Modified()
 
     @function_timer
@@ -255,17 +267,15 @@ class MeshActor(vtkPropAssembly):
         paint_position_mask = np.isin(section_ids, selected_elements)
         section_colors[paint_position_mask] = color.to_rgb()
 
-        if self._section_colors_hash != self._array_hash(section_colors):
+        if self.cached_info.section_colors_hash != CachedInfo.array_hash(section_colors):
             self.section_colors.Modified()
+
+    def cache_colors(self):
+        self.cached_info.surface_colors_hash = CachedInfo.array_hash(self.surface_colors)
+        self.cached_info.section_colors_hash = CachedInfo.array_hash(self.section_colors)
 
     def _get_parts(self) -> list[vtkActor]:
         return list(self.GetParts())  # pyright: ignore[reportArgumentType]
-
-    def _array_hash(self, *arrays: np.ndarray) -> str:
-        hasher = xxhash.xxh128()
-        for array in arrays:
-            hasher.update(array)
-        return hasher.hexdigest()
 
     def _clear_data(self):
         self.last_mesh_id = 0
