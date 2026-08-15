@@ -394,8 +394,6 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
         if volume_ids:
 
-            self.hide()
-
             title = "Porous material model resetting"
             message = "Would you like to remove the porous material effects from the model?"
 
@@ -829,7 +827,6 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
                 volume_ids, error_data = self.mesh.check_selected_ids(input_ids, selection = "volumes", single_id = False)
 
                 if error_data is not None:
-                    self.hide()
                     self.lineEdit_selection_id.setFocus()
                     PrintMessageInput(error_data)
                     return True

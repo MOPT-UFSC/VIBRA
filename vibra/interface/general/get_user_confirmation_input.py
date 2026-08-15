@@ -24,6 +24,8 @@ class GetUserConfirmationInput(GetUserConfirmation_UI):
 
         self._configure_labels()
         self._configure_buttons()
+
+        app().main_window.hide_dialogs()
         self.exec()
 
     def _config_window(self):

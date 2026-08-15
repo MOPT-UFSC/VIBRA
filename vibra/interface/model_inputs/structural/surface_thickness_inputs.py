@@ -132,7 +132,6 @@ class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
             surface_ids, error_data = self.mesh.check_selected_ids(input_ids, selection="surfaces")
 
             if error_data is not None:
-                self.hide()
                 self.lineEdit_selection_id.setFocus()
                 PrintMessageInput(error_data)
                 return
@@ -199,8 +198,6 @@ class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
             self.actions_to_finalize()
 
     def reset_callback(self):
-
-        self.hide()
 
         title = "Surface thickness resetting"
         message = "Would you like to remove the all assigned surface thickness from model?"

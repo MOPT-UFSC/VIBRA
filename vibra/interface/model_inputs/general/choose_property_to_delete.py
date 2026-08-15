@@ -174,7 +174,6 @@ class ChoosePropertyToDelete(ChoosePropertyToDelete_UI):
             "right_toolTip": "Remove selected items",
         }
 
-        self.hide()
         read = GetUserConfirmationInput(
             title, message, buttons_config=buttons_config, window_title="Vibra"
         )
@@ -189,7 +188,6 @@ class ChoosePropertyToDelete(ChoosePropertyToDelete_UI):
 
         properties_count: int = len(rows_selected)
         if properties_count == 0:
-            self.hide()
             title = "No property selected"
             message = "Please select at least one property."
             PrintMessageInput(["Error", title, message])
@@ -247,7 +245,6 @@ class ChoosePropertyToDelete(ChoosePropertyToDelete_UI):
             self.remove_callback()
         elif event.key() == Qt.Key_Escape:
             self.close()
-        return
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
