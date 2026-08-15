@@ -225,14 +225,17 @@ class ProjectWriter:
         )
         write_json(self.project_paths.model_properties_filepath, data)
 
-    def write_material_library(self, material_library: MaterialLibrary):
+    def write_material_library(self, material_library: MaterialLibrary, export_path: Path | None = None):
         logging.info("Writing MaterialLibrary.")
 
         material_library_dict = {}
         for material_id, material in material_library.items():
             material_library_dict[material_id] = asdict(material)
 
-        write_json(self.project_paths.material_library_filepath, material_library_dict)
+        if export_path is None:
+            export_path = self.project_paths.material_library_filepath
+
+        write_json(export_path, material_library_dict)
 
     def write_fluid_library(self, fluid_library: FluidLibrary, export_path: Path | None = None):
         logging.info("Writing FluidLibrary.")

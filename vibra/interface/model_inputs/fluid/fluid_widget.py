@@ -769,7 +769,7 @@ class FluidWidget(FluidWidget_UI):
             return False
 
         app().config.write_last_folder_path_in_file("exported_fluid_library_folder", file_path)
-        app().project.project_writer.write_fluid_library(self.properties.fluid_library, Path(file_path))
+        app().project.project_writer.write_fluid_library(self.properties.fluid_library, export_path=Path(file_path))
 
         return True
 
@@ -802,10 +802,19 @@ class FluidWidget(FluidWidget_UI):
         current_fluid_library = deepcopy(self.properties.fluid_library)
 
         try:
-            self.properties.fluid_library = app().project.project_reader.read_fluid_library(import_path=Path(file_path))
+            fluid_library = app().project.project_reader.read_fluid_library(import_path=Path(file_path))
+            if not isinstance(fluid_library, FluidLibrary):
+                return False
+
+            fluids_to_remove = list(self.properties.fluid_library.values())
+            for fluid in fluids_to_remove:
+                self.properties.remove_fluid(fluid)
+
+            self.update_properties_after_fluid_removal(fluids_to_remove)
+            self.properties.fluid_library = fluid_library
 
         except Exception:
-            title = "Error when importing fluid library"
+            title = "Error when importing the fluid library"
             message = "An error has been detected while importing the fluid library file. The import "
             message += "action was interrupted, and the current fluid library has been restored."
             PrintMessageInput([error_title, title, message])
