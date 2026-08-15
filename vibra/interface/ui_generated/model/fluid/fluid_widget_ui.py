@@ -156,7 +156,7 @@ class Ui_Form(object):
 
         self.pushButton_import_library = QPushButton(self.frame_6)
         self.pushButton_import_library.setObjectName(u"pushButton_import_library")
-        self.pushButton_import_library.setMinimumSize(QSize(60, 28))
+        self.pushButton_import_library.setMinimumSize(QSize(80, 28))
         self.pushButton_import_library.setMaximumSize(QSize(100, 28))
         self.pushButton_import_library.setFont(font1)
         self.pushButton_import_library.setStyleSheet(u"")
@@ -165,7 +165,7 @@ class Ui_Form(object):
 
         self.pushButton_export_library = QPushButton(self.frame_6)
         self.pushButton_export_library.setObjectName(u"pushButton_export_library")
-        self.pushButton_export_library.setMinimumSize(QSize(60, 28))
+        self.pushButton_export_library.setMinimumSize(QSize(80, 28))
         self.pushButton_export_library.setMaximumSize(QSize(100, 28))
         self.pushButton_export_library.setFont(font1)
         self.pushButton_export_library.setStyleSheet(u"")
