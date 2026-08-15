@@ -538,7 +538,7 @@ class MaterialWidget(MaterialWidget_UI):
 
         file_path, check = QFileDialog.getOpenFileName(
             self,
-            "Import the material library data",
+            "Import the material library file",
             str(last_path),
             filter=ext_filter,
             **kwargs,
@@ -548,9 +548,6 @@ class MaterialWidget(MaterialWidget_UI):
             return False
 
         app().config.write_last_folder_path_in_file("imported_material_library_folder", file_path)
-        
-        # create a copy of the current materials library for safety reasons
-        current_material_library = deepcopy(self.properties.material_library)
 
         try:
             material_library = app().project.project_reader.read_material_library(import_path=Path(file_path))
@@ -567,10 +564,9 @@ class MaterialWidget(MaterialWidget_UI):
         except Exception:
             title = "Error when importing the material library"
             message = "An error has been detected while importing the material library file. The import "
-            message += "action was interrupted, and the current material library has been restored."
+            message += "action was interrupted, and the current material library will not be modified."
             PrintMessageInput([error_title, title, message])
-
-            self.properties.material_library = current_material_library
+            return False
 
         self.reload_table_of_materials()
 

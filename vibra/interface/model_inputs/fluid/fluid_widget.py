@@ -787,7 +787,7 @@ class FluidWidget(FluidWidget_UI):
 
         file_path, check = QFileDialog.getOpenFileName(
             self,
-            "Import the fluid library data",
+            "Import the fluid library file",
             str(last_path),
             filter=ext_filter,
             **kwargs,
@@ -797,9 +797,6 @@ class FluidWidget(FluidWidget_UI):
             return False
 
         app().config.write_last_folder_path_in_file("imported_fluid_library_folder", file_path)
-        
-        # create a copy of the current fluids library for safety reasons
-        current_fluid_library = deepcopy(self.properties.fluid_library)
 
         try:
             fluid_library = app().project.project_reader.read_fluid_library(import_path=Path(file_path))
@@ -816,10 +813,9 @@ class FluidWidget(FluidWidget_UI):
         except Exception:
             title = "Error when importing the fluid library"
             message = "An error has been detected while importing the fluid library file. The import "
-            message += "action was interrupted, and the current fluid library has been restored."
+            message += "action was interrupted, and the current fluid library will not be modified."
             PrintMessageInput([error_title, title, message])
-
-            self.properties.fluid_library = current_fluid_library
+            return False
 
         self.reload_table_of_fluids()
 
