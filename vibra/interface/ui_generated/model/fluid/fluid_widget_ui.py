@@ -103,83 +103,90 @@ class Ui_Form(object):
         self.gridLayout_5.setHorizontalSpacing(8)
         self.gridLayout_5.setVerticalSpacing(0)
         self.gridLayout_5.setContentsMargins(0, 0, 0, 0)
-        self.frame_7 = QFrame(self.frame_6)
-        self.frame_7.setObjectName(u"frame_7")
-        self.frame_7.setFrameShape(QFrame.Shape.NoFrame)
-        self.frame_7.setFrameShadow(QFrame.Shadow.Raised)
-        self.gridLayout = QGridLayout(self.frame_7)
-        self.gridLayout.setSpacing(0)
-        self.gridLayout.setObjectName(u"gridLayout")
-        self.gridLayout.setContentsMargins(0, 0, 0, 0)
-        self.pushButton_reset_library = QPushButton(self.frame_7)
-        self.pushButton_reset_library.setObjectName(u"pushButton_reset_library")
-        self.pushButton_reset_library.setMinimumSize(QSize(60, 28))
-        self.pushButton_reset_library.setMaximumSize(QSize(60, 28))
+        self.pushButton_refprop = QPushButton(self.frame_6)
+        self.pushButton_refprop.setObjectName(u"pushButton_refprop")
+        self.pushButton_refprop.setMinimumSize(QSize(80, 28))
+        self.pushButton_refprop.setMaximumSize(QSize(80, 28))
         font1 = QFont()
         font1.setFamilies([u"MS Shell Dlg 2"])
         font1.setPointSize(10)
         font1.setBold(False)
         font1.setItalic(False)
-        self.pushButton_reset_library.setFont(font1)
-        self.pushButton_reset_library.setStyleSheet(u"")
-
-        self.gridLayout.addWidget(self.pushButton_reset_library, 0, 0, 1, 1)
-
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout.addItem(self.horizontalSpacer, 0, 1, 1, 1)
-
-
-        self.gridLayout_5.addWidget(self.frame_7, 0, 0, 1, 1)
-
-        self.pushButton_refprop = QPushButton(self.frame_6)
-        self.pushButton_refprop.setObjectName(u"pushButton_refprop")
-        self.pushButton_refprop.setMinimumSize(QSize(80, 28))
-        self.pushButton_refprop.setMaximumSize(QSize(80, 28))
         self.pushButton_refprop.setFont(font1)
         self.pushButton_refprop.setStyleSheet(u"")
 
-        self.gridLayout_5.addWidget(self.pushButton_refprop, 0, 2, 1, 1)
-
-        self.pushButton_add_column = QPushButton(self.frame_6)
-        self.pushButton_add_column.setObjectName(u"pushButton_add_column")
-        self.pushButton_add_column.setMinimumSize(QSize(28, 28))
-        self.pushButton_add_column.setMaximumSize(QSize(28, 28))
-        font2 = QFont()
-        font2.setFamilies([u"MS Shell Dlg 2"])
-        font2.setPointSize(9)
-        font2.setBold(True)
-        font2.setItalic(False)
-        self.pushButton_add_column.setFont(font2)
-        self.pushButton_add_column.setStyleSheet(u"")
-
-        self.gridLayout_5.addWidget(self.pushButton_add_column, 0, 3, 1, 1)
-
-        self.pushButton_duplicate = QPushButton(self.frame_6)
-        self.pushButton_duplicate.setObjectName(u"pushButton_duplicate")
-        self.pushButton_duplicate.setMinimumSize(QSize(28, 28))
-        self.pushButton_duplicate.setMaximumSize(QSize(28, 28))
-        font3 = QFont()
-        font3.setFamilies([u"MS Shell Dlg 2"])
-        font3.setPointSize(9)
-        font3.setBold(False)
-        font3.setItalic(False)
-        self.pushButton_duplicate.setFont(font3)
-        self.pushButton_duplicate.setStyleSheet(u"")
-        icon = Icon(u":/icons/copy_icon.png")
-        self.pushButton_duplicate.setIcon(icon)
-        self.pushButton_duplicate.setIconSize(QSize(18, 18))
-
-        self.gridLayout_5.addWidget(self.pushButton_duplicate, 0, 5, 1, 1)
+        self.gridLayout_5.addWidget(self.pushButton_refprop, 0, 4, 1, 1)
 
         self.pushButton_remove_column = QPushButton(self.frame_6)
         self.pushButton_remove_column.setObjectName(u"pushButton_remove_column")
         self.pushButton_remove_column.setMinimumSize(QSize(28, 28))
         self.pushButton_remove_column.setMaximumSize(QSize(28, 28))
-        self.pushButton_remove_column.setFont(font3)
+        font2 = QFont()
+        font2.setFamilies([u"MS Shell Dlg 2"])
+        font2.setPointSize(9)
+        font2.setBold(False)
+        font2.setItalic(False)
+        self.pushButton_remove_column.setFont(font2)
         self.pushButton_remove_column.setStyleSheet(u"")
 
-        self.gridLayout_5.addWidget(self.pushButton_remove_column, 0, 4, 1, 1)
+        self.gridLayout_5.addWidget(self.pushButton_remove_column, 0, 6, 1, 1)
+
+        self.pushButton_reset_library = QPushButton(self.frame_6)
+        self.pushButton_reset_library.setObjectName(u"pushButton_reset_library")
+        self.pushButton_reset_library.setMinimumSize(QSize(60, 28))
+        self.pushButton_reset_library.setMaximumSize(QSize(60, 28))
+        self.pushButton_reset_library.setFont(font1)
+        self.pushButton_reset_library.setStyleSheet(u"")
+
+        self.gridLayout_5.addWidget(self.pushButton_reset_library, 0, 0, 1, 1)
+
+        self.pushButton_add_column = QPushButton(self.frame_6)
+        self.pushButton_add_column.setObjectName(u"pushButton_add_column")
+        self.pushButton_add_column.setMinimumSize(QSize(28, 28))
+        self.pushButton_add_column.setMaximumSize(QSize(28, 28))
+        font3 = QFont()
+        font3.setFamilies([u"MS Shell Dlg 2"])
+        font3.setPointSize(9)
+        font3.setBold(True)
+        font3.setItalic(False)
+        self.pushButton_add_column.setFont(font3)
+        self.pushButton_add_column.setStyleSheet(u"")
+
+        self.gridLayout_5.addWidget(self.pushButton_add_column, 0, 5, 1, 1)
+
+        self.pushButton_import_library = QPushButton(self.frame_6)
+        self.pushButton_import_library.setObjectName(u"pushButton_import_library")
+        self.pushButton_import_library.setMinimumSize(QSize(60, 28))
+        self.pushButton_import_library.setMaximumSize(QSize(100, 28))
+        self.pushButton_import_library.setFont(font1)
+        self.pushButton_import_library.setStyleSheet(u"")
+
+        self.gridLayout_5.addWidget(self.pushButton_import_library, 0, 2, 1, 1)
+
+        self.pushButton_export_library = QPushButton(self.frame_6)
+        self.pushButton_export_library.setObjectName(u"pushButton_export_library")
+        self.pushButton_export_library.setMinimumSize(QSize(60, 28))
+        self.pushButton_export_library.setMaximumSize(QSize(100, 28))
+        self.pushButton_export_library.setFont(font1)
+        self.pushButton_export_library.setStyleSheet(u"")
+
+        self.gridLayout_5.addWidget(self.pushButton_export_library, 0, 1, 1, 1)
+
+        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_5.addItem(self.horizontalSpacer_2, 0, 3, 1, 1)
+
+        self.pushButton_duplicate = QPushButton(self.frame_6)
+        self.pushButton_duplicate.setObjectName(u"pushButton_duplicate")
+        self.pushButton_duplicate.setMinimumSize(QSize(28, 28))
+        self.pushButton_duplicate.setMaximumSize(QSize(28, 28))
+        self.pushButton_duplicate.setFont(font2)
+        self.pushButton_duplicate.setStyleSheet(u"")
+        icon = Icon(u":/icons/copy_icon.png")
+        self.pushButton_duplicate.setIcon(icon)
+        self.pushButton_duplicate.setIconSize(QSize(18, 18))
+
+        self.gridLayout_5.addWidget(self.pushButton_duplicate, 0, 7, 1, 1)
 
 
         self.gridLayout_2.addWidget(self.frame_6, 0, 0, 1, 1)
@@ -252,25 +259,33 @@ class Ui_Form(object):
         self.pushButton_apply.setText(QCoreApplication.translate("Form", u"Apply", None))
         self.pushButton_cancel.setText(QCoreApplication.translate("Form", u"Cancel", None))
 #if QT_CONFIG(tooltip)
-        self.pushButton_reset_library.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p><span style=\" font-weight:400;\">Reset to default material library</span></p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.pushButton_reset_library.setText(QCoreApplication.translate("Form", u"Reset", None))
-#if QT_CONFIG(tooltip)
         self.pushButton_refprop.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Press to open the REFPROP interface</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButton_refprop.setText(QCoreApplication.translate("Form", u"Refprop", None))
+#if QT_CONFIG(tooltip)
+        self.pushButton_remove_column.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Remove selected fluid</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButton_remove_column.setText(QCoreApplication.translate("Form", u"-", None))
+#if QT_CONFIG(tooltip)
+        self.pushButton_reset_library.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p><span style=\" font-weight:400;\">Reset to default material library</span></p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButton_reset_library.setText(QCoreApplication.translate("Form", u"Reset", None))
 #if QT_CONFIG(tooltip)
         self.pushButton_add_column.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p><span style=\" font-weight:400;\">Add an empty fluid</span></p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButton_add_column.setText(QCoreApplication.translate("Form", u"+", None))
 #if QT_CONFIG(tooltip)
+        self.pushButton_import_library.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Press to open the REFPROP interface</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButton_import_library.setText(QCoreApplication.translate("Form", u"Import", None))
+#if QT_CONFIG(tooltip)
+        self.pushButton_export_library.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Press to open the REFPROP interface</p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButton_export_library.setText(QCoreApplication.translate("Form", u"Export", None))
+#if QT_CONFIG(tooltip)
         self.pushButton_duplicate.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Duplicate the selected fluid</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButton_duplicate.setText("")
-#if QT_CONFIG(tooltip)
-        self.pushButton_remove_column.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Remove selected fluid</p></body></html>", None))
-#endif // QT_CONFIG(tooltip)
-        self.pushButton_remove_column.setText(QCoreApplication.translate("Form", u"-", None))
         ___qtablewidgetitem = self.tableWidget_fluid_data.verticalHeaderItem(0)
         ___qtablewidgetitem.setText(QCoreApplication.translate("Form", u"Name", None));
         ___qtablewidgetitem1 = self.tableWidget_fluid_data.verticalHeaderItem(1)
@@ -313,13 +328,13 @@ class FluidWidget_UI(QWidget, Ui_Form):
                     - (Layout): QGridLayout
                             - frame_6: QFrame
                                 - (Layout): QGridLayout
-                                        - frame_7: QFrame
-                                            - (Layout): QGridLayout
-                                                    - pushButton_reset_library: QPushButton
                                         - pushButton_refprop: QPushButton
-                                        - pushButton_add_column: QPushButton
-                                        - pushButton_duplicate: QPushButton
                                         - pushButton_remove_column: QPushButton
+                                        - pushButton_reset_library: QPushButton
+                                        - pushButton_add_column: QPushButton
+                                        - pushButton_import_library: QPushButton
+                                        - pushButton_export_library: QPushButton
+                                        - pushButton_duplicate: QPushButton
                             - tableWidget_fluid_data: QTableWidget
     """
 

@@ -104,7 +104,7 @@ class ProjectWriter:
         if isinstance(analysis_setup, AnalysisSetup):
             analysis_setup_dict = asdict(analysis_setup)
         else:
-            analysis_setup_dict = dict()
+            analysis_setup_dict = {}
 
         with update_json(self.project_paths.project_setup_filepath) as project_setup:
             project_setup["analysis_setup"] = analysis_setup_dict
@@ -228,20 +228,23 @@ class ProjectWriter:
     def write_material_library(self, material_library: MaterialLibrary):
         logging.info("Writing MaterialLibrary.")
 
-        material_library_dict = dict()
+        material_library_dict = {}
         for material_id, material in material_library.items():
             material_library_dict[material_id] = asdict(material)
 
         write_json(self.project_paths.material_library_filepath, material_library_dict)
 
-    def write_fluid_library(self, fluid_library: FluidLibrary):
+    def write_fluid_library(self, fluid_library: FluidLibrary, export_path: Path | None = None):
         logging.info("Writing FluidLibrary.")
 
-        fluid_library_dict = dict()
+        fluid_library_dict = {}
         for fluid_id, fluid in fluid_library.items():
             fluid_library_dict[fluid_id] = asdict(fluid)
 
-        write_json(self.project_paths.fluid_library_filepath, fluid_library_dict)
+        if export_path is None:
+            export_path = self.project_paths.fluid_library_filepath
+
+        write_json(export_path, fluid_library_dict)
 
     def write_tables_in_file(
         self,
@@ -395,7 +398,7 @@ class ProjectWriter:
         so we need to convert it to a string like:
         "property id" = value
         """
-        output = dict()
+        output = {}
         for (property, tags), data in prop.items():
             key = self._property_key(property, tags)
             if key is None:
@@ -408,7 +411,7 @@ class ProjectWriter:
                 output[key] = {"material_id": data.identifier}
 
             elif isinstance(data, dict):
-                aux = dict()
+                aux = {}
                 for _key, _data in data.items():
                     if _key in ["values"]:
                         continue

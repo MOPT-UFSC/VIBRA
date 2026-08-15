@@ -28,7 +28,7 @@ class SetFluidInputs(SetFluidInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__()
 
-        self.state_properties = kwargs.get("state_properties", dict())
+        self.state_properties = kwargs.get("state_properties", {})
 
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
@@ -97,6 +97,8 @@ class SetFluidInputs(SetFluidInputs_UI):
         self.fluid_widget.pushButton_cancel.clicked.connect(self.close)
         self.fluid_widget.pushButton_remove_column.clicked.connect(self.reset_selected_fluid_lineEdit)
         self.fluid_widget.pushButton_reset_library.clicked.connect(self.reset_fluid_library_callback)
+        self.fluid_widget.pushButton_export_library.clicked.connect(self.export_fluid_library_callback)
+        self.fluid_widget.pushButton_import_library.clicked.connect(self.import_fluid_library_callback)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
         #
@@ -136,6 +138,16 @@ class SetFluidInputs(SetFluidInputs_UI):
         if self.fluid_widget.reset_library_callback():
             self.actions_to_finalize()
 
+    def export_fluid_library_callback(self):
+        self.hide()
+        if self.fluid_widget.export_library_callback():
+            self.actions_to_finalize()
+
+    def import_fluid_library_callback(self):
+        self.hide()
+        if self.fluid_widget.import_library_callback():
+            self.actions_to_finalize()
+
     def geometry_selection_callback(self):
         if self.tabWidget_main.currentIndex() == TabType.LIST:
             self.verify_if_selected_volumes_belongs_to_table_model_fluids()
@@ -164,7 +176,7 @@ class SetFluidInputs(SetFluidInputs_UI):
         self.tableWidget_model_fluids.clearSelection()
         self.pushButton_remove.setDisabled(True)
 
-        selected_ids = set(table_model_fluids_map.keys())
+        selected_ids = set(table_model_fluids_map)
         volumes_in_table_widget = selected_volumes.intersection(selected_ids)
 
         if not volumes_in_table_widget:
@@ -184,7 +196,7 @@ class SetFluidInputs(SetFluidInputs_UI):
 
     def get_table_widget_model_fluids_items_map(self) -> dict:
         num_of_rows = self.tableWidget_model_fluids.rowCount()
-        map_id_to_row = dict()
+        map_id_to_row = {}
 
         for row in range(num_of_rows):
             selected_item = self.tableWidget_model_fluids.item(row, 0)
@@ -241,17 +253,16 @@ class SetFluidInputs(SetFluidInputs_UI):
         selected_fluid = self.fluid_widget.get_selected_fluid()
 
         if selected_fluid is None:
-            self.hide()
             self.title = "No fluids selected"
             self.message = "Select a fluid in the list before confirming the fluid attribution."
             PrintMessageInput([error_title, self.title, self.message])
             return
 
-        volume_ids = list()
+        volume_ids = []
         attribution_type = self.comboBox_attribution_type.currentIndex()
 
         if attribution_type == AttributionType.ALL_BODIES:
-            if "volumes" in self.mesh.geometry_information.keys():
+            if "volumes" in self.mesh.geometry_information:
                 volume_ids = self.mesh.geometry_information["volumes"]
 
         else:
@@ -263,7 +274,6 @@ class SetFluidInputs(SetFluidInputs_UI):
             )
 
             if error_data is not None:
-                self.hide()
                 self.lineEdit_selection_id.setFocus()
                 PrintMessageInput(error_data)
                 return
@@ -304,8 +314,6 @@ class SetFluidInputs(SetFluidInputs_UI):
 
     def reset_callback(self):
 
-        self.hide()
-
         title = "Fluids resetting"
         message = "Would you like to remove the all assigned fluids from model?"
 
@@ -345,7 +353,7 @@ class SetFluidInputs(SetFluidInputs_UI):
             "Volume" : self.properties.volume_properties,
             }
 
-        self.model_fluids = dict()
+        self.model_fluids = {}
 
         for selection, _property in properties.items():
             for key, data in _property.items():
@@ -389,7 +397,7 @@ class SetFluidInputs(SetFluidInputs_UI):
 
     def update_tabs_visibility(self):
 
-        for key in self.properties.volume_properties.keys():
+        for key in self.properties.volume_properties:
             property, _ = key
             if property != "fluid":
                 continue
@@ -397,7 +405,7 @@ class SetFluidInputs(SetFluidInputs_UI):
             self.tabWidget_main.setTabVisible(TabType.LIST, True)
             return
 
-        for key in self.properties.surface_properties.keys():
+        for key in self.properties.surface_properties:
             property, _ = key
             if property != "fluid":
                 continue
