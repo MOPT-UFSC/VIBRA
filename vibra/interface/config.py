@@ -115,9 +115,9 @@ class Config:
 
         return Path(last_path)
 
-    def write_refprop_path_in_file(self, path: str):
+    def write_refprop_path_in_file(self, path: str | Path):
         data = self.get_config_data()
-        data["refprop_path"] = path
+        data["refprop_path"] = str(path)
 
         self.write_data_in_file(data)
 

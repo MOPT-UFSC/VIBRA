@@ -4,11 +4,11 @@ import re
 from pathlib import Path
 
 import numpy as np
-from PySide6.QtWidgets import QFileDialog
 
 from vibra import app
 from vibra.interface import error_title, warning_title
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.user_input.data_handler.file_dialog_service import FileDialogService
 
 IS_ERROR_REGEX = re.compile(r"\[\w+\s+error")
 IS_WARNING_REGEX = re.compile(r"\[\w+\s+warning")
@@ -43,27 +43,26 @@ class RefpropInterface:
             "Z" : "compressibility_factor",
         }
 
-    def get_refprop_path(self) -> None | str:
-
+    def get_refprop_path(self) -> Path | None:
         REFPROP_PATH = os.environ.get('RPPREFIX')
         if REFPROP_PATH is None:
             REFPROP_PATH = app().config.get_refprop_path_from_file()
         
-        if isinstance(REFPROP_PATH, str):
-            if os.path.exists(REFPROP_PATH):
-                return REFPROP_PATH
+        if isinstance(REFPROP_PATH, str) and os.path.exists(REFPROP_PATH):
+            return Path(REFPROP_PATH)
 
         user_path = os.path.expanduser("~")
         title = 'Choose the REFPROP folder'
-        REFPROP_PATH = QFileDialog.getExistingDirectory(None, title, str(user_path))
 
-        if REFPROP_PATH == "":
+        REFPROP_PATH = FileDialogService.get_existing_dir(caption=title, dir=str(user_path))
+
+        if REFPROP_PATH is None:
             return None
 
-        if not os.path.exists(REFPROP_PATH):
+        if not REFPROP_PATH.exists():
             return None
     
-        if os.path.basename(REFPROP_PATH) in ["REFPROP", "Refprop", "refprop"]:
+        if REFPROP_PATH.name in ["REFPROP", "Refprop", "refprop"]:
             app().config.write_refprop_path_in_file(REFPROP_PATH)
             return REFPROP_PATH
 
@@ -90,7 +89,6 @@ class RefpropInterface:
             return True
 
     def initialize_REFPROP(self):
-
         try:
             
             from ctREFPROP.ctREFPROP import REFPROPFunctionLibrary
@@ -100,7 +98,7 @@ class RefpropInterface:
             if refProp_path is None:
                 return True
 
-            elif not Path(refProp_path).exists():
+            elif not refProp_path.exists():
                 title = "REFPROP installation not detected"
                 message = "Dear user, the REFPROP application files were not found in the computer's default paths. "
                 message += "Please, install the REFPROP on your computer to enable the set-up of the fluids mixture."
@@ -108,13 +106,13 @@ class RefpropInterface:
                 return True
 
             logging.info("Loading REFPROP interface [40%]")
-            self.refprop = REFPROPFunctionLibrary(refProp_path)
+            self.refprop = REFPROPFunctionLibrary(str(refProp_path))
             if self.check_refprop_version():
                 return True
  
             logging.info("Loading REFPROP interface [50%]")
-            self.refprop.SETPATHdll(refProp_path)
-            refProp_fluids_path = Path(refProp_path) / "FLUIDS"
+            self.refprop.SETPATHdll(str(refProp_path))
+            refProp_fluids_path = refProp_path / "FLUIDS"
 
             self.refprop_fluids = dict()
             self.fluid_file_to_final_name = dict()
@@ -123,7 +121,7 @@ class RefpropInterface:
                 if ".BNC" in fluid_file:
                     continue
 
-                filepath = Path(refProp_fluids_path) / fluid_file
+                filepath = refProp_fluids_path / fluid_file
 
                 f = open(filepath, 'r')
                 line_0 = f.readline()
