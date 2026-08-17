@@ -1,12 +1,11 @@
 import logging
-import platform
 from pathlib import Path
 
 import numpy as np
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QAbstractItemView, QFileDialog, QHeaderView, QTableWidgetItem, QTreeWidgetItem
+from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QTableWidgetItem, QTreeWidgetItem
 
-from vibra import app
+from vibra import SUPPORTED_SPREADSHEET_EXTENSIONS, app
 from vibra.engine.properties.fluid import Fluid
 from vibra.interface import error_title, warning_title
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
@@ -24,6 +23,7 @@ from vibra.interface.numeric_checks.unit_utilities import (
     temperature_units_labels,
 )
 from vibra.interface.ui_generated.model.fluid.set_fluid_composition_input_ui import SetFluidCompositionInput_UI
+from vibra.interface.user_input.data_handler.file_dialog_service import FileDialogService
 from vibra.model.machines.reciprocating_compressor_model import ConnectionType
 
 
@@ -1258,36 +1258,21 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         app().main_window.set_input_widget(self)
 
     def export_fluid_composition_callback(self):
-
         self.hide()
         last_path = app().config.get_last_folder_for("fluid_composition_folder", default=self.user_path)
 
-        ext_filter = (
-            "Spreasheet file (*.xlsx)"
-            ";;Spreasheet file (*.xls)"
-            ";;All Files (*)"
-        )
+        file_path = FileDialogService.save_file(file_extensions=SUPPORTED_SPREADSHEET_EXTENSIONS,
+                                    caption="Export the fluid composition data in spreadsheet file",
+                                    last_folder=last_path)
 
-        kwargs = {}
-        if platform.system() == "Linux":
-            kwargs["options"] = QFileDialog.Option.DontUseNativeDialog
-
-        file_path, check = QFileDialog.getSaveFileName(
-            self,
-            "Export the fluid composition data in spreadsheet file",
-            str(last_path),
-            filter=ext_filter,
-            **kwargs,
-        )
-
-        if not check:
+        if file_path is None:
             return True
 
         app().config.write_last_folder_path_in_file("fluid_composition_folder", file_path)
 
         data_to_export = self.get_fluid_composition_data_to_export()
 
-        self.export_data_in_spreadsheet_format(data_to_export, file_path)
+        self.export_data_in_spreadsheet_format(data_to_export, str(file_path))
 
     def get_fluid_composition_data_to_export(self):
 
