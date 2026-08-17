@@ -4,7 +4,7 @@ from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QLabel, QPushButton, QSpinBox
 
-from vibra import app
+from vibra import SUPPORTED_ANIMATION_EXTENSIONS, SUPPORTED_VIDEO_EXTENSIONS, app
 from vibra.engine.analysis_info import PhysicalDomain
 from vibra.interface import error_title
 from vibra.interface.formatters.icons import Icon
@@ -296,14 +296,15 @@ class AnimationWidget(AnimationWidget_UI):
         self.phase_slider.setSingleStep(single_step)
 
     def save_animation(self):
-        file_path = FileDialogService.save_file(file_extensions=["mp4", "webp", "gif"],
+        extensions = SUPPORTED_VIDEO_EXTENSIONS + SUPPORTED_ANIMATION_EXTENSIONS
+        file_path = FileDialogService.save_file(file_extensions=extensions,
                                                 caption="Save As")
 
         if file_path is None:
             return
 
         try:
-            if file_path.suffix.lower() in [".gif", ".webp"]:
+            if file_path.suffix.lower()[1:] in SUPPORTED_ANIMATION_EXTENSIONS:
                 LoadingWindow(self.current_render_widget.save_animation).run(file_path)
             else:
                 LoadingWindow(self.current_render_widget.save_video).run(file_path)
