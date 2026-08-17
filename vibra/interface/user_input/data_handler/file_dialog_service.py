@@ -86,9 +86,12 @@ class FileDialogService:
             ext_dict["All files"].append(ext_str)
             ext_dict[current_label].append(ext_str)
 
-            if current_label != last_label or i == len(file_extensions) - 1:
+            if current_label != last_label:
                 extensions_text += FileDialogService._generate_qt_filter(last_label, ext_dict)
                 last_label = current_label
+
+            if i == len(file_extensions) - 1:
+                extensions_text += FileDialogService._generate_qt_filter(current_label, ext_dict)
 
         if not all_files or len(file_extensions) == 1:
             return extensions_text
@@ -101,7 +104,7 @@ class FileDialogService:
 
     @staticmethod
     def _get_file_label(extension: str) -> str:
-        extension = extension.lower() 
+        extension = extension.lower()
 
         match extension:
             case "xlsx" | "xls":
@@ -114,6 +117,12 @@ class FileDialogService:
                 return "Geometry files"
             case "msh" | "bdf" | "nas":
                 return "Mesh files"
+            case "mp4":
+                return "Video"
+            case "webp":
+                return "WEBP"
+            case "gif":
+                return "GIF"
             case _:
                 return f"{extension.title()} file"
 
@@ -134,21 +143,21 @@ class FileDialogService:
         extension = extension.lower()
 
         match extension:
-            case "xlsx":
+            case "xlsx" | "xls":
                 return 0
-            case "xls":
+            case "dat" | "txt" | "csv":
                 return 1
-            case "dat":
-                return 2
-            case "txt":
-                return 3
-            case "csv":
-                return 4
             case "vibra":
-                return 5
+                return 2
             case "iges" | "igs" | "step" | "stp":
-                return 6
+                return 3
             case "msh" | "bdf" | "nas":
+                return 4
+            case "mp4":
+                return 5
+            case "webp":
+                return 6
+            case "gif":
                 return 7
             case _:
                 return 8

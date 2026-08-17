@@ -1,11 +1,8 @@
-import platform
-from pathlib import Path
-
 import numpy as np
 from molde.render_widgets.animated_render_widget import AnimatedRenderWidget
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QFileDialog, QLabel, QPushButton, QSpinBox
+from PySide6.QtWidgets import QLabel, QPushButton, QSpinBox
 
 from vibra import app
 from vibra.engine.analysis_info import PhysicalDomain
@@ -14,6 +11,7 @@ from vibra.interface.formatters.icons import Icon
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.ui_generated.plots.general.animation_widget_ui import AnimationWidget_UI
+from vibra.interface.user_input.data_handler.file_dialog_service import FileDialogService
 from vibra.interface.viewer_3d.plot_setup import (
     AllowablePulsationForScrewCompressorsPlotSetup,
     FrequencyDisplacementPlotSetup,
@@ -298,30 +296,11 @@ class AnimationWidget(AnimationWidget_UI):
         self.phase_slider.setSingleStep(single_step)
 
     def save_animation(self):
-        kwargs = dict()
-        if platform.system() == "Linux":
-            kwargs["options"] = QFileDialog.Option.DontUseNativeDialog
+        file_path = FileDialogService.save_file(file_extensions=["mp4", "webp", "gif"],
+                                                caption="Save As")
 
-        file_path, extension = QFileDialog.getSaveFileName(
-            self, "Save As", filter="Video (*.mp4);;WEBP (*.webp);;GIF (*.gif);; All Files ();;", **kwargs
-        )
-
-        if not extension:
+        if file_path is None:
             return
-
-        # Add default suffix if it does not have one
-        file_path = Path(file_path)
-        if extension == "Video (*.mp4)":
-            suffix = ".mp4"
-        elif extension == "WEBP (*.webp)":
-            suffix = ".webp"
-        elif extension == "GIF (*.gif)":
-            suffix = ".gif"
-        else:
-            suffix = ".mp4"
-
-        if not file_path.suffix:
-            file_path = file_path.parent / (file_path.name + suffix)
 
         try:
             if file_path.suffix.lower() in [".gif", ".webp"]:
