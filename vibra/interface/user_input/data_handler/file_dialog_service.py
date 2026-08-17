@@ -2,7 +2,7 @@ import platform
 from collections import defaultdict
 from pathlib import Path
 
-from PySide6.QtWidgets import QFileDialog
+from PySide6.QtWidgets import QFileDialog, QWidget
 
 
 class FileDialogService:
@@ -57,6 +57,19 @@ class FileDialogService:
             path = path.with_suffix(suffix)
 
         return path
+
+    @staticmethod
+    def get_existing_dir(caption: str = "", dir: str | Path = "") -> Path | None:
+        kwargs = {}
+        if platform.system() == "Linux":
+            kwargs["options"] = QFileDialog.Option.DontUseNativeDialog
+
+        existing_dir = QFileDialog.getExistingDirectory(caption=caption, dir=str(dir), **kwargs)
+
+        if not existing_dir:
+            return None
+
+        return Path(existing_dir)
 
     @staticmethod
     def _build_dialog_kwargs(file_extensions: list[str], caption: str, last_folder: str | None, open_file=True):
