@@ -1,13 +1,13 @@
-from PySide6.QtWidgets import QFileDialog, QPushButton
+import os
+from pathlib import Path
+
 from PySide6.QtCore import Qt
 
 from vibra import app
-from vibra.interface.ui_generated.data_handler.export_mesh_ui import ExportMesh_UI
-from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.common.common_interface import mesher_interface_callback
-
-import os
-from pathlib import Path
+from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.ui_generated.data_handler.export_mesh_ui import ExportMesh_UI
+from vibra.interface.user_input.data_handler.file_dialog_service import FileDialogService
 
 
 class ExportMeshData(ExportMesh_UI):
@@ -48,15 +48,18 @@ class ExportMeshData(ExportMesh_UI):
     def _create_connections(self):
         self.pushButton_export_mesh.clicked.connect(self.export_mesh_data)
         self.pushButton_search_folder.clicked.connect(self.search_folder)
+        self.pushButton_exit.clicked.connect(self.close)
 
     def search_folder(self):
-        self.folder_path = QFileDialog.getExistingDirectory(None, 'Choose a folder to export the mesh data', str(self.temp_path))
-        self.lineEdit_folder_path.setText(str(self.folder_path))
-        if self.folder_path == "":
+        self.folder_path = FileDialogService.get_existing_dir(caption='Choose a folder to export the mesh data', 
+                                                              dir=self.temp_path)
+        
+        if self.folder_path is None:
             return True
-        else:
-            self.temp_path = self.folder_path
-            return False
+        
+        self.temp_path = self.folder_path
+        self.lineEdit_folder_path.setText(str(self.folder_path))
+        return False
 
     def export_mesh_data(self):
 
