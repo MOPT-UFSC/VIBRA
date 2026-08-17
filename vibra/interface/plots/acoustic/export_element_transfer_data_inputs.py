@@ -4,9 +4,8 @@ from pathlib import Path
 import numpy as np
 from PySide6.QtCore import QEvent, QObject, Qt, Signal
 from PySide6.QtGui import QCloseEvent
-from PySide6.QtWidgets import QFileDialog
 
-from vibra import app
+from vibra import SUPPORTED_SPREADSHEET_EXTENSIONS, app
 from vibra.engine import AnalysisID
 from vibra.interface import error_title
 from vibra.interface.data_handler.export_model_results import ExportModelResults
@@ -15,6 +14,7 @@ from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.ui_generated.data_handler.export_element_transfer_data_inputs_ui import (
     ExportElementTransferDataInputs_UI,
 )
+from vibra.interface.user_input.data_handler.file_dialog_service import FileDialogService
 
 
 class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
@@ -138,24 +138,19 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
         self.current_lineEdit = self.lineEdit_output_selected_id
 
     def search_callback(self):
-
         last_path = app().config.get_last_folder_for(
             "imported_table_folder",
             default=Path().home(),
         )
 
-        caption = "Choose a file to import element transfer data"
-        path, check = QFileDialog.getOpenFileName(
-            self,
-            caption,
-            str(last_path),
-            "Table File (*.xls; *.xlsx;)",
-        )
+        path = FileDialogService.open_file(file_extensions=SUPPORTED_SPREADSHEET_EXTENSIONS,
+                                           caption="Choose a file to import element transfer data",
+                                           last_folder=last_path)
 
-        if not check:
+        if path is None:
             return True
 
-        self.lineEdit_spreadsheet_path.setText(path)
+        self.lineEdit_spreadsheet_path.setText(str(path))
         app().config.write_last_folder_path_in_file("imported_table_folder", path)
 
     def check_inputs(self):
