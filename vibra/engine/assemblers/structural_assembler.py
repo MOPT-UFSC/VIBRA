@@ -406,7 +406,7 @@ class StructuralAssembler:
             for i, complex_values in enumerate(surface_data):
                 indices = self.element_2d.element_indexes(i)
                 e_normal = elements_normals[i, :].reshape(-1, 1)
-                output[indices, :] += self.element_2d.load_vector(i, e_normal, complex_values)
+                output[indices, :] += self.element_2d.calculate_load_vector_for_normal_pressure_loading(i, e_normal, complex_values)
 
         if self.prescribed_dof_indexes:
             return output[self.unprescribed_dof_indexes, :]

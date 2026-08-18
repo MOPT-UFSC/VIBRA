@@ -84,7 +84,7 @@ class STRUCT_TRIANGLE_6(TRIANGLE_6):
         return nodal_loads
     
 
-    def load_vector(self, el_index: int, e_normal: np.ndarray,  normal_pressure: float | np.ndarray = 1.0) -> np.ndarray:
+    def calculate_load_vector_for_normal_pressure_loading(self, el_index: int, e_normal: np.ndarray,  normal_pressure: np.ndarray) -> np.ndarray:
         """ 
         This method computes the elementary load vector.
 
@@ -111,10 +111,14 @@ class STRUCT_TRIANGLE_6(TRIANGLE_6):
         # nodal coordinates in the local CS
         coord_lcs = get_local_coordinates(coords)
 
+        # reshape the normal pressures vector
+        normal_pressure = normal_pressure.reshape(1, -1)
+
+        # initialize the shape functions matrix
+        N = np.zeros((3, self.dof_per_element), dtype=float)
+
         # initialize the variable Fe
         Fe = 0.
-
-        normal_pressure = normal_pressure.reshape(1, -1)
 
         # integration loop
         for i in range(self.nint):
@@ -125,12 +129,12 @@ class STRUCT_TRIANGLE_6(TRIANGLE_6):
             # determinant of Jacobia matrix
             det_JAC = self.get_detJAC(JAC)
 
-            # shape functions
-            N = np.zeros((3, self.dof_per_element), dtype=float)
+            # populate the shape functions matrix
             N[0, 0::3] = self.phi[i, :, :]
             N[1, 1::3] = self.phi[i, :, :]
             N[2, 2::3] = self.phi[i, :, :]
 
+            # the negative value of the normal is used to point the normal toward the interior of the domain.
             Fe += (N.T @ (-e_normal @ normal_pressure)) * (det_JAC * self.wps[i])
 
         return Fe
