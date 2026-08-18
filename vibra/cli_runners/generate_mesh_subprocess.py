@@ -1,12 +1,10 @@
 import logging
 import sys
-from typing import TYPE_CHECKING, Optional
+from pathlib import Path
+from typing import Optional
 
 from vibra.engine.mesher.mesh_setup import MeshSetup
 from vibra.engine.project import Project
-
-if TYPE_CHECKING:
-    from pathlib import Path
 
 logging.basicConfig(
     level=logging.INFO,

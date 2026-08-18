@@ -250,18 +250,22 @@ class Project:
 
         mesh = Mesh().load_cad(self.model.geometry_path, mesh_setup)
 
-        if mesh.collapsed_1d_elements or mesh.collapsed_2d_elements or mesh.collapsed_3d_elements:
+        if mesh.collapsed_elements_data:
+            collapsed_1d_elements = mesh.collapsed_elements_data.get("collpased_1d_elements")
+            collapsed_2d_elements = mesh.collapsed_elements_data.get("collpased_2d_elements")
+            collapsed_3d_elements = mesh.collapsed_elements_data.get("collpased_3d_elements")
+
             message = "The generated mesh contains collapsed elements."
             message += "Please check the mesh setup and try again.\n"
-            message += "Collapsed 1d elements: " + ", ".join(mesh.collapsed_1d_elements) + "\n"
-            message += "Collapsed 2d elements: " + ", ".join(mesh.collapsed_2d_elements) + "\n"
-            message += "Collapsed 3d elements: " + ", ".join(mesh.collapsed_3d_elements)
+            message += "Collapsed 1d elements: " + ", ".join(collapsed_1d_elements) + "\n"
+            message += "Collapsed 2d elements: " + ", ".join(collapsed_2d_elements) + "\n"
+            message += "Collapsed 3d elements: " + ", ".join(collapsed_3d_elements)
 
             raise errors.MeshException(
                 message,
-                edges=mesh.collapsed_1d_elements,
-                faces=mesh.collapsed_2d_elements,
-                solids=mesh.collapsed_3d_elements,
+                edges=collapsed_1d_elements,
+                faces=collapsed_2d_elements,
+                solids=collapsed_3d_elements,
             )
 
         self.model.mesh = mesh

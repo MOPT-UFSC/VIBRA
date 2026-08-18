@@ -83,7 +83,7 @@ class SurfaceAbsorptionCoefficientInputs(SurfaceAbsorptionCoefficientInputs_UI):
 
     def toggle_nodal_normals_symbols_visibility(self):
         show_normals = (self.comboBox_nodal_normals.currentText() == "Show")
-        app().main_window.results_widget.visualization_filter.normal_symbols = show_normals
+        app().main_window.results_widget.visualization_filter.nodal_normal_symbols = show_normals
         app().main_window.update_symbols()
 
     def geometry_selection_callback(self):
@@ -183,7 +183,7 @@ class SurfaceAbsorptionCoefficientInputs(SurfaceAbsorptionCoefficientInputs_UI):
         self.join_model_data()
 
         show_normals = (self.comboBox_nodal_normals.currentText() == "Show")
-        app().main_window.results_widget.visualization_filter.normal_symbols = show_normals
+        app().main_window.results_widget.visualization_filter.nodal_normal_symbols = show_normals
         if show_normals:
             app().main_window.update_symbols()
 

@@ -157,8 +157,8 @@ class MainWindow(MainWindow_UI):
         self._connect_actions()
 
         app().splash.update_progress(30)
-        self._load_menu_widgets()
         self._load_render_widgets()
+        self._load_menu_widgets()
 
         app().splash.update_progress(60)
         self._create_basic_layout()
@@ -411,6 +411,7 @@ class MainWindow(MainWindow_UI):
     def configure_results_render_widget(self):
         self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
         self.results_viewer_widget.hide_bottom_widget()
+        self.results_viewer_widget.results_viewer_items.clear_last_item()
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
 
         self.action_results_workspace.setEnabled(True)
@@ -490,8 +491,11 @@ class MainWindow(MainWindow_UI):
 
         self.reload_visualization_filter()
 
-        if self.results_widget.visualization_filter.normal_symbols:
-            self.results_widget.visualization_filter.normal_symbols = False
+        nodal_normals = self.results_widget.visualization_filter.nodal_normal_symbols
+        element_normals = self.results_widget.visualization_filter.element_normal_symbols
+        if nodal_normals or element_normals:
+            self.results_widget.visualization_filter.nodal_normal_symbols = False
+            self.results_widget.visualization_filter.element_normal_symbols = False
             self.update_symbols()
 
     def action_mesh_workspace_callback(self):
@@ -667,7 +671,7 @@ class MainWindow(MainWindow_UI):
             f";;Geometry Files ({geo})"
             f";;Mesh Files ({mesh})"
             ";;All Files (*)"
-        )
+        )  # fmt: skip
 
         load_path, check = QFileDialog.getOpenFileName(
             self,
@@ -705,7 +709,7 @@ class MainWindow(MainWindow_UI):
         path = app().config.get_last_folder_for("geometry_mesh_folder", default=self.user_path)
 
         geo = qt_extensions(SUPPORTED_GEOMETRY_EXTENSIONS)
-        ext_filter = (f"Geometry Files ({geo});; All Files (*)")
+        ext_filter = f"Geometry Files ({geo});; All Files (*)"
 
         load_path, check = QFileDialog.getOpenFileName(
             self,
@@ -717,14 +721,20 @@ class MainWindow(MainWindow_UI):
         if not check:
             return
 
+        current_fluid_library = app().project.model.properties.fluid_library
+        current_material_library = app().project.model.properties.material_library
+
         app().project.reset_project()
+        app().project.model.properties.fluid_library = current_fluid_library
+        app().project.model.properties.material_library = current_material_library
+
         self.import_geometry(load_path)
 
     def import_mesh_dialog(self):
         path = app().config.get_last_folder_for("geometry_mesh_folder", default=self.user_path)
 
         mesh = qt_extensions(SUPPORTED_MESH_EXTENSIONS)
-        ext_filter = (f"Mesh Files ({mesh});; All Files (*)")
+        ext_filter = f"Mesh Files ({mesh});; All Files (*)"
 
         load_path, check = QFileDialog.getOpenFileName(
             self,
@@ -736,7 +746,13 @@ class MainWindow(MainWindow_UI):
         if not check:
             return
 
+        current_fluid_library = app().project.model.properties.fluid_library
+        current_material_library = app().project.model.properties.material_library
+
         app().project.reset_project()
+        app().project.model.properties.fluid_library = current_fluid_library
+        app().project.model.properties.material_library = current_material_library
+
         self.import_mesh(load_path)
 
     def save_project_dialog(self):
