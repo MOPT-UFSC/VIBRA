@@ -337,6 +337,25 @@ class MeshActor(vtkPropAssembly):
         if self.cached_info.section_colors_hash != CachedInfo.array_hash(section_colors):
             self.section_colors.Modified()
 
+    @function_timer
+    def picked_dim_tag(self, picker: vtkHardwarePicker) -> tuple[int, int] | None:
+        match picker.GetActor():
+            case self.section_actor:
+                dim = 3
+                ids = vtk_to_numpy(self.section_ids)
+            case self.surface_actor:
+                dim = 2
+                ids = vtk_to_numpy(self.surface_ids)
+            case self.node_actor:
+                dim = 0
+                ids = vtk_to_numpy(self.node_ids)
+            case _:
+                return
+
+        cell_id = picker.GetCellId()
+        if 0 < cell_id < len(ids):
+            return dim, ids[cell_id]
+
     def cache_data(self):
         self.cached_info.mesh_id = id(self.mesh)
         self.cached_info.surface_colors_hash = CachedInfo.array_hash(self.surface_colors)
