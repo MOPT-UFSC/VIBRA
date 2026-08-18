@@ -52,7 +52,6 @@ class MeshActor(vtkPropAssembly):
 
         self._create_variables()
         self._configure_actors_parameters()
-        self.last_mesh_id = 0
 
     @property
     def mesh(self) -> Mesh | None:
@@ -68,14 +67,32 @@ class MeshActor(vtkPropAssembly):
 
         return self.model.properties
 
+    @function_timer
     def update(self):
+        if self.mesh is None:
+            self.clear_data()
+            return
+
+        self.update_mesh_common()
         self.update_node()
         self.update_surface()
         self.update_section_plane()
         self.update_colors()
 
+        self.cached_info.mesh_id = id(self.mesh)
+
+    def clear_data(self):
+        self.surface_colors.SetNumberOfTuples(0)
+        self.surface_ids.SetNumberOfTuples(0)
+        self.surface_colors.Modified()
+
+        self.section_colors.SetNumberOfTuples(0)
+        self.section_ids.SetNumberOfTuples(0)
+        self.section_colors.Modified()
+
     def _create_variables(self):
         self.points = vtkPoints()
+        self.solids_on_section = np.zeros((0, 4), dtype=int)
 
         self.node_colors = vtkUnsignedCharArray()
         self.node_ids = vtkIntArray()
@@ -129,18 +146,27 @@ class MeshActor(vtkPropAssembly):
         self.section_actor.SetMapper(self.section_mapper)
         self.AddPart(self.section_actor)
 
-    def update_node(self):
-        if self.mesh is None:
-            self._clear_data()
-            return
-
+    def update_mesh_common(self):
+        assert self.mesh is not None
         assert self.mesh.nodal_coordinates is not None
+
+        # AND modifier is the same
+        if id(self.mesh) == self.cached_info.mesh_id:
+            return
 
         coordinates = self.mesh.nodal_coordinates[:, 1:]
         self.points.SetData(numpy_to_vtk(coordinates))
         self.points.Modified()
 
-        node_indexes = self.mesh.nodal_coordinates[:, 0].astype(int)
+    def update_node(self):
+        assert self.mesh is not None
+        assert self.mesh.nodal_coordinates is not None
+        assert self.mesh.faces_connectivity is not None
+
+        if id(self.mesh) == self.cached_info.mesh_id:
+            return
+
+        node_indexes = np.unique(self.mesh.faces_connectivity[:, 4:])
         n_cells = len(node_indexes)
 
         cells = self._create_cells(node_indexes)
@@ -154,20 +180,12 @@ class MeshActor(vtkPropAssembly):
         view[:] = node_indexes
 
     def update_surface(self):
-        if self.mesh is None:
-            self._clear_data()
-            return
-
+        assert self.mesh is not None
         assert self.mesh.nodal_coordinates is not None
         assert self.mesh.faces_connectivity is not None
 
-        mesh_id = id(self.mesh)
-        if mesh_id == self.cached_info.mesh_id:
+        if id(self.mesh) == self.cached_info.mesh_id:
             return
-        self.cached_info.mesh_id = mesh_id
-
-        # coordinates = self.mesh.nodal_coordinates[:, 1:]
-        # self.points.SetData(numpy_to_vtk(coordinates))
 
         connectivity = self.mesh.faces_connectivity[:, 4:]
         n_cells = len(connectivity)
@@ -182,15 +200,16 @@ class MeshActor(vtkPropAssembly):
         view = vtk_to_numpy(self.surface_ids)
         view[:] = self.mesh.faces_connectivity[:, 0]
 
+    @function_timer
     def update_section_plane(self):
-        if self.mesh is None:
-            return
-
+        assert self.mesh is not None
         assert self.mesh.nodal_coordinates is not None
         assert self.mesh.faces_connectivity is not None
         assert self.mesh.solids_connectivity is not None
 
+        self.node_mapper.RemoveAllClippingPlanes()
         self.surface_mapper.RemoveAllClippingPlanes()
+
         if self.section_plane is None:
             return
 
@@ -198,6 +217,7 @@ class MeshActor(vtkPropAssembly):
         plane.SetOrigin(self.section_plane.origin)
         plane.SetNormal(self.section_plane.normal)
 
+        self.node_mapper.AddClippingPlane(plane)
         self.surface_mapper.AddClippingPlane(plane)
         self.surface_mapper.Modified()
         self.surface_actor.Modified()
@@ -210,9 +230,8 @@ class MeshActor(vtkPropAssembly):
             self.section_plane.normal,
         ).flatten()
 
-        elements_inside_plane = np.all(mask[connectivity], axis=1)
-        elements_outside_plane = ~np.any(mask[connectivity], axis=1)
-        elements_in_middle = ~(elements_inside_plane | elements_outside_plane)
+        counts = mask[connectivity].sum(axis=1, dtype=np.int8)
+        elements_in_middle = (0 < counts) & (counts < connectivity.shape[1])
 
         filtered_connectivity = connectivity[elements_in_middle]
         n_cells = len(filtered_connectivity)
@@ -311,17 +330,6 @@ class MeshActor(vtkPropAssembly):
 
     def _get_parts(self) -> list[vtkActor]:
         return list(self.GetParts())  # pyright: ignore[reportArgumentType]
-
-    def _clear_data(self):
-        self.last_mesh_id = 0
-
-        self.surface_colors.SetNumberOfTuples(0)
-        self.surface_ids.SetNumberOfTuples(0)
-        self.surface_colors.Modified()
-
-        self.section_colors.SetNumberOfTuples(0)
-        self.section_ids.SetNumberOfTuples(0)
-        self.section_colors.Modified()
 
     def _create_cells(self, connectivity: np.ndarray) -> vtkCellArray:
         if connectivity.ndim == 1:
