@@ -76,8 +76,7 @@ class MeshActor(vtkPropAssembly):
         self.update_surface()
         self.update_section_plane()
         self.update_colors()
-
-        self.cached_info.mesh_id = id(self.mesh)
+        self.cache_data()
 
     def clear_data(self):
         self.cached_info = CachedInfo()
@@ -254,7 +253,6 @@ class MeshActor(vtkPropAssembly):
         view[:] = self.mesh.solids_connectivity[elements_in_middle, 0]
 
     def update_colors(self):
-        self.cache_colors()
         self.set_color(Color(255, 255, 255), update=False)
 
         if self.properties is None:
@@ -322,6 +320,9 @@ class MeshActor(vtkPropAssembly):
             surfaces = list(chain.from_iterable(surface_groups))
             self.paint_surfaces(color, surfaces)
 
+        if self.section_plane is None:
+            return
+
         section_ids = vtk_to_numpy(self.section_ids)
         section_colors = vtk_to_numpy(self.section_colors)
 
@@ -332,7 +333,8 @@ class MeshActor(vtkPropAssembly):
         if self.cached_info.section_colors_hash != CachedInfo.array_hash(section_colors):
             self.section_colors.Modified()
 
-    def cache_colors(self):
+    def cache_data(self):
+        self.cached_info.mesh_id = id(self.mesh)
         self.cached_info.surface_colors_hash = CachedInfo.array_hash(self.surface_colors)
         self.cached_info.section_colors_hash = CachedInfo.array_hash(self.section_colors)
 
