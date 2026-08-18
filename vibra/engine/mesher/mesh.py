@@ -1716,7 +1716,7 @@ class Mesh:
         number_3d_elements = len(self.solids_connectivity)
         elements_map_size = len(self.face_to_solid_element)
 
-        if number_2d_elements - elements_map_size and number_3d_elements:
+        if (number_2d_elements - elements_map_size) and number_3d_elements:
             print(f"Number of surface elements >>> {number_2d_elements}")
             print(f"Map face to solid elements >>> {elements_map_size}")
             print(f"Difference: {number_2d_elements - elements_map_size}")
