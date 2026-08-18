@@ -30,6 +30,7 @@ from vibra.engine.elements.elements_2d import (
     # 2D elements - structural
     STRUCT_TRIANGLE_3,
 )
+from vibra.engine.elements.elements_2d.structural.structural_tria6_element import STRUCT_TRIANGLE_6
 from vibra.engine.elements.elements_3d import (
     # 3d elements - acoustic
     ACT_HEXAHEDRON_8C,
@@ -497,7 +498,7 @@ class Model:
             return STRUCT_TETRAHEDRON_4S(self), STRUCT_TRIANGLE_3(self), None
 
         elif element_type == TETRAHEDRON_10:
-            return STRUCT_TETRAHEDRON_10S(self), None, None
+            return STRUCT_TETRAHEDRON_10S(self), STRUCT_TRIANGLE_6(self), None
 
         elif element_type == HEXAHEDRON_8:
             return STRUCT_HEXAHEDRON_8(self), None, None

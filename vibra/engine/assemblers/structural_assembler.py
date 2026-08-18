@@ -1,15 +1,14 @@
 
-from vibra.engine.analysis_info import HarmonicAnalysisSetup
+import logging
+from collections import defaultdict
+from time import time
 
+import numpy as np
+from scipy.sparse import csr_matrix
+
+from vibra.engine.analysis_info import HarmonicAnalysisSetup
 from vibra.engine.model import Model
 from vibra.engine.properties.material import Material
-
-import logging
-import numpy as np
-
-from collections import defaultdict
-from scipy.sparse import csr_matrix
-from time import time
 
 
 class StructuralAssembler:
@@ -211,7 +210,7 @@ class StructuralAssembler:
         return displacement_dof
 
 
-    def process_structural_nodal_loads(self):
+    def get_structural_excitations_by_nodal_attribution(self):
 
         input_nodal_loads_data = self.get_property_data_for_selected_property("nodal_loads")
         output_nodal_loads_data = self.reorder_property_data_based_on_gdof(input_nodal_loads_data)
@@ -272,6 +271,149 @@ class StructuralAssembler:
             return array_of_values
 
 
+    def get_value_in_array_form(
+            self, 
+            value: float | np.ndarray, 
+            flatten: bool = False, 
+            filter_frequencies: bool=True,
+            ) -> np.ndarray:
+        """
+        This method returns, for a given input value, an output vector with 
+        the same length as the frequencies vector.
+
+        Parameters
+        ----------
+        value: float or np.ndarray
+            The input value to be converted in array with
+            the same length as the frequencies vector.
+        
+        flatten: bool, optional
+            Controls whether the output vector will be flattened or not.
+
+        Returns
+        -------
+        output_vector: np.ndarray
+            The output vector with the same length as the frequencies
+            vector.
+        """
+
+        aux_ones = np.ones((1, self.number_frequencies), dtype=complex)
+
+        if isinstance(value, complex | float):
+            output_vector = value * aux_ones
+
+        elif isinstance(value, np.ndarray):
+            if value.shape[0] == 1:
+                output_vector = value * aux_ones
+
+            elif len(value.shape) == 1:
+                output_vector = value.reshape(1, -1)
+
+            else:
+                output_vector = value
+
+        if filter_frequencies:
+            if (output_vector.shape[1] - self.number_frequencies) and self.model.solution_steps_mask:
+                # filter values based on the solution steps mask
+                output_vector = output_vector[:, self.model.solution_steps_mask]
+
+        return output_vector.flatten() if flatten else output_vector
+
+
+    def get_excitation_data_for_element_integration(self, property_label: str) -> dict:
+        """ 
+        This method processes the excitation property data for element face
+        integration.
+
+        Parameters
+        ----------
+        property_label: str
+            The property label on which the surface data will be processed.
+
+        Returns
+        -------
+        integration_data: dict
+            A dictionary containing the connectivities and the data of each
+            processed 2d elements.
+        """
+
+        aux_data = {}
+        aux_connect = {}
+        integration_data = {}
+
+        for key, data in self.properties.surface_properties.items():
+
+            prop, surface_id = key
+            if prop != property_label:
+                continue
+
+            data: dict
+            complex_values = data.get("values")[0]
+
+            if property_label in ["normal_pressure_load", "nodal_loads"]:
+                element_type = data.get("element_type")
+                if element_type == "2d_element":
+                    continue
+
+            # normalize data type to array
+            complex_values_array = self.get_value_in_array_form(complex_values, flatten=True)
+
+            surf_elements = list(self.model.mesh.elements_from_surface.get(surface_id))
+            surf_connect = self.model.mesh.get_connectivity_from_surface(surface_id)
+
+            for i, el in enumerate(surf_elements):
+                aux_connect[el] = surf_connect[i]
+                aux_data[el] = complex_values_array
+
+        if aux_connect:
+            integration_data = {
+                "element_ids" : np.array(list(aux_connect.keys()), dtype=int),
+                "connectivities" : np.array(list(aux_connect.values()), dtype=int),
+                "surface_data" : np.array(list(aux_data.values()), dtype=complex),
+                }
+
+        return integration_data
+
+
+    def get_structural_excitations_by_element_integration(self):
+        """ 
+        This method processes the acoustic model excitations and
+        returns the output data in the form of mass flow rate.
+        """
+
+        total_dof = self.element_2d.dof_per_node * len(self.element_2d.nodal_coordinates)
+        output = np.zeros((total_dof, self.number_frequencies), dtype=complex)
+
+        prop_labels = [
+            "normal_pressure_load",
+            "distributed_load",
+        ]
+
+        for prop_label in prop_labels:
+            integration_data = self.get_excitation_data_for_element_integration(prop_label)
+
+            if not integration_data:
+                continue
+
+            element_ids = integration_data.get("element_ids")
+            connectivities = integration_data.get("connectivities")
+            surface_data = integration_data.get("surface_data")
+
+            surface_elements_connectivities = self.model.mesh.faces_connectivity[element_ids, :]
+            elements_normals = self.model.mesh.get_element_face_normal_batched(surface_elements_connectivities)
+
+            self.element_2d.reorder_connect(connectivities)
+            for i, complex_values in enumerate(surface_data):
+                indices = self.element_2d.element_indexes(i)
+                e_normal = elements_normals[i, :].reshape(-1, 1)
+                output[indices, :] += self.element_2d.load_vector(i, e_normal, complex_values)
+
+        if self.prescribed_dof_indexes:
+            return output[self.unprescribed_dof_indexes, :]
+
+        return output
+
+
     def process_distributed_loads(self):
 
         output = np.zeros((self.total_dof, self.number_frequencies), dtype=complex)
@@ -296,7 +438,11 @@ class StructuralAssembler:
                     continue
 
                 for connect in connectivities_from_surface:
-                    g_dof, F_elem = self.element_2d.process_forces_for_normal_pressure_load(connect, normal_pressure)
+                    if data.get("element_type") == "2d_element":
+                        g_dof, F_elem = self.element_2d.process_forces_for_normal_pressure_load(connect, normal_pressure)
+                    else:
+                        g_dof, F_elem = self.element_2d.normal_pressure_load(connect, normal_pressure)
+
                     output[g_dof, :] += F_elem
 
         for (property, line_id), data in self.properties.line_properties.items():
@@ -520,9 +666,11 @@ class StructuralAssembler:
         """
         This method assembles the excitations of the structural model.
         """
-        A = self.process_structural_nodal_loads()
-        B = self.process_distributed_loads()
-        self.structural_loads = A + B
+        A = self.get_structural_excitations_by_nodal_attribution()
+        B = self.get_structural_excitations_by_element_integration()
+        C = self.process_distributed_loads()
+
+        self.structural_loads = A + B + C
 
 
     def assemble_global_matrices_and_excitations(self, reorder: bool=True, **kwargs):
