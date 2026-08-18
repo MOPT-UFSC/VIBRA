@@ -76,7 +76,10 @@ class MainWindow(QMainWindow):
         self.render_widget.update_model(None)
         self.render_widget.update_section_plane(None)
 
-        for var in script_variables.values():
+        for name, var in script_variables.items():
+            if name.startswith("_"):
+                continue
+
             match var:
                 case Project() as project:
                     self.render_widget.update_model(project.model)
