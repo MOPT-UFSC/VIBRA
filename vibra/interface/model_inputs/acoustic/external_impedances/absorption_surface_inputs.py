@@ -229,7 +229,6 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
         surface_ids, error_data = self.mesh.check_selected_ids(input_ids, selection="surfaces", single_id=False)
 
         if error_data is not None:
-            self.hide()
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
             return True
@@ -278,7 +277,6 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
             message = f"Insert some value at the {label} input field."
 
         if message != "":
-            self.hide()
             PrintMessageInput([error_title, title, message])
             return None
         else:
@@ -289,7 +287,6 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
         absorption_coefficient = self.check_inputs(self.lineEdit_real_value, "Absorption coefficient", zero_included=False,)
 
         if absorption_coefficient is None:
-            self.hide()
             title = "Additional inputs required"
             message = "You must enter an absorption surface value to proceed with the assignment."
             PrintMessageInput([error_title, title, message])
@@ -351,7 +348,6 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
         _frequencies = imported_values[:, 0]
 
         if app().project.model.change_analysis_frequency_setup(list(_frequencies)):
-            self.hide()
             title = "Project frequency setup cannot be modified"
             message = "The following imported table of values has a frequency setup "
             message += "different from the others already imported ones. The current "
@@ -382,7 +378,6 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
     def tabular_data_assignment(self, surface_ids: list[int]):
 
         if self.lineEdit_table_path.text() == "":
-            self.hide()
             title = "Additional inputs required"
             message = "You must enter the absorption surface table path to proceed with the assignment."
             PrintMessageInput([error_title, title, message])
@@ -475,8 +470,6 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
 
         if not surface_ids:
             return
-
-        self.hide()
 
         title = "Absorption surface reset"
         message = "Would you like to remove the all applied absorption surfaces from model?"

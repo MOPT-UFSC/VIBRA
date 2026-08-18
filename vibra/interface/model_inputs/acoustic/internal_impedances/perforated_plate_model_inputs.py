@@ -389,7 +389,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
         for surface_id in surface_ids:
             if len(self.mesh.volumes_from_surface[surface_id]) != 2:
-                self.hide()
                 message = f"The selected surface ID #{surface_id} does not correspond to an inside surface "
                 message += "(surfaces that connect two neighboohrs volumes). The perforated plate "
                 message += "assignment will be ignored until all requirements are met."
@@ -633,7 +632,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         _frequencies = imported_values[:, 0]
 
         if app().project.model.change_analysis_frequency_setup(list(_frequencies)):
-            self.hide()
             title = "Project frequency setup cannot be modified"
             message = "The following imported table of values has a frequency setup "
             message += "different from the others already imported ones. The current "
@@ -735,7 +733,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                                                                 )
 
         if error_data is not None:
-            self.hide()
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
             return list()
@@ -767,7 +764,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                 message += "with two volumes to proceed with dofs decoupling."
 
             if message != "":
-                self.hide()
                 title = "Invalid surface selected"
                 PrintMessageInput([warning_title, title, message])
                 return
@@ -933,7 +929,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                                                                 )
 
         if error_data is not None:
-            self.hide()
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
             return
@@ -970,8 +965,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
         if not surface_ids:
             return
-
-        self.hide()
 
         title = "Perforated plate model resetting"
         message = "Would you like to remove the perforated plate from the acoustic model?"
@@ -1103,7 +1096,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             message = f"Insert some value at the {label} input field."
 
         if message != "":
-            self.hide()
             PrintMessageInput([error_title, title, message])
             return None
         else:

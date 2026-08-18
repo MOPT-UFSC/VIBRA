@@ -243,7 +243,6 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
         surface_ids, error_data = self.mesh.check_selected_ids(input_ids, selection="surfaces", single_id=False)
 
         if error_data is not None:
-            self.hide()
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
             return True
@@ -301,7 +300,6 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
         specific_impedance = self.check_complex_entries(self.lineEdit_real_value, self.lineEdit_imag_value)
 
         if specific_impedance is None:
-            self.hide()
             title = "Additional inputs required"
             message = "You must enter a specific impedance value to proceed with the assignment."
             PrintMessageInput([error_title, title, message])
@@ -362,7 +360,6 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
         _frequencies = imported_values[:, 0]
 
         if app().project.model.change_analysis_frequency_setup(list(_frequencies)):
-            self.hide()
             title = "Project frequency setup cannot be modified"
             message = "The following imported table of values has a frequency setup "
             message += "different from the others already imported ones. The current "
@@ -391,7 +388,6 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
     def tabular_data_assignment(self, surface_ids: list[int]):
 
         if self.lineEdit_table_path.text() == "":
-            self.hide()
             title = "Additional inputs required"
             message = "You must enter a specific impedance value to proceed with the assignment."
             PrintMessageInput([error_title, title, message])
@@ -481,8 +477,6 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
         self.actions_to_finalize()
 
     def reset_callback(self):
-
-        self.hide()
 
         title = "Specific impedance resetting"
         message = "Would you like to remove the all applied specific impedances from model?"

@@ -277,7 +277,6 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             surface_id, error_data = self.mesh.check_selected_ids(input_ids, selection="surfaces", single_id=True)
 
             if error_data is not None:
-                self.hide()
                 self.lineEdit_selection_id.setFocus()
                 PrintMessageInput(error_data)
                 return True
@@ -597,7 +596,6 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         surface_id, error_data = self.model.mesh.check_selected_ids(input_ids, selection="surfaces", single_id=True)
 
         if error_data is not None:
-            self.hide()
             self.lineEdit_selection_id.setFocus()
             self.lineEdit_selection_id.selectAll()
             PrintMessageInput(error_data)
@@ -605,7 +603,6 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
         volumes_from_surface = self.model.mesh.volumes_from_surface.get(surface_id)
         if len(volumes_from_surface) != 1:
-            self.hide()
             title = "Invalid surface selected"
             message = "The selected surface does not correspond to the piping endings. "
             message += "It is necessary to change the selection to proceed with the "
@@ -741,7 +738,6 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
     def save_table_values(self, table_name: str, frequencies: np.ndarray, complex_values: np.ndarray):
 
         if app().project.model.change_analysis_frequency_setup(list(frequencies)):
-            self.hide()
             title = "Project frequency setup cannot be modified"
             message = "The following imported table of values has a frequency setup "
             message += "different from the others already imported ones. The current "
@@ -963,8 +959,6 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.actions_to_finalize()
 
     def reset_callback(self):
-
-        self.hide()
 
         title = "Resetting of compressor excitations"
         message = "Would you like to remove all compressor excitations from the acoustic model?"

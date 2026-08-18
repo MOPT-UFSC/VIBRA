@@ -208,7 +208,6 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         if not volume_ids:
             return
 
-        self.hide()
         title = "Viscous-thermal dissipation model resetting"
         message = "Would you like to remove the Viscous-thermal dissipation effects from the model?"
 
@@ -718,7 +717,6 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                 )
 
                 if error_data is not None:
-                    self.hide()
                     self.lineEdit_selection_id.setFocus()
                     PrintMessageInput(error_data)
                     return

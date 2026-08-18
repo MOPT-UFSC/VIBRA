@@ -186,7 +186,6 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
                                                                 )
 
         if error_data is not None:
-            self.hide()
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
             return list()
@@ -218,7 +217,6 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
                 message += "with two volumes to proceed with dofs decoupling."
 
             if message != "":
-                self.hide()
                 title = "Invalid surface selected"
                 PrintMessageInput([warning_title, title, message])
                 return
@@ -283,7 +281,6 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
             return True
 
         if real_value + imag_value == 0:
-            self.hide()
             title = "Additional inputs required"
             message = "You must enter a non-zero transfer impedance value to proceed with the assignment."
             PrintMessageInput([error_title, title, message])
@@ -356,7 +353,6 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         _frequencies = _imported_values[:, 0]
 
         if app().project.model.change_analysis_frequency_setup(list(_frequencies)):
-            self.hide()
             title = "Project frequency setup cannot be modified"
             message = "The following imported table of values has a frequency setup "
             message += "different from the others already imported ones. The current "
@@ -385,7 +381,6 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
     def tabular_data_assignment(self, surface_ids: int | tuple[int]):
 
         if self.lineEdit_table_path.text() == "":
-            self.hide()
             title = "Additional inputs required"
             message = "You must enter the transfer impedance table path to proceed with the assignment."
             PrintMessageInput([error_title, title, message])
@@ -503,7 +498,6 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
         for surface_id in surface_ids:
             if len(self.mesh.volumes_from_surface[surface_id]) != 2:
-                self.hide()
                 message = f"The selected surface ID #{surface_id} does not correspond to an inside surface "
                 message += "(surfaces that connect two neighboohrs volumes). The transfer impedance "
                 message += "assignment will be ignored until all requirements are met."
@@ -633,7 +627,6 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
                                                                 )
         
         if error_data is not None:
-            self.hide()
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
             return
@@ -674,8 +667,6 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
         if not surface_ids:
             return
-
-        self.hide()
 
         title = "Transfer impedance resetting"
         message = "Would you like to remove the transfer impedance from the acoustic model?"
@@ -801,7 +792,6 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
             message += str(error_log)
 
         if message != "":
-            self.hide()
             line_edit.setFocus()
             PrintMessageInput([error_title, title, message])
             return None

@@ -132,7 +132,6 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
                 message += "with two volumes to proceed with dofs decoupling."
 
             if message != "":
-                self.hide()
                 title = "Invalid surface selected"
                 PrintMessageInput([warning_title, title, message])
                 return
@@ -174,7 +173,6 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
         surface_ids, message_log = self.mesh.check_selected_ids(input_ids, selection="surfaces")
 
         if message_log is not None:
-            self.hide()
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(message_log)
             return
@@ -241,8 +239,6 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
         self.restore_mesh_data_modified_by_decoupling()
 
     def reset_callback(self):
-
-        self.hide()
 
         title = "Degrees of freedom decoupling resetting"
         message = "Would you like to revert the acoustic degrees of freedom decoupling from model?"
@@ -450,10 +446,7 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
             self.hide()
             app().main_window.input_ui.mesh_setup()
             app().main_window.set_input_widget(self)
-            if not app().project.model.is_there_a_valid_mesh():
-                return True
-            else:
-                return False
+            return app().project.model.is_there_a_valid_mesh()
 
         if self.mesh.cache_nodal_coordinates is None:
             # self.mesh.cache_mesh_information()

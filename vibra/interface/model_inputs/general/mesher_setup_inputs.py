@@ -313,7 +313,6 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
         _, error_data = mesh.check_selected_ids(selected_ids, selection=selected_type)
         if error_data is not None:
-            self.hide()
             PrintMessageInput(error_data)
             self.show()
             return
@@ -433,7 +432,6 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         try:
             self.complete = generate_mesh()
         except InvalidMeshSetupError as e:
-            self.hide()
             PrintMessageInput([error_title, "Invalid mesh setup", str(e)])
             self.show()
             return
@@ -827,8 +825,6 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
         if mesh_setup.local_mesh_size_control_parameters == self.tmp_local_mesh_size_control_parameters:
             return
-
-        self.hide()
 
         title = "Unprocessed local mesh size control"
         message = "The local mesh size control configuration has been modified, but the mesh itself "
