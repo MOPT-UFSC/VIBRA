@@ -23,7 +23,7 @@ from vibra.engine.model import Model
 from vibra.engine.properties import Fluid, Material
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.utils.math_functions import inside_plane
-from vibra.utils.time_utils import function_timer
+from vibra.utils.time_utils import context_timer, function_timer
 
 
 @dataclass
@@ -80,10 +80,19 @@ class MeshActor(vtkPropAssembly):
         self.cached_info.mesh_id = id(self.mesh)
 
     def clear_data(self):
+        self.cached_info = CachedInfo()
+
+        self.node_data.SetCells(0, vtkCellArray())
+        self.node_colors.SetNumberOfTuples(0)
+        self.node_ids.SetNumberOfTuples(0)
+        self.node_colors.Modified()
+
+        self.surface_data.SetCells(0, vtkCellArray())
         self.surface_colors.SetNumberOfTuples(0)
         self.surface_ids.SetNumberOfTuples(0)
         self.surface_colors.Modified()
 
+        self.section_data.SetCells(0, vtkCellArray())
         self.section_colors.SetNumberOfTuples(0)
         self.section_ids.SetNumberOfTuples(0)
         self.section_colors.Modified()
@@ -308,9 +317,10 @@ class MeshActor(vtkPropAssembly):
 
         assert self.mesh.solids_connectivity is not None
 
-        surface_groups = [self.mesh.surfaces_from_volume[v] for v in volumes if (v in self.mesh.surfaces_from_volume)]
-        surfaces = list(chain.from_iterable(surface_groups))
-        self.paint_surfaces(color, surfaces)
+        with context_timer("surface stuff"):
+            surface_groups = [self.mesh.surfaces_from_volume[v] for v in volumes if (v in self.mesh.surfaces_from_volume)]
+            surfaces = list(chain.from_iterable(surface_groups))
+            self.paint_surfaces(color, surfaces)
 
         section_ids = vtk_to_numpy(self.section_ids)
         section_colors = vtk_to_numpy(self.section_colors)
