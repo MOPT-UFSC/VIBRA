@@ -217,6 +217,10 @@ class MeshActor(vtkPropAssembly):
         self.surface_mapper.RemoveAllClippingPlanes()
 
         if self.section_plane is None:
+            self.section_data.SetCells(0, vtkCellArray())
+            self.section_colors.SetNumberOfTuples(0)
+            self.section_ids.SetNumberOfTuples(0)
+            self.section_colors.Modified()
             return
 
         plane = vtkPlane()
