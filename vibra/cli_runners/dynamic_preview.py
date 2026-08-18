@@ -5,7 +5,7 @@ import runpy
 import signal
 import sys
 from pathlib import Path
-from typing import override
+from typing import Any, override
 
 from PySide6.QtCore import QThread, QTimer, Signal
 from PySide6.QtWidgets import QApplication, QMainWindow
@@ -18,7 +18,7 @@ from vibra.utils.preview_utils import SectionPlaneConfig
 class ScriptRunner(QThread):
     finished_script = Signal(dict)
 
-    def __init__(self, script_path: Path, script_cache: dict):
+    def __init__(self, script_path: Path, script_cache: dict[str, Any]):
         super().__init__()
         self.script_path = Path(script_path).expanduser()
         self.script_cache = script_cache
@@ -47,10 +47,10 @@ class MainWindow(QMainWindow):
         self.script_runner: ScriptRunner | None = None
 
         self.timer = QTimer(self)
-        _ = self.timer.timeout.connect(self.update)
+        _ = self.timer.timeout.connect(self.reload_file)
         self.timer.start(500)
 
-    def update(self):
+    def reload_file(self):
         modification_time = self._modification_time(self.script_path)
         if modification_time <= self.last_modification_time:
             return
@@ -72,7 +72,7 @@ class MainWindow(QMainWindow):
         _ = self.script_runner.finished_script.connect(self.on_script_finished)
         self.script_runner.start()
 
-    def on_script_finished(self, script_variables: dict):
+    def on_script_finished(self, script_variables: dict[str, Any]):
         self.render_widget.update_model(None)
         self.render_widget.update_section_plane(None)
 
@@ -105,12 +105,8 @@ def main(script_path: str | Path):
         os.environ["QT_QPA_PLATFORM"] = "xcb"
 
     app = QApplication(sys.argv)
-    main_window = MainWindow(script_path=script_path)
+    main_window = MainWindow(script_path=Path(script_path))
     main_window.show()
 
     _ = signal.signal(signal.SIGINT, signal.SIG_DFL)
     sys.exit(app.exec())
-
-
-if __name__ == "__main__":
-    main()
