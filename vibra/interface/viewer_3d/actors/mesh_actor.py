@@ -2,7 +2,6 @@ from collections import defaultdict
 from collections.abc import Sequence
 from dataclasses import dataclass
 from itertools import chain
-from typing import final
 
 import numpy as np
 import xxhash
@@ -41,7 +40,6 @@ class CachedInfo:
         return hasher.hexdigest()
 
 
-@final
 class MeshActor(vtkPropAssembly):
     def __init__(self, model: Model | None):
         super().__init__()
@@ -256,7 +254,7 @@ class MeshActor(vtkPropAssembly):
         surface_colors = defaultdict(list)
         volume_colors = defaultdict(list)
 
-        for entity, property, tag, value in self.properties.iterate_properties():
+        for entity, _property, tag, value in self.properties.iterate_properties():
             if not isinstance(value, Material | Fluid):
                 continue
 
@@ -276,7 +274,7 @@ class MeshActor(vtkPropAssembly):
             self.paint_volumes(color, tags)
 
     @function_timer
-    def set_color(self, color: Color, update=True):
+    def set_color(self, color: Color, update: bool = True):
         rgb = color.to_rgb()
         for i in range(self.surface_colors.GetNumberOfComponents()):
             self.surface_colors.FillComponent(i, rgb[i])

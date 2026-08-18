@@ -70,3 +70,5 @@ reportUnknownArgumentType = false
 reportUnknownLambdaType = false
 reportUnknownParameterType = false
 reportUnknownVariableType = false
+reportUnannotatedClassAttribute = false
+reportMissingTypeStubs = false

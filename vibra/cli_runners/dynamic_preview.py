@@ -5,6 +5,7 @@ import runpy
 import signal
 import sys
 from pathlib import Path
+from typing import override
 
 from PySide6.QtCore import QThread, QTimer, Signal
 from PySide6.QtWidgets import QApplication, QMainWindow
@@ -19,19 +20,20 @@ class ScriptRunner(QThread):
 
     def __init__(self, script_path: Path, script_cache: dict):
         super().__init__()
-        self.script_path = script_path
+        self.script_path = Path(script_path).expanduser()
         self.script_cache = script_cache
 
+    @override
     def run(self):
         script_variables = {}
         try:
-            script_variables = runpy.run_path(self.script_path)
+            script_variables = runpy.run_path(str(self.script_path))
         finally:
             self.finished_script.emit(script_variables)
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, *, script_path):
+    def __init__(self, *, script_path: Path):
         super().__init__()
 
         self.script_path = Path(script_path)
@@ -45,7 +47,7 @@ class MainWindow(QMainWindow):
         self.script_runner: ScriptRunner | None = None
 
         self.timer = QTimer(self)
-        self.timer.timeout.connect(self.update)
+        _ = self.timer.timeout.connect(self.update)
         self.timer.start(500)
 
     def update(self):
@@ -61,12 +63,13 @@ class MainWindow(QMainWindow):
 
         # Hack to make @preview_cache decorator work
         if not hasattr(builtins, "__HOT_RELOAD_CACHE__"):
-            builtins.__HOT_RELOAD_CACHE__ = self.script_cache
+            setattr(builtins, "__HOT_RELOAD_CACHE__", self.script_cache)
 
+        # Clear terminal
         print("\033[H\033[2J", end="")
 
         self.script_runner = ScriptRunner(self.script_path, self.script_cache)
-        self.script_runner.finished_script.connect(self.on_script_finished)
+        _ = self.script_runner.finished_script.connect(self.on_script_finished)
         self.script_runner.start()
 
     def on_script_finished(self, script_variables: dict):
@@ -81,6 +84,9 @@ class MainWindow(QMainWindow):
 
                 case SectionPlaneConfig() as section_plane:
                     self.render_widget.update_section_plane(section_plane)
+
+                case _:
+                    pass
 
         self.render_widget.update_plot()
 
@@ -99,7 +105,7 @@ def main(script_path: str | Path):
     main_window = MainWindow(script_path=script_path)
     main_window.show()
 
-    signal.signal(signal.SIGINT, signal.SIG_DFL)
+    _ = signal.signal(signal.SIGINT, signal.SIG_DFL)
     sys.exit(app.exec())
 
 
