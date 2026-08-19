@@ -1,5 +1,4 @@
 import logging
-import sys
 from time import time
 from typing import Optional
 from tqdm import tqdm
@@ -13,7 +12,6 @@ from vibra.engine.assemblers.structural_assembler import StructuralAssembler
 from vibra.engine.serialization.lazy_hdf5_matrix import LazyHDF5MatrixWriter
 from vibra.engine.serialization.project_paths import ProjectPaths
 from vibra.engine.solution import HarmonicSolution
-from vibra.engine.solution.lazy_harmonic_solution import LazyHarmonicSolution
 from vibra.engine.solvers import ModalSolver
 from vibra.engine.solvers.linear_solver import LinearSolver, SolverType, initialize_solver
 
@@ -88,7 +86,7 @@ class HarmonicSolver:
         frequencies = self.frequencies
 
         # compute the solution for each frequency step
-        with tqdm(frequencies, desc="Computing frequency sweep", unit="frequency", file=sys.stdout, disable=not print_log) as progress_bar:
+        with tqdm(frequencies, desc="Computing frequency sweep", unit="frequency") as progress_bar:
             for i, freq in enumerate(progress_bar):
                 if self.assembler.model.stop_processing:
                     return
@@ -109,11 +107,10 @@ class HarmonicSolver:
                     linear_solver = self._get_linear_solver(eigenvectors)
 
                 solution_freq = linear_solver.solve(A, f)
-
-                logging.info(f"Solution step {i + 1} and frequency {freq} Hz [{i + 1}/{len(frequencies)}]")
-
                 solution_freq = self.assembler.reinsert_the_prescribed_dof_into_solution_freq(solution_freq, i)
                 nodal_solution_buffer[:, i] = solution_freq
+
+                logging.info(f"Solution step {i + 1} and frequency {freq} Hz [{i + 1}/{len(frequencies)}]")
 
                 if self._file_writer is not None:
                     self._file_writer[:, i] = solution_freq
@@ -188,28 +185,29 @@ class HarmonicSolver:
         Phi_t = Phi.T
 
         # compute the solution for each frequency step
-        for i, freq in enumerate(frequencies):
-            logging.info(f"Solution step {i + 1} and frequency {freq} Hz [{i + 1}/{len(frequencies)}]")
+        with tqdm(frequencies, desc="Compute proportionally damped frequency sweep", unit="frequency") as progress_bar:
+            for i, freq in enumerate(progress_bar):
+                if is_resume and i != 0 and isinstance(self._file_writer, LazyHDF5MatrixWriter) and self._file_writer.has_column(i):
+                    continue
 
-            if is_resume and i != 0 and isinstance(self._file_writer, LazyHDF5MatrixWriter) and self._file_writer.has_column(i):
-                continue
+                # if print_log:
+                    # print(f"Solution step {i} -> frequency {freq} Hz")
 
-            if print_log:
-                print(f"Solution step {i} -> frequency {freq} Hz")
+                f = self.assembler.get_combined_nodal_loads_vector(index=i)
 
-            f = self.assembler.get_combined_nodal_loads_vector(index=i)
+                omega = 2 * np.pi * freq
+                A = omega_n**2 - omega**2 + 1j * (omega * (beta * (omega_n**2) + alpha) + eta * (omega_n**2))
+                diag = np.diag(1 / A)
 
-            omega = 2 * np.pi * freq
-            A = omega_n**2 - omega**2 + 1j * (omega * (beta * (omega_n**2) + alpha) + eta * (omega_n**2))
-            diag = np.diag(1 / A)
+                # compute the solution for each frequency step
+                solution_freq = Phi @ (diag @ (Phi_t @ f))
+                solution_freq = self.assembler.reinsert_the_prescribed_dof_into_solution_freq(solution_freq, i)
+                nodal_solution_buffer[:, i] = solution_freq
 
-            # compute the solution for each frequency step
-            solution_freq = Phi @ (diag @ (Phi_t @ f))
-            solution_freq = self.assembler.reinsert_the_prescribed_dof_into_solution_freq(solution_freq, i)
-            nodal_solution_buffer[:, i] = solution_freq
+                logging.info(f"Solution step {i + 1} and frequency {freq} Hz [{i + 1}/{len(frequencies)}]")
 
-            if isinstance(self._file_writer, LazyHDF5MatrixWriter):
-                self._file_writer[:, i] = solution_freq
+                if isinstance(self._file_writer, LazyHDF5MatrixWriter):
+                    self._file_writer[:, i] = solution_freq
 
     def _get_linear_solver(self, eigenvectors, new_instance: bool = False) -> LinearSolver:
         if self._linear_solver is None or new_instance:

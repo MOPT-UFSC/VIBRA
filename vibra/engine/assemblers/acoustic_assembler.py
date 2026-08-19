@@ -1,8 +1,8 @@
+from tqdm import tqdm
 
 from vibra.engine.analysis_info import HarmonicAnalysisSetup
 from vibra.engine.model import Model
 from vibra.engine.properties.fluid import Fluid
-
 
 import logging
 import numpy as np
@@ -1073,24 +1073,23 @@ class AcousticAssembler:
         self.int3d_NtN = np.zeros((self.number_3d_elements, self.dof, self.dof), dtype=complex)
 
         last_progress = 0
-        for element_id in range(self.number_3d_elements):
+        with tqdm(range(self.number_3d_elements), desc="Processing the elementary matrices data", unit="element") as progress_bar:
+            for element_id in progress_bar:
+                if self.model.stop_processing:
+                    return True
 
-            if self.model.stop_processing:
-                return True
+                progress = int(100 * (element_id / self.number_3d_elements))
+                if progress != last_progress:
+                    logging.info(f"Processing the elementary matrices data... [{progress}/100]")
 
-            progress = int(100 * (element_id / self.number_3d_elements))
-            if progress != last_progress:
-                logging.info(f"Processing the elementary matrices data... [{progress}/100]")
+                last_progress = progress
 
-            last_progress = progress
-
-            Ke, Me = self.element_3d.elementary_matrices(element_id)
-            self.int3d_BtB[element_id, :, :] = Ke
-            self.int3d_NtN[element_id, :, :] = Me
+                Ke, Me = self.element_3d.elementary_matrices(element_id)
+                self.int3d_BtB[element_id, :, :] = Ke
+                self.int3d_NtN[element_id, :, :] = Me
 
         self.fluid_properties_from_volume, self.frequency_dependent = self.model.map_fluid_properties_to_volumes()
         self.process_indexes()
-
 
     def compute_global_matrices_factors(self, index: int = 0):
         """

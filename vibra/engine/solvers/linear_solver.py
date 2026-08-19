@@ -1,5 +1,6 @@
 from enum import Enum, auto
 import logging
+from typing import Callable
 from pypardiso.pardiso_wrapper import PyPardisoSolver, Matrix_type
 from scipy.sparse.linalg import LinearOperator
 from scipy.sparse import triu, issparse
@@ -24,13 +25,14 @@ class MumpsLinearOperator(LinearOperator):
 
 
 class PardisoLinearOperator(LinearOperator):
-    def __init__(self, ps, A, is_symmetric: bool, est_operations: int | None = None):
+    def __init__(self, ps, A, is_symmetric: bool, est_operations: int | None = None, progress_callback: Callable[[int], None] | None = None):
         if is_symmetric:
             A = triu(A, format='csr')
 
         self.calc_counter = 0
         self.last_percentage = -1
         self.estimated_operations = est_operations
+        self.progress_callback = progress_callback
 
         ps.factorize(A)
         self.factorized_A = ps.factorized_A
@@ -45,6 +47,9 @@ class PardisoLinearOperator(LinearOperator):
             if percentage != self.last_percentage:
                 logging.info(f"Solving the eigenproblem... [{percentage}/100]")
                 self.last_percentage = percentage
+
+                if self.progress_callback is not None:
+                    self.progress_callback(percentage)
 
         return self.solve(self.factorized_A, x.astype(self.dtype))
 

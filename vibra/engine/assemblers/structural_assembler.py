@@ -1,4 +1,4 @@
-
+from tqdm import tqdm
 from vibra.engine.analysis_info import HarmonicAnalysisSetup
 
 from vibra.engine.model import Model
@@ -382,28 +382,27 @@ class StructuralAssembler:
         last_progress = 0
 
         # loop for 2d elements
-        for element_id, surf_id, _, _, *connect_nodes in self.model.mesh.faces_connectivity:
+        with tqdm(self.model.mesh.faces_connectivity, desc="Processing the elementary matrices data for face elements", unit="element") as progress_bar:
+            for element_id, surf_id, _, _, *connect_nodes in progress_bar:
+                if self.model.stop_processing:
+                    return True
 
-            if self.model.stop_processing:
-                return True
+                progress = int(100 * (element_id / self.number_2d_elements))
+                if progress != last_progress:
+                    logging.info(f"Processing the elementary matrices data for face elements... [{int(progress)}/100]")
 
-            progress = int(100 * (element_id / self.number_2d_elements))
-            if progress != last_progress:
-                logging.info(f"Processing the elementary matrices data for face elements... [{int(progress)}/100]")
+                last_progress = progress
 
-            last_progress = progress
+                # material from surface
+                material = self.surface_data_for_shell_elements[surf_id]["material"]
+                
+                # material from volume
+                surface_data = self.surface_data_for_shell_elements[surf_id]["surface_data"]
 
-            # material from surface
-            material = self.surface_data_for_shell_elements[surf_id]["material"]
-            
-            # material from volume
-            surface_data = self.surface_data_for_shell_elements[surf_id]["surface_data"]
+                Ke, Me = self.element_2d.elementary_matrices(element_id, material, surface_data.get("surface_thickness"))
 
-            Ke, Me = self.element_2d.elementary_matrices(element_id, material, surface_data.get("surface_thickness"))
-
-            self.data_K[element_id, :, :] = Ke
-            self.data_M[element_id, :, :] = Me
-
+                self.data_K[element_id, :, :] = Ke
+                self.data_M[element_id, :, :] = Me
 
     def compute_data_to_process_global_matrices_for_solid_elements(self, reorder: bool = True):
         """
@@ -430,24 +429,23 @@ class StructuralAssembler:
         last_progress = 0
 
         # loop for 3d elements
-        for element_id, vol_id, *_ in self.model.mesh.solids_connectivity:
-            
-            if self.model.stop_processing:
-                return True
+        with tqdm(self.model.mesh.solids_connectivity, desc="Processing the elementary matrices data for solid elements", unit="element") as progress_bar:
+            for element_id, vol_id, *_ in progress_bar:
+                if self.model.stop_processing:
+                    return True
 
-            progress = int(100 * (element_id / self.number_3d_elements))
-            if progress != last_progress:
-                logging.info(f"Processing the elementary matrices data for solid elements... [{int(progress)}/100]")
+                progress = int(100 * (element_id / self.number_3d_elements))
+                if progress != last_progress:
+                    logging.info(f"Processing the elementary matrices data for solid elements... [{int(progress)}/100]")
 
-            last_progress = progress
+                last_progress = progress
 
-            # material from volume
-            material = self.material_from_volume.get(vol_id)
+                # material from volume
+                material = self.material_from_volume.get(vol_id)
 
-            Ke, Me = self.element_3d.elementary_matrices(element_id, material)
-            self.data_K[element_id, :, :] = Ke
-            self.data_M[element_id, :, :] = Me
-
+                Ke, Me = self.element_3d.elementary_matrices(element_id, material)
+                self.data_K[element_id, :, :] = Ke
+                self.data_M[element_id, :, :] = Me
 
     def compute_data_to_process_global_matrices(self, reorder: bool = True):
         """
