@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 import numpy as np
 
@@ -6,6 +6,8 @@ import numpy as np
 @dataclass
 class ImportedDataInterface:
     path: Path = Path()
+    filename: str = field(init=False)
+    extension: str = field(init=False)
 
     def __post_init__(self):
         self.path = Path(self.path)
