@@ -32,6 +32,7 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.ui_generated.model.general.mesher_setup_inputs_ui import MesherSetupInputs_UI
 from vibra.interface.ui_generated.plots.general.mesh_quality_histogram_plot_ui import MeshQualityHistogramPlot_UI
+from vibra.interface.model_inputs.general.volume_suppression_dialog import VolumeSuppressionDialog
 from vibra.utils.interface_utils import block_signals
 from vibra.utils.subprocess.subprocess_handler import SubProcessHandler, SubProcessStatus
 
@@ -104,6 +105,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.synchronize_sizes = False
         self.tmp_local_mesh_size_control_parameters: list[LocalMeshSizeControlSetup] = []
         self.last_synced_ids: set[int] = set()
+        self.tmp_suppressed_volume_ids: list[int] = []
 
         self.gmsh_labels = {
             0: "gamma",
@@ -133,6 +135,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.pushButton_plot_histogram.clicked.connect(self.plot_mesh_parameter_histogram)
         self.pushButton_show_bad_elements.clicked.connect(self.plot_bad_elements)
         self.pushButton_syncrhonize.clicked.connect(self.synchronize_button_callback)
+        self.pushButton_suppress_volumes.clicked.connect(self._open_volume_suppression_dialog)
         # #
         # self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         # #
@@ -193,6 +196,9 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.lineEdit_geometry_tolerance.setText(str(mesh_setup.geometry_tolerance))
         self.comboBox_volumes_interface_behavior.setCurrentIndex(int(mesh_setup.merge_connected_volumes))
         self.comboBox_mesh_quality_metrics.setCurrentIndex(int(mesh_setup.compute_quality_metrics))
+
+        self.tmp_suppressed_volume_ids = list(mesh_setup.suppressed_volume_ids)
+        self._update_suppressed_volume_count_label()
 
         self.update_local_mesh_size_control_table()
         self.update_mesh_quality_table()
@@ -585,6 +591,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             element_order=element_order,
             merge_connected_volumes=merge_connected_volumes,
             compute_quality_metrics=compute_quality_metrics,
+            suppressed_volume_ids=list(self.tmp_suppressed_volume_ids),
             custom_element_setup=self._get_custom_element_setup(),
             local_mesh_size_control_parameters=self._get_local_mesh_size_control_parameters(),
         )
@@ -620,6 +627,21 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
     def _get_local_mesh_size_control_parameters(self) -> list[LocalMeshSizeControlSetup]:
         return deepcopy(self.tmp_local_mesh_size_control_parameters)
+
+    def _open_volume_suppression_dialog(self):
+        dialog = VolumeSuppressionDialog(self.tmp_suppressed_volume_ids)
+        result = dialog.exec()
+
+        if result == VolumeSuppressionDialog.DialogCode.Accepted:
+            self.tmp_suppressed_volume_ids = dialog.get_suppressed_volume_ids()
+            self._update_suppressed_volume_count_label()
+
+    def _update_suppressed_volume_count_label(self):
+        n = len(self.tmp_suppressed_volume_ids)
+        if n == 0:
+            self.label_suppressed_volume_count.setText("")
+        else:
+            self.label_suppressed_volume_count.setText(f"{n} volume(s)")
 
     def actions_to_finalize(self):
         if self.close_after_generate:
