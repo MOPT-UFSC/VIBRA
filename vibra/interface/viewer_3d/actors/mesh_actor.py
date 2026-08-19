@@ -4,11 +4,14 @@ from dataclasses import dataclass
 from itertools import chain
 
 import numpy as np
+import numpy.typing as npt
 import xxhash
 from molde import Color
 from vtkmodules.util.numpy_support import numpy_to_vtk, numpy_to_vtkIdTypeArray, vtk_to_numpy
 from vtkmodules.vtkCommonCore import vtkDataArray, vtkIntArray, vtkPoints, vtkUnsignedCharArray
 from vtkmodules.vtkCommonDataModel import (
+    VTK_EMPTY,
+    VTK_EMPTY_CELL,
     VTK_TETRA,
     VTK_TRIANGLE,
     VTK_VERTEX,
@@ -16,7 +19,7 @@ from vtkmodules.vtkCommonDataModel import (
     vtkPlane,
     vtkUnstructuredGrid,
 )
-from vtkmodules.vtkRenderingCore import vtkActor, vtkDataSetMapper, vtkPropAssembly
+from vtkmodules.vtkRenderingCore import vtkActor, vtkDataSetMapper, vtkHardwarePicker, vtkPicker, vtkPropAssembly
 
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
@@ -130,7 +133,7 @@ class MeshActor(vtkPropAssembly):
         self.node_actor.GetProperty().SetPointSize(5)
         self.node_actor.GetProperty().RenderPointsAsSpheresOn()
         self.node_actor.GetProperty().LightingOff()
-        self.AddPart(self.node_actor)
+        # self.AddPart(self.node_actor)
 
         self.surface_colors.SetName("color")
         self.surface_colors.SetNumberOfComponents(3)
@@ -295,25 +298,36 @@ class MeshActor(vtkPropAssembly):
             self.surface_colors.Modified()
             self.section_colors.Modified()
 
-    @function_timer
-    def paint_surfaces(self, color: Color, surfaces: Sequence[int]):
-        if self.mesh is None:
-            return
-
-        assert self.mesh.faces_connectivity is not None
-
+    def paint_face_elements(self, color: Color, face_elements: Sequence[int] | np.ndarray):
         surface_ids = vtk_to_numpy(self.surface_ids)
         surface_colors = vtk_to_numpy(self.surface_colors)
-
-        selected_elements, *_ = np.where(np.isin(self.mesh.faces_connectivity[:, 1], surfaces))
-        paint_position_mask = np.isin(surface_ids, selected_elements)
+        paint_position_mask = np.isin(surface_ids, face_elements)
         surface_colors[paint_position_mask] = color.to_rgb()
 
         if self.cached_info.surface_colors_hash != CachedInfo.array_hash(surface_colors):
             self.surface_colors.Modified()
 
+    def paint_solid_elements(self, color: Color, solid_elements: Sequence[int] | np.ndarray):
+        section_ids = vtk_to_numpy(self.section_ids)
+        section_colors = vtk_to_numpy(self.section_colors)
+        paint_position_mask = np.isin(section_ids, solid_elements)
+        section_colors[paint_position_mask] = color.to_rgb()
+
+        if self.cached_info.section_colors_hash != CachedInfo.array_hash(section_colors):
+            self.section_colors.Modified()
+            self.section_mapper.Modified()
+
     @function_timer
-    def paint_volumes(self, color: Color, volumes: Sequence[int]):
+    def paint_surfaces(self, color: Color, surfaces: Sequence[int] | np.ndarray):
+        if self.mesh is None:
+            return
+
+        assert self.mesh.faces_connectivity is not None
+        selected_elements, *_ = np.where(np.isin(self.mesh.faces_connectivity[:, 1], surfaces))
+        self.paint_face_elements(color, selected_elements)
+
+    @function_timer
+    def paint_volumes(self, color: Color, volumes: Sequence[int] | np.ndarray):
         if self.mesh is None:
             return
 

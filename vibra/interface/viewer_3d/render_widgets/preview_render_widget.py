@@ -1,9 +1,11 @@
+from typing import override
+
 import numpy as np
 from molde.colors.color import Color
 from molde.render_widgets import CommonRenderWidget
 from vtkmodules.util.numpy_support import vtk_to_numpy
 from vtkmodules.vtkCommonDataModel import vtkSelectionNode
-from vtkmodules.vtkRenderingCore import vtkHardwarePicker, vtkHardwareSelector
+from vtkmodules.vtkRenderingCore import vtkCellPicker, vtkHardwarePicker, vtkHardwareSelector
 
 from vibra.engine.model import Model
 from vibra.interface.viewer_3d import sources
@@ -59,31 +61,32 @@ class PreviewRenderWidget(CommonRenderWidget):
         with context_timer("render"):
             self.update()
 
+    @override
     def resizeEvent(self, event):
         super().resizeEvent(event)
         self.renderer.ResetCamera()
 
     def click(self, x, y):
-        return
-        self.picker.Pick(x, y, 0, self.renderer)
+        red = Color(255, 0, 0)
+        self.mesh_actor.set_color(Color(255, 255, 255))
 
-        actor = self.picker.GetActor()
-        cell_id = self.picker.GetCellId()
-
-        if cell_id < 0:
-            print("no cell")
+        something_picked = self.picker.Pick(x, y, 0, self.renderer)
+        if not something_picked:
+            self.update()
             return
 
-        match actor:
-            case self.mesh_actor.surface_actor:
-                tag = self.mesh_actor.mesh.faces_connectivity[cell_id][1]
-                self.mesh_actor.set_color(Color(0, 0, 0))
-                self.mesh_actor.paint_surfaces(color=Color(255, 0, 0), surfaces=[tag])
+        bla = self.mesh_actor.picked_dim_tag(self.picker)
+        print(bla)
 
-            case self.mesh_actor.section_actor:
-                print("solid")
+        match bla:
+            case 3, tag:
+                volume = self.model.mesh.solids_connectivity[tag, 1]
+                self.mesh_actor.paint_volumes(red, [volume])
+
+            case 2, tag:
+                self.mesh_actor.paint_face_elements(red, [tag])
 
             case _:
-                return
+                pass
 
         self.update()
