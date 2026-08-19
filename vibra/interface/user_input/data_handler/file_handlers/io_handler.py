@@ -5,12 +5,12 @@ from vibra.interface.user_input.data_handler.imported_data import ImportedData
 
 
 class IOHandler(ABC):
-    def __init__(self):
-        super().__init__()
 
     @abstractmethod
+    @staticmethod
     def read(self, file_path: str | Path) -> ImportedData:
         pass
 
+    @staticmethod
     def save(self):
         pass

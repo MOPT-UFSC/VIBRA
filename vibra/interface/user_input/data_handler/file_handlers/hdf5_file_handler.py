@@ -11,10 +11,8 @@ class HDF5FileHandler(IOHandler):
 
     EXTENSIONS = [".h5", ".hdf5"]
 
-    def __init__(self):
-        super().__init__()
-
-    def read(self, file_path: str | Path) -> SimulationData:
+    @staticmethod
+    def read(file_path: str | Path) -> SimulationData:
         simulation_data = SimulationData(
             file_path.stem,
             file_path.suffix,
