@@ -25,15 +25,15 @@ class StructuralAssembler:
         self.mass_matrix = None
         self.stiffness_matrix = None
 
-        self.prescribed_dof_values = dict()
+        self.prescribed_dof_values = {}
         self.array_prescribed_values = np.array([])
 
         self.displacement_dof = np.array([])
         self.prescribed_dof_indexes = np.array([])
         self.unprescribed_dof_indexes = np.array([])
 
-        self.surface_data_for_shell_elements = dict()
-        self.material_from_volume = dict()
+        self.surface_data_for_shell_elements = {}
+        self.material_from_volume = {}
 
 
     def define_structural_elements(self):
@@ -67,6 +67,9 @@ class StructuralAssembler:
             if property != selected_property:
                 continue
 
+            if property == "nodal_loads" and not data.get("nodal_distribution", False):
+                continue
+
             nodes = self.model.mesh.get_nodes_from_surface(surface_id)
             if nodes is None:
                 continue
@@ -77,6 +80,9 @@ class StructuralAssembler:
 
         for (property, line_id), data in self.properties.line_properties.items():
             if property != selected_property:
+                continue
+
+            if property == "nodal_loads" and not data.get("nodal_distribution", False):
                 continue
 
             nodes = self.model.mesh.get_nodes_from_line(line_id)
@@ -135,8 +141,8 @@ class StructuralAssembler:
 
         try:
 
-            property_data = dict()
-            for gdof in data.keys():
+            property_data = {}
+            for gdof in data:
                 value = data[gdof]
 
                 aux_ones = np.ones(number_frequencies, dtype=complex)
@@ -154,7 +160,7 @@ class StructuralAssembler:
 
     def reorder_property_data_based_on_gdof(self, input_property_data: dict):
 
-        output_property_data = dict()
+        output_property_data = {}
         ordered_gdof = np.sort(list(input_property_data.keys()))
         for gdof in ordered_gdof:
             output_property_data[gdof] = input_property_data[gdof]
@@ -381,10 +387,6 @@ class StructuralAssembler:
                 surface_area = self.element_2d.integrate_area(surf_connect)
                 complex_values_array /= surface_area
 
-            # print(surface_id, surface_area)
-            # print(complex_values_array / surface_area)
-            # print(complex_values_array.shape)
-
             for i, el in enumerate(surf_elements):
                 aux_connect[el] = surf_connect[i]
                 aux_data[el] = complex_values_array
@@ -497,7 +499,6 @@ class StructuralAssembler:
                     if data.get("element_type") == "2d_element":
                         g_dof, F_elem = self.element_2d.process_forces_for_normal_pressure_load(connect, normal_pressure)
                     else:
-                        print("passei B")
                         g_dof, F_elem = self.element_2d.normal_pressure_load(connect, normal_pressure)
 
                     output[g_dof, :] += F_elem
@@ -533,7 +534,7 @@ class StructuralAssembler:
         """
         self.material_from_volume.clear()
 
-        for vol_id in self.model.mesh.elements_from_volume.keys():
+        for vol_id in self.model.mesh.elements_from_volume:
             material = self.properties._get_property("material", volume=vol_id)
             if isinstance(material, Material):
                 self.material_from_volume[vol_id] = material
@@ -545,7 +546,7 @@ class StructuralAssembler:
         """
         self.surface_data_for_shell_elements.clear()
 
-        for surf_id in self.model.mesh.elements_from_surface.keys():
+        for surf_id in self.model.mesh.elements_from_surface:
             
             material = self.properties._get_property("material", surface=surf_id)
             if material is None:
@@ -613,7 +614,7 @@ class StructuralAssembler:
         Calculates global matrices.
         """
 
-        self.active_2d_element_dof = list()
+        self.active_2d_element_dof = []
 
         self.ind_rows, self.ind_cols = self.element_3d.generate_ind_rows_cols(reorder=reorder)
 
