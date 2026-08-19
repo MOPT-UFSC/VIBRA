@@ -13,11 +13,9 @@ class HDF5FileHandler(IOHandler):
 
     @staticmethod
     def read(file_path: str | Path) -> SimulationData:
-        simulation_data = SimulationData(
-            file_path.stem,
-            file_path.suffix,
-            str(file_path)
-        )
+        file_path = Path(file_path)
+
+        simulation_data = SimulationData(file_path)
 
         with h5py.File(file_path, 'r') as hf:
 

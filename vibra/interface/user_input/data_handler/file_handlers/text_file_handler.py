@@ -11,6 +11,8 @@ class TextFileHandler(IOHandler):
 
     @staticmethod
     def read(file_path: str | Path, delimiter: str = ",") -> TextData:
+        file_path = Path(file_path)
+
         try:
             loaded_data = np.loadtxt(file_path, delimiter=delimiter)
         except:
@@ -18,7 +20,7 @@ class TextFileHandler(IOHandler):
 
         loaded_data = TextFileHandler._remove_unnecesary_header_in_data(loaded_data)
 
-        return TextData(file_path.stem, file_path.suffix, str(file_path), loaded_data)
+        return TextData(file_path, loaded_data)
 
     @staticmethod
     def save(file_path: str | Path, data: np.array, delimiter=",", header=""):

@@ -1,33 +1,37 @@
 from dataclasses import dataclass
-
+from pathlib import Path
 import numpy as np
 
 
 @dataclass
-class ImportedData:
-    filename: str = str()
-    extension: str = str()
-    path: str = str()
+class ImportedDataInterface:
+    path: Path = Path()
 
+    def __post_init__(self):
+        self.path = Path(self.path)
+        self.filename = self.path.name
+        self.extension = self.path.suffix
 
 @dataclass
-class TextData(ImportedData):
+class TextData(ImportedDataInterface):
     data: np.array = None
 
 
 @dataclass
-class SimulationData(ImportedData):
+class SimulationData(ImportedDataInterface):
     nodal_area: np.array = None
     nodal_coordinates: np.array = None
 
 
 @dataclass
 class SpreadsheetSheet:
-    name: str
+    sheetname: str
     data: np.ndarray
-    source_file: str = ""
 
 
 @dataclass
-class SpreadsheetData(ImportedData):
+class SpreadsheetData(ImportedDataInterface):
     sheets: list[SpreadsheetSheet] = None
+
+
+ImportedData = TextData | SpreadsheetSheet | SimulationData

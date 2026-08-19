@@ -18,13 +18,12 @@ class SpreadsheetFileHandler(IOHandler):
         from openpyxl import load_workbook
         from polars import read_excel
 
+        file_path = Path(file_path)
+
         wb = load_workbook(file_path)
 
-        imported_spreadsheet = SpreadsheetData(
-            file_path.stem,
-            file_path.suffix,
-            str(file_path),
-        )
+        imported_spreadsheet = SpreadsheetData(file_path)
+
         sheets = list()
         for sheetname in wb.sheetnames:
             max_cols = wb[sheetname].max_column
