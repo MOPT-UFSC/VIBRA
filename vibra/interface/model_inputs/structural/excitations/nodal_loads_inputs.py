@@ -23,6 +23,11 @@ class ElementFormulation(IntEnum):
     ELEMENT_3D = 1
 
 
+class EvaluationType(IntEnum):
+    ELEMENT_INTEGRATION = 0
+    NODAL_DISTRIBUTION = 1
+
+
 class AssignmetType(IntEnum):
     SURFACES = 0
     LINES = 1
@@ -131,6 +136,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         #
         self.comboBox_attribution_type.currentIndexChanged.connect(self.attribution_type_callback)
         self.comboBox_element_type.currentIndexChanged.connect(self.element_type_callback)
+        self.comboBox_evaluation_type.currentIndexChanged.connect(self.evaluation_type_callback)
         #
         self.pushButton_apply.clicked.connect(self.apply_callback)
         self.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
@@ -284,6 +290,11 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         self.lineEdit_path_table_My.setVisible(element_2d)
         self.lineEdit_path_table_Mz.setVisible(element_2d)
 
+    def evaluation_type_callback(self):
+        nodal_distribution = self.comboBox_evaluation_type.currentIndex() == EvaluationType.NODAL_DISTRIBUTION
+        self.checkBox_averaged_constant_values.setEnabled(nodal_distribution)
+        self.checkBox_averaged_table_values.setEnabled(nodal_distribution)
+
     def update_element_type_based_on_geometry_information(self):
         volume_exists = self.mesh.are_there_volumes_in_geometry()
         self.comboBox_element_type.setCurrentIndex(int(volume_exists))
@@ -342,6 +353,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
         index = self.comboBox_element_type.currentIndex()
         element_type = self.element_types[index]
+        nodal_distribution = self.comboBox_evaluation_type.currentIndex() == EvaluationType.NODAL_DISTRIBUTION
 
         stop, Fx = self.check_complex_entries(self.lineEdit_real_Fx.text(), self.lineEdit_imag_Fx.text(), "Fx")
         if stop:
@@ -388,7 +400,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         real_values = [value if value is None else np.real(value) for value in nodal_loads]
         imag_values = [value if value is None else np.imag(value) for value in nodal_loads]
 
-        key_avg = self.checkBox_averaged_constant_values.isChecked()
+        key_avg = self.checkBox_averaged_table_values.isChecked() and self.checkBox_averaged_table_values.isEnabled()
 
         for selected_id in selected_ids:
             data = {
@@ -396,7 +408,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                 "values": nodal_loads,
                 "real_values": real_values,
                 "imag_values": imag_values,
-                "nodal_attribution": True,
+                "nodal_distribution": nodal_distribution,
                 "averaged": key_avg,
             }
 
@@ -551,6 +563,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
         index = self.comboBox_element_type.currentIndex()
         element_type = self.element_types[index]
+        nodal_distribution = self.comboBox_evaluation_type.currentIndex() == EvaluationType.NODAL_DISTRIBUTION
 
         if self.Fx_table_path is None:
             self.Fx_table_values, self.Fx_table_path = self.load_table(self.lineEdit_path_table_Fx, "Fx", direct_load = True)
@@ -570,7 +583,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         if self.Mz_table_path is None:
             self.Mz_table_values, self.Mz_table_path = self.load_table(self.lineEdit_path_table_Mz, "Mz", direct_load = True)
 
-        key_avg = self.checkBox_averaged_table_values.isChecked()
+        key_avg = self.checkBox_averaged_table_values.isChecked() and self.checkBox_averaged_table_values.isEnabled()
 
         for selected_id in selected_ids:
             
@@ -631,7 +644,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                 "table_names": table_names,
                 "table_paths": table_paths,
                 "values": nodal_loads,
-                "nodal_attribution": True,
+                "nodal_distribution": nodal_distribution,
                 "averaged": key_avg,
             }
 

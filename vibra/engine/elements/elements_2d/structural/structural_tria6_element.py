@@ -24,6 +24,30 @@ class STRUCT_TRIANGLE_6(TRIANGLE_6):
         self.process_shape_functions_and_derivatives()
 
 
+    def integrate_area(self, connectivities: np.ndarray):
+
+        self.connectivities = connectivities
+        
+        # compute local coordinates for all elements
+        local_coords = self.get_stacked_local_coordinates()
+
+        # initialize variable
+        dA = 0.
+
+        # integration loop
+        for i in range(self.nint):
+
+            # Jacobian matrices of all elements
+            JAC_stacked = self.dphi[i, :, :] @ local_coords
+
+            # Jacobian determinants and inverses of all elements
+            det_jacs, _ = self.get_detJAC_and_invJAC(JAC_stacked)
+
+            dA +=  det_jacs * self.wps[i]
+
+        return np.sum(dA)
+
+
     def normal_pressure_load(self, e_normals: np.ndarray, normal_pressures: np.ndarray) -> np.ndarray:
         """ 
         This method computes the acoustic pressure loads over a surface.
@@ -84,7 +108,7 @@ class STRUCT_TRIANGLE_6(TRIANGLE_6):
         return nodal_loads
     
 
-    def calculate_load_vector_for_normal_pressure_loading(self, el_index: int, e_normal: np.ndarray,  normal_pressure: np.ndarray) -> np.ndarray:
+    def integrate_normal_pressure_load(self, el_index: int, e_normal: np.ndarray,  normal_pressure: np.ndarray) -> np.ndarray:
         """ 
         This method computes the elementary load vector.
 
@@ -111,9 +135,6 @@ class STRUCT_TRIANGLE_6(TRIANGLE_6):
         # nodal coordinates in the local CS
         coord_lcs = get_local_coordinates(coords)
 
-        # reshape the normal pressures vector
-        normal_pressure = normal_pressure.reshape(1, -1)
-
         # initialize the shape functions matrix
         N = np.zeros((3, self.dof_per_element), dtype=float)
 
@@ -138,6 +159,59 @@ class STRUCT_TRIANGLE_6(TRIANGLE_6):
             Fe += (N.T @ (-e_normal @ normal_pressure)) * (det_JAC * self.wps[i])
 
         return Fe
+
+    def integrate_distributed_load(self, el_index: int, distributed_load: np.ndarray) -> np.ndarray:
+        """ 
+        This method computes the elementary load vector.
+
+        Parameters
+        ----------
+        el_index: int
+            The element index.
+
+        load: float, optional
+            The load vector.
+
+        Returns
+        -------
+        Fe: np.ndarray
+            The elementary load vector.
+        """
+
+        # element nodes
+        e_nodes = self.connectivities[el_index, :]
+
+        # element nodal coordinates
+        coords = self.nodal_coordinates[e_nodes, :]
+
+        # nodal coordinates in the local CS
+        coord_lcs = get_local_coordinates(coords)
+
+        # initialize the shape functions matrix
+        N = np.zeros((3, self.dof_per_element), dtype=float)
+
+        # initialize the variable Fe
+        Fe = 0.
+
+        # integration loop
+        for i in range(self.nint):
+
+            # Jacobian matrix
+            JAC = self.dphi[i, :, :] @ coord_lcs
+
+            # determinant of Jacobia matrix
+            det_JAC = self.get_detJAC(JAC)
+
+            # populate the shape functions matrix
+            N[0, 0::3] = self.phi[i, :, :]
+            N[1, 1::3] = self.phi[i, :, :]
+            N[2, 2::3] = self.phi[i, :, :]
+
+            # the negative value of the normal is used to point the normal toward the interior of the domain.
+            Fe += (N.T @ distributed_load) * (det_JAC * self.wps[i])
+
+        return Fe
+
 
     def element_indexes(self, index: int):
         node_ids = self.connectivities[index, :]

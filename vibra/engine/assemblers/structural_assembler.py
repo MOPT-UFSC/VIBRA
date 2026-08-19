@@ -230,9 +230,21 @@ class StructuralAssembler:
         return output
 
 
-    def process_loads_arrays(self, structural_loads: list):
+    def process_loads_arrays(self, values: list[np.ndarray | None]):
         """
-        This method returns...
+        For a given list of values, this method returns an output list of two-dimensional 
+        arrays whose columns have the same size as the frequencies vector.
+
+        Parameters
+        ----------
+        values: list
+            The input values list to be converted.
+
+        Returns
+        -------
+        array_of_values: np.ndarray
+            The output two-bidimensional array vector whose columns
+            have the same size as the frequencies vector.
         """
 
         if self.frequencies is None:
@@ -242,11 +254,11 @@ class StructuralAssembler:
 
         try:
 
-            values_list = list()
+            values_list = []
             aux_ones = np.ones(number_frequencies, dtype=complex)
             aux_zeros = np.zeros(number_frequencies, dtype=complex)
 
-            for value in structural_loads:
+            for value in values:
 
                 if value is None:
                     values_list.append(aux_zeros)
@@ -267,57 +279,57 @@ class StructuralAssembler:
         # filter values based on frequency mask
         if array_of_values.shape[1] - self.frequencies.size:
             return array_of_values[self.model.solution_steps_mask, :]
-        else:
-            return array_of_values
+
+        return array_of_values
 
 
-    def get_value_in_array_form(
-            self, 
-            value: float | np.ndarray, 
-            flatten: bool = False, 
-            filter_frequencies: bool=True,
-            ) -> np.ndarray:
-        """
-        This method returns, for a given input value, an output vector with 
-        the same length as the frequencies vector.
+    # def get_value_in_array_form(
+    #         self, 
+    #         value: float | np.ndarray, 
+    #         flatten: bool = False, 
+    #         filter_frequencies: bool=True,
+    #         ) -> np.ndarray:
+    #     """
+    #     This method returns, for a given input value, an output vector with 
+    #     the same length as the frequencies vector.
 
-        Parameters
-        ----------
-        value: float or np.ndarray
-            The input value to be converted in array with
-            the same length as the frequencies vector.
+    #     Parameters
+    #     ----------
+    #     value: float or np.ndarray
+    #         The input value to be converted in array with
+    #         the same length as the frequencies vector.
         
-        flatten: bool, optional
-            Controls whether the output vector will be flattened or not.
+    #     flatten: bool, optional
+    #         Controls whether the output vector will be flattened or not.
 
-        Returns
-        -------
-        output_vector: np.ndarray
-            The output vector with the same length as the frequencies
-            vector.
-        """
+    #     Returns
+    #     -------
+    #     output_vector: np.ndarray
+    #         The output vector with the same length as the frequencies
+    #         vector.
+    #     """
 
-        aux_ones = np.ones((1, self.number_frequencies), dtype=complex)
+    #     aux_ones = np.ones((1, self.number_frequencies), dtype=complex)
 
-        if isinstance(value, complex | float):
-            output_vector = value * aux_ones
+    #     if isinstance(value, complex | float):
+    #         output_vector = value * aux_ones
 
-        elif isinstance(value, np.ndarray):
-            if value.shape[0] == 1:
-                output_vector = value * aux_ones
+    #     elif isinstance(value, np.ndarray):
+    #         if value.shape[0] == 1:
+    #             output_vector = value * aux_ones
 
-            elif len(value.shape) == 1:
-                output_vector = value.reshape(1, -1)
+    #         elif len(value.shape) == 1:
+    #             output_vector = value.reshape(1, -1)
 
-            else:
-                output_vector = value
+    #         else:
+    #             output_vector = value
 
-        if filter_frequencies:
-            if (output_vector.shape[1] - self.number_frequencies) and self.model.solution_steps_mask:
-                # filter values based on the solution steps mask
-                output_vector = output_vector[:, self.model.solution_steps_mask]
+    #     if filter_frequencies:
+    #         if (output_vector.shape[1] - self.number_frequencies) and self.model.solution_steps_mask:
+    #             # filter values based on the solution steps mask
+    #             output_vector = output_vector[:, self.model.solution_steps_mask]
 
-        return output_vector.flatten() if flatten else output_vector
+    #     return output_vector.flatten() if flatten else output_vector
 
 
     def get_excitation_data_for_element_integration(self, property_label: str) -> dict:
@@ -348,70 +360,111 @@ class StructuralAssembler:
                 continue
 
             data: dict
-            complex_values = data.get("values")[0]
 
-            if property_label in ["normal_pressure_load", "nodal_loads"]:
+            if property_label in ["normal_pressure_load", "nodal_loads", "distributed_load"]:
                 element_type = data.get("element_type")
                 if element_type == "2d_element":
                     continue
 
+            if data.get("nodal_distribution", False):
+                continue
+
+            complex_values = data.get("values")
+
             # normalize data type to array
-            complex_values_array = self.get_value_in_array_form(complex_values, flatten=True)
+            complex_values_array = self.process_loads_arrays(complex_values)
 
             surf_elements = list(self.model.mesh.elements_from_surface.get(surface_id))
             surf_connect = self.model.mesh.get_connectivity_from_surface(surface_id)
+
+            if property_label == "nodal_loads":
+                surface_area = self.element_2d.integrate_area(surf_connect)
+                complex_values_array /= surface_area
+
+            # print(surface_id, surface_area)
+            # print(complex_values_array / surface_area)
+            # print(complex_values_array.shape)
 
             for i, el in enumerate(surf_elements):
                 aux_connect[el] = surf_connect[i]
                 aux_data[el] = complex_values_array
 
         if aux_connect:
+
             integration_data = {
                 "element_ids" : np.array(list(aux_connect.keys()), dtype=int),
                 "connectivities" : np.array(list(aux_connect.values()), dtype=int),
-                "surface_data" : np.array(list(aux_data.values()), dtype=complex),
+                "surface_data" : aux_data,
+                # "surface_data" : np.array(list(aux_data.values()), dtype=complex),
                 }
 
         return integration_data
 
 
-    def get_structural_excitations_by_element_integration(self):
+    def get_structural_excitations_by_element_integration_2d(self):
         """ 
         This method processes the acoustic model excitations and
         returns the output data in the form of mass flow rate.
         """
 
         total_dof = self.element_2d.dof_per_node * len(self.element_2d.nodal_coordinates)
-        output = np.zeros((total_dof, self.number_frequencies), dtype=complex)
+        load_vectors = np.zeros((total_dof, self.number_frequencies), dtype=complex)
 
         prop_labels = [
+            "nodal_loads",
             "normal_pressure_load",
-            "distributed_load",
+            "distributed_loads",
         ]
 
         for prop_label in prop_labels:
-            integration_data = self.get_excitation_data_for_element_integration(prop_label)
 
+            integration_data = self.get_excitation_data_for_element_integration(prop_label)
             if not integration_data:
                 continue
 
-            element_ids = integration_data.get("element_ids")
-            connectivities = integration_data.get("connectivities")
-            surface_data = integration_data.get("surface_data")
+            match prop_label:
+                case "normal_pressure_load":
+                    load_vectors = self.integrate_normal_pressure_load(integration_data, load_vectors)
 
-            surface_elements_connectivities = self.model.mesh.faces_connectivity[element_ids, :]
-            elements_normals = self.model.mesh.get_element_face_normal_batched(surface_elements_connectivities)
-
-            self.element_2d.reorder_connect(connectivities)
-            for i, complex_values in enumerate(surface_data):
-                indices = self.element_2d.element_indexes(i)
-                e_normal = elements_normals[i, :].reshape(-1, 1)
-                output[indices, :] += self.element_2d.calculate_load_vector_for_normal_pressure_loading(i, e_normal, complex_values)
+                case "distributed_loads" | "nodal_loads":
+                    load_vectors = self.integrate_distributed_load(integration_data, load_vectors)
 
         if self.prescribed_dof_indexes:
-            return output[self.unprescribed_dof_indexes, :]
+            return load_vectors[self.unprescribed_dof_indexes, :]
 
-        return output
+        return load_vectors
+
+
+    def integrate_normal_pressure_load(self, integration_data: dict, load_vectors: np.ndarray):
+
+        element_ids = integration_data.get("element_ids")
+        connectivities = integration_data.get("connectivities")
+        surface_data: dict = integration_data.get("surface_data")
+
+        surface_elements_connectivities = self.model.mesh.faces_connectivity[element_ids, :]
+        elements_normals = self.model.mesh.get_element_face_normal_batched(surface_elements_connectivities)
+
+        self.element_2d.reorder_connect(connectivities)
+        for i, complex_values in enumerate(surface_data.values()):
+            indices = self.element_2d.element_indexes(i)
+            e_normal = elements_normals[i, :].reshape(-1, 1)
+            load_vectors[indices, :] += self.element_2d.integrate_normal_pressure_load(i, e_normal, complex_values)
+
+        return load_vectors
+
+
+    def integrate_distributed_load(self, integration_data: dict, load_vectors: np.ndarray):
+
+        # element_ids = integration_data.get("element_ids")
+        connectivities = integration_data.get("connectivities")
+        surface_data: dict = integration_data.get("surface_data")
+
+        self.element_2d.reorder_connect(connectivities)
+        for i, complex_values in enumerate(surface_data.values()):
+            indices = self.element_2d.element_indexes(i)
+            load_vectors[indices, :] += self.element_2d.integrate_distributed_load(i, complex_values)
+
+        return load_vectors
 
 
     def process_distributed_loads(self):
@@ -420,6 +473,9 @@ class StructuralAssembler:
 
         for (property, surface_id), data in self.properties.surface_properties.items():
             if property not in ["distributed_loads", "normal_pressure_loads"]:
+                continue
+
+            if data.get("element_type") != "element_2d":
                 continue
 
             connectivities_from_surface = self.model.mesh.get_connectivity_from_surface(surface_id)
@@ -441,6 +497,7 @@ class StructuralAssembler:
                     if data.get("element_type") == "2d_element":
                         g_dof, F_elem = self.element_2d.process_forces_for_normal_pressure_load(connect, normal_pressure)
                     else:
+                        print("passei B")
                         g_dof, F_elem = self.element_2d.normal_pressure_load(connect, normal_pressure)
 
                     output[g_dof, :] += F_elem
@@ -466,8 +523,8 @@ class StructuralAssembler:
 
         if self.prescribed_dof_indexes:
             return output[self.unprescribed_dof_indexes, :]
-        else:
-            return output
+
+        return output
 
 
     def process_material_from_volumes(self):
@@ -667,7 +724,7 @@ class StructuralAssembler:
         This method assembles the excitations of the structural model.
         """
         A = self.get_structural_excitations_by_nodal_attribution()
-        B = self.get_structural_excitations_by_element_integration()
+        B = self.get_structural_excitations_by_element_integration_2d()
         C = self.process_distributed_loads()
 
         self.structural_loads = A + B + C

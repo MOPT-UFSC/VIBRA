@@ -299,7 +299,7 @@ class ModelSetupItems(CommonMenuItems):
         if mesh is not None:
             volume_exists = mesh.are_there_volumes_in_geometry()
             self.item_child_surface_thickness.setHidden(volume_exists)
-            self.item_child_distributed_loads.setHidden(volume_exists)
+            # self.item_child_distributed_loads.setHidden(volume_exists)
             # self.item_child_normal_pressure_load.setHidden(volume_exists)
 
         if isinstance(volume_exists, bool):
