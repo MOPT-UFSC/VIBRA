@@ -6,8 +6,8 @@ from vibra.interface.user_input.data_handler.imported_data import ImportedData
 
 class IOHandler(ABC):
 
-    @abstractmethod
     @staticmethod
+    @abstractmethod
     def read(self, file_path: str | Path) -> ImportedData:
         pass
 

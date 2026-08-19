@@ -2,7 +2,7 @@ import platform
 from collections import defaultdict
 from pathlib import Path
 
-from PySide6.QtWidgets import QFileDialog, QWidget
+from PySide6.QtWidgets import QFileDialog
 
 
 class FileDialogService:
