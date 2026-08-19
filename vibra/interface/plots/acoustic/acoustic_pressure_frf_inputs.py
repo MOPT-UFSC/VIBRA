@@ -9,12 +9,11 @@ from vibra.engine import AnalysisID
 from vibra.engine.properties.fluid import Fluid
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.general.utils import clear_style_sheet
 from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
 from vibra.interface.numeric_checks.unit_utilities import convert_length_unit, units_abreviations
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
-from vibra.interface.ui_generated.plots.acoustic.acoustic_pressure_frequency_response_function_inputs_ui import (
-    AcousticPressureFrequencyResponseFunctionInputs_UI,
-)
+from vibra.interface.ui_generated.plots.acoustic.acoustic_pressure_frf_inputs_ui import AcousticPressureFrfInputs_UI
 
 
 class CutoffFrequency(IntEnum):
@@ -23,7 +22,7 @@ class CutoffFrequency(IntEnum):
     AUTOMATIC = 2
 
 
-class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyResponseFunctionInputs_UI):
+class AcousticPressureFRFInputs(AcousticPressureFrfInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -123,13 +122,9 @@ class AcousticPressureFrequencyResponseFunctionInputs(AcousticPressureFrequencyR
         self.highlight_selected_line_edit()
 
     def highlight_selected_line_edit(self):
-
-        if self.current_lineEdit == self.lineEdit_input_selected_id:
-            self.lineEdit_output_selected_id.setStyleSheet("")
-        else:
-            self.lineEdit_input_selected_id.setStyleSheet("")
-
-        self.current_lineEdit.setStyleSheet("""border-color: rgb(32, 207, 255); border-width: 2px;""")
+        line_edits = [self.lineEdit_input_selected_id, self.lineEdit_output_selected_id]
+        clear_style_sheet([line_edit for line_edit in line_edits if line_edit is not self.current_lineEdit])
+        self.current_lineEdit.setStyleSheet("border-color: rgb(32, 207, 255); border-width: 2px;")
 
     def alternate_selected_line_edit(self):
         if self.current_lineEdit == self.lineEdit_input_selected_id:

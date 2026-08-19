@@ -191,7 +191,6 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
         frequencies = imported_values[:, 0]
 
         if app().project.model.change_analysis_frequency_setup(list(frequencies)):
-            self.hide()
             title = "Project frequency setup cannot be modified"
             message = "The following imported table of values has a frequency setup "
             message += "different from the others already imported ones. The current "
@@ -225,7 +224,6 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
         surface_ids, error_data = self.mesh.check_selected_ids(input_ids, selection = "surfaces")
 
         if error_data is not None:
-            self.hide()
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
             return
@@ -233,7 +231,6 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
         self.remove_conflicting_excitations(surface_ids)
 
         if self.lineEdit_table_path.text() == "":
-            self.hide()
             title = "Additional inputs required"
             message = "You must select the external compressor excitation "
             message += "table path to proceed with the assignment"
@@ -329,8 +326,6 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
             self.actions_to_finalize()
 
     def reset_callback(self):
-
-        self.hide()
 
         title = "Compressor excitation reseting"
         message = "Would you like to remove the all compressor excitations in frequency domain from model?"

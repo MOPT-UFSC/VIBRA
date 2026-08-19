@@ -13,6 +13,7 @@ from vibra.engine.analysis_info import AnalysisID, FrequencySpacing, HarmonicAna
 from vibra.interface import error_title
 from vibra.interface.common.common_interface import mesher_interface_callback
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.general.utils import clear_style_sheet
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
 from vibra.interface.ui_generated.model.acoustic.element_transfer.acoustic_transfer_element_inputs_ui import AcousticTransferElementInputs_UI
@@ -137,11 +138,9 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         self.highlight_line_edit()
 
     def highlight_line_edit(self):
+        line_edits = [self.lineEdit_input_selected_id, self.lineEdit_output_selected_id]
+        clear_style_sheet([line_edit for line_edit in line_edits if line_edit is not self.current_line_edit])
         self.current_line_edit.setStyleSheet(self.highlight_style_sheet)
-        if self.current_line_edit == self.lineEdit_input_selected_id:
-            self.lineEdit_output_selected_id.setStyleSheet("")
-        elif self.current_line_edit == self.lineEdit_output_selected_id:
-            self.lineEdit_input_selected_id.setStyleSheet("")
 
     def _load_analysis_setup(self):
         analysis_setup = self.analysis_setup
@@ -195,7 +194,6 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
             )
 
             if error_data is not None:
-                self.hide()
                 line_edit.setFocus()
                 line_edit.selectAll()
                 PrintMessageInput(error_data)
@@ -219,7 +217,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
                 line_edit.setStyleSheet(self.highlight_style_sheet)
                 return True
 
-            line_edit.setStyleSheet("")
+            clear_style_sheet(line_edit)
             freq_data.append(float(line_edit.text()))
 
         [f_min, f_max, f_step] = freq_data
@@ -389,7 +387,6 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         area, surface_velocity = self.get_area_and_surface_velocity(excitation_id)
 
         if area is None:
-            self.hide()
             title = "Surface velocity not detected"
             message = f"The surface velocity associated to the surface #{surface_id} has not been found. "
             message += "It is recommended to check the acoustic model excitations and change the excitation "

@@ -61,17 +61,17 @@ class ModelProperties:
         self.material_library = MaterialLibrary.default()
         self.fluid_library = FluidLibrary.default()
 
-        self.acoustic_imported_tables = dict()
-        self.structural_imported_tables = dict()
+        self.acoustic_imported_tables = {}
+        self.structural_imported_tables = {}
 
-        self.global_properties = dict()
-        self.group_properties = dict()
-        self.volume_properties = dict()
-        self.surface_properties = dict()
-        self.line_properties = dict()
-        self.point_properties = dict()
-        self.element_properties = dict()
-        self.nodal_properties = dict()
+        self.global_properties = {}
+        self.group_properties = {}
+        self.volume_properties = {}
+        self.surface_properties = {}
+        self.line_properties = {}
+        self.point_properties = {}
+        self.element_properties = {}
+        self.nodal_properties = {}
 
         # self.global_properties["material", "global"] = DEFAULT_MATERIAL
         # self.global_properties["fluid", "global"] = DEFAULT_FLUID
@@ -111,8 +111,8 @@ class ModelProperties:
         """
         if isinstance(data, dict):
 
-            values_list = list()
-            data_keys = list(data.keys())
+            values_list = []
+            data_keys = list(data)
             group_label = self.get_data_group_label(property)
 
             if "real_values" in data_keys and "imag_values" in data_keys:
@@ -145,13 +145,13 @@ class ModelProperties:
                 else:
                     imported_tables = self.structural_imported_tables
 
-                frequencies_list = list()
+                frequencies_list = []
                 for i, table_name in enumerate(data.get("table_names")):
                     if table_name is None:
                         values_list.append(None)
                         continue
 
-                    if table_name in imported_tables.keys():
+                    if table_name in imported_tables:
                         data_array = imported_tables[table_name]
 
                         table_frequencies = [float(freq) for freq in data_array[:, 0]]
@@ -250,31 +250,30 @@ class ModelProperties:
 
         for data_dict in data_dicts:
             for data in data_dict.values():
-                if isinstance(data, dict):
-                    if "table_names" in data.keys():
-                        return True
-        else:
-            return False
+                if isinstance(data, dict) and "table_names" in data:
+                    return True
+
+        return False
 
     def _reset_property(self, property: str):
         """
         Clears all instances of a specific property from the structure.
         """
-        data_dicts = [  
-                      self.volume_properties,
-                      self.surface_properties,
-                      self.line_properties,
-                      self.point_properties,
-                      self.group_properties,
-                      self.global_properties,
-                      self.nodal_properties,
-                      self.element_properties,
-                      ]
+        data_dicts = [
+            self.volume_properties,
+            self.surface_properties,
+            self.line_properties,
+            self.point_properties,
+            self.group_properties,
+            self.global_properties,
+            self.nodal_properties,
+            self.element_properties,
+        ]
 
         for data in data_dicts:
             keys_to_remove = []
 
-            for key in data.keys():
+            for key in data:
                 if len(key) == 2:
                     existing_property, _ = key
                 else:
@@ -291,7 +290,7 @@ class ModelProperties:
 
     def remove_material(self, material: Material):
         self.material_library.pop(material)
-        to_remove = list()
+        to_remove = []
         for entity_name, property_name, tags, prop_data in self.iterate_properties():
             if prop_data == material:
                 to_remove.append((entity_name, tags))
@@ -305,7 +304,7 @@ class ModelProperties:
 
     def remove_fluid(self, fluid: Fluid):
         self.fluid_library.pop(fluid)
-        to_remove = list()
+        to_remove = []
         for entity_name, property_name, tags, prop_data in self.iterate_properties():
             if prop_data == fluid:
                 to_remove.append((entity_name, tags))
@@ -320,47 +319,48 @@ class ModelProperties:
     def _remove_nodal_property(self, property: str, nodal_id: int):
         """Remove a nodal property at specific nodal_id."""
         key = (property, nodal_id)
-        if key in self.nodal_properties.keys():
+        if key in self.nodal_properties:
             self.nodal_properties.pop(key)
 
     def _remove_element_property(self, property: str, element_id: int):
         """Remove a element property at specific element_id."""
         key = (property, element_id)
-        if key in self.element_properties.keys():
+        if key in self.element_properties:
             self.element_properties.pop(key)
 
     def _remove_point_property(self, property: str, point_id: int):
         """Remove a point property at specific point_id."""
         key = (property, point_id)
-        if key in self.point_properties.keys():
+        if key in self.point_properties:
             self.point_properties.pop(key)
 
     def _remove_line_property(self, property: str, line_id: int):
         """Remove a line property at specific line_id."""
         key = (property, line_id)
-        if key in self.line_properties.keys():
+        if key in self.line_properties:
             self.line_properties.pop(key)
 
     def _remove_surface_property(self, property: str, surface_id: int):
         """Remove a surface property at specific surface_id."""
         key = (property, surface_id)
-        if key in self.surface_properties.keys():
+        if key in self.surface_properties:
             self.surface_properties.pop(key)
 
     def _remove_volume_property(self, property: str, volume_id: int):
         """Remove a volume property at specific volume_id."""
         key = (property, volume_id)
-        if key in self.volume_properties.keys():
+        if key in self.volume_properties:
             self.volume_properties.pop(key)
 
     def _remove_group_property(self, property: str, group_id: int):
         """Remove a group property at specific group_id."""
         key = (property, group_id)
-        if key in self.group_properties.keys():
+        if key in self.group_properties:
             self.group_properties.pop(key)
 
     def add_imported_tables(self, group_label: str, table_name: str, data: np.ndarray | list | tuple):
         """
+        Add an imported table data to the model properties attributes.
         """
         if group_label == "acoustic":
             self.acoustic_imported_tables[table_name] = data
@@ -390,10 +390,10 @@ class ModelProperties:
     # TODO: group_label argument is used on calls across the program. Need to remove later
     def remove_imported_tables(self, group_label: str, table_name: str):
         #TODO: is it possible both have the same table_names? I am counting with this, need to check for problems
-        if table_name in self.acoustic_imported_tables.keys():
+        if table_name in self.acoustic_imported_tables:
             self.acoustic_imported_tables.pop(table_name)
 
-        if table_name in self.structural_imported_tables.keys():
+        if table_name in self.structural_imported_tables:
             self.structural_imported_tables.pop(table_name)
 
     def get_data_group_label(self, property : str) -> str:
@@ -431,8 +431,9 @@ class ModelProperties:
 
     def get_property_related_table_names(self, property : str, selected_ids : int | list | tuple, selection: str) -> list:
         """
+        Returns the table names associated with a particular property and selected IDs.
         """
-        table_names = list()
+        table_names = []
         if isinstance(selected_ids, int):
             test_key = (property, selected_ids)
         elif isinstance(selected_ids, list) and len(selected_ids) == 1:
@@ -456,11 +457,10 @@ class ModelProperties:
             return table_names
 
         data = _properties.get(test_key)
-        if isinstance(data, dict):
-            if "table_names" in data.keys():
-                for table_name in data["table_names"]:
-                    if table_name is not None:
-                        table_names.append(table_name)
+        if isinstance(data, dict) and "table_names" in data:
+            for table_name in data["table_names"]:
+                if table_name is not None:
+                    table_names.append(table_name)
 
         return table_names
     
@@ -469,7 +469,7 @@ class ModelProperties:
         This method process the frequencies vectors from all imported tables.
         """
 
-        frequencies_from_tables = list()
+        frequencies_from_tables = []
 
         for _, _, _, prop_data in self.iterate_properties():
 
@@ -493,7 +493,7 @@ class ModelProperties:
 
     def is_the_volume_property_present_in_the_model(self, property_to_check: str):
 
-        for (property, _) in self.volume_properties.keys():
+        for (property, _) in self.volume_properties:
             if property == property_to_check:
                 return True
 
@@ -501,7 +501,7 @@ class ModelProperties:
 
     def is_the_surface_property_present_in_the_model(self, property_to_check: str):
 
-        for (property, _) in self.surface_properties.keys():
+        for (property, _) in self.surface_properties:
             if property == property_to_check:
                 return True
 
@@ -512,17 +512,16 @@ class ModelProperties:
             if property_name != "prescribed_dof":
                 continue
 
-            if isinstance(data, dict):
-                if data.get("integrate"):
-                    return True
-        
+            if isinstance(data, dict) and data.get("integrate"):
+                return True
+
         return False
     
     def get_entities_without_property(self, property: str, **kwargs):
 
-        entities_without_property = list()
-        volume_ids = kwargs.get("volumes", list())
-        surface_ids = kwargs.get("surfaces", list())
+        entities_without_property = []
+        volume_ids = kwargs.get("volumes", [])
+        surface_ids = kwargs.get("surfaces", [])
 
         if volume_ids:
             for volume_id in volume_ids:
@@ -531,7 +530,7 @@ class ModelProperties:
                     entities_without_property.append(volume_id)
 
         elif surface_ids:
-            for surface_id in kwargs.get("surfaces", list()):
+            for surface_id in kwargs.get("surfaces", []):
                 data = self._get_property(property, surface=surface_id)
                 if data is None:
                     entities_without_property.append(surface_id)
@@ -568,9 +567,9 @@ class ModelProperties:
         return self._get_properties_from_entities(volume_ids, self.volume_properties)
 
     def _get_properties_from_entities(self, entity_ids: set[int], entity_properties: dict) -> list[tuple[str, int]]:
-        properties_found: list[tuple[str, int]] = list()
+        properties_found: list[tuple[str, int]] = []
 
-        for property_name, entity_id in entity_properties.keys():
+        for property_name, entity_id in entity_properties:
             if entity_id in entity_ids:
                 properties_found.append((property_name, entity_id))
         

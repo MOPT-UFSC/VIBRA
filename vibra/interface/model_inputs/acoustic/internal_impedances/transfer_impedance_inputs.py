@@ -1,11 +1,13 @@
 import logging
 import warnings
 from copy import deepcopy
+from collections import defaultdict
 
 import numpy as np
 from PySide6.QtCore import QItemSelectionModel, QPoint, Qt
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QLineEdit, QTreeWidgetItem
+from vibra.interface import warning_title
 
 from vibra import app
 from vibra.interface import error_title
@@ -184,7 +186,6 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
                                                                 )
 
         if error_data is not None:
-            self.hide()
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
             return list()
@@ -195,6 +196,58 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         surface_ids.sort()
 
         return surface_ids
+
+    def map_volumes_to_surfaces(self, surface_ids: list[int]) -> None | dict:
+
+        surfaces_from_volume = defaultdict(list)
+
+        for surface_id in surface_ids:
+
+            message = ""
+            volumes_from_surface = self.model.mesh.volumes_from_surface.get(surface_id)
+
+            if volumes_from_surface is None:
+                message = "The selected surface is not connected to any volume. "
+                message += "You must select an internal surface connected "
+                message += "with two volumes to proceed with dofs decoupling."
+
+            elif len(volumes_from_surface) == 1:
+                message = "The selected surface is connected to one volume, this means that an external " 
+                message += "surface has been selected. You must select an internal surface connected "
+                message += "with two volumes to proceed with dofs decoupling."
+
+            if message != "":
+                title = "Invalid surface selected"
+                PrintMessageInput([warning_title, title, message])
+                return
+
+            for volume_id in volumes_from_surface:
+                if surface_id in surfaces_from_volume.get(volume_id, []):
+                    continue
+
+                surfaces_from_volume[volume_id].append(surface_id)
+
+        # check if there is a common volume touching the selected surfaces
+        for vol_id, surf_ids in surfaces_from_volume.items():
+            if len(surf_ids) == len(surface_ids):
+                return {surf_id : vol_id for surf_id in surface_ids}
+
+        surface_to_volume_map = {}
+
+        # select volumes with reduced number of solid elements to decouple the DOF
+        for _surface_id in surface_ids:
+            volumes_from_surface = self.model.mesh.volumes_from_surface.get(_surface_id)
+            if len(volumes_from_surface) != 2:
+                continue
+
+            n_el1 = len(self.mesh.elements_from_volume.get(volumes_from_surface[0]))
+            n_el2 = len(self.mesh.elements_from_volume.get(volumes_from_surface[1]))
+
+            vol_id = volumes_from_surface[0] if n_el1 > n_el2 else volumes_from_surface[1]
+
+            surface_to_volume_map[_surface_id] = vol_id
+
+        return surface_to_volume_map
 
     def apply_callback(self, close_window: bool = False):
 
@@ -228,7 +281,6 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
             return True
 
         if real_value + imag_value == 0:
-            self.hide()
             title = "Additional inputs required"
             message = "You must enter a non-zero transfer impedance value to proceed with the assignment."
             PrintMessageInput([error_title, title, message])
@@ -242,9 +294,17 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
             }
         )
 
+        volume_to_surface_map = self.map_volumes_to_surfaces(surface_ids)
+
         for surface_id in surface_ids:
+            volume_id = volume_to_surface_map.get(surface_id)
+            if volume_id is None:
+                continue
+
+            data = {"volume_to_decouple" : volume_id}
+
             self.properties._set_property("transfer_impedance", deepcopy(self.ti_data), surface=surface_id)
-            self.decouple_degrees_of_freedom(surface_id)
+            self.properties._set_property("degrees_of_freedom_decoupling", data, surface=surface_id)
 
         self.assignment_complete = True
         self.clear_line_edit_selection_id()
@@ -293,7 +353,6 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         _frequencies = _imported_values[:, 0]
 
         if app().project.model.change_analysis_frequency_setup(list(_frequencies)):
-            self.hide()
             title = "Project frequency setup cannot be modified"
             message = "The following imported table of values has a frequency setup "
             message += "different from the others already imported ones. The current "
@@ -322,7 +381,6 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
     def tabular_data_assignment(self, surface_ids: int | tuple[int]):
 
         if self.lineEdit_table_path.text() == "":
-            self.hide()
             title = "Additional inputs required"
             message = "You must enter the transfer impedance table path to proceed with the assignment."
             PrintMessageInput([error_title, title, message])
@@ -335,10 +393,18 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         if self.imported_values is None:
             return True
 
+        volume_to_surface_map = self.map_volumes_to_surfaces(surface_ids)
+
         for surface_id in surface_ids:
+            volume_id = volume_to_surface_map.get(surface_id)
+            if volume_id is None:
+                continue
+
+            data = {"volume_to_decouple" : volume_id}
+
             self.include_transfer_impedance_table_data(surface_id)
             self.properties._set_property("transfer_impedance", deepcopy(self.ti_data), surface=surface_id)
-            self.decouple_degrees_of_freedom(surface_id)
+            self.properties._set_property("degrees_of_freedom_decoupling", data, surface=surface_id)
 
         self.assignment_complete = True
         self.clear_line_edit_selection_id()
@@ -432,7 +498,6 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
         for surface_id in surface_ids:
             if len(self.mesh.volumes_from_surface[surface_id]) != 2:
-                self.hide()
                 message = f"The selected surface ID #{surface_id} does not correspond to an inside surface "
                 message += "(surfaces that connect two neighboohrs volumes). The transfer impedance "
                 message += "assignment will be ignored until all requirements are met."
@@ -499,16 +564,6 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         self.ti_data["table_paths"] = [table_path]
         self.ti_data["values"] = [complex_values]
 
-    def decouple_degrees_of_freedom(self, surface_id: int):
-
-        volumes_from_surface = self.mesh.volumes_from_surface.get(surface_id)
-        if volumes_from_surface is None:
-            return 
-
-        volume_id = volumes_from_surface[0]
-        data = {"volume_to_decouple" : volume_id}
-        self.properties._set_property("degrees_of_freedom_decoupling", data, surface=surface_id)
-
     def process_table_file_removal(self, table_names: list):
         for table_name in table_names:
             self.properties.remove_imported_tables("acoustic", table_name)
@@ -572,7 +627,6 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
                                                                 )
         
         if error_data is not None:
-            self.hide()
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
             return
@@ -613,8 +667,6 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
         if not surface_ids:
             return
-
-        self.hide()
 
         title = "Transfer impedance resetting"
         message = "Would you like to remove the transfer impedance from the acoustic model?"
@@ -693,7 +745,10 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
             logging.info("Processing degress of freedom decoupling... [90/100]")
             app().main_window.update_geometry_information()
-        
+
+            logging.info("Processing degress of freedom decoupling... [92/100]")
+            app().project.model.mesh.process_disconnected_nodes_criterion()
+
             logging.info("Processing degress of freedom decoupling... [95/100]")
             app().main_window.update_plots()
 
@@ -737,7 +792,6 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
             message += str(error_log)
 
         if message != "":
-            self.hide()
             line_edit.setFocus()
             PrintMessageInput([error_title, title, message])
             return None

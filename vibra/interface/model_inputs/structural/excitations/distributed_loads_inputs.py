@@ -228,7 +228,6 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
                 _real = float(real_input)
 
             except Exception:
-                self.hide()
                 title = f"Invalid entry to the {label}"
                 message = f"Wrong input for real part of {label}."
                 PrintMessageInput([error_title, title, message])
@@ -241,7 +240,6 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
                 _imag = float(imag_input)
 
             except Exception:
-                self.hide()
                 title = f"Invalid entry to the {label}"
                 message = f"Wrong input for imaginary part of {label}."
                 PrintMessageInput([error_title, title, message])
@@ -276,7 +274,6 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         selected_ids, error_data = self.mesh.check_selected_ids(input_ids, selection=selection, single_id=False)
 
         if error_data is not None:
-            self.hide()
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
             return True
@@ -305,7 +302,6 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         condition_2 = element_type == "3d_element" and distributed_loads.count(None) == 3
 
         if condition_1 or condition_2:
-            self.hide()
             title = "Additional inputs required"
             message = "You must to enter at least one distributed load value before confirming the assignment."
             PrintMessageInput([error_title, title, message])
@@ -400,7 +396,6 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
 
         if self.model.change_analysis_frequency_setup(list(self.frequencies)):
 
-            self.hide()
             lineEdit = self.table_lineEdits[load_label]
             imported_filename = basename(lineEdit.text())
             self.lineEdit_reset(lineEdit)
@@ -442,7 +437,6 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         selected_ids, error_data = self.mesh.check_selected_ids(input_ids, selection=selection, single_id=False)
 
         if error_data is not None:
-            self.hide()
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
             return True
@@ -487,7 +481,6 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
             condition_2 = element_type == "3d_element" and table_names.count(None) == 3
 
             if condition_1 or condition_2:
-                self.hide()
                 title = "Additional inputs required"
                 message = "You must to enter at leat one distributed load table path before confirming the assignment."
                 PrintMessageInput([error_title, title, message]) 
@@ -735,8 +728,6 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
             app().main_window.selection.set_mesh_selection()
 
     def reset_callback(self):
-
-        self.hide()
 
         title = "Distributed loads resetting"
         message = "Would you like to remove the all distributed loads from model?"

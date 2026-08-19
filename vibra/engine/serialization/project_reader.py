@@ -14,7 +14,7 @@ from vibra.engine.analysis_info import AnalysisID, AnalysisSetup, HarmonicAnalys
 from vibra.engine.assemblers import AcousticAssembler, StructuralAssembler
 from vibra.engine.mesher.element_setup import ElementSetup
 from vibra.engine.mesher.mesh import Mesh
-from vibra.engine.mesher.mesh_setup import MeshRefinementSetup, MeshSetup
+from vibra.engine.mesher.mesh_setup import LocalMeshSizeControlSetup, MeshSetup
 from vibra.engine.model import Model
 from vibra.engine.properties import Fluid, FluidLibrary, Material, MaterialLibrary
 from vibra.engine.properties.model_properties import ModelProperties
@@ -129,7 +129,11 @@ class ProjectReader:
         if not mesh_setup_dict:
             return None
 
-        refinement_parameters = [MeshRefinementSetup(*refinement) for refinement in mesh_setup_dict["mesh_refinement_parameters"]]
+        size_controls = mesh_setup_dict.get(
+            "local_mesh_size_control_parameters",
+            mesh_setup_dict.get("mesh_refinement_parameters", []),
+        )
+        size_control_parameters = [LocalMeshSizeControlSetup(*refinement) for refinement in size_controls]
 
         custom_element = mesh_setup_dict.get("custom_element_setup")
         if custom_element is not None:
@@ -154,7 +158,7 @@ class ProjectReader:
             element_order=element_order,
             compute_quality_metrics=mesh_setup_dict.get("compute_quality_metrics", False),
             merge_connected_volumes=mesh_setup_dict.get("merge_connected_volumes", False),
-            refinement_parameters=refinement_parameters,
+            local_mesh_size_control_parameters=size_control_parameters,
             custom_element_setup=custom_element,
             random_seed=mesh_setup_dict.get("random_seed", 1234),
         )
@@ -260,6 +264,7 @@ class ProjectReader:
         mesh.process_upwards_adjacencies_from_entities()
         mesh.process_mesh_related_mappings()
         mesh.update_element_topology_based_on_connectivity()
+        mesh.process_disconnected_nodes_criterion()
         mesh.mesh_quality_data = self.read_mesh_quality_metrics()
 
         return mesh
@@ -338,10 +343,13 @@ class ProjectReader:
 
         return model_properties
 
-    def read_material_library(self) -> MaterialLibrary:
+    def read_material_library(self, import_path: Path | None = None) -> MaterialLibrary:
         logging.info("Reading MaterialLibrary")
 
-        material_library_data = read_json(self.project_paths.material_library_filepath)
+        if import_path is None:
+            import_path = self.project_paths.material_library_filepath
+
+        material_library_data = read_json(import_path)
         if material_library_data is None:
             return MaterialLibrary.default()
 
@@ -353,10 +361,13 @@ class ProjectReader:
 
         return material_library
 
-    def read_fluid_library(self) -> FluidLibrary:
+    def read_fluid_library(self, import_path: Path | None = None) -> FluidLibrary:
         logging.info("Reading FluidLibrary")
 
-        fluid_library_data = read_json(self.project_paths.fluid_library_filepath)
+        if import_path is None:
+            import_path = self.project_paths.fluid_library_filepath
+
+        fluid_library_data = read_json(import_path)
         if fluid_library_data is None:
             return FluidLibrary.default()
 

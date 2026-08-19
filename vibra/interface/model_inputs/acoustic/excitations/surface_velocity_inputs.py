@@ -207,7 +207,6 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         surface_ids, error_data = self.mesh.check_selected_ids(input_ids, selection="surfaces", single_id=False)
 
         if error_data is not None:
-            self.hide()
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
             return
@@ -259,7 +258,6 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         surface_velocity = self.check_complex_entries(self.lineEdit_real_value, self.lineEdit_imag_value)
 
         if surface_velocity is None:
-            self.hide()
             title = "Additional inputs required"
             message = "You must enter a non-zero surface velocity value to proceed with the assignment."
             PrintMessageInput([error_title, title, message])
@@ -326,7 +324,6 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         _frequencies = imported_values[:, 0]
 
         if app().project.model.change_analysis_frequency_setup(list(_frequencies)):
-            self.hide()
             title = "Project frequency setup cannot be modified"
             message = "The following imported table of values has a frequency setup "
             message += "different from the others already imported ones. The current "
@@ -357,7 +354,6 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         self.remove_conflicting_excitations(surface_ids)
 
         if self.lineEdit_table_path.text() == "":
-            self.hide()
             title = "Additional inputs required"
             message = "You must enter the surface velocity table path to proceed with the assignment."
             PrintMessageInput([error_title, title, message])
@@ -451,8 +447,6 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         self.actions_to_finalize()
 
     def reset_callback(self):
-
-        self.hide()
 
         title = "Surface velocity resetting"
         message = "Would you like to remove the all applied surface velocities from model?"

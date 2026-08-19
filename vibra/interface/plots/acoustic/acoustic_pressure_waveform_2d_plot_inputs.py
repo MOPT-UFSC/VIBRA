@@ -1,23 +1,20 @@
+import logging
+from time import time
+
+import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
 from vibra.engine import AnalysisID
-
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.general.print_message_input import PrintMessageInput
-# from vibra.interface.loading_window import LoadingWindow
-from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter, DataFormat
-from vibra.interface.ui_generated.plots.acoustic.acoustic_pressure_waveform_inputs_ui import AcousticPressureWaveformInputs_UI
-
+from vibra.interface.plots.general.frequency_response_plotter import DataFormat, FrequencyResponsePlotter
+from vibra.interface.ui_generated.plots.acoustic.acoustic_pressure_waveform_2d_plot_inputs_ui import AcousticPressureWaveform2dPlotInputs_UI
 from vibra.utils.signal_processing import process_ifft_from_one_sided_spectrum_signal, process_multiple_iffts_from_one_sided_spectrum_signals
 
-import logging
-import numpy as np
-from time import time
 
-
-class AcousticPressureWaveformInputs(AcousticPressureWaveformInputs_UI):
+class AcousticPressureWaveform2DPlotInputs(AcousticPressureWaveform2dPlotInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 

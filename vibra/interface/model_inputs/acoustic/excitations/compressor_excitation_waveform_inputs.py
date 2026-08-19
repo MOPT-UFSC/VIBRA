@@ -17,6 +17,7 @@ from vibra.interface.data.data_manager import get_spectral_data_from_array
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.general.utils import clear_style_sheet
 from vibra.interface.plots.general.frequency_response_plotter import DataFormat, FrequencyResponsePlotter
 from vibra.interface.ui_generated.model.acoustic.excitations.compressor_excitation_waveform_inputs_ui import CompressorExcitationWaveformInputs_UI
 from vibra.utils.signal_processing import extend_signal, get_window_and_correction_factor, process_one_sided_spectrum
@@ -200,13 +201,12 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
             message += str(error_log)
 
         if message != "":
-            self.hide()
             title = "Invalid input to the analysis setup"
             PrintMessageInput([error_title, title, message])
             line_edit.setStyleSheet("""border-color: rgb(240, 10, 10); border-width: 2px;""")
             return None
 
-        line_edit.setStyleSheet("")
+        clear_style_sheet(line_edit)
 
         return value
 
@@ -544,7 +544,6 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
                 line_edit.setText(imported_data.path)
 
             if imported_values.shape[1] < 2:
-                self.hide()
                 message = "The imported table has insufficient number of columns. The mass flow data signal "
                 message += "must have two columns in the form: time, and mass flow values."
                 PrintMessageInput([error_title, title, message])
@@ -553,7 +552,6 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
             return imported_values
 
         except Exception as log_error:
-            self.hide()
             message = str(log_error)
             PrintMessageInput([error_title, title, message])
             line_edit.setFocus()
@@ -564,7 +562,6 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         _frequencies = imported_values[:, 0]
 
         if app().project.model.change_analysis_frequency_setup(list(_frequencies)):
-            self.hide()
             title = "Project frequency setup cannot be modified"
             message = "The following imported table of values has a frequency setup "
             message += "different from the others already imported ones. The current "
@@ -595,7 +592,6 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         )
 
         if error_data is not None:
-            self.hide()
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
             return
@@ -603,7 +599,6 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         self.remove_conflicting_excitations(surface_ids)
 
         if self.lineEdit_table_path.text() == "":
-            self.hide()
             title = "Additional inputs required"
             message = "You must select the external compressor excitation "
             message += "table path to proceed with the assignment."
@@ -725,8 +720,6 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         self.actions_to_finalize()
 
     def reset_callback(self):
-
-        self.hide()
 
         title = "External comrpressor excitation resetting"
         message = "Would you like to remove the all external compressor excitations from model?"
