@@ -127,7 +127,7 @@ def load_external_mesh_and_solve(**kwargs):
         "element_type": "3d_element",
         "real_values": [0.0, 1.0, 1.0],
         "imag_values": [0.0, 0.0, 0.0],
-        "nodal_attribution": True,
+        "element_integration": False,
         "averaged": False,
         }
 

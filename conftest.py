@@ -51,8 +51,7 @@ def acoustic_model(fluid: Fluid) -> Model:
     data_Vn = {
         "real_values": [1],
         "imag_values": [0],
-        "nodal_attribution": False,
-        "averaged": False,
+        "element_integration": True,
     }
     model.properties._set_property("fluid", fluid, surface=4)
     model.properties._set_property("surface_velocity", data_Vn, surface=4)
@@ -122,7 +121,7 @@ def structural_model(material: Material) -> Model:
         "element_type": "3d_element",
         "real_values": [1, 0, 0],
         "imag_values": [0, 0, 0],
-        "nodal_attribution": True,
+        "element_integration": False,
         "averaged": True,
     }
     model.properties._set_property("material", material, surface=7)

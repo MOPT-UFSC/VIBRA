@@ -117,8 +117,7 @@ def load_external_mesh_and_solve():
     data_Vn = {
         "real_values": [1],
         "imag_values": [0],
-        "nodal_attribution": False,
-        "averaged": False,
+        "element_integration": True,
     }
 
     # Impedance data - constant value
