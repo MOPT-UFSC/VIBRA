@@ -1,7 +1,7 @@
 from typing import override
 
 import numpy as np
-from molde.colors.color import Color
+from molde.colors import color_names
 from molde.render_widgets import CommonRenderWidget
 from vtkmodules.util.numpy_support import vtk_to_numpy
 from vtkmodules.vtkCommonDataModel import vtkSelectionNode
@@ -21,6 +21,7 @@ class PreviewRenderWidget(CommonRenderWidget):
         self.create_axes()
 
         self.picker = vtkHardwarePicker()
+        self.picker.SetPixelTolerance(0)
         self.picker.SnapToMeshPointOff()
 
         self.left_released.connect(self.click)
@@ -39,9 +40,10 @@ class PreviewRenderWidget(CommonRenderWidget):
                 sources.create_impedance_source,
                 (0, np.cos(i), np.sin(i)),
                 (0, 0, 1),
-                Color(255, 0, 0),
+                color_names.BLUE,
                 0.5,
             )
+        self.symbols.PickableOff()
         self.add_actors(self.symbols)
 
     def update_model(self, model: Model | None):
@@ -66,25 +68,31 @@ class PreviewRenderWidget(CommonRenderWidget):
         super().resizeEvent(event)
         self.renderer.ResetCamera()
 
+    @function_timer
     def click(self, x, y):
-        red = Color(255, 0, 0)
-        self.mesh_actor.set_color(Color(255, 255, 255))
+        if (model := self.model) is None:
+            return
+
+        if (mesh := model.mesh) is None:
+            return
 
         something_picked = self.picker.Pick(x, y, 0, self.renderer)
+        self.mesh_actor.set_color(color_names.WHITE)  # Keep it after the pick
+
         if not something_picked:
             self.update()
             return
 
-        bla = self.mesh_actor.picked_dim_tag(self.picker)
-        print(bla)
-
-        match bla:
+        match self.mesh_actor.picked_dim_tag(self.picker):
             case 3, tag:
-                volume = self.model.mesh.solids_connectivity[tag, 1]
-                self.mesh_actor.paint_volumes(red, [volume])
+                assert mesh.solids_connectivity is not None
+                volume = mesh.solids_connectivity[tag, 1]
+                self.mesh_actor.paint_volumes(color_names.RED_5, [volume])
 
             case 2, tag:
-                self.mesh_actor.paint_face_elements(red, [tag])
+                assert mesh.faces_connectivity is not None
+                surface = mesh.faces_connectivity[tag, 1]
+                self.mesh_actor.paint_surfaces(color_names.RED, [surface])
 
             case _:
                 pass
