@@ -125,9 +125,9 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         }
 
     def _config_widgets(self):
-        #
+
         self.comboBox_element_type.setEnabled(False)
-        #
+
         for i, w in enumerate([110, 150, 100]):
             self.treeWidget_nodal_loads.setColumnWidth(i, w)
             self.treeWidget_nodal_loads.headerItem().setTextAlignment(i, Qt.AlignCenter)
@@ -684,8 +684,8 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
     def remove_duplicated_assignments(self, selected_ids: list, selection: str):
 
-        table_names = list()
-        nodes_to_remove = list()
+        table_names = []
+        nodes_to_remove = []
         for selected_id in selected_ids:
 
             if selection == "surfaces":
@@ -820,11 +820,11 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
     def add_model_info_in_treeWidget(self, entity: str):
 
         properties = {
-                        "surface" : self.properties.surface_properties,
-                        "line" : self.properties.line_properties,
-                        "point" : self.properties.point_properties,
-                        "node" : self.properties.nodal_properties,
-                      }
+            "surface": self.properties.surface_properties,
+            "line": self.properties.line_properties,
+            "point": self.properties.point_properties,
+            "node": self.properties.nodal_properties,
+        }
 
         _property = properties.get(entity)
         if _property is None:
@@ -836,7 +836,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
             values = data["values"]
             element_type = data["element_type"]
-            constrained_dof_mask = [False if value is None else True for value in values]
+            constrained_dof_mask = [not value for value in values]
             dof_labels = str(self.text_label(constrained_dof_mask))
 
             new = QTreeWidgetItem([f"{entity.capitalize()}-{args[0]}", dof_labels, element_type])
@@ -856,15 +856,14 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
         self.update_tabs_visibility()
 
-
     def update_tabs_visibility(self):
 
         properties_to_check = [
-                               self.properties.surface_properties,
-                               self.properties.line_properties,
-                               self.properties.point_properties,
-                               self.properties.nodal_properties,
-                               ]
+            self.properties.surface_properties,
+            self.properties.line_properties,
+            self.properties.point_properties,
+            self.properties.nodal_properties,
+        ]
 
         for current_property in properties_to_check:
             for (property, _) in current_property:
@@ -1061,8 +1060,8 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
         return super().closeEvent(a0)
-    
-    #TODO: remove soon
+
+    #TODO: remove when possible
     def update_formulation_callback(self, **kwargs):
         return
 

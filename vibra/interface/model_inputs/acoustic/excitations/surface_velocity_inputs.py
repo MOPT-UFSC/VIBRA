@@ -28,7 +28,6 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
 
-        self.model = app().project.model
         self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
 
@@ -39,7 +38,6 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         self._create_connections()
 
         self.load_model_info()
-        self.geometry_selection_callback()
         
         while self.keep_window_open:
             self.exec()
@@ -81,6 +79,8 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         self.treeWidget_surface_velocity.itemDoubleClicked.connect(self.on_doubleclick_item)
 
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
+
+        self.geometry_selection_callback()
         self.distribution_type_changed_callback()
 
     def _config_widgets(self):
