@@ -20,9 +20,6 @@ class STRUCT_TRIANGLE_6(TRIANGLE_6):
         self.element_label = "structural_triangular_6"
         self.nodal_coordinates = self.model.mesh.nodal_coordinates
 
-        self.define_integration_points()
-        self.process_shape_functions_and_derivatives()
-
 
     def integrate_area(self, connectivities: np.ndarray):
 
