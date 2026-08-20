@@ -313,12 +313,16 @@ class AcousticAssembler:
                 continue
 
             data: dict
+            if not data.get("element_integration"):
+                continue
+
             complex_values = data.get("values")[0]
 
             if property_label in ["compressor_excitation_spectrum", "compressor_excitation_waveform"]:
                 excitation_type = data.get("excitation_type")
 
                 if excitation_type in ["mass flow rate", "volumetric flow rate"]:
+
                     # compute the nozzle area
                     self.model.mesh.process_face_elements_connected_to_nodes(surface_id)
                     area = self.model.mesh.surface_area_from_element_integration.get(surface_id, 0)                    
@@ -1694,6 +1698,12 @@ class AcousticAssembler:
         for (property, surface_id), data in self.properties.surface_properties.items():
             if property in ["surface_velocity", "reciprocating_compressor_excitation"]:
 
+                if not isinstance(data, dict):
+                    continue
+        
+                if data.get("element_integration"):
+                    continue
+
                 _complex_values = data["values"][0]
                 if isinstance(_complex_values, complex):
                     complex_values = _complex_values * aux_ones
@@ -1707,20 +1717,21 @@ class AcousticAssembler:
                     else:
                         complex_values = _complex_values
 
-                if data["nodal_attribution"]:
-                    nodes = self.model.mesh.get_nodes_from_surface(surface_id)
-                    if nodes is None:
-                        continue
+                nodes = self.model.mesh.get_nodes_from_surface(surface_id)
+                if nodes is None:
+                    continue
 
-                    N = len(nodes)
-                    self.model.mesh.process_face_elements_connected_to_nodes(surface_id)
-                    area = self.model.mesh.surface_area_from_element_integration[surface_id]
+                N = len(nodes)
+                self.model.mesh.process_face_elements_connected_to_nodes(surface_id)
+                area = self.model.mesh.surface_area_from_element_integration[surface_id]
 
-                    for index in self.model.get_acoustic_global_dof_from_nodes(nodes):
-                        if data["averaged"]:
-                            acoustic_excitation[index] += (complex_values * area) / N
-                        else:
-                            acoustic_excitation[index] += complex_values * area
+                averaged = data.get("averaged")
+
+                for index in self.model.get_acoustic_global_dof_from_nodes(nodes):
+                    if averaged:
+                        acoustic_excitation[index] += (complex_values * area) / N
+                    else:
+                        acoustic_excitation[index] += complex_values * area
 
         total_dof = self.element_3d.DOF_PER_NODE * len(self.element_3d.nodal_coordinates)
         output = np.zeros((total_dof, self.number_frequencies), dtype=complex)

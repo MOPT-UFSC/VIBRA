@@ -275,8 +275,7 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
                 "table_paths" : [table_path],
                 "table_names" : [table_name],
                 "values" : [complex_values],
-                "nodal_attribution": False,
-                "averaged": False,
+                "element_integration": True,
                 }
 
             self.properties._set_property("compressor_excitation_spectrum", data, surface=surface_id)

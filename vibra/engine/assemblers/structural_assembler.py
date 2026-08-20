@@ -59,8 +59,10 @@ class StructuralAssembler:
         return (self.stiffness_matrix is not None) and (self.mass_matrix is not None)
 
 
-    def get_property_data_for_selected_property(self, selected_property: str):
+    def get_property_data_for_selected_property(self, selected_property: str) -> dict[int, np.ndarray]:
         """
+        This method returns, for a given property, the integrated 
+        property-related data in array format.
         """
         output_data = defaultdict(int)
 
@@ -68,7 +70,11 @@ class StructuralAssembler:
             if property != selected_property:
                 continue
 
-            if property == "nodal_loads" and not data.get("nodal_distribution", False):
+            if not isinstance(data, dict):
+                continue
+
+            element_integration = data.get("element_integration", False)
+            if property == "nodal_loads" and element_integration:
                 continue
 
             nodes = self.model.mesh.get_nodes_from_surface(surface_id)
@@ -83,7 +89,8 @@ class StructuralAssembler:
             if property != selected_property:
                 continue
 
-            if property == "nodal_loads" and not data.get("nodal_distribution", False):
+            element_integration = data.get("element_integration", False)
+            if property == "nodal_loads" and element_integration:
                 continue
 
             nodes = self.model.mesh.get_nodes_from_line(line_id)
@@ -362,10 +369,6 @@ class StructuralAssembler:
                 continue
 
             data: dict
-
-            if data.get("nodal_distribution", False):
-                continue
-
             mass = np.real(data.get("values"))
 
             surf_elements = list(self.model.mesh.elements_from_surface.get(surface_id))
@@ -414,10 +417,6 @@ class StructuralAssembler:
                 continue
 
             data: dict
-
-            if data.get("nodal_distribution", False):
-                continue
-
             mass = np.real(data.get("values"))
 
             line_elements = list(self.model.mesh.elements_from_line.get(line_id))
@@ -470,14 +469,13 @@ class StructuralAssembler:
             if prop != property_label:
                 continue
 
-            data: dict
-
             if property_label in ["normal_pressure_load", "nodal_loads", "distributed_load"]:
                 element_type = data.get("element_type")
                 if element_type == "2d_element":
                     continue
 
-            if data.get("nodal_distribution", False):
+            data: dict
+            if not data.get("element_integration"):
                 continue
 
             complex_values = data.get("values")

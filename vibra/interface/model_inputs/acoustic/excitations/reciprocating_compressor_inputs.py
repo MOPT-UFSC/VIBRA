@@ -881,8 +881,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             "table_names": [table_name],
             "parameters": self.parameters,
             "values": [surface_velocity],
-            "nodal_attribution": False,
-            "averaged": False,
+            "element_integration": True,
         }
 
         self.remove_conflicting_excitations(surface_id)

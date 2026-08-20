@@ -33,6 +33,8 @@ from vibra.engine.elements.elements_2d import (
     ACT_QUADRANGLE_8,
     ACT_TRIANGLE_3,
     ACT_TRIANGLE_6,
+    STRUCT_QUADRANGLE_4,
+    STRUCT_QUADRANGLE_8,
     STRUCT_TRIANGLE_3,
     STRUCT_TRIANGLE_6,
 )
@@ -507,10 +509,10 @@ class Model:
             return STRUCT_TETRAHEDRON_10S(self), STRUCT_TRIANGLE_6(self), STRUCT_LINE_3(self)
 
         elif element_type == HEXAHEDRON_8:
-            return STRUCT_HEXAHEDRON_8(self), None, STRUCT_LINE_2(self)
+            return STRUCT_HEXAHEDRON_8(self), STRUCT_QUADRANGLE_4(self), STRUCT_LINE_2(self)
 
         elif element_type == HEXAHEDRON_20:
-            return STRUCT_HEXAHEDRON_20(self), None, STRUCT_LINE_3(self)
+            return STRUCT_HEXAHEDRON_20(self), STRUCT_QUADRANGLE_8(self), STRUCT_LINE_3(self)
 
         else:
             raise NotImplementedError(f'Element type "{element_type}" is not supported yet.')
@@ -586,23 +588,8 @@ class Model:
         local_dof = np.arange(dof_per_node, dtype=int)
         global_dof = dof_per_node * nodes.reshape(-1, 1) + local_dof
 
-        den = 1
-        if "nodal_attribution" in data:
-            nodal_attribution = data["nodal_attribution"]
-            averaged = data["averaged"]
-            if nodal_attribution and averaged:
-                den = len(nodes)
-
-            elif not nodal_attribution:
-                # TODO: process element integration
-                den = 1
-
-                if selection == "surfaces":
-                    pass
-                elif selection == "lines":
-                    pass
-                else:
-                    pass
+        averaged = data.get("averaged", False)
+        den = len(nodes) if averaged else 1.0
 
         n_int = 0
         if "integrate" in data:

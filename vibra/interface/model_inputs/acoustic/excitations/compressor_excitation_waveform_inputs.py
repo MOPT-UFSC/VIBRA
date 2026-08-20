@@ -669,8 +669,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
                 "table_names" : [table_name],
                 "table_paths" : [table_path],
                 "values" : [complex_values],
-                "averaged" : False,
-                "nodal_attribution" : False,
+                "element_integration": True,
                 }
 
             self.properties._set_property("compressor_excitation_waveform", data, surface=surface_id)
