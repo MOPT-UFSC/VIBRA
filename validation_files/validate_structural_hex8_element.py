@@ -167,7 +167,7 @@ def load_external_mesh_and_solve(case: str, **kwargs):
     assembler = StructuralAssembler(model)
 
     # Set the analysis frequency setup
-    assembler.assemble_global_matrices_and_excitations(reorder=False)
+    assembler.assemble_global_matrices_and_excitations(reorder=False, print_log=True)
 
     Ke = assembler.data_K[0, :, :]
     Me = assembler.data_M[0, :, :]
