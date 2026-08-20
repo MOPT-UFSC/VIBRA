@@ -10,9 +10,7 @@ class TextFileHandler(IOHandler):
     EXTENSIONS = [".txt", ".dat", ".csv"]
 
     @staticmethod
-    def read(file_path: str | Path, delimiter: str = ",") -> TextData:
-        file_path = Path(file_path)
-
+    def read(file_path: Path, delimiter: str = ",") -> TextData:
         try:
             loaded_data = np.loadtxt(file_path, delimiter=delimiter)
         except:
@@ -32,10 +30,8 @@ class TextFileHandler(IOHandler):
         return np.array(filtered_data, dtype=float)
 
     @staticmethod
-    def _load_text_file_data(file_path: str | Path):
+    def _load_text_file_data(file_path: Path):
         output_data = list()
-        if isinstance(file_path, str):
-            file_path = Path(file_path)
 
         with open(file_path, "r") as file:
             for line in file.readlines():

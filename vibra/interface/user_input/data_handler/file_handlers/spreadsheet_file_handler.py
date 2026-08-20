@@ -14,11 +14,9 @@ class SpreadsheetFileHandler(IOHandler):
     EXTENSIONS = [".xls", ".xlsx"]
 
     @staticmethod
-    def read(file_path: str | Path) -> SpreadsheetData:
+    def read(file_path: Path) -> SpreadsheetData:
         from openpyxl import load_workbook
         from polars import read_excel
-
-        file_path = Path(file_path)
 
         wb = load_workbook(file_path)
 
