@@ -4,29 +4,25 @@ from dataclasses import dataclass
 from itertools import chain
 
 import numpy as np
-import numpy.typing as npt
 import xxhash
 from molde import Color
 from vtkmodules.util.numpy_support import numpy_to_vtk, numpy_to_vtkIdTypeArray, vtk_to_numpy
 from vtkmodules.vtkCommonCore import vtkDataArray, vtkIntArray, vtkPoints, vtkUnsignedCharArray
 from vtkmodules.vtkCommonDataModel import (
-    VTK_EMPTY,
-    VTK_EMPTY_CELL,
-    VTK_TETRA,
     VTK_TRIANGLE,
     VTK_VERTEX,
     vtkCellArray,
     vtkPlane,
     vtkUnstructuredGrid,
 )
-from vtkmodules.vtkRenderingCore import vtkActor, vtkDataSetMapper, vtkHardwarePicker, vtkPicker, vtkPropAssembly
+from vtkmodules.vtkRenderingCore import vtkActor, vtkDataSetMapper, vtkHardwarePicker, vtkPropAssembly
 
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.engine.properties import Fluid, Material
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.utils.math_functions import inside_plane
-from vibra.utils.time_utils import context_timer, function_timer
+from vibra.utils.time_utils import function_timer
 
 
 @dataclass
@@ -209,7 +205,6 @@ class MeshActor(vtkPropAssembly):
         view = vtk_to_numpy(self.surface_ids)
         view[:] = self.mesh.faces_connectivity[:, 0]
 
-    @function_timer
     def update_section_plane(self):
         assert self.mesh is not None
         assert self.mesh.nodal_coordinates is not None
@@ -246,18 +241,17 @@ class MeshActor(vtkPropAssembly):
         counts = mask[connectivity].sum(axis=1, dtype=np.int8)
         elements_in_middle = (0 < counts) & (counts < connectivity.shape[1])
 
-        filtered_connectivity = connectivity[elements_in_middle]
-        n_cells = len(filtered_connectivity)
-        cell_type = VTK_TETRA
+        triangulated_connectivity = self._make_triangles(self.mesh.solids_connectivity[elements_in_middle])
+        n_cells = len(triangulated_connectivity)
 
-        cells = self._create_cells(filtered_connectivity)
-        self.section_data.SetCells(cell_type, cells)
+        cells = self._create_cells(triangulated_connectivity[:, 4:])
+        self.section_data.SetCells(VTK_TRIANGLE, cells)
         self.section_colors.SetNumberOfTuples(n_cells)
         self.section_mapper.Modified()
 
         self.section_ids.SetNumberOfTuples(n_cells)
         view = vtk_to_numpy(self.section_ids)
-        view[:] = self.mesh.solids_connectivity[elements_in_middle, 0]
+        view[:] = triangulated_connectivity[:, 0]
 
     def update_colors(self):
         self.set_color(Color(255, 255, 255), update=False)
@@ -287,7 +281,6 @@ class MeshActor(vtkPropAssembly):
         for color, tags in volume_colors.items():
             self.paint_volumes(color, tags)
 
-    @function_timer
     def set_color(self, color: Color, update: bool = True):
         rgb = color.to_rgb()
         for i in range(self.surface_colors.GetNumberOfComponents()):
@@ -317,7 +310,6 @@ class MeshActor(vtkPropAssembly):
             self.section_colors.Modified()
             self.section_mapper.Modified()
 
-    @function_timer
     def paint_surfaces(self, color: Color, surfaces: Sequence[int] | np.ndarray):
         if self.mesh is None:
             return
@@ -326,17 +318,15 @@ class MeshActor(vtkPropAssembly):
         selected_elements, *_ = np.where(np.isin(self.mesh.faces_connectivity[:, 1], surfaces))
         self.paint_face_elements(color, selected_elements)
 
-    @function_timer
     def paint_volumes(self, color: Color, volumes: Sequence[int] | np.ndarray):
         if self.mesh is None:
             return
 
         assert self.mesh.solids_connectivity is not None
 
-        with context_timer("surface stuff"):
-            surface_groups = [self.mesh.surfaces_from_volume[v] for v in volumes if (v in self.mesh.surfaces_from_volume)]
-            surfaces = list(chain.from_iterable(surface_groups))
-            self.paint_surfaces(color, surfaces)
+        surface_groups = [self.mesh.surfaces_from_volume[v] for v in volumes if (v in self.mesh.surfaces_from_volume)]
+        surfaces = list(chain.from_iterable(surface_groups))
+        self.paint_surfaces(color, surfaces)
 
         if self.section_plane is None:
             return
@@ -351,7 +341,6 @@ class MeshActor(vtkPropAssembly):
         if self.cached_info.section_colors_hash != CachedInfo.array_hash(section_colors):
             self.section_colors.Modified()
 
-    @function_timer
     def picked_dim_tag(self, picker: vtkHardwarePicker) -> tuple[int, int] | None:
         match picker.GetActor():
             case self.section_actor:
@@ -387,3 +376,17 @@ class MeshActor(vtkPropAssembly):
         cell_array = vtkCellArray()
         cell_array.SetCells(connectivity.shape[0], vtk_id_array)
         return cell_array
+
+    def _make_triangles(self, connectivity: np.ndarray) -> np.ndarray:
+        reorderings = [[0, 1, 2], [1, 3, 2]]
+        column_order = [
+            [0, 1, 2, 3] + [i + 4 for i in reordering]
+            for reordering in reorderings
+        ]  # fmt: skip
+
+        stacked = []
+        for order in column_order:
+            connect = connectivity[:, order]
+            stacked.append(connect)
+
+        return np.concatenate(stacked)
