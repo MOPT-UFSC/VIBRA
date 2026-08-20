@@ -13,9 +13,10 @@ from vtkmodules.vtkCommonDataModel import (
     VTK_VERTEX,
     vtkCellArray,
     vtkPlane,
+    vtkPolyData,
     vtkUnstructuredGrid,
 )
-from vtkmodules.vtkRenderingCore import vtkActor, vtkDataSetMapper, vtkHardwarePicker, vtkPropAssembly
+from vtkmodules.vtkRenderingCore import vtkActor, vtkDataSetMapper, vtkHardwarePicker, vtkPolyDataMapper, vtkPropAssembly
 
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
@@ -64,57 +65,26 @@ class MeshActor(vtkPropAssembly):
 
         return self.model.properties
 
-    @function_timer
-    def update(self):
-        if self.mesh is None:
-            self.clear_data()
-            return
-
-        self.update_mesh_common()
-        self.update_node()
-        self.update_surface()
-        self.update_section_plane()
-        self.update_colors()
-        self.update_caches()
-
-    def clear_data(self):
-        self.cached_info = CachedInfo()
-
-        self.node_data.SetCells(0, vtkCellArray())
-        self.node_colors.SetNumberOfTuples(0)
-        self.node_ids.SetNumberOfTuples(0)
-        self.node_colors.Modified()
-
-        self.surface_data.SetCells(0, vtkCellArray())
-        self.surface_colors.SetNumberOfTuples(0)
-        self.surface_ids.SetNumberOfTuples(0)
-        self.surface_colors.Modified()
-
-        self.section_data.SetCells(0, vtkCellArray())
-        self.section_colors.SetNumberOfTuples(0)
-        self.section_ids.SetNumberOfTuples(0)
-        self.section_colors.Modified()
-
     def _create_variables(self):
         self.points = vtkPoints()
         self.solids_on_section = np.zeros((0, 4), dtype=int)
 
         self.node_colors = vtkUnsignedCharArray()
         self.node_ids = vtkIntArray()
-        self.node_data = vtkUnstructuredGrid()
-        self.node_mapper = vtkDataSetMapper()
+        self.node_data = vtkPolyData()
+        self.node_mapper = vtkPolyDataMapper()
         self.node_actor = vtkActor()
 
         self.surface_colors = vtkUnsignedCharArray()
         self.surface_ids = vtkIntArray()
-        self.surface_data = vtkUnstructuredGrid()
-        self.surface_mapper = vtkDataSetMapper()
+        self.surface_data = vtkPolyData()
+        self.surface_mapper = vtkPolyDataMapper()
         self.surface_actor = vtkActor()
 
         self.section_colors = vtkUnsignedCharArray()
         self.section_ids = vtkIntArray()
-        self.section_data = vtkUnstructuredGrid()
-        self.section_mapper = vtkDataSetMapper()
+        self.section_data = vtkPolyData()
+        self.section_mapper = vtkPolyDataMapper()
         self.section_actor = vtkActor()
 
     def _configure_actors_parameters(self):
@@ -151,6 +121,37 @@ class MeshActor(vtkPropAssembly):
         self.section_actor.SetMapper(self.section_mapper)
         self.AddPart(self.section_actor)
 
+    def clear_data(self):
+        self.cached_info = CachedInfo()
+
+        self.node_data.SetVerts(vtkCellArray())
+        self.node_colors.SetNumberOfTuples(0)
+        self.node_ids.SetNumberOfTuples(0)
+        self.node_colors.Modified()
+
+        self.surface_data.SetPolys(vtkCellArray())
+        self.surface_colors.SetNumberOfTuples(0)
+        self.surface_ids.SetNumberOfTuples(0)
+        self.surface_colors.Modified()
+
+        self.section_data.SetPolys(vtkCellArray())
+        self.section_colors.SetNumberOfTuples(0)
+        self.section_ids.SetNumberOfTuples(0)
+        self.section_colors.Modified()
+
+    @function_timer
+    def update(self):
+        if self.mesh is None:
+            self.clear_data()
+            return
+
+        self.update_mesh_common()
+        self.update_node()
+        self.update_surface()
+        self.update_section_plane()
+        self.update_colors()
+        self.update_caches()
+
     def update_mesh_common(self):
         assert self.mesh is not None
         assert self.mesh.nodal_coordinates is not None
@@ -175,7 +176,7 @@ class MeshActor(vtkPropAssembly):
         n_cells = len(node_indexes)
 
         cells = self._create_cells(node_indexes)
-        self.node_data.SetCells(VTK_VERTEX, cells)
+        self.node_data.SetVerts(cells)
         self.node_colors.SetNumberOfTuples(n_cells)
         self.node_colors.Fill(255)
         self.node_mapper.Modified()
@@ -197,7 +198,7 @@ class MeshActor(vtkPropAssembly):
         cell_type = VTK_TRIANGLE
 
         cells = self._create_cells(connectivity)
-        self.surface_data.SetCells(cell_type, cells)
+        self.surface_data.SetPolys(cells)
         self.surface_colors.SetNumberOfTuples(n_cells)
         self.surface_mapper.Modified()
 
@@ -215,7 +216,7 @@ class MeshActor(vtkPropAssembly):
         self.surface_mapper.RemoveAllClippingPlanes()
 
         if self.section_plane is None:
-            self.section_data.SetCells(0, vtkCellArray())
+            self.section_data.SetPolys(vtkCellArray())
             self.section_colors.SetNumberOfTuples(0)
             self.section_ids.SetNumberOfTuples(0)
             self.section_colors.Modified()
@@ -245,7 +246,7 @@ class MeshActor(vtkPropAssembly):
         n_cells = len(triangulated_connectivity)
 
         cells = self._create_cells(triangulated_connectivity[:, 4:])
-        self.section_data.SetCells(VTK_TRIANGLE, cells)
+        self.section_data.SetPolys(cells)
         self.section_colors.SetNumberOfTuples(n_cells)
         self.section_mapper.Modified()
 
