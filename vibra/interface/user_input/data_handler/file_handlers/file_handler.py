@@ -43,6 +43,8 @@ class FileHandler:
         
     @staticmethod
     def _read(file_path: str | Path) -> ImportedData | None:
+        file_path = Path(file_path)
+        
         if file_path.suffix in TextFileHandler.EXTENSIONS:
             return TextFileHandler.read(file_path)
         elif file_path.suffix in HDF5FileHandler.EXTENSIONS:
