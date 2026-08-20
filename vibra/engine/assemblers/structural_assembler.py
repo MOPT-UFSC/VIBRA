@@ -465,17 +465,18 @@ class StructuralAssembler:
 
         for key, data in self.properties.surface_properties.items():
 
-            prop, surface_id = key
-            if prop != property_label:
+            property, surface_id = key
+            if property != property_label:
                 continue
 
-            if property_label in ["normal_pressure_load", "nodal_loads", "distributed_load"]:
+            if property in ["normal_pressure_load", "nodal_loads", "distributed_load"]:
                 element_type = data.get("element_type")
                 if element_type == "2d_element":
                     continue
 
             data: dict
-            if not data.get("element_integration"):
+            element_integration = data.get("element_integration")
+            if property == "nodal_loads" and not element_integration:
                 continue
 
             complex_values = data.get("values")
