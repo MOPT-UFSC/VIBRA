@@ -15,10 +15,10 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDialog,
-    QFrame, QGridLayout, QHeaderView, QLabel,
-    QLineEdit, QPushButton, QSizePolicy, QSpacerItem,
-    QTabWidget, QTreeWidget, QTreeWidgetItem, QWidget)
+from PySide6.QtWidgets import (QApplication, QComboBox, QDialog, QFrame,
+    QGridLayout, QHeaderView, QLabel, QLineEdit,
+    QPushButton, QSizePolicy, QSpacerItem, QTabWidget,
+    QTreeWidget, QTreeWidgetItem, QWidget)
 
 from vibra.interface.formatters.icons import Icon
 
@@ -54,8 +54,8 @@ class Ui_Dialog(object):
         self.gridLayout_4.setObjectName(u"gridLayout_4")
         self.frame_4 = QFrame(self.frame_2)
         self.frame_4.setObjectName(u"frame_4")
-        self.frame_4.setMinimumSize(QSize(360, 80))
-        self.frame_4.setMaximumSize(QSize(380, 80))
+        self.frame_4.setMinimumSize(QSize(360, 120))
+        self.frame_4.setMaximumSize(QSize(380, 120))
         self.frame_4.setFrameShape(QFrame.Shape.NoFrame)
         self.frame_4.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_5 = QGridLayout(self.frame_4)
@@ -63,32 +63,15 @@ class Ui_Dialog(object):
         self.gridLayout_5.setHorizontalSpacing(6)
         self.gridLayout_5.setVerticalSpacing(2)
         self.gridLayout_5.setContentsMargins(2, 2, 2, 2)
-        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_5.addItem(self.horizontalSpacer_2, 0, 3, 1, 1)
-
-        self.label_2 = QLabel(self.frame_4)
-        self.label_2.setObjectName(u"label_2")
-        self.label_2.setMinimumSize(QSize(120, 28))
-        self.label_2.setMaximumSize(QSize(120, 28))
+        self.lineEdit_selection_id = QLineEdit(self.frame_4)
+        self.lineEdit_selection_id.setObjectName(u"lineEdit_selection_id")
+        self.lineEdit_selection_id.setMinimumSize(QSize(150, 28))
+        self.lineEdit_selection_id.setMaximumSize(QSize(150, 28))
         font1 = QFont()
         font1.setFamilies([u"MS Shell Dlg 2"])
         font1.setPointSize(10)
         font1.setBold(False)
         font1.setItalic(False)
-        self.label_2.setFont(font1)
-        self.label_2.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
-
-        self.gridLayout_5.addWidget(self.label_2, 0, 1, 1, 1)
-
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_5.addItem(self.horizontalSpacer, 0, 0, 1, 1)
-
-        self.lineEdit_selection_id = QLineEdit(self.frame_4)
-        self.lineEdit_selection_id.setObjectName(u"lineEdit_selection_id")
-        self.lineEdit_selection_id.setMinimumSize(QSize(150, 28))
-        self.lineEdit_selection_id.setMaximumSize(QSize(150, 28))
         self.lineEdit_selection_id.setFont(font1)
         self.lineEdit_selection_id.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         self.lineEdit_selection_id.setStyleSheet(u"")
@@ -105,6 +88,10 @@ class Ui_Dialog(object):
 
         self.gridLayout_5.addWidget(self.label_5, 1, 1, 1, 1)
 
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_5.addItem(self.horizontalSpacer, 0, 0, 1, 1)
+
         self.comboBox_distribution_type = QComboBox(self.frame_4)
         self.comboBox_distribution_type.addItem("")
         self.comboBox_distribution_type.addItem("")
@@ -117,6 +104,39 @@ class Ui_Dialog(object):
         self.comboBox_distribution_type.setFont(font2)
 
         self.gridLayout_5.addWidget(self.comboBox_distribution_type, 1, 2, 1, 1)
+
+        self.label_2 = QLabel(self.frame_4)
+        self.label_2.setObjectName(u"label_2")
+        self.label_2.setMinimumSize(QSize(120, 28))
+        self.label_2.setMaximumSize(QSize(120, 28))
+        self.label_2.setFont(font1)
+        self.label_2.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+
+        self.gridLayout_5.addWidget(self.label_2, 0, 1, 1, 1)
+
+        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_5.addItem(self.horizontalSpacer_2, 0, 3, 1, 1)
+
+        self.label_6 = QLabel(self.frame_4)
+        self.label_6.setObjectName(u"label_6")
+        self.label_6.setMinimumSize(QSize(120, 28))
+        self.label_6.setMaximumSize(QSize(120, 28))
+        self.label_6.setFont(font1)
+        self.label_6.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+
+        self.gridLayout_5.addWidget(self.label_6, 2, 1, 1, 1)
+
+        self.comboBox_average_values = QComboBox(self.frame_4)
+        self.comboBox_average_values.addItem("")
+        self.comboBox_average_values.addItem("")
+        self.comboBox_average_values.setObjectName(u"comboBox_average_values")
+        self.comboBox_average_values.setMinimumSize(QSize(150, 28))
+        self.comboBox_average_values.setMaximumSize(QSize(150, 28))
+        self.comboBox_average_values.setFont(font2)
+        self.comboBox_average_values.setMaxVisibleItems(2)
+
+        self.gridLayout_5.addWidget(self.comboBox_average_values, 2, 2, 1, 1)
 
 
         self.gridLayout_4.addWidget(self.frame_4, 0, 0, 1, 1)
@@ -132,6 +152,10 @@ class Ui_Dialog(object):
         self.gridLayout_12.setSpacing(2)
         self.gridLayout_12.setObjectName(u"gridLayout_12")
         self.gridLayout_12.setContentsMargins(2, 6, 2, 6)
+        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.gridLayout_12.addItem(self.verticalSpacer, 0, 0, 1, 1)
+
         self.frame_20 = QFrame(self.tab_constant_data)
         self.frame_20.setObjectName(u"frame_20")
         self.frame_20.setFrameShape(QFrame.Shape.NoFrame)
@@ -140,19 +164,6 @@ class Ui_Dialog(object):
         self.gridLayout_10.setSpacing(0)
         self.gridLayout_10.setObjectName(u"gridLayout_10")
         self.gridLayout_10.setContentsMargins(0, 0, 0, 0)
-        self.checkBox_averaged_constant_values = QCheckBox(self.frame_20)
-        self.checkBox_averaged_constant_values.setObjectName(u"checkBox_averaged_constant_values")
-        self.checkBox_averaged_constant_values.setMinimumSize(QSize(0, 28))
-        self.checkBox_averaged_constant_values.setMaximumSize(QSize(220, 28))
-        self.checkBox_averaged_constant_values.setFont(font2)
-        self.checkBox_averaged_constant_values.setChecked(True)
-
-        self.gridLayout_10.addWidget(self.checkBox_averaged_constant_values, 0, 0, 1, 1)
-
-        self.verticalSpacer_2 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-
-        self.gridLayout_10.addItem(self.verticalSpacer_2, 1, 0, 1, 1)
-
 
         self.gridLayout_12.addWidget(self.frame_20, 3, 0, 1, 1)
 
@@ -227,10 +238,6 @@ class Ui_Dialog(object):
 
         self.gridLayout_12.addWidget(self.frame_8, 1, 0, 1, 1)
 
-        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-
-        self.gridLayout_12.addItem(self.verticalSpacer, 0, 0, 1, 1)
-
         self.verticalSpacer_3 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.gridLayout_12.addItem(self.verticalSpacer_3, 2, 0, 1, 1)
@@ -246,29 +253,9 @@ class Ui_Dialog(object):
 
         self.gridLayout_3.addItem(self.verticalSpacer_4, 0, 0, 1, 1)
 
-        self.verticalSpacer_5 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        self.verticalSpacer_6 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
-        self.gridLayout_3.addItem(self.verticalSpacer_5, 4, 0, 1, 1)
-
-        self.frame_21 = QFrame(self.tab_tabular_data)
-        self.frame_21.setObjectName(u"frame_21")
-        self.frame_21.setFrameShape(QFrame.Shape.NoFrame)
-        self.frame_21.setFrameShadow(QFrame.Shadow.Raised)
-        self.gridLayout_17 = QGridLayout(self.frame_21)
-        self.gridLayout_17.setSpacing(0)
-        self.gridLayout_17.setObjectName(u"gridLayout_17")
-        self.gridLayout_17.setContentsMargins(0, 0, 0, 0)
-        self.checkBox_averaged_table_values = QCheckBox(self.frame_21)
-        self.checkBox_averaged_table_values.setObjectName(u"checkBox_averaged_table_values")
-        self.checkBox_averaged_table_values.setMinimumSize(QSize(0, 28))
-        self.checkBox_averaged_table_values.setMaximumSize(QSize(220, 28))
-        self.checkBox_averaged_table_values.setFont(font2)
-        self.checkBox_averaged_table_values.setChecked(True)
-
-        self.gridLayout_17.addWidget(self.checkBox_averaged_table_values, 0, 0, 1, 1)
-
-
-        self.gridLayout_3.addWidget(self.frame_21, 3, 0, 1, 1)
+        self.gridLayout_3.addItem(self.verticalSpacer_6, 2, 0, 1, 1)
 
         self.frame_9 = QFrame(self.tab_tabular_data)
         self.frame_9.setObjectName(u"frame_9")
@@ -333,9 +320,16 @@ class Ui_Dialog(object):
 
         self.gridLayout_3.addWidget(self.frame_9, 1, 0, 1, 1)
 
-        self.verticalSpacer_6 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        self.frame_21 = QFrame(self.tab_tabular_data)
+        self.frame_21.setObjectName(u"frame_21")
+        self.frame_21.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_21.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_17 = QGridLayout(self.frame_21)
+        self.gridLayout_17.setSpacing(0)
+        self.gridLayout_17.setObjectName(u"gridLayout_17")
+        self.gridLayout_17.setContentsMargins(0, 0, 0, 0)
 
-        self.gridLayout_3.addItem(self.verticalSpacer_6, 2, 0, 1, 1)
+        self.gridLayout_3.addWidget(self.frame_21, 3, 0, 1, 1)
 
         self.tabWidget_main.addTab(self.tab_tabular_data, "")
         self.tab_list = QWidget()
@@ -488,6 +482,7 @@ class Ui_Dialog(object):
 
         self.retranslateUi(Dialog)
 
+        self.comboBox_average_values.setCurrentIndex(1)
         self.tabWidget_main.setCurrentIndex(0)
         self.pushButton_apply_and_close.setDefault(False)
         self.pushButton_apply.setDefault(False)
@@ -502,18 +497,20 @@ class Ui_Dialog(object):
 #if QT_CONFIG(whatsthis)
         Dialog.setWhatsThis("")
 #endif // QT_CONFIG(whatsthis)
-        self.label_2.setText(QCoreApplication.translate("Dialog", u"Selection ID:", None))
         self.label_5.setText(QCoreApplication.translate("Dialog", u"Distribution type:", None))
         self.comboBox_distribution_type.setItemText(0, QCoreApplication.translate("Dialog", u"Element integration", None))
         self.comboBox_distribution_type.setItemText(1, QCoreApplication.translate("Dialog", u"Nodal distribution", None))
 
-        self.checkBox_averaged_constant_values.setText(QCoreApplication.translate("Dialog", u"Averaged value over all nodes", None))
+        self.label_2.setText(QCoreApplication.translate("Dialog", u"Selection ID:", None))
+        self.label_6.setText(QCoreApplication.translate("Dialog", u"Average values:", None))
+        self.comboBox_average_values.setItemText(0, QCoreApplication.translate("Dialog", u"Disabled", None))
+        self.comboBox_average_values.setItemText(1, QCoreApplication.translate("Dialog", u"Enabled", None))
+
         self.label_21.setText(QCoreApplication.translate("Dialog", u"[m/s]", None))
         self.label_18.setText(QCoreApplication.translate("Dialog", u"Surface velocity:", None))
         self.label_4.setText(QCoreApplication.translate("Dialog", u"Real", None))
         self.label_20.setText(QCoreApplication.translate("Dialog", u"Imaginary", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_constant_data), QCoreApplication.translate("Dialog", u"Constant data", None))
-        self.checkBox_averaged_table_values.setText(QCoreApplication.translate("Dialog", u"Average value over all nodes", None))
         self.label_3.setText(QCoreApplication.translate("Dialog", u"Choose a table file to import the data", None))
         self.pushButton_load_table.setText("")
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_tabular_data), QCoreApplication.translate("Dialog", u"Tabular data", None))
@@ -543,16 +540,17 @@ class SurfaceVelocityInputs_UI(QDialog, Ui_Dialog):
                     - (Layout): QGridLayout
                             - frame_4: QFrame
                                 - (Layout): QGridLayout
-                                        - label_2: QLabel
                                         - lineEdit_selection_id: QLineEdit
                                         - label_5: QLabel
                                         - comboBox_distribution_type: QComboBox
+                                        - label_2: QLabel
+                                        - label_6: QLabel
+                                        - comboBox_average_values: QComboBox
                             - tabWidget_main: QTabWidget
                                 - tab_constant_data: QWidget
                                     - (Layout): QGridLayout
                                             - frame_20: QFrame
                                                 - (Layout): QGridLayout
-                                                        - checkBox_averaged_constant_values: QCheckBox
                                             - frame_8: QFrame
                                                 - (Layout): QGridLayout
                                                         - lineEdit_imag_value: QLineEdit
@@ -563,14 +561,13 @@ class SurfaceVelocityInputs_UI(QDialog, Ui_Dialog):
                                                         - lineEdit_real_value: QLineEdit
                                 - tab_tabular_data: QWidget
                                     - (Layout): QGridLayout
-                                            - frame_21: QFrame
-                                                - (Layout): QGridLayout
-                                                        - checkBox_averaged_table_values: QCheckBox
                                             - frame_9: QFrame
                                                 - (Layout): QGridLayout
                                                         - lineEdit_table_path: QLineEdit
                                                         - label_3: QLabel
                                                         - pushButton_load_table: QPushButton
+                                            - frame_21: QFrame
+                                                - (Layout): QGridLayout
                                 - tab_list: QWidget
                                     - (Layout): QGridLayout
                                             - frame_3: QFrame

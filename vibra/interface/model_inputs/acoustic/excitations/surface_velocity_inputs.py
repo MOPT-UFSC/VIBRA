@@ -63,7 +63,7 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
     def _create_connections(self):
 
         # QComboBox connection
-        self.comboBox_distribution_type.currentIndexChanged.connect(self.distribution_type_callback)
+        self.comboBox_distribution_type.currentIndexChanged.connect(self.distribution_type_changed_callback)
 
         # QPushButton connections
         self.pushButton_apply.clicked.connect(self.apply_callback)
@@ -81,8 +81,7 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         self.treeWidget_surface_velocity.itemDoubleClicked.connect(self.on_doubleclick_item)
 
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
-        self.update_controls_for_constant_value()
-        self.update_controls_for_table_of_values()
+        self.distribution_type_changed_callback()
 
     def _config_widgets(self):
 
@@ -179,10 +178,15 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         
         return map_id_to_model_index
 
-    def distribution_type_callback(self):
+    @property
+    def average_values(self):
+        return self.comboBox_average_values.currentText() == "Enabled"
+
+    def distribution_type_changed_callback(self):
         nodal_distribution = self.comboBox_distribution_type.currentIndex() == DistributionType.NODAL_DISTRIBUTION
-        self.checkBox_averaged_constant_values.setEnabled(nodal_distribution)
-        self.checkBox_averaged_table_values.setEnabled(nodal_distribution)
+        self.comboBox_average_values.setEnabled(nodal_distribution)
+        if not nodal_distribution:
+            self.comboBox_average_values.setCurrentText("Disabled")
 
     def tab_event_callback(self):
         current_tab = self.tabWidget_main.currentIndex()
@@ -280,7 +284,7 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         }
 
         if not element_integration:
-            data.update({"averaged": self.checkBox_averaged_constant_values.isChecked()})
+            data.update({"averaged": self.average_values})
 
         for surface_id in surface_ids:
             self.properties._set_property("surface_velocity", data, surface=surface_id)
@@ -400,7 +404,7 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
                 "element_integration" : element_integration,
                 }
 
-            data.update({"averaged": self.checkBox_averaged_constant_values.isChecked()})
+            data.update({"averaged": self.average_values})
 
             self.properties._set_property("surface_velocity", data, surface=surface_id)
     

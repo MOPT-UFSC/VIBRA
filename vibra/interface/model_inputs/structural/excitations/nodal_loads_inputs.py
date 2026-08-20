@@ -137,7 +137,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         # QComboBox connections
         self.comboBox_assignment_type.currentIndexChanged.connect(self.assignment_type_callback)
         self.comboBox_element_type.currentIndexChanged.connect(self.element_type_callback)
-        self.comboBox_distribution_type.currentIndexChanged.connect(self.distribution_type_callback)
+        self.comboBox_distribution_type.currentIndexChanged.connect(self.distribution_type_changed_callback)
 
         # QPushButton connections
         self.pushButton_apply.clicked.connect(self.apply_callback)
@@ -162,15 +162,12 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
         self.geometry_selection_callback()
+        self.distribution_type_changed_callback()
         self.update_element_type_based_on_geometry_information()
 
     def geometry_selection_callback(self):
 
         faces = app().main_window.selection.geometry_surfaces
-        lines = app().main_window.selection.geometry_lines
-        points = app().main_window.selection.geometry_points
-        nodes = app().main_window.selection.mesh_nodes
-
         if faces:
 
             text = ", ".join([str(i) for i in faces])
@@ -178,46 +175,51 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             self.comboBox_assignment_type.setCurrentIndex(0)
 
             if len(faces) == 1:
-                surface_id = list(faces)[0]
+                surface_id = next(iter(faces))
                 data = self.properties._get_property("nodal_loads", surface=surface_id)
                 self.update_input_fields(data)
                 if data is None:
                     self.update_formulation_callback(surface_id=surface_id)
 
-        elif lines:
+            return
+
+        lines = app().main_window.selection.geometry_lines
+        if lines:
 
             text = ", ".join([str(i) for i in lines])
             self.lineEdit_selection_id.setText(text)
             self.comboBox_assignment_type.setCurrentIndex(1)
 
             if len(lines) == 1:
-                line_id = list(lines)[0]
+                line_id = next(iter(lines))
                 data = self.properties._get_property("nodal_loads", line=line_id)
                 self.update_input_fields(data)
                 if data is None:
                     self.update_formulation_callback(line_id=line_id)
 
-        elif points:
+        points = app().main_window.selection.geometry_points
+        if points:
 
             text = ", ".join([str(i) for i in points])
             self.lineEdit_selection_id.setText(text)
             self.comboBox_assignment_type.setCurrentIndex(2)
 
             if len(points) == 1:
-                point_id = list(points)[0]
+                point_id = next(iter(points))
                 data = self.properties._get_property("nodal_loads", point=point_id)
                 self.update_input_fields(data)
                 if data is None:
                     self.update_formulation_callback(point_id=point_id)
 
-        elif nodes:
+        nodes = app().main_window.selection.mesh_nodes
+        if nodes:
 
             text = ", ".join([str(i) for i in nodes])
             self.lineEdit_selection_id.setText(text)
             self.comboBox_assignment_type.setCurrentIndex(3)
 
             if len(nodes) == 1:
-                node_id = list(nodes)[0]
+                node_id = next(iter(nodes))
                 data = self.properties._get_property("nodal_loads", node=node_id)
                 self.update_input_fields(data)
                 if data is None:
@@ -237,7 +239,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             self.comboBox_element_type.setCurrentIndex(ElementFormulation.ELEMENT_3D)
 
         values = data.get("values", None)
-        if "table_paths" in data.keys():
+        if "table_paths" in data:
             table_paths = data["table_paths"]
             for index, lineEdit_table in enumerate(self.table_lineEdits.values()):
                 if element_type == "3d_element" and index >= 3:
@@ -303,10 +305,15 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         self.lineEdit_path_table_My.setVisible(element_2d)
         self.lineEdit_path_table_Mz.setVisible(element_2d)
 
-    def distribution_type_callback(self):
+    @property
+    def average_values(self):
+        return self.comboBox_average_values.currentText() == "Enabled"
+
+    def distribution_type_changed_callback(self):
         nodal_distribution = self.comboBox_distribution_type.currentIndex() == DistributionType.NODAL_DISTRIBUTION
-        self.checkBox_averaged_constant_values.setEnabled(nodal_distribution)
-        self.checkBox_averaged_table_values.setEnabled(nodal_distribution)
+        self.comboBox_average_values.setEnabled(nodal_distribution)
+        if not nodal_distribution:
+            self.comboBox_average_values.setCurrentText("Disabled")
 
     def update_element_type_based_on_geometry_information(self):
         volume_exists = self.mesh.are_there_volumes_in_geometry()
@@ -423,7 +430,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             }
 
             if not element_integration:
-                data.update({"averaged": self.checkBox_averaged_table_values.isChecked()})
+                data.update({"averaged": self.average_values})
 
             if assignment_type == AssignmetType.SURFACES:
                 self.properties._set_property("nodal_loads", data, surface=selected_id)
@@ -659,7 +666,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             }
 
             if not element_integration:
-                data.update({"averaged": self.checkBox_averaged_table_values.isChecked()})
+                data.update({"averaged": self.average_values})
 
             if assignment_type == AssignmetType.SURFACES:
                 self.properties._set_property("nodal_loads", data, surface=selected_id)
@@ -684,7 +691,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             if selection == "surfaces":
 
                 nodes_from_surface = self.model.mesh.get_nodes_from_surface(selected_id)
-                for (property, node_id) in self.properties.nodal_properties.keys():
+                for (property, node_id) in self.properties.nodal_properties:
                     if property == "nodal_loads" and node_id in nodes_from_surface:
                         if node_id not in nodes_to_remove:
                             nodes_to_remove.append(node_id)
@@ -704,7 +711,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             elif selection == "lines":
 
                 nodes_from_line = self.model.mesh.get_nodes_from_line(selected_id)
-                for (property, node_id) in self.properties.nodal_properties.keys():
+                for (property, node_id) in self.properties.nodal_properties:
                     if property == "nodal_loads" and node_id in nodes_from_line:
                         if node_id not in nodes_to_remove:
                             nodes_to_remove.append(node_id)
@@ -724,7 +731,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             elif selection == "points":
 
                 nodes_from_point = self.model.mesh.nodes_from_points[selected_id]
-                for (property, node_id) in self.properties.nodal_properties.keys():
+                for (property, node_id) in self.properties.nodal_properties:
                     if property == "nodal_loads" and node_id in nodes_from_point:
                         if node_id not in nodes_to_remove:
                             nodes_to_remove.append(node_id)
@@ -860,7 +867,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                                ]
 
         for current_property in properties_to_check:
-            for (property, _) in current_property.keys():
+            for (property, _) in current_property:
                 if property == "nodal_loads":
                     self.tabWidget_main.setTabVisible(StandardTabType.LIST, True)
                     return
