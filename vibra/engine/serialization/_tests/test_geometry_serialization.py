@@ -18,7 +18,7 @@ def test_write_and_read_acoustic_project(fluid, datadir: Path):
     data_Vn = {
         "real_values": [1.0],
         "imag_values": [0.0],
-        "nodal_attribution": True,
+        "element_integration": False,
         "averaged": False,
     }
 
@@ -72,7 +72,7 @@ def test_write_and_read_structural_project(material, datadir: Path):
         "element_type": "3d_element",
         "real_values": [1, 0, 0],
         "imag_values": [0, 0, 0],
-        "nodal_attribution": True,
+        "element_integration": False,
         "averaged": True,
     }
 
