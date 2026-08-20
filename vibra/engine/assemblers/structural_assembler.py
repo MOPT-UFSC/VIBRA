@@ -38,6 +38,7 @@ class StructuralAssembler:
 
     def define_structural_elements(self):
         self.model.set_structural_elements()
+        self.element_1d = self.model.structural_element_1d
         self.element_2d = self.model.structural_element_2d
         self.element_3d = self.model.structural_element_3d
 
@@ -206,9 +207,9 @@ class StructuralAssembler:
         else:
             nodes_from_2d_elements = np.array([*set(self.model.mesh.faces_connectivity[:, 4:].flatten())], dtype=int)
 
-            dof = self.element_2d.DOF_PER_NODE
-            local_dof_2d = np.arange(self.element_2d.DOF_PER_NODE, dtype=int)            
-            displacement_ldof_2d = local_dof_2d[0 : int(self.element_2d.DOF_PER_NODE / 2)]
+            dof = self.element_2d.dof_per_node
+            local_dof_2d = np.arange(self.element_2d.dof_per_node, dtype=int)            
+            displacement_ldof_2d = local_dof_2d[0 : int(self.element_2d.dof_per_node / 2)]
 
             displacement_dof_from_2d_elements = dof * nodes_from_2d_elements.reshape(-1, 1) + displacement_ldof_2d
             displacement_dof = displacement_dof_from_2d_elements.flatten()
@@ -338,6 +339,110 @@ class StructuralAssembler:
     #     return output_vector.flatten() if flatten else output_vector
 
 
+    def get_distributed_mass_data_for_2d_element_integration(self) -> dict:
+        """ 
+        This method processes the excitation property data for element face
+        integration.
+
+        Returns
+        -------
+        integration_data: dict
+            A dictionary containing the connectivities and the data of each
+            processed 2d elements.
+        """
+
+        aux_data = {}
+        aux_connect = {}
+        integration_data = {}
+
+        for key, data in self.properties.surface_properties.items():
+
+            prop, surface_id = key
+            if prop != "distributed_mass":
+                continue
+
+            data: dict
+
+            if data.get("nodal_distribution", False):
+                continue
+
+            mass = np.real(data.get("values"))
+
+            surf_elements = list(self.model.mesh.elements_from_surface.get(surface_id))
+            surf_connect = self.model.mesh.get_connectivity_from_surface(surface_id)
+            surface_area = self.element_2d.integrate_area(surf_connect)
+
+            # calculate the surface density
+            surface_density = mass / surface_area
+
+            for i, el in enumerate(surf_elements):
+                aux_connect[el] = surf_connect[i]
+                aux_data[el] = surface_density
+
+        if aux_connect:
+
+            integration_data = {
+                "element_ids" : np.array(list(aux_connect.keys()), dtype=int),
+                "connectivities" : np.array(list(aux_connect.values()), dtype=int),
+                "surface_data" : aux_data,
+                # "surface_data" : np.array(list(aux_data.values()), dtype=complex),
+                }
+
+        return integration_data
+
+
+    def get_distributed_mass_data_for_1d_element_integration(self) -> dict:
+        """ 
+        This method processes the excitation property data for element face
+        integration.
+
+        Returns
+        -------
+        integration_data: dict
+            A dictionary containing the connectivities and the data of each
+            processed 2d elements.
+        """
+
+        aux_data = {}
+        aux_connect = {}
+        integration_data = {}
+
+        for key, data in self.properties.line_properties.items():
+
+            prop, line_id = key
+            if prop != "distributed_mass":
+                continue
+
+            data: dict
+
+            if data.get("nodal_distribution", False):
+                continue
+
+            mass = np.real(data.get("values"))
+
+            line_elements = list(self.model.mesh.elements_from_line.get(line_id))
+            line_connect = self.model.mesh.get_connectivity_from_line(line_id)
+            line_length = self.element_1d.integrate_length(line_connect)
+
+            # calculate the line density
+            line_density = mass / line_length
+
+            for i, el in enumerate(line_elements):
+                aux_connect[el] = line_connect[i]
+                aux_data[el] = line_density
+
+        if aux_connect:
+
+            integration_data = {
+                "element_ids" : np.array(list(aux_connect.keys()), dtype=int),
+                "connectivities" : np.array(list(aux_connect.values()), dtype=int),
+                "surface_data" : aux_data,
+                # "surface_data" : np.array(list(aux_data.values()), dtype=complex),
+                }
+
+        return integration_data
+
+
     def get_excitation_data_for_element_integration(self, property_label: str) -> dict:
         """ 
         This method processes the excitation property data for element face
@@ -448,7 +553,7 @@ class StructuralAssembler:
 
         self.element_2d.reorder_connect(connectivities)
         for i, complex_values in enumerate(surface_data.values()):
-            indices = self.element_2d.element_indexes(i)
+            indices = self.element_2d.element_indexes_vector(i)
             e_normal = elements_normals[i, :].reshape(-1, 1)
             load_vectors[indices, :] += self.element_2d.integrate_normal_pressure_load(i, e_normal, complex_values)
 
@@ -463,7 +568,7 @@ class StructuralAssembler:
 
         self.element_2d.reorder_connect(connectivities)
         for i, complex_values in enumerate(surface_data.values()):
-            indices = self.element_2d.element_indexes(i)
+            indices = self.element_2d.element_indexes_vector(i)
             load_vectors[indices, :] += self.element_2d.integrate_distributed_load(i, complex_values)
 
         return load_vectors
@@ -570,9 +675,9 @@ class StructuralAssembler:
 
         self.ind_rows, self.ind_cols = self.element_2d.generate_ind_rows_cols(reorder=reorder)
 
-        self.dof = self.element_2d.DOF_PER_ELEMENT
+        self.dof = self.element_2d.dof_per_element
         self.number_2d_elements = len(self.element_2d.connectivity)
-        self.total_dof = self.element_2d.DOF_PER_NODE * len(self.element_2d.nodal_coordinates)
+        self.total_dof = self.element_2d.dof_per_node * len(self.element_2d.nodal_coordinates)
 
         self.displacement_dof = self.get_displacement_dof()
     
@@ -687,6 +792,56 @@ class StructuralAssembler:
         self.mass_matrix_r = _mass_matrix_full[:, self.prescribed_dof_indexes]
 
 
+    def assemble_distributed_mass_matrix_for_lines(self):
+
+        integration_data_1d = self.get_distributed_mass_data_for_1d_element_integration()
+        if not integration_data_1d:
+            return
+
+        connectivities = integration_data_1d.get("connectivities")
+        surface_data: dict = integration_data_1d.get("surface_data")
+
+        n_el = len(connectivities)
+        e_dofs = self.element_1d.dof_per_element
+        data_Mdist = np.zeros((n_el, e_dofs, e_dofs), dtype=float)
+
+        self.element_1d.reorder_connect(connectivities)
+        ind_rows, ind_cols = self.element_1d.elements_indexes_matrix()
+
+        for i, surface_density in enumerate(surface_data.values()):
+            data_Mdist[i, :, :] = self.element_1d.integrate_distributed_mass(i, surface_density)
+
+        _distributed_mass_matrix_full = csr_matrix((data_Mdist.flatten(), (ind_rows, ind_cols)), shape=self.gm_shape)
+
+        self.mass_matrix += _distributed_mass_matrix_full[self.unprescribed_dof_indexes, :][:, self.unprescribed_dof_indexes]
+        self.mass_matrix_r += _distributed_mass_matrix_full[:, self.prescribed_dof_indexes]
+
+
+    def assemble_distributed_mass_matrix_for_surfaces(self):
+
+        integration_data_2d = self.get_distributed_mass_data_for_2d_element_integration()
+        if not integration_data_2d:
+            return
+
+        connectivities = integration_data_2d.get("connectivities")
+        surface_data: dict = integration_data_2d.get("surface_data")
+
+        n_el = len(connectivities)
+        e_dofs = self.element_2d.dof_per_element
+        data_Mdist = np.zeros((n_el, e_dofs, e_dofs), dtype=float)
+
+        self.element_2d.reorder_connect(connectivities)
+        ind_rows, ind_cols = self.element_2d.elements_indexes_matrix()
+
+        for i, surface_density in enumerate(surface_data.values()):
+            data_Mdist[i, :, :] = self.element_2d.integrate_distributed_mass(i, surface_density)
+
+        _distributed_mass_matrix_full = csr_matrix((data_Mdist.flatten(), (ind_rows, ind_cols)), shape=self.gm_shape)
+
+        self.mass_matrix += _distributed_mass_matrix_full[self.unprescribed_dof_indexes, :][:, self.unprescribed_dof_indexes]
+        self.mass_matrix_r += _distributed_mass_matrix_full[:, self.prescribed_dof_indexes]
+
+
     def assemble_global_matrices(self, reorder: bool=True, **kwargs):
         """
         This method assembles the global matrices of the structural model.
@@ -716,6 +871,8 @@ class StructuralAssembler:
         logging.info("Assembling global mass matrix... [60/100]")
         t0 = time()
         self.assemble_global_mass_matrix()
+        self.assemble_distributed_mass_matrix_for_lines()
+        self.assemble_distributed_mass_matrix_for_surfaces()
         dt = time() - t0
         print(f"Elapsed time to assemble the global mass matrix: {dt : .6f} [s]")
 

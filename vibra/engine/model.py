@@ -19,30 +19,36 @@ from vibra.engine.analysis_info import (
 from vibra.engine.dissipation_models.porous_materials_models import PorousMaterialModels
 from vibra.engine.dissipation_models.viscous_thermal_loss_models import ViscousThermalLossModels
 
-# 1d elements - acoustic
-from vibra.engine.elements.elements_1d import ACT_LINE_2, ACT_LINE_3
+# 1d elements
+from vibra.engine.elements.elements_1d import (
+    ACT_LINE_2,
+    ACT_LINE_3,
+    STRUCT_LINE_2,
+    STRUCT_LINE_3,
+)
+
+# 2d elements
 from vibra.engine.elements.elements_2d import (
     ACT_QUADRANGLE_4,
     ACT_QUADRANGLE_8,
-    # 2d elements - acoustic
     ACT_TRIANGLE_3,
     ACT_TRIANGLE_6,
-    # 2D elements - structural
     STRUCT_TRIANGLE_3,
+    STRUCT_TRIANGLE_6,
 )
-from vibra.engine.elements.elements_2d.structural.structural_tria6_element import STRUCT_TRIANGLE_6
+
+# 3d elements
 from vibra.engine.elements.elements_3d import (
-    # 3d elements - acoustic
     ACT_HEXAHEDRON_8C,
     ACT_HEXAHEDRON_20C,
     ACT_TETRAHEDRON_4C,
     ACT_TETRAHEDRON_10C,
-    # 3d elements - structural
     STRUCT_HEXAHEDRON_8,
     STRUCT_HEXAHEDRON_20,
     STRUCT_TETRAHEDRON_4S,
     STRUCT_TETRAHEDRON_10S,
 )
+
 from vibra.engine.geometry.geometry import LengthUnits
 from vibra.engine.mesher.degrees_of_freedom_decoupling_new import DegreesOfFreedomDecoupling
 from vibra.engine.mesher.element_setup import GMSH_VISUAL_MESH
@@ -495,16 +501,16 @@ class Model:
         element_type = self.element_topology
 
         if element_type == TETRAHEDRON_4:
-            return STRUCT_TETRAHEDRON_4S(self), STRUCT_TRIANGLE_3(self), None
+            return STRUCT_TETRAHEDRON_4S(self), STRUCT_TRIANGLE_3(self), STRUCT_LINE_2(self)
 
         elif element_type == TETRAHEDRON_10:
-            return STRUCT_TETRAHEDRON_10S(self), STRUCT_TRIANGLE_6(self), None
+            return STRUCT_TETRAHEDRON_10S(self), STRUCT_TRIANGLE_6(self), STRUCT_LINE_3(self)
 
         elif element_type == HEXAHEDRON_8:
-            return STRUCT_HEXAHEDRON_8(self), None, None
+            return STRUCT_HEXAHEDRON_8(self), None, STRUCT_LINE_2(self)
 
         elif element_type == HEXAHEDRON_20:
-            return STRUCT_HEXAHEDRON_20(self), None, None
+            return STRUCT_HEXAHEDRON_20(self), None, STRUCT_LINE_3(self)
 
         else:
             raise NotImplementedError(f'Element type "{element_type}" is not supported yet.')
