@@ -1,3 +1,5 @@
+import sys
+
 from tqdm import tqdm
 from vibra.engine.analysis_info import HarmonicAnalysisSetup
 
@@ -359,7 +361,7 @@ class StructuralAssembler:
                 }
 
 
-    def compute_data_to_process_global_matrices_for_shell_elements(self, reorder: bool = True):
+    def compute_data_to_process_global_matrices_for_shell_elements(self, reorder: bool = True, print_log: bool = False):
         """
         Calculates global matrices.
         """
@@ -382,7 +384,13 @@ class StructuralAssembler:
         last_progress = 0
 
         # loop for 2d elements
-        with tqdm(self.model.mesh.faces_connectivity, desc="Processing the elementary matrices data for face elements", unit="element") as progress_bar:
+        with tqdm(
+            self.model.mesh.faces_connectivity,
+            desc="Processing the elementary matrices data for face elements",
+            unit="element",
+            file=sys.stdout,
+            disable=not print_log,
+        ) as progress_bar:
             for element_id, surf_id, _, _, *connect_nodes in progress_bar:
                 if self.model.stop_processing:
                     return True
@@ -404,7 +412,7 @@ class StructuralAssembler:
                 self.data_K[element_id, :, :] = Ke
                 self.data_M[element_id, :, :] = Me
 
-    def compute_data_to_process_global_matrices_for_solid_elements(self, reorder: bool = True):
+    def compute_data_to_process_global_matrices_for_solid_elements(self, reorder: bool = True, print_log: bool = False):
         """
         Calculates global matrices.
         """
@@ -429,7 +437,13 @@ class StructuralAssembler:
         last_progress = 0
 
         # loop for 3d elements
-        with tqdm(self.model.mesh.solids_connectivity, desc="Processing the elementary matrices data for solid elements", unit="element") as progress_bar:
+        with tqdm(
+            self.model.mesh.solids_connectivity,
+            desc="Processing the elementary matrices data for solid elements",
+            unit="element",
+            file=sys.stdout,
+            disable=not print_log,
+        ) as progress_bar:
             for element_id, vol_id, *_ in progress_bar:
                 if self.model.stop_processing:
                     return True
@@ -447,16 +461,16 @@ class StructuralAssembler:
                 self.data_K[element_id, :, :] = Ke
                 self.data_M[element_id, :, :] = Me
 
-    def compute_data_to_process_global_matrices(self, reorder: bool = True):
+    def compute_data_to_process_global_matrices(self, reorder: bool = True, print_log: bool = False):
         """
         """
         if self.model.mesh.solids_connectivity.size:
             self.process_material_from_volumes()
-            self.compute_data_to_process_global_matrices_for_solid_elements(reorder = reorder)
+            self.compute_data_to_process_global_matrices_for_solid_elements(reorder=reorder, print_log=print_log)
 
         else:
             self.process_surface_data_for_shell_elements()
-            self.compute_data_to_process_global_matrices_for_shell_elements(reorder = reorder)
+            self.compute_data_to_process_global_matrices_for_shell_elements(reorder=reorder, print_log=print_log)
 
         self.process_prescribed_dof_data()
 
@@ -481,7 +495,7 @@ class StructuralAssembler:
         self.mass_matrix_r = _mass_matrix_full[:, self.prescribed_dof_indexes]
 
 
-    def assemble_global_matrices(self, reorder: bool=True, **kwargs):
+    def assemble_global_matrices(self, reorder: bool = True, print_log: bool = False, **kwargs):
         """
         This method assembles the global matrices of the structural model.
         """
@@ -493,7 +507,7 @@ class StructuralAssembler:
 
         logging.info("Gathering data to assemble global matrices... [20/100]")
         t0 = time()
-        if self.compute_data_to_process_global_matrices(reorder=reorder):
+        if self.compute_data_to_process_global_matrices(reorder=reorder, print_log=print_log):
             return
         dt = time() - t0
         print(f"Elapsed time to process data to assemble global matrices: {dt : .6f} [s]")
@@ -523,11 +537,11 @@ class StructuralAssembler:
         self.structural_loads = A + B
 
 
-    def assemble_global_matrices_and_excitations(self, reorder: bool=True, **kwargs):
+    def assemble_global_matrices_and_excitations(self, reorder: bool = True, print_log: bool = False, **kwargs):
         """
         This method assembles the global matrices and excitations of the structural model.
         """
-        self.assemble_global_matrices(reorder = reorder)
+        self.assemble_global_matrices(reorder=reorder, print_log=print_log)
         self.assemble_model_excitations()
 
 

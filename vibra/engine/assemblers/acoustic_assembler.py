@@ -1,3 +1,5 @@
+import sys
+
 from tqdm import tqdm
 
 import logging
@@ -1045,7 +1047,7 @@ class AcousticAssembler:
         self.process_indexes()
 
 
-    def compute_data_to_assemble_global_matrices_using_loop(self, reorder: bool = True):
+    def compute_data_to_assemble_global_matrices_using_loop(self, reorder: bool = True, print_log: bool = False):
         """ 
         This method processes the data required to assemble the global matrices
         sweeping all solid elements.
@@ -1069,7 +1071,13 @@ class AcousticAssembler:
         self.int3d_NtN = np.zeros((self.number_3d_elements, self.dof, self.dof), dtype=complex)
 
         last_progress = 0
-        with tqdm(range(self.number_3d_elements), desc="Processing the elementary matrices data", unit="element") as progress_bar:
+        with tqdm(
+            range(self.number_3d_elements),
+            desc="Processing the elementary matrices data",
+            unit="element",
+            file=sys.stdout,
+            disable=not print_log,
+        ) as progress_bar:
             for element_id in progress_bar:
                 if self.model.stop_processing:
                     return True
@@ -1793,7 +1801,7 @@ class AcousticAssembler:
         return output
 
 
-    def assemble_global_matrices(self, reorder: bool=True, stacked_matrices: bool=True):
+    def assemble_global_matrices(self, reorder: bool = True, stacked_matrices: bool = True, print_log: bool = False):
         """
         This method assembles the global matrices of the acoustic model.
         """
@@ -1807,7 +1815,7 @@ class AcousticAssembler:
         if stacked_matrices:
             self.compute_data_to_assemble_global_matrices(reorder=reorder)
         else:
-            self.compute_data_to_assemble_global_matrices_using_loop(reorder=reorder)
+            self.compute_data_to_assemble_global_matrices_using_loop(reorder=reorder, print_log=print_log)
         dt = time() - t0
         print(f"Elapsed time to gather data to assemble global matrices: {dt : .6f} [s]")
 
@@ -1867,12 +1875,12 @@ class AcousticAssembler:
         self.mass_flow_vectors = A + B
 
 
-    def assemble_global_matrices_and_excitations(self, reorder: bool=True, stacked_matrices: bool=True, **kwargs):
+    def assemble_global_matrices_and_excitations(self, reorder: bool = True, stacked_matrices: bool = True, print_log: bool = False, **kwargs):
         """
         This method assembles the global matrices and excitations of the acoustic model.
         """
 
-        self.assemble_global_matrices(reorder = reorder, stacked_matrices = stacked_matrices)        
+        self.assemble_global_matrices(reorder=reorder, stacked_matrices=stacked_matrices, print_log=print_log)
         self.assemble_model_excitations()
 
 

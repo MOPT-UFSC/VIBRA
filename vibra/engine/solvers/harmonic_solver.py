@@ -1,4 +1,5 @@
 import logging
+import sys
 from time import time
 from typing import Optional
 from tqdm import tqdm
@@ -86,7 +87,13 @@ class HarmonicSolver:
         frequencies = self.frequencies
 
         # compute the solution for each frequency step
-        with tqdm(frequencies, desc="Computing frequency sweep", unit="frequency") as progress_bar:
+        with tqdm(
+            frequencies,
+            desc="Computing frequency sweep",
+            unit="frequency",
+            file=sys.stdout,
+            disable=not print_log,
+        ) as progress_bar:
             for i, freq in enumerate(progress_bar):
                 if self.assembler.model.stop_processing:
                     return
@@ -128,7 +135,7 @@ class HarmonicSolver:
         logging.info("Solving harmonic analysis (mode superposition method)... [10/100]")
         t0 = time()
         modal_solver = ModalSolver(self.assembler)
-        modal_solution = modal_solver.solve(full_solution=False)
+        modal_solution = modal_solver.solve(full_solution=False, print_log=print_log)
         dt = time() - t0
         print(f"Elapsed time to solve modal analysis: {dt: .6f} [s]")
 
@@ -185,7 +192,13 @@ class HarmonicSolver:
         Phi_t = Phi.T
 
         # compute the solution for each frequency step
-        with tqdm(frequencies, desc="Compute proportionally damped frequency sweep", unit="frequency") as progress_bar:
+        with tqdm(
+            frequencies,
+            desc="Compute proportionally damped frequency sweep",
+            unit="frequency",
+            file=sys.stdout,
+            disable=not print_log,
+        ) as progress_bar:
             for i, freq in enumerate(progress_bar):
                 if is_resume and i != 0 and isinstance(self._file_writer, LazyHDF5MatrixWriter) and self._file_writer.has_column(i):
                     continue
