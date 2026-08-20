@@ -75,7 +75,7 @@ class MeshActor(vtkPropAssembly):
         self.update_surface()
         self.update_section_plane()
         self.update_colors()
-        self.cache_data()
+        self.update_caches()
 
     def clear_data(self):
         self.cached_info = CachedInfo()
@@ -301,6 +301,7 @@ class MeshActor(vtkPropAssembly):
             self.surface_colors.Modified()
 
     def paint_solid_elements(self, color: Color, solid_elements: Sequence[int] | np.ndarray):
+        # First paint the elements with solid IDs
         section_ids = vtk_to_numpy(self.section_ids)
         section_colors = vtk_to_numpy(self.section_colors)
         paint_position_mask = np.isin(section_ids, solid_elements)
@@ -310,19 +311,29 @@ class MeshActor(vtkPropAssembly):
             self.section_colors.Modified()
             self.section_mapper.Modified()
 
+        assert self.mesh.faces_connectivity is not None
+        assert self.mesh.solids_connectivity is not None
+
+        # Second paint the elements with face IDs (which can also be solids)
+        solids_mask = np.isin(self.mesh.solids_connectivity[:, 0], solid_elements)
+        face_mask = np.isin(
+            self.mesh.faces_connectivity[:, 4:],
+            self.mesh.solids_connectivity[solids_mask, 4:],
+        ).all(axis=1)
+        face_elements = self.mesh.faces_connectivity[face_mask, 0]
+        self.paint_face_elements(color, face_elements)
+
     def paint_surfaces(self, color: Color, surfaces: Sequence[int] | np.ndarray):
         if self.mesh is None:
             return
 
         assert self.mesh.faces_connectivity is not None
-        selected_elements, *_ = np.where(np.isin(self.mesh.faces_connectivity[:, 1], surfaces))
-        self.paint_face_elements(color, selected_elements)
+        selected_face_elements, *_ = np.where(np.isin(self.mesh.faces_connectivity[:, 1], surfaces))
+        self.paint_face_elements(color, selected_face_elements)
 
     def paint_volumes(self, color: Color, volumes: Sequence[int] | np.ndarray):
         if self.mesh is None:
             return
-
-        assert self.mesh.solids_connectivity is not None
 
         surface_groups = [self.mesh.surfaces_from_volume[v] for v in volumes if (v in self.mesh.surfaces_from_volume)]
         surfaces = list(chain.from_iterable(surface_groups))
@@ -359,7 +370,7 @@ class MeshActor(vtkPropAssembly):
         if 0 < cell_id < len(ids):
             return dim, ids[cell_id]
 
-    def cache_data(self):
+    def update_caches(self):
         self.cached_info.mesh_id = id(self.mesh)
         self.cached_info.surface_colors_hash = CachedInfo.array_hash(self.surface_colors)
         self.cached_info.section_colors_hash = CachedInfo.array_hash(self.section_colors)
