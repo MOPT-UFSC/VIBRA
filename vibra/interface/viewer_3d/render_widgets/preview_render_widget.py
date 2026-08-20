@@ -55,6 +55,7 @@ class PreviewRenderWidget(CommonRenderWidget):
         self.mesh_actor.section_plane = section_plane
 
     @function_timer
+    @override
     def update_plot(self):
         self.mesh_actor.update()
         self.symbols.build()
@@ -80,6 +81,7 @@ class PreviewRenderWidget(CommonRenderWidget):
         self.mesh_actor.set_color(color_names.WHITE)  # Keep it after the pick
 
         if not something_picked:
+            self.mesh_actor.update_caches()
             self.update()
             return
 
@@ -97,4 +99,5 @@ class PreviewRenderWidget(CommonRenderWidget):
             case _:
                 pass
 
+        self.mesh_actor.update_caches()
         self.update()

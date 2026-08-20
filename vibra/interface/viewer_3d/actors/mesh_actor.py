@@ -254,7 +254,7 @@ class MeshActor(vtkPropAssembly):
         view[:] = triangulated_connectivity[:, 0]
 
     def update_colors(self):
-        self.set_color(Color(255, 255, 255), update=False)
+        self.set_color(Color(255, 255, 255))
 
         if self.properties is None:
             return
@@ -281,38 +281,49 @@ class MeshActor(vtkPropAssembly):
         for color, tags in volume_colors.items():
             self.paint_volumes(color, tags)
 
-    def set_color(self, color: Color, update: bool = True):
+    def update_caches(self):
+        surface_colors_hash = CachedInfo.array_hash(self.surface_colors)
+        if surface_colors_hash != self.cached_info.surface_colors_hash:
+            self.cached_info.surface_colors_hash = surface_colors_hash
+            self.surface_colors.Modified()
+
+        section_colors_hash = CachedInfo.array_hash(self.section_colors)
+        if section_colors_hash != self.cached_info.section_colors_hash:
+            self.cached_info.section_colors_hash = section_colors_hash
+            self.section_colors.Modified()
+
+        mesh_id = id(self.mesh)
+        if mesh_id != self.cached_info.mesh_id:
+            self.cached_info.mesh_id = mesh_id
+            # Don't need to modify anything, but might
+
+    def set_color(self, color: Color):
         rgb = color.to_rgb()
         for i in range(self.surface_colors.GetNumberOfComponents()):
             self.surface_colors.FillComponent(i, rgb[i])
             self.section_colors.FillComponent(i, rgb[i])
 
-        if update:
-            self.surface_colors.Modified()
-            self.section_colors.Modified()
-
     def paint_face_elements(self, color: Color, face_elements: Sequence[int] | np.ndarray):
+        if self.mesh is None:
+            return
+
         surface_ids = vtk_to_numpy(self.surface_ids)
         surface_colors = vtk_to_numpy(self.surface_colors)
         paint_position_mask = np.isin(surface_ids, face_elements)
         surface_colors[paint_position_mask] = color.to_rgb()
 
-        if self.cached_info.surface_colors_hash != CachedInfo.array_hash(surface_colors):
-            self.surface_colors.Modified()
-
     def paint_solid_elements(self, color: Color, solid_elements: Sequence[int] | np.ndarray):
+        if self.mesh is None:
+            return
+
+        assert self.mesh.faces_connectivity is not None
+        assert self.mesh.solids_connectivity is not None
+
         # First paint the elements with solid IDs
         section_ids = vtk_to_numpy(self.section_ids)
         section_colors = vtk_to_numpy(self.section_colors)
         paint_position_mask = np.isin(section_ids, solid_elements)
         section_colors[paint_position_mask] = color.to_rgb()
-
-        if self.cached_info.section_colors_hash != CachedInfo.array_hash(section_colors):
-            self.section_colors.Modified()
-            self.section_mapper.Modified()
-
-        assert self.mesh.faces_connectivity is not None
-        assert self.mesh.solids_connectivity is not None
 
         # Second paint the elements with face IDs (which can also be solids)
         solids_mask = np.isin(self.mesh.solids_connectivity[:, 0], solid_elements)
@@ -335,6 +346,8 @@ class MeshActor(vtkPropAssembly):
         if self.mesh is None:
             return
 
+        assert self.mesh.solids_connectivity is not None
+
         surface_groups = [self.mesh.surfaces_from_volume[v] for v in volumes if (v in self.mesh.surfaces_from_volume)]
         surfaces = list(chain.from_iterable(surface_groups))
         self.paint_surfaces(color, surfaces)
@@ -348,9 +361,6 @@ class MeshActor(vtkPropAssembly):
         selected_elements, *_ = np.where(np.isin(self.mesh.solids_connectivity[:, 1], volumes))
         paint_position_mask = np.isin(section_ids, selected_elements)
         section_colors[paint_position_mask] = color.to_rgb()
-
-        if self.cached_info.section_colors_hash != CachedInfo.array_hash(section_colors):
-            self.section_colors.Modified()
 
     def picked_dim_tag(self, picker: vtkHardwarePicker) -> tuple[int, int] | None:
         match picker.GetActor():
@@ -369,11 +379,6 @@ class MeshActor(vtkPropAssembly):
         cell_id = picker.GetCellId()
         if 0 < cell_id < len(ids):
             return dim, ids[cell_id]
-
-    def update_caches(self):
-        self.cached_info.mesh_id = id(self.mesh)
-        self.cached_info.surface_colors_hash = CachedInfo.array_hash(self.surface_colors)
-        self.cached_info.section_colors_hash = CachedInfo.array_hash(self.section_colors)
 
     def _get_parts(self) -> list[vtkActor]:
         return list(self.GetParts())  # pyright: ignore[reportArgumentType]
