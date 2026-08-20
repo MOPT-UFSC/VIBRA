@@ -14,7 +14,7 @@ class FileHandler:
 
     @overload
     @staticmethod
-    def read(file_path: str | Path) -> ImportedData | None:
+    def read(file_path: str | Path | None) -> ImportedData | None:
         ...
 
     @overload
