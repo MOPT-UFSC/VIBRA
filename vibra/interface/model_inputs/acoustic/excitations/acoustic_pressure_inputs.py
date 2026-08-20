@@ -272,6 +272,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
 
             else:
                 extensions = SUPPORTED_SPREADSHEET_EXTENSIONS + SUPPORTED_TEXT_EXTENSIONS
+
                 imported_path = FileDialogService.open_file(file_extensions=extensions,
                                                             caption="Choose a table to import the acoustic pressure",
                                                             last_folder="imported_table_folder")
@@ -282,7 +283,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
                     return None
 
                 lineEdit.setText(str(imported_data.path))
-
+                
             imported_values = imported_data.data
 
             if imported_values.shape[1] < 3:

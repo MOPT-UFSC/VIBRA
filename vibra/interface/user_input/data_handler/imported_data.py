@@ -35,5 +35,12 @@ class SpreadsheetSheet:
 class SpreadsheetData(ImportedDataInterface):
     sheets: list[SpreadsheetSheet] = None
 
+    @property
+    def data(self):
+        if len(self.sheets) == 0:
+            return None
+        
+        return self.sheets[0].data
+
 
 ImportedData = TextData | SpreadsheetSheet | SimulationData
