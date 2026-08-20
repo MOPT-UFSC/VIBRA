@@ -149,7 +149,6 @@ class MeshActor(vtkPropAssembly):
         self.update_node()
         self.update_surface()
         self.update_section_plane()
-        self.update_colors()
         self.update_caches()
 
     def update_mesh_common(self):
@@ -202,6 +201,7 @@ class MeshActor(vtkPropAssembly):
         self.surface_colors.SetNumberOfTuples(n_cells)
         self.surface_mapper.Modified()
 
+        self.surface_colors.Fill(255)
         self.surface_ids.SetNumberOfTuples(n_cells)
         view = vtk_to_numpy(self.surface_ids)
         view[:] = self.mesh.faces_connectivity[:, 0]
@@ -250,6 +250,7 @@ class MeshActor(vtkPropAssembly):
         self.section_colors.SetNumberOfTuples(n_cells)
         self.section_mapper.Modified()
 
+        self.section_colors.Fill(255)
         self.section_ids.SetNumberOfTuples(n_cells)
         view = vtk_to_numpy(self.section_ids)
         view[:] = triangulated_connectivity[:, 0]
