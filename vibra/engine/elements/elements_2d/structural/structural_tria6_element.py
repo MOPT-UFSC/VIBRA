@@ -207,13 +207,82 @@ class STRUCT_TRIANGLE_6(TRIANGLE_6):
             N[1, 1::3] = self.phi[i, :, :]
             N[2, 2::3] = self.phi[i, :, :]
 
-            # the negative value of the normal is used to point the normal toward the interior of the domain.
             Fe += (N.T @ distributed_load) * (det_JAC * self.wps[i])
 
         return Fe
 
 
-    def element_indexes(self, index: int):
+    def integrate_distributed_mass(self, el_index: int, distributed_mass: float) -> np.ndarray:
+        """ 
+        This method computes the elementary load vector.
+
+        Parameters
+        ----------
+        el_index: int
+            The element index.
+
+        load: float, optional
+            The load vector.
+
+        Returns
+        -------
+        Fe: np.ndarray
+            The elementary load vector.
+        """
+
+        # element nodes
+        e_nodes = self.connectivities[el_index, :]
+
+        # element nodal coordinates
+        coords = self.nodal_coordinates[e_nodes, :]
+
+        # nodal coordinates in the local CS
+        coord_lcs = get_local_coordinates(coords)
+
+        # initialize the shape functions matrix
+        N = np.zeros((3, self.dof_per_element), dtype=float)
+
+        # initialize the variable Fe
+        Me = 0.
+
+        # integration loop
+        for i in range(self.nint):
+
+            # Jacobian matrix
+            JAC = self.dphi[i, :, :] @ coord_lcs
+
+            # determinant of Jacobia matrix
+            det_JAC = self.get_detJAC(JAC)
+
+            # populate the shape functions matrix
+            N[0, 0::3] = self.phi[i, :, :]
+            N[1, 1::3] = self.phi[i, :, :]
+            N[2, 2::3] = self.phi[i, :, :]
+
+            Me += (N.T @ N) * distributed_mass * (det_JAC * self.wps[i])
+
+        return Me
+
+
+    def element_indexes_vector(self, index: int):
         node_ids = self.connectivities[index, :]
         element_dofs = self.dof_per_node * node_ids.reshape(-1, 1) + np.arange(self.dof_per_node, dtype=int)
         return element_dofs.flatten()
+
+
+    def elements_indexes_matrix(self):
+
+        dof, edof = self.dof_per_node, self.dof_per_element
+        n_el = len(self.connectivities)
+
+        local_dof = np.arange(dof, dtype=int)
+        ind_dof = np.zeros((n_el, edof), dtype=int)
+
+        for j in range(self.NODES_PER_ELEMENT):
+            ind_dof[:, j*dof : (1 + j)*dof] = dof * self.connectivities[:, j+1].reshape(-1, 1) + local_dof
+
+        vect_indices = ind_dof.flatten()
+        self.ind_rows = ((np.tile(vect_indices, (edof, 1))).T).flatten()
+        self.ind_cols = (np.tile(ind_dof, edof)).flatten()
+
+        return self.ind_rows, self.ind_cols

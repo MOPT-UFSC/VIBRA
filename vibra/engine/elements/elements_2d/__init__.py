@@ -4,3 +4,4 @@ from .acoustic.acoustic_quad4_element import ACT_QUADRANGLE_4
 from .acoustic.acoustic_quad8_element import ACT_QUADRANGLE_8
 
 from .structural.structural_tria3_element import STRUCT_TRIANGLE_3
+from .structural.structural_tria6_element import STRUCT_TRIANGLE_6

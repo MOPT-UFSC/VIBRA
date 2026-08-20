@@ -1,7 +1,8 @@
 
+from typing import TYPE_CHECKING
+
 from vibra.engine.elements.surface_elements import Element2D
 
-from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from vibra.engine.model import Model
 
@@ -308,144 +309,6 @@ class TRIANGLE_6(Element2D):
         return int2d_NtN, int2d_BtB
 
 
-    def load_vector(self, el_index: int, load: float = 1.0) -> np.ndarray:
-        """ 
-        This method computes the elementary load vector.
-
-        Parameters
-        ----------
-        el_index: int
-            The element index.
-
-        load: float, optional
-            The load vector.
-
-        Returns
-        -------
-        Fe: np.ndarray
-            The elementary load vector.
-        """
-
-        # element nodal coordinates
-        coords = self.nodal_coordinates[self.connectivities[el_index, :], :]
-
-        # nodal coordinates in the local CS
-        coord_lcs = get_local_coordinates(coords)
-
-        # initialize the variable Fe
-        Fe = 0.
-
-        # integration loop
-        for i in range(self.nint):
-
-            # Jacobian matrix
-            JAC = self.dphi[i, :, :] @ coord_lcs
-
-            # determinant of Jacobia matrix
-            det_JAC = self.get_detJAC(JAC)
-
-            # shape functions
-            N = self.phi[i, :, :]
-
-            Fe += load * N.T * (det_JAC * self.wps[i])
-
-        return Fe
-
-
-    def elementary_sound_power(self, e_connect: np.ndarray, P_e: np.ndarray, Vn_e: np.ndarray) -> np.ndarray:
-        """ 
-        This method computes the elementary load vector.
-
-        Parameters
-        ----------
-        el_index: int
-            The element index.
-
-        P_e: np.ndarray
-            The righ stacked vector (complex-conjugate of pressures).
-    
-        Vn_e: np.ndarray
-            The left stacked vector (complex-conjugate of normal particle velocities).
-
-        Returns
-        -------
-        We: np.ndarray
-            The elementary sound power vector.
-        """
-
-        # element nodal coordinates
-        coords = self.nodal_coordinates[e_connect, :]
-
-        # nodal coordinates in the local CS
-        local_coords = get_local_coordinates(coords)
-
-        # initialize variable We
-        We = 0.
-
-        # integration loop
-        for i in range(self.nint):
-
-            # Jacobian matrices of all elements
-            JAC = self.dphi[i, :, :] @ local_coords
-
-            # determinant of Jacobian matrix
-            det_jac = self.get_detJAC(JAC)
-
-            # shape functions
-            N = self.phi[i, :, :]
-
-            We += P_e @ (N.T @ N) @ Vn_e * (det_jac * self.wps[i])
-
-        return We.flatten()
-
-
-    def acoustic_pressure_load(self, e_normals: np.ndarray, nodal_solution: np.ndarray) -> np.ndarray:
-        """ 
-        This method computes the acoustic pressure loads over a surface.
-
-        Parameters
-        ----------
-        e_normals: np.ndarray
-            The stacked surface elements normals vectors.
-
-        nodal_solution: np.ndarray
-            The acoustic nodal_solution array.
-
-        Returns
-        -------
-        acoustic_load: np.ndarray
-            The acoustic presure loads integrated over a surface.
-        """
-
-        # stack all elements nodal pressures 
-        pressures = np.array([nodal_solution[node_ids, :] for node_ids in self.connectivities.T], dtype=complex)
-
-        # stack the element nodal pressures in format [n_el, DOFS_PER_ELEMENT, n_freq]
-        Pe = pressures.transpose(1, 0, 2)
-
-        # compute local coordinates for all elements
-        local_coords = self.get_stacked_local_coordinates()
-
-        # initialize variable
-        acoustic_load = 0.
-
-        # integration loop
-        for i in range(self.nint):
-
-            # Jacobian matrices of all elements
-            JAC_stacked = self.dphi[i, :, :] @ local_coords
-
-            # Jacobian determinants and inverses of all elements
-            det_jacs, _ = self.get_detJAC_and_invJAC(JAC_stacked)
-
-            # shape functions
-            N = self.phi[i, :, :]
-
-            acoustic_load += np.sum(-e_normals @ (N @ Pe) * (det_jacs * self.wps[i]), axis=0)
-
-        return acoustic_load
-
-
     def get_stacked_element_face_normals(self) -> np.ndarray:
         """
         This method processes the stacked element face normals.
@@ -486,23 +349,6 @@ class TRIANGLE_6(Element2D):
         # self.connectivities = connectivities[:, [0, 1, 2, 3, 4, 5]]
 
 
-    def generate_ind_rows_cols(self, connectivities: np.ndarray):
-        """
-        This method processess the dof indices (rows and columns) 
-        for assembly
-        """
-
-        self.reorder_connect(connectivities)
-        dof, edof = self.dof_per_node, self.dof_per_element
-        ind_dof = dof * self.connectivities[:, :]
-
-        vect_indices = ind_dof.flatten()
-        ind_rows_face = ((np.tile(vect_indices, (edof,1))).T).flatten()
-        ind_cols_face = (np.tile(ind_dof, edof)).flatten()
-
-        return ind_rows_face, ind_cols_face
-
-
 def get_shape_functions_and_derivatives(rrx: np.ndarray, ssx: np.ndarray):
 
     """
@@ -536,233 +382,233 @@ def get_shape_functions_and_derivatives(rrx: np.ndarray, ssx: np.ndarray):
     return phi, dphi
 
 
-def excitation_F_base(self, ee, coord, connect_face, Vn=1):
-    """ F3 matrices
-    """
-    #Check Connectivity -- Ansys = Gmsh
+# def excitation_F_base(self, ee, coord, connect_face, Vn=1):
+#     """ F3 matrices
+#     """
+#     #Check Connectivity -- Ansys = Gmsh
 
-    ############## Definir plano de trabalho e adaptar coordenadas para tal plano
-    XX1, YY1, ZZ1 = coord[connect_face[ee,0],1], coord[connect_face[ee,0],2], coord[connect_face[ee,0],3]
-    XX2, YY2, ZZ2 = coord[connect_face[ee,1],1], coord[connect_face[ee,1],2], coord[connect_face[ee,1],3]
-    XX3, YY3, ZZ3 = coord[connect_face[ee,2],1], coord[connect_face[ee,2],2], coord[connect_face[ee,2],3]
+#     ############## Definir plano de trabalho e adaptar coordenadas para tal plano
+#     XX1, YY1, ZZ1 = coord[connect_face[ee,0],1], coord[connect_face[ee,0],2], coord[connect_face[ee,0],3]
+#     XX2, YY2, ZZ2 = coord[connect_face[ee,1],1], coord[connect_face[ee,1],2], coord[connect_face[ee,1],3]
+#     XX3, YY3, ZZ3 = coord[connect_face[ee,2],1], coord[connect_face[ee,2],2], coord[connect_face[ee,2],3]
 
-    vec21 = np.array([XX2-XX1, YY2-YY1, ZZ2-ZZ1]).T
-    vec31 = np.array([XX3-XX1, YY3-YY1, ZZ3-ZZ1]).T
+#     vec21 = np.array([XX2-XX1, YY2-YY1, ZZ2-ZZ1]).T
+#     vec31 = np.array([XX3-XX1, YY3-YY1, ZZ3-ZZ1]).T
 
-    loc_x_axis = vec21.copy()
-    loc_z_axis = np.cross(loc_x_axis, vec31)
-    loc_y_axis = np.cross(loc_z_axis, loc_x_axis)
+#     loc_x_axis = vec21.copy()
+#     loc_z_axis = np.cross(loc_x_axis, vec31)
+#     loc_y_axis = np.cross(loc_z_axis, loc_x_axis)
 
-    unit_x_axis = loc_x_axis/np.linalg.norm(loc_x_axis)
-    unit_y_axis = loc_y_axis/np.linalg.norm(loc_y_axis)
+#     unit_x_axis = loc_x_axis/np.linalg.norm(loc_x_axis)
+#     unit_y_axis = loc_y_axis/np.linalg.norm(loc_y_axis)
 
-    x1 = 0 
-    x2 = np.dot(vec21,unit_x_axis)
-    x3 = np.dot(vec31,unit_x_axis)
-    y1 = 0 
-    y2 = np.dot(vec21,unit_y_axis)
-    y3 = np.dot(vec31,unit_y_axis)
+#     x1 = 0 
+#     x2 = np.dot(vec21,unit_x_axis)
+#     x3 = np.dot(vec31,unit_x_axis)
+#     y1 = 0 
+#     y2 = np.dot(vec21,unit_y_axis)
+#     y3 = np.dot(vec31,unit_y_axis)
 
-    coord_loc = np.array([[x1, y1],
-                            [x2, y2],
-                            [x3, y3]])
+#     coord_loc = np.array([[x1, y1],
+#                             [x2, y2],
+#                             [x3, y3]])
 
-    ################ Definir pontos de integração 2D
-    nint = 3
-    con1 = 1/6
-    con2 = 2/3
-    wps = 1/3
-    pint = np.array([[con1, con1],
-                        [con2, con1],
-                        [con1, con2]])
+#     ################ Definir pontos de integração 2D
+#     nint = 3
+#     con1 = 1/6
+#     con2 = 2/3
+#     wps = 1/3
+#     pint = np.array([[con1, con1],
+#                         [con2, con1],
+#                         [con1, con2]])
 
-    ######################## Inicio da integração na face
-    Fe = np.zeros((3,1),dtype=complex)
-    N = np.zeros((1,3))
-    # integration
-    for i in range(nint):
-        ssx, ttx = pint[i, 0], pint[i, 1]
-        phi, dphi = get_shape_functions_and_derivatives(ssx, ttx)
-        #ie = connect_face[ee_face,1:]-1
-        dxdy = dphi@coord_loc
-        # note: dxdr, dydr, dzdr, dxds, dyds, dzds, dxdt, dydt, dzdt 
-        JAC = np.array([[dxdy[0,0], dxdy[0,1]],
-                        [dxdy[1,0], dxdy[1,1]]], dtype=float)
-        # print(f"forceF3: index - {ee} : k - {i} JAC {JAC}")
-        #Inverse Jacobian
-        detJAC = JAC[0,0] * JAC[1,1]  - JAC[0,1] * JAC[1,0]  
-        # N[0, :] = phi
-        for iii in range(3):
-            N[0,iii]=phi[iii]
+#     ######################## Inicio da integração na face
+#     Fe = np.zeros((3,1),dtype=complex)
+#     N = np.zeros((1,3))
+#     # integration
+#     for i in range(nint):
+#         ssx, ttx = pint[i, 0], pint[i, 1]
+#         phi, dphi = get_shape_functions_and_derivatives(ssx, ttx)
+#         #ie = connect_face[ee_face,1:]-1
+#         dxdy = dphi@coord_loc
+#         # note: dxdr, dydr, dzdr, dxds, dyds, dzds, dxdt, dydt, dzdt 
+#         JAC = np.array([[dxdy[0,0], dxdy[0,1]],
+#                         [dxdy[1,0], dxdy[1,1]]], dtype=float)
+#         # print(f"forceF3: index - {ee} : k - {i} JAC {JAC}")
+#         #Inverse Jacobian
+#         detJAC = JAC[0,0] * JAC[1,1]  - JAC[0,1] * JAC[1,0]  
+#         # N[0, :] = phi
+#         for iii in range(3):
+#             N[0,iii]=phi[iii]
 
-        # print(f"forceF3: index - {ee} : k - {i} {N}")           
-        Fe += -(1/2) * Vn * N.T * (detJAC * wps)
+#         # print(f"forceF3: index - {ee} : k - {i} {N}")           
+#         Fe += -(1/2) * Vn * N.T * (detJAC * wps)
 
-    return Fe
+#     return Fe
 
 
-def matrices_Z_base(ee, coord, connect_face, rho=1, impedance=1):
-    """ Z3 matrices
-    """
-    #Check Connectivity -- Ansys = Gmsh
+# def matrices_Z_base(ee, coord, connect_face, rho=1, impedance=1):
+#     """ Z3 matrices
+#     """
+#     #Check Connectivity -- Ansys = Gmsh
 
-    ############## Definir plano de trabalho e adaptar coordenadas para tal plano
-    XX1, YY1, ZZ1 = coord[connect_face[ee,0],1], coord[connect_face[ee,0],2], coord[connect_face[ee,0],3]
-    XX2, YY2, ZZ2 = coord[connect_face[ee,1],1], coord[connect_face[ee,1],2], coord[connect_face[ee,1],3]
-    XX3, YY3, ZZ3 = coord[connect_face[ee,2],1], coord[connect_face[ee,2],2], coord[connect_face[ee,2],3]
+#     ############## Definir plano de trabalho e adaptar coordenadas para tal plano
+#     XX1, YY1, ZZ1 = coord[connect_face[ee,0],1], coord[connect_face[ee,0],2], coord[connect_face[ee,0],3]
+#     XX2, YY2, ZZ2 = coord[connect_face[ee,1],1], coord[connect_face[ee,1],2], coord[connect_face[ee,1],3]
+#     XX3, YY3, ZZ3 = coord[connect_face[ee,2],1], coord[connect_face[ee,2],2], coord[connect_face[ee,2],3]
 
-    vec21 = np.array([XX2-XX1, YY2-YY1, ZZ2-ZZ1]).T
-    vec31 = np.array([XX3-XX1, YY3-YY1, ZZ3-ZZ1]).T
+#     vec21 = np.array([XX2-XX1, YY2-YY1, ZZ2-ZZ1]).T
+#     vec31 = np.array([XX3-XX1, YY3-YY1, ZZ3-ZZ1]).T
 
-    loc_x_axis = vec21.copy()
-    loc_z_axis = np.cross(loc_x_axis, vec31)
-    loc_y_axis = np.cross(loc_z_axis, loc_x_axis)
+#     loc_x_axis = vec21.copy()
+#     loc_z_axis = np.cross(loc_x_axis, vec31)
+#     loc_y_axis = np.cross(loc_z_axis, loc_x_axis)
 
-    unit_x_axis = loc_x_axis/np.linalg.norm(loc_x_axis)
-    unit_y_axis = loc_y_axis/np.linalg.norm(loc_y_axis)
+#     unit_x_axis = loc_x_axis/np.linalg.norm(loc_x_axis)
+#     unit_y_axis = loc_y_axis/np.linalg.norm(loc_y_axis)
 
-    x1 = 0 
-    x2 = np.dot(vec21,unit_x_axis)
-    x3 = np.dot(vec31,unit_x_axis)
-    y1 = 0 
-    y2 = np.dot(vec21,unit_y_axis)
-    y3 = np.dot(vec31,unit_y_axis)
+#     x1 = 0 
+#     x2 = np.dot(vec21,unit_x_axis)
+#     x3 = np.dot(vec31,unit_x_axis)
+#     y1 = 0 
+#     y2 = np.dot(vec21,unit_y_axis)
+#     y3 = np.dot(vec31,unit_y_axis)
 
-    coord_loc = np.array([[x1, y1],
-                            [x2, y2],
-                            [x3, y3]])
+#     coord_loc = np.array([[x1, y1],
+#                             [x2, y2],
+#                             [x3, y3]])
 
-    ################ Definir pontos de integração 2D
-    nint = 3
-    con1 = 1/6
-    con2 = 2/3
-    wps = 1/3
-    pint = np.array([[con1, con1],
-                        [con2, con1],
-                        [con1, con2]])
+#     ################ Definir pontos de integração 2D
+#     nint = 3
+#     con1 = 1/6
+#     con2 = 2/3
+#     wps = 1/3
+#     pint = np.array([[con1, con1],
+#                         [con2, con1],
+#                         [con1, con2]])
 
-    ######################## Inicio da integração na face
-    Ze = np.zeros((3,3),dtype=complex)
-    N = np.zeros((1,3))
+#     ######################## Inicio da integração na face
+#     Ze = np.zeros((3,3),dtype=complex)
+#     N = np.zeros((1,3))
 
-    # integration
-    for i in range(nint):
+#     # integration
+#     for i in range(nint):
 
-        ssx, ttx = pint[i, 0], pint[i, 1]
-        phi, dphi = get_shape_functions_and_derivatives(ssx,ttx)
+#         ssx, ttx = pint[i, 0], pint[i, 1]
+#         phi, dphi = get_shape_functions_and_derivatives(ssx,ttx)
 
-        #ie = connect_face[ee_face,1:]-1
-        dxdy = dphi@coord_loc
+#         #ie = connect_face[ee_face,1:]-1
+#         dxdy = dphi@coord_loc
 
-        # note: dxdr, dydr, dzdr, dxds, dyds, dzds, dxdt, dydt, dzdt 
-        JAC = np.array([[dxdy[0,0], dxdy[0,1]],
-                        [dxdy[1,0], dxdy[1,1]]], dtype=float) 
+#         # note: dxdr, dydr, dzdr, dxds, dyds, dzds, dxdt, dydt, dzdt 
+#         JAC = np.array([[dxdy[0,0], dxdy[0,1]],
+#                         [dxdy[1,0], dxdy[1,1]]], dtype=float) 
 
-        #Inverse Jacobian
-        detJAC = JAC[0,0] * JAC[1,1]  - JAC[0,1] * JAC[1,0]
+#         #Inverse Jacobian
+#         detJAC = JAC[0,0] * JAC[1,1]  - JAC[0,1] * JAC[1,0]
 
-        for iii in range(3):
-            N[0, iii] = phi[iii]
+#         for iii in range(3):
+#             N[0, iii] = phi[iii]
         
-        Ze += -(1/2) * (rho/impedance) * N.T@N * (detJAC * wps)
+#         Ze += -(1/2) * (rho/impedance) * N.T@N * (detJAC * wps)
 
-    return Ze
+#     return Ze
     
 
-def shapeF6(r,s):
-    """ Shape Functions and Derivatives TRIA6
-    """
-    #
-    t = 1 - r - s
-    phi = np.array([t*(2*t-1), r*(2*r-1), s*(2*s-1), 4*r*t, 4*r*s, 4*s*t])
-    #
-    dphi = np.array([[(-1)*(2*t-1)+t*(-2), 4*r-1,     0, 4*t + 4*r*(-1), 4*s,       4*s*(-1)],
-                     [(-1)*(2*t-1)+t*(-2),     0, 4*s-1,       4*r*(-1), 4*r, 4*t + 4*s*(-1)]], dtype=float)
-    #
-    return phi, dphi
+# def shapeF6(r,s):
+#     """ Shape Functions and Derivatives TRIA6
+#     """
+#     #
+#     t = 1 - r - s
+#     phi = np.array([t*(2*t-1), r*(2*r-1), s*(2*s-1), 4*r*t, 4*r*s, 4*s*t])
+#     #
+#     dphi = np.array([[(-1)*(2*t-1)+t*(-2), 4*r-1,     0, 4*t + 4*r*(-1), 4*s,       4*s*(-1)],
+#                      [(-1)*(2*t-1)+t*(-2),     0, 4*s-1,       4*r*(-1), 4*r, 4*t + 4*s*(-1)]], dtype=float)
+#     #
+#     return phi, dphi
 
-def forceF6(ee, coord, connect_face, c_0, rho, Vn):
-    """ F4 matrices
-    """
-    #Check Connectivity -- Ansys = Gmsh
+# def forceF6(ee, coord, connect_face, c_0, rho, Vn):
+#     """ F4 matrices
+#     """
+#     #Check Connectivity -- Ansys = Gmsh
 
-    ############## Definir plano de trabalho e adaptar coordenadas para tal plano
-    # Três primeiros nós da conectividade: vértices
-    XX1, YY1, ZZ1 = coord[connect_face[ee,1-1],1], coord[connect_face[ee,1-1],2], coord[connect_face[ee,1-1],3]
-    XX2, YY2, ZZ2 = coord[connect_face[ee,2-1],1], coord[connect_face[ee,2-1],2], coord[connect_face[ee,2-1],3]
-    XX3, YY3, ZZ3 = coord[connect_face[ee,3-1],1], coord[connect_face[ee,3-1],2], coord[connect_face[ee,3-1],3]
-    #
-    XX4, YY4, ZZ4 = coord[connect_face[ee,4-1],1], coord[connect_face[ee,4-1],2], coord[connect_face[ee,4-1],3]
-    XX5, YY5, ZZ5 = coord[connect_face[ee,5-1],1], coord[connect_face[ee,5-1],2], coord[connect_face[ee,5-1],3]
-    XX6, YY6, ZZ6 = coord[connect_face[ee,6-1],1], coord[connect_face[ee,6-1],2], coord[connect_face[ee,6-1],3]    
+#     ############## Definir plano de trabalho e adaptar coordenadas para tal plano
+#     # Três primeiros nós da conectividade: vértices
+#     XX1, YY1, ZZ1 = coord[connect_face[ee,1-1],1], coord[connect_face[ee,1-1],2], coord[connect_face[ee,1-1],3]
+#     XX2, YY2, ZZ2 = coord[connect_face[ee,2-1],1], coord[connect_face[ee,2-1],2], coord[connect_face[ee,2-1],3]
+#     XX3, YY3, ZZ3 = coord[connect_face[ee,3-1],1], coord[connect_face[ee,3-1],2], coord[connect_face[ee,3-1],3]
+#     #
+#     XX4, YY4, ZZ4 = coord[connect_face[ee,4-1],1], coord[connect_face[ee,4-1],2], coord[connect_face[ee,4-1],3]
+#     XX5, YY5, ZZ5 = coord[connect_face[ee,5-1],1], coord[connect_face[ee,5-1],2], coord[connect_face[ee,5-1],3]
+#     XX6, YY6, ZZ6 = coord[connect_face[ee,6-1],1], coord[connect_face[ee,6-1],2], coord[connect_face[ee,6-1],3]    
 
-    vec21 = np.array([XX2-XX1, YY2-YY1, ZZ2-ZZ1]).T
-    vec31 = np.array([XX3-XX1, YY3-YY1, ZZ3-ZZ1]).T
-    #
-    vec41 = np.array([XX4-XX1, YY4-YY1, ZZ4-ZZ1]).T
-    vec51 = np.array([XX5-XX1, YY5-YY1, ZZ5-ZZ1]).T
-    vec61 = np.array([XX6-XX1, YY6-YY1, ZZ6-ZZ1]).T
+#     vec21 = np.array([XX2-XX1, YY2-YY1, ZZ2-ZZ1]).T
+#     vec31 = np.array([XX3-XX1, YY3-YY1, ZZ3-ZZ1]).T
+#     #
+#     vec41 = np.array([XX4-XX1, YY4-YY1, ZZ4-ZZ1]).T
+#     vec51 = np.array([XX5-XX1, YY5-YY1, ZZ5-ZZ1]).T
+#     vec61 = np.array([XX6-XX1, YY6-YY1, ZZ6-ZZ1]).T
 
-    loc_x_axis = vec21.copy()
-    loc_z_axis = np.cross(loc_x_axis, vec31)   # ---> normal
-    loc_y_axis = np.cross(loc_z_axis, loc_x_axis)
+#     loc_x_axis = vec21.copy()
+#     loc_z_axis = np.cross(loc_x_axis, vec31)   # ---> normal
+#     loc_y_axis = np.cross(loc_z_axis, loc_x_axis)
 
-    unit_x_axis = loc_x_axis/np.linalg.norm(loc_x_axis)
-    unit_y_axis = loc_y_axis/np.linalg.norm(loc_y_axis)
-    unit_z_axis = loc_z_axis/np.linalg.norm(loc_z_axis)  # noqa: F841
+#     unit_x_axis = loc_x_axis/np.linalg.norm(loc_x_axis)
+#     unit_y_axis = loc_y_axis/np.linalg.norm(loc_y_axis)
+#     unit_z_axis = loc_z_axis/np.linalg.norm(loc_z_axis)  # noqa: F841
 
-    x1 = 0 
-    x2 = np.dot(vec21,unit_x_axis)
-    x3 = np.dot(vec31,unit_x_axis)
-    x4 = np.dot(vec41,unit_x_axis)
-    x5 = np.dot(vec51,unit_x_axis)
-    x6 = np.dot(vec61,unit_x_axis)
-    y1 = 0 
-    y2 = np.dot(vec21,unit_y_axis)
-    y3 = np.dot(vec31,unit_y_axis)
-    y4 = np.dot(vec41,unit_y_axis)
-    y5 = np.dot(vec51,unit_y_axis)
-    y6 = np.dot(vec61,unit_y_axis)
+#     x1 = 0 
+#     x2 = np.dot(vec21,unit_x_axis)
+#     x3 = np.dot(vec31,unit_x_axis)
+#     x4 = np.dot(vec41,unit_x_axis)
+#     x5 = np.dot(vec51,unit_x_axis)
+#     x6 = np.dot(vec61,unit_x_axis)
+#     y1 = 0 
+#     y2 = np.dot(vec21,unit_y_axis)
+#     y3 = np.dot(vec31,unit_y_axis)
+#     y4 = np.dot(vec41,unit_y_axis)
+#     y5 = np.dot(vec51,unit_y_axis)
+#     y6 = np.dot(vec61,unit_y_axis)
 
-    coord_loc = np.array([[x1, y1],
-                          [x2, y2],
-                          [x3, y3],
-                          [x4, y4],
-                          [x5, y5],
-                          [x6, y6],])
+#     coord_loc = np.array([[x1, y1],
+#                           [x2, y2],
+#                           [x3, y3],
+#                           [x4, y4],
+#                           [x5, y5],
+#                           [x6, y6],])
 
-    ################ Definir pontos de integração 2D
-    nint = 3
-    con1 = 1/6
-    con2 = 2/3
-    wps = 1/3
-    pint = np.array([[con1, con1],
-                     [con2, con1],
-                     [con1, con2]], dtype=float)
+#     ################ Definir pontos de integração 2D
+#     nint = 3
+#     con1 = 1/6
+#     con2 = 2/3
+#     wps = 1/3
+#     pint = np.array([[con1, con1],
+#                      [con2, con1],
+#                      [con1, con2]], dtype=float)
     
-    # nint = 1
-    # con = 1/3
-    # wps = 1
-    # pint = np.array([[con, con]])
+#     # nint = 1
+#     # con = 1/3
+#     # wps = 1
+#     # pint = np.array([[con, con]])
 
-    ######################## Inicio da integração na face
-    Fe = np.zeros((6,1),dtype=complex)
-    N = np.zeros((1,6))
-    # integration
-    for i in range(nint):
-        ssx, ttx = pint[i, 0], pint[i, 1]
-        phi, dphi = shapeF6(ssx,ttx)
-        #ie = connect_face[ee_face,1:]-1
-        dxdy = dphi@coord_loc
-        # note: dxdr, dydr, dzdr, dxds, dyds, dzds, dxdt, dydt, dzdt 
-        JAC = np.array([[dxdy[0,0], dxdy[0,1]],
-                        [dxdy[1,0], dxdy[1,1]]], dtype=float) 
-        #Inverse Jacobian
-        detJAC = JAC[0,0] * JAC[1,1]  - JAC[0,1] * JAC[1,0]
+#     ######################## Inicio da integração na face
+#     Fe = np.zeros((6,1),dtype=complex)
+#     N = np.zeros((1,6))
+#     # integration
+#     for i in range(nint):
+#         ssx, ttx = pint[i, 0], pint[i, 1]
+#         phi, dphi = shapeF6(ssx,ttx)
+#         #ie = connect_face[ee_face,1:]-1
+#         dxdy = dphi@coord_loc
+#         # note: dxdr, dydr, dzdr, dxds, dyds, dzds, dxdt, dydt, dzdt 
+#         JAC = np.array([[dxdy[0,0], dxdy[0,1]],
+#                         [dxdy[1,0], dxdy[1,1]]], dtype=float) 
+#         #Inverse Jacobian
+#         detJAC = JAC[0,0] * JAC[1,1]  - JAC[0,1] * JAC[1,0]
 
-        for iii in range(6):
-            N[0,iii]=phi[iii]
+#         for iii in range(6):
+#             N[0,iii]=phi[iii]
         
-        Fe += -(1/2)*Vn*N.T*(detJAC*wps)
+#         Fe += -(1/2)*Vn*N.T*(detJAC*wps)
 
-    return Fe
+#     return Fe

@@ -907,8 +907,8 @@ class AcousticAssembler:
             if not isinstance(data, dict):
                 continue
 
-            if not self.mass_source_vector_points.any():
-                self.mass_source_vector_points = np.zeros((self.total_dof, self.number_frequencies), dtype=complex)
+            if not self.mass_source_vector_surfaces.any():
+                self.mass_source_vector_surfaces = np.zeros((self.total_dof, self.number_frequencies), dtype=complex)
 
             values = data.get("values")
             if values is None:
@@ -1307,8 +1307,8 @@ class AcousticAssembler:
         self.ind_rows_Zsi = np.array([], dtype=int)
         self.ind_cols_Zsi = np.array([], dtype=int)
 
-        dof = self.element_2d.DOF_PER_ELEMENT
-        self.total_dof_2d = self.element_2d.DOF_PER_NODE * len(self.element_2d.nodal_coordinates)
+        dof = self.element_2d.dof_per_element
+        self.total_dof_2d = self.element_2d.dof_per_node * len(self.element_2d.nodal_coordinates)
 
         self.integration_data_Zsi = self.get_impedance_data_for_element_integration("specific_impedance")
         if not self.integration_data_Zsi:
@@ -1340,8 +1340,8 @@ class AcousticAssembler:
         self.ind_rows_Zat = np.array([], dtype=int)
         self.ind_cols_Zat = np.array([], dtype=int)
 
-        dof = self.element_2d.DOF_PER_ELEMENT
-        self.total_dof_2d = self.element_2d.DOF_PER_NODE * len(self.element_2d.nodal_coordinates)
+        dof = self.element_2d.dof_per_element
+        self.total_dof_2d = self.element_2d.dof_per_node * len(self.element_2d.nodal_coordinates)
 
         self.integration_data_Zat = self.get_impedance_data_for_element_integration("anechoic_termination")
         if not self.integration_data_Zat:
@@ -1383,8 +1383,8 @@ class AcousticAssembler:
         connectivities: np.ndarray = self.integration_data_ipw.connectivities
         element_normals: np.ndarray = self.integration_data_ipw.element_face_normals
 
-        dof = self.element_2d.DOF_PER_ELEMENT
-        self.total_dof_2d = self.element_2d.DOF_PER_NODE * len(self.element_2d.nodal_coordinates)
+        dof = self.element_2d.dof_per_element
+        self.total_dof_2d = self.element_2d.dof_per_node * len(self.element_2d.nodal_coordinates)
 
         nel = connectivities.shape[0]
         for j in range(self.number_frequencies):
@@ -1415,8 +1415,8 @@ class AcousticAssembler:
         self.ind_rows_Zas = np.array([])
         self.ind_cols_Zas = np.array([])
 
-        dof = self.element_2d.DOF_PER_ELEMENT
-        self.total_dof_2d = self.element_2d.DOF_PER_NODE * len(self.element_2d.nodal_coordinates)
+        dof = self.element_2d.dof_per_element
+        self.total_dof_2d = self.element_2d.dof_per_node * len(self.element_2d.nodal_coordinates)
 
         self.integration_data_Zas = self.get_impedance_data_for_element_integration("absorption_surface")
         if not self.integration_data_Zas:
@@ -1452,8 +1452,8 @@ class AcousticAssembler:
         self.ind_rows_Zti_B = np.array([])
         self.ind_cols_Zti_B = np.array([])
 
-        dof = self.element_2d.DOF_PER_ELEMENT
-        self.total_dof_2d = self.element_2d.DOF_PER_NODE * len(self.element_2d.nodal_coordinates)
+        dof = self.element_2d.dof_per_element
+        self.total_dof_2d = self.element_2d.dof_per_node * len(self.element_2d.nodal_coordinates)
 
         self.integration_data_Zti = self.get_transfer_impedance_data_for_element_integration()
         if not self.integration_data_Zti:
@@ -1505,8 +1505,8 @@ class AcousticAssembler:
         self.ind_rows_Zpp_B = np.array([])
         self.ind_cols_Zpp_B = np.array([])
 
-        dof = self.element_2d.DOF_PER_ELEMENT
-        self.total_dof_2d = self.element_2d.DOF_PER_NODE * len(self.element_2d.nodal_coordinates)
+        dof = self.element_2d.dof_per_element
+        self.total_dof_2d = self.element_2d.dof_per_node * len(self.element_2d.nodal_coordinates)
 
         self.integration_data_Zpp = self.get_perforated_plate_data_for_element_integration(solution)
         if not self.integration_data_Zpp:
@@ -1742,7 +1742,7 @@ class AcousticAssembler:
         returns the output data in the form of mass flow rate.
         """
 
-        total_dof = self.element_2d.DOF_PER_NODE * len(self.element_2d.nodal_coordinates)
+        total_dof = self.element_2d.dof_per_node * len(self.element_2d.nodal_coordinates)
         output = np.zeros((total_dof, self.number_frequencies), dtype=complex)
 
         prop_labels = [
