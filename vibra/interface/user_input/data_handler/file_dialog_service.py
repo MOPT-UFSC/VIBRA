@@ -4,13 +4,16 @@ from pathlib import Path
 
 from PySide6.QtWidgets import QFileDialog
 
+from vibra import app
+
 
 class FileDialogService:
     @staticmethod
-    def open_file(file_extensions: list[str], caption: str = "Open file", last_folder: str | Path = None) -> Path | None:
-        last_folder, caption, filter_str, kwargs = FileDialogService._build_dialog_kwargs(file_extensions, caption, last_folder)
+    def open_file(file_extensions: list[str], caption: str = "Open file", last_folder: str = "") -> Path | None:
+        filter_str, kwargs = FileDialogService._build_dialog_kwargs(file_extensions)
+        last_path = app().config.get_last_folder_for(last_folder)
 
-        path, selected_filter = QFileDialog.getOpenFileName(None, caption, str(last_folder), filter_str, **kwargs)
+        path, selected_filter = QFileDialog.getOpenFileName(None, caption, str(last_path), filter_str, **kwargs)
 
         if not path:
             return None
@@ -21,13 +24,16 @@ class FileDialogService:
             suffix = f".{FileDialogService._get_path_extension(selected_filter)}"
             path = path.with_suffix(suffix)
 
+        app().config.write_last_folder_path_in_file(last_folder, path)
+
         return path
 
     @staticmethod
-    def open_multiple_files(file_extensions: list[str], caption: str = "Open multiple files", last_folder: str | Path = None) -> list[Path] | None:
-        last_folder, caption, filter_str, kwargs = FileDialogService._build_dialog_kwargs(file_extensions, caption, last_folder)
+    def open_multiple_files(file_extensions: list[str], caption: str = "Open multiple files", last_folder: str = "") -> list[Path] | None:
+        filter_str, kwargs = FileDialogService._build_dialog_kwargs(file_extensions)
+        last_path = app().config.get_last_folder_for(last_folder)
 
-        paths, selected_filter = QFileDialog.getOpenFileNames(None, caption, str(last_folder), filter_str, **kwargs)
+        paths, selected_filter = QFileDialog.getOpenFileNames(None, caption, str(last_path), filter_str, **kwargs)
 
         if not paths:
             return None
@@ -39,13 +45,16 @@ class FileDialogService:
                 suffix = f".{FileDialogService._get_path_extension(selected_filter)}"
                 paths[i] = path.with_suffix(suffix)
 
+        app().config.write_last_folder_path_in_file(last_folder, paths[-1])
+
         return paths
 
     @staticmethod
-    def save_file(file_extensions: list[str], caption: str = "Save file", last_folder: str = None) -> Path | None:
-        last_folder, caption, filter_str, kwargs = FileDialogService._build_dialog_kwargs(file_extensions, caption, last_folder, open_file=False)
+    def save_file(file_extensions: list[str], caption: str = "Save file", last_folder: str = "") -> Path | None:
+        filter_str, kwargs = FileDialogService._build_dialog_kwargs(file_extensions, open_file=False)
+        last_path = app().config.get_last_folder_for(last_folder)
 
-        path, selected_filter = QFileDialog.getSaveFileName(None, caption, str(last_folder), filter_str, **kwargs)
+        path, selected_filter = QFileDialog.getSaveFileName(None, caption, str(last_path), filter_str, **kwargs)
 
         if not path:
             return None
@@ -55,6 +64,8 @@ class FileDialogService:
         if not path.suffix:
             suffix = f".{FileDialogService._get_path_extension(selected_filter)}"
             path = path.with_suffix(suffix)
+
+        app().config.write_last_folder_path_in_file(last_folder, path)
 
         return path
 
@@ -72,17 +83,14 @@ class FileDialogService:
         return Path(existing_dir)
 
     @staticmethod
-    def _build_dialog_kwargs(file_extensions: list[str], caption: str, last_folder: str | None, open_file=True):
-        if last_folder is None:
-            last_folder = Path().home()
-
+    def _build_dialog_kwargs(file_extensions: list[str], open_file=True):
         kwargs = {}
         if platform.system() == "Linux":
             kwargs["options"] = QFileDialog.Option.DontUseNativeDialog
 
         filter_str = FileDialogService._generate_file_extensions_str(file_extensions, open_file)
 
-        return last_folder, caption, filter_str, kwargs
+        return filter_str, kwargs
 
     @staticmethod
     def _generate_file_extensions_str(file_extensions: list[str], all_files=True):
