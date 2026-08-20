@@ -23,7 +23,7 @@ class ElementFormulation(IntEnum):
     ELEMENT_3D = 1
 
 
-class EvaluationType(IntEnum):
+class DistributionType(IntEnum):
     ELEMENT_INTEGRATION = 0
     NODAL_DISTRIBUTION = 1
 
@@ -133,11 +133,13 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             self.treeWidget_nodal_loads.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def _create_connections(self):
-        #
-        self.comboBox_attribution_type.currentIndexChanged.connect(self.attribution_type_callback)
+    
+        # QComboBox connections
+        self.comboBox_assignment_type.currentIndexChanged.connect(self.assignment_type_callback)
         self.comboBox_element_type.currentIndexChanged.connect(self.element_type_callback)
-        self.comboBox_evaluation_type.currentIndexChanged.connect(self.evaluation_type_callback)
-        #
+        self.comboBox_distribution_type.currentIndexChanged.connect(self.distribution_type_callback)
+
+        # QPushButton connections
         self.pushButton_apply.clicked.connect(self.apply_callback)
         self.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
         self.pushButton_cancel.clicked.connect(self.close)
@@ -149,14 +151,16 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         self.pushButton_load_Mz_table.clicked.connect(self.load_Mz_table)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
-        #
+
+        # QTabWidget connection
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
-        #
+
+        # QTreeWidget connection
         self.treeWidget_nodal_loads.itemClicked.connect(self.on_click_item)
         self.treeWidget_nodal_loads.itemDoubleClicked.connect(self.on_double_click_item)
-        #
+
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
-        #
+
         self.geometry_selection_callback()
         self.update_element_type_based_on_geometry_information()
 
@@ -171,7 +175,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
             text = ", ".join([str(i) for i in faces])
             self.lineEdit_selection_id.setText(text)
-            self.comboBox_attribution_type.setCurrentIndex(0)
+            self.comboBox_assignment_type.setCurrentIndex(0)
 
             if len(faces) == 1:
                 surface_id = list(faces)[0]
@@ -184,7 +188,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
             text = ", ".join([str(i) for i in lines])
             self.lineEdit_selection_id.setText(text)
-            self.comboBox_attribution_type.setCurrentIndex(1)
+            self.comboBox_assignment_type.setCurrentIndex(1)
 
             if len(lines) == 1:
                 line_id = list(lines)[0]
@@ -197,7 +201,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
             text = ", ".join([str(i) for i in points])
             self.lineEdit_selection_id.setText(text)
-            self.comboBox_attribution_type.setCurrentIndex(2)
+            self.comboBox_assignment_type.setCurrentIndex(2)
 
             if len(points) == 1:
                 point_id = list(points)[0]
@@ -210,7 +214,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
             text = ", ".join([str(i) for i in nodes])
             self.lineEdit_selection_id.setText(text)
-            self.comboBox_attribution_type.setCurrentIndex(3)
+            self.comboBox_assignment_type.setCurrentIndex(3)
 
             if len(nodes) == 1:
                 node_id = list(nodes)[0]
@@ -252,11 +256,20 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                     lineEdit_real.setText(str(np.real(values[index])))
                     lineEdit_imag.setText(str(np.imag(values[index])))
 
-    def attribution_type_callback(self):
-        if self.comboBox_attribution_type.currentIndex() == 3:
+    def assignment_type_callback(self):
+        assignment_index = self.comboBox_assignment_type.currentIndex()
+        if assignment_index == AssignmetType.NODES:
             app().main_window.action_mesh_workspace_callback()
         else:
             app().main_window.action_model_workspace_callback()
+
+        element_integration_is_valid = assignment_index in [AssignmetType.SURFACES, AssignmetType.LINES]
+        if element_integration_is_valid:
+            self.comboBox_distribution_type.setCurrentIndex(DistributionType.ELEMENT_INTEGRATION)
+        else:
+            self.comboBox_distribution_type.setCurrentIndex(DistributionType.NODAL_DISTRIBUTION)
+
+        self.comboBox_distribution_type.setEnabled(element_integration_is_valid)
 
     def element_type_callback(self):
 
@@ -290,8 +303,8 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         self.lineEdit_path_table_My.setVisible(element_2d)
         self.lineEdit_path_table_Mz.setVisible(element_2d)
 
-    def evaluation_type_callback(self):
-        nodal_distribution = self.comboBox_evaluation_type.currentIndex() == EvaluationType.NODAL_DISTRIBUTION
+    def distribution_type_callback(self):
+        nodal_distribution = self.comboBox_distribution_type.currentIndex() == DistributionType.NODAL_DISTRIBUTION
         self.checkBox_averaged_constant_values.setEnabled(nodal_distribution)
         self.checkBox_averaged_table_values.setEnabled(nodal_distribution)
 
@@ -338,11 +351,11 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
         return False, output
 
-    def constant_values_attribution(self):
+    def constant_values_assignment(self):
 
         input_ids = self.lineEdit_selection_id.text()
-        attribution_type = self.comboBox_attribution_type.currentIndex()
-        selection = self.assignment_types.get(attribution_type)
+        assignment_type = self.comboBox_assignment_type.currentIndex()
+        selection = self.assignment_types.get(assignment_type)
 
         selected_ids, error_data = self.mesh.check_selected_ids(input_ids, selection=selection, single_id=False)
 
@@ -353,7 +366,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
         index = self.comboBox_element_type.currentIndex()
         element_type = self.element_types[index]
-        nodal_distribution = self.comboBox_evaluation_type.currentIndex() == EvaluationType.NODAL_DISTRIBUTION
+        element_integration = self.comboBox_distribution_type.currentIndex() == DistributionType.ELEMENT_INTEGRATION
 
         stop, Fx = self.check_complex_entries(self.lineEdit_real_Fx.text(), self.lineEdit_imag_Fx.text(), "Fx")
         if stop:
@@ -394,13 +407,11 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             PrintMessageInput([error_title, title, message])
             return True
 
-        self.remove_duplicated_attributions(selected_ids, selection)
+        self.remove_duplicated_assignments(selected_ids, selection)
         self.remove_conflicting_excitations(selected_ids, selection)
 
         real_values = [value if value is None else np.real(value) for value in nodal_loads]
         imag_values = [value if value is None else np.imag(value) for value in nodal_loads]
-
-        key_avg = self.checkBox_averaged_table_values.isChecked() and self.checkBox_averaged_table_values.isEnabled()
 
         for selected_id in selected_ids:
             data = {
@@ -408,20 +419,22 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                 "values": nodal_loads,
                 "real_values": real_values,
                 "imag_values": imag_values,
-                "nodal_distribution": nodal_distribution,
-                "averaged": key_avg,
+                "element_integration": element_integration,
             }
 
-            if attribution_type == AssignmetType.SURFACES:
+            if not element_integration:
+                data.update({"averaged": self.checkBox_averaged_table_values.isChecked()})
+
+            if assignment_type == AssignmetType.SURFACES:
                 self.properties._set_property("nodal_loads", data, surface=selected_id)
 
-            elif attribution_type == AssignmetType.LINES:
+            elif assignment_type == AssignmetType.LINES:
                 self.properties._set_property("nodal_loads", data, line=selected_id)
 
-            elif attribution_type == AssignmetType.POINTS:
+            elif assignment_type == AssignmetType.POINTS:
                 self.properties._set_property("nodal_loads", data, point=selected_id)
 
-            elif attribution_type == AssignmetType.NODES:
+            elif assignment_type == AssignmetType.NODES:
                 self.properties._set_property("nodal_loads", data, node=selected_id)
 
     def load_table(self, lineEdit : QLineEdit, load_label : str, direct_load = False):
@@ -548,11 +561,11 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
         return table_name, data
 
-    def table_values_attribution(self):
+    def table_values_assignment(self):
 
         input_ids = self.lineEdit_selection_id.text()
-        attribution_type = self.comboBox_attribution_type.currentIndex()
-        selection = self.assignment_types.get(attribution_type)
+        assignment_type = self.comboBox_assignment_type.currentIndex()
+        selection = self.assignment_types.get(assignment_type)
 
         selected_ids, error_data = self.mesh.check_selected_ids(input_ids, selection=selection, single_id=False)
 
@@ -563,7 +576,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
         index = self.comboBox_element_type.currentIndex()
         element_type = self.element_types[index]
-        nodal_distribution = self.comboBox_evaluation_type.currentIndex() == EvaluationType.NODAL_DISTRIBUTION
+        element_integration = self.comboBox_distribution_type.currentIndex() == DistributionType.ELEMENT_INTEGRATION
 
         if self.Fx_table_path is None:
             self.Fx_table_values, self.Fx_table_path = self.load_table(self.lineEdit_path_table_Fx, "Fx", direct_load = True)
@@ -583,20 +596,18 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         if self.Mz_table_path is None:
             self.Mz_table_values, self.Mz_table_path = self.load_table(self.lineEdit_path_table_Mz, "Mz", direct_load = True)
 
-        key_avg = self.checkBox_averaged_table_values.isChecked() and self.checkBox_averaged_table_values.isEnabled()
-
         for selected_id in selected_ids:
-            
+
             if self.Fx_table_values is not None:
                 self.Fx_table_name, self.Fx_array = self.save_table_files("Fx", selected_id, selection, self.Fx_table_values)
                 if self.Fx_array is None:
                     return True
-                
+
             if self.Fy_table_values is not None:
                 self.Fy_table_name, self.Fy_array = self.save_table_files("Fy", selected_id, selection, self.Fy_table_values)
                 if self.Fy_array is None:
                     return True
-                
+
             if self.Fz_table_values is not None:
                 self.Fz_table_name, self.Fz_array = self.save_table_files("Fz", selected_id, selection, self.Fz_table_values)
                 if self.Fz_array is None:
@@ -636,7 +647,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                 PrintMessageInput([error_title, title, message]) 
                 return True
            
-            self.remove_duplicated_attributions(selected_ids, selection)
+            self.remove_duplicated_assignments(selected_ids, selection)
             self.remove_conflicting_excitations(selected_ids, selection)
 
             data = {
@@ -644,25 +655,27 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                 "table_names": table_names,
                 "table_paths": table_paths,
                 "values": nodal_loads,
-                "nodal_distribution": nodal_distribution,
-                "averaged": key_avg,
+                "element_integration": element_integration,
             }
 
-            if attribution_type == AssignmetType.SURFACES:
+            if not element_integration:
+                data.update({"averaged": self.checkBox_averaged_table_values.isChecked()})
+
+            if assignment_type == AssignmetType.SURFACES:
                 self.properties._set_property("nodal_loads", data, surface=selected_id)
 
-            elif attribution_type == AssignmetType.LINES:
+            elif assignment_type == AssignmetType.LINES:
                 self.properties._set_property("nodal_loads", data, line=selected_id)
 
-            elif attribution_type == AssignmetType.POINTS:
+            elif assignment_type == AssignmetType.POINTS:
                 self.properties._set_property("nodal_loads", data, point=selected_id)
 
-            elif attribution_type == AssignmetType.NODES:
+            elif assignment_type == AssignmetType.NODES:
                 self.properties._set_property("nodal_loads", data, node=selected_id)
 
         self.reset_table_variables()
 
-    def remove_duplicated_attributions(self, selected_ids: list, selection: str):
+    def remove_duplicated_assignments(self, selected_ids: list, selection: str):
 
         table_names = list()
         nodes_to_remove = list()
@@ -762,11 +775,11 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         tab_index = self.tabWidget_main.currentIndex()
 
         if tab_index == StandardTabType.CONSTANT_DATA:
-            if self.constant_values_attribution():
+            if self.constant_values_assignment():
                 return
 
         elif tab_index == StandardTabType.TABULAR_DATA:
-            if self.table_values_attribution():
+            if self.table_values_assignment():
                 return
 
         self.actions_to_finalize(close_window)

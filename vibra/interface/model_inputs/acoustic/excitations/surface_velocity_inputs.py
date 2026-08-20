@@ -1,3 +1,5 @@
+from enum import IntEnum
+
 import numpy as np
 from PySide6.QtCore import QItemSelectionModel, QPoint, Qt
 from PySide6.QtGui import QCloseEvent
@@ -12,6 +14,11 @@ from vibra.interface.general.get_user_confirmation_input import GetUserConfirmat
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.acoustic.definitions.enums import StandardTabType
 from vibra.interface.ui_generated.model.acoustic.excitations.surface_velocity_inputs_ui import SurfaceVelocityInputs_UI
+
+
+class DistributionType(IntEnum):
+    ELEMENT_INTEGRATION = 0
+    NODAL_DISTRIBUTION = 1
 
 
 class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
@@ -50,39 +57,34 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         self.tree_item_clicked = False
 
     def _configure_qt_variables(self):
-        self.radioButton_element_integration_constant.setChecked(True)
-        self.radioButton_element_integration_table.setChecked(True)
-
         self.treeWidget_surface_velocity.setColumnWidth(1, 20)
         self.treeWidget_surface_velocity.setColumnWidth(2, 80)
 
     def _create_connections(self):
-        #
+
+        # QComboBox connection
+        self.comboBox_distribution_type.currentIndexChanged.connect(self.distribution_type_callback)
+
+        # QPushButton connections
         self.pushButton_apply.clicked.connect(self.apply_callback)
         self.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
         self.pushButton_cancel.clicked.connect(self.close)
         self.pushButton_load_table.clicked.connect(self.load_surface_velocity_table)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
-        #
-        self.radioButton_nodal_attribution_constant.clicked.connect(self.update_controls_for_constant_value)
-        self.radioButton_element_integration_constant.clicked.connect(self.update_controls_for_constant_value)
-        self.radioButton_nodal_attribution_table.clicked.connect(self.update_controls_for_table_of_values)
-        self.radioButton_element_integration_table.clicked.connect(self.update_controls_for_table_of_values)
-        #
+
+        # QTabWidget connection
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
+
+        # QTreeWidget connection
         self.treeWidget_surface_velocity.itemClicked.connect(self.on_click_item)
         self.treeWidget_surface_velocity.itemDoubleClicked.connect(self.on_doubleclick_item)
-        #
+
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
-        #
         self.update_controls_for_constant_value()
         self.update_controls_for_table_of_values()
 
     def _config_widgets(self):
-        #
-        self.radioButton_element_integration_constant.setChecked(True)
-        self.radioButton_element_integration_table.setChecked(True)
 
         for i, w in enumerate([120]):
             self.treeWidget_surface_velocity.setColumnWidth(i, w)
@@ -100,7 +102,7 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
             self.lineEdit_selection_id.setText(text)
 
             if len(faces) == 1:
-                surface_id = list(faces)[0]
+                surface_id = next(iter(faces))
                 self.load_property_data(surface_id)
 
     def load_property_data(self, surface_id: int):
@@ -108,27 +110,24 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
 
         if isinstance(data, dict):
 
-            nodal_attribution = data.get("nodal_attribution", None)
-            averaged = data.get("averaged", None)
+            element_integration = data.get("element_integration", True)
 
-            self.checkBox_averaged_constant_values.setEnabled(nodal_attribution)
-            self.checkBox_averaged_table_values.setEnabled(nodal_attribution)
+            self.checkBox_averaged_constant_values.setEnabled(element_integration)
+            self.checkBox_averaged_table_values.setEnabled(element_integration)
 
-            if nodal_attribution:
-
-                self.radioButton_nodal_attribution_constant.setChecked(True)
-                self.radioButton_nodal_attribution_table.setChecked(True)
-                if "averaged" in data.keys():
-                    self.checkBox_averaged_constant_values.setChecked(averaged)
-                    self.checkBox_averaged_table_values.setChecked(averaged)
+            if element_integration:
+                self.comboBox_distribution_type.setCurrentIndex(DistributionType.ELEMENT_INTEGRATION)
 
             else:
-                self.radioButton_element_integration_constant.setChecked(True)
-                self.radioButton_element_integration_table.setChecked(True)
+                averaged = data.get("averaged", False)
+                self.checkBox_averaged_constant_values.setChecked(averaged)
+                self.checkBox_averaged_table_values.setChecked(averaged)
+                self.comboBox_distribution_type.setCurrentIndex(DistributionType.NODAL_DISTRIBUTION)
 
-            if "table_paths" in data.keys():
+            if "table_paths" in data:
                 self.tabWidget_main.setCurrentIndex(StandardTabType.TABULAR_DATA)
                 self.lineEdit_table_path.setText(data["table_paths"][0])
+
             else:
                 self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)
                 self.lineEdit_real_value.setText(str(data["real_values"][0]))
@@ -179,6 +178,11 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
             index = self.treeWidget_surface_velocity.indexBelow(index)
         
         return map_id_to_model_index
+
+    def distribution_type_callback(self):
+        nodal_distribution = self.comboBox_distribution_type.currentIndex() == DistributionType.NODAL_DISTRIBUTION
+        self.checkBox_averaged_constant_values.setEnabled(nodal_distribution)
+        self.checkBox_averaged_table_values.setEnabled(nodal_distribution)
 
     def tab_event_callback(self):
         current_tab = self.tabWidget_main.currentIndex()
@@ -267,15 +271,16 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         real_values = [np.real(surface_velocity)]
         imag_values = [np.imag(surface_velocity)]
 
-        nodal_attribution = self.radioButton_nodal_attribution_constant.isChecked()
-        key_avg = self.checkBox_averaged_constant_values.isChecked()
+        element_integration = self.comboBox_distribution_type.currentIndex() == DistributionType.ELEMENT_INTEGRATION
 
         data = {
             "real_values": real_values,
             "imag_values": imag_values,
-            "nodal_attribution": nodal_attribution,
-            "averaged": key_avg,
+            "element_integration": element_integration,
         }
+
+        if not element_integration:
+            data.update({"averaged": self.checkBox_averaged_constant_values.isChecked()})
 
         for surface_id in surface_ids:
             self.properties._set_property("surface_velocity", data, surface=surface_id)
@@ -386,16 +391,16 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
             # table path from imported tabular data
             table_path = self.lineEdit_table_path.text()
 
-            key_avg = self.checkBox_averaged_constant_values.isChecked()
-            nodal_attribution = self.radioButton_nodal_attribution_table.isChecked()
+            element_integration = self.comboBox_distribution_type.currentIndex() == DistributionType.ELEMENT_INTEGRATION
 
             data = {
                 "table_names" : [table_name],
                 "table_paths" : [table_path],
-                "values" : [complex_values],                   
-                "averaged" : key_avg,
-                "nodal_attribution" : nodal_attribution,
+                "values" : [complex_values],
+                "element_integration" : element_integration,
                 }
+
+            data.update({"averaged": self.checkBox_averaged_constant_values.isChecked()})
 
             self.properties._set_property("surface_velocity", data, surface=surface_id)
     
@@ -458,8 +463,8 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
             return
 
         if read._continue:
-            surface_ids = list()
-            for (property, *args) in self.properties.surface_properties.keys():
+            surface_ids = []
+            for (property, *args) in self.properties.surface_properties:
                 if property == "surface_velocity":
                     surface_id = args[0]
                     surface_ids.append(surface_id)
@@ -483,19 +488,9 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         self.lineEdit_imag_value.setText("")
         self.lineEdit_table_path.setText("")
 
-    def update_controls_for_constant_value(self):
-        _bool = self.radioButton_element_integration_constant.isChecked()
-        self.checkBox_averaged_constant_values.setChecked(not _bool)
-        self.checkBox_averaged_constant_values.setDisabled(_bool)
-
-    def update_controls_for_table_of_values(self):
-        _bool = self.radioButton_element_integration_table.isChecked()
-        self.checkBox_averaged_table_values.setChecked(not _bool)
-        self.checkBox_averaged_table_values.setDisabled(_bool)
-
     def update_tabs_visibility(self):
 
-        for key in self.properties.surface_properties.keys():
+        for key in self.properties.surface_properties:
             property, *args = key
             if property != "surface_velocity":
                 continue
@@ -528,7 +523,7 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         selected_items = self.treeWidget_surface_velocity.selectedItems()
 
         if not selected_items:
-            return list()
+            return []
 
         return [int(item.text(0)) for item in selected_items]
     
@@ -552,7 +547,7 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
             property, surface_id = key
             if property == "surface_velocity":
 
-                if "table_names" in data.keys():
+                if "table_names" in data:
                     str_value = "Table of values"
                 else:
                     real_values = np.array(data["real_values"])

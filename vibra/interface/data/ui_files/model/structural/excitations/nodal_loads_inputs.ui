@@ -218,7 +218,7 @@
           </widget>
          </item>
          <item row="0" column="3">
-          <widget class="QComboBox" name="comboBox_attribution_type">
+          <widget class="QComboBox" name="comboBox_assignment_type">
            <property name="minimumSize">
             <size>
              <width>0</width>
@@ -401,7 +401,7 @@
             </font>
            </property>
            <property name="text">
-            <string>Evaluation type:</string>
+            <string>Distribution type:</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
@@ -409,7 +409,7 @@
           </widget>
          </item>
          <item row="2" column="2">
-          <widget class="QComboBox" name="comboBox_evaluation_type">
+          <widget class="QComboBox" name="comboBox_distribution_type">
            <property name="minimumSize">
             <size>
              <width>150</width>

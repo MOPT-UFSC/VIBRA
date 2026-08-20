@@ -103,17 +103,17 @@ class Ui_Dialog(object):
 
         self.gridLayout_5.addWidget(self.comboBox_element_type, 1, 2, 1, 1)
 
-        self.comboBox_attribution_type = QComboBox(self.frame_4)
-        self.comboBox_attribution_type.addItem("")
-        self.comboBox_attribution_type.addItem("")
-        self.comboBox_attribution_type.addItem("")
-        self.comboBox_attribution_type.addItem("")
-        self.comboBox_attribution_type.setObjectName(u"comboBox_attribution_type")
-        self.comboBox_attribution_type.setMinimumSize(QSize(0, 28))
-        self.comboBox_attribution_type.setMaximumSize(QSize(16777215, 28))
-        self.comboBox_attribution_type.setFont(font2)
+        self.comboBox_assignment_type = QComboBox(self.frame_4)
+        self.comboBox_assignment_type.addItem("")
+        self.comboBox_assignment_type.addItem("")
+        self.comboBox_assignment_type.addItem("")
+        self.comboBox_assignment_type.addItem("")
+        self.comboBox_assignment_type.setObjectName(u"comboBox_assignment_type")
+        self.comboBox_assignment_type.setMinimumSize(QSize(0, 28))
+        self.comboBox_assignment_type.setMaximumSize(QSize(16777215, 28))
+        self.comboBox_assignment_type.setFont(font2)
 
-        self.gridLayout_5.addWidget(self.comboBox_attribution_type, 0, 3, 1, 1)
+        self.gridLayout_5.addWidget(self.comboBox_assignment_type, 0, 3, 1, 1)
 
         self.label_2 = QLabel(self.frame_4)
         self.label_2.setObjectName(u"label_2")
@@ -166,15 +166,15 @@ class Ui_Dialog(object):
 
         self.gridLayout_5.addWidget(self.label_5, 2, 1, 1, 1)
 
-        self.comboBox_evaluation_type = QComboBox(self.frame_4)
-        self.comboBox_evaluation_type.addItem("")
-        self.comboBox_evaluation_type.addItem("")
-        self.comboBox_evaluation_type.setObjectName(u"comboBox_evaluation_type")
-        self.comboBox_evaluation_type.setMinimumSize(QSize(150, 28))
-        self.comboBox_evaluation_type.setMaximumSize(QSize(150, 28))
-        self.comboBox_evaluation_type.setFont(font2)
+        self.comboBox_distribution_type = QComboBox(self.frame_4)
+        self.comboBox_distribution_type.addItem("")
+        self.comboBox_distribution_type.addItem("")
+        self.comboBox_distribution_type.setObjectName(u"comboBox_distribution_type")
+        self.comboBox_distribution_type.setMinimumSize(QSize(150, 28))
+        self.comboBox_distribution_type.setMaximumSize(QSize(150, 28))
+        self.comboBox_distribution_type.setFont(font2)
 
-        self.gridLayout_5.addWidget(self.comboBox_evaluation_type, 2, 2, 1, 1)
+        self.gridLayout_5.addWidget(self.comboBox_distribution_type, 2, 2, 1, 1)
 
 
         self.gridLayout_4.addWidget(self.frame_4, 0, 0, 1, 1)
@@ -920,16 +920,16 @@ class Ui_Dialog(object):
         self.comboBox_element_type.setItemText(0, QCoreApplication.translate("Dialog", u"Face element", None))
         self.comboBox_element_type.setItemText(1, QCoreApplication.translate("Dialog", u"Solid element", None))
 
-        self.comboBox_attribution_type.setItemText(0, QCoreApplication.translate("Dialog", u"Selected faces", None))
-        self.comboBox_attribution_type.setItemText(1, QCoreApplication.translate("Dialog", u"Selected lines", None))
-        self.comboBox_attribution_type.setItemText(2, QCoreApplication.translate("Dialog", u"Selected points", None))
-        self.comboBox_attribution_type.setItemText(3, QCoreApplication.translate("Dialog", u"Selected nodes", None))
+        self.comboBox_assignment_type.setItemText(0, QCoreApplication.translate("Dialog", u"Selected faces", None))
+        self.comboBox_assignment_type.setItemText(1, QCoreApplication.translate("Dialog", u"Selected lines", None))
+        self.comboBox_assignment_type.setItemText(2, QCoreApplication.translate("Dialog", u"Selected points", None))
+        self.comboBox_assignment_type.setItemText(3, QCoreApplication.translate("Dialog", u"Selected nodes", None))
 
         self.label_2.setText(QCoreApplication.translate("Dialog", u"Selection ID:", None))
         self.label_3.setText(QCoreApplication.translate("Dialog", u"Element type:", None))
-        self.label_5.setText(QCoreApplication.translate("Dialog", u"Evaluation type:", None))
-        self.comboBox_evaluation_type.setItemText(0, QCoreApplication.translate("Dialog", u"Element integration", None))
-        self.comboBox_evaluation_type.setItemText(1, QCoreApplication.translate("Dialog", u"Nodal distribution", None))
+        self.label_5.setText(QCoreApplication.translate("Dialog", u"Distribution type:", None))
+        self.comboBox_distribution_type.setItemText(0, QCoreApplication.translate("Dialog", u"Element integration", None))
+        self.comboBox_distribution_type.setItemText(1, QCoreApplication.translate("Dialog", u"Nodal distribution", None))
 
         self.lineEdit_real_Fx.setText("")
         self.label_Fy_constant.setText(QCoreApplication.translate("Dialog", u"Fy:", None))
@@ -992,12 +992,12 @@ class NodalLoadsInputs_UI(QDialog, Ui_Dialog):
                             - frame_4: QFrame
                                 - (Layout): QGridLayout
                                         - comboBox_element_type: QComboBox
-                                        - comboBox_attribution_type: QComboBox
+                                        - comboBox_assignment_type: QComboBox
                                         - label_2: QLabel
                                         - label_3: QLabel
                                         - lineEdit_selection_id: QLineEdit
                                         - label_5: QLabel
-                                        - comboBox_evaluation_type: QComboBox
+                                        - comboBox_distribution_type: QComboBox
                             - frame_6: QFrame
                                 - (Layout): QGridLayout
                                         - tabWidget_main: QTabWidget
