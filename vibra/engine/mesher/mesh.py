@@ -187,8 +187,47 @@ class Mesh:
         else:
             return 1
 
-    def _remove_orphan_points(self):
-        pass
+    def get_disconnected_nodes(self) -> list[int]:
+        all_node_ids = self.nodal_coordinates[:, 0].astype(int)
+        used_nodes = np.isin(all_node_ids, self.solids_connectivity[:, 4:])
+        used_nodes |= np.isin(all_node_ids, self.faces_connectivity[:, 4:])
+        used_nodes |= np.isin(all_node_ids, self.lines_connectivity[:, 4:])
+        return all_node_ids[~used_nodes]
+
+
+    def remove_disconnected_nodes(self):
+        disconnected_nodes = self.get_disconnected_nodes()
+        print("Number of disconnected nodes before:", len(disconnected_nodes))
+
+        # Remove disconnected nodes
+        mask_remaining_nodes = ~np.isin(self.nodal_coordinates[:, 0].astype(int), disconnected_nodes)
+        self.nodal_coordinates = self.nodal_coordinates[mask_remaining_nodes]
+
+        # Shift left the node indexes after the removed
+        self.nodal_coordinates[:, 0] -= np.searchsorted(
+            disconnected_nodes,
+            self.nodal_coordinates[:, 0],
+            side="right",
+        )
+
+        self.solids_connectivity[:, 4:] -= np.searchsorted(
+            disconnected_nodes,
+            self.solids_connectivity[:, 4:],
+            side="right",
+        )
+
+        self.faces_connectivity[:, 4:] -= np.searchsorted(
+            disconnected_nodes,
+            self.faces_connectivity[:, 4:],
+            side="right",
+        )
+
+        self.lines_connectivity[:, 4:] -= np.searchsorted(
+            disconnected_nodes,
+            self.lines_connectivity[:, 4:],
+            side="right",
+        )
+
 
     def load_cad(self, path: str | Path, mesh_setup: MeshSetup, threads: int = 0) -> Self:
         if not gmsh.is_initialized():
@@ -207,6 +246,7 @@ class Mesh:
 
         if mesh_setup.suppressed_volume_ids:
             dim_tags = [(3, vid) for vid in mesh_setup.suppressed_volume_ids]
+            print("tentou suprimir")
             self.suppress(dim_tags)
 
         if mesh_setup.merge_connected_volumes:
@@ -217,7 +257,7 @@ class Mesh:
         self._configure_mesh(mesh_setup)
 
         logging.info("Processing geometry data... [25/100]")
-        self._remove_orphan_points()
+        # self.remove_disconnected_nodes()
 
         logging.info("Processing geometry data... [30/100]")
         self.process_geometry_information()
@@ -244,6 +284,8 @@ class Mesh:
 
         logging.info("Post-processing mesh... [60/100]")
         self.post_process_mesh_data()
+        self.remove_disconnected_nodes()
+
         self.update_element_topology_based_on_connectivity()
 
         logging.info("Post-processing mesh... [95/100]")
