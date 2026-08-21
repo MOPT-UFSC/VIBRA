@@ -197,7 +197,9 @@ class Mesh:
 
     def remove_disconnected_nodes(self):
         disconnected_nodes = self.get_disconnected_nodes()
-        print("Number of disconnected nodes before:", len(disconnected_nodes))
+
+        if not len(disconnected_nodes):
+            return
 
         # Remove disconnected nodes
         mask_remaining_nodes = ~np.isin(self.nodal_coordinates[:, 0].astype(int), disconnected_nodes)
@@ -228,6 +230,42 @@ class Mesh:
             side="right",
         )
 
+        # Filter out the removed nodes and shift left the remaining ones
+        mask_valid_nodes = ~np.isin(self.nodes_from_volumes, disconnected_nodes)
+        self.nodes_from_volumes = self.nodes_from_volumes[mask_valid_nodes].astype(int)
+        self.nodes_from_volumes -= np.searchsorted(
+            disconnected_nodes,
+            self.nodes_from_volumes,
+            side="right",
+        )
+
+        mask_valid_nodes = ~np.isin(self.nodes_from_surfaces, disconnected_nodes)
+        self.nodes_from_surfaces = self.nodes_from_surfaces[mask_valid_nodes].astype(int)
+        self.nodes_from_surfaces -= np.searchsorted(
+            disconnected_nodes,
+            self.nodes_from_surfaces,
+            side="right",
+        )
+
+        mask_valid_nodes = ~np.isin(self.nodes_from_lines, disconnected_nodes)
+        self.nodes_from_lines = self.nodes_from_lines[mask_valid_nodes].astype(int)
+        self.nodes_from_lines -= np.searchsorted(
+            disconnected_nodes,
+            self.nodes_from_lines,
+            side="right",
+        )
+
+        # Update the node-point mappings for the new numbering
+        removed_nodes = set(int(node_id) for node_id in disconnected_nodes)
+        self.nodes_from_points = {
+            tag: int(node_id) - int(np.searchsorted(disconnected_nodes, node_id, side="right"))
+            for tag, node_id in self.nodes_from_points.items()
+            if int(node_id) not in removed_nodes
+        }
+        self.points_from_nodes = {
+            node_id: tag for tag, node_id in self.nodes_from_points.items()
+        }
+
 
     def load_cad(self, path: str | Path, mesh_setup: MeshSetup, threads: int = 0) -> Self:
         if not gmsh.is_initialized():
@@ -246,7 +284,6 @@ class Mesh:
 
         if mesh_setup.suppressed_volume_ids:
             dim_tags = [(3, vid) for vid in mesh_setup.suppressed_volume_ids]
-            print("tentou suprimir")
             self.suppress(dim_tags)
 
         if mesh_setup.merge_connected_volumes:
@@ -257,7 +294,6 @@ class Mesh:
         self._configure_mesh(mesh_setup)
 
         logging.info("Processing geometry data... [25/100]")
-        # self.remove_disconnected_nodes()
 
         logging.info("Processing geometry data... [30/100]")
         self.process_geometry_information()
@@ -284,7 +320,6 @@ class Mesh:
 
         logging.info("Post-processing mesh... [60/100]")
         self.post_process_mesh_data()
-        self.remove_disconnected_nodes()
 
         self.update_element_topology_based_on_connectivity()
 
@@ -1337,6 +1372,8 @@ class Mesh:
         self.lines_connectivity, self.map_line_elements = self._get_connectivity_array(connectivity_dim1)
         self.faces_connectivity, self.map_face_elements = self._get_connectivity_array(connectivity_dim2)
         self.solids_connectivity, self.map_solid_elements = self._get_connectivity_array(connectivity_dim3)
+
+        self.remove_disconnected_nodes()
 
         logging.info("Post-processing mesh... [68/100]")
         self.process_mesh_related_mappings("Post-processing")
