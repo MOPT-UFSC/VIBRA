@@ -1,6 +1,5 @@
 from copy import deepcopy
 from enum import IntEnum
-from pathlib import Path
 
 import numpy as np
 from PySide6.QtCore import Qt
@@ -10,16 +9,17 @@ from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
 # from scipy.io import wavfile
 from scipy.signal.windows import hann
 
-from vibra import app
+from vibra import SUPPORTED_SIMULATION_DATA, SUPPORTED_SPREADSHEET_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS, app
 from vibra.interface import error_title
 from vibra.interface.common.common_interface import update_analysis_setup_in_file
 from vibra.interface.data.data_manager import get_spectral_data_from_array
-from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.general.utils import clear_style_sheet
 from vibra.interface.plots.general.frequency_response_plotter import DataFormat, FrequencyResponsePlotter
 from vibra.interface.ui_generated.model.acoustic.excitations.compressor_excitation_waveform_inputs_ui import CompressorExcitationWaveformInputs_UI
+from vibra.interface.user_input.data_handler.file_dialog_service import FileDialogService
+from vibra.interface.user_input.data_handler.file_handlers.file_handler import FileHandler
 from vibra.utils.signal_processing import extend_signal, get_window_and_correction_factor, process_one_sided_spectrum
 
 
@@ -235,18 +235,18 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         df = spectrum_data[0, 0]
         self.lineEdit_frequency_resolution.setText(f"{df}")
 
-    def load_cfd_data(self, table_path: str|None = None):
+    def load_cfd_data(self, table_path: str | None = None):
         if table_path is None:
             table_path = self.load_hdf_file()
 
         if table_path is None:
             return
 
-        if not Path(table_path).exists():
+        if not table_path.exists():
             return
 
-        self.lineEdit_table_path.setText(table_path)
-        self.imported_values = DataImporter.load_cfd_simulation_data_from_hdf_file(table_path)
+        self.lineEdit_table_path.setText(str(table_path))
+        self.imported_values = FileHandler.read(table_path).to_dict()
 
         angular_resolution = self.imported_values.get("delta_theta")
         if angular_resolution is None:
@@ -292,7 +292,6 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
                 self.comboBox_normal_velocity_axis.setCurrentText(axis_labels[indexes[0]])
 
     def compute_compressor_excitation_spectrum(self):
-
         self.mass_flow_sdata = None
         self.normal_surface_velocity_sdata = None
         self.pressure_sdata = None
@@ -342,12 +341,12 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         return keys_map_cfd.get(direction), invert_signal
 
     def process_signal_spectrum_for_cfd_data(self, data_label: str, invert_signal: bool=False):
-
         if not isinstance(self.imported_values, dict):
             return None
 
         time_vector = self.imported_values.get("time_seconds")
         x_data_nodal = self.imported_values.get(data_label)
+
         if invert_signal:
             x_data_nodal *= -1
 
@@ -512,37 +511,43 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         self.lineEdit_selection_id.setText(text)
 
     def load_hdf_file(self):
-
-        extensions = ["h5", "hd5", "hdf5"]
         caption = "Choose the HDF file to import the external compressor excitation data"
 
-        imported_path, file_extension = DataImporter.get_file_paths(caption, "imported_table_folder", extensions)
-        if not file_extension:
-            return
+        imported_path = FileDialogService.open_file(file_extensions=SUPPORTED_SIMULATION_DATA, 
+                                    caption=caption,
+                                    last_folder="imported_table_folder")
+
+        if imported_path is None:
+            return None
 
         return imported_path
     
     def load_table(self, line_edit : QLineEdit, direct_load: bool=False):
-
-        imported_values = None
         title = "Error reached while loading 'surface velocity' table"
+        imported_values = None
+        imported_data = None
 
         try:
-
             if direct_load:
                 imported_table_path = line_edit.text()
-                imported_values = DataImporter.read_data_in_file(imported_table_path)[0].data
+                imported_data = FileHandler.read(imported_table_path)
 
             else:
-                extensions = ["csv", "dat", "txt", "xlsx", "xls"]
+                extensions = SUPPORTED_SPREADSHEET_EXTENSIONS + SUPPORTED_TEXT_EXTENSIONS
                 caption = "Choose a table to import the compressor excitation waveform data"
-                imported_data = DataImporter.import_single_file("imported_table_folder", extensions, caption)
 
-                if not imported_data:
+                imported_path = FileDialogService.open_file(file_extensions=extensions,
+                                                            caption=caption,
+                                                            last_folder="imported_table_folder")
+
+                imported_data = FileHandler.read(imported_path)
+
+                if imported_data is None:
                     return
+                
+                line_edit.setText(str(imported_data.path))
 
-                imported_values = imported_data.data
-                line_edit.setText(imported_data.path)
+            imported_values = imported_data.data 
 
             if imported_values.shape[1] < 2:
                 self.hide()
