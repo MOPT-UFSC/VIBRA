@@ -1,15 +1,15 @@
-from vibra.interface.user_input.data_handler.file_handlers.io_handler import IOHandler
-from vibra.interface.user_input.data_handler.imported_data import SimulationData
-
 from pathlib import Path
 
-import numpy as np
 import h5py
+import numpy as np
+
+from vibra.interface.user_input.data_handler.file_handlers.io_handler import IOHandler
+from vibra.interface.user_input.data_handler.imported_data import SimulationData
 
 
 class HDF5FileHandler(IOHandler):
 
-    EXTENSIONS = [".h5", ".hdf5"]
+    EXTENSIONS = [".h5", ".hd5", ".hdf5"]
 
     @staticmethod
     def read(file_path: Path) -> SimulationData:
