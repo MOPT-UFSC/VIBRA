@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field
 from pathlib import Path
+
 import numpy as np
 
 
@@ -13,6 +14,9 @@ class ImportedDataInterface:
         self.path = Path(self.path)
         self.filename = self.path.name
         self.extension = self.path.suffix
+
+    def to_dict(self) -> dict:
+        return dict(vars(self))
 
 @dataclass
 class TextData(ImportedDataInterface):
