@@ -121,6 +121,7 @@ class Ui_Dialog(object):
         self.comboBox_assignment_type = QComboBox(self.frame_4)
         self.comboBox_assignment_type.addItem("")
         self.comboBox_assignment_type.addItem("")
+        self.comboBox_assignment_type.addItem("")
         self.comboBox_assignment_type.setObjectName(u"comboBox_assignment_type")
         self.comboBox_assignment_type.setMinimumSize(QSize(0, 28))
         self.comboBox_assignment_type.setMaximumSize(QSize(16777215, 28))
@@ -257,6 +258,7 @@ class Ui_Dialog(object):
         self.pushButton_reset.setMaximumSize(QSize(100, 28))
         self.pushButton_reset.setFont(font1)
         self.pushButton_reset.setStyleSheet(u"")
+        self.pushButton_reset.setAutoDefault(False)
 
         self.gridLayout_8.addWidget(self.pushButton_reset, 0, 0, 1, 1)
 
@@ -266,6 +268,7 @@ class Ui_Dialog(object):
         self.pushButton_remove.setMaximumSize(QSize(100, 28))
         self.pushButton_remove.setFont(font1)
         self.pushButton_remove.setStyleSheet(u"")
+        self.pushButton_remove.setAutoDefault(False)
 
         self.gridLayout_8.addWidget(self.pushButton_remove, 0, 1, 1, 1)
 
@@ -385,6 +388,7 @@ class Ui_Dialog(object):
 
         self.comboBox_assignment_type.setItemText(0, QCoreApplication.translate("Dialog", u"Selected faces", None))
         self.comboBox_assignment_type.setItemText(1, QCoreApplication.translate("Dialog", u"Selected lines", None))
+        self.comboBox_assignment_type.setItemText(2, QCoreApplication.translate("Dialog", u"Multiple", None))
 
         self.lineEdit_mass_to_distribute.setText("")
         self.label_mass_to_distribute.setText(QCoreApplication.translate("Dialog", u"Mass to distribute:", None))

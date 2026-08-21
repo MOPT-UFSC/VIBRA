@@ -1,4 +1,5 @@
 
+from collections import defaultdict
 from enum import IntEnum
 
 import numpy as np
@@ -22,6 +23,7 @@ class TabType(IntEnum):
 class AssignmentType(IntEnum):
     SURFACES = 0
     LINES = 1
+    MULTIPLE = 2
 
 
 class DistributedMassInputs(DistributedMassInputs_UI):
@@ -85,16 +87,27 @@ class DistributedMassInputs(DistributedMassInputs_UI):
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
 
         # QTreeWidget connections
-        self.treeWidget_distributed_mass.itemClicked.connect(self.on_click_item)
-        self.treeWidget_distributed_mass.itemDoubleClicked.connect(self.on_double_click_item)
+        self.treeWidget_distributed_mass.itemClicked.connect(self.item_clicked_callback)
+        self.treeWidget_distributed_mass.itemDoubleClicked.connect(self.item_double_clicked_callback)
+        self.treeWidget_distributed_mass.itemSelectionChanged.connect(self.item_selection_clicked_callback)
 
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         self.update_element_type_based_on_geometry_information()
 
     def geometry_selection_callback(self):
 
-        surfaces = app().main_window.selection.geometry_surfaces
         lines = app().main_window.selection.geometry_lines
+        surfaces = app().main_window.selection.geometry_surfaces
+
+        if self.tabWidget_main.currentIndex() == 1 and (lines and surfaces):
+            self.lineEdit_selection_id.setText("mult. entities")
+            self.comboBox_assignment_type.setEnabled(False)
+            self.comboBox_assignment_type.setCurrentIndex(AssignmentType.MULTIPLE)
+            view = self.comboBox_assignment_type.view()
+            view.setRowHidden(2, False)
+            return
+
+        self.comboBox_assignment_type.setEnabled(True)
 
         if surfaces:
 
@@ -309,31 +322,41 @@ class DistributedMassInputs(DistributedMassInputs_UI):
         self.pushButton_apply_and_close.setDisabled(list_tab)
         self.pushButton_remove.setDisabled(True)
 
-        if list_tab:
-            self.lineEdit_selection_id.setText("")
-            return
+        if not list_tab:
+            view = self.comboBox_assignment_type.view() 
+            view.setRowHidden(2, True)
+            self.comboBox_assignment_type.setCurrentIndex(AssignmentType.SURFACES)
 
-    def on_click_item(self, item):
+        self.lineEdit_selection_id.setText("")
+        self.treeWidget_distributed_mass.clearSelection()
+        app().main_window.selection.set_geometry_selection()
+
+    def item_selection_clicked_callback(self):
+        self.item_clicked_callback(None)
+
+    def item_clicked_callback(self, item):
 
         self.pushButton_remove.setDisabled(False)
 
-        if item.text(0) == "":
+        selected_items = self.treeWidget_distributed_mass.selectedItems()
+        if not selected_items:
             return
 
-        selected_id = int(item.text(0))
-        selection = item.text(1)
+        entities_mapping = defaultdict(list)
+        for _item in selected_items:
+            entity = _item.text(1)
+            entities_mapping[entity].append(int(_item.text(0)))
 
-        if selection == "surface":
-            app().main_window.selection.set_geometry_selection(surfaces = [int(selected_id)])
+        if not entities_mapping:
+            return
 
-        elif selection == "line":
-            app().main_window.selection.set_geometry_selection(lines = [int(selected_id)])
+        app().main_window.selection.set_geometry_selection(
+            surfaces = entities_mapping.get("surface"),
+            lines = entities_mapping.get("line"),
+            )
 
-        # app().main_window.action_model_workspace_callback()
-        self.lineEdit_selection_id.setText(item.text(0))
-
-    def on_double_click_item(self, item):
-        self.on_click_item(item)
+    def item_double_clicked_callback(self, item):
+        self.item_clicked_callback(item)
 
     def process_table_file_removal(self, table_names: list):
 
@@ -367,11 +390,11 @@ class DistributedMassInputs(DistributedMassInputs_UI):
 
     def remove_callback(self):
 
-        selected_item = self.treeWidget_distributed_mass.selectedItems()
-        if not selected_item:
+        selected_items = self.treeWidget_distributed_mass.selectedItems()
+        if not selected_items:
             return
 
-        for item in selected_item:
+        for item in selected_items:
             selected_id = int(item.text(0))
             selection = item.text(1)
 
