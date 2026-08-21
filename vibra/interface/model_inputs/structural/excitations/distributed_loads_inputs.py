@@ -1,10 +1,12 @@
 
+from collections import defaultdict
+from enum import IntEnum
 from os.path import basename
 
 import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
-from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
+from PySide6.QtWidgets import QAbstractItemView, QLineEdit, QTreeWidgetItem
 
 from vibra import app
 from vibra.interface import error_title
@@ -13,7 +15,14 @@ from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.structural.definitions.enums import StandardTabType
+from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
 from vibra.interface.ui_generated.model.structural.excitations.distributed_loads_inputs_ui import DistributedLoadsInputs_UI
+
+
+class AssignmentType(IntEnum):
+    SURFACES = 0
+    LINES = 1
+    MULTIPLE = 2
 
 
 class DistributedLoadsInputs(DistributedLoadsInputs_UI):
@@ -30,10 +39,10 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         self._config_window()
         self._initialize()
         self._create_list_lineEdits()
+        self._configure_validators()
         self._create_connections()
 
         self._config_widgets()
-        self.geometry_selection_callback()
         self.load_model_info()
 
         while self.keep_window_open:
@@ -49,6 +58,11 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         self.keep_window_open = True
         self.element_types = ["2d_element", "3d_element"]
         self.reset_table_variables()
+
+    def _configure_validators(self):
+        for line_edit_real, line_edit_imag in self.list_lineEdit_constant_values:
+            line_edit_real.setValidator(StrictDoubleValidator(-1e16, 1e16, 8))
+            line_edit_imag.setValidator(StrictDoubleValidator(-1e16, 1e16, 8))
 
     def reset_table_variables(self):
 
@@ -82,18 +96,21 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         }
 
     def _config_widgets(self):
-        #
+
         self.comboBox_element_type.setEnabled(False)
-        #
-        for i, w in enumerate([110, 150, 100]):
+        self.treeWidget_distributed_loads.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+
+        for i, w in enumerate([60, 80, 100, 100]):
             self.treeWidget_distributed_loads.setColumnWidth(i, w)
             self.treeWidget_distributed_loads.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def _create_connections(self):
-        #
-        self.comboBox_attribution_type.currentIndexChanged.connect(self.attribution_type_callback)
+
+        # QComboBox connections
+        self.comboBox_assignment_type.currentIndexChanged.connect(self.attribution_type_callback)
         self.comboBox_element_type.currentIndexChanged.connect(self.element_type_callback)
-        #
+
+        # QPushButton connections
         self.pushButton_apply.clicked.connect(self.apply_callback)
         self.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
         self.pushButton_cancel.clicked.connect(self.close)
@@ -102,28 +119,43 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         self.pushButton_load_Fy_table.clicked.connect(self.load_Fy_table)
         self.pushButton_load_Fz_table.clicked.connect(self.load_Fz_table)
         self.pushButton_reset.clicked.connect(self.reset_callback)
-        #
+
+        # QTabWidget connections
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
-        #
-        self.treeWidget_distributed_loads.itemClicked.connect(self.on_click_item)
-        self.treeWidget_distributed_loads.itemDoubleClicked.connect(self.on_double_click_item)
-        #
+
+        # QTreeWidget connections
+        self.treeWidget_distributed_loads.itemClicked.connect(self.item_clicked_callback)
+        self.treeWidget_distributed_loads.itemDoubleClicked.connect(self.item_double_clicked_callback)
+        self.treeWidget_distributed_loads.itemSelectionChanged.connect(self.item_selection_clicked_callback)
+
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         self.update_element_type_based_on_geometry_information()
+        self.geometry_selection_callback()
+        self.tab_event_callback()
 
     def geometry_selection_callback(self):
 
-        faces = app().main_window.selection.geometry_surfaces
+        surfaces = app().main_window.selection.geometry_surfaces
         lines = app().main_window.selection.geometry_lines
 
-        if faces:
+        if self.tabWidget_main.currentIndex() == StandardTabType.LIST and (lines and surfaces):
+            self.lineEdit_selection_id.setText("mult. entities")
+            self.comboBox_assignment_type.setEnabled(False)
+            self.comboBox_assignment_type.setCurrentIndex(AssignmentType.MULTIPLE)
+            view = self.comboBox_assignment_type.view()
+            view.setRowHidden(2, False)
+            return
 
-            text = ", ".join([str(i) for i in faces])
+        self.comboBox_assignment_type.setEnabled(True)
+
+        if surfaces:
+
+            text = ", ".join([str(i) for i in surfaces])
             self.lineEdit_selection_id.setText(text)
-            self.comboBox_attribution_type.setCurrentIndex(0)
+            self.comboBox_assignment_type.setCurrentIndex(0)
 
-            if len(faces) == 1:
-                surface_id = list(faces)[0]
+            if len(surfaces) == 1:
+                surface_id = next(iter(surfaces))
                 data = self.properties._get_property("distributed_loads", surface=surface_id)
                 self.update_input_fields(data)
                 if data is None:
@@ -133,10 +165,10 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
 
             text = ", ".join([str(i) for i in lines])
             self.lineEdit_selection_id.setText(text)
-            self.comboBox_attribution_type.setCurrentIndex(1)
+            self.comboBox_assignment_type.setCurrentIndex(1)
 
             if len(lines) == 1:
-                line_id = list(lines)[0]
+                line_id = next(iter(lines))
                 data = self.properties._get_property("distributed_loads", line=line_id)
                 self.update_input_fields(data)
                 if data is None:
@@ -156,7 +188,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
             self.comboBox_element_type.setCurrentIndex(1)
 
         values = data.get("values", None)
-        if "table_paths" in data.keys():
+        if "table_paths" in data:
             table_paths = data["table_paths"]
             for index, lineEdit_table in enumerate(self.table_lineEdits.values()):
                 table_path = table_paths[index]
@@ -193,7 +225,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
                         return
 
     def attribution_type_callback(self):
-        if self.comboBox_attribution_type.currentIndex() == 0:
+        if self.comboBox_assignment_type.currentIndex() == 0:
             unit_label = "[N/m²]"
             load_label = "F{} / area:".format
         else:
@@ -261,7 +293,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
     def constant_values_attribution(self):
 
         input_ids = self.lineEdit_selection_id.text()
-        attribution_type = self.comboBox_attribution_type.currentIndex()
+        attribution_type = self.comboBox_assignment_type.currentIndex()
 
         if attribution_type == 0:
             selection = "surfaces"
@@ -424,15 +456,10 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
     def table_values_attribution(self):
 
         input_ids = self.lineEdit_selection_id.text()
-        attribution_type = self.comboBox_attribution_type.currentIndex()
+        surfaces_assignment = self.comboBox_assignment_type.currentIndex() == AssignmentType.SURFACES
 
-        if attribution_type == 0:
-            selection = "surfaces"
-            unit = "N/m²"
-
-        elif attribution_type == 1:
-            selection = "lines"
-            unit = "N/m"
+        selection = "surfaces" if surfaces_assignment else "lines"
+        unit = "N/m²" if surfaces_assignment else "N/m"
 
         selected_ids, error_data = self.mesh.check_selected_ids(input_ids, selection=selection, single_id=False)
 
@@ -494,17 +521,17 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
                 "unit" : unit,
             }
 
-            if attribution_type == 0:
+            if surfaces_assignment:
                 self.properties._set_property("distributed_loads", data, surface=selected_id)
 
-            elif attribution_type == 1:
+            else:
                 self.properties._set_property("distributed_loads", data, line=selected_id)
 
         self.reset_table_variables()
 
     def remove_duplicated_attributions(self, selected_ids: list, selection: str):
 
-        table_names = list()
+        table_names = []
         for selected_id in selected_ids:
 
             if selection == "surfaces":
@@ -525,16 +552,15 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
 
     def apply_callback(self, close_window: bool=False):
 
-        if self.tabWidget_main.currentIndex() == StandardTabType.LIST:
-            return
-
         tab_index = self.tabWidget_main.currentIndex()
+        if tab_index == StandardTabType.LIST:
+            return
 
         if tab_index == StandardTabType.CONSTANT_DATA:
             if self.constant_values_attribution():
                 return
 
-        elif tab_index == StandardTabType.TABULAR_DATA:
+        else:
             if self.table_values_attribution():
                 return
 
@@ -554,55 +580,41 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
 
     def load_model_info(self):
 
+        properties = {
+            "line" : self.properties.line_properties,
+            "surface" : self.properties.surface_properties,
+        }
+
         self.treeWidget_distributed_loads.clear()
-        for (property, *args), data in self.properties.surface_properties.items():
 
-            if property == "distributed_loads":
-                values = data["values"]
-                element_type = data["element_type"]
-                constrained_loads_mask = [False if value is None else True for value in values]
-                dof_labels = str(self.text_label(constrained_loads_mask))
-                new = QTreeWidgetItem([f"Surface-{args[0]}", dof_labels, element_type])
-                for i in range(3):
-                    new.setTextAlignment(i, Qt.AlignCenter)
+        for key, property in properties.items():
+            for (prop_label, *args), data in property.items():
 
-                self.treeWidget_distributed_loads.addTopLevelItem(new)
+                if prop_label != "distributed_loads":
+                    continue
 
-        for (property, *args), data in self.properties.line_properties.items():
+                if not isinstance(data, dict):
+                    continue
 
-            if property == "distributed_loads":
-                values = data["values"]
-                element_type = data["element_type"]
-                constrained_loads_mask = [False if value is None else True for value in values]
-                dof_labels = str(self.text_label(constrained_loads_mask))
-                new = QTreeWidgetItem([f"Line-{args[0]}", dof_labels, element_type])
-                for i in range(3):
-                    new.setTextAlignment(i, Qt.AlignCenter)
+                values = data.get("values", [])
+                element_type = data.get("element_type")
 
-                self.treeWidget_distributed_loads.addTopLevelItem(new)
+                active_values = []
+                for value in values:
+                    if value is not None:
+                        active_values.append(value)
 
-        for (property, *args), data in self.properties.point_properties.items():
+                dof_labels = str(self.text_label([bool(value) for value in values]))
 
-            if property == "distributed_loads":
-                values = data["values"]
-                element_type = data["element_type"]
-                constrained_loads_mask = [False if value is None else True for value in values]
-                dof_labels = str(self.text_label(constrained_loads_mask))
-                new = QTreeWidgetItem([f"Point-{args[0]}", dof_labels, element_type])
-                for i in range(3):
-                    new.setTextAlignment(i, Qt.AlignCenter)
+                new = QTreeWidgetItem([
+                    f"{args[0]}", 
+                    key, 
+                    element_type, 
+                    dof_labels, 
+                    ", ".join([str(val) for val in active_values]),
+                    ])
 
-                self.treeWidget_distributed_loads.addTopLevelItem(new)
-
-        for (property, *args), data in self.properties.nodal_properties.items():
-
-            if property == "distributed_loads":
-                values = data["values"]
-                element_type = data["element_type"]
-                constrained_loads_mask = [False if value is None else True for value in values]
-                dof_labels = str(self.text_label(constrained_loads_mask))
-                new = QTreeWidgetItem([f"Node-{args[0]}", dof_labels, element_type])
-                for i in range(3):
+                for i in range(5):
                     new.setTextAlignment(i, Qt.AlignCenter)
 
                 self.treeWidget_distributed_loads.addTopLevelItem(new)
@@ -612,14 +624,14 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
     def update_tabs_visibility(self):
 
         properties_to_check = [
-                               self.properties.surface_properties,
-                               self.properties.line_properties,
-                               self.properties.point_properties,
-                               self.properties.nodal_properties,
-                               ]
+            self.properties.surface_properties,
+            self.properties.line_properties,
+            self.properties.point_properties,
+            self.properties.nodal_properties,
+        ]
 
         for current_property in properties_to_check:
-            for (property, _) in current_property.keys():
+            for (property, _) in current_property:
                 if property == "distributed_loads":
                     self.tabWidget_main.setTabVisible(StandardTabType.LIST, True)
                     return
@@ -631,41 +643,47 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
 
     def tab_event_callback(self):
         list_tab = self.tabWidget_main.currentIndex() == StandardTabType.LIST
+        self.comboBox_assignment_type.setDisabled(list_tab)
         self.lineEdit_selection_id.setDisabled(list_tab)
         self.pushButton_apply.setDisabled(list_tab)
         self.pushButton_apply_and_close.setDisabled(list_tab)
         self.pushButton_remove.setDisabled(True)
 
-        if list_tab:
-            self.lineEdit_selection_id.setText("")
-            return
+        if not list_tab:
+            view = self.comboBox_assignment_type.view()
+            view.setRowHidden(2, True)
+            self.comboBox_assignment_type.setCurrentIndex(AssignmentType.SURFACES)
 
-        else:
-            text = self.lineEdit_selection_id.text()
-            if "-" in text:
-                selected_id = text.split("-")[1]
-                self.lineEdit_selection_id.setText(selected_id)
+        self.lineEdit_selection_id.setText("")
+        self.treeWidget_distributed_loads.clearSelection()
+        app().main_window.selection.set_geometry_selection()
 
-    def on_click_item(self, item):
+    def item_selection_clicked_callback(self):
+        self.item_clicked_callback(None)
+
+    def item_clicked_callback(self, item):
 
         self.pushButton_remove.setDisabled(False)
 
-        if item.text(0) != "":
+        selected_items = self.treeWidget_distributed_loads.selectedItems()
+        if not selected_items:
+            return
 
-            selection, _selected_id = item.text(0).split("-")
-            selected_id = int(_selected_id)
+        entities_mapping = defaultdict(list)
+        for _item in selected_items:
+            entity = _item.text(1)
+            entities_mapping[entity].append(int(_item.text(0)))
 
-            if selection == "Surface":
-                app().main_window.selection.set_geometry_selection(surfaces = [int(selected_id)])
+        if not entities_mapping:
+            return
 
-            elif selection == "Line":
-                app().main_window.selection.set_geometry_selection(lines = [int(selected_id)])
+        app().main_window.selection.set_geometry_selection(
+            surfaces = entities_mapping.get("surface"),
+            lines = entities_mapping.get("line"),
+            )
 
-            # app().main_window.action_model_workspace_callback()
-            self.lineEdit_selection_id.setText(item.text(0))
-
-    def on_double_click_item(self, item):
-        self.on_click_item(item)
+    def item_double_clicked_callback(self, item):
+        self.item_clicked_callback(item)
 
     def process_table_file_removal(self, table_names: list):
 
@@ -702,30 +720,26 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
 
     def remove_callback(self):
 
-        text = self.lineEdit_selection_id.text()
+        selected_items = self.treeWidget_distributed_loads.selectedItems()
+        if not selected_items:
+            return
 
-        if "-" in text:
+        for item in selected_items:
+            selected_id = int(item.text(0))
+            selection = item.text(1)
 
-            selection, _selected_id = text.split("-")
-            selected_id = int(_selected_id)
-
-            if selection == "Surface":
+            if selection == "surface":
                 self.properties._remove_surface_property("distributed_loads", selected_id)
 
-            elif selection == "Line":
+            elif selection == "line":
                 self.properties._remove_line_property("distributed_loads", selected_id)
 
-            elif selection == "Point":
-                self.properties._remove_point_property("distributed_loads", selected_id)
+            self.remove_table_files_from(selected_id, selection + "s")
 
-            elif selection == "Node":
-                self.properties._remove_nodal_property("distributed_loads", selected_id)
+        self.actions_to_finalize()
 
-            self.remove_table_files_from(selected_id, f"{selection.lower()}s")
-            self.actions_to_finalize()
-
-            app().main_window.selection.set_geometry_selection()
-            app().main_window.selection.set_mesh_selection()
+        app().main_window.selection.set_geometry_selection()
+        app().main_window.selection.set_mesh_selection()
 
     def reset_callback(self):
 
@@ -740,11 +754,11 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
 
         if obj._continue:
 
-            for (property, *args) in self.properties.surface_properties.keys():
+            for (property, *args) in self.properties.surface_properties:
                 if property == "distributed_loads":
                     self.remove_table_files_from(args[0], "surfaces")
 
-            for (property, *args) in self.properties.line_properties.keys():
+            for (property, *args) in self.properties.line_properties:
                 if property == "distributed_loads":
                     self.remove_table_files_from(args[0], "lines")
 

@@ -60,7 +60,7 @@ class DistributedMassInputs(DistributedMassInputs_UI):
         self.element_types = ["2d_element", "3d_element"]
 
     def _configure_validators(self):
-        self.lineEdit_mass_to_distribute.setValidator(StrictDoubleValidator(1e-15, 1e15, 8))
+        self.lineEdit_mass_to_distribute.setValidator(StrictDoubleValidator(1e-16, 1e16, 8))
 
     def _config_widgets(self):
 
@@ -99,7 +99,7 @@ class DistributedMassInputs(DistributedMassInputs_UI):
         lines = app().main_window.selection.geometry_lines
         surfaces = app().main_window.selection.geometry_surfaces
 
-        if self.tabWidget_main.currentIndex() == 1 and (lines and surfaces):
+        if self.tabWidget_main.currentIndex() == TabType.LIST and (lines and surfaces):
             self.lineEdit_selection_id.setText("mult. entities")
             self.comboBox_assignment_type.setEnabled(False)
             self.comboBox_assignment_type.setCurrentIndex(AssignmentType.MULTIPLE)
@@ -317,6 +317,7 @@ class DistributedMassInputs(DistributedMassInputs_UI):
 
     def tab_event_callback(self):
         list_tab = self.tabWidget_main.currentIndex() == TabType.LIST
+        self.comboBox_assignment_type.setDisabled(list_tab)
         self.lineEdit_selection_id.setDisabled(list_tab)
         self.pushButton_apply.setDisabled(list_tab)
         self.pushButton_apply_and_close.setDisabled(list_tab)

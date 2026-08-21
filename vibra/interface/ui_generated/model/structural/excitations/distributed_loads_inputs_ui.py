@@ -120,15 +120,16 @@ class Ui_Dialog(object):
 
         self.gridLayout_5.addWidget(self.comboBox_element_type, 1, 2, 1, 1)
 
-        self.comboBox_attribution_type = QComboBox(self.frame_4)
-        self.comboBox_attribution_type.addItem("")
-        self.comboBox_attribution_type.addItem("")
-        self.comboBox_attribution_type.setObjectName(u"comboBox_attribution_type")
-        self.comboBox_attribution_type.setMinimumSize(QSize(0, 28))
-        self.comboBox_attribution_type.setMaximumSize(QSize(16777215, 28))
-        self.comboBox_attribution_type.setFont(font2)
+        self.comboBox_assignment_type = QComboBox(self.frame_4)
+        self.comboBox_assignment_type.addItem("")
+        self.comboBox_assignment_type.addItem("")
+        self.comboBox_assignment_type.addItem("")
+        self.comboBox_assignment_type.setObjectName(u"comboBox_assignment_type")
+        self.comboBox_assignment_type.setMinimumSize(QSize(0, 28))
+        self.comboBox_assignment_type.setMaximumSize(QSize(16777215, 28))
+        self.comboBox_assignment_type.setFont(font2)
 
-        self.gridLayout_5.addWidget(self.comboBox_attribution_type, 0, 3, 1, 1)
+        self.gridLayout_5.addWidget(self.comboBox_assignment_type, 0, 3, 1, 1)
 
 
         self.gridLayout_4.addWidget(self.frame_4, 0, 0, 1, 1)
@@ -472,6 +473,8 @@ class Ui_Dialog(object):
         self.gridLayout_2.setObjectName(u"gridLayout_2")
         self.treeWidget_distributed_loads = QTreeWidget(self.frame_5)
         __qtreewidgetitem = QTreeWidgetItem()
+        __qtreewidgetitem.setTextAlignment(4, Qt.AlignCenter);
+        __qtreewidgetitem.setTextAlignment(3, Qt.AlignCenter);
         __qtreewidgetitem.setTextAlignment(2, Qt.AlignCenter);
         __qtreewidgetitem.setTextAlignment(1, Qt.AlignCenter);
         __qtreewidgetitem.setTextAlignment(0, Qt.AlignCenter);
@@ -633,8 +636,9 @@ class Ui_Dialog(object):
         self.comboBox_element_type.setItemText(0, QCoreApplication.translate("Dialog", u" Face element", None))
         self.comboBox_element_type.setItemText(1, QCoreApplication.translate("Dialog", u" Solid element", None))
 
-        self.comboBox_attribution_type.setItemText(0, QCoreApplication.translate("Dialog", u"Selected faces", None))
-        self.comboBox_attribution_type.setItemText(1, QCoreApplication.translate("Dialog", u"Selected lines", None))
+        self.comboBox_assignment_type.setItemText(0, QCoreApplication.translate("Dialog", u"Selected faces", None))
+        self.comboBox_assignment_type.setItemText(1, QCoreApplication.translate("Dialog", u"Selected lines", None))
+        self.comboBox_assignment_type.setItemText(2, QCoreApplication.translate("Dialog", u"Multiple", None))
 
         self.lineEdit_real_Fx.setText("")
         self.label_20.setText(QCoreApplication.translate("Dialog", u"Imaginary", None))
@@ -656,8 +660,10 @@ class Ui_Dialog(object):
         self.pushButton_load_Fz_table.setText("")
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_tabular_data), QCoreApplication.translate("Dialog", u"Tabular data", None))
         ___qtreewidgetitem = self.treeWidget_distributed_loads.headerItem()
-        ___qtreewidgetitem.setText(2, QCoreApplication.translate("Dialog", u"Pressure load", None));
-        ___qtreewidgetitem.setText(1, QCoreApplication.translate("Dialog", u"Selection type", None));
+        ___qtreewidgetitem.setText(4, QCoreApplication.translate("Dialog", u"Value", None));
+        ___qtreewidgetitem.setText(3, QCoreApplication.translate("Dialog", u"Label", None));
+        ___qtreewidgetitem.setText(2, QCoreApplication.translate("Dialog", u"Element type", None));
+        ___qtreewidgetitem.setText(1, QCoreApplication.translate("Dialog", u"Entity", None));
         ___qtreewidgetitem.setText(0, QCoreApplication.translate("Dialog", u"ID", None));
 #if QT_CONFIG(tooltip)
         self.treeWidget_distributed_loads.setToolTip(QCoreApplication.translate("Dialog", u"Select a node to remove the attributed boundary condition.", None))
@@ -686,7 +692,7 @@ class DistributedLoadsInputs_UI(QDialog, Ui_Dialog):
                                         - label_2: QLabel
                                         - label_3: QLabel
                                         - comboBox_element_type: QComboBox
-                                        - comboBox_attribution_type: QComboBox
+                                        - comboBox_assignment_type: QComboBox
                             - frame_6: QFrame
                                 - (Layout): QGridLayout
                                         - tabWidget_main: QTabWidget

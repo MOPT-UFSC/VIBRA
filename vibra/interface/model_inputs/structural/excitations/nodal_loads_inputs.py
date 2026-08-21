@@ -536,6 +536,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             self.lineEdit_reset(self.lineEdit_path_table_Mz)
 
     def save_table_files(self, load_label: str, selected_id: int, selection: str, values: np.ndarray):
+
         if self.frequencies[0] == 0:
             self.frequencies[0] = float(1e-6)
 

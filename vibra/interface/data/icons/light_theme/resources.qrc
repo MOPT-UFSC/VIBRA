@@ -86,10 +86,10 @@
         <file alias="model_setup_items/damping.png">../model_setup_items/damping.png</file>
         <file alias="model_setup_items/degrees_of_freedom_decoupling.png">../model_setup_items/degrees_of_freedom_decoupling.png</file>
         <file alias="model_setup_items/deployed_code.png">../model_setup_items/deployed_code.png</file>
-        <file alias="model_setup_items/distributed_load.png">../model_setup_items/distributed_load.png</file>
         <file alias="model_setup_items/distributed_loads.png">../model_setup_items/distributed_loads.png</file>
         <file alias="model_setup_items/distributed_loads3.png">../model_setup_items/distributed_loads3.png</file>
         <file alias="model_setup_items/distributed_loads4.png">../model_setup_items/distributed_loads4.png</file>
+        <file alias="model_setup_items/distributed_mass.png">../model_setup_items/distributed_mass.png</file>
         <file alias="model_setup_items/error_red.png">../model_setup_items/error_red.png</file>
         <file alias="model_setup_items/fluid.png">../model_setup_items/fluid.png</file>
         <file alias="model_setup_items/incident_plane_wave.png">../model_setup_items/incident_plane_wave.png</file>
