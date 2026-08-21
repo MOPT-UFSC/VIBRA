@@ -440,7 +440,71 @@ class StructuralAssembler:
         return integration_data
 
 
-    def get_excitation_data_for_element_integration(self, property_label: str) -> dict:
+    def get_excitation_data_for_1d_element_integration(self, property_label: str) -> dict:
+        """ 
+        This method processes the excitation property data for element face
+        integration.
+
+        Parameters
+        ----------
+        property_label: str
+            The property label on which the surface data will be processed.
+
+        Returns
+        -------
+        integration_data: dict
+            A dictionary containing the connectivities and the data of each
+            processed 2d elements.
+        """
+
+        aux_data = {}
+        aux_connect = {}
+        integration_data = {}
+
+        for key, data in self.properties.line_properties.items():
+
+            property, line_id = key
+            if property != property_label:
+                continue
+
+            if property in ["normal_pressure_load", "nodal_loads", "distributed_load"]:
+                element_type = data.get("element_type")
+                if element_type == "2d_element":
+                    continue
+
+            data: dict
+            element_integration = data.get("element_integration", True)
+            if property == "nodal_loads" and not element_integration:
+                continue
+
+            complex_values = data.get("values")
+
+            # normalize data type to array
+            complex_values_array = self.process_loads_arrays(complex_values)
+
+            elements = list(self.model.mesh.elements_from_line.get(line_id))
+            connect = self.model.mesh.get_connectivity_from_line(line_id)
+
+            if property_label == "nodal_loads":
+                line_length = self.element_1d.integrate_length(connect)
+                complex_values_array /= line_length
+
+            for i, el in enumerate(elements):
+                aux_connect[el] = connect[i]
+                aux_data[el] = complex_values_array
+
+        if aux_connect:
+
+            integration_data = {
+                "element_ids" : np.array(list(aux_connect.keys()), dtype=int),
+                "connectivities" : np.array(list(aux_connect.values()), dtype=int),
+                "data_array" : aux_data,
+                }
+
+        return integration_data
+
+
+    def get_excitation_data_for_2d_element_integration(self, property_label: str) -> dict:
         """ 
         This method processes the excitation property data for element face
         integration.
@@ -482,15 +546,15 @@ class StructuralAssembler:
             # normalize data type to array
             complex_values_array = self.process_loads_arrays(complex_values)
 
-            surf_elements = list(self.model.mesh.elements_from_surface.get(surface_id))
-            surf_connect = self.model.mesh.get_connectivity_from_surface(surface_id)
+            elements = list(self.model.mesh.elements_from_surface.get(surface_id))
+            connect = self.model.mesh.get_connectivity_from_surface(surface_id)
 
             if property_label == "nodal_loads":
-                surface_area = self.element_2d.integrate_area(surf_connect)
+                surface_area = self.element_2d.integrate_area(connect)
                 complex_values_array /= surface_area
 
-            for i, el in enumerate(surf_elements):
-                aux_connect[el] = surf_connect[i]
+            for i, el in enumerate(elements):
+                aux_connect[el] = connect[i]
                 aux_data[el] = complex_values_array
 
         if aux_connect:
@@ -498,14 +562,13 @@ class StructuralAssembler:
             integration_data = {
                 "element_ids" : np.array(list(aux_connect.keys()), dtype=int),
                 "connectivities" : np.array(list(aux_connect.values()), dtype=int),
-                "surface_data" : aux_data,
-                # "surface_data" : np.array(list(aux_data.values()), dtype=complex),
+                "data_array" : aux_data,
                 }
 
         return integration_data
 
 
-    def get_structural_excitations_by_element_integration_2d(self):
+    def get_structural_excitations_by_1d_element_integration(self):
         """ 
         This method processes the acoustic model excitations and
         returns the output data in the form of mass flow rate.
@@ -522,7 +585,38 @@ class StructuralAssembler:
 
         for prop_label in prop_labels:
 
-            integration_data = self.get_excitation_data_for_element_integration(prop_label)
+            integration_data = self.get_excitation_data_for_1d_element_integration(prop_label)
+            if not integration_data:
+                continue
+
+            match prop_label:
+                case "distributed_loads" | "nodal_loads":
+                    load_vectors = self.integrate_distributed_load_1d(integration_data, load_vectors)
+
+        if self.prescribed_dof_indexes:
+            return load_vectors[self.unprescribed_dof_indexes, :]
+
+        return load_vectors
+
+
+    def get_structural_excitations_by_2d_element_integration(self):
+        """ 
+        This method processes the acoustic model excitations and
+        returns the output data in the form of mass flow rate.
+        """
+
+        total_dof = self.element_2d.dof_per_node * len(self.element_2d.nodal_coordinates)
+        load_vectors = np.zeros((total_dof, self.number_frequencies), dtype=complex)
+
+        prop_labels = [
+            "nodal_loads",
+            "normal_pressure_load",
+            "distributed_loads",
+        ]
+
+        for prop_label in prop_labels:
+
+            integration_data = self.get_excitation_data_for_2d_element_integration(prop_label)
             if not integration_data:
                 continue
 
@@ -531,7 +625,7 @@ class StructuralAssembler:
                     load_vectors = self.integrate_normal_pressure_load(integration_data, load_vectors)
 
                 case "distributed_loads" | "nodal_loads":
-                    load_vectors = self.integrate_distributed_load(integration_data, load_vectors)
+                    load_vectors = self.integrate_distributed_load_2d(integration_data, load_vectors)
 
         if self.prescribed_dof_indexes:
             return load_vectors[self.unprescribed_dof_indexes, :]
@@ -543,7 +637,7 @@ class StructuralAssembler:
 
         element_ids = integration_data.get("element_ids")
         connectivities = integration_data.get("connectivities")
-        surface_data: dict = integration_data.get("surface_data")
+        surface_data: dict = integration_data.get("data_array")
 
         surface_elements_connectivities = self.model.mesh.faces_connectivity[element_ids, :]
         elements_normals = self.model.mesh.get_element_face_normal_batched(surface_elements_connectivities)
@@ -557,14 +651,30 @@ class StructuralAssembler:
         return load_vectors
 
 
-    def integrate_distributed_load(self, integration_data: dict, load_vectors: np.ndarray):
+    def integrate_distributed_load_1d(self, integration_data: dict, load_vectors: np.ndarray):
 
-        # element_ids = integration_data.get("element_ids")
         connectivities = integration_data.get("connectivities")
-        surface_data: dict = integration_data.get("surface_data")
+        data_array: dict = integration_data.get("data_array")
+
+        from vibra import app
+        node_ids = np.unique(connectivities)
+        app().main_window.selection.set_mesh_selection(nodes=node_ids)
+
+        self.element_1d.reorder_connect(connectivities)
+        for i, complex_values in enumerate(data_array.values()):
+            indices = self.element_1d.element_indexes_vector(i)
+            load_vectors[indices, :] += self.element_1d.integrate_distributed_load(i, complex_values)
+
+        return load_vectors
+
+
+    def integrate_distributed_load_2d(self, integration_data: dict, load_vectors: np.ndarray):
+
+        connectivities = integration_data.get("connectivities")
+        data_array: dict = integration_data.get("data_array")
 
         self.element_2d.reorder_connect(connectivities)
-        for i, complex_values in enumerate(surface_data.values()):
+        for i, complex_values in enumerate(data_array.values()):
             indices = self.element_2d.element_indexes_vector(i)
             load_vectors[indices, :] += self.element_2d.integrate_distributed_load(i, complex_values)
 
@@ -606,23 +716,28 @@ class StructuralAssembler:
                     output[g_dof, :] += F_elem
 
         for (property, line_id), data in self.properties.line_properties.items():
-            if property == "distributed_loads":
-                line_load = self.process_loads_arrays(data["values"])
-                if line_load is None:
-                    continue
+            if property != "distributed_loads":
+                continue
 
-                nodes = self.model.mesh.get_nodes_from_line(line_id)
-                if nodes is None:
-                    continue
+            if data.get("element_type") != "element_2d":
+                continue
+        
+            line_load = self.process_loads_arrays(data["values"])
+            if line_load is None:
+                continue
 
-                for surface_id in self.model.mesh.surfaces_from_line[line_id]:
-                    connectivities_from_surface = self.model.mesh.get_connectivity_from_surface(surface_id)
-                    rows = np.sum(np.isin(connectivities_from_surface, nodes), axis=1) == 2
+            nodes = self.model.mesh.get_nodes_from_line(line_id)
+            if nodes is None:
+                continue
 
-                    for connect_2d in connectivities_from_surface[rows, :]:
-                        active_nodes = [1 if node_id in nodes else 0 for node_id in connect_2d]
-                        g_dof, F_elem = self.element_2d.process_forces_for_distributed_load_over_line(connect_2d, active_nodes, line_load)
-                        output[g_dof, :] += F_elem
+            for surface_id in self.model.mesh.surfaces_from_line[line_id]:
+                connectivities_from_surface = self.model.mesh.get_connectivity_from_surface(surface_id)
+                rows = np.sum(np.isin(connectivities_from_surface, nodes), axis=1) == 2
+
+                for connect_2d in connectivities_from_surface[rows, :]:
+                    active_nodes = [1 if node_id in nodes else 0 for node_id in connect_2d]
+                    g_dof, F_elem = self.element_2d.process_forces_for_distributed_load_over_line(connect_2d, active_nodes, line_load)
+                    output[g_dof, :] += F_elem
 
         if self.prescribed_dof_indexes:
             return output[self.unprescribed_dof_indexes, :]
@@ -878,11 +993,12 @@ class StructuralAssembler:
         """
         This method assembles the excitations of the structural model.
         """
-        A = self.get_structural_excitations_by_nodal_attribution()
-        B = self.get_structural_excitations_by_element_integration_2d()
-        C = self.process_distributed_loads()
+        self.structural_loads = self.get_structural_excitations_by_nodal_attribution()
+        self.structural_loads += self.get_structural_excitations_by_1d_element_integration()
+        self.structural_loads += self.get_structural_excitations_by_2d_element_integration()
 
-        self.structural_loads = A + B + C
+        # loads of shell structure
+        self.structural_loads += self.process_distributed_loads()
 
 
     def assemble_global_matrices_and_excitations(self, reorder: bool=True, **kwargs):

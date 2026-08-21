@@ -23,7 +23,7 @@ class STRUCT_LINE_3(LINE_3):
     def integrate_length(self, connectivities: np.ndarray):
 
         self.connectivities = connectivities
-
+        
         # compute local coordinates for all elements
         coords_lcs = self.get_stacked_local_coordinates()
 
@@ -31,17 +31,69 @@ class STRUCT_LINE_3(LINE_3):
         dL = 0.
 
         # integration loop
-        for i in range(self.wps_M.size):
+        for i in range(self.nint_M):
 
-            # Jacobian matrix
-            JAC = self.dphi_M[i, :, :] @ coords_lcs
+            # calculate the Jacobian
+            jacs = self.dphi_M[i, :, :] @ coords_lcs
 
-            # determinant of Jacobian matrix
-            det_jacs = np.abs(JAC)
+            # calculate the determinant of the Jacobian
+            det_jacs = np.abs(jacs)
 
             dL += (det_jacs * self.wps_M[i])    
 
         return np.sum(dL)
+
+
+    def integrate_distributed_load(self, el_index: int, distributed_load: np.ndarray) -> np.ndarray:
+        """ 
+        This method computes the elementary load vector.
+
+        Parameters
+        ----------
+        el_index: int
+            The element index.
+
+        load: float, optional
+            The load vector.
+
+        Returns
+        -------
+        Fe: np.ndarray
+            The elementary load vector.
+        """
+
+        # element nodes
+        e_nodes = self.connectivities[el_index, :]
+
+        # element nodal coordinates
+        coords = self.nodal_coordinates[e_nodes, :]
+
+        # nodal coordinates in the local CS
+        coord_lcs = get_local_coordinates(coords)
+
+        # initialize the shape functions matrix
+        N = np.zeros((3, self.dof_per_element), dtype=float)
+
+        # initialize the variable Fe
+        Fe = 0.
+
+        # integration loop
+        for i in range(self.nint_M):
+
+            # Jacobian matrix
+            JAC = self.dphi_M[i, :, :] @ coord_lcs
+
+            # determinant of Jacobia matrix
+            det_JAC = np.abs(JAC)
+
+            # populate the shape functions matrix
+            N[0, 0::3] = self.phi_M[i, :, :]
+            N[1, 1::3] = self.phi_M[i, :, :]
+            N[2, 2::3] = self.phi_M[i, :, :]
+
+            Fe += (N.T @ distributed_load) * (det_JAC * self.wps_M[i])
+
+        return Fe
 
 
     def integrate_distributed_mass(self, el_index: int, distributed_mass: float) -> np.ndarray:
