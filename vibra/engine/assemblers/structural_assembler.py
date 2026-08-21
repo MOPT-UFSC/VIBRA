@@ -388,7 +388,6 @@ class StructuralAssembler:
                 "element_ids" : np.array(list(aux_connect.keys()), dtype=int),
                 "connectivities" : np.array(list(aux_connect.values()), dtype=int),
                 "surface_data" : aux_data,
-                # "surface_data" : np.array(list(aux_data.values()), dtype=complex),
                 }
 
         return integration_data
@@ -436,7 +435,6 @@ class StructuralAssembler:
                 "element_ids" : np.array(list(aux_connect.keys()), dtype=int),
                 "connectivities" : np.array(list(aux_connect.values()), dtype=int),
                 "surface_data" : aux_data,
-                # "surface_data" : np.array(list(aux_data.values()), dtype=complex),
                 }
 
         return integration_data
@@ -805,7 +803,7 @@ class StructuralAssembler:
         data_Mdist = np.zeros((n_el, e_dofs, e_dofs), dtype=float)
 
         self.element_1d.reorder_connect(connectivities)
-        ind_rows, ind_cols = self.element_1d.elements_indexes_matrix()
+        ind_rows, ind_cols = self.element_1d.process_rows_and_columns_indexes()
 
         for i, surface_density in enumerate(surface_data.values()):
             data_Mdist[i, :, :] = self.element_1d.integrate_distributed_mass(i, surface_density)
@@ -830,7 +828,7 @@ class StructuralAssembler:
         data_Mdist = np.zeros((n_el, e_dofs, e_dofs), dtype=float)
 
         self.element_2d.reorder_connect(connectivities)
-        ind_rows, ind_cols = self.element_2d.elements_indexes_matrix()
+        ind_rows, ind_cols = self.element_2d.process_rows_and_columns_indexes()
 
         for i, surface_density in enumerate(surface_data.values()):
             data_Mdist[i, :, :] = self.element_2d.integrate_distributed_mass(i, surface_density)

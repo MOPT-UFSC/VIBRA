@@ -96,7 +96,7 @@ class STRUCT_LINE_2(LINE_2):
         return element_dofs.flatten()
 
 
-    def elements_indexes_matrix(self):
+    def process_rows_and_columns_indexes(self):
 
         n_el = len(self.connectivities)
         dof, edof = self.dof_per_node, self.dof_per_element
@@ -104,8 +104,10 @@ class STRUCT_LINE_2(LINE_2):
         local_dof = np.arange(dof, dtype=int)
         ind_dof = np.zeros((n_el, edof), dtype=int)
 
-        for j in range(self.NODES_PER_ELEMENT):
-            ind_dof[:, j*dof : (1 + j)*dof] = dof * self.connectivities[:, j+1].reshape(-1, 1) + local_dof
+        for j in range(self.nodes_per_element):
+            start = j * dof
+            end = (1 + j) * dof
+            ind_dof[:, start : end] = dof * self.connectivities[:, j].reshape(-1, 1) + local_dof
 
         vect_indices = ind_dof.flatten()
         ind_rows = ((np.tile(vect_indices, (edof, 1))).T).flatten()
