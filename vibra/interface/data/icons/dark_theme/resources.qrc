@@ -85,6 +85,7 @@
         <file alias="model_setup_items/damping.png">../model_setup_items/damping.png</file>
         <file alias="model_setup_items/degrees_of_freedom_decoupling.png">../model_setup_items/degrees_of_freedom_decoupling.png</file>
         <file alias="model_setup_items/deployed_code.png">../model_setup_items/deployed_code.png</file>
+        <file alias="model_setup_items/distributed_load.png">../model_setup_items/distributed_load.png</file>
         <file alias="model_setup_items/distributed_loads.png">../model_setup_items/distributed_loads.png</file>
         <file alias="model_setup_items/distributed_loads3.png">../model_setup_items/distributed_loads3.png</file>
         <file alias="model_setup_items/distributed_loads4.png">../model_setup_items/distributed_loads4.png</file>
@@ -120,7 +121,6 @@
         <file alias="model_setup_items/viscous_thermal_model.png">../model_setup_items/viscous_thermal_model.png</file>
         <file alias="model_setup_items/warning_yellow.png">../model_setup_items/warning_yellow.png</file>
         <file alias="model_setup_items/warning_yellow2.png">../model_setup_items/warning_yellow2.png</file>
-        <file alias="model_setup_items/weight.png">../model_setup_items/weight.png</file>
         <file alias="warnings/black_warning.png">../warnings/black_warning.png</file>
         <file alias="warnings/error_blue.png">../warnings/error_blue.png</file>
         <file alias="warnings/error_icon1.png">../warnings/error_icon1.png</file>
