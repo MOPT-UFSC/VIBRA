@@ -145,7 +145,7 @@ class FileDialogService:
             case "gif":
                 return "GIF"
             case _:
-                return f"{extension.title()} file"
+                return f"{extension.title()} files"
 
     @staticmethod
     def _get_path_extension(string: str) -> str:

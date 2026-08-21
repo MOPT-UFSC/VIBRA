@@ -70,6 +70,12 @@ SUPPORTED_VIDEO_EXTENSIONS = [
     "mp4",
 ]
 
+SUPPORTED_SIMULATION_DATA = [
+    "h5",
+    "hd5",
+    "hdf5"
+]
+
 
 LIGHT_ICON_COLOR = Color("#0051A2")
 DARK_ICON_COLOR = Color("#84AAFF")
