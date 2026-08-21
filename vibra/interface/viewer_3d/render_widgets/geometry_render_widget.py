@@ -33,6 +33,7 @@ from .model_info_text import (
     points_info_text,
     porous_material_info_text,
     proportional_damping_info_text,
+    structural_additional_info_text,
     structural_boundary_conditions_info_text,
     viscous_thermal_info_text,
     volumes_info_text,
@@ -506,6 +507,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         if physical_domain == "structural":
             text += material_info_text()
             text += structural_boundary_conditions_info_text()
+            text += structural_additional_info_text()
 
         elif physical_domain == "acoustic":
             text += fluid_info_text()
