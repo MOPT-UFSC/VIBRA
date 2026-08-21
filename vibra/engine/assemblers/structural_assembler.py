@@ -73,7 +73,7 @@ class StructuralAssembler:
             if not isinstance(data, dict):
                 continue
 
-            element_integration = data.get("element_integration", False)
+            element_integration = data.get("element_integration", True)
             if property == "nodal_loads" and element_integration:
                 continue
 
@@ -89,7 +89,7 @@ class StructuralAssembler:
             if property != selected_property:
                 continue
 
-            element_integration = data.get("element_integration", False)
+            element_integration = data.get("element_integration", True)
             if property == "nodal_loads" and element_integration:
                 continue
 
@@ -473,7 +473,7 @@ class StructuralAssembler:
                     continue
 
             data: dict
-            element_integration = data.get("element_integration")
+            element_integration = data.get("element_integration", True)
             if property == "nodal_loads" and not element_integration:
                 continue
 

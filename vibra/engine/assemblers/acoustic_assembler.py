@@ -313,7 +313,7 @@ class AcousticAssembler:
                 continue
 
             data: dict
-            if not data.get("element_integration"):
+            if not data.get("element_integration", True):
                 continue
 
             complex_values = data.get("values")[0]
@@ -1701,7 +1701,7 @@ class AcousticAssembler:
                 if not isinstance(data, dict):
                     continue
         
-                if data.get("element_integration"):
+                if data.get("element_integration", True):
                     continue
 
                 _complex_values = data["values"][0]
