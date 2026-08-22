@@ -149,15 +149,6 @@ class Ui_Dialog(object):
 
         self.gridLayout_2.addWidget(self.label_10, 1, 1, 1, 1)
 
-        self.label_21 = QLabel(self.frame_element_formulation)
-        self.label_21.setObjectName(u"label_21")
-        self.label_21.setMinimumSize(QSize(180, 20))
-        self.label_21.setMaximumSize(QSize(240, 16777215))
-        self.label_21.setFont(font1)
-        self.label_21.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
-
-        self.gridLayout_2.addWidget(self.label_21, 4, 1, 1, 1)
-
         self.label_201 = QLabel(self.frame_element_formulation)
         self.label_201.setObjectName(u"label_201")
         self.label_201.setMinimumSize(QSize(180, 20))
@@ -181,26 +172,6 @@ class Ui_Dialog(object):
 
         self.gridLayout_2.addWidget(self.comboBox_mesh_quality_metrics, 2, 2, 1, 1)
 
-        self.pushButton_suppress_volumes = QPushButton(self.frame_element_formulation)
-        self.pushButton_suppress_volumes.setObjectName(u"pushButton_suppress_volumes")
-        self.pushButton_suppress_volumes.setMinimumSize(QSize(120, 30))
-        self.pushButton_suppress_volumes.setMaximumSize(QSize(16000, 30))
-        font2 = QFont()
-        font2.setPointSize(10)
-        font2.setBold(False)
-        font2.setItalic(False)
-        self.pushButton_suppress_volumes.setFont(font2)
-        self.pushButton_suppress_volumes.setAutoDefault(False)
-        self.pushButton_suppress_volumes.setFlat(False)
-
-        self.gridLayout_2.addWidget(self.pushButton_suppress_volumes, 4, 2, 1, 1)
-
-        self.label_suppressed_volume_count = QLabel(self.frame_element_formulation)
-        self.label_suppressed_volume_count.setObjectName(u"label_suppressed_volume_count")
-        self.label_suppressed_volume_count.setFont(font1)
-
-        self.gridLayout_2.addWidget(self.label_suppressed_volume_count, 4, 3, 1, 1)
-
 
         self.gridLayout_4.addWidget(self.frame_element_formulation, 0, 0, 1, 1)
 
@@ -214,9 +185,9 @@ class Ui_Dialog(object):
         self.tabWidget_main = QTabWidget(self.frame_tab_widgets)
         self.tabWidget_main.setObjectName(u"tabWidget_main")
         self.tabWidget_main.setEnabled(True)
-        font3 = QFont()
-        font3.setPointSize(9)
-        self.tabWidget_main.setFont(font3)
+        font2 = QFont()
+        font2.setPointSize(9)
+        self.tabWidget_main.setFont(font2)
         self.tabWidget_main.setTabShape(QTabWidget.TabShape.Rounded)
         self.tabWidget_main.setTabBarAutoHide(False)
         self.tab_global_settings = QWidget()
@@ -718,7 +689,11 @@ class Ui_Dialog(object):
         self.pushButton_apply_and_close.setObjectName(u"pushButton_apply_and_close")
         self.pushButton_apply_and_close.setMinimumSize(QSize(72, 30))
         self.pushButton_apply_and_close.setMaximumSize(QSize(72, 30))
-        self.pushButton_apply_and_close.setFont(font2)
+        font3 = QFont()
+        font3.setPointSize(10)
+        font3.setBold(False)
+        font3.setItalic(False)
+        self.pushButton_apply_and_close.setFont(font3)
         self.pushButton_apply_and_close.setStyleSheet(u"")
         self.pushButton_apply_and_close.setAutoDefault(False)
         self.pushButton_apply_and_close.setFlat(False)
@@ -729,7 +704,7 @@ class Ui_Dialog(object):
         self.pushButton_apply.setObjectName(u"pushButton_apply")
         self.pushButton_apply.setMinimumSize(QSize(72, 30))
         self.pushButton_apply.setMaximumSize(QSize(72, 30))
-        self.pushButton_apply.setFont(font2)
+        self.pushButton_apply.setFont(font3)
         self.pushButton_apply.setStyleSheet(u"")
         self.pushButton_apply.setAutoDefault(False)
         self.pushButton_apply.setFlat(False)
@@ -740,7 +715,7 @@ class Ui_Dialog(object):
         self.pushButton_cancel.setObjectName(u"pushButton_cancel")
         self.pushButton_cancel.setMinimumSize(QSize(72, 30))
         self.pushButton_cancel.setMaximumSize(QSize(72, 30))
-        self.pushButton_cancel.setFont(font2)
+        self.pushButton_cancel.setFont(font3)
         self.pushButton_cancel.setStyleSheet(u"")
         self.pushButton_cancel.setAutoDefault(False)
         self.pushButton_cancel.setFlat(False)
@@ -770,7 +745,6 @@ class Ui_Dialog(object):
         self.retranslateUi(Dialog)
 
         self.comboBox_volumes_interface_behavior.setCurrentIndex(1)
-        self.pushButton_suppress_volumes.setDefault(False)
         self.tabWidget_main.setCurrentIndex(0)
         self.comboBox_local_mesh_size_control_entity_type.setCurrentIndex(0)
         self.comboBox_3d_algorithm.setCurrentIndex(0)
@@ -798,13 +772,10 @@ class Ui_Dialog(object):
         self.comboBox_volumes_interface_behavior.setItemText(1, QCoreApplication.translate("Dialog", u"Merge nodes", None))
 
         self.label_10.setText(QCoreApplication.translate("Dialog", u"Element order:", None))
-        self.label_21.setText(QCoreApplication.translate("Dialog", u"Volumes to suppress:", None))
         self.label_201.setText(QCoreApplication.translate("Dialog", u"Volumes interface behavior:", None))
         self.comboBox_mesh_quality_metrics.setItemText(0, QCoreApplication.translate("Dialog", u"Disabled", None))
         self.comboBox_mesh_quality_metrics.setItemText(1, QCoreApplication.translate("Dialog", u"Enabled", None))
 
-        self.pushButton_suppress_volumes.setText(QCoreApplication.translate("Dialog", u"Add volumes", None))
-        self.label_suppressed_volume_count.setText("")
         self.label_28.setText(QCoreApplication.translate("Dialog", u"Min. element size:", None))
         self.label_29.setText(QCoreApplication.translate("Dialog", u"[mm]", None))
         self.label_30.setText(QCoreApplication.translate("Dialog", u"Max. element size:", None))
@@ -912,11 +883,8 @@ class MesherSetupInputs_UI(QDialog, Ui_Dialog):
                                         - label_19: QLabel
                                         - comboBox_volumes_interface_behavior: QComboBox
                                         - label_10: QLabel
-                                        - label_21: QLabel
                                         - label_20: QLabel
                                         - comboBox_mesh_quality_metrics: QComboBox
-                                        - pushButton_suppress_volumes: QPushButton
-                                        - label_suppressed_volume_count: QLabel
                             - frame_tab_widgets: QFrame
                                 - (Layout): QGridLayout
                                         - tabWidget_main: QTabWidget

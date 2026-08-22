@@ -2,18 +2,28 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QAbstractItemView, QTableWidgetItem
 
 from vibra import app
+from vibra.engine.mesher.mesh_setup import MeshSetup
+from vibra.interface.common.common_interface import generate_mesh_and_finalize
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.ui_generated.model.general.volume_suppression_dialog_ui import (
     VolumeSuppressionDialog_UI,
 )
 
 
-class VolumeSuppressionDialog(VolumeSuppressionDialog_UI):
-    def __init__(self, suppressed_volume_ids: list[int], parent=None):
-        super().__init__(parent)
+class VolumeSuppressionInputs(VolumeSuppressionDialog_UI):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
-        self.previously_suppressed_ids = set(suppressed_volume_ids)
-        self.suppressed_volume_ids = set(suppressed_volume_ids)
+        app().main_window.set_input_widget(self)
+
+        self.complete = False
+        self.keep_window_open = True
+
+        mesh_setup = app().project.model.mesh_setup
+        previous = list(mesh_setup.suppressed_volume_ids) if mesh_setup else []
+        self.previously_suppressed_ids = set(previous)
+        self.suppressed_volume_ids = set(previous)
+
         self.pending_ids: set[int] = set()
         self.last_synced_ids: set[int] = set()
         self._previous_volume_selection: set[int] = set()
@@ -22,6 +32,12 @@ class VolumeSuppressionDialog(VolumeSuppressionDialog_UI):
         self._configure_table()
         self._create_connections()
         self._populate_table()
+
+        app().main_window.selection.volume_selection_mode = True
+
+        while self.keep_window_open:
+            self.exec()
+
 
     def _config_window(self):
         self.setWindowIcon(app().main_window.vibra_icon)
@@ -197,15 +213,52 @@ class VolumeSuppressionDialog(VolumeSuppressionDialog_UI):
         if not self._check_properties_on_suppressed_volumes():
             return
 
+        new_ids = self.get_suppressed_volume_ids()
+        mesh_setup = app().project.model.mesh_setup
+
+        if mesh_setup is None:
+            mesh_setup = MeshSetup(suppressed_volume_ids=new_ids)
+            changed = bool(new_ids)
+        else:
+            changed = sorted(mesh_setup.suppressed_volume_ids) != new_ids
+            mesh_setup.suppressed_volume_ids = new_ids
+
+        regenerate_now = False
+
+        if changed:
+            app().project.configure_mesh(mesh_setup)
+            self.complete = True
+            model_setup_items = app().main_window.model_setup_widget.model_setup_items
+            model_setup_items.update_items_appearance()
+
+            confirmation = GetUserConfirmationInput(
+                "Mesh regeneration required",
+                "The volume suppression setup has been modified. The current "
+                "mesh must be regenerated for these changes to take effect.\n\n"
+                "Do you want to regenerate the mesh now?",
+                buttons_config={
+                    "left_button_label": "Later",
+                    "right_button_label": "Regenerate",
+                },
+            )
+            regenerate_now = confirmation._continue
+
+        self._close_dialog()
+
+        if regenerate_now:
+            generate_mesh_and_finalize()
+
+    def _close_dialog(self):
         app().main_window.selection.volume_selection_mode = False
-        self.accept()
+        self.keep_window_open = False
+        self.close()
 
     def _cancel(self):
-        app().main_window.selection.volume_selection_mode = False
-        self.reject()
+        self._close_dialog()
 
     def closeEvent(self, event):
         app().main_window.selection.volume_selection_mode = False
+        self.keep_window_open = False
         super().closeEvent(event)
 
     def get_suppressed_volume_ids(self) -> list[int]:

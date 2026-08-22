@@ -2,6 +2,8 @@ from pathlib import Path
 from typing import Literal
 from enum import IntEnum
 
+import logging
+
 import numpy as np
 from PySide6.QtWidgets import QDialog, QFileDialog, QPushButton, QWidget
 
@@ -10,7 +12,9 @@ from vibra.engine.analysis_info import AnalysisID, FrequencySpacing
 from vibra.interface import error_title, warning_title
 from vibra.interface.data.data_manager import is_frequencies_vector_equally_distributed
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
+from vibra.utils.subprocess.subprocess_handler import SubProcessHandler, SubProcessStatus
 
 
 class InputType(IntEnum):
@@ -202,6 +206,51 @@ def mesher_interface_callback(parent: QDialog, close_after_generate: bool = Fals
         return True
 
     app().main_window.update_plots()
+
+def generate_mesh_and_finalize() -> bool:
+    """
+    Generate the mesh from the current mesh setup and finalize
+    the interface state afterwards. Returns True on success.
+    """
+
+    def _load_mesh_from_working_dir():
+        logging.info("Loading generated mesh... [10/100]")
+        app().project.model.mesh = app().project.project_reader.read_mesh()
+
+        logging.info("Reading model properties... [65/100]")
+        app().project.model.properties = app().project.project_reader.read_model_properties()
+
+        logging.info("Updating project state... [85/100]")
+        app().project.reset_solution()
+        app().project.mark_project_as_modified()
+
+    def _generate_in_process():
+        mesh_setup = app().project.model.mesh_setup
+        app().project.generate_mesh(mesh_setup)
+
+    def _finalize():
+        logging.info("Updating render... [95/100]")
+        app().main_window.action_mesh_workspace_callback()
+        app().main_window.update_plots()
+        app().main_window.analysis_toolbar.reset_solution_action.setDisabled(True)
+        app().main_window.analysis_toolbar.check_analysis_setup_callback()
+        app().main_window.action_export_element_transfer_data.setDisabled(True)
+
+    if app().config.user_preferences.generate_mesh_in_subprocess:
+        app().project.write_to_working_dir()
+
+        command = f"{SubProcessHandler.get_executable()} --generate-mesh {app().project.working_directory!s}"
+        status = SubProcessHandler(command).run()
+        if status != SubProcessStatus.SUCCESS:
+            return False
+
+        LoadingWindow(_load_mesh_from_working_dir).run()
+
+    else:
+        LoadingWindow(_generate_in_process).run()
+
+    LoadingWindow(_finalize).run()
+    return True
 
 def export_modal_analysis_results(parent: QDialog | QWidget, modes_to_frequencies: dict, physical_domain: str):
 
