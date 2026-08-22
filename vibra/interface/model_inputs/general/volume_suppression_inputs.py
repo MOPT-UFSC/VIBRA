@@ -201,16 +201,15 @@ class VolumeSuppressionInputs(VolumeSuppressionDialog_UI):
             "right_button_label": "Proceed",
         }
 
-        confirmation = GetUserConfirmationInput(
+        return self._show_internal_confirmation(
             "Volume suppression warning",
             message,
             buttons_config=buttons_config,
         )
 
-        return confirmation._continue
-
     def _confirm(self):
         if not self._check_properties_on_suppressed_volumes():
+            self.show()
             return
 
         new_ids = self.get_suppressed_volume_ids()
@@ -231,7 +230,7 @@ class VolumeSuppressionInputs(VolumeSuppressionDialog_UI):
             model_setup_items = app().main_window.model_setup_widget.model_setup_items
             model_setup_items.update_items_appearance()
 
-            confirmation = GetUserConfirmationInput(
+            regenerate_now = self._show_internal_confirmation(
                 "Mesh regeneration required",
                 "The volume suppression setup has been modified. The current "
                 "mesh must be regenerated for these changes to take effect.\n\n"
@@ -241,7 +240,6 @@ class VolumeSuppressionInputs(VolumeSuppressionDialog_UI):
                     "right_button_label": "Regenerate",
                 },
             )
-            regenerate_now = confirmation._continue
 
         self._close_dialog()
 
@@ -252,6 +250,12 @@ class VolumeSuppressionInputs(VolumeSuppressionDialog_UI):
         app().main_window.selection.volume_selection_mode = False
         self.keep_window_open = False
         self.close()
+
+    def _show_internal_confirmation(self, title: str, message: str, buttons_config: dict) -> bool:
+        """Shows a confirmation dialog while keeping this window hidden."""
+        self.hide()
+        confirmation = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
+        return confirmation._continue
 
     def _cancel(self):
         self._close_dialog()

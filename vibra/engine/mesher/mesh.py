@@ -76,6 +76,8 @@ class Mesh:
         self.disconnected_nodes_data = dict()
         self.collapsed_elements_data = dict()
 
+        self.suppressed_volumes: set[int] = set()
+
         self.disconnected_nodes = []
         self.nodes_from_collapsed_elements = []
 
@@ -319,6 +321,7 @@ class Mesh:
             raise exception from e
 
         logging.info("Post-processing mesh... [60/100]")
+        self.suppressed_volumes = set(mesh_setup.suppressed_volume_ids)
         self.post_process_mesh_data()
 
         self.update_element_topology_based_on_connectivity()
@@ -1373,7 +1376,8 @@ class Mesh:
         self.faces_connectivity, self.map_face_elements = self._get_connectivity_array(connectivity_dim2)
         self.solids_connectivity, self.map_solid_elements = self._get_connectivity_array(connectivity_dim3)
 
-        self.remove_disconnected_nodes()
+        if self.suppressed_volumes:
+            self.remove_disconnected_nodes()
 
         logging.info("Post-processing mesh... [68/100]")
         self.process_mesh_related_mappings("Post-processing")
