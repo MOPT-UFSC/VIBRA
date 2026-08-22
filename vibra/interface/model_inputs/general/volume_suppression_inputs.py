@@ -19,12 +19,15 @@ class VolumeSuppressionInputs(VolumeSuppressionDialog_UI):
         self.complete = False
         self.keep_window_open = True
 
+        mesh = app().project.model.mesh
         mesh_setup = app().project.model.mesh_setup
-        previous = list(mesh_setup.suppressed_volume_ids) if mesh_setup else []
-        self.previously_suppressed_ids = set(previous)
-        self.suppressed_volume_ids = set(previous)
+        configured = set(mesh_setup.suppressed_volume_ids) if mesh_setup else set()
+        applied = set(mesh.suppressed_volumes) if mesh else set()
 
-        self.pending_ids: set[int] = set()
+        self.previously_suppressed_ids = applied
+        self._configured_ids = configured
+        self.pending_ids: set[int] = configured - applied
+        self.suppressed_volume_ids = applied | self.pending_ids
         self.last_synced_ids: set[int] = set()
         self._previous_volume_selection: set[int] = set()
 
@@ -77,7 +80,13 @@ class VolumeSuppressionInputs(VolumeSuppressionDialog_UI):
             id_item.setFlags(id_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
             self.tableWidget_local_mesh_size_control_data.setItem(row, 0, id_item)
 
-            status = "Suppressed" if vol_id in self.previously_suppressed_ids else "Pending"
+            if vol_id in self.previously_suppressed_ids:
+                status = "Suppressed"
+            elif vol_id in self._configured_ids:
+                status = "Awaiting regeneration"
+            else:
+                status = "Pending"
+
             status_item = QTableWidgetItem(status)
             status_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             status_item.setFlags(status_item.flags() & ~Qt.ItemFlag.ItemIsEditable)

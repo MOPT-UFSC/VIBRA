@@ -211,6 +211,10 @@ class ProjectReader:
             mesh.faces_connectivity = np.array(file["connectivity/faces_connectivity"])
             mesh.solids_connectivity = np.array(file["connectivity/solids_connectivity"])
 
+            suppression = file.get("suppression", dict())
+            suppressed_volume_ids = suppression.get("suppressed_volume_ids", list())
+            mesh.suppressed_volumes = {int(vol_id) for vol_id in suppressed_volume_ids}
+
             curvatures = file.get("curvatures", dict())
             for key, value in curvatures.get("curvatures_surface", dict()).items():
                 mesh.curvatures_surface[int(key)] = value[:]
