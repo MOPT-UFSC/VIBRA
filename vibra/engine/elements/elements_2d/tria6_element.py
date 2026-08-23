@@ -114,12 +114,12 @@ class TRIANGLE_6(Element2D):
 
         ## shape functions (Atalla and Sgard, 2015, pg. 173)
         phi = np.zeros((self.nint, 1, self.nodes_per_element), dtype=float)
-        phi[:, 0, 0] = xi_1*(2*xi_1 - 1)
-        phi[:, 0, 1] = xi_2*(2*xi_2 - 1)
-        phi[:, 0, 2] = xi_3*(2*xi_3 - 1)
-        phi[:, 0, 3] = 4*xi_1*xi_2
-        phi[:, 0, 4] = 4*xi_2*xi_3
-        phi[:, 0, 5] = 4*xi_1*xi_3
+        phi[:, 0, 0] = xi_1 * (2 * xi_1 - 1)
+        phi[:, 0, 1] = xi_2 * (2 * xi_2 - 1)
+        phi[:, 0, 2] = xi_3 * (2 * xi_3 - 1)
+        phi[:, 0, 3] = 4 * xi_1 * xi_2
+        phi[:, 0, 4] = 4 * xi_2 * xi_3
+        phi[:, 0, 5] = 4 * xi_1 * xi_3
 
         ## derivatives of shape functions (obtained from the Atalla and Sgard proposed shape functions)
         dphi = np.zeros((self.nint, 2, self.nodes_per_element), dtype=float)
@@ -229,6 +229,74 @@ class TRIANGLE_6(Element2D):
         coord_loc[:, 5, 1] = y6
 
         return coord_loc
+
+
+    def get_jacobian_determinant(self, int_point: int, coords: np.ndarray, return_normal_vector: bool = False):
+
+        # vectors tangent to the element's surface
+        g_xi = self.dphi[int_point, 0, :] @ coords
+        g_eta = self.dphi[int_point, 1, :] @ coords
+
+        # normal vector for the i-th integration point
+        normal_vector = np.cross(g_xi, g_eta).reshape(-1, 1)
+
+        # determinant of Jacobian matrix
+        det_jac = np.linalg.norm(normal_vector)
+
+        if not return_normal_vector:
+            return det_jac
+
+        # normalize the element normal vector for the i-th integration point
+        e_normal = normal_vector / det_jac
+
+        return det_jac, e_normal 
+
+
+    def get_stacked_jacobian_determinant(self, int_point: int, coords: np.ndarray, return_normal_vector: bool = False):
+        """
+        This method evaluates the Jacobian determinant of the i-th integrarion point.
+        
+        Parameters
+        ----------
+
+        int_point: int
+            The integration point to be evaluated.
+
+        coords:  np.ndarray
+            A three-dimensional coordinate matrix in which each plane 
+            contains the nodal coordinates of an element. 
+
+        return_normal_vector: bool, optional
+            Use this argument to control when the normal vector is returned.
+
+        Return
+        ------
+        det_jac: np.ndarray
+            A stacked vector with the Jacobian determinant of all elements evaluated
+            at the i-th integration point.
+
+        normal_vector: np.ndarray
+            The normalized normal vectors at the i-th integration point of all 
+            elements that is returned if the return_normal_vector argument is True.
+        """
+
+        # vectors tangent to the element's surface
+        g_xi = self.dphi[int_point, 0, :] @ coords
+        g_eta = self.dphi[int_point, 1, :] @ coords
+
+        # compute the stacked normal vectors
+        normal_vector = np.cross(g_xi, g_eta)
+
+        # calculate the stacked Jacobian determinants
+        det_jac = np.linalg.norm(normal_vector, axis=1)
+
+        if not return_normal_vector:
+            return det_jac
+
+        # normalize the elements normal vectors for the i-th integration point
+        e_normal = normal_vector / det_jac
+
+        return det_jac, e_normal 
 
 
     def stacked_matrices_NtN(self) -> np.ndarray:
@@ -555,7 +623,7 @@ def get_shape_functions_and_derivatives(rrx: np.ndarray, ssx: np.ndarray):
 
 #     unit_x_axis = loc_x_axis/np.linalg.norm(loc_x_axis)
 #     unit_y_axis = loc_y_axis/np.linalg.norm(loc_y_axis)
-#     unit_z_axis = loc_z_axis/np.linalg.norm(loc_z_axis)  # noqa: F841
+#     unit_z_axis = loc_z_axis/np.linalg.norm(loc_z_axis)
 
 #     x1 = 0 
 #     x2 = np.dot(vec21,unit_x_axis)

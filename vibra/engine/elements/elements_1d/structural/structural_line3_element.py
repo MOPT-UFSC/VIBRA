@@ -145,13 +145,13 @@ class STRUCT_LINE_3(LINE_3):
         return Me
 
 
-    def element_indexes_vector(self, index: int):
+    def get_load_indexes(self, index: int):
         node_ids = self.connectivities[index, :]
         element_dofs = self.dof_per_node * node_ids.reshape(-1, 1) + np.arange(self.dof_per_node, dtype=int)
         return element_dofs.flatten()
 
 
-    def process_rows_and_columns_indexes(self):
+    def get_element_rows_and_columns_indexes(self):
 
         n_el = len(self.connectivities)
         dof, edof = self.dof_per_node, self.dof_per_element
