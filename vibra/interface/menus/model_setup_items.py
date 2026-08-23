@@ -432,6 +432,13 @@ class ModelSetupItems(CommonMenuItems):
                                 else:
                                     item_child.set_icon("other_compressor")
 
+                elif item_child.property_name == "volume_suppression":
+                    mesh = app().project.model.mesh
+                    mesh_setup = app().project.model.mesh_setup
+                    configured = bool(mesh_setup is not None and mesh_setup.suppressed_volume_ids)
+                    applied = bool(mesh is not None and mesh.suppressed_volumes)
+                    item_child.set_icon("suppress_volume", visible=configured or applied)
+
                 elif self._needs_property(item_child.property_name, analysis_type, physical_domain):
                     item_child.set_warning(True)
                     item_child.set_tool_tip(item_child.property_name, requirement=True)
