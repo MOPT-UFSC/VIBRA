@@ -112,6 +112,7 @@
         <file alias="model_setup_items/screw_compressor.png">../model_setup_items/screw_compressor.png</file>
         <file alias="model_setup_items/specific_impedance.png">../model_setup_items/specific_impedance.png</file>
         <file alias="model_setup_items/structural_help.png">../model_setup_items/structural_help.png</file>
+        <file alias="model_setup_items/suppress_volume.png">../model_setup_items/suppress_volume.png</file>
         <file alias="model_setup_items/surface_thickness.png">../model_setup_items/surface_thickness.png</file>
         <file alias="model_setup_items/surface_thickness2.png">../model_setup_items/surface_thickness2.png</file>
         <file alias="model_setup_items/surface_velocity.png">../model_setup_items/surface_velocity.png</file>

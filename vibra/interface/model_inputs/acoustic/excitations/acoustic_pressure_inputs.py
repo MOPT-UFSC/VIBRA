@@ -187,7 +187,6 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         surface_ids, error_data = self.mesh.check_selected_ids(input_ids, selection="surfaces", single_id=False)
 
         if error_data is not None:
-            self.hide()
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
             return
@@ -241,7 +240,6 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         acoustic_pressure = self.check_complex_entries(self.lineEdit_real_value, self.lineEdit_imag_value)
 
         if acoustic_pressure is None:
-            self.hide()
             title = "Additional inputs required"
             message = "You must enter a non-zero acoustic pressure value to proceed with the assignment."
             PrintMessageInput([error_title, title, message])
@@ -303,7 +301,6 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         _frequencies = imported_values[:, 0]
 
         if app().project.model.change_analysis_frequency_setup(list(_frequencies)):
-            self.hide()
             title = "Project frequency setup cannot be modified"
             message = "The following imported table of values has a frequency setup "
             message += "different from the others already imported ones. The current "
@@ -332,7 +329,6 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
     def tabular_data_assignment(self, surface_ids: list[int]):
 
         if self.lineEdit_table_path.text() == "":
-            self.hide()
             title = "Additional inputs required"
             message = "You must enter the acoustic pressure table path to proceed with the assignment."
             PrintMessageInput([error_title, title, message])
@@ -421,8 +417,6 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         self.actions_to_finalize()
 
     def reset_callback(self):
-
-        self.hide()
 
         title = "Acoustic pressure resetting"
         message = "Would you like to remove the all applied acoustic pressures from model?"

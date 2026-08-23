@@ -338,7 +338,6 @@ class MassSourceInputs(MassSourceInputs_UI):
             app().main_window.selection.clear_selection()
 
             if print_message:
-                self.hide()
                 title = "Invalid selection detected"
                 message = "The current selection resulted in improper mapping between selected "
                 message += "between selected entities and the volumes. To univocally assign fluids "
@@ -451,12 +450,11 @@ class MassSourceInputs(MassSourceInputs_UI):
             message = f"Insert some value at the {label} input field."
 
         if message != "":
-            self.hide()
             lineEdit.setFocus()
             PrintMessageInput([error_title, title, message])
             return None
-        else:
-            return out
+
+        return out
 
     def compute_nearest_node_from_coordinate(self):
 
@@ -549,7 +547,6 @@ class MassSourceInputs(MassSourceInputs_UI):
 
         if error_data is not None:
             if print_message:
-                self.hide()
                 self.lineEdit_selection_id.setFocus()
                 PrintMessageInput(error_data)
             return None
@@ -593,7 +590,6 @@ class MassSourceInputs(MassSourceInputs_UI):
         mass_source = self.check_complex_entries(self.lineEdit_real_value, self.lineEdit_imag_value)
 
         if mass_source is None:
-            self.hide()
             title = "Additional inputs required"
             message = "You must enter a non-zero value to the mass source input fields to proceed with the assignment."
             PrintMessageInput([error_title, title, message])
@@ -670,7 +666,6 @@ class MassSourceInputs(MassSourceInputs_UI):
         _frequencies = imported_values[:, 0]
 
         if app().project.model.change_analysis_frequency_setup(list(_frequencies)):
-            self.hide()
             title = "Project frequency setup cannot be modified"
             message = "The following imported table of values has a frequency setup "
             message += "different from the others already imported ones. The current "
@@ -698,7 +693,6 @@ class MassSourceInputs(MassSourceInputs_UI):
     def tabular_data_assignment(self, selection_type: str, selection_ids: list[int]):
 
         if self.lineEdit_table_path.text() == "":
-            self.hide()
             title = "Additional inputs required"
             message = "You must enter the mass source table path to proceed with the assignment."
             PrintMessageInput([error_title, title, message])
@@ -823,8 +817,6 @@ class MassSourceInputs(MassSourceInputs_UI):
         self.actions_to_finalize()
 
     def reset_callback(self):
-
-        self.hide()
 
         title = "Mass source resetting"
         message = "Would you like to remove the all applied mass sources from model?"
