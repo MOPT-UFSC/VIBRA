@@ -81,6 +81,11 @@ class StructuralAssembler:
             if nodes is None:
                 continue
 
+            print("get_property_data_for_selected_property")
+            print(property, surface_id)
+            print(len(nodes))
+            print(nodes)
+
             property_data_from_nodes = self.model.get_structural_property_data_from_nodes(nodes, data, "surfaces")
             for gdof, p_data in property_data_from_nodes.items():
                 output_data[gdof] += p_data
@@ -376,11 +381,18 @@ class StructuralAssembler:
             surface_area = self.element_2d.integrate_area(surf_connect)
 
             # calculate the surface density
-            surface_density = mass / surface_area
+            mass_density = mass / surface_area
+
+            print()
+            print(f"Area: {surface_area} m²")
+            print(f"mass_density: {mass_density} kg/m²")
+            print()
+
+            mass_density = 2060.641904
 
             for i, el in enumerate(surf_elements):
                 aux_connect[el] = surf_connect[i]
-                aux_data[el] = surface_density
+                aux_data[el] = mass_density
 
         if aux_connect:
 
@@ -594,8 +606,10 @@ class StructuralAssembler:
                     load_vectors = self.integrate_distributed_load_1d(integration_data, load_vectors)
 
         if self.prescribed_dof_indexes:
+            print("1D integration (dropped) -> ", np.any(load_vectors))
             return load_vectors[self.unprescribed_dof_indexes, :]
 
+        print("1D integration -> ", np.any(load_vectors))
         return load_vectors
 
 
@@ -628,8 +642,10 @@ class StructuralAssembler:
                     load_vectors = self.integrate_distributed_load_2d(integration_data, load_vectors)
 
         if self.prescribed_dof_indexes:
+            print("2D integration (dropped) -> ", np.any(load_vectors))
             return load_vectors[self.unprescribed_dof_indexes, :]
 
+        print("2D integration -> ", np.any(load_vectors))
         return load_vectors
 
 
@@ -644,7 +660,7 @@ class StructuralAssembler:
 
         self.element_2d.reorder_connect(connectivities)
         for i, complex_values in enumerate(surface_data.values()):
-            indices = self.element_2d.element_indexes_vector(i)
+            indices = self.element_2d.get_load_indexes(i)
             e_normal = elements_normals[i, :].reshape(-1, 1)
             load_vectors[indices, :] += self.element_2d.integrate_normal_pressure_load(i, e_normal, complex_values)
 
@@ -662,7 +678,7 @@ class StructuralAssembler:
 
         self.element_1d.reorder_connect(connectivities)
         for i, complex_values in enumerate(data_array.values()):
-            indices = self.element_1d.element_indexes_vector(i)
+            indices = self.element_1d.get_load_indexes(i)
             load_vectors[indices, :] += self.element_1d.integrate_distributed_load(i, complex_values)
 
         return load_vectors
@@ -675,7 +691,7 @@ class StructuralAssembler:
 
         self.element_2d.reorder_connect(connectivities)
         for i, complex_values in enumerate(data_array.values()):
-            indices = self.element_2d.element_indexes_vector(i)
+            indices = self.element_2d.get_load_indexes(i)
             load_vectors[indices, :] += self.element_2d.integrate_distributed_load(i, complex_values)
 
         return load_vectors
@@ -710,8 +726,6 @@ class StructuralAssembler:
                 for connect in connectivities_from_surface:
                     if data.get("element_type") == "2d_element":
                         g_dof, F_elem = self.element_2d.process_forces_for_normal_pressure_load(connect, normal_pressure)
-                    else:
-                        g_dof, F_elem = self.element_2d.normal_pressure_load(connect, normal_pressure)
 
                     output[g_dof, :] += F_elem
 
@@ -918,7 +932,7 @@ class StructuralAssembler:
         data_Mdist = np.zeros((n_el, e_dofs, e_dofs), dtype=float)
 
         self.element_1d.reorder_connect(connectivities)
-        ind_rows, ind_cols = self.element_1d.process_rows_and_columns_indexes()
+        ind_rows, ind_cols = self.element_1d.get_element_rows_and_columns_indexes()
 
         for i, surface_density in enumerate(surface_data.values()):
             data_Mdist[i, :, :] = self.element_1d.integrate_distributed_mass(i, surface_density)
@@ -943,7 +957,7 @@ class StructuralAssembler:
         data_Mdist = np.zeros((n_el, e_dofs, e_dofs), dtype=float)
 
         self.element_2d.reorder_connect(connectivities)
-        ind_rows, ind_cols = self.element_2d.process_rows_and_columns_indexes()
+        ind_rows, ind_cols = self.element_2d.get_element_rows_and_columns_indexes()
 
         for i, surface_density in enumerate(surface_data.values()):
             data_Mdist[i, :, :] = self.element_2d.integrate_distributed_mass(i, surface_density)

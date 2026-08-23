@@ -302,7 +302,6 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.visualization_changed_callback()
         self.update()
 
-    #
     def click_callback(self, x, y):
         self.mouse_click = (x, y)
 
@@ -496,7 +495,7 @@ class GeometryRenderWidget(CommonRenderWidget):
 
     @warn_delays
     def update_info_text(self):
-        analysis_type, physical_domain = self.get_analysis_type_and_physical_domain()
+        _, physical_domain = self.get_analysis_type_and_physical_domain()
 
         text = ""
         text += points_info_text()
