@@ -37,6 +37,7 @@ class VolumeSuppressionInputs(VolumeSuppressionDialog_UI):
         self._populate_table()
 
         app().main_window.selection.volume_selection_mode = True
+        self._geometry_selection_callback()
 
         while self.keep_window_open:
             self.exec()
