@@ -1904,30 +1904,6 @@ class Mesh:
 
             print(message)
 
-    def get_list_of_disconnected_nodes(self):
-        """
-        This method returns the disconnected nodes list if they exist.
-        """
-
-        disconnected_nodes = []
-
-        disconnected_nodes_3d = self.get_disconnected_solid_nodes()
-        if isinstance(disconnected_nodes_3d, list) and len(disconnected_nodes_3d):
-            disconnected_nodes.extend(disconnected_nodes_3d)
-
-        disconnected_nodes_2d = self.get_disconnected_surface_nodes()
-        if isinstance(disconnected_nodes_2d, list) and len(disconnected_nodes_2d):
-            disconnected_nodes.extend(disconnected_nodes_2d)
-
-        disconnected_nodes_1d = self.get_disconnected_line_nodes()
-        if isinstance(disconnected_nodes_1d, list) and len(disconnected_nodes_1d):
-            disconnected_nodes.extend(disconnected_nodes_1d)
-
-        if not disconnected_nodes:
-            return []
-
-        return [int(node_id) for node_id in np.unique(disconnected_nodes)]
-
     def get_list_of_nodes_from_collapsed_elements(self):
         """
         This method returns a list containing the nodes from collapsed elements.
