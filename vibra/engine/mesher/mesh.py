@@ -14,7 +14,15 @@ from vtkmodules.vtkCommonCore import vtkPoints
 from vtkmodules.vtkCommonDataModel import VTK_HEXAHEDRON, VTK_QUADRATIC_HEXAHEDRON, VTK_QUADRATIC_TETRA, VTK_TETRA, vtkUnstructuredGrid
 from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridWriter
 
-from vibra.engine.mesher.mesh_setup import HEXAHEDRON_8, HEXAHEDRON_20, TETRAHEDRON_4, TETRAHEDRON_10, ElementTopology, LocalMeshSizeControlSetup, MeshSetup
+from vibra.engine.mesher.mesh_setup import (
+    HEXAHEDRON_8,
+    HEXAHEDRON_20,
+    TETRAHEDRON_4,
+    TETRAHEDRON_10,
+    ElementTopology,
+    LocalMeshSizeControlSetup,
+    MeshSetup,
+)
 from vibra.errors import InvalidMeshSetupError, MeshingAlgorithmError
 from vibra.interface.numeric_checks.unit_utilities import convert_length_unit
 
@@ -189,16 +197,48 @@ class Mesh:
         else:
             return 1
 
+    def get_disconnected_solid_nodes(self) -> list[int]:
+        assert self.nodal_coordinates is not None
+        assert self.solids_connectivity is not None
+
+        all_node_ids = self.nodal_coordinates[:, 0].astype(int)
+        mask = np.isin(all_node_ids, self.solids_connectivity[:, 4:])
+        return np.where(mask)[0].tolist()
+
+    def get_disconnected_surface_nodes(self) -> list[int]:
+        assert self.nodal_coordinates is not None
+        assert self.faces_connectivity is not None
+
+        all_node_ids = self.nodal_coordinates[:, 0].astype(int)
+        mask = np.isin(all_node_ids, self.faces_connectivity[:, 4:])
+        return np.where(mask)[0].tolist()
+
+    def get_disconnected_line_nodes(self) -> list[int]:
+        assert self.nodal_coordinates is not None
+        assert self.lines_connectivity is not None
+
+        all_node_ids = self.nodal_coordinates[:, 0].astype(int)
+        mask = np.isin(all_node_ids, self.lines_connectivity[:, 4:])
+        return np.where(mask)[0].tolist()
+
     def get_disconnected_nodes(self) -> list[int]:
+        mask = self._get_disconnected_nodes_mask()
+        return np.where(mask)[0].tolist()
+
+    def _get_disconnected_nodes_mask(self) -> np.typing.NDArray[np.bool_]:
+        assert self.nodal_coordinates is not None
+        assert self.solids_connectivity is not None
+        assert self.faces_connectivity is not None
+        assert self.lines_connectivity is not None
+
         all_node_ids = self.nodal_coordinates[:, 0].astype(int)
         used_nodes = np.isin(all_node_ids, self.solids_connectivity[:, 4:])
         used_nodes |= np.isin(all_node_ids, self.faces_connectivity[:, 4:])
         used_nodes |= np.isin(all_node_ids, self.lines_connectivity[:, 4:])
         return all_node_ids[~used_nodes]
 
-
     def remove_disconnected_nodes(self):
-        disconnected_nodes = self.get_disconnected_nodes()
+        disconnected_nodes = self._get_disconnected_nodes_mask()
 
         if not len(disconnected_nodes):
             return
@@ -264,10 +304,7 @@ class Mesh:
             for tag, node_id in self.nodes_from_points.items()
             if int(node_id) not in removed_nodes
         }
-        self.points_from_nodes = {
-            node_id: tag for tag, node_id in self.nodes_from_points.items()
-        }
-
+        self.points_from_nodes = {node_id: tag for tag, node_id in self.nodes_from_points.items()}
 
     def load_cad(self, path: str | Path, mesh_setup: MeshSetup, threads: int = 0) -> Self:
         if not gmsh.is_initialized():
@@ -290,7 +327,6 @@ class Mesh:
 
         if mesh_setup.merge_connected_volumes:
             self._merge_nodes_from_adjacent_volumes(mesh_setup.suppressed_volume_ids)
-
 
         logging.info("Configuring mesh... [20/100]")
         self._configure_mesh(mesh_setup)
@@ -972,7 +1008,7 @@ class Mesh:
         setup_sizes = [setup.element_size for setup in size_control_setups]
         max_size = max([global_size, *setup_sizes])
 
-        self._check_local_mesh_size_control_ids(size_control_setups) #checks if selected IDs actually exist
+        self._check_local_mesh_size_control_ids(size_control_setups)  # checks if selected IDs actually exist
 
         fields_list = []
 
@@ -996,7 +1032,7 @@ class Mesh:
             # Coarsening: the global size is applied as a refinement of every
             # region that is not explicitly coarsened.
 
-            gmsh.option.setNumber("Mesh.MeshSizeFromPoints", 0) # Necessary call for the fields to override this setting
+            gmsh.option.setNumber("Mesh.MeshSizeFromPoints", 0)  # Necessary call for the fields to override this setting
 
             all_volumes = {tag for dim, tag in gmsh.model.getEntities(3)}
             all_faces = {tag for dim, tag in gmsh.model.getEntities(2)}
@@ -1007,7 +1043,9 @@ class Mesh:
             coarsened_volumes = targeted_volumes
             pinned_volumes = all_volumes - coarsened_volumes
 
-            coarsened_faces = self._get_faces_to_coarsen(targeted_faces, targeted_volumes) # needed beacause faces of targeted volumes would be pinned otherwise
+            coarsened_faces = self._get_faces_to_coarsen(
+                targeted_faces, targeted_volumes
+            )  # needed beacause faces of targeted volumes would be pinned otherwise
             pinned_faces = all_faces - coarsened_faces
 
             pinned_curves, pinned_points = self._get_pinned_boundary_entities(all_faces, pinned_faces, coarsened_faces)
@@ -1109,16 +1147,8 @@ class Mesh:
                 if dim == 0:
                     faces_per_point.setdefault(tag, set()).add(face)
 
-        pinned_curves = {
-            curve
-            for curve, faces in faces_per_curve.items()
-            if (faces & pinned_faces) and not (faces & coarsened_faces)
-        }
-        pinned_points = {
-            point
-            for point, faces in faces_per_point.items()
-            if (faces & pinned_faces) and not (faces & coarsened_faces)
-        }
+        pinned_curves = {curve for curve, faces in faces_per_curve.items() if (faces & pinned_faces) and not (faces & coarsened_faces)}
+        pinned_points = {point for point, faces in faces_per_point.items() if (faces & pinned_faces) and not (faces & coarsened_faces)}
         return pinned_curves, pinned_points
 
     def clear_mesh_data(self):
