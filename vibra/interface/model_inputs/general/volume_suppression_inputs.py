@@ -201,7 +201,7 @@ class VolumeSuppressionInputs(VolumeSuppressionDialog_UI):
         message = (
             f"The following properties are assigned to surfaces of the selected volumes:\n\n"
             f"  {', '.join(prop_names)}\n\n"
-            "Suppressing these volumes will remove all associated mesh data while the volume is suppressed\n\n"
+            "Suppressing these volumes will remove all associated mesh data while the volume is suppressed.\n\n"
             "Do you want to proceed?"
         )
 
