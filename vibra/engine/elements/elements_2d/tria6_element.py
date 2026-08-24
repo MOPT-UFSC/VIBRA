@@ -231,7 +231,7 @@ class TRIANGLE_6(Element2D):
         return coord_loc
 
 
-    def get_jacobian_determinant(self, int_point: int, coords: np.ndarray, return_normal_vector: bool = False):
+    def get_jacobian_determinant(self, int_point: int, coords: np.ndarray, return_vectors: bool = False):
 
         # vectors tangent to the element's surface
         g_xi = self.dphi[int_point, 0, :] @ coords
@@ -243,13 +243,13 @@ class TRIANGLE_6(Element2D):
         # determinant of Jacobian matrix
         det_jac = np.linalg.norm(normal_vector)
 
-        if not return_normal_vector:
+        if not return_vectors:
             return det_jac
 
         # normalize the element normal vector for the i-th integration point
         e_normal = normal_vector / det_jac
 
-        return det_jac, e_normal 
+        return det_jac, e_normal, g_xi, g_eta
 
 
     def get_stacked_jacobian_determinant(self, int_point: int, coords: np.ndarray, return_normal_vector: bool = False):

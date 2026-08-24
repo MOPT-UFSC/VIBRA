@@ -414,4 +414,4 @@ if __name__ == "__main__":
 
     load_position = "output_face"
 
-    load_external_mesh_and_solve(load_position, load_type="nodal_loads", element_integration=False)
+    load_external_mesh_and_solve(load_position, load_type="nodal_loads", element_integration=True)

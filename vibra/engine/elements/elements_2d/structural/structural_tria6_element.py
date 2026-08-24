@@ -89,7 +89,7 @@ class STRUCT_TRIANGLE_6(TRIANGLE_6):
         for i in range(self.nint):
 
             # determinant of Jacobian and normal vector for the i-th integration point
-            det_jac, normal_vector = self.get_jacobian_determinant(i, coords, return_normal_vector=True)
+            det_jac, normal_vector, *_ = self.get_jacobian_determinant(i, coords, return_vectors=True)
 
             # matrix of shape functions for all DOF
             N = self.N_matrix[i, :, :]
@@ -100,7 +100,13 @@ class STRUCT_TRIANGLE_6(TRIANGLE_6):
         return Fe
 
 
-    def integrate_distributed_load(self, el_index: int, distributed_load: np.ndarray) -> np.ndarray:
+    def integrate_distributed_load(
+            self, 
+            el_index: int, 
+            distributed_load: np.ndarray, 
+            h_ecc: float = 0.0,
+            load_vector: np.ndarray | float = 0.0,
+            ) -> np.ndarray:
         """ 
         This method computes the elementary load vector.
 
@@ -126,17 +132,34 @@ class STRUCT_TRIANGLE_6(TRIANGLE_6):
 
         # initialize the variable Fe
         Fe = 0.
+        Fe_moment = 0.
 
         # integration loop
         for i in range(self.nint):
 
             # determinant of Jacobian for the i-th integration point
-            det_jac = self.get_jacobian_determinant(i, coords)
+            det_jac, normal_vector, g_xi, g_eta = self.get_jacobian_determinant(i, coords, return_vectors=True)
 
             # matrix of shape functions for all DOF
             N = self.N_matrix[i, :, :]
 
             Fe += (N.T @ distributed_load) * (det_jac * self.wps[i])
+
+            # normal to surface load vector
+            # normal_qvector = np.dot(load_vector, normal_vector) * normal_vector
+            normal_qvector = (distributed_load.T @ normal_vector) @ normal_vector.T
+
+            # tangent to surface load vector
+            tangent_qvector = distributed_load.T - normal_qvector
+
+            # compute moments
+            dN_deta =  self.dphi[i, 1, :].reshape(-1, 1, 1)
+            dN_dxi =  self.dphi[i, 0, :].reshape(-1, 1, 1)
+            moment_xi  = np.sum(np.cross(g_xi, tangent_qvector) * h_ecc * dN_deta, axis=0)
+            moment_eta = np.sum(np.cross(g_eta, tangent_qvector) * h_ecc * dN_dxi, axis=0)
+            
+            # load due the moments
+            Fe_moment += ((moment_xi - moment_eta) / det_jac) * self.wps * 0.5
 
         return Fe
 

@@ -692,7 +692,7 @@ class StructuralAssembler:
         self.element_2d.reorder_connect(connectivities)
         for i, complex_values in enumerate(data_array.values()):
             indices = self.element_2d.get_load_indexes(i)
-            load_vectors[indices, :] += self.element_2d.integrate_distributed_load(i, complex_values)
+            load_vectors[indices, :] += self.element_2d.integrate_distributed_load(i, complex_values)#, load_vector=np.array([1,0,0]))
 
         return load_vectors
 
