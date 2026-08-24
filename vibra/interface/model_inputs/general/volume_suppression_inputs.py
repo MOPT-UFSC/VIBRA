@@ -37,6 +37,7 @@ class VolumeSuppressionInputs(VolumeSuppressionDialog_UI):
         self._populate_table()
 
         app().main_window.selection.volume_selection_mode = True
+        self._geometry_selection_callback()
 
         while self.keep_window_open:
             self.exec()
@@ -200,8 +201,7 @@ class VolumeSuppressionInputs(VolumeSuppressionDialog_UI):
         message = (
             f"The following properties are assigned to surfaces of the selected volumes:\n\n"
             f"  {', '.join(prop_names)}\n\n"
-            "Suppressing these volumes will remove all associated mesh data. "
-            "These properties will become invalid and must be reassigned later.\n\n"
+            "Suppressing these volumes will remove all associated mesh data while the volume is suppressed.\n\n"
             "Do you want to proceed?"
         )
 
