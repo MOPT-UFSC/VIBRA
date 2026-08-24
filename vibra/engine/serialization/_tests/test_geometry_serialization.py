@@ -19,7 +19,6 @@ def test_write_and_read_acoustic_project(fluid, datadir: Path):
         "real_values": [1.0],
         "imag_values": [0.0],
         "element_integration": False,
-        "averaged": False,
     }
 
     project_a = Project()
@@ -72,8 +71,7 @@ def test_write_and_read_structural_project(material, datadir: Path):
         "element_type": "3d_element",
         "real_values": [1, 0, 0],
         "imag_values": [0, 0, 0],
-        "element_integration": False,
-        "averaged": True,
+        "element_integration": True,
     }
 
     project_a = Project()

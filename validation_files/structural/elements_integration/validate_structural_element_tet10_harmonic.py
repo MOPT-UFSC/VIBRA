@@ -134,9 +134,6 @@ def load_external_mesh_and_solve(load_position, load_type: str, element_integrat
             "element_integration": element_integration,
             }
 
-        if not element_integration:
-            load_data.update({"averaged": True})
-
         model.properties._set_property("nodal_loads", load_data, surface=load_surface)
 
         if load_type == "distributed_mass":

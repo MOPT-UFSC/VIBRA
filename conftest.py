@@ -121,9 +121,9 @@ def structural_model(material: Material) -> Model:
         "element_type": "3d_element",
         "real_values": [1, 0, 0],
         "imag_values": [0, 0, 0],
-        "element_integration": False,
-        "averaged": True,
+        "element_integration": True,
     }
+
     model.properties._set_property("material", material, surface=7)
     model.properties._set_property("nodal_loads", data_load, surface=7)
     model.set_geometry_path(path)

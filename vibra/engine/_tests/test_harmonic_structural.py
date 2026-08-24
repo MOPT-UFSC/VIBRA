@@ -72,8 +72,7 @@ def test_harmonic_structural():
             "element_type": "3d_element",
             "real_values": [1, 0, 2],
             "imag_values": [0, 0, 0],
-            "element_integration": False,
-            "averaged": True,
+            "element_integration": True,
         },
         surface=5,
     )

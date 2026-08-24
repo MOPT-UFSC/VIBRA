@@ -145,7 +145,6 @@ def load_external_mesh_and_solve(case: str, **kwargs):
         "real_values": [0.0, 1.0, 0.0],
         "imag_values": [0.0, 0.0, 0.0],
         "element_integration": True,
-        "averaged": False,
         }
 
     model.properties._set_property("nodal_loads", nodal_load_data, surface=2)
