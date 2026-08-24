@@ -81,7 +81,6 @@ class Mesh:
 
         self.mesh_quality_data = dict()
 
-        self.disconnected_nodes_data = dict()
         self.collapsed_elements_data = dict()
 
         self.suppressed_volumes: set[int] = set()
@@ -1160,7 +1159,6 @@ class Mesh:
         self.faces_connectivity = np.zeros((0, 4), dtype=int)
         self.solids_connectivity = np.zeros((0, 4), dtype=int)
 
-        self.disconnected_nodes_data.clear()
         self.collapsed_elements_data.clear()
 
         self.nodes_from_collapsed_elements.clear()
@@ -1883,35 +1881,16 @@ class Mesh:
         This method processes the disconnected nodes criterion for volumes,
         surfaces and lines-related elements.
         """
-
-        self.disconnected_nodes_data.clear()
-
-        if self.geometry_information.get("volumes"):
-            all_node_ids = self.nodal_coordinates[:, 0].astype(int)
-            nodes_from_3d_elements = np.unique(self.solids_connectivity[:, 4:].flatten())
-            if nodes_from_3d_elements.size and nodes_from_3d_elements.size != all_node_ids.size:
-                mask_3d = np.isin(all_node_ids, nodes_from_3d_elements, invert=True)
-                if mask_3d.any():
-                    self.disconnected_nodes_data["elements_3D"] = [int(node_id) for node_id in all_node_ids[mask_3d]]
-
-        if self.geometry_information.get("surfaces") and self.nodes_from_surfaces.size:
-            nodes_from_2d_elements = np.unique(self.faces_connectivity[:, 4:].flatten())
-            if self.nodes_from_surfaces.size != nodes_from_2d_elements.size:
-                mask_2d = np.isin(self.nodes_from_surfaces, nodes_from_2d_elements, invert=True)
-                if mask_2d.any():
-                    self.disconnected_nodes_data["elements_2D"] = [int(node_id) for node_id in self.nodes_from_surfaces[mask_2d]]
-
-        if self.geometry_information.get("lines") and self.nodes_from_lines.size:
-            nodes_from_1d_elements = np.unique(self.lines_connectivity[:, 4:].flatten())
-            if self.nodes_from_lines.size != nodes_from_1d_elements.size:
-                mask_1d = np.isin(self.nodes_from_lines, nodes_from_1d_elements, invert=True)
-                if mask_1d.any():
-                    self.disconnected_nodes_data["elements_1D"] = [int(node_id) for node_id in self.nodes_from_lines[mask_1d]]
+        disconnected_nodes_data = {
+            "elements_3D": self.get_disconnected_solid_nodes(),
+            "elements_2D": self.get_disconnected_surface_nodes(),
+            "elements_1D": self.get_disconnected_line_nodes(),
+        }
 
         if not print_log:
             return
 
-        for key, data in self.disconnected_nodes_data.items():
+        for key, data in disconnected_nodes_data.items():
             n_nodes = len(data)
             if n_nodes == 0:
                 continue
@@ -1932,15 +1911,15 @@ class Mesh:
 
         disconnected_nodes = []
 
-        disconnected_nodes_3d = self.disconnected_nodes_data.get("elements_3D")
+        disconnected_nodes_3d = self.get_disconnected_solid_nodes()
         if isinstance(disconnected_nodes_3d, list) and len(disconnected_nodes_3d):
             disconnected_nodes.extend(disconnected_nodes_3d)
 
-        disconnected_nodes_2d = self.disconnected_nodes_data.get("elements_2D")
+        disconnected_nodes_2d = self.get_disconnected_surface_nodes()
         if isinstance(disconnected_nodes_2d, list) and len(disconnected_nodes_2d):
             disconnected_nodes.extend(disconnected_nodes_2d)
 
-        disconnected_nodes_1d = self.disconnected_nodes_data.get("elements_1D")
+        disconnected_nodes_1d = self.get_disconnected_line_nodes()
         if isinstance(disconnected_nodes_1d, list) and len(disconnected_nodes_1d):
             disconnected_nodes.extend(disconnected_nodes_1d)
 

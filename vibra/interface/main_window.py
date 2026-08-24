@@ -593,13 +593,15 @@ class MainWindow(MainWindow_UI):
         self.selection.clear_selection()
 
     def has_hidden_part(self) -> bool:
+        mesh = app().project.model.mesh
+        assert mesh is not None
         return any(
             [
                 self.entity_visibility.has_hidden_entity(),
                 len(self.distinguished_solids) != 0,
                 self.section_plane.cutting,
-                bool(app().project.model.mesh.collapsed_elements_data),
-                bool(app().project.model.mesh.disconnected_nodes_data),
+                bool(mesh.collapsed_elements_data),
+                bool(mesh.get_disconnected_nodes()),
             ]
         )
 
