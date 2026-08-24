@@ -81,11 +81,6 @@ class StructuralAssembler:
             if nodes is None:
                 continue
 
-            print("get_property_data_for_selected_property")
-            print(property, surface_id)
-            print(len(nodes))
-            print(nodes)
-
             property_data_from_nodes = self.model.get_structural_property_data_from_nodes(nodes, data, "surfaces")
             for gdof, p_data in property_data_from_nodes.items():
                 output_data[gdof] += p_data
