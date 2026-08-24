@@ -44,7 +44,7 @@ class STRUCT_LINE_3(LINE_3):
         dL = 0.
 
         # integration loop
-        for i in range(self.nint):
+        for i in range(self.nint_M):
 
             det_jacs = self.get_stacked_jacobian_determinant(i, coords)
 
@@ -142,7 +142,7 @@ class STRUCT_LINE_3(LINE_3):
         Fe = 0.
 
         # integration loop
-        for i in range(self.nint):
+        for i in range(self.nint_M):
 
             # determinant of Jacobian for the i-th integration point
             det_jac = self.get_jacobian_determinant(i, coords)
@@ -183,7 +183,7 @@ class STRUCT_LINE_3(LINE_3):
         Me = 0.
 
         # integration loop
-        for i in range(self.nint):
+        for i in range(self.nint_M):
 
             # determinant of Jacobian for the i-th integration point
             det_jac = self.get_jacobian_determinant(i, coords)

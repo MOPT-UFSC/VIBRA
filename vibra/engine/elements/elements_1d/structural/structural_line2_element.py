@@ -22,12 +22,12 @@ class STRUCT_LINE_2(LINE_2):
 
 
     def get_N_matrix(self):
-        N = np.zeros((self.nint, 3, self.dof_per_element), dtype=float)
+        N = np.zeros((self.nint_M, 3, self.dof_per_element), dtype=float)
 
-        for i in range(self.nint):
-            N[i, 0, 0::3] = self.phi[i, :, :]
-            N[i, 1, 1::3] = self.phi[i, :, :]
-            N[i, 2, 2::3] = self.phi[i, :, :]
+        for i in range(self.nint_M):
+            N[i, 0, 0::3] = self.phi_M[i, :, :]
+            N[i, 1, 1::3] = self.phi_M[i, :, :]
+            N[i, 2, 2::3] = self.phi_M[i, :, :]
 
         return N
 
@@ -43,7 +43,7 @@ class STRUCT_LINE_2(LINE_2):
         dL = 0.
 
         # integration loop
-        for i in range(self.nint):
+        for i in range(self.nint_M):
 
             det_jacs = self.get_stacked_jacobian_determinant(i, coords)
 
@@ -141,7 +141,7 @@ class STRUCT_LINE_2(LINE_2):
         Fe = 0.
 
         # integration loop
-        for i in range(self.nint):
+        for i in range(self.nint_M):
 
             # determinant of Jacobian for the i-th integration point
             det_jac = self.get_jacobian_determinant(i, coords)
@@ -182,7 +182,7 @@ class STRUCT_LINE_2(LINE_2):
         Me = 0.
 
         # integration loop
-        for i in range(self.nint):
+        for i in range(self.nint_M):
 
             # determinant of Jacobian for the i-th integration point
             det_jac = self.get_jacobian_determinant(i, coords)
