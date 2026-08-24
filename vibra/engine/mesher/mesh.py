@@ -86,7 +86,6 @@ class Mesh:
 
         self.suppressed_volumes: set[int] = set()
 
-        self.disconnected_nodes = []
         self.nodes_from_collapsed_elements = []
 
         self.nodes_from_points = dict()
@@ -1164,7 +1163,6 @@ class Mesh:
         self.disconnected_nodes_data.clear()
         self.collapsed_elements_data.clear()
 
-        self.disconnected_nodes.clear()
         self.nodes_from_collapsed_elements.clear()
 
         self.nodes_from_points.clear()
@@ -1909,8 +1907,6 @@ class Mesh:
                 mask_1d = np.isin(self.nodes_from_lines, nodes_from_1d_elements, invert=True)
                 if mask_1d.any():
                     self.disconnected_nodes_data["elements_1D"] = [int(node_id) for node_id in self.nodes_from_lines[mask_1d]]
-
-        self.disconnected_nodes = self.get_list_of_disconnected_nodes()
 
         if not print_log:
             return

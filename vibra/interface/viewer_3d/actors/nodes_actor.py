@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from typing import Optional
 
 from molde.colors import Color, color_names
@@ -94,7 +95,7 @@ class NodesActor(vtkActor):
         else:
             self.set_color(Color(0, 0, 0, 0))
 
-        disconnected_nodes = self.mesh.disconnected_nodes
+        disconnected_nodes = self.mesh.get_disconnected_nodes()
         nodes_collapsed_elements = self.mesh.nodes_from_collapsed_elements
 
         if disconnected_nodes:
@@ -119,10 +120,10 @@ class NodesActor(vtkActor):
         self.GetMapper().ScalarVisibilityOff()  # Just to force color updates
         self.GetMapper().ScalarVisibilityOn()
 
-    def paint_nodes(self, color: Color, nodes: tuple[int]):
+    def paint_nodes(self, color: Color, nodes: Sequence[int]):
         self.paint_cells(color, nodes)
 
-    def paint_cells(self, color: Color, cells: tuple[int]):
+    def paint_cells(self, color: Color, cells: Sequence[int]):
         if self.data is None:
             return
 
