@@ -242,7 +242,7 @@ class STRUCT_TRIANGLE_6(TRIANGLE_6):
         return ind_rows, ind_cols
 
 
-    # NOTE: to be removed
+    ## NOTE: to be removed
 
     def integrate_area_old(self, connectivities: np.ndarray):
 

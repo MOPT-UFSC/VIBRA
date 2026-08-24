@@ -19,29 +19,99 @@ class STRUCT_LINE_3(LINE_3):
         self.element_label = "structural_line_3"
         self.nodal_coordinates = self.model.mesh.nodal_coordinates
 
+        self.N_matrix = self.get_N_matrix()
+
+
+    def get_N_matrix(self):
+        N = np.zeros((self.nint_M, 3, self.dof_per_element), dtype=float)
+
+        for i in range(self.nint_M):
+            N[i, 0, 0::3] = self.phi_M[i, :, :]
+            N[i, 1, 1::3] = self.phi_M[i, :, :]
+            N[i, 2, 2::3] = self.phi_M[i, :, :]
+
+        return N
+
 
     def integrate_length(self, connectivities: np.ndarray):
 
         self.connectivities = connectivities
-        
-        # compute local coordinates for all elements
-        coords_lcs = self.get_stacked_local_coordinates()
+
+        # stack the element nodes coordinates for all elements
+        coords = self.nodal_coordinates[[connect for connect in connectivities], 1:]
 
         # initialize variable
         dL = 0.
 
         # integration loop
-        for i in range(self.nint_M):
+        for i in range(self.nint):
 
-            # calculate the Jacobian
-            jacs = self.dphi_M[i, :, :] @ coords_lcs
+            det_jacs = self.get_stacked_jacobian_determinant(i, coords)
 
-            # calculate the determinant of the Jacobian
-            det_jacs = np.abs(jacs)
-
-            dL += (det_jacs * self.wps_M[i])    
+            # integrate all elementary areas
+            dL += det_jacs * self.wps_M[i]
 
         return np.sum(dL)
+
+
+    def get_jacobian_determinant(self, int_point: int, coords: np.ndarray):
+        """
+        This method evaluates the Jacobian determinant for the i-th integrarion point.
+        
+        Parameters
+        ----------
+
+        int_point: int
+            The integration point to be evaluated.
+
+        coords:  np.ndarray
+            A three-dimensional coordinate matrix of the element. 
+
+        Return
+        ------
+        det_jac: np.ndarray
+            The Jacobian determinant at the i-th integration point.
+
+        """
+
+        # Jacobian matrix
+        jac = self.dphi_M[int_point, 0, :] @ coords
+
+        # determinant of Jacobian matrix
+        det_jac = np.linalg.norm(jac).reshape(-1, 1)
+
+        return det_jac
+
+
+    def get_stacked_jacobian_determinant(self, int_point: int, coords: np.ndarray):
+        """
+        This method evaluates the Jacobian determinant for the i-th integrarion point.
+        
+        Parameters
+        ----------
+
+        int_point: int
+            The integration point to be evaluated.
+
+        coords:  np.ndarray
+            A three-dimensional coordinate matrix in which each plane contains
+            the nodal coordinates of an element. 
+
+        Return
+        ------
+        det_jac: np.ndarray
+            A stacked vector with the Jacobian determinant of all elements evaluated
+            at the i-th integration point.
+
+        """
+
+        # stacked Jacobian matrix
+        jac = self.dphi_M[int_point, 0, :] @ coords
+
+        # calculate the stacked Jacobian determinants
+        det_jac = np.linalg.norm(jac, axis=1)
+
+        return det_jac
 
 
     def integrate_distributed_load(self, el_index: int, distributed_load: np.ndarray) -> np.ndarray:
@@ -66,32 +136,21 @@ class STRUCT_LINE_3(LINE_3):
         e_nodes = self.connectivities[el_index, :]
 
         # element nodal coordinates
-        coords = self.nodal_coordinates[e_nodes, :]
-
-        # nodal coordinates in the local CS
-        coord_lcs = get_local_coordinates(coords)
-
-        # initialize the shape functions matrix
-        N = np.zeros((3, self.dof_per_element), dtype=float)
+        coords = self.nodal_coordinates[e_nodes, 1:]
 
         # initialize the variable Fe
         Fe = 0.
 
         # integration loop
-        for i in range(self.nint_M):
+        for i in range(self.nint):
 
-            # Jacobian matrix
-            JAC = self.dphi_M[i, :, :] @ coord_lcs
+            # determinant of Jacobian for the i-th integration point
+            det_jac = self.get_jacobian_determinant(i, coords)
 
-            # determinant of Jacobia matrix
-            det_JAC = np.abs(JAC)
+            # matrix of shape functions for all DOF
+            N = self.N_matrix[i, :, :]
 
-            # populate the shape functions matrix
-            N[0, 0::3] = self.phi_M[i, :, :]
-            N[1, 1::3] = self.phi_M[i, :, :]
-            N[2, 2::3] = self.phi_M[i, :, :]
-
-            Fe += (N.T @ distributed_load) * (det_JAC * self.wps_M[i])
+            Fe += (N.T @ distributed_load) * (det_jac * self.wps_M[i])
 
         return Fe
 
@@ -105,54 +164,57 @@ class STRUCT_LINE_3(LINE_3):
         el_index: int
             The element index.
 
-        load: float, optional
-            The load vector.
+        distributed_mass: float
+            The mass density in kg/m².
 
         Returns
         -------
-        Fe: np.ndarray
-            The elementary load vector.
+        Me: np.ndarray
+            The two-dimensional elementary consistent mass matrix.
         """
 
         # element nodes
         e_nodes = self.connectivities[el_index, :]
 
         # element nodal coordinates
-        coords = self.nodal_coordinates[e_nodes, :]
-
-        # nodal coordinates in the local CS
-        coord_lcs = get_local_coordinates(coords)
-
-        # initialize the shape functions matrix
-        N = np.zeros((3, self.dof_per_element), dtype=float)
+        coords = self.nodal_coordinates[e_nodes, 1:]
 
         # initialize the variable Fe
         Me = 0.
 
         # integration loop
-        for i in range(self.nint_M):
+        for i in range(self.nint):
 
-            # determinant of Jacobia matrix
-            det_jacs_M = self.dphi_M[i, :, :] @ coord_lcs
+            # determinant of Jacobian for the i-th integration point
+            det_jac = self.get_jacobian_determinant(i, coords)
 
-            # populate the shape functions matrix
-            N[0, 0::3] = self.phi_M[i, :, :]
-            N[1, 1::3] = self.phi_M[i, :, :]
-            N[2, 2::3] = self.phi_M[i, :, :]
+            # matrix of shape functions for all DOF
+            N = self.N_matrix[i, :, :]
 
-            Me += (N.T @ N) * distributed_mass * (det_jacs_M * self.wps_M[i])
+            Me += (N.T @ N) * distributed_mass * (det_jac * self.wps_M[i])
 
         return Me
 
 
-    def get_load_indexes(self, index: int):
-        node_ids = self.connectivities[index, :]
-        element_dofs = self.dof_per_node * node_ids.reshape(-1, 1) + np.arange(self.dof_per_node, dtype=int)
+    def get_load_indexes(self, index: int) -> np.ndarray:
+        """
+        Returns the load vector degrees of freedom indexes of an element.
+
+        Parameter
+        ---------
+        index: int
+            The element index of interest to compute the DOF indexes.
+
+        """
+        element_nodes = self.connectivities[index, :].reshape(-1, 1)
+        element_dofs = self.dof_per_node * element_nodes + np.arange(self.dof_per_node, dtype=int)
         return element_dofs.flatten()
 
 
     def get_element_rows_and_columns_indexes(self):
-
+        """
+        Returns the element rows and columns degrees of freedom indexes of an element.
+        """
         n_el = len(self.connectivities)
         dof, edof = self.dof_per_node, self.dof_per_element
 
@@ -169,3 +231,27 @@ class STRUCT_LINE_3(LINE_3):
         ind_cols = (np.tile(ind_dof, edof)).flatten()
 
         return ind_rows, ind_cols
+
+
+    def integrate_length_old(self, connectivities: np.ndarray):
+
+        self.connectivities = connectivities
+        
+        # compute local coordinates for all elements
+        coords_lcs = self.get_stacked_local_coordinates()
+
+        # initialize variable
+        dL = 0.
+
+        # integration loop
+        for i in range(self.nint_M):
+
+            # calculate the Jacobian
+            jacs = self.dphi_M[i, :, :] @ coords_lcs
+
+            # calculate the determinant of the Jacobian
+            det_jacs = np.abs(jacs)
+
+            dL += (det_jacs * self.wps_M[i])    
+
+        return np.sum(dL)
