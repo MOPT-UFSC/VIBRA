@@ -130,22 +130,36 @@ class MeshActor(vtkPropAssembly):
         # self.AddPart(self.node_actor)
 
         self.surface_colors.SetName("color")
-        self.surface_colors.SetNumberOfComponents(3)
+        self.surface_colors.SetNumberOfComponents(4)
         self.surface_ids.SetName("ids")
         self.surface_data.SetPoints(self.points)
         _ = self.surface_data.GetCellData().SetScalars(self.surface_colors)
         _ = self.surface_data.GetCellData().AddArray(self.surface_ids)
         self.surface_mapper.SetInputData(self.surface_data)
+        self.surface_actor.GetShaderProperty().AddFragmentShaderReplacement(
+            "//VTK::Light::Impl",
+            True,
+            "if (opacity < 0.1) { discard; }\n//VTK::Light::Impl",
+            False,
+        )
+        self.surface_actor.SetForceOpaque(True)
         self.surface_actor.SetMapper(self.surface_mapper)
         self.AddPart(self.surface_actor)
 
         self.section_colors.SetName("color")
-        self.section_colors.SetNumberOfComponents(3)
+        self.section_colors.SetNumberOfComponents(4)
         self.section_ids.SetName("ids")
         self.section_data.SetPoints(self.points)
         _ = self.section_data.GetCellData().SetScalars(self.section_colors)
         _ = self.section_data.GetCellData().AddArray(self.section_ids)
         self.section_mapper.SetInputData(self.section_data)
+        self.section_actor.GetShaderProperty().AddFragmentShaderReplacement(
+            "//VTK::Light::Impl",
+            True,
+            "if (opacity < 0.1) { discard; }\n//VTK::Light::Impl",
+            False,
+        )
+        self.section_actor.SetForceOpaque(True)
         self.section_actor.SetMapper(self.section_mapper)
         self.AddPart(self.section_actor)
 
@@ -295,10 +309,12 @@ class MeshActor(vtkPropAssembly):
             # Don't need to modify anything, but might
 
     def set_color(self, color: Color):
-        rgb = color.to_rgb()
+        rgba = color.to_rgba()
         for i in range(self.surface_colors.GetNumberOfComponents()):
-            self.surface_colors.FillComponent(i, rgb[i])
-            self.section_colors.FillComponent(i, rgb[i])
+            self.surface_colors.FillComponent(i, rgba[i])
+
+        for i in range(self.section_colors.GetNumberOfComponents()):
+            self.section_colors.FillComponent(i, rgba[i])
 
     def paint_face_elements(self, color: Color, face_elements: Sequence[int] | np.ndarray):
         if self.mesh is None:
@@ -307,7 +323,7 @@ class MeshActor(vtkPropAssembly):
         surface_ids = vtk_to_numpy(self.surface_ids)
         surface_colors = vtk_to_numpy(self.surface_colors)
         paint_position_mask = np.isin(surface_ids, face_elements)
-        surface_colors[paint_position_mask] = color.to_rgb()
+        surface_colors[paint_position_mask] = color.to_rgba()
 
     def paint_solid_elements(self, color: Color, solid_elements: Sequence[int] | np.ndarray):
         if self.mesh is None:
@@ -320,7 +336,7 @@ class MeshActor(vtkPropAssembly):
         section_ids = vtk_to_numpy(self.section_ids)
         section_colors = vtk_to_numpy(self.section_colors)
         paint_position_mask = np.isin(section_ids, solid_elements)
-        section_colors[paint_position_mask] = color.to_rgb()
+        section_colors[paint_position_mask] = color.to_rgba()
 
         # Second paint the elements with face IDs (which can also be solids)
         solids_mask = np.isin(self.mesh.solids_connectivity[:, 0], solid_elements)
@@ -339,6 +355,7 @@ class MeshActor(vtkPropAssembly):
         selected_face_elements, *_ = np.where(np.isin(self.mesh.faces_connectivity[:, 1], surfaces))
         self.paint_face_elements(color, selected_face_elements)
 
+    @function_timer
     def paint_volumes(self, color: Color, volumes: Sequence[int] | np.ndarray):
         if self.mesh is None:
             return
@@ -357,7 +374,7 @@ class MeshActor(vtkPropAssembly):
 
         selected_elements, *_ = np.where(np.isin(self.mesh.solids_connectivity[:, 1], volumes))
         paint_position_mask = np.isin(section_ids, selected_elements)
-        section_colors[paint_position_mask] = color.to_rgb()
+        section_colors[paint_position_mask] = color.to_rgba()
 
     def picked_dim_tag(self, picker: vtkHardwarePicker) -> tuple[int, int] | None:
         match picker.GetActor():
