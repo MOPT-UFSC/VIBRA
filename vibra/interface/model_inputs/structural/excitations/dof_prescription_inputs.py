@@ -9,11 +9,12 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QLabel, QLineEdit, QTreeWidgetItem
 
-from vibra import app
+from vibra import app, SUPPORTED_SPREADSHEET_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
 from vibra.engine.analysis_info import AnalysisID
 from vibra.interface import error_title
 from vibra.interface.common.common_interface import save_table_values, update_analysis_setup_in_file
-from vibra.interface.data_handler.data_importer import DataImporter
+from vibra.interface.user_input.data_handler.file_handlers.file_handler import FileHandler
+from vibra.interface.user_input.data_handler.file_dialog_service import FileDialogService
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.structural.definitions.enums import StandardTabType
@@ -594,25 +595,25 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
             app().project.configure_analysis(analysis_setup)
 
     def load_table(self, lineEdit : QLineEdit, dof_label : str, direct_load = False):
-
         try:
             if direct_load:
-                if lineEdit.text() == "":
-                    return None, None
-
-                imported_table_path = lineEdit.text()
-                imported_values = DataImporter.read_data_in_file(imported_table_path)[0].data
+                imported_path = lineEdit.text()
 
             else:
-                imported_data = DataImporter.import_single_file(
-                    "imported_table_folder", ["csv", "dat", "txt", "xlsx", "xls"], f"Choose a table to import the {dof_label} data"
-                )
-                if not imported_data:
-                    return None, None
+                extensions = SUPPORTED_SPREADSHEET_EXTENSIONS + SUPPORTED_TEXT_EXTENSIONS
+                imported_path = FileDialogService.open_file(file_extensions=extensions,
+                                                            caption=f"Choose a table to import the {dof_label} data",
+                                                            last_folder="imported_table_folder")
 
-                imported_values = imported_data.data
-                imported_table_path = imported_data.path
+            imported_data = FileHandler.read(imported_path)
 
+            if imported_data is None:
+                return None, None
+
+            imported_values = imported_data.data
+            imported_table_path = str(imported_data.path)
+
+            if not direct_load:
                 lineEdit.setText(imported_table_path)
                 lineEdit.setToolTip(imported_table_path)
 
