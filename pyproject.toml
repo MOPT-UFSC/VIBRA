@@ -71,3 +71,4 @@ reportUnknownParameterType = false
 reportUnknownVariableType = false
 reportUnannotatedClassAttribute = false
 reportMissingTypeStubs = false
+reportUnnecessaryIsInstance = false
