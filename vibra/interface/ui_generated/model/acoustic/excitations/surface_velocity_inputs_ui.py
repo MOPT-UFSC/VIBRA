@@ -15,10 +15,10 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QComboBox, QDialog, QFrame,
-    QGridLayout, QHeaderView, QLabel, QLineEdit,
-    QPushButton, QSizePolicy, QSpacerItem, QTabWidget,
-    QTreeWidget, QTreeWidgetItem, QWidget)
+from PySide6.QtWidgets import (QApplication, QDialog, QFrame, QGridLayout,
+    QHeaderView, QLabel, QLineEdit, QPushButton,
+    QSizePolicy, QSpacerItem, QTabWidget, QTreeWidget,
+    QTreeWidgetItem, QWidget)
 
 from vibra.interface.formatters.icons import Icon
 
@@ -27,14 +27,14 @@ class Ui_Dialog(object):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
         Dialog.setWindowModality(Qt.WindowModality.WindowModal)
-        Dialog.resize(420, 460)
+        Dialog.resize(440, 400)
         sizePolicy = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(Dialog.sizePolicy().hasHeightForWidth())
         Dialog.setSizePolicy(sizePolicy)
         Dialog.setMinimumSize(QSize(420, 400))
-        Dialog.setMaximumSize(QSize(420, 460))
+        Dialog.setMaximumSize(QSize(440, 400))
         font = QFont()
         font.setPointSize(11)
         font.setBold(False)
@@ -47,15 +47,16 @@ class Ui_Dialog(object):
         self.frame_2 = QFrame(Dialog)
         self.frame_2.setObjectName(u"frame_2")
         self.frame_2.setMinimumSize(QSize(380, 280))
-        self.frame_2.setMaximumSize(QSize(420, 480))
+        self.frame_2.setMaximumSize(QSize(16777215, 480))
         self.frame_2.setFrameShape(QFrame.Shape.Box)
         self.frame_2.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_4 = QGridLayout(self.frame_2)
         self.gridLayout_4.setObjectName(u"gridLayout_4")
+        self.gridLayout_4.setContentsMargins(12, -1, 12, -1)
         self.frame_4 = QFrame(self.frame_2)
         self.frame_4.setObjectName(u"frame_4")
-        self.frame_4.setMinimumSize(QSize(360, 120))
-        self.frame_4.setMaximumSize(QSize(380, 120))
+        self.frame_4.setMinimumSize(QSize(360, 40))
+        self.frame_4.setMaximumSize(QSize(16777215, 40))
         self.frame_4.setFrameShape(QFrame.Shape.NoFrame)
         self.frame_4.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_5 = QGridLayout(self.frame_4)
@@ -79,32 +80,6 @@ class Ui_Dialog(object):
 
         self.gridLayout_5.addWidget(self.lineEdit_selection_id, 0, 2, 1, 1)
 
-        self.label_5 = QLabel(self.frame_4)
-        self.label_5.setObjectName(u"label_5")
-        self.label_5.setMinimumSize(QSize(120, 28))
-        self.label_5.setMaximumSize(QSize(120, 28))
-        self.label_5.setFont(font1)
-        self.label_5.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
-
-        self.gridLayout_5.addWidget(self.label_5, 1, 1, 1, 1)
-
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_5.addItem(self.horizontalSpacer, 0, 0, 1, 1)
-
-        self.comboBox_distribution_type = QComboBox(self.frame_4)
-        self.comboBox_distribution_type.addItem("")
-        self.comboBox_distribution_type.addItem("")
-        self.comboBox_distribution_type.setObjectName(u"comboBox_distribution_type")
-        self.comboBox_distribution_type.setMinimumSize(QSize(150, 28))
-        self.comboBox_distribution_type.setMaximumSize(QSize(150, 28))
-        font2 = QFont()
-        font2.setPointSize(10)
-        font2.setBold(False)
-        self.comboBox_distribution_type.setFont(font2)
-
-        self.gridLayout_5.addWidget(self.comboBox_distribution_type, 1, 2, 1, 1)
-
         self.label_2 = QLabel(self.frame_4)
         self.label_2.setObjectName(u"label_2")
         self.label_2.setMinimumSize(QSize(120, 28))
@@ -114,29 +89,13 @@ class Ui_Dialog(object):
 
         self.gridLayout_5.addWidget(self.label_2, 0, 1, 1, 1)
 
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_5.addItem(self.horizontalSpacer, 0, 0, 1, 1)
+
         self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.gridLayout_5.addItem(self.horizontalSpacer_2, 0, 3, 1, 1)
-
-        self.label_6 = QLabel(self.frame_4)
-        self.label_6.setObjectName(u"label_6")
-        self.label_6.setMinimumSize(QSize(120, 28))
-        self.label_6.setMaximumSize(QSize(120, 28))
-        self.label_6.setFont(font1)
-        self.label_6.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
-
-        self.gridLayout_5.addWidget(self.label_6, 2, 1, 1, 1)
-
-        self.comboBox_average_values = QComboBox(self.frame_4)
-        self.comboBox_average_values.addItem("")
-        self.comboBox_average_values.addItem("")
-        self.comboBox_average_values.setObjectName(u"comboBox_average_values")
-        self.comboBox_average_values.setMinimumSize(QSize(150, 28))
-        self.comboBox_average_values.setMaximumSize(QSize(150, 28))
-        self.comboBox_average_values.setFont(font2)
-        self.comboBox_average_values.setMaxVisibleItems(2)
-
-        self.gridLayout_5.addWidget(self.comboBox_average_values, 2, 2, 1, 1)
 
 
         self.gridLayout_4.addWidget(self.frame_4, 0, 0, 1, 1)
@@ -144,7 +103,10 @@ class Ui_Dialog(object):
         self.tabWidget_main = QTabWidget(self.frame_2)
         self.tabWidget_main.setObjectName(u"tabWidget_main")
         self.tabWidget_main.setMinimumSize(QSize(360, 0))
-        self.tabWidget_main.setMaximumSize(QSize(380, 16777215))
+        self.tabWidget_main.setMaximumSize(QSize(16777215, 16777215))
+        font2 = QFont()
+        font2.setPointSize(10)
+        font2.setBold(False)
         self.tabWidget_main.setFont(font2)
         self.tab_constant_data = QWidget()
         self.tab_constant_data.setObjectName(u"tab_constant_data")
@@ -403,7 +365,7 @@ class Ui_Dialog(object):
         self.frame = QFrame(Dialog)
         self.frame.setObjectName(u"frame")
         self.frame.setMinimumSize(QSize(380, 48))
-        self.frame.setMaximumSize(QSize(420, 48))
+        self.frame.setMaximumSize(QSize(16777215, 48))
         self.frame.setFrameShape(QFrame.Shape.Box)
         self.frame.setFrameShadow(QFrame.Shadow.Raised)
         self.frame.setLineWidth(1)
@@ -482,7 +444,6 @@ class Ui_Dialog(object):
 
         self.retranslateUi(Dialog)
 
-        self.comboBox_average_values.setCurrentIndex(1)
         self.tabWidget_main.setCurrentIndex(0)
         self.pushButton_apply_and_close.setDefault(False)
         self.pushButton_apply.setDefault(False)
@@ -497,15 +458,7 @@ class Ui_Dialog(object):
 #if QT_CONFIG(whatsthis)
         Dialog.setWhatsThis("")
 #endif // QT_CONFIG(whatsthis)
-        self.label_5.setText(QCoreApplication.translate("Dialog", u"Distribution type:", None))
-        self.comboBox_distribution_type.setItemText(0, QCoreApplication.translate("Dialog", u"Element integration", None))
-        self.comboBox_distribution_type.setItemText(1, QCoreApplication.translate("Dialog", u"Nodal distribution", None))
-
         self.label_2.setText(QCoreApplication.translate("Dialog", u"Selection ID:", None))
-        self.label_6.setText(QCoreApplication.translate("Dialog", u"Average values:", None))
-        self.comboBox_average_values.setItemText(0, QCoreApplication.translate("Dialog", u"Disabled", None))
-        self.comboBox_average_values.setItemText(1, QCoreApplication.translate("Dialog", u"Enabled", None))
-
         self.label_21.setText(QCoreApplication.translate("Dialog", u"[m/s]", None))
         self.label_18.setText(QCoreApplication.translate("Dialog", u"Surface velocity:", None))
         self.label_4.setText(QCoreApplication.translate("Dialog", u"Real", None))
@@ -541,11 +494,7 @@ class SurfaceVelocityInputs_UI(QDialog, Ui_Dialog):
                             - frame_4: QFrame
                                 - (Layout): QGridLayout
                                         - lineEdit_selection_id: QLineEdit
-                                        - label_5: QLabel
-                                        - comboBox_distribution_type: QComboBox
                                         - label_2: QLabel
-                                        - label_6: QLabel
-                                        - comboBox_average_values: QComboBox
                             - tabWidget_main: QTabWidget
                                 - tab_constant_data: QWidget
                                     - (Layout): QGridLayout

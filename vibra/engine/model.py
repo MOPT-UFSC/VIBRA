@@ -588,9 +588,6 @@ class Model:
         local_dof = np.arange(dof_per_node, dtype=int)
         global_dof = dof_per_node * nodes.reshape(-1, 1) + local_dof
 
-        averaged = data.get("averaged", False)
-        den = len(nodes) if averaged else 1.0
-
         n_int = 0
         if "integrate" in data:
             n_int = data.get("integrate", 0)
@@ -602,9 +599,9 @@ class Model:
                     continue
 
                 if isinstance(values, np.ndarray):
-                    avg_value = values[self.solution_steps_mask] / den
+                    avg_value = values[self.solution_steps_mask]
                 else:
-                    avg_value = values / den
+                    avg_value = values
 
                 if n_int and isinstance(self.frequencies, np.ndarray):
                     output_data[gdof] = avg_value / ((1j * 2 * np.pi * self.frequencies)**n_int)

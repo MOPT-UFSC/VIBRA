@@ -137,7 +137,6 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         # QComboBox connections
         self.comboBox_assignment_type.currentIndexChanged.connect(self.assignment_type_callback)
         self.comboBox_element_type.currentIndexChanged.connect(self.element_type_callback)
-        self.comboBox_distribution_type.currentIndexChanged.connect(self.distribution_type_changed_callback)
 
         # QPushButton connections
         self.pushButton_apply.clicked.connect(self.apply_callback)
@@ -155,14 +154,14 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         # QTabWidget connection
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
 
-        # QTreeWidget connection
+        # QTreeWidget connections
         self.treeWidget_nodal_loads.itemClicked.connect(self.on_click_item)
         self.treeWidget_nodal_loads.itemDoubleClicked.connect(self.on_double_click_item)
 
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
+        self.assignment_type_callback()
         self.geometry_selection_callback()
-        self.distribution_type_changed_callback()
         self.update_element_type_based_on_geometry_information()
 
     def geometry_selection_callback(self):
@@ -265,13 +264,8 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         else:
             app().main_window.action_model_workspace_callback()
 
-        element_integration_is_valid = assignment_index in [AssignmetType.SURFACES, AssignmetType.LINES]
-        if element_integration_is_valid:
-            self.comboBox_distribution_type.setCurrentIndex(DistributionType.ELEMENT_INTEGRATION)
-        else:
-            self.comboBox_distribution_type.setCurrentIndex(DistributionType.NODAL_DISTRIBUTION)
-
-        self.comboBox_distribution_type.setEnabled(element_integration_is_valid)
+        element_integration = assignment_index in [AssignmetType.SURFACES, AssignmetType.LINES]
+        self.comboBox_average_values.setDisabled(element_integration)
 
     def element_type_callback(self):
 
@@ -306,14 +300,9 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         self.lineEdit_path_table_Mz.setVisible(element_2d)
 
     @property
-    def average_values(self):
-        return self.comboBox_average_values.currentText() == "Enabled"
-
-    def distribution_type_changed_callback(self):
-        nodal_distribution = self.comboBox_distribution_type.currentIndex() == DistributionType.NODAL_DISTRIBUTION
-        self.comboBox_average_values.setEnabled(nodal_distribution)
-        if not nodal_distribution:
-            self.comboBox_average_values.setCurrentText("Disabled")
+    def element_integration(self):
+        assignment_type = self.comboBox_assignment_type.currentIndex()
+        return assignment_type in [AssignmetType.SURFACES, AssignmetType.LINES]
 
     def update_element_type_based_on_geometry_information(self):
         volume_exists = self.mesh.are_there_volumes_in_geometry()
@@ -373,7 +362,6 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
         index = self.comboBox_element_type.currentIndex()
         element_type = self.element_types[index]
-        element_integration = self.comboBox_distribution_type.currentIndex() == DistributionType.ELEMENT_INTEGRATION
 
         stop, Fx = self.check_complex_entries(self.lineEdit_real_Fx.text(), self.lineEdit_imag_Fx.text(), "Fx")
         if stop:
@@ -426,11 +414,8 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                 "values": nodal_loads,
                 "real_values": real_values,
                 "imag_values": imag_values,
-                "element_integration": element_integration,
+                "element_integration": self.element_integration,
             }
-
-            if not element_integration:
-                data.update({"averaged": self.average_values})
 
             if assignment_type == AssignmetType.SURFACES:
                 self.properties._set_property("nodal_loads", data, surface=selected_id)
@@ -584,7 +569,6 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
         index = self.comboBox_element_type.currentIndex()
         element_type = self.element_types[index]
-        element_integration = self.comboBox_distribution_type.currentIndex() == DistributionType.ELEMENT_INTEGRATION
 
         if self.Fx_table_path is None:
             self.Fx_table_values, self.Fx_table_path = self.load_table(self.lineEdit_path_table_Fx, "Fx", direct_load = True)
@@ -663,11 +647,8 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                 "table_names": table_names,
                 "table_paths": table_paths,
                 "values": nodal_loads,
-                "element_integration": element_integration,
+                "element_integration": self.element_integration,
             }
-
-            if not element_integration:
-                data.update({"averaged": self.average_values})
 
             if assignment_type == AssignmetType.SURFACES:
                 self.properties._set_property("nodal_loads", data, surface=selected_id)

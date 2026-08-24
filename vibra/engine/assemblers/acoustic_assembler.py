@@ -1721,17 +1721,11 @@ class AcousticAssembler:
                 if nodes is None:
                     continue
 
-                N = len(nodes)
                 self.model.mesh.process_face_elements_connected_to_nodes(surface_id)
                 area = self.model.mesh.surface_area_from_element_integration[surface_id]
 
-                averaged = data.get("averaged")
-
                 for index in self.model.get_acoustic_global_dof_from_nodes(nodes):
-                    if averaged:
-                        acoustic_excitation[index] += (complex_values * area) / N
-                    else:
-                        acoustic_excitation[index] += complex_values * area
+                    acoustic_excitation[index] += complex_values * area
 
         total_dof = self.element_3d.DOF_PER_NODE * len(self.element_3d.nodal_coordinates)
         output = np.zeros((total_dof, self.number_frequencies), dtype=complex)

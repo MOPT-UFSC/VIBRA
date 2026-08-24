@@ -60,9 +60,6 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
 
     def _create_connections(self):
 
-        # QComboBox connection
-        self.comboBox_distribution_type.currentIndexChanged.connect(self.distribution_type_changed_callback)
-
         # QPushButton connections
         self.pushButton_apply.clicked.connect(self.apply_callback)
         self.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
@@ -81,7 +78,6 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
         self.geometry_selection_callback()
-        self.distribution_type_changed_callback()
 
     def _config_widgets(self):
 
@@ -108,20 +104,6 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         data = self.properties._get_property("surface_velocity", surface=surface_id)
 
         if isinstance(data, dict):
-
-            element_integration = data.get("element_integration", True)
-
-            self.checkBox_averaged_constant_values.setEnabled(element_integration)
-            self.checkBox_averaged_table_values.setEnabled(element_integration)
-
-            if element_integration:
-                self.comboBox_distribution_type.setCurrentIndex(DistributionType.ELEMENT_INTEGRATION)
-
-            else:
-                averaged = data.get("averaged", False)
-                self.checkBox_averaged_constant_values.setChecked(averaged)
-                self.checkBox_averaged_table_values.setChecked(averaged)
-                self.comboBox_distribution_type.setCurrentIndex(DistributionType.NODAL_DISTRIBUTION)
 
             if "table_paths" in data:
                 self.tabWidget_main.setCurrentIndex(StandardTabType.TABULAR_DATA)
@@ -178,16 +160,6 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         
         return map_id_to_model_index
 
-    @property
-    def average_values(self):
-        return self.comboBox_average_values.currentText() == "Enabled"
-
-    def distribution_type_changed_callback(self):
-        nodal_distribution = self.comboBox_distribution_type.currentIndex() == DistributionType.NODAL_DISTRIBUTION
-        self.comboBox_average_values.setEnabled(nodal_distribution)
-        if not nodal_distribution:
-            self.comboBox_average_values.setCurrentText("Disabled")
-
     def tab_event_callback(self):
         current_tab = self.tabWidget_main.currentIndex()
         tab_list = current_tab == StandardTabType.LIST
@@ -225,7 +197,7 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
             if self.constant_data_assignment(surface_ids):
                 return
 
-        elif tab_index == StandardTabType.TABULAR_DATA:
+        if tab_index == StandardTabType.TABULAR_DATA:
             if self.tabular_data_assignment(surface_ids):
                 return
 
@@ -275,16 +247,11 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         real_values = [np.real(surface_velocity)]
         imag_values = [np.imag(surface_velocity)]
 
-        element_integration = self.comboBox_distribution_type.currentIndex() == DistributionType.ELEMENT_INTEGRATION
-
         data = {
             "real_values": real_values,
             "imag_values": imag_values,
-            "element_integration": element_integration,
+            "element_integration": True,
         }
-
-        if not element_integration:
-            data.update({"averaged": self.average_values})
 
         for surface_id in surface_ids:
             self.properties._set_property("surface_velocity", data, surface=surface_id)
@@ -395,19 +362,15 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
             # table path from imported tabular data
             table_path = self.lineEdit_table_path.text()
 
-            element_integration = self.comboBox_distribution_type.currentIndex() == DistributionType.ELEMENT_INTEGRATION
-
             data = {
                 "table_names" : [table_name],
                 "table_paths" : [table_path],
                 "values" : [complex_values],
-                "element_integration" : element_integration,
+                "element_integration" : True,
                 }
 
-            data.update({"averaged": self.average_values})
-
             self.properties._set_property("surface_velocity", data, surface=surface_id)
-    
+
     def process_table_file_removal(self, table_names: list):
         for table_name in table_names:
             self.properties.remove_imported_tables("acoustic", table_name)
