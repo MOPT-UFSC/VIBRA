@@ -41,7 +41,7 @@ stresses_labels = [
 def load_external_mesh_and_solve(load_position, load_type: str, element_integration: bool = True):
 
     # start decoding the Ansys script file (ds.dat file or input file)
-    mesh_path = PROJECT_DIR / "validation_files/data/WB/structural/elements_integration/tet10/mesh/curved_pipe_tet10_coarse.dat"
+    mesh_path = PROJECT_DIR / "validation_files/data/WB/structural/elements_integration/tet10/mesh/curved_pipe_tet10.dat"
     if not os.path.exists(mesh_path):
         return
     
@@ -137,8 +137,6 @@ def load_external_mesh_and_solve(load_position, load_type: str, element_integrat
         if not element_integration:
             load_data.update({"averaged": True})
 
-        print(load_data)
-
         model.properties._set_property("nodal_loads", load_data, surface=load_surface)
 
         if load_type == "distributed_mass":
@@ -222,8 +220,8 @@ def load_external_mesh_and_solve(load_position, load_type: str, element_integrat
     plot_type = "absolute"
 
     # displacements plots
-    # for node_id in [1388, 1402, 143]:
-    for node_id in [373, 281, 143]:
+    for node_id in [1388, 1402, 143]:
+    # for node_id in [373, 281, 143]:
 
         print()
         # plots for displacements
@@ -412,6 +410,6 @@ def get_reference_nodal_response(
 
 if __name__ == "__main__":
 
-    load_position = "output_face"
+    load_position = "side_face"
 
-    load_external_mesh_and_solve(load_position, load_type="nodal_loads", element_integration=True)
+    load_external_mesh_and_solve(load_position, load_type="normal_pressure_load", element_integration=True)

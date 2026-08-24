@@ -584,11 +584,9 @@ class Model:
                 return output_data
 
             dof_per_node = element_3d.DOF_PER_NODE
-            print(f"dof per node: {dof_per_node}")
 
         local_dof = np.arange(dof_per_node, dtype=int)
         global_dof = dof_per_node * nodes.reshape(-1, 1) + local_dof
-        print(global_dof.shape)
 
         averaged = data.get("averaged", False)
         den = len(nodes) if averaged else 1.0
