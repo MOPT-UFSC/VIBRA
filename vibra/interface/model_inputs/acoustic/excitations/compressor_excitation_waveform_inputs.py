@@ -524,13 +524,10 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
     
     def load_table(self, line_edit : QLineEdit, direct_load: bool=False):
         title = "Error reached while loading 'surface velocity' table"
-        imported_values = None
-        imported_data = None
 
         try:
             if direct_load:
-                imported_table_path = line_edit.text()
-                imported_data = FileHandler.read(imported_table_path)
+                imported_path = line_edit.text()
 
             else:
                 extensions = SUPPORTED_SPREADSHEET_EXTENSIONS + SUPPORTED_TEXT_EXTENSIONS
@@ -540,11 +537,12 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
                                                             caption=caption,
                                                             last_folder="imported_table_folder")
 
-                imported_data = FileHandler.read(imported_path)
+            imported_data = FileHandler.read(imported_path)
 
-                if imported_data is None:
-                    return
-                
+            if imported_data is None:
+                return
+
+            if not direct_load:
                 line_edit.setText(str(imported_data.path))
 
             imported_values = imported_data.data 

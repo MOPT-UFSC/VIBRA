@@ -385,13 +385,10 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
 
     def load_table(self, lineEdit : QLineEdit, direct_load=False):
         title = "Error reached while loading 'incident plane wave' table"
-        imported_values = None
-        imported_data = None
 
         try:
             if direct_load:
-                imported_table_path = lineEdit.text()
-                imported_data = FileHandler.read(imported_table_path)
+                imported_path = lineEdit.text()
 
             else:
                 extensions = SUPPORTED_SPREADSHEET_EXTENSIONS + SUPPORTED_TEXT_EXTENSIONS
@@ -399,11 +396,12 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
                                             caption="Choose a table to import the absorption surface",
                                             last_folder="imported_table_folder")
 
-                imported_data = FileHandler.read(imported_path)
+            imported_data = FileHandler.read(imported_path)
 
-                if imported_data is None:
-                    return
-                
+            if imported_data is None:
+                return
+
+            if not direct_load:
                 lineEdit.setText(str(imported_data.path))
 
             imported_values = imported_data.data

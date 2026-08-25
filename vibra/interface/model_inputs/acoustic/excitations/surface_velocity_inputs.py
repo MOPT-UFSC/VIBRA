@@ -285,8 +285,6 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
 
     def load_table(self, lineEdit : QLineEdit, direct_load=False):
         title = "Error reached while loading 'surface velocity' table"
-        imported_values = None
-        imported_data = None
 
         try:
             if direct_load:

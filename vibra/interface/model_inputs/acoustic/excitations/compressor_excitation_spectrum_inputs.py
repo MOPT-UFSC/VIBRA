@@ -149,13 +149,10 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
 
     def load_table(self, lineEdit : QLineEdit, direct_load=False):
         title = "Error reached while loading compressor excitation data"
-        imported_data = None
-        imported_values = None
 
         try:
             if direct_load:
-                imported_table_path = lineEdit.text()
-                imported_data = FileHandler.read(imported_table_path)
+                imported_path = lineEdit.text()
 
             else:
                 extensions = SUPPORTED_SPREADSHEET_EXTENSIONS + SUPPORTED_TEXT_EXTENSIONS
@@ -165,11 +162,12 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
                                             caption=caption,
                                             last_folder="imported_table_folder")
 
-                imported_data = FileHandler.read(imported_path)
+            imported_data = FileHandler.read(imported_path)
 
-                if imported_data is None:
-                    return None
+            if imported_data is None:
+                return None
 
+            if not direct_load:
                 lineEdit.setText(str(imported_data.path))
                 
             imported_values = imported_data.data
