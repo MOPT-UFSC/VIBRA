@@ -6,7 +6,7 @@ from os.path import basename
 import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
-from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
+from PySide6.QtWidgets import QAbstractItemView, QLineEdit, QTreeWidgetItem
 
 from vibra import app
 from vibra.interface import error_title
@@ -15,6 +15,7 @@ from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.structural.definitions.enums import StandardTabType
+from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
 from vibra.interface.ui_generated.model.structural.excitations.nodal_loads_inputs_ui import NodalLoadsInputs_UI
 
 
@@ -28,11 +29,17 @@ class DistributionType(IntEnum):
     NODAL_DISTRIBUTION = 1
 
 
-class AssignmetType(IntEnum):
+class AssignmentType(IntEnum):
     SURFACES = 0
     LINES = 1
     POINTS = 2
     NODES = 3
+    MULTIPLE = 4
+
+
+class DataType(IntEnum):
+    REAL_IMAGINARY = 0
+    AMPLITUDE_PHASE = 1
 
 
 class NodalLoadsInputs(NodalLoadsInputs_UI):
@@ -48,7 +55,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
         self._config_window()
         self._initialize()
-        self._create_list_lineEdits()
+        self._create_list_line_edits()
         self._create_connections()
 
         self._config_widgets()
@@ -73,6 +80,16 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             3 : "nodes",
         }
         self.reset_table_variables()
+
+    def _configure_validators(self):
+        for line_edit_real, line_edit_imag in self.list_lineEdit_constant_values:
+            line_edit_real.setValidator(StrictDoubleValidator(-1e16, 1e16, 8))
+            line_edit_imag.setValidator(StrictDoubleValidator(-1e16, 1e16, 8))
+
+    @property
+    def element_integration(self):
+        assignment_type = self.comboBox_assignment_type.currentIndex()
+        return assignment_type in [AssignmentType.SURFACES, AssignmentType.LINES]
 
     def reset_table_variables(self):
 
@@ -104,15 +121,15 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         self.My_table_name = None
         self.Mz_table_name = None
 
-    def _create_list_lineEdits(self):
+    def _create_list_line_edits(self):
 
         self.list_lineEdit_constant_values = [
-            [self.lineEdit_real_Fx, self.lineEdit_imag_Fx],
-            [self.lineEdit_real_Fy, self.lineEdit_imag_Fy],
-            [self.lineEdit_real_Fz, self.lineEdit_imag_Fz],
-            [self.lineEdit_real_Mx, self.lineEdit_imag_Mx],
-            [self.lineEdit_real_My, self.lineEdit_imag_My],
-            [self.lineEdit_real_Mz, self.lineEdit_imag_Mz],
+            [self.lineEdit_left_Fx, self.lineEdit_right_Fx],
+            [self.lineEdit_left_Fy, self.lineEdit_right_Fy],
+            [self.lineEdit_left_Fz, self.lineEdit_right_Fz],
+            [self.lineEdit_left_Mx, self.lineEdit_right_Mx],
+            [self.lineEdit_left_My, self.lineEdit_right_My],
+            [self.lineEdit_left_Mz, self.lineEdit_right_Mz],
         ]
 
         self.table_lineEdits = {
@@ -124,11 +141,21 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             "Mz": self.lineEdit_path_table_Mz,
         }
 
+        self.unit_labels = {
+            "Fx": self.label_Fx_unit,
+            "Fy": self.label_Fy_unit,
+            "Fz": self.label_Fz_unit,
+            "Mx": self.label_Mx_unit,
+            "My": self.label_My_unit,
+            "Mz": self.label_Mz_unit,
+        }
+
     def _config_widgets(self):
 
         self.comboBox_element_type.setEnabled(False)
+        self.treeWidget_nodal_loads.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
 
-        for i, w in enumerate([110, 150, 100]):
+        for i, w in enumerate([60, 80, 120, 120]):
             self.treeWidget_nodal_loads.setColumnWidth(i, w)
             self.treeWidget_nodal_loads.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
@@ -136,6 +163,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
     
         # QComboBox connections
         self.comboBox_assignment_type.currentIndexChanged.connect(self.assignment_type_callback)
+        self.comboBox_data_type.currentIndexChanged.connect(self.data_type_callback)
         self.comboBox_element_type.currentIndexChanged.connect(self.element_type_callback)
 
         # QPushButton connections
@@ -155,26 +183,44 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
 
         # QTreeWidget connections
-        self.treeWidget_nodal_loads.itemClicked.connect(self.on_click_item)
-        self.treeWidget_nodal_loads.itemDoubleClicked.connect(self.on_double_click_item)
+        self.treeWidget_nodal_loads.itemClicked.connect(self.item_clicked_callback)
+        self.treeWidget_nodal_loads.itemDoubleClicked.connect(self.item_double_clicked_callback)
+        self.treeWidget_nodal_loads.itemSelectionChanged.connect(self.item_selection_clicked_callback)
 
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
         self.assignment_type_callback()
         self.geometry_selection_callback()
+        self.tab_event_callback()
         self.update_element_type_based_on_geometry_information()
 
     def geometry_selection_callback(self):
 
-        faces = app().main_window.selection.geometry_surfaces
-        if faces:
+        surfaces = app().main_window.selection.geometry_surfaces
+        lines = app().main_window.selection.geometry_lines
+        points = app().main_window.selection.geometry_points
+        nodes = app().main_window.selection.mesh_nodes
 
-            text = ", ".join([str(i) for i in faces])
+        multiple_selection = sum([len(entities) > 0 for entities in (surfaces, lines, points, nodes)]) >= 2
+
+        if self.tabWidget_main.currentIndex() == StandardTabType.LIST and multiple_selection:
+            self.lineEdit_selection_id.setText("mult. entities")
+            self.comboBox_assignment_type.setEnabled(False)
+            self.comboBox_assignment_type.setCurrentIndex(AssignmentType.MULTIPLE)
+            view = self.comboBox_assignment_type.view()
+            view.setRowHidden(4, False)
+            return
+
+        self.comboBox_assignment_type.setEnabled(True)
+
+        if surfaces:
+
+            text = ", ".join([str(i) for i in surfaces])
             self.lineEdit_selection_id.setText(text)
-            self.comboBox_assignment_type.setCurrentIndex(0)
+            self.comboBox_assignment_type.setCurrentIndex(AssignmentType.SURFACES)
 
-            if len(faces) == 1:
-                surface_id = next(iter(faces))
+            if len(surfaces) == 1:
+                surface_id = next(iter(surfaces))
                 data = self.properties._get_property("nodal_loads", surface=surface_id)
                 self.update_input_fields(data)
                 if data is None:
@@ -182,12 +228,11 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
             return
 
-        lines = app().main_window.selection.geometry_lines
         if lines:
 
             text = ", ".join([str(i) for i in lines])
             self.lineEdit_selection_id.setText(text)
-            self.comboBox_assignment_type.setCurrentIndex(1)
+            self.comboBox_assignment_type.setCurrentIndex(AssignmentType.LINES)
 
             if len(lines) == 1:
                 line_id = next(iter(lines))
@@ -196,12 +241,10 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                 if data is None:
                     self.update_formulation_callback(line_id=line_id)
 
-        points = app().main_window.selection.geometry_points
         if points:
-
             text = ", ".join([str(i) for i in points])
             self.lineEdit_selection_id.setText(text)
-            self.comboBox_assignment_type.setCurrentIndex(2)
+            self.comboBox_assignment_type.setCurrentIndex(AssignmentType.POINTS)
 
             if len(points) == 1:
                 point_id = next(iter(points))
@@ -210,12 +253,10 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                 if data is None:
                     self.update_formulation_callback(point_id=point_id)
 
-        nodes = app().main_window.selection.mesh_nodes
         if nodes:
-
             text = ", ".join([str(i) for i in nodes])
             self.lineEdit_selection_id.setText(text)
-            self.comboBox_assignment_type.setCurrentIndex(3)
+            self.comboBox_assignment_type.setCurrentIndex(AssignmentType.NODES)
 
             if len(nodes) == 1:
                 node_id = next(iter(nodes))
@@ -249,23 +290,20 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                     lineEdit_table.setText(table_path)
 
         else:
-            for index, [lineEdit_real, lineEdit_imag] in enumerate(self.list_lineEdit_constant_values):
+            for index, [lineEdit_left, lineEdit_right] in enumerate(self.list_lineEdit_constant_values):
                 if element_type == "3d_element" and index >= 3:
                     continue
 
                 elif index <= 5 and values[index] is not None:
-                    lineEdit_real.setText(str(np.real(values[index])))
-                    lineEdit_imag.setText(str(np.imag(values[index])))
+                    lineEdit_left.setText(str(np.real(values[index])))
+                    lineEdit_right.setText(str(np.imag(values[index])))
 
     def assignment_type_callback(self):
         assignment_index = self.comboBox_assignment_type.currentIndex()
-        if assignment_index == AssignmetType.NODES:
+        if assignment_index == AssignmentType.NODES:
             app().main_window.action_mesh_workspace_callback()
         else:
             app().main_window.action_model_workspace_callback()
-
-        element_integration = assignment_index in [AssignmetType.SURFACES, AssignmetType.LINES]
-        self.comboBox_average_values.setDisabled(element_integration)
 
     def element_type_callback(self):
 
@@ -283,13 +321,13 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         self.label_My_table.setVisible(element_2d)
         self.label_Mz_table.setVisible(element_2d)
 
-        self.lineEdit_real_Mx.setVisible(element_2d)
-        self.lineEdit_real_My.setVisible(element_2d)
-        self.lineEdit_real_Mz.setVisible(element_2d)
+        self.lineEdit_left_Mx.setVisible(element_2d)
+        self.lineEdit_left_My.setVisible(element_2d)
+        self.lineEdit_left_Mz.setVisible(element_2d)
 
-        self.lineEdit_imag_Mx.setVisible(element_2d)
-        self.lineEdit_imag_My.setVisible(element_2d)
-        self.lineEdit_imag_Mz.setVisible(element_2d)
+        self.lineEdit_right_Mx.setVisible(element_2d)
+        self.lineEdit_right_My.setVisible(element_2d)
+        self.lineEdit_right_Mz.setVisible(element_2d)
 
         self.pushButton_load_Mx_table.setVisible(element_2d)
         self.pushButton_load_My_table.setVisible(element_2d)
@@ -299,53 +337,49 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         self.lineEdit_path_table_My.setVisible(element_2d)
         self.lineEdit_path_table_Mz.setVisible(element_2d)
 
-    @property
-    def element_integration(self):
-        assignment_type = self.comboBox_assignment_type.currentIndex()
-        return assignment_type in [AssignmetType.SURFACES, AssignmetType.LINES]
+    def data_type_callback(self):
+        real_imaginary = self.comboBox_data_type.currentIndex() == DataType.REAL_IMAGINARY
+        self.label_constant_left.setText("Real" if real_imaginary else "Amplitude")
+        self.label_constant_right.setText("Imaginary" if real_imaginary else "Phase")
+
+        for key, widget in self.unit_labels.items():
+            unit = "N" if "F" in key else "N.m"
+            label_text = f"[{unit}]" if real_imaginary else f"[{unit}, deg]"
+            widget.setText(label_text)
 
     def update_element_type_based_on_geometry_information(self):
         volume_exists = self.mesh.are_there_volumes_in_geometry()
         self.comboBox_element_type.setCurrentIndex(int(volume_exists))
 
-    def check_complex_entries(self, real_input: str, imag_input: str, label: str):
+    def check_input_entries(self, input_left: str, input_right: str, label: str):
 
-        _real = None
-        if real_input != "":
+        value_left = None
+        if input_left != "":
             try:
-                real_input = real_input.replace(",", ".")
-                _real = float(real_input)
+                input_left = input_left.replace(",", ".")
+                value_left = float(input_left)
 
             except Exception:
                 title = f"Invalid entry to the {label}"
                 message = f"Wrong input for real part of {label}."
                 PrintMessageInput([error_title, title, message])
-                return True, None
+                return
 
-        _imag = None
-        if imag_input != "":
+        value_right = None
+        if input_right != "":
             try:
-                imag_input = imag_input.replace(",", ".")
-                _imag = float(imag_input)
+                input_right = input_right.replace(",", ".")
+                value_right = float(input_right)
 
             except Exception:
                 title = f"Invalid entry to the {label}"
                 message = f"Wrong input for imaginary part of {label}."
                 PrintMessageInput([error_title, title, message])
-                return True, None
+                return
 
-        if _real is None and _imag is None:
-            values = None
-        elif _real is None:
-            values = 1j * _imag
-        elif _imag is None:
-            values = complex(_real)
-        else:
-            values = _real + 1j * _imag
+        output = [value_left, value_right] 
 
-        output = values
-
-        return False, output
+        return output
 
     def constant_values_assignment(self):
 
@@ -359,42 +393,46 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
             return True
+ 
+        element_type = self.element_types[self.comboBox_element_type.currentIndex()]
+        real_imag_input = self.comboBox_data_type.currentIndex() == DataType.REAL_IMAGINARY
 
-        index = self.comboBox_element_type.currentIndex()
-        element_type = self.element_types[index]
-
-        stop, Fx = self.check_complex_entries(self.lineEdit_real_Fx.text(), self.lineEdit_imag_Fx.text(), "Fx")
-        if stop:
+        Fx = self.check_input_entries(self.lineEdit_left_Fx.text(), self.lineEdit_right_Fx.text(), "Fx")
+        if Fx is None:
             return True
 
-        stop, Fy = self.check_complex_entries(self.lineEdit_real_Fy.text(), self.lineEdit_imag_Fy.text(), "Fy")
-        if stop:
+        Fy = self.check_input_entries(self.lineEdit_left_Fy.text(), self.lineEdit_right_Fy.text(), "Fy")
+        if Fy is None:
             return True
 
-        stop, Fz = self.check_complex_entries(self.lineEdit_real_Fz.text(), self.lineEdit_imag_Fz.text(), "Fz")
-        if stop:
+        Fz = self.check_input_entries(self.lineEdit_left_Fz.text(), self.lineEdit_right_Fz.text(), "Fz")
+        if Fz is None:
             return True
 
         nodal_loads = [Fx, Fy, Fz]
 
         if element_type == "2d_element":
             
-            stop, rx = self.check_complex_entries(self.lineEdit_real_Mx.text(), self.lineEdit_imag_Mx.text(), "rx")
-            if stop:
+            Mx = self.check_input_entries(self.lineEdit_left_Mx.text(), self.lineEdit_right_Mx.text(), "rx")
+            if Mx is None:
                 return True
 
-            stop, ry = self.check_complex_entries(self.lineEdit_real_My.text(), self.lineEdit_imag_My.text(), "ry")
-            if stop:
+            My = self.check_input_entries(self.lineEdit_left_My.text(), self.lineEdit_right_My.text(), "ry")
+            if My is None:
                 return True
 
-            stop, Mz = self.check_complex_entries(self.lineEdit_real_Mz.text(), self.lineEdit_imag_Mz.text(), "Mz")
-            if stop:
+            Mz = self.check_input_entries(self.lineEdit_left_Mz.text(), self.lineEdit_right_Mz.text(), "Mz")
+            if Mz is None:
                 return True
 
-            nodal_loads.extend([rx, ry, Mz])
+            nodal_loads.extend([Mx, My, Mz])
 
-        condition_1 = element_type == "2d_element" and nodal_loads.count(None) == 6
-        condition_2 = element_type == "3d_element" and nodal_loads.count(None) == 3
+        all_values = []
+        for values in nodal_loads:
+            all_values.extend(values)
+
+        condition_1 = element_type == "2d_element" and all_values.count(None) == 12
+        condition_2 = element_type == "3d_element" and all_values.count(None) == 6
 
         if condition_1 or condition_2:
             title = "Additional inputs required"
@@ -405,28 +443,38 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         self.remove_duplicated_assignments(selected_ids, selection)
         self.remove_conflicting_excitations(selected_ids, selection)
 
-        real_values = [value if value is None else np.real(value) for value in nodal_loads]
-        imag_values = [value if value is None else np.imag(value) for value in nodal_loads]
+        if real_imag_input:
+            real_values = []
+            imag_values = []
+            for real_value, imag_value in nodal_loads:
+                real_values.append(real_value)
+                imag_values.append(imag_value)
+
+        else:
+            amplitude_values = []
+            phase_values = []
+            for amplitude_value, phase_value in nodal_loads:
+                amplitude_values.append(amplitude_value)
+                phase_values.append(phase_value)
 
         for selected_id in selected_ids:
             data = {
                 "element_type": element_type,
-                "values": nodal_loads,
-                "real_values": real_values,
-                "imag_values": imag_values,
+                "real_values" if real_imag_input else "amplitude_values": real_values if real_imag_input else amplitude_values,
+                "imag_values" if real_imag_input else "phase_values": imag_values if real_imag_input else phase_values,
                 "element_integration": self.element_integration,
             }
 
-            if assignment_type == AssignmetType.SURFACES:
+            if assignment_type == AssignmentType.SURFACES:
                 self.properties._set_property("nodal_loads", data, surface=selected_id)
 
-            elif assignment_type == AssignmetType.LINES:
+            elif assignment_type == AssignmentType.LINES:
                 self.properties._set_property("nodal_loads", data, line=selected_id)
 
-            elif assignment_type == AssignmetType.POINTS:
+            elif assignment_type == AssignmentType.POINTS:
                 self.properties._set_property("nodal_loads", data, point=selected_id)
 
-            elif assignment_type == AssignmetType.NODES:
+            elif assignment_type == AssignmentType.NODES:
                 self.properties._set_property("nodal_loads", data, node=selected_id)
 
     def load_table(self, lineEdit : QLineEdit, load_label : str, direct_load = False):
@@ -463,7 +511,11 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                 lineEdit.setFocus()
                 return None, None
 
-            imported_values = imported_file[:, 1] + 1j * imported_file[:, 2]
+            if self.comboBox_data_type.currentIndex() == DataType.REAL_IMAGINARY:
+                imported_values = imported_file[:, 1] + 1j * imported_file[:, 2]
+            else:
+                imported_values = imported_file[:, 1] * np.exp(1j * imported_file[:, 2] * np.pi / 180)
+
             self.frequencies = imported_file[:, 0]
         
             if app().project.model.change_analysis_frequency_setup(list(self.frequencies)):
@@ -650,16 +702,16 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                 "element_integration": self.element_integration,
             }
 
-            if assignment_type == AssignmetType.SURFACES:
+            if assignment_type == AssignmentType.SURFACES:
                 self.properties._set_property("nodal_loads", data, surface=selected_id)
 
-            elif assignment_type == AssignmetType.LINES:
+            elif assignment_type == AssignmentType.LINES:
                 self.properties._set_property("nodal_loads", data, line=selected_id)
 
-            elif assignment_type == AssignmetType.POINTS:
+            elif assignment_type == AssignmentType.POINTS:
                 self.properties._set_property("nodal_loads", data, point=selected_id)
 
-            elif assignment_type == AssignmetType.NODES:
+            elif assignment_type == AssignmentType.NODES:
                 self.properties._set_property("nodal_loads", data, node=selected_id)
 
         self.reset_table_variables()
@@ -767,7 +819,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             if self.constant_values_assignment():
                 return
 
-        elif tab_index == StandardTabType.TABULAR_DATA:
+        if tab_index == StandardTabType.TABULAR_DATA:
             if self.table_values_assignment():
                 return
 
@@ -785,21 +837,21 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
         text = ""
         if list(mask).count(True) == 6:
-            text = "[{}, {}, {}, {}, {}, {}]".format(*labels)
+            text = "{}, {}, {}, {}, {}, {}".format(*labels)
         elif list(mask).count(True) == 5:
-            text = "[{}, {}, {}, {}, {}]".format(*labels)
+            text = "{}, {}, {}, {}, {}".format(*labels)
         elif list(mask).count(True) == 4:
-            text = "[{}, {}, {}, {}]".format(*labels)
+            text = "{}, {}, {}, {}".format(*labels)
         elif list(mask).count(True) == 3:
-            text = "[{}, {}, {}]".format(*labels)
+            text = "{}, {}, {}".format(*labels)
         elif list(mask).count(True) == 2:
-            text = "[{}, {}]".format(*labels)
+            text = "{}, {}".format(*labels)
         elif list(mask).count(True) == 1:
-            text = "[{}]".format(*labels)
+            text = "{}".format(*labels)
 
         return text
 
-    def add_model_info_in_treeWidget(self, entity: str):
+    def load_model_info(self):
 
         properties = {
             "surface": self.properties.surface_properties,
@@ -808,33 +860,40 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             "node": self.properties.nodal_properties,
         }
 
-        _property = properties.get(entity)
-        if _property is None:
-            return
-        
-        for (property, *args), data in _property.items():
-            if property != "nodal_loads":
-                continue
-
-            values = data["values"]
-            element_type = data["element_type"]
-            constrained_dof_mask = [not value for value in values]
-            dof_labels = str(self.text_label(constrained_dof_mask))
-
-            new = QTreeWidgetItem([f"{entity.capitalize()}-{args[0]}", dof_labels, element_type])
-            for i in range(3):
-                new.setTextAlignment(i, Qt.AlignCenter)
-
-            self.treeWidget_nodal_loads.addTopLevelItem(new)
-
-    def load_model_info(self):
-
         self.treeWidget_nodal_loads.clear()
+       
+        for key, property in properties.items():
+            for (prop_label, *args), data in property.items():
 
-        self.add_model_info_in_treeWidget("surface")
-        self.add_model_info_in_treeWidget("line")
-        self.add_model_info_in_treeWidget("point")
-        self.add_model_info_in_treeWidget("node")
+                if prop_label != "nodal_loads":
+                    continue
+
+                if not isinstance(data, dict):
+                    continue
+
+                values = data.get("values")
+                element_type = data.get("element_type")
+
+                active_values = []
+                for value in values:
+                    if value is not None:
+                        active_values.append(value if not isinstance(value, np.ndarray) else "Table")
+
+                dof_labels = str(self.text_label([bool(value) for value in values]))
+                str_value = ", ".join([str(val) for val in active_values])
+
+                new = QTreeWidgetItem([
+                    f"{args[0]}", 
+                    key, 
+                    element_type, 
+                    dof_labels, 
+                    str_value,
+                    ])
+
+                for i in range(5):
+                    new.setTextAlignment(i, Qt.AlignCenter)
+
+                self.treeWidget_nodal_loads.addTopLevelItem(new)
 
         self.update_tabs_visibility()
 
@@ -853,59 +912,59 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                     self.tabWidget_main.setTabVisible(StandardTabType.LIST, True)
                     return
 
-        self.lineEdit_real_Fx.setFocus()
+        self.lineEdit_left_Fx.setFocus()
         self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)
         self.tabWidget_main.setTabVisible(StandardTabType.LIST, False)
         app().main_window.selection.set_geometry_selection()
 
     def tab_event_callback(self):
         list_tab = self.tabWidget_main.currentIndex() == StandardTabType.LIST
+        self.comboBox_assignment_type.setDisabled(list_tab)
         self.lineEdit_selection_id.setDisabled(list_tab)
         self.pushButton_apply.setDisabled(list_tab)
         self.pushButton_apply_and_close.setDisabled(list_tab)
         self.pushButton_remove.setDisabled(True)
 
-        if list_tab:
-            self.lineEdit_selection_id.setText("")
+        if not list_tab:
+            view = self.comboBox_assignment_type.view()
+            view.setRowHidden(4, True)
+            self.comboBox_assignment_type.setCurrentIndex(AssignmentType.SURFACES)
+
+        self.lineEdit_selection_id.setText("")
+        self.treeWidget_nodal_loads.clearSelection()
+        app().main_window.selection.set_geometry_selection()
+
+    def item_selection_clicked_callback(self):
+        self.item_clicked_callback(None)
+
+    def item_clicked_callback(self, item):
+
+        self.pushButton_remove.setDisabled(False)
+
+        selected_items = self.treeWidget_nodal_loads.selectedItems()
+        if not selected_items:
             return
 
-        else:
-            text = self.lineEdit_selection_id.text()
-            if "-" in text:
-                selected_id = text.split("-")[1]
-                self.lineEdit_selection_id.setText(selected_id)
+        entities_mapping = defaultdict(list)
+        for _item in selected_items:
+            entity = _item.text(1)
+            entities_mapping[entity].append(int(_item.text(0)))
 
-    def on_click_item(self, item):
+        if not entities_mapping:
+            return
 
-        self.pushButton_remove.setEnabled(True)
+        app().main_window.selection.set_geometry_selection(
+            surfaces = entities_mapping.get("surface"),
+            lines = entities_mapping.get("line"),
+            points = entities_mapping.get("point"),
+            )
 
-        if item.text(0) != "":
+        # app().main_window.selection.set_mesh_selection(
+        #     nodes = entities_mapping.get("node"),
+        # )
 
-            selection, _selected_id = item.text(0).split("-")
-            selected_id = int(_selected_id)
-
-            if selection == "Surface":
-                app().main_window.selection.set_geometry_selection(surfaces = [int(selected_id)])
-
-            elif selection == "Line":
-                app().main_window.selection.set_geometry_selection(lines = [int(selected_id)])
-
-            elif selection == "Point":
-                app().main_window.selection.set_geometry_selection(points = [int(selected_id)])
-
-            elif selection == "Node":
-                app().main_window.selection.set_mesh_selection(nodes=[int(selected_id)])
-
-            if selection == "Node":
-                app().main_window.action_mesh_workspace_callback()
-
-            else:
-                app().main_window.action_model_workspace_callback()
-
-            self.lineEdit_selection_id.setText(item.text(0))
-
-    def on_double_click_item(self, item):
-        self.on_click_item(item)
+    def item_double_clicked_callback(self, item):
+        self.item_clicked_callback(item)
 
     def process_table_file_removal(self, table_names: list):
 
@@ -954,20 +1013,32 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
     def remove_callback(self):
 
-        text = self.lineEdit_selection_id.text()
+        selected_items = self.treeWidget_nodal_loads.selectedItems()
+        if not selected_items:
+            return
 
-        if "-" in text:
+        for item in selected_items:
+            selected_id = int(item.text(0))
+            selection = item.text(1)
 
-            _selection, _selected_id = text.split("-")
-            selection = _selection.lower()
-            selected_id = int(_selected_id)
+            if selection == "surface":
+                self.properties._remove_surface_property("nodal_loads", selected_id)
 
-            self.remove_table_files_from(selected_id, f"{selection}s")
-            self.remove_property_from("nodal_loads", selected_id, selection)
-            self.actions_to_finalize()
+            elif selection == "line":
+                self.properties._remove_line_property("nodal_loads", selected_id)
 
-            app().main_window.selection.set_geometry_selection()
-            app().main_window.selection.set_mesh_selection()
+            elif selection == "point":
+                self.properties._remove_point_property("nodal_loads", selected_id)
+
+            elif selection == "node":
+                self.properties._remove_nodal_property("nodal_loads", selected_id)
+
+            self.remove_table_files_from(selected_id, selection + "s")
+
+        self.actions_to_finalize()
+
+        app().main_window.selection.set_geometry_selection()
+        app().main_window.selection.set_mesh_selection()
 
     def reset_callback(self):
 
@@ -992,7 +1063,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             entities_to_remove = defaultdict(list)
 
             for key, _property in properties.items():
-                for (property_label, *args), data in _property.items():
+                for (property_label, *args) in _property:
                     if property_label != "nodal_loads":
                         continue
     
@@ -1024,9 +1095,9 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         if reset_all:
             self.lineEdit_selection_id.setText("")
 
-        for lineEdit_real, lineEdit_imag in self.list_lineEdit_constant_values:
-            lineEdit_real.setText("")
-            lineEdit_imag.setText("")
+        for lineEdit_left, lineEdit_right in self.list_lineEdit_constant_values:
+            lineEdit_left.setText("")
+            lineEdit_right.setText("")
 
         for lineEdit_table in self.table_lineEdits.values():
             lineEdit_table.setText("")
@@ -1041,6 +1112,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
+        app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
         return super().closeEvent(a0)
 
     #TODO: remove when possible

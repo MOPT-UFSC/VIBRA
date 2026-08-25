@@ -135,7 +135,8 @@ class ModelProperties:
                         values_list.append(None)
 
                     else:
-                        phi_deg = data.get("phase_values")[i]
+                        value = data.get("phase_values")[i]
+                        phi_deg = 0.0 if value is None else value
                         complex_values = amp * np.exp(1j * phi_deg * np.pi / 180)
                         values_list.append(complex(complex_values))
 

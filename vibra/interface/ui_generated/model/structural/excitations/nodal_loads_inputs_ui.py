@@ -27,14 +27,14 @@ class Ui_Dialog(object):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
         Dialog.setWindowModality(Qt.WindowModality.WindowModal)
-        Dialog.resize(460, 500)
+        Dialog.resize(540, 500)
         sizePolicy = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(Dialog.sizePolicy().hasHeightForWidth())
         Dialog.setSizePolicy(sizePolicy)
         Dialog.setMinimumSize(QSize(460, 500))
-        Dialog.setMaximumSize(QSize(460, 580))
+        Dialog.setMaximumSize(QSize(540, 580))
         font = QFont()
         font.setPointSize(11)
         font.setBold(False)
@@ -81,7 +81,7 @@ class Ui_Dialog(object):
         self.gridLayout_4.setContentsMargins(2, 4, 2, 2)
         self.frame_4 = QFrame(self.frame_2)
         self.frame_4.setObjectName(u"frame_4")
-        self.frame_4.setMinimumSize(QSize(360, 80))
+        self.frame_4.setMinimumSize(QSize(360, 100))
         self.frame_4.setMaximumSize(QSize(16777215, 140))
         self.frame_4.setFrameShape(QFrame.Shape.NoFrame)
         self.frame_4.setFrameShadow(QFrame.Shadow.Raised)
@@ -90,33 +90,16 @@ class Ui_Dialog(object):
         self.gridLayout_5.setHorizontalSpacing(6)
         self.gridLayout_5.setVerticalSpacing(2)
         self.gridLayout_5.setContentsMargins(2, 2, 2, 2)
-        self.comboBox_element_type = QComboBox(self.frame_4)
-        self.comboBox_element_type.addItem("")
-        self.comboBox_element_type.addItem("")
-        self.comboBox_element_type.setObjectName(u"comboBox_element_type")
-        self.comboBox_element_type.setMinimumSize(QSize(150, 28))
-        self.comboBox_element_type.setMaximumSize(QSize(150, 28))
-        font2 = QFont()
-        font2.setPointSize(10)
-        font2.setBold(False)
-        self.comboBox_element_type.setFont(font2)
-
-        self.gridLayout_5.addWidget(self.comboBox_element_type, 1, 2, 1, 1)
-
-        self.horizontalSpacer_9 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_5.addItem(self.horizontalSpacer_9, 0, 4, 1, 1)
-
         self.label_2 = QLabel(self.frame_4)
         self.label_2.setObjectName(u"label_2")
         self.label_2.setMinimumSize(QSize(120, 28))
         self.label_2.setMaximumSize(QSize(120, 28))
-        font3 = QFont()
-        font3.setFamilies([u"MS Shell Dlg 2"])
-        font3.setPointSize(10)
-        font3.setBold(False)
-        font3.setItalic(False)
-        self.label_2.setFont(font3)
+        font2 = QFont()
+        font2.setFamilies([u"MS Shell Dlg 2"])
+        font2.setPointSize(10)
+        font2.setBold(False)
+        font2.setItalic(False)
+        self.label_2.setFont(font2)
         self.label_2.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_5.addWidget(self.label_2, 0, 1, 1, 1)
@@ -126,36 +109,73 @@ class Ui_Dialog(object):
         self.comboBox_assignment_type.addItem("")
         self.comboBox_assignment_type.addItem("")
         self.comboBox_assignment_type.addItem("")
+        self.comboBox_assignment_type.addItem("")
         self.comboBox_assignment_type.setObjectName(u"comboBox_assignment_type")
         self.comboBox_assignment_type.setMinimumSize(QSize(0, 28))
         self.comboBox_assignment_type.setMaximumSize(QSize(16777215, 28))
-        self.comboBox_assignment_type.setFont(font2)
+        font3 = QFont()
+        font3.setPointSize(10)
+        font3.setBold(False)
+        self.comboBox_assignment_type.setFont(font3)
 
         self.gridLayout_5.addWidget(self.comboBox_assignment_type, 0, 3, 1, 1)
 
-        self.label_3 = QLabel(self.frame_4)
-        self.label_3.setObjectName(u"label_3")
-        self.label_3.setMinimumSize(QSize(120, 28))
-        self.label_3.setMaximumSize(QSize(120, 28))
-        self.label_3.setFont(font3)
-        self.label_3.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+        self.horizontalSpacer_9 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gridLayout_5.addWidget(self.label_3, 1, 1, 1, 1)
+        self.gridLayout_5.addItem(self.horizontalSpacer_9, 0, 4, 1, 1)
 
         self.lineEdit_selection_id = QLineEdit(self.frame_4)
         self.lineEdit_selection_id.setObjectName(u"lineEdit_selection_id")
         self.lineEdit_selection_id.setMinimumSize(QSize(150, 28))
         self.lineEdit_selection_id.setMaximumSize(QSize(150, 28))
-        self.lineEdit_selection_id.setFont(font3)
+        self.lineEdit_selection_id.setFont(font2)
         self.lineEdit_selection_id.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         self.lineEdit_selection_id.setStyleSheet(u"")
         self.lineEdit_selection_id.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout_5.addWidget(self.lineEdit_selection_id, 0, 2, 1, 1)
 
+        self.comboBox_element_type = QComboBox(self.frame_4)
+        self.comboBox_element_type.addItem("")
+        self.comboBox_element_type.addItem("")
+        self.comboBox_element_type.setObjectName(u"comboBox_element_type")
+        self.comboBox_element_type.setMinimumSize(QSize(150, 28))
+        self.comboBox_element_type.setMaximumSize(QSize(150, 28))
+        self.comboBox_element_type.setFont(font3)
+
+        self.gridLayout_5.addWidget(self.comboBox_element_type, 1, 2, 1, 1)
+
         self.horizontalSpacer_6 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.gridLayout_5.addItem(self.horizontalSpacer_6, 0, 0, 1, 1)
+
+        self.label_3 = QLabel(self.frame_4)
+        self.label_3.setObjectName(u"label_3")
+        self.label_3.setMinimumSize(QSize(120, 28))
+        self.label_3.setMaximumSize(QSize(120, 28))
+        self.label_3.setFont(font2)
+        self.label_3.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+
+        self.gridLayout_5.addWidget(self.label_3, 1, 1, 1, 1)
+
+        self.label_4 = QLabel(self.frame_4)
+        self.label_4.setObjectName(u"label_4")
+        self.label_4.setMinimumSize(QSize(120, 28))
+        self.label_4.setMaximumSize(QSize(120, 28))
+        self.label_4.setFont(font2)
+        self.label_4.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+
+        self.gridLayout_5.addWidget(self.label_4, 2, 1, 1, 1)
+
+        self.comboBox_data_type = QComboBox(self.frame_4)
+        self.comboBox_data_type.addItem("")
+        self.comboBox_data_type.addItem("")
+        self.comboBox_data_type.setObjectName(u"comboBox_data_type")
+        self.comboBox_data_type.setMinimumSize(QSize(150, 28))
+        self.comboBox_data_type.setMaximumSize(QSize(150, 28))
+        self.comboBox_data_type.setFont(font3)
+
+        self.gridLayout_5.addWidget(self.comboBox_data_type, 2, 2, 1, 1)
 
 
         self.gridLayout_4.addWidget(self.frame_4, 0, 0, 1, 1)
@@ -170,8 +190,8 @@ class Ui_Dialog(object):
         self.tabWidget_main = QTabWidget(self.frame_6)
         self.tabWidget_main.setObjectName(u"tabWidget_main")
         self.tabWidget_main.setMinimumSize(QSize(360, 0))
-        self.tabWidget_main.setMaximumSize(QSize(420, 16777215))
-        self.tabWidget_main.setFont(font2)
+        self.tabWidget_main.setMaximumSize(QSize(16777215, 16777215))
+        self.tabWidget_main.setFont(font3)
         self.tab_constant_data = QWidget()
         self.tab_constant_data.setObjectName(u"tab_constant_data")
         self.gridLayout_12 = QGridLayout(self.tab_constant_data)
@@ -190,25 +210,25 @@ class Ui_Dialog(object):
         self.gridLayout.setHorizontalSpacing(8)
         self.gridLayout.setVerticalSpacing(6)
         self.gridLayout.setContentsMargins(4, 4, 4, 6)
-        self.lineEdit_imag_Mx = QLineEdit(self.frame_8)
-        self.lineEdit_imag_Mx.setObjectName(u"lineEdit_imag_Mx")
-        self.lineEdit_imag_Mx.setMinimumSize(QSize(80, 26))
-        self.lineEdit_imag_Mx.setMaximumSize(QSize(80, 26))
-        self.lineEdit_imag_Mx.setFont(font2)
-        self.lineEdit_imag_Mx.setStyleSheet(u"")
-        self.lineEdit_imag_Mx.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.lineEdit_right_Mx = QLineEdit(self.frame_8)
+        self.lineEdit_right_Mx.setObjectName(u"lineEdit_right_Mx")
+        self.lineEdit_right_Mx.setMinimumSize(QSize(120, 26))
+        self.lineEdit_right_Mx.setMaximumSize(QSize(120, 26))
+        self.lineEdit_right_Mx.setFont(font3)
+        self.lineEdit_right_Mx.setStyleSheet(u"")
+        self.lineEdit_right_Mx.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.gridLayout.addWidget(self.lineEdit_imag_Mx, 6, 3, 1, 1)
+        self.gridLayout.addWidget(self.lineEdit_right_Mx, 6, 3, 1, 1)
 
-        self.lineEdit_real_My = QLineEdit(self.frame_8)
-        self.lineEdit_real_My.setObjectName(u"lineEdit_real_My")
-        self.lineEdit_real_My.setMinimumSize(QSize(80, 26))
-        self.lineEdit_real_My.setMaximumSize(QSize(80, 26))
-        self.lineEdit_real_My.setFont(font2)
-        self.lineEdit_real_My.setStyleSheet(u"")
-        self.lineEdit_real_My.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.lineEdit_left_My = QLineEdit(self.frame_8)
+        self.lineEdit_left_My.setObjectName(u"lineEdit_left_My")
+        self.lineEdit_left_My.setMinimumSize(QSize(120, 26))
+        self.lineEdit_left_My.setMaximumSize(QSize(120, 26))
+        self.lineEdit_left_My.setFont(font3)
+        self.lineEdit_left_My.setStyleSheet(u"")
+        self.lineEdit_left_My.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.gridLayout.addWidget(self.lineEdit_real_My, 7, 2, 1, 1)
+        self.gridLayout.addWidget(self.lineEdit_left_My, 7, 2, 1, 1)
 
         self.label_Mz_unit = QLabel(self.frame_8)
         self.label_Mz_unit.setObjectName(u"label_Mz_unit")
@@ -223,15 +243,15 @@ class Ui_Dialog(object):
 
         self.gridLayout.addWidget(self.label_Mz_unit, 8, 4, 1, 1)
 
-        self.lineEdit_imag_Mz = QLineEdit(self.frame_8)
-        self.lineEdit_imag_Mz.setObjectName(u"lineEdit_imag_Mz")
-        self.lineEdit_imag_Mz.setMinimumSize(QSize(80, 26))
-        self.lineEdit_imag_Mz.setMaximumSize(QSize(80, 26))
-        self.lineEdit_imag_Mz.setFont(font2)
-        self.lineEdit_imag_Mz.setStyleSheet(u"")
-        self.lineEdit_imag_Mz.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.lineEdit_right_Mz = QLineEdit(self.frame_8)
+        self.lineEdit_right_Mz.setObjectName(u"lineEdit_right_Mz")
+        self.lineEdit_right_Mz.setMinimumSize(QSize(120, 26))
+        self.lineEdit_right_Mz.setMaximumSize(QSize(120, 26))
+        self.lineEdit_right_Mz.setFont(font3)
+        self.lineEdit_right_Mz.setStyleSheet(u"")
+        self.lineEdit_right_Mz.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.gridLayout.addWidget(self.lineEdit_imag_Mz, 8, 3, 1, 1)
+        self.gridLayout.addWidget(self.lineEdit_right_Mz, 8, 3, 1, 1)
 
         self.label_My_unit = QLabel(self.frame_8)
         self.label_My_unit.setObjectName(u"label_My_unit")
@@ -246,7 +266,7 @@ class Ui_Dialog(object):
         self.label_Fy_constant.setObjectName(u"label_Fy_constant")
         self.label_Fy_constant.setMinimumSize(QSize(70, 26))
         self.label_Fy_constant.setMaximumSize(QSize(70, 26))
-        self.label_Fy_constant.setFont(font3)
+        self.label_Fy_constant.setFont(font2)
         self.label_Fy_constant.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout.addWidget(self.label_Fy_constant, 4, 1, 1, 1)
@@ -255,7 +275,7 @@ class Ui_Dialog(object):
         self.label_Mx_constant.setObjectName(u"label_Mx_constant")
         self.label_Mx_constant.setMinimumSize(QSize(70, 26))
         self.label_Mx_constant.setMaximumSize(QSize(70, 26))
-        self.label_Mx_constant.setFont(font2)
+        self.label_Mx_constant.setFont(font3)
         self.label_Mx_constant.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout.addWidget(self.label_Mx_constant, 6, 1, 1, 1)
@@ -268,7 +288,7 @@ class Ui_Dialog(object):
         self.label_Fz_constant.setObjectName(u"label_Fz_constant")
         self.label_Fz_constant.setMinimumSize(QSize(70, 26))
         self.label_Fz_constant.setMaximumSize(QSize(70, 26))
-        self.label_Fz_constant.setFont(font3)
+        self.label_Fz_constant.setFont(font2)
         self.label_Fz_constant.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout.addWidget(self.label_Fz_constant, 5, 1, 1, 1)
@@ -277,7 +297,7 @@ class Ui_Dialog(object):
         self.label_Fz_unit.setObjectName(u"label_Fz_unit")
         self.label_Fz_unit.setMinimumSize(QSize(50, 26))
         self.label_Fz_unit.setMaximumSize(QSize(50, 26))
-        self.label_Fz_unit.setFont(font3)
+        self.label_Fz_unit.setFont(font2)
         self.label_Fz_unit.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout.addWidget(self.label_Fz_unit, 5, 4, 1, 1)
@@ -286,7 +306,7 @@ class Ui_Dialog(object):
         self.label_Mz_constant.setObjectName(u"label_Mz_constant")
         self.label_Mz_constant.setMinimumSize(QSize(70, 26))
         self.label_Mz_constant.setMaximumSize(QSize(70, 26))
-        self.label_Mz_constant.setFont(font2)
+        self.label_Mz_constant.setFont(font3)
         self.label_Mz_constant.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout.addWidget(self.label_Mz_constant, 8, 1, 1, 1)
@@ -294,87 +314,87 @@ class Ui_Dialog(object):
         self.label_constant_left = QLabel(self.frame_8)
         self.label_constant_left.setObjectName(u"label_constant_left")
         self.label_constant_left.setMinimumSize(QSize(80, 26))
-        self.label_constant_left.setMaximumSize(QSize(80, 26))
-        self.label_constant_left.setFont(font3)
+        self.label_constant_left.setMaximumSize(QSize(16777215, 26))
+        self.label_constant_left.setFont(font2)
         self.label_constant_left.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout.addWidget(self.label_constant_left, 2, 2, 1, 1)
 
-        self.lineEdit_imag_Fy = QLineEdit(self.frame_8)
-        self.lineEdit_imag_Fy.setObjectName(u"lineEdit_imag_Fy")
-        self.lineEdit_imag_Fy.setMinimumSize(QSize(80, 26))
-        self.lineEdit_imag_Fy.setMaximumSize(QSize(80, 26))
-        self.lineEdit_imag_Fy.setFont(font3)
-        self.lineEdit_imag_Fy.setStyleSheet(u"")
-        self.lineEdit_imag_Fy.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.lineEdit_right_Fy = QLineEdit(self.frame_8)
+        self.lineEdit_right_Fy.setObjectName(u"lineEdit_right_Fy")
+        self.lineEdit_right_Fy.setMinimumSize(QSize(120, 26))
+        self.lineEdit_right_Fy.setMaximumSize(QSize(120, 26))
+        self.lineEdit_right_Fy.setFont(font2)
+        self.lineEdit_right_Fy.setStyleSheet(u"")
+        self.lineEdit_right_Fy.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.gridLayout.addWidget(self.lineEdit_imag_Fy, 4, 3, 1, 1)
+        self.gridLayout.addWidget(self.lineEdit_right_Fy, 4, 3, 1, 1)
 
-        self.lineEdit_imag_Fz = QLineEdit(self.frame_8)
-        self.lineEdit_imag_Fz.setObjectName(u"lineEdit_imag_Fz")
-        self.lineEdit_imag_Fz.setMinimumSize(QSize(80, 26))
-        self.lineEdit_imag_Fz.setMaximumSize(QSize(80, 26))
-        self.lineEdit_imag_Fz.setFont(font3)
-        self.lineEdit_imag_Fz.setStyleSheet(u"")
-        self.lineEdit_imag_Fz.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.lineEdit_right_Fz = QLineEdit(self.frame_8)
+        self.lineEdit_right_Fz.setObjectName(u"lineEdit_right_Fz")
+        self.lineEdit_right_Fz.setMinimumSize(QSize(120, 26))
+        self.lineEdit_right_Fz.setMaximumSize(QSize(120, 26))
+        self.lineEdit_right_Fz.setFont(font2)
+        self.lineEdit_right_Fz.setStyleSheet(u"")
+        self.lineEdit_right_Fz.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.gridLayout.addWidget(self.lineEdit_imag_Fz, 5, 3, 1, 1)
+        self.gridLayout.addWidget(self.lineEdit_right_Fz, 5, 3, 1, 1)
 
-        self.lineEdit_real_Mz = QLineEdit(self.frame_8)
-        self.lineEdit_real_Mz.setObjectName(u"lineEdit_real_Mz")
-        self.lineEdit_real_Mz.setMinimumSize(QSize(80, 26))
-        self.lineEdit_real_Mz.setMaximumSize(QSize(80, 26))
-        self.lineEdit_real_Mz.setFont(font2)
-        self.lineEdit_real_Mz.setStyleSheet(u"")
-        self.lineEdit_real_Mz.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.lineEdit_left_Mz = QLineEdit(self.frame_8)
+        self.lineEdit_left_Mz.setObjectName(u"lineEdit_left_Mz")
+        self.lineEdit_left_Mz.setMinimumSize(QSize(120, 26))
+        self.lineEdit_left_Mz.setMaximumSize(QSize(120, 26))
+        self.lineEdit_left_Mz.setFont(font3)
+        self.lineEdit_left_Mz.setStyleSheet(u"")
+        self.lineEdit_left_Mz.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.gridLayout.addWidget(self.lineEdit_real_Mz, 8, 2, 1, 1)
+        self.gridLayout.addWidget(self.lineEdit_left_Mz, 8, 2, 1, 1)
 
-        self.lineEdit_imag_My = QLineEdit(self.frame_8)
-        self.lineEdit_imag_My.setObjectName(u"lineEdit_imag_My")
-        self.lineEdit_imag_My.setMinimumSize(QSize(80, 26))
-        self.lineEdit_imag_My.setMaximumSize(QSize(80, 26))
-        self.lineEdit_imag_My.setFont(font2)
-        self.lineEdit_imag_My.setStyleSheet(u"")
-        self.lineEdit_imag_My.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.lineEdit_right_My = QLineEdit(self.frame_8)
+        self.lineEdit_right_My.setObjectName(u"lineEdit_right_My")
+        self.lineEdit_right_My.setMinimumSize(QSize(120, 26))
+        self.lineEdit_right_My.setMaximumSize(QSize(120, 26))
+        self.lineEdit_right_My.setFont(font3)
+        self.lineEdit_right_My.setStyleSheet(u"")
+        self.lineEdit_right_My.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.gridLayout.addWidget(self.lineEdit_imag_My, 7, 3, 1, 1)
+        self.gridLayout.addWidget(self.lineEdit_right_My, 7, 3, 1, 1)
 
-        self.lineEdit_real_Fx = QLineEdit(self.frame_8)
-        self.lineEdit_real_Fx.setObjectName(u"lineEdit_real_Fx")
-        self.lineEdit_real_Fx.setMinimumSize(QSize(80, 26))
-        self.lineEdit_real_Fx.setMaximumSize(QSize(80, 26))
-        self.lineEdit_real_Fx.setFont(font3)
-        self.lineEdit_real_Fx.setStyleSheet(u"")
-        self.lineEdit_real_Fx.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.lineEdit_left_Fx = QLineEdit(self.frame_8)
+        self.lineEdit_left_Fx.setObjectName(u"lineEdit_left_Fx")
+        self.lineEdit_left_Fx.setMinimumSize(QSize(120, 26))
+        self.lineEdit_left_Fx.setMaximumSize(QSize(120, 26))
+        self.lineEdit_left_Fx.setFont(font2)
+        self.lineEdit_left_Fx.setStyleSheet(u"")
+        self.lineEdit_left_Fx.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.gridLayout.addWidget(self.lineEdit_real_Fx, 3, 2, 1, 1)
+        self.gridLayout.addWidget(self.lineEdit_left_Fx, 3, 2, 1, 1)
 
-        self.lineEdit_imag_Fx = QLineEdit(self.frame_8)
-        self.lineEdit_imag_Fx.setObjectName(u"lineEdit_imag_Fx")
-        self.lineEdit_imag_Fx.setMinimumSize(QSize(80, 26))
-        self.lineEdit_imag_Fx.setMaximumSize(QSize(80, 26))
-        self.lineEdit_imag_Fx.setFont(font3)
-        self.lineEdit_imag_Fx.setStyleSheet(u"")
-        self.lineEdit_imag_Fx.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.lineEdit_right_Fx = QLineEdit(self.frame_8)
+        self.lineEdit_right_Fx.setObjectName(u"lineEdit_right_Fx")
+        self.lineEdit_right_Fx.setMinimumSize(QSize(120, 26))
+        self.lineEdit_right_Fx.setMaximumSize(QSize(120, 26))
+        self.lineEdit_right_Fx.setFont(font2)
+        self.lineEdit_right_Fx.setStyleSheet(u"")
+        self.lineEdit_right_Fx.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.gridLayout.addWidget(self.lineEdit_imag_Fx, 3, 3, 1, 1)
+        self.gridLayout.addWidget(self.lineEdit_right_Fx, 3, 3, 1, 1)
 
-        self.lineEdit_real_Fy = QLineEdit(self.frame_8)
-        self.lineEdit_real_Fy.setObjectName(u"lineEdit_real_Fy")
-        self.lineEdit_real_Fy.setMinimumSize(QSize(80, 26))
-        self.lineEdit_real_Fy.setMaximumSize(QSize(80, 26))
-        self.lineEdit_real_Fy.setFont(font3)
-        self.lineEdit_real_Fy.setStyleSheet(u"")
-        self.lineEdit_real_Fy.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.lineEdit_left_Fy = QLineEdit(self.frame_8)
+        self.lineEdit_left_Fy.setObjectName(u"lineEdit_left_Fy")
+        self.lineEdit_left_Fy.setMinimumSize(QSize(120, 26))
+        self.lineEdit_left_Fy.setMaximumSize(QSize(120, 26))
+        self.lineEdit_left_Fy.setFont(font2)
+        self.lineEdit_left_Fy.setStyleSheet(u"")
+        self.lineEdit_left_Fy.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.gridLayout.addWidget(self.lineEdit_real_Fy, 4, 2, 1, 1)
+        self.gridLayout.addWidget(self.lineEdit_left_Fy, 4, 2, 1, 1)
 
         self.label_Fx_constant = QLabel(self.frame_8)
         self.label_Fx_constant.setObjectName(u"label_Fx_constant")
         self.label_Fx_constant.setMinimumSize(QSize(70, 26))
         self.label_Fx_constant.setMaximumSize(QSize(70, 26))
-        self.label_Fx_constant.setFont(font3)
+        self.label_Fx_constant.setFont(font2)
         self.label_Fx_constant.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout.addWidget(self.label_Fx_constant, 3, 1, 1, 1)
@@ -383,7 +403,7 @@ class Ui_Dialog(object):
         self.label_Fy_unit.setObjectName(u"label_Fy_unit")
         self.label_Fy_unit.setMinimumSize(QSize(50, 26))
         self.label_Fy_unit.setMaximumSize(QSize(50, 26))
-        self.label_Fy_unit.setFont(font3)
+        self.label_Fy_unit.setFont(font2)
         self.label_Fy_unit.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout.addWidget(self.label_Fy_unit, 4, 4, 1, 1)
@@ -397,31 +417,31 @@ class Ui_Dialog(object):
 
         self.gridLayout.addWidget(self.label_Mx_unit, 6, 4, 1, 1)
 
-        self.lineEdit_real_Mx = QLineEdit(self.frame_8)
-        self.lineEdit_real_Mx.setObjectName(u"lineEdit_real_Mx")
-        self.lineEdit_real_Mx.setMinimumSize(QSize(80, 26))
-        self.lineEdit_real_Mx.setMaximumSize(QSize(80, 26))
-        self.lineEdit_real_Mx.setFont(font2)
-        self.lineEdit_real_Mx.setStyleSheet(u"")
-        self.lineEdit_real_Mx.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.lineEdit_left_Mx = QLineEdit(self.frame_8)
+        self.lineEdit_left_Mx.setObjectName(u"lineEdit_left_Mx")
+        self.lineEdit_left_Mx.setMinimumSize(QSize(120, 26))
+        self.lineEdit_left_Mx.setMaximumSize(QSize(120, 26))
+        self.lineEdit_left_Mx.setFont(font3)
+        self.lineEdit_left_Mx.setStyleSheet(u"")
+        self.lineEdit_left_Mx.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.gridLayout.addWidget(self.lineEdit_real_Mx, 6, 2, 1, 1)
+        self.gridLayout.addWidget(self.lineEdit_left_Mx, 6, 2, 1, 1)
 
-        self.lineEdit_real_Fz = QLineEdit(self.frame_8)
-        self.lineEdit_real_Fz.setObjectName(u"lineEdit_real_Fz")
-        self.lineEdit_real_Fz.setMinimumSize(QSize(80, 26))
-        self.lineEdit_real_Fz.setMaximumSize(QSize(80, 26))
-        self.lineEdit_real_Fz.setFont(font3)
-        self.lineEdit_real_Fz.setStyleSheet(u"")
-        self.lineEdit_real_Fz.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.lineEdit_left_Fz = QLineEdit(self.frame_8)
+        self.lineEdit_left_Fz.setObjectName(u"lineEdit_left_Fz")
+        self.lineEdit_left_Fz.setMinimumSize(QSize(120, 26))
+        self.lineEdit_left_Fz.setMaximumSize(QSize(120, 26))
+        self.lineEdit_left_Fz.setFont(font2)
+        self.lineEdit_left_Fz.setStyleSheet(u"")
+        self.lineEdit_left_Fz.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.gridLayout.addWidget(self.lineEdit_real_Fz, 5, 2, 1, 1)
+        self.gridLayout.addWidget(self.lineEdit_left_Fz, 5, 2, 1, 1)
 
         self.label_Fx_unit = QLabel(self.frame_8)
         self.label_Fx_unit.setObjectName(u"label_Fx_unit")
         self.label_Fx_unit.setMinimumSize(QSize(50, 26))
         self.label_Fx_unit.setMaximumSize(QSize(50, 26))
-        self.label_Fx_unit.setFont(font3)
+        self.label_Fx_unit.setFont(font2)
         self.label_Fx_unit.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout.addWidget(self.label_Fx_unit, 3, 4, 1, 1)
@@ -430,7 +450,7 @@ class Ui_Dialog(object):
         self.label_My_constant.setObjectName(u"label_My_constant")
         self.label_My_constant.setMinimumSize(QSize(70, 26))
         self.label_My_constant.setMaximumSize(QSize(70, 26))
-        self.label_My_constant.setFont(font2)
+        self.label_My_constant.setFont(font3)
         self.label_My_constant.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout.addWidget(self.label_My_constant, 7, 1, 1, 1)
@@ -439,14 +459,14 @@ class Ui_Dialog(object):
 
         self.gridLayout.addItem(self.horizontalSpacer_2, 3, 0, 1, 1)
 
-        self.label_constante_right = QLabel(self.frame_8)
-        self.label_constante_right.setObjectName(u"label_constante_right")
-        self.label_constante_right.setMinimumSize(QSize(80, 26))
-        self.label_constante_right.setMaximumSize(QSize(80, 26))
-        self.label_constante_right.setFont(font3)
-        self.label_constante_right.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.label_constant_right = QLabel(self.frame_8)
+        self.label_constant_right.setObjectName(u"label_constant_right")
+        self.label_constant_right.setMinimumSize(QSize(80, 26))
+        self.label_constant_right.setMaximumSize(QSize(16777215, 26))
+        self.label_constant_right.setFont(font2)
+        self.label_constant_right.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.gridLayout.addWidget(self.label_constante_right, 2, 3, 1, 1)
+        self.gridLayout.addWidget(self.label_constant_right, 2, 3, 1, 1)
 
 
         self.gridLayout_12.addWidget(self.frame_8, 0, 0, 1, 1)
@@ -471,7 +491,7 @@ class Ui_Dialog(object):
         self.label_Fy_table.setEnabled(True)
         self.label_Fy_table.setMinimumSize(QSize(0, 26))
         self.label_Fy_table.setMaximumSize(QSize(38, 26))
-        self.label_Fy_table.setFont(font2)
+        self.label_Fy_table.setFont(font3)
         self.label_Fy_table.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_3.addWidget(self.label_Fy_table, 1, 1, 1, 1)
@@ -481,7 +501,7 @@ class Ui_Dialog(object):
         self.label_Mx_table.setEnabled(True)
         self.label_Mx_table.setMinimumSize(QSize(0, 26))
         self.label_Mx_table.setMaximumSize(QSize(38, 26))
-        self.label_Mx_table.setFont(font2)
+        self.label_Mx_table.setFont(font3)
         self.label_Mx_table.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_3.addWidget(self.label_Mx_table, 3, 1, 1, 1)
@@ -496,7 +516,7 @@ class Ui_Dialog(object):
         self.pushButton_load_Fz_table.setSizePolicy(sizePolicy1)
         self.pushButton_load_Fz_table.setMinimumSize(QSize(40, 26))
         self.pushButton_load_Fz_table.setMaximumSize(QSize(40, 26))
-        self.pushButton_load_Fz_table.setFont(font2)
+        self.pushButton_load_Fz_table.setFont(font3)
         self.pushButton_load_Fz_table.setStyleSheet(u"")
         icon = Icon(u":/icons/document_search_blue.png")
         self.pushButton_load_Fz_table.setIcon(icon)
@@ -510,7 +530,7 @@ class Ui_Dialog(object):
         self.label_Mz_table.setEnabled(True)
         self.label_Mz_table.setMinimumSize(QSize(0, 26))
         self.label_Mz_table.setMaximumSize(QSize(38, 26))
-        self.label_Mz_table.setFont(font2)
+        self.label_Mz_table.setFont(font3)
         self.label_Mz_table.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_3.addWidget(self.label_Mz_table, 5, 1, 1, 1)
@@ -518,8 +538,8 @@ class Ui_Dialog(object):
         self.lineEdit_path_table_Fy = QLineEdit(self.frame_9)
         self.lineEdit_path_table_Fy.setObjectName(u"lineEdit_path_table_Fy")
         self.lineEdit_path_table_Fy.setEnabled(True)
-        self.lineEdit_path_table_Fy.setMinimumSize(QSize(300, 26))
-        self.lineEdit_path_table_Fy.setMaximumSize(QSize(300, 26))
+        self.lineEdit_path_table_Fy.setMinimumSize(QSize(360, 26))
+        self.lineEdit_path_table_Fy.setMaximumSize(QSize(360, 26))
         self.lineEdit_path_table_Fy.setStyleSheet(u"")
         self.lineEdit_path_table_Fy.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.lineEdit_path_table_Fy.setClearButtonEnabled(True)
@@ -529,8 +549,8 @@ class Ui_Dialog(object):
         self.lineEdit_path_table_My = QLineEdit(self.frame_9)
         self.lineEdit_path_table_My.setObjectName(u"lineEdit_path_table_My")
         self.lineEdit_path_table_My.setEnabled(True)
-        self.lineEdit_path_table_My.setMinimumSize(QSize(300, 26))
-        self.lineEdit_path_table_My.setMaximumSize(QSize(300, 26))
+        self.lineEdit_path_table_My.setMinimumSize(QSize(360, 26))
+        self.lineEdit_path_table_My.setMaximumSize(QSize(360, 26))
         self.lineEdit_path_table_My.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.lineEdit_path_table_My.setClearButtonEnabled(True)
 
@@ -543,7 +563,7 @@ class Ui_Dialog(object):
         self.pushButton_load_Fy_table.setSizePolicy(sizePolicy1)
         self.pushButton_load_Fy_table.setMinimumSize(QSize(40, 26))
         self.pushButton_load_Fy_table.setMaximumSize(QSize(40, 26))
-        self.pushButton_load_Fy_table.setFont(font2)
+        self.pushButton_load_Fy_table.setFont(font3)
         self.pushButton_load_Fy_table.setStyleSheet(u"")
         self.pushButton_load_Fy_table.setIcon(icon)
         self.pushButton_load_Fy_table.setIconSize(QSize(20, 20))
@@ -558,8 +578,8 @@ class Ui_Dialog(object):
         self.lineEdit_path_table_Fx = QLineEdit(self.frame_9)
         self.lineEdit_path_table_Fx.setObjectName(u"lineEdit_path_table_Fx")
         self.lineEdit_path_table_Fx.setEnabled(True)
-        self.lineEdit_path_table_Fx.setMinimumSize(QSize(300, 26))
-        self.lineEdit_path_table_Fx.setMaximumSize(QSize(300, 26))
+        self.lineEdit_path_table_Fx.setMinimumSize(QSize(360, 26))
+        self.lineEdit_path_table_Fx.setMaximumSize(QSize(360, 26))
         self.lineEdit_path_table_Fx.setStyleSheet(u"")
         self.lineEdit_path_table_Fx.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.lineEdit_path_table_Fx.setClearButtonEnabled(True)
@@ -573,7 +593,7 @@ class Ui_Dialog(object):
         self.pushButton_load_Mz_table.setSizePolicy(sizePolicy1)
         self.pushButton_load_Mz_table.setMinimumSize(QSize(40, 26))
         self.pushButton_load_Mz_table.setMaximumSize(QSize(40, 26))
-        self.pushButton_load_Mz_table.setFont(font2)
+        self.pushButton_load_Mz_table.setFont(font3)
         self.pushButton_load_Mz_table.setStyleSheet(u"")
         self.pushButton_load_Mz_table.setIcon(icon)
         self.pushButton_load_Mz_table.setIconSize(QSize(20, 20))
@@ -588,7 +608,7 @@ class Ui_Dialog(object):
         self.pushButton_load_My_table.setSizePolicy(sizePolicy1)
         self.pushButton_load_My_table.setMinimumSize(QSize(40, 26))
         self.pushButton_load_My_table.setMaximumSize(QSize(40, 26))
-        self.pushButton_load_My_table.setFont(font2)
+        self.pushButton_load_My_table.setFont(font3)
         self.pushButton_load_My_table.setStyleSheet(u"")
         self.pushButton_load_My_table.setIcon(icon)
         self.pushButton_load_My_table.setIconSize(QSize(20, 20))
@@ -599,8 +619,8 @@ class Ui_Dialog(object):
         self.lineEdit_path_table_Fz = QLineEdit(self.frame_9)
         self.lineEdit_path_table_Fz.setObjectName(u"lineEdit_path_table_Fz")
         self.lineEdit_path_table_Fz.setEnabled(True)
-        self.lineEdit_path_table_Fz.setMinimumSize(QSize(300, 26))
-        self.lineEdit_path_table_Fz.setMaximumSize(QSize(300, 26))
+        self.lineEdit_path_table_Fz.setMinimumSize(QSize(360, 26))
+        self.lineEdit_path_table_Fz.setMaximumSize(QSize(360, 26))
         self.lineEdit_path_table_Fz.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.lineEdit_path_table_Fz.setClearButtonEnabled(True)
 
@@ -613,7 +633,7 @@ class Ui_Dialog(object):
         self.pushButton_load_Fx_table.setSizePolicy(sizePolicy1)
         self.pushButton_load_Fx_table.setMinimumSize(QSize(40, 26))
         self.pushButton_load_Fx_table.setMaximumSize(QSize(40, 26))
-        self.pushButton_load_Fx_table.setFont(font2)
+        self.pushButton_load_Fx_table.setFont(font3)
         self.pushButton_load_Fx_table.setStyleSheet(u"")
         self.pushButton_load_Fx_table.setIcon(icon)
         self.pushButton_load_Fx_table.setIconSize(QSize(20, 20))
@@ -624,8 +644,8 @@ class Ui_Dialog(object):
         self.lineEdit_path_table_Mz = QLineEdit(self.frame_9)
         self.lineEdit_path_table_Mz.setObjectName(u"lineEdit_path_table_Mz")
         self.lineEdit_path_table_Mz.setEnabled(True)
-        self.lineEdit_path_table_Mz.setMinimumSize(QSize(300, 26))
-        self.lineEdit_path_table_Mz.setMaximumSize(QSize(300, 26))
+        self.lineEdit_path_table_Mz.setMinimumSize(QSize(360, 26))
+        self.lineEdit_path_table_Mz.setMaximumSize(QSize(360, 26))
         self.lineEdit_path_table_Mz.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.lineEdit_path_table_Mz.setClearButtonEnabled(True)
 
@@ -638,8 +658,8 @@ class Ui_Dialog(object):
         self.lineEdit_path_table_Mx = QLineEdit(self.frame_9)
         self.lineEdit_path_table_Mx.setObjectName(u"lineEdit_path_table_Mx")
         self.lineEdit_path_table_Mx.setEnabled(True)
-        self.lineEdit_path_table_Mx.setMinimumSize(QSize(300, 26))
-        self.lineEdit_path_table_Mx.setMaximumSize(QSize(300, 26))
+        self.lineEdit_path_table_Mx.setMinimumSize(QSize(360, 26))
+        self.lineEdit_path_table_Mx.setMaximumSize(QSize(360, 26))
         self.lineEdit_path_table_Mx.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.lineEdit_path_table_Mx.setClearButtonEnabled(True)
 
@@ -650,7 +670,7 @@ class Ui_Dialog(object):
         self.label_Fz_table.setEnabled(True)
         self.label_Fz_table.setMinimumSize(QSize(0, 26))
         self.label_Fz_table.setMaximumSize(QSize(38, 26))
-        self.label_Fz_table.setFont(font2)
+        self.label_Fz_table.setFont(font3)
         self.label_Fz_table.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_3.addWidget(self.label_Fz_table, 2, 1, 1, 1)
@@ -660,7 +680,7 @@ class Ui_Dialog(object):
         self.label_My_table.setEnabled(True)
         self.label_My_table.setMinimumSize(QSize(0, 26))
         self.label_My_table.setMaximumSize(QSize(38, 26))
-        self.label_My_table.setFont(font2)
+        self.label_My_table.setFont(font3)
         self.label_My_table.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_3.addWidget(self.label_My_table, 4, 1, 1, 1)
@@ -672,7 +692,7 @@ class Ui_Dialog(object):
         self.pushButton_load_Mx_table.setSizePolicy(sizePolicy1)
         self.pushButton_load_Mx_table.setMinimumSize(QSize(40, 26))
         self.pushButton_load_Mx_table.setMaximumSize(QSize(40, 26))
-        self.pushButton_load_Mx_table.setFont(font2)
+        self.pushButton_load_Mx_table.setFont(font3)
         self.pushButton_load_Mx_table.setStyleSheet(u"")
         self.pushButton_load_Mx_table.setIcon(icon)
         self.pushButton_load_Mx_table.setIconSize(QSize(20, 20))
@@ -685,7 +705,7 @@ class Ui_Dialog(object):
         self.label_Fx_table.setEnabled(True)
         self.label_Fx_table.setMinimumSize(QSize(0, 26))
         self.label_Fx_table.setMaximumSize(QSize(38, 26))
-        self.label_Fx_table.setFont(font2)
+        self.label_Fx_table.setFont(font3)
         self.label_Fx_table.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_3.addWidget(self.label_Fx_table, 0, 1, 1, 1)
@@ -702,20 +722,23 @@ class Ui_Dialog(object):
         self.gridLayout_9.setContentsMargins(2, 2, 2, 2)
         self.frame_5 = QFrame(self.tab_list)
         self.frame_5.setObjectName(u"frame_5")
-        self.frame_5.setFrameShape(QFrame.Shape.StyledPanel)
+        self.frame_5.setFrameShape(QFrame.Shape.NoFrame)
         self.frame_5.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_2 = QGridLayout(self.frame_5)
         self.gridLayout_2.setObjectName(u"gridLayout_2")
+        self.gridLayout_2.setContentsMargins(-1, -1, -1, 0)
         self.treeWidget_nodal_loads = QTreeWidget(self.frame_5)
         __qtreewidgetitem = QTreeWidgetItem()
+        __qtreewidgetitem.setTextAlignment(4, Qt.AlignCenter);
+        __qtreewidgetitem.setTextAlignment(3, Qt.AlignCenter);
         __qtreewidgetitem.setTextAlignment(2, Qt.AlignCenter);
         __qtreewidgetitem.setTextAlignment(1, Qt.AlignCenter);
         __qtreewidgetitem.setTextAlignment(0, Qt.AlignCenter);
         self.treeWidget_nodal_loads.setHeaderItem(__qtreewidgetitem)
         self.treeWidget_nodal_loads.setObjectName(u"treeWidget_nodal_loads")
-        self.treeWidget_nodal_loads.setMinimumSize(QSize(320, 170))
-        self.treeWidget_nodal_loads.setMaximumSize(QSize(380, 200))
-        self.treeWidget_nodal_loads.setFont(font3)
+        self.treeWidget_nodal_loads.setMinimumSize(QSize(320, 0))
+        self.treeWidget_nodal_loads.setMaximumSize(QSize(16777215, 200))
+        self.treeWidget_nodal_loads.setFont(font2)
         self.treeWidget_nodal_loads.setIndentation(1)
         self.treeWidget_nodal_loads.setHeaderHidden(False)
         self.treeWidget_nodal_loads.header().setHighlightSections(False)
@@ -741,7 +764,7 @@ class Ui_Dialog(object):
         self.pushButton_reset.setObjectName(u"pushButton_reset")
         self.pushButton_reset.setMinimumSize(QSize(100, 28))
         self.pushButton_reset.setMaximumSize(QSize(100, 28))
-        self.pushButton_reset.setFont(font3)
+        self.pushButton_reset.setFont(font2)
         self.pushButton_reset.setStyleSheet(u"")
         self.pushButton_reset.setAutoDefault(False)
 
@@ -751,7 +774,7 @@ class Ui_Dialog(object):
         self.pushButton_remove.setObjectName(u"pushButton_remove")
         self.pushButton_remove.setMinimumSize(QSize(100, 28))
         self.pushButton_remove.setMaximumSize(QSize(100, 28))
-        self.pushButton_remove.setFont(font3)
+        self.pushButton_remove.setFont(font2)
         self.pushButton_remove.setStyleSheet(u"")
         self.pushButton_remove.setAutoDefault(False)
 
@@ -838,16 +861,21 @@ class Ui_Dialog(object):
         Dialog.setWhatsThis("")
 #endif // QT_CONFIG(whatsthis)
         self.label.setText(QCoreApplication.translate("Dialog", u"Set structural nodal loads", None))
-        self.comboBox_element_type.setItemText(0, QCoreApplication.translate("Dialog", u"Face element", None))
-        self.comboBox_element_type.setItemText(1, QCoreApplication.translate("Dialog", u"Solid element", None))
-
         self.label_2.setText(QCoreApplication.translate("Dialog", u"Selection ID:", None))
         self.comboBox_assignment_type.setItemText(0, QCoreApplication.translate("Dialog", u"Selected faces", None))
         self.comboBox_assignment_type.setItemText(1, QCoreApplication.translate("Dialog", u"Selected lines", None))
         self.comboBox_assignment_type.setItemText(2, QCoreApplication.translate("Dialog", u"Selected points", None))
         self.comboBox_assignment_type.setItemText(3, QCoreApplication.translate("Dialog", u"Selected nodes", None))
+        self.comboBox_assignment_type.setItemText(4, QCoreApplication.translate("Dialog", u"Multiple", None))
+
+        self.comboBox_element_type.setItemText(0, QCoreApplication.translate("Dialog", u"Face element", None))
+        self.comboBox_element_type.setItemText(1, QCoreApplication.translate("Dialog", u"Solid element", None))
 
         self.label_3.setText(QCoreApplication.translate("Dialog", u"Element type:", None))
+        self.label_4.setText(QCoreApplication.translate("Dialog", u"Data type:", None))
+        self.comboBox_data_type.setItemText(0, QCoreApplication.translate("Dialog", u"Real and imaginary", None))
+        self.comboBox_data_type.setItemText(1, QCoreApplication.translate("Dialog", u"Amplitude and phase", None))
+
         self.label_Mz_unit.setText(QCoreApplication.translate("Dialog", u"[N.m]", None))
         self.label_My_unit.setText(QCoreApplication.translate("Dialog", u"[N.m]", None))
         self.label_Fy_constant.setText(QCoreApplication.translate("Dialog", u"Fy:", None))
@@ -856,13 +884,13 @@ class Ui_Dialog(object):
         self.label_Fz_unit.setText(QCoreApplication.translate("Dialog", u"[N]", None))
         self.label_Mz_constant.setText(QCoreApplication.translate("Dialog", u"Mz:", None))
         self.label_constant_left.setText(QCoreApplication.translate("Dialog", u"Real", None))
-        self.lineEdit_real_Fx.setText("")
+        self.lineEdit_left_Fx.setText("")
         self.label_Fx_constant.setText(QCoreApplication.translate("Dialog", u"Fx:", None))
         self.label_Fy_unit.setText(QCoreApplication.translate("Dialog", u"[N]", None))
         self.label_Mx_unit.setText(QCoreApplication.translate("Dialog", u"[N.m]", None))
         self.label_Fx_unit.setText(QCoreApplication.translate("Dialog", u"[N]", None))
         self.label_My_constant.setText(QCoreApplication.translate("Dialog", u"My:", None))
-        self.label_constante_right.setText(QCoreApplication.translate("Dialog", u"Imaginary", None))
+        self.label_constant_right.setText(QCoreApplication.translate("Dialog", u"Imaginary", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_constant_data), QCoreApplication.translate("Dialog", u"Constant data", None))
         self.label_Fy_table.setText(QCoreApplication.translate("Dialog", u"Fy:", None))
         self.label_Mx_table.setText(QCoreApplication.translate("Dialog", u"Mx:", None))
@@ -878,9 +906,11 @@ class Ui_Dialog(object):
         self.label_Fx_table.setText(QCoreApplication.translate("Dialog", u"Fx:", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_tabular_data), QCoreApplication.translate("Dialog", u"Tabular data", None))
         ___qtreewidgetitem = self.treeWidget_nodal_loads.headerItem()
+        ___qtreewidgetitem.setText(4, QCoreApplication.translate("Dialog", u"Values", None));
+        ___qtreewidgetitem.setText(3, QCoreApplication.translate("Dialog", u"Loads", None));
         ___qtreewidgetitem.setText(2, QCoreApplication.translate("Dialog", u"Element type", None));
-        ___qtreewidgetitem.setText(1, QCoreApplication.translate("Dialog", u"Nodal loads", None));
-        ___qtreewidgetitem.setText(0, QCoreApplication.translate("Dialog", u"Selection-ID", None));
+        ___qtreewidgetitem.setText(1, QCoreApplication.translate("Dialog", u"Entity", None));
+        ___qtreewidgetitem.setText(0, QCoreApplication.translate("Dialog", u"ID", None));
 #if QT_CONFIG(tooltip)
         self.treeWidget_nodal_loads.setToolTip(QCoreApplication.translate("Dialog", u"Select a node to remove the attributed boundary condition.", None))
 #endif // QT_CONFIG(tooltip)
@@ -906,11 +936,13 @@ class NodalLoadsInputs_UI(QDialog, Ui_Dialog):
                     - (Layout): QGridLayout
                             - frame_4: QFrame
                                 - (Layout): QGridLayout
-                                        - comboBox_element_type: QComboBox
                                         - label_2: QLabel
                                         - comboBox_assignment_type: QComboBox
-                                        - label_3: QLabel
                                         - lineEdit_selection_id: QLineEdit
+                                        - comboBox_element_type: QComboBox
+                                        - label_3: QLabel
+                                        - label_4: QLabel
+                                        - comboBox_data_type: QComboBox
                             - frame_6: QFrame
                                 - (Layout): QGridLayout
                                         - tabWidget_main: QTabWidget
@@ -918,10 +950,10 @@ class NodalLoadsInputs_UI(QDialog, Ui_Dialog):
                                                 - (Layout): QGridLayout
                                                         - frame_8: QFrame
                                                             - (Layout): QGridLayout
-                                                                    - lineEdit_imag_Mx: QLineEdit
-                                                                    - lineEdit_real_My: QLineEdit
+                                                                    - lineEdit_right_Mx: QLineEdit
+                                                                    - lineEdit_left_My: QLineEdit
                                                                     - label_Mz_unit: QLabel
-                                                                    - lineEdit_imag_Mz: QLineEdit
+                                                                    - lineEdit_right_Mz: QLineEdit
                                                                     - label_My_unit: QLabel
                                                                     - label_Fy_constant: QLabel
                                                                     - label_Mx_constant: QLabel
@@ -929,21 +961,21 @@ class NodalLoadsInputs_UI(QDialog, Ui_Dialog):
                                                                     - label_Fz_unit: QLabel
                                                                     - label_Mz_constant: QLabel
                                                                     - label_constant_left: QLabel
-                                                                    - lineEdit_imag_Fy: QLineEdit
-                                                                    - lineEdit_imag_Fz: QLineEdit
-                                                                    - lineEdit_real_Mz: QLineEdit
-                                                                    - lineEdit_imag_My: QLineEdit
-                                                                    - lineEdit_real_Fx: QLineEdit
-                                                                    - lineEdit_imag_Fx: QLineEdit
-                                                                    - lineEdit_real_Fy: QLineEdit
+                                                                    - lineEdit_right_Fy: QLineEdit
+                                                                    - lineEdit_right_Fz: QLineEdit
+                                                                    - lineEdit_left_Mz: QLineEdit
+                                                                    - lineEdit_right_My: QLineEdit
+                                                                    - lineEdit_left_Fx: QLineEdit
+                                                                    - lineEdit_right_Fx: QLineEdit
+                                                                    - lineEdit_left_Fy: QLineEdit
                                                                     - label_Fx_constant: QLabel
                                                                     - label_Fy_unit: QLabel
                                                                     - label_Mx_unit: QLabel
-                                                                    - lineEdit_real_Mx: QLineEdit
-                                                                    - lineEdit_real_Fz: QLineEdit
+                                                                    - lineEdit_left_Mx: QLineEdit
+                                                                    - lineEdit_left_Fz: QLineEdit
                                                                     - label_Fx_unit: QLabel
                                                                     - label_My_constant: QLabel
-                                                                    - label_constante_right: QLabel
+                                                                    - label_constant_right: QLabel
                                             - tab_tabular_data: QWidget
                                                 - (Layout): QGridLayout
                                                         - frame_9: QFrame
