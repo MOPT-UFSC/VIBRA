@@ -279,6 +279,24 @@ class MeshActor(vtkPropAssembly):
             self.cached_info.mesh_id = mesh_id
             # Don't need to modify anything, but might
 
+    def picked_dim_tag(self, picker: vtkHardwarePicker) -> tuple[int, int] | None:
+        match picker.GetActor():
+            case self.volume_actor:
+                dim = 3
+                ids = vtk_to_numpy(self.volume_ids)
+            case self.surface_actor:
+                dim = 2
+                ids = vtk_to_numpy(self.surface_ids)
+            case self.node_actor:
+                dim = 0
+                ids = vtk_to_numpy(self.node_ids)
+            case _:
+                return
+
+        cell_id = picker.GetCellId()
+        if 0 < cell_id < len(ids):
+            return dim, ids[cell_id]
+
     def set_color(self, color: Color):
         rgb = color.to_rgb()
         for i in range(3):
@@ -344,15 +362,31 @@ class MeshActor(vtkPropAssembly):
         paint_position_mask = np.isin(section_ids, selected_elements)
         section_colors[paint_position_mask, :3] = color.to_rgb()
 
-    def hide_all(self):
-        vtk_to_numpy(self.surface_colors)[:, 3] = 0
-        vtk_to_numpy(self.volume_colors)[:, 3] = 0
+    def hide_surfaces(self, surfaces: Sequence[int] | None = None):
+        if surfaces is None:
+            vtk_to_numpy(self.surface_colors)[:, 3] = 0
+        else:
+            self._set_surface_cells_visibility(surfaces, visible=False)
 
-    def show_all(self):
-        vtk_to_numpy(self.surface_colors)[:, 3] = 255
-        vtk_to_numpy(self.volume_colors)[:, 3] = 255
+    def hide_volumes(self, volumes: Sequence[int] | None = None):
+        if volumes is None:
+            vtk_to_numpy(self.volume_colors)[:, 3] = 0
+        else:
+            self._set_volume_cells_visibility(volumes, visible=False)
 
-    def set_surfaces_visibility(self, surfaces: Sequence[int], *, visible: bool):
+    def show_surfaces(self, surfaces: Sequence[int] | None = None):
+        if surfaces is None:
+            vtk_to_numpy(self.surface_colors)[:, 3] = 255
+        else:
+            self._set_surface_cells_visibility(surfaces, visible=True)
+
+    def show_volumes(self, volumes: Sequence[int] | None = None):
+        if volumes is None:
+            vtk_to_numpy(self.volume_colors)[:, 3] = 255
+        else:
+            self._set_volume_cells_visibility(volumes, visible=True)
+
+    def _set_surface_cells_visibility(self, surfaces: Sequence[int], *, visible: bool):
         if self.mesh is None:
             return
 
@@ -366,7 +400,7 @@ class MeshActor(vtkPropAssembly):
         mask = np.isin(surface_ids, selected_face_elements)
         surface_colors[mask, 3] = alpha
 
-    def set_volumes_visibility(self, volumes: Sequence[int], *, visible: bool):
+    def _set_volume_cells_visibility(self, volumes: Sequence[int], *, visible: bool):
         if self.mesh is None:
             return
 
@@ -374,7 +408,7 @@ class MeshActor(vtkPropAssembly):
 
         surface_groups = [self.mesh.surfaces_from_volume[v] for v in volumes if (v in self.mesh.surfaces_from_volume)]
         surfaces = list(chain.from_iterable(surface_groups))
-        self.set_surfaces_visibility(surfaces, visible=visible)
+        self._set_surface_cells_visibility(surfaces, visible=visible)
 
         if self.section_plane is None:
             return
@@ -386,24 +420,6 @@ class MeshActor(vtkPropAssembly):
         selected_elements, *_ = np.where(np.isin(self.mesh.solids_connectivity[:, 1], volumes))
         paint_position_mask = np.isin(section_ids, selected_elements)
         section_colors[paint_position_mask, 3] = alpha
-
-    def picked_dim_tag(self, picker: vtkHardwarePicker) -> tuple[int, int] | None:
-        match picker.GetActor():
-            case self.volume_actor:
-                dim = 3
-                ids = vtk_to_numpy(self.volume_ids)
-            case self.surface_actor:
-                dim = 2
-                ids = vtk_to_numpy(self.surface_ids)
-            case self.node_actor:
-                dim = 0
-                ids = vtk_to_numpy(self.node_ids)
-            case _:
-                return
-
-        cell_id = picker.GetCellId()
-        if 0 < cell_id < len(ids):
-            return dim, ids[cell_id]
 
     def _get_parts(self) -> list[vtkActor]:
         return list(self.GetParts())  # pyright: ignore[reportArgumentType]
