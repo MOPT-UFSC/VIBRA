@@ -1,4 +1,3 @@
-from collections import defaultdict
 from collections.abc import Sequence
 from dataclasses import dataclass
 from itertools import chain
@@ -17,7 +16,6 @@ from vtkmodules.vtkRenderingCore import vtkActor, vtkHardwarePicker, vtkPolyData
 
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
-from vibra.engine.properties import Fluid, Material
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.utils.math_functions import inside_plane
 from vibra.utils.time_utils import function_timer
@@ -72,7 +70,6 @@ class MeshActor(vtkPropAssembly):
         self.update_node()
         self.update_surface()
         self.update_section_plane()
-        self.update_colors()
         self.update_caches()
 
     def clear_data(self):
@@ -162,36 +159,6 @@ class MeshActor(vtkPropAssembly):
         self.section_actor.SetForceOpaque(True)
         self.section_actor.SetMapper(self.section_mapper)
         self.AddPart(self.section_actor)
-
-    def clear_data(self):
-        self.cached_info = CachedInfo()
-
-        self.node_data.SetVerts(vtkCellArray())
-        self.node_colors.SetNumberOfTuples(0)
-        self.node_ids.SetNumberOfTuples(0)
-        self.node_colors.Modified()
-
-        self.surface_data.SetPolys(vtkCellArray())
-        self.surface_colors.SetNumberOfTuples(0)
-        self.surface_ids.SetNumberOfTuples(0)
-        self.surface_colors.Modified()
-
-        self.section_data.SetPolys(vtkCellArray())
-        self.section_colors.SetNumberOfTuples(0)
-        self.section_ids.SetNumberOfTuples(0)
-        self.section_colors.Modified()
-
-    @function_timer
-    def update(self):
-        if self.mesh is None:
-            self.clear_data()
-            return
-
-        self.update_mesh_common()
-        self.update_node()
-        self.update_surface()
-        self.update_section_plane()
-        self.update_caches()
 
     def update_mesh_common(self):
         assert self.mesh is not None
@@ -295,34 +262,6 @@ class MeshActor(vtkPropAssembly):
         self.section_ids.SetNumberOfTuples(n_cells)
         view = vtk_to_numpy(self.section_ids)
         view[:] = triangulated_connectivity[:, 0]
-
-    def update_colors(self):
-        self.set_color(Color(255, 255, 255))
-
-        if self.properties is None:
-            return
-
-        surface_colors = defaultdict(list)
-        volume_colors = defaultdict(list)
-
-        for entity, _property, tag, value in self.properties.iterate_properties():
-            if not isinstance(value, Material | Fluid):
-                continue
-
-            color = Color.from_rgb(*value.color)
-            match entity:
-                case "surface":
-                    surface_colors[color].append(tag)
-                case "volume":
-                    volume_colors[color].append(tag)
-                case _:
-                    pass
-
-        for color, tags in surface_colors.items():
-            self.paint_surfaces(tags, color)
-
-        for color, tags in volume_colors.items():
-            self.paint_volumes(tags, color)
 
     def update_caches(self):
         surface_colors_hash = CachedInfo.array_hash(self.surface_colors)
