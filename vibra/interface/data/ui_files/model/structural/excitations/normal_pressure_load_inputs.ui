@@ -216,7 +216,7 @@
           </spacer>
          </item>
          <item row="0" column="3">
-          <widget class="QComboBox" name="comboBox_attribution_type">
+          <widget class="QComboBox" name="comboBox_assignment_type">
            <property name="minimumSize">
             <size>
              <width>120</width>

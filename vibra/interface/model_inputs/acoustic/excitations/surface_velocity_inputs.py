@@ -29,6 +29,7 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         self._config_window()
         self._initialize()
         self._config_widgets()
+        self._configure_validators()
         self._create_connections()
 
         self.load_model_info()
@@ -47,6 +48,14 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         self.keep_window_open = True
         self.last_tab = self.tabWidget_main.currentIndex()
         self.tree_item_clicked = False
+
+    def _config_widgets(self):
+
+        self.treeWidget_surface_velocity.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+
+        for i, w in enumerate([100, 120, 140]):
+            self.treeWidget_surface_velocity.setColumnWidth(i, w)
+            self.treeWidget_surface_velocity.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def _configure_validators(self):
         self.lineEdit_left_value.setValidator(StrictDoubleValidator(-1e16, 1e16, 8))
@@ -76,14 +85,6 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
         self.geometry_selection_callback()
-
-    def _config_widgets(self):
-
-        self.treeWidget_surface_velocity.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
-
-        for i, w in enumerate([120]):
-            self.treeWidget_surface_velocity.setColumnWidth(i, w)
-            self.treeWidget_surface_velocity.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def geometry_selection_callback(self):
         # if self.tabWidget_main.currentIndex() == StandardTabType.LIST:
@@ -125,8 +126,8 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
                 right_value = data.get("phase_values")[0]
                 self.comboBox_data_type.setCurrentIndex(InputDataType.MAGNITUDE_PHASE)
 
-            self.lineEdit_left_value.setText(str(left_value if left_value is not None else 0.0))
-            self.lineEdit_right_value.setText(str(right_value if right_value is not None else 0.0))
+            self.lineEdit_left_value.setText(str(left_value))
+            self.lineEdit_right_value.setText(str(right_value))
             self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)
 
     def data_type_callback(self):
@@ -139,21 +140,20 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
 
     def tab_event_callback(self):
         current_tab = self.tabWidget_main.currentIndex()
-        tab_list = current_tab == StandardTabType.LIST
+        list_tab = current_tab == StandardTabType.LIST
 
-        if self.last_tab == StandardTabType.LIST or tab_list:
+        if self.last_tab == StandardTabType.LIST or list_tab:
             app().main_window.selection.clear_selection()
             self.clear_line_edit_selection_id()
-
-        if tab_list:
-            self.pushButton_remove.setDisabled(True)
-            self.treeWidget_surface_velocity.clearSelection()
         
-        self.lineEdit_selection_id.setDisabled(tab_list)
-        self.pushButton_apply.setDisabled(tab_list)
-        self.pushButton_apply_and_close.setDisabled(tab_list)
+        self.comboBox_data_type.setDisabled(list_tab)
+        self.lineEdit_selection_id.setDisabled(list_tab)
+        self.pushButton_apply.setDisabled(list_tab)
+        self.pushButton_apply_and_close.setDisabled(list_tab)
+        self.pushButton_remove.setDisabled(True)
 
         self.last_tab = current_tab
+        self.treeWidget_surface_velocity.clearSelection()
 
     def apply_callback(self, close_window: bool = False):
         tab_index = self.tabWidget_main.currentIndex()
@@ -205,7 +205,6 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         data = {
             "real_values" if real_imag_input else "amplitude_values": left_values,
             "imag_values" if real_imag_input else "phase_values": right_values,
-            "data_type": "real_imaginary" if real_imag_input else "amplitude_phase",
             "element_integration": True,
         }
 

@@ -994,7 +994,7 @@
             </column>
             <column>
              <property name="text">
-              <string>Values</string>
+              <string>Values (m/s)</string>
              </property>
              <property name="textAlignment">
               <set>AlignCenter</set>

@@ -29,12 +29,11 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
 
         self._config_window()
         self._initialize()
-        self._configure_qt_variables()
-        self._create_connections()
         self._config_widgets()
+        self._configure_validators()
+        self._create_connections()
 
         self.load_model_info()
-        self.geometry_selection_callback()
 
         while self.keep_window_open:
             self.exec()
@@ -51,13 +50,17 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         self.last_tab = self.tabWidget_main.currentIndex()
         self.tree_item_clicked = False
 
+    def _config_widgets(self):
+
+        self.treeWidget_acoustic_pressure.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+
+        for i, w in enumerate([100, 120, 140]):
+            self.treeWidget_acoustic_pressure.setColumnWidth(i, w)
+            self.treeWidget_acoustic_pressure.headerItem().setTextAlignment(i, Qt.AlignCenter)
+
     def _configure_validators(self):
         self.lineEdit_left_value.setValidator(StrictDoubleValidator(-1e16, 1e16, 8))
         self.lineEdit_right_value.setValidator(StrictDoubleValidator(-1e16, 1e16, 8))
-
-    def _configure_qt_variables(self):
-        self.treeWidget_acoustic_pressure.setColumnWidth(1, 20)
-        self.treeWidget_acoustic_pressure.setColumnWidth(2, 80)
 
     def _create_connections(self):
 
@@ -81,15 +84,9 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         self.treeWidget_acoustic_pressure.itemSelectionChanged.connect(self.item_selection_clicked_callback)
 
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
+
+        self.geometry_selection_callback()
     
-    def _config_widgets(self):
-
-        self.treeWidget_acoustic_pressure.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
-
-        for i, w in enumerate([120]):
-            self.treeWidget_acoustic_pressure.setColumnWidth(i, w)
-            self.treeWidget_acoustic_pressure.headerItem().setTextAlignment(i, Qt.AlignCenter)
-
     def geometry_selection_callback(self):
         # if self.tabWidget_main.currentIndex() == StandardTabType.LIST:
         #     self.verify_if_selected_surfaces_are_in_tree_widget_acoustic_pressure()
@@ -130,8 +127,8 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
                 right_value = data.get("phase_values")[0]
                 self.comboBox_data_type.setCurrentIndex(InputDataType.MAGNITUDE_PHASE)
 
-            self.lineEdit_left_value.setText(str(left_value if left_value is not None else 0.0))
-            self.lineEdit_right_value.setText(str(right_value if right_value is not None else 0.0))
+            self.lineEdit_left_value.setText(str(left_value))
+            self.lineEdit_right_value.setText(str(right_value))
             self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)
    
     def clear_line_edit_selection_id(self):
@@ -148,19 +145,20 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
 
     def tab_event_callback(self):
         current_tab = self.tabWidget_main.currentIndex()
-        tab_list = current_tab == StandardTabType.LIST
-    
-        if self.last_tab == StandardTabType.LIST or tab_list:
+        list_tab = current_tab == StandardTabType.LIST
+
+        if self.last_tab == StandardTabType.LIST or list_tab:
             app().main_window.selection.clear_selection()
             self.clear_line_edit_selection_id()
+        
+        self.comboBox_data_type.setDisabled(list_tab)
+        self.lineEdit_selection_id.setDisabled(list_tab)
+        self.pushButton_apply.setDisabled(list_tab)
+        self.pushButton_apply_and_close.setDisabled(list_tab)
+        self.pushButton_remove.setDisabled(True)
 
-        if tab_list:
-            self.pushButton_remove.setDisabled(True)
-            self.treeWidget_acoustic_pressure.clearSelection()
-
-        self.lineEdit_selection_id.setDisabled(tab_list)
-        self.pushButton_apply.setDisabled(tab_list)
-        self.pushButton_apply_and_close.setDisabled(tab_list)
+        self.last_tab = current_tab
+        self.treeWidget_acoustic_pressure.clearSelection()
 
     def apply_callback(self, close_window: bool = False):
         tab_index = self.tabWidget_main.currentIndex()
@@ -436,7 +434,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
 
     def item_clicked_callback(self, item):
 
-        self.pushButton_remove.setEnabled(False)
+        self.pushButton_remove.setEnabled(True)
 
         selected_items = self.treeWidget_acoustic_pressure.selectedItems()
         if not selected_items:
@@ -459,7 +457,6 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         self.item_clicked_callback(item)
 
     def item_selection_clicked_callback(self):
-        print("item_selection_clicked_callback")
         self.item_clicked_callback(None)
 
     def load_model_info(self):

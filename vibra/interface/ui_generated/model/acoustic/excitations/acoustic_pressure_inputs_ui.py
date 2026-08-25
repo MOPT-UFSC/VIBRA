@@ -448,7 +448,7 @@ class Ui_Dialog(object):
         self.pushButton_reset.setText(QCoreApplication.translate("Dialog", u"Reset", None))
         self.pushButton_remove.setText(QCoreApplication.translate("Dialog", u"Remove", None))
         ___qtreewidgetitem = self.treeWidget_acoustic_pressure.headerItem()
-        ___qtreewidgetitem.setText(2, QCoreApplication.translate("Dialog", u"Values", None));
+        ___qtreewidgetitem.setText(2, QCoreApplication.translate("Dialog", u"Values (Pa)", None));
         ___qtreewidgetitem.setText(1, QCoreApplication.translate("Dialog", u"Entity", None));
         ___qtreewidgetitem.setText(0, QCoreApplication.translate("Dialog", u"ID", None));
 #if QT_CONFIG(tooltip)

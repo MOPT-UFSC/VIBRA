@@ -77,7 +77,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
     def _create_connections(self):
 
         # QComboBox connections
-        self.comboBox_attribution_type.currentIndexChanged.connect(self.attribution_type_callback)
+        self.comboBox_assignment_type.currentIndexChanged.connect(self.assignment_type_callback)
         self.comboBox_data_type.currentIndexChanged.connect(self.data_type_callback)
         self.comboBox_element_type.currentIndexChanged.connect(self.element_type_callback)
 
@@ -110,7 +110,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
 
             text = ", ".join([str(i) for i in faces])
             self.lineEdit_selection_id.setText(text)
-            self.comboBox_attribution_type.setCurrentIndex(AssignmentType.SURFACES)
+            self.comboBox_assignment_type.setCurrentIndex(AssignmentType.SURFACES)
 
             if self.tabWidget_main.currentIndex() == StandardTabType.LIST:
                 return
@@ -144,11 +144,11 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
                 right_value = data.get("phase_values")[0]
                 self.comboBox_data_type.setCurrentIndex(InputDataType.MAGNITUDE_PHASE)
 
-            self.lineEdit_left_value.setText(str(left_value if left_value is not None else 0.0))
-            self.lineEdit_right_value.setText(str(right_value if right_value is not None else 0.0))
+            self.lineEdit_left_value.setText(str(left_value))
+            self.lineEdit_right_value.setText(str(right_value))
             self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)
 
-    def attribution_type_callback(self):
+    def assignment_type_callback(self):
         app().main_window.action_model_workspace_callback()
 
     def element_type_callback(self):
@@ -414,6 +414,8 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
 
     def tab_event_callback(self):
         list_tab = self.tabWidget_main.currentIndex() == StandardTabType.LIST
+        self.comboBox_assignment_type.setDisabled(list_tab)
+        self.comboBox_data_type.setDisabled(list_tab)
         self.lineEdit_selection_id.setDisabled(list_tab)
         self.pushButton_apply.setDisabled(list_tab)
         self.pushButton_apply_and_close.setDisabled(list_tab)

@@ -98,14 +98,14 @@ class Ui_Dialog(object):
 
         self.gridLayout_5.addItem(self.horizontalSpacer_9, 0, 4, 1, 1)
 
-        self.comboBox_attribution_type = QComboBox(self.frame_4)
-        self.comboBox_attribution_type.addItem("")
-        self.comboBox_attribution_type.setObjectName(u"comboBox_attribution_type")
-        self.comboBox_attribution_type.setMinimumSize(QSize(120, 28))
-        self.comboBox_attribution_type.setMaximumSize(QSize(120, 28))
-        self.comboBox_attribution_type.setFont(font2)
+        self.comboBox_assignment_type = QComboBox(self.frame_4)
+        self.comboBox_assignment_type.addItem("")
+        self.comboBox_assignment_type.setObjectName(u"comboBox_assignment_type")
+        self.comboBox_assignment_type.setMinimumSize(QSize(120, 28))
+        self.comboBox_assignment_type.setMaximumSize(QSize(120, 28))
+        self.comboBox_assignment_type.setFont(font2)
 
-        self.gridLayout_5.addWidget(self.comboBox_attribution_type, 0, 3, 1, 1)
+        self.gridLayout_5.addWidget(self.comboBox_assignment_type, 0, 3, 1, 1)
 
         self.label_2 = QLabel(self.frame_4)
         self.label_2.setObjectName(u"label_2")
@@ -503,7 +503,7 @@ class Ui_Dialog(object):
         self.comboBox_element_type.setItemText(0, QCoreApplication.translate("Dialog", u"Face element", None))
         self.comboBox_element_type.setItemText(1, QCoreApplication.translate("Dialog", u"Solid element", None))
 
-        self.comboBox_attribution_type.setItemText(0, QCoreApplication.translate("Dialog", u"Selected faces", None))
+        self.comboBox_assignment_type.setItemText(0, QCoreApplication.translate("Dialog", u"Selected faces", None))
 
         self.label_2.setText(QCoreApplication.translate("Dialog", u"Selection ID:", None))
         self.label_3.setText(QCoreApplication.translate("Dialog", u"Element type:", None))
@@ -549,7 +549,7 @@ class NormalPressureLoadInputs_UI(QDialog, Ui_Dialog):
                                 - (Layout): QGridLayout
                                         - lineEdit_selection_id: QLineEdit
                                         - comboBox_element_type: QComboBox
-                                        - comboBox_attribution_type: QComboBox
+                                        - comboBox_assignment_type: QComboBox
                                         - label_2: QLabel
                                         - label_3: QLabel
                                         - comboBox_data_type: QComboBox

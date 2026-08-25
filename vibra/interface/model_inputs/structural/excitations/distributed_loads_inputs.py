@@ -43,7 +43,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
 
         self._config_window()
         self._initialize()
-        self._create_list_lineEdits()
+        self._create_list_line_edits()
         self._configure_validators()
         self._create_connections()
 
@@ -65,7 +65,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         self.reset_table_variables()
 
     def _configure_validators(self):
-        for line_edit_real, line_edit_imag in self.list_lineEdit_constant_values:
+        for line_edit_real, line_edit_imag in self.constant_values_line_edits:
             line_edit_real.setValidator(StrictDoubleValidator(-1e16, 1e16, 8))
             line_edit_imag.setValidator(StrictDoubleValidator(-1e16, 1e16, 8))
 
@@ -87,14 +87,14 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         self.Fy_table_name = None
         self.Fz_table_name = None
 
-    def _create_list_lineEdits(self):
-        self.list_lineEdit_constant_values = [
+    def _create_list_line_edits(self):
+        self.constant_values_line_edits = [
             [self.lineEdit_left_Fx, self.lineEdit_right_Fx],
             [self.lineEdit_left_Fy, self.lineEdit_right_Fy],
             [self.lineEdit_left_Fz, self.lineEdit_right_Fz],
         ]
 
-        self.table_lineEdits = {
+        self.table_line_edits = {
             "Fx": self.lineEdit_path_table_Fx,
             "Fy": self.lineEdit_path_table_Fy,
             "Fz": self.lineEdit_path_table_Fz,
@@ -153,13 +153,10 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
 
         if self.tabWidget_main.currentIndex() == StandardTabType.LIST and (lines and surfaces):
             self.lineEdit_selection_id.setText("mult. entities")
-            self.comboBox_assignment_type.setEnabled(False)
             self.comboBox_assignment_type.setCurrentIndex(AssignmentType.MULTIPLE)
             view = self.comboBox_assignment_type.view()
             view.setRowHidden(2, False)
             return
-
-        self.comboBox_assignment_type.setEnabled(True)
 
         if surfaces:
             text = ", ".join([str(i) for i in surfaces])
@@ -207,7 +204,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         values = data.get("values", None)
         if "table_paths" in data:
             table_paths = data["table_paths"]
-            for index, lineEdit_table in enumerate(self.table_lineEdits.values()):
+            for index, lineEdit_table in enumerate(self.table_line_edits.values()):
                 table_path = table_paths[index]
                 if table_path is not None:                   
                     lineEdit_table.setText(table_path)
@@ -226,16 +223,14 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
                 right_values = data.get("phase_values")
                 self.comboBox_data_type.setCurrentIndex(InputDataType.MAGNITUDE_PHASE)
 
-            for index, [lineEdit_left, lineEdit_right] in enumerate(self.list_lineEdit_constant_values):
+            for index, [line_edit_left, line_edit_right] in enumerate(self.constant_values_line_edits):
 
                 if element_type == "3d_element" and index >= 3:
                     continue
 
                 elif index <= 5 and values[index] is not None:
-                    left_value = left_values[index]
-                    right_value = right_values[index]
-                    lineEdit_left.setText(str(left_value if left_value is not None else 0.0))
-                    lineEdit_right.setText(str(right_value if right_value is not None else 0.0))
+                    line_edit_left.setText(str(left_values[index]))
+                    line_edit_right.setText(str(right_values[index]))
 
             self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)
 
@@ -426,7 +421,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
 
         if self.model.change_analysis_frequency_setup(list(frequencies)):
 
-            lineEdit = self.table_lineEdits[load_label]
+            lineEdit = self.table_line_edits[load_label]
             imported_filename = basename(lineEdit.text())
             self.lineEdit_reset(lineEdit)
 
@@ -652,6 +647,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
     def tab_event_callback(self):
         list_tab = self.tabWidget_main.currentIndex() == StandardTabType.LIST
         self.comboBox_assignment_type.setDisabled(list_tab)
+        self.comboBox_data_type.setDisabled(list_tab)
         self.lineEdit_selection_id.setDisabled(list_tab)
         self.pushButton_apply.setDisabled(list_tab)
         self.pushButton_apply_and_close.setDisabled(list_tab)
@@ -791,11 +787,11 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         if reset_all:
             self.lineEdit_selection_id.setText("")
 
-        for lineEdit_left, lineEdit_right in self.list_lineEdit_constant_values:
+        for lineEdit_left, lineEdit_right in self.constant_values_line_edits:
             lineEdit_left.setText("")
             lineEdit_right.setText("")
 
-        for lineEdit_table in self.table_lineEdits.values():
+        for lineEdit_table in self.table_line_edits.values():
             lineEdit_table.setText("")
 
     def keyPressEvent(self, event):

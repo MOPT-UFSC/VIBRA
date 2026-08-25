@@ -972,7 +972,7 @@
             </column>
             <column>
              <property name="text">
-              <string>Values</string>
+              <string>Values (Pa)</string>
              </property>
              <property name="textAlignment">
               <set>AlignCenter</set>
