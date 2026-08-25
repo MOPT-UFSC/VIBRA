@@ -130,7 +130,7 @@ def load_external_mesh_and_solve():
     ## Impedance data - table of values
 
     # fluid_data_path = f"validation_files/data/WB/porous_material_models/results/silencer/complex_fluid_properties_DB_model.xlsx"
-    # complex_fluid_data = DataImporter.load_spreadsheet_data_for_validation(fluid_data_path)
+    # complex_fluid_data = FileHandler.read(fluid_data_path).to_dict()
     # impedance_data = complex_fluid_data["complex_impedance"]
 
     # data_Z = {"values" : [impedance_data[:, 1] + 1j * impedance_data[:, 2]]}
