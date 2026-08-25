@@ -394,7 +394,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
         if volume_ids:
 
-            title = "Porous material model resetting"
+            title = "Porous material model reset"
             message = "Would you like to remove the porous material effects from the model?"
 
             buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}

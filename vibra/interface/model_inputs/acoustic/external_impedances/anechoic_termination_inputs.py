@@ -229,7 +229,7 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
 
     def reset_callback(self):
 
-        title = "Anechoic termination resetting"
+        title = "Anechoic termination reset"
         message = "Would you like to remove the all applied anechoic termination from model?"
 
         buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}

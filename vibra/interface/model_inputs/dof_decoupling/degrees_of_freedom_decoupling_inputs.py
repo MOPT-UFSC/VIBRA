@@ -240,7 +240,7 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
 
     def reset_callback(self):
 
-        title = "Degrees of freedom decoupling resetting"
+        title = "Degrees of freedom decoupling reset"
         message = "Would you like to revert the acoustic degrees of freedom decoupling from model?"
 
         buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}

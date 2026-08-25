@@ -668,7 +668,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         if not surface_ids:
             return
 
-        title = "Transfer impedance resetting"
+        title = "Transfer impedance reset"
         message = "Would you like to remove the transfer impedance from the acoustic model?"
 
         buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}

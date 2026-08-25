@@ -414,8 +414,8 @@ class DistributedMassInputs(DistributedMassInputs_UI):
 
     def reset_callback(self):
 
-        title = "Distributed loads resetting"
-        message = "Would you like to remove the all distributed loads from model?"
+        title = "Distributed masses reset"
+        message = "Would you like to remove the all distributed masses from model?"
 
         buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
         obj = GetUserConfirmationInput(title, message, buttons_config=buttons_config)

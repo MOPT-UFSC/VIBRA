@@ -420,7 +420,7 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
 
     def reset_callback(self):
 
-        title = "Surface velocity resetting"
+        title = "Surface velocity reset"
         message = "Would you like to remove the all applied surface velocities from model?"
 
         buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}

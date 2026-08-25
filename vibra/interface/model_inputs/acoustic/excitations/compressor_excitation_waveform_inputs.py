@@ -720,7 +720,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
 
     def reset_callback(self):
 
-        title = "External comrpressor excitation resetting"
+        title = "External comrpressor excitation reset"
         message = "Would you like to remove the all external compressor excitations from model?"
 
         buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}

@@ -383,7 +383,7 @@ class MaterialInputs(SetMaterial_UI):
 
     def reset_callback(self):
 
-        title = "Materials resetting"
+        title = "Materials reset"
         message = "Would you like to remove the all assigned materials from model?"
 
         buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}

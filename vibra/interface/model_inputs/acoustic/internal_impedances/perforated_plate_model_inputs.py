@@ -966,7 +966,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         if not surface_ids:
             return
 
-        title = "Perforated plate model resetting"
+        title = "Perforated plate model reset"
         message = "Would you like to remove the perforated plate from the acoustic model?"
 
         buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}

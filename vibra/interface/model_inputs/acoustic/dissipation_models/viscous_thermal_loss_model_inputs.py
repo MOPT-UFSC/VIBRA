@@ -208,7 +208,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         if not volume_ids:
             return
 
-        title = "Viscous-thermal dissipation model resetting"
+        title = "Viscous-thermal dissipation model reset"
         message = "Would you like to remove the Viscous-thermal dissipation effects from the model?"
 
         buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}

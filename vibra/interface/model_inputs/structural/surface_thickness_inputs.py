@@ -199,7 +199,7 @@ class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
 
     def reset_callback(self):
 
-        title = "Surface thickness resetting"
+        title = "Surface thickness reset"
         message = "Would you like to remove the all assigned surface thickness from model?"
 
         buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}

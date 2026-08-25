@@ -818,7 +818,7 @@ class MassSourceInputs(MassSourceInputs_UI):
 
     def reset_callback(self):
 
-        title = "Mass source resetting"
+        title = "Mass source reset"
         message = "Would you like to remove the all applied mass sources from model?"
 
         buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}

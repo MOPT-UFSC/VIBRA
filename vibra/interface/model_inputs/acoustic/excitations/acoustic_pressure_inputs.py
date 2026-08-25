@@ -418,7 +418,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
 
     def reset_callback(self):
 
-        title = "Acoustic pressure resetting"
+        title = "Acoustic pressure reset"
         message = "Would you like to remove the all applied acoustic pressures from model?"
 
         buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
