@@ -19,6 +19,11 @@ from vibra.interface.numeric_checks.double_validator import StrictDoubleValidato
 from vibra.interface.ui_generated.model.structural.excitations.distributed_loads_inputs_ui import DistributedLoadsInputs_UI
 
 
+class ElementFormulation(IntEnum):
+    ELEMENT_2D = 0
+    ELEMENT_3D = 1
+
+
 class AssignmentType(IntEnum):
     SURFACES = 0
     LINES = 1
@@ -89,15 +94,21 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
 
     def _create_list_lineEdits(self):
         self.list_lineEdit_constant_values = [
-            [self.lineEdit_real_Fx, self.lineEdit_imag_Fx],
-            [self.lineEdit_real_Fy, self.lineEdit_imag_Fy],
-            [self.lineEdit_real_Fz, self.lineEdit_imag_Fz],
+            [self.lineEdit_left_Fx, self.lineEdit_right_Fx],
+            [self.lineEdit_left_Fy, self.lineEdit_right_Fy],
+            [self.lineEdit_left_Fz, self.lineEdit_right_Fz],
         ]
 
         self.table_lineEdits = {
             "Fx": self.lineEdit_path_table_Fx,
             "Fy": self.lineEdit_path_table_Fy,
             "Fz": self.lineEdit_path_table_Fz,
+        }
+
+        self.unit_labels = {
+            "Fx": self.label_unit_Fx,
+            "Fy": self.label_unit_Fy,
+            "Fz": self.label_unit_Fz,
         }
 
     def _config_widgets(self):
@@ -113,6 +124,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
 
         # QComboBox connections
         self.comboBox_assignment_type.currentIndexChanged.connect(self.attribution_type_callback)
+        self.comboBox_data_type.currentIndexChanged.connect(self.data_type_callback)
         self.comboBox_element_type.currentIndexChanged.connect(self.element_type_callback)
 
         # QPushButton connections
@@ -134,6 +146,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         self.treeWidget_distributed_loads.itemSelectionChanged.connect(self.item_selection_clicked_callback)
 
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
+
         self.update_element_type_based_on_geometry_information()
         self.geometry_selection_callback()
         self.tab_event_callback()
@@ -154,10 +167,12 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         self.comboBox_assignment_type.setEnabled(True)
 
         if surfaces:
-
             text = ", ".join([str(i) for i in surfaces])
             self.lineEdit_selection_id.setText(text)
-            self.comboBox_assignment_type.setCurrentIndex(0)
+            self.comboBox_assignment_type.setCurrentIndex(AssignmentType.SURFACES)
+
+            if self.tabWidget_main.currentIndex() == StandardTabType.LIST:
+                return
 
             if len(surfaces) == 1:
                 surface_id = next(iter(surfaces))
@@ -167,10 +182,12 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
                     self.update_formulation_callback(surface_id=surface_id)
 
         elif lines:
-
             text = ", ".join([str(i) for i in lines])
             self.lineEdit_selection_id.setText(text)
-            self.comboBox_assignment_type.setCurrentIndex(1)
+            self.comboBox_assignment_type.setCurrentIndex(AssignmentType.LINES)
+
+            if self.tabWidget_main.currentIndex() == StandardTabType.LIST:
+                return
 
             if len(lines) == 1:
                 line_id = next(iter(lines))
@@ -186,11 +203,11 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
 
         self.reset_input_fields()
 
-        element_type = data.get("element_type", None)
+        element_type = data.get("element_type")
         if element_type == "2d_element":
-            self.comboBox_element_type.setCurrentIndex(0)
+            self.comboBox_element_type.setCurrentIndex(ElementFormulation.ELEMENT_2D)
         else:
-            self.comboBox_element_type.setCurrentIndex(1)
+            self.comboBox_element_type.setCurrentIndex(ElementFormulation.ELEMENT_3D)
 
         values = data.get("values", None)
         if "table_paths" in data:
@@ -201,14 +218,25 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
                     lineEdit_table.setText(table_path)
 
         else:
-            for index, [lineEdit_real, lineEdit_imag] in enumerate(self.list_lineEdit_constant_values):
+
+            if "real_values" in data:
+                left_values = data.get("real_values")
+                right_values = data.get("imag_values")
+                self.comboBox_data_type.setCurrentIndex(DataType.REAL_IMAGINARY)
+
+            else:
+                left_values = data.get("amplitude_values")
+                right_values = data.get("phase_values")
+                self.comboBox_data_type.setCurrentIndex(DataType.AMPLITUDE_PHASE)
+
+            for index, [lineEdit_left, lineEdit_right] in enumerate(self.list_lineEdit_constant_values):
 
                 if element_type == "3d_element" and index >= 3:
                     continue
-                
+
                 elif index <= 5 and values[index] is not None:
-                    lineEdit_real.setText(str(np.real(values[index])))
-                    lineEdit_imag.setText(str(np.imag(values[index])))
+                    lineEdit_left.setText(str(left_values[index]))
+                    lineEdit_right.setText(str(right_values[index]))
 
     def update_formulation_callback(self, **kwargs):
 
@@ -230,16 +258,9 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
                         return
 
     def attribution_type_callback(self):
-        if self.comboBox_assignment_type.currentIndex() == 0:
-            unit_label = "[N/m²]"
-            load_label = "F{} / area:".format
-        else:
-            unit_label = "[N/m]"
-            load_label = "F{} / length:".format
 
-        self.label_unit_Fx.setText(unit_label)
-        self.label_unit_Fy.setText(unit_label)
-        self.label_unit_Fz.setText(unit_label)
+        surface_assignment = self.comboBox_assignment_type.currentIndex() == AssignmentType.SURFACES
+        load_label = "F{} / area:".format if surface_assignment else "F{} / length:".format
 
         self.label_constant_Fx.setText(load_label("x"))
         self.label_constant_Fy.setText(load_label("y"))
@@ -249,8 +270,21 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         self.label_table_Fy.setText(load_label("y"))
         self.label_table_Fz.setText(load_label("z"))
 
+        self.data_type_callback()
+
     def element_type_callback(self):
         return
+
+    def data_type_callback(self):
+        real_imaginary = self.comboBox_data_type.currentIndex() == DataType.REAL_IMAGINARY
+        self.label_dtype_left.setText("Real" if real_imaginary else "Amplitude")
+        self.label_dtype_right.setText("Imaginary" if real_imaginary else "Phase")
+
+        unit = "N/m²" if self.comboBox_assignment_type.currentIndex() == AssignmentType.SURFACES else "N/m"
+
+        for widget in self.unit_labels.values():
+            label_text = f"[{unit}]" if real_imaginary else f"[{unit}, deg]"
+            widget.setText(label_text)
 
     def update_element_type_based_on_geometry_information(self):
         volume_exists = self.mesh.are_there_volumes_in_geometry()
@@ -307,15 +341,15 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         element_type = self.element_types[self.comboBox_element_type.currentIndex()]
         real_imag_input = self.comboBox_data_type.currentIndex() == DataType.REAL_IMAGINARY
 
-        Fx = self.check_input_entries(self.lineEdit_real_Fx.text(), self.lineEdit_imag_Fx.text(), "Fx")
+        Fx = self.check_input_entries(self.lineEdit_left_Fx.text(), self.lineEdit_right_Fx.text(), "Fx")
         if Fx is None:
             return True
 
-        Fy = self.check_input_entries(self.lineEdit_real_Fy.text(), self.lineEdit_imag_Fy.text(), "Fy")
+        Fy = self.check_input_entries(self.lineEdit_left_Fy.text(), self.lineEdit_right_Fy.text(), "Fy")
         if Fy is None:
             return True
 
-        Fz = self.check_input_entries(self.lineEdit_real_Fz.text(), self.lineEdit_imag_Fz.text(), "Fz")
+        Fz = self.check_input_entries(self.lineEdit_left_Fz.text(), self.lineEdit_right_Fz.text(), "Fz")
         if Fz is None:
             return True
 
@@ -355,14 +389,14 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
     def load_table(self, lineEdit : QLineEdit, load_label: str, direct_load = False):
 
         title = "Error while loading table"
-        imported_file = None
+
         try:
             if direct_load:
                 if lineEdit.text() == "":
                     return None, None
 
                 imported_table_path = lineEdit.text()
-                imported_file = DataImporter.read_data_in_file(imported_table_path)[0].data
+                imported_values = DataImporter.read_data_in_file(imported_table_path)[0].data
 
             else:
                 imported_data = DataImporter.import_single_file("imported_table_folder",
@@ -371,23 +405,16 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
                 if not imported_data:
                     return None, None
 
-                imported_file = imported_data.data
+                imported_values = imported_data.data
                 lineEdit.setText(imported_data.path)
                 imported_table_path = imported_data.path
 
-            if imported_file.shape[1] < 3:
+            if imported_values.shape[1] < 3:
                 message = "The imported table has insufficient number of columns. The spectrum "
                 message += "data must have frequencies, real and imaginary columns."
                 PrintMessageInput([error_title, title, message])
                 lineEdit.setFocus()
                 return None, None
-
-            if self.comboBox_data_type.currentIndex() == DataType.REAL_IMAGINARY:
-                imported_values = imported_file[:, 1] + 1j * imported_file[:, 2]
-            else:
-                imported_values = imported_file[:, 1] * np.exp(1j * imported_file[:, 2] * np.pi / 180)
-
-            self.frequencies = imported_file[:, 0]
 
             return imported_values, imported_table_path
 
@@ -416,15 +443,17 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         if self.Fz_table_path is None:
             self.lineEdit_reset(self.lineEdit_path_table_Fz)
 
-    def save_table_files(self, load_label: str, selected_id: int, selection: str, values: np.ndarray):
+    def save_table_files(self, load_label: str, selected_id: int, selection: str, imported_values: np.ndarray):
 
-        if self.frequencies[0] == 0:
-            self.frequencies[0] = float(1e-6)
+        frequencies = imported_values[:, 0]
 
-        if self.frequencies[0] == float(1e-6):
-            self.frequencies[0] = 0
+        if frequencies[0] == 0:
+            frequencies[0] = 1e-6
 
-        if self.model.change_analysis_frequency_setup(list(self.frequencies)):
+        if frequencies[0] == 1e-6:
+            frequencies[0] = 0
+
+        if self.model.change_analysis_frequency_setup(list(frequencies)):
 
             lineEdit = self.table_lineEdits[load_label]
             imported_filename = basename(lineEdit.text())
@@ -441,11 +470,20 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
 
         table_name = f"distributed_loads_{load_label}_from_{selection[:-1]}_{selected_id}"
 
-        real_values = np.real(values)
-        imag_values = np.imag(values)
-        data = np.array([self.frequencies, real_values, imag_values], dtype=float).T
+        if self.comboBox_data_type.currentIndex() == DataType.REAL_IMAGINARY:
+            complex_values = imported_values[:, 1] + 1j * imported_values[:, 2]
+        else:
+            complex_values = imported_values[:, 1] * np.exp(1j * imported_values[:, 2] * np.pi / 180)
 
-        update_analysis_setup_in_file(self.frequencies)
+        # real values vector
+        real_values = np.real(complex_values)
+
+        # imaginary values vector
+        imag_values = np.imag(complex_values)
+
+        data = np.array([frequencies, real_values, imag_values], dtype=float).T
+
+        update_analysis_setup_in_file(frequencies)
 
         self.properties.add_imported_tables("structural", table_name, data)
 
@@ -630,14 +668,15 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
 
         for current_property in properties_to_check:
             for (property, _) in current_property:
-                if property == "distributed_loads":
-                    self.tabWidget_main.setTabVisible(StandardTabType.LIST, True)
-                    return
+                if property != "distributed_loads":
+                    continue
+
+                self.tabWidget_main.setTabVisible(StandardTabType.LIST, True)
+                return
 
         self.tabWidget_main.setTabVisible(StandardTabType.LIST, False)
         self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)
-        self.lineEdit_real_Fx.setFocus()
-        app().main_window.selection.set_geometry_selection()
+        self.lineEdit_left_Fx.setFocus()
 
     def tab_event_callback(self):
         list_tab = self.tabWidget_main.currentIndex() == StandardTabType.LIST
@@ -781,9 +820,9 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         if reset_all:
             self.lineEdit_selection_id.setText("")
 
-        for lineEdit_real, lineEdit_imag in self.list_lineEdit_constant_values:
-            lineEdit_real.setText("")
-            lineEdit_imag.setText("")
+        for lineEdit_left, lineEdit_right in self.list_lineEdit_constant_values:
+            lineEdit_left.setText("")
+            lineEdit_right.setText("")
 
         for lineEdit_table in self.table_lineEdits.values():
             lineEdit_table.setText("")

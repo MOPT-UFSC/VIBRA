@@ -18,6 +18,12 @@ from vibra.interface.numeric_checks.double_validator import StrictDoubleValidato
 from vibra.interface.ui_generated.model.structural.excitations.normal_pressure_load_inputs_ui import NormalPressureLoadInputs_UI
 
 
+class AssignmentType(IntEnum):
+    SURFACES = 0
+    LINES = 1
+    MULTIPLE = 2
+
+
 class DataType(IntEnum):
     REAL_IMAGINARY = 0
     AMPLITUDE_PHASE = 1
@@ -107,45 +113,45 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
 
         if faces:
 
-            self.comboBox_attribution_type.setCurrentIndex(0)
-
             text = ", ".join([str(i) for i in faces])
             self.lineEdit_selection_id.setText(text)
+            self.comboBox_attribution_type.setCurrentIndex(AssignmentType.SURFACES)
+
+            if self.tabWidget_main.currentIndex() == StandardTabType.LIST:
+                return
 
             if len(faces) == 1:
                 surface_id = next(iter(faces))
                 data = self.properties._get_property("normal_pressure_load", surface=surface_id)
                 self.update_input_fields(data)
 
-    def update_input_fields(self, data: dict):
+    def update_input_fields(self, data: dict | None):
 
-        if isinstance(data, dict):
+        if data is None:
+            return
 
-            self.reset_input_fields()
+        self.reset_input_fields()
 
-            if "table_paths" in data:
-                table_paths = data["table_paths"]
-                self.lineEdit_table_path.setText(table_paths[0])
-                return
+        if "table_paths" in data:
+            table_paths = data["table_paths"]
+            self.lineEdit_table_path.setText(table_paths[0])
+            self.tabWidget_main.setCurrentIndex(StandardTabType.TABULAR_DATA)
 
-            real_imag_dtype = "real_values" in data
+        else:
 
-            if real_imag_dtype:
-                real_value = data.get("real_values")[0]
-                imag_value = data.get("imag_values")[0]
-                left_value = 0 if real_value is None else real_value
-                right_value = 0 if imag_value is None else imag_value
+            if "real_values" in data:
+                left_values = data.get("real_values")
+                right_values = data.get("imag_values")
                 self.comboBox_data_type.setCurrentIndex(DataType.REAL_IMAGINARY)
 
             else:
-                amplitude_value = data.get("amplitude_values")[0]
-                phase_value = data.get("phase_values")[0]
-                left_value = 0 if amplitude_value is None else amplitude_value
-                right_value = 0 if phase_value is None else phase_value
+                left_values = data.get("amplitude_values")
+                right_values = data.get("phase_values")
                 self.comboBox_data_type.setCurrentIndex(DataType.AMPLITUDE_PHASE)
 
-            self.lineEdit_left_value.setText(str(left_value))
-            self.lineEdit_right_value.setText(str(right_value))
+            self.lineEdit_left_value.setText(str(left_values[0]))
+            self.lineEdit_right_value.setText(str(right_values[0]))
+            self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)
 
     def attribution_type_callback(self):
         app().main_window.action_model_workspace_callback()
@@ -240,7 +246,6 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
     def load_table(self, lineEdit : QLineEdit, load_label : str, direct_load = False):
 
         title = "Error while loading table"
-        imported_file = None
 
         try:
             if direct_load:
@@ -248,7 +253,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
                     return None, None
 
                 imported_table_path = lineEdit.text()
-                imported_file = DataImporter.read_data_in_file(imported_table_path)[0].data
+                imported_values = DataImporter.read_data_in_file(imported_table_path)[0].data
 
             else:
 
@@ -258,23 +263,16 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
                 if not imported_data:
                     return None, None
 
-                imported_file = imported_data.data
+                imported_values = imported_data.data
                 lineEdit.setText(imported_data.path)
                 imported_table_path = imported_data.path
 
-            if imported_file.shape[1] < 3:
+            if imported_values.shape[1] < 3:
                 message = "The imported table has insufficient number of columns. The spectrum "
                 message += "data must have frequencies, real and imaginary columns."
                 PrintMessageInput([error_title, title, message])
                 lineEdit.setFocus()
                 return None, None
-
-            if self.comboBox_data_type.currentIndex() == DataType.REAL_IMAGINARY:
-                imported_values = imported_file[:, 1] + 1j * imported_file[:, 2]
-            else:
-                imported_values = imported_file[:, 1] * np.exp(1j * imported_file[:, 2] * np.pi / 180)
-
-            self.frequencies = imported_file[:, 0]
 
             return imported_values, imported_table_path
 
@@ -293,15 +291,17 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         if  self.pressure_table_path is None:
             self.lineEdit_reset(self.lineEdit_table_path)
 
-    def save_table_files(self, selected_id: int, values: np.ndarray):
+    def save_table_files(self, selected_id: int, imported_values: np.ndarray):
 
-        if self.frequencies[0] == 0:
-            self.frequencies[0] = float(1e-6)
+        frequencies = imported_values[:, 0]
 
-        if self.frequencies[0] == float(1e-6):
-            self.frequencies[0] = 0
+        if frequencies[0] == 0:
+            frequencies[0] = 1e-6
 
-        if app().project.model.change_analysis_frequency_setup(list(self.frequencies)):
+        if frequencies[0] == 1e-6:
+            frequencies[0] = 0
+
+        if app().project.model.change_analysis_frequency_setup(list(frequencies)):
 
             lineEdit = self.lineEdit_table_path
             imported_filename = basename(lineEdit.text())
@@ -318,11 +318,21 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
 
         table_name = f"normal_pressure_from_surface_{selected_id}"
 
-        real_values = np.real(values)
-        imag_values = np.imag(values)
-        data = np.array([self.frequencies, real_values, imag_values], dtype=float).T
+        if self.comboBox_data_type.currentIndex() == DataType.REAL_IMAGINARY:
+            complex_values = imported_values[:, 1] + 1j * imported_values[:, 2]
+        else:
+            complex_values = imported_values[:, 1] * np.exp(1j * imported_values[:, 2] * np.pi / 180)
 
-        update_analysis_setup_in_file(self.frequencies)
+        # real values vector
+        real_values = np.real(complex_values)
+
+        # imaginary values vector
+        imag_values = np.imag(complex_values)
+
+        data = np.array([frequencies, real_values, imag_values], dtype=float).T
+
+        update_analysis_setup_in_file(frequencies)
+
         self.properties.add_imported_tables("structural", table_name, data)
 
         return table_name, data
@@ -436,7 +446,6 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         self.tabWidget_main.setTabVisible(StandardTabType.LIST, False)
         self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)
         self.lineEdit_left_value.setFocus()
-        app().main_window.selection.set_geometry_selection()
 
     def tab_event_callback(self):
         list_tab = self.tabWidget_main.currentIndex() == StandardTabType.LIST

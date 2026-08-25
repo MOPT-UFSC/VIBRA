@@ -210,10 +210,12 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         self.comboBox_assignment_type.setEnabled(True)
 
         if surfaces:
-
             text = ", ".join([str(i) for i in surfaces])
             self.lineEdit_selection_id.setText(text)
             self.comboBox_assignment_type.setCurrentIndex(AssignmentType.SURFACES)
+
+            if self.tabWidget_main.currentIndex() == StandardTabType.LIST:
+                return
 
             if len(surfaces) == 1:
                 surface_id = next(iter(surfaces))
@@ -225,10 +227,12 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             return
 
         if lines:
-
             text = ", ".join([str(i) for i in lines])
             self.lineEdit_selection_id.setText(text)
             self.comboBox_assignment_type.setCurrentIndex(AssignmentType.LINES)
+
+            if self.tabWidget_main.currentIndex() == StandardTabType.LIST:
+                return
 
             if len(lines) == 1:
                 line_id = next(iter(lines))
@@ -242,6 +246,9 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             self.lineEdit_selection_id.setText(text)
             self.comboBox_assignment_type.setCurrentIndex(AssignmentType.POINTS)
 
+            if self.tabWidget_main.currentIndex() == StandardTabType.LIST:
+                return
+
             if len(points) == 1:
                 point_id = next(iter(points))
                 data = self.properties._get_property("nodal_loads", point=point_id)
@@ -253,6 +260,9 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             text = ", ".join([str(i) for i in nodes])
             self.lineEdit_selection_id.setText(text)
             self.comboBox_assignment_type.setCurrentIndex(AssignmentType.NODES)
+
+            if self.tabWidget_main.currentIndex() == StandardTabType.LIST:
+                return
 
             if len(nodes) == 1:
                 node_id = next(iter(nodes))
@@ -268,7 +278,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
         self.reset_input_fields()
 
-        element_type = data.get("element_type", None)
+        element_type = data.get("element_type")
         if element_type == "2d_element":
             self.comboBox_element_type.setCurrentIndex(ElementFormulation.ELEMENT_2D)
         else:
@@ -285,14 +295,30 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                 if table_path is not None:                   
                     lineEdit_table.setText(table_path)
 
+            self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)
+
         else:
-            for index, [lineEdit_left, lineEdit_right] in enumerate(self.list_lineEdit_constant_values):
+
+            if "real_values" in data:
+                left_values = data.get("real_values")
+                right_values = data.get("imag_values")
+                self.comboBox_data_type.setCurrentIndex(DataType.REAL_IMAGINARY)
+
+            else:
+                left_values = data.get("amplitude_values")
+                right_values = data.get("phase_values")
+                self.comboBox_data_type.setCurrentIndex(DataType.AMPLITUDE_PHASE)
+
+            for index, [lineEdit_real, lineEdit_imag] in enumerate(self.list_lineEdit_constant_values):
+
                 if element_type == "3d_element" and index >= 3:
                     continue
 
                 elif index <= 5 and values[index] is not None:
-                    lineEdit_left.setText(str(np.real(values[index])))
-                    lineEdit_right.setText(str(np.imag(values[index])))
+                    lineEdit_real.setText(str(left_values[index]))
+                    lineEdit_imag.setText(str(right_values[index]))
+
+            self.tabWidget_main.setCurrentIndex(StandardTabType.TABULAR_DATA)
 
     def assignment_type_callback(self):
         assignment_index = self.comboBox_assignment_type.currentIndex()
@@ -465,7 +491,6 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
     def load_table(self, lineEdit : QLineEdit, load_label : str, direct_load = False):
 
         title = "Error while loading table"
-        imported_file = None
 
         try:
             if direct_load:
@@ -473,7 +498,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                     return None, None
 
                 imported_table_path = lineEdit.text()
-                imported_file = DataImporter.read_data_in_file(imported_table_path)[0].data
+                imported_values = DataImporter.read_data_in_file(imported_table_path)[0].data
 
             else:
 
@@ -483,25 +508,18 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                 if not imported_data:
                     return None, None
 
-                imported_file = imported_data.data
+                imported_values = imported_data.data
                 lineEdit.setText(imported_data.path)
                 imported_table_path = imported_data.path
 
                 imported_filename = basename(imported_table_path)
 
-            if imported_file.shape[1] < 3:
+            if imported_values.shape[1] < 3:
                 message = "The imported table has insufficient number of columns. The spectrum "
                 message += "data must have frequencies, real and imaginary columns."
                 PrintMessageInput([error_title, title, message])
                 lineEdit.setFocus()
                 return None, None
-
-            if self.comboBox_data_type.currentIndex() == DataType.REAL_IMAGINARY:
-                imported_values = imported_file[:, 1] + 1j * imported_file[:, 2]
-            else:
-                imported_values = imported_file[:, 1] * np.exp(1j * imported_file[:, 2] * np.pi / 180)
-
-            self.frequencies = imported_file[:, 0]
         
             if app().project.model.change_analysis_frequency_setup(list(self.frequencies)):
 
@@ -557,13 +575,15 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         if self.Mz_table_path is None:
             self.lineEdit_reset(self.lineEdit_path_table_Mz)
 
-    def save_table_files(self, load_label: str, selected_id: int, selection: str, values: np.ndarray):
+    def save_table_files(self, load_label: str, selected_id: int, selection: str, imported_values: np.ndarray):
 
-        if self.frequencies[0] == 0:
-            self.frequencies[0] = float(1e-6)
+        frequencies = imported_values[:, 0]
 
-        if self.frequencies[0] == float(1e-6):
-            self.frequencies[0] = 0
+        if frequencies[0] == 0:
+            frequencies[0] = 1e-6
+
+        if frequencies[0] == 1e-6:
+            frequencies[0] = 0
 
         if app().project.model.change_analysis_frequency_setup(list(self.frequencies)):
 
@@ -582,11 +602,21 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
         table_name = f"nodal_loads_{load_label}_from_{selection[:-1]}_{selected_id}"
 
-        real_values = np.real(values)
-        imag_values = np.imag(values)
-        data = np.array([self.frequencies, real_values, imag_values], dtype=float).T
+        if self.comboBox_data_type.currentIndex() == DataType.REAL_IMAGINARY:
+            complex_values = imported_values[:, 1] + 1j * imported_values[:, 2]
+        else:
+            complex_values = imported_values[:, 1] * np.exp(1j * imported_values[:, 2] * np.pi / 180)
 
-        update_analysis_setup_in_file(self.frequencies)
+        # real values vector
+        real_values = np.real(complex_values)
+
+        # imaginary values vector
+        imag_values = np.imag(complex_values)
+
+        data = np.array([frequencies, real_values, imag_values], dtype=float).T
+
+        update_analysis_setup_in_file(frequencies)
+
         self.properties.add_imported_tables("structural", table_name, data)
 
         return table_name, data
@@ -683,7 +713,6 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                 "element_type": element_type,
                 "table_names": table_names,
                 "table_paths": table_paths,
-                "values": nodal_loads,
                 "element_integration": self.element_integration,
             }
 
@@ -893,14 +922,15 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
         for current_property in properties_to_check:
             for (property, _) in current_property:
-                if property == "nodal_loads":
-                    self.tabWidget_main.setTabVisible(StandardTabType.LIST, True)
-                    return
+                if property != "nodal_loads":
+                    continue
 
-        self.lineEdit_left_Fx.setFocus()
+                self.tabWidget_main.setTabVisible(StandardTabType.LIST, True)
+                return
+
         self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)
         self.tabWidget_main.setTabVisible(StandardTabType.LIST, False)
-        app().main_window.selection.set_geometry_selection()
+        self.lineEdit_left_Fx.setFocus()
 
     def tab_event_callback(self):
         list_tab = self.tabWidget_main.currentIndex() == StandardTabType.LIST
