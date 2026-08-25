@@ -13,7 +13,7 @@ from vibra.engine.properties.fluid import Fluid
 from vibra.engine.solution import HarmonicSolution
 from vibra.engine.solvers.harmonic_solver import HarmonicSolver
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
-from vibra.interface.data_handler.data_importer import DataImporter
+from vibra.interface.user_input.data_handler.file_handlers.file_handler import FileHandler
 
 
 def load_external_mesh_and_solve():
@@ -180,7 +180,7 @@ def load_external_mesh_and_solve():
     # results_path = f"validation_files/data/WB/viscous_thermal_loss/results/circular_ducts_results.xlsx"
     # results_path = f"validation_files/data/WB/viscous_thermal_loss/results/only_fluid_results.xlsx"
 
-    imported_results = DataImporter.load_spreadsheet_data_for_validation(results_path)
+    imported_results = FileHandler.read(results_path).to_dict()
 
     pressure_at_input_face = imported_results["input_pressure"]
     pressure_at_output_face = imported_results["output_pressure"]
