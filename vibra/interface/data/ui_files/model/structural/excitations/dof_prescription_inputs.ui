@@ -1588,7 +1588,7 @@
                    <string/>
                   </property>
                   <property name="icon">
-                   <iconset resource="../../../../icons/resources.qrc">
+                   <iconset resource="../../../../icons/dark_theme/resources.qrc">
                     <normaloff>:/icons/document_search_blue.png</normaloff>:/icons/document_search_blue.png</iconset>
                   </property>
                   <property name="iconSize">
@@ -1669,7 +1669,7 @@
                    <string/>
                   </property>
                   <property name="icon">
-                   <iconset resource="../../../../icons/resources.qrc">
+                   <iconset resource="../../../../icons/dark_theme/resources.qrc">
                     <normaloff>:/icons/document_search_blue.png</normaloff>:/icons/document_search_blue.png</iconset>
                   </property>
                   <property name="iconSize">
@@ -1744,7 +1744,7 @@
                    <string/>
                   </property>
                   <property name="icon">
-                   <iconset resource="../../../../icons/resources.qrc">
+                   <iconset resource="../../../../icons/dark_theme/resources.qrc">
                     <normaloff>:/icons/document_search_blue.png</normaloff>:/icons/document_search_blue.png</iconset>
                   </property>
                   <property name="iconSize">
@@ -1853,7 +1853,7 @@
                    <string/>
                   </property>
                   <property name="icon">
-                   <iconset resource="../../../../icons/resources.qrc">
+                   <iconset resource="../../../../icons/dark_theme/resources.qrc">
                     <normaloff>:/icons/document_search_blue.png</normaloff>:/icons/document_search_blue.png</iconset>
                   </property>
                   <property name="iconSize">
@@ -1990,7 +1990,7 @@
                    <string/>
                   </property>
                   <property name="icon">
-                   <iconset resource="../../../../icons/resources.qrc">
+                   <iconset resource="../../../../icons/dark_theme/resources.qrc">
                     <normaloff>:/icons/document_search_blue.png</normaloff>:/icons/document_search_blue.png</iconset>
                   </property>
                   <property name="iconSize">
@@ -2040,7 +2040,7 @@
                    <string/>
                   </property>
                   <property name="icon">
-                   <iconset resource="../../../../icons/resources.qrc">
+                   <iconset resource="../../../../icons/dark_theme/resources.qrc">
                     <normaloff>:/icons/document_search_blue.png</normaloff>:/icons/document_search_blue.png</iconset>
                   </property>
                   <property name="iconSize">
@@ -2556,7 +2556,7 @@
   </layout>
  </widget>
  <resources>
-  <include location="../../../../icons/resources.qrc"/>
+  <include location="../../../../icons/dark_theme/resources.qrc"/>
  </resources>
  <connections/>
 </ui>

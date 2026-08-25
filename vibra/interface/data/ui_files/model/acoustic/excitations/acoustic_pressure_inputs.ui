@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>420</width>
-    <height>400</height>
+    <width>480</width>
+    <height>480</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -21,14 +21,14 @@
   </property>
   <property name="minimumSize">
    <size>
-    <width>420</width>
+    <width>480</width>
     <height>400</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>420</width>
-    <height>400</height>
+    <width>480</width>
+    <height>480</height>
    </size>
   </property>
   <property name="font">
@@ -72,7 +72,7 @@
      </property>
      <property name="maximumSize">
       <size>
-       <width>420</width>
+       <width>16777215</width>
        <height>48</height>
       </size>
      </property>
@@ -120,7 +120,7 @@
      </property>
      <property name="maximumSize">
       <size>
-       <width>420</width>
+       <width>16777215</width>
        <height>480</height>
       </size>
      </property>
@@ -131,18 +131,24 @@
       <enum>QFrame::Shadow::Raised</enum>
      </property>
      <layout class="QGridLayout" name="gridLayout_4">
+      <property name="leftMargin">
+       <number>8</number>
+      </property>
+      <property name="rightMargin">
+       <number>8</number>
+      </property>
       <item row="0" column="0">
        <widget class="QFrame" name="frame_4">
         <property name="minimumSize">
          <size>
           <width>360</width>
-          <height>40</height>
+          <height>80</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>380</width>
-          <height>40</height>
+          <width>16777215</width>
+          <height>90</height>
          </size>
         </property>
         <property name="frameShape">
@@ -174,7 +180,7 @@
           <widget class="QLineEdit" name="lineEdit_selection_id">
            <property name="minimumSize">
             <size>
-             <width>120</width>
+             <width>150</width>
              <height>28</height>
             </size>
            </property>
@@ -203,17 +209,105 @@
            </property>
           </widget>
          </item>
-         <item row="0" column="1">
-          <widget class="QLabel" name="label_2">
+         <item row="0" column="3">
+          <spacer name="horizontalSpacer_2">
+           <property name="orientation">
+            <enum>Qt::Orientation::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="0" column="0">
+          <spacer name="horizontalSpacer">
+           <property name="orientation">
+            <enum>Qt::Orientation::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLabel" name="label_4">
            <property name="minimumSize">
             <size>
-             <width>100</width>
+             <width>120</width>
              <height>28</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>100</width>
+             <width>120</width>
+             <height>28</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <family>MS Shell Dlg 2</family>
+             <pointsize>10</pointsize>
+             <italic>false</italic>
+             <bold>false</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Data type:</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="2">
+          <widget class="QComboBox" name="comboBox_data_type">
+           <property name="minimumSize">
+            <size>
+             <width>150</width>
+             <height>28</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>150</width>
+             <height>28</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+             <bold>false</bold>
+            </font>
+           </property>
+           <item>
+            <property name="text">
+             <string>Real and imaginary</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Amplitude and phase</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLabel" name="label_2">
+           <property name="minimumSize">
+            <size>
+             <width>120</width>
+             <height>28</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>120</width>
              <height>28</height>
             </size>
            </property>
@@ -233,32 +327,6 @@
            </property>
           </widget>
          </item>
-         <item row="0" column="0">
-          <spacer name="horizontalSpacer">
-           <property name="orientation">
-            <enum>Qt::Orientation::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item row="0" column="3">
-          <spacer name="horizontalSpacer_2">
-           <property name="orientation">
-            <enum>Qt::Orientation::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
         </layout>
        </widget>
       </item>
@@ -272,7 +340,7 @@
         </property>
         <property name="maximumSize">
          <size>
-          <width>380</width>
+          <width>16777215</width>
           <height>16777215</height>
          </size>
         </property>
@@ -309,16 +377,16 @@
            <number>2</number>
           </property>
           <item row="2" column="3">
-           <widget class="QLineEdit" name="lineEdit_imag_value">
+           <widget class="QLineEdit" name="lineEdit_right_value">
             <property name="minimumSize">
              <size>
-              <width>80</width>
+              <width>100</width>
               <height>28</height>
              </size>
             </property>
             <property name="maximumSize">
              <size>
-              <width>80</width>
+              <width>100</width>
               <height>28</height>
              </size>
             </property>
@@ -339,7 +407,7 @@
            </widget>
           </item>
           <item row="1" column="2">
-           <widget class="QLabel" name="label_4">
+           <widget class="QLabel" name="label_dtype_left">
             <property name="minimumSize">
              <size>
               <width>80</width>
@@ -348,7 +416,7 @@
             </property>
             <property name="maximumSize">
              <size>
-              <width>80</width>
+              <width>16777215</width>
               <height>26</height>
              </size>
             </property>
@@ -399,16 +467,16 @@
            </widget>
           </item>
           <item row="2" column="2">
-           <widget class="QLineEdit" name="lineEdit_real_value">
+           <widget class="QLineEdit" name="lineEdit_left_value">
             <property name="minimumSize">
              <size>
-              <width>80</width>
+              <width>100</width>
               <height>28</height>
              </size>
             </property>
             <property name="maximumSize">
              <size>
-              <width>80</width>
+              <width>100</width>
               <height>28</height>
              </size>
             </property>
@@ -429,16 +497,16 @@
            </widget>
           </item>
           <item row="2" column="4">
-           <widget class="QLabel" name="label_21">
+           <widget class="QLabel" name="label_unit">
             <property name="minimumSize">
              <size>
-              <width>0</width>
+              <width>80</width>
               <height>28</height>
              </size>
             </property>
             <property name="maximumSize">
              <size>
-              <width>60</width>
+              <width>80</width>
               <height>28</height>
              </size>
             </property>
@@ -498,7 +566,7 @@
            </spacer>
           </item>
           <item row="1" column="3">
-           <widget class="QLabel" name="label_20">
+           <widget class="QLabel" name="label_dtype_right">
             <property name="minimumSize">
              <size>
               <width>80</width>
@@ -507,7 +575,7 @@
             </property>
             <property name="maximumSize">
              <size>
-              <width>80</width>
+              <width>16777215</width>
               <height>26</height>
              </size>
             </property>
@@ -705,7 +773,7 @@
              <string/>
             </property>
             <property name="icon">
-             <iconset resource="../../../icons/resources.qrc">
+             <iconset resource="../../../../icons/dark_theme/resources.qrc">
               <normaloff>:/icons/document_search_blue.png</normaloff>:/icons/document_search_blue.png</iconset>
             </property>
             <property name="iconSize">
@@ -727,13 +795,13 @@
          </attribute>
          <layout class="QGridLayout" name="gridLayout_9">
           <property name="leftMargin">
-           <number>2</number>
+           <number>10</number>
           </property>
           <property name="topMargin">
            <number>8</number>
           </property>
           <property name="rightMargin">
-           <number>2</number>
+           <number>10</number>
           </property>
           <property name="bottomMargin">
            <number>2</number>
@@ -751,7 +819,7 @@
             </property>
             <property name="maximumSize">
              <size>
-              <width>320</width>
+              <width>16777215</width>
               <height>40</height>
              </size>
             </property>
@@ -856,7 +924,7 @@
             </property>
             <property name="maximumSize">
              <size>
-              <width>320</width>
+              <width>16777215</width>
               <height>200</height>
              </size>
             </property>
@@ -888,7 +956,15 @@
             </attribute>
             <column>
              <property name="text">
-              <string>Surfaces</string>
+              <string>ID</string>
+             </property>
+             <property name="textAlignment">
+              <set>AlignCenter</set>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>Entity</string>
              </property>
              <property name="textAlignment">
               <set>AlignCenter</set>
@@ -1080,7 +1156,7 @@
   </layout>
  </widget>
  <resources>
-  <include location="../../../icons/resources.qrc"/>
+  <include location="../../../../icons/dark_theme/resources.qrc"/>
  </resources>
  <connections/>
 </ui>
