@@ -1,7 +1,7 @@
 from typing import override
 
 import numpy as np
-from molde.colors import color_names
+from molde.colors import Color, color_names
 from molde.render_widgets import CommonRenderWidget
 from vtkmodules.util.numpy_support import vtk_to_numpy
 from vtkmodules.vtkCommonDataModel import vtkSelectionNode
@@ -89,12 +89,12 @@ class PreviewRenderWidget(CommonRenderWidget):
             case 3, tag:
                 assert mesh.solids_connectivity is not None
                 volume = mesh.solids_connectivity[tag, 1]
-                self.mesh_actor.paint_volumes(color_names.RED_5, [volume])
+                self.mesh_actor.paint_volumes(Color(0, 0, 0, 0), [volume])
 
             case 2, tag:
                 assert mesh.faces_connectivity is not None
                 surface = mesh.faces_connectivity[tag, 1]
-                self.mesh_actor.paint_surfaces(color_names.RED, [surface])
+                self.mesh_actor.paint_surfaces(Color(0, 0, 0, 0), [surface])
 
             case _:
                 pass
