@@ -135,17 +135,17 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         else:
 
             if "real_values" in data:
-                left_values = data.get("real_values")
-                right_values = data.get("imag_values")
+                left_value = data.get("real_values")[0]
+                right_value = data.get("imag_values")[0]
                 self.comboBox_data_type.setCurrentIndex(InputDataType.REAL_IMAGINARY)
 
             else:
-                left_values = data.get("amplitude_values")
-                right_values = data.get("phase_values")
+                left_value = data.get("amplitude_values")[0]
+                right_value = data.get("phase_values")[0]
                 self.comboBox_data_type.setCurrentIndex(InputDataType.MAGNITUDE_PHASE)
 
-            self.lineEdit_left_value.setText(str(left_values[0]))
-            self.lineEdit_right_value.setText(str(right_values[0]))
+            self.lineEdit_left_value.setText(str(left_value if left_value is not None else 0.0))
+            self.lineEdit_right_value.setText(str(right_value if right_value is not None else 0.0))
             self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)
 
     def attribution_type_callback(self):

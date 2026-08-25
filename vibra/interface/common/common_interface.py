@@ -48,7 +48,6 @@ def check_input_entries(input_left: str, input_right: str, label: str):
 
     return output
 
-
 def save_table_values(table_name: str, imported_values: np.ndarray, physical_domain: Literal["acoustic", "structural"]):
     
     # define the frequencies vector

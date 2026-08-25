@@ -290,7 +290,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                 if table_path is not None:                   
                     lineEdit_table.setText(table_path)
 
-            self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)
+            self.tabWidget_main.setCurrentIndex(StandardTabType.TABULAR_DATA)
 
         else:
 
@@ -304,16 +304,18 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                 right_values = data.get("phase_values")
                 self.comboBox_data_type.setCurrentIndex(InputDataType.MAGNITUDE_PHASE)
 
-            for index, [lineEdit_real, lineEdit_imag] in enumerate(self.list_lineEdit_constant_values):
+            for index, [lineEdit_left, lineEdit_right] in enumerate(self.list_lineEdit_constant_values):
 
                 if element_type == "3d_element" and index >= 3:
                     continue
 
                 elif index <= 5 and values[index] is not None:
-                    lineEdit_real.setText(str(left_values[index]))
-                    lineEdit_imag.setText(str(right_values[index]))
+                    left_value = left_values[index]
+                    right_value = right_values[index]
+                    lineEdit_left.setText(str(left_value if left_value is not None else 0.0))
+                    lineEdit_right.setText(str(right_value if right_value is not None else 0.0))
 
-            self.tabWidget_main.setCurrentIndex(StandardTabType.TABULAR_DATA)
+            self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)
 
     def assignment_type_callback(self):
         assignment_index = self.comboBox_assignment_type.currentIndex()

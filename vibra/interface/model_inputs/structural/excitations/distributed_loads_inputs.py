@@ -212,6 +212,8 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
                 if table_path is not None:                   
                     lineEdit_table.setText(table_path)
 
+            self.tabWidget_main.setCurrentIndex(StandardTabType.TABULAR_DATA)
+
         else:
 
             if "real_values" in data:
@@ -230,8 +232,12 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
                     continue
 
                 elif index <= 5 and values[index] is not None:
-                    lineEdit_left.setText(str(left_values[index]))
-                    lineEdit_right.setText(str(right_values[index]))
+                    left_value = left_values[index]
+                    right_value = right_values[index]
+                    lineEdit_left.setText(str(left_value if left_value is not None else 0.0))
+                    lineEdit_right.setText(str(right_value if right_value is not None else 0.0))
+
+            self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)
 
     def update_formulation_callback(self, **kwargs):
 
