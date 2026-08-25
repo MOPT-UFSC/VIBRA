@@ -3,9 +3,7 @@ from typing import override
 import numpy as np
 from molde.colors import Color, color_names
 from molde.render_widgets import CommonRenderWidget
-from vtkmodules.util.numpy_support import vtk_to_numpy
-from vtkmodules.vtkCommonDataModel import vtkSelectionNode
-from vtkmodules.vtkRenderingCore import vtkCellPicker, vtkHardwarePicker, vtkHardwareSelector
+from vtkmodules.vtkRenderingCore import vtkHardwarePicker
 
 from vibra.engine.model import Model
 from vibra.interface.viewer_3d import sources

@@ -13,7 +13,7 @@ from vtkmodules.vtkCommonDataModel import (
     vtkPlane,
     vtkPolyData,
 )
-from vtkmodules.vtkRenderingCore import vtkActor, vtkDataSetMapper, vtkHardwarePicker, vtkPolyDataMapper, vtkPropAssembly
+from vtkmodules.vtkRenderingCore import vtkActor, vtkHardwarePicker, vtkPolyDataMapper, vtkPropAssembly
 
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
