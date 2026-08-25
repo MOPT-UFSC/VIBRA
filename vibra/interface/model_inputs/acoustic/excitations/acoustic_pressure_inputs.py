@@ -438,6 +438,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
 
         selected_items = self.treeWidget_acoustic_pressure.selectedItems()
         if not selected_items:
+            self.lineEdit_selection_id.clear()
             self.pushButton_remove.setDisabled(True)
             return
 

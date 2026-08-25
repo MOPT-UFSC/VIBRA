@@ -671,6 +671,8 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
 
         selected_items = self.treeWidget_distributed_loads.selectedItems()
         if not selected_items:
+            self.lineEdit_selection_id.clear()
+            self.pushButton_remove.setDisabled(True)
             return
 
         entities_mapping = defaultdict(list)

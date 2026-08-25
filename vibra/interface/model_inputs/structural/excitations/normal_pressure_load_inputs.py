@@ -434,6 +434,8 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
 
         selected_items = self.treeWidget_normal_pressure_loads.selectedItems()
         if not selected_items:
+            self.lineEdit_selection_id.clear()
+            self.pushButton_remove.setDisabled(True)
             return
 
         entities_mapping = defaultdict(list)
