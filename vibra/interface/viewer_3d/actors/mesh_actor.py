@@ -387,7 +387,6 @@ class MeshActor(vtkPropAssembly):
         selected_face_elements, *_ = np.where(np.isin(self.mesh.faces_connectivity[:, 1], surfaces))
         self.paint_face_elements(color, selected_face_elements)
 
-    @function_timer
     def paint_volumes(self, color: Color, volumes: Sequence[int] | np.ndarray):
         if self.mesh is None:
             return
@@ -407,6 +406,49 @@ class MeshActor(vtkPropAssembly):
         selected_elements, *_ = np.where(np.isin(self.mesh.solids_connectivity[:, 1], volumes))
         paint_position_mask = np.isin(section_ids, selected_elements)
         section_colors[paint_position_mask] = color.to_rgba()
+
+    def hide_all(self):
+        vtk_to_numpy(self.surface_colors)[:, 3] = 0
+        vtk_to_numpy(self.section_colors)[:, 3] = 0
+
+    def show_all(self):
+        vtk_to_numpy(self.surface_colors)[:, 3] = 255
+        vtk_to_numpy(self.section_colors)[:, 3] = 255
+
+    def set_surfaces_visibility(self, surfaces: Sequence[int], *, visible: bool):
+        if self.mesh is None:
+            return
+
+        assert self.mesh.faces_connectivity is not None
+
+        surface_ids = vtk_to_numpy(self.surface_ids)
+        surface_colors = vtk_to_numpy(self.surface_colors)
+
+        alpha = 255 if visible else 0
+        selected_face_elements, *_ = np.where(np.isin(self.mesh.faces_connectivity[:, 1], surfaces))
+        mask = np.isin(surface_ids, selected_face_elements)
+        surface_colors[mask, 3] = alpha
+
+    def set_volumes_visibility(self, volumes: Sequence[int], *, visible: bool):
+        if self.mesh is None:
+            return
+
+        assert self.mesh.solids_connectivity is not None
+
+        surface_groups = [self.mesh.surfaces_from_volume[v] for v in volumes if (v in self.mesh.surfaces_from_volume)]
+        surfaces = list(chain.from_iterable(surface_groups))
+        self.set_surfaces_visibility(surfaces, visible=visible)
+
+        if self.section_plane is None:
+            return
+
+        section_ids = vtk_to_numpy(self.section_ids)
+        section_colors = vtk_to_numpy(self.section_colors)
+
+        alpha = 255 if visible else 0
+        selected_elements, *_ = np.where(np.isin(self.mesh.solids_connectivity[:, 1], volumes))
+        paint_position_mask = np.isin(section_ids, selected_elements)
+        section_colors[paint_position_mask, 3] = alpha
 
     def picked_dim_tag(self, picker: vtkHardwarePicker) -> tuple[int, int] | None:
         match picker.GetActor():
