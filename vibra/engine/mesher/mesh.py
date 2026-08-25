@@ -195,35 +195,11 @@ class Mesh:
         else:
             return 1
 
-    def get_disconnected_solid_nodes(self) -> list[int]:
-        assert self.nodal_coordinates is not None
-        assert self.solids_connectivity is not None
-
-        all_node_ids = self.nodal_coordinates[:, 0].astype(int)
-        mask = np.isin(all_node_ids, self.solids_connectivity[:, 4:])
-        return np.where(mask)[0].tolist()
-
-    def get_disconnected_surface_nodes(self) -> list[int]:
-        assert self.nodal_coordinates is not None
-        assert self.faces_connectivity is not None
-
-        all_node_ids = self.nodal_coordinates[:, 0].astype(int)
-        mask = np.isin(all_node_ids, self.faces_connectivity[:, 4:])
-        return np.where(mask)[0].tolist()
-
-    def get_disconnected_line_nodes(self) -> list[int]:
-        assert self.nodal_coordinates is not None
-        assert self.lines_connectivity is not None
-
-        all_node_ids = self.nodal_coordinates[:, 0].astype(int)
-        mask = np.isin(all_node_ids, self.lines_connectivity[:, 4:])
-        return np.where(mask)[0].tolist()
-
     def get_disconnected_nodes(self) -> list[int]:
-        mask = self._get_disconnected_nodes_mask()
+        mask = self.get_disconnected_nodes_mask()
         return np.where(mask)[0].tolist()
 
-    def _get_disconnected_nodes_mask(self) -> np.typing.NDArray[np.bool_]:
+    def get_disconnected_nodes_mask(self) -> np.typing.NDArray[np.bool_]:
         assert self.nodal_coordinates is not None
         assert self.solids_connectivity is not None
         assert self.faces_connectivity is not None
@@ -236,7 +212,7 @@ class Mesh:
         return all_node_ids[~used_nodes]
 
     def remove_disconnected_nodes(self):
-        disconnected_nodes = self._get_disconnected_nodes_mask()
+        disconnected_nodes = self.get_disconnected_nodes_mask()
 
         if not len(disconnected_nodes):
             return
@@ -1881,28 +1857,22 @@ class Mesh:
         This method processes the disconnected nodes criterion for volumes,
         surfaces and lines-related elements.
         """
-        disconnected_nodes_data = {
-            "elements_3D": self.get_disconnected_solid_nodes(),
-            "elements_2D": self.get_disconnected_surface_nodes(),
-            "elements_1D": self.get_disconnected_line_nodes(),
-        }
+        disconnected_nodes = self.get_disconnected_nodes()
 
         if not print_log:
             return
 
-        for key, data in disconnected_nodes_data.items():
-            n_nodes = len(data)
-            if n_nodes == 0:
-                continue
+        n_nodes = len(disconnected_nodes)
+        if n_nodes == 0:
+            return
 
-            nodes_list = data if n_nodes < 10 else data[:10]
+        nodes_list = disconnected_nodes if n_nodes < 10 else disconnected_nodes[:10]
+        message = f">> At least {n_nodes} disconnected nodes have been detected.\n"
+        message += f"Nodes list: {nodes_list}"
+        if n_nodes > 10:
+            message += ", ..."
 
-            message = f">> At least {n_nodes} disconnected nodes have been detected for {key}:\n"
-            message += f"Nodes list: {nodes_list}"
-            if n_nodes > 10:
-                message += ", ..."
-
-            print(message)
+        logging.warning(message)
 
     def get_list_of_nodes_from_collapsed_elements(self):
         """
