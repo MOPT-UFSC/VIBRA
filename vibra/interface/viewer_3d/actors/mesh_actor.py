@@ -18,6 +18,7 @@ from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.utils.math_functions import inside_plane
+from vibra.utils.preview_utils import SectionPlaneConfig
 from vibra.utils.time_utils import function_timer
 
 
@@ -40,7 +41,7 @@ class MeshActor(vtkPropAssembly):
         super().__init__()
 
         self.model = model
-        self.section_plane = None
+        self.section_plane: SectionPlaneConfig | None = None
         self.cached_info = CachedInfo()
 
         self._create_variables()
@@ -92,7 +93,7 @@ class MeshActor(vtkPropAssembly):
 
     def _create_variables(self):
         self.points = vtkPoints()
-        self.solids_on_section = np.zeros((0, 4), dtype=int)
+        self.nodes_in_section = np.array([], dtype=int)
 
         self.node_colors = vtkUnsignedCharArray()
         self.node_ids = vtkIntArray()
@@ -124,7 +125,7 @@ class MeshActor(vtkPropAssembly):
         self.node_actor.GetProperty().SetPointSize(5)
         self.node_actor.GetProperty().RenderPointsAsSpheresOn()
         self.node_actor.GetProperty().LightingOff()
-        # self.AddPart(self.node_actor)
+        self.AddPart(self.node_actor)
 
         self.surface_colors.SetName("color")
         self.surface_colors.SetNumberOfComponents(4)
@@ -161,8 +162,14 @@ class MeshActor(vtkPropAssembly):
         self.AddPart(self.volume_actor)
 
     def update_mesh_common(self):
-        assert self.mesh is not None
-        assert self.mesh.nodal_coordinates is not None
+        if self.mesh is None:
+            self.clear_data()
+            return
+
+        if self.mesh.nodal_coordinates is None:
+            return
+
+        self.nodes_in_section = self._find_nodes_in_section()
 
         # AND modifier is the same
         if id(self.mesh) == self.cached_info.mesh_id:
@@ -180,7 +187,9 @@ class MeshActor(vtkPropAssembly):
         if id(self.mesh) == self.cached_info.mesh_id:
             return
 
-        node_indexes = np.unique(self.mesh.faces_connectivity[:, 4:])
+        tmp_a = self.nodes_in_section.ravel()
+        tmp_b = self.mesh.faces_connectivity[:, 4:].ravel()
+        node_indexes = np.unique(np.concatenate((tmp_a, tmp_b)))
         n_cells = len(node_indexes)
 
         cells = self._create_cells(node_indexes)
@@ -239,18 +248,9 @@ class MeshActor(vtkPropAssembly):
         self.surface_mapper.Modified()
         self.surface_actor.Modified()
 
-        coordinates = self.mesh.nodal_coordinates[:, 1:]
         connectivity = self.mesh.solids_connectivity[:, 4:]
-        mask = inside_plane(
-            coordinates,  # pyright: ignore[reportArgumentType]
-            self.section_plane.origin,
-            self.section_plane.normal,
-        ).flatten()
-
-        counts = mask[connectivity].sum(axis=1, dtype=np.int8)
-        elements_in_middle = (0 < counts) & (counts < connectivity.shape[1])
-
-        triangulated_connectivity = self._make_triangles(self.mesh.solids_connectivity[elements_in_middle])
+        elements_in_middle = np.isin(connectivity, self.nodes_in_section).all(axis=1)
+        triangulated_connectivity = self._explode_3d_cells(self.mesh.solids_connectivity[elements_in_middle])
         n_cells = len(triangulated_connectivity)
 
         cells = self._create_cells(triangulated_connectivity[:, 4:])
@@ -434,8 +434,13 @@ class MeshActor(vtkPropAssembly):
         cell_array.SetCells(connectivity.shape[0], vtk_id_array)
         return cell_array
 
-    def _make_triangles(self, connectivity: np.ndarray) -> np.ndarray:
-        reorderings = [[0, 1, 2], [1, 3, 2]]
+    def _explode_3d_cells(self, connectivity: np.ndarray) -> np.ndarray:
+        reorderings = [
+            [0, 1, 2],
+            [0, 2, 3],
+            [3, 2, 1],
+            [0, 1, 3],
+        ]
         column_order = [
             [0, 1, 2, 3] + [i + 4 for i in reordering]
             for reordering in reorderings
@@ -447,3 +452,30 @@ class MeshActor(vtkPropAssembly):
             stacked.append(connect)
 
         return np.concatenate(stacked)
+
+    def _find_nodes_in_section(self) -> np.ndarray:
+        if self.mesh is None:
+            return np.array([], dtype=int)
+
+        if self.mesh.nodal_coordinates is None:
+            return np.array([], dtype=int)
+
+        if self.mesh.solids_connectivity is None:
+            return np.array([], dtype=int)
+
+        if self.section_plane is None:
+            return np.array([], dtype=int)
+
+        coordinates = self.mesh.nodal_coordinates[:, 1:]
+        connectivity = self.mesh.solids_connectivity[:, 4:]
+
+        # I am not sure why the normals need to be inverted
+        mask = inside_plane(
+            coordinates,  # pyright: ignore[reportArgumentType]
+            self.section_plane.origin,
+            self.section_plane.normal,
+        ).flatten()
+
+        counts = mask[connectivity].sum(axis=1, dtype=np.int8)
+        elements_in_middle = (0 < counts) & (counts < connectivity.shape[1])
+        return np.unique(connectivity[elements_in_middle])
