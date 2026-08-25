@@ -89,12 +89,12 @@ class PreviewRenderWidget(CommonRenderWidget):
             case 2, tag:
                 assert mesh.faces_connectivity is not None
                 surface = mesh.faces_connectivity[tag, 1]
-                self.mesh_actor.paint_surfaces(Color(0, 0, 255), [surface])
+                self.mesh_actor.paint_surfaces([surface], Color(0, 0, 255))
 
             case 3, tag:
                 assert mesh.solids_connectivity is not None
                 volume = mesh.solids_connectivity[tag, 1]
-                self.mesh_actor.paint_volumes(Color(255, 0, 0), [volume])
+                self.mesh_actor.paint_volumes([volume], Color(255, 0, 0))
 
             case _:
                 pass

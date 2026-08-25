@@ -319,10 +319,10 @@ class MeshActor(vtkPropAssembly):
                     pass
 
         for color, tags in surface_colors.items():
-            self.paint_surfaces(color, tags)
+            self.paint_surfaces(tags, color)
 
         for color, tags in volume_colors.items():
-            self.paint_volumes(color, tags)
+            self.paint_volumes(tags, color)
 
     def update_caches(self):
         surface_colors_hash = CachedInfo.array_hash(self.surface_colors)
@@ -346,7 +346,7 @@ class MeshActor(vtkPropAssembly):
             self.surface_colors.FillComponent(i, rgb[i])
             self.section_colors.FillComponent(i, rgb[i])
 
-    def paint_face_elements(self, color: Color, face_elements: Sequence[int] | np.ndarray):
+    def paint_face_elements(self, face_elements: Sequence[int] | np.ndarray, color: Color):
         if self.mesh is None:
             return
 
@@ -355,7 +355,7 @@ class MeshActor(vtkPropAssembly):
         paint_position_mask = np.isin(surface_ids, face_elements)
         surface_colors[paint_position_mask, :3] = color.to_rgb()
 
-    def paint_solid_elements(self, color: Color, solid_elements: Sequence[int] | np.ndarray):
+    def paint_solid_elements(self, solid_elements: Sequence[int] | np.ndarray, color: Color):
         if self.mesh is None:
             return
 
@@ -375,17 +375,17 @@ class MeshActor(vtkPropAssembly):
             self.mesh.solids_connectivity[solids_mask, 4:],
         ).all(axis=1)
         face_elements = self.mesh.faces_connectivity[face_mask, 0]
-        self.paint_face_elements(color, face_elements)
+        self.paint_face_elements(face_elements, color)
 
-    def paint_surfaces(self, color: Color, surfaces: Sequence[int] | np.ndarray):
+    def paint_surfaces(self, surfaces: Sequence[int] | np.ndarray, color: Color):
         if self.mesh is None:
             return
 
         assert self.mesh.faces_connectivity is not None
         selected_face_elements, *_ = np.where(np.isin(self.mesh.faces_connectivity[:, 1], surfaces))
-        self.paint_face_elements(color, selected_face_elements)
+        self.paint_face_elements(selected_face_elements, color)
 
-    def paint_volumes(self, color: Color, volumes: Sequence[int] | np.ndarray):
+    def paint_volumes(self, volumes: Sequence[int] | np.ndarray, color: Color):
         if self.mesh is None:
             return
 
@@ -393,7 +393,7 @@ class MeshActor(vtkPropAssembly):
 
         surface_groups = [self.mesh.surfaces_from_volume[v] for v in volumes if (v in self.mesh.surfaces_from_volume)]
         surfaces = list(chain.from_iterable(surface_groups))
-        self.paint_surfaces(color, surfaces)
+        self.paint_surfaces(surfaces, color)
 
         if self.section_plane is None:
             return
