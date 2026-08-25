@@ -25,6 +25,11 @@ class AssignmentType(IntEnum):
     MULTIPLE = 2
 
 
+class DataType(IntEnum):
+    REAL_IMAGINARY = 0
+    AMPLITUDE_PHASE = 1
+
+
 class DistributedLoadsInputs(DistributedLoadsInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -251,57 +256,43 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         volume_exists = self.mesh.are_there_volumes_in_geometry()
         self.comboBox_element_type.setCurrentIndex(int(volume_exists))
 
-    def check_complex_entries(self, real_input: str, imag_input: str, label: str):
+    def check_input_entries(self, input_left: str, input_right: str, label: str):
 
-        _real = None
-        if real_input != "":
+        value_left = None
+        if input_left != "":
             try:
-                real_input = real_input.replace(",", ".")
-                _real = float(real_input)
+                input_left = input_left.replace(",", ".")
+                value_left = float(input_left)
 
             except Exception:
                 title = f"Invalid entry to the {label}"
                 message = f"Wrong input for real part of {label}."
                 PrintMessageInput([error_title, title, message])
-                return True, None
+                return
 
-        _imag = None
-        if imag_input != "":
+        value_right = None
+        if input_right != "":
             try:
-                imag_input = imag_input.replace(",", ".")
-                _imag = float(imag_input)
+                input_right = input_right.replace(",", ".")
+                value_right = float(input_right)
 
             except Exception:
                 title = f"Invalid entry to the {label}"
                 message = f"Wrong input for imaginary part of {label}."
                 PrintMessageInput([error_title, title, message])
-                return True, None
+                return
 
-        if _real is None and _imag is None:
-            values = None
-        elif _real is None:
-            values = 1j * _imag
-        elif _imag is None:
-            values = complex(_real)
-        else:
-            values = _real + 1j * _imag
+        output = [value_left, value_right] 
 
-        output = values
-
-        return False, output
+        return output
 
     def constant_values_attribution(self):
 
         input_ids = self.lineEdit_selection_id.text()
-        attribution_type = self.comboBox_assignment_type.currentIndex()
+        assignment_type = self.comboBox_assignment_type.currentIndex()
 
-        if attribution_type == 0:
-            selection = "surfaces"
-            unit = "N/m²"
-
-        elif attribution_type == 1:
-            selection = "lines"
-            unit = "N/m"
+        selection = "surfaces" if assignment_type == AssignmentType.SURFACES else "lines"
+        unit = "N/m²" if assignment_type == AssignmentType.SURFACES else "N/m"
 
         selected_ids, error_data = self.mesh.check_selected_ids(input_ids, selection=selection, single_id=False)
 
@@ -313,25 +304,29 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         self.remove_duplicated_attributions(selected_ids, selection)
         self.remove_conflicting_excitations(selected_ids, selection)
 
-        index = self.comboBox_element_type.currentIndex()
-        element_type = self.element_types[index]
+        element_type = self.element_types[self.comboBox_element_type.currentIndex()]
+        real_imag_input = self.comboBox_data_type.currentIndex() == DataType.REAL_IMAGINARY
 
-        stop, Fx= self.check_complex_entries(self.lineEdit_real_Fx.text(), self.lineEdit_imag_Fx.text(), "Fx")
-        if stop:
+        Fx = self.check_input_entries(self.lineEdit_real_Fx.text(), self.lineEdit_imag_Fx.text(), "Fx")
+        if Fx is None:
             return True
 
-        stop, Fy= self.check_complex_entries(self.lineEdit_real_Fy.text(), self.lineEdit_imag_Fy.text(), "Fy")
-        if stop:
+        Fy = self.check_input_entries(self.lineEdit_real_Fy.text(), self.lineEdit_imag_Fy.text(), "Fy")
+        if Fy is None:
             return True
 
-        stop, Fz= self.check_complex_entries(self.lineEdit_real_Fz.text(), self.lineEdit_imag_Fz.text(), "Fz")
-        if stop:
+        Fz = self.check_input_entries(self.lineEdit_real_Fz.text(), self.lineEdit_imag_Fz.text(), "Fz")
+        if Fz is None:
             return True
 
         distributed_loads = [Fx, Fy, Fz]
 
-        condition_1 = element_type == "2d_element" and distributed_loads.count(None) == 3
-        condition_2 = element_type == "3d_element" and distributed_loads.count(None) == 3
+        all_values = []
+        for values in distributed_loads:
+            all_values.extend(values)
+
+        condition_1 = element_type == "2d_element" and all_values.count(None) == 12
+        condition_2 = element_type == "3d_element" and all_values.count(None) == 6
 
         if condition_1 or condition_2:
             title = "Additional inputs required"
@@ -339,23 +334,22 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
             PrintMessageInput([error_title, title, message])
             return True
 
-        real_values = [value if value is None else np.real(value) for value in distributed_loads]
-        imag_values = [value if value is None else np.imag(value) for value in distributed_loads]
+        left_values = [value_a for (value_a, _) in distributed_loads]
+        right_values = [value_b for (_, value_b) in distributed_loads]
 
         for selected_id in selected_ids:
 
             data = {
                 "element_type": element_type,
-                "values": distributed_loads,
-                "real_values": real_values,
-                "imag_values": imag_values,
+                "real_values" if real_imag_input else "amplitude_values": left_values,
+                "imag_values" if real_imag_input else "phase_values": right_values,
                 "unit": unit,
             }
 
-            if attribution_type == 0:
+            if assignment_type == AssignmentType.SURFACES:
                 self.properties._set_property("distributed_loads", data, surface=selected_id)
 
-            elif attribution_type == 1:
+            elif assignment_type == AssignmentType.LINES:
                 self.properties._set_property("distributed_loads", data, line=selected_id)
 
     def load_table(self, lineEdit : QLineEdit, load_label: str, direct_load = False):
@@ -388,7 +382,11 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
                 lineEdit.setFocus()
                 return None, None
 
-            imported_values = imported_file[:, 1] + 1j * imported_file[:, 2]
+            if self.comboBox_data_type.currentIndex() == DataType.REAL_IMAGINARY:
+                imported_values = imported_file[:, 1] + 1j * imported_file[:, 2]
+            else:
+                imported_values = imported_file[:, 1] * np.exp(1j * imported_file[:, 2] * np.pi / 180)
+
             self.frequencies = imported_file[:, 0]
 
             return imported_values, imported_table_path
@@ -743,7 +741,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
 
     def reset_callback(self):
 
-        title = "Distributed loads resetting"
+        title = "Distributed loads reset"
         message = "Would you like to remove the all distributed loads from model?"
 
         buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
@@ -800,4 +798,5 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
+        app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
         return super().closeEvent(a0)

@@ -24,11 +24,6 @@ class ElementFormulation(IntEnum):
     ELEMENT_3D = 1
 
 
-class DistributionType(IntEnum):
-    ELEMENT_INTEGRATION = 0
-    NODAL_DISTRIBUTION = 1
-
-
 class AssignmentType(IntEnum):
     SURFACES = 0
     LINES = 1
@@ -56,9 +51,10 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         self._config_window()
         self._initialize()
         self._create_list_line_edits()
+        self._configure_validators()
+        self._config_widgets()
         self._create_connections()
 
-        self._config_widgets()
         self.load_model_info()
 
         while self.keep_window_open:
@@ -339,8 +335,8 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
     def data_type_callback(self):
         real_imaginary = self.comboBox_data_type.currentIndex() == DataType.REAL_IMAGINARY
-        self.label_constant_left.setText("Real" if real_imaginary else "Amplitude")
-        self.label_constant_right.setText("Imaginary" if real_imaginary else "Phase")
+        self.label_dtype_left.setText("Real" if real_imaginary else "Amplitude")
+        self.label_dtype_right.setText("Imaginary" if real_imaginary else "Phase")
 
         for key, widget in self.unit_labels.items():
             unit = "N" if "F" in key else "N.m"
@@ -443,25 +439,14 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         self.remove_duplicated_assignments(selected_ids, selection)
         self.remove_conflicting_excitations(selected_ids, selection)
 
-        if real_imag_input:
-            real_values = []
-            imag_values = []
-            for real_value, imag_value in nodal_loads:
-                real_values.append(real_value)
-                imag_values.append(imag_value)
-
-        else:
-            amplitude_values = []
-            phase_values = []
-            for amplitude_value, phase_value in nodal_loads:
-                amplitude_values.append(amplitude_value)
-                phase_values.append(phase_value)
+        left_values = [value_a for (value_a, _) in nodal_loads]
+        right_values = [value_b for (_, value_b) in nodal_loads]
 
         for selected_id in selected_ids:
             data = {
                 "element_type": element_type,
-                "real_values" if real_imag_input else "amplitude_values": real_values if real_imag_input else amplitude_values,
-                "imag_values" if real_imag_input else "phase_values": imag_values if real_imag_input else phase_values,
+                "real_values" if real_imag_input else "amplitude_values": left_values,
+                "imag_values" if real_imag_input else "phase_values": right_values,
                 "element_integration": self.element_integration,
             }
 
@@ -1042,7 +1027,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
     def reset_callback(self):
 
-        title = "Nodal loads resetting"
+        title = "Nodal loads reset"
         message = "Would you like to remove the all external loads from model?"
 
         buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}

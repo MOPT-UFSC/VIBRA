@@ -111,8 +111,8 @@ class Ui_Dialog(object):
         self.comboBox_assignment_type.addItem("")
         self.comboBox_assignment_type.addItem("")
         self.comboBox_assignment_type.setObjectName(u"comboBox_assignment_type")
-        self.comboBox_assignment_type.setMinimumSize(QSize(0, 28))
-        self.comboBox_assignment_type.setMaximumSize(QSize(16777215, 28))
+        self.comboBox_assignment_type.setMinimumSize(QSize(120, 28))
+        self.comboBox_assignment_type.setMaximumSize(QSize(120, 28))
         font3 = QFont()
         font3.setPointSize(10)
         font3.setBold(False)
@@ -232,8 +232,8 @@ class Ui_Dialog(object):
 
         self.label_Mz_unit = QLabel(self.frame_8)
         self.label_Mz_unit.setObjectName(u"label_Mz_unit")
-        self.label_Mz_unit.setMinimumSize(QSize(50, 26))
-        self.label_Mz_unit.setMaximumSize(QSize(50, 26))
+        self.label_Mz_unit.setMinimumSize(QSize(70, 26))
+        self.label_Mz_unit.setMaximumSize(QSize(70, 26))
         font4 = QFont()
         font4.setPointSize(10)
         font4.setBold(False)
@@ -255,8 +255,8 @@ class Ui_Dialog(object):
 
         self.label_My_unit = QLabel(self.frame_8)
         self.label_My_unit.setObjectName(u"label_My_unit")
-        self.label_My_unit.setMinimumSize(QSize(50, 26))
-        self.label_My_unit.setMaximumSize(QSize(50, 26))
+        self.label_My_unit.setMinimumSize(QSize(70, 26))
+        self.label_My_unit.setMaximumSize(QSize(70, 26))
         self.label_My_unit.setFont(font4)
         self.label_My_unit.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
 
@@ -295,8 +295,8 @@ class Ui_Dialog(object):
 
         self.label_Fz_unit = QLabel(self.frame_8)
         self.label_Fz_unit.setObjectName(u"label_Fz_unit")
-        self.label_Fz_unit.setMinimumSize(QSize(50, 26))
-        self.label_Fz_unit.setMaximumSize(QSize(50, 26))
+        self.label_Fz_unit.setMinimumSize(QSize(70, 26))
+        self.label_Fz_unit.setMaximumSize(QSize(70, 26))
         self.label_Fz_unit.setFont(font2)
         self.label_Fz_unit.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
 
@@ -311,14 +311,14 @@ class Ui_Dialog(object):
 
         self.gridLayout.addWidget(self.label_Mz_constant, 8, 1, 1, 1)
 
-        self.label_constant_left = QLabel(self.frame_8)
-        self.label_constant_left.setObjectName(u"label_constant_left")
-        self.label_constant_left.setMinimumSize(QSize(80, 26))
-        self.label_constant_left.setMaximumSize(QSize(16777215, 26))
-        self.label_constant_left.setFont(font2)
-        self.label_constant_left.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.label_dtype_left = QLabel(self.frame_8)
+        self.label_dtype_left.setObjectName(u"label_dtype_left")
+        self.label_dtype_left.setMinimumSize(QSize(80, 26))
+        self.label_dtype_left.setMaximumSize(QSize(16777215, 26))
+        self.label_dtype_left.setFont(font2)
+        self.label_dtype_left.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.gridLayout.addWidget(self.label_constant_left, 2, 2, 1, 1)
+        self.gridLayout.addWidget(self.label_dtype_left, 2, 2, 1, 1)
 
         self.lineEdit_right_Fy = QLineEdit(self.frame_8)
         self.lineEdit_right_Fy.setObjectName(u"lineEdit_right_Fy")
@@ -401,8 +401,8 @@ class Ui_Dialog(object):
 
         self.label_Fy_unit = QLabel(self.frame_8)
         self.label_Fy_unit.setObjectName(u"label_Fy_unit")
-        self.label_Fy_unit.setMinimumSize(QSize(50, 26))
-        self.label_Fy_unit.setMaximumSize(QSize(50, 26))
+        self.label_Fy_unit.setMinimumSize(QSize(70, 26))
+        self.label_Fy_unit.setMaximumSize(QSize(70, 26))
         self.label_Fy_unit.setFont(font2)
         self.label_Fy_unit.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
 
@@ -410,8 +410,8 @@ class Ui_Dialog(object):
 
         self.label_Mx_unit = QLabel(self.frame_8)
         self.label_Mx_unit.setObjectName(u"label_Mx_unit")
-        self.label_Mx_unit.setMinimumSize(QSize(50, 26))
-        self.label_Mx_unit.setMaximumSize(QSize(50, 26))
+        self.label_Mx_unit.setMinimumSize(QSize(70, 26))
+        self.label_Mx_unit.setMaximumSize(QSize(70, 26))
         self.label_Mx_unit.setFont(font4)
         self.label_Mx_unit.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
 
@@ -439,8 +439,8 @@ class Ui_Dialog(object):
 
         self.label_Fx_unit = QLabel(self.frame_8)
         self.label_Fx_unit.setObjectName(u"label_Fx_unit")
-        self.label_Fx_unit.setMinimumSize(QSize(50, 26))
-        self.label_Fx_unit.setMaximumSize(QSize(50, 26))
+        self.label_Fx_unit.setMinimumSize(QSize(70, 26))
+        self.label_Fx_unit.setMaximumSize(QSize(70, 26))
         self.label_Fx_unit.setFont(font2)
         self.label_Fx_unit.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
 
@@ -459,14 +459,14 @@ class Ui_Dialog(object):
 
         self.gridLayout.addItem(self.horizontalSpacer_2, 3, 0, 1, 1)
 
-        self.label_constant_right = QLabel(self.frame_8)
-        self.label_constant_right.setObjectName(u"label_constant_right")
-        self.label_constant_right.setMinimumSize(QSize(80, 26))
-        self.label_constant_right.setMaximumSize(QSize(16777215, 26))
-        self.label_constant_right.setFont(font2)
-        self.label_constant_right.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.label_dtype_right = QLabel(self.frame_8)
+        self.label_dtype_right.setObjectName(u"label_dtype_right")
+        self.label_dtype_right.setMinimumSize(QSize(80, 26))
+        self.label_dtype_right.setMaximumSize(QSize(16777215, 26))
+        self.label_dtype_right.setFont(font2)
+        self.label_dtype_right.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.gridLayout.addWidget(self.label_constant_right, 2, 3, 1, 1)
+        self.gridLayout.addWidget(self.label_dtype_right, 2, 3, 1, 1)
 
 
         self.gridLayout_12.addWidget(self.frame_8, 0, 0, 1, 1)
@@ -883,14 +883,14 @@ class Ui_Dialog(object):
         self.label_Fz_constant.setText(QCoreApplication.translate("Dialog", u"Fz:", None))
         self.label_Fz_unit.setText(QCoreApplication.translate("Dialog", u"[N]", None))
         self.label_Mz_constant.setText(QCoreApplication.translate("Dialog", u"Mz:", None))
-        self.label_constant_left.setText(QCoreApplication.translate("Dialog", u"Real", None))
+        self.label_dtype_left.setText(QCoreApplication.translate("Dialog", u"Real", None))
         self.lineEdit_left_Fx.setText("")
         self.label_Fx_constant.setText(QCoreApplication.translate("Dialog", u"Fx:", None))
         self.label_Fy_unit.setText(QCoreApplication.translate("Dialog", u"[N]", None))
         self.label_Mx_unit.setText(QCoreApplication.translate("Dialog", u"[N.m]", None))
         self.label_Fx_unit.setText(QCoreApplication.translate("Dialog", u"[N]", None))
         self.label_My_constant.setText(QCoreApplication.translate("Dialog", u"My:", None))
-        self.label_constant_right.setText(QCoreApplication.translate("Dialog", u"Imaginary", None))
+        self.label_dtype_right.setText(QCoreApplication.translate("Dialog", u"Imaginary", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_constant_data), QCoreApplication.translate("Dialog", u"Constant data", None))
         self.label_Fy_table.setText(QCoreApplication.translate("Dialog", u"Fy:", None))
         self.label_Mx_table.setText(QCoreApplication.translate("Dialog", u"Mx:", None))
@@ -960,7 +960,7 @@ class NodalLoadsInputs_UI(QDialog, Ui_Dialog):
                                                                     - label_Fz_constant: QLabel
                                                                     - label_Fz_unit: QLabel
                                                                     - label_Mz_constant: QLabel
-                                                                    - label_constant_left: QLabel
+                                                                    - label_dtype_left: QLabel
                                                                     - lineEdit_right_Fy: QLineEdit
                                                                     - lineEdit_right_Fz: QLineEdit
                                                                     - lineEdit_left_Mz: QLineEdit
@@ -975,7 +975,7 @@ class NodalLoadsInputs_UI(QDialog, Ui_Dialog):
                                                                     - lineEdit_left_Fz: QLineEdit
                                                                     - label_Fx_unit: QLabel
                                                                     - label_My_constant: QLabel
-                                                                    - label_constant_right: QLabel
+                                                                    - label_dtype_right: QLabel
                                             - tab_tabular_data: QWidget
                                                 - (Layout): QGridLayout
                                                         - frame_9: QFrame

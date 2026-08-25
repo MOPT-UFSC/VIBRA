@@ -16,11 +16,6 @@ from vibra.interface.model_inputs.acoustic.definitions.enums import StandardTabT
 from vibra.interface.ui_generated.model.acoustic.excitations.surface_velocity_inputs_ui import SurfaceVelocityInputs_UI
 
 
-class DistributionType(IntEnum):
-    ELEMENT_INTEGRATION = 0
-    NODAL_DISTRIBUTION = 1
-
-
 class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
