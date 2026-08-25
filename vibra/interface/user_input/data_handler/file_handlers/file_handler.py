@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import overload
 
 import numpy as np
 from polars import DataFrame as PolarsDataFrame
@@ -8,7 +9,6 @@ from vibra.interface.user_input.data_handler.file_handlers.spreadsheet_file_hand
 from vibra.interface.user_input.data_handler.file_handlers.text_file_handler import TextFileHandler
 from vibra.interface.user_input.data_handler.imported_data import ImportedData
 
-from typing import overload
 
 class FileHandler:
 

@@ -39,6 +39,17 @@ class SpreadsheetSheet:
 class SpreadsheetData(ImportedDataInterface):
     sheets: list[SpreadsheetSheet] = None
 
+    def to_dict(self) -> dict:
+        data = {"path": self.path, 
+                "filename": self.filename, 
+                "extension": self.extension
+                }
+
+        for sheet in self.sheets:
+            data[sheet.sheetname] = sheet.data
+
+        return data
+
     @property
     def data(self):
         if len(self.sheets) == 0:
