@@ -8,7 +8,7 @@ from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
 
 from vibra import app
 from vibra.interface import error_title
-from vibra.interface.common.common_interface import InputType, update_analysis_setup_in_file
+from vibra.interface.common.common_interface import InputDataType, update_analysis_setup_in_file
 from vibra.interface.data.data_manager import get_spectral_data_from_array
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
@@ -230,18 +230,18 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
             if self.constant_data_assignment(surface_ids):
                 return
 
-        elif tab_index == StandardTabType.TABULAR_DATA:
+        if tab_index == StandardTabType.TABULAR_DATA:
             if self.tabular_data_assignment(surface_ids):
                 return
 
         self.actions_to_finalize(close_window)
 
     def input_mode_callback(self):
-        real_imag_imode = self.comboBox_input_mode.currentIndex() == InputType.REAL_IMAGINARY
-        self.label_pinc0_constant.setText("Incident pressure ({}):".format("real" if real_imag_imode else "amp."))
-        self.label_pinc1_constant.setText("Incident pressure ({}):".format("imag." if real_imag_imode else "phase"))
+        real_imag_dtype = self.comboBox_input_mode.currentIndex() == InputDataType.REAL_IMAGINARY
+        self.label_pinc0_constant.setText("Incident pressure ({}):".format("real" if real_imag_dtype else "amp."))
+        self.label_pinc1_constant.setText("Incident pressure ({}):".format("imag." if real_imag_dtype else "phase"))
         self.label_pinc0_unit.setText("[Pa]:")
-        self.label_pinc1_unit.setText("[{}]:".format("Pa" if real_imag_imode else "deg"))
+        self.label_pinc1_unit.setText("[{}]:".format("Pa" if real_imag_dtype else "deg"))
 
     def check_incident_plane_wave_values(self, line_edit_fieldA: QLineEdit, line_edit_fieldB: QLineEdit, label: str):
 
@@ -254,7 +254,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
             value_b = float(line_edit_fieldB.text())
 
         if self.comboBox_wave_direction.currentIndex() == WaveDirection.NORMAL:
-            if value_a <= 0 and self.comboBox_input_mode.currentIndex() == InputType.REAL_IMAGINARY:
+            if value_a <= 0 and self.comboBox_input_mode.currentIndex() == InputDataType.REAL_IMAGINARY:
                 line_edit_fieldA.setFocus()
                 title = "Invalid value detected"
                 message = "Enter a positive value for the normal "
@@ -352,7 +352,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
         if values is None:
             return None
 
-        real_imag_imode = self.comboBox_input_mode.currentIndex() == InputType.REAL_IMAGINARY
+        real_imag_imode = self.comboBox_input_mode.currentIndex() == InputDataType.REAL_IMAGINARY
 
         data = {
             "wave_direction": self.wave_direction,

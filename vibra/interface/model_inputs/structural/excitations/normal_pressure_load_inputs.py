@@ -9,7 +9,7 @@ from PySide6.QtWidgets import QAbstractItemView, QLineEdit, QTreeWidgetItem
 
 from vibra import app
 from vibra.interface import error_title
-from vibra.interface.common.common_interface import update_analysis_setup_in_file
+from vibra.interface.common.common_interface import InputDataType, check_input_entries, update_analysis_setup_in_file
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -22,11 +22,6 @@ class AssignmentType(IntEnum):
     SURFACES = 0
     LINES = 1
     MULTIPLE = 2
-
-
-class DataType(IntEnum):
-    REAL_IMAGINARY = 0
-    AMPLITUDE_PHASE = 1
 
 
 class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
@@ -142,12 +137,12 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
             if "real_values" in data:
                 left_values = data.get("real_values")
                 right_values = data.get("imag_values")
-                self.comboBox_data_type.setCurrentIndex(DataType.REAL_IMAGINARY)
+                self.comboBox_data_type.setCurrentIndex(InputDataType.REAL_IMAGINARY)
 
             else:
                 left_values = data.get("amplitude_values")
                 right_values = data.get("phase_values")
-                self.comboBox_data_type.setCurrentIndex(DataType.AMPLITUDE_PHASE)
+                self.comboBox_data_type.setCurrentIndex(InputDataType.MAGNITUDE_PHASE)
 
             self.lineEdit_left_value.setText(str(left_values[0]))
             self.lineEdit_right_value.setText(str(right_values[0]))
@@ -160,7 +155,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         return
 
     def data_type_callback(self):
-        real_imaginary = self.comboBox_data_type.currentIndex() == DataType.REAL_IMAGINARY
+        real_imaginary = self.comboBox_data_type.currentIndex() == InputDataType.REAL_IMAGINARY
         self.label_dtype_left.setText("Real" if real_imaginary else "Amplitude")
         self.label_dtype_right.setText("Imaginary" if real_imaginary else "Phase")
 
@@ -170,36 +165,6 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
     def update_element_type_based_on_geometry_information(self):
         volume_exists = self.mesh.are_there_volumes_in_geometry()
         self.comboBox_element_type.setCurrentIndex(int(volume_exists))
-
-    def check_input_entries(self, input_left: str, input_right: str, label: str):
-
-        value_left = None
-        if input_left != "":
-            try:
-                input_left = input_left.replace(",", ".")
-                value_left = float(input_left)
-
-            except Exception:
-                title = f"Invalid entry to the {label}"
-                message = f"Wrong input for real part of {label}."
-                PrintMessageInput([error_title, title, message])
-                return
-
-        value_right = None
-        if input_right != "":
-            try:
-                input_right = input_right.replace(",", ".")
-                value_right = float(input_right)
-
-            except Exception:
-                title = f"Invalid entry to the {label}"
-                message = f"Wrong input for imaginary part of {label}."
-                PrintMessageInput([error_title, title, message])
-                return
-
-        output = [value_left, value_right] 
-
-        return output
 
     def constant_values_attribution(self):
 
@@ -214,9 +179,9 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         self.remove_conflicting_excitations(surface_ids, "surfaces")
 
         element_type = self.element_types[self.comboBox_element_type.currentIndex()]
-        real_imag_input = self.comboBox_data_type.currentIndex() == DataType.REAL_IMAGINARY
+        real_imag_input = self.comboBox_data_type.currentIndex() == InputDataType.REAL_IMAGINARY
 
-        pressure_load = self.check_input_entries(self.lineEdit_left_value.text(), self.lineEdit_right_value.text(), "Pressure load")
+        pressure_load = check_input_entries(self.lineEdit_left_value.text(), self.lineEdit_right_value.text(), "Pressure load")
 
         if pressure_load is None:
             return True
@@ -318,7 +283,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
 
         table_name = f"normal_pressure_from_surface_{selected_id}"
 
-        if self.comboBox_data_type.currentIndex() == DataType.REAL_IMAGINARY:
+        if self.comboBox_data_type.currentIndex() == InputDataType.REAL_IMAGINARY:
             complex_values = imported_values[:, 1] + 1j * imported_values[:, 2]
         else:
             complex_values = imported_values[:, 1] * np.exp(1j * imported_values[:, 2] * np.pi / 180)
