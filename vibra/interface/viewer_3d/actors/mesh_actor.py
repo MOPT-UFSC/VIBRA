@@ -341,12 +341,10 @@ class MeshActor(vtkPropAssembly):
             # Don't need to modify anything, but might
 
     def set_color(self, color: Color):
-        rgba = color.to_rgba()
-        for i in range(self.surface_colors.GetNumberOfComponents()):
-            self.surface_colors.FillComponent(i, rgba[i])
-
-        for i in range(self.section_colors.GetNumberOfComponents()):
-            self.section_colors.FillComponent(i, rgba[i])
+        rgb = color.to_rgb()
+        for i in range(3):
+            self.surface_colors.FillComponent(i, rgb[i])
+            self.section_colors.FillComponent(i, rgb[i])
 
     def paint_face_elements(self, color: Color, face_elements: Sequence[int] | np.ndarray):
         if self.mesh is None:
@@ -355,7 +353,7 @@ class MeshActor(vtkPropAssembly):
         surface_ids = vtk_to_numpy(self.surface_ids)
         surface_colors = vtk_to_numpy(self.surface_colors)
         paint_position_mask = np.isin(surface_ids, face_elements)
-        surface_colors[paint_position_mask] = color.to_rgba()
+        surface_colors[paint_position_mask, :3] = color.to_rgb()
 
     def paint_solid_elements(self, color: Color, solid_elements: Sequence[int] | np.ndarray):
         if self.mesh is None:
@@ -368,7 +366,7 @@ class MeshActor(vtkPropAssembly):
         section_ids = vtk_to_numpy(self.section_ids)
         section_colors = vtk_to_numpy(self.section_colors)
         paint_position_mask = np.isin(section_ids, solid_elements)
-        section_colors[paint_position_mask] = color.to_rgba()
+        section_colors[paint_position_mask, :3] = color.to_rgb()
 
         # Second paint the elements with face IDs (which can also be solids)
         solids_mask = np.isin(self.mesh.solids_connectivity[:, 0], solid_elements)
@@ -405,7 +403,7 @@ class MeshActor(vtkPropAssembly):
 
         selected_elements, *_ = np.where(np.isin(self.mesh.solids_connectivity[:, 1], volumes))
         paint_position_mask = np.isin(section_ids, selected_elements)
-        section_colors[paint_position_mask] = color.to_rgba()
+        section_colors[paint_position_mask, :3] = color.to_rgb()
 
     def hide_all(self):
         vtk_to_numpy(self.surface_colors)[:, 3] = 0
