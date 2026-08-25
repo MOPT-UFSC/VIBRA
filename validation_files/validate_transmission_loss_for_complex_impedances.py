@@ -10,7 +10,7 @@ from vibra.engine.properties.fluid import Fluid
 from vibra.engine.solution import HarmonicSolution
 from vibra.engine.solvers.harmonic_solver import HarmonicSolver
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
-from vibra.interface.data_handler.data_importer import DataImporter
+from vibra.interface.user_input.data_handler.file_handlers.file_handler import FileHandler
 
 if TYPE_CHECKING:
     from vibra.engine.model import Model
@@ -206,7 +206,7 @@ def load_external_mesh_and_solve():
     # results_path = f"validation_files/data/WB/transmission_loss/results/WB_results_silencer_only_fluid_Vn1_Z1_Z2_complex.xlsx"
     results_path = "validation_files/data/WB/transmission_loss/results/WB_results_silencer_only_fluid_Vn1_Z1_Z2_real.xlsx"
 
-    imported_results = DataImporter.load_spreadsheet_data_for_validation(results_path)
+    imported_results = FileHandler.read(results_path).to_dict()
 
     TL_data = imported_results["transmission_loss"]  # ports enabled
 
