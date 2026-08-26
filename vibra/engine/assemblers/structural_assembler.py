@@ -378,12 +378,12 @@ class StructuralAssembler:
             # calculate the surface density
             mass_density = mass / surface_area
 
-            print()
-            print(f"Area: {surface_area} m²")
-            print(f"mass_density: {mass_density} kg/m²")
-            print()
+            # print()
+            # print(f"Area: {surface_area} m²")
+            # print(f"mass_density: {mass_density} kg/m²")
+            # print()
 
-            mass_density = 2060.641904
+            # mass_density = 1249.600004
 
             for i, el in enumerate(surf_elements):
                 aux_connect[el] = surf_connect[i]
@@ -683,7 +683,7 @@ class StructuralAssembler:
         self.element_2d.reorder_connect(connectivities)
         for i, complex_values in enumerate(data_array.values()):
             indices = self.element_2d.get_load_indexes(i)
-            load_vectors[indices, :] += self.element_2d.integrate_distributed_load(i, complex_values)#, load_vector=np.array([1,0,0]))
+            load_vectors[indices, :] += self.element_2d.integrate_distributed_load(i, complex_values)
 
         return load_vectors
 

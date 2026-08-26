@@ -122,7 +122,7 @@ class STRUCT_LINE_2(LINE_2):
         el_index: int
             The element index.
 
-        load: float, optional
+        distributed_load: float, optional
             The load vector.
 
         Returns

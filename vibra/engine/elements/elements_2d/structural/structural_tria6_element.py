@@ -100,13 +100,7 @@ class STRUCT_TRIANGLE_6(TRIANGLE_6):
         return Fe
 
 
-    def integrate_distributed_load(
-            self, 
-            el_index: int, 
-            distributed_load: np.ndarray, 
-            h_ecc: float = 0.0,
-            load_vector: np.ndarray | float = 0.0,
-            ) -> np.ndarray:
+    def integrate_distributed_load(self, el_index: int, distributed_load: np.ndarray) -> np.ndarray:
         """ 
         This method computes the elementary load vector.
 
@@ -115,7 +109,7 @@ class STRUCT_TRIANGLE_6(TRIANGLE_6):
         el_index: int
             The element index.
 
-        load: float, optional
+        distributed_load: float, optional
             The load vector.
 
         Returns
