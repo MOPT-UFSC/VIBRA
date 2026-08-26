@@ -25,6 +25,7 @@ from vibra.utils.time_utils import function_timer
 @dataclass
 class CachedInfo:
     mesh_id: int = 0
+    node_colors_hash: str = ""
     surface_colors_hash: str = ""
     section_colors_hash: str = ""
 
@@ -185,18 +186,18 @@ class MeshActor(vtkPropAssembly):
         assert self.mesh.nodal_coordinates is not None
         assert self.mesh.faces_connectivity is not None
         assert self.mesh.solids_connectivity is not None
-        
+
         if id(self.mesh) == self.cached_info.mesh_id:
             return
 
         faces_connectivity = self.mesh.faces_connectivity[:, 4:]
-    
+
         if self.section_plane is not None:
             solids_connectivity = self.mesh.solids_connectivity[:, 4:]
             counts = self.masked_nodes[solids_connectivity].sum(axis=1, dtype=np.int8)
             elements_in_middle = (0 < counts) & (counts < solids_connectivity.shape[1])
             faces_before_plane = self.masked_nodes[faces_connectivity].all(axis=1)
-    
+
             external_nodes = faces_connectivity[faces_before_plane].ravel()
             section_nodes = solids_connectivity[elements_in_middle].ravel()
             node_indexes = np.unique(np.concatenate((external_nodes, section_nodes)))
@@ -255,7 +256,6 @@ class MeshActor(vtkPropAssembly):
         plane.SetOrigin(self.section_plane.origin)
         plane.SetNormal(self.section_plane.normal)
 
-        # self.node_mapper.AddClippingPlane(plane)
         self.surface_mapper.AddClippingPlane(plane)
         self.surface_mapper.Modified()
         self.surface_actor.Modified()
@@ -277,6 +277,11 @@ class MeshActor(vtkPropAssembly):
         view[:] = triangulated_connectivity[:, 0]
 
     def update_caches(self):
+        node_colors_hash = CachedInfo.array_hash(self.node_colors)
+        if node_colors_hash != self.cached_info.node_colors_hash:
+            self.cached_info.node_colors_hash = node_colors_hash
+            self.node_colors.Modified()
+        
         surface_colors_hash = CachedInfo.array_hash(self.surface_colors)
         if surface_colors_hash != self.cached_info.surface_colors_hash:
             self.cached_info.surface_colors_hash = surface_colors_hash
@@ -313,8 +318,19 @@ class MeshActor(vtkPropAssembly):
     def set_color(self, color: Color):
         rgb = color.to_rgb()
         for i in range(3):
+            self.node_colors.FillComponent(i, rgb[i])
             self.surface_colors.FillComponent(i, rgb[i])
             self.volume_colors.FillComponent(i, rgb[i])
+
+    def paint_nodes(self, color: Color, nodes: Sequence[int] | np.ndarray):
+        if self.mesh is None:
+            return
+
+        node_ids = vtk_to_numpy(self.node_ids)
+        node_colors = vtk_to_numpy(self.node_colors)
+        
+        paint_position_mask = np.isin(node_ids, nodes)
+        node_colors[paint_position_mask, :3] = color.to_rgb()
 
     def paint_face_elements(self, color: Color, face_elements: Sequence[int] | np.ndarray):
         if self.mesh is None:
@@ -375,6 +391,18 @@ class MeshActor(vtkPropAssembly):
         paint_position_mask = np.isin(section_ids, selected_elements)
         section_colors[paint_position_mask, :3] = color.to_rgb()
 
+    def hide_nodes(self, nodes: Sequence[int] | None = None):
+        if nodes is None:
+            vtk_to_numpy(self.node_colors)[:, 3] = 0
+        else:
+            self._set_node_cells_visibility(nodes, visible=False)
+
+    def show_nodes(self, nodes: Sequence[int] | None = None):
+        if nodes is None:
+            vtk_to_numpy(self.node_colors)[:, 3] = 255
+        else:
+            self._set_node_cells_visibility(nodes, visible=True)
+
     def hide_surfaces(self, surfaces: Sequence[int] | None = None):
         if surfaces is None:
             vtk_to_numpy(self.surface_colors)[:, 3] = 0
@@ -398,6 +426,17 @@ class MeshActor(vtkPropAssembly):
             vtk_to_numpy(self.volume_colors)[:, 3] = 255
         else:
             self._set_volume_cells_visibility(volumes, visible=True)
+
+    def _set_node_cells_visibility(self, nodes: Sequence[int], *, visible: bool):
+        if self.mesh is None:
+            return
+
+        node_ids = vtk_to_numpy(self.node_ids)
+        node_colors = vtk_to_numpy(self.node_colors)
+
+        alpha = 255 if visible else 0
+        mask = np.isin(node_ids, nodes)
+        node_colors[mask, 3] = alpha
 
     def _set_surface_cells_visibility(self, surfaces: Sequence[int], *, visible: bool):
         if self.mesh is None:
