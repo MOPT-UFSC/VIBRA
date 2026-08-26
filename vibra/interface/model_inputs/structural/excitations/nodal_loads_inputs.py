@@ -72,11 +72,6 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         }
         self.reset_table_variables()
 
-    def _configure_validators(self):
-        for line_edit_real, line_edit_imag in self.constant_values_line_edits:
-            line_edit_real.setValidator(StrictDoubleValidator(-1e16, 1e16, 8))
-            line_edit_imag.setValidator(StrictDoubleValidator(-1e16, 1e16, 8))
-
     @property
     def element_integration(self):
         assignment_type = self.comboBox_assignment_type.currentIndex()
@@ -146,9 +141,14 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         self.comboBox_element_type.setEnabled(False)
         self.treeWidget_nodal_loads.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
 
-        for i, w in enumerate([60, 80, 120, 120]):
+        for i, w in enumerate([80, 100, 120, 120]):
             self.treeWidget_nodal_loads.setColumnWidth(i, w)
             self.treeWidget_nodal_loads.headerItem().setTextAlignment(i, Qt.AlignCenter)
+
+    def _configure_validators(self):
+        for line_edit_real, line_edit_imag in self.constant_values_line_edits:
+            line_edit_real.setValidator(StrictDoubleValidator(-1e16, 1e16, 8))
+            line_edit_imag.setValidator(StrictDoubleValidator(-1e16, 1e16, 8))
 
     def _create_connections(self):
     
@@ -352,7 +352,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
     def data_type_callback(self):
         real_imaginary = self.comboBox_data_type.currentIndex() == InputDataType.REAL_IMAGINARY
-        self.label_dtype_left.setText("Real" if real_imaginary else "Amplitude")
+        self.label_dtype_left.setText("Real" if real_imaginary else "Magnitude")
         self.label_dtype_right.setText("Imaginary" if real_imaginary else "Phase")
 
         for key, widget in self.unit_labels.items():
@@ -757,12 +757,6 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                 values = data.get("values")
                 element_type = data.get("element_type")
 
-                active_values = []
-                for value in values:
-                    if value is not None:
-                        active_values.append(value if not isinstance(value, np.ndarray) else "Table")
-
-                str_values = ", ".join([f"{val : .6e}" for val in active_values])
                 dof_labels = str(self.text_label([bool(value) for value in values]))
 
                 new = QTreeWidgetItem([
@@ -770,10 +764,9 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                     key, 
                     element_type, 
                     dof_labels, 
-                    str_values,
                     ])
 
-                for i in range(5):
+                for i in range(4):
                     new.setTextAlignment(i, Qt.AlignCenter)
 
                 self.treeWidget_nodal_loads.addTopLevelItem(new)

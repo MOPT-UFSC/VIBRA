@@ -132,7 +132,7 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
 
     def data_type_callback(self):
         real_imaginary = self.comboBox_data_type.currentIndex() == InputDataType.REAL_IMAGINARY
-        self.label_dtype_left.setText("Real" if real_imaginary else "Amplitude")
+        self.label_dtype_left.setText("Real" if real_imaginary else "Magnitude")
         self.label_dtype_right.setText("Imaginary" if real_imaginary else "Phase")
 
         label_text = "[m/s]" if real_imaginary else "[m/s, deg]"

@@ -111,7 +111,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         self.comboBox_element_type.setEnabled(False)
         self.treeWidget_distributed_loads.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
 
-        for i, w in enumerate([60, 80, 100, 100]):
+        for i, w in enumerate([80, 100, 120, 120]):
             self.treeWidget_distributed_loads.setColumnWidth(i, w)
             self.treeWidget_distributed_loads.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
@@ -272,7 +272,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
 
     def data_type_callback(self):
         real_imaginary = self.comboBox_data_type.currentIndex() == InputDataType.REAL_IMAGINARY
-        self.label_dtype_left.setText("Real" if real_imaginary else "Amplitude")
+        self.label_dtype_left.setText("Real" if real_imaginary else "Magnitude")
         self.label_dtype_right.setText("Imaginary" if real_imaginary else "Phase")
 
         unit = "N/m²" if self.comboBox_assignment_type.currentIndex() == AssignmentType.SURFACES else "N/m"
@@ -574,13 +574,6 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
 
                 values = data.get("values", [])
                 element_type = data.get("element_type")
-
-                active_values = []
-                for value in values:
-                    if value is not None:
-                        active_values.append(value)
-
-                str_values = [f"{val : .6e}" for val in active_values]
                 dof_labels = str(self.text_label([bool(value) for value in values]))
 
                 new = QTreeWidgetItem([
@@ -588,7 +581,6 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
                     key, 
                     element_type, 
                     dof_labels, 
-                    ", ".join(str_values),
                     ])
 
                 for i in range(5):
