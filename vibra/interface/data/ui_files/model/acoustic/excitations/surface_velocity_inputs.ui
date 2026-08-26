@@ -274,7 +274,7 @@
            </item>
            <item>
             <property name="text">
-             <string>Amplitude and phase</string>
+             <string>Magnitude and phase</string>
             </property>
            </item>
           </widget>

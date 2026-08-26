@@ -471,7 +471,7 @@ class Ui_Dialog(object):
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_list), QCoreApplication.translate("Dialog", u"List", None))
         self.label_4.setText(QCoreApplication.translate("Dialog", u"Data type:", None))
         self.comboBox_data_type.setItemText(0, QCoreApplication.translate("Dialog", u"Real and imaginary", None))
-        self.comboBox_data_type.setItemText(1, QCoreApplication.translate("Dialog", u"Amplitude and phase", None))
+        self.comboBox_data_type.setItemText(1, QCoreApplication.translate("Dialog", u"Magnitude and phase", None))
 
         self.label_2.setText(QCoreApplication.translate("Dialog", u"Selection ID:", None))
         self.pushButton_apply_and_close.setText(QCoreApplication.translate("Dialog", u"Ok", None))
