@@ -182,7 +182,6 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
         self.assignment_type_callback()
         self.geometry_selection_callback()
-        self.tab_event_callback()
         self.update_element_type_based_on_geometry_information()
 
     def geometry_selection_callback(self):

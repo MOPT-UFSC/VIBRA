@@ -414,7 +414,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
         else:
 
-            values = data.get("values", list())
+            values = data.get("values", [])
             self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)
 
             for index, (unit_label, (lineEdit_real, lineEdit_imag)) in enumerate(self.constant_line_edits.items()):
@@ -567,7 +567,6 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
             data = {
                 "element_type" : element_type,
-                "values" : prescribed_dof,
                 "real_values" : real_values,
                 "imag_values" : imag_values,
                 "integrate" : self.comboBox_data_type.currentIndex(),

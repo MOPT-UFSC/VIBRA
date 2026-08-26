@@ -144,7 +144,6 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
 
         self.update_element_type_based_on_geometry_information()
         self.geometry_selection_callback()
-        self.tab_event_callback()
 
     def geometry_selection_callback(self):
 
@@ -504,7 +503,6 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
 
             table_names = [self.Fx_table_name, self.Fy_table_name, self.Fz_table_name]
             table_paths = [self.Fx_table_path, self.Fy_table_path, self.Fz_table_path]
-            distributed_loads = [self.Fx_table_values, self.Fy_table_values, self.Fz_table_values]
 
             condition_1 = element_type == "2d_element" and table_names.count(None) == 3
             condition_2 = element_type == "3d_element" and table_names.count(None) == 3
@@ -519,7 +517,6 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
                 "element_type" : element_type,
                 "table_names" : table_names,
                 "table_paths" : table_paths,
-                "values" : distributed_loads,
                 "unit" : unit,
             }
 

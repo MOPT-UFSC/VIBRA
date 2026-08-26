@@ -344,7 +344,6 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
                 "element_type": element_type,
                 "table_names": table_names,
                 "table_paths": table_paths,
-                "values": pressure_load,
             }
 
             self.properties._set_property("normal_pressure_load", data, surface=surface_id)

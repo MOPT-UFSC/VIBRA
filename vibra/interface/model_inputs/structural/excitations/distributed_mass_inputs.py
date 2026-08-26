@@ -222,7 +222,6 @@ class DistributedMassInputs(DistributedMassInputs_UI):
 
             data = {
                 "element_type": element_type,
-                "values": distributed_mass,
                 "real_values": real_values,
                 "imag_values": imag_values,
                 "unit": "kg",
