@@ -601,10 +601,8 @@ class StructuralAssembler:
                     load_vectors = self.integrate_distributed_load_1d(integration_data, load_vectors)
 
         if self.prescribed_dof_indexes:
-            print("1D integration (dropped) -> ", np.any(load_vectors))
             return load_vectors[self.unprescribed_dof_indexes, :]
 
-        print("1D integration -> ", np.any(load_vectors))
         return load_vectors
 
 
@@ -637,10 +635,8 @@ class StructuralAssembler:
                     load_vectors = self.integrate_distributed_load_2d(integration_data, load_vectors)
 
         if self.prescribed_dof_indexes:
-            print("2D integration (dropped) -> ", np.any(load_vectors))
             return load_vectors[self.unprescribed_dof_indexes, :]
 
-        print("2D integration -> ", np.any(load_vectors))
         return load_vectors
 
 
