@@ -28,6 +28,7 @@ class CachedInfo:
     node_colors_hash: str = ""
     surface_colors_hash: str = ""
     section_colors_hash: str = ""
+    section_plane_hash: int = 0
 
     @classmethod
     def array_hash(cls, array: np.ndarray | vtkDataArray) -> str:
@@ -171,11 +172,10 @@ class MeshActor(vtkPropAssembly):
         if self.mesh.nodal_coordinates is None:
             return
 
-        self.masked_nodes = self._find_masked_nodes()
-
-        # AND modifier is the same
-        if id(self.mesh) == self.cached_info.mesh_id:
+        if (hash(self.section_plane) == self.cached_info.section_plane_hash) and (id(self.mesh) == self.cached_info.mesh_id):
             return
+
+        self.masked_nodes = self._find_masked_nodes()
 
         coordinates = self.mesh.nodal_coordinates[:, 1:]
         self.points.SetData(numpy_to_vtk(coordinates))
@@ -187,8 +187,8 @@ class MeshActor(vtkPropAssembly):
         assert self.mesh.faces_connectivity is not None
         assert self.mesh.solids_connectivity is not None
 
-        # if (self.section_plane is None) and id(self.mesh) == self.cached_info.mesh_id:
-        #     return
+        if (hash(self.section_plane) == self.cached_info.section_plane_hash) and (id(self.mesh) == self.cached_info.mesh_id):
+            return
 
         faces_connectivity = self.mesh.faces_connectivity[:, 4:]
 
@@ -220,10 +220,10 @@ class MeshActor(vtkPropAssembly):
         assert self.mesh.nodal_coordinates is not None
         assert self.mesh.faces_connectivity is not None
 
-        self.surface_mapper.RemoveAllClippingPlanes()
-        if (self.section_plane is None) and id(self.mesh) == self.cached_info.mesh_id:
+        if (hash(self.section_plane) == self.cached_info.section_plane_hash) and (id(self.mesh) == self.cached_info.mesh_id):
             return
 
+        self.surface_mapper.RemoveAllClippingPlanes()
         if self.section_plane is not None:
             plane = vtkPlane()
             plane.SetOrigin(self.section_plane.origin)
@@ -248,6 +248,9 @@ class MeshActor(vtkPropAssembly):
         assert self.mesh.nodal_coordinates is not None
         assert self.mesh.faces_connectivity is not None
         assert self.mesh.solids_connectivity is not None
+
+        if (hash(self.section_plane) == self.cached_info.section_plane_hash) and (id(self.mesh) == self.cached_info.mesh_id):
+            return
 
         if self.section_plane is None:
             self.volume_data.SetPolys(vtkCellArray())
@@ -292,6 +295,10 @@ class MeshActor(vtkPropAssembly):
         if mesh_id != self.cached_info.mesh_id:
             self.cached_info.mesh_id = mesh_id
             # Don't need to modify anything, but might
+
+        section_plane_hash = hash(self.section_plane)
+        if section_plane_hash != self.cached_info.section_plane_hash:
+            self.cached_info.section_plane_hash = section_plane_hash
 
     def picked_dim_tag(self, picker: vtkHardwarePicker) -> tuple[int, int] | None:
         match picker.GetActor():
