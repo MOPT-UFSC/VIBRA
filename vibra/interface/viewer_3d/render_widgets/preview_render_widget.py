@@ -54,11 +54,13 @@ class PreviewRenderWidget(CommonRenderWidget):
 
     @function_timer
     @override
-    def update_plot(self):
+    def update_plot(self, reset_camera: bool = False):
         self.mesh_actor.update()
         self.symbols.build()
 
-        self.renderer.ResetCamera()
+        if reset_camera:
+            self.renderer.ResetCamera()
+
         with context_timer("render"):
             self.update()
 

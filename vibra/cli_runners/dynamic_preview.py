@@ -38,6 +38,7 @@ class MainWindow(QMainWindow):
 
         self.script_path = Path(script_path)
         self.script_cache = {}
+        self._last_project_id = None
 
         self.render_widget = PreviewRenderWidget()
         self.setCentralWidget(self.render_widget)
@@ -75,6 +76,7 @@ class MainWindow(QMainWindow):
     def on_script_finished(self, script_variables: dict[str, Any]):
         self.render_widget.update_model(None)
         self.render_widget.update_section_plane(None)
+        reset_camera = True
 
         for name, var in script_variables.items():
             if name.startswith("_"):
@@ -82,6 +84,8 @@ class MainWindow(QMainWindow):
 
             match var:
                 case Project() as project:
+                    reset_camera = self._last_project_id != id(project)
+                    self._last_project_id = id(project)
                     self.render_widget.update_model(project.model)
                     self.setWindowTitle(project.model.name)
 
@@ -91,7 +95,7 @@ class MainWindow(QMainWindow):
                 case _:
                     pass
 
-        self.render_widget.update_plot()
+        self.render_widget.update_plot(reset_camera=reset_camera)
 
     def _modification_time(self, path: Path) -> float:
         return Path(path).stat().st_mtime
