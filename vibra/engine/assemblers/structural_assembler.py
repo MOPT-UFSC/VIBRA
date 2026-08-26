@@ -510,7 +510,8 @@ class StructuralAssembler:
         if self.compute_data_to_process_global_matrices(reorder=reorder, print_log=print_log):
             return
         dt = time() - t0
-        print(f"Elapsed time to process data to assemble global matrices: {dt : .6f} [s]")
+        if print_log:
+            print(f"Elapsed time to process data to assemble global matrices: {dt : .6f} [s]")
 
         if self.model.stop_processing:
             return
@@ -519,13 +520,15 @@ class StructuralAssembler:
         t0 = time()
         self.assemble_global_stiffness_matrix()
         dt = time() - t0
-        print(f"Elapsed time to assemble the global stiffness matrix: {dt : .6f} [s]")
+        if print_log:
+            print(f"Elapsed time to assemble the global stiffness matrix: {dt : .6f} [s]")
 
         logging.info("Assembling global mass matrix... [60/100]")
         t0 = time()
         self.assemble_global_mass_matrix()
         dt = time() - t0
-        print(f"Elapsed time to assemble the global mass matrix: {dt : .6f} [s]")
+        if print_log:
+            print(f"Elapsed time to assemble the global mass matrix: {dt : .6f} [s]")
 
     
     def assemble_model_excitations(self):

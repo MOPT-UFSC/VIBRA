@@ -332,7 +332,8 @@ class Project:
         self.mark_project_as_modified()
         dt = perf_counter() - t0
 
-        print(f"Elapsed time to solve structural modal analysis: {dt: .6f} [s]")
+        if print_log:
+            print(f"Elapsed time to solve structural modal analysis: {dt: .6f} [s]")
         logging.info(f"Elapsed time to solve structural modal analysis: {dt: .6f} [s]")
 
         return self.model.solution
@@ -368,7 +369,8 @@ class Project:
         self.mark_project_as_modified()
         dt = perf_counter() - t0
 
-        print(f"Elapsed time to solve structural harmonic analysis: {dt: .6f} [s]")
+        if print_log:
+            print(f"Elapsed time to solve structural harmonic analysis: {dt: .6f} [s]")
         logging.info(f"Elapsed time to solve structural harmonic analysis: {dt: .6f} [s]")
 
         return self.model.solution
@@ -392,7 +394,8 @@ class Project:
         self.mark_project_as_modified()
         dt = perf_counter() - t0
 
-        print(f"Elapsed time to solve acoustic modal analysis: {dt: .6f} [s]")
+        if print_log:
+            print(f"Elapsed time to solve acoustic modal analysis: {dt: .6f} [s]")
         logging.info(f"Elapsed time to solve acoustic modal analysis: {dt: .6f} [s]")
 
         return self.model.solution
@@ -430,7 +433,8 @@ class Project:
         self.mark_project_as_modified()
         dt = perf_counter() - t0
 
-        print(f"Elapsed time to solve acoustic harmonic analysis: {dt: .6f} [s]")
+        if print_log:
+            print(f"Elapsed time to solve acoustic harmonic analysis: {dt: .6f} [s]")
         logging.info(f"Elapsed time to solve acoustic harmonic analysis: {dt: .6f} [s]")
 
         return self.model.solution
