@@ -421,9 +421,11 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         self.pushButton_apply_and_close.setDisabled(list_tab)
         self.pushButton_remove.setDisabled(True)
 
+        if list_tab:
+            app().main_window.selection.set_geometry_selection()
+        
         self.lineEdit_selection_id.setText("")
         self.treeWidget_normal_pressure_loads.clearSelection()
-        app().main_window.selection.set_geometry_selection()
 
     def item_selection_clicked_callback(self):
         self.item_clicked_callback(None)
@@ -453,16 +455,6 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
     def item_double_clicked_callback(self, item):
         self.item_clicked_callback(item)
 
-    def process_table_file_removal(self, table_names: list):
-
-        if len(table_names) == 0:
-            return
-
-        for table_name in table_names:
-            self.properties.remove_imported_tables("structural", table_name)
-
-        app().project.update_model_properties_file()
-
     def remove_conflicting_excitations(self, selected_ids: int | list, selection: str):
 
         if isinstance(selected_ids, int):
@@ -475,13 +467,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
 
         for selected_id in selected_ids:
             for property in properties:
-                table_names = self.properties.get_property_related_table_names(property, selected_id, selection)
                 remove_function(property, selected_id)
-                self.process_table_file_removal(table_names)
-
-    def remove_table_files_from(self, selected_id : list, selection: str):
-        table_names = self.properties.get_property_related_table_names("normal_pressure_load", selected_id, selection)
-        self.process_table_file_removal(table_names)
 
     def remove_callback(self):
 
@@ -495,8 +481,6 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
 
             if selection == "surface":
                 self.properties._remove_surface_property("normal_pressure_load", selected_id)
-
-            self.remove_table_files_from(selected_id, selection + "s")
 
         self.actions_to_finalize()
 
@@ -515,11 +499,6 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
             return
 
         if obj._continue:
-
-            for (property, *args) in self.properties.surface_properties:
-                if property == "normal_pressure_load":
-                    self.remove_table_files_from(args[0], "surfaces")
-
             self.properties._reset_property("normal_pressure_load")
             self.actions_to_finalize()
 

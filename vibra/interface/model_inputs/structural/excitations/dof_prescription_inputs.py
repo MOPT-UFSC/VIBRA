@@ -882,8 +882,6 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                 self.properties._remove_nodal_property("prescribed_dof", node_id)
                 table_names.extend(self.properties.get_property_related_table_names("prescribed_dof", node_id, "nodes"))
 
-            self.process_table_file_removal(table_names)
-
     def apply_callback(self, close_window: bool=False):
 
         if self.tabWidget_main.currentIndex() == StandardTabType.LIST:
@@ -895,7 +893,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
             if self.constant_values_attribution():
                 return
 
-        elif tab_index == StandardTabType.TABULAR_DATA:
+        if tab_index == StandardTabType.TABULAR_DATA:
             if self.table_values_attribution():
                 return
 
@@ -1037,16 +1035,6 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
     def on_double_click_item(self, item):
         self.on_click_item(item)
 
-    def process_table_file_removal(self, table_names: list):
-
-        if len(table_names) == 0:
-            return
-
-        for table_name in table_names:
-            self.properties.remove_imported_tables("structural", table_name)
-
-        app().project.update_model_properties_file()
-
     def remove_conflicting_excitations(self, selected_ids: int | list, selection: str, all_dof_free: bool=False):
 
         if isinstance(selected_ids, int):
@@ -1059,13 +1047,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                 if all_dof_free and _property == "nodal_loads":
                     continue
 
-                table_names = self.properties.get_property_related_table_names(_property, selected_id, selection)
                 self.remove_property_from(_property, selected_id, selection)
-                self.process_table_file_removal(table_names)
-
-    def remove_table_files_from(self, selected_id : list, selection: str):
-        table_names = self.properties.get_property_related_table_names("prescribed_dof", selected_id, selection)
-        self.process_table_file_removal(table_names)
 
     def remove_property_from(self, property: str, selected_ids: int | list, selection: str):
         if isinstance(selected_ids, int):
@@ -1095,7 +1077,6 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
             selection = _selection.lower()
             selected_id = int(_selected_id)
 
-            self.remove_table_files_from(selected_id, f"{selection}s")
             self.remove_property_from("prescribed_dof", selected_id, selection)
             self.actions_to_finalize()
 
@@ -1116,28 +1097,6 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
             return
 
         if obj._continue:
-
-            properties = {
-                "surfaces" : self.properties.surface_properties,
-                "lines" : self.properties.line_properties,
-                "points" : self.properties.point_properties,
-                "nodes" : self.properties.nodal_properties,
-                }
-
-            entities_to_remove = defaultdict(list)
-
-            for key, _property in properties.items():
-                for (property_label, *args), data in _property.items():
-                    if property_label != "prescribed_dof":
-                        continue
-    
-                    entities_to_remove[key].append(args[0])
-
-            for selection, selected_ids in entities_to_remove.items():
-                for selected_id in selected_ids:
-                    table_name = self.properties.get_property_related_table_names("prescribed_dof", selected_id, selection)
-                    self.process_table_file_removal(table_name)
-
             self.properties._reset_property("prescribed_dof")
             self.actions_to_finalize()
 

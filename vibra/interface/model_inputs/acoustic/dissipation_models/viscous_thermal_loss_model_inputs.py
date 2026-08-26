@@ -199,15 +199,6 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
     def reset_callback(self):
 
-        volume_ids = list()
-        for key in self.properties.volume_properties:
-            property, volume_id = key
-            if property == "viscous_thermal_model":
-                volume_ids.append(volume_id)
-
-        if not volume_ids:
-            return
-
         title = "Viscous-thermal dissipation model reset"
         message = "Would you like to remove the Viscous-thermal dissipation effects from the model?"
 
@@ -217,13 +208,10 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         if read._cancel:
             return
 
-        if not read._continue:
-            return
+        if read._continue:
+            self.properties._reset_property("viscous_thermal_model")
 
-        for volume_id in volume_ids:
-            self.properties._remove_volume_property("viscous_thermal_model", volume_id)
-
-        self.models = list()
+        self.models.clear()
         self.actions_to_finalize()
 
     def tab_event_callback(self):

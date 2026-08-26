@@ -746,12 +746,6 @@ class MassSourceInputs(MassSourceInputs_UI):
             else:
                 self.properties._set_property("mass_source", data, volume=selection_id)
 
-    def process_table_file_removal(self, table_names: list):
-        for table_name in table_names:
-            self.properties.remove_imported_tables("acoustic", table_name)
-        if table_names:
-            app().project.update_model_properties_file()
-
     def remove_conflicting_excitations(self, selection_ids: int | list, selection_type: str):
 
         if isinstance(selection_ids, int):
@@ -769,7 +763,6 @@ class MassSourceInputs(MassSourceInputs_UI):
 
         for label in labels:
             for selection_id in selection_ids:
-                table_names = self.properties.get_property_related_table_names(label, selection_id, selection_type)
                 if selection_type == "nodes":
                     self.properties._remove_nodal_property(label, selection_id)
                 elif selection_type == "points":
@@ -781,12 +774,6 @@ class MassSourceInputs(MassSourceInputs_UI):
                 elif selection_type == "volumes":
                     self.properties._remove_volume_property(label, selection_id)
 
-                self.process_table_file_removal(table_names)
-
-    def remove_table_files_from_selection(self, selection_id : list, selection_type: str):
-        table_names = self.properties.get_property_related_table_names("mass_source", selection_id, selection_type)
-        self.process_table_file_removal(table_names)
-
     def remove_callback(self):
         selected_items = self.get_selected_items_from_tree_widget_mass_source()
 
@@ -794,7 +781,6 @@ class MassSourceInputs(MassSourceInputs_UI):
             return
 
         for selected_type, selected_ids in selected_items.items():
-            self.remove_table_files_from_selection(selected_ids, selected_type)
 
             for selected_id in selected_ids:
                 if selected_type == "nodes":
@@ -828,27 +814,6 @@ class MassSourceInputs(MassSourceInputs_UI):
             return
 
         if read._continue:
-
-            properties_to_reset = { 
-                                   "nodes" : self.properties.nodal_properties,
-                                   "points" : self.properties.point_properties,
-                                   "lines" : self.properties.line_properties,
-                                   "surfaces" : self.properties.surface_properties,
-                                   "volumes" : self.properties.volume_properties,
-                                   }
-
-            for selection_type, _properties in properties_to_reset.items():
-
-                selection_ids = list()
-                for (property, *args) in _properties.keys():
-                    if property != "mass_source":
-                        continue
-    
-                    selection_ids.append(args[0])
-
-                for selection_id in selection_ids:
-                    self.remove_table_files_from_selection(selection_id, selection_type)
-
             self.properties._reset_property("mass_source")
             self.actions_to_finalize()
 

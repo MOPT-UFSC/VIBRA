@@ -282,13 +282,6 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
 
         self.actions_to_finalize(close_window)
 
-    def process_table_file_removal(self, table_names: list):
-        for table_name in table_names:
-            self.properties.remove_imported_tables("acoustic", table_name)
-
-        if table_names:
-            app().project.update_model_properties_file()
-
     def remove_conflicting_excitations(self, surface_ids: int | list):
 
         if isinstance(surface_ids, int):
@@ -306,21 +299,12 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
 
         for surface_id in surface_ids:
             for label in labels:
-                table_names = self.properties.get_property_related_table_names(label, surface_id, "surfaces")
                 self.properties._remove_surface_property(label, surface_id)
-                self.process_table_file_removal(table_names)
-
-    def remove_table_files_from_surfaces(self, surface_id : list):
-        table_names = self.properties.get_property_related_table_names("compressor_excitation_spectrum", surface_id, "surfaces")
-        self.process_table_file_removal(table_names)
 
     def remove_callback(self):
 
         if self.lineEdit_selection_id.text() != "":
-
             surface_id = int(self.lineEdit_selection_id.text())
-            self.remove_table_files_from_surfaces(surface_id)
-
             self.properties._remove_surface_property("compressor_excitation_spectrum", surface_id)
             self.actions_to_finalize()
 
@@ -336,15 +320,6 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
             return
 
         if read._continue:
-
-            surface_ids = list()
-            for (property, *args), data in self.properties.surface_properties.items():
-                if property == "compressor_excitation_spectrum":
-                    surface_id = args[0]
-                    surface_ids.append(surface_id)
-
-            self.remove_table_files_from_surfaces(surface_ids)
-
             self.properties._reset_property("compressor_excitation_spectrum")
             self.actions_to_finalize()
 

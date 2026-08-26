@@ -240,7 +240,6 @@ class DistributedMassInputs(DistributedMassInputs_UI):
 
     def remove_duplicated_attributions(self, selected_ids: list, selection: str):
 
-        table_names = []
         for selected_id in selected_ids:
 
             if selection == "surfaces":
@@ -248,16 +247,12 @@ class DistributedMassInputs(DistributedMassInputs_UI):
                     data = self.properties._get_property("distributed_mass", line=line_id)
                     if isinstance(data, dict):
                         self.properties._remove_line_property("distributed_mass", line_id)
-                        table_names.extend(self.properties.get_property_related_table_names("distributed_mass", line_id, "lines"))
 
             elif selection == "lines":
                 for surface_id in self.mesh.surfaces_from_line[selected_id]:
                     data = self.properties._get_property("distributed_mass", surface=surface_id)
                     if isinstance(data, dict):
                         self.properties._remove_surface_property("distributed_mass", surface_id)
-                        table_names.extend(self.properties.get_property_related_table_names("distributed_mass", surface_id, "surfaces"))
-
-            self.process_table_file_removal(table_names)
 
     def apply_callback(self, close_window: bool=False):
 
@@ -323,14 +318,15 @@ class DistributedMassInputs(DistributedMassInputs_UI):
         self.pushButton_apply_and_close.setDisabled(list_tab)
         self.pushButton_remove.setDisabled(True)
 
-        if not list_tab:
+        if list_tab:
+            app().main_window.selection.set_geometry_selection()
+        else:
             view = self.comboBox_assignment_type.view() 
             view.setRowHidden(2, True)
             self.comboBox_assignment_type.setCurrentIndex(AssignmentType.SURFACES)
 
         self.lineEdit_selection_id.setText("")
         self.treeWidget_distributed_mass.clearSelection()
-        app().main_window.selection.set_geometry_selection()
 
     def item_selection_clicked_callback(self):
         self.item_clicked_callback(None)
@@ -361,16 +357,6 @@ class DistributedMassInputs(DistributedMassInputs_UI):
     def item_double_clicked_callback(self, item):
         self.item_clicked_callback(item)
 
-    def process_table_file_removal(self, table_names: list):
-
-        if len(table_names) == 0:
-            return
-
-        for table_name in table_names:
-            self.properties.remove_imported_tables("structural", table_name)
-
-        app().project.update_model_properties_file()
-
     def remove_conflicting_excitations(self, selected_ids: int | list, selection: str):
 
         if isinstance(selected_ids, int):
@@ -383,13 +369,7 @@ class DistributedMassInputs(DistributedMassInputs_UI):
             remove_function = self.properties._remove_line_property
 
         for selected_id in selected_ids:
-            table_names = self.properties.get_property_related_table_names("distributed_mass", selected_id, selection)
             remove_function("distributed_mass", selected_id)
-            self.process_table_file_removal(table_names)
-
-    def remove_table_files_from(self, selected_id : list, selection: str):
-        table_names = self.properties.get_property_related_table_names("distributed_mass", selected_id, selection)
-        self.process_table_file_removal(table_names)
 
     def remove_callback(self):
 
@@ -406,8 +386,6 @@ class DistributedMassInputs(DistributedMassInputs_UI):
 
             elif selection == "line":
                 self.properties._remove_line_property("distributed_mass", selected_id)
-
-            self.remove_table_files_from(selected_id, selection + "s")
 
         self.actions_to_finalize()
 
@@ -426,15 +404,6 @@ class DistributedMassInputs(DistributedMassInputs_UI):
             return
 
         if obj._continue:
-
-            for (property, *args) in self.properties.surface_properties:
-                if property == "distributed_mass":
-                    self.remove_table_files_from(args[0], "surfaces")
-
-            for (property, *args) in self.properties.line_properties:
-                if property == "distributed_mass":
-                    self.remove_table_files_from(args[0], "lines")
-
             self.properties._reset_property("distributed_mass")
             self.actions_to_finalize()
 

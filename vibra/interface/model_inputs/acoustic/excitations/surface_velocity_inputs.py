@@ -234,18 +234,13 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
                 message = "The imported table has insufficient number of columns. The spectrum"
                 message += " data must have three columns in the form: frequencies, real and imaginary values."
                 PrintMessageInput([error_title, title, message])
-                return None
+                return
             
             # filter the zero-frequency component
             mask = imported_values[:, 0] > 0
             _imported_values = imported_values[mask, :]
 
-            if self.comboBox_data_type.currentIndex() == InputDataType.REAL_IMAGINARY:
-                complex_values = _imported_values[:, 1] + 1j * _imported_values[:, 2]
-            else:
-                complex_values = _imported_values[:, 1] * np.exp(1j * _imported_values[:, 2] * np.pi / 180)
-
-            return complex_values
+            return _imported_values
 
         except Exception as log_error:
             message = str(log_error)
@@ -331,12 +326,6 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
 
             self.properties._set_property("surface_velocity", data, surface=surface_id)
 
-    def process_table_file_removal(self, table_names: list):
-        for table_name in table_names:
-            self.properties.remove_imported_tables("acoustic", table_name)
-        if table_names:
-            app().project.update_model_properties_file()
-
     def remove_conflicting_excitations(self, surface_ids: int | list):
 
         if isinstance(surface_ids, int):
@@ -354,13 +343,7 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
 
         for surface_id in surface_ids:
             for label in labels:
-                table_names = self.properties.get_property_related_table_names(label, surface_id, "surfaces")
                 self.properties._remove_surface_property(label, surface_id)
-                self.process_table_file_removal(table_names)
-
-    def remove_table_files_from_surfaces(self, surface_id : int | list):
-        table_names = self.properties.get_property_related_table_names("surface_velocity", surface_id, "surfaces")
-        self.process_table_file_removal(table_names)
 
     def remove_callback(self):
 
@@ -393,16 +376,6 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
             return
 
         if read._continue:
-            surface_ids = []
-            for (property, *args) in self.properties.surface_properties:
-                if property != "surface_velocity":
-                    continue
-
-                surface_id = args[0]
-                surface_ids.append(surface_id)
-
-            self.remove_table_files_from_surfaces(surface_ids)
-
             self.properties._reset_property("surface_velocity")
             self.actions_to_finalize()
 

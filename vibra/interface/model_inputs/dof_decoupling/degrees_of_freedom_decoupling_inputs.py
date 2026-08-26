@@ -253,11 +253,13 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
 
             new_surface_ids = list()
             for (property, _), data in self.properties.surface_properties.items():
-                if property == "degrees_of_freedom_decoupling":
-                    data: dict
-                    new_surface_id = data.get("new_surface_id")
-                    if isinstance(new_surface_id, int):
-                        new_surface_ids.append(new_surface_id)
+                if property != "degrees_of_freedom_decoupling":
+                    continue
+            
+                data: dict
+                new_surface_id = data.get("new_surface_id")
+                if isinstance(new_surface_id, int):
+                    new_surface_ids.append(new_surface_id)
 
             self.remove_all_surface_properties_from_surface([new_surface_id])
             self.remove_all_line_properties_boundind_surface([new_surface_id]) 

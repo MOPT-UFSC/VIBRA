@@ -250,28 +250,18 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
 
     def reset_callback(self):
 
-        volume_ids = list()
-        for (property, volume_id) in self.properties.volume_properties.keys():
-            if property != "proportional_damping":
-                continue
-            volume_ids.append(volume_id)
+        title = "Proportional damping reset"
+        message = "Would you like to remove the proportional damping effects?"
 
-        if volume_ids:
+        buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
+        read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
 
-            title = "Proportional damping reset"
-            message = "Would you like to remove the proportional damping effects?"
+        if read._cancel:
+            return
 
-            buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
-            read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
-
-            if read._cancel:
-                return
-
-            if read._continue:
-                for volume_id in volume_ids:
-                    self.properties._remove_volume_property("proportional_damping", volume_id)
-
-                self.actions_to_finalize()
+        if read._continue:
+            self.properties._reset_property("proportional_damping")
+            self.actions_to_finalize()
 
     def tab_event_callback(self):
         app().main_window.selection.clear_selection()

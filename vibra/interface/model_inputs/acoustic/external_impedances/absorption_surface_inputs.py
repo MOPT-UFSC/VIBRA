@@ -418,12 +418,6 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
 
             self.properties._set_property("absorption_surface", data, surface=surface_id)
 
-    def process_table_file_removal(self, table_names: list):
-        for table_name in table_names:
-            self.properties.remove_imported_tables("acoustic", table_name)
-        if table_names:
-            app().project.update_model_properties_file()
-
     def remove_conflicting_excitations(self, surface_ids: int | list):
 
         if isinstance(surface_ids, int):
@@ -437,13 +431,7 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
 
         for surface_id in surface_ids:
             for label in labels:
-                table_names = self.properties.get_property_related_table_names(label, surface_id, "surfaces")
                 self.properties._remove_surface_property(label, surface_id)
-                self.process_table_file_removal(table_names)
-
-    def remove_table_files_from_surfaces(self, surface_id : list):
-        table_names = self.properties.get_property_related_table_names("absorption_surface", surface_id, "surfaces")
-        self.process_table_file_removal(table_names)
 
     def remove_callback(self):
         selected_surfaces = self.get_selected_surfaces_from_tree_widget_absorption_surface()
@@ -452,7 +440,6 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
             return
         
         for surface_id in selected_surfaces:
-            self.remove_table_files_from_surfaces(surface_id)
             self.properties._remove_surface_property("absorption_surface", surface_id)
 
         self.clear_line_edit_selection_id()
@@ -463,14 +450,6 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
 
     def reset_callback(self):
 
-        surface_ids = list()
-        for (property, *args) in self.properties.surface_properties.keys():
-            if property == "absorption_surface":
-                surface_ids.append(args[0])
-
-        if not surface_ids:
-            return
-
         title = "Absorption surface reset"
         message = "Would you like to remove the all applied absorption surfaces from model?"
 
@@ -480,14 +459,9 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
         if read._cancel:
             return
 
-        if not read._continue:
-            return
-
-        self.remove_table_files_from_surfaces(surface_ids)
-        for surface_id in surface_ids:
-            self.properties._remove_surface_property("absorption_surface", surface_id)
-
-        self.actions_to_finalize()
+        if read._continue:
+            self.properties._reset_property("absorption_surface")
+            self.actions_to_finalize()
 
     def actions_to_finalize(self, close_window: bool = False):
         self.load_model_info()

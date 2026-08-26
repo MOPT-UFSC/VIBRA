@@ -326,7 +326,7 @@ class ModelProperties:
 
     def _remove_tables_from_current_property(self, property: str, prop_data: dict):
         """
-        This method removes all tables related to a particular property.
+        This method removes all tables related to a specific property.
         """
         if not isinstance(prop_data, dict):
             return

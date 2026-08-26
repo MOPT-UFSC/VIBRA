@@ -694,7 +694,6 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
     def remove_duplicated_assignments(self, selected_ids: list, selection: str):
 
-        table_names = []
         nodes_to_remove = []
         for selected_id in selected_ids:
 
@@ -710,13 +709,11 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                     data = self.properties._get_property("nodal_loads", line=line_id)
                     if isinstance(data, dict):
                         self.properties._remove_line_property("nodal_loads", line_id)
-                        table_names.extend(self.properties.get_property_related_table_names("nodal_loads", line_id, "lines"))
 
                     for point_id in self.mesh.points_from_line[line_id]:
                         data = self.properties._get_property("nodal_loads", point=point_id)
                         if isinstance(data, dict):
                             self.properties._remove_point_property("nodal_loads", point_id)
-                            table_names.extend(self.properties.get_property_related_table_names("nodal_loads", point_id, "points"))
 
             elif selection == "lines":
 
@@ -730,13 +727,11 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                     data = self.properties._get_property("nodal_loads", surface=surface_id)
                     if isinstance(data, dict):
                         self.properties._remove_surface_property("nodal_loads", surface_id)
-                        table_names.extend(self.properties.get_property_related_table_names("nodal_loads", surface_id, "surfaces"))
 
                 for point_id in self.mesh.points_from_line[selected_id]:
                     data = self.properties._get_property("nodal_loads", point=point_id)
                     if isinstance(data, dict):
                         self.properties._remove_point_property("nodal_loads", point_id)
-                        table_names.extend(self.properties.get_property_related_table_names("nodal_loads", point_id, "points"))
 
             elif selection == "points":
 
@@ -750,13 +745,11 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                     data = self.properties._get_property("nodal_loads", line=line_id)
                     if isinstance(data, dict):
                         self.properties._remove_line_property("nodal_loads", line_id)
-                        table_names.extend(self.properties.get_property_related_table_names("nodal_loads", line_id, "lines"))
 
                     for surface_id in self.model.mesh.surfaces_from_line[line_id]:
                         data = self.properties._get_property("nodal_loads", surface=surface_id)
                         if isinstance(data, dict):
                             self.properties._remove_surface_property("nodal_loads", surface_id)
-                            table_names.extend(self.properties.get_property_related_table_names("nodal_loads", surface_id, "surfaces"))
 
             elif selection == "nodes":
 
@@ -764,25 +757,19 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                 data = self.properties._get_property("nodal_loads", point=point_id)
                 if isinstance(data, dict):
                     self.properties._remove_point_property("nodal_loads", point_id)
-                    table_names.extend(self.properties.get_property_related_table_names("nodal_loads", point_id, "points"))
-
+ 
                 for line_id in self.mesh.lines_from_point[point_id]:
                     data = self.properties._get_property("nodal_loads", line=line_id)
                     if isinstance(data, dict):
                         self.properties._remove_line_property("nodal_loads", line_id)
-                        table_names.extend(self.properties.get_property_related_table_names("nodal_loads", line_id, "lines"))
 
                     for surface_id in self.model.mesh.surfaces_from_line[line_id]:
                         data = self.properties._get_property("nodal_loads", surface=surface_id)
                         if isinstance(data, dict):
                             self.properties._remove_surface_property("nodal_loads", surface_id)
-                            table_names.extend(self.properties.get_property_related_table_names("nodal_loads", surface_id, "surfaces"))
 
             for node_id in nodes_to_remove:
                 self.properties._remove_nodal_property("nodal_loads", node_id)
-                table_names.extend(self.properties.get_property_related_table_names("nodal_loads", node_id, "nodes"))
-
-            self.process_table_file_removal(table_names)
 
     def apply_callback(self, close_window: bool=False):
 
@@ -903,14 +890,15 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         self.pushButton_apply_and_close.setDisabled(list_tab)
         self.pushButton_remove.setDisabled(True)
 
-        if not list_tab:
+        if list_tab:
+            app().main_window.selection.set_geometry_selection()
+        else:
             view = self.comboBox_assignment_type.view()
             view.setRowHidden(4, True)
             self.comboBox_assignment_type.setCurrentIndex(AssignmentType.SURFACES)
 
         self.lineEdit_selection_id.setText("")
         self.treeWidget_nodal_loads.clearSelection()
-        app().main_window.selection.set_geometry_selection()
 
     def item_selection_clicked_callback(self):
         self.item_clicked_callback(None)
@@ -946,16 +934,6 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
     def item_double_clicked_callback(self, item):
         self.item_clicked_callback(item)
 
-    def process_table_file_removal(self, table_names: list):
-
-        if len(table_names) == 0:
-            return
-
-        for table_name in table_names:
-            self.properties.remove_imported_tables("structural", table_name)
-
-        app().project.update_model_properties_file()
-
     def remove_conflicting_excitations(self, selected_ids: int | list, selection: str):
 
         if isinstance(selected_ids, int):
@@ -965,13 +943,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
         for selected_id in selected_ids:
             for property in properties:
-                table_names = self.properties.get_property_related_table_names(property, selected_id, selection)
                 self.remove_property_from(property, selected_id, selection)
-                self.process_table_file_removal(table_names)
-
-    def remove_table_files_from(self, selected_id : int, selection: str):
-        table_names = self.properties.get_property_related_table_names("nodal_loads", selected_id, selection)
-        self.process_table_file_removal(table_names)
 
     def remove_property_from(self, property: str, selected_ids: int | list, selection: str):
         if isinstance(selected_ids, int):
@@ -1013,8 +985,6 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             elif selection == "node":
                 self.properties._remove_nodal_property("nodal_loads", selected_id)
 
-            self.remove_table_files_from(selected_id, selection + "s")
-
         self.actions_to_finalize()
 
         app().main_window.selection.set_geometry_selection()
@@ -1032,28 +1002,6 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             return
 
         if obj._continue:
-
-            properties = {
-                "surfaces" : self.properties.surface_properties,
-                "lines" : self.properties.line_properties,
-                "points" : self.properties.point_properties,
-                "nodes" : self.properties.nodal_properties,
-                }
-
-            entities_to_remove = defaultdict(list)
-
-            for key, _property in properties.items():
-                for (property_label, *args) in _property:
-                    if property_label != "nodal_loads":
-                        continue
-    
-                    entities_to_remove[key].append(args[0])
-
-            for selection, selected_ids in entities_to_remove.items():
-                for selected_id in selected_ids:
-                    table_name = self.properties.get_property_related_table_names("nodal_loads", selected_id, selection)
-                    self.process_table_file_removal(table_name)
-
             self.properties._reset_property("nodal_loads")
             self.actions_to_finalize()
 
