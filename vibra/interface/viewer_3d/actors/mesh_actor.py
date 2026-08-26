@@ -1,6 +1,6 @@
 from collections.abc import Sequence
 from dataclasses import dataclass
-from itertools import chain
+from itertools import chain, combinations
 
 import numpy as np
 import xxhash
@@ -71,6 +71,7 @@ class MeshActor(vtkPropAssembly):
 
         self.update_mesh_common()
         self.update_node()
+        self.update_edges()
         self.update_surface()
         self.update_solids()
         self.update_caches()
@@ -104,6 +105,10 @@ class MeshActor(vtkPropAssembly):
         self.node_mapper.SetResolveCoincidentTopologyToShiftZBuffer()
         self.node_actor = vtkActor()
 
+        self.edge_data = vtkPolyData()
+        self.edge_mapper = vtkPolyDataMapper()
+        self.edge_actor = vtkActor()
+
         self.surface_colors = vtkUnsignedCharArray()
         self.surface_ids = vtkIntArray()
         self.surface_data = vtkPolyData()
@@ -129,6 +134,15 @@ class MeshActor(vtkPropAssembly):
         self.node_actor.GetProperty().RenderPointsAsSpheresOn()
         self.node_actor.GetProperty().LightingOff()
         self.AddPart(self.node_actor)
+
+        self.edge_data.SetPoints(self.points)
+        self.edge_mapper.SetInputData(self.edge_data)
+        self.edge_actor.SetMapper(self.edge_mapper)
+        self.edge_actor.GetProperty().SetRepresentationToWireframe()
+        self.edge_actor.GetProperty().SetLineWidth(7)
+        self.edge_actor.GetProperty().SetColor(1, 1, 1)
+        self.edge_actor.PickableOff()
+        self.AddPart(self.edge_actor)
 
         self.surface_colors.SetName("color")
         self.surface_colors.SetNumberOfComponents(4)
@@ -197,11 +211,11 @@ class MeshActor(vtkPropAssembly):
         else:
             solids_connectivity = self.mesh.solids_connectivity[:, 4:]
             counts = self.masked_nodes[solids_connectivity].sum(axis=1, dtype=np.int8)
-            elements_in_middle = (0 < counts) & (counts < solids_connectivity.shape[1])
-            faces_before_plane = self.masked_nodes[faces_connectivity].all(axis=1)
+            solids_in_middle_mask = (0 < counts) & (counts < solids_connectivity.shape[1])
+            faces_before_plane_mask = self.masked_nodes[faces_connectivity].all(axis=1)
 
-            external_nodes = faces_connectivity[faces_before_plane].ravel()
-            section_nodes = solids_connectivity[elements_in_middle].ravel()
+            external_nodes = faces_connectivity[faces_before_plane_mask].ravel()
+            section_nodes = solids_connectivity[solids_in_middle_mask].ravel()
             node_indexes = np.unique(np.concatenate((external_nodes, section_nodes)))
 
         n_cells = len(node_indexes)
@@ -214,6 +228,34 @@ class MeshActor(vtkPropAssembly):
         self.node_ids.SetNumberOfTuples(n_cells)
         view = vtk_to_numpy(self.node_ids)
         view[:] = node_indexes
+
+    def update_edges(self):
+        assert self.mesh is not None
+        assert self.mesh.nodal_coordinates is not None
+        assert self.mesh.faces_connectivity is not None
+        assert self.mesh.solids_connectivity is not None
+
+        if not self._mesh_updated():
+            return
+
+        if self.section_plane is not None:
+            faces_connectivity = self.mesh.faces_connectivity[:, 4:]
+            solids_connectivity = self.mesh.solids_connectivity[:, 4:]
+
+            counts = self.masked_nodes[solids_connectivity].sum(axis=1, dtype=np.int8)
+            solids_in_middle_mask = (0 < counts) & (counts < solids_connectivity.shape[1])
+            faces_before_plane_mask = self.masked_nodes[faces_connectivity].all(axis=1)
+
+            solids_triangulated = self._explode_to_2d_cells(self.mesh.solids_connectivity[solids_in_middle_mask])
+            all_faces = np.row_stack((self.mesh.faces_connectivity[faces_before_plane_mask], solids_triangulated))
+
+        else:
+            all_faces = self.mesh.faces_connectivity
+
+        # Although I am creating polys, this actor is
+        # configured to show only wireframes
+        cells = self._create_cells(all_faces[:, 4:])
+        self.edge_data.SetPolys(cells)
 
     def update_surface(self):
         assert self.mesh is not None
@@ -262,7 +304,7 @@ class MeshActor(vtkPropAssembly):
         connectivity = self.mesh.solids_connectivity[:, 4:]
         counts = self.masked_nodes[connectivity].sum(axis=1, dtype=np.int8)
         elements_in_middle = (0 < counts) & (counts < connectivity.shape[1])
-        triangulated_connectivity = self._explode_3d_cells(self.mesh.solids_connectivity[elements_in_middle])
+        triangulated_connectivity = self._explode_to_2d_cells(self.mesh.solids_connectivity[elements_in_middle])
         n_cells = len(triangulated_connectivity)
 
         cells = self._create_cells(triangulated_connectivity[:, 4:])
@@ -489,13 +531,29 @@ class MeshActor(vtkPropAssembly):
         cell_array.SetCells(connectivity.shape[0], vtk_id_array)
         return cell_array
 
-    def _explode_3d_cells(self, connectivity: np.ndarray) -> np.ndarray:
-        reorderings = [
-            [0, 1, 2],
-            [0, 2, 3],
-            [3, 2, 1],
-            [0, 1, 3],
-        ]
+    def _explode_to_1d_cells(self, connectivity: np.ndarray) -> np.ndarray:
+        n_nodes = connectivity[:, :4].shape[1]
+
+        match n_nodes:
+            case 3 | 4:
+                reorderings = list(combinations(range(n_nodes), 2))
+            case _:
+                raise NotImplementedError(f"Exploding to 1D cells is not supported for {n_nodes}-node cells")
+
+        return self._explode_cells(connectivity, reorderings)
+
+    def _explode_to_2d_cells(self, connectivity: np.ndarray) -> np.ndarray:
+        n_nodes = connectivity[:, :4].shape[1]
+
+        match n_nodes:
+            case 4:
+                reorderings = list(combinations(range(n_nodes), 3))
+            case _:
+                raise NotImplementedError(f"Exploding to 2D cells is not supported for {n_nodes}-node cells")
+
+        return self._explode_cells(connectivity, reorderings)
+
+    def _explode_cells(self, connectivity: np.ndarray, reorderings: Sequence[Sequence[int]]) -> np.ndarray:
         column_order = [
             [0, 1, 2, 3] + [i + 4 for i in reordering]
             for reordering in reorderings
@@ -503,6 +561,7 @@ class MeshActor(vtkPropAssembly):
 
         stacked = []
         for order in column_order:
+            print(order, connectivity.shape)
             connect = connectivity[:, order]
             stacked.append(connect)
 
