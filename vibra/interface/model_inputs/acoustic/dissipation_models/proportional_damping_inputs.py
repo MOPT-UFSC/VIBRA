@@ -342,7 +342,7 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
         self.update_tabs_visibility()
 
     def update_tabs_visibility(self):
-        for (property, _) in self.properties.volume_properties.keys():
+        for (property, _) in self.properties.volume_properties:
             if property != "proportional_damping":
                 continue
 

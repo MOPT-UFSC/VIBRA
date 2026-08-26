@@ -538,11 +538,13 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
     def update_tabs_visibility(self):
 
-        for key, _ in self.properties.volume_properties.items():
+        for key in self.properties.volume_properties:
             property, _ = key
-            if property == "viscous_thermal_model":
-                self.tabWidget_main.setTabVisible(TabType.EDIT, True)
-                return
+            if property != "viscous_thermal_model":
+                continue
+
+            self.tabWidget_main.setTabVisible(TabType.EDIT, True)
+            return
 
         self.tabWidget_main.setTabVisible(TabType.EDIT, False)
         self.tabWidget_main.setCurrentIndex(TabType.RECTANGULAR)

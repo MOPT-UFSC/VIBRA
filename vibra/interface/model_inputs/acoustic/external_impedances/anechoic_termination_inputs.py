@@ -245,7 +245,7 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
             if property != "specific_impedance":
                 continue
 
-            if "anechoic_termination" in data.keys():
+            if "anechoic_termination" in data:
                 self.tabWidget_main.setTabVisible(SetupTabType.LIST, True)
                 return
 

@@ -441,9 +441,11 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
 
         for key, data in self.properties.surface_properties.items():
             property, *args = key
-            if property == "specific_impedance":
-                if "anechoic_termination" in data:
-                    continue
+            if property != "specific_impedance":
+                continue
+
+            if "anechoic_termination" in data:
+                continue
 
             self.tabWidget_main.setTabVisible(StandardTabType.LIST, True)
             return

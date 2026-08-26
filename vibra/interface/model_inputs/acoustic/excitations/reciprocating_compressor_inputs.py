@@ -1038,10 +1038,12 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.lineEdit_connection_type.clear()
         self.pushButton_remove.setDisabled(True)
 
-        for (property, *_) in self.properties.surface_properties.keys():
-            if property == "reciprocating_compressor_excitation":
-                self.tabWidget_main.setTabVisible(TabIndex.LIST, True)
-                return
+        for (property, *_) in self.properties.surface_properties:
+            if property != "reciprocating_compressor_excitation":
+                continue
+
+            self.tabWidget_main.setTabVisible(TabIndex.LIST, True)
+            return
 
         self.tabWidget_main.setTabVisible(TabIndex.LIST, False)
         self.tabWidget_main.setCurrentIndex(TabIndex.SETUP)

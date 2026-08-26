@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>480</width>
-    <height>400</height>
+    <height>480</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -28,7 +28,7 @@
   <property name="maximumSize">
    <size>
     <width>480</width>
-    <height>400</height>
+    <height>480</height>
    </size>
   </property>
   <property name="font">
@@ -774,7 +774,7 @@
             <property name="minimumSize">
              <size>
               <width>320</width>
-              <height>100</height>
+              <height>0</height>
              </size>
             </property>
             <property name="maximumSize">
@@ -827,7 +827,7 @@
             </column>
             <column>
              <property name="text">
-              <string>Values</string>
+              <string>Values (Pa/m/s)</string>
              </property>
              <property name="textAlignment">
               <set>AlignCenter</set>

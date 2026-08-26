@@ -27,14 +27,14 @@ class Ui_Dialog(object):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
         Dialog.setWindowModality(Qt.WindowModality.WindowModal)
-        Dialog.resize(480, 400)
+        Dialog.resize(480, 480)
         sizePolicy = QSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(Dialog.sizePolicy().hasHeightForWidth())
         Dialog.setSizePolicy(sizePolicy)
         Dialog.setMinimumSize(QSize(480, 360))
-        Dialog.setMaximumSize(QSize(480, 400))
+        Dialog.setMaximumSize(QSize(480, 480))
         font = QFont()
         font.setPointSize(11)
         font.setBold(False)
@@ -295,7 +295,7 @@ class Ui_Dialog(object):
         __qtreewidgetitem.setTextAlignment(0, Qt.AlignCenter);
         self.treeWidget_specific_impedance.setHeaderItem(__qtreewidgetitem)
         self.treeWidget_specific_impedance.setObjectName(u"treeWidget_specific_impedance")
-        self.treeWidget_specific_impedance.setMinimumSize(QSize(320, 100))
+        self.treeWidget_specific_impedance.setMinimumSize(QSize(320, 0))
         self.treeWidget_specific_impedance.setMaximumSize(QSize(16777215, 200))
         font5 = QFont()
         font5.setFamilies([u"MS Shell Dlg 2"])
@@ -462,7 +462,7 @@ class Ui_Dialog(object):
         self.pushButton_reset.setText(QCoreApplication.translate("Dialog", u"Reset", None))
         self.pushButton_remove.setText(QCoreApplication.translate("Dialog", u"Remove", None))
         ___qtreewidgetitem = self.treeWidget_specific_impedance.headerItem()
-        ___qtreewidgetitem.setText(2, QCoreApplication.translate("Dialog", u"Values", None));
+        ___qtreewidgetitem.setText(2, QCoreApplication.translate("Dialog", u"Values (Pa/m/s)", None));
         ___qtreewidgetitem.setText(1, QCoreApplication.translate("Dialog", u"Entity", None));
         ___qtreewidgetitem.setText(0, QCoreApplication.translate("Dialog", u"ID", None));
 #if QT_CONFIG(tooltip)

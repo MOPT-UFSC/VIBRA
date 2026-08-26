@@ -399,7 +399,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
 
         for key in self.properties.surface_properties:
             property, *args = key
-            if property == "acoustic_pressure":
+            if property != "acoustic_pressure":
                 continue
 
             self.tabWidget_main.setTabVisible(StandardTabType.LIST, True)

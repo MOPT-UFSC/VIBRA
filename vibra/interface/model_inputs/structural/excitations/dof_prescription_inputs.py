@@ -971,7 +971,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         ]
 
         for current_property in properties_to_check:
-            for (property, _), data in current_property.items():
+            for (property, _) in current_property:
                 if property != "prescribed_dof":
                     continue
 

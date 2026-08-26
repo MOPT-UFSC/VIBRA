@@ -222,8 +222,8 @@ class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
             self.close()
 
     def update_tabs_visibility(self):
-        for key, data in self.properties.surface_properties:
-            property, surface_id = key
+        for key in self.properties.surface_properties:
+            property, _ = key
             if property != "surface_thickness":
                 continue
         

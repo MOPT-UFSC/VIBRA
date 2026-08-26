@@ -532,9 +532,11 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
         for key, _ in self.properties.surface_properties.items():
             property, _ = key
-            if property == "transfer_impedance":
-                self.tabWidget_main.setTabVisible(StandardTabType.LIST, True)
-                return
+            if property != "transfer_impedance":
+                continue
+
+            self.tabWidget_main.setTabVisible(StandardTabType.LIST, True)
+            return
 
         self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)
         self.tabWidget_main.setTabVisible(StandardTabType.LIST, False)

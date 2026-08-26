@@ -456,7 +456,7 @@ class MaterialInputs(SetMaterial_UI):
 
     def update_tabs_visibility(self):
 
-        for key in self.properties.volume_properties.keys():
+        for key in self.properties.volume_properties:
             property, _ = key
             if property != "material":
                 continue
@@ -464,7 +464,7 @@ class MaterialInputs(SetMaterial_UI):
             self.tabWidget_main.setTabVisible(TabType.LIST, True)
             return
 
-        for key in self.properties.surface_properties.keys():
+        for key in self.properties.surface_properties:
             property, _ = key
             if property == "material":
                 continue
