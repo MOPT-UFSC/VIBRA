@@ -1713,14 +1713,6 @@
                     <set>AlignCenter</set>
                    </property>
                   </column>
-                  <column>
-                   <property name="text">
-                    <string>Value</string>
-                   </property>
-                   <property name="textAlignment">
-                    <set>AlignCenter</set>
-                   </property>
-                  </column>
                  </widget>
                 </item>
                </layout>

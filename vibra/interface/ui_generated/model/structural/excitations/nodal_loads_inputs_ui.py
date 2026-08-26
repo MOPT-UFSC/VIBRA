@@ -729,7 +729,6 @@ class Ui_Dialog(object):
         self.gridLayout_2.setContentsMargins(-1, -1, -1, 0)
         self.treeWidget_nodal_loads = QTreeWidget(self.frame_5)
         __qtreewidgetitem = QTreeWidgetItem()
-        __qtreewidgetitem.setTextAlignment(4, Qt.AlignCenter);
         __qtreewidgetitem.setTextAlignment(3, Qt.AlignCenter);
         __qtreewidgetitem.setTextAlignment(2, Qt.AlignCenter);
         __qtreewidgetitem.setTextAlignment(1, Qt.AlignCenter);
@@ -906,7 +905,6 @@ class Ui_Dialog(object):
         self.label_Fx_table.setText(QCoreApplication.translate("Dialog", u"Fx:", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_tabular_data), QCoreApplication.translate("Dialog", u"Tabular data", None))
         ___qtreewidgetitem = self.treeWidget_nodal_loads.headerItem()
-        ___qtreewidgetitem.setText(4, QCoreApplication.translate("Dialog", u"Values", None));
         ___qtreewidgetitem.setText(3, QCoreApplication.translate("Dialog", u"Loads", None));
         ___qtreewidgetitem.setText(2, QCoreApplication.translate("Dialog", u"Element type", None));
         ___qtreewidgetitem.setText(1, QCoreApplication.translate("Dialog", u"Entity", None));
