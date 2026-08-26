@@ -1,4 +1,6 @@
 import json
+from collections import defaultdict
+from collections.abc import Iterable
 from typing import Callable, Optional
 
 import numpy as np
@@ -256,35 +258,40 @@ class ModelProperties:
 
         return False
 
-    def _reset_property(self, property: str):
+    def _reset_property(self, property_to_reset: str):
         """
         Clears all instances of a specific property from the structure.
         """
-        data_dicts = [
-            self.volume_properties,
-            self.surface_properties,
-            self.line_properties,
-            self.point_properties,
-            self.group_properties,
-            self.global_properties,
-            self.nodal_properties,
-            self.element_properties,
-        ]
 
-        for data in data_dicts:
-            keys_to_remove = []
+        removal_map = defaultdict(list)
+        for entity_name, prop_name, tags, _ in self.iterate_properties():
+            if prop_name != property_to_reset:
+                continue
 
-            for key in data:
-                if len(key) == 2:
-                    existing_property, _ = key
-                else:
-                    existing_property = key
+            if isinstance(tags, Iterable):
+                removal_map[entity_name].extend(tags)                   
+            else:
+                removal_map[entity_name].append(tags)          
 
-                if property == existing_property:
-                    keys_to_remove.append(key)
-
-            for _key in keys_to_remove:
-                data.pop(_key)
+        for entity_label, entity_ids in removal_map.items():
+            for entity_id in entity_ids:
+                match entity_label:
+                    case "volume":
+                        self._remove_volume_property(property_to_reset, entity_id)
+                    case "surface":
+                        self._remove_surface_property(property_to_reset, entity_id)
+                    case "line":
+                        self._remove_line_property(property_to_reset, entity_id)
+                    case "point":
+                        self._remove_point_property(property_to_reset, entity_id)
+                    case "node":
+                        self._remove_nodal_property(property_to_reset, entity_id)
+                    case "element":
+                        self._remove_element_property(property_to_reset, entity_id)
+                    case "group":
+                        self._remove_group_property(property_to_reset, entity_id)
+                    case "global":
+                        self._remove_global_property(property_to_reset)
 
         if self.disable_resume_callback is not None:
             self.disable_resume_callback()
@@ -317,46 +324,75 @@ class ModelProperties:
                 case "surface":
                     self._remove_surface_property("fluid", tags)
 
+    def _remove_tables_from_current_property(self, property: str, prop_data: dict):
+        """
+        This method removes all tables related to a particular property.
+        """
+        if not isinstance(prop_data, dict):
+            return
+
+        table_names = prop_data.get("table_names")
+        if not isinstance(table_names, list):
+            return
+
+        for table_name in table_names:
+            group_label = self.get_data_group_label(property)
+            self.remove_imported_tables(group_label, table_name)
+
     def _remove_nodal_property(self, property: str, nodal_id: int):
         """Remove a nodal property at specific nodal_id."""
         key = (property, nodal_id)
+        self._remove_tables_from_current_property(property, self.nodal_properties.get(key))
         if key in self.nodal_properties:
             self.nodal_properties.pop(key)
 
     def _remove_element_property(self, property: str, element_id: int):
         """Remove a element property at specific element_id."""
         key = (property, element_id)
+        self._remove_tables_from_current_property(property, self.element_properties.get(key))
         if key in self.element_properties:
             self.element_properties.pop(key)
 
     def _remove_point_property(self, property: str, point_id: int):
         """Remove a point property at specific point_id."""
         key = (property, point_id)
+        self._remove_tables_from_current_property(property, self.point_properties.get(key))
         if key in self.point_properties:
             self.point_properties.pop(key)
 
     def _remove_line_property(self, property: str, line_id: int):
         """Remove a line property at specific line_id."""
         key = (property, line_id)
+        self._remove_tables_from_current_property(property, self.line_properties.get(key))
         if key in self.line_properties:
             self.line_properties.pop(key)
 
     def _remove_surface_property(self, property: str, surface_id: int):
         """Remove a surface property at specific surface_id."""
         key = (property, surface_id)
+        self._remove_tables_from_current_property(property, self.surface_properties.get(key))
         if key in self.surface_properties:
             self.surface_properties.pop(key)
 
     def _remove_volume_property(self, property: str, volume_id: int):
         """Remove a volume property at specific volume_id."""
         key = (property, volume_id)
+        self._remove_tables_from_current_property(property, self.volume_properties.get(key))
         if key in self.volume_properties:
             self.volume_properties.pop(key)
 
     def _remove_group_property(self, property: str, group_id: int):
         """Remove a group property at specific group_id."""
         key = (property, group_id)
+        self._remove_tables_from_current_property(property, self.group_properties.get(key))
         if key in self.group_properties:
+            self.group_properties.pop(key)
+
+    def _remove_global_property(self, property: str):
+        """Remove a global property at specific group_id."""
+        key = (property, "global")
+        self._remove_tables_from_current_property(property, self.global_properties.get(key))
+        if key in self.global_properties:
             self.group_properties.pop(key)
 
     def add_imported_tables(self, group_label: str, table_name: str, data: np.ndarray | list | tuple):
@@ -540,14 +576,14 @@ class ModelProperties:
     
     def iterate_properties(self):
         property_dicts = {
-            "global": self.global_properties,
-            "group": self.group_properties,
             "volume": self.volume_properties,
             "surface": self.surface_properties,
             "line": self.line_properties,
             "point": self.point_properties,
             "element": self.element_properties,
             "node": self.nodal_properties,
+            "global": self.global_properties,
+            "group": self.group_properties,
         }
 
         for entity_name, property_dict in property_dicts.items():
