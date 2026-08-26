@@ -187,8 +187,8 @@ class MeshActor(vtkPropAssembly):
         assert self.mesh.faces_connectivity is not None
         assert self.mesh.solids_connectivity is not None
 
-        if (self.section_plane is None) and id(self.mesh) == self.cached_info.mesh_id:
-            return
+        # if (self.section_plane is None) and id(self.mesh) == self.cached_info.mesh_id:
+        #     return
 
         faces_connectivity = self.mesh.faces_connectivity[:, 4:]
 
@@ -220,6 +220,7 @@ class MeshActor(vtkPropAssembly):
         assert self.mesh.nodal_coordinates is not None
         assert self.mesh.faces_connectivity is not None
 
+        self.surface_mapper.RemoveAllClippingPlanes()
         if (self.section_plane is None) and id(self.mesh) == self.cached_info.mesh_id:
             return
 
@@ -227,7 +228,6 @@ class MeshActor(vtkPropAssembly):
             plane = vtkPlane()
             plane.SetOrigin(self.section_plane.origin)
             plane.SetNormal(self.section_plane.normal)
-            self.surface_mapper.RemoveAllClippingPlanes()
             self.surface_mapper.AddClippingPlane(plane)
 
         connectivity = self.mesh.faces_connectivity[:, 4:]
