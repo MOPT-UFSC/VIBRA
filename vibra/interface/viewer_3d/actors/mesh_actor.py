@@ -187,12 +187,14 @@ class MeshActor(vtkPropAssembly):
         assert self.mesh.faces_connectivity is not None
         assert self.mesh.solids_connectivity is not None
 
-        if id(self.mesh) == self.cached_info.mesh_id:
+        if (self.section_plane is None) and id(self.mesh) == self.cached_info.mesh_id:
             return
 
         faces_connectivity = self.mesh.faces_connectivity[:, 4:]
 
-        if self.section_plane is not None:
+        if self.section_plane is None:
+            node_indexes = np.unique(faces_connectivity)
+        else:
             solids_connectivity = self.mesh.solids_connectivity[:, 4:]
             counts = self.masked_nodes[solids_connectivity].sum(axis=1, dtype=np.int8)
             elements_in_middle = (0 < counts) & (counts < solids_connectivity.shape[1])
@@ -201,8 +203,6 @@ class MeshActor(vtkPropAssembly):
             external_nodes = faces_connectivity[faces_before_plane].ravel()
             section_nodes = solids_connectivity[elements_in_middle].ravel()
             node_indexes = np.unique(np.concatenate((external_nodes, section_nodes)))
-        else:
-            node_indexes = np.unique(faces_connectivity)
 
         n_cells = len(node_indexes)
         cells = self._create_cells(node_indexes)
@@ -220,8 +220,15 @@ class MeshActor(vtkPropAssembly):
         assert self.mesh.nodal_coordinates is not None
         assert self.mesh.faces_connectivity is not None
 
-        if id(self.mesh) == self.cached_info.mesh_id:
+        if (self.section_plane is None) and id(self.mesh) == self.cached_info.mesh_id:
             return
+
+        if self.section_plane is not None:
+            plane = vtkPlane()
+            plane.SetOrigin(self.section_plane.origin)
+            plane.SetNormal(self.section_plane.normal)
+            self.surface_mapper.RemoveAllClippingPlanes()
+            self.surface_mapper.AddClippingPlane(plane)
 
         connectivity = self.mesh.faces_connectivity[:, 4:]
         n_cells = len(connectivity)
@@ -242,23 +249,12 @@ class MeshActor(vtkPropAssembly):
         assert self.mesh.faces_connectivity is not None
         assert self.mesh.solids_connectivity is not None
 
-        self.node_mapper.RemoveAllClippingPlanes()
-        self.surface_mapper.RemoveAllClippingPlanes()
-
         if self.section_plane is None:
             self.volume_data.SetPolys(vtkCellArray())
             self.volume_colors.SetNumberOfTuples(0)
             self.volume_ids.SetNumberOfTuples(0)
             self.volume_colors.Modified()
             return
-
-        plane = vtkPlane()
-        plane.SetOrigin(self.section_plane.origin)
-        plane.SetNormal(self.section_plane.normal)
-
-        self.surface_mapper.AddClippingPlane(plane)
-        self.surface_mapper.Modified()
-        self.surface_actor.Modified()
 
         connectivity = self.mesh.solids_connectivity[:, 4:]
         counts = self.masked_nodes[connectivity].sum(axis=1, dtype=np.int8)
@@ -281,7 +277,7 @@ class MeshActor(vtkPropAssembly):
         if node_colors_hash != self.cached_info.node_colors_hash:
             self.cached_info.node_colors_hash = node_colors_hash
             self.node_colors.Modified()
-        
+
         surface_colors_hash = CachedInfo.array_hash(self.surface_colors)
         if surface_colors_hash != self.cached_info.surface_colors_hash:
             self.cached_info.surface_colors_hash = surface_colors_hash
@@ -328,7 +324,7 @@ class MeshActor(vtkPropAssembly):
 
         node_ids = vtk_to_numpy(self.node_ids)
         node_colors = vtk_to_numpy(self.node_colors)
-        
+
         paint_position_mask = np.isin(node_ids, nodes)
         node_colors[paint_position_mask, :3] = color.to_rgb()
 
