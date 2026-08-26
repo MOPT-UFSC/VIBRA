@@ -423,7 +423,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             PrintMessageInput([error_title, title, message])
             return True
 
-        self.remove_duplicated_assignments(selected_ids, selection)
+        # self.remove_duplicated_assignments(selected_ids, selection)
         self.remove_conflicting_excitations(selected_ids, selection)
 
         left_values = [value_a for (value_a, _) in nodal_loads]
@@ -667,7 +667,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                 PrintMessageInput([error_title, title, message]) 
                 return True
            
-            self.remove_duplicated_assignments(selected_ids, selection)
+            # self.remove_duplicated_assignments(selected_ids, selection)
             self.remove_conflicting_excitations(selected_ids, selection)
 
             data = {
@@ -690,85 +690,6 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                 self.properties._set_property("nodal_loads", data, node=selected_id)
 
         self.reset_table_variables()
-
-    def remove_duplicated_assignments(self, selected_ids: list, selection: str):
-
-        nodes_to_remove = []
-        for selected_id in selected_ids:
-
-            if selection == "surfaces":
-
-                nodes_from_surface = self.model.mesh.get_nodes_from_surface(selected_id)
-                for (property, node_id) in self.properties.nodal_properties:
-                    if property == "nodal_loads" and node_id in nodes_from_surface:
-                        if node_id not in nodes_to_remove:
-                            nodes_to_remove.append(node_id)
-
-                for line_id in self.mesh.lines_from_surface[selected_id]:
-                    data = self.properties._get_property("nodal_loads", line=line_id)
-                    if isinstance(data, dict):
-                        self.properties._remove_line_property("nodal_loads", line_id)
-
-                    for point_id in self.mesh.points_from_line[line_id]:
-                        data = self.properties._get_property("nodal_loads", point=point_id)
-                        if isinstance(data, dict):
-                            self.properties._remove_point_property("nodal_loads", point_id)
-
-            elif selection == "lines":
-
-                nodes_from_line = self.model.mesh.get_nodes_from_line(selected_id)
-                for (property, node_id) in self.properties.nodal_properties:
-                    if property == "nodal_loads" and node_id in nodes_from_line:
-                        if node_id not in nodes_to_remove:
-                            nodes_to_remove.append(node_id)
-
-                for surface_id in self.mesh.surfaces_from_line[selected_id]:
-                    data = self.properties._get_property("nodal_loads", surface=surface_id)
-                    if isinstance(data, dict):
-                        self.properties._remove_surface_property("nodal_loads", surface_id)
-
-                for point_id in self.mesh.points_from_line[selected_id]:
-                    data = self.properties._get_property("nodal_loads", point=point_id)
-                    if isinstance(data, dict):
-                        self.properties._remove_point_property("nodal_loads", point_id)
-
-            elif selection == "points":
-
-                nodes_from_point = self.model.mesh.nodes_from_points[selected_id]
-                for (property, node_id) in self.properties.nodal_properties:
-                    if property == "nodal_loads" and node_id in nodes_from_point:
-                        if node_id not in nodes_to_remove:
-                            nodes_to_remove.append(node_id)
-
-                for line_id in self.mesh.lines_from_point[selected_id]:
-                    data = self.properties._get_property("nodal_loads", line=line_id)
-                    if isinstance(data, dict):
-                        self.properties._remove_line_property("nodal_loads", line_id)
-
-                    for surface_id in self.model.mesh.surfaces_from_line[line_id]:
-                        data = self.properties._get_property("nodal_loads", surface=surface_id)
-                        if isinstance(data, dict):
-                            self.properties._remove_surface_property("nodal_loads", surface_id)
-
-            elif selection == "nodes":
-
-                point_id = selected_id + 1
-                data = self.properties._get_property("nodal_loads", point=point_id)
-                if isinstance(data, dict):
-                    self.properties._remove_point_property("nodal_loads", point_id)
- 
-                for line_id in self.mesh.lines_from_point[point_id]:
-                    data = self.properties._get_property("nodal_loads", line=line_id)
-                    if isinstance(data, dict):
-                        self.properties._remove_line_property("nodal_loads", line_id)
-
-                    for surface_id in self.model.mesh.surfaces_from_line[line_id]:
-                        data = self.properties._get_property("nodal_loads", surface=surface_id)
-                        if isinstance(data, dict):
-                            self.properties._remove_surface_property("nodal_loads", surface_id)
-
-            for node_id in nodes_to_remove:
-                self.properties._remove_nodal_property("nodal_loads", node_id)
 
     def apply_callback(self, close_window: bool=False):
 
@@ -1082,3 +1003,83 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                 if isinstance(data, dict):
                     self.comboBox_element_type.setCurrentIndex(ElementFormulation.ELEMENT_2D)
                     return
+
+    def remove_duplicated_assignments(self, selected_ids: list, selection: str):
+        return
+
+        nodes_to_remove = []
+        for selected_id in selected_ids:
+
+            if selection == "surfaces":
+
+                nodes_from_surface = self.model.mesh.get_nodes_from_surface(selected_id)
+                for (property, node_id) in self.properties.nodal_properties:
+                    if property == "nodal_loads" and node_id in nodes_from_surface:
+                        if node_id not in nodes_to_remove:
+                            nodes_to_remove.append(node_id)
+
+                for line_id in self.mesh.lines_from_surface[selected_id]:
+                    data = self.properties._get_property("nodal_loads", line=line_id)
+                    if isinstance(data, dict):
+                        self.properties._remove_line_property("nodal_loads", line_id)
+
+                    for point_id in self.mesh.points_from_line[line_id]:
+                        data = self.properties._get_property("nodal_loads", point=point_id)
+                        if isinstance(data, dict):
+                            self.properties._remove_point_property("nodal_loads", point_id)
+
+            elif selection == "lines":
+
+                nodes_from_line = self.model.mesh.get_nodes_from_line(selected_id)
+                for (property, node_id) in self.properties.nodal_properties:
+                    if property == "nodal_loads" and node_id in nodes_from_line:
+                        if node_id not in nodes_to_remove:
+                            nodes_to_remove.append(node_id)
+
+                for surface_id in self.mesh.surfaces_from_line[selected_id]:
+                    data = self.properties._get_property("nodal_loads", surface=surface_id)
+                    if isinstance(data, dict):
+                        self.properties._remove_surface_property("nodal_loads", surface_id)
+
+                for point_id in self.mesh.points_from_line[selected_id]:
+                    data = self.properties._get_property("nodal_loads", point=point_id)
+                    if isinstance(data, dict):
+                        self.properties._remove_point_property("nodal_loads", point_id)
+
+            elif selection == "points":
+
+                nodes_from_point = self.model.mesh.nodes_from_points[selected_id]
+                for (property, node_id) in self.properties.nodal_properties:
+                    if property == "nodal_loads" and node_id in nodes_from_point:
+                        if node_id not in nodes_to_remove:
+                            nodes_to_remove.append(node_id)
+
+                for line_id in self.mesh.lines_from_point[selected_id]:
+                    data = self.properties._get_property("nodal_loads", line=line_id)
+                    if isinstance(data, dict):
+                        self.properties._remove_line_property("nodal_loads", line_id)
+
+                    for surface_id in self.model.mesh.surfaces_from_line[line_id]:
+                        data = self.properties._get_property("nodal_loads", surface=surface_id)
+                        if isinstance(data, dict):
+                            self.properties._remove_surface_property("nodal_loads", surface_id)
+
+            elif selection == "nodes":
+
+                point_id = selected_id + 1
+                data = self.properties._get_property("nodal_loads", point=point_id)
+                if isinstance(data, dict):
+                    self.properties._remove_point_property("nodal_loads", point_id)
+ 
+                for line_id in self.mesh.lines_from_point[point_id]:
+                    data = self.properties._get_property("nodal_loads", line=line_id)
+                    if isinstance(data, dict):
+                        self.properties._remove_line_property("nodal_loads", line_id)
+
+                    for surface_id in self.model.mesh.surfaces_from_line[line_id]:
+                        data = self.properties._get_property("nodal_loads", surface=surface_id)
+                        if isinstance(data, dict):
+                            self.properties._remove_surface_property("nodal_loads", surface_id)
+
+            for node_id in nodes_to_remove:
+                self.properties._remove_nodal_property("nodal_loads", node_id)

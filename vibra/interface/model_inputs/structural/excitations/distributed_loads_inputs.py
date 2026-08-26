@@ -300,7 +300,6 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
             PrintMessageInput(error_data)
             return True
 
-        self.remove_duplicated_attributions(selected_ids, selection)
         self.remove_conflicting_excitations(selected_ids, selection)
 
         element_type = self.element_types[self.comboBox_element_type.currentIndex()]
@@ -469,7 +468,6 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
             PrintMessageInput(error_data)
             return True
 
-        self.remove_duplicated_attributions(selected_ids, selection)
         self.remove_conflicting_excitations(selected_ids, selection)
 
         index = self.comboBox_element_type.currentIndex()
@@ -527,22 +525,6 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
                 self.properties._set_property("distributed_loads", data, line=selected_id)
 
         self.reset_table_variables()
-
-    def remove_duplicated_attributions(self, selected_ids: list, selection: str):
-
-        for selected_id in selected_ids:
-
-            if selection == "surfaces":
-                for line_id in self.mesh.lines_from_surface[selected_id]:
-                    data = self.properties._get_property("distributed_loads", line=line_id)
-                    if isinstance(data, dict):
-                        self.properties._remove_line_property("distributed_loads", line_id)
-
-            elif selection == "lines":
-                for surface_id in self.mesh.surfaces_from_line[selected_id]:
-                    data = self.properties._get_property("distributed_loads", surface=surface_id)
-                    if isinstance(data, dict):
-                        self.properties._remove_surface_property("distributed_loads", surface_id)
 
     def apply_callback(self, close_window: bool=False):
 
