@@ -15,7 +15,7 @@ from ..actors.faces_actor import FacesActor
 from ..actors.ghost_actor import GhostActor
 from ..actors.hollow_solids_actor import HollowSolidsActor
 from ..actors.legend_actor import LegendActor
-from ..actors.nodes_actor_old import NodesActor
+from ..actors.nodes_actor import NodesActor
 from ..actors.section_plane_actor import SectionPlaneActor
 from ..actors.selection_spheres import SelectionSpheres
 from ..actors.solids_actor import SolidsActor
