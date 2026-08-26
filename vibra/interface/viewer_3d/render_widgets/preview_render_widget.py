@@ -87,7 +87,6 @@ class PreviewRenderWidget(CommonRenderWidget):
 
         match self.mesh_actor.picked_dim_tag(self.picker):
             case 0, tag:
-                print("Point", tag)
                 self.mesh_actor.paint_nodes(color_names.GREEN, [tag])
 
             case 2, tag:
