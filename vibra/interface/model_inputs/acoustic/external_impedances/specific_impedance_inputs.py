@@ -53,6 +53,9 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
         self.tree_item_clicked = False
 
     def _configure_widgets(self):
+
+        self.treeWidget_specific_impedance.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+
         for i, w in enumerate([80, 80]):
             self.treeWidget_specific_impedance.setColumnWidth(i, w)
             self.treeWidget_specific_impedance.headerItem().setTextAlignment(i, Qt.AlignCenter)
