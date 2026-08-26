@@ -139,6 +139,9 @@ def load_external_mesh_and_solve(distribute_mass: bool=False):
     print(f"Elapsed time to solve modal analysis: {round(dt, 4)}s")
 
     results_path = PROJECT_DIR / "validation_files/data/WB/structural/elements_integration/tet10/results/modal/"
+    if distribute_mass:
+        results_path = results_path / "distributed_mass"
+
     natural_frequencies_ref = np.loadtxt(results_path / "natural_frequencies_reference.dat")[:, 1]
 
     # modes_indexes = np.arange(natural_frequencies.size)
@@ -157,4 +160,4 @@ def load_external_mesh_and_solve(distribute_mass: bool=False):
 
 if __name__ == "__main__":
 
-    load_external_mesh_and_solve(distribute_mass=True)
+    load_external_mesh_and_solve(distribute_mass=False)

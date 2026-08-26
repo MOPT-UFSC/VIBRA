@@ -384,6 +384,7 @@ class StructuralAssembler:
             # print()
 
             # mass_density = 1249.600004
+            # mass_density = 2061.0
 
             for i, el in enumerate(surf_elements):
                 aux_connect[el] = surf_connect[i]
