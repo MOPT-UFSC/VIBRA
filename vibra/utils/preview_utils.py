@@ -7,7 +7,7 @@ from enum import Enum, auto
 from typing import TypeVar
 
 
-@dataclass
+@dataclass(frozen=True)
 class SectionPlaneConfig:
     class SectionPlaneMode(Enum):
         DISABLED = auto()
