@@ -137,8 +137,8 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
 
             ipw_vector = [round(value, 8) for value in data.get("ipw_vector")]
 
-            if "table_names" in data.keys():
-                str_value = "Table of values"
+            if "table_names" in data:
+                str_value = "Table"
 
             else:
                 complex_values = data.get("values")[0]

@@ -510,20 +510,21 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         self.treeWidget_transfer_impedance.clear()
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key
-            if property == "transfer_impedance":
+            if property != "transfer_impedance":
+                continue
 
-                if "table_names" in data.keys():
-                    str_value = "Table of values"
-                else:
-                    real_values = np.array(data["real_values"])
-                    imag_values = np.array(data["imag_values"])
-                    complex_values = real_values + 1j * imag_values
-                    str_value = str(complex_values)
+            if "table_names" in data:
+                str_value = "Table"
+            else:
+                real_values = np.array(data["real_values"])
+                imag_values = np.array(data["imag_values"])
+                complex_values = real_values + 1j * imag_values
+                str_value = str(complex_values)
 
-                new = QTreeWidgetItem([str(surface_id), str_value])
-                new.setTextAlignment(0, Qt.AlignCenter)
-                new.setTextAlignment(1, Qt.AlignCenter)
-                self.treeWidget_transfer_impedance.addTopLevelItem(new)
+            new = QTreeWidgetItem([str(surface_id), str_value])
+            new.setTextAlignment(0, Qt.AlignCenter)
+            new.setTextAlignment(1, Qt.AlignCenter)
+            self.treeWidget_transfer_impedance.addTopLevelItem(new)
 
         self.update_tabs_visibility()
 

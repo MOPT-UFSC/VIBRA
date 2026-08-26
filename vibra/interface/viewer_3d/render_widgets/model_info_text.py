@@ -424,7 +424,7 @@ def get_incident_plane_wave_text(ipw_data: dict):
     if isinstance(value, Number | str | float | complex):
         tree_pw.add_item("P_inc", np.round(value, 4), "Pa")
     else:
-        tree_pw.add_item("P_inc", "Table of values")
+        tree_pw.add_item("P_inc", "Table")
 
     ipw_vector = ipw_data["ipw_vector"]
     tree_pw.add_item("Incident wave vector", np.round(ipw_vector, 4))
@@ -738,7 +738,7 @@ def acoustic_format(property_name, value, label, unit, additional_labels=[]):
     if isinstance(value, Number | str | float | complex):
         tree.add_item(label, np.round(value, 4), unit)
     else:
-        tree.add_item(label, "Table of values")
+        tree.add_item(label, "Table")
 
     if len(additional_labels) == 2:
         tree.add_item(additional_labels[0], additional_labels[1])
@@ -947,9 +947,9 @@ def mesh_structural_format(property_name, values, labels, units, has_table):
     tree = TreeInfo(property_name)
     if has_table:
         if u_values:
-            tree.add_item(", ".join(u_labels), "Table of values")
+            tree.add_item(", ".join(u_labels), "Table")
         if r_values:
-            tree.add_item(", ".join(r_labels), "Table of values")
+            tree.add_item(", ".join(r_labels), "Table")
 
     else:
         if u_values:
@@ -1098,10 +1098,10 @@ def structural_format(property_name, values, labels, units, has_table):
     tree = TreeInfo(property_name)
     if has_table:
         if u_values:
-            tree.add_item(", ".join(u_labels), "Table of values")
+            tree.add_item(", ".join(u_labels), "Table")
 
         if r_values:
-            tree.add_item(", ".join(r_labels), "Table of values")
+            tree.add_item(", ".join(r_labels), "Table")
 
     else:
         if u_values:

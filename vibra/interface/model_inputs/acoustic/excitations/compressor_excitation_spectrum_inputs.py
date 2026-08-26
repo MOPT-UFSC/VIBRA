@@ -129,20 +129,21 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
         self.treeWidget_compressor_excitation_spectrum.clear()
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key
-            if property == "compressor_excitation_spectrum":
+            if property != "compressor_excitation_spectrum":
+                continue
 
-                if "table_names" in data.keys():
-                    str_value = "Table of values"
-                else:
-                    real_values = np.array(data["real_values"])
-                    imag_values = np.array(data["imag_values"])
-                    complex_values = real_values + 1j * imag_values
-                    str_value = str(complex_values)
+            if "table_names" in data:
+                str_value = "Table"
+            else:
+                real_values = np.array(data["real_values"])
+                imag_values = np.array(data["imag_values"])
+                complex_values = real_values + 1j * imag_values
+                str_value = str(complex_values)
 
-                new = QTreeWidgetItem([str(surface_id), str_value])
-                new.setTextAlignment(0, Qt.AlignCenter)
-                new.setTextAlignment(1, Qt.AlignCenter)
-                self.treeWidget_compressor_excitation_spectrum.addTopLevelItem(new)
+            new = QTreeWidgetItem([str(surface_id), str_value])
+            new.setTextAlignment(0, Qt.AlignCenter)
+            new.setTextAlignment(1, Qt.AlignCenter)
+            self.treeWidget_compressor_excitation_spectrum.addTopLevelItem(new)
 
         self.update_tabs_visibility()
 

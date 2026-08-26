@@ -928,8 +928,8 @@ class MassSourceInputs(MassSourceInputs_UI):
                 if property != "mass_source":
                     continue
 
-                if "table_names" in data.keys():
-                    str_value = "Table of values"
+                if "table_names" in data:
+                    str_value = "Table"
                 else:
                     real_values = np.array(data["real_values"])
                     imag_values = np.array(data["imag_values"])

@@ -448,7 +448,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
                 continue
 
             if "table_names" in data:
-                str_value = "Table of values"
+                str_value = "Table"
             else:
                 values = data["values"][0]
                 str_value = str(values)

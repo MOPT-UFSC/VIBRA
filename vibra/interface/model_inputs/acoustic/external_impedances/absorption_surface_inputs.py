@@ -205,18 +205,19 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
         self.treeWidget_absorption_surface.clear()
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key
-            if property == "absorption_surface":
+            if property != "absorption_surface":
+                continue
 
-                if "table_names" in data.keys():
-                    str_value = "Table of values"
-                else:
-                    absorption_coefficient = np.array(data["real_values"])
-                    str_value = str(absorption_coefficient)
+            if "table_names" in data:
+                str_value = "Table"
+            else:
+                absorption_coefficient = np.array(data["real_values"])
+                str_value = str(absorption_coefficient)
 
-                new = QTreeWidgetItem([str(surface_id), str_value])
-                new.setTextAlignment(0, Qt.AlignCenter)
-                new.setTextAlignment(1, Qt.AlignCenter)
-                self.treeWidget_absorption_surface.addTopLevelItem(new)
+            new = QTreeWidgetItem([str(surface_id), str_value])
+            new.setTextAlignment(0, Qt.AlignCenter)
+            new.setTextAlignment(1, Qt.AlignCenter)
+            self.treeWidget_absorption_surface.addTopLevelItem(new)
 
         self.update_tabs_visibility()
 
