@@ -580,6 +580,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
                     if value is not None:
                         active_values.append(value)
 
+                str_values = [f"{val : .6e}" for val in active_values]
                 dof_labels = str(self.text_label([bool(value) for value in values]))
 
                 new = QTreeWidgetItem([
@@ -587,7 +588,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
                     key, 
                     element_type, 
                     dof_labels, 
-                    ", ".join([str(val) for val in active_values]),
+                    ", ".join(str_values),
                     ])
 
                 for i in range(5):

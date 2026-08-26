@@ -278,8 +278,10 @@ class DistributedMassInputs(DistributedMassInputs_UI):
                 if prop_label != "distributed_mass":
                     continue
             
-                values = np.real(data["values"])
-                new = QTreeWidgetItem([f"{args[0]}", key, f"{float(values)}"])
+                value = np.real(data["values"])[0]
+                str_value = f"{value}"
+
+                new = QTreeWidgetItem([f"{args[0]}", key, str_value])
 
                 for i in range(3):
                     new.setTextAlignment(i, Qt.AlignCenter)

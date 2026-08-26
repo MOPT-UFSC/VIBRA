@@ -378,13 +378,13 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
             if not isinstance(data, dict):
                 continue
 
-            values = data["values"][0]
-            if isinstance(values, complex):
-                str_values = str(values)
+            if "table_names" in data:
+                str_value = "Table"
             else:
-                str_values = "Table"
+                values = data["values"][0]
+                str_value = f"{values : .6e}"
 
-            new = QTreeWidgetItem([str(args[0]), "surface", str_values])
+            new = QTreeWidgetItem([str(args[0]), "surface", str_value])
             for i in range(3):
                 new.setTextAlignment(i, Qt.AlignCenter)
 

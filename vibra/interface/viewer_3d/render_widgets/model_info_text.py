@@ -726,7 +726,7 @@ def structural_additional_info_text():
         text += structural_format("Distributed mass (area)", real_value, ["M"], ["kg"], loaded_table)
 
     if isinstance(distributed_mass_1d, dict):
-        real_value = [value.real for value in distributed_mass_2d.get("values")]
+        real_value = [value.real for value in distributed_mass_1d.get("values")]
         loaded_table = "table_names" in distributed_mass_1d
         text += structural_format("Distributed mass (line)", real_value, ["M"], ["kg"], loaded_table)
 

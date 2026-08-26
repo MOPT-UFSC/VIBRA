@@ -200,7 +200,7 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
                 str_value = "Table"
             else:
                 values = data["values"][0]
-                str_value = str(values)
+                str_value = f"{values : .6e}"
 
             new = QTreeWidgetItem([str(surface_id), "surface", str_value])
             for i in range(3):

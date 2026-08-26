@@ -762,15 +762,15 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                     if value is not None:
                         active_values.append(value if not isinstance(value, np.ndarray) else "Table")
 
+                str_values = ", ".join([f"{val : .6e}" for val in active_values])
                 dof_labels = str(self.text_label([bool(value) for value in values]))
-                str_value = ", ".join([str(val) for val in active_values])
 
                 new = QTreeWidgetItem([
                     f"{args[0]}", 
                     key, 
                     element_type, 
                     dof_labels, 
-                    str_value,
+                    str_values,
                     ])
 
                 for i in range(5):
