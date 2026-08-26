@@ -172,7 +172,7 @@ class MeshActor(vtkPropAssembly):
         if self.mesh.nodal_coordinates is None:
             return
 
-        if (hash(self.section_plane) == self.cached_info.section_plane_hash) and (id(self.mesh) == self.cached_info.mesh_id):
+        if not self._mesh_updated():
             return
 
         self.masked_nodes = self._find_masked_nodes()
@@ -187,7 +187,7 @@ class MeshActor(vtkPropAssembly):
         assert self.mesh.faces_connectivity is not None
         assert self.mesh.solids_connectivity is not None
 
-        if (hash(self.section_plane) == self.cached_info.section_plane_hash) and (id(self.mesh) == self.cached_info.mesh_id):
+        if not self._mesh_updated():
             return
 
         faces_connectivity = self.mesh.faces_connectivity[:, 4:]
@@ -220,7 +220,7 @@ class MeshActor(vtkPropAssembly):
         assert self.mesh.nodal_coordinates is not None
         assert self.mesh.faces_connectivity is not None
 
-        if (hash(self.section_plane) == self.cached_info.section_plane_hash) and (id(self.mesh) == self.cached_info.mesh_id):
+        if not self._mesh_updated():
             return
 
         self.surface_mapper.RemoveAllClippingPlanes()
@@ -249,7 +249,7 @@ class MeshActor(vtkPropAssembly):
         assert self.mesh.faces_connectivity is not None
         assert self.mesh.solids_connectivity is not None
 
-        if (hash(self.section_plane) == self.cached_info.section_plane_hash) and (id(self.mesh) == self.cached_info.mesh_id):
+        if not self._mesh_updated():
             return
 
         if self.section_plane is None:
@@ -530,3 +530,12 @@ class MeshActor(vtkPropAssembly):
         ).flatten()
 
         return mask
+
+    def _mesh_updated(self):
+        if id(self.mesh) != self.cached_info.mesh_id:
+            return True
+
+        if hash(self.section_plane) != self.cached_info.section_plane_hash:  # noqa: SIM103
+            return True
+
+        return False
