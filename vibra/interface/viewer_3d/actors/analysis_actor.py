@@ -21,14 +21,7 @@ class AnalysisActor(SolidsActor):
         self.cutter_mapper.InterpolateScalarsBeforeMappingOn()
         self.SetMapper(self.cutter_mapper)
 
-    def apply_deformation(self, displacements: np.ndarray, magnification_factor: float, max_abs: float):
-
-        if max_abs == 0:
-            max_abs = 1
-
-        deltas = (magnification_factor / (10 * max_abs)) * displacements
-        deformed_coordinates = deltas + self.mesh.nodal_coordinates[:, 1:]
-
+    def apply_deformation(self, deformed_coordinates: np.ndarray):
         self.update_coordinates(deformed_coordinates)
 
     def plot_color_bar(self, values, min_value, max_value, colormap="jet"):
