@@ -265,17 +265,25 @@ def prompt_if_disconnected_nodes():
         "Disconnected nodes detected",
         "The generated mesh contains disconnected nodes.\n"
         "The model solution will stay deactivated until this is addressed.\n\n"
-        "What do you want to do next?",
+        "Choose an option:\n"
+        "\"Go to Mesh Setup\" to adjust the mesh parameters and regenerate\n"
+        "the mesh to try to solve the problem.\n"
+        "\"Remove disconnected nodes\" to forcibly delete them from the\n"
+        "current mesh and keep using it as is.",
         buttons_config={
             "left_button_label": "Go to Mesh Setup",
-            "right_button_label": "View disconnected nodes",
+            "right_button_label": "Remove disconnected nodes",
             "left_button_size": 160,
-            "right_button_size": 190,
+            "right_button_size": 230,
         },
     )
 
+    # right button = remove the disconnected nodes
     if confirmation._continue:
-        return  # right button = just close; nodes are already shown in green
+        mesh.remove_disconnected_nodes()
+        mesh.process_disconnected_nodes_criterion(print_log=True)
+        app().main_window.update_plots()
+        return
 
     # left button = open mesh setup
     app().main_window.input_ui.mesh_setup()
