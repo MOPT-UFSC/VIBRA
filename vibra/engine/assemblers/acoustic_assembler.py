@@ -48,6 +48,11 @@ class AcousticAssembler:
         self.element_3d = None
 
 
+    @property
+    def number_3d_elements(self):
+        return self.model.number_3d_acoustic_elements
+
+
     def define_acoustic_elements(self):
         self.model.set_acoustic_elements()
         self.element_1d = self.model.acoustic_element_1d
@@ -152,7 +157,9 @@ class AcousticAssembler:
             if nodes is None:
                 continue
 
-            for index in self.model.get_acoustic_global_dof_from_nodes(nodes):
+            _nodes = self.model.fluid_node_mapping[nodes]
+
+            for index in self.model.get_acoustic_global_dof_from_nodes(_nodes):
                 prescribed_dof_indexes.append(index)
 
         return prescribed_dof_indexes
@@ -162,7 +169,7 @@ class AcousticAssembler:
         """ 
         Returns the unprescribed dof indexes.
         """
-        all_indexes = np.arange(self.model.total_str_dofs, dtype=int)
+        all_indexes = np.arange(self.model.total_act_dofs, dtype=int)
         if self.prescribed_dof_indexes is None:
             self.prescribed_dof_indexes = self.get_prescribed_indexes()
 
@@ -172,6 +179,9 @@ class AcousticAssembler:
     def process_indexes(self):
         self.prescribed_dof_indexes = self.get_prescribed_indexes()
         self.unprescribed_dof_indexes = self.get_unprescribed_indexes()
+
+        print("passei aqui...")
+        print(self.model.total_dof, self.model.total_act_dofs, self.unprescribed_dof_indexes.size)
 
 
     def get_prescribed_pressure_model_excitation(self, index: int = 0):
@@ -1026,7 +1036,6 @@ class AcousticAssembler:
         self.ind_rows, self.ind_cols = self.element_3d.generate_ind_rows_cols(reorder=reorder)
 
         self.dof = self.element_3d.DOF_PER_ELEMENT
-        self.number_3d_elements = len(self.element_3d.connectivity)
         self.total_dof = self.element_3d.DOF_PER_NODE * len(self.element_3d.nodal_coordinates)
 
         # global_matrices shape
@@ -1056,33 +1065,32 @@ class AcousticAssembler:
             Control when the connectivity matrix will be reordered.
         """
 
-        self.ind_rows, self.ind_cols = self.element_3d.generate_ind_rows_cols(reorder=reorder)
+        self.ind_rows, self.ind_cols, self.acoustic_dofs = self.element_3d.generate_ind_rows_cols(reorder=reorder)
 
         self.dof = self.element_3d.DOF_PER_ELEMENT
-        self.number_3d_elements = len(self.element_3d.connectivity)
         self.total_dof = self.element_3d.DOF_PER_NODE * len(self.element_3d.nodal_coordinates)
 
         # global_matrices shape
-        self.gm_shape = (self.total_dof, self.total_dof)
+        self.gm_shape = (self.model.total_dof, self.model.total_dof)
 
         self.int3d_BtB = np.zeros((self.number_3d_elements, self.dof, self.dof), dtype=complex)
         self.int3d_NtN = np.zeros((self.number_3d_elements, self.dof, self.dof), dtype=complex)
 
         last_progress = 0
-        for element_id in range(self.number_3d_elements):
+        for index, element_id in enumerate(self.model.elements_per_domain.get("acoustic", [])):
 
             if self.model.stop_processing:
                 return True
 
-            progress = int(100 * (element_id / self.number_3d_elements))
+            progress = int(100 * (index / self.number_3d_elements))
             if progress != last_progress:
                 logging.info(f"Processing the elementary matrices data... [{progress}/100]")
 
             last_progress = progress
 
             Ke, Me = self.element_3d.elementary_matrices(element_id)
-            self.int3d_BtB[element_id, :, :] = Ke
-            self.int3d_NtN[element_id, :, :] = Me
+            self.int3d_BtB[index, :, :] = Ke
+            self.int3d_NtN[index, :, :] = Me
 
         self.fluid_properties_from_volume, self.frequency_dependent = self.model.map_fluid_properties_to_volumes()
         self.process_indexes()
@@ -1552,7 +1560,7 @@ class AcousticAssembler:
         self.process_perforated_plate_impedance_data_to_assemble_damping_matrix()
 
 
-    def assemble_global_stiffness_matrix(self, factor_K: np.ndarray):
+    def assemble_global_stiffness_matrix(self, factor_K: np.ndarray, weak_coupling: bool = True):
         """
         This method assembles the global stiffness matrix.
 
@@ -1564,11 +1572,14 @@ class AcousticAssembler:
         data_K = self.int3d_BtB * factor_K
         _stiffness_matrix_full = csr_matrix((data_K.flatten(), (self.ind_rows, self.ind_cols)), shape=self.gm_shape)
 
+        if weak_coupling and self.model.total_str_dofs:
+            _stiffness_matrix_full = _stiffness_matrix_full[self.acoustic_dofs, :][:, self.acoustic_dofs]
+
         self.stiffness_matrix = _stiffness_matrix_full[self.unprescribed_dof_indexes, :][:, self.unprescribed_dof_indexes]
         self.stiffness_matrix_r = _stiffness_matrix_full[:, self.prescribed_dof_indexes]
 
 
-    def assemble_global_mass_matrix(self, factor_M: np.ndarray):
+    def assemble_global_mass_matrix(self, factor_M: np.ndarray, weak_coupling: bool = True):
         """
         This method assembles the global mass matrix.
 
@@ -1579,6 +1590,9 @@ class AcousticAssembler:
         """
         data_M = self.int3d_NtN * factor_M
         _mass_matrix_full = csr_matrix((data_M.flatten(), (self.ind_rows, self.ind_cols)), shape=self.gm_shape)
+
+        if weak_coupling and self.model.total_str_dofs:
+            _mass_matrix_full = _mass_matrix_full[self.acoustic_dofs, :][:, self.acoustic_dofs]
 
         self.mass_matrix = _mass_matrix_full[self.unprescribed_dof_indexes, :][:, self.unprescribed_dof_indexes]
         self.mass_matrix_r = _mass_matrix_full[:, self.prescribed_dof_indexes]
@@ -1795,7 +1809,7 @@ class AcousticAssembler:
         return output
 
 
-    def assemble_global_matrices(self, reorder: bool=True, stacked_matrices: bool=True):
+    def assemble_global_matrices(self, reorder: bool=True, stacked_matrices: bool=False):
         """
         This method assembles the global matrices of the acoustic model.
         """

@@ -36,6 +36,11 @@ class StructuralAssembler:
         self.material_from_volume = {}
 
 
+    @property
+    def number_3d_elements(self):
+        return self.model.number_3d_structural_elements
+
+
     def define_structural_elements(self):
         self.model.set_structural_elements()
         self.element_1d = self.model.structural_element_1d
@@ -854,15 +859,12 @@ class StructuralAssembler:
         # global_matrices shape
         self.gm_shape = (self.model.total_dof, self.model.total_dof)
 
-        number_elements = self.model.number_3d_structural_elements
-        # number_elements = len(self.element_3d.connectivity)
-
         print(f"Number of acoustic elements: {self.model.number_3d_acoustic_elements}")
         print(f"Number of structural elements: {self.model.number_3d_structural_elements}")
-        print(self.ind_cols.size, self.ind_rows.size, number_elements*(self.dof**2))
+        print(self.ind_cols.size, self.ind_rows.size, self.number_3d_elements*(self.dof**2))
 
-        self.data_K = np.zeros((number_elements, self.dof, self.dof), dtype=complex)
-        self.data_M = np.zeros((number_elements, self.dof, self.dof), dtype=complex)
+        self.data_K = np.zeros((self.number_3d_elements, self.dof, self.dof), dtype=complex)
+        self.data_M = np.zeros((self.number_3d_elements, self.dof, self.dof), dtype=complex)
 
         # initialize variable
         last_progress = 0
@@ -874,7 +876,7 @@ class StructuralAssembler:
             if self.model.stop_processing:
                 return True
 
-            progress = int(100 * (index / number_elements))
+            progress = int(100 * (index / self.number_3d_elements))
             if progress != last_progress:
                 logging.info(f"Processing the elementary matrices data for solid elements... [{int(progress)}/100]")
 
@@ -896,6 +898,7 @@ class StructuralAssembler:
 
     def compute_data_to_process_global_matrices(self, reorder: bool = True):
         """
+        This method preprocesses all the required data to assemble the global matrices.
         """
         if self.model.mesh.solids_connectivity.size:
             self.process_material_from_volumes()
@@ -915,7 +918,6 @@ class StructuralAssembler:
         _stiffness_matrix_full = csr_matrix((self.data_K.flatten(), (self.ind_rows, self.ind_cols)), shape=self.gm_shape)
 
         if weak_coupling and self.model.total_act_dofs:
-            print(self.structural_dofs.size)
             _stiffness_matrix_full = _stiffness_matrix_full[self.structural_dofs, :][:, self.structural_dofs]
 
         self.stiffness_matrix = _stiffness_matrix_full[self.unprescribed_dof_indexes, :][:, self.unprescribed_dof_indexes]
