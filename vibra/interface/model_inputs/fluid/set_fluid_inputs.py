@@ -282,6 +282,8 @@ class SetFluidInputs(SetFluidInputs_UI):
             return
 
         for volume_id in volume_ids:
+            # we cannot have two physical domains active on the same volume
+            self.properties._remove_volume_property("material", volume_id)
             self.properties._set_property("fluid", selected_fluid, volume=volume_id)
 
             for surface_id in self.mesh.surfaces_from_volume[volume_id]:

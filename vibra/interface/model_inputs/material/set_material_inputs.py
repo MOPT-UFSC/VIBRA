@@ -325,7 +325,7 @@ class MaterialInputs(SetMaterial_UI):
 
         if "surfaces" in current_text:
             if "All" in current_text:
-                surface_ids = list()
+                surface_ids = []
                 if "surfaces" in self.mesh.geometry_information.keys():
                     surface_ids = self.mesh.geometry_information["surfaces"]
 
@@ -343,8 +343,8 @@ class MaterialInputs(SetMaterial_UI):
 
         if "volumes" in current_text:
             if "All" in current_text:
-                volume_ids = list()
-                if "volumes" in self.mesh.geometry_information.keys():
+                volume_ids = []
+                if "volumes" in self.mesh.geometry_information:
                     volume_ids = self.mesh.geometry_information["volumes"]
 
             else:
@@ -357,6 +357,8 @@ class MaterialInputs(SetMaterial_UI):
                     return True
 
             for volume_id in volume_ids:
+                # we cannot have two physical domains active on the same volume
+                self.properties._remove_volume_property("fluid", volume_id)
                 self.properties._set_property("material", selected_material, volume=volume_id)
 
         self.actions_to_finalize(close_window)
