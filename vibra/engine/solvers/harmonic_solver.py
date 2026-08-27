@@ -14,6 +14,7 @@ from vibra.engine.solution import HarmonicSolution
 from vibra.engine.solution.lazy_harmonic_solution import LazyHarmonicSolution
 from vibra.engine.solvers import ModalSolver
 from vibra.engine.solvers.linear_solver import LinearSolver, SolverType, initialize_solver
+from vibra.utils.RamMonitor import RamMonitor
 
 
 class HarmonicSolver:
@@ -38,6 +39,7 @@ class HarmonicSolver:
         self._linear_solver: Optional[LinearSolver] = None
         self._file_writer: Optional[LazyHDF5MatrixWriter] = None
 
+    @RamMonitor()
     def solve_direct(self, print_log: bool = False, is_resume: bool = False) -> HarmonicSolution:
         """
         This method solves the acoustic harmonic analysis using the

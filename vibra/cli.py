@@ -10,10 +10,7 @@ def run_interface(project_path: str | None = None, open_last: bool = False):
 def run_analysis(working_dir: str):
     from vibra.utils.subprocess import analysis_subprocess
 
-    try:
-        analysis_subprocess.main(is_resume=False, working_dir=working_dir)
-    except Exception:
-        print("Working dir does not propperly configure an analysis.")
+    analysis_subprocess.main(is_resume=False, working_dir=working_dir)
 
 
 def continue_analysis(working_dir: str):

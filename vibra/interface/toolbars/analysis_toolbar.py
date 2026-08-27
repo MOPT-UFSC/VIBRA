@@ -13,6 +13,7 @@ from vibra.interface.analysis.modal_analysis_input import ModalAnalysisInput
 from vibra.interface.formatters.icons import Icon
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.loading_window import LoadingWindow
+from vibra.utils.RamMonitor import RamMonitor
 from vibra.utils.subprocess.subprocess_handler import SubProcessHandler, SubProcessStatus
 
 
@@ -260,6 +261,7 @@ class AnalysisToolbar(QToolBar):
 
         LoadingWindow(self.post_processing_analysis).run()
 
+    @RamMonitor()
     def run_analysis_in_subprocess(self, is_resume: bool = True) -> bool:
         if app().main_window.action_results_workspace.isChecked():
             app().main_window.action_model_workspace_callback()

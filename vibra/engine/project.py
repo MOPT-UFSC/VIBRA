@@ -22,6 +22,7 @@ from vibra.engine.serialization.project_reader import ProjectReader
 from vibra.engine.serialization.project_writer import ProjectWriter
 from vibra.engine.solution import HarmonicSolution, ModalSolution
 from vibra.engine.solvers import HarmonicSolver, ModalSolver
+from vibra.utils.RamMonitor import RamMonitor
 
 
 class Project:
@@ -113,10 +114,11 @@ class Project:
         self.project_paths.clear_data()
         self.mark_project_as_modified()
 
+    @RamMonitor()
     def run_analysis(self, is_resume: bool = False):
         """
         It performs the solution of the currently configured model.
-        It might raise errors if the analysis is not propperly configured.
+        It might raise errors if the analysis is not properly configured.
         """
         match self.model.analysis_id:
             case AnalysisID.STRUCTURAL_MODAL:
@@ -248,7 +250,9 @@ class Project:
         if not isinstance(mesh_setup, MeshSetup):
             raise errors.InvalidMeshSetupError("The mesh setup has not been configured yet.")
 
-        mesh = Mesh().load_cad(self.model.geometry_path, mesh_setup)
+        with RamMonitor():
+            print("mesh")
+            mesh = Mesh().load_cad(self.model.geometry_path, mesh_setup)
 
         if mesh.collapsed_elements_data:
             collapsed_1d_elements = mesh.collapsed_elements_data.get("collpased_1d_elements")
