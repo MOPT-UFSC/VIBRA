@@ -277,7 +277,14 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             max_value = self.user_max_value
 
         colormap = app().config.user_preferences.color_map
-        self.analysis_actor.plot_color_bar(color_scalars, min_value, max_value, colormap)
+
+        # filter structural nodes
+        model = postprocessing.model
+        acoustic_nodes = model.nodes_per_domain.get("acoustic")
+        _color_scalars = np.zeros(len(model.mesh.nodal_coordinates), dtype=float)
+        _color_scalars[acoustic_nodes] = color_scalars
+
+        self.analysis_actor.plot_color_bar(_color_scalars, min_value, max_value, colormap)
         self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.update()
 
