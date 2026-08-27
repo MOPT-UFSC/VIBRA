@@ -274,6 +274,12 @@ class VolumeSuppressionInputs(VolumeSuppressionDialog_UI):
     def _cancel(self):
         self._close_dialog()
 
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Escape:
+            self._cancel()
+        else:
+            super().keyPressEvent(event)
+
     def closeEvent(self, event):
         app().main_window.selection.volume_selection_mode = False
         self.keep_window_open = False
