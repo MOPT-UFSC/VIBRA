@@ -1,3 +1,6 @@
+import sys
+
+from tqdm import tqdm
 
 import logging
 from collections import defaultdict
@@ -1044,7 +1047,7 @@ class AcousticAssembler:
         self.process_indexes()
 
 
-    def compute_data_to_assemble_global_matrices_using_loop(self, reorder: bool = True):
+    def compute_data_to_assemble_global_matrices_using_loop(self, reorder: bool = True, print_log: bool = False):
         """ 
         This method processes the data required to assemble the global matrices
         sweeping all solid elements.
@@ -1068,24 +1071,29 @@ class AcousticAssembler:
         self.int3d_NtN = np.zeros((self.number_3d_elements, self.dof, self.dof), dtype=complex)
 
         last_progress = 0
-        for element_id in range(self.number_3d_elements):
+        with tqdm(
+            range(self.number_3d_elements),
+            desc="Processing the elementary matrices data",
+            unit="element",
+            file=sys.stdout,
+            disable=not print_log,
+        ) as progress_bar:
+            for element_id in progress_bar:
+                if self.model.stop_processing:
+                    return True
 
-            if self.model.stop_processing:
-                return True
+                progress = int(100 * (element_id / self.number_3d_elements))
+                if progress != last_progress:
+                    logging.info(f"Processing the elementary matrices data... [{progress}/100]")
 
-            progress = int(100 * (element_id / self.number_3d_elements))
-            if progress != last_progress:
-                logging.info(f"Processing the elementary matrices data... [{progress}/100]")
+                last_progress = progress
 
-            last_progress = progress
-
-            Ke, Me = self.element_3d.elementary_matrices(element_id)
-            self.int3d_BtB[element_id, :, :] = Ke
-            self.int3d_NtN[element_id, :, :] = Me
+                Ke, Me = self.element_3d.elementary_matrices(element_id)
+                self.int3d_BtB[element_id, :, :] = Ke
+                self.int3d_NtN[element_id, :, :] = Me
 
         self.fluid_properties_from_volume, self.frequency_dependent = self.model.map_fluid_properties_to_volumes()
         self.process_indexes()
-
 
     def compute_global_matrices_factors(self, index: int = 0):
         """
@@ -1793,7 +1801,7 @@ class AcousticAssembler:
         return output
 
 
-    def assemble_global_matrices(self, reorder: bool=True, stacked_matrices: bool=True):
+    def assemble_global_matrices(self, reorder: bool = True, stacked_matrices: bool = True, print_log: bool = False):
         """
         This method assembles the global matrices of the acoustic model.
         """
@@ -1807,9 +1815,10 @@ class AcousticAssembler:
         if stacked_matrices:
             self.compute_data_to_assemble_global_matrices(reorder=reorder)
         else:
-            self.compute_data_to_assemble_global_matrices_using_loop(reorder=reorder)
+            self.compute_data_to_assemble_global_matrices_using_loop(reorder=reorder, print_log=print_log)
         dt = time() - t0
-        print(f"Elapsed time to gather data to assemble global matrices: {dt : .6f} [s]")
+        if print_log:
+            print(f"Elapsed time to gather data to assemble global matrices: {dt : .6f} [s]")
 
         if self.model.stop_processing:
             return
@@ -1818,32 +1827,37 @@ class AcousticAssembler:
         t0 = time()
         self.compute_data_to_assemble_damping_matrix()
         dt = time() - t0
-        print(f"Elapsed time to gather data to assemble damping matrices: {dt : .6f} [s]")
+        if print_log:
+            print(f"Elapsed time to gather data to assemble damping matrices: {dt : .6f} [s]")
 
         logging.info("Computing the global matrices factors... [45/100]")
         t0 = time()
         factor_K, factor_M, factor_Cvisc, factor_fvisc = self.compute_global_matrices_factors()
         dt = time() - t0
-        print(f"Elapsed time to compute global matrices factor: {dt : .6f} [s]")
+        if print_log:
+            print(f"Elapsed time to compute global matrices factor: {dt : .6f} [s]")
 
         logging.info("Assembling global stiffness matrix... [50/100]")
         t0 = time()
         self.assemble_global_stiffness_matrix(factor_K)
         dt = time() - t0
-        print(f"Elapsed time to assemble the global stiffness matrix: {dt : .6f} [s]")
+        if print_log:
+            print(f"Elapsed time to assemble the global stiffness matrix: {dt : .6f} [s]")
 
         logging.info("Assembling global mass matrix... [60/100]")
         t0 = time()
         self.assemble_global_mass_matrix(factor_M)
         dt = time() - t0
-        print(f"Elapsed time to assemble the global mass matrix: {dt : .6f} [s]")
+        if print_log:
+            print(f"Elapsed time to assemble the global mass matrix: {dt : .6f} [s]")
 
         logging.info("Assembling global mass matrix... [70/100]")
         t0 = time()
         self.assemble_global_damping_matrix_3d_elements(factor_Cvisc, factor_fvisc)
         self.assemble_global_damping_matrix_2d_elements()
         dt = time() - t0
-        print(f"Elapsed time to assemble the global damping matrix: {dt : .6f} [s]\n")
+        if print_log:
+            print(f"Elapsed time to assemble the global damping matrix: {dt : .6f} [s]\n")
 
 
     def assemble_model_excitations(self):
@@ -1867,12 +1881,12 @@ class AcousticAssembler:
         self.mass_flow_vectors = A + B
 
 
-    def assemble_global_matrices_and_excitations(self, reorder: bool=True, stacked_matrices: bool=True, **kwargs):
+    def assemble_global_matrices_and_excitations(self, reorder: bool = True, stacked_matrices: bool = True, print_log: bool = False, **kwargs):
         """
         This method assembles the global matrices and excitations of the acoustic model.
         """
 
-        self.assemble_global_matrices(reorder = reorder, stacked_matrices = stacked_matrices)        
+        self.assemble_global_matrices(reorder=reorder, stacked_matrices=stacked_matrices, print_log=print_log)
         self.assemble_model_excitations()
 
 
