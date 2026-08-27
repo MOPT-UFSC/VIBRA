@@ -3,6 +3,7 @@ from copy import deepcopy
 from numbers import Number
 from pathlib import Path
 from typing import Callable, Optional
+from collections import defaultdict
 
 import numpy as np
 from PIL.Image import Image
@@ -50,13 +51,13 @@ from vibra.engine.elements.elements_3d import (
     STRUCT_TETRAHEDRON_4S,
     STRUCT_TETRAHEDRON_10S,
 )
-
 from vibra.engine.geometry.geometry import LengthUnits
 from vibra.engine.mesher.degrees_of_freedom_decoupling_new import DegreesOfFreedomDecoupling
 from vibra.engine.mesher.element_setup import GMSH_VISUAL_MESH
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.mesh_setup import HEXAHEDRON_8, HEXAHEDRON_20, TETRAHEDRON_4, TETRAHEDRON_10, ElementTopology, MeshSetup
 from vibra.engine.properties.fluid import Fluid
+from vibra.engine.properties.material import Material
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.engine.solution import HarmonicSolution, Solution
 from vibra.engine.transfer_impedances.perforated_plate_models import (
@@ -93,8 +94,8 @@ class Model:
         self.decouple_info = {}
         self.nodes_mapping = {}
 
-        self.solid_acoustic_element = None
-        self.surface_acoustic_element = None
+        self.dof_indexes_act = None
+        self.dof_indexes_str = None
 
         self.acoustic_element_1d = None
         self.acoustic_element_2d = None
@@ -103,6 +104,11 @@ class Model:
         self.structural_element_1d = None
         self.structural_element_2d = None
         self.structural_element_3d = None
+
+        self.model_domains = defaultdict(list)
+        self.nodes_per_domain = {}
+        self.elements_per_domain = {}
+        self.fluid_structure_interfaces = {}
 
         self.properties = ModelProperties(self.disable_resume_callback)
 
@@ -168,6 +174,123 @@ class Model:
             return not np.all(self.solution.status)
         except Exception:
             return False
+
+    def map_model_domains(self):
+        self.model_domains.clear()
+        for vol_id in self.mesh.elements_from_volume:
+
+            fluid = self.properties._get_property("fluid", volume=vol_id)
+            if isinstance(fluid, Fluid):
+                self.model_domains["acoustic"].append(vol_id)
+                continue
+
+            material = self.properties._get_property("material", volume=vol_id)
+            if isinstance(material, Material):
+                self.model_domains["structural"].append(vol_id)
+
+    def map_fluid_structure_interfaces(self):
+        self.fluid_structure_interfaces.clear()
+        for surface_id, vol_ids in self.mesh.volumes_from_surface.items():
+            if len(vol_ids) == 1:
+                continue
+
+            acoustic_volumes = self.model_domains.get("acoustic", [])
+            structural_volumes = self.model_domains.get("structural", [])
+
+            vol_a, vol_b = vol_ids
+            if vol_a in acoustic_volumes and vol_b in structural_volumes:
+                fluid_volume = vol_a
+                structure_volume = vol_b
+
+            elif vol_b in acoustic_volumes and vol_a in structural_volumes:
+                fluid_volume = vol_b
+                structure_volume = vol_a
+
+            else:
+                continue
+
+            self.fluid_structure_interfaces[surface_id] = {
+                "fluid_volume" : fluid_volume,
+                "structure_volume" : structure_volume,
+                "surface_nodes" : self.mesh.get_nodes_from_surface(surface_id)
+                }
+
+    def map_nodes_by_domain(self):
+        self.nodes_per_domain.clear()
+        self.elements_per_domain.clear()
+        for domain, vol_ids in self.model_domains.items():
+            rows = np.isin(self.mesh.solids_connectivity[:, 1], vol_ids)
+            self.nodes_per_domain[domain] = np.unique(self.mesh.solids_connectivity[rows, 4:])
+            self.elements_per_domain[domain] = self.mesh.solids_connectivity[rows, 0]
+
+        self.number_3d_acoustic_elements = len(self.elements_per_domain.get("acoustic", []))
+        self.number_3d_structural_elements = len(self.elements_per_domain.get("structural", []))
+
+    def process_dof_mappings_for_fsi(self):
+
+        if self.acoustic_element_3d is None:
+            self.set_acoustic_elements()
+
+        if self.structural_element_3d is None:
+            self.set_structural_elements()
+
+        nodes_act: np.ndarray = self.nodes_per_domain.get("acoustic", np.array([]))
+        nodes_str: np.ndarray = self.nodes_per_domain.get("structural", np.array([]))
+
+        dof_act = self.acoustic_element_3d.DOF_PER_NODE
+        dof_str = self.structural_element_3d.DOF_PER_NODE
+
+        self.number_acoustic_nodes = len(nodes_act)
+        self.number_structural_nodes = len(nodes_str)
+
+        self.total_act_dofs = dof_act * self.number_acoustic_nodes
+        self.total_str_dofs = dof_str * self.number_structural_nodes
+        self.total_dof = self.total_act_dofs + self.total_str_dofs
+
+        print(f"Number of DOF (acoustic): {self.total_act_dofs}")
+        print(f"Number of DOF (structural): {self.total_str_dofs}")
+        print(f"Number of DOF (total): {self.total_dof}")
+
+        # the total number of nodes
+        total_nodes = len(self.mesh.nodal_coordinates)
+
+        # map the nodes of each domain sequentially
+
+        self.struct_node_mapping = np.full(total_nodes, -1, dtype=int)
+        self.fluid_node_mapping = np.full(total_nodes, -1, dtype=int)
+
+        for index, node_id in enumerate(nodes_act):
+            self.fluid_node_mapping[node_id] = index
+
+        for index, node_id in enumerate(nodes_str):
+            self.struct_node_mapping[node_id] = index
+
+        nodes_str_seq = np.arange(self.number_structural_nodes, dtype=int).reshape(-1, 1)
+        dof_indexes_str = dof_str * nodes_str_seq + np.arange(dof_str)
+        self.dof_indexes_str = dof_indexes_str.flatten()
+
+        nodes_act_seq = np.arange(self.number_acoustic_nodes, dtype=int).reshape(-1, 1)
+        dof_indexes_act = dof_act * nodes_act_seq + np.arange(dof_act) + self.total_str_dofs
+        self.dof_indexes_act = dof_indexes_act.flatten()
+
+        # all_indexes = np.arange(self.total_dof, dtype=int)
+        # all_indexes_conc = np.sort(np.append(self.dof_indexes_str, self.dof_indexes_act))
+        # data = np.array([all_indexes, all_indexes_conc], dtype=int).T
+        # np.savetxt("dof_indexes.dat", data, delimiter=",", fmt="%i")
+        # print(np.allclose(all_indexes, all_indexes_conc))
+
+        # mask = np.isin(all_indexes, str_dof_indexes, invert=True)
+        # act_dof_indexes = all_indexes[mask]
+
+        # print(total_dof, str_dof_indexes.size, act_dof_indexes.size)
+
+        # return total_dof, str_dof_indexes, act_dof_indexes
+
+    def update_domains_mappings(self):
+        self.map_model_domains()
+        self.map_fluid_structure_interfaces()
+        self.map_nodes_by_domain()
+        self.process_dof_mappings_for_fsi()
 
     def reset_current_solution(self):
         self.solution = None
