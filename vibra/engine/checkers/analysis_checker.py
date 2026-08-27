@@ -17,6 +17,10 @@ class AnalysisChecker:
         self.model = model
 
     def check_analysis_requirements(self, is_resume: bool = False):
+
+        # update the domains mappings
+        self.model.update_domains_mappings()
+
         match self.model.analysis_id:
             case AnalysisID.STRUCTURAL_MODAL:
                 self.check_structural_modal_analysis()
@@ -117,12 +121,20 @@ class AnalysisChecker:
             "volumes",
         )
 
-        if volumes_without_material:
-            raise errors.InvalidModelSetupError(
-                f"You should assign one material for volumes {volumes_without_material} "
-                "to proceed with the analysis solution.",
-                volumes=volumes_without_material,
-            )  # fmt: skip
+        if not volumes_without_material:
+            return
+
+        acoustic_domain_volumes = self.model.model_domains.get("acoustic", [])
+        if len(acoustic_domain_volumes) != len(volumes_without_material):
+            for vol_id in volumes_without_material:
+                if vol_id in acoustic_domain_volumes:
+                    continue
+
+                raise errors.InvalidModelSetupError(
+                    f"You should assign one material for volumes {volumes_without_material} "
+                    "to proceed with the analysis solution.",
+                    volumes=volumes_without_material,
+                )  # fmt: skip
 
     def check_materials_surfaces(self):
         surfaces_without_material = self._entities_without_property(
@@ -143,12 +155,20 @@ class AnalysisChecker:
             "volumes",
         )
 
-        if volumes_without_fluid:
-            raise errors.InvalidModelSetupError(
-                f"You should assign one fluid for volumes {volumes_without_fluid} "
-                "to proceed with the analysis solution.",
-                volumes=volumes_without_fluid,
-            )  # fmt: skip
+        if not volumes_without_fluid:
+            return
+
+        structural_domain_volumes = self.model.model_domains.get("structural", [])
+        if len(structural_domain_volumes) != len(volumes_without_fluid):
+            for vol_id in volumes_without_fluid:
+                if vol_id in structural_domain_volumes:
+                    continue
+    
+                raise errors.InvalidModelSetupError(
+                    f"You should assign one fluid for volumes {volumes_without_fluid} "
+                    "to proceed with the analysis solution.",
+                    volumes=volumes_without_fluid,
+                )  # fmt: skip
 
     def check_fluids_surfaces(self):
         surfaces_without_fluid = self._entities_without_property(
