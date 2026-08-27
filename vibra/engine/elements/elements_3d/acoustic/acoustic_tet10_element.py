@@ -489,6 +489,39 @@ class ACT_TETRAHEDRON_10C(Element3D):
 
 
     def generate_ind_rows_cols(self, reorder: bool = True):
+        """This method processess the dof indices (rows and columns) for assembly"""
+
+        if reorder:
+            self.reorder_connect()
+        else:
+            self.connectivity = self.solids_connectivity[:, [0, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]]
+
+        # filter the acoustic elements connectivities
+        element_ids = self.model.elements_per_domain.get("acoustic", np.array([]))
+        acoustic_connect = self.connectivity[element_ids, :]
+
+        dof, edof = self.DOF_PER_NODE, self.DOF_PER_ELEMENT
+        n_el = element_ids.size
+
+        local_dof = np.arange(dof, dtype=int)
+        ind_dof = np.zeros((n_el, edof), dtype=int)
+
+        for j in range(self.NODES_PER_ELEMENT):
+            start = j * dof
+            end = (j + 1) * dof
+            elem_nodes = self.model.fluid_node_mapping[acoustic_connect[:, j + 1]]
+            ind_dof[:, start : end] = dof * elem_nodes.reshape(-1, 1) + local_dof
+
+        vect_indices = ind_dof.flatten()
+        ordered_dofs = np.unique(vect_indices)
+
+        ind_rows = ((np.tile(vect_indices, (edof, 1))).T).flatten()
+        ind_cols = (np.tile(ind_dof, edof)).flatten()
+
+        return ind_rows, ind_cols, ordered_dofs
+
+
+    def generate_ind_rows_cols_old(self, reorder: bool = True):
         """ 
         This method processess the dof indices (rows and columns) 
         for assembly
