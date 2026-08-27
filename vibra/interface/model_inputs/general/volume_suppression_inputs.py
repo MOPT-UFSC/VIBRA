@@ -96,6 +96,7 @@ class VolumeSuppressionInputs(VolumeSuppressionDialog_UI):
     def _add_callback(self):
         text = self.lineEdit_selected_ids.text().strip()
         if not text:
+
             return
 
         try:
@@ -124,6 +125,7 @@ class VolumeSuppressionInputs(VolumeSuppressionDialog_UI):
         self.last_synced_ids.clear()
 
         self._populate_table()
+        app().main_window.entity_visibility.hide_volumes(self.pending_ids)
 
     def _delete_callback(self):
         current_row = self.tableWidget_local_mesh_size_control_data.currentRow()
@@ -143,6 +145,9 @@ class VolumeSuppressionInputs(VolumeSuppressionDialog_UI):
 
         self.suppressed_volume_ids = self.previously_suppressed_ids | self.pending_ids
         self._populate_table()
+        app().main_window.entity_visibility.unhide_all()
+        if self.pending_ids:
+            app().main_window.entity_visibility.hide_volumes(self.pending_ids)
 
     def _geometry_selection_callback(self):
         selection = app().main_window.selection
