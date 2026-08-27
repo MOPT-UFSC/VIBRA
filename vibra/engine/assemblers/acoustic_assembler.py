@@ -39,8 +39,8 @@ class AcousticAssembler:
 
         self.number_frequencies = 1
         self.prescribed_values = []
-        self.prescribed_indexes = []
-        self.unprescribed_indexes = []
+        self.prescribed_dof_indexes = None
+        self.unprescribed_dof_indexes = None
         self.fluid_properties_from_volume = {}
 
         self.element_1d = None
@@ -142,7 +142,7 @@ class AcousticAssembler:
         """
         Returns the prescribed dof indexes.
         """
-        _prescribed_indexes = []
+        prescribed_dof_indexes = []
         for key in self.properties.surface_properties:
             property, surface_id = key
             if property != "acoustic_pressure":
@@ -153,28 +153,25 @@ class AcousticAssembler:
                 continue
 
             for index in self.model.get_acoustic_global_dof_from_nodes(nodes):
-                _prescribed_indexes.append(index)
+                prescribed_dof_indexes.append(index)
 
-        return _prescribed_indexes
+        return prescribed_dof_indexes
 
 
     def get_unprescribed_indexes(self):
         """ 
         Returns the unprescribed dof indexes.
         """
-        total_dof = self.element_3d.DOF_PER_NODE * len(self.element_3d.nodal_coordinates)
-        all_indexes = np.arange(total_dof, dtype=int)
-        prescribed_indexes = self.get_prescribed_indexes()
-        return np.delete(all_indexes, prescribed_indexes)
+        all_indexes = np.arange(self.model.total_str_dofs, dtype=int)
+        if self.prescribed_dof_indexes is None:
+            self.prescribed_dof_indexes = self.get_prescribed_indexes()
+
+        return np.delete(all_indexes, self.prescribed_dof_indexes)
 
 
     def process_indexes(self):
-        self.prescribed_indexes = self.get_prescribed_indexes()
-        self.unprescribed_indexes = self.get_unprescribed_indexes()
-
-
-    def get_matrices_dropping_indexes(self):
-        return self.unprescribed_indexes, self.prescribed_indexes
+        self.prescribed_dof_indexes = self.get_prescribed_indexes()
+        self.unprescribed_dof_indexes = self.get_unprescribed_indexes()
 
 
     def get_prescribed_pressure_model_excitation(self, index: int = 0):
@@ -220,7 +217,7 @@ class AcousticAssembler:
         F_Cadd = 1j * omega * Cr_add
         F_eq = F_Kadd + F_Madd + F_Cadd
 
-        return F_eq[self.unprescribed_indexes]
+        return F_eq[self.unprescribed_dof_indexes]
 
 
     def get_impedance_data_for_element_integration(self, property_label: str) -> dict:
@@ -854,7 +851,7 @@ class AcousticAssembler:
                 self.mass_source_vector_points[node_id, :] += complex_values_array / fluid.fluid_density
 
         if self.mass_source_vector_points.any():
-            self.mass_source_vector_points = self.mass_source_vector_points[self.unprescribed_indexes, :]
+            self.mass_source_vector_points = self.mass_source_vector_points[self.unprescribed_dof_indexes, :]
 
 
     def process_nodal_mass_source_data_for_lines(self):
@@ -892,7 +889,7 @@ class AcousticAssembler:
             self.mass_source_vector_lines[nodes, :] += aux_ones @ complex_values_array
 
         if self.mass_source_vector_lines.any():
-            self.mass_source_vector_lines = self.mass_source_vector_lines[self.unprescribed_indexes, :]
+            self.mass_source_vector_lines = self.mass_source_vector_lines[self.unprescribed_dof_indexes, :]
 
 
     def process_nodal_mass_source_data_for_surfaces(self):
@@ -930,7 +927,7 @@ class AcousticAssembler:
             self.mass_source_vector_surfaces[nodes, :] += aux_ones @ complex_values_array
 
         if self.mass_source_vector_surfaces.any():
-            self.mass_source_vector_surfaces = self.mass_source_vector_surfaces[self.unprescribed_indexes, :]
+            self.mass_source_vector_surfaces = self.mass_source_vector_surfaces[self.unprescribed_dof_indexes, :]
 
 
     def process_nodal_mass_source_data_for_volumes(self):
@@ -968,7 +965,7 @@ class AcousticAssembler:
             self.mass_source_vector_volumes[nodes, :] += aux_ones @ complex_values_array
 
         if self.mass_source_vector_volumes.any():
-            self.mass_source_vector_volumes = self.mass_source_vector_volumes[self.unprescribed_indexes, :]
+            self.mass_source_vector_volumes = self.mass_source_vector_volumes[self.unprescribed_dof_indexes, :]
 
 
     def process_mass_source_data_to_assemble_matrices(self):
@@ -1206,8 +1203,8 @@ class AcousticAssembler:
         data_Qms2 = factor_Qms2[:, index].reshape(-1, 1, 1) * self.int1d_BtB
         Q_ms2 = csr_matrix((data_Qms2.flatten(), (self.ind_rows_Qmsf_1d, self.ind_cols_Qmsf_1d)), shape=self.gm_shape)
 
-        self.Qms1_1d = Q_ms1[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
-        self.Qms2_1d = Q_ms2[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
+        self.Qms1_1d = Q_ms1[self.unprescribed_dof_indexes, :][:, self.unprescribed_dof_indexes]
+        self.Qms2_1d = Q_ms2[self.unprescribed_dof_indexes, :][:, self.unprescribed_dof_indexes]
 
 
     def assemble_mass_source_matrices_from_surfaces(self, index: int = 0):
@@ -1233,8 +1230,8 @@ class AcousticAssembler:
         data_Qms2 = factor_Qms2[:, index].reshape(-1, 1, 1) * self.int2d_BtB
         Q_ms2 = csr_matrix((data_Qms2.flatten(), (self.ind_rows_Qmsf_2d, self.ind_cols_Qmsf_2d)), shape=self.gm_shape)
 
-        self.Qms1_2d = Q_ms1[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
-        self.Qms2_2d = Q_ms2[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
+        self.Qms1_2d = Q_ms1[self.unprescribed_dof_indexes, :][:, self.unprescribed_dof_indexes]
+        self.Qms2_2d = Q_ms2[self.unprescribed_dof_indexes, :][:, self.unprescribed_dof_indexes]
 
 
     def assemble_mass_source_matrices_from_volumes(self, index: int = 0):
@@ -1259,8 +1256,8 @@ class AcousticAssembler:
         data_Qms2 = factor_Qms2 * self.int3d_BtB
         Q_ms2 = csr_matrix((data_Qms2.flatten(), (self.ind_rows, self.ind_cols)), shape=self.gm_shape)
 
-        self.Qms1_3d = Q_ms1[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
-        self.Qms2_3d = Q_ms2[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
+        self.Qms1_3d = Q_ms1[self.unprescribed_dof_indexes, :][:, self.unprescribed_dof_indexes]
+        self.Qms2_3d = Q_ms2[self.unprescribed_dof_indexes, :][:, self.unprescribed_dof_indexes]
 
 
     def compute_mass_source_load_vector(self, omega: float, index: int = 0):
@@ -1567,8 +1564,8 @@ class AcousticAssembler:
         data_K = self.int3d_BtB * factor_K
         _stiffness_matrix_full = csr_matrix((data_K.flatten(), (self.ind_rows, self.ind_cols)), shape=self.gm_shape)
 
-        self.stiffness_matrix = _stiffness_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
-        self.stiffness_matrix_r = _stiffness_matrix_full[:, self.prescribed_indexes]
+        self.stiffness_matrix = _stiffness_matrix_full[self.unprescribed_dof_indexes, :][:, self.unprescribed_dof_indexes]
+        self.stiffness_matrix_r = _stiffness_matrix_full[:, self.prescribed_dof_indexes]
 
 
     def assemble_global_mass_matrix(self, factor_M: np.ndarray):
@@ -1583,8 +1580,8 @@ class AcousticAssembler:
         data_M = self.int3d_NtN * factor_M
         _mass_matrix_full = csr_matrix((data_M.flatten(), (self.ind_rows, self.ind_cols)), shape=self.gm_shape)
 
-        self.mass_matrix = _mass_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
-        self.mass_matrix_r = _mass_matrix_full[:, self.prescribed_indexes]
+        self.mass_matrix = _mass_matrix_full[self.unprescribed_dof_indexes, :][:, self.unprescribed_dof_indexes]
+        self.mass_matrix_r = _mass_matrix_full[:, self.prescribed_dof_indexes]
 
 
     def assemble_global_damping_matrix_3d_elements(self, factor_Cvsic: np.ndarray, factor_fvsic: np.ndarray):
@@ -1597,14 +1594,14 @@ class AcousticAssembler:
         data_C = self.int3d_BtB * factor_Cvsic
         _visc_damping_matrix_full = csr_matrix((data_C.flatten(), (self.ind_rows, self.ind_cols)), shape=self.gm_shape)
 
-        self.visc_damping_matrix = _visc_damping_matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
-        self.visc_damping_matrix_r = _visc_damping_matrix_full[:, self.prescribed_indexes]
+        self.visc_damping_matrix = _visc_damping_matrix_full[self.unprescribed_dof_indexes, :][:, self.unprescribed_dof_indexes]
+        self.visc_damping_matrix_r = _visc_damping_matrix_full[:, self.prescribed_dof_indexes]
 
         data_f = self.int3d_BtB * factor_fvsic
         _load_vector_viscous_full = csr_matrix((data_f.flatten(), (self.ind_rows, self.ind_cols)), shape=self.gm_shape)
 
-        self.load_vector_viscous = _load_vector_viscous_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
-        # self.load_vector_viscous_r = _load_vector_viscous_full[:, self.prescribed_indexes]
+        self.load_vector_viscous = _load_vector_viscous_full[self.unprescribed_dof_indexes, :][:, self.unprescribed_dof_indexes]
+        # self.load_vector_viscous_r = _load_vector_viscous_full[:, self.prescribed_dof_indexes]
 
 
     def assemble_global_damping_matrix_2d_elements(self, index: int = 0):
@@ -1682,8 +1679,8 @@ class AcousticAssembler:
 
         _matrix_full = _matrix_full_A + _matrix_full_B
 
-        self.damping_matrix = _matrix_full[self.unprescribed_indexes, :][:, self.unprescribed_indexes]
-        self.damping_matrix_r = _matrix_full[:, self.prescribed_indexes]
+        self.damping_matrix = _matrix_full[self.unprescribed_dof_indexes, :][:, self.unprescribed_dof_indexes]
+        self.damping_matrix_r = _matrix_full[:, self.prescribed_dof_indexes]
 
 
     def get_acoustic_excitations_by_nodal_attribution(self):
@@ -1735,8 +1732,8 @@ class AcousticAssembler:
             excitation = list(acoustic_excitation.values())
             output[indexes, :] = np.array(excitation)
 
-        if self.prescribed_indexes:
-            return output[self.unprescribed_indexes, :]
+        if self.prescribed_dof_indexes:
+            return output[self.unprescribed_dof_indexes, :]
         else:
             return output
 
@@ -1792,8 +1789,8 @@ class AcousticAssembler:
                 # assemble the acoustic load
                 output[indices, :] += int2d_N @ aux.reshape(1, -1)
 
-        if self.prescribed_indexes:
-            return output[self.unprescribed_indexes, :]
+        if self.prescribed_dof_indexes:
+            return output[self.unprescribed_dof_indexes, :]
 
         return output
 
@@ -1895,20 +1892,20 @@ class AcousticAssembler:
         full_solution: np.ndarray
             An array that contains the solution of all the degrees of freedom.
         """
-        unprescribed_indexes, prescribed_indexes = self.get_matrices_dropping_indexes()
+
         prescribed_values, array_prescribed_values = self.get_prescribed_dof_values()
 
-        rows = solution.shape[0] + len(prescribed_indexes)
+        rows = solution.shape[0] + len(self.prescribed_dof_indexes)
         cols = solution.shape[1]
 
         full_solution = np.zeros((rows, cols), dtype=complex)
-        full_solution[unprescribed_indexes, :] = solution
+        full_solution[self.unprescribed_dof_indexes, :] = solution
 
-        if len(prescribed_indexes):
+        if len(self.prescribed_dof_indexes):
             if modal_analysis:
-                full_solution[prescribed_indexes, :] = np.zeros((len(prescribed_values), cols))
+                full_solution[self.prescribed_dof_indexes, :] = np.zeros((len(prescribed_values), cols))
             else:
-                full_solution[prescribed_indexes, :] = array_prescribed_values[:, 0:cols]
+                full_solution[self.prescribed_dof_indexes, :] = array_prescribed_values[:, 0:cols]
 
         return full_solution
 
@@ -1929,16 +1926,16 @@ class AcousticAssembler:
         full_solution: np.ndarray
             An array that contains the solution of all the degrees of freedom.
         """
-        unprescribed_indexes, prescribed_indexes = self.get_matrices_dropping_indexes()
+
         _, array_prescribed_values = self.get_prescribed_dof_values()
 
-        rows = solution.shape[0] + len(prescribed_indexes)
+        rows = solution.shape[0] + len(self.prescribed_dof_indexes)
 
         full_solution = np.zeros(rows, dtype=complex)
-        full_solution[unprescribed_indexes] = solution
+        full_solution[self.unprescribed_dof_indexes] = solution
 
-        if len(prescribed_indexes):
-            full_solution[prescribed_indexes] = array_prescribed_values[:, freq_index]
+        if len(self.prescribed_dof_indexes):
+            full_solution[self.prescribed_dof_indexes] = array_prescribed_values[:, freq_index]
 
         return full_solution
 

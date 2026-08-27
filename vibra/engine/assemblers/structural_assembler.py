@@ -81,7 +81,9 @@ class StructuralAssembler:
             if nodes is None:
                 continue
 
-            property_data_from_nodes = self.model.get_structural_property_data_from_nodes(nodes, data, "surfaces")
+            _nodes = self.model.struct_node_mapping[nodes]
+
+            property_data_from_nodes = self.model.get_structural_property_data_from_nodes(_nodes, data, "surfaces")
             for gdof, p_data in property_data_from_nodes.items():
                 output_data[gdof] += p_data
 
@@ -97,7 +99,9 @@ class StructuralAssembler:
             if nodes is None:
                 continue
 
-            property_data_from_nodes = self.model.get_structural_property_data_from_nodes(nodes, data, "lines")
+            _nodes = self.model.struct_node_mapping[nodes]
+
+            property_data_from_nodes = self.model.get_structural_property_data_from_nodes(_nodes, data, "lines")
             for gdof, p_data in property_data_from_nodes.items():
                 output_data[gdof] += p_data
 
@@ -109,8 +113,9 @@ class StructuralAssembler:
             if node_id is None:
                 continue
 
-            _node_id = np.array([node_id], dtype=int)
-            property_data_from_nodes = self.model.get_structural_property_data_from_nodes(_node_id, data, "points")
+            _nodes = self.model.struct_node_mapping[node_id]
+            # _nodes = np.array([node_id], dtype=int)
+            property_data_from_nodes = self.model.get_structural_property_data_from_nodes(_nodes, data, "points")
             for gdof, p_data in property_data_from_nodes.items():
                 output_data[gdof] += p_data
 
@@ -118,8 +123,9 @@ class StructuralAssembler:
             if property != selected_property:
                 continue
 
-            nodes = np.array([node_id], dtype=int)
-            property_data_from_nodes = self.model.get_structural_property_data_from_nodes(nodes, data, "nodes")
+            _nodes = self.model.struct_node_mapping[node_id]
+            # _nodes = np.array([node_id], dtype=int)
+            property_data_from_nodes = self.model.get_structural_property_data_from_nodes(_nodes, data, "nodes")
             for gdof, p_data in property_data_from_nodes.items():
                 output_data[gdof] += p_data
 
@@ -184,18 +190,15 @@ class StructuralAssembler:
 
         self.prescribed_dof_indexes = list(output_prescribed_dof_data.keys())
         self.unprescribed_dof_indexes = self.get_unprescribed_indexes()
+        print(f"unprescribed_dof_indexes: {self.unprescribed_dof_indexes.size}")
 
 
     def get_unprescribed_indexes(self):
         """ 
         Returns the unprescribed dof indexes.
         """
-        all_indexes = np.arange(self.total_dof, dtype=int)
+        all_indexes = np.arange(self.model.total_str_dofs, dtype=int)
         return np.delete(all_indexes, self.prescribed_dof_indexes)
-
-
-    def get_matrices_dropping_indexes(self):
-        return self.unprescribed_dof_indexes, self.prescribed_dof_indexes
 
 
     def get_prescribed_dof_values(self):
@@ -795,6 +798,7 @@ class StructuralAssembler:
 
         self.dof = self.element_2d.dof_per_element
         self.number_2d_elements = len(self.element_2d.connectivity)
+
         self.total_dof = self.element_2d.dof_per_node * len(self.element_2d.nodal_coordinates)
 
         self.displacement_dof = self.get_displacement_dof()
@@ -838,42 +842,56 @@ class StructuralAssembler:
         """
 
         self.active_2d_element_dof = []
-
-        self.ind_rows, self.ind_cols = self.element_3d.generate_ind_rows_cols(reorder=reorder)
-
         self.dof = self.element_3d.DOF_PER_ELEMENT
-        self.number_3d_elements = len(self.element_3d.connectivity)
-        self.total_dof = self.element_3d.DOF_PER_NODE * len(self.element_3d.nodal_coordinates)
+
+        self.ind_rows, self.ind_cols, self.structural_dofs = self.element_3d.generate_ind_rows_cols(reorder=reorder)
+
+        self.total_dof = self.model.total_dof
+        # self.total_dof = self.element_3d.DOF_PER_NODE * len(self.element_3d.nodal_coordinates)
 
         self.displacement_dof = self.get_displacement_dof()
 
         # global_matrices shape
-        self.gm_shape = (self.total_dof, self.total_dof)
+        self.gm_shape = (self.model.total_dof, self.model.total_dof)
 
-        self.data_K = np.zeros((self.number_3d_elements, self.dof, self.dof), dtype=complex)
-        self.data_M = np.zeros((self.number_3d_elements, self.dof, self.dof), dtype=complex)
+        number_elements = self.model.number_3d_structural_elements
+        # number_elements = len(self.element_3d.connectivity)
+
+        print(f"Number of acoustic elements: {self.model.number_3d_acoustic_elements}")
+        print(f"Number of structural elements: {self.model.number_3d_structural_elements}")
+        print(self.ind_cols.size, self.ind_rows.size, number_elements*(self.dof**2))
+
+        self.data_K = np.zeros((number_elements, self.dof, self.dof), dtype=complex)
+        self.data_M = np.zeros((number_elements, self.dof, self.dof), dtype=complex)
 
         # initialize variable
         last_progress = 0
 
         # loop for 3d elements
-        for element_id, vol_id, *_ in self.model.mesh.solids_connectivity:
-            
+        # for element_id, vol_id, *_ in self.model.mesh.solids_connectivity:
+        for index, element_id in enumerate(self.model.elements_per_domain.get("structural", [])):
+
             if self.model.stop_processing:
                 return True
 
-            progress = int(100 * (element_id / self.number_3d_elements))
+            progress = int(100 * (index / number_elements))
             if progress != last_progress:
                 logging.info(f"Processing the elementary matrices data for solid elements... [{int(progress)}/100]")
 
             last_progress = progress
 
+            # get the volume of the 3D element
+            vol_id = self.model.mesh.solids_connectivity[element_id, 1]
+
             # material from volume
             material = self.material_from_volume.get(vol_id)
+            if material is None:
+                print(f"Retornei no elemento: {element_id}")
+                continue
 
             Ke, Me = self.element_3d.elementary_matrices(element_id, material)
-            self.data_K[element_id, :, :] = Ke
-            self.data_M[element_id, :, :] = Me
+            self.data_K[index, :, :] = Ke
+            self.data_M[index, :, :] = Me
 
 
     def compute_data_to_process_global_matrices(self, reorder: bool = True):
@@ -890,21 +908,28 @@ class StructuralAssembler:
         self.process_prescribed_dof_data()
 
 
-    def assemble_global_stiffness_matrix(self):
+    def assemble_global_stiffness_matrix(self, weak_coupling: bool = True):
         """
         This method assembles the global stiffness matrix.
         """
         _stiffness_matrix_full = csr_matrix((self.data_K.flatten(), (self.ind_rows, self.ind_cols)), shape=self.gm_shape)
 
+        if weak_coupling and self.model.total_act_dofs:
+            print(self.structural_dofs.size)
+            _stiffness_matrix_full = _stiffness_matrix_full[self.structural_dofs, :][:, self.structural_dofs]
+
         self.stiffness_matrix = _stiffness_matrix_full[self.unprescribed_dof_indexes, :][:, self.unprescribed_dof_indexes]
         self.stiffness_matrix_r = _stiffness_matrix_full[:, self.prescribed_dof_indexes]
 
 
-    def assemble_global_mass_matrix(self):
+    def assemble_global_mass_matrix(self, weak_coupling: bool = True):
         """
         This method assembles the global mass matrix.
         """
         _mass_matrix_full = csr_matrix((self.data_M.flatten(), (self.ind_rows, self.ind_cols)), shape=self.gm_shape)
+
+        if weak_coupling and self.model.total_act_dofs:
+            _mass_matrix_full = _mass_matrix_full[self.structural_dofs, :][:, self.structural_dofs]
 
         self.mass_matrix = _mass_matrix_full[self.unprescribed_dof_indexes, :][:, self.unprescribed_dof_indexes]
         self.mass_matrix_r = _mass_matrix_full[:, self.prescribed_dof_indexes]

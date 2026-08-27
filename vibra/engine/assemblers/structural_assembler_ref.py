@@ -262,8 +262,8 @@ class StructuralAssembler:
         else:
             return output
 
-    def get_matrices_dropping_indexes(self):
-        return self.unprescribed_dof_indexes, self.prescribed_dof_indexes
+    # def get_matrices_dropping_indexes(self):
+    #     return self.unprescribed_dof_indexes, self.prescribed_dof_indexes
 
     def get_prescribed_dof_values(self):
         return self.prescribed_dof_values, self.array_prescribed_values
