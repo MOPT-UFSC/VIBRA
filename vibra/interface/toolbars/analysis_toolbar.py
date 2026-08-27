@@ -13,7 +13,7 @@ from vibra.interface.analysis.modal_analysis_input import ModalAnalysisInput
 from vibra.interface.formatters.icons import Icon
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.loading_window import LoadingWindow
-from vibra.utils.RamMonitor import RamMonitor
+from vibra.utils.ram_monitor import RamMonitor
 from vibra.utils.subprocess.subprocess_handler import SubProcessHandler, SubProcessStatus
 
 

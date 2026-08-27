@@ -22,7 +22,7 @@ from vibra.engine.serialization.project_reader import ProjectReader
 from vibra.engine.serialization.project_writer import ProjectWriter
 from vibra.engine.solution import HarmonicSolution, ModalSolution
 from vibra.engine.solvers import HarmonicSolver, ModalSolver
-from vibra.utils.RamMonitor import RamMonitor
+from vibra.utils.ram_monitor import RamMonitor
 
 
 class Project:
