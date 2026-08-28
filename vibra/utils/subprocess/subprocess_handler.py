@@ -10,7 +10,6 @@ from typing import IO
 
 from PySide6.QtWidgets import QApplication
 
-from vibra import VIBRA_DIR
 from vibra.errors import SolverSubprocessError
 from vibra.interface.loading_window import LoadingWindow
 

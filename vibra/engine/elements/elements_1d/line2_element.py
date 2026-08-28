@@ -1,31 +1,60 @@
 
+from typing import TYPE_CHECKING
+
 from vibra.engine.elements.line_elements import Element1D
 
-from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from vibra.engine.model import Model
 
 import numpy as np
 
 
-class ACT_LINE_2(Element1D):
-    #
-    NODES_PER_ELEMENT = 2
-    DOF_PER_NODE = 1
-    DOF_PER_ELEMENT = NODES_PER_ELEMENT * DOF_PER_NODE
+def get_local_coordinates(coords: np.ndarray) -> np.ndarray:
+    """
+    This funtion computes the local coordinates from global coordinates.
+
+    Parameter
+    ---------
+    coords: np.ndarray
+        An array containing the global coordinates to be converted.
+
+    Returns
+    -------
+    coord_loc: np.ndarray
+        The array of the stacked coordinates in the local coordinate system.
+    """
+    X1, X2, = coords[:, 1]
+    Y1, Y2, = coords[:, 2]
+    Z1, Z2, = coords[:, 3]
+
+    vec_21 = np.array([X2-X1, Y2-Y1, Z2-Z1]).T
+
+    coord_loc = np.zeros((2, 1), dtype=float)
+    coord_loc[1, 0] = np.linalg.norm(vec_21)
+
+    return coord_loc
 
 
-    def __init__(self, model: "Model"):
+class LINE_2(Element1D):
+
+    def __init__(self, model: "Model", dof_per_node: int):
 
         self.model = model
 
-        self.element_label = "acoustic_line_2"
+        self.nodes_per_element = 2
+        self.dof_per_node = dof_per_node
+
+        self.connectivities = None
+        self.element_label = ""
         self.nodal_coordinates = self.model.mesh.nodal_coordinates
-        self.connectivity = self.model.mesh.solids_connectivity
-        self.faces_connectivity = self.model.mesh.faces_connectivity
 
         self.define_integration_points()
         self.process_shape_functions_and_derivatives()
+
+
+    @property
+    def dof_per_element(self):
+        return self.nodes_per_element * self.dof_per_node
 
 
     def define_integration_points(self):
@@ -33,9 +62,11 @@ class ACT_LINE_2(Element1D):
         Defines the integration points and their respective weights
         for the numerical integration processing.
         """
-        self.nint = 2
+        self.nint_K = 2
+        self.nint_M = 3
+        self.wps_K = 1
+        self.wps_M = 1
         con = 1 / np.sqrt(3)
-        self.wps2 = 1
         self.pint2 = np.array([-con, con], dtype=float)
 
 
@@ -59,13 +90,13 @@ class ACT_LINE_2(Element1D):
         """
 
         # shape functions
-        phi = np.zeros((xi.size, 1, self.NODES_PER_ELEMENT), dtype=float)
+        phi = np.zeros((xi.size, 1, self.nodes_per_element), dtype=float)
 
         phi[:, 0, 0] = 0.5*(1 - xi)
         phi[:, 0, 1] = 0.5*(1 + xi)
 
         # shape functions derivatives
-        dphi = np.zeros((xi.size, 1, self.NODES_PER_ELEMENT), dtype=float)
+        dphi = np.zeros((xi.size, 1, self.nodes_per_element), dtype=float)
 
         dphi[:, 0, 0] = -0.5
         dphi[:, 0, 1] =  0.5
@@ -108,11 +139,11 @@ class ACT_LINE_2(Element1D):
         derivatives for all integration points.
         """
         # calculate the shape functions and derivatives for stiffness matrix
-        pint_K, self.wps_K = self.get_integration_points_data(integration_points=2)
+        pint_K, self.wps_K = self.get_integration_points_data(integration_points=self.nint_K)
         self.phi_K, self.dphi_K = self.get_shape_functions_and_derivatives(pint_K)
 
         # calculate the shape functions and derivatives for mass matrix
-        pint_M, self.wps_M = self.get_integration_points_data(integration_points=3)
+        pint_M, self.wps_M = self.get_integration_points_data(integration_points=self.nint_M)
         self.phi_M, self.dphi_M = self.get_shape_functions_and_derivatives(pint_M)
 
 
@@ -130,15 +161,15 @@ class ACT_LINE_2(Element1D):
         coord_loc: np.ndarray
             The array of the stacked coordinates in the local coordinate system.
         """
-        X1 = self.nodal_coordinates[self.connect_line[:, 0], 1]
-        Y1 = self.nodal_coordinates[self.connect_line[:, 0], 2]
-        Z1 = self.nodal_coordinates[self.connect_line[:, 0], 3]
+        X1 = self.nodal_coordinates[self.connectivities[:, 0], 1]
+        Y1 = self.nodal_coordinates[self.connectivities[:, 0], 2]
+        Z1 = self.nodal_coordinates[self.connectivities[:, 0], 3]
 
-        X2 = self.nodal_coordinates[self.connect_line[:, 1], 1]
-        Y2 = self.nodal_coordinates[self.connect_line[:, 1], 2]
-        Z2 = self.nodal_coordinates[self.connect_line[:, 1], 3]
+        X2 = self.nodal_coordinates[self.connectivities[:, 1], 1]
+        Y2 = self.nodal_coordinates[self.connectivities[:, 1], 2]
+        Z2 = self.nodal_coordinates[self.connectivities[:, 1], 3]
 
-        nel = self.connect_line.shape[0]
+        nel = self.connectivities.shape[0]
         vec_21 = np.array([X2-X1, Y2-Y1, Z2-Z1]).T
 
         coord_loc = np.zeros((nel, 2, 1), dtype=float)
@@ -197,35 +228,14 @@ class ACT_LINE_2(Element1D):
         return int1d_NtN, int1d_BtB
 
 
-    def reorder_connect(self, connect_line: np.ndarray):
+    def reorder_connect(self, connectivities: np.ndarray):
         """
         Reordering connectivity matrix to adequate 
         the GMSH connectivity to the FE model.
 
         Parameter
         ---------
-        connect_line: np.ndarray
+        connectivities: np.ndarray
             An array containing the lines connectivities.
         """
-        self.connect_line = connect_line[:, [0, 1]]
-
-
-    def generate_ind_rows_cols(self, connect_line: np.ndarray):
-        """
-        This method processess the dof indices (rows and columns) 
-        for assembly.
-
-        Parameter
-        ---------
-        connect_line: np.ndarray
-            An array containing the lines connectivities.
-        """
-        self.reorder_connect(connect_line)
-        dof, edof = self.DOF_PER_NODE, self.DOF_PER_ELEMENT
-        ind_dof = dof * self.connect_line[:, :]
-
-        ind_dof_flat = ind_dof.flatten()
-        ind_rows = ((np.tile(ind_dof_flat, (edof,1))).T).flatten()
-        ind_cols = (np.tile(ind_dof, edof)).flatten()
-
-        return ind_rows, ind_cols
+        self.connectivities = connectivities[:, [0, 1]]

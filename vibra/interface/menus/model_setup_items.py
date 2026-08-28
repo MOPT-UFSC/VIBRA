@@ -51,6 +51,7 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_nodal_loads = self.add_item("Nodal Loads")
         self.item_child_distributed_loads = self.add_item("Distributed Loads")
         self.item_child_normal_pressure_load = self.add_item("Normal Pressure Load")
+        self.item_child_distributed_mass = self.add_item("Distributed Mass")
     
         self.item_top_acoustic_model_setup = self.add_top_item('Acoustic Model Setup')
 
@@ -103,6 +104,7 @@ class ModelSetupItems(CommonMenuItems):
             "item_child_nodal_loads": "nodal_loads",
             "item_child_distributed_loads": "distributed_loads",
             "item_child_normal_pressure_load": "normal_pressure_load",
+            "item_child_distributed_mass": "distributed_mass",
             "item_child_acoustic_pressure": "acoustic_pressure",
             "item_child_mass_source": "mass_source",
             "item_child_surface_velocity": "surface_velocity",
@@ -139,8 +141,12 @@ class ModelSetupItems(CommonMenuItems):
                 if item_child_name is None:
                     continue
 
-                item_child.set_property_name(self.property_names[item_child_name])
-                
+                property_name = self.property_names.get(item_child_name)
+                if property_name is None:
+                    continue
+
+                item_child.set_property_name(property_name)
+
                 function_name = item_child_name + "_callback"
                 function_exists = hasattr(self, function_name)
 
@@ -299,8 +305,8 @@ class ModelSetupItems(CommonMenuItems):
         if mesh is not None:
             volume_exists = mesh.are_there_volumes_in_geometry()
             self.item_child_surface_thickness.setHidden(volume_exists)
-            self.item_child_distributed_loads.setHidden(volume_exists)
-            self.item_child_normal_pressure_load.setHidden(volume_exists)
+            # self.item_child_distributed_loads.setHidden(volume_exists)
+            # self.item_child_normal_pressure_load.setHidden(volume_exists)
 
         if isinstance(volume_exists, bool):
             toolbar.combo_box_physical_domain.setEnabled(volume_exists)
@@ -469,6 +475,9 @@ class ModelSetupItems(CommonMenuItems):
     
     def item_child_distributed_loads_callback(self):
         app().main_window.input_ui.set_distributed_loads()
+
+    def item_child_distributed_mass_callback(self):
+        app().main_window.input_ui.set_distributed_mass()
     
     def item_child_normal_pressure_load_callback(self):
         app().main_window.input_ui.set_normal_pressure_load()
