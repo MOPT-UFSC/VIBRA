@@ -1335,7 +1335,7 @@ class Mesh:
             if not element_indexes:
                 continue
 
-            if dim == 2 and valid_surfaces and tag not in valid_surfaces:
+            if (dim == 2) and valid_surfaces and (tag not in valid_surfaces):
                 continue
 
             if dim == 1 and valid_lines and tag not in valid_lines:
