@@ -1,25 +1,25 @@
 import logging
 import warnings
-from copy import deepcopy
 from collections import defaultdict
+from copy import deepcopy
 
 import numpy as np
 from PySide6.QtCore import QItemSelectionModel, QPoint, Qt
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QLineEdit, QTreeWidgetItem
-from vibra.interface import warning_title
 
-from vibra import app, SUPPORTED_SPREADSHEET_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
-from vibra.interface import error_title
+from vibra import app
+from vibra.extensions import SUPPORTED_SPREADSHEET_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
+from vibra.interface import error_title, warning_title
 from vibra.interface.common.common_interface import update_analysis_setup_in_file
 from vibra.interface.data.data_manager import get_spectral_data_from_array
-from vibra.interface.user_input.data_handler.file_handlers.file_handler import FileHandler
-from vibra.interface.user_input.data_handler.file_dialog_service import FileDialogService
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.model_inputs.acoustic.definitions.enums import StandardTabType
 from vibra.interface.ui_generated.model.acoustic.internal_impedances.transfer_impedance_inputs_ui import TransferImpedanceInputs_UI
+from vibra.interface.user_input.data_handler.file_dialog_service import FileDialogService
+from vibra.interface.user_input.data_handler.file_handlers.file_handler import FileHandler
 from vibra.utils.bidict import bidict
 
 

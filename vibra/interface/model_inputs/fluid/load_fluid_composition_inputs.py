@@ -3,7 +3,8 @@ from pathlib import Path
 
 from PySide6.QtCore import Qt
 
-from vibra import SUPPORTED_SPREADSHEET_EXTENSIONS, app
+from vibra import app
+from vibra.extensions import SUPPORTED_SPREADSHEET_EXTENSIONS
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.ui_generated.model.fluid.load_fluid_composition_ui import LoadFluidComposition_UI
 from vibra.interface.user_input.data_handler.file_dialog_service import FileDialogService

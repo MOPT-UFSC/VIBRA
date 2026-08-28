@@ -8,9 +8,10 @@ from molde.render_widgets import AnimatedRenderWidget
 from vtkmodules.vtkCommonCore import vtkPoints
 from vtkmodules.vtkCommonDataModel import vtkPointData
 
-from vibra import LOGO_DIR, SUPPORTED_ANIMATION_EXTENSIONS, SUPPORTED_VIDEO_EXTENSIONS, app
+from vibra import LOGO_DIR, app
 from vibra.engine import AnalysisID
 from vibra.engine.postprocessing import AcousticPostprocessing, StructuralPostprocessing
+from vibra.extensions import SUPPORTED_ANIMATION_EXTENSIONS, SUPPORTED_VIDEO_EXTENSIONS
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.user_input.data_handler.file_dialog_service import FileDialogService
 from vibra.interface.viewer_3d.plot_setup import (

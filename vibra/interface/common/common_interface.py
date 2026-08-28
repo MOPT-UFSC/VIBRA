@@ -5,8 +5,9 @@ from typing import Literal
 import numpy as np
 from PySide6.QtWidgets import QDialog, QPushButton, QWidget
 
-from vibra import SUPPORTED_OUTPUT_DATA_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS, app
+from vibra import app
 from vibra.engine.analysis_info import AnalysisID, FrequencySpacing
+from vibra.extensions import SUPPORTED_OUTPUT_DATA_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
 from vibra.interface import error_title, warning_title
 from vibra.interface.data.data_manager import is_frequencies_vector_equally_distributed
 from vibra.interface.general.print_message_input import PrintMessageInput

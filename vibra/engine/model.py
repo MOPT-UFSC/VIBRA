@@ -7,7 +7,7 @@ from typing import Callable, Optional
 import numpy as np
 from PIL.Image import Image
 
-from vibra import SUPPORTED_GEOMETRY_EXTENSIONS, errors
+from vibra import errors
 from vibra.engine.analysis_info import (
     AnalysisID,
     AnalysisMethod,
@@ -54,6 +54,7 @@ from vibra.engine.transfer_impedances.perforated_plate_models import (
     PerforatedPlateModels,
 )
 from vibra.errors import IncompleteSetupError
+from vibra.extensions import SUPPORTED_GEOMETRY_EXTENSIONS
 from vibra.interface import error_title
 from vibra.interface.general.print_message_input import PrintMessageInput
 

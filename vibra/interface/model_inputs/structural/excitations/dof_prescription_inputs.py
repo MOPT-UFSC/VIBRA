@@ -9,18 +9,19 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QLabel, QLineEdit, QTreeWidgetItem
 
-from vibra import app, SUPPORTED_SPREADSHEET_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
+from vibra import app
 from vibra.engine.analysis_info import AnalysisID
+from vibra.extensions import SUPPORTED_SPREADSHEET_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
 from vibra.interface import error_title
 from vibra.interface.common.common_interface import save_table_values, update_analysis_setup_in_file
-from vibra.interface.user_input.data_handler.file_handlers.file_handler import FileHandler
-from vibra.interface.user_input.data_handler.file_dialog_service import FileDialogService
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.structural.definitions.enums import StandardTabType
 
 # from vibra.utils.utils import are_there_values_different_from_zero
 from vibra.interface.ui_generated.model.structural.excitations.dof_prescription_inputs_ui import DofPrescriptionInputs_UI
+from vibra.interface.user_input.data_handler.file_dialog_service import FileDialogService
+from vibra.interface.user_input.data_handler.file_handlers.file_handler import FileHandler
 
 
 class ElementFormulation(IntEnum):

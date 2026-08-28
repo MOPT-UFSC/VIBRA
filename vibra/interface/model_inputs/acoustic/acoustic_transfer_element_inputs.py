@@ -8,8 +8,9 @@ from PySide6.QtCore import QEvent, QObject, Qt, Signal
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QLineEdit
 
-from vibra import SUPPORTED_SPREADSHEET_EXTENSIONS, app
+from vibra import app
 from vibra.engine.analysis_info import AnalysisID, FrequencySpacing, HarmonicAnalysisSetup
+from vibra.extensions import SUPPORTED_SPREADSHEET_EXTENSIONS
 from vibra.interface import error_title
 from vibra.interface.common.common_interface import mesher_interface_callback
 from vibra.interface.general.print_message_input import PrintMessageInput

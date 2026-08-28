@@ -5,8 +5,9 @@ import numpy as np
 from PySide6.QtCore import QEvent, QObject, Qt, Signal
 from PySide6.QtGui import QCloseEvent
 
-from vibra import SUPPORTED_SPREADSHEET_EXTENSIONS, app
+from vibra import app
 from vibra.engine import AnalysisID
+from vibra.extensions import SUPPORTED_SPREADSHEET_EXTENSIONS
 from vibra.interface import error_title
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.general.print_message_input import PrintMessageInput

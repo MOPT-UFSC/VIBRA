@@ -4,8 +4,9 @@ from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QLabel, QPushButton, QSpinBox
 
-from vibra import SUPPORTED_ANIMATION_EXTENSIONS, SUPPORTED_VIDEO_EXTENSIONS, app
+from vibra import app
 from vibra.engine.analysis_info import PhysicalDomain
+from vibra.extensions import SUPPORTED_ANIMATION_EXTENSIONS, SUPPORTED_VIDEO_EXTENSIONS
 from vibra.interface import error_title
 from vibra.interface.formatters.icons import Icon
 from vibra.interface.general.print_message_input import PrintMessageInput

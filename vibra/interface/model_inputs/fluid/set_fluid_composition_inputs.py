@@ -5,8 +5,9 @@ import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QTableWidgetItem, QTreeWidgetItem
 
-from vibra import SUPPORTED_SPREADSHEET_EXTENSIONS, app
+from vibra import app
 from vibra.engine.properties.fluid import Fluid
+from vibra.extensions import SUPPORTED_SPREADSHEET_EXTENSIONS
 from vibra.interface import error_title, warning_title
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
