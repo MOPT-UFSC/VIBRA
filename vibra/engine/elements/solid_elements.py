@@ -21,7 +21,7 @@ class Element3D:
 
 
     @property
-    def midside_nodes_indexes_map(self):
+    def midside_nodes_indices_map(self):
         return dict()
 
 

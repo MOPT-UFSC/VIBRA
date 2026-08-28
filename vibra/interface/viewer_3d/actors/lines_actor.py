@@ -1,3 +1,6 @@
+from typing import TYPE_CHECKING
+
+from molde import Color
 from vtkmodules.util.numpy_support import numpy_to_vtk
 from vtkmodules.vtkCommonCore import vtkIntArray, vtkPoints, vtkUnsignedCharArray
 from vtkmodules.vtkCommonDataModel import (
@@ -10,9 +13,6 @@ from vtkmodules.vtkCommonDataModel import (
 from vtkmodules.vtkRenderingCore import vtkActor, vtkDataSetMapper
 
 from vibra import app
-from molde import Color
-
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from vibra.engine.mesher.mesh import Mesh
@@ -35,9 +35,9 @@ class LinesActor(vtkActor):
         mapper = vtkDataSetMapper()
         self.data.Allocate(number_of_lines * 3)
 
-        line_indexes = vtkIntArray()
-        line_indexes.SetName("line_indexes")
-        line_indexes.Allocate(number_of_lines)
+        line_indices = vtkIntArray()
+        line_indices.SetName("line_indices")
+        line_indices.Allocate(number_of_lines)
 
         cell_colors = vtkUnsignedCharArray()
         cell_colors.SetNumberOfComponents(4)
@@ -48,22 +48,22 @@ class LinesActor(vtkActor):
         # Vertices need to be added first
         for _, line_id, _, _, *values in self.mesh.lines_connectivity:
             self.data.InsertNextCell(VTK_VERTEX, 1, [values[0]])
-            line_indexes.InsertNextValue(line_id)
+            line_indices.InsertNextValue(line_id)
             cell_colors.InsertNextTuple4(0, 0, 0, 0)
 
             self.data.InsertNextCell(VTK_VERTEX, 1, [values[1]])
-            line_indexes.InsertNextValue(line_id)
+            line_indices.InsertNextValue(line_id)
             cell_colors.InsertNextTuple4(0, 0, 0, 0)
 
         cell_type = self.NODES_TO_VTK_CELL[nodes_per_line]
         for _, line_id, _, _, *values in self.mesh.lines_connectivity:
             self.data.InsertNextCell(cell_type, nodes_per_line, values)
-            line_indexes.InsertNextValue(line_id)
+            line_indices.InsertNextValue(line_id)
             cell_colors.InsertNextTuple4(0, 0, 0, 0)
 
         self.data.SetPoints(points)
         self.data.GetCellData().SetScalars(cell_colors)
-        self.data.GetCellData().AddArray(line_indexes)
+        self.data.GetCellData().AddArray(line_indices)
 
         mapper.SetInputData(self.data)
         self.SetMapper(mapper)
@@ -122,8 +122,8 @@ class LinesActor(vtkActor):
 
         all_lines_elements = list()
         for line in lines:
-            indexes = app().project.model.mesh.elements_from_line.get(line, [])
-            all_lines_elements.extend(indexes)
+            indices = app().project.model.mesh.elements_from_line.get(line, [])
+            all_lines_elements.extend(indices)
 
         cells = []
         for line_element in all_lines_elements:

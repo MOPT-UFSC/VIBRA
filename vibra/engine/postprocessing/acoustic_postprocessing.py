@@ -386,8 +386,8 @@ class AcousticPostprocessing:
             Vk = 0.0
             for element_id in solid_element_ids:
                 connect = element_3d.connectivity[element_id, 1:]
-                indexes = np.array([node_to_index.get(node) for node in connect])
-                enodal_pressures = solution[indexes, :]
+                indices = np.array([node_to_index.get(node) for node in connect])
+                enodal_pressures = solution[indices, :]
                 Vk += element_3d.process_particle_velocity(
                     element_id,
                     node_id,
@@ -618,9 +618,9 @@ class AcousticPostprocessing:
 
         sound_power = 0.0
         for i, e_connect in enumerate(surface_connectivities):
-            node_indexes = [map_nodes.get(node) for node in e_connect]
-            L_sv = pressures[node_indexes, :].T.reshape(-1, 1, element_2d.DOF_PER_ELEMENT)
-            R_sv = particle_velocities[node_indexes, :].T.reshape(-1, element_2d.DOF_PER_ELEMENT, 1)
+            node_indices = [map_nodes.get(node) for node in e_connect]
+            L_sv = pressures[node_indices, :].T.reshape(-1, 1, element_2d.DOF_PER_ELEMENT)
+            R_sv = particle_velocities[node_indices, :].T.reshape(-1, element_2d.DOF_PER_ELEMENT, 1)
 
             normalized_data = element_2d.elementary_sound_power(e_connect, L_sv, R_sv)
             sound_power += np.real(normalized_data) / 2

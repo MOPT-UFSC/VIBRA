@@ -44,23 +44,23 @@ class NodesActor(vtkActor):
         points = vtkPoints()
         mapper = vtkPolyDataMapper()
         cell_colors = vtkUnsignedCharArray()
-        cell_indexes = vtkIntArray()
-        cell_indexes.SetName("cell_indexes")
+        cell_indices = vtkIntArray()
+        cell_indices.SetName("cell_indices")
 
         data.Allocate(len(self.mesh.nodal_coordinates))
         cell_colors.SetNumberOfComponents(4)
         cell_colors.SetNumberOfTuples(len(self.mesh.nodal_coordinates))
         cell_colors.Fill(0)
-        cell_indexes.SetNumberOfTuples(len(self.mesh.nodal_coordinates))
+        cell_indices.SetNumberOfTuples(len(self.mesh.nodal_coordinates))
 
         for i, (x, y, z) in enumerate(self.get_coordinates()):
-            cell_indexes.InsertValue(i, i)  # This is usefull if part of the cells are hidden
+            cell_indices.InsertValue(i, i)  # This is usefull if part of the cells are hidden
             points.InsertNextPoint(x, y, z)
             data.InsertNextCell(VTK_VERTEX, 1, [i])
 
         data.SetPoints(points)
         data.GetCellData().SetScalars(cell_colors)
-        data.GetCellData().AddArray(cell_indexes)
+        data.GetCellData().AddArray(cell_indices)
         self.data = data
         mapper.SetInputData(data)
         mapper.SetScalarModeToUseCellData()

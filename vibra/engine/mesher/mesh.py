@@ -491,7 +491,7 @@ class Mesh:
         Returns
         -------
         group_of_connected_nodes: dict
-            a dictionary whose the keys are the group of nodes indexes and the
+            a dictionary whose the keys are the group of nodes indices and the
             values are the node IDs.
 
         """
@@ -603,10 +603,10 @@ class Mesh:
             aux_ones = np.ones(rows, dtype=int)
 
             last_index += rows
-            indexes = np.arange(first_index, last_index, dtype=int)
+            indices = np.arange(first_index, last_index, dtype=int)
 
             connectivity = np.zeros((rows, 4 + n_nodes_1d), dtype=int)
-            connectivity[:, 0] = indexes
+            connectivity[:, 0] = indices
             connectivity[:, 1] = aux_ones * line_id
             connectivity[:, 2] = aux_ones * e_type
             connectivity[:, 3] = aux_ones * n_nodes_1d
@@ -680,8 +680,8 @@ class Mesh:
 
             """
             values = line_connectivities[:, [0, 1]].flatten()
-            _, indexes, count = np.unique(values, return_index=True, return_counts=True)
-            non_repeated_values = list(values[indexes[count == 1]])
+            _, indices, count = np.unique(values, return_index=True, return_counts=True)
+            non_repeated_values = list(values[indices[count == 1]])
             return non_repeated_values
 
         point_id = 0
@@ -733,12 +733,12 @@ class Mesh:
 
         rows, cols = data.shape
 
-        indexes = data[:, 0]
+        indices = data[:, 0]
         if index_zero:
-            indexes -= 1
+            indices -= 1
 
         self.nodal_coordinates = np.zeros((rows, cols), dtype=float)
-        self.nodal_coordinates[:, 0] = indexes
+        self.nodal_coordinates[:, 0] = indices
         self.nodal_coordinates[:, 1:] = data[:, 1:]
 
     def import_external_solids_connectivity(self, connectivity: dict, index_zero: bool = True, etype_tag: float = 1):
@@ -754,18 +754,18 @@ class Mesh:
         data = np.array(aux, dtype=int)
         rows, cols = data.shape
 
-        indexes = data[:, 0]
+        indices = data[:, 0]
         volumes = data[:, 1]
         nodes_per_element = data[:, 2]
         connect = data[:, 3:]
 
         if index_zero:
             connect -= 1
-            indexes -= 1
+            indices -= 1
 
         aux = np.ones(rows)
         self.solids_connectivity = np.zeros((rows, cols + 1), dtype=int)
-        self.solids_connectivity[:, 0] = indexes
+        self.solids_connectivity[:, 0] = indices
         self.solids_connectivity[:, 1] = volumes
         self.solids_connectivity[:, 2] = aux * etype_tag
         self.solids_connectivity[:, 3] = nodes_per_element
@@ -792,18 +792,18 @@ class Mesh:
         data = np.array(aux_list, dtype=int)
         rows, cols = data.shape
 
-        indexes = data[:, 0]
+        indices = data[:, 0]
         surface = data[:, 1]
         nodes_per_element = data[:, 2]
         connect = data[:, 3:]
 
         if index_zero:
             connect -= 1
-            indexes -= 1
+            indices -= 1
 
         aux = np.ones(rows)
         self.faces_connectivity = np.zeros((rows, cols + 1), dtype=int)
-        self.faces_connectivity[:, 0] = indexes
+        self.faces_connectivity[:, 0] = indices
         self.faces_connectivity[:, 1] = surface
         self.faces_connectivity[:, 2] = aux * etype_tag
         self.faces_connectivity[:, 3] = nodes_per_element
@@ -1163,14 +1163,14 @@ class Mesh:
         node_tags, _, param = gmsh.model.mesh.getNodes(2, tag, True)
         normals_surface = gmsh.model.getNormal(tag, param).reshape(-1, 3)
         curvatures_surface = gmsh.model.getCurvature(2, tag, param)
-        sorted_indexes = np.argsort(node_tags)
-        self.normals_surface[tag] = normals_surface[sorted_indexes, :]
+        sorted_indices = np.argsort(node_tags)
+        self.normals_surface[tag] = normals_surface[sorted_indices, :]
 
         # processs the unit length factor to curvatures
         conv_factor = convert_length_unit(1.0, self.length_unit, "meter")
 
         # convert the curvature unit to 1/m
-        self.curvatures_surface[tag] = curvatures_surface[sorted_indexes] / conv_factor
+        self.curvatures_surface[tag] = curvatures_surface[sorted_indices] / conv_factor
 
     def process_cylindrical_surfaces(self):
 
@@ -1212,13 +1212,13 @@ class Mesh:
 
         self.clear_mesh_data()
 
-        indexes, coords, _ = gmsh.model.mesh.getNodes(includeBoundary=True)
-        total_nodes = int(np.max(indexes))
+        indices, coords, _ = gmsh.model.mesh.getNodes(includeBoundary=True)
+        total_nodes = int(np.max(indices))
 
         unit_length_factor = self.get_length_unit_factor()
         self.nodal_coordinates = np.zeros((total_nodes, 4))
-        self.nodal_coordinates[indexes - 1, 1:] = coords.reshape(-1, 3) * unit_length_factor
-        self.nodal_coordinates[indexes - 1, :1] = indexes.reshape(-1, 1) - 1
+        self.nodal_coordinates[indices - 1, 1:] = coords.reshape(-1, 3) * unit_length_factor
+        self.nodal_coordinates[indices - 1, :1] = indices.reshape(-1, 1) - 1
 
         nodes_from_volumes = gmsh.model.mesh.getNodes(dim=3, includeBoundary=True)[0]
         nodes_from_surfaces = gmsh.model.mesh.getNodes(dim=2, includeBoundary=True)[0]
@@ -1239,9 +1239,9 @@ class Mesh:
 
         for dim, tag in gmsh.model.getEntities():
             elements_data = dict()
-            element_types, element_indexes, element_nodes = gmsh.model.mesh.getElements(dim, tag)
+            element_types, element_indices, element_nodes = gmsh.model.mesh.getElements(dim, tag)
 
-            if not element_indexes:
+            if not element_indices:
                 continue
 
             if dim == 2:
@@ -1255,7 +1255,7 @@ class Mesh:
                 array_element_nodes -= 1
 
                 elements_data[element_type] = {
-                    "indexes": element_indexes[i],
+                    "indices": element_indices[i],
                     "array_element_nodes": array_element_nodes,
                 }
 
@@ -2068,27 +2068,27 @@ class Mesh:
 
         # tria3 surface element
         if nodes_per_element == 3:
-            column_indexes = [(0, 1, 2)]
+            column_indices = [(0, 1, 2)]
 
         # quad4 surface element
         elif nodes_per_element == 4:
-            column_indexes = [(0, 1, 2), (0, 2, 3)]
+            column_indices = [(0, 1, 2), (0, 2, 3)]
 
         # tria6 surface element
         elif nodes_per_element == 6:
-            column_indexes = [(3, 1, 4), (3, 4, 2), (3, 2, 5), (3, 5, 0)]
+            column_indices = [(3, 1, 4), (3, 4, 2), (3, 2, 5), (3, 5, 0)]
 
         # quad8 surface element
         elif nodes_per_element == 8:
-            column_indexes = [(0, 4, 7), (4, 1, 5), (5, 2, 6), (6, 3, 7), (4, 6, 7), (4, 5, 6)]
+            column_indices = [(0, 4, 7), (4, 1, 5), (5, 2, 6), (6, 3, 7), (4, 6, 7), (4, 5, 6)]
 
         else:
             return NotImplementedError(f"Normal not implemented for surface with {nodes_per_element} nodes")
 
         Vn_sum = defaultdict(float)
 
-        for indexes in column_indexes:
-            inside_face_connectivity = face_connectivity[:, indexes]
+        for indices in column_indices:
+            inside_face_connectivity = face_connectivity[:, indices]
             norm_cross = self.process_stacked_cross_products(inside_face_connectivity)
 
             for i, e_nodes in enumerate(inside_face_connectivity):
@@ -2502,8 +2502,8 @@ class Mesh:
         n_list = list()
         for data_0 in input_dict.values():
             for data_1 in data_0.values():
-                if "indexes" in data_1.keys():
-                    n_list.append(len(data_1["indexes"]))
+                if "indices" in data_1.keys():
+                    n_list.append(len(data_1["indices"]))
                     array_nodes = data_1["array_element_nodes"]
                     if max_cols < array_nodes.shape[1]:
                         max_cols = array_nodes.shape[1]
@@ -2512,17 +2512,17 @@ class Mesh:
         output_data = np.zeros((n, max_cols + 4), dtype=int)
         gmsh_elements = np.zeros(n, dtype=int)
 
-        internal_indexes = np.arange(n, dtype=int)
-        output_data[:, 0] = internal_indexes
+        internal_indices = np.arange(n, dtype=int)
+        output_data[:, 0] = internal_indices
 
         start, end, ind = 0, 0, 0
         for (entity_dim, entity_tag), e_data in input_dict.items():
             for etype_tag, data in e_data.items():
                 end += n_list[ind]
-                indexes = data["indexes"]
+                indices = data["indices"]
                 connectivity = data["array_element_nodes"]
 
-                rows = len(indexes)
+                rows = len(indices)
                 cols = connectivity.shape[1]
                 aux = np.ones(rows, dtype=int)
 
@@ -2530,12 +2530,12 @@ class Mesh:
                 output_data[start:end, 2] = aux * etype_tag
                 output_data[start:end, 3] = aux * cols
                 output_data[start:end, 4 : 4 + cols] = connectivity
-                gmsh_elements[start:end] = indexes
+                gmsh_elements[start:end] = indices
 
                 start = end
                 ind += 1
 
-        map_elements = dict(zip(gmsh_elements, internal_indexes))
+        map_elements = dict(zip(gmsh_elements, internal_indices))
 
         return output_data, map_elements
 
@@ -2651,8 +2651,8 @@ class Mesh:
         This should work similar to the method `get_element_face_normal`.
 
         While there the expected parameter is a single connectivity row,
-        containing only the node indexes, here we allow for 2D arrays with
-        multiple entries on each line and it is required to include the indexes
+        containing only the node indices, here we allow for 2D arrays with
+        multiple entries on each line and it is required to include the indices
         of the whole array, just like in `self.faces_connectivity`.
 
         (The names are a bit misleading, we should try to fix it some day)
@@ -2836,10 +2836,10 @@ class Mesh:
             return None, None
 
         diff = self.nodal_coordinates[:, 1:] - point_coords
-        indexes = np.argsort(np.linalg.norm(diff, axis=1))
+        indices = np.argsort(np.linalg.norm(diff, axis=1))
 
-        nearest_node = int(self.nodal_coordinates[indexes[0], 0])
-        nearest_coords = self.nodal_coordinates[indexes[0], 1:]
+        nearest_node = int(self.nodal_coordinates[indices[0], 0])
+        nearest_coords = self.nodal_coordinates[indices[0], 1:]
 
         return nearest_node, nearest_coords
 
@@ -2858,7 +2858,7 @@ class Mesh:
 
         selected_elements = list()
         nodes_inside_sphere = list()
-        node_indexes = self.nodal_coordinates[:, 0]
+        node_indices = self.nodal_coordinates[:, 0]
         nodal_coordinates = self.nodal_coordinates[:, 1:]
 
         for center_coords in list_center_coords:
@@ -2868,7 +2868,7 @@ class Mesh:
 
                 if filtered_elements:
                     filtered_solid_elements = self.process_element_average_coordinates(filtered_elements)
-                    element_indexes = np.array(list(filtered_solid_elements.keys()), dtype=int)
+                    element_indices = np.array(list(filtered_solid_elements.keys()), dtype=int)
                     elements_center_coordinates = np.array(list(filtered_solid_elements.values()), dtype=float)
                 else:
                     return
@@ -2880,12 +2880,12 @@ class Mesh:
                 mask_elem = diff_elem <= selection_radius
 
                 if sum(mask_nodes):
-                    for node_id in node_indexes[mask_nodes]:
+                    for node_id in node_indices[mask_nodes]:
                         if node_id not in nodes_inside_sphere:
                             nodes_inside_sphere.append(node_id)
 
                 if sum(mask_elem):
-                    for element_id in element_indexes[mask_elem]:
+                    for element_id in element_indices[mask_elem]:
                         if element_id not in selected_elements:
                             selected_elements.append(element_id)
 
@@ -2894,7 +2894,7 @@ class Mesh:
                 mask_nodes = diff_nodes <= selection_radius
 
                 if sum(mask_nodes):
-                    nodes_inside_sphere = node_indexes[mask_nodes]
+                    nodes_inside_sphere = node_indices[mask_nodes]
                     selection_data = self.get_solid_elements_connected_to_nodes(node_ids=nodes_inside_sphere)
                     for _node, element_ids in selection_data.items():
                         for element_id in element_ids:
@@ -2925,12 +2925,12 @@ class Mesh:
         return selected_elements, nodes_inside_sphere
 
     def get_nodes_inside_sphere_and_its_elements_connected(self, center_coords, selection_radius):
-        node_indexes = self.nodal_coordinates[:, 0]
+        node_indices = self.nodal_coordinates[:, 0]
         nodal_coordinates = self.nodal_coordinates[:, 1:]
 
         diff_nodes = np.linalg.norm(nodal_coordinates - center_coords, axis=1)
         mask_nodes = diff_nodes <= selection_radius
-        nodes_inside_sphere = node_indexes[mask_nodes]
+        nodes_inside_sphere = node_indices[mask_nodes]
 
         selection_data = self.get_solid_elements_connected_to_nodes(node_ids=nodes_inside_sphere)
 

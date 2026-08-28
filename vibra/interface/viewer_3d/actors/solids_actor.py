@@ -54,8 +54,8 @@ class SolidsActor(vtkActor):
         points = vtkPoints()
         point_colors = vtkFloatArray()
         cell_colors = vtkUnsignedCharArray()
-        solid_indexes = vtkIntArray()
-        solid_indexes.SetName("solid_indexes")
+        solid_indices = vtkIntArray()
+        solid_indices.SetName("solid_indices")
 
         if self.mesh.element_topology == TETRAHEDRON_4:
             cell_type = VTK_TETRA
@@ -90,27 +90,27 @@ class SolidsActor(vtkActor):
         point_colors.SetNumberOfTuples(number_of_nodes)
         cell_colors.SetNumberOfComponents(4)
         cell_colors.SetNumberOfTuples(number_of_elements)
-        solid_indexes.Allocate(number_of_elements)
+        solid_indices.Allocate(number_of_elements)
 
         coordinates = self.get_coordinates()
         points.SetData(numpy_to_vtk(coordinates))
 
         hidden_volumes = app().main_window.entity_visibility.get_hidden_volumes()
-        self.visible_indexes = dict()
+        self.visible_indices = dict()
 
         for i, volume, _, _, *nodes in nodes_connectivity:
             if volume in hidden_volumes:
                 continue
 
             # This is usefull if part of the cells are hidden
-            visible_index = solid_indexes.InsertNextValue(i)
-            self.visible_indexes[i] = visible_index
+            visible_index = solid_indices.InsertNextValue(i)
+            self.visible_indices[i] = visible_index
             data.InsertNextCell(cell_type, len(nodes), nodes)
 
         data.SetPoints(points)
         data.GetPointData().SetScalars(point_colors)
         data.GetCellData().SetScalars(cell_colors)
-        data.GetCellData().AddArray(solid_indexes)
+        data.GetCellData().AddArray(solid_indices)
         self.data: vtkPolyData = data
 
         self.has_distinguished_cells = False
@@ -186,7 +186,7 @@ class SolidsActor(vtkActor):
     def paint_solids(self, color: Color, solids: tuple[int]):
         cells = []
         for i in solids:
-            visible_index = self.visible_indexes.get(i, -1)
+            visible_index = self.visible_indices.get(i, -1)
             if visible_index >= 0:
                 cells.append(visible_index)
         self.paint_cells(color, cells)
@@ -217,7 +217,7 @@ class SolidsActor(vtkActor):
     def distinguish_solids(self, solids: tuple[int]):
         cells = []
         for i in solids:
-            visible_index = self.visible_indexes.get(i, -1)
+            visible_index = self.visible_indices.get(i, -1)
             if visible_index >= 0:
                 cells.append(visible_index)
 

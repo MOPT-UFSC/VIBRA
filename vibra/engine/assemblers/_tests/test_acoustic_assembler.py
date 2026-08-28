@@ -14,7 +14,7 @@ def test_reordering_approach_for_frequency_dependent_acoustic_assembler(viscous_
 
     assembler.assemble_global_matrices_and_excitations()
     # Enforce assembly with reordering
-    reordering = matrix_helper.get_reordering_indexes(assembler.ind_rows, assembler.ind_cols)
+    reordering = matrix_helper.get_reordering_indices(assembler.ind_rows, assembler.ind_cols)
     factor_K, factor_M, _, _ = assembler.compute_global_matrices_factors(1)
     data_K = assembler.int3d_BtB * factor_K
     data_M = assembler.int3d_NtN * factor_M

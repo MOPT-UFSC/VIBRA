@@ -79,17 +79,17 @@ class FacesActor(vtkActor):
         cell_colors.SetNumberOfTuples(number_of_elements)
         cell_colors.Fill(0)
 
-        face_indexes = vtkIntArray()
-        face_indexes.SetName("face_indexes")
-        face_indexes.Allocate(number_of_elements)
+        face_indices = vtkIntArray()
+        face_indices.SetName("face_indices")
+        face_indices.Allocate(number_of_elements)
 
-        surface_indexes = vtkIntArray()
-        surface_indexes.SetName("surface_indexes")
-        surface_indexes.Allocate(number_of_elements)
+        surface_indices = vtkIntArray()
+        surface_indices.SetName("surface_indices")
+        surface_indices.Allocate(number_of_elements)
 
-        volume_indexes = vtkIntArray()
-        volume_indexes.SetName("volume_indexes")
-        volume_indexes.Allocate(number_of_elements)
+        volume_indices = vtkIntArray()
+        volume_indices.SetName("volume_indices")
+        volume_indices.Allocate(number_of_elements)
 
         cell_type = self.NODES_TO_VTK_CELL[nodes_per_element]
         data.Allocate(nodes_per_element * number_of_elements)
@@ -102,7 +102,7 @@ class FacesActor(vtkActor):
             for surface in surfaces:
                 surface_to_volume[surface] = volume
 
-        self.visible_indexes = dict()
+        self.visible_indices = dict()
         hidden_surfaces = app().main_window.entity_visibility.get_hidden_surfaces()
         if not self.allow_hidding:
             hidden_surfaces.clear()
@@ -112,20 +112,20 @@ class FacesActor(vtkActor):
                 continue
 
             volume = surface_to_volume.get(surface, -1)
-            surface_indexes.InsertNextValue(surface)
-            volume_indexes.InsertNextValue(volume)
+            surface_indices.InsertNextValue(surface)
+            volume_indices.InsertNextValue(volume)
 
             # This is usefull if part of the cells are hidden
-            visible_index = face_indexes.InsertNextValue(i)
-            self.visible_indexes[i] = visible_index
+            visible_index = face_indices.InsertNextValue(i)
+            self.visible_indices[i] = visible_index
             data.InsertNextCell(cell_type, nodes_per_element, list(values))
 
         data.SetPoints(points)
         data.GetPointData().SetScalars(point_colors)
         data.GetCellData().SetScalars(cell_colors)
-        data.GetCellData().AddArray(face_indexes)
-        data.GetCellData().AddArray(surface_indexes)
-        data.GetCellData().AddArray(volume_indexes)
+        data.GetCellData().AddArray(face_indices)
+        data.GetCellData().AddArray(surface_indices)
+        data.GetCellData().AddArray(volume_indices)
 
         # Updating normals messes with the colors
         # this is why this option exists.
@@ -220,7 +220,7 @@ class FacesActor(vtkActor):
         color = color.to_rgba()
         cell_colors = self.data.GetCellData().GetScalars()
         for i in faces:
-            visible_index = self.visible_indexes.get(i, -1)
+            visible_index = self.visible_indices.get(i, -1)
             if visible_index >= 0:
                 cell_colors.SetTuple(visible_index, color)
 

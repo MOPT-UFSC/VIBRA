@@ -114,10 +114,10 @@ class StructuralPostprocessing:
 
         data_complex = self.solution.get_nodal_displacement_at_column(column)
 
-        if self.model.structural_dof_indexes is None:
+        if self.model.structural_dof_indices is None:
             self.model.update_domains_mappings()
 
-        data_complex = data_complex[self.model.structural_dof_indexes]
+        data_complex = data_complex[self.model.structural_dof_indices]
 
         if self.model.analysis_id == AnalysisID.STRUCTURAL_HARMONIC:
             freq = self.model.frequencies[column]
@@ -225,29 +225,29 @@ class StructuralPostprocessing:
         t0 = time()
 
         # local_dofs = np.arange(element_3d.DOF_PER_NODE, dtype=int)
-        # dofs_indexes = element_nodes.reshape(-1, 1) * element_3d.DOF_PER_NODE + local_dofs
+        # dofs_indices = element_nodes.reshape(-1, 1) * element_3d.DOF_PER_NODE + local_dofs
 
         # # Load all frequency solutions to optimize multiple load
         # node_to_index = dict(zip(element_nodes, np.arange(element_nodes.size, dtype=int)))
-        # solution = self.solution.nodal_solution[dofs_indexes.flatten(), :]
+        # solution = self.solution.nodal_solution[dofs_indices.flatten(), :]
 
         nodal_stresses_data = dict()
 
         avg_den = defaultdict(int)
         avg_nodal_stresses_data = defaultdict(float)
 
-        corner_indexes = element_3d.corner_nodes_indexes
-        midside_indexes_map = element_3d.midside_nodes_indexes_map
+        corner_indices = element_3d.corner_nodes_indices
+        midside_indices_map = element_3d.midside_nodes_indices_map
 
         for element_id in element_ids:
             connect = element_3d.connectivity[element_id, 1:]
-            # indexes = np.array([node_to_index.get(node) for node in connect], dtype=int)
-            # dofs_indexes = indexes.reshape(-1, 1) * element_3d.DOF_PER_NODE + local_dofs
-            # dofs_indexes = dofs_indexes.flatten()
+            # indices = np.array([node_to_index.get(node) for node in connect], dtype=int)
+            # dofs_indices = indices.reshape(-1, 1) * element_3d.DOF_PER_NODE + local_dofs
+            # dofs_indices = dofs_indices.flatten()
 
             element_stresses = element_3d.process_stresses_at_integration_points(
                 element_id,
-                nodal_solution = None, #self.solution.nodal_solution[dofs_indexes, :]
+                nodal_solution = None, #self.solution.nodal_solution[dofs_indices, :]
                 solution = self.solution.nodal_solution,
                 )
 
@@ -256,13 +256,13 @@ class StructuralPostprocessing:
             for i, e_node in enumerate(connect):
                 avg_den[e_node] += 1
 
-                if i in corner_indexes:
+                if i in corner_indices:
                     avg_nodal_stresses_data[e_node] += enodal_stresses[:, i, :]
                     nodal_stresses_data[(element_id, e_node)] = enodal_stresses[:, i, :]
 
                 else:
 
-                    (index_1, index_2) = midside_indexes_map.get(i)
+                    (index_1, index_2) = midside_indices_map.get(i)
                     avg_stress = (enodal_stresses[:, index_1, :] + enodal_stresses[:, index_2, :]) / 2
 
                     avg_nodal_stresses_data[e_node] += avg_stress
@@ -350,11 +350,11 @@ class StructuralPostprocessing:
             node_ids=node_ids, return_nodes=True)
 
         local_dofs = np.arange(element_3d.DOF_PER_NODE, dtype=int)
-        dofs_indexes = filtered_nodes.reshape(-1, 1) * element_3d.DOF_PER_NODE + local_dofs
+        dofs_indices = filtered_nodes.reshape(-1, 1) * element_3d.DOF_PER_NODE + local_dofs
 
         # Load all frequency solutions to optimize multiple load on the `process_particle_velocity` method below.
         node_to_index = dict(zip(filtered_nodes, np.arange(filtered_nodes.size, dtype=int)))
-        solution = self.solution.nodal_solution[dofs_indexes.flatten(), :]
+        solution = self.solution.nodal_solution[dofs_indices.flatten(), :]
 
         nodal_stresses_data = dict()
         avg_nodal_stresses_data = defaultdict(float)
@@ -365,14 +365,14 @@ class StructuralPostprocessing:
 
             for element_id in solid_element_ids:
                 connect = element_3d.connectivity[element_id, 1:]
-                indexes = np.array([node_to_index.get(node) for node in connect], dtype=int)
+                indices = np.array([node_to_index.get(node) for node in connect], dtype=int)
 
-                dofs_indexes = indexes.reshape(-1, 1) * element_3d.DOF_PER_NODE + local_dofs
-                dofs_indexes = dofs_indexes.flatten()
+                dofs_indices = indices.reshape(-1, 1) * element_3d.DOF_PER_NODE + local_dofs
+                dofs_indices = dofs_indices.flatten()
                 
                 element_stresses = element_3d.process_stresses_at_integration_points(
                     element_id,
-                    nodal_solution = solution[dofs_indexes, :]
+                    nodal_solution = solution[dofs_indices, :]
                     )
 
                 nodal_stresses = element_3d.extrapolate_stresses_to_nodes(element_stresses)

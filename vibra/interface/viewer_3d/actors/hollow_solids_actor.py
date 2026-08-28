@@ -1,9 +1,9 @@
+from vtkmodules.util.numpy_support import numpy_to_vtk
 from vtkmodules.vtkCommonCore import vtkIntArray
 
 from vibra import app
-from .faces_actor import FacesActor
 
-from vtkmodules.util.numpy_support import numpy_to_vtk
+from .faces_actor import FacesActor
 
 
 class HollowSolidsActor(FacesActor):
@@ -13,17 +13,17 @@ class HollowSolidsActor(FacesActor):
     def create_geometry(self):
         super().create_geometry()
 
-        face_indexes: vtkIntArray = self.data.GetCellData().GetArray("face_indexes")
-        solid_indexes = vtkIntArray()
-        solid_indexes.SetName("solid_indexes")
-        solid_indexes.SetNumberOfValues(face_indexes.GetNumberOfValues())
+        face_indices: vtkIntArray = self.data.GetCellData().GetArray("face_indices")
+        solid_indices = vtkIntArray()
+        solid_indices.SetName("solid_indices")
+        solid_indices.SetNumberOfValues(face_indices.GetNumberOfValues())
 
-        for i in range(face_indexes.GetNumberOfTuples()):
-            cell2d = face_indexes.GetValue(i)
+        for i in range(face_indices.GetNumberOfTuples()):
+            cell2d = face_indices.GetValue(i)
             cell3d = self.mesh.face_to_solid_element.get(cell2d, -1)
-            solid_indexes.SetValue(i, cell3d)
+            solid_indices.SetValue(i, cell3d)
         
-        self.data.GetCellData().AddArray(solid_indexes)
+        self.data.GetCellData().AddArray(solid_indices)
 
     def update_coordinates(self, coordinates):
         points = self.data.GetPoints()

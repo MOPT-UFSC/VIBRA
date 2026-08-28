@@ -27,8 +27,8 @@ class StructuralAssembler:
         self.array_prescribed_values = np.array([])
 
         self.displacement_dof = np.array([])
-        self.prescribed_dof_indexes = np.array([])
-        self.unprescribed_dof_indexes = np.array([])
+        self.prescribed_dof_indices = np.array([])
+        self.unprescribed_dof_indices = np.array([])
 
     def define_structural_elements(self):
         self.model.set_structural_elements()
@@ -102,9 +102,9 @@ class StructuralAssembler:
 
         See also
         --------
-        get_prescribed_indexes : Indexes of the structural degrees of freedom with prescribed displacement or rotation boundary conditions.
+        get_prescribed_indices : Indexes of the structural degrees of freedom with prescribed displacement or rotation boundary conditions.
 
-        get_unprescribed_indexes : Indexes of the structural free degrees of freedom.
+        get_unprescribed_indices : Indexes of the structural free degrees of freedom.
         """
 
         if self.frequencies is None:
@@ -164,9 +164,9 @@ class StructuralAssembler:
 
         return np.array(loads_list, dtype=complex)
 
-    def get_unprescribed_indexes(self):
-        prescribed_indexes = np.array([*set(self.prescribed_dof_indexes)], dtype=int)
-        return np.delete(self.all_dof, prescribed_indexes)
+    def get_unprescribed_indices(self):
+        prescribed_indices = np.array([*set(self.prescribed_dof_indices)], dtype=int)
+        return np.delete(self.all_dof, prescribed_indices)
 
     def reorder_property_data_based_on_gdof(self, input_property_data: dict):
 
@@ -183,8 +183,8 @@ class StructuralAssembler:
         output_prescribed_dof_data = self.reorder_property_data_based_on_gdof(input_prescribed_dof_data)
         self.prescribed_dof_values, self.array_prescribed_values = self.process_property_arrays(output_prescribed_dof_data)
 
-        self.prescribed_dof_indexes = list(output_prescribed_dof_data.keys())
-        self.unprescribed_dof_indexes = self.get_unprescribed_indexes()
+        self.prescribed_dof_indices = list(output_prescribed_dof_data.keys())
+        self.unprescribed_dof_indices = self.get_unprescribed_indices()
 
     def process_structural_nodal_loads(self):
 
@@ -192,19 +192,19 @@ class StructuralAssembler:
         output_nodal_loads_data = self.reorder_property_data_based_on_gdof(input_nodal_loads_data)
         nodal_loads, _ = self.process_property_arrays(output_nodal_loads_data)
 
-        # self.nodal_loads_indexes = list(output_nodal_loads_data.keys())
+        # self.nodal_loads_indices = list(output_nodal_loads_data.keys())
         output = np.zeros((len(self.all_dof), self.number_frequencies), dtype=complex)
 
         if nodal_loads:
-            indexes = list(nodal_loads.keys())
+            indices = list(nodal_loads.keys())
             excitation = list(nodal_loads.values())
-            output[indexes, :] = np.array(excitation)
+            output[indices, :] = np.array(excitation)
 
-        if self.prescribed_dof_indexes:
+        if self.prescribed_dof_indices:
             if len(self.active_2d_element_dof):
                 return output[self.unprescribed_shell_dof, :]
             else:
-                return output[self.unprescribed_dof_indexes, :]
+                return output[self.unprescribed_dof_indices, :]
         else:
             return output
 
@@ -254,16 +254,16 @@ class StructuralAssembler:
                         g_dof, F_elem = self.element_2d.process_forces_for_distributed_load_over_line(connect_2d, active_nodes, line_load)
                         output[g_dof, :] += F_elem
 
-        if self.prescribed_dof_indexes:
+        if self.prescribed_dof_indices:
             if len(self.active_2d_element_dof):
                 return output[self.unprescribed_shell_dof, :]
             else:
-                return output[self.unprescribed_dof_indexes, :]
+                return output[self.unprescribed_dof_indices, :]
         else:
             return output
 
-    # def get_matrices_dropping_indexes(self):
-    #     return self.unprescribed_dof_indexes, self.prescribed_dof_indexes
+    # def get_matrices_dropping_indices(self):
+    #     return self.unprescribed_dof_indices, self.prescribed_dof_indices
 
     def get_prescribed_dof_values(self):
         return self.prescribed_dof_values, self.array_prescribed_values
@@ -368,7 +368,7 @@ class StructuralAssembler:
                 if material is None:
                     continue
 
-                rows, cols = self.element_3d.get_rows_and_cols_indexes(el_index, shift_index)
+                rows, cols = self.element_3d.get_rows_and_cols_indices(el_index, shift_index)
                 ind_rows[el_index, :, :] = rows
                 ind_cols[el_index, :, :] = cols
 
@@ -382,7 +382,7 @@ class StructuralAssembler:
             self.ind_rows = np.append(self.ind_rows, ind_rows.flatten())
             self.ind_cols = np.append(self.ind_cols, ind_cols.flatten())
 
-            # np.savetxt("indexes_exported.dat", np.array([ind_rows.flatten(), ind_cols.flatten()], dtype=int).T, delimiter=",", fmt="%i")
+            # np.savetxt("indices_exported.dat", np.array([ind_rows.flatten(), ind_cols.flatten()], dtype=int).T, delimiter=",", fmt="%i")
 
         aux_nodes = list()
 
@@ -395,7 +395,7 @@ class StructuralAssembler:
 
             self.ind_rows = np.append(self.ind_rows, rows_fe)
             self.ind_cols = np.append(self.ind_cols, cols_fe)
-            # np.savetxt("indexes.dat", np.array([ind_rows, ind_cols], dtype=int).T, fmt="%i")
+            # np.savetxt("indices.dat", np.array([ind_rows, ind_cols], dtype=int).T, fmt="%i")
 
             data_K_fe = np.zeros((nel, dof, dof), dtype=complex)
             data_M_fe = np.zeros((nel, dof, dof), dtype=complex)
@@ -446,25 +446,25 @@ class StructuralAssembler:
         self.process_prescribed_dof_data()
 
         if len(self.active_2d_element_dof):
-            self.unprescribed_shell_dof = np.intersect1d(self.unprescribed_dof_indexes, self.active_2d_element_dof)
+            self.unprescribed_shell_dof = np.intersect1d(self.unprescribed_dof_indices, self.active_2d_element_dof)
             self.stiffness_matrix = _stiffness_matrix_full[self.unprescribed_shell_dof, :][:, self.unprescribed_shell_dof]
             self.mass_matrix = _mass_matrix_full[self.unprescribed_shell_dof, :][:, self.unprescribed_shell_dof]
 
         else:
 
-            self.mass_matrix = _mass_matrix_full[self.unprescribed_dof_indexes, :][:, self.unprescribed_dof_indexes]
-            self.stiffness_matrix = _stiffness_matrix_full[self.unprescribed_dof_indexes, :][:, self.unprescribed_dof_indexes]
+            self.mass_matrix = _mass_matrix_full[self.unprescribed_dof_indices, :][:, self.unprescribed_dof_indices]
+            self.stiffness_matrix = _stiffness_matrix_full[self.unprescribed_dof_indices, :][:, self.unprescribed_dof_indices]
             
-            if self.prescribed_dof_indexes:
-                self.mass_matrix = _mass_matrix_full[self.unprescribed_dof_indexes, :][:, self.unprescribed_dof_indexes]
-                self.stiffness_matrix = _stiffness_matrix_full[self.unprescribed_dof_indexes, :][:, self.unprescribed_dof_indexes]
+            if self.prescribed_dof_indices:
+                self.mass_matrix = _mass_matrix_full[self.unprescribed_dof_indices, :][:, self.unprescribed_dof_indices]
+                self.stiffness_matrix = _stiffness_matrix_full[self.unprescribed_dof_indices, :][:, self.unprescribed_dof_indices]
 
             else:
                 self.mass_matrix = _mass_matrix_full
                 self.stiffness_matrix = _stiffness_matrix_full
 
-        self.mass_matrix_r = _mass_matrix_full[:, self.prescribed_dof_indexes]
-        self.stiffness_matrix_r = _stiffness_matrix_full[:, self.prescribed_dof_indexes]
+        self.mass_matrix_r = _mass_matrix_full[:, self.prescribed_dof_indices]
+        self.stiffness_matrix_r = _stiffness_matrix_full[:, self.prescribed_dof_indices]
 
     def process_assemble(self, reorder: bool=True, stacked_matrices: bool=True, **kwargs):
 
@@ -513,17 +513,17 @@ class StructuralAssembler:
         cols = solution.shape[1]
         full_solution = np.zeros((rows, cols), dtype=complex)
 
-        if len(self.prescribed_dof_indexes):
+        if len(self.prescribed_dof_indices):
             if modal_analysis:
-                full_solution[self.prescribed_dof_indexes, :] = np.zeros((len(self.prescribed_dof_indexes), cols))
+                full_solution[self.prescribed_dof_indices, :] = np.zeros((len(self.prescribed_dof_indices), cols))
             else:
-                full_solution[self.prescribed_dof_indexes, :] = self.array_prescribed_values[:, 0:cols]
+                full_solution[self.prescribed_dof_indices, :] = self.array_prescribed_values[:, 0:cols]
 
         if len(self.active_2d_element_dof):
             full_solution[self.unprescribed_shell_dof, :] = solution
 
         else:
-            full_solution[self.unprescribed_dof_indexes, :] = solution
+            full_solution[self.unprescribed_dof_indices, :] = solution
 
         return full_solution
     
@@ -531,14 +531,14 @@ class StructuralAssembler:
         rows = self.total_dof
         full_solution = np.zeros(rows, dtype=complex)
 
-        if len(self.prescribed_dof_indexes):
-            full_solution[self.prescribed_dof_indexes] = self.array_prescribed_values[:, freq_index]
+        if len(self.prescribed_dof_indices):
+            full_solution[self.prescribed_dof_indices] = self.array_prescribed_values[:, freq_index]
 
         if len(self.active_2d_element_dof):
             full_solution[self.unprescribed_shell_dof] = solution
 
         else:
-            full_solution[self.unprescribed_dof_indexes] = solution
+            full_solution[self.unprescribed_dof_indices] = solution
 
         return full_solution
 
@@ -580,11 +580,11 @@ class StructuralAssembler:
         f_eq = (1 + 1j*(eta + omega * beta)) * Kr_add + (-(omega**2) + 1j*(omega * alpha)) * Mr_add
 
         if len(self.active_2d_element_dof):
-            unprescribed_indexes = self.unprescribed_shell_dof
+            unprescribed_indices = self.unprescribed_shell_dof
         else:
-            unprescribed_indexes = self.unprescribed_dof_indexes
+            unprescribed_indices = self.unprescribed_dof_indices
 
-        return f_eq[unprescribed_indexes]
+        return f_eq[unprescribed_indices]
 
     def get_prescribed_dof_model_excitation_reference(self, freq_dependent: bool = False):
         """
@@ -606,12 +606,12 @@ class StructuralAssembler:
         frequencies = self.model.frequencies
 
         if len(self.active_2d_element_dof):
-            unprescribed_indexes = self.unprescribed_shell_dof
+            unprescribed_indices = self.unprescribed_shell_dof
         else:
-            unprescribed_indexes = self.unprescribed_dof_indexes
+            unprescribed_indices = self.unprescribed_dof_indices
 
-        Kr = (self.stiffness_matrix_r.toarray())[unprescribed_indexes, :]
-        Mr = (self.mass_matrix_r.toarray())[unprescribed_indexes, :]
+        Kr = (self.stiffness_matrix_r.toarray())[unprescribed_indices, :]
+        Mr = (self.mass_matrix_r.toarray())[unprescribed_indices, :]
 
         logging.info(f"Processing prescribed dof model excitation... [10/{len(frequencies)}]")
 

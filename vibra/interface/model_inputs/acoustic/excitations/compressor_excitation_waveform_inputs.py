@@ -285,10 +285,10 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
             min_coords = np.min(coords, axis=0)
             max_coords = np.max(coords, axis=0)
             range_coords = np.abs(max_coords - min_coords)
-            indexes = np.argsort(range_coords)
-            if round(range_coords[indexes[0]], 4) == 0:
+            indices = np.argsort(range_coords)
+            if round(range_coords[indices[0]], 4) == 0:
                 axis_labels = ["x-axis (+)", "y-axis (+)", "z-axis (+)"]
-                self.comboBox_normal_velocity_axis.setCurrentText(axis_labels[indexes[0]])
+                self.comboBox_normal_velocity_axis.setCurrentText(axis_labels[indices[0]])
 
     def compute_compressor_excitation_spectrum(self):
 

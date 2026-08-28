@@ -197,12 +197,12 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
         else:
             return None
 
-        indexes = self.model.fluid_node_mapping[nodes]
+        indices = self.model.fluid_node_mapping[nodes]
 
-        if isinstance(indexes, int):
-            response = self.nodal_solution[indexes, :]
+        if isinstance(indices, int):
+            response = self.nodal_solution[indices, :]
         else:
-            response = np.average(self.nodal_solution[indexes, :], axis=0)
+            response = np.average(self.nodal_solution[indices, :], axis=0)
 
         if complex(0) in response:
             response += 1e-12

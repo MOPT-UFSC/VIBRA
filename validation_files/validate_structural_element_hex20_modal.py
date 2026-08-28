@@ -128,8 +128,8 @@ def load_external_mesh_and_solve(integration_type: str):
     results_path = PROJECT_DIR / f"validation_files/data/WB/structural/elements/hex20/results/{integration_type}/"
     natural_frequencies_ref = np.loadtxt(results_path / "natural_frequencies_Ansys.dat")[:, 1]
 
-    # modes_indexes = np.arange(natural_frequencies.size)
-    # nat_freq_data = np.array([modes_indexes, natural_frequencies]).T
+    # modes_indices = np.arange(natural_frequencies.size)
+    # nat_freq_data = np.array([modes_indices, natural_frequencies]).T
     # np.savetxt("natural_frequencies_Vibra.dat", nat_freq_data, fmt = "%i %.12e", delimiter=',')
 
     fnat_diff = 100 * (np.abs(natural_frequencies[1:] - natural_frequencies_ref[1:]) / natural_frequencies_ref[1:])
