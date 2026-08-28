@@ -22,6 +22,7 @@ class HarmonicSolver:
         assembler: AcousticAssembler | StructuralAssembler,
         project_paths: ProjectPaths | None = None,
     ):
+
         self.assembler = assembler
         self.project_paths = project_paths
 
@@ -30,6 +31,13 @@ class HarmonicSolver:
     @property
     def frequencies(self) -> np.ndarray:
         return self.assembler.model.frequencies
+
+    @property
+    def total_dofs(self) -> int:
+        if isinstance(self.assembler, AcousticAssembler):
+            return self.assembler.acoustic_ndof
+        elif isinstance(self.assembler, StructuralAssembler):
+            return self.assembler.structural_ndof           
 
     def reset_variables(self):
         self.solution: Optional[HarmonicSolution] = None
@@ -55,6 +63,7 @@ class HarmonicSolver:
             self.displacement_dof = self.assembler.displacement_dof
 
         nodal_solution_buffer = self._get_nodal_solution_buffer(is_resume)
+
         self._initialize_file_writer(is_resume)
         self.compute_frequency_sweep(nodal_solution_buffer, print_log, is_resume)
         self._close_file_writer()
@@ -124,7 +133,9 @@ class HarmonicSolver:
         is_resume: bool = False,
         is_proportionally_damped: bool = False,
     ) -> HarmonicSolution:
+
         logging.info("Solving harmonic analysis (mode superposition method)... [10/100]")
+
         t0 = time()
         modal_solver = ModalSolver(self.assembler)
         modal_solution = modal_solver.solve(full_solution=False)
@@ -142,6 +153,7 @@ class HarmonicSolver:
                 print_log,
                 is_resume,
             )
+
         else:
             self.compute_frequency_sweep(
                 nodal_solution_buffer,
@@ -230,7 +242,7 @@ class HarmonicSolver:
 
         self._file_writer = LazyHDF5MatrixWriter(
             self.project_paths.harmonic_solution_filepath,
-            self.assembler.total_dof,
+            self.total_dofs,
             self.assembler.frequencies,
             dtype=complex,
             is_resume=is_resume,
@@ -252,7 +264,8 @@ class HarmonicSolver:
             with h5py.File(self.project_paths.harmonic_solution_filepath, "r") as file:
                 return np.array(file["solution"])
 
-        num_rows = self.assembler.total_dof
+        num_rows = self.total_dofs
         num_cols = len(self.assembler.frequencies)
+
         solution = np.zeros((num_rows, num_cols), dtype=complex)
         return solution
