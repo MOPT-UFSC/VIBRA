@@ -79,6 +79,8 @@ class ProjectReader:
         model.properties = self.read_model_properties()
         model.solution = self.read_solution(model)
 
+        model.update_domains_mappings()
+
         return model
 
     def read_current_analysis_id(self) -> AnalysisID:
