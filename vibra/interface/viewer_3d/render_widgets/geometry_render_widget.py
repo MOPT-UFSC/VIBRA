@@ -33,6 +33,7 @@ from .model_info_text import (
     points_info_text,
     porous_material_info_text,
     proportional_damping_info_text,
+    structural_additional_info_text,
     structural_boundary_conditions_info_text,
     viscous_thermal_info_text,
     volumes_info_text,
@@ -301,7 +302,6 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.visualization_changed_callback()
         self.update()
 
-    #
     def click_callback(self, x, y):
         self.mouse_click = (x, y)
 
@@ -495,7 +495,7 @@ class GeometryRenderWidget(CommonRenderWidget):
 
     @warn_delays
     def update_info_text(self):
-        analysis_type, physical_domain = self.get_analysis_type_and_physical_domain()
+        _, physical_domain = self.get_analysis_type_and_physical_domain()
 
         text = ""
         text += points_info_text()
@@ -506,6 +506,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         if physical_domain == "structural":
             text += material_info_text()
             text += structural_boundary_conditions_info_text()
+            text += structural_additional_info_text()
 
         elif physical_domain == "acoustic":
             text += fluid_info_text()

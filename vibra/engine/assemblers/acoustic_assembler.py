@@ -316,12 +316,16 @@ class AcousticAssembler:
                 continue
 
             data: dict
+            if not data.get("element_integration", True):
+                continue
+
             complex_values = data.get("values")[0]
 
             if property_label in ["compressor_excitation_spectrum", "compressor_excitation_waveform"]:
                 excitation_type = data.get("excitation_type")
 
                 if excitation_type in ["mass flow rate", "volumetric flow rate"]:
+
                     # compute the nozzle area
                     self.model.mesh.process_face_elements_connected_to_nodes(surface_id)
                     area = self.model.mesh.surface_area_from_element_integration.get(surface_id, 0)                    
@@ -910,8 +914,8 @@ class AcousticAssembler:
             if not isinstance(data, dict):
                 continue
 
-            if not self.mass_source_vector_points.any():
-                self.mass_source_vector_points = np.zeros((self.total_dof, self.number_frequencies), dtype=complex)
+            if not self.mass_source_vector_surfaces.any():
+                self.mass_source_vector_surfaces = np.zeros((self.total_dof, self.number_frequencies), dtype=complex)
 
             values = data.get("values")
             if values is None:
@@ -1315,8 +1319,8 @@ class AcousticAssembler:
         self.ind_rows_Zsi = np.array([], dtype=int)
         self.ind_cols_Zsi = np.array([], dtype=int)
 
-        dof = self.element_2d.DOF_PER_ELEMENT
-        self.total_dof_2d = self.element_2d.DOF_PER_NODE * len(self.element_2d.nodal_coordinates)
+        dof = self.element_2d.dof_per_element
+        self.total_dof_2d = self.element_2d.dof_per_node * len(self.element_2d.nodal_coordinates)
 
         self.integration_data_Zsi = self.get_impedance_data_for_element_integration("specific_impedance")
         if not self.integration_data_Zsi:
@@ -1348,8 +1352,8 @@ class AcousticAssembler:
         self.ind_rows_Zat = np.array([], dtype=int)
         self.ind_cols_Zat = np.array([], dtype=int)
 
-        dof = self.element_2d.DOF_PER_ELEMENT
-        self.total_dof_2d = self.element_2d.DOF_PER_NODE * len(self.element_2d.nodal_coordinates)
+        dof = self.element_2d.dof_per_element
+        self.total_dof_2d = self.element_2d.dof_per_node * len(self.element_2d.nodal_coordinates)
 
         self.integration_data_Zat = self.get_impedance_data_for_element_integration("anechoic_termination")
         if not self.integration_data_Zat:
@@ -1391,8 +1395,8 @@ class AcousticAssembler:
         connectivities: np.ndarray = self.integration_data_ipw.connectivities
         element_normals: np.ndarray = self.integration_data_ipw.element_face_normals
 
-        dof = self.element_2d.DOF_PER_ELEMENT
-        self.total_dof_2d = self.element_2d.DOF_PER_NODE * len(self.element_2d.nodal_coordinates)
+        dof = self.element_2d.dof_per_element
+        self.total_dof_2d = self.element_2d.dof_per_node * len(self.element_2d.nodal_coordinates)
 
         nel = connectivities.shape[0]
         for j in range(self.number_frequencies):
@@ -1423,8 +1427,8 @@ class AcousticAssembler:
         self.ind_rows_Zas = np.array([])
         self.ind_cols_Zas = np.array([])
 
-        dof = self.element_2d.DOF_PER_ELEMENT
-        self.total_dof_2d = self.element_2d.DOF_PER_NODE * len(self.element_2d.nodal_coordinates)
+        dof = self.element_2d.dof_per_element
+        self.total_dof_2d = self.element_2d.dof_per_node * len(self.element_2d.nodal_coordinates)
 
         self.integration_data_Zas = self.get_impedance_data_for_element_integration("absorption_surface")
         if not self.integration_data_Zas:
@@ -1460,8 +1464,8 @@ class AcousticAssembler:
         self.ind_rows_Zti_B = np.array([])
         self.ind_cols_Zti_B = np.array([])
 
-        dof = self.element_2d.DOF_PER_ELEMENT
-        self.total_dof_2d = self.element_2d.DOF_PER_NODE * len(self.element_2d.nodal_coordinates)
+        dof = self.element_2d.dof_per_element
+        self.total_dof_2d = self.element_2d.dof_per_node * len(self.element_2d.nodal_coordinates)
 
         self.integration_data_Zti = self.get_transfer_impedance_data_for_element_integration()
         if not self.integration_data_Zti:
@@ -1513,8 +1517,8 @@ class AcousticAssembler:
         self.ind_rows_Zpp_B = np.array([])
         self.ind_cols_Zpp_B = np.array([])
 
-        dof = self.element_2d.DOF_PER_ELEMENT
-        self.total_dof_2d = self.element_2d.DOF_PER_NODE * len(self.element_2d.nodal_coordinates)
+        dof = self.element_2d.dof_per_element
+        self.total_dof_2d = self.element_2d.dof_per_node * len(self.element_2d.nodal_coordinates)
 
         self.integration_data_Zpp = self.get_perforated_plate_data_for_element_integration(solution)
         if not self.integration_data_Zpp:
@@ -1702,6 +1706,12 @@ class AcousticAssembler:
         for (property, surface_id), data in self.properties.surface_properties.items():
             if property in ["surface_velocity", "reciprocating_compressor_excitation"]:
 
+                if not isinstance(data, dict):
+                    continue
+        
+                if data.get("element_integration", True):
+                    continue
+
                 _complex_values = data["values"][0]
                 if isinstance(_complex_values, complex):
                     complex_values = _complex_values * aux_ones
@@ -1715,20 +1725,15 @@ class AcousticAssembler:
                     else:
                         complex_values = _complex_values
 
-                if data["nodal_attribution"]:
-                    nodes = self.model.mesh.get_nodes_from_surface(surface_id)
-                    if nodes is None:
-                        continue
+                nodes = self.model.mesh.get_nodes_from_surface(surface_id)
+                if nodes is None:
+                    continue
 
-                    N = len(nodes)
-                    self.model.mesh.process_face_elements_connected_to_nodes(surface_id)
-                    area = self.model.mesh.surface_area_from_element_integration[surface_id]
+                self.model.mesh.process_face_elements_connected_to_nodes(surface_id)
+                area = self.model.mesh.surface_area_from_element_integration[surface_id]
 
-                    for index in self.model.get_acoustic_global_dof_from_nodes(nodes):
-                        if data["averaged"]:
-                            acoustic_excitation[index] += (complex_values * area) / N
-                        else:
-                            acoustic_excitation[index] += complex_values * area
+                for index in self.model.get_acoustic_global_dof_from_nodes(nodes):
+                    acoustic_excitation[index] += complex_values * area
 
         total_dof = self.element_3d.DOF_PER_NODE * len(self.element_3d.nodal_coordinates)
         output = np.zeros((total_dof, self.number_frequencies), dtype=complex)
@@ -1750,7 +1755,7 @@ class AcousticAssembler:
         returns the output data in the form of mass flow rate.
         """
 
-        total_dof = self.element_2d.DOF_PER_NODE * len(self.element_2d.nodal_coordinates)
+        total_dof = self.element_2d.dof_per_node * len(self.element_2d.nodal_coordinates)
         output = np.zeros((total_dof, self.number_frequencies), dtype=complex)
 
         prop_labels = [
