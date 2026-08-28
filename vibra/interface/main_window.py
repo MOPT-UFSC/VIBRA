@@ -695,6 +695,8 @@ class MainWindow(MainWindow_UI):
         self._import_geometry_or_mesh(load_path)
 
     def _import_geometry_or_mesh(self, load_path: Path):
+        self.entity_visibility.unhide_all()
+        self.selection.clear_selection()
         ext = Path(load_path).suffix.strip(".").lower()
         if ext in SUPPORTED_GEOMETRY_EXTENSIONS:
             app().project.reset_project()
@@ -884,6 +886,9 @@ class MainWindow(MainWindow_UI):
         If you pass a valid vibra file to this function, it will first copy
         the file to a temporary folder and then load it.
         """
+
+        self.entity_visibility.unhide_all()
+        self.selection.clear_selection()
 
         # Actual loading
         project = app().project
