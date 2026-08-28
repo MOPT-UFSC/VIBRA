@@ -51,16 +51,16 @@ class Ui_Dialog(object):
         self.frame_3.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_4 = QGridLayout(self.frame_3)
         self.gridLayout_4.setObjectName(u"gridLayout_4")
-        self.pushButton_confirm = QPushButton(self.frame_3)
-        self.pushButton_confirm.setObjectName(u"pushButton_confirm")
-        self.pushButton_confirm.setMinimumSize(QSize(68, 28))
-        self.pushButton_confirm.setMaximumSize(QSize(140, 16777215))
+        self.pushButton_ok = QPushButton(self.frame_3)
+        self.pushButton_ok.setObjectName(u"pushButton_ok")
+        self.pushButton_ok.setMinimumSize(QSize(68, 28))
+        self.pushButton_ok.setMaximumSize(QSize(140, 16777215))
         font1 = QFont()
         font1.setPointSize(10)
-        self.pushButton_confirm.setFont(font1)
-        self.pushButton_confirm.setAutoDefault(False)
+        self.pushButton_ok.setFont(font1)
+        self.pushButton_ok.setAutoDefault(False)
 
-        self.gridLayout_4.addWidget(self.pushButton_confirm, 0, 3, 1, 1)
+        self.gridLayout_4.addWidget(self.pushButton_ok, 0, 3, 1, 1)
 
         self.pushButton_apply = QPushButton(self.frame_3)
         self.pushButton_apply.setObjectName(u"pushButton_apply")
@@ -177,7 +177,7 @@ class Ui_Dialog(object):
     def retranslateUi(self, Dialog):
         Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"Dialog", None))
         self.label.setText(QCoreApplication.translate("Dialog", u"Volume suppression setup", None))
-        self.pushButton_confirm.setText(QCoreApplication.translate("Dialog", u"Confirm", None))
+        self.pushButton_ok.setText(QCoreApplication.translate("Dialog", u"Ok", None))
         self.pushButton_apply.setText(QCoreApplication.translate("Dialog", u"Apply", None))
         self.pushButton_cancel.setText(QCoreApplication.translate("Dialog", u"Cancel", None))
         self.label_selected_ids.setText(QCoreApplication.translate("Dialog", u"Selected IDs:", None))
@@ -202,7 +202,7 @@ class VolumeSuppressionDialog_UI(QDialog, Ui_Dialog):
                             - label: QLabel
                 - frame_3: QFrame
                     - (Layout): QGridLayout
-                            - pushButton_confirm: QPushButton
+                            - pushButton_ok: QPushButton
                             - pushButton_apply: QPushButton
                             - pushButton_cancel: QPushButton
                 - frame_2: QFrame

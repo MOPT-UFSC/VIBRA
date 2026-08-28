@@ -63,7 +63,10 @@ class VolumeSuppressionInputs(VolumeSuppressionDialog_UI):
     def _create_connections(self):
         self.pushButton_suppress.clicked.connect(self._suppress_callback)
         self.pushButton_unsuppress.clicked.connect(self._unsuppress_callback)
-        self.pushButton_confirm.clicked.connect(self._confirm)
+        # clicked() always fires with a checked bool, which would otherwise
+        # sneak into `close` and make Ok behave like Apply. The lambda drops it
+        # so Ok closes and Apply stays open.
+        self.pushButton_ok.clicked.connect(lambda: self._confirm(close=True))
         self.pushButton_apply.clicked.connect(lambda: self._confirm(close=False))
         self.pushButton_cancel.clicked.connect(self._cancel)
         self.lineEdit_selected_ids.returnPressed.connect(self._suppress_callback)
@@ -219,7 +222,8 @@ class VolumeSuppressionInputs(VolumeSuppressionDialog_UI):
             buttons_config=buttons_config,
         )
 
-    def _confirm(self, close: bool=True):
+    def _confirm(self, close:bool):
+        # can't use a default value on close (line 66)
         if not self._check_properties_on_suppressed_volumes():
             self.show()
             return
