@@ -51,14 +51,14 @@ class VolumeSuppressionInputs(VolumeSuppressionDialog_UI):
         self.setMinimumSize(420, 400)
 
     def _configure_table(self):
-        self.tableWidget_local_mesh_size_control_data.setColumnCount(2)
-        self.tableWidget_local_mesh_size_control_data.setHorizontalHeaderLabels(
+        self.tableWidget_volume_suppression.setColumnCount(2)
+        self.tableWidget_volume_suppression.setHorizontalHeaderLabels(
             ["Volume ID", "Status"]
         )
-        self.tableWidget_local_mesh_size_control_data.setEditTriggers(
+        self.tableWidget_volume_suppression.setEditTriggers(
             QAbstractItemView.EditTrigger.NoEditTriggers
         )
-        self.tableWidget_local_mesh_size_control_data.verticalHeader().setVisible(False)
+        self.tableWidget_volume_suppression.verticalHeader().setVisible(False)
 
     def _create_connections(self):
         self.pushButton_suppress.clicked.connect(self._suppress_callback)
@@ -74,13 +74,13 @@ class VolumeSuppressionInputs(VolumeSuppressionDialog_UI):
 
     def _populate_table(self):
         all_ids = sorted(self.suppressed_volume_ids | self.pending_ids)
-        self.tableWidget_local_mesh_size_control_data.setRowCount(len(all_ids))
+        self.tableWidget_volume_suppression.setRowCount(len(all_ids))
 
         for row, vol_id in enumerate(all_ids):
             id_item = QTableWidgetItem(str(vol_id))
             id_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             id_item.setFlags(id_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
-            self.tableWidget_local_mesh_size_control_data.setItem(row, 0, id_item)
+            self.tableWidget_volume_suppression.setItem(row, 0, id_item)
 
             if vol_id in self.previously_suppressed_ids:
                 status = "Suppressed"
@@ -92,7 +92,7 @@ class VolumeSuppressionInputs(VolumeSuppressionDialog_UI):
             status_item = QTableWidgetItem(status)
             status_item.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
             status_item.setFlags(status_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
-            self.tableWidget_local_mesh_size_control_data.setItem(row, 1, status_item)
+            self.tableWidget_volume_suppression.setItem(row, 1, status_item)
 
     def _suppress_callback(self):
         text = self.lineEdit_selected_ids.text().strip()
@@ -129,20 +129,21 @@ class VolumeSuppressionInputs(VolumeSuppressionDialog_UI):
         app().main_window.entity_visibility.hide_volumes(self.pending_ids)
 
     def _unsuppress_callback(self):
-        current_row = self.tableWidget_local_mesh_size_control_data.currentRow()
-        if current_row < 0:
+        selected_rows = self.tableWidget_volume_suppression.selectionModel().selectedRows()
+        if not selected_rows:
             return
 
-        id_item = self.tableWidget_local_mesh_size_control_data.item(current_row, 0)
-        if id_item is None:
-            return
+        ids = set()
+        for index in selected_rows:
+            item = self.tableWidget_volume_suppression.item(index.row(), 0)
+            if item is not None:
+                ids.add(int(item.text()))
 
-        vol_id = int(id_item.text())
-
-        if vol_id in self.pending_ids:
-            self.pending_ids.discard(vol_id)
-        elif vol_id in self.previously_suppressed_ids:
-            self.previously_suppressed_ids.discard(vol_id)
+        for vol_id in ids:
+            if vol_id in self.pending_ids:
+                self.pending_ids.discard(vol_id)
+            elif vol_id in self.previously_suppressed_ids:
+                self.previously_suppressed_ids.discard(vol_id)
 
         self.suppressed_volume_ids = self.previously_suppressed_ids | self.pending_ids
         self._populate_table()

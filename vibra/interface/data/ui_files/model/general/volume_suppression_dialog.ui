@@ -223,7 +223,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QTableWidget" name="tableWidget_local_mesh_size_control_data">
+       <widget class="QTableWidget" name="tableWidget_volume_suppression">
         <property name="maximumSize">
          <size>
           <width>16777215</width>

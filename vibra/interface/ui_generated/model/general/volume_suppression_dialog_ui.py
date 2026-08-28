@@ -120,23 +120,23 @@ class Ui_Dialog(object):
 
         self.verticalLayout.addWidget(self.frame_4)
 
-        self.tableWidget_local_mesh_size_control_data = QTableWidget(self.frame_2)
-        if (self.tableWidget_local_mesh_size_control_data.columnCount() < 2):
-            self.tableWidget_local_mesh_size_control_data.setColumnCount(2)
+        self.tableWidget_volume_suppression = QTableWidget(self.frame_2)
+        if (self.tableWidget_volume_suppression.columnCount() < 2):
+            self.tableWidget_volume_suppression.setColumnCount(2)
         __qtablewidgetitem = QTableWidgetItem()
-        self.tableWidget_local_mesh_size_control_data.setHorizontalHeaderItem(0, __qtablewidgetitem)
+        self.tableWidget_volume_suppression.setHorizontalHeaderItem(0, __qtablewidgetitem)
         __qtablewidgetitem1 = QTableWidgetItem()
-        self.tableWidget_local_mesh_size_control_data.setHorizontalHeaderItem(1, __qtablewidgetitem1)
-        self.tableWidget_local_mesh_size_control_data.setObjectName(u"tableWidget_local_mesh_size_control_data")
-        self.tableWidget_local_mesh_size_control_data.setMaximumSize(QSize(16777215, 16777215))
-        self.tableWidget_local_mesh_size_control_data.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        self.tableWidget_local_mesh_size_control_data.setShowGrid(False)
-        self.tableWidget_local_mesh_size_control_data.horizontalHeader().setDefaultSectionSize(160)
-        self.tableWidget_local_mesh_size_control_data.horizontalHeader().setStretchLastSection(True)
-        self.tableWidget_local_mesh_size_control_data.verticalHeader().setVisible(False)
-        self.tableWidget_local_mesh_size_control_data.verticalHeader().setStretchLastSection(False)
+        self.tableWidget_volume_suppression.setHorizontalHeaderItem(1, __qtablewidgetitem1)
+        self.tableWidget_volume_suppression.setObjectName(u"tableWidget_volume_suppression")
+        self.tableWidget_volume_suppression.setMaximumSize(QSize(16777215, 16777215))
+        self.tableWidget_volume_suppression.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.tableWidget_volume_suppression.setShowGrid(False)
+        self.tableWidget_volume_suppression.horizontalHeader().setDefaultSectionSize(160)
+        self.tableWidget_volume_suppression.horizontalHeader().setStretchLastSection(True)
+        self.tableWidget_volume_suppression.verticalHeader().setVisible(False)
+        self.tableWidget_volume_suppression.verticalHeader().setStretchLastSection(False)
 
-        self.verticalLayout.addWidget(self.tableWidget_local_mesh_size_control_data)
+        self.verticalLayout.addWidget(self.tableWidget_volume_suppression)
 
         self.frame_5 = QFrame(self.frame_2)
         self.frame_5.setObjectName(u"frame_5")
@@ -182,9 +182,9 @@ class Ui_Dialog(object):
         self.pushButton_cancel.setText(QCoreApplication.translate("Dialog", u"Cancel", None))
         self.label_selected_ids.setText(QCoreApplication.translate("Dialog", u"Selected IDs:", None))
         self.lineEdit_selected_ids.setText("")
-        ___qtablewidgetitem = self.tableWidget_local_mesh_size_control_data.horizontalHeaderItem(0)
+        ___qtablewidgetitem = self.tableWidget_volume_suppression.horizontalHeaderItem(0)
         ___qtablewidgetitem.setText(QCoreApplication.translate("Dialog", u"Volume ID", None));
-        ___qtablewidgetitem1 = self.tableWidget_local_mesh_size_control_data.horizontalHeaderItem(1)
+        ___qtablewidgetitem1 = self.tableWidget_volume_suppression.horizontalHeaderItem(1)
         ___qtablewidgetitem1.setText(QCoreApplication.translate("Dialog", u"Status", None));
         self.pushButton_unsuppress.setText(QCoreApplication.translate("Dialog", u"Unsuppress", None))
         self.pushButton_suppress.setText(QCoreApplication.translate("Dialog", u"Suppress", None))
@@ -211,7 +211,7 @@ class VolumeSuppressionDialog_UI(QDialog, Ui_Dialog):
                                 - (Layout): QGridLayout
                                         - label_selected_ids: QLabel
                                         - lineEdit_selected_ids: QLineEdit
-                            - tableWidget_local_mesh_size_control_data: QTableWidget
+                            - tableWidget_volume_suppression: QTableWidget
                             - frame_5: QFrame
                                 - (Layout): QHBoxLayout
                                         - pushButton_unsuppress: QPushButton
