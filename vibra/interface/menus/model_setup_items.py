@@ -199,8 +199,19 @@ class ModelSetupItems(CommonMenuItems):
         if property_name == "material":
             if mesh.are_there_volumes_in_geometry():
                 volume_ids = mesh.geometry_information.get("volumes")
+                volume_ids.sort()
                 volumes_without_material = properties.get_entities_without_property("material", volumes=volume_ids)
-                return not bool(len(volumes_without_material))
+                if volumes_without_material:
+                    acoustic_volumes = model.model_domains.get("acoustic", [])
+                    if volumes_without_material == volume_ids:
+                        return False
+
+                    for vol_id in volumes_without_material:
+                        if vol_id not in acoustic_volumes:
+                            return False
+
+                return True
+
             else:
                 surface_ids = mesh.geometry_information.get("surfaces")
                 surfaces_without_material = properties.get_entities_without_property("material", surfaces=surface_ids)
@@ -209,8 +220,18 @@ class ModelSetupItems(CommonMenuItems):
         if property_name == "fluid":
             if mesh.are_there_volumes_in_geometry():
                 volume_ids = mesh.geometry_information.get("volumes")
+                volume_ids.sort()
                 volumes_without_fluid = properties.get_entities_without_property("fluid", volumes=volume_ids)
-                return not bool(len(volumes_without_fluid))
+                if volumes_without_fluid:
+                    structural_volumes = model.model_domains.get("structural", [])
+                    if volumes_without_fluid == volume_ids:
+                        return False
+
+                    for vol_id in volumes_without_fluid:
+                        if vol_id not in structural_volumes:
+                            return False
+
+                return True
             # else:
             #     surface_ids = mesh.geometry_information.get("surfaces")
             #     surfaces_without_fluid = properties.get_entities_without_property("fluid", surfaces=surface_ids)
@@ -230,10 +251,7 @@ class ModelSetupItems(CommonMenuItems):
             if mesh is not None:
                 st_check = model.is_surface_thickness_properly_applied_in_model()
                 if isinstance(st_check, list) and st_check:
-                    if st_check:
-                        return False
-                    else:
-                        return True
+                    return not st_check
 
         # As anechoic_termination is a subproperty of specific_impedance, 
         # we need to garantee there is a specific_impedance that is not anechoic_termination
