@@ -509,19 +509,28 @@ class STRUCT_HEXAHEDRON_20(Element3D):
             self.connectivity = self.solids_connectivity[
                 :, [0, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]]
 
+        # filter the structural elements connectivities
+        element_ids = self.model.elements_per_domain.get("structural", np.array([]))
+        structural_connect = self.connectivity[element_ids, :]
+
         dof, edof = self.DOF_PER_NODE, self.DOF_PER_ELEMENT
-        n_el = self.solids_connectivity.shape[0]
-    
+        n_el = element_ids.size
+
         local_dof = np.arange(dof, dtype=int)
         ind_dof = np.zeros((n_el, edof), dtype=int)
 
         for j in range(self.NODES_PER_ELEMENT):
-            ind_dof[:, j*dof : (1 + j)*dof] = dof * self.connectivity[:, j+1].reshape(-1, 1) + local_dof
+            start = j * dof
+            end = (j + 1) * dof
+            elem_nodes = self.model.struct_node_mapping[structural_connect[:, j + 1]]
+            ind_dof[:, start : end] = dof * elem_nodes.reshape(-1, 1) + local_dof
 
         vect_indices = ind_dof.flatten()
-        self.ind_rows = ((np.tile(vect_indices, (edof, 1))).T).flatten()
-        self.ind_cols = (np.tile(ind_dof, edof)).flatten()
+        ordered_dofs = np.unique(vect_indices)
 
-        return self.ind_rows, self.ind_cols
+        ind_rows = ((np.tile(vect_indices, (edof, 1))).T).flatten()
+        ind_cols = (np.tile(ind_dof, edof)).flatten()
+
+        return ind_rows, ind_cols, ordered_dofs
     
 # fmt: on

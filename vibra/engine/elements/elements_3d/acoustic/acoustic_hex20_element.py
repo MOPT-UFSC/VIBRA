@@ -212,11 +212,16 @@ class ACT_HEXAHEDRON_20C(Element3D):
             coordinates of all elements.
 
         """
-        nel = self.connectivity.shape[0]
+
+        # filter the acoustic elements connectivities
+        element_ids = self.model.elements_per_domain.get("acoustic", np.array([]))
+        acoustic_connect = self.connectivity[element_ids, :]
+
+        nel = len(acoustic_connect)
 
         stacked_coords = np.zeros((nel, self.DOF_PER_ELEMENT, 3), dtype=float)
         for j in range(self.DOF_PER_ELEMENT):
-            stacked_coords[:, j, :] = self.nodal_coordinates[self.connectivity[:, j+1], 1:4]
+            stacked_coords[:, j, :] = self.nodal_coordinates[acoustic_connect[:, j + 1], 1:4]
 
         return stacked_coords
 
@@ -479,11 +484,26 @@ class ACT_HEXAHEDRON_20C(Element3D):
             self.connectivity = self.solids_connectivity[
                 :, [0, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]]
 
+        # filter the acoustic elements connectivities
+        element_ids = self.model.elements_per_domain.get("acoustic", np.array([]))
+        acoustic_connect = self.connectivity[element_ids, :]
+
         dof, edof = self.DOF_PER_NODE, self.DOF_PER_ELEMENT
-        ind_dof = dof * self.connectivity[:, 1:]
+        n_el = element_ids.size
+
+        local_dof = np.arange(dof, dtype=int)
+        ind_dof = np.zeros((n_el, edof), dtype=int)
+
+        for j in range(self.NODES_PER_ELEMENT):
+            start = j * dof
+            end = (j + 1) * dof
+            elem_nodes = self.model.fluid_node_mapping[acoustic_connect[:, j + 1]]
+            ind_dof[:, start : end] = dof * elem_nodes.reshape(-1, 1) + local_dof
 
         vect_indices = ind_dof.flatten()
-        self.ind_rows = ((np.tile(vect_indices, (edof, 1))).T).flatten()
-        self.ind_cols = (np.tile(ind_dof, edof)).flatten()
+        ordered_dofs = np.unique(vect_indices)
 
-        return self.ind_rows, self.ind_cols
+        ind_rows = ((np.tile(vect_indices, (edof, 1))).T).flatten()
+        ind_cols = (np.tile(ind_dof, edof)).flatten()
+
+        return ind_rows, ind_cols, ordered_dofs

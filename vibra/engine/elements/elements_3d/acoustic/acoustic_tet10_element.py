@@ -211,17 +211,11 @@ class ACT_TETRAHEDRON_10C(Element3D):
         return phi, dphi
 
 
-    def get_stacked_nodal_coords(self, all_int_points: bool=False) -> np.ndarray:
+    def get_stacked_nodal_coords(self) -> np.ndarray:
         """
         This method returns the nodal coordinates of all elements in form 
         of a 3D matrix. Each plane of this matrix contains the nodal 
         coordiantes from all nodes relative to the i-th element.
-
-        Parameter
-        ---------
-        all_int_points: bool, optional
-            Controls when the processing are executed in all 
-            integration points (default is False).
 
         Returns
         -------
@@ -237,16 +231,9 @@ class ACT_TETRAHEDRON_10C(Element3D):
 
         nel = len(acoustic_connect)
 
-        if all_int_points:
-            stacked_coords = np.zeros((nel, 1, self.DOF_PER_ELEMENT, 3), dtype=float)
-            for j in range(self.DOF_PER_ELEMENT):
-                stacked_coords[:, 0, j, :] = self.nodal_coordinates[acoustic_connect[:, j+1], 1:4]
-
-        else:
-
-            stacked_coords = np.zeros((nel, self.DOF_PER_ELEMENT, 3), dtype=float)
-            for j in range(self.DOF_PER_ELEMENT):
-                stacked_coords[:, j, :] = self.nodal_coordinates[acoustic_connect[:, j+1], 1:4]
+        stacked_coords = np.zeros((nel, self.DOF_PER_ELEMENT, 3), dtype=float)
+        for j in range(self.DOF_PER_ELEMENT):
+            stacked_coords[:, j, :] = self.nodal_coordinates[acoustic_connect[:, j + 1], 1:4]
 
         return stacked_coords
 
@@ -303,45 +290,6 @@ class ACT_TETRAHEDRON_10C(Element3D):
         return Ke, Me
 
 
-    def stacked_elementary_matrices_NtN_BtB_noloop(self):
-        """
-        This method computes all mass and stiffness matrices in
-        stacked form without performing a loop between the
-        integration points.
-
-        Returns
-        -------
-        Ke: np.ndarray
-            The elementary stiffness stacked matrices.
-
-        Me: np.ndarray
-            The elementary mass stacked matrices.
-        """
-
-        # stacked nodal coordinates
-        stacked_coords = self.get_stacked_nodal_coords(all_int_points=True)
-
-        # Jacobian matrices of all elements
-        dphi_resh = self.dphi.reshape(1, self.nint, 3, self.NODES_PER_ELEMENT)
-        JAC_stacked = dphi_resh @ stacked_coords
-
-        # Jacobian determinants and inverses of all elements
-        det_jacs, inv_jacs = get_all_detJAC_and_invJAC(JAC_stacked)
-
-        # shape functions
-        N = self.phi
-        N_t = np.transpose(N, axes=(0, 2, 1))
-
-        # derivative of shape functions
-        B = inv_jacs @ dphi_resh
-        B_t = np.transpose(B, axes=(0, 1, 3, 2))
-
-        Ke = np.sum(B_t @ B * (det_jacs * self.wps), axis=1)
-        Me = np.sum(N_t @ N * (det_jacs * self.wps), axis=1)
-
-        return Ke, Me
-
-
     def stacked_elementary_matrices_NtN_BtB(self):
         """
         This method computes all mass and stiffness matrices in
@@ -359,8 +307,6 @@ class ACT_TETRAHEDRON_10C(Element3D):
 
         # stacked nodal coordinates
         stacked_coords = self.get_stacked_nodal_coords()
-
-        print(f"stacked_coords: {stacked_coords.shape}")
 
         # initialize variables
         int2d_BtB = 0.
