@@ -187,20 +187,22 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
         index = self.comboBox_selector_filter.currentIndex()
 
         if index == SelectionType.SURFACES:
-            rows = self.mesh.get_nodes_from_surface(selected_id)
+            nodes = self.mesh.get_nodes_from_surface(selected_id)
         elif index == SelectionType.LINES:
-            rows = self.mesh.get_nodes_from_line(selected_id)
+            nodes = self.mesh.get_nodes_from_line(selected_id)
         elif index == SelectionType.POINTS:
-            rows = self.mesh.nodes_from_points.get(selected_id)
+            nodes = self.mesh.nodes_from_points.get(selected_id)
         elif index == SelectionType.NODES:
-            rows = selected_id
+            nodes = selected_id
         else:
             return None
 
-        if isinstance(rows, int):
-            response = self.nodal_solution[rows,:]
+        indexes = self.model.fluid_node_mapping[nodes]
+
+        if isinstance(indexes, int):
+            response = self.nodal_solution[indexes, :]
         else:
-            response = np.average(self.nodal_solution[rows,:], axis=0)
+            response = np.average(self.nodal_solution[indexes, :], axis=0)
 
         if complex(0) in response:
             response += 1e-12
