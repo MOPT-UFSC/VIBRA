@@ -119,7 +119,6 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
         surface_ids, error_data = self.mesh.check_selected_ids(input_ids, selection="surfaces")
 
         if error_data is not None:
-            self.hide()
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
             return
@@ -157,7 +156,6 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
         surface_ids, error_data = self.mesh.check_selected_ids(input_ids, selection="surfaces")
 
         if error_data is not None:
-            self.hide()
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
             return
@@ -168,8 +166,7 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
 
             volume_ids = self.model.mesh.volumes_from_surface[surface_ids[0]]
             if len(surface_ids) > 1 and len(volume_ids) > 1:
-                
-                self.hide()
+
                 title = "Undefined volume"
                 
                 # message = f"The selected face ID [{face_id}] is associated to the volumes {volume_ids}. "
@@ -231,8 +228,6 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
         self.actions_to_finalize()
 
     def reset_callback(self):
-
-        self.hide()
 
         title = "Anechoic termination resetting"
         message = "Would you like to remove the all applied anechoic termination from model?"

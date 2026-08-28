@@ -71,6 +71,13 @@ class GeometrySelection:
         surfaces = self._pick_surfaces_from_indexes(internal_picked_nodes)
         volumes = self._pick_volumes_from_indexes(internal_picked_nodes)
 
+        mesh = app().project.model.mesh
+        if (mesh is not None) and ((mesh.solids_connectivity is None) or (mesh.solids_connectivity.size == 0)):
+            volumes = set()
+            for surface in surfaces:
+                vols = mesh.volumes_from_surface.get(surface, [])
+                volumes.update(vols)
+
         return points, lines, surfaces, volumes
 
     def set_section_plane(self, position, rotation):

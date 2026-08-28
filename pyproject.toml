@@ -1,6 +1,6 @@
 [project]
 name = "vibra"
-version = "0.6.0"
+version = "0.6.1"
 description = ""
 authors = [{ name = "Your Name", email = "you@example.com" }]
 requires-python = ">=3.10,<3.14"
@@ -27,6 +27,7 @@ dependencies = [
     "pandas>=2.3.3",
     "xxhash>=3.6.0",
     "pint>=0.24.4",
+    "tqdm>=4.67.1",
 ]
 
 [dependency-groups]

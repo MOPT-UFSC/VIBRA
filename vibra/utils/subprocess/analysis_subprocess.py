@@ -1,10 +1,14 @@
+from __future__ import annotations
+
 import logging
 import sys
-import traceback
-from argparse import ArgumentParser
+from typing import TYPE_CHECKING
 
-from vibra import TEMP_PROJECT_DIR
 from vibra.engine.project import Project
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
 
 logging.basicConfig(
     level=logging.INFO,
@@ -13,13 +17,16 @@ logging.basicConfig(
 )
 
 
-def main(is_resume: bool):
-    project = Project(TEMP_PROJECT_DIR)
+def main(is_resume: bool, working_dir: Path):
+    project = Project(working_dir)
     project.read_from_working_dir()
     project.run_analysis(is_resume)
 
 
 if __name__ == "__main__":
+    import traceback
+    from argparse import ArgumentParser
+
     parser = ArgumentParser()
     parser.add_argument(
         "-r",

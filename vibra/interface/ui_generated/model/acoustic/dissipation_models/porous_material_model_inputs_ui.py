@@ -27,7 +27,7 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
-        Dialog.resize(531, 559)
+        Dialog.resize(531, 586)
         self.gridLayout = QGridLayout(Dialog)
         self.gridLayout.setSpacing(4)
         self.gridLayout.setObjectName(u"gridLayout")
@@ -66,7 +66,7 @@ class Ui_Dialog(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 494, 540))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 494, 560))
         self.gridLayout_20 = QGridLayout(self.scrollAreaWidgetContents)
         self.gridLayout_20.setObjectName(u"gridLayout_20")
         self.frame_plot_setup = QFrame(self.scrollAreaWidgetContents)
@@ -199,9 +199,56 @@ class Ui_Dialog(object):
 
         self.gridLayout_20.addWidget(self.frame_plot_setup, 2, 0, 1, 1)
 
+        self.frame_plot_buttons = QFrame(self.scrollAreaWidgetContents)
+        self.frame_plot_buttons.setObjectName(u"frame_plot_buttons")
+        self.frame_plot_buttons.setMaximumSize(QSize(16777215, 48))
+        self.frame_plot_buttons.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_plot_buttons.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_19 = QGridLayout(self.frame_plot_buttons)
+        self.gridLayout_19.setObjectName(u"gridLayout_19")
+        self.label_50 = QLabel(self.frame_plot_buttons)
+        self.label_50.setObjectName(u"label_50")
+        self.label_50.setMinimumSize(QSize(0, 28))
+        self.label_50.setMaximumSize(QSize(16777215, 28))
+        self.label_50.setFont(font1)
+        self.label_50.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+
+        self.gridLayout_19.addWidget(self.label_50, 0, 1, 1, 1)
+
+        self.comboBox_plot_type = QComboBox(self.frame_plot_buttons)
+        self.comboBox_plot_type.addItem("")
+        self.comboBox_plot_type.addItem("")
+        self.comboBox_plot_type.addItem("")
+        self.comboBox_plot_type.addItem("")
+        self.comboBox_plot_type.setObjectName(u"comboBox_plot_type")
+        self.comboBox_plot_type.setMinimumSize(QSize(160, 28))
+        self.comboBox_plot_type.setMaximumSize(QSize(200, 28))
+        self.comboBox_plot_type.setFont(font1)
+
+        self.gridLayout_19.addWidget(self.comboBox_plot_type, 0, 2, 1, 1)
+
+        self.horizontalSpacer_19 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_19.addItem(self.horizontalSpacer_19, 0, 4, 1, 1)
+
+        self.pushButton_plot_data = QPushButton(self.frame_plot_buttons)
+        self.pushButton_plot_data.setObjectName(u"pushButton_plot_data")
+        self.pushButton_plot_data.setMinimumSize(QSize(80, 28))
+        self.pushButton_plot_data.setMaximumSize(QSize(220, 28))
+        self.pushButton_plot_data.setFont(font1)
+
+        self.gridLayout_19.addWidget(self.pushButton_plot_data, 0, 3, 1, 1)
+
+        self.horizontalSpacer_20 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_19.addItem(self.horizontalSpacer_20, 0, 0, 1, 1)
+
+
+        self.gridLayout_20.addWidget(self.frame_plot_buttons, 3, 0, 1, 1)
+
         self.tabWidget_main = QTabWidget(self.scrollAreaWidgetContents)
         self.tabWidget_main.setObjectName(u"tabWidget_main")
-        self.tabWidget_main.setMinimumSize(QSize(0, 300))
+        self.tabWidget_main.setMinimumSize(QSize(0, 320))
         self.tabWidget_main.setMaximumSize(QSize(16777215, 16777215))
         self.tabWidget_main.setSizeIncrement(QSize(0, 0))
         self.tabWidget_main.setFont(font1)
@@ -406,7 +453,7 @@ class Ui_Dialog(object):
         self.frame_5 = QFrame(self.tab_DBM)
         self.frame_5.setObjectName(u"frame_5")
         self.frame_5.setMinimumSize(QSize(0, 48))
-        self.frame_5.setMaximumSize(QSize(16777215, 48))
+        self.frame_5.setMaximumSize(QSize(16777215, 80))
         self.frame_5.setFrameShape(QFrame.Shape.NoFrame)
         self.frame_5.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_7 = QGridLayout(self.frame_5)
@@ -415,17 +462,14 @@ class Ui_Dialog(object):
         self.gridLayout_7.setContentsMargins(6, 6, 6, 6)
         self.horizontalSpacer_5 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gridLayout_7.addItem(self.horizontalSpacer_5, 0, 4, 1, 1)
-
-        self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_7.addItem(self.horizontalSpacer_4, 0, 0, 1, 1)
+        self.gridLayout_7.addItem(self.horizontalSpacer_5, 1, 4, 1, 1)
 
         self.label_10 = QLabel(self.frame_5)
         self.label_10.setObjectName(u"label_10")
         self.label_10.setFont(font1)
+        self.label_10.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
-        self.gridLayout_7.addWidget(self.label_10, 0, 1, 1, 1)
+        self.gridLayout_7.addWidget(self.label_10, 1, 1, 1, 1)
 
         self.doubleSpinBox_flow_resistivity_DBM = QDoubleSpinBox(self.frame_5)
         self.doubleSpinBox_flow_resistivity_DBM.setObjectName(u"doubleSpinBox_flow_resistivity_DBM")
@@ -434,15 +478,33 @@ class Ui_Dialog(object):
         self.doubleSpinBox_flow_resistivity_DBM.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.doubleSpinBox_flow_resistivity_DBM.setDecimals(6)
         self.doubleSpinBox_flow_resistivity_DBM.setMaximum(100000.000000000000000)
-        self.doubleSpinBox_flow_resistivity_DBM.setValue(1518.506599999999935)
+        self.doubleSpinBox_flow_resistivity_DBM.setValue(4000.000000000000000)
 
-        self.gridLayout_7.addWidget(self.doubleSpinBox_flow_resistivity_DBM, 0, 2, 1, 1)
+        self.gridLayout_7.addWidget(self.doubleSpinBox_flow_resistivity_DBM, 1, 2, 1, 1)
+
+        self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_7.addItem(self.horizontalSpacer_4, 1, 0, 1, 1)
 
         self.label_11 = QLabel(self.frame_5)
         self.label_11.setObjectName(u"label_11")
         self.label_11.setFont(font1)
 
-        self.gridLayout_7.addWidget(self.label_11, 0, 3, 1, 1)
+        self.gridLayout_7.addWidget(self.label_11, 1, 3, 1, 1)
+
+        self.comboBox_normalize_flow_resistivity = QComboBox(self.frame_5)
+        self.comboBox_normalize_flow_resistivity.addItem("")
+        self.comboBox_normalize_flow_resistivity.addItem("")
+        self.comboBox_normalize_flow_resistivity.setObjectName(u"comboBox_normalize_flow_resistivity")
+
+        self.gridLayout_7.addWidget(self.comboBox_normalize_flow_resistivity, 2, 2, 1, 1)
+
+        self.label_13 = QLabel(self.frame_5)
+        self.label_13.setObjectName(u"label_13")
+        self.label_13.setFont(font1)
+        self.label_13.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+
+        self.gridLayout_7.addWidget(self.label_13, 2, 1, 1, 1)
 
 
         self.gridLayout_5.addWidget(self.frame_5, 2, 0, 1, 1)
@@ -828,54 +890,7 @@ class Ui_Dialog(object):
 
         self.tabWidget_main.addTab(self.tab_list, "")
 
-        self.gridLayout_20.addWidget(self.tabWidget_main, 0, 0, 1, 1)
-
-        self.frame_plot_buttons = QFrame(self.scrollAreaWidgetContents)
-        self.frame_plot_buttons.setObjectName(u"frame_plot_buttons")
-        self.frame_plot_buttons.setMaximumSize(QSize(16777215, 48))
-        self.frame_plot_buttons.setFrameShape(QFrame.Shape.NoFrame)
-        self.frame_plot_buttons.setFrameShadow(QFrame.Shadow.Raised)
-        self.gridLayout_19 = QGridLayout(self.frame_plot_buttons)
-        self.gridLayout_19.setObjectName(u"gridLayout_19")
-        self.label_50 = QLabel(self.frame_plot_buttons)
-        self.label_50.setObjectName(u"label_50")
-        self.label_50.setMinimumSize(QSize(0, 28))
-        self.label_50.setMaximumSize(QSize(16777215, 28))
-        self.label_50.setFont(font1)
-        self.label_50.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
-
-        self.gridLayout_19.addWidget(self.label_50, 0, 1, 1, 1)
-
-        self.comboBox_plot_type = QComboBox(self.frame_plot_buttons)
-        self.comboBox_plot_type.addItem("")
-        self.comboBox_plot_type.addItem("")
-        self.comboBox_plot_type.addItem("")
-        self.comboBox_plot_type.addItem("")
-        self.comboBox_plot_type.setObjectName(u"comboBox_plot_type")
-        self.comboBox_plot_type.setMinimumSize(QSize(160, 28))
-        self.comboBox_plot_type.setMaximumSize(QSize(200, 28))
-        self.comboBox_plot_type.setFont(font1)
-
-        self.gridLayout_19.addWidget(self.comboBox_plot_type, 0, 2, 1, 1)
-
-        self.horizontalSpacer_19 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_19.addItem(self.horizontalSpacer_19, 0, 4, 1, 1)
-
-        self.pushButton_plot_data = QPushButton(self.frame_plot_buttons)
-        self.pushButton_plot_data.setObjectName(u"pushButton_plot_data")
-        self.pushButton_plot_data.setMinimumSize(QSize(80, 28))
-        self.pushButton_plot_data.setMaximumSize(QSize(220, 28))
-        self.pushButton_plot_data.setFont(font1)
-
-        self.gridLayout_19.addWidget(self.pushButton_plot_data, 0, 3, 1, 1)
-
-        self.horizontalSpacer_20 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_19.addItem(self.horizontalSpacer_20, 0, 0, 1, 1)
-
-
-        self.gridLayout_20.addWidget(self.frame_plot_buttons, 3, 0, 1, 1)
+        self.gridLayout_20.addWidget(self.tabWidget_main, 0, 0, 2, 1)
 
         self.scrollArea.setWidget(self.scrollAreaWidgetContents)
 
@@ -1052,6 +1067,7 @@ class Ui_Dialog(object):
         self.retranslateUi(Dialog)
 
         self.tabWidget_main.setCurrentIndex(0)
+        self.comboBox_normalize_flow_resistivity.setCurrentIndex(1)
         self.tabWidget_models.setCurrentIndex(0)
         self.pushButton_apply_and_close.setDefault(False)
         self.pushButton_apply.setDefault(False)
@@ -1075,6 +1091,13 @@ class Ui_Dialog(object):
         self.label_36.setText(QCoreApplication.translate("Dialog", u"Fluid density", None))
         self.lineEdit_selected_fluid.setText("")
         self.label_48.setText(QCoreApplication.translate("Dialog", u"[kg/m\u00b3]", None))
+        self.label_50.setText(QCoreApplication.translate("Dialog", u"Plot selector:", None))
+        self.comboBox_plot_type.setItemText(0, QCoreApplication.translate("Dialog", u" Fluid density", None))
+        self.comboBox_plot_type.setItemText(1, QCoreApplication.translate("Dialog", u" Speed of sound", None))
+        self.comboBox_plot_type.setItemText(2, QCoreApplication.translate("Dialog", u" Surface impedance", None))
+        self.comboBox_plot_type.setItemText(3, QCoreApplication.translate("Dialog", u" Absorption coefficient", None))
+
+        self.pushButton_plot_data.setText(QCoreApplication.translate("Dialog", u"Plot data", None))
         self.label_8.setText(QCoreApplication.translate("Dialog", u"C7:", None))
         self.label_7.setText(QCoreApplication.translate("Dialog", u"C6:", None))
         self.label_3.setText(QCoreApplication.translate("Dialog", u"C2:", None))
@@ -1089,6 +1112,10 @@ class Ui_Dialog(object):
         self.pushButton_DB_equations.setText("")
         self.label_10.setText(QCoreApplication.translate("Dialog", u"<html><head/><body><p>Flow resistivity <span style=\" font-size:11pt;\">\u03c3</span>:</p></body></html>", None))
         self.label_11.setText(QCoreApplication.translate("Dialog", u"[kg/m\u00b3.s]", None))
+        self.comboBox_normalize_flow_resistivity.setItemText(0, QCoreApplication.translate("Dialog", u"None", None))
+        self.comboBox_normalize_flow_resistivity.setItemText(1, QCoreApplication.translate("Dialog", u"By density", None))
+
+        self.label_13.setText(QCoreApplication.translate("Dialog", u"<html><head/><body><p>Normalize <span style=\" font-size:11pt;\">\u03c3</span>:</p></body></html>", None))
         self.label_51.setText(QCoreApplication.translate("Dialog", u"Constants from:", None))
         self.comboBox_DBM_constants.setItemText(0, QCoreApplication.translate("Dialog", u"Delany-Bazley", None))
         self.comboBox_DBM_constants.setItemText(1, QCoreApplication.translate("Dialog", u"Delany-Bazley-Miki", None))
@@ -1161,13 +1188,6 @@ class Ui_Dialog(object):
         self.treeWidget_porous_material_model.setToolTip(QCoreApplication.translate("Dialog", u"Select a face to remove the previously attributed boundary condition.", None))
 #endif // QT_CONFIG(tooltip)
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_list), QCoreApplication.translate("Dialog", u"List", None))
-        self.label_50.setText(QCoreApplication.translate("Dialog", u"Plot selector:", None))
-        self.comboBox_plot_type.setItemText(0, QCoreApplication.translate("Dialog", u" Fluid density", None))
-        self.comboBox_plot_type.setItemText(1, QCoreApplication.translate("Dialog", u" Speed of sound", None))
-        self.comboBox_plot_type.setItemText(2, QCoreApplication.translate("Dialog", u" Surface impedance", None))
-        self.comboBox_plot_type.setItemText(3, QCoreApplication.translate("Dialog", u" Absorption coefficient", None))
-
-        self.pushButton_plot_data.setText(QCoreApplication.translate("Dialog", u"Plot data", None))
         self.comboBox_attribution_type.setItemText(0, QCoreApplication.translate("Dialog", u" All bodies", None))
         self.comboBox_attribution_type.setItemText(1, QCoreApplication.translate("Dialog", u" Selected bodies", None))
 
@@ -1210,6 +1230,11 @@ class PorousMaterialModelInputs_UI(QDialog, Ui_Dialog):
                                                         - lineEdit_selected_fluid: QLineEdit
                                                         - label_48: QLabel
                                                         - frame_2: QFrame
+                                            - frame_plot_buttons: QFrame
+                                                - (Layout): QGridLayout
+                                                        - label_50: QLabel
+                                                        - comboBox_plot_type: QComboBox
+                                                        - pushButton_plot_data: QPushButton
                                             - tabWidget_main: QTabWidget
                                                 - tab_DBM: QWidget
                                                     - (Layout): QGridLayout
@@ -1237,6 +1262,8 @@ class PorousMaterialModelInputs_UI(QDialog, Ui_Dialog):
                                                                         - label_10: QLabel
                                                                         - doubleSpinBox_flow_resistivity_DBM: QDoubleSpinBox
                                                                         - label_11: QLabel
+                                                                        - comboBox_normalize_flow_resistivity: QComboBox
+                                                                        - label_13: QLabel
                                                             - frame: QFrame
                                                                 - (Layout): QGridLayout
                                                                         - label_51: QLabel
@@ -1280,11 +1307,6 @@ class PorousMaterialModelInputs_UI(QDialog, Ui_Dialog):
                                                                         - pushButton_reset: QPushButton
                                                                         - pushButton_remove: QPushButton
                                                             - treeWidget_porous_material_model: QTreeWidget
-                                            - frame_plot_buttons: QFrame
-                                                - (Layout): QGridLayout
-                                                        - label_50: QLabel
-                                                        - comboBox_plot_type: QComboBox
-                                                        - pushButton_plot_data: QPushButton
                             - frame_6: QFrame
                                 - (Layout): QGridLayout
                                         - comboBox_attribution_type: QComboBox

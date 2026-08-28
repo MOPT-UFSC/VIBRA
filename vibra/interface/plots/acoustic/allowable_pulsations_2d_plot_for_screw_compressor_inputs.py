@@ -10,18 +10,21 @@ from vibra.interface import error_title
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.fluid.set_fluid_inputs_simplified import SetFluidInputsSimplified
-from vibra.interface.plots.general.frequency_response_plotter import DataFormat,FrequencyResponsePlotter
-from vibra.interface.ui_generated.plots.acoustic.allowable_pulsations_for_screw_compressor_inputs_ui import AllowablePulsationsForScrewCompressorInputs_UI
+from vibra.interface.plots.general.frequency_response_plotter import DataFormat, FrequencyResponsePlotter
+from vibra.interface.ui_generated.plots.acoustic.allowable_pulsations_2d_for_screw_compressor_inputs_ui import (
+    AllowablePulsations2dForScrewCompressorInputs_UI,
+)
 from vibra.utils.signal_processing import process_ifft_from_one_sided_spectrum_signal
 
 
-class AllowablePulsationsForScrewCompressorInputs(AllowablePulsationsForScrewCompressorInputs_UI):
+class AllowablePulsations2DPlotForScrewCompressorInputs(AllowablePulsations2dForScrewCompressorInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         app().main_window.show_geometry_render_widget()
 
         self._reset_variables()
+        self._add_penalization_values_to_combo_box()
         self._create_connections()
 
         self._load_analysis_setup_and_solution()
@@ -54,21 +57,32 @@ class AllowablePulsationsForScrewCompressorInputs(AllowablePulsationsForScrewCom
         self.fluid_dialog = None
         self.selected_fluid = None
 
-        self.model_results = dict()
+        self.model_results = {}
 
         self.unit_label = "Pa"
         self.selection_types = ["surfaces", "lines", "points", "nodes"]
 
+    def _add_penalization_values_to_combo_box(self):
+        self.comboBox_penalization_factor.clear()
+
+        for value in range(0, 100, 5):
+            self.comboBox_penalization_factor.addItem(str(value))
+
+        tool_tip = "Use this to reduced the allowable pulsation criteria by (1 - penalization) factor. "
+        self.comboBox_penalization_factor.setToolTip(tool_tip)
+        self.label_penalization_factor.setToolTip(tool_tip)
+
     def _create_connections(self):
-        #
+
+        # QComboBox connection
         self.comboBox_selector_filter.currentIndexChanged.connect(self.selection_filter_callback)
-        #
+
+        # QPushButton connection
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
         self.pushButton_get_fluid.clicked.connect(self.get_fluid_callback)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
-        #
+
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
-        #
         self.geometry_selection_callback()
 
     def geometry_selection_callback(self):
@@ -340,14 +354,19 @@ class AllowablePulsationsForScrewCompressorInputs(AllowablePulsationsForScrewCom
         pulsation_criteria_peak = (allowable_levels_percentual / 200) * P_AM * aux_ones
 
         # penalization factor for pre-study analysis
-        factor = 0.7 if self.checkBox_pre_study_analysis.isChecked() else 1.0
+        factor = int(self.comboBox_penalization_factor.currentText())
+
+        if factor:
+            title += f" (penalized in {factor}%)"
 
         key = ("allowable pulsation limits (upper)", (None))
         legend_label_upper = "Allowable pulsation (upper bound)"
 
+        criteria_values = (1 - (factor / 100)) * pulsation_criteria_peak
+
         self.model_results[key] = { 
             "x_data" : time_vector,
-            "y_data" : factor * pulsation_criteria_peak,
+            "y_data" : criteria_values,
             "x_label" : "Time [s]",
             "y_label" : "Acoustic pressure",
             "title" : title,
@@ -363,7 +382,7 @@ class AllowablePulsationsForScrewCompressorInputs(AllowablePulsationsForScrewCom
 
         self.model_results[key] = { 
             "x_data" : time_vector,
-            "y_data" : -factor * pulsation_criteria_peak,
+            "y_data" : -criteria_values,
             "x_label" : "Time [s]",
             "y_label" : "Acoustic pressure",
             "title" : title,

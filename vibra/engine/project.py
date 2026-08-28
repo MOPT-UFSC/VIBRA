@@ -113,20 +113,20 @@ class Project:
         self.project_paths.clear_data()
         self.mark_project_as_modified()
 
-    def run_analysis(self, is_resume: bool = False):
+    def run_analysis(self, is_resume: bool = False, print_log: bool = False):
         """
         It performs the solution of the currently configured model.
         It might raise errors if the analysis is not propperly configured.
         """
         match self.model.analysis_id:
             case AnalysisID.STRUCTURAL_MODAL:
-                return self.solve_structural_modal_analysis(is_resume)
+                return self.solve_structural_modal_analysis(is_resume=is_resume, print_log=print_log)
             case AnalysisID.STRUCTURAL_HARMONIC:
-                return self.solve_structural_harmonic_analysis(is_resume)
+                return self.solve_structural_harmonic_analysis(is_resume=is_resume, print_log=print_log)
             case AnalysisID.ACOUSTIC_MODAL:
-                return self.solve_acoustic_modal_analysis(is_resume)
+                return self.solve_acoustic_modal_analysis(is_resume=is_resume, print_log=print_log)
             case AnalysisID.ACOUSTIC_HARMONIC:
-                return self.solve_acoustic_harmonic_analysis(is_resume)
+                return self.solve_acoustic_harmonic_analysis(is_resume=is_resume, print_log=print_log)
             case AnalysisID.NO_ANALYSIS:
                 raise errors.IncompleteSetupError("No AnalysisID was provided.")
             case _:
@@ -250,18 +250,22 @@ class Project:
 
         mesh = Mesh().load_cad(self.model.geometry_path, mesh_setup)
 
-        if mesh.collapsed_1d_elements or mesh.collapsed_2d_elements or mesh.collapsed_3d_elements:
+        if mesh.collapsed_elements_data:
+            collapsed_1d_elements = mesh.collapsed_elements_data.get("collpased_1d_elements")
+            collapsed_2d_elements = mesh.collapsed_elements_data.get("collpased_2d_elements")
+            collapsed_3d_elements = mesh.collapsed_elements_data.get("collpased_3d_elements")
+
             message = "The generated mesh contains collapsed elements."
             message += "Please check the mesh setup and try again.\n"
-            message += "Collapsed 1d elements: " + ", ".join(mesh.collapsed_1d_elements) + "\n"
-            message += "Collapsed 2d elements: " + ", ".join(mesh.collapsed_2d_elements) + "\n"
-            message += "Collapsed 3d elements: " + ", ".join(mesh.collapsed_3d_elements)
+            message += "Collapsed 1d elements: " + ", ".join(collapsed_1d_elements) + "\n"
+            message += "Collapsed 2d elements: " + ", ".join(collapsed_2d_elements) + "\n"
+            message += "Collapsed 3d elements: " + ", ".join(collapsed_3d_elements)
 
             raise errors.MeshException(
                 message,
-                edges=mesh.collapsed_1d_elements,
-                faces=mesh.collapsed_2d_elements,
-                solids=mesh.collapsed_3d_elements,
+                edges=collapsed_1d_elements,
+                faces=collapsed_2d_elements,
+                solids=collapsed_3d_elements,
             )
 
         self.model.mesh = mesh
@@ -309,7 +313,7 @@ class Project:
         self.model.set_analysis_setup(analysis_setup)
         self.update_project_setup_file()
 
-    def solve_structural_modal_analysis(self, is_resume: bool = False) -> ModalSolution:
+    def solve_structural_modal_analysis(self, is_resume: bool = False, print_log: bool = False) -> ModalSolution:
 
         self.update_project_setup_file()
 
@@ -320,20 +324,21 @@ class Project:
         self.solver = ModalSolver(self.assembler)
         self.postprocessing = StructuralPostprocessing(self.model)
 
-        self.assembler.assemble_global_matrices()
+        self.assembler.assemble_global_matrices(print_log=print_log)
 
         t0 = perf_counter()
-        self.model.solution = self.solver.solve()
+        self.model.solution = self.solver.solve(print_log=print_log)
         self.project_writer.write_modal_solution(self.model.solution)
         self.mark_project_as_modified()
         dt = perf_counter() - t0
 
-        print(f"Elapsed time to solve structural modal analysis: {dt: .6f} [s]")
+        if print_log:
+            print(f"Elapsed time to solve structural modal analysis: {dt: .6f} [s]")
         logging.info(f"Elapsed time to solve structural modal analysis: {dt: .6f} [s]")
 
         return self.model.solution
 
-    def solve_structural_harmonic_analysis(self, is_resume: bool = False) -> HarmonicSolution:
+    def solve_structural_harmonic_analysis(self, is_resume: bool = False, print_log: bool = False) -> HarmonicSolution:
 
         self.update_project_setup_file()
 
@@ -344,17 +349,18 @@ class Project:
         self.solver = HarmonicSolver(self.assembler, self.project_paths)
         self.postprocessing = StructuralPostprocessing(self.model)
 
-        self.assembler.assemble_global_matrices_and_excitations()
+        self.assembler.assemble_global_matrices_and_excitations(print_log=print_log)
 
         t0 = perf_counter()
 
         analysis_method = self.model.analysis_setup.analysis_method
         if analysis_method == "direct":
-            self.model.solution = self.solver.solve_direct(is_resume=is_resume)
+            self.model.solution = self.solver.solve_direct(print_log=print_log, is_resume=is_resume)
         elif analysis_method == "mode_superposition":
             self.model.solution = self.solver.solve_mode_superposition(
                 is_proportionally_damped=True,
                 is_resume=is_resume,
+                print_log=print_log,
             )
         else:
             raise ValueError(f"Unsupported analysis method: {analysis_method}")
@@ -363,12 +369,13 @@ class Project:
         self.mark_project_as_modified()
         dt = perf_counter() - t0
 
-        print(f"Elapsed time to solve structural harmonic analysis: {dt: .6f} [s]")
+        if print_log:
+            print(f"Elapsed time to solve structural harmonic analysis: {dt: .6f} [s]")
         logging.info(f"Elapsed time to solve structural harmonic analysis: {dt: .6f} [s]")
 
         return self.model.solution
 
-    def solve_acoustic_modal_analysis(self, is_resume: bool = False) -> ModalSolution:
+    def solve_acoustic_modal_analysis(self, is_resume: bool = False, print_log: bool = False) -> ModalSolution:
 
         self.update_project_setup_file()
 
@@ -379,20 +386,21 @@ class Project:
         self.solver = ModalSolver(self.assembler)
         self.postprocessing = AcousticPostprocessing(self.model)
 
-        self.assembler.assemble_global_matrices()
+        self.assembler.assemble_global_matrices(print_log=print_log)
 
         t0 = perf_counter()
-        self.model.solution = self.solver.solve()
+        self.model.solution = self.solver.solve(print_log=print_log)
         self.project_writer.write_modal_solution(self.model.solution)
         self.mark_project_as_modified()
         dt = perf_counter() - t0
 
-        print(f"Elapsed time to solve acoustic modal analysis: {dt: .6f} [s]")
+        if print_log:
+            print(f"Elapsed time to solve acoustic modal analysis: {dt: .6f} [s]")
         logging.info(f"Elapsed time to solve acoustic modal analysis: {dt: .6f} [s]")
 
         return self.model.solution
 
-    def solve_acoustic_harmonic_analysis(self, is_resume: bool = False) -> HarmonicSolution:
+    def solve_acoustic_harmonic_analysis(self, is_resume: bool = False, print_log: bool = False) -> HarmonicSolution:
 
         self.update_project_setup_file()
 
@@ -407,15 +415,15 @@ class Project:
         self.model.process_porous_material_properties()
         self.model.process_viscous_thermal_model_properties()
         self.model.process_perforated_plate_impedance()
-        self.assembler.assemble_global_matrices_and_excitations()
+        self.assembler.assemble_global_matrices_and_excitations(print_log=print_log)
 
         t0 = perf_counter()
 
         analysis_method = self.model.analysis_setup.analysis_method
         if analysis_method == "direct":
-            self.model.solution = self.solver.solve_direct(is_resume=is_resume)
+            self.model.solution = self.solver.solve_direct(print_log=print_log, is_resume=is_resume)
         elif analysis_method == "mode_superposition":
-            self.model.solution = self.solver.solve_mode_superposition(is_resume=is_resume)
+            self.model.solution = self.solver.solve_mode_superposition(print_log=print_log, is_resume=is_resume)
         else:
             raise ValueError(f"Unsupported analysis method: {analysis_method}")
 
@@ -425,7 +433,8 @@ class Project:
         self.mark_project_as_modified()
         dt = perf_counter() - t0
 
-        print(f"Elapsed time to solve acoustic harmonic analysis: {dt: .6f} [s]")
+        if print_log:
+            print(f"Elapsed time to solve acoustic harmonic analysis: {dt: .6f} [s]")
         logging.info(f"Elapsed time to solve acoustic harmonic analysis: {dt: .6f} [s]")
 
         return self.model.solution

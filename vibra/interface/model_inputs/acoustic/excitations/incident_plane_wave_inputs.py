@@ -212,13 +212,11 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
         surface_ids, error_data = self.mesh.check_selected_ids(input_ids, selection = "surfaces", single_id = False)
 
         if error_data is not None:
-            self.hide()
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
             return
 
         if self.check_for_inside_surfaces(surface_ids):
-            self.hide()
             title = "Invalid surface selected"
             message = "An invalid surface has been detected in the current "
             message += "selection. The incident plane wave excitation can"
@@ -257,7 +255,6 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
 
         if self.comboBox_wave_direction.currentIndex() == WaveDirection.NORMAL:
             if value_a <= 0 and self.comboBox_input_mode.currentIndex() == InputType.REAL_IMAGINARY:
-                self.hide()
                 line_edit_fieldA.setFocus()
                 title = "Invalid value detected"
                 message = "Enter a positive value for the normal "
@@ -266,7 +263,6 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
                 return
             
         if not any((value_a, value_b)):
-            self.hide()
             line_edit_fieldA.setFocus()
             title = "Invalid value detected"
             message = "Enter a non-zero value for the incident "
@@ -304,7 +300,6 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
                     ipw_vector.append(float(line_edit.text()))
 
             if not any(ipw_vector):
-                self.hide()
                 title = "Invalid incident wave vector"
                 message = f"The incident plane wave {ipw_vector} is invalid. Enter a non-null "
                 message += "vector to proceed with the boundary condition assignment."
@@ -341,8 +336,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
             for value in np.real(values):
                 if np.real(value) < 0:
                     continue
-            
-                self.hide()
+
                 title = 'Invalid setup detected'
                 message = "The plane wave should be incident, i.e., directed inwards of the domain. "
                 message += "We recommend to verify the entered values of the incident pressure amplitude "
@@ -428,7 +422,6 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
         _frequencies = imported_values[:, 0]
 
         if app().project.model.change_analysis_frequency_setup(list(_frequencies)):
-            self.hide()
             title = "Project frequency setup cannot be modified"
             message = "The following imported table of values has a frequency setup "
             message += "different from the others already imported ones. The current "
@@ -458,7 +451,6 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
     def tabular_data_assignment(self, surface_ids: list[int]):
 
         if self.lineEdit_table_path.text() == "":
-            self.hide()
             title = "Additional inputs required"
             message = "You must enter the absorption surface table path to proceed with the assignment."
             PrintMessageInput([error_title, title, message])
@@ -558,8 +550,6 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
 
         if not surface_ids:
             return
-
-        self.hide()
 
         title = "Incident pressure wave reset"
         message = "Would you like to remove the all applied incident pressure waves from model?"

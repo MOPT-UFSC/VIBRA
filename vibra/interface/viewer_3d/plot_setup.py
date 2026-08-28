@@ -56,10 +56,18 @@ class TransientPressurePlotSetup:
     reduced_loop_time: float | None = None
 
 
+@dataclass(slots=True)
+class AllowablePulsationForScrewCompressorsPlotSetup:
+    plot_type: PressurePlotType
+    unit: str = "--"
+    penalization_factor: int = 0
+
+
 # Do not forget to add the type here
 PlotSetup = Union[
     NoPlotSetup,
     FrequencyDisplacementPlotSetup,
     FrequencyPressurePlotSetup,
     TransientPressurePlotSetup,
+    AllowablePulsationForScrewCompressorsPlotSetup,
 ]

@@ -1,3 +1,3 @@
-from vibra.launch import main
+from vibra.cli import main
 
 main()

@@ -40,6 +40,22 @@ def get_DBM_standard_constants() -> dict[str, float]:
     }
 
 
+def get_user_defined_constants() -> dict[str, float]:
+    """
+    Returns a set of user-defined constants to the Delany-Bazley-Miki porous material model.
+    """
+    return {
+    "C1" : 0.1328,
+    "C2" : 0.5571,
+    "C3" : 0.1540,
+    "C4" : 0.7093,
+    "C5" : 0.0877,
+    "C6" : 0.5557,
+    "C7" : 0.0876,
+    "C8" : 0.7609,
+    }
+
+
 class PorousMaterialModels:
 
     def __init__(self, model: "Model"):
@@ -105,22 +121,27 @@ class PorousMaterialModels:
             material model effective properties.
         """
 
-        C1 = data["C1"]
-        C2 = data["C2"]
-        C3 = data["C3"]
-        C4 = data["C4"]
-        C5 = data["C5"]
-        C6 = data["C6"]
-        C7 = data["C7"]
-        C8 = data["C8"]
+        C1 = data.get("C1")
+        C2 = data.get("C2")
+        C3 = data.get("C3")
+        C4 = data.get("C4")
+        C5 = data.get("C5")
+        C6 = data.get("C6")
+        C7 = data.get("C7")
+        C8 = data.get("C8")
 
-        flow_resistivity = data["flow_resistivity"]
+        flow_resistivity = data.get("flow_resistivity")
+        normalize_flow_resistivity = data.get("normalize_flow_resistivity", False)
 
         C_0 = fluid.speed_of_sound
         rho_0 = fluid.fluid_density
 
         frequencies = omega / (2 * np.pi)
-        X = frequencies / flow_resistivity
+
+        if normalize_flow_resistivity:
+            X = frequencies / (flow_resistivity / rho_0)
+        else:
+            X = frequencies / flow_resistivity
 
         k_eff = (omega / C_0) * ( 1 + C1*(X**-C2) - 1j*(C3*(X**-C4)) )
         Z_eff = (rho_0 * C_0) * ( 1 + C5*(X**-C6) - 1j*(C7*(X**-C8)) )

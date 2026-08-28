@@ -95,6 +95,8 @@ class MaterialInputs(SetMaterial_UI):
         self.material_widget.pushButton_cancel.clicked.connect(self.close)
         self.material_widget.pushButton_remove_column.clicked.connect(self.reset_selected_material_lineEdit)
         self.material_widget.pushButton_reset_library.clicked.connect(self.reset_material_library_callback)
+        self.material_widget.pushButton_export_library.clicked.connect(self.export_material_library_callback)
+        self.material_widget.pushButton_import_library.clicked.connect(self.import_material_library_callback)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
         #
@@ -163,6 +165,16 @@ class MaterialInputs(SetMaterial_UI):
     def reset_material_library_callback(self):
         self.hide()
         if self.material_widget.reset_library_callback():
+            self.actions_to_finalize()
+
+    def export_material_library_callback(self):
+        self.hide()
+        if self.material_widget.export_library_callback():
+            self.actions_to_finalize()
+
+    def import_material_library_callback(self):
+        self.hide()
+        if self.material_widget.import_library_callback():
             self.actions_to_finalize()
 
     def geometry_selection_callback(self):
@@ -304,7 +316,6 @@ class MaterialInputs(SetMaterial_UI):
         selected_material = self.material_widget.get_selected_material()
 
         if selected_material is None:
-            self.hide()
             self.title = "No materials selected"
             self.message = "Select a material in the list before confirming the material attribution."
             PrintMessageInput([error_title, self.title, self.message])
@@ -323,7 +334,6 @@ class MaterialInputs(SetMaterial_UI):
                 surface_ids, error_data = self.mesh.check_selected_ids(input_ids, selection="surfaces", single_id=False)
 
                 if error_data is not None:
-                    self.hide()
                     self.lineEdit_selection_id.setFocus()
                     PrintMessageInput(error_data)
                     return True
@@ -342,7 +352,6 @@ class MaterialInputs(SetMaterial_UI):
                 volume_ids, error_data = self.mesh.check_selected_ids(input_ids, selection="volumes", single_id=False)
 
                 if error_data is not None:
-                    self.hide()
                     self.lineEdit_selection_id.setFocus()
                     PrintMessageInput(error_data)
                     return True
@@ -373,8 +382,6 @@ class MaterialInputs(SetMaterial_UI):
         app().main_window.selection.set_geometry_selection()
 
     def reset_callback(self):
-
-        self.hide()
 
         title = "Materials resetting"
         message = "Would you like to remove the all assigned materials from model?"

@@ -5,6 +5,7 @@ from PySide6.QtWidgets import QLineEdit
 
 from vibra import app
 from vibra.engine.properties.fluid import Fluid
+from vibra.interface.general.utils import clear_style_sheet
 
 # from vibra.interface import error_title, warning_title
 from vibra.interface.model_inputs.fluid.set_fluid_inputs_simplified import SetFluidInputsSimplified
@@ -160,18 +161,9 @@ class AcousticPropertiesGradientInputs(AcousticPropertiesGradientInputs_UI):
         self.highlight_line_edit()
 
     def highlight_line_edit(self):
+        line_edits = [self.lineEdit_end_coords, self.lineEdit_selection_id, self.lineEdit_start_coords]
+        clear_style_sheet([line_edit for line_edit in line_edits if line_edit is not self.current_line_edit])
         self.current_line_edit.setStyleSheet("border-color: rgb(255,0,0); border-width: 2px")
-        if self.current_line_edit == self.lineEdit_start_coords:
-            self.lineEdit_end_coords.setStyleSheet("")
-            self.lineEdit_selection_id.setStyleSheet("")
-        elif self.current_line_edit == self.lineEdit_end_coords:
-            self.lineEdit_start_coords.setStyleSheet("")
-            self.lineEdit_selection_id.setStyleSheet("")
-        elif self.current_line_edit == self.lineEdit_selection_id:
-            self.lineEdit_start_coords.setStyleSheet("")
-            self.lineEdit_end_coords.setStyleSheet("")
-        else:
-            pass
 
     def attribution_type_callback(self):
 
