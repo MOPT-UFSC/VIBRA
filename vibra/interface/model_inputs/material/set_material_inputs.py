@@ -407,10 +407,11 @@ class MaterialInputs(SetMaterial_UI):
         self.pushButton_remove.setDisabled(True)
 
         self.load_model_info()
+        app().project.update_model_properties_file()
+        app().project.model.map_model_domains()
         app().main_window.update_info_text()
         app().main_window.selection.clear_selection()  # this also updates
         app().main_window.update_symbols()
-        app().project.update_model_properties_file()
 
         if close_window:
             self.close()

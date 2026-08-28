@@ -89,13 +89,15 @@ class Model:
         self.initial_element_size = None
         self.geometry_qf = 1.0
 
+        self.weak_coupling = True
+
         self.current_frequencies = []
 
         self.decouple_info = {}
         self.nodes_mapping = {}
 
-        self.dof_indexes_act = None
-        self.dof_indexes_str = None
+        self.acoustic_dof_indexes = None
+        self.structural_dof_indexes = None
 
         self.acoustic_element_1d = None
         self.acoustic_element_2d = None
@@ -265,16 +267,24 @@ class Model:
         for index, node_id in enumerate(nodes_str):
             self.struct_node_mapping[node_id] = index
 
-        nodes_str_seq = np.arange(self.number_structural_nodes, dtype=int).reshape(-1, 1)
-        dof_indexes_str = dof_str * nodes_str_seq + np.arange(dof_str)
-        self.dof_indexes_str = dof_indexes_str.flatten()
+        structural_shift = 0
+        acoustic_shift = self.total_str_dofs
 
+        # process the structural dofs (continuos nodes list + dofs shift)
+        nodes_str_seq = np.arange(self.number_structural_nodes, dtype=int).reshape(-1, 1)
+        structural_dof_indexes = dof_str * nodes_str_seq + np.arange(dof_str) + structural_shift
+        self.structural_dof_indexes = structural_dof_indexes.flatten()
+
+        # process the acoustic dofs (continuos nodes list + dofs shift)
         nodes_act_seq = np.arange(self.number_acoustic_nodes, dtype=int).reshape(-1, 1)
-        dof_indexes_act = dof_act * nodes_act_seq + np.arange(dof_act) + self.total_str_dofs
-        self.dof_indexes_act = dof_indexes_act.flatten()
+        acoustic_dof_indexes = dof_act * nodes_act_seq + np.arange(dof_act) + acoustic_shift
+        self.acoustic_dof_indexes = acoustic_dof_indexes.flatten()
+
+        # data = np.array([self.fluid_node_mapping, self.struct_node_mapping]).T
+        # np.savetxt("nodes_mappings.dat", data, delimiter=",", fmt="%i")
 
         # all_indexes = np.arange(self.total_dof, dtype=int)
-        # all_indexes_conc = np.sort(np.append(self.dof_indexes_str, self.dof_indexes_act))
+        # all_indexes_conc = np.sort(np.append(self.structural_dof_indexes, self.acoustic_dof_indexes))
         # data = np.array([all_indexes, all_indexes_conc], dtype=int).T
         # np.savetxt("dof_indexes.dat", data, delimiter=",", fmt="%i")
         # print(np.allclose(all_indexes, all_indexes_conc))
@@ -687,24 +697,23 @@ class Model:
         _nodes = node_ids.reshape(-1, 1)
         _dof_per_node = self.acoustic_element_3d.DOF_PER_NODE
 
-        global_dof = _dof_per_node * _nodes + np.arange(_dof_per_node)
-        global_dof = np.array(global_dof.flatten(), dtype=int)
+        global_dofs = _dof_per_node * _nodes + np.arange(_dof_per_node)
+        global_dofs = np.array(global_dofs.flatten(), dtype=int)
 
-        return global_dof
+        return [int(g_dof) for g_dof in global_dofs]
 
     def get_structural_property_data_from_nodes(self, nodes: np.ndarray, data: dict, selection: str):
-        output_data = {}
         if data["element_type"] == "2d_element":
             element_2d = self.structural_element_2d
             if element_2d is None:
-                return output_data
+                return {}
 
             dof_per_node = element_2d.DOF_PER_NODE
 
         else:
             element_3d = self.structural_element_3d
             if element_3d is None:
-                return output_data
+                return {}
 
             dof_per_node = element_3d.DOF_PER_NODE
 
@@ -714,6 +723,8 @@ class Model:
         n_int = 0
         if "integrate" in data:
             n_int = data.get("integrate", 0)
+
+        output_data = {}
 
         for node_gdof in global_dof:
             for j, gdof in enumerate(node_gdof):

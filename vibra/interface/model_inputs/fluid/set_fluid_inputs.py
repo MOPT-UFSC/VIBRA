@@ -338,10 +338,11 @@ class SetFluidInputs(SetFluidInputs_UI):
         self.lineEdit_selected_fluid_name.clear()
         self.pushButton_remove.setDisabled(True)
 
+        app().project.update_model_properties_file()
+        app().project.model.map_model_domains()
         app().main_window.update_info_text()
         app().main_window.selection.clear_selection()  # this also updates
         app().main_window.update_symbols()
-        app().project.update_model_properties_file()
 
         self.complete = True
 

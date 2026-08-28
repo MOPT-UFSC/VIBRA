@@ -355,11 +355,13 @@ class Project:
         analysis_method = self.model.analysis_setup.analysis_method
         if analysis_method == "direct":
             self.model.solution = self.solver.solve_direct(is_resume=is_resume)
+
         elif analysis_method == "mode_superposition":
             self.model.solution = self.solver.solve_mode_superposition(
                 is_proportionally_damped=True,
                 is_resume=is_resume,
             )
+
         else:
             raise ValueError(f"Unsupported analysis method: {analysis_method}")
 
@@ -418,8 +420,10 @@ class Project:
         analysis_method = self.model.analysis_setup.analysis_method
         if analysis_method == "direct":
             self.model.solution = self.solver.solve_direct(is_resume=is_resume)
+
         elif analysis_method == "mode_superposition":
             self.model.solution = self.solver.solve_mode_superposition(is_resume=is_resume)
+
         else:
             raise ValueError(f"Unsupported analysis method: {analysis_method}")
 
