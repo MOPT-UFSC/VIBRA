@@ -41,6 +41,26 @@ class StructuralAssembler:
         return self.model.number_3d_structural_elements
 
 
+    @property
+    def structural_dof_indexes(self):
+        return self.model.structural_dof_indexes
+
+
+    @property
+    def structural_ndof(self):
+        return len(self.model.structural_dof_indexes)
+
+
+    @property
+    def total_dofs(self):
+        return self.model.total_dof
+
+
+    @property
+    def gm_shape(self):
+        return (self.model.total_dof, self.model.total_dof)
+
+
     def define_structural_elements(self):
         self.model.set_structural_elements()
         self.element_1d = self.model.structural_element_1d
@@ -217,7 +237,7 @@ class StructuralAssembler:
         the 2d face elements, otherwise.
         """
         if self.model.mesh.solids_connectivity.size:
-            displacement_dof = np.arange(self.total_dof, dtype=int)
+            displacement_dof = np.arange(self.total_dofs, dtype=int)
 
         else:
             nodes_from_2d_elements = np.array([*set(self.model.mesh.faces_connectivity[:, 4:].flatten())], dtype=int)
@@ -239,7 +259,7 @@ class StructuralAssembler:
         nodal_loads, _ = self.process_property_arrays(output_nodal_loads_data)
 
         # self.nodal_loads_indexes = list(output_nodal_loads_data.keys())
-        output = np.zeros((self.total_dof, self.number_frequencies), dtype=complex)
+        output = np.zeros((self.total_dofs, self.number_frequencies), dtype=complex)
 
         if nodal_loads:
             indexes = list(nodal_loads.keys())
@@ -808,9 +828,6 @@ class StructuralAssembler:
 
         self.displacement_dof = self.get_displacement_dof()
     
-        # global_matrices shape
-        self.gm_shape = (self.total_dof, self.total_dof)
-
         self.data_K = np.zeros((self.number_2d_elements, self.dof, self.dof), dtype=complex)
         self.data_M = np.zeros((self.number_2d_elements, self.dof, self.dof), dtype=complex)
 
@@ -851,13 +868,7 @@ class StructuralAssembler:
 
         self.ind_rows, self.ind_cols, self.structural_dofs = self.element_3d.generate_ind_rows_cols(reorder=reorder)
 
-        self.total_dof = self.model.total_dof
-        # self.total_dof = self.element_3d.DOF_PER_NODE * len(self.element_3d.nodal_coordinates)
-
         self.displacement_dof = self.get_displacement_dof()
-
-        # global_matrices shape
-        self.gm_shape = (self.model.total_dof, self.model.total_dof)
 
         print(f"Number of acoustic elements: {self.model.number_3d_acoustic_elements}")
         print(f"Number of structural elements: {self.model.number_3d_structural_elements}")
@@ -911,26 +922,26 @@ class StructuralAssembler:
         self.process_prescribed_dof_data()
 
 
-    def assemble_global_stiffness_matrix(self, weak_coupling: bool = True):
+    def assemble_global_stiffness_matrix(self):
         """
         This method assembles the global stiffness matrix.
         """
         _stiffness_matrix_full = csr_matrix((self.data_K.flatten(), (self.ind_rows, self.ind_cols)), shape=self.gm_shape)
 
-        if weak_coupling and self.model.total_act_dofs:
+        if self.model.weak_coupling and self.model.total_act_dofs:
             _stiffness_matrix_full = _stiffness_matrix_full[self.structural_dofs, :][:, self.structural_dofs]
 
         self.stiffness_matrix = _stiffness_matrix_full[self.unprescribed_dof_indexes, :][:, self.unprescribed_dof_indexes]
         self.stiffness_matrix_r = _stiffness_matrix_full[:, self.prescribed_dof_indexes]
 
 
-    def assemble_global_mass_matrix(self, weak_coupling: bool = True):
+    def assemble_global_mass_matrix(self):
         """
         This method assembles the global mass matrix.
         """
         _mass_matrix_full = csr_matrix((self.data_M.flatten(), (self.ind_rows, self.ind_cols)), shape=self.gm_shape)
 
-        if weak_coupling and self.model.total_act_dofs:
+        if self.model.weak_coupling and self.model.total_act_dofs:
             _mass_matrix_full = _mass_matrix_full[self.structural_dofs, :][:, self.structural_dofs]
 
         self.mass_matrix = _mass_matrix_full[self.unprescribed_dof_indexes, :][:, self.unprescribed_dof_indexes]
@@ -1060,7 +1071,7 @@ class StructuralAssembler:
             Solution of all the degrees of freedom.
         """
 
-        rows = self.total_dof
+        rows = self.total_dofs
         cols = solution.shape[1]
         full_solution = np.zeros((rows, cols), dtype=complex)
 
@@ -1076,7 +1087,7 @@ class StructuralAssembler:
     
 
     def reinsert_the_prescribed_dof_into_solution_freq(self, solution: np.ndarray, freq_index: int):
-        rows = self.total_dof
+        rows = self.total_dofs
         full_solution = np.zeros(rows, dtype=complex)
 
         if len(self.prescribed_dof_indexes):

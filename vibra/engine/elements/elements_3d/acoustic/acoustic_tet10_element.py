@@ -230,17 +230,23 @@ class ACT_TETRAHEDRON_10C(Element3D):
             coordinates of all elements.
 
         """
-        nel = self.connectivity.shape[0]
+
+        # filter the acoustic elements connectivities
+        element_ids = self.model.elements_per_domain.get("acoustic", np.array([]))
+        acoustic_connect = self.connectivity[element_ids, :]
+
+        nel = len(acoustic_connect)
+
         if all_int_points:
             stacked_coords = np.zeros((nel, 1, self.DOF_PER_ELEMENT, 3), dtype=float)
             for j in range(self.DOF_PER_ELEMENT):
-                stacked_coords[:, 0, j, :] = self.nodal_coordinates[self.connectivity[:, j+1], 1:4]
+                stacked_coords[:, 0, j, :] = self.nodal_coordinates[acoustic_connect[:, j+1], 1:4]
 
         else:
 
             stacked_coords = np.zeros((nel, self.DOF_PER_ELEMENT, 3), dtype=float)
             for j in range(self.DOF_PER_ELEMENT):
-                stacked_coords[:, j, :] = self.nodal_coordinates[self.connectivity[:, j+1], 1:4]
+                stacked_coords[:, j, :] = self.nodal_coordinates[acoustic_connect[:, j+1], 1:4]
 
         return stacked_coords
 
@@ -353,6 +359,8 @@ class ACT_TETRAHEDRON_10C(Element3D):
 
         # stacked nodal coordinates
         stacked_coords = self.get_stacked_nodal_coords()
+
+        print(f"stacked_coords: {stacked_coords.shape}")
 
         # initialize variables
         int2d_BtB = 0.
