@@ -1372,7 +1372,7 @@ class Mesh:
 
     def get_connectivity_from_surface(self, surface_id: int, from_cache: bool = False) -> np.ndarray:
 
-        if surface_id in self.external_connectivity_from_surfaces.keys():
+        if surface_id in self.external_connectivity_from_surfaces:
             return self.external_connectivity_from_surfaces.get(surface_id)
 
         if from_cache:

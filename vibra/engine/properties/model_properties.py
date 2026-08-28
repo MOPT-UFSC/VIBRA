@@ -571,6 +571,8 @@ class ModelProperties:
                 data = self._get_property(property, surface=surface_id)
                 if data is None:
                     entities_without_property.append(surface_id)
+
+        entities_without_property.sort()
     
         return entities_without_property
     
