@@ -4,7 +4,6 @@ from PySide6.QtWidgets import QAbstractItemView, QTableWidgetItem
 from vibra import app
 from vibra.engine.mesher.mesh_setup import MeshSetup
 from vibra.interface import warning_title
-from vibra.interface.common.common_interface import generate_mesh_and_finalize
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.ui_generated.model.general.volume_suppression_dialog_ui import (
@@ -277,7 +276,7 @@ class VolumeSuppressionInputs(VolumeSuppressionDialog_UI):
             self._close_dialog()
 
         if regenerate_now:
-            generate_mesh_and_finalize()
+            app().main_window.input_ui.mesh_setup()
 
         if not close and changed:
             self._refresh_after_regeneration()
