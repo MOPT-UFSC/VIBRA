@@ -274,7 +274,6 @@ class AnalysisToolbar(QToolBar):
 
         flag = "--continue-analysis" if is_resume else "--run-analysis"
         command = SubProcessHandler.get_executable() + [flag, str(app().project.working_directory)]
-        print(f"Running analysis in subprocess with command: {command}")
         subprocess_status = SubProcessHandler(command).run()
 
         if subprocess_status != SubProcessStatus.SUCCESS:
