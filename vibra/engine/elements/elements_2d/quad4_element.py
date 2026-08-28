@@ -80,6 +80,8 @@ class QUADRANGLE_4(Element2D):
         self.element_label = ""
         self.nodal_coordinates = self.model.mesh.nodal_coordinates
 
+        self.local_dof = np.arange(dof_per_node, dtype=int)
+
         self.define_integration_points()
         self.process_shape_functions_and_derivatives()
 
@@ -545,3 +547,10 @@ class QUADRANGLE_4(Element2D):
     def reorder_connect(self, connect_face: np.ndarray):
         """Reordering connectivity matrix to adequate the GMSH connectivity to the FE model"""
         self.connectivities = connect_face[:, [0, 1, 2, 3]]
+       
+
+    def get_rows_and_cols_indexes(self, index: int):
+        dof = self.dof_per_node
+        elem_nodes = self.connectivities[index, :]
+        dof_indexes = dof * elem_nodes + self.local_dof
+        return dof_indexes

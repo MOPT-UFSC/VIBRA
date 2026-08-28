@@ -30,7 +30,7 @@ class ACT_TRIANGLE_6(TRIANGLE_6):
         el_index: int
             The element index.
 
-        load: float, optional
+        distributed_load: float, optional
             The load vector.
 
         Returns
@@ -39,11 +39,13 @@ class ACT_TRIANGLE_6(TRIANGLE_6):
             The elementary load vector.
         """
 
-        # element nodal coordinates
-        coords = self.nodal_coordinates[self.connectivities[el_index, :], :]
+        print(el_index, self.connectivities[el_index, :])
 
-        # nodal coordinates in the local CS
-        coord_lcs = get_local_coordinates(coords)
+        # element nodes
+        e_nodes = self.connectivities[el_index, :]
+
+        # element nodal coordinates
+        coords = self.nodal_coordinates[e_nodes, 1:]
 
         # initialize the variable Fe
         Fe = 0.
@@ -51,18 +53,98 @@ class ACT_TRIANGLE_6(TRIANGLE_6):
         # integration loop
         for i in range(self.nint):
 
-            # Jacobian matrix
-            JAC = self.dphi[i, :, :] @ coord_lcs
+            # determinant of Jacobian for the i-th integration point
+            det_jac = self.get_jacobian_determinant(i, coords)
 
-            # determinant of Jacobia matrix
-            det_JAC = self.get_detJAC(JAC)
+            # matrix of shape functions for all DOF
+            N = self.phi[i, :, :]
+
+            Fe += (N.T * load) * (det_jac * self.wps[i])
+
+        return Fe
+
+
+    def stacked_matrices_NtN(self) -> np.ndarray:
+        """
+        This method processes all elementary matrices and returns them
+        in the stacked array form.
+
+        Returns
+        -------
+        int2d_NtN: np.ndarray
+            The array containing the stacked elementary matrices.
+        """
+
+        # stack the element nodes coordinates for all elements
+        coords = self.nodal_coordinates[[connect for connect in self.connectivities], 1:]
+
+        # initialize variable
+        int2d_NtN = 0.
+
+        # integration loop
+        for i in range(self.nint):
+
+            det_jacs, vectors, *_ = self.get_stacked_jacobian_determinant(i, coords, return_vectors=True)
 
             # shape functions
             N = self.phi[i, :, :]
 
-            Fe += load * N.T * (det_JAC * self.wps[i])
+            int2d_NtN += N.T @ N * (det_jacs * self.wps[i])
 
-        return Fe
+        return int2d_NtN
+
+
+    def stacked_matrices_NtN_and_BtB(self) -> np.ndarray:
+        """
+        This method processes all elementary matrices for mass source
+        and returns them in the stacked array form.
+
+        Returns
+        -------
+        Nt_N_stacked: np.ndarray
+            The array containing the elementary stacked matrices int(Nt @ N, gamma_s).
+
+        Bt_B_stacked: np.ndarray
+            The array containing the elementary stacked matrices int(Bt @ B, gamma_s).
+        """
+
+        # # compute local coordinates for all elements
+        # local_coords = self.get_stacked_local_coordinates()
+
+        # stack the element nodes coordinates for all elements
+        coords = self.nodal_coordinates[[connect for connect in self.connectivities], 1:]
+
+        # initialize variables
+        int2d_NtN = 0.
+        int2d_BtB = 0.
+
+        # integration loop
+        for i in range(self.nint):
+
+            # # Jacobian matrices of all elements
+            # JAC_stacked = self.dphi[i, :, :] @ local_coords
+
+            # # Jacobian determinants and inverses of all elements
+            # det_jacs, inv_jacs = self.get_detJAC_and_invJAC(JAC_stacked)
+
+            det_jacs, normal_vectors = self.get_stacked_jacobian_determinant(i, coords, return_vectors=True)
+
+            print(normal_vectors.shape)
+
+            inv_jacs = np.linalg.inv(normal_vectors)
+
+            # shape functions
+            N = self.phi[i, :, :]
+            N_t = N.T
+
+            # derivative of shape functions
+            B = inv_jacs @ self.dphi[i, :, :]
+            B_t = np.transpose(B, axes=(0, 2, 1))
+
+            int2d_NtN += N_t @ N * (det_jacs * self.wps[i])
+            int2d_BtB += B_t @ B * (det_jacs * self.wps[i])
+
+        return int2d_NtN, int2d_BtB
 
 
     def elementary_sound_power(self, e_connect: np.ndarray, P_e: np.ndarray, Vn_e: np.ndarray) -> np.ndarray:
@@ -89,20 +171,13 @@ class ACT_TRIANGLE_6(TRIANGLE_6):
         # element nodal coordinates
         coords = self.nodal_coordinates[e_connect, :]
 
-        # nodal coordinates in the local CS
-        local_coords = get_local_coordinates(coords)
-
         # initialize variable We
         We = 0.
 
         # integration loop
         for i in range(self.nint):
 
-            # Jacobian matrices of all elements
-            JAC = self.dphi[i, :, :] @ local_coords
-
-            # determinant of Jacobian matrix
-            det_jac = self.get_detJAC(JAC)
+            det_jac = self.get_stacked_jacobian_determinant(i, coords)
 
             # shape functions
             N = self.phi[i, :, :]
@@ -136,8 +211,8 @@ class ACT_TRIANGLE_6(TRIANGLE_6):
         # stack the element nodal pressures in format [n_el, DOFS_PER_ELEMENT, n_freq]
         Pe = pressures.transpose(1, 0, 2)
 
-        # compute local coordinates for all elements
-        local_coords = self.get_stacked_local_coordinates()
+        # stack the element nodes coordinates for all elements
+        coords = self.nodal_coordinates[[connect for connect in self.connectivities], 1:]
 
         # initialize variable
         acoustic_load = 0.
@@ -145,11 +220,7 @@ class ACT_TRIANGLE_6(TRIANGLE_6):
         # integration loop
         for i in range(self.nint):
 
-            # Jacobian matrices of all elements
-            JAC_stacked = self.dphi[i, :, :] @ local_coords
-
-            # Jacobian determinants and inverses of all elements
-            det_jacs, _ = self.get_detJAC_and_invJAC(JAC_stacked)
+            det_jacs = self.get_stacked_jacobian_determinant(i, coords)
 
             # shape functions
             N = self.phi[i, :, :]
@@ -166,11 +237,29 @@ class ACT_TRIANGLE_6(TRIANGLE_6):
         """
 
         self.reorder_connect(connectivities)
+        # dof, edof = self.dof_per_node, self.dof_per_element
+        # ind_dof = dof * self.connectivities[:, :]
+
+        # vect_indices = ind_dof.flatten()
+        # ind_rows_face = ((np.tile(vect_indices, (edof,1))).T).flatten()
+        # ind_cols_face = (np.tile(ind_dof, edof)).flatten()
+
         dof, edof = self.dof_per_node, self.dof_per_element
-        ind_dof = dof * self.connectivities[:, :]
+        n_el = len(connectivities)
+
+        local_dof = np.arange(dof, dtype=int)
+        ind_dof = np.zeros((n_el, edof), dtype=int)
+
+        for j in range(self.NODES_PER_ELEMENT):
+            start = j * dof
+            end = (j + 1) * dof
+            elem_nodes = self.model.fluid_node_mapping[self.connectivities[:, j + 1]]
+            ind_dof[:, start : end] = dof * elem_nodes.reshape(-1, 1) + local_dof
 
         vect_indices = ind_dof.flatten()
-        ind_rows_face = ((np.tile(vect_indices, (edof,1))).T).flatten()
-        ind_cols_face = (np.tile(ind_dof, edof)).flatten()
+        # ordered_dofs = np.unique(vect_indices)
 
-        return ind_rows_face, ind_cols_face
+        ind_rows = ((np.tile(vect_indices, (edof, 1))).T).flatten()
+        ind_cols = (np.tile(ind_dof, edof)).flatten()
+
+        return ind_rows, ind_cols
