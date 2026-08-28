@@ -1,6 +1,5 @@
 import logging
 from collections import defaultdict
-from pathlib import Path
 from time import sleep
 
 import numpy as np
@@ -156,14 +155,9 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
     def search_callback(self):
         caption = "Set a file name to export the acoustic element transfer data"
 
-        last_path = app().config.get_last_folder_for(
-            "exported_data_folder",
-            default=Path().home(),
-        )
-
         path = FileDialogService.save_file(file_extensions=SUPPORTED_SPREADSHEET_EXTENSIONS,
                                            caption=caption,
-                                           last_folder=last_path)
+                                           last_folder="exported_data_folder")
 
         if path is None:
             return True

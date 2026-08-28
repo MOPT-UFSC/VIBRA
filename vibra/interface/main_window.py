@@ -661,13 +661,11 @@ class MainWindow(MainWindow_UI):
     def import_geometry_or_mesh_dialog(self):
         self.close_dialogs()
 
-        path = app().config.get_last_folder_for("geometry_mesh_folder", default=self.user_path)
-
         extensions = SUPPORTED_GEOMETRY_EXTENSIONS + SUPPORTED_MESH_EXTENSIONS
 
         imported_path = FileDialogService.open_file(file_extensions=extensions, 
                                     caption="Select a geometry or mesh file to start your project.", 
-                                    last_folder=path)
+                                    last_folder="geometry_mesh_folder")
 
         if imported_path is None:
             return True
@@ -695,11 +693,9 @@ class MainWindow(MainWindow_UI):
             raise ValueError(f"File extension {ext} not supported")
 
     def import_geometry_dialog(self):
-        path = app().config.get_last_folder_for("geometry_mesh_folder", default=self.user_path)
-
         imported_path = FileDialogService.open_file(file_extensions=SUPPORTED_GEOMETRY_EXTENSIONS,
                                                     caption="Select a geometry file to import.",
-                                                    last_folder=path)
+                                                    last_folder="geometry_mesh_folder")
 
         if imported_path is None:
             return
@@ -714,11 +710,9 @@ class MainWindow(MainWindow_UI):
         self.import_geometry(imported_path)
 
     def import_mesh_dialog(self):
-        path = app().config.get_last_folder_for("geometry_mesh_folder", default=self.user_path)
-
         imported_path = FileDialogService.open_file(file_extensions=SUPPORTED_MESH_EXTENSIONS,
                                     caption="Select a mesh file to import.",
-                                    last_folder=path)
+                                    last_folder="geometry_mesh_folder")
 
         if imported_path is None:
             return
@@ -745,11 +739,9 @@ class MainWindow(MainWindow_UI):
         if not obj.complete:
             return False
 
-        save_dir = app().config.get_last_folder_for("project_folder", default=self.user_path)
-
         file_path = FileDialogService.save_file(file_extensions=["vibra"],
                                     caption="Save As",
-                                    last_folder=save_dir)
+                                    last_folder="project_folder")
 
         if file_path is None:
             return False
@@ -790,11 +782,9 @@ class MainWindow(MainWindow_UI):
         print(message)
 
     def open_project_dialog(self):
-        path = app().config.get_last_folder_for("project_folder", default=self.user_path)
-
         project_path = FileDialogService.open_file(file_extensions=["vibra"],
                                     caption="Open Project", 
-                                    last_folder=path)
+                                    last_folder="project_folder")
         
         if project_path is None:
             return

@@ -1,5 +1,4 @@
 from enum import IntEnum
-from pathlib import Path
 from typing import Literal
 
 import numpy as np
@@ -206,14 +205,10 @@ def mesher_interface_callback(parent: QDialog, close_after_generate: bool = Fals
     app().main_window.update_plots()
 
 def export_modal_analysis_results(parent: QDialog | QWidget, modes_to_frequencies: dict, physical_domain: str):
-    last_path = app().config.get_last_folder_for("exported_table_folder")
-    if last_path is None:
-        last_path = str(Path().home())
-
     caption = "Export the modal analysis results"
     export_path = FileDialogService.save_file(file_extensions=SUPPORTED_OUTPUT_DATA_EXTENSIONS,
                                               caption=caption,
-                                              last_folder=last_path)
+                                              last_folder="exported_table_folder")
 
     if export_path is None:
         return

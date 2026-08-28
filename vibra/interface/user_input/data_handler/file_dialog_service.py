@@ -11,7 +11,7 @@ class FileDialogService:
     @staticmethod
     def open_file(file_extensions: list[str], caption: str = "Open file", last_folder: str = "") -> Path | None:
         filter_str, kwargs = FileDialogService._build_dialog_kwargs(file_extensions)
-        last_path = app().config.get_last_folder_for(last_folder)
+        last_path = app().config.get_last_folder_for(last_folder, default=Path().home())
 
         path, selected_filter = QFileDialog.getOpenFileName(None, caption, str(last_path), filter_str, **kwargs)
 
@@ -31,7 +31,7 @@ class FileDialogService:
     @staticmethod
     def open_multiple_files(file_extensions: list[str], caption: str = "Open multiple files", last_folder: str = "") -> list[Path] | None:
         filter_str, kwargs = FileDialogService._build_dialog_kwargs(file_extensions)
-        last_path = app().config.get_last_folder_for(last_folder)
+        last_path = app().config.get_last_folder_for(last_folder, default=Path().home())
 
         paths, selected_filter = QFileDialog.getOpenFileNames(None, caption, str(last_path), filter_str, **kwargs)
 
@@ -52,7 +52,7 @@ class FileDialogService:
     @staticmethod
     def save_file(file_extensions: list[str], caption: str = "Save file", last_folder: str = "") -> Path | None:
         filter_str, kwargs = FileDialogService._build_dialog_kwargs(file_extensions, open_file=False)
-        last_path = app().config.get_last_folder_for(last_folder)
+        last_path = app().config.get_last_folder_for(last_folder, default=Path().home())
 
         path, selected_filter = QFileDialog.getSaveFileName(None, caption, str(last_path), filter_str, **kwargs)
 

@@ -1,5 +1,4 @@
 import os
-from pathlib import Path
 
 from PySide6.QtCore import Qt
 
@@ -33,8 +32,6 @@ class LoadFluidCompositionInputs(LoadFluidComposition_UI):
         self.fluid_composition_data: list[tuple[int, str, str, str]] = []
         self.state_properties_data: list[tuple[int, str, str, str]] = []
 
-        self.desktop_path = Path.home() / "Desktop"
-
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
@@ -57,11 +54,9 @@ class LoadFluidCompositionInputs(LoadFluidComposition_UI):
             self.load_composition_data_from_file()
 
     def search_button_callback(self):
-        last_path = app().config.get_last_folder_for("fluid_composition_folder", default=self.desktop_path)
-
         file_path = FileDialogService.open_file(file_extensions=SUPPORTED_SPREADSHEET_EXTENSIONS,
                                                 caption="Open file",
-                                                last_folder=last_path)
+                                                last_folder="fluid_composition_folder")
 
         if file_path is None:
             return True

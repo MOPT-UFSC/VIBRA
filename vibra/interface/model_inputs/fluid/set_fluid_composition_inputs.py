@@ -1,5 +1,4 @@
 import logging
-from pathlib import Path
 
 import numpy as np
 from PySide6.QtCore import Qt
@@ -76,9 +75,6 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         return molar_fractions
 
     def _initialize(self):
-
-        self.user_path = Path().home()
-
         self.fluid_to_row = {}
         self.fluid_to_composition = {}
 
@@ -1260,11 +1256,10 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
 
     def export_fluid_composition_callback(self):
         self.hide()
-        last_path = app().config.get_last_folder_for("fluid_composition_folder", default=self.user_path)
 
         file_path = FileDialogService.save_file(file_extensions=SUPPORTED_SPREADSHEET_EXTENSIONS,
                                     caption="Export the fluid composition data in spreadsheet file",
-                                    last_folder=last_path)
+                                    last_folder="fluid_composition_folder")
 
         if file_path is None:
             return True

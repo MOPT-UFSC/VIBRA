@@ -1,5 +1,4 @@
 import logging
-from pathlib import Path
 
 import numpy as np
 from PySide6.QtCore import QEvent, QObject, Qt, Signal
@@ -139,14 +138,9 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
         self.current_lineEdit = self.lineEdit_output_selected_id
 
     def search_callback(self):
-        last_path = app().config.get_last_folder_for(
-            "imported_table_folder",
-            default=Path().home(),
-        )
-
         path = FileDialogService.open_file(file_extensions=SUPPORTED_SPREADSHEET_EXTENSIONS,
                                            caption="Choose a file to import element transfer data",
-                                           last_folder=last_path)
+                                           last_folder="imported_table_folder")
 
         if path is None:
             return True
