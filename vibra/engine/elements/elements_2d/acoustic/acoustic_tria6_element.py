@@ -20,6 +20,8 @@ class ACT_TRIANGLE_6(TRIANGLE_6):
         self.element_label = "acoustic_triangular_6"
         self.nodal_coordinates = self.model.mesh.nodal_coordinates
 
+        self.local_dof = np.arange(dof_per_node, dtype=int)
+
 
     def load_vector(self, el_index: int, load: float = 1.0) -> np.ndarray:
         """ 
@@ -38,8 +40,6 @@ class ACT_TRIANGLE_6(TRIANGLE_6):
         Fe: np.ndarray
             The elementary load vector.
         """
-
-        print(el_index, self.connectivities[el_index, :])
 
         # element nodes
         e_nodes = self.connectivities[el_index, :]
@@ -128,8 +128,6 @@ class ACT_TRIANGLE_6(TRIANGLE_6):
             # det_jacs, inv_jacs = self.get_detJAC_and_invJAC(JAC_stacked)
 
             det_jacs, normal_vectors = self.get_stacked_jacobian_determinant(i, coords, return_vectors=True)
-
-            print(normal_vectors.shape)
 
             inv_jacs = np.linalg.inv(normal_vectors)
 
@@ -237,28 +235,19 @@ class ACT_TRIANGLE_6(TRIANGLE_6):
         """
 
         self.reorder_connect(connectivities)
-        # dof, edof = self.dof_per_node, self.dof_per_element
-        # ind_dof = dof * self.connectivities[:, :]
-
-        # vect_indices = ind_dof.flatten()
-        # ind_rows_face = ((np.tile(vect_indices, (edof,1))).T).flatten()
-        # ind_cols_face = (np.tile(ind_dof, edof)).flatten()
 
         dof, edof = self.dof_per_node, self.dof_per_element
         n_el = len(connectivities)
 
-        local_dof = np.arange(dof, dtype=int)
         ind_dof = np.zeros((n_el, edof), dtype=int)
 
-        for j in range(self.NODES_PER_ELEMENT):
+        for j in range(self.nodes_per_element):
             start = j * dof
             end = (j + 1) * dof
-            elem_nodes = self.model.fluid_node_mapping[self.connectivities[:, j + 1]]
-            ind_dof[:, start : end] = dof * elem_nodes.reshape(-1, 1) + local_dof
+            elem_nodes = self.model.fluid_node_mapping[self.connectivities[:, j]]
+            ind_dof[:, start : end] = dof * elem_nodes.reshape(-1, 1) + self.local_dof
 
         vect_indices = ind_dof.flatten()
-        # ordered_dofs = np.unique(vect_indices)
-
         ind_rows = ((np.tile(vect_indices, (edof, 1))).T).flatten()
         ind_cols = (np.tile(ind_dof, edof)).flatten()
 

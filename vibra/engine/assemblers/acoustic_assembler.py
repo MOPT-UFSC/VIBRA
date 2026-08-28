@@ -200,9 +200,6 @@ class AcousticAssembler:
         self.prescribed_dof_indexes = self.get_prescribed_indexes()
         self.unprescribed_dof_indexes = self.get_unprescribed_indexes()
 
-        print("passei aqui...")
-        print(self.model.total_dof, self.model.total_act_dofs, self.unprescribed_dof_indexes.size)
-
 
     def get_prescribed_pressure_model_excitation(self, index: int = 0):
         """
@@ -237,8 +234,6 @@ class AcousticAssembler:
         self.Mr = self.mass_matrix_r
         self.Cr = self.damping_matrix_r
         self.Cr_visc = self.visc_damping_matrix_r
-
-        print(self.Cr.shape, self.Cr_visc.shape, values.shape)
 
         Kr_add = self.Kr @ values
         Mr_add = self.Mr @ values
@@ -1342,8 +1337,6 @@ class AcousticAssembler:
         connectivities = self.integration_data_Zsi.get("connectivities")       
         Z_si = self.integration_data_Zsi.get("surface_data")
 
-        print(Z_si)
-
         nel = len(connectivities)
         dof = self.element_2d.dof_per_element
 
@@ -1999,7 +1992,7 @@ class AcousticAssembler:
         # damping matrices
         C_imp = self.damping_matrix
         C_visc = self.visc_damping_matrix
-        C = C_imp + C_visc * 0
+        C = C_imp + C_visc
 
         if self.frequency_dependent:
             # reassemble the global mass and stiffness matrices
