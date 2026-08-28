@@ -23,7 +23,7 @@ class InputType(IntEnum):
 
 
 def save_table_values(table_name: str, imported_values: np.ndarray, physical_domain: Literal["acoustic", "structural"]):
-    
+
     # define the frequencies vector
     frequencies = imported_values[:, 0]
 
@@ -41,7 +41,7 @@ def save_table_values(table_name: str, imported_values: np.ndarray, physical_dom
 
     # real values vector
     real_values = imported_values[:, 1]
-    
+
     # imaginary values vector
     imag_values = imported_values[:, 2]
 
@@ -254,13 +254,13 @@ def generate_mesh_and_finalize() -> bool:
     LoadingWindow(_finalize).run()
 
     prompt_if_disconnected_nodes()
-    
+
     return True
 
 
 def prompt_if_disconnected_nodes():
     mesh = app().project.model.mesh
-    if mesh is None or not mesh.disconnected_nodes_data:
+    if mesh is None or not mesh.get_disconnected_nodes():
         return
 
     confirmation = GetUserConfirmationInput(
