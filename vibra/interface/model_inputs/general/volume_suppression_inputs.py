@@ -3,8 +3,10 @@ from PySide6.QtWidgets import QAbstractItemView, QTableWidgetItem
 
 from vibra import app
 from vibra.engine.mesher.mesh_setup import MeshSetup
+from vibra.interface import warning_title
 from vibra.interface.common.common_interface import generate_mesh_and_finalize
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
+from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.ui_generated.model.general.volume_suppression_dialog_ui import (
     VolumeSuppressionDialog_UI,
 )
@@ -224,8 +226,20 @@ class VolumeSuppressionInputs(VolumeSuppressionDialog_UI):
             buttons_config=buttons_config,
         )
 
-    def _confirm(self, close:bool):
-        # can't use a default value on close (line 66)
+    def _confirm(self, close: bool=True):
+        mesh = app().project.model.mesh
+        if mesh is None:
+            return
+
+        if self.suppressed_volume_ids >= set(mesh.all_solid_ids()) | set(mesh.suppressed_volumes):
+            message = (
+                "You are trying to suppress every volume of the geometry.\n"
+                "Suppressing all volumes would leave the model with no mesh.\n"
+                "Please unsuppress at least one volume."
+            )
+            PrintMessageInput([warning_title, "Cannot suppress all volumes", message])
+            return
+
         if not self._check_properties_on_suppressed_volumes():
             self.show()
             return
