@@ -266,12 +266,12 @@ def prompt_if_disconnected_nodes():
     confirmation = GetUserConfirmationInput(
         "Disconnected nodes detected",
         "The generated mesh contains disconnected nodes.\n"
-        "The model solution will stay deactivated until this is addressed.\n\n"
-        "Choose an option:\n"
-        "\"Go to Mesh Setup\" to adjust the mesh parameters and regenerate\n"
-        "the mesh to try to solve the problem.\n"
-        "\"Remove disconnected nodes\" to forcibly delete them from the\n"
-        "current mesh and keep using it as is.",
+        + "The model solution will stay deactivated until this is addressed.\n\n"
+        + "Choose an option:\n"
+        + "\"Go to Mesh Setup\" to adjust the mesh parameters and regenerate\n"
+        + "the mesh to try to solve the problem.\n"
+        + "\"Remove disconnected nodes\" to forcibly delete them from the\n"
+        + "current mesh and keep using it as is.",
         buttons_config={
             "left_button_label": "Go to Mesh Setup",
             "right_button_label": "Remove disconnected nodes",
