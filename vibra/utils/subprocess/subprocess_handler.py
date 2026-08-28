@@ -10,7 +10,6 @@ from typing import IO
 
 from PySide6.QtWidgets import QApplication
 
-from vibra import VIBRA_DIR
 from vibra.errors import SolverSubprocessError
 from vibra.interface.loading_window import LoadingWindow
 
@@ -34,11 +33,11 @@ class SubProcessHandler:
         return LoadingWindow(self._run_subprocess, self._interrupt_subprocess).run()
 
     @classmethod
-    def get_executable(cls) -> str:
+    def get_executable(cls) -> list[str]:
         if getattr(sys, "frozen", False):
-            return sys.executable
+            return [sys.executable]
         else:
-            return f"{sys.executable} {sys.argv[0]}"
+            return [sys.executable, sys.argv[0]]
 
     def _interrupt_subprocess(self, by_user=True):
         if self._subprocess is None or self._subprocess.poll() is not None:
@@ -56,9 +55,8 @@ class SubProcessHandler:
         logging.info("Launching subprocess... (15%)")
 
         try:
-            commands = self.command.split()
             self._subprocess = subprocess.Popen(
-                commands,
+                self.command,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,

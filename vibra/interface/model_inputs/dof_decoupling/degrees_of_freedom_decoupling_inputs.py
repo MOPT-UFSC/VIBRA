@@ -240,7 +240,7 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
 
     def reset_callback(self):
 
-        title = "Degrees of freedom decoupling resetting"
+        title = "Degrees of freedom decoupling reset"
         message = "Would you like to revert the acoustic degrees of freedom decoupling from model?"
 
         buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
@@ -253,11 +253,13 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
 
             new_surface_ids = list()
             for (property, _), data in self.properties.surface_properties.items():
-                if property == "degrees_of_freedom_decoupling":
-                    data: dict
-                    new_surface_id = data.get("new_surface_id")
-                    if isinstance(new_surface_id, int):
-                        new_surface_ids.append(new_surface_id)
+                if property != "degrees_of_freedom_decoupling":
+                    continue
+            
+                data: dict
+                new_surface_id = data.get("new_surface_id")
+                if isinstance(new_surface_id, int):
+                    new_surface_ids.append(new_surface_id)
 
             self.remove_all_surface_properties_from_surface([new_surface_id])
             self.remove_all_line_properties_boundind_surface([new_surface_id]) 

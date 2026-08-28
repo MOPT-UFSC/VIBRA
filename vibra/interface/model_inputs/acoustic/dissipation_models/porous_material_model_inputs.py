@@ -386,29 +386,17 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
     def reset_callback(self):
 
-        volume_ids = list()
-        for key, data in self.properties.volume_properties.items():
-            property, volume_id = key
-            if property == "porous_material_model":
-                volume_ids.append(volume_id)
+        title = "Porous material model reset"
+        message = "Would you like to remove the porous material effects from the model?"
 
-        if volume_ids:
+        buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
+        read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
 
-            title = "Porous material model resetting"
-            message = "Would you like to remove the porous material effects from the model?"
+        if read._cancel:
+            return
 
-            buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
-            read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
-
-            if read._cancel:
-                return
-
-            if not read._continue:
-                return
-
-            for volume_id in volume_ids:
-                self.properties._remove_volume_property("porous_material_model", volume_id)
-
+        if read._continue:
+            self.properties._reset_property("porous_material_model")
             self.actions_to_finalize()
 
     def tab_event_porous_material_model(self):

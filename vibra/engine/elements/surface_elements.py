@@ -152,8 +152,15 @@ class Element2D:
         weights for the numerical integration processing.
         """
 
+        if integration_points == 1:
+            a = 1/3
+            w1 = 1/2
+
+            num_int_data = np.array([
+                [a, w1]
+                ], dtype=float)
+
         if integration_points == 3:
-        
             a = 1/6
             b = 2/3
             w1 = 1/6
@@ -165,7 +172,6 @@ class Element2D:
                 ], dtype=float)
 
         elif integration_points == 4:
-
             a = 1/3
             b = 1/5
             c = 3/5
@@ -180,7 +186,6 @@ class Element2D:
                 ], dtype=float)
 
         elif integration_points == 6:
-
             a = 0.4459484909
             b = 0.091576213509771
             c = 1 - 2*a
@@ -195,6 +200,26 @@ class Element2D:
                 [b, b, w2],
                 [d, b, w2],
                 [b, d, w2],
+                ], dtype=float)
+
+        elif integration_points == 7:
+            a = 1/3
+            b = (6 + np.sqrt(15)) / 21
+            c = 4/7 - b
+            d = 1 - 2 * b
+            e = 1 - 2 * c
+            w1 = 9 / 80
+            w2 = (155 + np.sqrt(15)) / 2400
+            w3 = (155 - np.sqrt(15)) / 2400
+
+            num_int_data = np.array([
+                [a, a, w1],
+                [b, b, w2],
+                [d, b, w2],
+                [b, d, w2],
+                [c, c, w3],
+                [e, c, w3],
+                [c, e, w3],
                 ], dtype=float)
 
         return num_int_data

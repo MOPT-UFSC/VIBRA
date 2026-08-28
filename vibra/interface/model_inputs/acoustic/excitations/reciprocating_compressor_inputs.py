@@ -881,8 +881,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             "table_names": [table_name],
             "parameters": self.parameters,
             "values": [surface_velocity],
-            "nodal_attribution": False,
-            "averaged": False,
+            "element_integration": True,
         }
 
         self.remove_conflicting_excitations(surface_id)
@@ -914,12 +913,6 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         if close_window:
             self.close()
 
-    def process_table_file_removal(self, table_names: list):
-        for table_name in table_names:
-            self.properties.remove_imported_tables("acoustic", table_name)
-        if table_names:
-            app().project.update_model_properties_file()
-
     def remove_conflicting_excitations(self, surface_id: int):
 
         labels = [
@@ -933,13 +926,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             ]
 
         for label in labels:
-            table_names = self.properties.get_property_related_table_names(label, surface_id, "surfaces")
             self.properties._remove_surface_property(label, surface_id)
-            self.process_table_file_removal(table_names)
-
-    def remove_table_files_from_surfaces(self, surface_id : list):
-        table_names = self.properties.get_property_related_table_names("reciprocating_compressor_excitation", surface_id, "surfaces")
-        self.process_table_file_removal(table_names)
 
     def remove_callback(self):
         surface_ids = [int(selected_item.text(0)) for selected_item in self.treeWidget_compressor_excitation.selectedItems()]
@@ -948,7 +935,6 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             return
         
         for surface_id in surface_ids:
-            self.remove_table_files_from_surfaces(surface_id)
             self.properties._remove_surface_property("reciprocating_compressor_excitation", surface_id)
         
         self.clear_line_edit_selection_id()
@@ -970,16 +956,6 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             return
 
         if read._continue:
-
-            surface_ids = list()
-            for (property, *args) in self.properties.surface_properties.keys():
-                if property == "reciprocating_compressor_excitation":
-
-                    surface_id = args[0]
-                    surface_ids.append(surface_id)
-
-            self.remove_table_files_from_surfaces(surface_ids)
-
             self.properties._reset_property("reciprocating_compressor_excitation")
             self.actions_to_finalize()
 
@@ -1062,10 +1038,12 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.lineEdit_connection_type.clear()
         self.pushButton_remove.setDisabled(True)
 
-        for (property, *_) in self.properties.surface_properties.keys():
-            if property == "reciprocating_compressor_excitation":
-                self.tabWidget_main.setTabVisible(TabIndex.LIST, True)
-                return
+        for (property, *_) in self.properties.surface_properties:
+            if property != "reciprocating_compressor_excitation":
+                continue
+
+            self.tabWidget_main.setTabVisible(TabIndex.LIST, True)
+            return
 
         self.tabWidget_main.setTabVisible(TabIndex.LIST, False)
         self.tabWidget_main.setCurrentIndex(TabIndex.SETUP)

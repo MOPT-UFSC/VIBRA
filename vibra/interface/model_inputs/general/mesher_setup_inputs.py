@@ -381,7 +381,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         app().project.configure_mesh(mesh_setup)
         app().project.write_to_working_dir()
 
-        command = f"{SubProcessHandler.get_executable()} --generate-mesh {str(app().project.working_directory)}"
+        command = SubProcessHandler.get_executable() + ["--generate-mesh", str(app().project.working_directory)]
         status = SubProcessHandler(command).run()
         if status != SubProcessStatus.SUCCESS:
             return False
