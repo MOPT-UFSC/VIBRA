@@ -638,10 +638,10 @@ class STRUCT_TRIANGLE_3(Element2D):
                 # Normal pressure vector
                 loads += 0.5 * det_J * N.T @ (normal_pressure_load * normal_unit_vector)
 
-        force_indexes = [0, 1, 2, 6, 7, 8, 12, 13, 14]
+        force_indices = [0, 1, 2, 6, 7, 8, 12, 13, 14]
 
         F_elem = np.zeros(self.DOF_PER_ELEMENT, dtype=float)
-        F_elem[force_indexes] = loads
+        F_elem[force_indices] = loads
 
         return F_elem
 
@@ -693,11 +693,11 @@ class STRUCT_TRIANGLE_3(Element2D):
             # Load vector
             loads += det_J * weight * N.T @ distributed_load
 
-        force_indexes = [0, 1, 2, 6, 7, 8, 12, 13, 14]
+        force_indices = [0, 1, 2, 6, 7, 8, 12, 13, 14]
 
         number_of_frequencies = distributed_load.shape[1]
         F_elem = np.zeros((self.DOF_PER_ELEMENT, number_of_frequencies), dtype=complex)
-        F_elem[force_indexes, :] = loads
+        F_elem[force_indices, :] = loads
 
         g_dof = self.DOF_PER_NODE * connect.reshape(-1, 1) + self.local_dof
 
@@ -728,11 +728,11 @@ class STRUCT_TRIANGLE_3(Element2D):
         # Pressure vector
         loads = 0.5 * det_J * N.T @ distributed_load
 
-        force_indexes = [0, 1, 2, 6, 7, 8, 12, 13, 14]
+        force_indices = [0, 1, 2, 6, 7, 8, 12, 13, 14]
 
         number_of_frequencies = distributed_load.shape[1]
         F_elem = np.zeros((self.DOF_PER_ELEMENT, number_of_frequencies), dtype=complex)
-        F_elem[force_indexes, :] = loads
+        F_elem[force_indices, :] = loads
 
         g_dof = self.DOF_PER_NODE * connect.reshape(-1, 1) + self.local_dof
 
@@ -771,8 +771,8 @@ class STRUCT_TRIANGLE_3(Element2D):
         # Normal pressure vector
         loads = 0.5 * det_J * N.T @ (normal_unit_vector.reshape(-1, 1) @ normal_pressure_load)
 
-        force_indexes = [0, 1, 2, 6, 7, 8, 12, 13, 14]
-        F_elem[force_indexes, :] = loads
+        force_indices = [0, 1, 2, 6, 7, 8, 12, 13, 14]
+        F_elem[force_indices, :] = loads
 
         g_dof = self.DOF_PER_NODE * connect.reshape(-1, 1) + self.local_dof
 

@@ -33,12 +33,12 @@ class STRUCT_TETRAHEDRON_10S(Element3D):
 
 
     @property
-    def corner_nodes_indexes(self):
+    def corner_nodes_indices(self):
         return np.arange(4, dtype=int)
 
 
     @property
-    def midside_nodes_indexes_map(self):
+    def midside_nodes_indices_map(self):
         return {
             4 : (0, 1),     # M -> (I, J)
             5 : (1, 2),     # N -> (J, K)
@@ -338,8 +338,8 @@ class STRUCT_TETRAHEDRON_10S(Element3D):
             Ue = nodal_solution
 
         elif isinstance(solution, np.ndarray):
-            indexes = node_ids.reshape(-1, 1) * self.DOF_PER_NODE + self.LOCAL_DOF
-            Ue = solution[indexes.flatten(), :]
+            indices = node_ids.reshape(-1, 1) * self.DOF_PER_NODE + self.LOCAL_DOF
+            Ue = solution[indices.flatten(), :]
 
         else:
             return 0.

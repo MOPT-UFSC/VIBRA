@@ -45,9 +45,9 @@ class STRUCT_HEXAHEDRON_8(Element3D):
 
 
     @property
-    def corner_nodes_indexes(self):
-        indexes = np.arange(self.NODES_PER_ELEMENT, dtype=int)
-        return indexes[:8]
+    def corner_nodes_indices(self):
+        indices = np.arange(self.NODES_PER_ELEMENT, dtype=int)
+        return indices[:8]
 
 
     def load_element_options(self):
@@ -705,8 +705,8 @@ class STRUCT_HEXAHEDRON_8(Element3D):
             Ue = nodal_solution
 
         elif isinstance(solution, np.ndarray):
-            indexes = node_ids.reshape(-1, 1) * self.DOF_PER_NODE + self.LOCAL_DOF
-            Ue = solution[indexes.flatten(), :]    
+            indices = node_ids.reshape(-1, 1) * self.DOF_PER_NODE + self.LOCAL_DOF
+            Ue = solution[indices.flatten(), :]    
 
         else:
             return 0.

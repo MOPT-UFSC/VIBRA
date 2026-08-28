@@ -115,7 +115,7 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
         if self.solids_connectivity.shape[1] == self.NODES_PER_ELEMENT + 4:
             self.connectivity = self.solids_connectivity[:, [0, 6, 4, 5, 7]]
 
-    def get_rows_and_cols_indexes(self, el_index: int, shift_index: int):
+    def get_rows_and_cols_indices(self, el_index: int, shift_index: int):
 
         edof = self.DOF_PER_ELEMENT
         node_ids = self.connectivity[el_index, 1:]
@@ -140,8 +140,8 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
             _dof[i] = dof_node
             _shifts[i] = shift
 
-        _indexes = (_dof * node_ids + _shifts).reshape(-1, 1) + local_dof
-        aux = np.tile(_indexes.flatten(), (edof, 1))
+        _indices = (_dof * node_ids + _shifts).reshape(-1, 1) + local_dof
+        aux = np.tile(_indices.flatten(), (edof, 1))
         ind_rows = aux.T
         ind_cols = aux
 

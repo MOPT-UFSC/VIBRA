@@ -547,10 +547,3 @@ class QUADRANGLE_4(Element2D):
     def reorder_connect(self, connect_face: np.ndarray):
         """Reordering connectivity matrix to adequate the GMSH connectivity to the FE model"""
         self.connectivities = connect_face[:, [0, 1, 2, 3]]
-       
-
-    def get_rows_and_cols_indexes(self, index: int):
-        dof = self.dof_per_node
-        elem_nodes = self.connectivities[index, :]
-        dof_indexes = dof * elem_nodes + self.local_dof
-        return dof_indexes

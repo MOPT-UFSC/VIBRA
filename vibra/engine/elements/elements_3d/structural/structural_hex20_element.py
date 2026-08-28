@@ -35,12 +35,12 @@ class STRUCT_HEXAHEDRON_20(Element3D):
 
 
     @property
-    def corner_nodes_indexes(self):
+    def corner_nodes_indices(self):
         return np.arange(8, dtype=int)
 
 
     @property
-    def midside_nodes_indexes_map(self):
+    def midside_nodes_indices_map(self):
         return {
             8 : (0, 1),      # Q -> (I, J)
             9 : (1, 2),      # R -> (J, K)
@@ -430,8 +430,8 @@ class STRUCT_HEXAHEDRON_20(Element3D):
             Ue = nodal_solution
 
         elif isinstance(solution, np.ndarray):
-            indexes = node_ids.reshape(-1, 1) * self.DOF_PER_NODE + self.LOCAL_DOF
-            Ue = solution[indexes.flatten(), :]
+            indices = node_ids.reshape(-1, 1) * self.DOF_PER_NODE + self.LOCAL_DOF
+            Ue = solution[indices.flatten(), :]
 
         else:
             return 0.

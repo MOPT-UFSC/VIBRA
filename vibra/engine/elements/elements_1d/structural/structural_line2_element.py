@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from vibra.engine.elements.elements_1d.line2_element import LINE_2, get_local_coordinates
+from vibra.engine.elements.elements_1d.line2_element import LINE_2
 
 if TYPE_CHECKING:
     from vibra.engine.model import Model
@@ -14,10 +14,12 @@ class STRUCT_LINE_2(LINE_2):
         super().__init__(model, dof_per_node)
 
         self.model = model
+        self.local_dof = np.arange(dof_per_node, dtype=int)
 
         self.connectivities = None
         self.element_label = "structural_line_2"
         self.nodal_coordinates = self.model.mesh.nodal_coordinates
+
         self.N_matrix = self.get_N_matrix()
 
 
@@ -195,35 +197,43 @@ class STRUCT_LINE_2(LINE_2):
         return Me
 
 
-    def get_load_indexes(self, index: int) -> np.ndarray:
+    def get_rows_and_cols_indices_1D(self, index: int):
         """
-        Returns the load vector degrees of freedom indexes of an element.
-
-        Parameter
-        ---------
+        This method returns, for a selected element, the row 
+        and column indices for 1D element integration.
+        
         index: int
-            The element index of interest to compute the DOF indexes.
-
+            The element index.
         """
-        element_nodes = self.connectivities[index, :].reshape(-1, 1)
-        element_dofs = self.dof_per_node * element_nodes + np.arange(self.dof_per_node, dtype=int)
-        return element_dofs.flatten()
+
+        dof = self.dof_per_node
+        elem_nodes = self.connectivities[index, :]
+        _elem_nodes = self.model.struct_node_mapping[elem_nodes]
+        dof_indices = dof * _elem_nodes + self.local_dof
+        return dof_indices
 
 
-    def get_element_rows_and_columns_indexes(self):
+    def get_rows_and_cols_indices_2D(self, connectivities: np.ndarray):
         """
-        Returns the element rows and columns degrees of freedom indexes of an element.
+        This method returns the row and column indices for 2D element 
+        integration for all elements related to the connectivities.
+        
+        connectivities: np.ndarray
+            A 2D array containing all element connectivities.
         """
-        n_el = len(self.connectivities)
+
+        self.reorder_connect(connectivities)
+
+        n_el = len(connectivities)
         dof, edof = self.dof_per_node, self.dof_per_element
 
-        local_dof = np.arange(dof, dtype=int)
         ind_dof = np.zeros((n_el, edof), dtype=int)
 
         for j in range(self.nodes_per_element):
             start = j * dof
-            end = (1 + j) * dof
-            ind_dof[:, start : end] = dof * self.connectivities[:, j].reshape(-1, 1) + local_dof
+            end = (j + 1) * dof
+            elem_nodes = self.model.struct_node_mapping[self.connectivities[:, j]]
+            ind_dof[:, start : end] = dof * elem_nodes.reshape(-1, 1) + self.local_dof
 
         vect_indices = ind_dof.flatten()
         ind_rows = ((np.tile(vect_indices, (edof, 1))).T).flatten()

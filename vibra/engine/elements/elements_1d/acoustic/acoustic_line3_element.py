@@ -14,29 +14,53 @@ class ACT_LINE_3(LINE_3):
         super().__init__(model, dof_per_node)
 
         self.model = model
+        self.local_dof = np.arange(dof_per_node, dtype=int)
 
         self.connectivities = None
         self.element_label = "acoustic_line_3"
         self.nodal_coordinates = self.model.mesh.nodal_coordinates
 
 
-    def generate_ind_rows_cols(self, connectivities: np.ndarray):
+    def get_rows_and_cols_indices_1D(self, index: int):
         """
-        This method processess the dof indices (rows and columns) 
-        for assembly.
+        This method returns, for a selected element, the row 
+        and column indices for 1D element integration.
+        
+        index: int
+            The element index.
+        """
 
-        Parameter
-        ---------
-        connectivities: np.ndarray
-            An array containing the lines connectivities.
+        dof = self.dof_per_node
+        elem_nodes = self.connectivities[index, :]
+        _elem_nodes = self.model.fluid_node_mapping[elem_nodes]
+        dof_indices = dof * _elem_nodes + self.local_dof
+        return dof_indices
+
+
+    def get_rows_and_cols_indices_2D(self, connectivities: np.ndarray):
         """
+        This method returns the row and column indices for 2D element 
+        integration for all elements related to the connectivities.
+        
+        connectivities: np.ndarray
+            A 2D array containing all element connectivities.
+        """
+
         self.reorder_connect(connectivities)
+
+        n_el = len(connectivities)
         dof, edof = self.dof_per_node, self.dof_per_element
 
-        ind_dof = dof * self.connectivities[:, :]
-        ind_dof_flat = ind_dof.flatten()
+        ind_dof = np.zeros((n_el, edof), dtype=int)
 
-        ind_rows = ((np.tile(ind_dof_flat, (edof,1))).T).flatten()
+        for j in range(self.nodes_per_element):
+            start = j * dof
+            end = (j + 1) * dof
+            elem_nodes = self.model.fluid_node_mapping[self.connectivities[:, j]]
+            ind_dof[:, start : end] = dof * elem_nodes.reshape(-1, 1) + self.local_dof
+
+        vect_indices = ind_dof.flatten()
+        ind_rows = ((np.tile(vect_indices, (edof, 1))).T).flatten()
         ind_cols = (np.tile(ind_dof, edof)).flatten()
 
         return ind_rows, ind_cols

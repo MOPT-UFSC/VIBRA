@@ -243,8 +243,8 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
             Ue = nodal_solution
 
         elif isinstance(solution, np.ndarray):
-            indexes = node_ids.reshape(-1, 1) * self.DOF_PER_NODE + self.LOCAL_DOF
-            Ue = solution[indexes.flatten(), :]
+            indices = node_ids.reshape(-1, 1) * self.DOF_PER_NODE + self.LOCAL_DOF
+            Ue = solution[indices.flatten(), :]
 
         else:
             return 0.

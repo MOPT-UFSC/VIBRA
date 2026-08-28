@@ -382,14 +382,6 @@ class TRIANGLE_6(Element2D):
         # self.connectivities = connectivities[:, [0, 1, 2, 3, 4, 5]]
 
 
-    def get_rows_and_cols_indexes(self, index: int):
-        dof = self.dof_per_node
-        elem_nodes = self.connectivities[index, :]
-        _elem_nodes = self.model.fluid_node_mapping[elem_nodes]
-        dof_indexes = dof * _elem_nodes + self.local_dof
-        return dof_indexes
-
-
 def get_shape_functions_and_derivatives(rrx: np.ndarray, ssx: np.ndarray):
 
     """
