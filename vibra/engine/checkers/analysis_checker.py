@@ -99,7 +99,7 @@ class AnalysisChecker:
         if not self.model.is_there_a_valid_mesh():
             raise errors.InvalidMeshSetupError("No mesh was provided")
 
-        if mesh.disconnected_nodes_data:
+        if mesh.get_disconnected_nodes():
             text = "Disconnected nodes have been detected during the mesh post-processing. \n"
             text += "The model solution will stay deactivated until the meshing-related issues \n"
             text += "have been addressed."

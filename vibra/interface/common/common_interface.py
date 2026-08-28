@@ -23,7 +23,7 @@ class InputType(IntEnum):
 
 
 def save_table_values(table_name: str, imported_values: np.ndarray, physical_domain: Literal["acoustic", "structural"]):
-    
+
     # define the frequencies vector
     frequencies = imported_values[:, 0]
 
@@ -41,7 +41,7 @@ def save_table_values(table_name: str, imported_values: np.ndarray, physical_dom
 
     # real values vector
     real_values = imported_values[:, 1]
-    
+
     # imaginary values vector
     imag_values = imported_values[:, 2]
 
@@ -169,7 +169,9 @@ def check_mesh_related_issues(run_analysis_button: QPushButton):
 
     # disable run_analysis button if there are disconnected nodes or collapsed elements
     mesh = app().project.model.mesh
-    disconnected_nodes = bool(mesh.disconnected_nodes_data)
+    assert mesh is not None
+
+    disconnected_nodes = bool(mesh.get_disconnected_nodes())
     collapsed_elements = bool(mesh.collapsed_elements_data)
     problematic_mesh = collapsed_elements or disconnected_nodes
 
@@ -252,24 +254,24 @@ def generate_mesh_and_finalize() -> bool:
     LoadingWindow(_finalize).run()
 
     prompt_if_disconnected_nodes()
-    
+
     return True
 
 
 def prompt_if_disconnected_nodes():
     mesh = app().project.model.mesh
-    if mesh is None or not mesh.disconnected_nodes_data:
+    if mesh is None or not mesh.get_disconnected_nodes():
         return
 
     confirmation = GetUserConfirmationInput(
         "Disconnected nodes detected",
         "The generated mesh contains disconnected nodes.\n"
-        "The model solution will stay deactivated until this is addressed.\n\n"
-        "Choose an option:\n"
-        "\"Go to Mesh Setup\" to adjust the mesh parameters and regenerate\n"
-        "the mesh to try to solve the problem.\n"
-        "\"Remove disconnected nodes\" to forcibly delete them from the\n"
-        "current mesh and keep using it as is.",
+        + "The model solution will stay deactivated until this is addressed.\n\n"
+        + "Choose an option:\n"
+        + "\"Go to Mesh Setup\" to adjust the mesh parameters and regenerate\n"
+        + "the mesh to try to solve the problem.\n"
+        + "\"Remove disconnected nodes\" to forcibly delete them from the\n"
+        + "current mesh and keep using it as is.",
         buttons_config={
             "left_button_label": "Go to Mesh Setup",
             "right_button_label": "Remove disconnected nodes",
