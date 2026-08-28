@@ -181,7 +181,6 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
             )
 
             if error_data is not None:
-                self.hide()
                 line_edit.setFocus()
                 line_edit.selectAll()
                 PrintMessageInput(error_data)
@@ -347,8 +346,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         data = {
             "real_values": [1.0],
             "imag_values": [0.0],
-            "nodal_attribution": False,
-            "averaged": False,
+            "element_integration": True,
         }
 
         self.properties._set_property("surface_velocity", data, surface=surface_id)
@@ -375,7 +373,6 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         area, surface_velocity = self.get_area_and_surface_velocity(excitation_id)
 
         if area is None:
-            self.hide()
             title = "Surface velocity not detected"
             message = f"The surface velocity associated to the surface #{surface_id} has not been found. "
             message += "It is recommended to check the acoustic model excitations and change the excitation "

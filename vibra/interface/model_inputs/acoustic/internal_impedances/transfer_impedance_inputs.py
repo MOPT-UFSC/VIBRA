@@ -187,7 +187,6 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
                                                                 )
 
         if error_data is not None:
-            self.hide()
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
             return list()
@@ -219,7 +218,6 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
                 message += "with two volumes to proceed with dofs decoupling."
 
             if message != "":
-                self.hide()
                 title = "Invalid surface selected"
                 PrintMessageInput([warning_title, title, message])
                 return
@@ -284,7 +282,6 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
             return True
 
         if real_value + imag_value == 0:
-            self.hide()
             title = "Additional inputs required"
             message = "You must enter a non-zero transfer impedance value to proceed with the assignment."
             PrintMessageInput([error_title, title, message])
@@ -361,7 +358,6 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         _frequencies = _imported_values[:, 0]
 
         if app().project.model.change_analysis_frequency_setup(list(_frequencies)):
-            self.hide()
             title = "Project frequency setup cannot be modified"
             message = "The following imported table of values has a frequency setup "
             message += "different from the others already imported ones. The current "
@@ -390,7 +386,6 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
     def tabular_data_assignment(self, surface_ids: int | tuple[int]):
 
         if self.lineEdit_table_path.text() == "":
-            self.hide()
             title = "Additional inputs required"
             message = "You must enter the transfer impedance table path to proceed with the assignment."
             PrintMessageInput([error_title, title, message])
@@ -508,7 +503,6 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
         for surface_id in surface_ids:
             if len(self.mesh.volumes_from_surface[surface_id]) != 2:
-                self.hide()
                 message = f"The selected surface ID #{surface_id} does not correspond to an inside surface "
                 message += "(surfaces that connect two neighboohrs volumes). The transfer impedance "
                 message += "assignment will be ignored until all requirements are met."
@@ -521,20 +515,21 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         self.treeWidget_transfer_impedance.clear()
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key
-            if property == "transfer_impedance":
+            if property != "transfer_impedance":
+                continue
 
-                if "table_names" in data.keys():
-                    str_value = "Table of values"
-                else:
-                    real_values = np.array(data["real_values"])
-                    imag_values = np.array(data["imag_values"])
-                    complex_values = real_values + 1j * imag_values
-                    str_value = str(complex_values)
+            if "table_names" in data:
+                str_value = "Table"
+            else:
+                real_values = np.array(data["real_values"])
+                imag_values = np.array(data["imag_values"])
+                complex_values = real_values + 1j * imag_values
+                str_value = str(complex_values)
 
-                new = QTreeWidgetItem([str(surface_id), str_value])
-                new.setTextAlignment(0, Qt.AlignCenter)
-                new.setTextAlignment(1, Qt.AlignCenter)
-                self.treeWidget_transfer_impedance.addTopLevelItem(new)
+            new = QTreeWidgetItem([str(surface_id), str_value])
+            new.setTextAlignment(0, Qt.AlignCenter)
+            new.setTextAlignment(1, Qt.AlignCenter)
+            self.treeWidget_transfer_impedance.addTopLevelItem(new)
 
         self.update_tabs_visibility()
 
@@ -542,9 +537,11 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
         for key, _ in self.properties.surface_properties.items():
             property, _ = key
-            if property == "transfer_impedance":
-                self.tabWidget_main.setTabVisible(StandardTabType.LIST, True)
-                return
+            if property != "transfer_impedance":
+                continue
+
+            self.tabWidget_main.setTabVisible(StandardTabType.LIST, True)
+            return
 
         self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)
         self.tabWidget_main.setTabVisible(StandardTabType.LIST, False)
@@ -575,12 +572,6 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         self.ti_data["table_paths"] = [table_path]
         self.ti_data["values"] = [complex_values]
 
-    def process_table_file_removal(self, table_names: list):
-        for table_name in table_names:
-            self.properties.remove_imported_tables("acoustic", table_name)
-        if table_names:
-            app().project.update_model_properties_file()
-
     def remove_conflicting_excitations(self, surface_ids: int | list[int]):
 
         if isinstance(surface_ids, int):
@@ -593,13 +584,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
         for surface_id in surface_ids:
             for label in labels:
-                table_names = self.properties.get_property_related_table_names(label, surface_id, "surfaces")
                 self.properties._remove_surface_property(label, surface_id)
-                self.process_table_file_removal(table_names)
-
-    def remove_table_files_from_surfaces(self, surface_ids : int | tuple[int]):
-        table_names = self.properties.get_property_related_table_names("transfer_impedance", surface_ids, "surfaces")
-        self.process_table_file_removal(table_names)
 
     def remove_all_surface_properties_from_surface(self, new_surface_ids: list[int]):
         if not new_surface_ids:
@@ -607,7 +592,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
         surface_properties = deepcopy(self.properties.surface_properties)
         for new_surface_id in new_surface_ids:
-            for (property, surf_id) in surface_properties.keys():
+            for (property, surf_id) in surface_properties:
                 if surf_id == new_surface_id:
                     self.properties._remove_surface_property(property, new_surface_id)
 
@@ -622,7 +607,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
                 continue
 
             for line_from_surface in lines_from_surface:
-                for (property, line_id) in line_properties.keys():
+                for (property, line_id) in line_properties:
                     if line_from_surface == line_id:
                         self.properties._remove_line_property(property, line_id)
 
@@ -638,19 +623,16 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
                                                                 )
         
         if error_data is not None:
-            self.hide()
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
             return
-
-        self.remove_table_files_from_surfaces(surface_ids)
 
         for surface_id in surface_ids:
             self.properties._remove_surface_property("transfer_impedance", surface_id)
 
             data = self.properties._get_property("degrees_of_freedom_decoupling", surface=surface_id)
-
             if isinstance(data, dict):
+
                 new_surface_id = data.get("new_surface_id")
                 if isinstance(new_surface_id, int):   
                     self.remove_all_surface_properties_from_surface([new_surface_id])
@@ -680,9 +662,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         if not surface_ids:
             return
 
-        self.hide()
-
-        title = "Transfer impedance resetting"
+        title = "Transfer impedance reset"
         message = "Would you like to remove the transfer impedance from the acoustic model?"
 
         buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
@@ -696,7 +676,6 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
         new_surface_ids = list()
         for surf_id in surface_ids:
-            self.remove_table_files_from_surfaces(surf_id)
             data = self.properties._get_property("degrees_of_freedom_decoupling", surface=surf_id)
             if isinstance(data, dict):
                 new_surface_id = data.get("new_surface_id")
@@ -806,7 +785,6 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
             message += str(error_log)
 
         if message != "":
-            self.hide()
             line_edit.setFocus()
             PrintMessageInput([error_title, title, message])
             return None

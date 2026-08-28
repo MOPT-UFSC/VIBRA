@@ -61,10 +61,13 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         self.min_value = 0
         self.max_value = 0
+        self.user_min_value = None
+        self.user_max_value = None
         self.transparency = 0
         self.screw_compressor_allowable_pulsation_criterion = 0
 
         self.is_animation_symetric = True
+        self.user_changed_pressure_values = False
 
         self.set_default_render_tool()
         self.remove_all_actors()
@@ -72,6 +75,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.create_axes()
         self.create_color_bar()
         self.create_scale_bar()
+        self.colorbar_actor.SetLabelFormat("%+0.1e")
         self.update_plot()
 
     def showEvent(self, event):
@@ -261,11 +265,17 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if data is None:
             return
 
-        color_scalars, min_value, max_value, complex_result = data
+        color_scalars, self.min_value, self.max_value, complex_result = data
         self.is_animation_symetric = not complex_result
-        if clear_cache:
-            self.min_value = min_value
-            self.max_value = max_value
+
+        min_value = self.min_value
+        max_value = self.max_value
+
+        if self.user_min_value is not None:
+            min_value = self.user_min_value
+
+        if self.user_max_value is not None:
+            max_value = self.user_max_value
 
         colormap = app().config.user_preferences.color_map
         self.analysis_actor.plot_color_bar(color_scalars, min_value, max_value, colormap)
@@ -300,11 +310,17 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if data is None:
             return
 
-        displacements, color_scalars, min_value, max_value, complex_result = data
+        displacements, color_scalars, self.min_value, self.max_value, complex_result = data
         self.is_animation_symetric = not complex_result
-        if clear_cache:
-            self.min_value = min_value
-            self.max_value = max_value
+
+        min_value = self.min_value
+        max_value = self.max_value
+
+        if self.user_min_value is not None:
+            min_value = self.user_min_value
+
+        if self.user_max_value is not None:
+            max_value = self.user_max_value
 
         self.analysis_actor.apply_deformation(displacements, self.plot_setup.magnification_factor, max_value)
         self.edges_actor.extract_data(self.analysis_actor.data)
@@ -339,7 +355,16 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if data is None:
             return
 
-        time_vector, color_scalars, min_value, max_value = data
+        time_vector, color_scalars, self.min_value, self.max_value = data
+
+        min_value = self.min_value
+        max_value = self.max_value
+
+        if self.user_min_value is not None:
+            min_value = self.user_min_value
+
+        if self.user_max_value is not None:
+            max_value = self.user_max_value
 
         animation_widget = app().main_window.results_viewer_widget.get_animation_widget()
 
@@ -348,9 +373,6 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             animation_widget.update_animation_parameters(sampling_time, time_vector.size)
 
         self.is_animation_symetric = False
-        if clear_cache:
-            self.min_value = min_value
-            self.max_value = max_value
 
         colormap = app().config.user_preferences.color_map
         self.analysis_actor.plot_color_bar(color_scalars, min_value, max_value, colormap)
@@ -372,17 +394,22 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if data is None:
             return
 
-        color_scalars, min_value, max_value = data
+        color_scalars, self.min_value, self.max_value = data
 
         # apply the penalization factor, if necessary
         penalization_factor = self.plot_setup.penalization_factor / 100
-        max_value *= (1 - penalization_factor)
+        self.max_value *= (1 - penalization_factor)
 
-        self.screw_compressor_allowable_pulsation_criterion = max_value
+        self.screw_compressor_allowable_pulsation_criterion = self.max_value
 
-        if clear_cache:
-            self.min_value = min_value
-            self.max_value = max_value
+        min_value = self.min_value
+        max_value = self.max_value
+
+        if self.user_min_value is not None:
+            min_value = self.user_min_value
+
+        if self.user_max_value is not None:
+            max_value = self.user_max_value
 
         colormap = app().config.user_preferences.color_map
         self.analysis_actor.plot_color_bar(color_scalars, min_value, max_value, colormap)
@@ -404,8 +431,9 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             timestamp = time()
             self.timestamp = timestamp
             self._animation_cached_data.clear()
-            self.min_value = 0
-            self.max_value = 0
+            if not self.user_changed_pressure_values:
+                self.min_value = 0
+                self.max_value = 0
         return timestamp
 
     def cache_animation_frames(self):
@@ -481,6 +509,11 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.cache_frame(frame)
 
     def set_analysis_actors_transparency(self, transparency):
+        if not self.actors_exists():
+            return
+
+        assert self.analysis_actor is not None
+
         self.transparency = transparency
         opacity = 1 - transparency
         self.analysis_actor.GetProperty().SetOpacity(opacity)
@@ -662,9 +695,9 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
             case AllowablePulsationForScrewCompressorsPlotSetup():
                 text += allowable_pulsation_for_screw_compressor_info_text(
-                    self.screw_compressor_allowable_pulsation_criterion, 
+                    self.screw_compressor_allowable_pulsation_criterion,
                     self.plot_setup.penalization_factor,
-                    )
+                )
 
         self.set_info_text(text)
         self.update()
@@ -703,3 +736,9 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         tool = RenderTool()
         self.set_interactor_style(tool)
         tool.update_mouse_cursor_in_render_widgets(tool.current_cursor)
+
+    def set_min_value(self, min_value: float | None):
+        self.user_min_value = min_value
+
+    def set_max_value(self, max_value: float | None):
+        self.user_max_value = max_value

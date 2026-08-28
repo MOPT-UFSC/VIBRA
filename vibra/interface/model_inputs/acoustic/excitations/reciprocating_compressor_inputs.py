@@ -278,7 +278,6 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             surface_id, error_data = self.mesh.check_selected_ids(input_ids, selection="surfaces", single_id=True)
 
             if error_data is not None:
-                self.hide()
                 self.lineEdit_selection_id.setFocus()
                 PrintMessageInput(error_data)
                 return True
@@ -598,7 +597,6 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         surface_id, error_data = self.model.mesh.check_selected_ids(input_ids, selection="surfaces", single_id=True)
 
         if error_data is not None:
-            self.hide()
             self.lineEdit_selection_id.setFocus()
             self.lineEdit_selection_id.selectAll()
             PrintMessageInput(error_data)
@@ -606,7 +604,6 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
         volumes_from_surface = self.model.mesh.volumes_from_surface.get(surface_id)
         if len(volumes_from_surface) != 1:
-            self.hide()
             title = "Invalid surface selected"
             message = "The selected surface does not correspond to the piping endings. "
             message += "It is necessary to change the selection to proceed with the "
@@ -742,7 +739,6 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
     def save_table_values(self, table_name: str, frequencies: np.ndarray, complex_values: np.ndarray):
 
         if app().project.model.change_analysis_frequency_setup(list(frequencies)):
-            self.hide()
             title = "Project frequency setup cannot be modified"
             message = "The following imported table of values has a frequency setup "
             message += "different from the others already imported ones. The current "
@@ -886,8 +882,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             "table_names": [table_name],
             "parameters": self.parameters,
             "values": [surface_velocity],
-            "nodal_attribution": False,
-            "averaged": False,
+            "element_integration": True,
         }
 
         self.remove_conflicting_excitations(surface_id)
@@ -919,12 +914,6 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         if close_window:
             self.close()
 
-    def process_table_file_removal(self, table_names: list):
-        for table_name in table_names:
-            self.properties.remove_imported_tables("acoustic", table_name)
-        if table_names:
-            app().project.update_model_properties_file()
-
     def remove_conflicting_excitations(self, surface_id: int):
 
         labels = [
@@ -938,13 +927,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             ]
 
         for label in labels:
-            table_names = self.properties.get_property_related_table_names(label, surface_id, "surfaces")
             self.properties._remove_surface_property(label, surface_id)
-            self.process_table_file_removal(table_names)
-
-    def remove_table_files_from_surfaces(self, surface_id : list):
-        table_names = self.properties.get_property_related_table_names("reciprocating_compressor_excitation", surface_id, "surfaces")
-        self.process_table_file_removal(table_names)
 
     def remove_callback(self):
         surface_ids = [int(selected_item.text(0)) for selected_item in self.treeWidget_compressor_excitation.selectedItems()]
@@ -953,7 +936,6 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             return
         
         for surface_id in surface_ids:
-            self.remove_table_files_from_surfaces(surface_id)
             self.properties._remove_surface_property("reciprocating_compressor_excitation", surface_id)
         
         self.clear_line_edit_selection_id()
@@ -965,8 +947,6 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
     def reset_callback(self):
 
-        self.hide()
-
         title = "Resetting of compressor excitations"
         message = "Would you like to remove all compressor excitations from the acoustic model?"
 
@@ -977,16 +957,6 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             return
 
         if read._continue:
-
-            surface_ids = list()
-            for (property, *args) in self.properties.surface_properties.keys():
-                if property == "reciprocating_compressor_excitation":
-
-                    surface_id = args[0]
-                    surface_ids.append(surface_id)
-
-            self.remove_table_files_from_surfaces(surface_ids)
-
             self.properties._reset_property("reciprocating_compressor_excitation")
             self.actions_to_finalize()
 
@@ -1069,10 +1039,12 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.lineEdit_connection_type.clear()
         self.pushButton_remove.setDisabled(True)
 
-        for (property, *_) in self.properties.surface_properties.keys():
-            if property == "reciprocating_compressor_excitation":
-                self.tabWidget_main.setTabVisible(TabIndex.LIST, True)
-                return
+        for (property, *_) in self.properties.surface_properties:
+            if property != "reciprocating_compressor_excitation":
+                continue
+
+            self.tabWidget_main.setTabVisible(TabIndex.LIST, True)
+            return
 
         self.tabWidget_main.setTabVisible(TabIndex.LIST, False)
         self.tabWidget_main.setCurrentIndex(TabIndex.SETUP)

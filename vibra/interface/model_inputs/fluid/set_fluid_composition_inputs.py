@@ -483,7 +483,6 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
 
     def reset_fluid(self):
 
-        self.hide()
 
         title = "Fluid composition reset"
         message = "Would you like to reset the current fluid composition?"
@@ -620,7 +619,6 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
 
         message = ""
         if round(self.remaining_molar_fraction, 6):
-            self.hide()
             remaining_molar_fraction = round(self.remaining_molar_fraction, 6)
             title = "Fluid composition not invalid"
             message += "The sum of all molar fractions must be equal to the unity. It is recommended "
@@ -634,7 +632,6 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
     def check_fluid_name(self):
 
         if self.lineEdit_fluid_name.text() == "":
-            self.hide()
             title = "Additional input required"
             message = "Define a fluid name at specific input field to proceed."
             self.lineEdit_fluid_name.setFocus()
@@ -886,7 +883,6 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             [T_end, P_end] = values
 
             if round(T_start - T_end, 6) == 0 and round(P_start - P_end, 6) == 0:
-                self.hide()
                 title = "Invalid thermodynamic states"
                 message = "The initial and final thermodynamic states are identical. "
                 message += "You must to specify different states to obtain valid "
@@ -935,8 +931,6 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
     def check_ideal_gas_criterion(self):
         if not (self.ideal_gas_warning and self.check_ideal_gas):
             return
-
-        self.hide()
 
         Z = self.compressibility_factor
         title = "Deviation from ideal gas behavior"
@@ -1007,8 +1001,6 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
     def process_refprop_warning_and_errors(self):
         if not (self.errors or self.warnings):
             return
-
-        self.hide()
 
         if self.errors:
             further_details = ""
@@ -1195,7 +1187,6 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             message += "The value should be a positive value less or equals to 100."
 
         if message != "":
-            self.hide()
             window_title = "Error"
             title = "Invalid molar fraction"
             PrintMessageInput([window_title, title, message])

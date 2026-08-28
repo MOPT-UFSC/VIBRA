@@ -29,6 +29,7 @@ from vibra.interface.model_inputs.fluid.set_fluid_inputs import SetFluidInputs
 from vibra.interface.model_inputs.material.set_material_inputs import MaterialInputs
 from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
 from vibra.interface.model_inputs.structural.excitations.distributed_loads_inputs import DistributedLoadsInputs
+from vibra.interface.model_inputs.structural.excitations.distributed_mass_inputs import DistributedMassInputs
 
 #
 from vibra.interface.model_inputs.structural.excitations.dof_prescription_inputs import DofPrescriptionInputs
@@ -113,6 +114,10 @@ class InputUi:
     def set_distributed_loads(self):
         if not self.model_setup_items.item_child_distributed_loads.isDisabled():
             self.process_input(DistributedLoadsInputs)
+
+    def set_distributed_mass(self):
+        if not self.model_setup_items.item_child_distributed_mass.isDisabled():
+            self.process_input(DistributedMassInputs)
 
     def set_normal_pressure_load(self):
         if not self.model_setup_items.item_child_normal_pressure_load.isDisabled():

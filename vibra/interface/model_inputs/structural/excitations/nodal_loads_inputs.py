@@ -6,15 +6,16 @@ from os.path import basename
 import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
-from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
+from PySide6.QtWidgets import QAbstractItemView, QLineEdit, QTreeWidgetItem
 
 from vibra import app
 from vibra.extensions import SUPPORTED_SPREADSHEET_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
 from vibra.interface import error_title
-from vibra.interface.common.common_interface import update_analysis_setup_in_file
+from vibra.interface.common.common_interface import InputDataType, check_input_entries, update_analysis_setup_in_file
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.structural.definitions.enums import StandardTabType
+from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
 from vibra.interface.ui_generated.model.structural.excitations.nodal_loads_inputs_ui import NodalLoadsInputs_UI
 from vibra.interface.user_input.data_handler.file_dialog_service import FileDialogService
 from vibra.interface.user_input.data_handler.file_handlers.file_handler import FileHandler
@@ -25,11 +26,12 @@ class ElementFormulation(IntEnum):
     ELEMENT_3D = 1
 
 
-class AssignmetType(IntEnum):
+class AssignmentType(IntEnum):
     SURFACES = 0
     LINES = 1
     POINTS = 2
     NODES = 3
+    MULTIPLE = 4
 
 
 class NodalLoadsInputs(NodalLoadsInputs_UI):
@@ -45,10 +47,11 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
         self._config_window()
         self._initialize()
-        self._create_list_lineEdits()
+        self._create_list_line_edits()
+        self._configure_validators()
+        self._config_widgets()
         self._create_connections()
 
-        self._config_widgets()
         self.load_model_info()
 
         while self.keep_window_open:
@@ -70,6 +73,11 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             3 : "nodes",
         }
         self.reset_table_variables()
+
+    @property
+    def element_integration(self):
+        assignment_type = self.comboBox_assignment_type.currentIndex()
+        return assignment_type in [AssignmentType.SURFACES, AssignmentType.LINES]
 
     def reset_table_variables(self):
 
@@ -101,18 +109,18 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         self.My_table_name = None
         self.Mz_table_name = None
 
-    def _create_list_lineEdits(self):
+    def _create_list_line_edits(self):
 
-        self.list_lineEdit_constant_values = [
-            [self.lineEdit_real_Fx, self.lineEdit_imag_Fx],
-            [self.lineEdit_real_Fy, self.lineEdit_imag_Fy],
-            [self.lineEdit_real_Fz, self.lineEdit_imag_Fz],
-            [self.lineEdit_real_Mx, self.lineEdit_imag_Mx],
-            [self.lineEdit_real_My, self.lineEdit_imag_My],
-            [self.lineEdit_real_Mz, self.lineEdit_imag_Mz],
+        self.constant_values_line_edits = [
+            [self.lineEdit_left_Fx, self.lineEdit_right_Fx],
+            [self.lineEdit_left_Fy, self.lineEdit_right_Fy],
+            [self.lineEdit_left_Fz, self.lineEdit_right_Fz],
+            [self.lineEdit_left_Mx, self.lineEdit_right_Mx],
+            [self.lineEdit_left_My, self.lineEdit_right_My],
+            [self.lineEdit_left_Mz, self.lineEdit_right_Mz],
         ]
 
-        self.table_lineEdits = {
+        self.table_line_edits = {
             "Fx": self.lineEdit_path_table_Fx,
             "Fy": self.lineEdit_path_table_Fy,
             "Fz": self.lineEdit_path_table_Fz,
@@ -121,19 +129,37 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             "Mz": self.lineEdit_path_table_Mz,
         }
 
+        self.unit_labels = {
+            "Fx": self.label_Fx_unit,
+            "Fy": self.label_Fy_unit,
+            "Fz": self.label_Fz_unit,
+            "Mx": self.label_Mx_unit,
+            "My": self.label_My_unit,
+            "Mz": self.label_Mz_unit,
+        }
+
     def _config_widgets(self):
-        #
+
         self.comboBox_element_type.setEnabled(False)
-        #
-        for i, w in enumerate([110, 150, 100]):
+        self.treeWidget_nodal_loads.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+
+        for i, w in enumerate([80, 100, 120, 120]):
             self.treeWidget_nodal_loads.setColumnWidth(i, w)
             self.treeWidget_nodal_loads.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
+    def _configure_validators(self):
+        for line_edit_real, line_edit_imag in self.constant_values_line_edits:
+            line_edit_real.setValidator(StrictDoubleValidator(-1e16, 1e16, 8))
+            line_edit_imag.setValidator(StrictDoubleValidator(-1e16, 1e16, 8))
+
     def _create_connections(self):
-        #
-        self.comboBox_attribution_type.currentIndexChanged.connect(self.attribution_type_callback)
+    
+        # QComboBox connections
+        self.comboBox_assignment_type.currentIndexChanged.connect(self.assignment_type_callback)
+        self.comboBox_data_type.currentIndexChanged.connect(self.data_type_callback)
         self.comboBox_element_type.currentIndexChanged.connect(self.element_type_callback)
-        #
+
+        # QPushButton connections
         self.pushButton_apply.clicked.connect(self.apply_callback)
         self.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
         self.pushButton_cancel.clicked.connect(self.close)
@@ -145,71 +171,94 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         self.pushButton_load_Mz_table.clicked.connect(self.load_Mz_table)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
-        #
+
+        # QTabWidget connection
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
-        #
-        self.treeWidget_nodal_loads.itemClicked.connect(self.on_click_item)
-        self.treeWidget_nodal_loads.itemDoubleClicked.connect(self.on_double_click_item)
-        #
+
+        # QTreeWidget connections
+        self.treeWidget_nodal_loads.itemClicked.connect(self.item_clicked_callback)
+        self.treeWidget_nodal_loads.itemDoubleClicked.connect(self.item_double_clicked_callback)
+        self.treeWidget_nodal_loads.itemSelectionChanged.connect(self.item_selection_clicked_callback)
+
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
-        #
+
+        self.assignment_type_callback()
         self.geometry_selection_callback()
         self.update_element_type_based_on_geometry_information()
 
     def geometry_selection_callback(self):
 
-        faces = app().main_window.selection.geometry_surfaces
+        surfaces = app().main_window.selection.geometry_surfaces
         lines = app().main_window.selection.geometry_lines
         points = app().main_window.selection.geometry_points
         nodes = app().main_window.selection.mesh_nodes
 
-        if faces:
+        multiple_selection = sum([len(entities) > 0 for entities in (surfaces, lines, points, nodes)]) >= 2
 
-            text = ", ".join([str(i) for i in faces])
+        if self.tabWidget_main.currentIndex() == StandardTabType.LIST and multiple_selection:
+            self.lineEdit_selection_id.setText("mult. entities")
+            self.comboBox_assignment_type.setCurrentIndex(AssignmentType.MULTIPLE)
+            view = self.comboBox_assignment_type.view()
+            view.setRowHidden(4, False)
+            return
+
+        if surfaces:
+            text = ", ".join([str(i) for i in surfaces])
             self.lineEdit_selection_id.setText(text)
-            self.comboBox_attribution_type.setCurrentIndex(0)
+            self.comboBox_assignment_type.setCurrentIndex(AssignmentType.SURFACES)
 
-            if len(faces) == 1:
-                surface_id = list(faces)[0]
+            if self.tabWidget_main.currentIndex() == StandardTabType.LIST:
+                return
+
+            if len(surfaces) == 1:
+                surface_id = next(iter(surfaces))
                 data = self.properties._get_property("nodal_loads", surface=surface_id)
                 self.update_input_fields(data)
                 if data is None:
                     self.update_formulation_callback(surface_id=surface_id)
 
-        elif lines:
+            return
 
+        if lines:
             text = ", ".join([str(i) for i in lines])
             self.lineEdit_selection_id.setText(text)
-            self.comboBox_attribution_type.setCurrentIndex(1)
+            self.comboBox_assignment_type.setCurrentIndex(AssignmentType.LINES)
+
+            if self.tabWidget_main.currentIndex() == StandardTabType.LIST:
+                return
 
             if len(lines) == 1:
-                line_id = list(lines)[0]
+                line_id = next(iter(lines))
                 data = self.properties._get_property("nodal_loads", line=line_id)
                 self.update_input_fields(data)
                 if data is None:
                     self.update_formulation_callback(line_id=line_id)
 
-        elif points:
-
+        if points:
             text = ", ".join([str(i) for i in points])
             self.lineEdit_selection_id.setText(text)
-            self.comboBox_attribution_type.setCurrentIndex(2)
+            self.comboBox_assignment_type.setCurrentIndex(AssignmentType.POINTS)
+
+            if self.tabWidget_main.currentIndex() == StandardTabType.LIST:
+                return
 
             if len(points) == 1:
-                point_id = list(points)[0]
+                point_id = next(iter(points))
                 data = self.properties._get_property("nodal_loads", point=point_id)
                 self.update_input_fields(data)
                 if data is None:
                     self.update_formulation_callback(point_id=point_id)
 
-        elif nodes:
-
+        if nodes:
             text = ", ".join([str(i) for i in nodes])
             self.lineEdit_selection_id.setText(text)
-            self.comboBox_attribution_type.setCurrentIndex(3)
+            self.comboBox_assignment_type.setCurrentIndex(AssignmentType.NODES)
+
+            if self.tabWidget_main.currentIndex() == StandardTabType.LIST:
+                return
 
             if len(nodes) == 1:
-                node_id = list(nodes)[0]
+                node_id = next(iter(nodes))
                 data = self.properties._get_property("nodal_loads", node=node_id)
                 self.update_input_fields(data)
                 if data is None:
@@ -222,16 +271,16 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
         self.reset_input_fields()
 
-        element_type = data.get("element_type", None)
+        element_type = data.get("element_type")
         if element_type == "2d_element":
             self.comboBox_element_type.setCurrentIndex(ElementFormulation.ELEMENT_2D)
         else:
             self.comboBox_element_type.setCurrentIndex(ElementFormulation.ELEMENT_3D)
 
         values = data.get("values", None)
-        if "table_paths" in data.keys():
+        if "table_paths" in data:
             table_paths = data["table_paths"]
-            for index, lineEdit_table in enumerate(self.table_lineEdits.values()):
+            for index, lineEdit_table in enumerate(self.table_line_edits.values()):
                 if element_type == "3d_element" and index >= 3:
                     continue
 
@@ -239,17 +288,34 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                 if table_path is not None:                   
                     lineEdit_table.setText(table_path)
 
+            self.tabWidget_main.setCurrentIndex(StandardTabType.TABULAR_DATA)
+
         else:
-            for index, [lineEdit_real, lineEdit_imag] in enumerate(self.list_lineEdit_constant_values):
+
+            if "real_values" in data:
+                left_values = data.get("real_values")
+                right_values = data.get("imag_values")
+                self.comboBox_data_type.setCurrentIndex(InputDataType.REAL_IMAGINARY)
+
+            else:
+                left_values = data.get("amplitude_values")
+                right_values = data.get("phase_values")
+                self.comboBox_data_type.setCurrentIndex(InputDataType.MAGNITUDE_PHASE)
+
+            for index, [line_edit_left, line_edit_right] in enumerate(self.constant_values_line_edits):
+
                 if element_type == "3d_element" and index >= 3:
                     continue
 
                 elif index <= 5 and values[index] is not None:
-                    lineEdit_real.setText(str(np.real(values[index])))
-                    lineEdit_imag.setText(str(np.imag(values[index])))
+                    line_edit_left.setText(str(left_values[index]))
+                    line_edit_right.setText(str(right_values[index]))
 
-    def attribution_type_callback(self):
-        if self.comboBox_attribution_type.currentIndex() == 3:
+            self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)
+
+    def assignment_type_callback(self):
+        assignment_index = self.comboBox_assignment_type.currentIndex()
+        if assignment_index == AssignmentType.NODES:
             app().main_window.action_mesh_workspace_callback()
         else:
             app().main_window.action_model_workspace_callback()
@@ -270,13 +336,13 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         self.label_My_table.setVisible(element_2d)
         self.label_Mz_table.setVisible(element_2d)
 
-        self.lineEdit_real_Mx.setVisible(element_2d)
-        self.lineEdit_real_My.setVisible(element_2d)
-        self.lineEdit_real_Mz.setVisible(element_2d)
+        self.lineEdit_left_Mx.setVisible(element_2d)
+        self.lineEdit_left_My.setVisible(element_2d)
+        self.lineEdit_left_Mz.setVisible(element_2d)
 
-        self.lineEdit_imag_Mx.setVisible(element_2d)
-        self.lineEdit_imag_My.setVisible(element_2d)
-        self.lineEdit_imag_Mz.setVisible(element_2d)
+        self.lineEdit_right_Mx.setVisible(element_2d)
+        self.lineEdit_right_My.setVisible(element_2d)
+        self.lineEdit_right_Mz.setVisible(element_2d)
 
         self.pushButton_load_Mx_table.setVisible(element_2d)
         self.pushButton_load_My_table.setVisible(element_2d)
@@ -286,136 +352,103 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         self.lineEdit_path_table_My.setVisible(element_2d)
         self.lineEdit_path_table_Mz.setVisible(element_2d)
 
+    def data_type_callback(self):
+        real_imaginary = self.comboBox_data_type.currentIndex() == InputDataType.REAL_IMAGINARY
+        self.label_dtype_left.setText("Real" if real_imaginary else "Magnitude")
+        self.label_dtype_right.setText("Imaginary" if real_imaginary else "Phase")
+
+        for key, widget in self.unit_labels.items():
+            unit = "N" if "F" in key else "N.m"
+            label_text = f"[{unit}]" if real_imaginary else f"[{unit}, deg]"
+            widget.setText(label_text)
+
     def update_element_type_based_on_geometry_information(self):
         volume_exists = self.mesh.are_there_volumes_in_geometry()
         self.comboBox_element_type.setCurrentIndex(int(volume_exists))
 
-    def check_complex_entries(self, real_input: str, imag_input: str, label: str):
-
-        _real = None
-        if real_input != "":
-            try:
-                real_input = real_input.replace(",", ".")
-                _real = float(real_input)
-
-            except Exception:
-                self.hide()
-                title = f"Invalid entry to the {label}"
-                message = f"Wrong input for real part of {label}."
-                PrintMessageInput([error_title, title, message])
-                return True, None
-
-        _imag = None
-        if imag_input != "":
-            try:
-                imag_input = imag_input.replace(",", ".")
-                _imag = float(imag_input)
-
-            except Exception:
-                self.hide()
-                title = f"Invalid entry to the {label}"
-                message = f"Wrong input for imaginary part of {label}."
-                PrintMessageInput([error_title, title, message])
-                return True, None
-
-        if _real is None and _imag is None:
-            values = None
-        elif _real is None:
-            values = 1j * _imag
-        elif _imag is None:
-            values = complex(_real)
-        else:
-            values = _real + 1j * _imag
-
-        output = values
-
-        return False, output
-
-    def constant_values_attribution(self):
+    def constant_values_assignment(self):
 
         input_ids = self.lineEdit_selection_id.text()
-        attribution_type = self.comboBox_attribution_type.currentIndex()
-        selection = self.assignment_types.get(attribution_type)
+        assignment_type = self.comboBox_assignment_type.currentIndex()
+        selection = self.assignment_types.get(assignment_type)
 
         selected_ids, error_data = self.mesh.check_selected_ids(input_ids, selection=selection, single_id=False)
 
         if error_data is not None:
-            self.hide()
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
             return True
+ 
+        element_type = self.element_types[self.comboBox_element_type.currentIndex()]
+        real_imag_input = self.comboBox_data_type.currentIndex() == InputDataType.REAL_IMAGINARY
 
-        index = self.comboBox_element_type.currentIndex()
-        element_type = self.element_types[index]
-
-        stop, Fx = self.check_complex_entries(self.lineEdit_real_Fx.text(), self.lineEdit_imag_Fx.text(), "Fx")
-        if stop:
+        Fx = check_input_entries(self.lineEdit_left_Fx.text(), self.lineEdit_right_Fx.text(), "Fx")
+        if Fx is None:
             return True
 
-        stop, Fy = self.check_complex_entries(self.lineEdit_real_Fy.text(), self.lineEdit_imag_Fy.text(), "Fy")
-        if stop:
+        Fy = check_input_entries(self.lineEdit_left_Fy.text(), self.lineEdit_right_Fy.text(), "Fy")
+        if Fy is None:
             return True
 
-        stop, Fz = self.check_complex_entries(self.lineEdit_real_Fz.text(), self.lineEdit_imag_Fz.text(), "Fz")
-        if stop:
+        Fz = check_input_entries(self.lineEdit_left_Fz.text(), self.lineEdit_right_Fz.text(), "Fz")
+        if Fz is None:
             return True
 
         nodal_loads = [Fx, Fy, Fz]
 
         if element_type == "2d_element":
             
-            stop, rx = self.check_complex_entries(self.lineEdit_real_Mx.text(), self.lineEdit_imag_Mx.text(), "rx")
-            if stop:
+            Mx = check_input_entries(self.lineEdit_left_Mx.text(), self.lineEdit_right_Mx.text(), "rx")
+            if Mx is None:
                 return True
 
-            stop, ry = self.check_complex_entries(self.lineEdit_real_My.text(), self.lineEdit_imag_My.text(), "ry")
-            if stop:
+            My = check_input_entries(self.lineEdit_left_My.text(), self.lineEdit_right_My.text(), "ry")
+            if My is None:
                 return True
 
-            stop, Mz = self.check_complex_entries(self.lineEdit_real_Mz.text(), self.lineEdit_imag_Mz.text(), "Mz")
-            if stop:
+            Mz = check_input_entries(self.lineEdit_left_Mz.text(), self.lineEdit_right_Mz.text(), "Mz")
+            if Mz is None:
                 return True
 
-            nodal_loads.extend([rx, ry, Mz])
+            nodal_loads.extend([Mx, My, Mz])
 
-        condition_1 = element_type == "2d_element" and nodal_loads.count(None) == 6
-        condition_2 = element_type == "3d_element" and nodal_loads.count(None) == 3
+        all_values = []
+        for values in nodal_loads:
+            all_values.extend(values)
+
+        condition_1 = element_type == "2d_element" and all_values.count(None) == 12
+        condition_2 = element_type == "3d_element" and all_values.count(None) == 6
 
         if condition_1 or condition_2:
-            self.hide()
             title = "Additional inputs required"
             message = "You must enter at least one nodal loads value before confirming the assignment."
             PrintMessageInput([error_title, title, message])
             return True
 
-        self.remove_duplicated_attributions(selected_ids, selection)
+        # self.remove_duplicated_assignments(selected_ids, selection)
         self.remove_conflicting_excitations(selected_ids, selection)
 
-        real_values = [value if value is None else np.real(value) for value in nodal_loads]
-        imag_values = [value if value is None else np.imag(value) for value in nodal_loads]
-
-        key_avg = self.checkBox_averaged_constant_values.isChecked()
+        left_values = [value_a for (value_a, _) in nodal_loads]
+        right_values = [value_b for (_, value_b) in nodal_loads]
 
         for selected_id in selected_ids:
             data = {
                 "element_type": element_type,
-                "values": nodal_loads,
-                "real_values": real_values,
-                "imag_values": imag_values,
-                "nodal_attribution": True,
-                "averaged": key_avg,
+                "real_values" if real_imag_input else "amplitude_values": left_values,
+                "imag_values" if real_imag_input else "phase_values": right_values,
+                "element_integration": self.element_integration,
             }
 
-            if attribution_type == AssignmetType.SURFACES:
+            if assignment_type == AssignmentType.SURFACES:
                 self.properties._set_property("nodal_loads", data, surface=selected_id)
 
-            elif attribution_type == AssignmetType.LINES:
+            elif assignment_type == AssignmentType.LINES:
                 self.properties._set_property("nodal_loads", data, line=selected_id)
 
-            elif attribution_type == AssignmetType.POINTS:
+            elif assignment_type == AssignmentType.POINTS:
                 self.properties._set_property("nodal_loads", data, point=selected_id)
 
-            elif attribution_type == AssignmetType.NODES:
+            elif assignment_type == AssignmentType.NODES:
                 self.properties._set_property("nodal_loads", data, node=selected_id)
 
     def load_table(self, lineEdit : QLineEdit, load_label : str, direct_load = False):
@@ -439,19 +472,16 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             if not direct_load:
                 lineEdit.setText(str(imported_data.path))
 
-            imported_file = imported_data.data
+            imported_values = imported_data.data
             imported_table_path = str(imported_data.path)
             imported_filename = basename(imported_table_path)
 
-            if imported_file.shape[1] < 3:
+            if imported_values.shape[1] < 3:
                 message = "The imported table has insufficient number of columns. The spectrum "
                 message += "data must have frequencies, real and imaginary columns."
                 PrintMessageInput([error_title, title, message])
                 lineEdit.setFocus()
                 return None, None
-
-            imported_values = imported_file[:, 1] + 1j * imported_file[:, 2]
-            self.frequencies = imported_file[:, 0]
         
             if app().project.model.change_analysis_frequency_setup(list(self.frequencies)):
 
@@ -507,17 +537,19 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         if self.Mz_table_path is None:
             self.lineEdit_reset(self.lineEdit_path_table_Mz)
 
-    def save_table_files(self, load_label: str, selected_id: int, selection: str, values: np.ndarray):
-        if self.frequencies[0] == 0:
-            self.frequencies[0] = float(1e-6)
+    def save_table_files(self, load_label: str, selected_id: int, selection: str, imported_values: np.ndarray):
 
-        if self.frequencies[0] == float(1e-6):
-            self.frequencies[0] = 0
+        frequencies = imported_values[:, 0]
+
+        if frequencies[0] == 0:
+            frequencies[0] = 1e-6
+
+        if frequencies[0] == 1e-6:
+            frequencies[0] = 0
 
         if app().project.model.change_analysis_frequency_setup(list(self.frequencies)):
 
-            self.hide()
-            lineEdit = self.table_lineEdits[load_label]
+            lineEdit = self.table_line_edits[load_label]
             imported_filename = basename(lineEdit.text())
             self.lineEdit_reset(lineEdit)
 
@@ -532,25 +564,34 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
         table_name = f"nodal_loads_{load_label}_from_{selection[:-1]}_{selected_id}"
 
-        real_values = np.real(values)
-        imag_values = np.imag(values)
-        data = np.array([self.frequencies, real_values, imag_values], dtype=float).T
+        if self.comboBox_data_type.currentIndex() == InputDataType.REAL_IMAGINARY:
+            complex_values = imported_values[:, 1] + 1j * imported_values[:, 2]
+        else:
+            complex_values = imported_values[:, 1] * np.exp(1j * imported_values[:, 2] * np.pi / 180)
 
-        update_analysis_setup_in_file(self.frequencies)
+        # real values vector
+        real_values = np.real(complex_values)
+
+        # imaginary values vector
+        imag_values = np.imag(complex_values)
+
+        data = np.array([frequencies, real_values, imag_values], dtype=float).T
+
+        update_analysis_setup_in_file(frequencies)
+
         self.properties.add_imported_tables("structural", table_name, data)
 
         return table_name, data
 
-    def table_values_attribution(self):
+    def table_values_assignment(self):
 
         input_ids = self.lineEdit_selection_id.text()
-        attribution_type = self.comboBox_attribution_type.currentIndex()
-        selection = self.assignment_types.get(attribution_type)
+        assignment_type = self.comboBox_assignment_type.currentIndex()
+        selection = self.assignment_types.get(assignment_type)
 
         selected_ids, error_data = self.mesh.check_selected_ids(input_ids, selection=selection, single_id=False)
 
         if error_data is not None:
-            self.hide()
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
             return True
@@ -576,20 +617,18 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         if self.Mz_table_path is None:
             self.Mz_table_values, self.Mz_table_path = self.load_table(self.lineEdit_path_table_Mz, "Mz", direct_load = True)
 
-        key_avg = self.checkBox_averaged_table_values.isChecked()
-
         for selected_id in selected_ids:
-            
+
             if self.Fx_table_values is not None:
                 self.Fx_table_name, self.Fx_array = self.save_table_files("Fx", selected_id, selection, self.Fx_table_values)
                 if self.Fx_array is None:
                     return True
-                
+
             if self.Fy_table_values is not None:
                 self.Fy_table_name, self.Fy_array = self.save_table_files("Fy", selected_id, selection, self.Fy_table_values)
                 if self.Fy_array is None:
                     return True
-                
+
             if self.Fz_table_values is not None:
                 self.Fz_table_name, self.Fz_array = self.save_table_files("Fz", selected_id, selection, self.Fz_table_values)
                 if self.Fz_array is None:
@@ -624,129 +663,34 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             condition_2 = element_type == "3d_element" and table_names.count(None) == 3
 
             if condition_1 or condition_2:
-                self.hide()
                 title = "Additional inputs required"
                 message = "You must enter at least one nodal loads table path before confirming the assignment."
                 PrintMessageInput([error_title, title, message]) 
                 return True
            
-            self.remove_duplicated_attributions(selected_ids, selection)
+            # self.remove_duplicated_assignments(selected_ids, selection)
             self.remove_conflicting_excitations(selected_ids, selection)
 
             data = {
                 "element_type": element_type,
                 "table_names": table_names,
                 "table_paths": table_paths,
-                "values": nodal_loads,
-                "nodal_attribution": True,
-                "averaged": key_avg,
+                "element_integration": self.element_integration,
             }
 
-            if attribution_type == AssignmetType.SURFACES:
+            if assignment_type == AssignmentType.SURFACES:
                 self.properties._set_property("nodal_loads", data, surface=selected_id)
 
-            elif attribution_type == AssignmetType.LINES:
+            elif assignment_type == AssignmentType.LINES:
                 self.properties._set_property("nodal_loads", data, line=selected_id)
 
-            elif attribution_type == AssignmetType.POINTS:
+            elif assignment_type == AssignmentType.POINTS:
                 self.properties._set_property("nodal_loads", data, point=selected_id)
 
-            elif attribution_type == AssignmetType.NODES:
+            elif assignment_type == AssignmentType.NODES:
                 self.properties._set_property("nodal_loads", data, node=selected_id)
 
         self.reset_table_variables()
-
-    def remove_duplicated_attributions(self, selected_ids: list, selection: str):
-
-        table_names = list()
-        nodes_to_remove = list()
-        for selected_id in selected_ids:
-
-            if selection == "surfaces":
-
-                nodes_from_surface = self.model.mesh.get_nodes_from_surface(selected_id)
-                for (property, node_id) in self.properties.nodal_properties.keys():
-                    if property == "nodal_loads" and node_id in nodes_from_surface:
-                        if node_id not in nodes_to_remove:
-                            nodes_to_remove.append(node_id)
-
-                for line_id in self.mesh.lines_from_surface[selected_id]:
-                    data = self.properties._get_property("nodal_loads", line=line_id)
-                    if isinstance(data, dict):
-                        self.properties._remove_line_property("nodal_loads", line_id)
-                        table_names.extend(self.properties.get_property_related_table_names("nodal_loads", line_id, "lines"))
-
-                    for point_id in self.mesh.points_from_line[line_id]:
-                        data = self.properties._get_property("nodal_loads", point=point_id)
-                        if isinstance(data, dict):
-                            self.properties._remove_point_property("nodal_loads", point_id)
-                            table_names.extend(self.properties.get_property_related_table_names("nodal_loads", point_id, "points"))
-
-            elif selection == "lines":
-
-                nodes_from_line = self.model.mesh.get_nodes_from_line(selected_id)
-                for (property, node_id) in self.properties.nodal_properties.keys():
-                    if property == "nodal_loads" and node_id in nodes_from_line:
-                        if node_id not in nodes_to_remove:
-                            nodes_to_remove.append(node_id)
-
-                for surface_id in self.mesh.surfaces_from_line[selected_id]:
-                    data = self.properties._get_property("nodal_loads", surface=surface_id)
-                    if isinstance(data, dict):
-                        self.properties._remove_surface_property("nodal_loads", surface_id)
-                        table_names.extend(self.properties.get_property_related_table_names("nodal_loads", surface_id, "surfaces"))
-
-                for point_id in self.mesh.points_from_line[selected_id]:
-                    data = self.properties._get_property("nodal_loads", point=point_id)
-                    if isinstance(data, dict):
-                        self.properties._remove_point_property("nodal_loads", point_id)
-                        table_names.extend(self.properties.get_property_related_table_names("nodal_loads", point_id, "points"))
-
-            elif selection == "points":
-
-                nodes_from_point = self.model.mesh.nodes_from_points[selected_id]
-                for (property, node_id) in self.properties.nodal_properties.keys():
-                    if property == "nodal_loads" and node_id in nodes_from_point:
-                        if node_id not in nodes_to_remove:
-                            nodes_to_remove.append(node_id)
-
-                for line_id in self.mesh.lines_from_point[selected_id]:
-                    data = self.properties._get_property("nodal_loads", line=line_id)
-                    if isinstance(data, dict):
-                        self.properties._remove_line_property("nodal_loads", line_id)
-                        table_names.extend(self.properties.get_property_related_table_names("nodal_loads", line_id, "lines"))
-
-                    for surface_id in self.model.mesh.surfaces_from_line[line_id]:
-                        data = self.properties._get_property("nodal_loads", surface=surface_id)
-                        if isinstance(data, dict):
-                            self.properties._remove_surface_property("nodal_loads", surface_id)
-                            table_names.extend(self.properties.get_property_related_table_names("nodal_loads", surface_id, "surfaces"))
-
-            elif selection == "nodes":
-
-                point_id = selected_id + 1
-                data = self.properties._get_property("nodal_loads", point=point_id)
-                if isinstance(data, dict):
-                    self.properties._remove_point_property("nodal_loads", point_id)
-                    table_names.extend(self.properties.get_property_related_table_names("nodal_loads", point_id, "points"))
-
-                for line_id in self.mesh.lines_from_point[point_id]:
-                    data = self.properties._get_property("nodal_loads", line=line_id)
-                    if isinstance(data, dict):
-                        self.properties._remove_line_property("nodal_loads", line_id)
-                        table_names.extend(self.properties.get_property_related_table_names("nodal_loads", line_id, "lines"))
-
-                    for surface_id in self.model.mesh.surfaces_from_line[line_id]:
-                        data = self.properties._get_property("nodal_loads", surface=surface_id)
-                        if isinstance(data, dict):
-                            self.properties._remove_surface_property("nodal_loads", surface_id)
-                            table_names.extend(self.properties.get_property_related_table_names("nodal_loads", surface_id, "surfaces"))
-
-            for node_id in nodes_to_remove:
-                self.properties._remove_nodal_property("nodal_loads", node_id)
-                table_names.extend(self.properties.get_property_related_table_names("nodal_loads", node_id, "nodes"))
-
-            self.process_table_file_removal(table_names)
 
     def apply_callback(self, close_window: bool=False):
 
@@ -756,11 +700,11 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         tab_index = self.tabWidget_main.currentIndex()
 
         if tab_index == StandardTabType.CONSTANT_DATA:
-            if self.constant_values_attribution():
+            if self.constant_values_assignment():
                 return
 
-        elif tab_index == StandardTabType.TABULAR_DATA:
-            if self.table_values_attribution():
+        if tab_index == StandardTabType.TABULAR_DATA:
+            if self.table_values_assignment():
                 return
 
         self.actions_to_finalize(close_window)
@@ -777,138 +721,132 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
         text = ""
         if list(mask).count(True) == 6:
-            text = "[{}, {}, {}, {}, {}, {}]".format(*labels)
+            text = "{}, {}, {}, {}, {}, {}".format(*labels)
         elif list(mask).count(True) == 5:
-            text = "[{}, {}, {}, {}, {}]".format(*labels)
+            text = "{}, {}, {}, {}, {}".format(*labels)
         elif list(mask).count(True) == 4:
-            text = "[{}, {}, {}, {}]".format(*labels)
+            text = "{}, {}, {}, {}".format(*labels)
         elif list(mask).count(True) == 3:
-            text = "[{}, {}, {}]".format(*labels)
+            text = "{}, {}, {}".format(*labels)
         elif list(mask).count(True) == 2:
-            text = "[{}, {}]".format(*labels)
+            text = "{}, {}".format(*labels)
         elif list(mask).count(True) == 1:
-            text = "[{}]".format(*labels)
+            text = "{}".format(*labels)
 
         return text
 
-    def add_model_info_in_treeWidget(self, entity: str):
-
-        properties = {
-                        "surface" : self.properties.surface_properties,
-                        "line" : self.properties.line_properties,
-                        "point" : self.properties.point_properties,
-                        "node" : self.properties.nodal_properties,
-                      }
-
-        _property = properties.get(entity)
-        if _property is None:
-            return
-        
-        for (property, *args), data in _property.items():
-            if property != "nodal_loads":
-                continue
-
-            values = data["values"]
-            element_type = data["element_type"]
-            constrained_dof_mask = [False if value is None else True for value in values]
-            dof_labels = str(self.text_label(constrained_dof_mask))
-
-            new = QTreeWidgetItem([f"{entity.capitalize()}-{args[0]}", dof_labels, element_type])
-            for i in range(3):
-                new.setTextAlignment(i, Qt.AlignCenter)
-
-            self.treeWidget_nodal_loads.addTopLevelItem(new)
-
     def load_model_info(self):
 
-        self.treeWidget_nodal_loads.clear()
+        properties = {
+            "surface": self.properties.surface_properties,
+            "line": self.properties.line_properties,
+            "point": self.properties.point_properties,
+            "node": self.properties.nodal_properties,
+        }
 
-        self.add_model_info_in_treeWidget("surface")
-        self.add_model_info_in_treeWidget("line")
-        self.add_model_info_in_treeWidget("point")
-        self.add_model_info_in_treeWidget("node")
+        self.treeWidget_nodal_loads.clear()
+       
+        for key, property in properties.items():
+            for (prop_label, *args), data in property.items():
+
+                if prop_label != "nodal_loads":
+                    continue
+
+                if not isinstance(data, dict):
+                    continue
+
+                values = data.get("values")
+                element_type = data.get("element_type")
+
+                dof_labels = str(self.text_label([bool(value) for value in values]))
+
+                new = QTreeWidgetItem([
+                    f"{args[0]}", 
+                    key, 
+                    element_type, 
+                    dof_labels, 
+                    ])
+
+                for i in range(4):
+                    new.setTextAlignment(i, Qt.AlignCenter)
+
+                self.treeWidget_nodal_loads.addTopLevelItem(new)
 
         self.update_tabs_visibility()
-
 
     def update_tabs_visibility(self):
 
         properties_to_check = [
-                               self.properties.surface_properties,
-                               self.properties.line_properties,
-                               self.properties.point_properties,
-                               self.properties.nodal_properties,
-                               ]
+            self.properties.surface_properties,
+            self.properties.line_properties,
+            self.properties.point_properties,
+            self.properties.nodal_properties,
+        ]
 
         for current_property in properties_to_check:
-            for (property, _) in current_property.keys():
-                if property == "nodal_loads":
-                    self.tabWidget_main.setTabVisible(StandardTabType.LIST, True)
-                    return
+            for (property, _) in current_property:
+                if property != "nodal_loads":
+                    continue
 
-        self.lineEdit_real_Fx.setFocus()
+                self.tabWidget_main.setTabVisible(StandardTabType.LIST, True)
+                return
+
         self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)
         self.tabWidget_main.setTabVisible(StandardTabType.LIST, False)
-        app().main_window.selection.set_geometry_selection()
+        self.lineEdit_left_Fx.setFocus()
 
     def tab_event_callback(self):
         list_tab = self.tabWidget_main.currentIndex() == StandardTabType.LIST
+        self.comboBox_assignment_type.setDisabled(list_tab)
+        self.comboBox_data_type.setDisabled(list_tab)
         self.lineEdit_selection_id.setDisabled(list_tab)
         self.pushButton_apply.setDisabled(list_tab)
         self.pushButton_apply_and_close.setDisabled(list_tab)
         self.pushButton_remove.setDisabled(True)
 
         if list_tab:
-            self.lineEdit_selection_id.setText("")
-            return
-
+            app().main_window.selection.set_geometry_selection()
         else:
-            text = self.lineEdit_selection_id.text()
-            if "-" in text:
-                selected_id = text.split("-")[1]
-                self.lineEdit_selection_id.setText(selected_id)
+            view = self.comboBox_assignment_type.view()
+            view.setRowHidden(4, True)
+            self.comboBox_assignment_type.setCurrentIndex(AssignmentType.SURFACES)
 
-    def on_click_item(self, item):
+        self.lineEdit_selection_id.setText("")
+        self.treeWidget_nodal_loads.clearSelection()
 
-        self.pushButton_remove.setEnabled(True)
+    def item_selection_clicked_callback(self):
+        self.item_clicked_callback(None)
 
-        if item.text(0) != "":
+    def item_clicked_callback(self, item):
 
-            selection, _selected_id = item.text(0).split("-")
-            selected_id = int(_selected_id)
+        self.pushButton_remove.setDisabled(False)
 
-            if selection == "Surface":
-                app().main_window.selection.set_geometry_selection(surfaces = [int(selected_id)])
-
-            elif selection == "Line":
-                app().main_window.selection.set_geometry_selection(lines = [int(selected_id)])
-
-            elif selection == "Point":
-                app().main_window.selection.set_geometry_selection(points = [int(selected_id)])
-
-            elif selection == "Node":
-                app().main_window.selection.set_mesh_selection(nodes=[int(selected_id)])
-
-            if selection == "Node":
-                app().main_window.action_mesh_workspace_callback()
-
-            else:
-                app().main_window.action_model_workspace_callback()
-
-            self.lineEdit_selection_id.setText(item.text(0))
-
-    def on_double_click_item(self, item):
-        self.on_click_item(item)
-
-    def process_table_file_removal(self, table_names: list):
-
-        if len(table_names) == 0:
+        selected_items = self.treeWidget_nodal_loads.selectedItems()
+        if not selected_items:
+            self.lineEdit_selection_id.clear()
+            self.pushButton_remove.setDisabled(True)
             return
 
-        for table_name in table_names:
-            self.properties.remove_imported_tables("structural", table_name)
+        entities_mapping = defaultdict(list)
+        for _item in selected_items:
+            entity = _item.text(1)
+            entities_mapping[entity].append(int(_item.text(0)))
 
-        app().project.update_model_properties_file()
+        if not entities_mapping:
+            return
+
+        app().main_window.selection.set_geometry_selection(
+            surfaces = entities_mapping.get("surface"),
+            lines = entities_mapping.get("line"),
+            points = entities_mapping.get("point"),
+            )
+
+        # app().main_window.selection.set_mesh_selection(
+        #     nodes = entities_mapping.get("node"),
+        # )
+
+    def item_double_clicked_callback(self, item):
+        self.item_clicked_callback(item)
 
     def remove_conflicting_excitations(self, selected_ids: int | list, selection: str):
 
@@ -919,13 +857,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
         for selected_id in selected_ids:
             for property in properties:
-                table_names = self.properties.get_property_related_table_names(property, selected_id, selection)
                 self.remove_property_from(property, selected_id, selection)
-                self.process_table_file_removal(table_names)
-
-    def remove_table_files_from(self, selected_id : int, selection: str):
-        table_names = self.properties.get_property_related_table_names("nodal_loads", selected_id, selection)
-        self.process_table_file_removal(table_names)
 
     def remove_property_from(self, property: str, selected_ids: int | list, selection: str):
         if isinstance(selected_ids, int):
@@ -947,26 +879,34 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
     def remove_callback(self):
 
-        text = self.lineEdit_selection_id.text()
+        selected_items = self.treeWidget_nodal_loads.selectedItems()
+        if not selected_items:
+            return
 
-        if "-" in text:
+        for item in selected_items:
+            selected_id = int(item.text(0))
+            selection = item.text(1)
 
-            _selection, _selected_id = text.split("-")
-            selection = _selection.lower()
-            selected_id = int(_selected_id)
+            if selection == "surface":
+                self.properties._remove_surface_property("nodal_loads", selected_id)
 
-            self.remove_table_files_from(selected_id, f"{selection}s")
-            self.remove_property_from("nodal_loads", selected_id, selection)
-            self.actions_to_finalize()
+            elif selection == "line":
+                self.properties._remove_line_property("nodal_loads", selected_id)
 
-            app().main_window.selection.set_geometry_selection()
-            app().main_window.selection.set_mesh_selection()
+            elif selection == "point":
+                self.properties._remove_point_property("nodal_loads", selected_id)
+
+            elif selection == "node":
+                self.properties._remove_nodal_property("nodal_loads", selected_id)
+
+        self.actions_to_finalize()
+
+        app().main_window.selection.set_geometry_selection()
+        app().main_window.selection.set_mesh_selection()
 
     def reset_callback(self):
 
-        self.hide()
-
-        title = "Nodal loads resetting"
+        title = "Nodal loads reset"
         message = "Would you like to remove the all external loads from model?"
 
         buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
@@ -976,28 +916,6 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             return
 
         if obj._continue:
-
-            properties = {
-                "surfaces" : self.properties.surface_properties,
-                "lines" : self.properties.line_properties,
-                "points" : self.properties.point_properties,
-                "nodes" : self.properties.nodal_properties,
-                }
-
-            entities_to_remove = defaultdict(list)
-
-            for key, _property in properties.items():
-                for (property_label, *args), data in _property.items():
-                    if property_label != "nodal_loads":
-                        continue
-    
-                    entities_to_remove[key].append(args[0])
-
-            for selection, selected_ids in entities_to_remove.items():
-                for selected_id in selected_ids:
-                    table_name = self.properties.get_property_related_table_names("nodal_loads", selected_id, selection)
-                    self.process_table_file_removal(table_name)
-
             self.properties._reset_property("nodal_loads")
             self.actions_to_finalize()
 
@@ -1019,11 +937,11 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         if reset_all:
             self.lineEdit_selection_id.setText("")
 
-        for lineEdit_real, lineEdit_imag in self.list_lineEdit_constant_values:
-            lineEdit_real.setText("")
-            lineEdit_imag.setText("")
+        for lineEdit_left, lineEdit_right in self.constant_values_line_edits:
+            lineEdit_left.setText("")
+            lineEdit_right.setText("")
 
-        for lineEdit_table in self.table_lineEdits.values():
+        for lineEdit_table in self.table_line_edits.values():
             lineEdit_table.setText("")
 
     def keyPressEvent(self, event):
@@ -1036,9 +954,10 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
+        app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
         return super().closeEvent(a0)
-    
-    #TODO: remove soon
+
+    #TODO: remove when possible
     def update_formulation_callback(self, **kwargs):
         return
 
@@ -1078,3 +997,83 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                 if isinstance(data, dict):
                     self.comboBox_element_type.setCurrentIndex(ElementFormulation.ELEMENT_2D)
                     return
+
+    def remove_duplicated_assignments(self, selected_ids: list, selection: str):
+        return
+
+        nodes_to_remove = []
+        for selected_id in selected_ids:
+
+            if selection == "surfaces":
+
+                nodes_from_surface = self.model.mesh.get_nodes_from_surface(selected_id)
+                for (property, node_id) in self.properties.nodal_properties:
+                    if property == "nodal_loads" and node_id in nodes_from_surface:
+                        if node_id not in nodes_to_remove:
+                            nodes_to_remove.append(node_id)
+
+                for line_id in self.mesh.lines_from_surface[selected_id]:
+                    data = self.properties._get_property("nodal_loads", line=line_id)
+                    if isinstance(data, dict):
+                        self.properties._remove_line_property("nodal_loads", line_id)
+
+                    for point_id in self.mesh.points_from_line[line_id]:
+                        data = self.properties._get_property("nodal_loads", point=point_id)
+                        if isinstance(data, dict):
+                            self.properties._remove_point_property("nodal_loads", point_id)
+
+            elif selection == "lines":
+
+                nodes_from_line = self.model.mesh.get_nodes_from_line(selected_id)
+                for (property, node_id) in self.properties.nodal_properties:
+                    if property == "nodal_loads" and node_id in nodes_from_line:
+                        if node_id not in nodes_to_remove:
+                            nodes_to_remove.append(node_id)
+
+                for surface_id in self.mesh.surfaces_from_line[selected_id]:
+                    data = self.properties._get_property("nodal_loads", surface=surface_id)
+                    if isinstance(data, dict):
+                        self.properties._remove_surface_property("nodal_loads", surface_id)
+
+                for point_id in self.mesh.points_from_line[selected_id]:
+                    data = self.properties._get_property("nodal_loads", point=point_id)
+                    if isinstance(data, dict):
+                        self.properties._remove_point_property("nodal_loads", point_id)
+
+            elif selection == "points":
+
+                nodes_from_point = self.model.mesh.nodes_from_points[selected_id]
+                for (property, node_id) in self.properties.nodal_properties:
+                    if property == "nodal_loads" and node_id in nodes_from_point:
+                        if node_id not in nodes_to_remove:
+                            nodes_to_remove.append(node_id)
+
+                for line_id in self.mesh.lines_from_point[selected_id]:
+                    data = self.properties._get_property("nodal_loads", line=line_id)
+                    if isinstance(data, dict):
+                        self.properties._remove_line_property("nodal_loads", line_id)
+
+                    for surface_id in self.model.mesh.surfaces_from_line[line_id]:
+                        data = self.properties._get_property("nodal_loads", surface=surface_id)
+                        if isinstance(data, dict):
+                            self.properties._remove_surface_property("nodal_loads", surface_id)
+
+            elif selection == "nodes":
+
+                point_id = selected_id + 1
+                data = self.properties._get_property("nodal_loads", point=point_id)
+                if isinstance(data, dict):
+                    self.properties._remove_point_property("nodal_loads", point_id)
+ 
+                for line_id in self.mesh.lines_from_point[point_id]:
+                    data = self.properties._get_property("nodal_loads", line=line_id)
+                    if isinstance(data, dict):
+                        self.properties._remove_line_property("nodal_loads", line_id)
+
+                    for surface_id in self.model.mesh.surfaces_from_line[line_id]:
+                        data = self.properties._get_property("nodal_loads", surface=surface_id)
+                        if isinstance(data, dict):
+                            self.properties._remove_surface_property("nodal_loads", surface_id)
+
+            for node_id in nodes_to_remove:
+                self.properties._remove_nodal_property("nodal_loads", node_id)

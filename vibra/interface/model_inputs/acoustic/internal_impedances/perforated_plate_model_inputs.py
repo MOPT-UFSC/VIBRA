@@ -390,7 +390,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
         for surface_id in surface_ids:
             if len(self.mesh.volumes_from_surface[surface_id]) != 2:
-                self.hide()
                 message = f"The selected surface ID #{surface_id} does not correspond to an inside surface "
                 message += "(surfaces that connect two neighboohrs volumes). The perforated plate "
                 message += "assignment will be ignored until all requirements are met."
@@ -637,7 +636,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         _frequencies = imported_values[:, 0]
 
         if app().project.model.change_analysis_frequency_setup(list(_frequencies)):
-            self.hide()
             title = "Project frequency setup cannot be modified"
             message = "The following imported table of values has a frequency setup "
             message += "different from the others already imported ones. The current "
@@ -739,7 +737,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                                                                 )
 
         if error_data is not None:
-            self.hide()
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
             return list()
@@ -771,7 +768,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                 message += "with two volumes to proceed with dofs decoupling."
 
             if message != "":
-                self.hide()
                 title = "Invalid surface selected"
                 PrintMessageInput([warning_title, title, message])
                 return
@@ -874,12 +870,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
         model.set_table_data([table_name], [table_path], [complex_values])
 
-    def process_table_file_removal(self, table_names: list):
-        for table_name in table_names:
-            self.properties.remove_imported_tables("acoustic", table_name)
-        if table_names:
-            app().project.update_model_properties_file()
-
     def remove_conflicting_excitations(self, surface_ids: int | list[int]):
 
         if isinstance(surface_ids, int):
@@ -892,13 +882,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
         for surface_id in surface_ids:
             for label in labels:
-                table_names = self.properties.get_property_related_table_names(label, surface_id, "surfaces")
                 self.properties._remove_surface_property(label, surface_id)
-                self.process_table_file_removal(table_names)
-
-    def remove_table_files_from_surfaces(self, surface_ids : int | tuple[int]):
-        table_names = self.properties.get_property_related_table_names("perforated_plate_model", surface_ids, "surfaces")
-        self.process_table_file_removal(table_names)
 
     def remove_all_surface_properties_from_surface(self, new_surface_ids: list[int]):
         if not new_surface_ids:
@@ -906,7 +890,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
         surface_properties = deepcopy(self.properties.surface_properties)
         for new_surface_id in new_surface_ids:
-            for (property, surf_id) in surface_properties.keys():
+            for (property, surf_id) in surface_properties:
                 if surf_id == new_surface_id:
                     self.properties._remove_surface_property(property, new_surface_id)
 
@@ -921,7 +905,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                 continue
 
             for line_from_surface in lines_from_surface:
-                for (property, line_id) in line_properties.keys():
+                for (property, line_id) in line_properties:
                     if line_from_surface == line_id:
                         self.properties._remove_line_property(property, line_id)
 
@@ -937,12 +921,9 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                                                                 )
 
         if error_data is not None:
-            self.hide()
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
             return
-
-        self.remove_table_files_from_surfaces(surface_ids)
 
         for surface_id in surface_ids:
             self.properties._remove_surface_property("perforated_plate_model", surface_id)
@@ -975,9 +956,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         if not surface_ids:
             return
 
-        self.hide()
-
-        title = "Perforated plate model resetting"
+        title = "Perforated plate model reset"
         message = "Would you like to remove the perforated plate from the acoustic model?"
 
         buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
@@ -991,7 +970,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
         new_surface_ids = list()
         for surf_id in surface_ids:
-            self.remove_table_files_from_surfaces(surf_id)
             data = self.properties._get_property("degrees_of_freedom_decoupling", surface=surf_id)
             if isinstance(data, dict):
                 new_surface_id = data.get("new_surface_id")
@@ -1107,7 +1085,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             message = f"Insert some value at the {label} input field."
 
         if message != "":
-            self.hide()
             PrintMessageInput([error_title, title, message])
             return None
         else:

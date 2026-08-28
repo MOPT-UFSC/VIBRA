@@ -158,7 +158,6 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
                                                                            )
 
         if error_data is not None:
-            self.hide()
             self.lineEdit_input_selected_id.setFocus()
             self.lineEdit_input_selected_id.selectAll()
             PrintMessageInput(error_data)
@@ -172,7 +171,6 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
                                                                             )
 
         if error_data is not None:
-            self.hide()
             self.lineEdit_output_selected_id.setFocus()
             self.lineEdit_output_selected_id.selectAll()
             PrintMessageInput(error_data)
@@ -214,7 +212,6 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
         area, surface_velocity = self.get_area_and_surface_velocity(excitation_id)
 
         if area is None:
-            self.hide()
             title = "Surface velocity not detected"
             message = f"The surface velocity associated to the surface #{surface_id} has not been found. "
             message += "It is recommended to check the acoustic model excitations and change the excitation "

@@ -131,20 +131,21 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
         self.treeWidget_compressor_excitation_spectrum.clear()
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key
-            if property == "compressor_excitation_spectrum":
+            if property != "compressor_excitation_spectrum":
+                continue
 
-                if "table_names" in data.keys():
-                    str_value = "Table of values"
-                else:
-                    real_values = np.array(data["real_values"])
-                    imag_values = np.array(data["imag_values"])
-                    complex_values = real_values + 1j * imag_values
-                    str_value = str(complex_values)
+            if "table_names" in data:
+                str_value = "Table"
+            else:
+                real_values = np.array(data["real_values"])
+                imag_values = np.array(data["imag_values"])
+                complex_values = real_values + 1j * imag_values
+                str_value = str(complex_values)
 
-                new = QTreeWidgetItem([str(surface_id), str_value])
-                new.setTextAlignment(0, Qt.AlignCenter)
-                new.setTextAlignment(1, Qt.AlignCenter)
-                self.treeWidget_compressor_excitation_spectrum.addTopLevelItem(new)
+            new = QTreeWidgetItem([str(surface_id), str_value])
+            new.setTextAlignment(0, Qt.AlignCenter)
+            new.setTextAlignment(1, Qt.AlignCenter)
+            self.treeWidget_compressor_excitation_spectrum.addTopLevelItem(new)
 
         self.update_tabs_visibility()
 
@@ -197,7 +198,6 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
         frequencies = imported_values[:, 0]
 
         if app().project.model.change_analysis_frequency_setup(list(frequencies)):
-            self.hide()
             title = "Project frequency setup cannot be modified"
             message = "The following imported table of values has a frequency setup "
             message += "different from the others already imported ones. The current "
@@ -231,7 +231,6 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
         surface_ids, error_data = self.mesh.check_selected_ids(input_ids, selection = "surfaces")
 
         if error_data is not None:
-            self.hide()
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
             return
@@ -239,7 +238,6 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
         self.remove_conflicting_excitations(surface_ids)
 
         if self.lineEdit_table_path.text() == "":
-            self.hide()
             title = "Additional inputs required"
             message = "You must select the external compressor excitation "
             message += "table path to proceed with the assignment"
@@ -284,20 +282,12 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
                 "table_paths" : [table_path],
                 "table_names" : [table_name],
                 "values" : [complex_values],
-                "nodal_attribution": False,
-                "averaged": False,
+                "element_integration": True,
                 }
 
             self.properties._set_property("compressor_excitation_spectrum", data, surface=surface_id)
 
         self.actions_to_finalize(close_window)
-
-    def process_table_file_removal(self, table_names: list):
-        for table_name in table_names:
-            self.properties.remove_imported_tables("acoustic", table_name)
-
-        if table_names:
-            app().project.update_model_properties_file()
 
     def remove_conflicting_excitations(self, surface_ids: int | list):
 
@@ -316,27 +306,16 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
 
         for surface_id in surface_ids:
             for label in labels:
-                table_names = self.properties.get_property_related_table_names(label, surface_id, "surfaces")
                 self.properties._remove_surface_property(label, surface_id)
-                self.process_table_file_removal(table_names)
-
-    def remove_table_files_from_surfaces(self, surface_id : list):
-        table_names = self.properties.get_property_related_table_names("compressor_excitation_spectrum", surface_id, "surfaces")
-        self.process_table_file_removal(table_names)
 
     def remove_callback(self):
 
         if self.lineEdit_selection_id.text() != "":
-
             surface_id = int(self.lineEdit_selection_id.text())
-            self.remove_table_files_from_surfaces(surface_id)
-
             self.properties._remove_surface_property("compressor_excitation_spectrum", surface_id)
             self.actions_to_finalize()
 
     def reset_callback(self):
-
-        self.hide()
 
         title = "Compressor excitation reseting"
         message = "Would you like to remove the all compressor excitations in frequency domain from model?"
@@ -348,15 +327,6 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
             return
 
         if read._continue:
-
-            surface_ids = list()
-            for (property, *args), data in self.properties.surface_properties.items():
-                if property == "compressor_excitation_spectrum":
-                    surface_id = args[0]
-                    surface_ids.append(surface_id)
-
-            self.remove_table_files_from_surfaces(surface_ids)
-
             self.properties._reset_property("compressor_excitation_spectrum")
             self.actions_to_finalize()
 
@@ -371,7 +341,7 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
 
     def update_tabs_visibility(self):
 
-        for key in self.properties.surface_properties.keys():
+        for key in self.properties.surface_properties:
             property, *args = key
             if property != "compressor_excitation_spectrum":
                 continue

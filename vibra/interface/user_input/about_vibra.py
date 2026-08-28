@@ -1,12 +1,11 @@
-from PySide6.QtGui import QCloseEvent, QDesktopServices, QPixmap
 from PySide6.QtCore import Qt, QUrl
+from PySide6.QtGui import QCloseEvent, QDesktopServices, QPixmap
 
-from vibra import app, RELEASE_DATE, VERSION, LOGO_DIR
-from vibra.interface.ui_generated.menu.about_vibra_ui import AboutVibra_UI
+from vibra import LOGO_DIR, RELEASE_DATE, VERSION, app
+from vibra.interface import error_title
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.ui_generated.menu.about_vibra_ui import AboutVibra_UI
 
-window_title_1 = "Error"
-window_title_2 = "Warning"
 
 class AboutVibraInput(AboutVibra_UI):
     def __init__(self, *args, **kwargs):
@@ -69,18 +68,15 @@ class AboutVibraInput(AboutVibra_UI):
         title = "Error reached while trying to access the project repository"
 
         try:
-            self.hide()
             url = QUrl('https://github.com/MOPT-UFSC/VIBRA') 
             if not QDesktopServices.openUrl(url):
                 message = "The VIBRA repository at the GitHub's site cannot be accessed.\n"
                 message += "We recommend trying again later."
-                PrintMessageInput([title, message, window_title_1])
+                PrintMessageInput([error_title, title, message])
 
         except Exception as log_error:
             message = str(log_error)
-            PrintMessageInput([window_title_1, title, message])
-
-        self.close()
+            PrintMessageInput([error_title, title, message])
 
     def continueButtonEvent(self):
         self.close()

@@ -343,10 +343,13 @@ class ProjectReader:
 
         return model_properties
 
-    def read_material_library(self) -> MaterialLibrary:
+    def read_material_library(self, import_path: Path | None = None) -> MaterialLibrary:
         logging.info("Reading MaterialLibrary")
 
-        material_library_data = read_json(self.project_paths.material_library_filepath)
+        if import_path is None:
+            import_path = self.project_paths.material_library_filepath
+
+        material_library_data = read_json(import_path)
         if material_library_data is None:
             return MaterialLibrary.default()
 
@@ -358,10 +361,13 @@ class ProjectReader:
 
         return material_library
 
-    def read_fluid_library(self) -> FluidLibrary:
+    def read_fluid_library(self, import_path: Path | None = None) -> FluidLibrary:
         logging.info("Reading FluidLibrary")
 
-        fluid_library_data = read_json(self.project_paths.fluid_library_filepath)
+        if import_path is None:
+            import_path = self.project_paths.fluid_library_filepath
+
+        fluid_library_data = read_json(import_path)
         if fluid_library_data is None:
             return FluidLibrary.default()
 

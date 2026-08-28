@@ -97,28 +97,30 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.top_widget.setFixedHeight(120)
         self.current_widget = self.plot_structural_modal
         self.plot_structural_modal.load_natural_frequencies()
-        self.plot_structural_modal.load_user_preference_colormap()
+        self.plot_structural_modal.configure_results_display_widget()
+
         self.add_widget(self.plot_structural_modal)
 
     def add_structural_harmonic_widget(self):
         self.top_widget.setFixedHeight(120)
         self.current_widget = self.plot_structural_harmonic
         self.plot_structural_harmonic.load_frequencies()
-        self.plot_structural_harmonic.load_user_preference_colormap()
+        self.plot_structural_harmonic.configure_results_display_widget()
+
         self.add_widget(self.plot_structural_harmonic)
 
     def add_acoustic_modal_widget(self):
         self.top_widget.setFixedHeight(220)
         self.current_widget = self.plot_acoustic_modal
         self.plot_acoustic_modal.load_natural_frequencies()
-        self.plot_acoustic_modal.load_user_preference_colormap()
+        self.plot_acoustic_modal.configure_results_display_widget()
         self.add_widget(self.plot_acoustic_modal)
 
     def add_acoustic_harmonic_widget(self):
         self.top_widget.setFixedHeight(220)
         self.current_widget = self.plot_acoustic_harmonic
         self.plot_acoustic_harmonic.load_frequencies()
-        self.plot_acoustic_harmonic.load_user_preference_colormap()
+        self.plot_acoustic_harmonic.configure_results_display_widget()
         self.add_widget(self.plot_acoustic_harmonic)
 
     def add_structural_frequency_response_widget(self):
@@ -131,12 +133,12 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
 
     def add_acoustic_pressure_frequency_response_widget(self):
         self.current_widget = app().main_window.input_ui.plot_acoustic_pressure_frequency_response()
-        
+
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
 
         self.add_widget(self.current_widget)
-    
+
     def add_acoustic_pressure_frequency_response_function_widget(self):
         self.current_widget = app().main_window.input_ui.plot_acoustic_pressure_frequency_response_function()
 
@@ -169,9 +171,20 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
 
         self.add_widget(self.current_widget)
 
+    def add_allowable_pulsations_for_screw_compressor_widget(self):
+        self.current_widget = app().main_window.input_ui.plot_allowable_pulsation_criteria_for_screw_compressor()
+
+        if app().main_window.results_widget.playing_animation:
+            app().main_window.results_widget.stop_animation()
+
+        self.add_widget(self.current_widget)
+
+    def add_acoustic_pressure_waveform_widget(self):
+        self.current_widget = app().main_window.input_ui.plot_acoustic_pressure_waveform()
+
     def add_acoustic_pressure_waveform_2d_plot_widget(self):
         self.current_widget = app().main_window.input_ui.plot_acoustic_pressure_waveform_2d()
-        
+
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
 
@@ -179,7 +192,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
 
     def add_acoustic_pressure_waveform_3d_plot_widget(self):
         self.current_widget = app().main_window.input_ui.plot_acoustic_pressure_waveform_3d()
-        
+
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
 
@@ -195,7 +208,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
 
     def add_allowable_pulsations_3d_for_screw_compressor_widget(self):
         self.current_widget = app().main_window.input_ui.plot_allowable_pulsation_3d_for_screw_compressor()
-        
+
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
 

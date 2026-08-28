@@ -98,7 +98,11 @@ def load_external_mesh_and_solve():
     model.properties._set_property("fluid", fluid, surface=2)
 
     # Normal surface velocity data
-    data_Vn = {"real_values": [1], "imag_values": [0], "nodal_attribution": False, "averaged": False}
+    data_Vn = {
+        "real_values": [1], 
+        "imag_values": [0], 
+        "element_integration": True, 
+        }
 
     # Impedance data
     Zo = fluid.impedance
@@ -135,7 +139,7 @@ def load_external_mesh_and_solve():
 
     # Define and process the assemble
     assembler = AcousticAssembler(model)
-    assembler.assemble_global_matrices_and_excitations()
+    assembler.assemble_global_matrices_and_excitations(print_log=True)
 
     # Define the analysis type and load setup
     harmonic_solver = HarmonicSolver(assembler)

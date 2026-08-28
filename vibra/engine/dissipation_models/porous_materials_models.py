@@ -40,6 +40,22 @@ def get_DBM_standard_constants() -> dict[str, float]:
     }
 
 
+def get_user_defined_constants() -> dict[str, float]:
+    """
+    Returns a set of user-defined constants to the Delany-Bazley-Miki porous material model.
+    """
+    return {
+    "C1" : 0.1328,
+    "C2" : 0.5571,
+    "C3" : 0.1540,
+    "C4" : 0.7093,
+    "C5" : 0.0877,
+    "C6" : 0.5557,
+    "C7" : 0.0876,
+    "C8" : 0.7609,
+    }
+
+
 class PorousMaterialModels:
 
     def __init__(self, model: "Model"):

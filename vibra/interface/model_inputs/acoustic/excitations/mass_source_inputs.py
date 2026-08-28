@@ -339,7 +339,6 @@ class MassSourceInputs(MassSourceInputs_UI):
             app().main_window.selection.clear_selection()
 
             if print_message:
-                self.hide()
                 title = "Invalid selection detected"
                 message = "The current selection resulted in improper mapping between selected "
                 message += "between selected entities and the volumes. To univocally assign fluids "
@@ -452,12 +451,11 @@ class MassSourceInputs(MassSourceInputs_UI):
             message = f"Insert some value at the {label} input field."
 
         if message != "":
-            self.hide()
             lineEdit.setFocus()
             PrintMessageInput([error_title, title, message])
             return None
-        else:
-            return out
+
+        return out
 
     def compute_nearest_node_from_coordinate(self):
 
@@ -550,7 +548,6 @@ class MassSourceInputs(MassSourceInputs_UI):
 
         if error_data is not None:
             if print_message:
-                self.hide()
                 self.lineEdit_selection_id.setFocus()
                 PrintMessageInput(error_data)
             return None
@@ -594,7 +591,6 @@ class MassSourceInputs(MassSourceInputs_UI):
         mass_source = self.check_complex_entries(self.lineEdit_real_value, self.lineEdit_imag_value)
 
         if mass_source is None:
-            self.hide()
             title = "Additional inputs required"
             message = "You must enter a non-zero value to the mass source input fields to proceed with the assignment."
             PrintMessageInput([error_title, title, message])
@@ -674,7 +670,6 @@ class MassSourceInputs(MassSourceInputs_UI):
         _frequencies = imported_values[:, 0]
 
         if app().project.model.change_analysis_frequency_setup(list(_frequencies)):
-            self.hide()
             title = "Project frequency setup cannot be modified"
             message = "The following imported table of values has a frequency setup "
             message += "different from the others already imported ones. The current "
@@ -702,7 +697,6 @@ class MassSourceInputs(MassSourceInputs_UI):
     def tabular_data_assignment(self, selection_type: str, selection_ids: list[int]):
 
         if self.lineEdit_table_path.text() == "":
-            self.hide()
             title = "Additional inputs required"
             message = "You must enter the mass source table path to proceed with the assignment."
             PrintMessageInput([error_title, title, message])
@@ -756,12 +750,6 @@ class MassSourceInputs(MassSourceInputs_UI):
             else:
                 self.properties._set_property("mass_source", data, volume=selection_id)
 
-    def process_table_file_removal(self, table_names: list):
-        for table_name in table_names:
-            self.properties.remove_imported_tables("acoustic", table_name)
-        if table_names:
-            app().project.update_model_properties_file()
-
     def remove_conflicting_excitations(self, selection_ids: int | list, selection_type: str):
 
         if isinstance(selection_ids, int):
@@ -779,7 +767,6 @@ class MassSourceInputs(MassSourceInputs_UI):
 
         for label in labels:
             for selection_id in selection_ids:
-                table_names = self.properties.get_property_related_table_names(label, selection_id, selection_type)
                 if selection_type == "nodes":
                     self.properties._remove_nodal_property(label, selection_id)
                 elif selection_type == "points":
@@ -791,12 +778,6 @@ class MassSourceInputs(MassSourceInputs_UI):
                 elif selection_type == "volumes":
                     self.properties._remove_volume_property(label, selection_id)
 
-                self.process_table_file_removal(table_names)
-
-    def remove_table_files_from_selection(self, selection_id : list, selection_type: str):
-        table_names = self.properties.get_property_related_table_names("mass_source", selection_id, selection_type)
-        self.process_table_file_removal(table_names)
-
     def remove_callback(self):
         selected_items = self.get_selected_items_from_tree_widget_mass_source()
 
@@ -804,7 +785,6 @@ class MassSourceInputs(MassSourceInputs_UI):
             return
 
         for selected_type, selected_ids in selected_items.items():
-            self.remove_table_files_from_selection(selected_ids, selected_type)
 
             for selected_id in selected_ids:
                 if selected_type == "nodes":
@@ -828,9 +808,7 @@ class MassSourceInputs(MassSourceInputs_UI):
 
     def reset_callback(self):
 
-        self.hide()
-
-        title = "Mass source resetting"
+        title = "Mass source reset"
         message = "Would you like to remove the all applied mass sources from model?"
 
         buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
@@ -840,27 +818,6 @@ class MassSourceInputs(MassSourceInputs_UI):
             return
 
         if read._continue:
-
-            properties_to_reset = { 
-                                   "nodes" : self.properties.nodal_properties,
-                                   "points" : self.properties.point_properties,
-                                   "lines" : self.properties.line_properties,
-                                   "surfaces" : self.properties.surface_properties,
-                                   "volumes" : self.properties.volume_properties,
-                                   }
-
-            for selection_type, _properties in properties_to_reset.items():
-
-                selection_ids = list()
-                for (property, *args) in _properties.keys():
-                    if property != "mass_source":
-                        continue
-    
-                    selection_ids.append(args[0])
-
-                for selection_id in selection_ids:
-                    self.remove_table_files_from_selection(selection_id, selection_type)
-
             self.properties._reset_property("mass_source")
             self.actions_to_finalize()
 
@@ -975,8 +932,8 @@ class MassSourceInputs(MassSourceInputs_UI):
                 if property != "mass_source":
                     continue
 
-                if "table_names" in data.keys():
-                    str_value = "Table of values"
+                if "table_names" in data:
+                    str_value = "Table"
                 else:
                     real_values = np.array(data["real_values"])
                     imag_values = np.array(data["imag_values"])

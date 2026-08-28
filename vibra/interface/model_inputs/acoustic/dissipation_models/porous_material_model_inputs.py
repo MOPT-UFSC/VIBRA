@@ -9,7 +9,12 @@ from PySide6.QtGui import QAction, QCloseEvent
 from PySide6.QtWidgets import QAbstractItemView, QDialog, QDoubleSpinBox, QMenu, QTableWidgetItem, QTreeWidgetItem
 
 from vibra import app
-from vibra.engine.dissipation_models.porous_materials_models import PorousMaterialModels, get_DB_standard_constants, get_DBM_standard_constants
+from vibra.engine.dissipation_models.porous_materials_models import (
+    PorousMaterialModels,
+    get_DB_standard_constants,
+    get_DBM_standard_constants,
+    get_user_defined_constants,
+)
 from vibra.engine.properties.fluid import Fluid
 from vibra.interface import error_title
 from vibra.interface.formatters.icons import Icon
@@ -381,31 +386,17 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
     def reset_callback(self):
 
-        volume_ids = list()
-        for key, data in self.properties.volume_properties.items():
-            property, volume_id = key
-            if property == "porous_material_model":
-                volume_ids.append(volume_id)
+        title = "Porous material model reset"
+        message = "Would you like to remove the porous material effects from the model?"
 
-        if volume_ids:
+        buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
+        read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
 
-            self.hide()
+        if read._cancel:
+            return
 
-            title = "Porous material model resetting"
-            message = "Would you like to remove the porous material effects from the model?"
-
-            buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
-            read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
-
-            if read._cancel:
-                return
-
-            if not read._continue:
-                return
-
-            for volume_id in volume_ids:
-                self.properties._remove_volume_property("porous_material_model", volume_id)
-
+        if read._continue:
+            self.properties._reset_property("porous_material_model")
             self.actions_to_finalize()
 
     def tab_event_porous_material_model(self):
@@ -525,6 +516,9 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
         elif index == DBMConstants.DELANY_BAZLEY_MIKI:
             model_constants = get_DBM_standard_constants()
+
+        elif index == DBMConstants.USER_DEFINED:
+            model_constants = get_user_defined_constants()
 
         for key, value in model_constants.items():
             widget = getattr(self, f"doubleSpinBox_{key}_DBM")
@@ -821,7 +815,6 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
                 volume_ids, error_data = self.mesh.check_selected_ids(input_ids, selection = "volumes", single_id = False)
 
                 if error_data is not None:
-                    self.hide()
                     self.lineEdit_selection_id.setFocus()
                     PrintMessageInput(error_data)
                     return True

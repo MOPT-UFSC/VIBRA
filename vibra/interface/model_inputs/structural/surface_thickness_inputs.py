@@ -132,7 +132,6 @@ class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
             surface_ids, error_data = self.mesh.check_selected_ids(input_ids, selection="surfaces")
 
             if error_data is not None:
-                self.hide()
                 self.lineEdit_selection_id.setFocus()
                 PrintMessageInput(error_data)
                 return
@@ -200,9 +199,7 @@ class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
 
     def reset_callback(self):
 
-        self.hide()
-
-        title = "Surface thickness resetting"
+        title = "Surface thickness reset"
         message = "Would you like to remove the all assigned surface thickness from model?"
 
         buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
@@ -212,14 +209,6 @@ class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
             return
 
         if read._continue:
-
-            surface_ids = list()
-            for (property, *args) in self.properties.surface_properties.keys():
-                if property == "surface_thickness":
-
-                    surface_id = args[0]
-                    surface_ids.append(surface_id)
-
             self.properties._reset_property("surface_thickness")
             self.actions_to_finalize()
 
@@ -233,8 +222,8 @@ class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
             self.close()
 
     def update_tabs_visibility(self):
-        for key, data in self.properties.surface_properties.items():
-            property, surface_id = key
+        for key in self.properties.surface_properties:
+            property, _ = key
             if property != "surface_thickness":
                 continue
         

@@ -24,6 +24,9 @@ class FileHandler:
 
     @staticmethod
     def read(file_path: str | Path | list[str] | list[Path]) -> ImportedData | list[ImportedData] | None:
+        if file_path == "":
+            return None
+
         if isinstance(file_path, (str | Path)):
             return FileHandler._read(file_path)
 

@@ -206,7 +206,6 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
             volume_ids, error_data = self.mesh.check_selected_ids(input_ids, selection="volumes", single_id=False)
 
             if error_data is not None:
-                self.hide()
                 self.lineEdit_selection_id.setFocus()
                 PrintMessageInput(error_data)
                 return
@@ -251,30 +250,18 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
 
     def reset_callback(self):
 
-        volume_ids = list()
-        for (property, volume_id) in self.properties.volume_properties.keys():
-            if property != "proportional_damping":
-                continue
-            volume_ids.append(volume_id)
+        title = "Proportional damping reset"
+        message = "Would you like to remove the proportional damping effects?"
 
-        if volume_ids:
+        buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
+        read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
 
-            self.hide()
+        if read._cancel:
+            return
 
-            title = "Proportional damping reset"
-            message = "Would you like to remove the proportional damping effects?"
-
-            buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
-            read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
-
-            if read._cancel:
-                return
-
-            if read._continue:
-                for volume_id in volume_ids:
-                    self.properties._remove_volume_property("proportional_damping", volume_id)
-
-                self.actions_to_finalize()
+        if read._continue:
+            self.properties._reset_property("proportional_damping")
+            self.actions_to_finalize()
 
     def tab_event_callback(self):
         app().main_window.selection.clear_selection()
@@ -355,7 +342,7 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
         self.update_tabs_visibility()
 
     def update_tabs_visibility(self):
-        for (property, _) in self.properties.volume_properties.keys():
+        for (property, _) in self.properties.volume_properties:
             if property != "proportional_damping":
                 continue
 
