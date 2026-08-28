@@ -64,7 +64,7 @@ class VolumeSuppressionInputs(VolumeSuppressionDialog_UI):
         self.pushButton_suppress.clicked.connect(self._suppress_callback)
         self.pushButton_unsuppress.clicked.connect(self._unsuppress_callback)
         self.pushButton_confirm.clicked.connect(self._confirm)
-        self.pushButton_apply.clicked.connect(self._confirm)
+        self.pushButton_apply.clicked.connect(lambda: self._confirm(close=False))
         self.pushButton_cancel.clicked.connect(self._cancel)
         self.lineEdit_selected_ids.returnPressed.connect(self._suppress_callback)
         app().main_window.selection.selection_changed.connect(self._geometry_selection_callback)
@@ -219,7 +219,7 @@ class VolumeSuppressionInputs(VolumeSuppressionDialog_UI):
             buttons_config=buttons_config,
         )
 
-    def _confirm(self):
+    def _confirm(self, close: bool=True):
         if not self._check_properties_on_suppressed_volumes():
             self.show()
             return
@@ -253,10 +253,27 @@ class VolumeSuppressionInputs(VolumeSuppressionDialog_UI):
                 },
             )
 
-        self._close_dialog()
+        if close:
+            self._close_dialog()
 
         if regenerate_now:
             generate_mesh_and_finalize()
+
+        if not close and changed:
+            self._refresh_after_regeneration()
+
+    def _refresh_after_regeneration(self):
+        mesh = app().project.model.mesh
+        mesh_setup = app().project.model.mesh_setup
+
+        applied = set(mesh.suppressed_volumes) if mesh else set()
+        configured = set(mesh_setup.suppressed_volume_ids) if mesh_setup else set()
+
+        self.previously_suppressed_ids = applied
+        self._configured_ids = configured
+        self.pending_ids = configured - applied
+        self.suppressed_volume_ids = applied | self.pending_ids
+        self._populate_table()
 
     def _close_dialog(self):
         app().main_window.selection.volume_selection_mode = False
