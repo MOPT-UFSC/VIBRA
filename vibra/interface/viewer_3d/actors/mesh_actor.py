@@ -325,6 +325,21 @@ class MeshActor(vtkPropAssembly):
             self.surface_colors.FillComponent(i, rgb[i])
             self.volume_colors.FillComponent(i, rgb[i])
 
+    def set_node_color(self, color: Color):
+        rgb = color.to_rgb()
+        for i in range(3):
+            self.node_colors.FillComponent(i, rgb[i])
+
+    def set_surface_color(self, color: Color):
+        rgb = color.to_rgb()
+        for i in range(3):
+            self.surface_colors.FillComponent(i, rgb[i])
+
+    def set_volume_color(self, color: Color):
+        rgb = color.to_rgb()
+        for i in range(3):
+            self.volume_colors.FillComponent(i, rgb[i])
+
     def paint_nodes(self, color: Color, nodes: Sequence[int] | np.ndarray):
         if self.mesh is None:
             return
