@@ -61,15 +61,13 @@ class VolumeSuppressionInputs(VolumeSuppressionDialog_UI):
         self.tableWidget_local_mesh_size_control_data.verticalHeader().setVisible(False)
 
     def _create_connections(self):
-        self.pushButton_add.clicked.connect(self._add_callback)
-        self.pushButton_delete.clicked.connect(self._delete_callback)
+        self.pushButton_suppress.clicked.connect(self._suppress_callback)
+        self.pushButton_unsuppress.clicked.connect(self._unsuppress_callback)
         self.pushButton_confirm.clicked.connect(self._confirm)
         self.pushButton_apply.clicked.connect(self._confirm)
         self.pushButton_cancel.clicked.connect(self._cancel)
-        self.lineEdit_selected_ids.returnPressed.connect(self._add_callback)
-        app().main_window.selection.selection_changed.connect(
-            self._geometry_selection_callback
-        )
+        self.lineEdit_selected_ids.returnPressed.connect(self._suppress_callback)
+        app().main_window.selection.selection_changed.connect(self._geometry_selection_callback)
 
     def _populate_table(self):
         all_ids = sorted(self.suppressed_volume_ids | self.pending_ids)
@@ -93,7 +91,7 @@ class VolumeSuppressionInputs(VolumeSuppressionDialog_UI):
             status_item.setFlags(status_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
             self.tableWidget_local_mesh_size_control_data.setItem(row, 1, status_item)
 
-    def _add_callback(self):
+    def _suppress_callback(self):
         text = self.lineEdit_selected_ids.text().strip()
         if not text:
 
@@ -127,7 +125,7 @@ class VolumeSuppressionInputs(VolumeSuppressionDialog_UI):
         self._populate_table()
         app().main_window.entity_visibility.hide_volumes(self.pending_ids)
 
-    def _delete_callback(self):
+    def _unsuppress_callback(self):
         current_row = self.tableWidget_local_mesh_size_control_data.currentRow()
         if current_row < 0:
             return

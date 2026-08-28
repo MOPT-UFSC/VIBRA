@@ -17,8 +17,8 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QAbstractItemView, QApplication, QDialog, QFrame,
     QGridLayout, QHBoxLayout, QHeaderView, QLabel,
-    QLineEdit, QPushButton, QSizePolicy, QTableWidget,
-    QTableWidgetItem, QVBoxLayout, QWidget)
+    QLineEdit, QPushButton, QSizePolicy, QSpacerItem,
+    QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget)
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
@@ -51,16 +51,25 @@ class Ui_Dialog(object):
         self.frame_3.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_4 = QGridLayout(self.frame_3)
         self.gridLayout_4.setObjectName(u"gridLayout_4")
+        self.pushButton_confirm = QPushButton(self.frame_3)
+        self.pushButton_confirm.setObjectName(u"pushButton_confirm")
+        self.pushButton_confirm.setMinimumSize(QSize(68, 28))
+        self.pushButton_confirm.setMaximumSize(QSize(140, 16777215))
+        font1 = QFont()
+        font1.setPointSize(10)
+        self.pushButton_confirm.setFont(font1)
+        self.pushButton_confirm.setAutoDefault(False)
+
+        self.gridLayout_4.addWidget(self.pushButton_confirm, 0, 3, 1, 1)
+
         self.pushButton_apply = QPushButton(self.frame_3)
         self.pushButton_apply.setObjectName(u"pushButton_apply")
         self.pushButton_apply.setMinimumSize(QSize(68, 28))
         self.pushButton_apply.setMaximumSize(QSize(140, 16777215))
-        font1 = QFont()
-        font1.setPointSize(10)
         self.pushButton_apply.setFont(font1)
         self.pushButton_apply.setAutoDefault(False)
 
-        self.gridLayout_4.addWidget(self.pushButton_apply, 0, 1, 1, 1)
+        self.gridLayout_4.addWidget(self.pushButton_apply, 0, 2, 1, 1)
 
         self.pushButton_cancel = QPushButton(self.frame_3)
         self.pushButton_cancel.setObjectName(u"pushButton_cancel")
@@ -71,14 +80,9 @@ class Ui_Dialog(object):
 
         self.gridLayout_4.addWidget(self.pushButton_cancel, 0, 0, 1, 1)
 
-        self.pushButton_confirm = QPushButton(self.frame_3)
-        self.pushButton_confirm.setObjectName(u"pushButton_confirm")
-        self.pushButton_confirm.setMinimumSize(QSize(68, 28))
-        self.pushButton_confirm.setMaximumSize(QSize(140, 16777215))
-        self.pushButton_confirm.setFont(font1)
-        self.pushButton_confirm.setAutoDefault(False)
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gridLayout_4.addWidget(self.pushButton_confirm, 0, 2, 1, 1)
+        self.gridLayout_4.addItem(self.horizontalSpacer, 0, 1, 1, 1)
 
 
         self.gridLayout.addWidget(self.frame_3, 2, 0, 1, 1)
@@ -140,23 +144,23 @@ class Ui_Dialog(object):
         self.frame_5.setFrameShadow(QFrame.Shadow.Raised)
         self.horizontalLayout = QHBoxLayout(self.frame_5)
         self.horizontalLayout.setObjectName(u"horizontalLayout")
-        self.pushButton_delete = QPushButton(self.frame_5)
-        self.pushButton_delete.setObjectName(u"pushButton_delete")
-        self.pushButton_delete.setMinimumSize(QSize(68, 28))
-        self.pushButton_delete.setMaximumSize(QSize(70, 16777215))
-        self.pushButton_delete.setFont(font1)
-        self.pushButton_delete.setAutoDefault(False)
+        self.pushButton_unsuppress = QPushButton(self.frame_5)
+        self.pushButton_unsuppress.setObjectName(u"pushButton_unsuppress")
+        self.pushButton_unsuppress.setMinimumSize(QSize(100, 28))
+        self.pushButton_unsuppress.setMaximumSize(QSize(70, 16777215))
+        self.pushButton_unsuppress.setFont(font1)
+        self.pushButton_unsuppress.setAutoDefault(False)
 
-        self.horizontalLayout.addWidget(self.pushButton_delete)
+        self.horizontalLayout.addWidget(self.pushButton_unsuppress)
 
-        self.pushButton_add = QPushButton(self.frame_5)
-        self.pushButton_add.setObjectName(u"pushButton_add")
-        self.pushButton_add.setMinimumSize(QSize(68, 28))
-        self.pushButton_add.setMaximumSize(QSize(70, 16777215))
-        self.pushButton_add.setFont(font1)
-        self.pushButton_add.setAutoDefault(False)
+        self.pushButton_suppress = QPushButton(self.frame_5)
+        self.pushButton_suppress.setObjectName(u"pushButton_suppress")
+        self.pushButton_suppress.setMinimumSize(QSize(100, 28))
+        self.pushButton_suppress.setMaximumSize(QSize(70, 16777215))
+        self.pushButton_suppress.setFont(font1)
+        self.pushButton_suppress.setAutoDefault(False)
 
-        self.horizontalLayout.addWidget(self.pushButton_add)
+        self.horizontalLayout.addWidget(self.pushButton_suppress)
 
 
         self.verticalLayout.addWidget(self.frame_5)
@@ -173,17 +177,17 @@ class Ui_Dialog(object):
     def retranslateUi(self, Dialog):
         Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"Dialog", None))
         self.label.setText(QCoreApplication.translate("Dialog", u"Volume suppression setup", None))
+        self.pushButton_confirm.setText(QCoreApplication.translate("Dialog", u"Confirm", None))
         self.pushButton_apply.setText(QCoreApplication.translate("Dialog", u"Apply", None))
         self.pushButton_cancel.setText(QCoreApplication.translate("Dialog", u"Cancel", None))
-        self.pushButton_confirm.setText(QCoreApplication.translate("Dialog", u"Confirm", None))
         self.label_selected_ids.setText(QCoreApplication.translate("Dialog", u"Selected IDs:", None))
         self.lineEdit_selected_ids.setText("")
         ___qtablewidgetitem = self.tableWidget_local_mesh_size_control_data.horizontalHeaderItem(0)
         ___qtablewidgetitem.setText(QCoreApplication.translate("Dialog", u"Volume ID", None));
         ___qtablewidgetitem1 = self.tableWidget_local_mesh_size_control_data.horizontalHeaderItem(1)
         ___qtablewidgetitem1.setText(QCoreApplication.translate("Dialog", u"Status", None));
-        self.pushButton_delete.setText(QCoreApplication.translate("Dialog", u"Delete", None))
-        self.pushButton_add.setText(QCoreApplication.translate("Dialog", u"Add", None))
+        self.pushButton_unsuppress.setText(QCoreApplication.translate("Dialog", u"Unsuppress", None))
+        self.pushButton_suppress.setText(QCoreApplication.translate("Dialog", u"Suppress", None))
     # retranslateUi
 
 
@@ -198,9 +202,9 @@ class VolumeSuppressionDialog_UI(QDialog, Ui_Dialog):
                             - label: QLabel
                 - frame_3: QFrame
                     - (Layout): QGridLayout
+                            - pushButton_confirm: QPushButton
                             - pushButton_apply: QPushButton
                             - pushButton_cancel: QPushButton
-                            - pushButton_confirm: QPushButton
                 - frame_2: QFrame
                     - (Layout): QVBoxLayout
                             - frame_4: QFrame
@@ -210,8 +214,8 @@ class VolumeSuppressionDialog_UI(QDialog, Ui_Dialog):
                             - tableWidget_local_mesh_size_control_data: QTableWidget
                             - frame_5: QFrame
                                 - (Layout): QHBoxLayout
-                                        - pushButton_delete: QPushButton
-                                        - pushButton_add: QPushButton
+                                        - pushButton_unsuppress: QPushButton
+                                        - pushButton_suppress: QPushButton
     """
 
     def __init__(self, *args, **kwargs):
