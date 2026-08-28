@@ -1,8 +1,7 @@
+import logging
+from enum import IntEnum
 from pathlib import Path
 from typing import Literal
-from enum import IntEnum
-
-import logging
 
 import numpy as np
 from PySide6.QtWidgets import QDialog, QFileDialog, QPushButton, QWidget
@@ -11,6 +10,7 @@ from vibra import app
 from vibra.engine.analysis_info import AnalysisID, FrequencySpacing
 from vibra.interface import error_title, warning_title
 from vibra.interface.data.data_manager import is_frequencies_vector_equally_distributed
+from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
@@ -252,7 +252,44 @@ def generate_mesh_and_finalize() -> bool:
         LoadingWindow(_generate_in_process).run()
 
     LoadingWindow(_finalize).run()
+
+    prompt_if_disconnected_nodes()
+    
     return True
+
+
+def prompt_if_disconnected_nodes():
+    mesh = app().project.model.mesh
+    if mesh is None or not mesh.disconnected_nodes_data:
+        return
+
+    confirmation = GetUserConfirmationInput(
+        "Disconnected nodes detected",
+        "The generated mesh contains disconnected nodes.\n"
+        "The model solution will stay deactivated until this is addressed.\n\n"
+        "Choose an option:\n"
+        "\"Go to Mesh Setup\" to adjust the mesh parameters and regenerate\n"
+        "the mesh to try to solve the problem.\n"
+        "\"Remove disconnected nodes\" to forcibly delete them from the\n"
+        "current mesh and keep using it as is.",
+        buttons_config={
+            "left_button_label": "Go to Mesh Setup",
+            "right_button_label": "Remove disconnected nodes",
+            "left_button_size": 160,
+            "right_button_size": 230,
+        },
+    )
+
+    # right button = remove the disconnected nodes
+    if confirmation._continue:
+        mesh.remove_disconnected_nodes()
+        mesh.process_disconnected_nodes_criterion(print_log=True)
+        app().main_window.update_plots()
+        return
+
+    # left button = open mesh setup
+    app().main_window.input_ui.mesh_setup()
+
 
 def export_modal_analysis_results(parent: QDialog | QWidget, modes_to_frequencies: dict, physical_domain: str):
 

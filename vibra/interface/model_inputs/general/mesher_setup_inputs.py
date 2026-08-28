@@ -418,6 +418,10 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
             LoadingWindow(self.actions_to_finalize).run()
 
+            from vibra.interface.common.common_interface import prompt_if_disconnected_nodes
+
+            prompt_if_disconnected_nodes()
+
             self.update_local_mesh_size_control_table()
             self.update_mesh_quality_table()
 
@@ -641,6 +645,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         app().main_window.analysis_toolbar.reset_solution_action.setDisabled(True)
         app().main_window.analysis_toolbar.check_analysis_setup_callback()
         app().main_window.action_export_element_transfer_data.setDisabled(True)
+
 
     def get_element_setup(self) -> ElementSetup | None:
         element_geometry = self.comboBox_element_geometry.currentText().lower()
