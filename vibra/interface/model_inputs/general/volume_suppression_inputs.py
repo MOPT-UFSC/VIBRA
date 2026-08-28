@@ -157,6 +157,7 @@ class VolumeSuppressionInputs(VolumeSuppressionDialog_UI):
         if not current_volumes:
             self.lineEdit_selected_ids.setText("")
             self.last_synced_ids.clear()
+            self._previous_volume_selection = set()
             return
 
         if current_volumes == self._previous_volume_selection:
