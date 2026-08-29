@@ -35,6 +35,11 @@ class StructuralAssembler:
         self.surface_data_for_shell_elements = {}
         self.material_from_volume = {}
 
+        self.mass_matrix = 0
+        self.mass_matrix_r = 0
+        self.stiffness_matrix = 0
+        self.stiffness_matrix_r = 0
+        self.structural_load = None
 
     @property
     def number_3d_elements(self):
@@ -81,7 +86,7 @@ class StructuralAssembler:
 
 
     def is_assembled(self):
-        return (self.stiffness_matrix is not None) and (self.mass_matrix is not None)
+        return not (isinstance(self.stiffness_matrix, float) and isinstance(self.mass_matrix, float))
 
 
     def get_property_data_for_selected_property(self, selected_property: str) -> dict[int, np.ndarray]:
@@ -215,7 +220,6 @@ class StructuralAssembler:
 
         self.prescribed_dof_indices = list(output_prescribed_dof_data.keys())
         self.unprescribed_dof_indices = self.get_unprescribed_indices()
-        print(f"unprescribed_dof_indices: {self.unprescribed_dof_indices.size}")
 
 
     def get_unprescribed_indices(self):
@@ -252,24 +256,16 @@ class StructuralAssembler:
         return displacement_dof
 
 
-    def get_structural_excitations_by_nodal_attribution(self):
+    def process_structural_excitations_by_nodal_attribution(self):
 
         input_nodal_loads_data = self.get_property_data_for_selected_property("nodal_loads")
         output_nodal_loads_data = self.reorder_property_data_based_on_gdof(input_nodal_loads_data)
         nodal_loads, _ = self.process_property_arrays(output_nodal_loads_data)
 
-        # self.nodal_loads_indices = list(output_nodal_loads_data.keys())
-        output = np.zeros((self.total_dofs, self.number_frequencies), dtype=complex)
-
         if nodal_loads:
             indices = list(nodal_loads.keys())
             excitation = list(nodal_loads.values())
-            output[indices, :] = np.array(excitation)
-
-        if self.prescribed_dof_indices:
-            return output[self.unprescribed_dof_indices, :]
-
-        return output
+            self.structural_load[indices, :] += np.array(excitation)
 
 
     def process_loads_arrays(self, values: list[np.ndarray | None]):
@@ -604,14 +600,11 @@ class StructuralAssembler:
         return integration_data
 
 
-    def get_structural_excitations_by_1d_element_integration(self):
+    def process_structural_excitations_by_1d_element_integration(self):
         """ 
         This method processes the acoustic model excitations and
         returns the output data in the form of mass flow rate.
         """
-
-        total_dof = self.element_2d.dof_per_node * len(self.element_2d.nodal_coordinates)
-        load_vectors = np.zeros((total_dof, self.number_frequencies), dtype=complex)
 
         prop_labels = [
             "nodal_loads",
@@ -627,22 +620,14 @@ class StructuralAssembler:
 
             match prop_label:
                 case "distributed_loads" | "nodal_loads":
-                    load_vectors = self.integrate_distributed_load_1d(integration_data, load_vectors)
-
-        if self.prescribed_dof_indices:
-            return load_vectors[self.unprescribed_dof_indices, :]
-
-        return load_vectors
+                    self.process_distributed_load_1d(integration_data)
 
 
-    def get_structural_excitations_by_2d_element_integration(self):
+    def process_structural_excitations_by_2d_element_integration(self):
         """ 
         This method processes the acoustic model excitations and
         returns the output data in the form of mass flow rate.
         """
-
-        total_dof = self.element_2d.dof_per_node * len(self.element_2d.nodal_coordinates)
-        load_vectors = np.zeros((total_dof, self.number_frequencies), dtype=complex)
 
         prop_labels = [
             "nodal_loads",
@@ -658,18 +643,13 @@ class StructuralAssembler:
 
             match prop_label:
                 case "normal_pressure_load":
-                    load_vectors = self.integrate_normal_pressure_load(integration_data, load_vectors)
+                    self.process_normal_pressure_load(integration_data)
 
                 case "distributed_loads" | "nodal_loads":
-                    load_vectors = self.integrate_distributed_load_2d(integration_data, load_vectors)
-
-        if self.prescribed_dof_indices:
-            return load_vectors[self.unprescribed_dof_indices, :]
-
-        return load_vectors
+                    self.process_distributed_load_2d(integration_data)
 
 
-    def integrate_normal_pressure_load(self, integration_data: dict, load_vectors: np.ndarray):
+    def process_normal_pressure_load(self, integration_data: dict, load_vectors: np.ndarray):
 
         element_ids = integration_data.get("element_ids")
         connectivities = integration_data.get("connectivities")
@@ -682,29 +662,21 @@ class StructuralAssembler:
         for i, complex_values in enumerate(surface_data.values()):
             indices = self.element_2d.get_rows_and_cols_indices_1D(i)
             e_normal = elements_normals[i, :].reshape(-1, 1)
-            load_vectors[indices, :] += self.element_2d.integrate_normal_pressure_load(i, e_normal, complex_values)
-
-        return load_vectors
+            self.structural_load[indices, :] += self.element_2d.integrate_normal_pressure_load(i, e_normal, complex_values)
 
 
-    def integrate_distributed_load_1d(self, integration_data: dict, load_vectors: np.ndarray):
+    def process_distributed_load_1d(self, integration_data: dict):
 
         connectivities = integration_data.get("connectivities")
         data_array: dict = integration_data.get("data_array")
 
-        from vibra import app
-        node_ids = np.unique(connectivities)
-        app().main_window.selection.set_mesh_selection(nodes=node_ids)
-
         self.element_1d.reorder_connect(connectivities)
         for i, complex_values in enumerate(data_array.values()):
             indices = self.element_1d.get_rows_and_cols_indices_1D(i)
-            load_vectors[indices, :] += self.element_1d.integrate_distributed_load(i, complex_values)
-
-        return load_vectors
+            self.structural_load[indices, :] += self.element_1d.integrate_distributed_load(i, complex_values)
 
 
-    def integrate_distributed_load_2d(self, integration_data: dict, load_vectors: np.ndarray):
+    def process_distributed_load_2d(self, integration_data: dict):
 
         connectivities = integration_data.get("connectivities")
         data_array: dict = integration_data.get("data_array")
@@ -712,14 +684,10 @@ class StructuralAssembler:
         self.element_2d.reorder_connect(connectivities)
         for i, complex_values in enumerate(data_array.values()):
             indices = self.element_2d.get_rows_and_cols_indices_1D(i)
-            load_vectors[indices, :] += self.element_2d.integrate_distributed_load(i, complex_values)
-
-        return load_vectors
+            self.structural_load[indices, :] += self.element_2d.integrate_distributed_load(i, complex_values)
 
 
-    def process_distributed_loads(self):
-
-        output = np.zeros((self.total_dof, self.number_frequencies), dtype=complex)
+    def process_distributed_loads_for_shell_elements(self):
 
         for (property, surface_id), data in self.properties.surface_properties.items():
             if property not in ["distributed_loads", "normal_pressure_loads"]:
@@ -736,7 +704,7 @@ class StructuralAssembler:
 
                 for connect in connectivities_from_surface:
                     g_dof, F_elem = self.element_2d.process_forces_for_distributed_load_over_area(connect, surface_load)
-                    output[g_dof, :] += F_elem
+                    self.structural_load[g_dof, :] += F_elem
 
             elif property == "normal_pressure_load":
                 normal_pressure = self.process_loads_arrays(data["values"])
@@ -747,7 +715,7 @@ class StructuralAssembler:
                     if data.get("element_type") == "2d_element":
                         g_dof, F_elem = self.element_2d.process_forces_for_normal_pressure_load(connect, normal_pressure)
 
-                    output[g_dof, :] += F_elem
+                    self.structural_load[g_dof, :] += F_elem
 
         for (property, line_id), data in self.properties.line_properties.items():
             if property != "distributed_loads":
@@ -771,12 +739,7 @@ class StructuralAssembler:
                 for connect_2d in connectivities_from_surface[rows, :]:
                     active_nodes = [1 if node_id in nodes else 0 for node_id in connect_2d]
                     g_dof, F_elem = self.element_2d.process_forces_for_distributed_load_over_line(connect_2d, active_nodes, line_load)
-                    output[g_dof, :] += F_elem
-
-        if self.prescribed_dof_indices:
-            return output[self.unprescribed_dof_indices, :]
-
-        return output
+                    self.structural_load[g_dof, :] += F_elem
 
 
     def process_material_from_volumes(self):
@@ -868,7 +831,8 @@ class StructuralAssembler:
 
         self.ind_rows, self.ind_cols, self.structural_dofs = self.element_3d.generate_ind_rows_cols(reorder=reorder)
 
-        self.displacement_dof = self.get_displacement_dof()
+        self.displacement_dof = self.structural_dofs
+        # self.displacement_dof = self.get_displacement_dof()
 
         print(f"Number of acoustic elements: {self.model.number_3d_acoustic_elements}")
         print(f"Number of structural elements: {self.model.number_3d_structural_elements}")
@@ -881,7 +845,6 @@ class StructuralAssembler:
         last_progress = 0
 
         # loop for 3d elements
-        # for element_id, vol_id, *_ in self.model.mesh.solids_connectivity:
         for index, element_id in enumerate(self.model.elements_per_domain.get("structural", [])):
 
             if self.model.stop_processing:
@@ -899,7 +862,7 @@ class StructuralAssembler:
             # material from volume
             material = self.material_from_volume.get(vol_id)
             if material is None:
-                print(f"Retornei no elemento: {element_id}")
+                print(f"-> Element without material: {element_id}")
                 continue
 
             Ke, Me = self.element_3d.elementary_matrices(element_id, material)
@@ -926,26 +889,15 @@ class StructuralAssembler:
         """
         This method assembles the global stiffness matrix.
         """
-        _stiffness_matrix_full = csr_matrix((self.data_K.flatten(), (self.ind_rows, self.ind_cols)), shape=self.gm_shape)
+        self.stiffness_matrix += csr_matrix((self.data_K.flatten(), (self.ind_rows, self.ind_cols)), shape=self.gm_shape)
 
-        if self.model.weak_coupling and self.model.total_act_dofs:
-            _stiffness_matrix_full = _stiffness_matrix_full[self.structural_dofs, :][:, self.structural_dofs]
+        if self.model.drop_domain:
+            self.stiffness_matrix = self.stiffness_matrix[self.structural_dofs, :][:, self.structural_dofs]
 
-        self.stiffness_matrix = _stiffness_matrix_full[self.unprescribed_dof_indices, :][:, self.unprescribed_dof_indices]
-        self.stiffness_matrix_r = _stiffness_matrix_full[:, self.prescribed_dof_indices]
+        self.stiffness_matrix_r = self.stiffness_matrix[:, self.prescribed_dof_indices]
 
-
-    def assemble_global_mass_matrix(self):
-        """
-        This method assembles the global mass matrix.
-        """
-        _mass_matrix_full = csr_matrix((self.data_M.flatten(), (self.ind_rows, self.ind_cols)), shape=self.gm_shape)
-
-        if self.model.weak_coupling and self.model.total_act_dofs:
-            _mass_matrix_full = _mass_matrix_full[self.structural_dofs, :][:, self.structural_dofs]
-
-        self.mass_matrix = _mass_matrix_full[self.unprescribed_dof_indices, :][:, self.unprescribed_dof_indices]
-        self.mass_matrix_r = _mass_matrix_full[:, self.prescribed_dof_indices]
+        if self.prescribed_dof_indices:
+            self.stiffness_matrix = self.stiffness_matrix[self.unprescribed_dof_indices, :][:, self.unprescribed_dof_indices]
 
 
     def assemble_distributed_mass_matrix_for_lines(self):
@@ -962,15 +914,12 @@ class StructuralAssembler:
         data_Mdist = np.zeros((n_el, e_dofs, e_dofs), dtype=float)
 
         self.element_1d.reorder_connect(connectivities)
-        ind_rows, ind_cols = self.element_1d.get_element_rows_and_columns_indices()
+        ind_rows, ind_cols = self.element_1d.get_rows_and_cols_indices_1D()
 
         for i, surface_density in enumerate(surface_data.values()):
             data_Mdist[i, :, :] = self.element_1d.integrate_distributed_mass(i, surface_density)
 
-        _distributed_mass_matrix_full = csr_matrix((data_Mdist.flatten(), (ind_rows, ind_cols)), shape=self.gm_shape)
-
-        self.mass_matrix += _distributed_mass_matrix_full[self.unprescribed_dof_indices, :][:, self.unprescribed_dof_indices]
-        self.mass_matrix_r += _distributed_mass_matrix_full[:, self.prescribed_dof_indices]
+        self.mass_matrix += csr_matrix((data_Mdist.flatten(), (ind_rows, ind_cols)), shape=self.gm_shape)
 
 
     def assemble_distributed_mass_matrix_for_surfaces(self):
@@ -987,18 +936,32 @@ class StructuralAssembler:
         data_Mdist = np.zeros((n_el, e_dofs, e_dofs), dtype=float)
 
         self.element_2d.reorder_connect(connectivities)
-        ind_rows, ind_cols = self.element_2d.get_element_rows_and_columns_indices()
+        ind_rows, ind_cols = self.element_2d.get_rows_and_cols_indices_2D()
 
         for i, surface_density in enumerate(surface_data.values()):
             data_Mdist[i, :, :] = self.element_2d.integrate_distributed_mass(i, surface_density)
 
-        _distributed_mass_matrix_full = csr_matrix((data_Mdist.flatten(), (ind_rows, ind_cols)), shape=self.gm_shape)
-
-        self.mass_matrix += _distributed_mass_matrix_full[self.unprescribed_dof_indices, :][:, self.unprescribed_dof_indices]
-        self.mass_matrix_r += _distributed_mass_matrix_full[:, self.prescribed_dof_indices]
+        self.mass_matrix += csr_matrix((data_Mdist.flatten(), (ind_rows, ind_cols)), shape=self.gm_shape)
 
 
-    def assemble_global_matrices(self, reorder: bool=True, **kwargs):
+    def assemble_global_mass_matrix(self):
+        """
+        This method assembles the global mass matrix.
+        """
+        self.mass_matrix += csr_matrix((self.data_M.flatten(), (self.ind_rows, self.ind_cols)), shape=self.gm_shape)
+        self.assemble_distributed_mass_matrix_for_lines()
+        self.assemble_distributed_mass_matrix_for_surfaces()
+
+        if self.model.drop_domain:
+            self.mass_matrix = self.mass_matrix[self.structural_dofs, :][:, self.structural_dofs]
+
+        self.mass_matrix_r = self.mass_matrix[:, self.prescribed_dof_indices]
+
+        if self.prescribed_dof_indices:
+            self.mass_matrix = self.mass_matrix[self.unprescribed_dof_indices, :][:, self.unprescribed_dof_indices]
+
+
+    def assemble_global_matrices(self, reorder: bool = True):
         """
         This method assembles the global matrices of the structural model.
         """
@@ -1018,31 +981,40 @@ class StructuralAssembler:
         if self.model.stop_processing:
             return
 
-        logging.info("Assembling global stiffness matrix... [50/100]")
+        logging.info("Assembling the global stiffness matrix... [50/100]")
         t0 = time()
         self.assemble_global_stiffness_matrix()
         dt = time() - t0
         print(f"Elapsed time to assemble the global stiffness matrix: {dt : .6f} [s]")
 
-        logging.info("Assembling global mass matrix... [60/100]")
+        logging.info("Assembling the global mass matrix... [60/100]")
         t0 = time()
         self.assemble_global_mass_matrix()
-        self.assemble_distributed_mass_matrix_for_lines()
-        self.assemble_distributed_mass_matrix_for_surfaces()
         dt = time() - t0
         print(f"Elapsed time to assemble the global mass matrix: {dt : .6f} [s]")
 
-    
+
     def assemble_model_excitations(self):
         """
         This method assembles the excitations of the structural model.
         """
-        self.structural_loads = self.get_structural_excitations_by_nodal_attribution()
-        self.structural_loads += self.get_structural_excitations_by_1d_element_integration()
-        self.structural_loads += self.get_structural_excitations_by_2d_element_integration()
+
+        # initialize the structural load vector
+        self.structural_load = np.zeros((self.total_dofs, self.number_frequencies), dtype=complex)
+
+        self.process_structural_excitations_by_nodal_attribution()
+        self.process_structural_excitations_by_1d_element_integration()
+        self.process_structural_excitations_by_2d_element_integration()
 
         # loads of shell structure
-        self.structural_loads += self.process_distributed_loads()
+        self.process_distributed_loads_for_shell_elements()
+
+        # partitioning the load vector
+        if self.model.drop_domain:
+            self.structural_load = self.structural_load[self.structural_dofs, :]
+
+        if self.prescribed_dof_indices:
+            self.structural_load = self.structural_load[self.unprescribed_dof_indices, :]
 
 
     def assemble_global_matrices_and_excitations(self, reorder: bool=True, **kwargs):
@@ -1071,8 +1043,9 @@ class StructuralAssembler:
             Solution of all the degrees of freedom.
         """
 
-        rows = self.total_dofs
+        rows = len(solution) + len(self.prescribed_dof_indices)
         cols = solution.shape[1]
+
         full_solution = np.zeros((rows, cols), dtype=complex)
 
         if len(self.prescribed_dof_indices):
@@ -1087,7 +1060,8 @@ class StructuralAssembler:
     
 
     def reinsert_the_prescribed_dof_into_solution_freq(self, solution: np.ndarray, freq_index: int):
-        rows = self.total_dofs
+
+        rows = len(solution) + len(self.prescribed_dof_indices)
         full_solution = np.zeros(rows, dtype=complex)
 
         if len(self.prescribed_dof_indices):
@@ -1193,11 +1167,9 @@ class StructuralAssembler:
 
     
     def get_combined_nodal_loads_vector(self, index: int):
-
-        structural_loads = self.structural_loads
         
         f_eq = self.get_prescribed_dof_model_excitation(index=index)
-        f = structural_loads[:, index] - f_eq
+        f = self.structural_load[:, index] - f_eq
 
         return f
 

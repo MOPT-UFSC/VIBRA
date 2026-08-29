@@ -192,8 +192,8 @@ class STRUCT_QUADRANGLE_4(QUADRANGLE_4):
         dof = self.dof_per_node
         elem_nodes = self.connectivities[index, :]
         _elem_nodes = self.model.struct_node_mapping[elem_nodes]
-        dof_indices = dof * _elem_nodes + self.local_dof
-        return dof_indices
+        dof_indices = dof * _elem_nodes.reshape(-1, 1) + self.local_dof
+        return dof_indices.flatten()
 
 
     def get_rows_and_cols_indices_2D(self, connectivities: np.ndarray):

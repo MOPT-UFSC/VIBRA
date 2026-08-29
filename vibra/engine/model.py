@@ -1,9 +1,11 @@
 import logging
+from collections import defaultdict
+from collections.abc import Callable
 from copy import deepcopy
+from enum import IntEnum
 from numbers import Number
 from pathlib import Path
-from typing import Callable, Optional
-from collections import defaultdict
+from typing import Optional
 
 import numpy as np
 from PIL.Image import Image
@@ -68,6 +70,12 @@ from vibra.interface import error_title
 from vibra.interface.general.print_message_input import PrintMessageInput
 
 
+class CouplingType(IntEnum):
+    DISABLED = 0
+    WEAK = 1
+    STRONG = 2
+
+
 class Model:
     def __init__(self, disable_resume_callback: Optional[Callable] = None):
         self.disable_resume_callback = disable_resume_callback
@@ -89,7 +97,7 @@ class Model:
         self.initial_element_size = None
         self.geometry_qf = 1.0
 
-        self.weak_coupling = True
+        self.coupling_type = CouplingType.WEAK
 
         self.current_frequencies = []
 
@@ -176,6 +184,13 @@ class Model:
             return not np.all(self.solution.status)
         except Exception:
             return False
+
+    @property
+    def drop_domain(self):
+        if self.coupling_type != CouplingType.STRONG:
+            return len(self.model_domains) != 1
+
+        return False
 
     def map_model_domains(self):
         self.model_domains.clear()
