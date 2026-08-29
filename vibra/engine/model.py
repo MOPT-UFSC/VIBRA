@@ -104,8 +104,11 @@ class Model:
         self.decouple_info = {}
         self.nodes_mapping = {}
 
-        self.acoustic_dof_indices = None
-        self.structural_dof_indices = None
+        self.structural_dofs_shift = 0
+        self.acoustic_dofs_shift = 0
+
+        self.acoustic_dofs_indices = None
+        self.structural_dofs_indices = None
 
         self.acoustic_element_1d = None
         self.acoustic_element_2d = None
@@ -282,24 +285,25 @@ class Model:
         for index, node_id in enumerate(nodes_str):
             self.struct_node_mapping[node_id] = index
 
-        structural_shift = 0
-        acoustic_shift = self.total_str_dofs
+        # define the dof shifts for each domain
+        self.structural_dofs_shift = 0
+        self.acoustic_dofs_shift = self.total_str_dofs
 
         # process the structural dofs (continuos nodes list + dofs shift)
         nodes_str_seq = np.arange(self.number_structural_nodes, dtype=int).reshape(-1, 1)
-        structural_dof_indices = dof_str * nodes_str_seq + np.arange(dof_str) + structural_shift
-        self.structural_dof_indices = structural_dof_indices.flatten()
+        structural_dofs_indices = dof_str * nodes_str_seq + np.arange(dof_str) + self.structural_dofs_shift
+        self.structural_dofs_indices = structural_dofs_indices.flatten()
 
         # process the acoustic dofs (continuos nodes list + dofs shift)
         nodes_act_seq = np.arange(self.number_acoustic_nodes, dtype=int).reshape(-1, 1)
-        acoustic_dof_indices = dof_act * nodes_act_seq + np.arange(dof_act) + acoustic_shift
-        self.acoustic_dof_indices = acoustic_dof_indices.flatten()
+        acoustic_dofs_indices = dof_act * nodes_act_seq + np.arange(dof_act) + self.acoustic_dofs_shift
+        self.acoustic_dofs_indices = acoustic_dofs_indices.flatten()
 
         # data = np.array([self.fluid_node_mapping, self.struct_node_mapping]).T
         # np.savetxt("nodes_mappings.dat", data, delimiter=",", fmt="%i")
 
         # all_indices = np.arange(self.total_dof, dtype=int)
-        # all_indices_conc = np.sort(np.append(self.structural_dof_indices, self.acoustic_dof_indices))
+        # all_indices_conc = np.sort(np.append(self.structural_dofs_indices, self.acoustic_dofs_indices))
         # data = np.array([all_indices, all_indices_conc], dtype=int).T
         # np.savetxt("dof_indices.dat", data, delimiter=",", fmt="%i")
         # print(np.allclose(all_indices, all_indices_conc))
