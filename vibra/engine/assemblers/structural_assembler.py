@@ -35,10 +35,10 @@ class StructuralAssembler:
         self.surface_data_for_shell_elements = {}
         self.material_from_volume = {}
 
-        self.mass_matrix = 0
-        self.mass_matrix_r = 0
-        self.stiffness_matrix = 0
-        self.stiffness_matrix_r = 0
+        self.mass_matrix = None
+        self.mass_matrix_r = None
+        self.stiffness_matrix = None
+        self.stiffness_matrix_r = None
         self.structural_load = None
 
     @property
@@ -86,7 +86,7 @@ class StructuralAssembler:
 
 
     def is_assembled(self):
-        return not (isinstance(self.stiffness_matrix, float) and isinstance(self.mass_matrix, float))
+        return (self.stiffness_matrix is not None) and (self.mass_matrix is not None)
 
 
     def get_property_data_for_selected_property(self, selected_property: str) -> dict[int, np.ndarray]:
@@ -241,6 +241,7 @@ class StructuralAssembler:
         the 2d face elements, otherwise.
         """
         if self.model.mesh.solids_connectivity.size:
+            return self.structural_dofs
             displacement_dof = np.arange(self.total_dofs, dtype=int)
 
         else:
@@ -831,12 +832,10 @@ class StructuralAssembler:
 
         self.ind_rows, self.ind_cols, self.structural_dofs = self.element_3d.generate_ind_rows_cols(reorder=reorder)
 
-        self.displacement_dof = self.structural_dofs
-        # self.displacement_dof = self.get_displacement_dof()
+        self.displacement_dof = self.get_displacement_dof()
 
         print(f"Number of acoustic elements: {self.model.number_3d_acoustic_elements}")
         print(f"Number of structural elements: {self.model.number_3d_structural_elements}")
-        print(self.ind_cols.size, self.ind_rows.size, self.number_3d_elements*(self.dof**2))
 
         self.data_K = np.zeros((self.number_3d_elements, self.dof, self.dof), dtype=complex)
         self.data_M = np.zeros((self.number_3d_elements, self.dof, self.dof), dtype=complex)
@@ -883,21 +882,6 @@ class StructuralAssembler:
             self.compute_data_to_process_global_matrices_for_shell_elements(reorder = reorder)
 
         self.process_prescribed_dof_data()
-
-
-    def assemble_global_stiffness_matrix(self):
-        """
-        This method assembles the global stiffness matrix.
-        """
-        self.stiffness_matrix += csr_matrix((self.data_K.flatten(), (self.ind_rows, self.ind_cols)), shape=self.gm_shape)
-
-        if self.model.drop_domain:
-            self.stiffness_matrix = self.stiffness_matrix[self.structural_dofs, :][:, self.structural_dofs]
-
-        self.stiffness_matrix_r = self.stiffness_matrix[:, self.prescribed_dof_indices]
-
-        if self.prescribed_dof_indices:
-            self.stiffness_matrix = self.stiffness_matrix[self.unprescribed_dof_indices, :][:, self.unprescribed_dof_indices]
 
 
     def assemble_distributed_mass_matrix_for_lines(self):
@@ -948,7 +932,8 @@ class StructuralAssembler:
         """
         This method assembles the global mass matrix.
         """
-        self.mass_matrix += csr_matrix((self.data_M.flatten(), (self.ind_rows, self.ind_cols)), shape=self.gm_shape)
+        self.mass_matrix = csr_matrix((self.data_M.flatten(), (self.ind_rows, self.ind_cols)), shape=self.gm_shape)
+
         self.assemble_distributed_mass_matrix_for_lines()
         self.assemble_distributed_mass_matrix_for_surfaces()
 
@@ -959,6 +944,21 @@ class StructuralAssembler:
 
         if self.prescribed_dof_indices:
             self.mass_matrix = self.mass_matrix[self.unprescribed_dof_indices, :][:, self.unprescribed_dof_indices]
+
+
+    def assemble_global_stiffness_matrix(self):
+        """
+        This method assembles the global stiffness matrix.
+        """
+        self.stiffness_matrix = csr_matrix((self.data_K.flatten(), (self.ind_rows, self.ind_cols)), shape=self.gm_shape)
+
+        if self.model.drop_domain:
+            self.stiffness_matrix = self.stiffness_matrix[self.structural_dofs, :][:, self.structural_dofs]
+
+        self.stiffness_matrix_r = self.stiffness_matrix[:, self.prescribed_dof_indices]
+
+        if self.prescribed_dof_indices:
+            self.stiffness_matrix = self.stiffness_matrix[self.unprescribed_dof_indices, :][:, self.unprescribed_dof_indices]
 
 
     def assemble_global_matrices(self, reorder: bool = True):

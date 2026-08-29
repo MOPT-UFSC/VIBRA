@@ -37,13 +37,16 @@ class AcousticAssembler:
         self.mass_matrix_r = None
         self.damping_matrix = None
         self.damping_matrix_r = None
-
         self.visc_damping_matrix = None
         self.visc_damping_matrix_r = None
 
         self.visc_load_matrix = None
-
+        self.mass_source_vector_points = None
+        self.mass_source_vector_lines = None
+        self.mass_source_vector_surfaces = None
+        self.mass_source_vector_volumes = None
         self.mass_flow_vector = None
+
         self.frequencies = None
         self.frequency_dependent = False
 
@@ -852,8 +855,6 @@ class AcousticAssembler:
         to nodes and points.
         """
 
-        self.mass_source_vector_points = np.array([])
-
         model_properties = {
             "point_properties": self.properties.point_properties,
             "nodal_properties": self.properties.nodal_properties,
@@ -868,7 +869,7 @@ class AcousticAssembler:
                 if not isinstance(data, dict):
                     continue
 
-                if not self.mass_source_vector_points.any():
+                if self.mass_source_vector_points is None:
                     self.mass_source_vector_points = np.zeros((self.total_dofs, self.number_frequencies), dtype=complex)
 
                 volume_id = data.get("volume_id")
@@ -894,6 +895,9 @@ class AcousticAssembler:
 
                 self.mass_source_vector_points[node_id, :] += complex_values_array / fluid.fluid_density
 
+        if self.mass_source_vector_points is None:
+            return
+
         if self.model.drop_domain:
             self.mass_source_vector_points = self.mass_source_vector_points[self.acoustic_dofs, :]
 
@@ -907,8 +911,6 @@ class AcousticAssembler:
         to lines.
         """
 
-        self.mass_source_vector_lines = np.array([])
-
         for (property, *args), data in self.properties.line_properties.items():
 
             if property != "mass_source":
@@ -917,7 +919,7 @@ class AcousticAssembler:
             if not isinstance(data, dict):
                 continue
 
-            if not self.mass_source_vector_lines.any():
+            if self.mass_source_vector_lines is None:
                 self.mass_source_vector_lines = np.zeros((self.total_dofs, self.number_frequencies), dtype=complex)
 
             values = data.get("values")
@@ -935,6 +937,9 @@ class AcousticAssembler:
 
             self.mass_source_vector_lines[nodes, :] += aux_ones @ complex_values_array
 
+        if self.mass_source_vector_lines is None:
+            return
+
         if self.model.drop_domain:
             self.mass_source_vector_lines = self.mass_source_vector_lines[self.acoustic_dofs, :]
 
@@ -948,8 +953,6 @@ class AcousticAssembler:
         to surfaces.
         """
 
-        self.mass_source_vector_surfaces = np.array([])
-
         for (property, *args), data in self.properties.surface_properties.items():
 
             if property != "mass_source":
@@ -958,7 +961,7 @@ class AcousticAssembler:
             if not isinstance(data, dict):
                 continue
 
-            if not self.mass_source_vector_surfaces.any():
+            if self.mass_source_vector_surfaces is None:
                 self.mass_source_vector_surfaces = np.zeros((self.total_dofs, self.number_frequencies), dtype=complex)
 
             values = data.get("values")
@@ -976,6 +979,9 @@ class AcousticAssembler:
 
             self.mass_source_vector_surfaces[nodes, :] += aux_ones @ complex_values_array
 
+        if self.mass_source_vector_surfaces is None:
+            return
+
         if self.model.drop_domain:
             self.mass_source_vector_surfaces = self.mass_source_vector_surfaces[self.acoustic_dofs, :]
 
@@ -989,8 +995,6 @@ class AcousticAssembler:
         to volumes.
         """
 
-        self.mass_source_vector_volumes = np.array([])
-
         for (property, *args), data in self.properties.volume_properties.items():
 
             if property != "mass_source":
@@ -999,7 +1003,7 @@ class AcousticAssembler:
             if not isinstance(data, dict):
                 continue
 
-            if not self.mass_source_vector_volumes.any():
+            if self.mass_source_vector_volumes is None:
                 self.mass_source_vector_volumes = np.zeros((self.total_dofs, self.number_frequencies), dtype=complex)
 
             values = data.get("values")
@@ -1016,6 +1020,9 @@ class AcousticAssembler:
             complex_values_array = self.get_value_in_array_form(values[0])
 
             self.mass_source_vector_volumes[nodes, :] += aux_ones @ complex_values_array
+
+        if self.mass_source_vector_points is None:
+            return
 
         if self.model.drop_domain:
             self.mass_source_vector_volumes = self.mass_source_vector_volumes[self.acoustic_dofs, :]
@@ -1036,7 +1043,7 @@ class AcousticAssembler:
 
         self.process_nodal_mass_source_data()
 
-        if self.mass_source_vector_lines.any():
+        if isinstance(self.mass_source_vector_lines, np.ndarray):
         
             self.ind_rows_Qmsf_1d = np.array([], dtype=int)
             self.ind_cols_Qmsf_1d = np.array([], dtype=int)
@@ -1052,7 +1059,7 @@ class AcousticAssembler:
                 self.ind_rows_Qmsf_1d, self.ind_cols_Qmsf_1d = self.element_1d.get_rows_and_cols_indices_2D(connectivities)
                 self.int1d_NtN, self.int1d_BtB = self.element_1d.stacked_matrices_NtN_and_BtB()
 
-        if self.mass_source_vector_surfaces.any():
+        if isinstance(self.mass_source_vector_surfaces, np.ndarray):
 
             self.ind_rows_Qmsf_2d = np.array([], dtype=int)
             self.ind_cols_Qmsf_2d = np.array([], dtype=int)
@@ -1234,7 +1241,7 @@ class AcousticAssembler:
             The frequency index.
         """
 
-        if not self.mass_source_vector_lines.any():
+        if self.mass_source_vector_lines is None:
             return
 
         factor_Qms1 = self.integration_data_Qms_1d.get("factor_Qms1")
@@ -1266,7 +1273,7 @@ class AcousticAssembler:
             The frequency index.
         """
 
-        if not self.mass_source_vector_surfaces.any():
+        if self.mass_source_vector_surfaces is None:
             return
 
         factor_Qms1 = self.integration_data_Qms_2d.get("factor_Qms1")
@@ -1298,7 +1305,7 @@ class AcousticAssembler:
             The frequency index.
         """
 
-        if not self.mass_source_vector_volumes.any():
+        if self.mass_source_vector_volumes is None:
             return
 
         factor_Qms1, factor_Qms2 = self.compute_mass_source_load_factors_for_volumes(index=index)
@@ -1337,19 +1344,19 @@ class AcousticAssembler:
             The compound mass source vector. 
         """
         Q_ms = 0.
-        if self.mass_source_vector_points.any():
+        if isinstance(self.mass_source_vector_points, np.ndarray):
             mass_source_p = self.mass_source_vector_points[:, index]
             Q_ms += 1j * omega * mass_source_p
 
-        if self.mass_source_vector_lines.any():
+        if isinstance(self.mass_source_vector_lines, np.ndarray):
             mass_source_l = self.mass_source_vector_lines[:, index]
             Q_ms += (1j * omega * self.Qms1_1d + self.Qms2_1d) @ mass_source_l
 
-        if self.mass_source_vector_surfaces.any():
+        if isinstance(self.mass_source_vector_surfaces, np.ndarray):
             mass_source_s = self.mass_source_vector_surfaces[:, index]
             Q_ms += (1j * omega * self.Qms1_2d + self.Qms2_2d) @ mass_source_s
 
-        if self.mass_source_vector_volumes.any():
+        if isinstance(self.mass_source_vector_volumes, np.ndarray):
             mass_source_v = self.mass_source_vector_volumes[:, index]
             Q_ms += (1j * omega * self.Qms1_3d + self.Qms2_3d) @ mass_source_v
 
@@ -1602,27 +1609,6 @@ class AcousticAssembler:
         self.process_perforated_plate_impedance_data_to_assemble_damping_matrix()
 
 
-    def assemble_global_stiffness_matrix(self, factor_K: np.ndarray):
-        """
-        This method assembles the global stiffness matrix.
-
-        Parameters
-        ----------
-        factor_K: np.ndarray
-            An array containing all elementary stiffness factors in stacked form.
-        """
-        data_K = self.int3d_BtB * factor_K
-        self.stiffness_matrix = csr_matrix((data_K.flatten(), (self.ind_rows, self.ind_cols)), shape=self.gm_shape)
-
-        if self.model.drop_domain:
-            self.stiffness_matrix = self.stiffness_matrix[self.acoustic_dofs, :][:, self.acoustic_dofs]
-
-        self.stiffness_matrix_r = self.stiffness_matrix[:, self.prescribed_dof_indices]
-
-        if self.prescribed_dof_indices:
-            self.stiffness_matrix = self.stiffness_matrix[self.unprescribed_dof_indices, :][:, self.unprescribed_dof_indices]
-
-
     def assemble_global_mass_matrix(self, factor_M: np.ndarray):
         """
         This method assembles the global mass matrix.
@@ -1642,6 +1628,27 @@ class AcousticAssembler:
 
         if self.prescribed_dof_indices:
             self.mass_matrix = self.mass_matrix[self.unprescribed_dof_indices, :][:, self.unprescribed_dof_indices]
+
+
+    def assemble_global_stiffness_matrix(self, factor_K: np.ndarray):
+        """
+        This method assembles the global stiffness matrix.
+
+        Parameters
+        ----------
+        factor_K: np.ndarray
+            An array containing all elementary stiffness factors in stacked form.
+        """
+        data_K = self.int3d_BtB * factor_K
+        self.stiffness_matrix = csr_matrix((data_K.flatten(), (self.ind_rows, self.ind_cols)), shape=self.gm_shape)
+
+        if self.model.drop_domain:
+            self.stiffness_matrix = self.stiffness_matrix[self.acoustic_dofs, :][:, self.acoustic_dofs]
+
+        self.stiffness_matrix_r = self.stiffness_matrix[:, self.prescribed_dof_indices]
+
+        if self.prescribed_dof_indices:
+            self.stiffness_matrix = self.stiffness_matrix[self.unprescribed_dof_indices, :][:, self.unprescribed_dof_indices]
 
 
     def assemble_global_damping_matrix_3d_elements(self, factor_Cvsic: np.ndarray, factor_fvsic: np.ndarray):
