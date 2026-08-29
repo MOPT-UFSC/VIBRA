@@ -322,6 +322,8 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
             elem_nodes = self.model.struct_node_mapping[structural_connect[:, j + 1]]
             ind_dof[:, start : end] = dof * elem_nodes.reshape(-1, 1) + local_dof
 
+        ind_dof += self.model.structural_dofs_shift
+
         vect_indices = ind_dof.flatten()
         ordered_dofs = np.unique(vect_indices)
 

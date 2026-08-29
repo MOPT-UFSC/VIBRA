@@ -209,8 +209,11 @@ class STRUCT_LINE_2(LINE_2):
         dof = self.dof_per_node
         elem_nodes = self.connectivities[index, :]
         _elem_nodes = self.model.struct_node_mapping[elem_nodes]
-        dof_indices = dof * _elem_nodes + self.local_dof
-        return dof_indices
+
+        dofs_shift = self.model.structural_dofs_shift
+        dof_indices = dof * _elem_nodes.reshape(-1, 1) + self.local_dof + dofs_shift
+
+        return dof_indices.flatten()
 
 
     def get_rows_and_cols_indices_2D(self, connectivities: np.ndarray):
@@ -234,6 +237,8 @@ class STRUCT_LINE_2(LINE_2):
             end = (j + 1) * dof
             elem_nodes = self.model.struct_node_mapping[self.connectivities[:, j]]
             ind_dof[:, start : end] = dof * elem_nodes.reshape(-1, 1) + self.local_dof
+
+        ind_dof += self.model.structural_dofs_shift
 
         vect_indices = ind_dof.flatten()
         ind_rows = ((np.tile(vect_indices, (edof, 1))).T).flatten()

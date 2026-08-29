@@ -392,6 +392,8 @@ class ACT_TETRAHEDRON_4C(Element3D):
             elem_nodes = self.model.fluid_node_mapping[acoustic_connect[:, j + 1]]
             ind_dof[:, start : end] = dof * elem_nodes.reshape(-1, 1) + local_dof
 
+        ind_dof += self.model.acoustic_dofs_shift
+
         vect_indices = ind_dof.flatten()
         ordered_dofs = np.unique(vect_indices)
 

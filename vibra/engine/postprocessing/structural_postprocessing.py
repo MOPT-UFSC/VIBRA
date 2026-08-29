@@ -114,11 +114,6 @@ class StructuralPostprocessing:
 
         data_complex = self.solution.get_nodal_displacement_at_column(column)
 
-        if self.model.structural_dof_indices is None:
-            self.model.update_domains_mappings()
-
-        data_complex = data_complex[self.model.structural_dof_indices]
-
         if self.model.analysis_id == AnalysisID.STRUCTURAL_HARMONIC:
             freq = self.model.frequencies[column]
             data_complex *= (1j * 2 * np.pi * freq)**n_diff

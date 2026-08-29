@@ -250,7 +250,10 @@ class ACT_QUADRANGLE_8(QUADRANGLE_8):
         dof = self.dof_per_node
         elem_nodes = self.connectivities[index, :]
         _elem_nodes = self.model.fluid_node_mapping[elem_nodes]
-        dof_indices = dof * _elem_nodes + self.local_dof
+
+        dofs_shift = self.model.acoustic_dofs_shift
+        dof_indices = dof * _elem_nodes + self.local_dof + dofs_shift
+
         return dof_indices
 
 
@@ -275,6 +278,8 @@ class ACT_QUADRANGLE_8(QUADRANGLE_8):
             end = (j + 1) * dof
             elem_nodes = self.model.fluid_node_mapping[self.connectivities[:, j]]
             ind_dof[:, start : end] = dof * elem_nodes.reshape(-1, 1) + self.local_dof
+
+        ind_dof += self.model.acoustic_dofs_shift
 
         vect_indices = ind_dof.flatten()
         ind_rows = ((np.tile(vect_indices, (edof, 1))).T).flatten()
