@@ -47,13 +47,13 @@ class StructuralAssembler:
 
 
     @property
-    def structural_dof_indices(self):
-        return self.model.structural_dof_indices
+    def structural_dofs_indices(self):
+        return self.model.structural_dofs_indices
 
 
     @property
-    def structural_ndof(self):
-        return len(self.model.structural_dof_indices)
+    def structural_ndofs(self):
+        return len(self.model.structural_dofs_indices)
 
 
     @property

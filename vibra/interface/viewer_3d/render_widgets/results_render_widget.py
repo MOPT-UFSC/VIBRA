@@ -276,13 +276,14 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if self.user_max_value is not None:
             max_value = self.user_max_value
 
-        colormap = app().config.user_preferences.color_map
-
-        # filter structural nodes
+        # filter acoustic nodes
         model = postprocessing.model
         acoustic_nodes = model.nodes_per_domain.get("acoustic")
+
         _color_scalars = np.zeros(len(model.mesh.nodal_coordinates), dtype=float)
         _color_scalars[acoustic_nodes] = color_scalars
+
+        colormap = app().config.user_preferences.color_map
 
         self.analysis_actor.plot_color_bar(_color_scalars, min_value, max_value, colormap)
         self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
@@ -334,17 +335,17 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         # filter structural nodes
         model = postprocessing.model
         structural_nodes = model.nodes_per_domain.get("structural")
+
         deformed_coords = model.mesh.nodal_coordinates[:, 1:].copy()
-
         deformed_coords[structural_nodes, :] += (magnification_factor / (10 * max_value)) * displacements
-
-        self.analysis_actor.apply_deformation(deformed_coords)
-        self.edges_actor.extract_data(self.analysis_actor.data)
-
-        colormap = app().config.user_preferences.color_map
 
         _color_scalars = np.zeros(len(model.mesh.nodal_coordinates), dtype=float)
         _color_scalars[structural_nodes] = color_scalars
+
+        colormap = app().config.user_preferences.color_map
+
+        self.analysis_actor.apply_deformation(deformed_coords)
+        self.edges_actor.extract_data(self.analysis_actor.data)
 
         self.analysis_actor.plot_color_bar(_color_scalars, min_value, max_value, colormap)
         self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
