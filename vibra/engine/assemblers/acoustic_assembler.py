@@ -109,9 +109,9 @@ class AcousticAssembler:
 
         See also
         --------
-        get_prescribed_indices : Indexes of the acoustic degrees of freedom with prescribed pressure boundary conditions.
+        process_prescribed_indices : Indexes of the acoustic degrees of freedom with prescribed pressure boundary conditions.
 
-        get_unprescribed_indices : Indexes of the acoustic free degrees of freedom.
+        process_unprescribed_indices : Indexes of the acoustic free degrees of freedom.
         """
 
         global_prescribed = []
@@ -167,7 +167,7 @@ class AcousticAssembler:
         return global_prescribed, array_prescribed_values
 
 
-    def get_prescribed_indices(self):
+    def process_prescribed_indices(self):
         """
         Returns the prescribed dof indices.
         """
@@ -186,23 +186,20 @@ class AcousticAssembler:
             global_dofs = self.model.get_acoustic_global_dof_from_nodes(_nodes)
             prescribed_dof_indices.extend(global_dofs)
 
-        return prescribed_dof_indices
+        self.prescribed_dof_indices = prescribed_dof_indices
 
 
-    def get_unprescribed_indices(self):
+    def process_unprescribed_indices(self):
         """ 
         Returns the unprescribed dof indices.
         """
         all_indices = np.arange(self.model.total_act_dofs, dtype=int)
-        if self.prescribed_dof_indices is None:
-            self.prescribed_dof_indices = self.get_prescribed_indices()
-
-        return np.delete(all_indices, self.prescribed_dof_indices)
+        self.unprescribed_dof_indices = np.delete(all_indices, self.prescribed_dof_indices)
 
 
-    def process_indices(self):
-        self.prescribed_dof_indices = self.get_prescribed_indices()
-        self.unprescribed_dof_indices = self.get_unprescribed_indices()
+    def process_dofs_indices(self):
+        self.process_prescribed_indices()
+        self.process_unprescribed_indices()
 
 
     def get_fluid_properties_from_surface(self, surface_id: int):
@@ -308,7 +305,7 @@ class AcousticAssembler:
         self.fluid_properties_from_volume, self.frequency_dependent = self.model.map_fluid_properties_to_volumes()
 
         logging.info("Processing the elementary matrices data... [95/100]")
-        self.process_indices()
+        self.process_dofs_indices()
 
 
     def compute_data_to_assemble_global_matrices_using_loop(self, reorder: bool = True):
@@ -344,8 +341,11 @@ class AcousticAssembler:
             self.int3d_BtB[index, :, :] = Ke
             self.int3d_NtN[index, :, :] = Me
 
+        logging.info("Processing the elementary matrices data... [85/100]")
         self.fluid_properties_from_volume, self.frequency_dependent = self.model.map_fluid_properties_to_volumes()
-        self.process_indices()
+
+        logging.info("Processing the elementary matrices data... [95/100]")
+        self.process_dofs_indices()
 
 
     def compute_global_matrices_factors(self, index: int = 0):
@@ -647,8 +647,6 @@ class AcousticAssembler:
         if not is_complex:
             A.data = np.real(A.data)
             f = np.real(f)
-
-        print(A.shape, f.shape)
 
         return A, f
 

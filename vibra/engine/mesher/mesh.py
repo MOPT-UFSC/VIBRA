@@ -695,7 +695,7 @@ class Mesh:
 
             for _node_id in corner_nodes:
                 node_id = int(_node_id)
-                if node_id in self.points_from_nodes.keys():
+                if node_id in self.points_from_nodes:
                     points_from_nodes = self.points_from_nodes.get(node_id)
                     points_from_line.append(points_from_nodes)
                     continue
@@ -1303,7 +1303,7 @@ class Mesh:
 
     def get_nodes_from_line(self, line_id: int, from_cache: bool = False):
 
-        if line_id in self.external_nodes_from_lines.keys():
+        if line_id in self.external_nodes_from_lines:
             return self.external_nodes_from_lines.get(line_id)
 
         if from_cache:
@@ -1323,7 +1323,7 @@ class Mesh:
 
     def get_nodes_from_surface(self, surface_id: int, from_cache: bool = False):
 
-        if surface_id in self.external_nodes_from_surfaces.keys():
+        if surface_id in self.external_nodes_from_surfaces:
             return self.external_nodes_from_surfaces.get(surface_id)
 
         if from_cache:
@@ -1341,7 +1341,7 @@ class Mesh:
 
     def get_nodes_from_volume(self, volume_id: int, from_cache: bool = False):
 
-        if volume_id in self.external_nodes_from_volumes.keys():
+        if volume_id in self.external_nodes_from_volumes:
             return self.external_nodes_from_volumes.get(volume_id)
 
         if from_cache:
@@ -1359,7 +1359,7 @@ class Mesh:
 
     def get_connectivity_from_line(self, line_id: int, from_cache: bool = False) -> np.ndarray:
 
-        if line_id in self.external_connectivity_from_lines.keys():
+        if line_id in self.external_connectivity_from_lines:
             return self.external_connectivity_from_lines.get(line_id)
 
         if from_cache:
@@ -1460,7 +1460,7 @@ class Mesh:
                 continue
 
             for vol_id in vol_ids:
-                if selected_surface in volumes_from_surfaces.keys():
+                if selected_surface in volumes_from_surfaces:
                     if vol_id in volumes_from_surfaces.get(selected_surface):
                         continue
 
@@ -1504,12 +1504,12 @@ class Mesh:
             point_ids |= set(line_points)
         point_ids = list(point_ids)
 
-        for line_id in deepcopy(self.length_from_lines).keys():
+        for line_id in deepcopy(self.length_from_lines):
             if line_id in line_ids:
                 continue
             self.length_from_lines.pop(line_id)
 
-        for surface_id in deepcopy(self.area_from_surfaces).keys():
+        for surface_id in deepcopy(self.area_from_surfaces):
             if surface_id in surface_ids:
                 continue
             self.area_from_surfaces.pop(surface_id)
@@ -1518,7 +1518,7 @@ class Mesh:
         self.geometry_information["lines"] = line_ids
         self.geometry_information["points"] = point_ids
 
-        for point_id in deepcopy(self.nodes_from_points).keys():
+        for point_id in deepcopy(self.nodes_from_points):
             if point_id in point_ids:
                 continue
             self.nodes_from_points.pop(point_id)
@@ -2502,7 +2502,7 @@ class Mesh:
         n_list = list()
         for data_0 in input_dict.values():
             for data_1 in data_0.values():
-                if "indices" in data_1.keys():
+                if "indices" in data_1:
                     n_list.append(len(data_1["indices"]))
                     array_nodes = data_1["array_element_nodes"]
                     if max_cols < array_nodes.shape[1]:
@@ -2758,19 +2758,19 @@ class Mesh:
                 all_ids = list(self.solids_connectivity[:, 0])
 
             elif selection == "points":
-                if selection in self.geometry_information.keys():
+                if selection in self.process_geometry_information:
                     all_ids = self.geometry_information["points"]
 
             elif selection == "lines":
-                if "lines" in self.geometry_information.keys():
+                if "lines" in self.process_geometry_information:
                     all_ids = self.geometry_information["lines"]
 
             elif selection == "surfaces":
-                if selection in self.geometry_information.keys():
+                if selection in self.process_geometry_information:
                     all_ids = self.geometry_information["surfaces"]
 
             elif selection == "volumes":
-                if selection in self.geometry_information.keys():
+                if selection in self.process_geometry_information:
                     all_ids = self.geometry_information["volumes"]
 
             else:

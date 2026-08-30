@@ -1,14 +1,23 @@
 
 import logging
 from collections import defaultdict
+from dataclasses import dataclass
 from time import time
 
 import numpy as np
 from scipy.sparse import csr_matrix
 
 from vibra.engine.analysis_info import HarmonicAnalysisSetup
+from vibra.engine.assemblers.structural_excitations_assembler import StructuralExcitationsAssembler
 from vibra.engine.model import Model
 from vibra.engine.properties.material import Material
+
+
+@dataclass
+class DistributedMassData:
+    element_ids: np.ndarray
+    connectivities: np.ndarray
+    pdata_values: np.ndarray | dict
 
 
 class StructuralAssembler:
@@ -18,6 +27,8 @@ class StructuralAssembler:
         self.properties = model.properties
 
         self.reset()
+
+        self.excitations_assembler = StructuralExcitationsAssembler(self)
 
 
     def reset(self):
@@ -29,8 +40,8 @@ class StructuralAssembler:
         self.array_prescribed_values = np.array([])
 
         self.displacement_dof = np.array([])
-        self.prescribed_dof_indices = np.array([])
-        self.unprescribed_dof_indices = np.array([])
+        self.prescribed_dof_indices = None
+        self.unprescribed_dof_indices = None
 
         self.surface_data_for_shell_elements = {}
         self.material_from_volume = {}
@@ -108,6 +119,7 @@ class StructuralAssembler:
                 continue
 
             nodes = self.model.mesh.get_nodes_from_surface(surface_id)
+            print(nodes)
             if nodes is None:
                 continue
 
@@ -178,28 +190,23 @@ class StructuralAssembler:
         get_unprescribed_indices : Indexes of the structural free degrees of freedom.
         """
 
-        if self.frequencies is None:
-            number_frequencies = 1
-        else:
-            number_frequencies = len(self.frequencies)
-
         try:
 
             property_data = {}
             for gdof in data:
                 value = data[gdof]
 
-                aux_ones = np.ones(number_frequencies, dtype=complex)
+                aux_ones = np.ones(self.number_frequencies, dtype=complex)
                 if isinstance(value, complex):
                     property_data[gdof] = aux_ones * value
 
                 elif isinstance(value, np.ndarray):
-                    property_data[gdof] = value[0:number_frequencies]
+                    property_data[gdof] = value[: self.number_frequencies]
 
         except Exception as _error_log:
             print(str(_error_log))
 
-        return property_data, np.array(list(property_data.values()))
+        return property_data
 
 
     def reorder_property_data_based_on_gdof(self, input_property_data: dict):
@@ -216,23 +223,24 @@ class StructuralAssembler:
 
         input_prescribed_dof_data = self.get_property_data_for_selected_property("prescribed_dof")
         output_prescribed_dof_data = self.reorder_property_data_based_on_gdof(input_prescribed_dof_data)
-        self.prescribed_dof_values, self.array_prescribed_values = self.process_property_arrays(output_prescribed_dof_data)
+        self.prescribed_dof_values = self.process_property_arrays(output_prescribed_dof_data)
 
-        self.prescribed_dof_indices = list(output_prescribed_dof_data.keys())
-        self.unprescribed_dof_indices = self.get_unprescribed_indices()
+        self.prescribed_dof_indices = list(self.prescribed_dof_values.keys())
+        self.array_prescribed_values = np.array(list(self.prescribed_dof_values.values()), dtype=complex)
 
 
-    def get_unprescribed_indices(self):
+    def process_unprescribed_indices(self):
         """ 
         Returns the unprescribed dof indices.
         """
         all_indices = np.arange(self.model.total_str_dofs, dtype=int)
-        return np.delete(all_indices, self.prescribed_dof_indices)
+        self.unprescribed_dof_indices = np.delete(all_indices, self.prescribed_dof_indices)
 
 
-    def get_prescribed_dof_values(self):
-        return self.prescribed_dof_values, self.array_prescribed_values
-    
+    def process_dofs_indices(self):
+        self.process_prescribed_dof_data()
+        self.process_unprescribed_indices()
+
 
     def get_displacement_dof(self):
         """
@@ -242,7 +250,6 @@ class StructuralAssembler:
         """
         if self.model.mesh.solids_connectivity.size:
             return self.structural_dofs
-            displacement_dof = np.arange(self.total_dofs, dtype=int)
 
         else:
             nodes_from_2d_elements = np.array([*set(self.model.mesh.faces_connectivity[:, 4:].flatten())], dtype=int)
@@ -255,18 +262,6 @@ class StructuralAssembler:
             displacement_dof = displacement_dof_from_2d_elements.flatten()
 
         return displacement_dof
-
-
-    def process_structural_excitations_by_nodal_attribution(self):
-
-        input_nodal_loads_data = self.get_property_data_for_selected_property("nodal_loads")
-        output_nodal_loads_data = self.reorder_property_data_based_on_gdof(input_nodal_loads_data)
-        nodal_loads, _ = self.process_property_arrays(output_nodal_loads_data)
-
-        if nodal_loads:
-            indices = list(nodal_loads.keys())
-            excitation = list(nodal_loads.values())
-            self.structural_load[indices, :] += np.array(excitation)
 
 
     def process_loads_arrays(self, values: list[np.ndarray | None]):
@@ -286,16 +281,11 @@ class StructuralAssembler:
             have the same size as the frequencies vector.
         """
 
-        if self.frequencies is None:
-            number_frequencies = 1
-        else:
-            number_frequencies = len(self.frequencies)
-
         try:
 
             values_list = []
-            aux_ones = np.ones(number_frequencies, dtype=complex)
-            aux_zeros = np.zeros(number_frequencies, dtype=complex)
+            aux_ones = np.ones(self.number_frequencies, dtype=complex)
+            aux_zeros = np.zeros(self.number_frequencies, dtype=complex)
 
             for value in values:
 
@@ -306,72 +296,34 @@ class StructuralAssembler:
                     values_list.append(aux_ones * value)
 
                 elif isinstance(value, np.ndarray):
-                    values_list.append(value[:number_frequencies])
+                    values_list.append(value[: self.number_frequencies])
 
         except Exception as _error_log:
             print(str(_error_log))
-            # TODO: check matrix dimensions for compatibility
             return aux_ones
         
         array_of_values = np.array(values_list, dtype=complex)
 
         # filter values based on frequency mask
-        if array_of_values.shape[1] - self.frequencies.size:
+        if array_of_values.shape[1] - self.number_frequencies:
             return array_of_values[self.model.solution_steps_mask, :]
 
         return array_of_values
 
 
-    # def get_value_in_array_form(
-    #         self, 
-    #         value: float | np.ndarray, 
-    #         flatten: bool = False, 
-    #         filter_frequencies: bool=True,
-    #         ) -> np.ndarray:
-    #     """
-    #     This method returns, for a given input value, an output vector with 
-    #     the same length as the frequencies vector.
+    def process_material_from_volumes(self):
+        """
+        This method maps the materials against each volume.
+        """
+        self.material_from_volume.clear()
 
-    #     Parameters
-    #     ----------
-    #     value: float or np.ndarray
-    #         The input value to be converted in array with
-    #         the same length as the frequencies vector.
-        
-    #     flatten: bool, optional
-    #         Controls whether the output vector will be flattened or not.
-
-    #     Returns
-    #     -------
-    #     output_vector: np.ndarray
-    #         The output vector with the same length as the frequencies
-    #         vector.
-    #     """
-
-    #     aux_ones = np.ones((1, self.number_frequencies), dtype=complex)
-
-    #     if isinstance(value, complex | float):
-    #         output_vector = value * aux_ones
-
-    #     elif isinstance(value, np.ndarray):
-    #         if value.shape[0] == 1:
-    #             output_vector = value * aux_ones
-
-    #         elif len(value.shape) == 1:
-    #             output_vector = value.reshape(1, -1)
-
-    #         else:
-    #             output_vector = value
-
-    #     if filter_frequencies:
-    #         if (output_vector.shape[1] - self.number_frequencies) and self.model.solution_steps_mask:
-    #             # filter values based on the solution steps mask
-    #             output_vector = output_vector[:, self.model.solution_steps_mask]
-
-    #     return output_vector.flatten() if flatten else output_vector
+        for vol_id in self.model.mesh.elements_from_volume:
+            material = self.properties._get_property("material", volume=vol_id)
+            if isinstance(material, Material):
+                self.material_from_volume[vol_id] = material
 
 
-    def get_distributed_mass_data_for_2d_element_integration(self) -> dict:
+    def get_distributed_mass_data_for_2d_element_integration(self) -> DistributedMassData | None:
         """ 
         This method processes the excitation property data for element face
         integration.
@@ -383,8 +335,8 @@ class StructuralAssembler:
             processed 2d elements.
         """
 
-        aux_data = {}
-        aux_connect = {}
+        pdata_values = {}
+        connectivities = {}
         integration_data = {}
 
         for key, data in self.properties.surface_properties.items():
@@ -412,21 +364,21 @@ class StructuralAssembler:
             # mass_density = 2061.0
 
             for i, el in enumerate(surf_elements):
-                aux_connect[el] = surf_connect[i]
-                aux_data[el] = mass_density
+                connectivities[el] = surf_connect[i]
+                pdata_values[el] = mass_density
 
-        if aux_connect:
+        if connectivities:
 
             integration_data = {
-                "element_ids" : np.array(list(aux_connect.keys()), dtype=int),
-                "connectivities" : np.array(list(aux_connect.values()), dtype=int),
-                "surface_data" : aux_data,
+                "element_ids" : np.array(list(connectivities.keys()), dtype=int),
+                "connectivities" : np.array(list(connectivities.values()), dtype=int),
+                "pdata_values" : np.array(list(pdata_values.values()), dtype=float),
                 }
 
-        return integration_data
+            return DistributedMassData(**integration_data)
 
 
-    def get_distributed_mass_data_for_1d_element_integration(self) -> dict:
+    def get_distributed_mass_data_for_1d_element_integration(self) -> DistributedMassData | None:
         """ 
         This method processes the excitation property data for element face
         integration.
@@ -438,8 +390,8 @@ class StructuralAssembler:
             processed 2d elements.
         """
 
-        aux_data = {}
-        aux_connect = {}
+        pdata_values = {}
+        connectivities = {}
         integration_data = {}
 
         for key, data in self.properties.line_properties.items():
@@ -459,300 +411,18 @@ class StructuralAssembler:
             line_density = mass / line_length
 
             for i, el in enumerate(line_elements):
-                aux_connect[el] = line_connect[i]
-                aux_data[el] = line_density
+                connectivities[el] = line_connect[i]
+                pdata_values[el] = line_density
 
-        if aux_connect:
-
-            integration_data = {
-                "element_ids" : np.array(list(aux_connect.keys()), dtype=int),
-                "connectivities" : np.array(list(aux_connect.values()), dtype=int),
-                "surface_data" : aux_data,
-                }
-
-        return integration_data
-
-
-    def get_excitation_data_for_1d_element_integration(self, property_label: str) -> dict:
-        """ 
-        This method processes the excitation property data for element face
-        integration.
-
-        Parameters
-        ----------
-        property_label: str
-            The property label on which the surface data will be processed.
-
-        Returns
-        -------
-        integration_data: dict
-            A dictionary containing the connectivities and the data of each
-            processed 2d elements.
-        """
-
-        aux_data = {}
-        aux_connect = {}
-        integration_data = {}
-
-        for key, data in self.properties.line_properties.items():
-
-            property, line_id = key
-            if property != property_label:
-                continue
-
-            if property in ["normal_pressure_load", "nodal_loads", "distributed_load"]:
-                element_type = data.get("element_type")
-                if element_type == "2d_element":
-                    continue
-
-            data: dict
-            element_integration = data.get("element_integration", True)
-            if property == "nodal_loads" and not element_integration:
-                continue
-
-            complex_values = data.get("values")
-
-            # normalize data type to array
-            complex_values_array = self.process_loads_arrays(complex_values)
-
-            elements = list(self.model.mesh.elements_from_line.get(line_id))
-            connect = self.model.mesh.get_connectivity_from_line(line_id)
-
-            if property_label == "nodal_loads":
-                line_length = self.element_1d.integrate_length(connect)
-                complex_values_array /= line_length
-
-            for i, el in enumerate(elements):
-                aux_connect[el] = connect[i]
-                aux_data[el] = complex_values_array
-
-        if aux_connect:
+        if connectivities:
 
             integration_data = {
-                "element_ids" : np.array(list(aux_connect.keys()), dtype=int),
-                "connectivities" : np.array(list(aux_connect.values()), dtype=int),
-                "data_array" : aux_data,
+                "element_ids" : np.array(list(connectivities.keys()), dtype=int),
+                "connectivities" : np.array(list(connectivities.values()), dtype=int),
+                "pdata_values" : np.array(list(pdata_values.values()), dtype=float),
                 }
 
-        return integration_data
-
-
-    def get_excitation_data_for_2d_element_integration(self, property_label: str) -> dict:
-        """ 
-        This method processes the excitation property data for element face
-        integration.
-
-        Parameters
-        ----------
-        property_label: str
-            The property label on which the surface data will be processed.
-
-        Returns
-        -------
-        integration_data: dict
-            A dictionary containing the connectivities and the data of each
-            processed 2d elements.
-        """
-
-        aux_data = {}
-        aux_connect = {}
-        integration_data = {}
-
-        for key, data in self.properties.surface_properties.items():
-
-            property, surface_id = key
-            if property != property_label:
-                continue
-
-            if property in ["normal_pressure_load", "nodal_loads", "distributed_load"]:
-                element_type = data.get("element_type")
-                if element_type == "2d_element":
-                    continue
-
-            data: dict
-            element_integration = data.get("element_integration", True)
-            if property == "nodal_loads" and not element_integration:
-                continue
-
-            complex_values = data.get("values")
-
-            # normalize data type to array
-            complex_values_array = self.process_loads_arrays(complex_values)
-
-            elements = list(self.model.mesh.elements_from_surface.get(surface_id))
-            connect = self.model.mesh.get_connectivity_from_surface(surface_id)
-
-            if property_label == "nodal_loads":
-                surface_area = self.element_2d.integrate_area(connect)
-                complex_values_array /= surface_area
-
-            for i, el in enumerate(elements):
-                aux_connect[el] = connect[i]
-                aux_data[el] = complex_values_array
-
-        if aux_connect:
-
-            integration_data = {
-                "element_ids" : np.array(list(aux_connect.keys()), dtype=int),
-                "connectivities" : np.array(list(aux_connect.values()), dtype=int),
-                "data_array" : aux_data,
-                }
-
-        return integration_data
-
-
-    def process_structural_excitations_by_1d_element_integration(self):
-        """ 
-        This method processes the acoustic model excitations and
-        returns the output data in the form of mass flow rate.
-        """
-
-        prop_labels = [
-            "nodal_loads",
-            "normal_pressure_load",
-            "distributed_loads",
-        ]
-
-        for prop_label in prop_labels:
-
-            integration_data = self.get_excitation_data_for_1d_element_integration(prop_label)
-            if not integration_data:
-                continue
-
-            match prop_label:
-                case "distributed_loads" | "nodal_loads":
-                    self.process_distributed_load_1d(integration_data)
-
-
-    def process_structural_excitations_by_2d_element_integration(self):
-        """ 
-        This method processes the acoustic model excitations and
-        returns the output data in the form of mass flow rate.
-        """
-
-        prop_labels = [
-            "nodal_loads",
-            "normal_pressure_load",
-            "distributed_loads",
-        ]
-
-        for prop_label in prop_labels:
-
-            integration_data = self.get_excitation_data_for_2d_element_integration(prop_label)
-            if not integration_data:
-                continue
-
-            match prop_label:
-                case "normal_pressure_load":
-                    self.process_normal_pressure_load(integration_data)
-
-                case "distributed_loads" | "nodal_loads":
-                    self.process_distributed_load_2d(integration_data)
-
-
-    def process_normal_pressure_load(self, integration_data: dict, load_vectors: np.ndarray):
-
-        element_ids = integration_data.get("element_ids")
-        connectivities = integration_data.get("connectivities")
-        surface_data: dict = integration_data.get("data_array")
-
-        surface_elements_connectivities = self.model.mesh.faces_connectivity[element_ids, :]
-        elements_normals = self.model.mesh.get_element_face_normal_batched(surface_elements_connectivities)
-
-        self.element_2d.reorder_connect(connectivities)
-        for i, complex_values in enumerate(surface_data.values()):
-            indices = self.element_2d.get_rows_and_cols_indices_1D(i)
-            e_normal = elements_normals[i, :].reshape(-1, 1)
-            self.structural_load[indices, :] += self.element_2d.integrate_normal_pressure_load(i, e_normal, complex_values)
-
-
-    def process_distributed_load_1d(self, integration_data: dict):
-
-        connectivities = integration_data.get("connectivities")
-        data_array: dict = integration_data.get("data_array")
-
-        self.element_1d.reorder_connect(connectivities)
-        for i, complex_values in enumerate(data_array.values()):
-            indices = self.element_1d.get_rows_and_cols_indices_1D(i)
-            self.structural_load[indices, :] += self.element_1d.integrate_distributed_load(i, complex_values)
-
-
-    def process_distributed_load_2d(self, integration_data: dict):
-
-        connectivities = integration_data.get("connectivities")
-        data_array: dict = integration_data.get("data_array")
-
-        self.element_2d.reorder_connect(connectivities)
-        for i, complex_values in enumerate(data_array.values()):
-            indices = self.element_2d.get_rows_and_cols_indices_1D(i)
-            self.structural_load[indices, :] += self.element_2d.integrate_distributed_load(i, complex_values)
-
-
-    def process_distributed_loads_for_shell_elements(self):
-
-        for (property, surface_id), data in self.properties.surface_properties.items():
-            if property not in ["distributed_loads", "normal_pressure_loads"]:
-                continue
-
-            if data.get("element_type") != "element_2d":
-                continue
-
-            connectivities_from_surface = self.model.mesh.get_connectivity_from_surface(surface_id)
-            if property == "distributed_loads":
-                surface_load = self.process_loads_arrays(data["values"])
-                if surface_load is None:
-                    continue
-
-                for connect in connectivities_from_surface:
-                    g_dof, F_elem = self.element_2d.process_forces_for_distributed_load_over_area(connect, surface_load)
-                    self.structural_load[g_dof, :] += F_elem
-
-            elif property == "normal_pressure_load":
-                normal_pressure = self.process_loads_arrays(data["values"])
-                if normal_pressure is None:
-                    continue
-
-                for connect in connectivities_from_surface:
-                    if data.get("element_type") == "2d_element":
-                        g_dof, F_elem = self.element_2d.process_forces_for_normal_pressure_load(connect, normal_pressure)
-
-                    self.structural_load[g_dof, :] += F_elem
-
-        for (property, line_id), data in self.properties.line_properties.items():
-            if property != "distributed_loads":
-                continue
-
-            if data.get("element_type") != "element_2d":
-                continue
-        
-            line_load = self.process_loads_arrays(data["values"])
-            if line_load is None:
-                continue
-
-            nodes = self.model.mesh.get_nodes_from_line(line_id)
-            if nodes is None:
-                continue
-
-            for surface_id in self.model.mesh.surfaces_from_line[line_id]:
-                connectivities_from_surface = self.model.mesh.get_connectivity_from_surface(surface_id)
-                rows = np.sum(np.isin(connectivities_from_surface, nodes), axis=1) == 2
-
-                for connect_2d in connectivities_from_surface[rows, :]:
-                    active_nodes = [1 if node_id in nodes else 0 for node_id in connect_2d]
-                    g_dof, F_elem = self.element_2d.process_forces_for_distributed_load_over_line(connect_2d, active_nodes, line_load)
-                    self.structural_load[g_dof, :] += F_elem
-
-
-    def process_material_from_volumes(self):
-        """
-        This method maps the materials against each volume.
-        """
-        self.material_from_volume.clear()
-
-        for vol_id in self.model.mesh.elements_from_volume:
-            material = self.properties._get_property("material", volume=vol_id)
-            if isinstance(material, Material):
-                self.material_from_volume[vol_id] = material
+            return DistributedMassData(**integration_data)
 
 
     def process_surface_data_for_shell_elements(self):
@@ -814,7 +484,7 @@ class StructuralAssembler:
             material = self.surface_data_for_shell_elements[surf_id]["material"]
             
             # material from volume
-            surface_data = self.surface_data_for_shell_elements[surf_id]["surface_data"]
+            surface_data: dict = self.surface_data_for_shell_elements[surf_id]["surface_data"]
 
             Ke, Me = self.element_2d.elementary_matrices(element_id, material, surface_data.get("surface_thickness"))
 
@@ -881,17 +551,17 @@ class StructuralAssembler:
             self.process_surface_data_for_shell_elements()
             self.compute_data_to_process_global_matrices_for_shell_elements(reorder = reorder)
 
-        self.process_prescribed_dof_data()
+        self.process_dofs_indices()
 
 
     def assemble_distributed_mass_matrix_for_lines(self):
 
         integration_data_1d = self.get_distributed_mass_data_for_1d_element_integration()
-        if not integration_data_1d:
+        if integration_data_1d is None:
             return
 
-        connectivities = integration_data_1d.get("connectivities")
-        surface_data: dict = integration_data_1d.get("surface_data")
+        connectivities = integration_data_1d.connectivities
+        pdata_values = integration_data_1d.pdata_values
 
         n_el = len(connectivities)
         e_dofs = self.element_1d.dof_per_element
@@ -900,7 +570,7 @@ class StructuralAssembler:
         self.element_1d.reorder_connect(connectivities)
         ind_rows, ind_cols = self.element_1d.get_rows_and_cols_indices_1D()
 
-        for i, surface_density in enumerate(surface_data.values()):
+        for i, surface_density in enumerate(pdata_values):
             data_Mdist[i, :, :] = self.element_1d.integrate_distributed_mass(i, surface_density)
 
         self.mass_matrix += csr_matrix((data_Mdist.flatten(), (ind_rows, ind_cols)), shape=self.gm_shape)
@@ -909,11 +579,11 @@ class StructuralAssembler:
     def assemble_distributed_mass_matrix_for_surfaces(self):
 
         integration_data_2d = self.get_distributed_mass_data_for_2d_element_integration()
-        if not integration_data_2d:
+        if integration_data_2d is None:
             return
 
-        connectivities = integration_data_2d.get("connectivities")
-        surface_data: dict = integration_data_2d.get("surface_data")
+        connectivities = integration_data_2d.connectivities
+        pdata_values = integration_data_2d.pdata_values
 
         n_el = len(connectivities)
         e_dofs = self.element_2d.dof_per_element
@@ -922,7 +592,7 @@ class StructuralAssembler:
         self.element_2d.reorder_connect(connectivities)
         ind_rows, ind_cols = self.element_2d.get_rows_and_cols_indices_2D()
 
-        for i, surface_density in enumerate(surface_data.values()):
+        for i, surface_density in enumerate(pdata_values):
             data_Mdist[i, :, :] = self.element_2d.integrate_distributed_mass(i, surface_density)
 
         self.mass_matrix += csr_matrix((data_Mdist.flatten(), (ind_rows, ind_cols)), shape=self.gm_shape)
@@ -994,38 +664,50 @@ class StructuralAssembler:
         print(f"Elapsed time to assemble the global mass matrix: {dt : .6f} [s]")
 
 
-    def assemble_model_excitations(self):
-        """
-        This method assembles the excitations of the structural model.
-        """
-
-        # initialize the structural load vector
-        self.structural_load = np.zeros((self.total_dofs, self.number_frequencies), dtype=complex)
-
-        self.process_structural_excitations_by_nodal_attribution()
-        self.process_structural_excitations_by_1d_element_integration()
-        self.process_structural_excitations_by_2d_element_integration()
-
-        # loads of shell structure
-        self.process_distributed_loads_for_shell_elements()
-
-        # partitioning the load vector
-        if self.model.drop_domain:
-            self.structural_load = self.structural_load[self.structural_dofs, :]
-
-        if self.prescribed_dof_indices:
-            self.structural_load = self.structural_load[self.unprescribed_dof_indices, :]
-
-
     def assemble_global_matrices_and_excitations(self, reorder: bool=True, **kwargs):
         """
         This method assembles the global matrices and excitations of the structural model.
         """
         self.assemble_global_matrices(reorder = reorder)
-        self.assemble_model_excitations()
+        self.structural_load = self.excitations_assembler.assemble_model_excitations()
 
 
-    def reinsert_the_prescribed_dof(self, solution, modal_analysis=False):
+    def build_harmonic_system(self, freq: float, index: int):
+        omega = 2 * np.pi * freq
+
+        analysis_setup = self.model.analysis_setup
+        assert isinstance(analysis_setup, HarmonicAnalysisSetup)
+
+        alpha, beta, eta = self.model.global_damping
+
+        M = self.mass_matrix
+        K = self.stiffness_matrix
+
+        f = self.excitations_assembler.get_combined_nodal_loads_vector(index=index)
+
+        A = (-(omega**2) + 1j*(omega * alpha)) * M + (1 + 1j*(eta + omega * beta)) * K
+
+        is_complex = np.any(np.iscomplex(A.data)) or np.any(np.iscomplex(f))
+        if not is_complex:
+            A.data = np.real(A.data)
+            f = np.real(f)
+
+        return A, f
+
+
+    def build_eigenproblem_system(self):
+        K = self.stiffness_matrix
+        M = self.mass_matrix
+        
+        is_complex = np.any(np.iscomplex(K.data)) or np.any(np.iscomplex(M.data))
+        if not is_complex:
+            K.data = np.real(K.data)
+            M.data = np.real(M.data)
+
+        return K, M, True
+
+
+    def reinsert_the_prescribed_dof(self, solution, modal_analysis: bool = False):
         """
         This method reinsert the value of the prescribed degree of freedom in the solution.
 
@@ -1052,7 +734,7 @@ class StructuralAssembler:
             if modal_analysis:
                 full_solution[self.prescribed_dof_indices, :] = np.zeros((len(self.prescribed_dof_indices), cols))
             else:
-                full_solution[self.prescribed_dof_indices, :] = self.array_prescribed_values[:, 0:cols]
+                full_solution[self.prescribed_dof_indices, :] = self.array_prescribed_values[:, :cols]
 
         full_solution[self.unprescribed_dof_indices, :] = solution
 
@@ -1062,148 +744,11 @@ class StructuralAssembler:
     def reinsert_the_prescribed_dof_into_solution_freq(self, solution: np.ndarray, freq_index: int):
 
         rows = len(solution) + len(self.prescribed_dof_indices)
+
         full_solution = np.zeros(rows, dtype=complex)
+        full_solution[self.unprescribed_dof_indices] = solution
 
         if len(self.prescribed_dof_indices):
             full_solution[self.prescribed_dof_indices] = self.array_prescribed_values[:, freq_index]
 
-        full_solution[self.unprescribed_dof_indices] = solution
-
         return full_solution
-
-
-    def get_prescribed_dof_model_excitation(self, index: int = 0):
-        """
-        This method adds the effects of prescribed acoustic pressure into mass flow global vector.
-
-        Parameter
-        ---------
-        index: int, optional
-        It corresponds to the frequency index.
-
-        Returns
-        -------
-        f_eq: np.ndarray
-        The array of equivalent prescribed dof model excitation from
-        i-th frequency index.
-        """
-
-        if np.sum(self.array_prescribed_values) == 0:
-            return 0.
-
-        analysis_setup = self.model.analysis_setup
-        assert isinstance(analysis_setup, HarmonicAnalysisSetup)
-
-        alpha, beta, eta = self.model.global_damping
-        frequencies = analysis_setup.get_frequencies()
-
-        omega = 2 * np.pi * frequencies[index]
-        values = self.array_prescribed_values[:, index]
-
-        self.Kr = self.stiffness_matrix_r
-        self.Mr = self.mass_matrix_r
-
-        Kr_add = self.Kr @ values
-        Mr_add = self.Mr @ values
-
-        f_eq = (1 + 1j*(eta + omega * beta)) * Kr_add + (-(omega**2) + 1j*(omega * alpha)) * Mr_add
-
-        unprescribed_indices = self.unprescribed_dof_indices
-
-        return f_eq[unprescribed_indices]
-
-
-    def get_prescribed_dof_model_excitation_reference(self, freq_dependent: bool = False):
-        """
-        This method adds the effects of prescribed acoustic pressure into mass flow global vector.
-
-        Returns
-        ----------
-        array
-            F_eq. Each column corresponds to a frequency of analysis.
-        """
-
-        if np.sum(self.array_prescribed_values) == 0:
-            return 0.
-
-        analysis_setup = self.model.analysis_setup
-        assert isinstance(analysis_setup, HarmonicAnalysisSetup)
-
-        alpha, beta, eta = self.model.global_damping
-        frequencies = self.model.frequencies
-
-        unprescribed_indices = self.unprescribed_dof_indices
-
-        Kr = (self.stiffness_matrix_r.toarray())[unprescribed_indices, :]
-        Mr = (self.mass_matrix_r.toarray())[unprescribed_indices, :]
-
-        logging.info(f"Processing prescribed dof model excitation... [10/{len(frequencies)}]")
-
-        rows = Kr.shape[0]
-        if freq_dependent:
-            cols = 1
-            f_eq = np.zeros(rows, dtype=complex)
-
-        else:
-            cols = len(frequencies)
-            f_eq = np.zeros((rows, cols), dtype=complex)
-
-        for i, freq in enumerate(frequencies):
-            #
-            logging.info(f"Processing prescribed dof model excitation... [{i + 10}/{len(frequencies) + 10}]")
-            #
-            Kr_add = np.sum((Kr * self.array_prescribed_values[:, i]), axis=1)
-            Mr_add = np.sum((Mr * self.array_prescribed_values[:, i]), axis=1)
-            #
-            omega = 2 * np.pi * freq
-            f_Kadd = Kr_add
-            f_Madd = -(omega**2) * Mr_add
-            f_Cadd = 1j * ((eta + omega * beta) * Kr_add + (omega * alpha) * Mr_add)
-            f_eq[:, i] = f_Madd + f_Cadd + f_Kadd
-
-        logging.info("Processing prescribed dof model excitation... [100/100]")
-
-        return f_eq
-
-    
-    def get_combined_nodal_loads_vector(self, index: int):
-        
-        f_eq = self.get_prescribed_dof_model_excitation(index=index)
-        f = self.structural_load[:, index] - f_eq
-
-        return f
-
-
-    def build_harmonic_system(self, freq: float, index: int):
-        omega = 2 * np.pi * freq
-
-        analysis_setup = self.model.analysis_setup
-        assert isinstance(analysis_setup, HarmonicAnalysisSetup)
-
-        alpha, beta, eta = self.model.global_damping
-
-        M = self.mass_matrix
-        K = self.stiffness_matrix
-
-        f = self.get_combined_nodal_loads_vector(index=index)
-
-        A = (-(omega**2) + 1j*(omega * alpha)) * M + (1 + 1j*(eta + omega * beta)) * K
-
-        is_complex = np.any(np.iscomplex(A.data)) or np.any(np.iscomplex(f))
-        if not is_complex:
-            A.data = np.real(A.data)
-            f = np.real(f)
-
-        return A, f
-
-
-    def build_eigenproblem_system(self):
-        K = self.stiffness_matrix
-        M = self.mass_matrix
-        
-        is_complex = np.any(np.iscomplex(K.data)) or np.any(np.iscomplex(M.data))
-        if not is_complex:
-            K.data = np.real(K.data)
-            M.data = np.real(M.data)
-
-        return K, M, True
