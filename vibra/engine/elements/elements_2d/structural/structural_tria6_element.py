@@ -26,6 +26,13 @@ class STRUCT_TRIANGLE_6(TRIANGLE_6):
 
         self.N_matrix = self.get_N_matrix()
 
+        self.dof_indexes_proc = self.dof_indexes_processor(
+            model,
+            "structural",
+            dof_per_node,
+            self.nodes_per_element,
+            )
+
 
     def get_N_matrix(self):
         N = np.zeros((self.nint, 3, self.dof_per_element), dtype=float)
@@ -192,14 +199,7 @@ class STRUCT_TRIANGLE_6(TRIANGLE_6):
             The element index.
         """
 
-        dof = self.dof_per_node
-        elem_nodes = self.connectivities[index, :]
-        _elem_nodes = self.model.struct_node_mapping[elem_nodes]
-
-        dofs_shift = self.model.structural_dofs_shift
-        dof_indices = dof * _elem_nodes.reshape(-1, 1) + self.local_dof + dofs_shift
-
-        return dof_indices.flatten()
+        return self.dof_indexes_proc.get_rows_and_cols_indices_1D(index, self.connectivities)
 
 
     def get_rows_and_cols_indices_2D(self, connectivities: np.ndarray):
@@ -213,21 +213,4 @@ class STRUCT_TRIANGLE_6(TRIANGLE_6):
 
         self.reorder_connect(connectivities)
 
-        n_el = len(connectivities)
-        dof, edof = self.dof_per_node, self.dof_per_element
-
-        ind_dof = np.zeros((n_el, edof), dtype=int)
-
-        for j in range(self.nodes_per_element):
-            start = j * dof
-            end = (j + 1) * dof
-            elem_nodes = self.model.struct_node_mapping[self.connectivities[:, j]]
-            ind_dof[:, start : end] = dof * elem_nodes.reshape(-1, 1) + self.local_dof
-
-        ind_dof += self.model.structural_dofs_shift
-
-        vect_indices = ind_dof.flatten()
-        ind_rows = ((np.tile(vect_indices, (edof, 1))).T).flatten()
-        ind_cols = (np.tile(ind_dof, edof)).flatten()
-
-        return ind_rows, ind_cols
+        return self.dof_indexes_proc.get_rows_and_cols_indices_2D(self.connectivities)

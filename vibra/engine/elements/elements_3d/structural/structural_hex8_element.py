@@ -1,17 +1,21 @@
 
+from typing import TYPE_CHECKING
+
 from vibra.engine.elements.solid_elements import Element3D
 from vibra.engine.properties.material import Material
 
-from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from vibra.engine.model import Model
 
 # from vibra.engine.elements.elements_3d.structural.FEMSTHEX8_FB import matricesH8S_FB
-from vibra.engine.elements.elements_3d.structural.flanagan_belytschko_formulation import get_B_analytic, compute_hourglass_stiffness#, calcular_k_stab_corrigido
-
-from vibra.engine.elements.element_options import HEX8_structural, BbarDilatationalEvaluation
-
 import numpy as np
+
+from vibra.engine.elements.element_options import BbarDilatationalEvaluation, HEX8_structural
+from vibra.engine.elements.elements_3d.structural.flanagan_belytschko_formulation import (  #, calcular_k_stab_corrigido
+    compute_hourglass_stiffness,
+    get_B_analytic,
+)
+
 
 class STRUCT_HEXAHEDRON_8(Element3D):
 
@@ -30,7 +34,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
 
         self.model = model
 
-        self.connectivity = None
+        self.connectivities = None
         self.element_label = "structural_hexahedron_8"
 
         self.nodal_coordinates = self.model.mesh.nodal_coordinates
@@ -367,7 +371,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         """
 
         # nodes from element
-        elem_nodes = self.connectivity[element_id, 1:]
+        elem_nodes = self.connectivities[element_id, :]
 
         # element nodal coords
         coords = self.nodal_coordinates[elem_nodes, 1:4]
@@ -549,7 +553,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
             Me = np.diag(self.aux_ones * nodal_mass)
 
             # nodes from element
-            elem_nodes = self.connectivity[element_id, 1:]
+            elem_nodes = self.connectivities[element_id, :]
 
             # element nodal coords
             coords = self.nodal_coordinates[elem_nodes, 1:4]
@@ -571,7 +575,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
             # hourglass stabilization matrix K_hg
             K_hg = compute_hourglass_stiffness(K_unif, coords, dphi_t_an, material, e_vol[0])
             # K_hg = calcular_k_stab_corrigido(coords, material.elasticity_modulus, material.poisson_ratio, 0.1)
-            # K_hg = matricesH8S_FB(element_id, self.nodal_coordinates, self.connectivity, material.elasticity_modulus, material.poisson_ratio, material.material_density, 0, kappa=0.125)
+            # K_hg = matricesH8S_FB(element_id, self.nodal_coordinates, self.connectivities, material.elasticity_modulus, material.poisson_ratio, material.material_density, 0, kappa=0.125)
 
             ## PATCH TEST FOR ORTHOGONAL STABILIZATION ()
             
@@ -634,7 +638,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
                 Ke = Kuu - Kua @ np.linalg.inv(Kbb) @ Kau
 
         # # nodes from element
-        # elem_nodes = self.connectivity[element_id, 1:]
+        # elem_nodes = self.connectivities[element_id, :]
 
         # # element nodal coords
         # coords = self.nodal_coordinates[elem_nodes, 1:4]
@@ -699,7 +703,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         node_ids = kwargs.get("node_ids")
 
         if node_ids is None:
-            node_ids = self.connectivity[element_id, 1:]
+            node_ids = self.connectivities[element_id, :]
 
         if isinstance(nodal_solution, np.ndarray):
             Ue = nodal_solution
@@ -711,7 +715,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         else:
             return 0.
 
-        if self.connectivity is None:
+        if self.connectivities is None:
             self.reorder_connect()
 
         # get the volume ID from element
@@ -767,7 +771,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
     def reorder_connect(self):
         """Reordering connectivity matrix to adequate the GMSH connectivity to the FE model"""
         if self.solids_connectivity.shape[1] == self.NODES_PER_ELEMENT + 4:
-            self.connectivity = self.solids_connectivity[:, [0, 4, 5, 6, 7, 8, 9, 10, 11]]
+            self.connectivities = self.solids_connectivity[:, [4, 5, 6, 7, 8, 9, 10, 11]]
 
 
     def generate_ind_rows_cols(self, reorder: bool = True):
@@ -776,33 +780,16 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         if reorder:
             self.reorder_connect()
         else:
-            self.connectivity = self.solids_connectivity[:, [0, 4, 5, 6, 7, 8, 9, 10, 11]]
+            self.connectivities = self.solids_connectivity[:, [4, 5, 6, 7, 8, 9, 10, 11]]
 
-        # filter the structural elements connectivities
-        element_ids = self.model.elements_per_domain.get("structural", np.array([]))
-        structural_connect = self.connectivity[element_ids, :]
+        dof_indexes = self.dof_indexes_processor(
+            self.model,
+            "structural",
+            self.DOF_PER_NODE,
+            self.NODES_PER_ELEMENT,
+            )
 
-        dof, edof = self.DOF_PER_NODE, self.DOF_PER_ELEMENT
-        n_el = element_ids.size
-
-        local_dof = np.arange(dof, dtype=int)
-        ind_dof = np.zeros((n_el, edof), dtype=int)
-
-        for j in range(self.NODES_PER_ELEMENT):
-            start = j * dof
-            end = (j + 1) * dof
-            elem_nodes = self.model.struct_node_mapping[structural_connect[:, j + 1]]
-            ind_dof[:, start : end] = dof * elem_nodes.reshape(-1, 1) + local_dof
-
-        ind_dof += self.model.structural_dofs_shift
-
-        vect_indices = ind_dof.flatten()
-        ordered_dofs = np.unique(vect_indices)
-
-        ind_rows = ((np.tile(vect_indices, (edof, 1))).T).flatten()
-        ind_cols = (np.tile(ind_dof, edof)).flatten()
-
-        return ind_rows, ind_cols, ordered_dofs
+        return dof_indexes.get_rows_and_cols_indices_3D(self.connectivities)
 
 
     def calcB(self, dphi_t):
