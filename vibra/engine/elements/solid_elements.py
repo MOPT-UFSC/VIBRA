@@ -23,6 +23,31 @@ class Element3D:
     DOF_PER_ELEMENT: int = NODES_PER_ELEMENT * DOF_PER_NODE
    
 
+    #     self.initialize()
+
+
+    # def initialize(self):
+    #     self.nint = None
+    #     self.nint_M = None
+    #     self.nint_K = None
+
+    #     self.wps = None
+    #     self.wps_M = None
+    #     self.wps_K = None
+
+    #     self.phi = None
+    #     self.phi_M = None
+    #     self.phi_K = None
+
+    #     self.dphi = None
+    #     self.dphi_M = None
+    #     self.dphi_K = None
+
+
+    # @property
+    # def dof_per_element(self):
+    #     return self.dof_per_node * self.nodes_per_element
+
     def dof_indexes_processor(self, 
             model: "Model",
             domain: str,
