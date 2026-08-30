@@ -1,3 +1,5 @@
+from enum import IntEnum
+
 import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
@@ -8,6 +10,13 @@ from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
 from vibra.interface.ui_generated.plots.structural.structural_frequency_response_inputs_ui import StructuralFrequencyResponseInputs_UI
+
+
+class SelectionType(IntEnum):
+    SURFACES = 0
+    LINES = 1
+    POINTS = 2
+    NODES = 3
 
 
 class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI):
@@ -51,17 +60,19 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
     def _initialize(self):
         self.plotter = None
         self.exporter = None
+        self.model_results = {}
         self.selection_types = ["surfaces", "lines", "points", "nodes"]
 
     def _create_connections(self):
-        #
+
+        # QComboBox connection
         self.comboBox_selector_filter.currentIndexChanged.connect(self.selection_type_callback)
-        #
+
+        # QPushButton connection
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
-        #
+
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
-        #
         self.update_combo_box_items_callback()
 
     def update_combo_box_items_callback(self):
@@ -85,7 +96,7 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
                 self.comboBox_structural_results.addItem(f"{results_label} {_dof_label}")
 
     def selection_type_callback(self):
-        if self.comboBox_selector_filter.currentIndex() == 3:
+        if self.comboBox_selector_filter.currentIndex() == SelectionType.NODES:
             app().main_window.show_mesh_render_widget()
         else:
             app().main_window.show_geometry_render_widget()
@@ -166,7 +177,7 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
 
     def get_response(self, selection_type: str, selected_id: int, dof_index: int):
 
-        surface_ids = list()
+        surface_ids = []
 
         if selection_type == "surface":
             surface_ids = [selected_id]
@@ -200,8 +211,11 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
                     self.model.set_structural_elements()
                 dof_per_node = self.model.structural_element_3d.DOF_PER_NODE
 
-            gdof = dof_per_node * nodes.reshape(-1, 1) + np.arange(dof_per_node, dtype=int)
-            rows = gdof[:, dof_index]
+        # map structural dofs
+        _nodes = self.model.struct_node_mapping[nodes]
+
+        gdof = dof_per_node * _nodes.reshape(-1, 1) + np.arange(dof_per_node, dtype=int)
+        rows = gdof[:, dof_index]
 
         if isinstance(rows, int):
             response = self.nodal_solution[rows,:]
@@ -217,11 +231,11 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
 
     def join_model_data(self):
 
+        self.model_results.clear()
         dof_index = self.get_dof_index()
         index = self.comboBox_selector_filter.currentIndex()
         selection_type = self.selection_types[index][:-1]
 
-        self.model_results = dict()
         self.y_label = self.get_ylabel()
         self.unit = self.get_unit()
         self.title = f"Structural frequency response - {self.analysis_method}"
@@ -318,5 +332,5 @@ def get_color(index: int):
 
     if index <= 6:
         return colors[index]
-    else:
-        return tuple(np.random.randint(0, 255, size=3) / 255)
+
+    return tuple(np.random.randint(0, 255, size=3) / 255)

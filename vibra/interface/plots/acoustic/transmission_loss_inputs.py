@@ -333,7 +333,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
 
     def map_cylindrical_surfaces_to_fluids(self):
 
-        self.map_curvatures_to_fluid = dict()
+        self.map_curvatures_to_fluid = {}
         self.comboBox_cutoff_frequency.clear()
         self.comboBox_cutoff_frequency.blockSignals(True)
 
@@ -364,22 +364,22 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
 
     def compute_pipe_cutoff_frequency_callback(self):
         if self.comboBox_cutoff_frequency.currentText() == "":
-            return None
+            return
         
         if not self.map_curvatures_to_fluid:
-            return None
+            return
         
         key = float(self.comboBox_cutoff_frequency.currentText())
         data = self.map_curvatures_to_fluid.get(key)
         if data is None:
-            return None
+            return
 
         d_in, fluid = data
         if not isinstance(fluid, Fluid):
-            return None
+            return
 
         if d_in == 0:
-            return None
+            return
 
         # speed of sound in m/s
         Co = fluid.speed_of_sound
@@ -392,7 +392,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
 
     def join_model_data(self):
 
-        self.model_results = dict()
+        self.model_results = {}
 
         if self.comboBox_processing_selector.currentIndex() == DataType.TRANSMISSION_LOSS:
 

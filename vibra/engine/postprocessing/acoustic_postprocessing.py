@@ -335,7 +335,11 @@ class AcousticPostprocessing:
 
         return alpha
 
-    def get_particle_velocity_from_surface(self, surface_id: int, volume_id: int | None = None) -> NodalParticleVelocities:
+    def get_particle_velocity_from_surface(
+            self,
+            surface_id: int,
+            volume_id: int | None = None,
+            ) -> NodalParticleVelocities:
         """
         This method computes the nodal average particle velocity in the selected surface.
 
@@ -378,7 +382,8 @@ class AcousticPostprocessing:
         #     surface_id=surface_id, return_nodes=True)
 
         # Load all frequency solutions to optimize multiple load on the `process_particle_velocity` method below.
-        node_to_index = dict(zip(filtered_nodes, np.arange(filtered_nodes.size, dtype=int)))
+        _filtered_nodes = self.model.fluid_node_mapping[filtered_nodes]
+        node_to_index = dict(zip(_filtered_nodes, np.arange(filtered_nodes.size, dtype=int)))
         solution = self.solution.nodal_solution[filtered_nodes, :]
 
         pv_data = {}
@@ -386,7 +391,8 @@ class AcousticPostprocessing:
             Vk = 0.0
             for element_id in solid_element_ids:
                 connect = element_3d.connectivity[element_id, 1:]
-                indices = np.array([node_to_index.get(node) for node in connect])
+                _connect = self.model.fluid_node_mapping[connect]
+                indices = np.array([node_to_index.get(node) for node in _connect])
                 enodal_pressures = solution[indices, :]
                 Vk += element_3d.process_particle_velocity(
                     element_id,
@@ -471,8 +477,8 @@ class AcousticPostprocessing:
         nodes_output = np.sort(self.mesh.get_nodes_from_surface(output_surface_id))
 
         logging.info("Processing the transmission loss... [20/100]")
-        # P_in = self.solution.nodal_solution[nodes_input, :]
-        P_out = self.solution.nodal_solution[nodes_output, :]
+        # P_in = self.solution.nodal_solution[self.model.fluid_node_mapping[nodes_input], :]
+        P_out = self.solution.nodal_solution[self.model.fluid_node_mapping[nodes_output], :]
 
         logging.info("Processing the transmission loss... [40/100]")
 
@@ -580,7 +586,11 @@ class AcousticPostprocessing:
         return frequencies, transmission_loss
 
     def integrate_surface_sound_power(
-        self, surface_id: int, pressures: np.ndarray, particle_velocities: np.ndarray, dB_scale: bool = True
+        self,
+        surface_id: int,
+        pressures: np.ndarray,
+        particle_velocities: np.ndarray,
+        dB_scale: bool = True,
     ) -> np.ndarray:
         """
         This method integrates the sound power intensity over the selected surface.
@@ -619,8 +629,9 @@ class AcousticPostprocessing:
         sound_power = 0.0
         for i, e_connect in enumerate(surface_connectivities):
             node_indices = [map_nodes.get(node) for node in e_connect]
-            L_sv = pressures[node_indices, :].T.reshape(-1, 1, element_2d.DOF_PER_ELEMENT)
-            R_sv = particle_velocities[node_indices, :].T.reshape(-1, element_2d.DOF_PER_ELEMENT, 1)
+            # _node_indices = self.model.fluid_node_mapping[node_indices]
+            L_sv = pressures[node_indices, :].T.reshape(-1, 1, element_2d.dof_per_element)
+            R_sv = particle_velocities[node_indices, :].T.reshape(-1, element_2d.dof_per_element, 1)
 
             normalized_data = element_2d.elementary_sound_power(e_connect, L_sv, R_sv)
             sound_power += np.real(normalized_data) / 2

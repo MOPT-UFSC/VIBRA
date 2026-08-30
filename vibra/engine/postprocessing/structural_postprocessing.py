@@ -209,7 +209,7 @@ class StructuralPostprocessing:
 
         if not node_ids:
             print("Invalid node ids")
-            return dict(), dict()
+            return {}, {}
 
         node_ids = np.unique(node_ids)
         element_ids = self.mesh.get_solid_elements_from_nodes(node_ids)
@@ -226,7 +226,7 @@ class StructuralPostprocessing:
         # node_to_index = dict(zip(element_nodes, np.arange(element_nodes.size, dtype=int)))
         # solution = self.solution.nodal_solution[dofs_indices.flatten(), :]
 
-        nodal_stresses_data = dict()
+        nodal_stresses_data = {}
 
         avg_den = defaultdict(int)
         avg_nodal_stresses_data = defaultdict(float)
@@ -337,7 +337,7 @@ class StructuralPostprocessing:
     
         if not node_ids:
             print("Invalid node ids")
-            return dict(), dict()
+            return {}, {}
 
         node_ids = np.unique(node_ids)
 
@@ -351,7 +351,7 @@ class StructuralPostprocessing:
         node_to_index = dict(zip(filtered_nodes, np.arange(filtered_nodes.size, dtype=int)))
         solution = self.solution.nodal_solution[dofs_indices.flatten(), :]
 
-        nodal_stresses_data = dict()
+        nodal_stresses_data = {}
         avg_nodal_stresses_data = defaultdict(float)
 
         for node_id, solid_element_ids in map_elements_to_nodes.items():

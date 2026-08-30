@@ -1,4 +1,5 @@
 import logging
+from enum import IntEnum
 from time import time
 
 import numpy as np
@@ -12,6 +13,13 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.plots.general.frequency_response_plotter import DataFormat, FrequencyResponsePlotter
 from vibra.interface.ui_generated.plots.acoustic.acoustic_pressure_waveform_2d_plot_inputs_ui import AcousticPressureWaveform2dPlotInputs_UI
 from vibra.utils.signal_processing import process_ifft_from_one_sided_spectrum_signal, process_multiple_iffts_from_one_sided_spectrum_signals
+
+
+class SelectionType(IntEnum):
+    SURFACES = 0
+    LINES = 1
+    POINTS = 2
+    NODES = 3
 
 
 class AcousticPressureWaveform2DPlotInputs(AcousticPressureWaveform2dPlotInputs_UI):
@@ -102,7 +110,7 @@ class AcousticPressureWaveform2DPlotInputs(AcousticPressureWaveform2dPlotInputs_
 
         self.geometry_selection_callback()
 
-        if self.comboBox_selector_filter.currentIndex() == 3:
+        if self.comboBox_selector_filter.currentIndex() == SelectionType.NODES:
             app().main_window.show_mesh_render_widget()
         else:
             app().main_window.show_geometry_render_widget()
@@ -149,14 +157,21 @@ class AcousticPressureWaveform2DPlotInputs(AcousticPressureWaveform2dPlotInputs_
 
         index = self.comboBox_selector_filter.currentIndex()
 
-        if index == 0:
-            rows = self.mesh.get_nodes_from_surface(selected_id)
-        elif index == 1:
-            rows = self.mesh.get_nodes_from_line(selected_id)
-        elif index == 2:
-            rows = self.mesh.nodes_from_points.get(selected_id)
+        if index == SelectionType.SURFACES:
+            nodes = self.mesh.get_nodes_from_surface(selected_id)
+        elif index == SelectionType.LINES:
+            nodes = self.mesh.get_nodes_from_line(selected_id)
+        elif index == SelectionType.POINTS:
+            nodes = self.mesh.nodes_from_points.get(selected_id)
         else:
-            rows = selected_id
+            nodes = selected_id
+
+        # process the dofs of the selected entities
+        _nodes = self.model.fluid_node_mapping[nodes]
+        dof_per_node = self.model.acoustic_element_3d.DOF_PER_NODE
+
+        gdof = dof_per_node * _nodes.reshape(-1, 1) + np.arange(dof_per_node, dtype=int)
+        rows = gdof[:, 0]
 
         if isinstance(rows, int):
             response = self.nodal_solution[rows,:]

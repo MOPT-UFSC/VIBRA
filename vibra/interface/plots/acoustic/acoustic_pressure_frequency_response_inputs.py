@@ -84,16 +84,17 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
         self.lineEdit_cutoff_frequency.setValidator(StrictDoubleValidator(0, 1e8, 6))
 
     def _create_connections(self):
-        #
+
+        # QComboBox connections
         self.comboBox_selector_filter.currentIndexChanged.connect(self.update_render_according_to_selector)
         self.comboBox_cutoff_frequency.currentIndexChanged.connect(self.compute_pipe_cutoff_frequency_callback)
         self.comboBox_cutoff_frequency_options.currentIndexChanged.connect(self.cutoff_frequency_options_callback)
-        #
+
+        # QPushButton connections
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
-        #
+
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
-        #
         self.update_cutoff_related_widgets_visibility()
 
     def geometry_selection_callback(self):
@@ -130,7 +131,7 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
 
         self.geometry_selection_callback()
 
-        if self.comboBox_selector_filter.currentIndex() == 3:
+        if self.comboBox_selector_filter.currentIndex() == SelectionType.NODES:
             app().main_window.show_mesh_render_widget()
         else:
             app().main_window.show_geometry_render_widget()
@@ -195,18 +196,22 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
         elif index == SelectionType.NODES:
             nodes = selected_id
         else:
-            return None
+            return
 
-        indices = self.model.fluid_node_mapping[nodes]
+        # process the dofs of the selected entities
+        _nodes = self.model.fluid_node_mapping[nodes]
+        dof_per_node = self.model.acoustic_element_3d.DOF_PER_NODE
 
-        if isinstance(indices, int):
-            response = self.nodal_solution[indices, :]
+        gdof = dof_per_node * _nodes.reshape(-1, 1) + np.arange(dof_per_node, dtype=int)
+        rows = gdof[:, 0]
+
+        if isinstance(rows, int):
+            response = self.nodal_solution[rows, :]
         else:
-            response = np.average(self.nodal_solution[indices, :], axis=0)
+            response = np.average(self.nodal_solution[rows, :], axis=0)
 
         if complex(0) in response:
             response += 1e-12
-        #     response += np.ones(len(response), dtype=float)*(1e-12)
 
         return response
 
