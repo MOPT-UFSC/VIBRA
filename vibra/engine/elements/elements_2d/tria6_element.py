@@ -68,12 +68,11 @@ def get_local_coordinates(coords: np.ndarray) -> np.ndarray:
 
 class TRIANGLE_6(Element2D):
 
-    def __init__(self, model: "Model", dof_per_node: int):
+    def __init__(self, model: "Model", dof_per_node: int, nodes_per_element: int):
 
         self.model = model
-
-        self.nodes_per_element = 6
         self.dof_per_node = dof_per_node
+        self.nodes_per_element = nodes_per_element
 
         self.connectivities = None
         self.element_label = ""
@@ -83,11 +82,6 @@ class TRIANGLE_6(Element2D):
 
         self.define_integration_points()
         self.process_shape_functions_and_derivatives()
-
-
-    @property
-    def dof_per_element(self):
-        return self.nodes_per_element * self.dof_per_node
 
 
     def define_integration_points(self, integration_points: int = 6):
@@ -141,115 +135,6 @@ class TRIANGLE_6(Element2D):
 
         self.phi = phi
         self.dphi = dphi
-
-
-    def get_jacobian_determinant(self, int_point: int, coords: np.ndarray, return_vectors: bool = False):
-        """
-        This method evaluates the Jacobian determinant for the i-th integrarion point.
-        
-        Parameters
-        ----------
-
-        int_point: int
-            The integration point to be evaluated.
-
-        coords:  np.ndarray
-            A three-dimensional coordinate matrix of the element. 
-
-        return_vectors: bool, optional
-            Use this argument to control when the normal unitary, g_xi and g_eta vectors are returned.
-
-        Return
-        ------
-        det_jac: np.ndarray
-            The Jacobian determinant at the i-th integration point.
-
-        normal_vector: np.ndarray,  optional
-            The unitary normal vectors at the i-th integration point
-            (returned if the return_vectors argument is True).
-
-        g_xi: np.ndarray,  optional
-            The tangent vector in xi direction at the i-th integration point
-            (returned if the return_vectors argument is True).
-
-        g_eta: np.ndarray,  optional
-            The tangent vector in eta direction at the i-th integration point
-            (returned if the return_vectors argument is True).
-
-        """
-
-        # vectors tangent to the element's surface
-        g_xi = self.dphi[int_point, 0, :] @ coords
-        g_eta = self.dphi[int_point, 1, :] @ coords
-
-        # normal vector for the i-th integration point
-        normal_vector = np.cross(g_xi, g_eta).reshape(-1, 1)
-
-        # determinant of Jacobian matrix
-        det_jac = np.linalg.norm(normal_vector)
-
-        if not return_vectors:
-            return det_jac
-
-        # normalize the element normal vector for the i-th integration point
-        e_normal = normal_vector / det_jac
-
-        return det_jac, e_normal, g_xi, g_eta
-
-
-    def get_stacked_jacobian_determinant(self, int_point: int, coords: np.ndarray, return_vectors: bool = False):
-        """
-        This method evaluates the Jacobian determinant for the i-th integrarion point.
-        
-        Parameters
-        ----------
-
-        int_point: int
-            The integration point to be evaluated.
-
-        coords:  np.ndarray
-            A three-dimensional coordinate matrix in which each plane contains
-            the nodal coordinates of an element. 
-
-        return_vectors: bool, optional
-            Use this argument to control when the normal unitary, g_xi and g_eta vectors are returned.
-
-        Return
-        ------
-        det_jac: np.ndarray
-            A stacked vector with the Jacobian determinant of all elements evaluated
-            at the i-th integration point.
-
-        normal_vector: np.ndarray,  optional
-            The unitary normal vectors at the i-th integration point for all elements
-            (returned if the return_vectors argument is True).
-
-        g_xi: np.ndarray,  optional
-            The tangent vector in xi direction at the i-th integration point for all elements
-            (returned if the return_vectors argument is True).
-
-        g_eta: np.ndarray,  optional
-            The tangent vector in eta direction at the i-th integration point for all elements
-            (returned if the return_vectors argument is True).
-        """
-
-        # vectors tangent to the element's surface
-        g_xi = self.dphi[int_point, 0, :] @ coords
-        g_eta = self.dphi[int_point, 1, :] @ coords
-
-        # compute the stacked normal vectors
-        normal_vector = np.cross(g_xi, g_eta)
-
-        # calculate the stacked Jacobian determinants
-        det_jac = np.linalg.norm(normal_vector, axis=1).reshape(-1, 1, 1)
-
-        if not return_vectors:
-            return det_jac
-
-        # normalize the elements normal vectors for the i-th integration point
-        e_normal = normal_vector.reshape(-1, 3, 1) / det_jac.reshape(-1, 1, 1)
-
-        return det_jac, e_normal, g_xi, g_eta
 
 
     def get_stacked_local_coordinates(self) -> np.ndarray:
