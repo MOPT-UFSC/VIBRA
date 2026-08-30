@@ -182,7 +182,7 @@ class StructuralPostprocessing:
 
         element_3d = self.structural_element_3d
 
-        if element_3d.connectivity is None:
+        if element_3d.connectivities is None:
             element_3d.reorder_connect()
 
         if isinstance(node_ids, int):
@@ -190,7 +190,7 @@ class StructuralPostprocessing:
 
         if not isinstance(node_ids, np.ndarray | list):
 
-            node_ids = list()
+            node_ids = []
             if isinstance(surface_ids, int):
                 surface_ids = [surface_ids]
 
@@ -235,7 +235,7 @@ class StructuralPostprocessing:
         midside_indices_map = element_3d.midside_nodes_indices_map
 
         for element_id in element_ids:
-            connect = element_3d.connectivity[element_id, 1:]
+            connect = element_3d.connectivities[element_id, :]
             # indices = np.array([node_to_index.get(node) for node in connect], dtype=int)
             # dofs_indices = indices.reshape(-1, 1) * element_3d.DOF_PER_NODE + local_dofs
             # dofs_indices = dofs_indices.flatten()
@@ -310,7 +310,7 @@ class StructuralPostprocessing:
         #     self.harmonic_solver.assembler.define_structural_elements()
         #     element_3d = self.harmonic_solver.assembler.element_3d
 
-        if element_3d.connectivity is None:
+        if element_3d.connectivities is None:
             element_3d.reorder_connect()
 
         if isinstance(node_ids, int):
@@ -318,7 +318,7 @@ class StructuralPostprocessing:
 
         if not isinstance(node_ids, np.ndarray | list):
 
-            node_ids = list()
+            node_ids = []
             if isinstance(surface_ids, int):
                 surface_ids = [surface_ids]
 
@@ -359,7 +359,7 @@ class StructuralPostprocessing:
             n_el = len(solid_element_ids)
 
             for element_id in solid_element_ids:
-                connect = element_3d.connectivity[element_id, 1:]
+                connect = element_3d.connectivities[element_id, :]
                 indices = np.array([node_to_index.get(node) for node in connect], dtype=int)
 
                 dofs_indices = indices.reshape(-1, 1) * element_3d.DOF_PER_NODE + local_dofs

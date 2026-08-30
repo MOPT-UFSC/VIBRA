@@ -20,7 +20,7 @@ class ExternalMeshData():
         self.faces_connectivities = {}
         self.solids_connectivities = {}
 
-        self.connectivity = defaultdict(list)
+        self.connectivities_data = defaultdict(list)
         self.nodes_from_named_selection = defaultdict(list)
 
 
@@ -70,7 +70,7 @@ class ExternalMeshData():
             elif "CMBLOCK" in line or "cmblock" in line:
 
                 if self.modo is None:
-                    if self.nodal_coordinates and self.connectivity:
+                    if self.nodal_coordinates and self.connectivities_data:
                         for named_selection in self.named_selections:
                             if named_selection.upper() in line:
                                 self.named_selection = named_selection
@@ -141,7 +141,7 @@ class ExternalMeshData():
                                 _connect_data.insert(1, body_id)
                                 _connect_data.insert(2, nodes_per_element)
                                 # print(f"solid181 - tria3: {_connect_data}")
-                                self.connectivity[body_id, "solid181_tria3"].append(_connect_data)
+                                self.connectivities_data[body_id, "solid181_tria3"].append(_connect_data)
 
                         elif nodes_per_element == 4:
                             if len(connect_data) == number_of_cols:
@@ -149,7 +149,7 @@ class ExternalMeshData():
                                 _connect_data.insert(1, body_id)
                                 _connect_data.insert(2, nodes_per_element)
                                 # print(f"solid285 - tet4: {_connect_data}")
-                                self.connectivity[body_id, "solid285_tet4"].append(_connect_data)
+                                self.connectivities_data[body_id, "solid285_tet4"].append(_connect_data)
 
                         elif nodes_per_element == 8:
                             if len(connect_data) == number_of_cols:
@@ -157,7 +157,7 @@ class ExternalMeshData():
                                 _connect_data.insert(1, body_id)
                                 _connect_data.insert(2, nodes_per_element)
                                 # print(f"solid185 - hex8: {_connect_data}")
-                                self.connectivity[body_id, "solid185_hex8"].append(_connect_data)
+                                self.connectivities_data[body_id, "solid185_hex8"].append(_connect_data)
 
                         elif nodes_per_element == 10:
                             if len(connect_data) == number_of_cols:
@@ -172,7 +172,7 @@ class ExternalMeshData():
                                     cache_nodes.insert(1, body_id)
                                     cache_nodes.insert(2, nodes_per_element)
                                     # print(f"solid187 - tet10: {cache_nodes}")
-                                    self.connectivity[body_id, "solid187_tet10"].append(cache_nodes)
+                                    self.connectivities_data[body_id, "solid187_tet10"].append(cache_nodes)
                                     cache_nodes = []
 
                         elif nodes_per_element == 20:
@@ -188,7 +188,7 @@ class ExternalMeshData():
                                     cache_nodes.insert(1, body_id)
                                     cache_nodes.insert(2, nodes_per_element)
                                     # print(f"solid186 - hex20: {cache_nodes}")
-                                    self.connectivity[body_id, "solid186_hex20"].append(cache_nodes)
+                                    self.connectivities_data[body_id, "solid186_hex20"].append(cache_nodes)
                                     cache_nodes = []
                         else:
                             continue
@@ -243,7 +243,7 @@ class ExternalMeshData():
 
     def post_process_connectivities(self):
         self.solids_connectivities.clear()
-        for key, data in self.connectivity.items():
+        for key, data in self.connectivities_data.items():
             self.solids_connectivities[key] = np.array(data, dtype=int)
 
 
@@ -332,7 +332,7 @@ class ExternalMeshData():
         start, end = 0, 0
         self.elements_from_named_selection = {}
 
-        for key, data in self.connectivity.items():
+        for key, data in self.connectivities_data.items():
             vol_id, element_type = key
             nodes_face_element, nodes_solid_element = self.get_nodes_from_face_and_solid_element(element_type)
 

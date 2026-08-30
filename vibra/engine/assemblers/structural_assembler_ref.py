@@ -347,7 +347,7 @@ class StructuralAssembler:
             self.element_3d.reorder_connect()
 
             dof = self.element_3d.DOF_PER_ELEMENT
-            nel = len(self.element_3d.connectivity)
+            nel = len(self.element_3d.connectivities)
 
             ind_rows = np.zeros((nel, dof, dof), dtype=int)
             ind_cols = np.zeros((nel, dof, dof), dtype=int)

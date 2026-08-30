@@ -368,7 +368,7 @@ class AcousticPostprocessing:
 
         element_3d = self.acoustic_element_3d
 
-        if element_3d.connectivity is None:
+        if element_3d.connectivities is None:
             element_3d.reorder_connect()
 
         data_normals = self.mesh.get_surface_nodal_normals(surface_id, volume_id)
@@ -390,7 +390,7 @@ class AcousticPostprocessing:
         for node_id, solid_element_ids in map_elements_to_nodes.items():
             Vk = 0.0
             for element_id in solid_element_ids:
-                connect = element_3d.connectivity[element_id, 1:]
+                connect = element_3d.connectivities[element_id, :]
                 _connect = self.model.fluid_node_mapping[connect]
                 indices = np.array([node_to_index.get(node) for node in _connect])
                 enodal_pressures = solution[indices, :]
@@ -625,13 +625,15 @@ class AcousticPostprocessing:
             particle_velocities = np.tile(particle_velocities, (number_nodes, 1))
 
         element_2d = self.acoustic_element_2d
+        edof = element_2d.dof_per_element
 
         sound_power = 0.0
         for i, e_connect in enumerate(surface_connectivities):
+            print(i, e_connect)
             node_indices = [map_nodes.get(node) for node in e_connect]
             # _node_indices = self.model.fluid_node_mapping[node_indices]
-            L_sv = pressures[node_indices, :].T.reshape(-1, 1, element_2d.dof_per_element)
-            R_sv = particle_velocities[node_indices, :].T.reshape(-1, element_2d.dof_per_element, 1)
+            L_sv = pressures[node_indices, :].T.reshape(-1, 1, edof)
+            R_sv = particle_velocities[node_indices, :].T.reshape(-1, edof, 1)
 
             normalized_data = element_2d.elementary_sound_power(e_connect, L_sv, R_sv)
             sound_power += np.real(normalized_data) / 2
