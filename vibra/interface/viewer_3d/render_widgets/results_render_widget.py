@@ -125,7 +125,10 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         *,
         plot_setup: Optional[PlotSetup] = None,
     ):
-        if plot_setup is not None:
+
+        if plot_setup is None:
+            self.plot_setup = NoPlotSetup()
+        else:
             self.configure_plot(plot_setup)
 
         mesh = app().project.model.mesh

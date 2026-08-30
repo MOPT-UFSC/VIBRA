@@ -2482,10 +2482,7 @@ class Mesh:
 
     def are_there_volumes_in_geometry(self) -> bool:
         volumes = self.geometry_information.get("volumes")
-        if isinstance(volumes, list):
-            if volumes:
-                return True
-        return False
+        return isinstance(volumes, list) and len(volumes)
 
     def _get_connectivity_array(self, input_dict):
         """
@@ -2731,12 +2728,9 @@ class Mesh:
         try:
             message = ""
             if isinstance(selected_ids, str):
-                tokens = selected_ids.strip().split(",")
-                try:
-                    tokens.remove("")
-                except Exception:
-                    pass
-                list_ids = list(map(int, tokens))
+                tokens = selected_ids.replace(" ", "").split(",")
+                list_ids = [int(_id) for _id in tokens]
+                print(list_ids)
 
             elif isinstance(selected_ids, list):
                 list_ids = selected_ids
@@ -2758,23 +2752,23 @@ class Mesh:
                 all_ids = list(self.solids_connectivity[:, 0])
 
             elif selection == "points":
-                if selection in self.process_geometry_information:
-                    all_ids = self.geometry_information["points"]
+                if selection in self.geometry_information:
+                    all_ids = self.geometry_information.get("points")
 
             elif selection == "lines":
-                if "lines" in self.process_geometry_information:
-                    all_ids = self.geometry_information["lines"]
+                if "lines" in self.geometry_information:
+                    all_ids = self.geometry_information.get("lines")
 
             elif selection == "surfaces":
-                if selection in self.process_geometry_information:
-                    all_ids = self.geometry_information["surfaces"]
+                if selection in self.geometry_information:
+                    all_ids = self.geometry_information.get("surfaces")
 
             elif selection == "volumes":
-                if selection in self.process_geometry_information:
-                    all_ids = self.geometry_information["volumes"]
+                if selection in self.geometry_information:
+                    all_ids = self.geometry_information.get("volumes")
 
             else:
-                return None
+                return
 
             _size = len(all_ids)
 
