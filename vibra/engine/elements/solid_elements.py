@@ -1,7 +1,14 @@
 
+from typing import TYPE_CHECKING
+
 import numpy as np
 
+from vibra.engine.elements.dof_indexes_processor import DOFIndexesProcessor
+from vibra.engine.elements.element_data_processor import ElementDataProcessor
 from vibra.engine.properties.material import Material
+
+if TYPE_CHECKING:
+    from vibra.engine.model import Model
 
 
 class Element3D:
@@ -14,7 +21,28 @@ class Element3D:
     NODES_PER_ELEMENT: int = 0
     DOF_PER_NODE: int = 0
     DOF_PER_ELEMENT: int = NODES_PER_ELEMENT * DOF_PER_NODE
-    
+   
+
+    def dof_indexes_processor(self, 
+            model: "Model",
+            domain: str,
+            dof_per_node: int,
+            nodes_per_element: int,
+            ) -> DOFIndexesProcessor:
+
+        return DOFIndexesProcessor(model, domain, dof_per_node, nodes_per_element)
+
+
+    def element_data_processor(
+            self,
+            model: "Model",
+            domain: str,
+            dof_per_node: int,
+            nodes_per_element: int,
+            ) -> ElementDataProcessor:
+
+        return ElementDataProcessor(model, domain, dof_per_node, nodes_per_element)
+
 
     def elementary_matrices(self) -> tuple[np.ndarray]:
         raise NotImplementedError("The function elementary_matrices was not implemented")
@@ -22,7 +50,7 @@ class Element3D:
 
     @property
     def midside_nodes_indices_map(self):
-        return dict()
+        return {}
 
 
     def get_constitutive_model(self, material: Material, model_type: str = "linear-isotropic"):

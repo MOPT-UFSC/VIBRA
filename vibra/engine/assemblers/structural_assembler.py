@@ -119,7 +119,6 @@ class StructuralAssembler:
                 continue
 
             nodes = self.model.mesh.get_nodes_from_surface(surface_id)
-            print(nodes)
             if nodes is None:
                 continue
 

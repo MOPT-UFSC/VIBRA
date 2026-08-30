@@ -1,0 +1,121 @@
+from typing import TYPE_CHECKING
+
+import numpy as np
+
+if TYPE_CHECKING:
+    from vibra.engine.model import Model
+
+
+class DOFIndexesProcessor:
+    def __init__(self, model: "Model", domain: str, dof_per_node: int, nodes_per_element: int):
+
+        self.model = model
+        self.domain = domain
+        self.dof_per_node = dof_per_node
+        self.nodes_per_element = nodes_per_element
+        self.dof_per_element = dof_per_node * nodes_per_element
+        self.local_dof = np.arange(dof_per_node, dtype=int)
+
+    @ property
+    def nodes_mapping(self):
+        if self.domain == "acoustic":
+            return self.model.fluid_node_mapping
+
+        return self.model.struct_node_mapping
+
+    @property
+    def dofs_shift(self):
+        if self.domain == "acoustic":
+            return self.model.acoustic_dofs_shift
+
+        return self.model.structural_dofs_shift
+
+    def get_rows_and_cols_indices_1D(
+            self,
+            index: int,
+            connectivities: np.ndarray,
+            ):
+        """
+        This method returns, for a selected element, the row 
+        and column indices for 1D element integration.
+        
+        index: int
+            The element index.
+        """
+
+        dof = self.dof_per_node
+        elem_nodes = connectivities[index, :]
+        _elem_nodes = self.nodes_mapping[elem_nodes]
+
+        dof_indices = dof * _elem_nodes.reshape(-1, 1) + self.local_dof + self.dofs_shift
+
+        return dof_indices.flatten()
+
+
+    def get_rows_and_cols_indices_2D(
+            self,
+            connectivities: np.ndarray,
+            ):
+        """
+        This method returns the row and column indices for 2D element 
+        integration for all elements related to the connectivities.
+        
+        connectivities: np.ndarray
+            A 2D array containing all element connectivities.
+        """
+
+        dof = self.dof_per_node
+        edof = self.dof_per_element
+
+        n_el = len(connectivities)
+        ind_dof = np.zeros((n_el, edof), dtype=int)
+
+        for j in range(self.nodes_per_element):
+            start = j * dof
+            end = (j + 1) * dof
+            elem_nodes = self.nodes_mapping[connectivities[:, j]]
+            ind_dof[:, start : end] = dof * elem_nodes.reshape(-1, 1) + self.local_dof
+
+        ind_dof += self.dofs_shift
+
+        vect_indices = ind_dof.flatten()
+        ind_rows = ((np.tile(vect_indices, (edof, 1))).T).flatten()
+        ind_cols = (np.tile(ind_dof, edof)).flatten()
+
+        return ind_rows, ind_cols
+
+
+    def get_rows_and_cols_indices_3D(
+            self,
+            connectivities: np.ndarray,
+            ):
+        """ 
+        This method processess the dof indices (rows and columns) 
+        for assembly
+        """
+
+        # filter the acoustic elements connectivities
+        element_ids = self.model.elements_per_domain.get(self.domain, [])
+        reduced_connect = connectivities[element_ids, :]
+
+        dof = self.dof_per_node
+        edof = self.dof_per_element
+
+        n_el = element_ids.size
+        ind_dof = np.zeros((n_el, edof), dtype=int)
+
+        for j in range(self.nodes_per_element):
+            start = j * dof
+            end = (j + 1) * dof
+            elem_nodes = self.nodes_mapping[reduced_connect[:, j]]
+            ind_dof[:, start : end] = dof * elem_nodes.reshape(-1, 1) + self.local_dof
+
+        ind_dof += self.dofs_shift
+
+        vect_indices = ind_dof.flatten()
+        ordered_dofs = np.unique(vect_indices)
+
+        ind_rows = ((np.tile(vect_indices, (edof, 1))).T).flatten()
+        ind_cols = (np.tile(ind_dof, edof)).flatten()
+
+        return ind_rows, ind_cols, ordered_dofs
