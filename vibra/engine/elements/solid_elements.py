@@ -18,9 +18,9 @@ class Element3D:
     """
 
     # Constants of the element
-    NODES_PER_ELEMENT: int = 0
-    DOF_PER_NODE: int = 0
-    DOF_PER_ELEMENT: int = NODES_PER_ELEMENT * DOF_PER_NODE
+    nodes_per_element: int = 0
+    dof_per_node: int = 0
+    dof_per_element: int = nodes_per_element * dof_per_node
    
 
     #     self.initialize()

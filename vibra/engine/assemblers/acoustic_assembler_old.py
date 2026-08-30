@@ -1112,7 +1112,7 @@ class AcousticAssembler:
             Control when the connectivity matrix will be reordered.
         """
 
-        dof = self.element_3d.DOF_PER_ELEMENT
+        dof = self.element_3d.dof_per_element
         self.int3d_BtB = np.zeros((self.number_3d_elements, dof, dof), dtype=complex)
         self.int3d_NtN = np.zeros((self.number_3d_elements, dof, dof), dtype=complex)
 

@@ -21,9 +21,9 @@ def shapeT4C(ssx, ttx, rrx):
 
 class STRUCT_TETRAHEDRON_4S(Element3D):
     #
-    NODES_PER_ELEMENT = 4
-    DOF_PER_NODE = 3
-    DOF_PER_ELEMENT = NODES_PER_ELEMENT * DOF_PER_NODE
+    nodes_per_element = 4
+    dof_per_node = 3
+    dof_per_element = nodes_per_element * dof_per_node
 
     def __init__(self, model: "Model"):
         #
@@ -86,7 +86,7 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
         detJAC, invJAC = self.get_detJAC_and_invJAC(JAC)
         dphi_t = invJAC @ self.dphi
 
-        B = np.zeros((6, self.DOF_PER_ELEMENT), dtype=float)
+        B = np.zeros((6, self.dof_per_element), dtype=float)
         B[0, 0::3] = dphi_t[0, :]
         B[1, 1::3] = dphi_t[1, :]
         B[2, 2::3] = dphi_t[2, :]
@@ -97,7 +97,7 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
         B[5, 1::3] = dphi_t[2, :]
         B[5, 2::3] = dphi_t[1, :]
 
-        N = np.zeros((self.nint, 3, self.DOF_PER_ELEMENT), dtype=float)
+        N = np.zeros((self.nint, 3, self.dof_per_element), dtype=float)
         N[:, 0, 0::3] = self.phi
         N[:, 1, 1::3] = self.phi
         N[:, 2, 2::3] = self.phi
@@ -112,14 +112,14 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
 
     def reorder_connect(self, reorder: bool = True):
         """Reordering connectivity matrix to adequate the GMSH connectivity to the FE model"""
-        if self.solids_connectivity.shape[1] == self.NODES_PER_ELEMENT + 4:
+        if self.solids_connectivity.shape[1] == self.nodes_per_element + 4:
             self.connectivity = self.solids_connectivity[:, [0, 6, 4, 5, 7]]
 
     def get_rows_and_cols_indices(self, el_index: int, shift_index: int):
 
-        edof = self.DOF_PER_ELEMENT
+        edof = self.dof_per_element
         node_ids = self.connectivity[el_index, 1:]
-        local_dof = np.arange(self.DOF_PER_NODE, dtype=int)
+        local_dof = np.arange(self.dof_per_node, dtype=int)
 
         _dof = np.zeros(len(node_ids), dtype=int)
         _shifts = np.zeros(len(node_ids), dtype=int)
@@ -127,13 +127,13 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
         for i, node_id in enumerate(node_ids):
 
             shift = shift_index
-            dof_node = self.DOF_PER_NODE
+            dof_node = self.dof_per_node
             surface_ids = self.model.mesh.get_surfaces_from_node(node_id)
 
             for surface_id in surface_ids:
                 shell_data = self.model.properties._get_property("surface_thickness", surface=surface_id)
                 if isinstance(shell_data, dict):
-                    dof_node = 2 * self.DOF_PER_NODE
+                    dof_node = 2 * self.dof_per_node
                     shift = 0
                     break
 
@@ -155,8 +155,8 @@ class STRUCT_TETRAHEDRON_4S(Element3D):
         else:
             self.connectivity = self.solids_connectivity[:, [0, 4, 5, 6, 7]]
 
-        dof = self.DOF_PER_NODE
-        edof = self.DOF_PER_ELEMENT
+        dof = self.dof_per_node
+        edof = self.dof_per_element
 
         # ind_dof = np.array([  dof * self.connectivity[:, 1] + 0,
         #                        dof * self.connectivity[:, 1] + 1,

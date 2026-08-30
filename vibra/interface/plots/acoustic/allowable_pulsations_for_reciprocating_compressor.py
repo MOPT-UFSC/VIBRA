@@ -234,7 +234,7 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
 
         # map structural dofs
         _nodes = self.model.fluid_node_mapping[nodes]
-        dof_per_node = self.model.acoustic_element_3d.DOF_PER_NODE
+        dof_per_node = self.model.acoustic_element_3d.dof_per_node
 
         gdof = dof_per_node * _nodes.reshape(-1, 1) + np.arange(dof_per_node, dtype=int)
         rows = gdof[:, 0]

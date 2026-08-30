@@ -6,9 +6,9 @@ from vibra.engine.properties.material import Material
 
 class STRUCT_HEXAHEDRON_20(Element3D):
     #
-    NODES_PER_ELEMENT = 20
-    DOF_PER_NODE = 3
-    DOF_PER_ELEMENT = NODES_PER_ELEMENT * DOF_PER_NODE
+    nodes_per_element = 20
+    dof_per_node = 3
+    dof_per_element = nodes_per_element * dof_per_node
 
     def __init__(self, model):
         self.model = model
@@ -69,7 +69,7 @@ class STRUCT_HEXAHEDRON_20(Element3D):
         div8 = 1 / 8
         div4 = 1 / 4
         # shape functions
-        phit = np.zeros((self.nint, self.NODES_PER_ELEMENT), dtype=float)
+        phit = np.zeros((self.nint, self.nodes_per_element), dtype=float)
         #
         phit[:, 0] = div8 * (1 - ssx) * (1 - ttx) * (1 - rrx) * (-ssx - ttx - rrx - 2)
         phit[:, 1] = div8 * (1 + ssx) * (1 - ttx) * (1 - rrx) * (ssx - ttx - rrx - 2)
@@ -94,7 +94,7 @@ class STRUCT_HEXAHEDRON_20(Element3D):
         phit[:, 19] = div4 * (1 - ssx) * (1 + ttx) * (1 - rrx**2)
         #
         # derivatives
-        dphit = np.zeros((self.nint, self.DOF_PER_NODE, self.NODES_PER_ELEMENT), dtype=float)
+        dphit = np.zeros((self.nint, self.dof_per_node, self.nodes_per_element), dtype=float)
         #
         dphit[:, 0, 0] = div8 * (1 - ttx) * (1 - rrx) * (-(-ssx - ttx - rrx - 2) + (1 - ssx) * (-1))
         dphit[:, 0, 1] = div8 * (1 - ttx) * (1 - rrx) * (+(ssx - ttx - rrx - 2) + (1 + ssx) * (1))
@@ -175,7 +175,7 @@ class STRUCT_HEXAHEDRON_20(Element3D):
         detJAC, invJAC = self.get_detJAC_and_invJAC(JAC)
         dphi_t = invJAC @ self.dphi
 
-        B = np.zeros((self.nint, 6, self.DOF_PER_ELEMENT), dtype=float)
+        B = np.zeros((self.nint, 6, self.dof_per_element), dtype=float)
         B[:, 0, 0::3] = dphi_t[:, 0, :]
         B[:, 1, 1::3] = dphi_t[:, 1, :]
         B[:, 2, 2::3] = dphi_t[:, 2, :]
@@ -186,7 +186,7 @@ class STRUCT_HEXAHEDRON_20(Element3D):
         B[:, 5, 1::3] = dphi_t[:, 2, :]
         B[:, 5, 2::3] = dphi_t[:, 1, :]
 
-        N = np.zeros((self.nint, 3, self.DOF_PER_ELEMENT), dtype=float)
+        N = np.zeros((self.nint, 3, self.dof_per_element), dtype=float)
         N[:, 0, 0::3] = self.phi
         N[:, 1, 1::3] = self.phi
         N[:, 2, 2::3] = self.phi
@@ -209,7 +209,7 @@ class STRUCT_HEXAHEDRON_20(Element3D):
         """This method processess the dof indices (rows and columns) for assembly"""
 
         self.reorder_connect()
-        dof, edof = self.DOF_PER_NODE, self.DOF_PER_ELEMENT
+        dof, edof = self.dof_per_node, self.dof_per_element
         ind_dof = (
             np.array(
                 [

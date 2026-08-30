@@ -11,10 +11,10 @@ if TYPE_CHECKING:
 
 class STRUCT_HEXAHEDRON_20(Element3D):
 
-    NODES_PER_ELEMENT = 20
-    DOF_PER_NODE = 3
-    DOF_PER_ELEMENT = NODES_PER_ELEMENT * DOF_PER_NODE
-    LOCAL_DOF = np.arange(DOF_PER_NODE, dtype=int)
+    nodes_per_element = 20
+    dof_per_node = 3
+    dof_per_element = nodes_per_element * dof_per_node
+    LOCAL_DOF = np.arange(dof_per_node, dtype=int)
 
     def __init__(self, model: "Model"):
 
@@ -178,7 +178,7 @@ class STRUCT_HEXAHEDRON_20(Element3D):
         ##NOTE: Atalla, Noureddine.; Sgard Franck. Finite Element and Boundary Methods in Structural Acoustics and Vibration. 1st Ed. 2015
 
         # define the shape functions (Atalla and Sgard, 2015, pg. 171)
-        phi = np.zeros((Nz, self.NODES_PER_ELEMENT), dtype=float)
+        phi = np.zeros((Nz, self.nodes_per_element), dtype=float)
 
         phi[:, 0] = (1 - xi_1) * (1 - xi_2) * (1 - xi_3) * (-xi_1 - xi_2 - xi_3 - 2) / 8      # ->      (-1.0, -1.0, -1.0)   Node 1
         phi[:, 1] = (1 + xi_1) * (1 - xi_2) * (1 - xi_3) * ( xi_1 - xi_2 - xi_3 - 2) / 8      # ->      ( 1.0, -1.0, -1.0)   Node 2
@@ -203,7 +203,7 @@ class STRUCT_HEXAHEDRON_20(Element3D):
         phi[:, 19] = (1 - xi_1) * (1 + xi_2) * (1 - xi_3**2) / 4                              # ->      (-1.0,  1.0,  0.0)   Node 16
 
         ## derivatives of shape functions (obtained from the Atalla and Sgard proposed shape functions)
-        dphi = np.zeros((Nz, 3, self.NODES_PER_ELEMENT), dtype=float)
+        dphi = np.zeros((Nz, 3, self.nodes_per_element), dtype=float)
 
         dphi[:, 0, 0 ] =  (1 - xi_2) * (1 - xi_3) * (2*xi_1 + xi_2 + xi_3 + 1) / 8
         dphi[:, 0, 1 ] =  (1 - xi_2) * (1 - xi_3) * (2*xi_1 - xi_2 - xi_3 - 1) / 8
@@ -343,7 +343,7 @@ class STRUCT_HEXAHEDRON_20(Element3D):
         dphi_t = invJAC_K @ self.dphi_K
 
         # initialize the B matrix
-        B = np.zeros((self.nint_K, 6, self.DOF_PER_ELEMENT), dtype=float)
+        B = np.zeros((self.nint_K, 6, self.dof_per_element), dtype=float)
 
         B[:, 0, 0::3] = dphi_t[:, 0, :]
         B[:, 1, 1::3] = dphi_t[:, 1, :]
@@ -396,7 +396,7 @@ class STRUCT_HEXAHEDRON_20(Element3D):
         detJAC_M = self.get_detJAC(JAC_M)
 
         # initialize the matrix of shape functions N
-        N = np.zeros((self.nint_M, 3, self.DOF_PER_ELEMENT), dtype=float)
+        N = np.zeros((self.nint_M, 3, self.dof_per_element), dtype=float)
         N[:, 0, 0::3] = self.phi_M
         N[:, 1, 1::3] = self.phi_M
         N[:, 2, 2::3] = self.phi_M
@@ -431,7 +431,7 @@ class STRUCT_HEXAHEDRON_20(Element3D):
             Ue = nodal_solution
 
         elif isinstance(solution, np.ndarray):
-            indices = node_ids.reshape(-1, 1) * self.DOF_PER_NODE + self.LOCAL_DOF
+            indices = node_ids.reshape(-1, 1) * self.dof_per_node + self.LOCAL_DOF
             Ue = solution[indices.flatten(), :]
 
         else:
@@ -479,7 +479,7 @@ class STRUCT_HEXAHEDRON_20(Element3D):
         """
 
         # Nf = element_stresses.shape[2]
-        # nodal_stresses = np.zeros((self.NODES_PER_ELEMENT, 6, Nf), dtype=complex)
+        # nodal_stresses = np.zeros((self.nodes_per_element, 6, Nf), dtype=complex)
 
         # for i in range(6):
         #     nodal_stresses[:, i, :] = self.phi_inv @ element_stresses[:, i, :]
@@ -492,7 +492,7 @@ class STRUCT_HEXAHEDRON_20(Element3D):
 
     def reorder_connect(self):
         """Reordering connectivity matrix to adequate the GMSH connectivity to the FE model"""
-        if self.solids_connectivity.shape[1] == self.NODES_PER_ELEMENT + 4:
+        if self.solids_connectivity.shape[1] == self.nodes_per_element + 4:
             self.connectivities = self.solids_connectivity[
                 :, [4, 5, 6, 7, 8, 9, 10, 11, 12, 15, 17, 13, 20, 22, 23, 21, 14, 16, 18, 19]
             ]
@@ -513,8 +513,8 @@ class STRUCT_HEXAHEDRON_20(Element3D):
         dof_indexes = self.dof_indexes_processor(
             self.model,
             "structural",
-            self.DOF_PER_NODE,
-            self.NODES_PER_ELEMENT,
+            self.dof_per_node,
+            self.nodes_per_element,
             )
 
         return dof_indexes.get_rows_and_cols_indices_3D(self.connectivities)

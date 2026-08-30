@@ -851,14 +851,14 @@ class Mesh:
             points.InsertPoint(id, list(coords))
             vtk_dataset.SetPoints(points)
         #
-        NODES_PER_ELEMENT = len(self.solids_connectivity[0, 4:])
-        if NODES_PER_ELEMENT == 4:
+        nodes_per_element = len(self.solids_connectivity[0, 4:])
+        if nodes_per_element == 4:
             vtk_cell = VTK_TETRA
-        elif NODES_PER_ELEMENT == 10:
+        elif nodes_per_element == 10:
             vtk_cell = VTK_QUADRATIC_TETRA
-        elif NODES_PER_ELEMENT == 8:
+        elif nodes_per_element == 8:
             vtk_cell = VTK_HEXAHEDRON
-        elif NODES_PER_ELEMENT == 20:
+        elif nodes_per_element == 20:
             vtk_cell = VTK_QUADRATIC_HEXAHEDRON
         else:
             raise TypeError("Unsupported element type.")
@@ -866,7 +866,7 @@ class Mesh:
         n_nodes, nf_elem, ns_elem = self.get_mesh_info()
         vtk_dataset.Allocate(ns_elem)
         for id, connect in enumerate(self.solids_connectivity[:, 4:]):
-            vtk_dataset.InsertNextCell(vtk_cell, NODES_PER_ELEMENT, list(connect))
+            vtk_dataset.InsertNextCell(vtk_cell, nodes_per_element, list(connect))
 
         # unod1 = np.zeros((nnode), dtype=complex)
         # for i in range(nnode):

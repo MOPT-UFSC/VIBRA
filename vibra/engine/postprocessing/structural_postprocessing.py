@@ -219,8 +219,8 @@ class StructuralPostprocessing:
 
         t0 = time()
 
-        # local_dofs = np.arange(element_3d.DOF_PER_NODE, dtype=int)
-        # dofs_indices = element_nodes.reshape(-1, 1) * element_3d.DOF_PER_NODE + local_dofs
+        # local_dofs = np.arange(element_3d.dof_per_node, dtype=int)
+        # dofs_indices = element_nodes.reshape(-1, 1) * element_3d.dof_per_node + local_dofs
 
         # # Load all frequency solutions to optimize multiple load
         # node_to_index = dict(zip(element_nodes, np.arange(element_nodes.size, dtype=int)))
@@ -237,7 +237,7 @@ class StructuralPostprocessing:
         for element_id in element_ids:
             connect = element_3d.connectivities[element_id, :]
             # indices = np.array([node_to_index.get(node) for node in connect], dtype=int)
-            # dofs_indices = indices.reshape(-1, 1) * element_3d.DOF_PER_NODE + local_dofs
+            # dofs_indices = indices.reshape(-1, 1) * element_3d.dof_per_node + local_dofs
             # dofs_indices = dofs_indices.flatten()
 
             element_stresses = element_3d.process_stresses_at_integration_points(
@@ -344,8 +344,8 @@ class StructuralPostprocessing:
         map_elements_to_nodes, filtered_nodes = mesh.get_solid_elements_connected_to_nodes(
             node_ids=node_ids, return_nodes=True)
 
-        local_dofs = np.arange(element_3d.DOF_PER_NODE, dtype=int)
-        dofs_indices = filtered_nodes.reshape(-1, 1) * element_3d.DOF_PER_NODE + local_dofs
+        local_dofs = np.arange(element_3d.dof_per_node, dtype=int)
+        dofs_indices = filtered_nodes.reshape(-1, 1) * element_3d.dof_per_node + local_dofs
 
         # Load all frequency solutions to optimize multiple load on the `process_particle_velocity` method below.
         node_to_index = dict(zip(filtered_nodes, np.arange(filtered_nodes.size, dtype=int)))
@@ -362,7 +362,7 @@ class StructuralPostprocessing:
                 connect = element_3d.connectivities[element_id, :]
                 indices = np.array([node_to_index.get(node) for node in connect], dtype=int)
 
-                dofs_indices = indices.reshape(-1, 1) * element_3d.DOF_PER_NODE + local_dofs
+                dofs_indices = indices.reshape(-1, 1) * element_3d.dof_per_node + local_dofs
                 dofs_indices = dofs_indices.flatten()
                 
                 element_stresses = element_3d.process_stresses_at_integration_points(

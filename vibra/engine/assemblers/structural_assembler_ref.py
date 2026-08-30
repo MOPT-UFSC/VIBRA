@@ -273,13 +273,13 @@ class StructuralAssembler:
         nodes_from_2d_elements = np.array([*set(self.model.mesh.faces_connectivity[:, 4:].flatten())], dtype=int)
         nodes_from_3d_elements = np.array([*set(self.model.mesh.solids_connectivity[:, 4:].flatten())], dtype=int)
 
-        local_dof_2d = np.arange(element_2D.DOF_PER_NODE)
-        local_dof_3d = np.arange(element_3D.DOF_PER_NODE)
-        rotation_local_dof_2d = local_dof_2d[int(element_2D.DOF_PER_NODE / 2):]
+        local_dof_2d = np.arange(element_2D.dof_per_node)
+        local_dof_3d = np.arange(element_3D.dof_per_node)
+        rotation_local_dof_2d = local_dof_2d[int(element_2D.dof_per_node / 2):]
 
-        dof_from_2d_elements = element_2D.DOF_PER_NODE * nodes_from_2d_elements.reshape(-1, 1) + local_dof_2d
-        dof_from_3d_elements = element_3D.DOF_PER_NODE * nodes_from_3d_elements.reshape(-1, 1) + local_dof_3d
-        rotation_dof_from_2d_elements = element_2D.DOF_PER_NODE * nodes_from_2d_elements.reshape(-1, 1) + rotation_local_dof_2d
+        dof_from_2d_elements = element_2D.dof_per_node * nodes_from_2d_elements.reshape(-1, 1) + local_dof_2d
+        dof_from_3d_elements = element_3D.dof_per_node * nodes_from_3d_elements.reshape(-1, 1) + local_dof_3d
+        rotation_dof_from_2d_elements = element_2D.dof_per_node * nodes_from_2d_elements.reshape(-1, 1) + rotation_local_dof_2d
 
         self.dof_from_2d_elements = dof_from_2d_elements.flatten()
         self.dof_from_3d_elements = dof_from_3d_elements.flatten()
@@ -293,7 +293,7 @@ class StructuralAssembler:
             if len(nodes_from_3d_elements):
                 shift_index = int((np.max(dof_from_2d_elements) + 1) / 2)
                 internal_nodes = np.delete(nodes_from_3d_elements, nodes_from_2d_elements)
-                internal_dof_from_3d_elements = element_3D.DOF_PER_NODE * internal_nodes.reshape(-1, 1) + local_dof_3d + shift_index
+                internal_dof_from_3d_elements = element_3D.dof_per_node * internal_nodes.reshape(-1, 1) + local_dof_3d + shift_index
                 internal_dof_from_3d_elements = internal_dof_from_3d_elements.flatten()
 
             total_dof_apd = np.append(self.dof_from_2d_elements, internal_dof_from_3d_elements)
@@ -321,9 +321,9 @@ class StructuralAssembler:
 
         active_dof = np.array([])
         if active_nodes_list:
-            shell_local_dof = np.arange(element_2D.DOF_PER_NODE)
+            shell_local_dof = np.arange(element_2D.dof_per_node)
             active_nodes = np.unique(active_nodes_list).astype(int)
-            active_dof = element_2D.DOF_PER_NODE * active_nodes.reshape(-1, 1) + shell_local_dof 
+            active_dof = element_2D.dof_per_node * active_nodes.reshape(-1, 1) + shell_local_dof 
             active_dof = np.sort(active_dof.flatten())
 
         self.all_dof, shift_index = self.get_all_degrees_of_freedom(element_2D, element_3D, active_dof)
@@ -346,7 +346,7 @@ class StructuralAssembler:
         if self.model.mesh.solids_connectivity.size:
             self.element_3d.reorder_connect()
 
-            dof = self.element_3d.DOF_PER_ELEMENT
+            dof = self.element_3d.dof_per_element
             nel = len(self.element_3d.connectivities)
 
             ind_rows = np.zeros((nel, dof, dof), dtype=int)

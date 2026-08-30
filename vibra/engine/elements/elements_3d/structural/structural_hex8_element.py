@@ -19,12 +19,12 @@ from vibra.engine.elements.elements_3d.structural.flanagan_belytschko_formulatio
 
 class STRUCT_HEXAHEDRON_8(Element3D):
 
-    NODES_PER_ELEMENT = 8
-    DOF_PER_NODE = 3
-    DOF_PER_ELEMENT = NODES_PER_ELEMENT * DOF_PER_NODE
-    LOCAL_DOF = np.arange(DOF_PER_NODE, dtype=int)
+    nodes_per_element = 8
+    dof_per_node = 3
+    dof_per_element = nodes_per_element * dof_per_node
+    LOCAL_DOF = np.arange(dof_per_node, dtype=int)
 
-    aux_ones = np.ones(DOF_PER_ELEMENT, dtype=float)
+    aux_ones = np.ones(dof_per_element, dtype=float)
 
     dil_projector = np.array([1, 1, 1, 0, 0, 0], dtype=float).reshape(-1, 1)
     m_mt = dil_projector @ dil_projector.T
@@ -50,7 +50,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
 
     @property
     def corner_nodes_indices(self):
-        indices = np.arange(self.NODES_PER_ELEMENT, dtype=int)
+        indices = np.arange(self.nodes_per_element, dtype=int)
         return indices[:8]
 
 
@@ -114,7 +114,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         This method returns the inverse of shape functions matrix N applied
         at integration points (Gauss-Legendre quadrature points).
         """
-        N = self.phi[:, :self.NODES_PER_ELEMENT]
+        N = self.phi[:, :self.nodes_per_element]
         n_intp, n_nodes = N.shape
 
         if n_intp == n_nodes:
@@ -165,7 +165,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         ##NOTE: Atalla, Noureddine.; Sgard Franck. Finite Element and Boundary Methods in Structural Acoustics and Vibration. 1st Ed. 2015
 
         # define the shape functions (Atalla and Sgard, 2015, pg. 171)
-        phi = np.zeros((Nz, self.NODES_PER_ELEMENT), dtype=float)
+        phi = np.zeros((Nz, self.nodes_per_element), dtype=float)
 
         phi[:, 0] = (1.0 - xi_1) * (1.0 - xi_2) * (1.0 - xi_3) / 8       # ->      (-1.0, -1.0, -1.0)   Node 1
         phi[:, 1] = (1.0 + xi_1) * (1.0 - xi_2) * (1.0 - xi_3) / 8       # ->      ( 1.0, -1.0, -1.0)   Node 2
@@ -177,7 +177,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         phi[:, 7] = (1.0 - xi_1) * (1.0 + xi_2) * (1.0 + xi_3) / 8       # ->      (-1.0,  1.0,  1.0)   Node 8
 
         ## derivatives of shape functions (obtained from the Atalla and Sgard proposed shape functions)
-        dphi = np.zeros((Nz, 3, self.NODES_PER_ELEMENT), dtype=float)
+        dphi = np.zeros((Nz, 3, self.nodes_per_element), dtype=float)
 
         dphi[:, 0, 0] = -(1.0 - xi_2) * (1.0 - xi_3) / 8
         dphi[:, 0, 1] =  (1.0 - xi_2) * (1.0 - xi_3) / 8
@@ -241,7 +241,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
     @property
     def extra_dofs(self):
         if self.element_options.extra_shape_functions:
-            return int(3 * self.DOF_PER_NODE)
+            return int(3 * self.dof_per_node)
 
         elif self.element_options.enhanced_assumed_strain:
             return self.element_options.EAS_internal_dofs
@@ -389,7 +389,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         self.B_grad = np.sum(dphi_t * detJAC * self.wps, axis=0) / np.sum(detJAC * self.wps, axis=0)
 
         # initialize the B matrix
-        edof = self.DOF_PER_ELEMENT
+        edof = self.dof_per_element
         B = np.zeros((self.nint, 6, edof + self.extra_dofs), dtype=float)
 
         # fill the B matrix
@@ -547,7 +547,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
             e_vol = np.sum(detJAC * self.wps, axis=0)
 
             # calculate the nodal mass (total mass divided by element nodes)
-            nodal_mass = (rho * e_vol[0]) / self.NODES_PER_ELEMENT
+            nodal_mass = (rho * e_vol[0]) / self.nodes_per_element
 
             # compute the lumped mass matrix
             Me = np.diag(self.aux_ones * nodal_mass)
@@ -581,7 +581,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
             
             # constant rotation about z-axis
             theta_z = 0.01
-            u_rot = np.zeros(self.DOF_PER_ELEMENT, dtype=float)
+            u_rot = np.zeros(self.dof_per_element, dtype=float)
             
             u_rot[0::3] = -theta_z * coords[:, 1]
             u_rot[1::3] =  theta_z * coords[:, 0]
@@ -595,7 +595,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
 
             # constant deformation epsilon_x
             e_def = 0.01
-            u_def = np.zeros(self.DOF_PER_ELEMENT, dtype=float)
+            u_def = np.zeros(self.dof_per_element, dtype=float)
 
             u_def[0::3] = e_def * coords[:, 0]
             u_def[1::3] = 0
@@ -617,7 +617,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         else:
 
             # initialize the matrix of shape functions N
-            N = np.zeros((self.nint, 3, self.DOF_PER_ELEMENT), dtype=float)
+            N = np.zeros((self.nint, 3, self.dof_per_element), dtype=float)
             N[:, 0, 0::3] = self.phi
             N[:, 1, 1::3] = self.phi
             N[:, 2, 2::3] = self.phi
@@ -630,10 +630,10 @@ class STRUCT_HEXAHEDRON_8(Element3D):
 
             # static condensation of the elementary stiffness matrix Ke
             if self.static_condensation_required:
-                Kuu = Ke[0 : self.DOF_PER_ELEMENT, 0 : self.DOF_PER_ELEMENT]
-                Kua = Ke[0 : self.DOF_PER_ELEMENT, self.DOF_PER_ELEMENT :]
+                Kuu = Ke[0 : self.dof_per_element, 0 : self.dof_per_element]
+                Kua = Ke[0 : self.dof_per_element, self.dof_per_element :]
                 Kau = Kua.T
-                Kbb = Ke[self.DOF_PER_ELEMENT :, self.DOF_PER_ELEMENT :]
+                Kbb = Ke[self.dof_per_element :, self.dof_per_element :]
 
                 Ke = Kuu - Kua @ np.linalg.inv(Kbb) @ Kau
 
@@ -679,8 +679,8 @@ class STRUCT_HEXAHEDRON_8(Element3D):
             for i in range(self.nint):
                 Ke += B[i, :, :].T @ D @ B[i, :, :] * (detJAC[i, :, :] * self.wps[i])
 
-            Kau = Ke[self.DOF_PER_ELEMENT :, 0 : self.DOF_PER_ELEMENT]
-            Kaa = Ke[self.DOF_PER_ELEMENT :, self.DOF_PER_ELEMENT :]
+            Kau = Ke[self.dof_per_element :, 0 : self.dof_per_element]
+            Kaa = Ke[self.dof_per_element :, self.dof_per_element :]
 
             # extra dofs results
             alpha = -np.linalg.inv(Kaa) @ (Kau @ Ue)
@@ -709,7 +709,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
             Ue = nodal_solution
 
         elif isinstance(solution, np.ndarray):
-            indices = node_ids.reshape(-1, 1) * self.DOF_PER_NODE + self.LOCAL_DOF
+            indices = node_ids.reshape(-1, 1) * self.dof_per_node + self.LOCAL_DOF
             Ue = solution[indices.flatten(), :]    
 
         else:
@@ -757,7 +757,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         """
 
         # Nf = element_stresses.shape[2]
-        # nodal_stresses = np.zeros((self.NODES_PER_ELEMENT, 6, Nf), dtype=complex)
+        # nodal_stresses = np.zeros((self.nodes_per_element, 6, Nf), dtype=complex)
 
         # for i in range(6):
         #     nodal_stresses[:, i, :] = self.phi_inv @ element_stresses[:, i, :]
@@ -770,7 +770,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
 
     def reorder_connect(self):
         """Reordering connectivity matrix to adequate the GMSH connectivity to the FE model"""
-        if self.solids_connectivity.shape[1] == self.NODES_PER_ELEMENT + 4:
+        if self.solids_connectivity.shape[1] == self.nodes_per_element + 4:
             self.connectivities = self.solids_connectivity[:, [4, 5, 6, 7, 8, 9, 10, 11]]
 
 
@@ -785,8 +785,8 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         dof_indexes = self.dof_indexes_processor(
             self.model,
             "structural",
-            self.DOF_PER_NODE,
-            self.NODES_PER_ELEMENT,
+            self.dof_per_node,
+            self.nodes_per_element,
             )
 
         return dof_indexes.get_rows_and_cols_indices_3D(self.connectivities)
@@ -796,7 +796,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         """ Assemble B matrix (6x24) from dphi_t (3x8).
         """
         if len(dphi_t.shape) == 2:
-            B = np.zeros((6, self.DOF_PER_ELEMENT), dtype=float)
+            B = np.zeros((6, self.dof_per_element), dtype=float)
             # fill the B matrix
             B[0, 0::3] = dphi_t[0, :]
             B[1, 1::3] = dphi_t[1, :]
@@ -809,7 +809,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
             B[5, 2::3] = dphi_t[1, :]
 
         else:
-            B = np.zeros((dphi_t.shape[0], 6, self.DOF_PER_ELEMENT), dtype=float)
+            B = np.zeros((dphi_t.shape[0], 6, self.dof_per_element), dtype=float)
 
             # fill the B matrix
             B[:, 0, 0::3] = dphi_t[:, 0, :]

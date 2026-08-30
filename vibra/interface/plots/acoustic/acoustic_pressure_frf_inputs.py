@@ -281,7 +281,7 @@ class AcousticPressureFRFInputs(AcousticPressureFrfInputs_UI):
         # process the dofs of the selected entities
         _nodes_num = self.model.fluid_node_mapping[nodes_num]
         _nodes_den = self.model.fluid_node_mapping[nodes_den]
-        dof_per_node = self.model.acoustic_element_3d.DOF_PER_NODE
+        dof_per_node = self.model.acoustic_element_3d.dof_per_node
 
         gdof_num = dof_per_node * _nodes_num.reshape(-1, 1) + np.arange(dof_per_node, dtype=int)
         gdof_den = dof_per_node * _nodes_den.reshape(-1, 1) + np.arange(dof_per_node, dtype=int)

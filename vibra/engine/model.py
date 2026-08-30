@@ -257,8 +257,8 @@ class Model:
         nodes_act: np.ndarray = self.nodes_per_domain.get("acoustic", np.array([]))
         nodes_str: np.ndarray = self.nodes_per_domain.get("structural", np.array([]))
 
-        dof_act = self.acoustic_element_3d.DOF_PER_NODE
-        dof_str = self.structural_element_3d.DOF_PER_NODE
+        dof_act = self.acoustic_element_3d.dof_per_node
+        dof_str = self.structural_element_3d.dof_per_node
 
         self.number_acoustic_nodes = len(nodes_act)
         self.number_structural_nodes = len(nodes_str)
@@ -714,7 +714,7 @@ class Model:
             An array containing the global dof from input nodes.
         """
         _nodes = node_ids.reshape(-1, 1)
-        _dof_per_node = self.acoustic_element_3d.DOF_PER_NODE
+        _dof_per_node = self.acoustic_element_3d.dof_per_node
 
         global_dofs = _dof_per_node * _nodes + np.arange(_dof_per_node)
         global_dofs = np.array(global_dofs.flatten(), dtype=int)
@@ -727,14 +727,14 @@ class Model:
             if element_2d is None:
                 return {}
 
-            dof_per_node = element_2d.DOF_PER_NODE
+            dof_per_node = element_2d.dof_per_node
 
         else:
             element_3d = self.structural_element_3d
             if element_3d is None:
                 return {}
 
-            dof_per_node = element_3d.DOF_PER_NODE
+            dof_per_node = element_3d.dof_per_node
 
         local_dof = np.arange(dof_per_node, dtype=int)
         global_dof = dof_per_node * nodes.reshape(-1, 1) + local_dof

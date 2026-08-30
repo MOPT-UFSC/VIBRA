@@ -167,7 +167,7 @@ def load_external_mesh_and_solve(integration_type: str):
     print(f"Elapsed time to solve modal analysis: {round(dt, 4)}s")
 
     # Nodal results comparisons
-    dofs_per_node = assembler.element_3d.DOF_PER_NODE
+    dofs_per_node = assembler.element_3d.dof_per_node
 
     path = PROJECT_DIR / f"validation_files/data/WB/structural/elements/hex20/results/{integration_type}/harmonic/"
     ext_data = LoadExternalData(path)

@@ -13,9 +13,9 @@ import numpy as np
 
 class ACT_HEXAHEDRON_8C(Element3D):
 
-    NODES_PER_ELEMENT = 8
-    DOF_PER_NODE = 1
-    DOF_PER_ELEMENT = NODES_PER_ELEMENT * DOF_PER_NODE
+    nodes_per_element = 8
+    dof_per_node = 1
+    dof_per_element = nodes_per_element * dof_per_node
 
     def __init__(self, model: "Model"):
 
@@ -98,7 +98,7 @@ class ACT_HEXAHEDRON_8C(Element3D):
         ##NOTE: Atalla, Noureddine.; Sgard Franck. Finite Element and Boundary Methods in Structural Acoustics and Vibration. 1st Ed. 2015
 
         # define the shape functions (Atalla and Sgard, 2015, pg. 171)
-        phi = np.zeros((Nz, 1, self.NODES_PER_ELEMENT), dtype=float)
+        phi = np.zeros((Nz, 1, self.nodes_per_element), dtype=float)
 
         phi[:, 0, 0] = (1.0 - xi_1) * (1.0 - xi_2) * (1.0 - xi_3) / 8       # ->      (-1.0, -1.0, -1.0)   Node 1
         phi[:, 0, 1] = (1.0 + xi_1) * (1.0 - xi_2) * (1.0 - xi_3) / 8       # ->      ( 1.0, -1.0, -1.0)   Node 2
@@ -110,7 +110,7 @@ class ACT_HEXAHEDRON_8C(Element3D):
         phi[:, 0, 7] = (1.0 - xi_1) * (1.0 + xi_2) * (1.0 + xi_3) / 8       # ->      (-1.0,  1.0,  1.0)   Node 8
 
         ## derivatives of shape functions (obtained from the Atalla and Sgard proposed shape functions)
-        dphi = np.zeros((self.nint, 3, self.NODES_PER_ELEMENT), dtype=float)
+        dphi = np.zeros((self.nint, 3, self.nodes_per_element), dtype=float)
 
         dphi[:, 0, 0] = -(1.0 - xi_2) * (1.0 - xi_3) / 8
         dphi[:, 0, 1] =  (1.0 - xi_2) * (1.0 - xi_3) / 8
@@ -221,8 +221,8 @@ class ACT_HEXAHEDRON_8C(Element3D):
         element_data_proc = self.element_data_processor(
             self.model, 
             "acoustic", 
-            self.DOF_PER_NODE, 
-            self.NODES_PER_ELEMENT,
+            self.dof_per_node, 
+            self.nodes_per_element,
             )
 
         stacked_coords = element_data_proc.get_stacked_nodal_coords(self.connectivities)
@@ -354,7 +354,7 @@ class ACT_HEXAHEDRON_8C(Element3D):
 
     def reorder_connect(self):
         """Reordering connectivity matrix to adequate the GMSH connectivity to the FE model"""
-        if self.solids_connectivity.shape[1] == self.NODES_PER_ELEMENT + 4:
+        if self.solids_connectivity.shape[1] == self.nodes_per_element + 4:
             self.connectivities = self.solids_connectivity[:, [4, 5, 6, 7, 8, 9, 10, 11]]
 
 
@@ -369,8 +369,8 @@ class ACT_HEXAHEDRON_8C(Element3D):
         dof_indexes = self.dof_indexes_processor(
             self.model,
             "acoustic",
-            self.DOF_PER_NODE,
-            self.NODES_PER_ELEMENT,
+            self.dof_per_node,
+            self.nodes_per_element,
             )
 
         return dof_indexes.get_rows_and_cols_indices_3D(self.connectivities)

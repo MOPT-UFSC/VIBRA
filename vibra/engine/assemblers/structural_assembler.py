@@ -497,7 +497,7 @@ class StructuralAssembler:
         """
 
         self.active_2d_element_dof = []
-        self.dof = self.element_3d.DOF_PER_ELEMENT
+        self.dof = self.element_3d.dof_per_element
 
         self.ind_rows, self.ind_cols, self.structural_dofs = self.element_3d.generate_ind_rows_cols(reorder=reorder)
 
