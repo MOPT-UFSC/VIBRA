@@ -566,8 +566,7 @@ class StructuralAssembler:
         e_dofs = self.element_1d.dof_per_element
         data_Mdist = np.zeros((n_el, e_dofs, e_dofs), dtype=float)
 
-        self.element_1d.reorder_connect(connectivities)
-        ind_rows, ind_cols = self.element_1d.get_rows_and_cols_indices_1D()
+        ind_rows, ind_cols = self.element_1d.get_rows_and_cols_indices_2D(connectivities)
 
         for i, surface_density in enumerate(pdata_values):
             data_Mdist[i, :, :] = self.element_1d.integrate_distributed_mass(i, surface_density)
@@ -588,8 +587,7 @@ class StructuralAssembler:
         e_dofs = self.element_2d.dof_per_element
         data_Mdist = np.zeros((n_el, e_dofs, e_dofs), dtype=float)
 
-        self.element_2d.reorder_connect(connectivities)
-        ind_rows, ind_cols = self.element_2d.get_rows_and_cols_indices_2D()
+        ind_rows, ind_cols = self.element_2d.get_rows_and_cols_indices_2D(connectivities)
 
         for i, surface_density in enumerate(pdata_values):
             data_Mdist[i, :, :] = self.element_2d.integrate_distributed_mass(i, surface_density)

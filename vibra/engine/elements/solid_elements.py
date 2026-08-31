@@ -11,66 +11,70 @@ if TYPE_CHECKING:
     from vibra.engine.model import Model
 
 
+# class Element3D:
+#     """
+#     This determines the attributes and methods
+#     that need to exist in EVERY element.
+#     """
+
+#     # Constants of the element
+#     nodes_per_element: int = 0
+#     dof_per_node: int = 0
+#     dof_per_element: int = nodes_per_element * dof_per_node
+
+
 class Element3D:
-    """
-    This determines the attributes and methods
-    that need to exist in EVERY element.
-    """
 
-    # Constants of the element
-    nodes_per_element: int = 0
-    dof_per_node: int = 0
-    dof_per_element: int = nodes_per_element * dof_per_node
-   
+    def __init__(self, model: "Model", dof_per_node: int, nodes_per_element: int):
 
-    #     self.initialize()
+        self.model = model
+        self.dof_per_node = dof_per_node
+        self.nodes_per_element = nodes_per_element
+        self.local_dof = np.arange(dof_per_node, dtype=int)
+
+        self.initialize()
 
 
-    # def initialize(self):
-    #     self.nint = None
-    #     self.nint_M = None
-    #     self.nint_K = None
+    def initialize(self):
 
-    #     self.wps = None
-    #     self.wps_M = None
-    #     self.wps_K = None
+        self.nint: np.ndarray | None = None
+        self.nint_M: np.ndarray | None = None
+        self.nint_K: np.ndarray | None = None
 
-    #     self.phi = None
-    #     self.phi_M = None
-    #     self.phi_K = None
+        self.wps: np.ndarray | None = None
+        self.wps_M: np.ndarray | None = None
+        self.wps_K: np.ndarray | None = None
 
-    #     self.dphi = None
-    #     self.dphi_M = None
-    #     self.dphi_K = None
+        self.phi: np.ndarray | None = None
+        self.phi_M: np.ndarray | None = None
+        self.phi_K: np.ndarray | None = None
 
+        self.dphi: np.ndarray | None = None
+        self.dphi_M: np.ndarray | None = None
+        self.dphi_K: np.ndarray | None = None
 
-    # @property
-    # def dof_per_element(self):
-    #     return self.dof_per_node * self.nodes_per_element
-
-    def dof_indexes_processor(self, 
-            model: "Model",
-            domain: str,
-            dof_per_node: int,
-            nodes_per_element: int,
-            ) -> DOFIndexesProcessor:
-
-        return DOFIndexesProcessor(model, domain, dof_per_node, nodes_per_element)
+        self.phi_inv: np.ndarray | None = None
 
 
-    def element_data_processor(
-            self,
-            model: "Model",
-            domain: str,
-            dof_per_node: int,
-            nodes_per_element: int,
-            ) -> ElementDataProcessor:
+    @property
+    def dof_per_element(self):
+        return self.dof_per_node * self.nodes_per_element
 
-        return ElementDataProcessor(model, domain, dof_per_node, nodes_per_element)
+
+    def dof_indexes_processor(self, domain: str) -> DOFIndexesProcessor:
+        return DOFIndexesProcessor(self.model, domain, self.dof_per_node, self.nodes_per_element)
+
+
+    def element_data_processor(self, model: "Model", domain: str) -> ElementDataProcessor:
+        return ElementDataProcessor(model, domain, self.dof_per_node, self.nodes_per_element)
 
 
     def elementary_matrices(self) -> tuple[np.ndarray]:
         raise NotImplementedError("The function elementary_matrices was not implemented")
+
+
+    def reorder_connect(self):
+        pass
 
 
     @property

@@ -44,14 +44,14 @@ from vibra.engine.elements.elements_2d import (
 
 # 3d elements
 from vibra.engine.elements.elements_3d import (
-    ACT_HEXAHEDRON_8C,
-    ACT_HEXAHEDRON_20C,
-    ACT_TETRAHEDRON_4C,
-    ACT_TETRAHEDRON_10C,
+    ACT_HEXAHEDRON_8,
+    ACT_HEXAHEDRON_20,
+    ACT_TETRAHEDRON_4,
+    ACT_TETRAHEDRON_10,
     STRUCT_HEXAHEDRON_8,
     STRUCT_HEXAHEDRON_20,
-    STRUCT_TETRAHEDRON_4S,
-    STRUCT_TETRAHEDRON_10S,
+    STRUCT_TETRAHEDRON_4,
+    STRUCT_TETRAHEDRON_10,
 )
 from vibra.engine.geometry.geometry import LengthUnits
 from vibra.engine.mesher.degrees_of_freedom_decoupling_new import DegreesOfFreedomDecoupling
@@ -655,10 +655,10 @@ class Model:
         element_type = self.element_topology
 
         if element_type == TETRAHEDRON_4:
-            return STRUCT_TETRAHEDRON_4S(self), STRUCT_TRIANGLE_3(self), STRUCT_LINE_2(self)
+            return STRUCT_TETRAHEDRON_4(self), STRUCT_TRIANGLE_3(self), STRUCT_LINE_2(self)
 
         elif element_type == TETRAHEDRON_10:
-            return STRUCT_TETRAHEDRON_10S(self), STRUCT_TRIANGLE_6(self), STRUCT_LINE_3(self)
+            return STRUCT_TETRAHEDRON_10(self), STRUCT_TRIANGLE_6(self), STRUCT_LINE_3(self)
 
         elif element_type == HEXAHEDRON_8:
             return STRUCT_HEXAHEDRON_8(self), STRUCT_QUADRANGLE_4(self), STRUCT_LINE_2(self)
@@ -673,16 +673,16 @@ class Model:
         element_type = self.element_topology
 
         if element_type == TETRAHEDRON_4:
-            return ACT_TETRAHEDRON_4C(self), ACT_TRIANGLE_3(self), ACT_LINE_2(self)
+            return ACT_TETRAHEDRON_4(self), ACT_TRIANGLE_3(self), ACT_LINE_2(self)
 
         elif element_type == TETRAHEDRON_10:
-            return ACT_TETRAHEDRON_10C(self), ACT_TRIANGLE_6(self), ACT_LINE_3(self)
+            return ACT_TETRAHEDRON_10(self), ACT_TRIANGLE_6(self), ACT_LINE_3(self)
 
         elif element_type == HEXAHEDRON_8:
-            return ACT_HEXAHEDRON_8C(self), ACT_QUADRANGLE_4(self), ACT_LINE_2(self)
+            return ACT_HEXAHEDRON_8(self), ACT_QUADRANGLE_4(self), ACT_LINE_2(self)
 
         elif element_type == HEXAHEDRON_20:
-            return ACT_HEXAHEDRON_20C(self), ACT_QUADRANGLE_8(self), ACT_LINE_3(self)
+            return ACT_HEXAHEDRON_20(self), ACT_QUADRANGLE_8(self), ACT_LINE_3(self)
 
         else:
             raise NotImplementedError(f'Element type "{element_type}" is not supported yet.')
