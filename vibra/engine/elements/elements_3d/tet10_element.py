@@ -1,7 +1,7 @@
 
 from typing import TYPE_CHECKING
 
-from vibra.engine.elements.solid_elements import Element3D
+from vibra.engine.elements.elements_3d.solid_elements import Element3D
 
 if TYPE_CHECKING:
     from vibra.engine.model import Model
@@ -230,3 +230,11 @@ class TETRAHEDRON_10(Element3D):
             return phi[0, :, :], dphi[0, :, :]
 
         return phi, dphi
+
+
+    def reorder_connect(self):
+        """
+        Reordering connectivity matrix to adequate 
+        the GMSH connectivity to the FE model
+        """
+        self.connectivities = self.model.mesh.solids_connectivity[:, [6, 4, 5, 7, 10, 8, 9, 12, 11, 13]]

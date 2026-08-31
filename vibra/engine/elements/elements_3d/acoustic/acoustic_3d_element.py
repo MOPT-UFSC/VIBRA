@@ -1,7 +1,7 @@
 
 from typing import TYPE_CHECKING
 
-from vibra.engine.elements.solid_elements import Element3D
+from vibra.engine.elements.elements_3d.solid_elements import Element3D
 
 if TYPE_CHECKING:
     from vibra.engine.model import Model
@@ -109,7 +109,7 @@ class ACOUSTIC_3D_ELEMENT(Element3D):
             det_jacs, inv_jacs = self.get_detJAC_and_invJAC(JAC_stacked)
 
             # shape functions
-            N = self.phi[i, :]
+            N = self.phi[i, :].reshape(1, -1)
             N_t = N.T
 
             # derivative of shape functions

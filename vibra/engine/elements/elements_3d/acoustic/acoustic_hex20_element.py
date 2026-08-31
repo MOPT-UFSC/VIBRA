@@ -126,13 +126,3 @@ class ACT_HEXAHEDRON_20(ACOUSTIC_3D_ELEMENT, HEXAHEDRON_20):
         particle_velocity = -(1 / (1j * rho * omega)) * (B @ Pe)
 
         return particle_velocity
-
-
-    def reorder_connect(self):
-        """
-        Reordering connectivity matrix to adequate 
-        the GMSH connectivity to the FE model
-        """
-        self.connectivities = self.model.mesh.solids_connectivity[
-                :, [4, 5, 6, 7, 8, 9, 10, 11, 12, 15, 17, 13, 20, 22, 23, 21, 14, 16, 18, 19]
-            ]

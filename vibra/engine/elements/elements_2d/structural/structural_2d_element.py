@@ -1,7 +1,7 @@
 
 from typing import TYPE_CHECKING
 
-from vibra.engine.elements.surface_elements import Element2D
+from vibra.engine.elements.elements_2d.surface_elements import Element2D
 
 if TYPE_CHECKING:
     from vibra.engine.model import Model
@@ -87,7 +87,7 @@ class STRUCTURAL_2D_ELEMENT(Element2D):
         for i in range(self.nint):
 
             # determinant of Jacobian and normal vector for the i-th integration point
-            det_jac, normal_vector, *_ = self.get_jacobian_determinant_2d(i, coords, self.dphi, return_vectors=True)
+            det_jac, normal_vector, *_ = self.get_jacobian_determinant_2d(i, self.dphi, coords, return_vectors=True)
 
             # matrix of shape functions for all DOF
             N = self.N_matrix[i, :, :]
