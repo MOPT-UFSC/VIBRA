@@ -82,6 +82,8 @@ class Model:
         self.analysis_setup: AnalysisSetup | None = None
         self.solution: Solution | None = None
 
+        self.solutions: list[Solution] = []
+
         # TODO: review these variables
         self.mesh: Mesh | None = None
         self.stop_processing = False
@@ -302,8 +304,13 @@ class Model:
         self.map_nodes_by_domain()
         self.process_dof_mappings_for_fsi()
 
+    def add_solution(self, solution: Solution):
+        self.solutions.append(solution)
+        self.solution = solution
+
     def reset_current_solution(self):
         self.solution = None
+        self.solutions.clear()
 
     def get_harmonic_analysis_setup(self, **kwargs) -> HarmonicAnalysisSetup:
         analysis_setup = HarmonicAnalysisSetup(**kwargs)

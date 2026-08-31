@@ -162,7 +162,8 @@ class Project:
         """
         Reload solution data written by another process.
         """
-        self.model.solution = self.project_reader.read_solution(self.model)
+        solution = self.project_reader.read_solution(self.model)
+        self.model.add_solution(solution)
         self.assembler, self.solver = self.project_reader.read_assembler_and_solver(self.model)
         self.update_post_processing()
 
@@ -327,15 +328,16 @@ class Project:
         self.assembler.assemble_global_matrices()
 
         t0 = perf_counter()
-        self.model.solution = self.solver.solve()
-        self.project_writer.write_modal_solution(self.model.solution)
+        solution = self.solver.solve()
+        self.model.add_solution(solution)
+        self.project_writer.write_modal_solution(solution)
         self.mark_project_as_modified()
         dt = perf_counter() - t0
 
         print(f"Elapsed time to solve structural modal analysis: {dt: .6f} [s]")
         logging.info(f"Elapsed time to solve structural modal analysis: {dt: .6f} [s]")
 
-        return self.model.solution
+        return solution
 
     def solve_structural_harmonic_analysis(self, is_resume: bool = False) -> HarmonicSolution:
 
@@ -354,25 +356,27 @@ class Project:
 
         analysis_method = self.model.analysis_setup.analysis_method
         if analysis_method == "direct":
-            self.model.solution = self.solver.solve_direct(is_resume=is_resume)
+            solution = self.solver.solve_direct(is_resume=is_resume)
+            self.model.add_solution(solution)
 
         elif analysis_method == "mode_superposition":
-            self.model.solution = self.solver.solve_mode_superposition(
+            solution = self.solver.solve_mode_superposition(
                 is_proportionally_damped=True,
                 is_resume=is_resume,
             )
+            self.model.add_solution(solution)
 
         else:
             raise ValueError(f"Unsupported analysis method: {analysis_method}")
 
-        self.project_writer.write_harmonic_solution(self.model.solution)
+        self.project_writer.write_harmonic_solution(solution)
         self.mark_project_as_modified()
         dt = perf_counter() - t0
 
         print(f"Elapsed time to solve structural harmonic analysis: {dt: .6f} [s]")
         logging.info(f"Elapsed time to solve structural harmonic analysis: {dt: .6f} [s]")
 
-        return self.model.solution
+        return solution
 
     def solve_acoustic_modal_analysis(self, is_resume: bool = False) -> ModalSolution:
 
@@ -388,15 +392,16 @@ class Project:
         self.assembler.assemble_global_matrices()
 
         t0 = perf_counter()
-        self.model.solution = self.solver.solve()
-        self.project_writer.write_modal_solution(self.model.solution)
+        solution = self.solver.solve()
+        self.model.add_solution(solution)
+        self.project_writer.write_modal_solution(solution)
         self.mark_project_as_modified()
         dt = perf_counter() - t0
 
         print(f"Elapsed time to solve acoustic modal analysis: {dt: .6f} [s]")
         logging.info(f"Elapsed time to solve acoustic modal analysis: {dt: .6f} [s]")
 
-        return self.model.solution
+        return solution
 
     def solve_acoustic_harmonic_analysis(self, is_resume: bool = False) -> HarmonicSolution:
 
@@ -419,16 +424,18 @@ class Project:
 
         analysis_method = self.model.analysis_setup.analysis_method
         if analysis_method == "direct":
-            self.model.solution = self.solver.solve_direct(is_resume=is_resume)
+            solution = self.solver.solve_direct(is_resume=is_resume)
 
         elif analysis_method == "mode_superposition":
-            self.model.solution = self.solver.solve_mode_superposition(is_resume=is_resume)
+            solution = self.solver.solve_mode_superposition(is_resume=is_resume)
 
         else:
             raise ValueError(f"Unsupported analysis method: {analysis_method}")
 
+        self.model.add_solution(solution)
+
         if self.solver.project_paths is None:
-            self.project_writer.write_harmonic_solution(self.model.solution)
+            self.project_writer.write_harmonic_solution(solution)
 
         self.mark_project_as_modified()
         dt = perf_counter() - t0
@@ -436,7 +443,7 @@ class Project:
         print(f"Elapsed time to solve acoustic harmonic analysis: {dt: .6f} [s]")
         logging.info(f"Elapsed time to solve acoustic harmonic analysis: {dt: .6f} [s]")
 
-        return self.model.solution
+        return solution
 
     def update_post_processing(self):
         self.postprocessing = None

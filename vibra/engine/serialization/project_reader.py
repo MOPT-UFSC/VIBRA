@@ -77,7 +77,10 @@ class ProjectReader:
         model.set_mesh_setup(mesh_setup)
 
         model.properties = self.read_model_properties()
-        model.solution = self.read_solution(model)
+
+        solution = self.read_solution(model)
+        if solution is not None:
+            model.add_solution(solution)
 
         model.update_domains_mappings()
 
