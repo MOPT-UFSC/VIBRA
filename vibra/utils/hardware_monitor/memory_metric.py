@@ -18,3 +18,10 @@ class MemoryMetric:
         if self.initial is not None and self.final is not None:
             return self.final - self.initial
         return None
+
+
+@dataclass
+class MemorySample:
+    rss: float | None = None
+    uss: float | None = None
+    vms: float | None = None

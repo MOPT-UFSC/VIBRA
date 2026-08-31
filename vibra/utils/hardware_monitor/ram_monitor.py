@@ -4,7 +4,7 @@ import psutil
 import threading
 import time
 
-from vibra.utils.hardware_monitor.memory_metric import MemoryMetric
+from vibra.utils.hardware_monitor.memory_metric import MemoryMetric, MemorySample
 
 
 class RamMonitor:
@@ -26,6 +26,7 @@ class RamMonitor:
 
         self.rss = MemoryMetric()
         self.uss = MemoryMetric()
+        self.vms = MemoryMetric()
 
         self.process = psutil.Process()
         self.monitor_thread: threading.Thread | None = None
@@ -53,24 +54,39 @@ class RamMonitor:
 
             return None
 
-    def _read_rss_mib(self) -> float | None:
+    def _read_basic_memory_mib(self) -> MemorySample:
         try:
-            return self.process.memory_info().rss / self._BYTES_PER_MIB
+            memory = self.process.memory_info()
+            sample = MemorySample(
+                rss=memory.rss / self._BYTES_PER_MIB,
+                vms=memory.vms / self._BYTES_PER_MIB,
+            )
+            return sample
+
         except psutil.Error as error:
             if self.monitor_error is None:
                 self.monitor_error = error
-            return None
+            return MemorySample()
 
-    def _read_rss_uss_mib(self) -> tuple[float | None, float | None]:
+    def _read_full_memory_mib(self) -> MemorySample:
         try:
             memory = self.process.memory_full_info()
-            return memory.rss / self._BYTES_PER_MIB, memory.uss / self._BYTES_PER_MIB
+            sample = MemorySample(
+                rss=memory.rss / self._BYTES_PER_MIB,
+                uss=memory.uss / self._BYTES_PER_MIB,
+                vms=memory.vms / self._BYTES_PER_MIB,
+            )
+            return sample
+
         except psutil.Error as error:
             if self.monitor_error is None:
                 self.monitor_error = error
-            return None, None
+            return self._read_basic_memory_mib()
 
-    def _update_peak(self, metric: MemoryMetric, value: float) -> None:
+    def _update_peak(self, metric: MemoryMetric, value: float | None) -> None:
+        if value is None:
+            return
+
         if metric.peak is None:
             metric.peak = value
         else:
@@ -80,20 +96,14 @@ class RamMonitor:
         uss_time_ref = time.monotonic()
         while not stop_event.wait(self.__rss_interval):
             if time.monotonic() - uss_time_ref >= self.__uss_interval:
-                rss_mb, uss_mb = self._read_rss_uss_mib()
-                if rss_mb is None:
-                    rss_mb = self._read_rss_mib()
-                if rss_mb is not None:
-                    self._update_peak(self.rss, rss_mb)
-
-                if uss_mb is not None:
-                    self._update_peak(self.uss, uss_mb)
-
+                sample = self._read_full_memory_mib()
                 uss_time_ref = time.monotonic()
-                continue
+            else:
+                sample = self._read_basic_memory_mib()
 
-            if (rss_mb := self._read_rss_mib()) is not None:
-                self._update_peak(self.rss, rss_mb)
+            self._update_peak(self.rss, sample.rss)
+            self._update_peak(self.uss, sample.uss)
+            self._update_peak(self.vms, sample.vms)
 
     def start(self) -> "RamMonitor":
         if self.monitor_thread is not None and self.monitor_thread.is_alive():
@@ -101,17 +111,19 @@ class RamMonitor:
 
         self.rss = MemoryMetric()
         self.uss = MemoryMetric()
+        self.vms = MemoryMetric()
         self.monitor_error = None
 
-        initial_rss, initial_uss = self._read_rss_uss_mib()
-        if initial_rss is None:
-            initial_rss = self._read_rss_mib()
-        if initial_rss is not None:
-            self.rss.peak = self.rss.initial = initial_rss
-        if initial_uss is not None:
-            self.uss.peak = self.uss.initial = initial_uss
-        if initial_rss is None and initial_uss is None:
+        sample = self._read_full_memory_mib()
+        if sample.rss is None and sample.uss is None and sample.vms is None:
             return self
+
+        self._update_peak(self.rss, sample.rss)
+        self.rss.initial = sample.rss
+        self._update_peak(self.uss, sample.uss)
+        self.uss.initial = sample.uss
+        self._update_peak(self.vms, sample.vms)
+        self.vms.initial = sample.vms
 
         self.stop_event = threading.Event()
         self.monitor_thread = threading.Thread(target=self._monitor, args=(self.stop_event,), daemon=True)
@@ -125,18 +137,13 @@ class RamMonitor:
             self.monitor_thread.join()
             self.monitor_thread = None
 
-        final_rss, final_uss = self._read_rss_uss_mib()
-
-        if final_rss is None:
-            final_rss = self._read_rss_mib()
-
-        if final_rss is not None:
-            self.rss.final = final_rss
-            self._update_peak(self.rss, final_rss)
-
-        if final_uss is not None:
-            self.uss.final = final_uss
-            self._update_peak(self.uss, final_uss)
+        sample = self._read_full_memory_mib()
+        self._update_peak(self.rss, sample.rss)
+        self.rss.final = sample.rss
+        self._update_peak(self.uss, sample.uss)
+        self.uss.final = sample.uss
+        self._update_peak(self.vms, sample.vms)
+        self.vms.final = sample.vms
 
     def __enter__(self) -> "RamMonitor":
         self.start()
@@ -173,4 +180,10 @@ class RamMonitor:
                     Peak increase:        {_format_memory(self.uss.peak_increase)}
                     Final:                {_format_memory(self.uss.final)}
                     Final change:         {_format_memory(self.uss.final_change)}
+                VMS (Linux and Windows differ):
+                    Initial:       {_format_memory(self.vms.initial)}
+                    Peak:          {_format_memory(self.vms.peak)}
+                    Peak increase: {_format_memory(self.vms.peak_increase)}
+                    Final:         {_format_memory(self.vms.final)}
+                    Final change:  {_format_memory(self.vms.final_change)}
                 """
