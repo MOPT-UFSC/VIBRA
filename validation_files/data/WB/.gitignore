@@ -25,3 +25,5 @@
 !/structural/**
 
 !mesh_info/*/*
+
+/structural/elements_integration/**

@@ -149,7 +149,7 @@ def load_external_mesh_and_solve(**kwargs):
     assembler = StructuralAssembler(model)
 
     # Set the analysis frequency setup
-    assembler.assemble_global_matrices_and_excitations(reorder=False)
+    assembler.assemble_global_matrices_and_excitations(reorder=False, print_log=True)
 
     t0 = time()
     # Run modal analysis

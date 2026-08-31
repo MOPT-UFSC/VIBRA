@@ -1,3 +1,6 @@
+import sys
+
+from tqdm import tqdm
 
 import logging
 from time import time
@@ -538,7 +541,7 @@ class AcousticAssembler:
             self.damping_matrix = self.damping_matrix[self.unprescribed_dof_indices, :][:, self.unprescribed_dof_indices]
 
 
-    def assemble_global_matrices(self, reorder: bool = True, stacked_matrices: bool = True):
+    def assemble_global_matrices(self, reorder: bool = True, stacked_matrices: bool = True, print_log: bool = False):
         """
         This method assembles the global matrices of the acoustic model.
         """
@@ -552,9 +555,10 @@ class AcousticAssembler:
         if stacked_matrices:
             self.compute_data_to_assemble_global_matrices(reorder=reorder)
         else:
-            self.compute_data_to_assemble_global_matrices_using_loop(reorder=reorder)
+            self.compute_data_to_assemble_global_matrices_using_loop(reorder=reorder, print_log=print_log)
         dt = time() - t0
-        print(f"Elapsed time to gather data to assemble global matrices: {dt : .6f} [s]")
+        if print_log:
+            print(f"Elapsed time to gather data to assemble global matrices: {dt : .6f} [s]")
 
         if self.model.stop_processing:
             return
@@ -563,39 +567,44 @@ class AcousticAssembler:
         t0 = time()
         self.impedances_assembler.compute_data_to_assemble_damping_matrix()
         dt = time() - t0
-        print(f"Elapsed time to gather data to assemble damping matrices: {dt : .6f} [s]")
+        if print_log:
+            print(f"Elapsed time to gather data to assemble damping matrices: {dt : .6f} [s]")
 
         logging.info("Computing the global matrices factors... [45/100]")
         t0 = time()
         factor_K, factor_M, factor_Cvisc, factor_fvisc = self.compute_global_matrices_factors()
         dt = time() - t0
-        print(f"Elapsed time to compute global matrices factor: {dt : .6f} [s]")
+        if print_log:
+            print(f"Elapsed time to compute global matrices factor: {dt : .6f} [s]")
 
         logging.info("Assembling global stiffness matrix... [50/100]")
         t0 = time()
         self.assemble_global_stiffness_matrix(factor_K)
         dt = time() - t0
-        print(f"Elapsed time to assemble the global stiffness matrix: {dt : .6f} [s]")
+        if print_log:
+            print(f"Elapsed time to assemble the global stiffness matrix: {dt : .6f} [s]")
 
         logging.info("Assembling global mass matrix... [60/100]")
         t0 = time()
         self.assemble_global_mass_matrix(factor_M)
         dt = time() - t0
-        print(f"Elapsed time to assemble the global mass matrix: {dt : .6f} [s]")
+        if print_log:
+            print(f"Elapsed time to assemble the global mass matrix: {dt : .6f} [s]")
 
         logging.info("Assembling global mass matrix... [70/100]")
         t0 = time()
         self.assemble_global_damping_matrix_3d_elements(factor_Cvisc, factor_fvisc)
         self.assemble_global_damping_matrix_2d_elements()
         dt = time() - t0
-        print(f"Elapsed time to assemble the global damping matrix: {dt : .6f} [s]\n")
+        if print_log:
+            print(f"Elapsed time to assemble the global damping matrix: {dt : .6f} [s]\n")
 
 
-    def assemble_global_matrices_and_excitations(self, reorder: bool=True, stacked_matrices: bool=True):
+    def assemble_global_matrices_and_excitations(self, reorder: bool = True, stacked_matrices: bool = True, print_log: bool = False):
         """
         This method assembles the global matrices and excitations of the acoustic model.
         """
-        self.assemble_global_matrices(reorder = reorder, stacked_matrices = stacked_matrices)        
+        self.assemble_global_matrices(reorder = reorder, stacked_matrices = stacked_matrices, print_log = print_log)        
         self.mass_flow_vector =self.excitations_assembler.assemble_model_excitations()
 
 
@@ -670,7 +679,7 @@ class AcousticAssembler:
             return A, B, False
 
         return K, M, True
-    
+
 
     def reinsert_the_prescribed_dof(self, solution: np.ndarray, modal_analysis=False):
         """
