@@ -19,7 +19,7 @@ def shapeT4C(ssx, ttx, rrx):
     return phi, dphi
 
 
-class STRUCT_TETRAHEDRON_4S(Element3D):
+class StructTetrahedron4S(Element3D):
     #
     nodes_per_element = 4
     dof_per_node = 3

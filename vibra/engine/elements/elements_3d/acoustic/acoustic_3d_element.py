@@ -11,7 +11,7 @@ import logging
 import numpy as np
 
 
-class ACOUSTIC_3D_ELEMENT(Element3D):
+class Acoustic3DElement(Element3D):
 
     def __init__(self, model: "Model", dof_per_node: int, nodes_per_element: int):
         super().__init__(model, dof_per_node, nodes_per_element)

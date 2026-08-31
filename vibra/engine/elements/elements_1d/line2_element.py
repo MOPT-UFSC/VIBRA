@@ -35,7 +35,7 @@ def get_local_coordinates(coords: np.ndarray) -> np.ndarray:
     return coord_loc
 
 
-class LINE_2(Element1D):
+class Line2(Element1D):
 
     def __init__(self, model: "Model", dof_per_node: int, nodes_per_element: int):
 

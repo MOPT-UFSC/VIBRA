@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 import numpy as np
 
 
-class ACOUSTIC_2D_ELEMENT(Element2D):
+class Acoustic2DElement(Element2D):
 
     def __init__(self, model: "Model", dof_per_node: int, nodes_per_element: int):
         super().__init__(model, dof_per_node, nodes_per_element)

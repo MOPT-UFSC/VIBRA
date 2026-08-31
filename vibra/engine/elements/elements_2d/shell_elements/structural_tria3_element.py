@@ -213,7 +213,7 @@ def get_detJAC_and_invJAC(JAC: np.ndarray):
     return detJAC, (1 / detJAC) * AUJJ
 
 
-class STRUCT_TRIANGLE_3(Element2D):
+class StructTriangle_3(Element2D):
 
     nodes_per_element = 3
     dof_per_node = 6
@@ -321,7 +321,7 @@ class STRUCT_TRIANGLE_3(Element2D):
             return Db, Dm, rho
 
     def elementary_matrices(self, el_index: int, material: Material, t: float):
-        """This method returns elementary stiffness and mass matrices for TRIANGLE-3 nodes.
+        """This method returns elementary stiffness and mass matrices for Triangle-3 nodes.
 
         """
 

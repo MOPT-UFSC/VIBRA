@@ -3,19 +3,19 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 from vibra.engine.elements.element_options import BbarDilatationalEvaluation, HEX8_structural
-from vibra.engine.elements.elements_3d.hex8_element import HEXAHEDRON_8
+from vibra.engine.elements.elements_3d.hex8_element import Hexahedron8
 from vibra.engine.elements.elements_3d.structural.flanagan_belytschko_formulation import (
     compute_hourglass_stiffness,
     get_B_analytic,
 )
-from vibra.engine.elements.elements_3d.structural.structural_3d_element import STRUCTURAL_3D_ELEMENT
+from vibra.engine.elements.elements_3d.structural.structural_3d_element import Structural3DElement
 from vibra.engine.properties.material import Material
 
 if TYPE_CHECKING:
     from vibra.engine.model import Model
 
 
-class STRUCT_HEXAHEDRON_8(STRUCTURAL_3D_ELEMENT, HEXAHEDRON_8):
+class StructHexahedron8(Structural3DElement, Hexahedron8):
 
     def __init__(self, model: "Model", dof_per_node: int = 3, nodes_per_element: int = 8):
         super().__init__(model, dof_per_node, nodes_per_element)

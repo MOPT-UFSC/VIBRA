@@ -11,18 +11,6 @@ if TYPE_CHECKING:
     from vibra.engine.model import Model
 
 
-# class Element3D:
-#     """
-#     This determines the attributes and methods
-#     that need to exist in EVERY element.
-#     """
-
-#     # Constants of the element
-#     nodes_per_element: int = 0
-#     dof_per_node: int = 0
-#     dof_per_element: int = nodes_per_element * dof_per_node
-
-
 class Element3D:
 
     def __init__(self, model: "Model", dof_per_node: int, nodes_per_element: int):

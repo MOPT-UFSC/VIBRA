@@ -67,7 +67,7 @@ def get_local_coordinates(coords: np.ndarray) -> np.ndarray:
     return coord_loc
 
 
-class QUADRANGLE_4(Element2D):
+class Quadrangle4(Element2D):
 
     def __init__(self, model: "Model", dof_per_node: int, nodes_per_element: int):
 

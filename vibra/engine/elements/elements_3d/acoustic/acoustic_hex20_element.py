@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
-from vibra.engine.elements.elements_3d.acoustic.acoustic_3d_element import ACOUSTIC_3D_ELEMENT
-from vibra.engine.elements.elements_3d.hex20_element import HEXAHEDRON_20
+from vibra.engine.elements.elements_3d.acoustic.acoustic_3d_element import Acoustic3DElement
+from vibra.engine.elements.elements_3d.hex20_element import Hexahedron20
 
 if TYPE_CHECKING:
     from vibra.engine.model import Model
@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 import numpy as np
 
 
-class ACT_HEXAHEDRON_20(ACOUSTIC_3D_ELEMENT, HEXAHEDRON_20):
+class ActHexahedron20(Acoustic3DElement, Hexahedron20):
 
     def __init__(self, model: "Model", dof_per_node: int = 1, nodes_per_element: int = 20):
         super().__init__(model, dof_per_node, nodes_per_element)
