@@ -859,9 +859,9 @@ class AcousticExcitationsAssembler:
             connectivities_sv = integration_data_sv.connectivities
             surface_data_sv = integration_data_sv.surface_data
 
-            from vibra import app
-            surf_connect = self.model.mesh.get_connectivity_from_surface(4)
-            app().main_window.selection.set_mesh_selection(nodes=surf_connect.flatten())
+            # from vibra import app
+            # surf_connect = self.model.mesh.get_connectivity_from_surface(4)
+            # app().main_window.selection.set_mesh_selection(nodes=surf_connect.flatten())
 
             self.element_2d.reorder_connect(connectivities_sv)
             for i, complex_values in enumerate(surface_data_sv):
