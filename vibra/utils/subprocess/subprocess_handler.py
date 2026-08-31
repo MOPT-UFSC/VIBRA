@@ -2,7 +2,6 @@ import logging
 import subprocess
 import sys
 from enum import Enum, auto
-from pathlib import Path
 from queue import Empty, Queue
 from threading import Thread
 from time import sleep
@@ -10,7 +9,6 @@ from typing import IO
 
 from PySide6.QtWidgets import QApplication
 
-from vibra import VIBRA_DIR
 from vibra.errors import SolverSubprocessError
 from vibra.interface.loading_window import LoadingWindow
 

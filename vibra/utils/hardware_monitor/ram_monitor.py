@@ -1,33 +1,24 @@
-from dataclasses import dataclass
 from functools import wraps
-import os
 from typing import Callable
 import psutil
 import threading
 import time
 
-
-@dataclass
-class MemoryMetric:
-    initial: float | None = None
-    peak: float | None = None
-    final: float | None = None
-
-    @property
-    def peak_increase(self) -> float | None:
-        if self.initial is not None and self.peak is not None:
-            return self.peak - self.initial
-
-    @property
-    def final_change(self) -> float | None:
-        if self.initial is not None and self.final is not None:
-            return self.final - self.initial
+from vibra.utils.hardware_monitor.memory_metric import MemoryMetric
 
 
 class RamMonitor:
+    _BYTES_PER_MIB = 1024**2
+
     def __init__(self, rss_interval: float = 0.05, uss_interval: float = 0.5, label: str | None = None) -> None:
-        if (rss_interval <= 0 or uss_interval <= 0) and rss_interval < uss_interval:
-            raise ValueError(f"Interval {rss_interval} or {uss_interval} invalid. Needs to be greater than 0")
+        if rss_interval <= 0:
+            raise ValueError("rss_interval must be greater than 0")
+
+        if uss_interval <= 0:
+            raise ValueError("uss_interval must be greater than 0")
+
+        if uss_interval < rss_interval:
+            raise ValueError("uss_interval must be greater than or equal to rss_interval")
 
         self.__rss_interval = rss_interval
         self.__uss_interval = uss_interval
@@ -50,12 +41,21 @@ class RamMonitor:
 
         return wrapper
 
-    def _new_session(self, label: str | None = None):
+    def _new_session(self, label: str | None = None) -> "RamMonitor":
         return type(self)(rss_interval=self.__rss_interval, uss_interval=self.__uss_interval, label=label)
+
+    def get_ppid(self) -> int | None:
+        try:
+            return self.process.ppid()
+        except Exception as error:
+            if self.monitor_error is None:
+                self.monitor_error = error
+
+            return None
 
     def _read_rss_mib(self) -> float | None:
         try:
-            return self.process.memory_info().rss / (1024**2)
+            return self.process.memory_info().rss / self._BYTES_PER_MIB
         except psutil.Error as error:
             if self.monitor_error is None:
                 self.monitor_error = error
@@ -64,7 +64,7 @@ class RamMonitor:
     def _read_rss_uss_mib(self) -> tuple[float | None, float | None]:
         try:
             memory = self.process.memory_full_info()
-            return memory.rss / (1024**2), memory.uss / (1024**2)
+            return memory.rss / self._BYTES_PER_MIB, memory.uss / self._BYTES_PER_MIB
         except psutil.Error as error:
             if self.monitor_error is None:
                 self.monitor_error = error
@@ -76,7 +76,7 @@ class RamMonitor:
         else:
             metric.peak = max(metric.peak, value)
 
-    def _monitor(self, stop_event: threading.Event):
+    def _monitor(self, stop_event: threading.Event) -> None:
         uss_time_ref = time.monotonic()
         while not stop_event.wait(self.__rss_interval):
             if time.monotonic() - uss_time_ref >= self.__uss_interval:
@@ -92,17 +92,16 @@ class RamMonitor:
                 uss_time_ref = time.monotonic()
                 continue
 
-            if (rss_mb := self._read_rss_mib()) is None:
-                return
+            if (rss_mb := self._read_rss_mib()) is not None:
+                self._update_peak(self.rss, rss_mb)
 
-            self._update_peak(self.rss, rss_mb)
-
-    def start(self):
+    def start(self) -> "RamMonitor":
         if self.monitor_thread is not None and self.monitor_thread.is_alive():
             raise RuntimeError("RAM monitor is already running")
 
         self.rss = MemoryMetric()
         self.uss = MemoryMetric()
+        self.monitor_error = None
 
         initial_rss, initial_uss = self._read_rss_uss_mib()
         if initial_rss is None:
@@ -114,16 +113,13 @@ class RamMonitor:
         if initial_rss is None and initial_uss is None:
             return self
 
-        self.monitor_error = None
-        self.rss.final = None
-
         self.stop_event = threading.Event()
         self.monitor_thread = threading.Thread(target=self._monitor, args=(self.stop_event,), daemon=True)
         self.monitor_thread.start()
 
         return self
 
-    def stop(self):
+    def stop(self) -> None:
         if self.monitor_thread is not None:
             self.stop_event.set()
             self.monitor_thread.join()
@@ -142,7 +138,7 @@ class RamMonitor:
             self.uss.final = final_uss
             self._update_peak(self.uss, final_uss)
 
-    def __enter__(self):
+    def __enter__(self) -> "RamMonitor":
         self.start()
         return self
 
@@ -152,7 +148,7 @@ class RamMonitor:
         if self.monitor_error is not None:
             print(self.monitor_error)
 
-        print(self.__str__())
+        print(self)
         return False
 
     def __str__(self) -> str:
@@ -163,15 +159,15 @@ class RamMonitor:
             return f"{value:.2f} MiB"
 
         return f"""
-             Measurement: {self.label}
-                PID (Parent PID):     {os.getpid()} ({self.process.ppid()})
+             Measurement: {self.label or "unnamed block"}
+                PID (Parent PID):     {self.process.pid} ({self.get_ppid()})
                 Resident memory (RSS):
                     Initial:              {_format_memory(self.rss.initial)}
                     Peak:                 {_format_memory(self.rss.peak)}
                     Peak increase:        {_format_memory(self.rss.peak_increase)}
                     Final:                {_format_memory(self.rss.final)}
                     Final change:         {_format_memory(self.rss.final_change)}
-                Unique Set Size memory (USS):
+                Unique Set Size (USS):
                     Initial:              {_format_memory(self.uss.initial)}
                     Peak:                 {_format_memory(self.uss.peak)}
                     Peak increase:        {_format_memory(self.uss.peak_increase)}
