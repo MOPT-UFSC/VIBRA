@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 import numpy as np
 
 
-class STRUCTURAL_3D_ELEMENT(Element3D):
+class Structural3DElement(Element3D):
 
     def __init__(self, model: "Model", dof_per_node: int, nodes_per_element: int):
         super().__init__(model, dof_per_node, nodes_per_element)

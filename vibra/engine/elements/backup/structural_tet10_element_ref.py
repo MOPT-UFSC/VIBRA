@@ -61,7 +61,7 @@ def shapeT10C(l1, l2, l3):
     return phi, dphi
 
 
-class STRUCT_TETRAHEDRON_10S(Element3D):
+class StructTetrahedron10S(Element3D):
     #
     nodes_per_element = 10
     dof_per_node = 3

@@ -1,13 +1,13 @@
 from typing import TYPE_CHECKING
 
-from vibra.engine.elements.elements_1d.line2_element import LINE_2
-from vibra.engine.elements.elements_1d.structural.structural_1d_element import STRUCTURAL_1D_ELEMENT
+from vibra.engine.elements.elements_1d.line2_element import Line2
+from vibra.engine.elements.elements_1d.structural.structural_1d_element import Structural1DElement
 
 if TYPE_CHECKING:
     from vibra.engine.model import Model
 
 
-class STRUCT_LINE_2(STRUCTURAL_1D_ELEMENT, LINE_2):
+class StructLine2(Structural1DElement, Line2):
 
     def __init__(self, model: "Model", dof_per_node: int = 3, nodes_per_element: int = 2):
         super().__init__(model, dof_per_node, nodes_per_element)

@@ -14,7 +14,7 @@ from vtkmodules.vtkCommonCore import vtkPoints
 from vtkmodules.vtkCommonDataModel import VTK_HEXAHEDRON, VTK_QUADRATIC_HEXAHEDRON, VTK_QUADRATIC_TETRA, VTK_TETRA, vtkUnstructuredGrid
 from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridWriter
 
-from vibra.engine.mesher.mesh_setup import HEXAHEDRON_8, HEXAHEDRON_20, TETRAHEDRON_4, TETRAHEDRON_10, ElementTopology, LocalMeshSizeControlSetup, MeshSetup
+from vibra.engine.mesher.mesh_setup import Hexahedron8, Hexahedron20, Tetrahedron4, Tetrahedron10, ElementTopology, LocalMeshSizeControlSetup, MeshSetup
 from vibra.errors import InvalidMeshSetupError, MeshingAlgorithmError
 from vibra.interface.numeric_checks.unit_utilities import convert_length_unit
 
@@ -365,13 +365,13 @@ class Mesh:
             return
 
         if nodes_per_element in [3, 4] and self.faces_connectivity.size:
-            self.element_topology = TETRAHEDRON_4
+            self.element_topology = Tetrahedron4
         elif nodes_per_element == 10:
-            self.element_topology = TETRAHEDRON_10
+            self.element_topology = Tetrahedron10
         elif nodes_per_element == 8:
-            self.element_topology = HEXAHEDRON_8
+            self.element_topology = Hexahedron8
         elif nodes_per_element == 20:
-            self.element_topology = HEXAHEDRON_20
+            self.element_topology = Hexahedron20
 
     def process_downwards_adjacencies_from_mesh_data(self):
         """

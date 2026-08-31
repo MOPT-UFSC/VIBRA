@@ -52,7 +52,7 @@ def get_local_coordinates(coords: np.ndarray) -> np.ndarray:
     return coord_loc
 
 
-class TRIANGLE_3(Element2D):
+class Triangle_3(Element2D):
 
     def __init__(self, model: "Model", dof_per_node: int, nodes_per_element: int):
 

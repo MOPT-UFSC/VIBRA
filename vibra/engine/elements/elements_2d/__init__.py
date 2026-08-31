@@ -1,9 +1,9 @@
-from .acoustic.acoustic_quad4_element import ACT_QUADRANGLE_4
-from .acoustic.acoustic_quad8_element import ACT_QUADRANGLE_8
-from .acoustic.acoustic_tria3_element import ACT_TRIANGLE_3
-from .acoustic.acoustic_tria6_element import ACT_TRIANGLE_6
+from .acoustic.acoustic_quad4_element import ActQuadrangle4
+from .acoustic.acoustic_quad8_element import ActQuadrangle8
+from .acoustic.acoustic_tria3_element import ActTriangle3
+from .acoustic.acoustic_tria6_element import ActTriangle6
 
-from .structural.structural_quad4_element import STRUCT_QUADRANGLE_4
-from .structural.structural_quad8_element import STRUCT_QUADRANGLE_8
-from .structural.structural_tria3_element import STRUCT_TRIANGLE_3
-from .structural.structural_tria6_element import STRUCT_TRIANGLE_6
+from .structural.structural_quad4_element import StructQuadrangle4
+from .structural.structural_quad8_element import StructQuadrangle8
+from .structural.structural_tria3_element import StructTriangle_3
+from .structural.structural_tria6_element import StructTriangle_6

@@ -8,7 +8,7 @@ if TYPE_CHECKING:
 import numpy as np
 
 
-class STRUCTURAL_1D_ELEMENT(Element1D):
+class Structural1DElement(Element1D):
 
     def __init__(self, model: "Model", dof_per_node: int, nodes_per_element: int):
         super().__init__(model, dof_per_node, nodes_per_element)

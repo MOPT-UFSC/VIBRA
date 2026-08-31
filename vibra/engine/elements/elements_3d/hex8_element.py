@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 import numpy as np
 
 
-class HEXAHEDRON_8(Element3D):
+class Hexahedron8(Element3D):
 
     def __init__(self, model: "Model", dof_per_node: int, nodes_per_element: int):
 
