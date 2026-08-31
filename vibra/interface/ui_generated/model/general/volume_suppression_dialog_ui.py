@@ -31,6 +31,7 @@ class Ui_Dialog(object):
         self.gridLayout.setContentsMargins(4, 4, 4, 4)
         self.frame = QFrame(Dialog)
         self.frame.setObjectName(u"frame")
+        self.frame.setMinimumSize(QSize(0, 48))
         self.frame.setFrameShape(QFrame.Shape.Box)
         self.frame.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_3 = QGridLayout(self.frame)
