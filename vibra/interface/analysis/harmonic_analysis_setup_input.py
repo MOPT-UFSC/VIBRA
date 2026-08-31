@@ -109,10 +109,12 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         self.lineEdit_constant_structural_coefficient.setValidator(StrictDoubleValidator(0, 1, 8))
 
     def _create_connections(self):
-        #
+
+        # QComboBox connections
         self.comboBox_frequency_spacing.currentIndexChanged.connect(self.frequency_spacing_callback)
         self.comboBox_method.currentIndexChanged.connect(self.analysis_method_callback)
-        #
+
+        # QPushButton connections
         self.pushButton_enter_setup.clicked.connect(self.enter_setup_callback)
         self.pushButton_exit.clicked.connect(self.close)
         self.pushButton_reset_frequency_settings.clicked.connect(self.reset_frequency_setup_based_on_tabular_data)
@@ -493,6 +495,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
 
                 analysis_setup_data.update(freq_data)
 
+        is_harmonic_acoustic = AnalysisID(analysis_id).is_harmonic_acoustic()
         is_harmonic_structural = AnalysisID(analysis_id).is_harmonic_structural()
         if is_harmonic_structural:
             analysis_setup_data["global_damping"] = self.check_damping_inputs()
@@ -504,6 +507,9 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
             #  structural harmonic analysis if there is a prescribed velocity or acceleration in the model
             if self.model.properties.is_there_a_prescribed_velocity_or_acceleration_in_the_model():
                 analysis_setup = self.model.modify_analysis_setup_to_filter_zero_frequency(analysis_setup)
+
+        elif is_harmonic_acoustic:
+            analysis_setup = self.model.modify_analysis_setup_to_filter_zero_frequency(analysis_setup)
 
         app().project.configure_analysis(analysis_setup)
 

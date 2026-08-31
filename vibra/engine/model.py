@@ -484,8 +484,8 @@ class Model:
 
         if not isinstance(analysis_setup, HarmonicAnalysisSetup):
             return analysis_setup
-        
-        if not analysis_setup.analysis_id == AnalysisID.STRUCTURAL_HARMONIC:
+
+        if not AnalysisID.is_harmonic(analysis_setup.analysis_id):
             return analysis_setup
 
         table_exists = self.properties.check_if_there_are_tables_at_the_model()
