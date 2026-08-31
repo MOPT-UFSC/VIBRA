@@ -14,6 +14,7 @@ from vtkmodules.vtkCommonCore import vtkPoints
 from vtkmodules.vtkCommonDataModel import VTK_HEXAHEDRON, VTK_QUADRATIC_HEXAHEDRON, VTK_QUADRATIC_TETRA, VTK_TETRA, vtkUnstructuredGrid
 from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridWriter
 
+from vibra.engine.mesher.degrees_of_freedom_decoupling import maps_values_to_keys
 from vibra.engine.mesher.mesh_setup import HEXAHEDRON_8, HEXAHEDRON_20, TETRAHEDRON_4, TETRAHEDRON_10, ElementTopology, LocalMeshSizeControlSetup, MeshSetup
 from vibra.errors import InvalidMeshSetupError, MeshingAlgorithmError
 from vibra.interface.numeric_checks.unit_utilities import convert_length_unit
@@ -260,6 +261,10 @@ class Mesh:
         self.post_process_mesh_data()
         self.update_element_topology_based_on_connectivity()
 
+        if mesh_setup.merge_connected_volumes and mesh_setup.disconnected_surfaces:
+            surface_to_volume = self._get_surface_to_volume_mapping(mesh_setup.disconnected_surfaces)
+            self.disconnect_surfaces(surface_to_volume)
+
         logging.info("Post-processing mesh... [95/100]")
         if mesh_setup.compute_quality_metrics:
             self.compute_mesh_quality_parameters()
@@ -306,6 +311,533 @@ class Mesh:
         # gmsh.model.occ.fragment(lines_list, lines_list)
         gmsh.model.occ.fragment(volumes_list, volumes_list)
         gmsh.model.occ.synchronize()
+
+    def _get_surface_to_volume_mapping(self, disconnected_surfaces: list[int]) -> dict[int, int]:
+        """ This method resolves the selected surfaces to the volume that
+            will be rewired to the duplicated (twin) nodes. The first volume
+            adjacent to each surface is chosen.
+
+            Parameters
+            ----------
+            disconnected_surfaces: list[int]
+                The list of surface IDs to keep disconnected.
+
+            Returns
+            -------
+            surface_to_volume: dict
+                A dictionary mapping each surface ID to the volume ID
+                whose elements will be rewired to the twin nodes.
+        """
+        surface_to_volume = dict()
+        for surface_id in disconnected_surfaces:
+            volumes = self.volumes_from_surface.get(int(surface_id))
+            if volumes is None or len(volumes) < 2:
+                continue
+            surface_to_volume[int(surface_id)] = int(volumes[0])
+
+        return surface_to_volume
+
+    def disconnect_surfaces(self, surface_to_volume: dict[int, int]):
+        """ This method disconnects the nodes from the selected surfaces,
+            duplicating the nodes so that the volumes on each side of the
+            surface no longer share nodes across it.
+
+            Parameters
+            ----------
+            surface_to_volume: dict
+                A dictionary mapping each surface ID to the volume ID
+                whose elements should be rewired to the twin nodes.
+        """
+        # The main explanations along the methods will follow this example:
+        # Two boxes, volume A and volume B, touching on surface S. The surface id is 5, and it's shared — volumes_from_surface[5] == [1, 2] (A=1, B=2). 
+        # Since _get_surface_to_volume_mapping takes volumes[0], we get surface_to_volume = {5: 1}: A is rewired to the twin nodes, B keeps the originals.
+        # surface_to_volume is an important variable
+
+        self.surfaces_mapping = self._get_new_surfaces_mapping(surface_to_volume)
+        if not surface_to_volume:
+            return
+
+        logging.info("Processing disconnected surfaces... [65/100]")
+
+        self.lines_mapping = self._get_new_lines_mapping(surface_to_volume)
+        self.points_mapping = self._get_new_points_mapping(surface_to_volume)
+
+        self.nodes_mapping = self._create_twin_nodes(surface_to_volume) #very important, the main method
+
+        self._modify_the_connectivities_from_lines(surface_to_volume)
+        self._modify_the_connectivities_from_surfaces(surface_to_volume)
+
+        self._rewire_solid_elements(surface_to_volume)
+        self._rewire_surface_elements(surface_to_volume)
+        self._rewire_line_elements(surface_to_volume)
+
+        self._update_nodes_from_points()
+        self._update_nodes_from_geometry_arrays()
+        self._update_disconnected_geometry_information(surface_to_volume)
+
+        self.process_mesh_related_mappings("Post-processing")
+        self.process_disconnected_nodes_criterion()
+
+    def _get_new_surfaces_mapping(self, surface_to_volume: dict[int, int]) -> dict[int, int]:
+        """ Returns a dictionary mapping the selected surface IDs to the
+            IDs of the new (twin) surfaces.
+        """
+        surface_ids = list(surface_to_volume.keys())
+        max_surface_id = max(self.geometry_information.get("surfaces", [0]))
+        first_new_surface_id = int(max_surface_id) + 1
+        new_surface_ids = np.arange(
+            first_new_surface_id,
+            first_new_surface_id + len(surface_ids),
+            dtype=int,
+        )
+        surfaces_mapping = {}
+        for surface_id, new_surface_id in zip(surface_ids, new_surface_ids):
+            surfaces_mapping[int(surface_id)] = int(new_surface_id)
+
+        return surfaces_mapping
+
+    def _get_new_lines_mapping(self, surface_to_volume: dict[int, int]) -> dict[int, dict[int, int]]:
+        """ Returns a dictionary mapping the lines that bound the selected
+            surfaces to the volumes that rewire them, and the IDs of the
+            new (twin) lines.
+        """
+        line_to_rewire_volumes = defaultdict(set)
+        for surface_id, rewire_volume in surface_to_volume.items():
+            for line_id in self.lines_from_surface.get(int(surface_id), []):
+                line_to_rewire_volumes[int(line_id)].add(int(rewire_volume))
+
+        max_line_id = max(self.geometry_information.get("lines", [0]))
+        next_line_id = int(max_line_id) + 1
+
+        lines_mapping = {}
+        for line_id, rewire_volumes in line_to_rewire_volumes.items():
+            lines_mapping[int(line_id)] = {}
+            for rewire_volume in sorted(rewire_volumes):
+                lines_mapping[int(line_id)][int(rewire_volume)] = next_line_id
+                next_line_id += 1
+
+        return lines_mapping
+        # In the simple case: {line_id: {rewire_volume: twin_line_id}}
+        # If a line bounds two surfaces rewired to volumes 1 and 3, it becomes {line: {1: 9, 3: 10}}. Two twin lines, one per volume.
+
+    def _get_new_points_mapping(self, surface_to_volume: dict[int, int]) -> dict[int, dict[int, int]]:
+        """ Returns a dictionary mapping the points from the lines that bound
+            the selected surfaces to the volumes that rewire them, and the
+            IDs of the new (twin) points.
+        """
+        point_to_rewire_volumes = defaultdict(set)
+        for surface_id, rewire_volume in surface_to_volume.items():
+            for line_id in self.lines_from_surface.get(int(surface_id), []):
+                for point_id in self.points_from_line.get(int(line_id), []):
+                    point_to_rewire_volumes[int(point_id)].add(int(rewire_volume))
+
+        max_point_id = max(self.geometry_information.get("points", [0]))
+        next_point_id = int(max_point_id) + 1
+
+        points_mapping = {}
+        for point_id, rewire_volumes in point_to_rewire_volumes.items():
+            points_mapping[int(point_id)] = {}
+            for rewire_volume in sorted(rewire_volumes):
+                points_mapping[int(point_id)][int(rewire_volume)] = next_point_id
+                next_point_id += 1
+
+        return points_mapping
+    #  {point_id: {rewire_volume: twin_point_id}}
+
+    def _create_twin_nodes(self, surface_to_volume: dict[int, int]) -> dict[int, dict[int, int]]:
+        """ This method creates the twin nodes for the selected surfaces,
+            appending their coordinates to `nodal_coordinates`.
+
+            One twin node is created per original node and per volume that
+            is rewired at that node, so that the volumes that share a node
+            on a corner (a node common to three or more disconnected
+            surfaces) are each rewired to their own copy.
+
+            Returns
+            -------
+            nodes_mapping: dict
+                A dictionary mapping each volume ID to a dictionary
+                mapping each original node ID to its twin node ID.
+        """
+        # 1 - collect every node that sits on a disconnected surface:
+        nodes_from_surfaces = set() # candidate nodes for duplication
+        # it's a set because a node can belong to more than one disconnected surface and we only want to process it once.
+
+        for surface_id in surface_to_volume:
+            nodes = self.get_nodes_from_surface(int(surface_id))
+            if nodes is None:
+                continue
+            for node_id in nodes:
+                nodes_from_surfaces.add(int(node_id))
+
+        # 2 - who touches each node (the two volume maps)
+        # records, per node, every volume whose elements contain it
+        node_to_volumes = defaultdict(set)  
+        for row in self.solids_connectivity:
+            volume_id = int(row[1])
+            for node_id in row[4:]:
+                node_to_volumes[int(node_id)].add(volume_id)
+
+        # for each node, which volumes rewire it
+        node_to_rewired_volumes = defaultdict(set)
+        for surface_id, rewire_volume in surface_to_volume.items():
+            nodes = self.get_nodes_from_surface(int(surface_id))
+            if nodes is None:
+                continue
+            for node_id in nodes:
+                node_to_rewired_volumes[int(node_id)].add(int(rewire_volume))
+
+        # In the example, every node of S maps to {1, 2} in the first dict, and to {1} in the second (only A rewires)
+        # At a corner node, where 3 surfaces meet, the first dict would have {1, 2, 3, ...}
+
+        # The volumes that keep the original node are the ones that do not
+        # rewire any of its surfaces. When every incident volume is rewired,
+        # the smallest incident volume keeps the original node
+
+        # 3 - keep/twin decsion per node:
+        nodes_mapping = {}
+        twins = []
+        max_node_id = int(np.max(self.nodal_coordinates[:, 0])) #e.g. 100
+        next_node_id = max_node_id + 1 #101
+
+        for node_id in sorted(nodes_from_surfaces):
+            incident_volumes = node_to_volumes[node_id] #{A, B}
+            rewired_volumes = node_to_rewired_volumes.get(node_id, set()) #{A}
+            keep_volumes = incident_volumes - rewired_volumes #{B}
+            if not keep_volumes: #corner
+                keep_volumes = {min(incident_volumes)}
+
+            for volume_id in sorted(incident_volumes - keep_volumes):
+                nodes_mapping.setdefault(volume_id, {})[node_id] = next_node_id #{A : {S : 101}}
+                twins.append((node_id, next_node_id))
+                next_node_id += 1
+        # after this volume A has a twin for every node of S; volume B keeps them all, basically
+
+        # 4 - actually create the twin nodes in nodal_coordinates 
+        if twins:
+            original_node_ids = np.array([node_id for node_id, _ in twins], dtype=int)
+            twin_node_ids = np.array([twin_id for _, twin_id in twins], dtype=int)
+
+            twin_coordinates = np.zeros((len(twins), 4), dtype=float)
+            twin_coordinates[:, 0] = twin_node_ids
+            twin_coordinates[:, 1:] = self.nodal_coordinates[original_node_ids, 1:]
+
+            self.nodal_coordinates = np.append(self.nodal_coordinates, twin_coordinates, axis=0)
+
+        #  Each twin is just a copy of its original's coordinates, in a fresh row of nodal_coordinates
+
+        return nodes_mapping # tells exactly which node maps to which copy. This dict is the key everything downstream uses
+
+    def _update_nodes_from_array(self, values: np.ndarray, mapping: dict[int, int]) -> np.ndarray:
+        """ This method returns an array whose elements are modified
+            based on the nodes mapping previously processed.
+        """
+        output_values = values.copy()
+        for j, node_id in enumerate(values):
+            new_node_id = mapping.get(int(node_id))
+            if new_node_id is not None:
+                output_values[j] = new_node_id
+
+        return output_values
+
+    def _rewire_solid_elements(self, surface_to_volume: dict[int, int]):
+        """ This method rewires the solid elements from the selected
+            volumes to the twin nodes.
+        """
+        for volume_id, nodes_mapping in self.nodes_mapping.items():
+            contains_twin_node = np.isin(
+                self.solids_connectivity[:, 4:],
+                list(nodes_mapping.keys()),
+            ).any(axis=1)
+
+            for element_index in np.where(contains_twin_node)[0]:
+                if self.solids_connectivity[element_index, 1] == volume_id:
+                    self.solids_connectivity[element_index, 4:] = self._update_nodes_from_array(
+                        self.solids_connectivity[element_index, 4:],
+                        nodes_mapping,
+                    )
+
+    def _rewire_surface_elements(self, surface_to_volume: dict[int, int]):
+        """ This method rewires the face elements from the surfaces of the
+            selected volumes to the twin nodes.
+
+            The original faces of a disconnected surface are kept by the
+            volume that does not rewire it, so they are rewired with the
+            mapping of that volume.
+        """
+        for volume_id, nodes_mapping in self.nodes_mapping.items():
+            surface_ids = self.surfaces_from_volume.get(int(volume_id), [])
+            valid_surface_ids = {int(surface_id) for surface_id in surface_ids}
+
+            rewired_surface_ids = {
+                int(surface_id)
+                for surface_id, rewire_volume in surface_to_volume.items()
+                if int(rewire_volume) == volume_id
+            }
+            valid_surface_ids -= rewired_surface_ids
+
+            contains_twin_node = np.isin(
+                self.faces_connectivity[:, 4:],
+                list(nodes_mapping.keys()),
+            ).any(axis=1)
+
+            for element_index in np.where(contains_twin_node)[0]:
+                if self.faces_connectivity[element_index, 1] in valid_surface_ids:
+                    self.faces_connectivity[element_index, 4:] = self._update_nodes_from_array(
+                        self.faces_connectivity[element_index, 4:],
+                        nodes_mapping,
+                    )
+
+    def _get_original_line_owners(self, surface_to_volume: dict[int, int]) -> dict[int, int]:
+        """ Returns the volume that keeps the original line elements of each
+            line, i.e. the volume that is not rewired on any of the surfaces
+            bounding the line (or the smallest incident volume when every
+            incident volume is rewired).
+        """
+        line_to_surfaces = defaultdict(set)
+        for surface_id, surface_lines in self.lines_from_surface.items():
+            for line_id in surface_lines:
+                line_to_surfaces[int(line_id)].add(int(surface_id))
+
+        line_owners = {}
+        for line_id, surface_ids in line_to_surfaces.items():
+            incident_volumes = set()
+            rewired_volumes = set()
+
+            for surface_id in surface_ids:
+                volumes = self.volumes_from_surface.get(int(surface_id), [])
+                incident_volumes.update(int(volume_id) for volume_id in volumes)
+
+                rewire_volume = surface_to_volume.get(int(surface_id))
+                if rewire_volume is not None:
+                    rewired_volumes.add(int(rewire_volume))
+
+            keep_volumes = incident_volumes - rewired_volumes
+            if keep_volumes:
+                line_owners[int(line_id)] = min(keep_volumes)
+            else:
+                line_owners[int(line_id)] = min(incident_volumes)
+
+        return line_owners
+
+    def _rewire_line_elements(self, surface_to_volume: dict[int, int]):
+        """ This method rewires the line elements from the surfaces of the
+            selected volumes to the twin nodes.
+
+            The original line elements are kept by the volume that is not
+            rewired on any of their surfaces, and the remaining volumes
+            receive their own twin line elements.
+        """
+        line_owners = self._get_original_line_owners(surface_to_volume)
+
+        for line_id, owner_volume in line_owners.items():
+            nodes_mapping = self.nodes_mapping.get(owner_volume, {})
+            if not nodes_mapping:
+                continue
+
+            contains_twin_node = np.isin(
+                self.lines_connectivity[:, 4:],
+                list(nodes_mapping.keys()),
+            ).any(axis=1)
+
+            for element_index in np.where(contains_twin_node)[0]:
+                if self.lines_connectivity[element_index, 1] == line_id:
+                    self.lines_connectivity[element_index, 4:] = self._update_nodes_from_array(
+                        self.lines_connectivity[element_index, 4:],
+                        nodes_mapping,
+                    )
+
+    def _get_surface_element_tag_and_nodes_number(self, surface_id: int) -> tuple[int | None, int | None]:
+        """ Returns the 2D element type tag and the number of nodes per
+            element for the given surface.
+        """
+        rows = np.where(self.faces_connectivity[:, 1] == surface_id)[0]
+        if rows.size == 0:
+            return None, None
+        return int(self.faces_connectivity[rows[0], 2]), int(self.faces_connectivity[rows[0], 3])
+
+    def _get_line_element_tag_and_nodes_number(self, line_id: int) -> tuple[int | None, int | None]:
+        """ Returns the 1D element type tag and the number of nodes per
+            element for the given line.
+        """
+        rows = np.where(self.lines_connectivity[:, 1] == line_id)[0]
+        if rows.size == 0:
+            return None, None
+        return int(self.lines_connectivity[rows[0], 2]), int(self.lines_connectivity[rows[0], 3])
+
+    def _modify_the_connectivities_from_lines(self, surface_to_volume: dict[int, int]):
+        """ This method creates the twin line elements for the lines that
+            bound the disconnected surfaces.
+        """
+        #  takes the original line elements of each line and, for each twin line, writes a full copy where every node id has been swapped
+        if not self.lines_connectivity.size:
+            return
+
+        number_of_columns = self.lines_connectivity.shape[1]
+
+        for line_id, twin_lines in self.lines_mapping.items():
+            line_connectivity = self.get_connectivity_from_line(int(line_id))
+            element_tag, nodes_per_element = self._get_line_element_tag_and_nodes_number(int(line_id))
+            if element_tag is None:
+                continue
+
+            for volume_id, twin_line_id in twin_lines.items():
+                nodes_mapping = self.nodes_mapping.get(int(volume_id), {})
+
+                twin_connectivity = np.zeros_like(line_connectivity, dtype=int)
+                for element_index, connect in enumerate(line_connectivity):
+                    twin_connectivity[element_index, :] = self._update_nodes_from_array(connect, nodes_mapping)
+
+                rows = twin_connectivity.shape[0]
+                ones = np.ones(rows, dtype=int)
+                last_index = self.lines_connectivity[-1, 0]
+                element_ids = int(last_index + 1) + np.arange(rows)
+
+                connectivity_to_append = np.zeros((rows, number_of_columns), dtype=int)
+                connectivity_to_append[:, 0] = element_ids
+                connectivity_to_append[:, 1] = ones * int(twin_line_id)
+                connectivity_to_append[:, 2] = ones * int(element_tag)
+                connectivity_to_append[:, 3] = ones * int(nodes_per_element)
+                connectivity_to_append[:, 4:] = twin_connectivity
+
+                self.lines_connectivity = np.append(self.lines_connectivity, connectivity_to_append, axis=0)
+
+    def _modify_the_connectivities_from_surfaces(self, surface_to_volume: dict[int, int]):
+        """ This method creates the twin face elements for the
+            disconnected surfaces.
+        """
+        if not self.faces_connectivity.size:
+            return
+
+        number_of_columns = self.faces_connectivity.shape[1]
+
+        for surface_id, twin_surface_id in self.surfaces_mapping.items():
+            face_connectivity = self.get_connectivity_from_surface(int(surface_id))
+            element_tag, nodes_per_element = self._get_surface_element_tag_and_nodes_number(int(surface_id))
+            if element_tag is None:
+                continue
+
+            rewire_volume = int(surface_to_volume[int(surface_id)])
+            nodes_mapping = self.nodes_mapping.get(rewire_volume, {})
+
+            twin_connectivity = np.zeros_like(face_connectivity, dtype=int)
+            for element_index, connect in enumerate(face_connectivity):
+                twin_connectivity[element_index, :] = self._update_nodes_from_array(connect, nodes_mapping)
+
+            rows = twin_connectivity.shape[0]
+            ones = np.ones(rows, dtype=int)
+            last_index = self.faces_connectivity[-1, 0]
+            element_ids = int(last_index + 1) + np.arange(rows)
+
+            connectivity_to_append = np.zeros((rows, number_of_columns), dtype=int)
+            connectivity_to_append[:, 0] = element_ids
+            connectivity_to_append[:, 1] = ones * int(twin_surface_id)
+            connectivity_to_append[:, 2] = ones * int(element_tag)
+            connectivity_to_append[:, 3] = ones * int(nodes_per_element)
+            connectivity_to_append[:, 4:] = twin_connectivity
+
+            self.faces_connectivity = np.append(self.faces_connectivity, connectivity_to_append, axis=0)
+
+    def _update_nodes_from_points(self):
+        """ This method updates the nodes from the created points,
+            mapping the new points to the twin nodes.
+        """
+        for point_id, point_mapping in self.points_mapping.items():
+            node_from_point = self.nodes_from_points.get(int(point_id))
+            if node_from_point is None:
+                continue
+
+            for volume_id, new_point_id in point_mapping.items():
+                nodes_mapping = self.nodes_mapping.get(int(volume_id), {})
+                new_node_id = nodes_mapping.get(int(node_from_point), int(node_from_point))
+
+                self.nodes_from_points[int(new_point_id)] = int(new_node_id)
+                self.points_from_nodes[int(new_node_id)] = int(new_point_id)
+
+    def _update_nodes_from_geometry_arrays(self):
+        """ This method appends the twin nodes to the nodes_from_volumes,
+            nodes_from_surfaces, and nodes_from_lines arrays.
+        """
+        twin_nodes = []
+        for nodes_mapping in self.nodes_mapping.values():
+            twin_nodes.extend(nodes_mapping.values())
+        twin_nodes = np.array(twin_nodes, dtype=int)
+
+        self.nodes_from_volumes = np.unique(np.append(self.nodes_from_volumes, twin_nodes))
+        self.nodes_from_surfaces = np.unique(np.append(self.nodes_from_surfaces, twin_nodes))
+
+        twin_nodes_from_lines = np.intersect1d(self.lines_connectivity[:, 4:].flatten(), twin_nodes)
+        twin_nodes_from_lines = np.unique(twin_nodes_from_lines)
+        self.nodes_from_lines = np.unique(np.append(self.nodes_from_lines, twin_nodes_from_lines))
+
+    def _update_disconnected_geometry_information(self, surface_to_volume: dict[int, int]):
+        """ This method updates the geometry-related information, precisely,
+            the number of each entity and the adjacencies from entities.
+        """
+        surfaces_from_volume = deepcopy(self.surfaces_from_volume)
+        lines_from_surface = deepcopy(self.lines_from_surface)
+        points_from_line = deepcopy(self.points_from_line)
+
+        geometry_information = deepcopy(self.geometry_information)
+        area_from_surfaces = deepcopy(self.area_from_surfaces)
+        length_from_lines = deepcopy(self.length_from_lines)
+
+        surface_ids = set(geometry_information["surfaces"])
+        point_ids = set(geometry_information["points"])
+        line_ids = set(geometry_information["lines"])
+
+        # Replace each disconnected surface by its twin surface in the volume
+        # that rewires it.
+        surfaces_by_rewire_volume = defaultdict(list)
+        for surface_id, rewire_volume in surface_to_volume.items():
+            surfaces_by_rewire_volume[rewire_volume].append(surface_id)
+
+        for volume_id, surfaces_to_replace in surfaces_by_rewire_volume.items():
+            volume_surfaces = set(surfaces_from_volume[int(volume_id)])
+            volume_surfaces -= set(surfaces_to_replace)
+
+            for surface_id in surfaces_to_replace:
+                twin_surface_id = self.surfaces_mapping[int(surface_id)]
+                volume_surfaces.add(twin_surface_id)
+
+            self.surfaces_from_volume[int(volume_id)] = [int(surface_id) for surface_id in volume_surfaces]
+
+        # Register the twin surfaces, and for each of them, its twin lines
+        # and twin points.
+        for surface_id, rewire_volume in surface_to_volume.items():
+            twin_surface_id = self.surfaces_mapping[int(surface_id)]
+            surface_ids.add(twin_surface_id)
+
+            twin_line_ids = [
+                self.lines_mapping[int(line_id)][int(rewire_volume)]
+                for line_id in lines_from_surface[int(surface_id)]
+            ]
+            self.lines_from_surface[twin_surface_id] = twin_line_ids
+
+            if area_from_surfaces:
+                self.area_from_surfaces[twin_surface_id] = area_from_surfaces[int(surface_id)]
+
+            for line_id, twin_line_id in zip(lines_from_surface[int(surface_id)], twin_line_ids):
+                twin_line_id = int(twin_line_id)
+                line_ids.add(twin_line_id)
+
+                twin_point_ids = [
+                    self.points_mapping[int(point_id)][int(rewire_volume)]
+                    for point_id in points_from_line[int(line_id)]
+                ]
+                self.points_from_line[twin_line_id] = twin_point_ids
+                point_ids.update(twin_point_ids)
+
+                if length_from_lines:
+                    self.length_from_lines[twin_line_id] = length_from_lines[int(line_id)]
+
+        self.geometry_information["surfaces"] = list(surface_ids)
+        self.geometry_information["lines"] = list(line_ids)
+        self.geometry_information["points"] = list(point_ids)
+
+        self.volumes_from_surface = maps_values_to_keys(deepcopy(self.surfaces_from_volume))
+        self.surfaces_from_line = maps_values_to_keys(deepcopy(self.lines_from_surface))
+        self.lines_from_point = maps_values_to_keys(deepcopy(self.points_from_line))
 
     def load_mesh(self, path: Path | str, **kwargs):
         geometry_tolerance = kwargs.get("geometry_tolerance", 1e-8)

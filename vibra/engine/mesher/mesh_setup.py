@@ -24,6 +24,7 @@ class MeshSetup:
 
     compute_quality_metrics: bool = False
     merge_connected_volumes: bool = True
+    disconnected_surfaces: list[int] = field(default_factory=list)
 
     # Advanced stuff
     local_mesh_size_control_parameters: list[LocalMeshSizeControlSetup] = field(default_factory=list)

@@ -30,6 +30,7 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_material = self.add_item("Material")
         self.item_child_fluid = self.add_item('Fluid')
         self.item_child_mesh_setup = self.add_item("Mesh Setup")
+        self.item_child_mesh_decoupling = self.add_item("Mesh Decoupling")
         self.item_child_element_options = self.add_item("Element Options")
         self.item_child_degrees_of_freedom_decoupling = self.add_item("DOF Decoupling")
 
@@ -97,6 +98,7 @@ class ModelSetupItems(CommonMenuItems):
             "item_child_material": "material",
             "item_child_fluid": "fluid",
             "item_child_mesh_setup": "mesh_setup",
+            "item_child_mesh_decoupling": "mesh_decoupling",
             "item_child_element_options": "element_options",
             "item_child_degrees_of_freedom_decoupling": "degrees_of_freedom_decoupling",
             "item_child_surface_thickness": "surface_thickness",
@@ -224,6 +226,10 @@ class ModelSetupItems(CommonMenuItems):
                 return False
 
             return model.mesh_setup is not None
+
+        if property_name == "mesh_decoupling":
+            mesh_setup = model.mesh_setup
+            return bool(mesh_setup is not None and mesh_setup.disconnected_surfaces)
 
         # verify if there are surface thickness in all surfaces before changing the icon
         if property_name == "surface_thickness":
@@ -461,6 +467,9 @@ class ModelSetupItems(CommonMenuItems):
     def item_child_mesh_setup_callback(self):
         app().main_window.input_ui.mesh_setup()
 
+    def item_child_mesh_decoupling_callback(self):
+        app().main_window.input_ui.mesh_decoupling()
+
     def item_child_element_options_callback(self):
         app().main_window.input_ui.advanced_element_options()
 
@@ -539,6 +548,7 @@ class ModelSetupItems(CommonMenuItems):
     def modify_general_settings_items_access(self):
         imported_geometry = app().project.model.is_there_a_geometry_imported()
         self.item_child_mesh_setup.setDisabled(not imported_geometry)
+        self.item_child_mesh_decoupling.setDisabled(not imported_geometry)
         self.item_child_element_options.setDisabled(not imported_geometry)
 
     def hide_all_top_items(self):

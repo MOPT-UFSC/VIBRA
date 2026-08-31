@@ -158,6 +158,7 @@ class ProjectReader:
             element_order=element_order,
             compute_quality_metrics=mesh_setup_dict.get("compute_quality_metrics", False),
             merge_connected_volumes=mesh_setup_dict.get("merge_connected_volumes", False),
+            disconnected_surfaces=mesh_setup_dict.get("disconnected_surfaces", []),
             local_mesh_size_control_parameters=size_control_parameters,
             custom_element_setup=custom_element,
             random_seed=mesh_setup_dict.get("random_seed", 1234),
@@ -204,6 +205,10 @@ class ProjectReader:
         with h5py.File(mesh_data_path, "r") as file:
             mesh.nodes_from_points = {int(key): int(value) for key, value in file["nodal_data/nodes_from_points"]}
             mesh.points_from_nodes = {value: key for key, value in mesh.nodes_from_points.items()}
+
+            surfaces_mapping = file.get("adjacencies/surfaces_mapping")
+            if surfaces_mapping is not None:
+                mesh.surfaces_mapping = {int(key): int(value) for key, value in surfaces_mapping}
 
             mesh.nodal_coordinates = np.array(file["nodal_data/nodal_coordinates"])
             mesh.lines_connectivity = np.array(file["connectivity/lines_connectivity"])

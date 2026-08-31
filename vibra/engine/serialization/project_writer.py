@@ -151,6 +151,10 @@ class ProjectWriter:
             file["nodal_data/nodal_coordinates"] = mesh.nodal_coordinates
             file["nodal_data/nodes_from_points"] = np.array(list(mesh.nodes_from_points.items()))
 
+            surfaces_mapping = getattr(mesh, "surfaces_mapping", None)
+            if surfaces_mapping:
+                file["adjacencies/surfaces_mapping"] = np.array(list(surfaces_mapping.items()))
+
             if mesh.has_decoupling():
                 file["nodal_data/cache_nodal_coordinates"] = mesh.cache_nodal_coordinates
                 file["connectivity/cache_lines_connectivity"] = mesh.cache_lines_connectivity
