@@ -69,23 +69,23 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 
 
 class Model:
-    def __init__(self, disable_resume_callback: Optional[Callable] = None):
+    def __init__(self, disable_resume_callback: Callable | None = None):
         self.disable_resume_callback = disable_resume_callback
         self.reset_variables()
 
     def reset_variables(self):
         self.name: str = "Model"
-        self.thumbnail: Optional[Image] = None
+        self.thumbnail: Image | None = None
 
         self.length_unit: LengthUnits = "millimeter"
-        self.mesh_setup: Optional[MeshSetup] = None
-        self.analysis_setup: Optional[AnalysisSetup] = None
-        self.solution: Optional[Solution] = None
+        self.mesh_setup: MeshSetup | None = None
+        self.analysis_setup: AnalysisSetup | None = None
+        self.solution: Solution | None = None
 
         # TODO: review these variables
-        self.mesh: Optional[Mesh] = None
+        self.mesh: Mesh | None = None
         self.stop_processing = False
-        self.geometry_path: Optional[Path | str] = None
+        self.geometry_path: Path | str | None = None
         self.initial_element_size = None
         self.geometry_qf = 1.0
 
@@ -134,7 +134,7 @@ class Model:
         return AnalysisID.NO_ANALYSIS
 
     @property
-    def frequencies(self) -> Optional[np.ndarray]:
+    def frequencies(self) -> np.ndarray | None:
         """
         This property was created for retro compatibility.
         """
@@ -151,7 +151,7 @@ class Model:
         return []
 
     @property
-    def global_damping(self) -> Optional[np.ndarray]:
+    def global_damping(self) -> np.ndarray | None:
         """
         This property was created for retro compatibility.
         """
@@ -421,7 +421,7 @@ class Model:
         if self.disable_resume_callback is not None:
             self.disable_resume_callback()
 
-    def set_analysis_setup(self, analysis_setup: Optional[AnalysisSetup]):
+    def set_analysis_setup(self, analysis_setup: AnalysisSetup | None):
         if not isinstance(analysis_setup, AnalysisSetup | None):
             raise ValueError("Invalid analysis setup")
 
@@ -465,7 +465,7 @@ class Model:
 
         if not isinstance(analysis_setup, HarmonicAnalysisSetup):
             return analysis_setup
-        
+
         if not analysis_setup.analysis_id == AnalysisID.STRUCTURAL_HARMONIC:
             return analysis_setup
 
