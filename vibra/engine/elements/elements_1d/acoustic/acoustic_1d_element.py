@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from vibra.engine.elements.line_elements import Element1D
+from vibra.engine.elements.elements_1d.line_elements import Element1D
 
 if TYPE_CHECKING:
     from vibra.engine.model import Model
