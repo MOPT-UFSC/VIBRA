@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 from time import perf_counter
-from typing import Optional
+
 
 import numpy as np
 from PIL.Image import Image
@@ -25,7 +25,7 @@ from vibra.engine.solvers import HarmonicSolver, ModalSolver
 
 
 class Project:
-    def __init__(self, working_directory: Optional[Path | str] = None):
+    def __init__(self, working_directory: Path | str | None = None):
         self.project_paths = ProjectPaths(working_directory)
         self.reset_variables()
 
@@ -34,14 +34,14 @@ class Project:
         self.project_reader = ProjectReader(self.project_paths)
         self.project_writer = ProjectWriter(self.project_paths)
 
-        self.save_path: Optional[Path] = None
+        self.save_path: Path | None = None
         self.needs_saving: bool = False
 
         # TODO: Store the Solution, not the solvers and assemblers.
         # Except if it is used to cache a few matrices somehow.
-        self.assembler: Optional[AcousticAssembler | StructuralAssembler] = None
-        self.solver: Optional[HarmonicSolver | ModalSolver] = None
-        self.postprocessing: Optional[AcousticPostprocessing | StructuralPostprocessing] = None
+        self.assembler: AcousticAssembler | StructuralAssembler | None = None
+        self.solver: HarmonicSolver | ModalSolver | None = None
+        self.postprocessing: AcousticPostprocessing | StructuralPostprocessing | None = None
 
     def reset_solution(self):
         self.assembler = None
@@ -56,7 +56,7 @@ class Project:
         self.reset_variables()
 
     @property
-    def mesh(self) -> Optional[Mesh]:
+    def mesh(self) -> Mesh | None:
         return self.model.mesh
 
     @property
@@ -92,7 +92,7 @@ class Project:
         return self.project_paths.working_directory
 
     @working_directory.setter
-    def working_directory(self, path: Optional[Path | str]):
+    def working_directory(self, path: Path | str | None):
         if hasattr(self, "project_paths"):
             self.project_paths.set_working_directory(path)
         else:
@@ -304,7 +304,7 @@ class Project:
 
     def configure_analysis(
         self,
-        analysis_setup: Optional[AnalysisSetup],
+        analysis_setup: AnalysisSetup | None,
     ):
         """
         Defines the `AnalysisID` and the `AnalysisSetup` required to
