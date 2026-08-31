@@ -1,9 +1,11 @@
 import logging
+from collections import defaultdict
+from collections.abc import Callable
 from copy import deepcopy
+from enum import IntEnum
 from numbers import Number
 from pathlib import Path
-from typing import Callable, Optional
-from collections import defaultdict
+from typing import Optional
 
 import numpy as np
 from PIL.Image import Image
@@ -42,14 +44,14 @@ from vibra.engine.elements.elements_2d import (
 
 # 3d elements
 from vibra.engine.elements.elements_3d import (
-    ACT_HEXAHEDRON_8C,
-    ACT_HEXAHEDRON_20C,
-    ACT_TETRAHEDRON_4C,
-    ACT_TETRAHEDRON_10C,
+    ACT_HEXAHEDRON_8,
+    ACT_HEXAHEDRON_20,
+    ACT_TETRAHEDRON_4,
+    ACT_TETRAHEDRON_10,
     STRUCT_HEXAHEDRON_8,
     STRUCT_HEXAHEDRON_20,
-    STRUCT_TETRAHEDRON_4S,
-    STRUCT_TETRAHEDRON_10S,
+    STRUCT_TETRAHEDRON_4,
+    STRUCT_TETRAHEDRON_10,
 )
 from vibra.engine.geometry.geometry import LengthUnits
 from vibra.engine.mesher.degrees_of_freedom_decoupling_new import DegreesOfFreedomDecoupling
@@ -66,6 +68,12 @@ from vibra.engine.transfer_impedances.perforated_plate_models import (
 from vibra.errors import IncompleteSetupError
 from vibra.interface import error_title
 from vibra.interface.general.print_message_input import PrintMessageInput
+
+
+class CouplingType(IntEnum):
+    DISABLED = 0
+    WEAK = 1
+    STRONG = 2
 
 
 class Model:
@@ -91,15 +99,18 @@ class Model:
         self.initial_element_size = None
         self.geometry_qf = 1.0
 
-        self.weak_coupling = True
+        self.coupling_type = CouplingType.WEAK
 
         self.current_frequencies = []
 
         self.decouple_info = {}
         self.nodes_mapping = {}
 
-        self.acoustic_dof_indices = None
-        self.structural_dof_indices = None
+        self.structural_dofs_shift = 0
+        self.acoustic_dofs_shift = 0
+
+        self.acoustic_dofs_indices = None
+        self.structural_dofs_indices = None
 
         self.acoustic_element_1d = None
         self.acoustic_element_2d = None
@@ -179,6 +190,13 @@ class Model:
         except Exception:
             return False
 
+    @property
+    def drop_domain(self):
+        if self.coupling_type != CouplingType.STRONG:
+            return len(self.model_domains) != 1
+
+        return False
+
     def map_model_domains(self):
         self.model_domains.clear()
         for vol_id in self.mesh.elements_from_volume:
@@ -241,8 +259,8 @@ class Model:
         nodes_act: np.ndarray = self.nodes_per_domain.get("acoustic", np.array([]))
         nodes_str: np.ndarray = self.nodes_per_domain.get("structural", np.array([]))
 
-        dof_act = self.acoustic_element_3d.DOF_PER_NODE
-        dof_str = self.structural_element_3d.DOF_PER_NODE
+        dof_act = self.acoustic_element_3d.dof_per_node
+        dof_str = self.structural_element_3d.dof_per_node
 
         self.number_acoustic_nodes = len(nodes_act)
         self.number_structural_nodes = len(nodes_str)
@@ -269,24 +287,25 @@ class Model:
         for index, node_id in enumerate(nodes_str):
             self.struct_node_mapping[node_id] = index
 
-        structural_shift = 0
-        acoustic_shift = self.total_str_dofs
+        # define the dof shifts for each domain
+        self.structural_dofs_shift = 0
+        self.acoustic_dofs_shift = self.total_str_dofs
 
         # process the structural dofs (continuos nodes list + dofs shift)
         nodes_str_seq = np.arange(self.number_structural_nodes, dtype=int).reshape(-1, 1)
-        structural_dof_indices = dof_str * nodes_str_seq + np.arange(dof_str) + structural_shift
-        self.structural_dof_indices = structural_dof_indices.flatten()
+        structural_dofs_indices = dof_str * nodes_str_seq + np.arange(dof_str) + self.structural_dofs_shift
+        self.structural_dofs_indices = structural_dofs_indices.flatten()
 
         # process the acoustic dofs (continuos nodes list + dofs shift)
         nodes_act_seq = np.arange(self.number_acoustic_nodes, dtype=int).reshape(-1, 1)
-        acoustic_dof_indices = dof_act * nodes_act_seq + np.arange(dof_act) + acoustic_shift
-        self.acoustic_dof_indices = acoustic_dof_indices.flatten()
+        acoustic_dofs_indices = dof_act * nodes_act_seq + np.arange(dof_act) + self.acoustic_dofs_shift
+        self.acoustic_dofs_indices = acoustic_dofs_indices.flatten()
 
         # data = np.array([self.fluid_node_mapping, self.struct_node_mapping]).T
         # np.savetxt("nodes_mappings.dat", data, delimiter=",", fmt="%i")
 
         # all_indices = np.arange(self.total_dof, dtype=int)
-        # all_indices_conc = np.sort(np.append(self.structural_dof_indices, self.acoustic_dof_indices))
+        # all_indices_conc = np.sort(np.append(self.structural_dofs_indices, self.acoustic_dofs_indices))
         # data = np.array([all_indices, all_indices_conc], dtype=int).T
         # np.savetxt("dof_indices.dat", data, delimiter=",", fmt="%i")
         # print(np.allclose(all_indices, all_indices_conc))
@@ -643,10 +662,10 @@ class Model:
         element_type = self.element_topology
 
         if element_type == TETRAHEDRON_4:
-            return STRUCT_TETRAHEDRON_4S(self), STRUCT_TRIANGLE_3(self), STRUCT_LINE_2(self)
+            return STRUCT_TETRAHEDRON_4(self), STRUCT_TRIANGLE_3(self), STRUCT_LINE_2(self)
 
         elif element_type == TETRAHEDRON_10:
-            return STRUCT_TETRAHEDRON_10S(self), STRUCT_TRIANGLE_6(self), STRUCT_LINE_3(self)
+            return STRUCT_TETRAHEDRON_10(self), STRUCT_TRIANGLE_6(self), STRUCT_LINE_3(self)
 
         elif element_type == HEXAHEDRON_8:
             return STRUCT_HEXAHEDRON_8(self), STRUCT_QUADRANGLE_4(self), STRUCT_LINE_2(self)
@@ -661,16 +680,16 @@ class Model:
         element_type = self.element_topology
 
         if element_type == TETRAHEDRON_4:
-            return ACT_TETRAHEDRON_4C(self), ACT_TRIANGLE_3(self), ACT_LINE_2(self)
+            return ACT_TETRAHEDRON_4(self), ACT_TRIANGLE_3(self), ACT_LINE_2(self)
 
         elif element_type == TETRAHEDRON_10:
-            return ACT_TETRAHEDRON_10C(self), ACT_TRIANGLE_6(self), ACT_LINE_3(self)
+            return ACT_TETRAHEDRON_10(self), ACT_TRIANGLE_6(self), ACT_LINE_3(self)
 
         elif element_type == HEXAHEDRON_8:
-            return ACT_HEXAHEDRON_8C(self), ACT_QUADRANGLE_4(self), ACT_LINE_2(self)
+            return ACT_HEXAHEDRON_8(self), ACT_QUADRANGLE_4(self), ACT_LINE_2(self)
 
         elif element_type == HEXAHEDRON_20:
-            return ACT_HEXAHEDRON_20C(self), ACT_QUADRANGLE_8(self), ACT_LINE_3(self)
+            return ACT_HEXAHEDRON_20(self), ACT_QUADRANGLE_8(self), ACT_LINE_3(self)
 
         else:
             raise NotImplementedError(f'Element type "{element_type}" is not supported yet.')
@@ -702,7 +721,7 @@ class Model:
             An array containing the global dof from input nodes.
         """
         _nodes = node_ids.reshape(-1, 1)
-        _dof_per_node = self.acoustic_element_3d.DOF_PER_NODE
+        _dof_per_node = self.acoustic_element_3d.dof_per_node
 
         global_dofs = _dof_per_node * _nodes + np.arange(_dof_per_node)
         global_dofs = np.array(global_dofs.flatten(), dtype=int)
@@ -715,14 +734,14 @@ class Model:
             if element_2d is None:
                 return {}
 
-            dof_per_node = element_2d.DOF_PER_NODE
+            dof_per_node = element_2d.dof_per_node
 
         else:
             element_3d = self.structural_element_3d
             if element_3d is None:
                 return {}
 
-            dof_per_node = element_3d.DOF_PER_NODE
+            dof_per_node = element_3d.dof_per_node
 
         local_dof = np.arange(dof_per_node, dtype=int)
         global_dof = dof_per_node * nodes.reshape(-1, 1) + local_dof

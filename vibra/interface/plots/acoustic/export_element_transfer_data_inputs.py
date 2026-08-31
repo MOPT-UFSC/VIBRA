@@ -67,8 +67,8 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
     def _reset_variables(self):
         self.exporter = None
         self.keep_window_open = True
-        self.particle_velocity = dict()
-        self.element_transfer_data = dict()
+        self.particle_velocity = {}
+        self.element_transfer_data = {}
 
     def _configure_qt_variables(self):
         self.current_lineEdit = self.lineEdit_output_selected_id
@@ -233,9 +233,14 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
         # Note: the negative signal ensures the assembly consistency of acoustic transfer element
         volume_velocity = -surface_velocity * area
 
-        node_ids = np.sort(surface_nodes)
-        pressures = self.nodal_solution[node_ids, :]
-        avg_pressure = np.average(pressures, axis=0)
+        # process the dofs of the selected entities
+        _nodes = self.model.fluid_node_mapping[np.sort(surface_nodes)]
+        dof_per_node = self.model.acoustic_element_3d.dof_per_node
+
+        gdof = dof_per_node * _nodes.reshape(-1, 1) + np.arange(dof_per_node, dtype=int)
+        rows = gdof[:, 0]
+
+        avg_pressure = np.average(self.nodal_solution[rows, :], axis=0)
 
         return avg_pressure / volume_velocity
 
@@ -253,7 +258,7 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
 
         self.hide()
 
-        self.model_results = dict()
+        self.model_results = {}
         self.process_areas()
 
         for i, selected_id in enumerate([self.input_selection_id, self.output_selection_id]):

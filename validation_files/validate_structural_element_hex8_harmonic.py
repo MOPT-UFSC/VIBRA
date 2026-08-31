@@ -217,7 +217,7 @@ def load_external_mesh_and_solve(**kwargs):
     # element_averaged_stresses = structural_post.nodal_stresses_post_process(element_stresses)
 
    # Nodal results comparisons
-    dofs_per_node = assembler.element_3d.DOF_PER_NODE
+    dofs_per_node = assembler.element_3d.dof_per_node
 
     # define the plot type
     plot_type = "absolute"

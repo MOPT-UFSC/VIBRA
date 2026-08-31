@@ -185,7 +185,7 @@ def load_external_mesh_and_solve():
 
     dof_index = {"ux": 0, "uy": 1, "uz": 2, "rx": 3, "ry": 4, "rz": 5}
 
-    dof_per_node = model.structural_element_2d.DOF_PER_NODE
+    dof_per_node = model.structural_element_2d.dof_per_node
 
     gdof = dof_per_node * top_right_face_nodes.reshape(-1, 1) + np.arange(dof_per_node, dtype=int)
 

@@ -221,7 +221,7 @@ def load_external_mesh_and_solve(**kwargs):
             print(f"Deviation of the averaged particle velocity {pv_label} (Surface #{surf_id}): {100 * np.max(abs_diff_pressure)} %")
 
    # Nodal results comparisons
-    dofs_per_node = assembler.element_3d.DOF_PER_NODE
+    dofs_per_node = assembler.element_3d.dof_per_node
 
     # define the plot type
     plot_type = "real"

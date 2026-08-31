@@ -1,28 +1,85 @@
 
+from typing import TYPE_CHECKING
+
 import numpy as np
 
+from vibra.engine.elements.dof_indexes_processor import DOFIndexesProcessor
+from vibra.engine.elements.element_data_processor import ElementDataProcessor
 from vibra.engine.properties.material import Material
+
+if TYPE_CHECKING:
+    from vibra.engine.model import Model
+
+
+# class Element3D:
+#     """
+#     This determines the attributes and methods
+#     that need to exist in EVERY element.
+#     """
+
+#     # Constants of the element
+#     nodes_per_element: int = 0
+#     dof_per_node: int = 0
+#     dof_per_element: int = nodes_per_element * dof_per_node
 
 
 class Element3D:
-    """
-    This determines the attributes and methods
-    that need to exist in EVERY element.
-    """
 
-    # Constants of the element
-    NODES_PER_ELEMENT: int = 0
-    DOF_PER_NODE: int = 0
-    DOF_PER_ELEMENT: int = NODES_PER_ELEMENT * DOF_PER_NODE
-    
+    def __init__(self, model: "Model", dof_per_node: int, nodes_per_element: int):
+
+        self.model = model
+        self.dof_per_node = dof_per_node
+        self.nodes_per_element = nodes_per_element
+        self.local_dof = np.arange(dof_per_node, dtype=int)
+
+        self.initialize()
+
+
+    def initialize(self):
+
+        self.nint: np.ndarray | None = None
+        self.nint_M: np.ndarray | None = None
+        self.nint_K: np.ndarray | None = None
+
+        self.wps: np.ndarray | None = None
+        self.wps_M: np.ndarray | None = None
+        self.wps_K: np.ndarray | None = None
+
+        self.phi: np.ndarray | None = None
+        self.phi_M: np.ndarray | None = None
+        self.phi_K: np.ndarray | None = None
+
+        self.dphi: np.ndarray | None = None
+        self.dphi_M: np.ndarray | None = None
+        self.dphi_K: np.ndarray | None = None
+
+        self.phi_inv: np.ndarray | None = None
+
+
+    @property
+    def dof_per_element(self):
+        return self.dof_per_node * self.nodes_per_element
+
+
+    def dof_indexes_processor(self, domain: str) -> DOFIndexesProcessor:
+        return DOFIndexesProcessor(self.model, domain, self.dof_per_node, self.nodes_per_element)
+
+
+    def element_data_processor(self, model: "Model", domain: str) -> ElementDataProcessor:
+        return ElementDataProcessor(model, domain, self.dof_per_node, self.nodes_per_element)
+
 
     def elementary_matrices(self) -> tuple[np.ndarray]:
         raise NotImplementedError("The function elementary_matrices was not implemented")
 
 
+    def reorder_connect(self):
+        pass
+
+
     @property
     def midside_nodes_indices_map(self):
-        return dict()
+        return {}
 
 
     def get_constitutive_model(self, material: Material, model_type: str = "linear-isotropic"):

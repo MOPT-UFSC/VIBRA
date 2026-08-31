@@ -50,7 +50,7 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
         self.exporter = None
         self.plotter = None
 
-        self.model_results = dict()
+        self.model_results = {}
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -153,8 +153,8 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
 
     def check_volumes_from_surfaces(self, surface_ids: list[int]):
 
-        external_surfaces_map = dict()
-        internal_surfaces_map = dict()  
+        external_surfaces_map = {}
+        internal_surfaces_map = {}  
         self.comboBox_volumes.blockSignals(True)
 
         for surface_id in surface_ids:

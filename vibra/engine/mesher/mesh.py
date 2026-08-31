@@ -695,7 +695,7 @@ class Mesh:
 
             for _node_id in corner_nodes:
                 node_id = int(_node_id)
-                if node_id in self.points_from_nodes.keys():
+                if node_id in self.points_from_nodes:
                     points_from_nodes = self.points_from_nodes.get(node_id)
                     points_from_line.append(points_from_nodes)
                     continue
@@ -851,14 +851,14 @@ class Mesh:
             points.InsertPoint(id, list(coords))
             vtk_dataset.SetPoints(points)
         #
-        NODES_PER_ELEMENT = len(self.solids_connectivity[0, 4:])
-        if NODES_PER_ELEMENT == 4:
+        nodes_per_element = len(self.solids_connectivity[0, 4:])
+        if nodes_per_element == 4:
             vtk_cell = VTK_TETRA
-        elif NODES_PER_ELEMENT == 10:
+        elif nodes_per_element == 10:
             vtk_cell = VTK_QUADRATIC_TETRA
-        elif NODES_PER_ELEMENT == 8:
+        elif nodes_per_element == 8:
             vtk_cell = VTK_HEXAHEDRON
-        elif NODES_PER_ELEMENT == 20:
+        elif nodes_per_element == 20:
             vtk_cell = VTK_QUADRATIC_HEXAHEDRON
         else:
             raise TypeError("Unsupported element type.")
@@ -866,7 +866,7 @@ class Mesh:
         n_nodes, nf_elem, ns_elem = self.get_mesh_info()
         vtk_dataset.Allocate(ns_elem)
         for id, connect in enumerate(self.solids_connectivity[:, 4:]):
-            vtk_dataset.InsertNextCell(vtk_cell, NODES_PER_ELEMENT, list(connect))
+            vtk_dataset.InsertNextCell(vtk_cell, nodes_per_element, list(connect))
 
         # unod1 = np.zeros((nnode), dtype=complex)
         # for i in range(nnode):
@@ -1303,7 +1303,7 @@ class Mesh:
 
     def get_nodes_from_line(self, line_id: int, from_cache: bool = False):
 
-        if line_id in self.external_nodes_from_lines.keys():
+        if line_id in self.external_nodes_from_lines:
             return self.external_nodes_from_lines.get(line_id)
 
         if from_cache:
@@ -1323,7 +1323,7 @@ class Mesh:
 
     def get_nodes_from_surface(self, surface_id: int, from_cache: bool = False):
 
-        if surface_id in self.external_nodes_from_surfaces.keys():
+        if surface_id in self.external_nodes_from_surfaces:
             return self.external_nodes_from_surfaces.get(surface_id)
 
         if from_cache:
@@ -1341,7 +1341,7 @@ class Mesh:
 
     def get_nodes_from_volume(self, volume_id: int, from_cache: bool = False):
 
-        if volume_id in self.external_nodes_from_volumes.keys():
+        if volume_id in self.external_nodes_from_volumes:
             return self.external_nodes_from_volumes.get(volume_id)
 
         if from_cache:
@@ -1359,7 +1359,7 @@ class Mesh:
 
     def get_connectivity_from_line(self, line_id: int, from_cache: bool = False) -> np.ndarray:
 
-        if line_id in self.external_connectivity_from_lines.keys():
+        if line_id in self.external_connectivity_from_lines:
             return self.external_connectivity_from_lines.get(line_id)
 
         if from_cache:
@@ -1460,7 +1460,7 @@ class Mesh:
                 continue
 
             for vol_id in vol_ids:
-                if selected_surface in volumes_from_surfaces.keys():
+                if selected_surface in volumes_from_surfaces:
                     if vol_id in volumes_from_surfaces.get(selected_surface):
                         continue
 
@@ -1504,12 +1504,12 @@ class Mesh:
             point_ids |= set(line_points)
         point_ids = list(point_ids)
 
-        for line_id in deepcopy(self.length_from_lines).keys():
+        for line_id in deepcopy(self.length_from_lines):
             if line_id in line_ids:
                 continue
             self.length_from_lines.pop(line_id)
 
-        for surface_id in deepcopy(self.area_from_surfaces).keys():
+        for surface_id in deepcopy(self.area_from_surfaces):
             if surface_id in surface_ids:
                 continue
             self.area_from_surfaces.pop(surface_id)
@@ -1518,7 +1518,7 @@ class Mesh:
         self.geometry_information["lines"] = line_ids
         self.geometry_information["points"] = point_ids
 
-        for point_id in deepcopy(self.nodes_from_points).keys():
+        for point_id in deepcopy(self.nodes_from_points):
             if point_id in point_ids:
                 continue
             self.nodes_from_points.pop(point_id)
@@ -2482,10 +2482,7 @@ class Mesh:
 
     def are_there_volumes_in_geometry(self) -> bool:
         volumes = self.geometry_information.get("volumes")
-        if isinstance(volumes, list):
-            if volumes:
-                return True
-        return False
+        return isinstance(volumes, list) and len(volumes)
 
     def _get_connectivity_array(self, input_dict):
         """
@@ -2502,7 +2499,7 @@ class Mesh:
         n_list = list()
         for data_0 in input_dict.values():
             for data_1 in data_0.values():
-                if "indices" in data_1.keys():
+                if "indices" in data_1:
                     n_list.append(len(data_1["indices"]))
                     array_nodes = data_1["array_element_nodes"]
                     if max_cols < array_nodes.shape[1]:
@@ -2731,12 +2728,9 @@ class Mesh:
         try:
             message = ""
             if isinstance(selected_ids, str):
-                tokens = selected_ids.strip().split(",")
-                try:
-                    tokens.remove("")
-                except Exception:
-                    pass
-                list_ids = list(map(int, tokens))
+                tokens = selected_ids.replace(" ", "").split(",")
+                list_ids = [int(_id) for _id in tokens]
+                print(list_ids)
 
             elif isinstance(selected_ids, list):
                 list_ids = selected_ids
@@ -2758,23 +2752,23 @@ class Mesh:
                 all_ids = list(self.solids_connectivity[:, 0])
 
             elif selection == "points":
-                if selection in self.geometry_information.keys():
-                    all_ids = self.geometry_information["points"]
+                if selection in self.geometry_information:
+                    all_ids = self.geometry_information.get("points")
 
             elif selection == "lines":
-                if "lines" in self.geometry_information.keys():
-                    all_ids = self.geometry_information["lines"]
+                if "lines" in self.geometry_information:
+                    all_ids = self.geometry_information.get("lines")
 
             elif selection == "surfaces":
-                if selection in self.geometry_information.keys():
-                    all_ids = self.geometry_information["surfaces"]
+                if selection in self.geometry_information:
+                    all_ids = self.geometry_information.get("surfaces")
 
             elif selection == "volumes":
-                if selection in self.geometry_information.keys():
-                    all_ids = self.geometry_information["volumes"]
+                if selection in self.geometry_information:
+                    all_ids = self.geometry_information.get("volumes")
 
             else:
-                return None
+                return
 
             _size = len(all_ids)
 

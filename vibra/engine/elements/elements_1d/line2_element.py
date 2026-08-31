@@ -37,12 +37,11 @@ def get_local_coordinates(coords: np.ndarray) -> np.ndarray:
 
 class LINE_2(Element1D):
 
-    def __init__(self, model: "Model", dof_per_node: int):
+    def __init__(self, model: "Model", dof_per_node: int, nodes_per_element: int):
 
         self.model = model
-
-        self.nodes_per_element = 2
         self.dof_per_node = dof_per_node
+        self.nodes_per_element = nodes_per_element
 
         self.connectivities = None
         self.element_label = ""

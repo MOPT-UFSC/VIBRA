@@ -182,7 +182,7 @@ def load_external_mesh_and_solve():
     if element_2d is None:
         return
 
-    dof_per_node = element_2d.DOF_PER_NODE
+    dof_per_node = element_2d.dof_per_node
     gdof = dof_per_node * selected_nodes.reshape(-1, 1) + np.arange(dof_per_node, dtype=int)
 
     ux_rows = gdof[:, dof_index["ux"]]

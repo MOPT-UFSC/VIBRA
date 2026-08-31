@@ -6,9 +6,9 @@ from vibra.engine.properties.material import Material
 
 class STRUCT_HEXAHEDRON_8(Element3D):
     #
-    NODES_PER_ELEMENT = 8
-    DOF_PER_NODE = 3
-    DOF_PER_ELEMENT = NODES_PER_ELEMENT * DOF_PER_NODE
+    nodes_per_element = 8
+    dof_per_node = 3
+    dof_per_element = nodes_per_element * dof_per_node
 
     def __init__(self, model):
         self.model = model
@@ -55,7 +55,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         #
         denominator = 8
         # shape functions
-        phi = np.zeros((self.nint, self.NODES_PER_ELEMENT), dtype=float)
+        phi = np.zeros((self.nint, self.nodes_per_element), dtype=float)
         #
         phi[:, 0] = (1.0 - ssx) * (1.0 - ttx) * (1.0 - rrx)
         phi[:, 1] = (1.0 + ssx) * (1.0 - ttx) * (1.0 - rrx)
@@ -68,7 +68,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         phi = phi / denominator
         #
         # derivatives
-        dphi = np.zeros((self.nint, self.DOF_PER_NODE, self.NODES_PER_ELEMENT), dtype=float)
+        dphi = np.zeros((self.nint, self.dof_per_node, self.nodes_per_element), dtype=float)
         #
         dphi[:, 0, 0] = (-1.0) * (1.0 - ttx) * (1.0 - rrx)
         dphi[:, 0, 1] = (1.0) * (1.0 - ttx) * (1.0 - rrx)
@@ -114,7 +114,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         detJAC, invJAC = self.get_detJAC_and_invJAC(JAC)
         dphi_t = invJAC @ self.dphi
 
-        B = np.zeros((self.nint, 6, self.DOF_PER_ELEMENT), dtype=float)
+        B = np.zeros((self.nint, 6, self.dof_per_element), dtype=float)
         B[:, 0, 0::3] = dphi_t[:, 0, :]
         B[:, 1, 1::3] = dphi_t[:, 1, :]
         B[:, 2, 2::3] = dphi_t[:, 2, :]
@@ -125,7 +125,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         B[:, 5, 1::3] = dphi_t[:, 2, :]
         B[:, 5, 2::3] = dphi_t[:, 1, :]
 
-        N = np.zeros((self.nint, 3, self.DOF_PER_ELEMENT), dtype=float)
+        N = np.zeros((self.nint, 3, self.dof_per_element), dtype=float)
         N[:, 0, 0::3] = self.phi
         N[:, 1, 1::3] = self.phi
         N[:, 2, 2::3] = self.phi
@@ -146,7 +146,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         """This method processess the dof indices (rows and columns) for assembly"""
 
         self.reorder_connect()
-        dof, edof = self.DOF_PER_NODE, self.DOF_PER_ELEMENT
+        dof, edof = self.dof_per_node, self.dof_per_element
 
         ind_dof = (
             np.array(
