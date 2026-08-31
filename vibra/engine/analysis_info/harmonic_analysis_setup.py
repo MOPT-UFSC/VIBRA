@@ -10,7 +10,7 @@ from vibra.utils.dataclass_utils import ignore_extra_kwargs
 @ignore_extra_kwargs
 @dataclass(kw_only=True)
 class HarmonicAnalysisSetup:
-    analysis_id: int = AnalysisID.NO_ANALYSIS
+    analysis_id: AnalysisID = AnalysisID.NO_ANALYSIS
     frequency_spacing: str = FrequencySpacing.EQUALLY_DISTRIBUTED
     f_min: float | None = None
     f_max: float | None = None

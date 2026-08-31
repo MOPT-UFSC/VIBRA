@@ -157,6 +157,12 @@ class Model:
         return None
 
     @property
+    def current_solution(self):
+        if self.analysis_setup is None:
+            return None
+        return self.solutions.get(self.analysis_setup.analysis_id)
+
+    @property
     def solution_steps_mask(self):
         if isinstance(self.analysis_setup, HarmonicAnalysisSetup):
             return self.analysis_setup.solution_steps_mask
