@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-from typing import List, Optional
 
 import numpy as np
 
@@ -15,8 +14,8 @@ class HarmonicAnalysisSetup:
     f_min: float | None = None
     f_max: float | None = None
     f_step: float | None = None
-    frequencies: Optional[np.ndarray[tuple[int], float]] = None
-    solution_steps_mask: List[bool] = field(default_factory=list)
+    frequencies: np.ndarray[tuple[int], float] | None = None
+    solution_steps_mask: list[bool] = field(default_factory=list)
     analysis_method: AnalysisMethod = AnalysisMethod.DIRECT
     modes_number: int = 40
     sigma_factor: float = 0.01

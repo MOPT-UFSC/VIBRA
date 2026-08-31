@@ -1,10 +1,11 @@
 import logging
 import sys
-from tqdm import tqdm
 
 import numpy as np
 from scipy.sparse.linalg import eigs
+from tqdm import tqdm
 
+from vibra.engine.analysis_info.modal_analysis_setup import ModalAnalysisSetup
 from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
 from vibra.engine.assemblers.structural_assembler import StructuralAssembler
 from vibra.engine.solution import ModalSolution
@@ -23,16 +24,19 @@ class ModalSolver:
         self.complex_natural_frequencies = np.array([])
         self.displacement_dof: np.ndarray | None = None
 
-    def solve(self, which="LM", full_solution: bool = True, print_log: bool = False) -> ModalSolution:
+    def solve(self, which: str = "LM", full_solution: bool = True, print_log: bool = False) -> ModalSolution:
         """
         This method solves the acoustic modal analysis for both damped and undamped problems.
         """
 
         self.reset_variables()
 
-        n_modes = self.assembler.model.analysis_setup.modes_number
-        sigma = self.assembler.model.analysis_setup.sigma_factor
-        
+        analysis_setup = self.assembler.model.analysis_setup
+        assert isinstance(analysis_setup, ModalAnalysisSetup)
+
+        n_modes = analysis_setup.modes_number
+        sigma = analysis_setup.sigma_factor
+
         logging.info("Solving the eigenproblem... [75/100]")
 
         A, B, is_symmetric = self.assembler.build_eigenproblem_system()
@@ -51,6 +55,7 @@ class ModalSolver:
             file=sys.stdout,
             disable=not print_log,
         )
+
         def update_progress(percentage: int):
             if (increment := percentage - progress_bar.n) > 0:
                 progress_bar.update(increment)
@@ -124,7 +129,7 @@ class ModalSolver:
             self.displacement_dof = self.assembler.displacement_dof
 
         self.solution = ModalSolution(
-            analysis_id=self.assembler.model.analysis_id,
+            analysis_setup=analysis_setup,
             natural_frequencies=self.natural_frequencies,
             modal_shapes=self.nodal_solution,
             displacement_dof=self.displacement_dof,

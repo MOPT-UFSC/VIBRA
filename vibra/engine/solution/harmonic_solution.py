@@ -1,10 +1,11 @@
+from collections.abc import Generator
 from copy import deepcopy
 from functools import cached_property
-from typing import Generator, Optional, Self
+from typing import Self
 
 import numpy as np
 
-from vibra.engine import AnalysisID
+from vibra.engine.analysis_info import AnalysisSetup
 from vibra.utils.lazy_array import LazyArray
 
 from .common_solution import Array1D, Array2D, CommonSolution
@@ -13,17 +14,17 @@ from .common_solution import Array1D, Array2D, CommonSolution
 class HarmonicSolution(CommonSolution):
     def __init__(
         self,
-        analysis_id: AnalysisID,
+        analysis_setup: AnalysisSetup,
         frequencies: Array1D,
         nodal_solution: Array2D,
-        status: Optional[np.ndarray[tuple[int], bool]] = None,
-        displacement_dof: Optional[Array2D] = None,
+        status: np.ndarray[tuple[int], bool] | None = None,
+        displacement_dof: Array2D | None = None,
     ):
-        self.analysis_id = analysis_id
+        self.analysis_setup = deepcopy(analysis_setup)
         self.frequencies = self._immutable_array(frequencies)
-        self.nodal_solution: Array2D = self._immutable_array(nodal_solution)
+        self.nodal_solution: Array2D = self._immutable_array(nodal_solution)  # pyright: ignore[reportAttributeAccessIssue]
         self.status = self._create_status(status)
-        self.displacement_dof: Array2D = self._optional_immutable_array(displacement_dof)
+        self.displacement_dof: Array2D | None = self._optional_immutable_array(displacement_dof)  # pyright: ignore[reportAttributeAccessIssue]
         super().__init__()
 
     @cached_property
@@ -55,12 +56,12 @@ class HarmonicSolution(CommonSolution):
     def get_column(self, column_index: int) -> Array1D:
         return self.nodal_solution[:, column_index]
 
-    def _create_status(self, status: Optional[np.ndarray[tuple[int], bool]]):
+    def _create_status(self, status: np.ndarray[tuple[int], bool] | None):
         if status is None:
             return np.ones_like(self.frequencies, dtype=bool)
         return self._immutable_array(status)
 
-    def __iter__(self) -> Generator[tuple[float | complex, Array1D], None, None]:
+    def __iter__(self) -> Generator[tuple[float | complex, Array1D]]:
         yield from zip(self.frequencies, self.nodal_solution)
 
     def __eq__(self, other: Self) -> bool:

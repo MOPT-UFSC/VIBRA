@@ -1,9 +1,11 @@
+from collections.abc import Generator
+from copy import deepcopy
 from functools import cached_property
-from typing import Generator, Optional, Self
+from typing import Self
 
 import numpy as np
 
-from vibra.engine import AnalysisID
+from vibra.engine.analysis_info import AnalysisSetup
 
 from .common_solution import Array1D, Array2D, CommonSolution
 
@@ -11,13 +13,13 @@ from .common_solution import Array1D, Array2D, CommonSolution
 class ModalSolution(CommonSolution):
     def __init__(
         self,
-        analysis_id: AnalysisID,
+        analysis_setup: AnalysisSetup,
         natural_frequencies: Array1D,
         modal_shapes: Array2D,
-        complex_natural_frequencies: Optional[Array1D] = None,
-        displacement_dof: Optional[Array2D] = None,
+        complex_natural_frequencies: Array1D | None = None,
+        displacement_dof: Array2D | None = None,
     ):
-        self.analysis_id = analysis_id
+        self.analysis_setup = deepcopy(analysis_setup)
         self.natural_frequencies = self._immutable_array(natural_frequencies)
         self.modal_shapes = self._immutable_array(modal_shapes)
         self.complex_natural_frequencies = self._optional_immutable_array(complex_natural_frequencies)
@@ -47,7 +49,7 @@ class ModalSolution(CommonSolution):
     def get_column(self, column_index: int) -> Array1D:
         return self.modal_shapes[:, column_index]
 
-    def __iter__(self) -> Generator[tuple[float | complex, Array1D], None, None]:
+    def __iter__(self) -> Generator[tuple[float | complex, Array1D]]:
         yield from zip(self.natural_frequencies, self.modal_shapes)
 
     def __eq__(self, other: Self) -> bool:

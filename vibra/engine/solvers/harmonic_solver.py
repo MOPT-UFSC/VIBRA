@@ -38,7 +38,7 @@ class HarmonicSolver:
         if isinstance(self.assembler, AcousticAssembler):
             return self.assembler.acoustic_ndofs
         elif isinstance(self.assembler, StructuralAssembler):
-            return self.assembler.structural_ndofs          
+            return self.assembler.structural_ndofs
 
     def reset_variables(self):
         self.solution: Optional[HarmonicSolution] = None
@@ -71,8 +71,11 @@ class HarmonicSolver:
 
         logging.info("Solving harmonic analysis (direct method)... [99/100]")
 
+        analysis_setup = self.assembler.model.analysis_setup
+        assert isinstance(analysis_setup, HarmonicAnalysisSetup)
+
         self.solution = HarmonicSolution(
-            analysis_id=self.assembler.model.analysis_id,
+            analysis_setup=analysis_setup,
             frequencies=self.assembler.model.frequencies,
             nodal_solution=nodal_solution_buffer,
             displacement_dof=self.displacement_dof,
@@ -170,8 +173,12 @@ class HarmonicSolver:
             )
 
         self._close_file_writer()
+
+        analysis_setup = self.assembler.model.analysis_setup
+        assert isinstance(analysis_setup, HarmonicAnalysisSetup)
+
         self.solution = HarmonicSolution(
-            analysis_id=self.assembler.model.analysis_id,
+            analysis_setup=analysis_setup,
             frequencies=self.assembler.model.frequencies,
             nodal_solution=nodal_solution_buffer,
             displacement_dof=self.displacement_dof,

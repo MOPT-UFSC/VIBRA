@@ -1,8 +1,9 @@
-from typing import Optional
+from typing import Optional, override
 
 import h5py
 
 from vibra.engine import AnalysisID
+from vibra.engine.analysis_info import AnalysisSetup
 from vibra.engine.serialization.project_paths import ProjectPaths
 from vibra.utils.lazy_array import LazyArray
 
@@ -23,11 +24,12 @@ class LazyHarmonicSolution(HarmonicSolution):
         self.status: LazyArray = LazyArray(hs, "solution_status")
 
     @property
-    def analysis_id(self) -> AnalysisID:
+    @override
+    def analysis_setup(self) -> AnalysisSetup | None:
         from vibra.engine.serialization.project_reader import ProjectReader
 
         reader = ProjectReader(self.project_paths)
-        return reader.read_current_analysis_id()
+        return reader.read_analysis_setup()
 
     @property
     def displacement_dof(self) -> Optional[LazyArray]:
@@ -42,7 +44,7 @@ class LazyHarmonicSolution(HarmonicSolution):
     def get_nodal_displacement_at_column(self, column_index: int):
         """
         It is VERY important to get the columns first.
-        Otherwise the whole file will be loaded to extract a single column.  
+        Otherwise the whole file will be loaded to extract a single column.
         """
         col = self.get_column(column_index)
         return col[self.displacement_dof]
@@ -57,13 +59,16 @@ class LazyHarmonicSolution(HarmonicSolution):
 
         return True
 
+    @override
     def copy(self) -> HarmonicSolution:
         disp = self.displacement_dof
         if disp is not None:
             disp = disp.copy()
 
+        assert self.analysis_setup is not None
+
         return HarmonicSolution(
-            analysis_id=self.analysis_id,
+            analysis_setup=self.analysis_setup,
             frequencies=self.frequencies.copy(),
             nodal_solution=self.nodal_solution.copy(),
             status=self.status.copy(),

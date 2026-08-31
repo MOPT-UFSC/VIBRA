@@ -455,8 +455,9 @@ class ProjectReader:
                 displacement_dof = np.array(displacement_dof)
             logging.info("Reading harmonic solution [95/100]")
 
+            assert model.analysis_setup is not None  # TODO: replace this with a json inside the hdf5
             return HarmonicSolution(
-                analysis_id=model.analysis_id,
+                analysis_setup=model.analysis_setup,
                 frequencies=frequencies,
                 nodal_solution=solution,
                 status=solution_status,
@@ -470,8 +471,9 @@ class ProjectReader:
         with h5py.File(self.project_paths.modal_solution_filepath, "r") as file:
             file: h5py.File
 
+            assert model.analysis_setup is not None  # TODO: replace this with a json inside the hdf5
             return ModalSolution(
-                analysis_id=model.analysis_id,
+                analysis_setup=model.analysis_setup,
                 natural_frequencies=file["frequencies"],
                 modal_shapes=file["solution"],
                 displacement_dof=file.get("displacement_dof"),
