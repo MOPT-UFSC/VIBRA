@@ -17,11 +17,3 @@ class STRUCT_TETRAHEDRON_4(STRUCTURAL_3D_ELEMENT, TETRAHEDRON_4):
 
         self.define_integration_points()
         self.process_shape_functions_and_derivatives()
-
-
-    def reorder_connect(self):
-        """
-        Reordering connectivity matrix to adequate 
-        the GMSH connectivity to the FE model
-        """
-        self.connectivities = self.model.mesh.solids_connectivity[:, [6, 4, 5, 7]]

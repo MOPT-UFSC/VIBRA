@@ -1,7 +1,7 @@
 
 from typing import TYPE_CHECKING
 
-from vibra.engine.elements.solid_elements import Element3D
+from vibra.engine.elements.elements_3d.solid_elements import Element3D
 
 if TYPE_CHECKING:
     from vibra.engine.model import Model

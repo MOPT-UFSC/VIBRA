@@ -1,7 +1,7 @@
 
 from typing import TYPE_CHECKING
 
-from vibra.engine.elements.solid_elements import Element3D
+from vibra.engine.elements.elements_3d.solid_elements import Element3D
 
 if TYPE_CHECKING:
     from vibra.engine.model import Model
@@ -130,3 +130,11 @@ class TETRAHEDRON_4(Element3D):
         else:
             print("Not implemented stress extrapolation for N_int < N_nodes")
             return None
+
+
+    def reorder_connect(self):
+        """
+        Reordering connectivity matrix to adequate 
+        the GMSH connectivity to the FE model
+        """
+        self.connectivities = self.model.mesh.solids_connectivity[:, [6, 4, 5, 7]]

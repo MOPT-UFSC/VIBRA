@@ -671,11 +671,3 @@ class STRUCT_HEXAHEDRON_8(STRUCTURAL_3D_ELEMENT, HEXAHEDRON_8):
             return np.average(element_stresses, axis=1)
 
         return element_stresses
-
-
-    def reorder_connect(self):
-        """
-        Reordering connectivity matrix to adequate 
-        the GMSH connectivity to the FE model
-        """
-        self.connectivities = self.model.mesh.solids_connectivity[:, [4, 5, 6, 7, 8, 9, 10, 11]]

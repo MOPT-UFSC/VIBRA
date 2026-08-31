@@ -108,10 +108,3 @@ class ACT_TETRAHEDRON_4(ACOUSTIC_3D_ELEMENT, TETRAHEDRON_4):
         particle_velocity = -(1 / (1j * rho * omega)) * (B @ Pe)
 
         return particle_velocity
-
-    def reorder_connect(self):
-        """
-        Reordering connectivity matrix to adequate 
-        the GMSH connectivity to the FE model
-        """
-        self.connectivities = self.model.mesh.solids_connectivity[:, [6, 4, 5, 7]]
