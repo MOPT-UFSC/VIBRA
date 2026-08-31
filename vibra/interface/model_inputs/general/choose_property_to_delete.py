@@ -24,6 +24,7 @@ class ChoosePropertyToDelete(ChoosePropertyToDelete_UI):
         if len(self.properties_formated) == 1:
             self.tableWidget.selectAll()
             self.remove_callback()
+            return
 
         self._config_window()
         self._create_connections()
