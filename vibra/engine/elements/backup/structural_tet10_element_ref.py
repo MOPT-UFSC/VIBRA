@@ -1,6 +1,6 @@
 import numpy as np
 
-from vibra.engine.elements.solid_elements import Element3D
+from vibra.engine.elements.elements_3d.solid_elements import Element3D
 from vibra.engine.properties.material import Material
 
 def shapeT10C(l1, l2, l3):

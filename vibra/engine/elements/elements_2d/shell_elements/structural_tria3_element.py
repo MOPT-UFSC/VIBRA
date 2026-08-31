@@ -2,7 +2,7 @@
 
 from typing import TYPE_CHECKING
 
-from vibra.engine.elements.surface_elements import Element2D
+from vibra.engine.elements.elements_2d.surface_elements import Element2D
 from vibra.engine.properties.material import Material
 
 if TYPE_CHECKING:

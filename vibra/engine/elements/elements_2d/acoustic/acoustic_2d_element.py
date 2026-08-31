@@ -1,7 +1,7 @@
 
 from typing import TYPE_CHECKING
 
-from vibra.engine.elements.surface_elements import Element2D
+from vibra.engine.elements.elements_2d.surface_elements import Element2D
 
 if TYPE_CHECKING:
     from vibra.engine.model import Model
@@ -191,10 +191,10 @@ class ACOUSTIC_2D_ELEMENT(Element2D):
         """
 
         # # compute local coordinates for all elements
-        # local_coords = self.get_stacked_local_coordinates()
+        local_coords = self.get_stacked_local_coordinates()
 
-        # stack the element nodes coordinates for all elements
-        coords = self.model.mesh.nodal_coordinates[[connect for connect in self.connectivities], 1:]
+        # # stack the element nodes coordinates for all elements
+        # coords = self.model.mesh.nodal_coordinates[[connect for connect in self.connectivities], 1:]
 
         # initialize variables
         int2d_NtN = 0.
@@ -203,15 +203,14 @@ class ACOUSTIC_2D_ELEMENT(Element2D):
         # integration loop
         for i in range(self.nint):
 
-            # # Jacobian matrices of all elements
-            # JAC_stacked = self.dphi[i, :, :] @ local_coords
+            # Jacobian matrices of all elements
+            JAC_stacked = self.dphi[i, :, :] @ local_coords
 
-            # # Jacobian determinants and inverses of all elements
-            # det_jacs, inv_jacs = self.get_detJAC_and_invJAC(JAC_stacked)
+            # Jacobian determinants and inverses of all elements
+            det_jacs, inv_jacs = self.get_detJAC_and_invJAC(JAC_stacked)
 
-            det_jacs, normal_vectors = self.get_jacobian_determinant_2d(i, coords, self.dphi, return_vectors=True)
-
-            inv_jacs = np.linalg.inv(normal_vectors)
+            # det_jacs, normal_vectors = self.get_jacobian_determinant_2d(i, coords, self.dphi, return_vectors=True)
+            # inv_jacs = np.linalg.inv(normal_vectors)
 
             # shape functions
             N = self.phi[i, :, :]
