@@ -16,6 +16,7 @@ class VolumeSuppressionInputs(VolumeSuppressionDialog_UI):
         super().__init__(**kwargs)
 
         app().main_window.set_input_widget(self)
+        app().main_window.workspace_updating_for_model_setup()
 
         self.complete = False
         self.keep_window_open = True
