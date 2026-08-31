@@ -227,7 +227,7 @@ class Tetrahedron10(Element3D):
         dphi[:, 2, 9] =  4 * xi_1
 
         if Nz == 1:
-            return phi[0, :, :], dphi[0, :, :]
+            return phi[0, :], dphi[0, :, :]
 
         return phi, dphi
 

@@ -384,7 +384,7 @@ class AcousticPostprocessing:
         # Load all frequency solutions to optimize multiple load on the `process_particle_velocity` method below.
         _filtered_nodes = self.model.fluid_node_mapping[filtered_nodes]
         node_to_index = dict(zip(_filtered_nodes, np.arange(filtered_nodes.size, dtype=int)))
-        solution = self.solution.nodal_solution[filtered_nodes, :]
+        solution = self.solution.nodal_solution[_filtered_nodes, :]
 
         pv_data = {}
         for node_id, solid_element_ids in map_elements_to_nodes.items():

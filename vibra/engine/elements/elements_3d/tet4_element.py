@@ -108,6 +108,9 @@ class Tetrahedron4(Element3D):
         dphi[:, 2, 2] =  1
         dphi[:, 2, 3] =  0
 
+        if Nz == 1:
+            return phi[0, :], dphi[0, :, :]
+
         return phi, dphi
 
 

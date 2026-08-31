@@ -200,7 +200,7 @@ class Hexahedron20(Element3D):
         dphi[:, 2, 19] = (1 - xi_1) * (1 + xi_2) * (-2*xi_3) / 4
 
         if Nz == 1:
-            return phi[0, :, :], dphi[0, :, :]
+            return phi[0, :], dphi[0, :, :]
 
         return phi, dphi
 
