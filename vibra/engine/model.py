@@ -82,7 +82,7 @@ class Model:
         self.analysis_setup: AnalysisSetup | None = None
         self.solution: Solution | None = None
 
-        self.solutions: list[Solution] = []
+        self.solutions: dict[AnalysisID, Solution] = {}
 
         # TODO: review these variables
         self.mesh: Mesh | None = None
@@ -305,7 +305,7 @@ class Model:
         self.process_dof_mappings_for_fsi()
 
     def add_solution(self, solution: Solution):
-        self.solutions.append(solution)
+        self.solutions[solution.analysis_id] = solution
         self.solution = solution
 
     def reset_current_solution(self):
