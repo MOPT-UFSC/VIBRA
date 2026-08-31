@@ -110,7 +110,7 @@ def load_external_mesh_and_solve():
         model.properties._set_property("fluid", fluid, surface=_surf_id)
 
     # ## normal surface velocity data
-    # data_Vn = {"real_values": [1], "imag_values": [0], "nodal_attribution": False, "averaged": False}
+    # data_Vn = {"real_values": [1], "imag_values": [0], "element_integration": True}
 
     # model.properties._set_property("surface_velocity", data_Vn, surface=1)
 

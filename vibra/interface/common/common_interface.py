@@ -1,6 +1,7 @@
+from enum import IntEnum
 from pathlib import Path
 from typing import Literal
-from enum import IntEnum
+from numbers import Number
 
 import numpy as np
 from PySide6.QtWidgets import QDialog, QFileDialog, QPushButton, QWidget
@@ -13,10 +14,46 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
 
 
-class InputType(IntEnum):
+class InputDataType(IntEnum):
     REAL_IMAGINARY = 0
     MAGNITUDE_PHASE = 1
 
+
+def check_input_entries(input_left: str, input_right: str, label: str):
+
+    value_left = None
+    if input_left != "":
+        try:
+            input_left = input_left.replace(",", ".")
+            value_left = float(input_left)
+
+        except Exception:
+            title = f"Invalid entry to the {label}"
+            message = f"Wrong input for real part of {label}."
+            PrintMessageInput([error_title, title, message])
+            return
+
+    value_right = None
+    if input_right != "":
+        try:
+            input_right = input_right.replace(",", ".")
+            value_right = float(input_right)
+
+        except Exception:
+            title = f"Invalid entry to the {label}"
+            message = f"Wrong input for imaginary part of {label}."
+            PrintMessageInput([error_title, title, message])
+            return
+
+    if value_left is None and isinstance(value_right, Number):
+        value_left = 0.0
+
+    if value_right is None and isinstance(value_left, Number):
+        value_right = 0.0
+
+    output = [value_left, value_right] 
+
+    return output
 
 def save_table_values(table_name: str, imported_values: np.ndarray, physical_domain: Literal["acoustic", "structural"]):
     

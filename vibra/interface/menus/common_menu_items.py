@@ -194,7 +194,7 @@ class ChildTreeWidgetItem(QTreeWidgetItem):
         file_name = file_name if file_name != "" else self.property_name
 
         if visible:
-            path_image = str(Path((ICON_DIR / "model_setup_items" / str(file_name + ".png"))))
+            path_image = str(Path(ICON_DIR / "model_setup_items" / str(file_name + ".png")))
             self.setIcon(0, QIcon(path_image))
         else:
             self.setIcon(0, QIcon())

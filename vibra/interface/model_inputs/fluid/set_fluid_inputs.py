@@ -314,7 +314,7 @@ class SetFluidInputs(SetFluidInputs_UI):
 
     def reset_callback(self):
 
-        title = "Fluids resetting"
+        title = "Fluids reset"
         message = "Would you like to remove the all assigned fluids from model?"
 
         buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}

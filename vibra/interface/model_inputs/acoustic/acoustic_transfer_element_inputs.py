@@ -359,8 +359,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         data = {
             "real_values": [1.0],
             "imag_values": [0.0],
-            "nodal_attribution": False,
-            "averaged": False,
+            "element_integration": True,
         }
 
         self.properties._set_property("surface_velocity", data, surface=surface_id)
