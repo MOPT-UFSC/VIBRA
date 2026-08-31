@@ -181,9 +181,9 @@ class RamMonitor:
                     Final:                {_format_memory(self.uss.final)}
                     Final change:         {_format_memory(self.uss.final_change)}
                 VMS (Linux and Windows differ):
-                    Initial:       {_format_memory(self.vms.initial)}
-                    Peak:          {_format_memory(self.vms.peak)}
-                    Peak increase: {_format_memory(self.vms.peak_increase)}
-                    Final:         {_format_memory(self.vms.final)}
-                    Final change:  {_format_memory(self.vms.final_change)}
+                    Initial:              {_format_memory(self.vms.initial)}
+                    Peak:                 {_format_memory(self.vms.peak)}
+                    Peak increase:        {_format_memory(self.vms.peak_increase)}
+                    Final:                {_format_memory(self.vms.final)}
+                    Final change:         {_format_memory(self.vms.final_change)}
                 """
