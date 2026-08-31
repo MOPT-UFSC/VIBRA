@@ -55,8 +55,6 @@ class StructHexahedron20(Structural3DElement, Hexahedron20):
         self.num_int_data_M = self.integration_points_data_for_hexahedrons(integration_points)
         self.wps_M = self.num_int_data_M[:, -1].reshape(-1, 1, 1)
 
-        print(self.nint_M)
-
 
     def process_shape_functions_and_derivatives_for_Ke(self):
         """

@@ -2730,7 +2730,6 @@ class Mesh:
             if isinstance(selected_ids, str):
                 tokens = selected_ids.replace(" ", "").split(",")
                 list_ids = [int(_id) for _id in tokens]
-                print(list_ids)
 
             elif isinstance(selected_ids, list):
                 list_ids = selected_ids

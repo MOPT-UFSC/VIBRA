@@ -17,3 +17,4 @@ class StructTetrahedron4(Structural3DElement, Tetrahedron4):
 
         self.define_integration_points()
         self.process_shape_functions_and_derivatives()
+        self.process_N_matrix()
