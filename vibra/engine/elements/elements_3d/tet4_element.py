@@ -116,7 +116,7 @@ class Tetrahedron4(Element3D):
         This method returns the inverse of shape functions matrix N applied
         at integration points (Gauss-Legendre quadrature points).
         """
-        N = self.phi[:, 0, :]
+        N = self.phi
         n_intp, n_nodes = N.shape
 
         if n_intp == n_nodes:
