@@ -63,7 +63,7 @@ class ACOUSTIC_1D_ELEMENT(Element1D):
             det_jacs = self.dphi_M[i, :, :] @ local_coords
 
             # shape functions
-            N = self.phi_M[i, :, :]
+            N = self.phi_M[i, :].reshape(1, -1)
 
             int1d_NtN += N.T @ N * (det_jacs * self.wps_M[i])
 

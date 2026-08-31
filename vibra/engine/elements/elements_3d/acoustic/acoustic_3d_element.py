@@ -109,7 +109,7 @@ class ACOUSTIC_3D_ELEMENT(Element3D):
             det_jacs, inv_jacs = self.get_detJAC_and_invJAC(JAC_stacked)
 
             # shape functions
-            N = self.phi[i, :]
+            N = self.phi[i, :].reshape(1, -1)
             N_t = N.T
 
             # derivative of shape functions

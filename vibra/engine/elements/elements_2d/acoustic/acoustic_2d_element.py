@@ -56,7 +56,7 @@ class ACOUSTIC_2D_ELEMENT(Element2D):
             det_jac = self.get_jacobian_determinant_2d(i, self.dphi, coords)
 
             # matrix of shape functions for all DOF
-            N = self.phi[i, :, :]
+            N = self.phi[i, :].reshape(1, -1)
 
             Fe += (N.T * load) * (det_jac * self.wps[i])
 
@@ -96,7 +96,7 @@ class ACOUSTIC_2D_ELEMENT(Element2D):
             det_jac = self.get_jacobian_determinant_2d(i, self.dphi, coords)
 
             # shape functions
-            N = self.phi[i, :, :]
+            N = self.phi[i, :].reshape(1, -1)
 
             We += P_e @ (N.T @ N) @ Vn_e * (det_jac * self.wps[i])
 
@@ -139,7 +139,7 @@ class ACOUSTIC_2D_ELEMENT(Element2D):
             det_jacs = self.get_jacobian_determinant_2d(i, self.dphi, coords)
 
             # shape functions
-            N = self.phi[i, :, :]
+            N = self.phi[i, :].reshape(1, -1)
 
             acoustic_load += np.sum(-e_normals @ (N @ Pe) * (det_jacs * self.wps[i]), axis=0)
 
@@ -169,7 +169,7 @@ class ACOUSTIC_2D_ELEMENT(Element2D):
             det_jacs = self.get_jacobian_determinant_2d(i, self.dphi, coords)
 
             # shape functions
-            N = self.phi[i, :, :]
+            N = self.phi[i, :].reshape(1, -1)
 
             int2d_NtN += N.T @ N * (det_jacs * self.wps[i])
 
@@ -213,7 +213,7 @@ class ACOUSTIC_2D_ELEMENT(Element2D):
             # inv_jacs = np.linalg.inv(normal_vectors)
 
             # shape functions
-            N = self.phi[i, :, :]
+            N = self.phi[i, :].reshape(1, -1)
             N_t = N.T
 
             # derivative of shape functions
