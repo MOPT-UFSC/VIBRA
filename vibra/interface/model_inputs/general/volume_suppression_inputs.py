@@ -247,7 +247,18 @@ class VolumeSuppressionInputs(VolumeSuppressionDialog_UI):
         mesh_setup = app().project.model.mesh_setup
 
         if mesh_setup is None:
-            mesh_setup = MeshSetup(suppressed_volume_ids=new_ids)
+            # Keep the element size suggestion equal to the initial one
+            # (computed from the whole geometry), so suppressing a volume
+            # does not recalculate a different element size.
+            element_size = app().project.model.initial_element_size
+            minimum_element_size = int(0.9 * element_size) if element_size else 0 # .9 is the default factor troughout the code
+            maximum_element_size = element_size if element_size else float("inf") 
+
+            mesh_setup = MeshSetup(
+                minimum_element_size=minimum_element_size,
+                maximum_element_size=maximum_element_size,
+                suppressed_volume_ids=new_ids,
+            )
             changed = bool(new_ids)
         else:
             changed = sorted(mesh_setup.suppressed_volume_ids) != new_ids
