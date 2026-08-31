@@ -24,9 +24,9 @@ class STRUCT_TRIANGLE_6(STRUCTURAL_2D_ELEMENT, TRIANGLE_6):
     #     N = np.zeros((self.nint, 3, self.dof_per_element), dtype=float)
 
     #     for i in range(self.nint):
-    #         N[i, 0, 0::3] = self.phi[i, :, :]
-    #         N[i, 1, 1::3] = self.phi[i, :, :]
-    #         N[i, 2, 2::3] = self.phi[i, :, :]
+    #         N[i, 0, 0::3] = self.phi[i, :]
+    #         N[i, 1, 1::3] = self.phi[i, :]
+    #         N[i, 2, 2::3] = self.phi[i, :]
 
     #     return N
 

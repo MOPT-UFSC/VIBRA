@@ -16,24 +16,26 @@ class Element1D:
         self.nodes_per_element = nodes_per_element
 
         self.initialize()
+        self.local_dof = np.arange(dof_per_node, dtype=int)
 
 
     def initialize(self):
-        self.nint = None
-        self.nint_M = None
-        self.nint_K = None
 
-        self.wps = None
-        self.wps_M = None
-        self.wps_K = None
+        self.nint: np.ndarray | None = None
+        self.nint_M: np.ndarray | None = None
+        self.nint_K: np.ndarray | None = None
 
-        self.phi = None
-        self.phi_M = None
-        self.phi_K = None
+        self.wps: np.ndarray | None = None
+        self.wps_M: np.ndarray | None = None
+        self.wps_K: np.ndarray | None = None
 
-        self.dphi = None
-        self.dphi_M = None
-        self.dphi_K = None
+        self.phi: np.ndarray | None = None
+        self.phi_M: np.ndarray | None = None
+        self.phi_K: np.ndarray | None = None
+
+        self.dphi: np.ndarray | None = None
+        self.dphi_M: np.ndarray | None = None
+        self.dphi_K: np.ndarray | None = None
 
 
     @property
@@ -41,8 +43,8 @@ class Element1D:
         return self.dof_per_node * self.nodes_per_element
 
 
-    def dof_indexes_processor(self, model: "Model",  domain: str) -> DOFIndexesProcessor:
-        return DOFIndexesProcessor(model, domain, self.dof_per_node, self.nodes_per_element)
+    def dof_indexes_processor(self, domain: str) -> DOFIndexesProcessor:
+        return DOFIndexesProcessor(self.model, domain, self.dof_per_node, self.nodes_per_element)
 
 
     def reorder_connect(self, connectivities: np.ndarray):

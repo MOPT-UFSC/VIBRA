@@ -15,12 +15,11 @@ class ACOUSTIC_2D_ELEMENT(Element2D):
         super().__init__(model, dof_per_node, nodes_per_element)
 
         self.model = model
-        self.local_dof = np.arange(dof_per_node, dtype=int)
 
         self.element_label = ""
         self.connectivities = None
 
-        self.dof_indexes_proc = self.dof_indexes_processor(model, "acoustic")
+        self.dof_indexes_proc = self.dof_indexes_processor("acoustic")
 
 
     def load_vector(self, el_index: int, load: float = 1.0) -> np.ndarray:

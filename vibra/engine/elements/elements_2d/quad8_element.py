@@ -83,7 +83,6 @@ class QUADRANGLE_8(Element2D):
 
         self.connectivities = None
         self.element_label = ""
-        self.nodal_coordinates = self.model.mesh.nodal_coordinates
 
         self.local_dof = np.arange(dof_per_node, dtype=int)
 
@@ -119,15 +118,15 @@ class QUADRANGLE_8(Element2D):
         xi_2 = self.num_int_data[:, 1]
 
         ## shape functions (Atalla and Sgard, 2015, pg. 174)
-        phi = np.zeros((self.nint, 1, self.nodes_per_element), dtype=float)
-        phi[:, 0, 0] = (1 - xi_1)*(1 - xi_2)*(-xi_1 - xi_2 - 1) / 4      # ->      (-1.0, -1.0)   Node 1
-        phi[:, 0, 1] = (1 + xi_1)*(1 - xi_2)*( xi_1 - xi_2 - 1) / 4      # ->      ( 1.0, -1.0)   Node 2
-        phi[:, 0, 2] = (1 + xi_1)*(1 + xi_2)*( xi_1 + xi_2 - 1) / 4      # ->      ( 1.0,  1.0)   Node 3
-        phi[:, 0, 3] = (1 - xi_1)*(1 + xi_2)*(-xi_1 + xi_2 - 1) / 4      # ->      (-1.0,  1.0)   Node 4
-        phi[:, 0, 4] = (1 - xi_1**2)*(1 - xi_2) / 2                      # ->      ( 0.0, -1.0)   Node 5
-        phi[:, 0, 5] = (1 + xi_1)*(1 - xi_2**2) / 2                      # ->      ( 1.0,  0.0)   Node 6
-        phi[:, 0, 6] = (1 - xi_1**2)*(1 + xi_2) / 2                      # ->      ( 0.0,  1.0)   Node 7
-        phi[:, 0, 7] = (1 - xi_1)*(1 - xi_2**2) / 2                      # ->      (-1.0,  0.0)   Node 8
+        phi = np.zeros((self.nint, self.nodes_per_element), dtype=float)
+        phi[:, 0] = (1 - xi_1)*(1 - xi_2)*(-xi_1 - xi_2 - 1) / 4      # ->      (-1.0, -1.0)   Node 1
+        phi[:, 1] = (1 + xi_1)*(1 - xi_2)*( xi_1 - xi_2 - 1) / 4      # ->      ( 1.0, -1.0)   Node 2
+        phi[:, 2] = (1 + xi_1)*(1 + xi_2)*( xi_1 + xi_2 - 1) / 4      # ->      ( 1.0,  1.0)   Node 3
+        phi[:, 3] = (1 - xi_1)*(1 + xi_2)*(-xi_1 + xi_2 - 1) / 4      # ->      (-1.0,  1.0)   Node 4
+        phi[:, 4] = (1 - xi_1**2)*(1 - xi_2) / 2                      # ->      ( 0.0, -1.0)   Node 5
+        phi[:, 5] = (1 + xi_1)*(1 - xi_2**2) / 2                      # ->      ( 1.0,  0.0)   Node 6
+        phi[:, 6] = (1 - xi_1**2)*(1 + xi_2) / 2                      # ->      ( 0.0,  1.0)   Node 7
+        phi[:, 7] = (1 - xi_1)*(1 - xi_2**2) / 2                      # ->      (-1.0,  0.0)   Node 8
 
         ## derivatives of shape functions (obtained from the Atalla and Sgard proposed shape functions)
         dphi = np.zeros((self.nint, 2, self.nodes_per_element), dtype=float)

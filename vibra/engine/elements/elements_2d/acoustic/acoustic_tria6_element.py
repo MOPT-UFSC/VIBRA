@@ -16,12 +16,7 @@ class ACT_TRIANGLE_6(ACOUSTIC_2D_ELEMENT, TRIANGLE_6):
         self.model = model
         self.element_label = "acoustic_triangular_6"
 
-        # self.dof_indexes_proc = self.dof_indexes_processor(
-        #     model,
-        #     "acoustic",
-        #     dof_per_node,
-        #     self.nodes_per_element,
-        #     )
+        # self.dof_indexes_proc = self.dof_indexes_processor("acoustic")
 
 
     # def load_vector(self, el_index: int, load: float = 1.0) -> np.ndarray:

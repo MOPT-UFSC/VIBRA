@@ -76,7 +76,6 @@ class TRIANGLE_6(Element2D):
 
         self.connectivities = None
         self.element_label = ""
-        self.nodal_coordinates = self.model.mesh.nodal_coordinates
 
         self.local_dof = np.arange(dof_per_node, dtype=int)
 
@@ -109,13 +108,13 @@ class TRIANGLE_6(Element2D):
         xi_3 = 1 - xi_1 - xi_2
 
         ## shape functions (Atalla and Sgard, 2015, pg. 173)
-        phi = np.zeros((self.nint, 1, self.nodes_per_element), dtype=float)
-        phi[:, 0, 0] = xi_1 * (2 * xi_1 - 1)
-        phi[:, 0, 1] = xi_2 * (2 * xi_2 - 1)
-        phi[:, 0, 2] = xi_3 * (2 * xi_3 - 1)
-        phi[:, 0, 3] = 4 * xi_1 * xi_2
-        phi[:, 0, 4] = 4 * xi_2 * xi_3
-        phi[:, 0, 5] = 4 * xi_1 * xi_3
+        phi = np.zeros((self.nint, self.nodes_per_element), dtype=float)
+        phi[:, 0] = xi_1 * (2 * xi_1 - 1)
+        phi[:, 1] = xi_2 * (2 * xi_2 - 1)
+        phi[:, 2] = xi_3 * (2 * xi_3 - 1)
+        phi[:, 3] = 4 * xi_1 * xi_2
+        phi[:, 4] = 4 * xi_2 * xi_3
+        phi[:, 5] = 4 * xi_1 * xi_3
 
         ## derivatives of shape functions (obtained from the Atalla and Sgard proposed shape functions)
         dphi = np.zeros((self.nint, 2, self.nodes_per_element), dtype=float)

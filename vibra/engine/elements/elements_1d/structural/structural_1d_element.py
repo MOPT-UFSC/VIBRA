@@ -14,24 +14,22 @@ class STRUCTURAL_1D_ELEMENT(Element1D):
         super().__init__(model, dof_per_node, nodes_per_element)
 
         self.model = model
-        self.local_dof = np.arange(dof_per_node, dtype=int)
-
         self.element_label = ""
         self.connectivities = None
 
-        self.N_matrix = self.get_N_matrix()
-        self.dof_indexes_proc = self.dof_indexes_processor(model, "structural")
+        self.process_N_matrix()
+        self.dof_indexes_proc = self.dof_indexes_processor("structural")
 
 
-    def get_N_matrix(self):
+    def process_N_matrix(self):
         N = np.zeros((self.nint_M, 3, self.dof_per_element), dtype=float)
 
         for i in range(self.nint_M):
-            N[i, 0, 0::3] = self.phi_M[i, :, :]
-            N[i, 1, 1::3] = self.phi_M[i, :, :]
-            N[i, 2, 2::3] = self.phi_M[i, :, :]
+            N[i, 0, 0::3] = self.phi_M[i, :]
+            N[i, 1, 1::3] = self.phi_M[i, :]
+            N[i, 2, 2::3] = self.phi_M[i, :]
 
-        return N
+        self.N_matrix = N
 
 
     def integrate_length(self, connectivities: np.ndarray):

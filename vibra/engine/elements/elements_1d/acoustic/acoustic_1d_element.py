@@ -14,12 +14,10 @@ class ACOUSTIC_1D_ELEMENT(Element1D):
         super().__init__(model, dof_per_node, nodes_per_element)
 
         self.model = model
-        self.local_dof = np.arange(dof_per_node, dtype=int)
-
         self.element_label = ""
         self.connectivities = None
 
-        self.dof_indexes_proc = self.dof_indexes_processor(model, "acoustic")
+        self.dof_indexes_proc = self.dof_indexes_processor("acoustic")
 
 
     def get_rows_and_cols_indices_1D(self, index: int):

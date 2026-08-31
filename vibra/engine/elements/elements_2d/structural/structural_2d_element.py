@@ -20,19 +20,19 @@ class STRUCTURAL_2D_ELEMENT(Element2D):
         self.element_label = ""
         self.connectivities = None
 
-        self.N_matrix = self.get_N_matrix()
-        self.dof_indexes_proc = self.dof_indexes_processor(model, "structural")
+        self.process_N_matrix()
+        self.dof_indexes_proc = self.dof_indexes_processor("structural")
 
 
-    def get_N_matrix(self):
+    def process_N_matrix(self):
         N = np.zeros((self.nint, 3, self.dof_per_element), dtype=float)
 
         for i in range(self.nint):
-            N[i, 0, 0::3] = self.phi[i, :, :]
-            N[i, 1, 1::3] = self.phi[i, :, :]
-            N[i, 2, 2::3] = self.phi[i, :, :]
+            N[i, 0, 0::3] = self.phi[i, :]
+            N[i, 1, 1::3] = self.phi[i, :]
+            N[i, 2, 2::3] = self.phi[i, :]
 
-        return N
+        self.N_matrix = N
 
 
     def integrate_area(self, connectivities: np.ndarray):
