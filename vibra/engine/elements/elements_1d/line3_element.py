@@ -206,56 +206,6 @@ class LINE_3(Element1D):
         return coord_loc#, Le
 
 
-    def stacked_matrices_NtN_and_BtB(self) -> np.ndarray:
-        """
-        This method processes all elementary matrices for mass source
-        and returns them in the stacked array form.
-
-        Returns
-        -------
-        Nt_N_stacked: np.ndarray
-            The array containing the elementary stacked matrices int(Nt @ N, gamma_L).
-
-        Bt_B_stacked: np.ndarray
-            The array containing the elementary stacked matrices int(Bt @ B, gamma_L).
-        """
-
-        # local coordinates
-        local_coords = self.get_stacked_local_coordinates()
-
-        # initialize variables
-        int1d_NtN = 0.
-        int1d_BtB = 0.
-
-        # integration loop for stiffness matrix
-        for i in range(self.wps_K.size):
-
-            # determinant of Jacobian all elements
-            det_jacs_K = self.dphi_K[i, :, :] @ local_coords
-
-            # inverse of Jacobian
-            inv_jacs = 1 / det_jacs_K
-
-            # derivative of shape functions
-            B = inv_jacs @ self.dphi_M[i, :, :]
-            B_t = np.transpose(B, axes=(0, 2, 1))
-
-            int1d_BtB += B_t @ B * (det_jacs_K[i] * self.wps_K[i])
-
-        # integration loop for mass matrix
-        for i in range(self.wps_M.size):
-
-            # determinant of Jacobian
-            det_jacs_M = self.dphi_M[i, :, :] @ local_coords
-
-            # shape functions
-            N = self.phi_M[i, :, :]
-
-            int1d_NtN += N.T @ N * (det_jacs_M[i] * self.wps_M[i])
-
-        return int1d_NtN, int1d_BtB
-
-
     def reorder_connect(self, connectivities: np.ndarray):
         """
         Reordering connectivity matrix to adequate 

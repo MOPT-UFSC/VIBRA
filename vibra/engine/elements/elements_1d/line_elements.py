@@ -47,13 +47,17 @@ class Element1D:
         return DOFIndexesProcessor(self.model, domain, self.dof_per_node, self.nodes_per_element)
 
 
-    def reorder_connect(self, connectivities: np.ndarray):
+    def get_stacked_local_coordinates(self):
         pass
+
+
+    def get_jacobian_determinant_1d(self, int_point: int, dphi: np.ndarray, coords: np.ndarray):
+        return get_jacobian_determinant_1d(int_point, dphi, coords)
 
 
     def elementary_matrices(self) -> tuple[np.ndarray]:
         raise NotImplementedError("The function elementary_matrices was not implemented")
 
 
-    def get_jacobian_determinant_1d(self, int_point: int, dphi: np.ndarray, coords: np.ndarray):
-        return get_jacobian_determinant_1d(int_point, dphi, coords)
+    def reorder_connect(self, connectivities: np.ndarray):
+        pass
