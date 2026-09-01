@@ -1,5 +1,5 @@
 from vibra.engine.assemblers import matrix_helper
-from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
+from vibra.engine.assemblers.acoustic.acoustic_assembler import AcousticAssembler
 from vibra.engine.model import Model
 from scipy.sparse import csr_matrix
 import numpy as np

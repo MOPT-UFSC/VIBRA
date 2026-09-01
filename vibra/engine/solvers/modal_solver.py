@@ -5,8 +5,8 @@ from tqdm import tqdm
 import numpy as np
 from scipy.sparse.linalg import eigs
 
-from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
-from vibra.engine.assemblers.structural_assembler import StructuralAssembler
+from vibra.engine.assemblers.acoustic.acoustic_assembler import AcousticAssembler
+from vibra.engine.assemblers.structural.structural_assembler import StructuralAssembler
 from vibra.engine.solution import ModalSolution
 from vibra.engine.solvers.linear_solver import SolverType, initialize_solver
 

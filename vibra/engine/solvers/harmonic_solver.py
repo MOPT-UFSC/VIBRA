@@ -2,14 +2,14 @@ import logging
 import sys
 from time import time
 from typing import Optional
-from tqdm import tqdm
 
 import h5py
 import numpy as np
+from tqdm import tqdm
 
 from vibra.engine.analysis_info import HarmonicAnalysisSetup
-from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
-from vibra.engine.assemblers.structural_assembler import StructuralAssembler
+from vibra.engine.assemblers.acoustic.acoustic_assembler import AcousticAssembler
+from vibra.engine.assemblers.structural.structural_assembler import StructuralAssembler
 from vibra.engine.serialization.lazy_hdf5_matrix import LazyHDF5MatrixWriter
 from vibra.engine.serialization.project_paths import ProjectPaths
 from vibra.engine.solution import HarmonicSolution

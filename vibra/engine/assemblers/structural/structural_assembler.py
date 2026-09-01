@@ -9,7 +9,7 @@ from scipy.sparse import csr_matrix
 from tqdm import tqdm
 
 from vibra.engine.analysis_info import HarmonicAnalysisSetup
-from vibra.engine.assemblers.structural_excitations_assembler import StructuralExcitationsAssembler
+from vibra.engine.assemblers.structural.structural_excitations_assembler import StructuralExcitationsAssembler
 from vibra.engine.model import Model
 from vibra.engine.properties.material import Material
 
@@ -647,6 +647,9 @@ class StructuralAssembler:
         """
         This method assembles the global matrices of the structural model.
         """
+
+        if not self.model.model_domains:
+            self.model.update_domains_mappings()
 
         logging.info("Gathering data to assemble global matrices... [10/100]")
         self.define_structural_elements()

@@ -11,7 +11,7 @@ from vibra.engine.analysis_info import HarmonicAnalysisSetup
 from vibra.engine.properties.fluid import Fluid
 
 if TYPE_CHECKING:
-    from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
+    from vibra.engine.assemblers.acoustic.acoustic_assembler import AcousticAssembler
 
 
 @dataclass

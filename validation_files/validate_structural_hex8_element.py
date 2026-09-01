@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 from vibra import PROJECT_DIR
 from vibra.engine.analysis_info import AnalysisID, FrequencySpacing
-from vibra.engine.assemblers.structural_assembler import StructuralAssembler
+from vibra.engine.assemblers.structural.structural_assembler import StructuralAssembler
 from vibra.engine.elements.element_options import BbarDilatationalEvaluation, HEX8_structural
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model

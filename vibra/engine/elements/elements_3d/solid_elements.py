@@ -18,7 +18,6 @@ class Element3D:
         self.model = model
         self.dof_per_node = dof_per_node
         self.nodes_per_element = nodes_per_element
-        self.local_dof = np.arange(dof_per_node, dtype=int)
 
         self.initialize()
 

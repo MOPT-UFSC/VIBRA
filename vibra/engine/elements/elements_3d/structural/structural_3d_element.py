@@ -18,6 +18,8 @@ class Structural3DElement(Element3D):
         self.connectivities = None
         self.dof_indexes_proc = self.dof_indexes_processor("structural")
 
+        self.local_dof = np.arange(dof_per_node, dtype=int)
+
 
     def process_N_matrix(self):
         N = np.zeros((self.nint, 3, self.dof_per_element), dtype=float)

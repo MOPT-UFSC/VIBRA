@@ -11,7 +11,7 @@ from vibra.engine.solution import HarmonicSolution, LazyHarmonicSolution
 if TYPE_CHECKING:
     from vibra.engine.model import Model
 
-from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
+from vibra.engine.assemblers.acoustic.acoustic_assembler import AcousticAssembler
 from vibra.engine.solvers import HarmonicSolver
 
 

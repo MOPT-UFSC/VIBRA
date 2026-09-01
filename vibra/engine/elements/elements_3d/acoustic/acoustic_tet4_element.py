@@ -93,7 +93,7 @@ class ActTetrahedron4(Acoustic3DElement, Tetrahedron4):
         _, dphi = self.get_shape_functions_and_derivatives(ssx, ttx, rrx)
 
         # nodal coordinates from element
-        coords = self.nodal_coordinates[node_ids, 1:4]
+        coords = self.model.mesh.nodal_coordinates[node_ids, 1:4]
 
         # Jacobian matrix
         JAC = dphi @ coords

@@ -3,7 +3,7 @@ from __future__ import annotations
 import numpy as np
 from typing_extensions import TYPE_CHECKING
 
-from vibra.engine.assemblers.structural_assembler import StructuralAssembler
+from vibra.engine.assemblers.structural.structural_assembler import StructuralAssembler
 from vibra.engine.serialization.project_paths import ProjectPaths
 from vibra.engine.solution import HarmonicSolution, LazyHarmonicSolution
 from vibra.engine.solvers.harmonic_solver import HarmonicSolver

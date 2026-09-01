@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 
 from vibra import PROJECT_DIR
-from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
+from vibra.engine.assemblers.acoustic.acoustic_assembler import AcousticAssembler
 from vibra.engine.model import Model
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.serialization.project_paths import ProjectPaths

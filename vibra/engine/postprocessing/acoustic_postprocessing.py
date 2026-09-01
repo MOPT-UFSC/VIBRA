@@ -383,6 +383,10 @@ class AcousticPostprocessing:
 
         # Load all frequency solutions to optimize multiple load on the `process_particle_velocity` method below.
         _filtered_nodes = self.model.fluid_node_mapping[filtered_nodes]
+
+        # print(self.solution.nodal_solution.shape)
+        # print(_filtered_nodes.shape)
+
         node_to_index = dict(zip(_filtered_nodes, np.arange(filtered_nodes.size, dtype=int)))
         solution = self.solution.nodal_solution[_filtered_nodes, :]
 
@@ -612,11 +616,15 @@ class AcousticPostprocessing:
             The sound power level in dB if dB_scale is True or the sound power in watts otherwise.
         """
 
+        element_2d = self.acoustic_element_2d
+        edof = element_2d.dof_per_element
+
         nodes = np.sort(self.mesh.get_nodes_from_surface(surface_id))
         surface_connectivities = self.mesh.get_connectivity_from_surface(surface_id)
 
         number_nodes = len(nodes)
-        map_nodes = dict(zip(nodes, np.arange(number_nodes)))
+        _nodes = self.model.fluid_node_mapping[nodes]
+        map_nodes = dict(zip(_nodes, np.arange(number_nodes, dtype=int)))
 
         if len(pressures.shape) == 1:
             pressures = np.tile(pressures, (number_nodes, 1))
@@ -624,18 +632,18 @@ class AcousticPostprocessing:
         if len(particle_velocities.shape) == 1:
             particle_velocities = np.tile(particle_velocities, (number_nodes, 1))
 
-        element_2d = self.acoustic_element_2d
-        edof = element_2d.dof_per_element
-
         sound_power = 0.0
-        for i, e_connect in enumerate(surface_connectivities):
-            print(i, e_connect)
-            node_indices = [map_nodes.get(node) for node in e_connect]
-            # _node_indices = self.model.fluid_node_mapping[node_indices]
+        for i, connect in enumerate(surface_connectivities):
+            _connect = self.model.fluid_node_mapping[connect]
+            node_indices = [map_nodes.get(node) for node in _connect]
+
+            # print(i, connect, _connect, node_indices)
+            # print(pressures[node_indices, :].shape, particle_velocities[node_indices, :].shape)
+
             L_sv = pressures[node_indices, :].T.reshape(-1, 1, edof)
             R_sv = particle_velocities[node_indices, :].T.reshape(-1, edof, 1)
 
-            normalized_data = element_2d.elementary_sound_power(e_connect, L_sv, R_sv)
+            normalized_data = element_2d.elementary_sound_power(_connect, L_sv, R_sv)
             sound_power += np.real(normalized_data) / 2
 
         if dB_scale:

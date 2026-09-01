@@ -111,7 +111,7 @@ class ActHexahedron20(Acoustic3DElement, Hexahedron20):
         _, dphi = self.get_shape_functions_and_derivatives(ssx, ttx, rrx)
 
         # nodal coordinates from element
-        coords = self.nodal_coordinates[node_ids, 1:4]
+        coords = self.model.mesh.nodal_coordinates[node_ids, 1:4]
 
         # Jacobian matrix
         JAC = dphi @ coords

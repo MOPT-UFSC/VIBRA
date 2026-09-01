@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from validation_files.data.WB.load_external_data import LoadExternalData
 from vibra import PROJECT_DIR
 from vibra.engine.analysis_info import AnalysisID, FrequencySpacing
-from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
+from vibra.engine.assemblers.acoustic.acoustic_assembler import AcousticAssembler
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.engine.postprocessing.acoustic_postprocessing import AcousticPostprocessing

@@ -35,21 +35,21 @@ class Mesh:
 
         ## geometry-related attributes
 
-        self.nodes_to_highlight = list()
-        self.efaces_to_highlight = list()
+        self.nodes_to_highlight = []
+        self.efaces_to_highlight = []
 
-        self.surfaces_from_volume = dict()
+        self.surfaces_from_volume = {}
         self.lines_from_surface = defaultdict(list)
-        self.points_from_line = dict()
+        self.points_from_line = {}
 
         self.volumes_from_surface = defaultdict(list)
         self.surfaces_from_line = defaultdict(list)
         self.lines_from_point = defaultdict(list)
         self.face_elements_connected_to_nodes = defaultdict(list)
 
-        self.length_from_lines = dict()
-        self.area_from_surfaces = dict()
-        self.volume_from_bodies = dict()
+        self.length_from_lines = {}
+        self.area_from_surfaces = {}
+        self.volume_from_bodies = {}
 
         ## mesh-related attributes
 
@@ -71,61 +71,61 @@ class Mesh:
             "aspectRatio": (4, 1.5),
         }
 
-        self.mesh_quality_data = dict()
+        self.mesh_quality_data = {}
 
-        self.disconnected_nodes_data = dict()
-        self.collapsed_elements_data = dict()
+        self.disconnected_nodes_data = {}
+        self.collapsed_elements_data = {}
 
         self.disconnected_nodes = []
         self.nodes_from_collapsed_elements = []
 
-        self.nodes_from_points = dict()
-        self.points_from_nodes = dict()
+        self.nodes_from_points = {}
+        self.points_from_nodes = {}
 
-        self.map_solid_elements = dict()
-        self.map_face_elements = dict()
-        self.map_line_elements = dict()
+        self.map_solid_elements = {}
+        self.map_face_elements = {}
+        self.map_line_elements = {}
 
-        self.elements_from_line = dict()
-        self.elements_from_surface = dict()
-        self.elements_from_volume = dict()
+        self.elements_from_line = {}
+        self.elements_from_surface = {}
+        self.elements_from_volume = {}
 
-        self.face_to_solid_element = dict()
+        self.face_to_solid_element = {}
         self.solid_to_face_elements = defaultdict(list)
 
-        self.face_element_thickness = dict()
+        self.face_element_thickness = {}
         self.surface_from_solid_element = defaultdict(list)
 
-        self.external_nodes_from_lines = dict()
-        self.external_nodes_from_surfaces = dict()
-        self.external_nodes_from_volumes = dict()
-        self.external_connectivity_from_lines = dict()
-        self.external_connectivity_from_surfaces = dict()
+        self.external_nodes_from_lines = {}
+        self.external_nodes_from_surfaces = {}
+        self.external_nodes_from_volumes = {}
+        self.external_connectivity_from_lines = {}
+        self.external_connectivity_from_surfaces = {}
 
-        self.normals_surface = dict()
-        self.curvatures_surface = dict()
-        self.nodal_normals_data = dict()
-        self.element_normals_data = dict()
+        self.normals_surface = {}
+        self.curvatures_surface = {}
+        self.nodal_normals_data = {}
+        self.element_normals_data = {}
 
-        self.solid_elements_center = dict()
-        self.surfaces_centers = dict()
-        self.surface_area_from_element_integration = dict()
-        self.cylindrical_surfaces_data = dict()
+        self.solid_elements_center = {}
+        self.surfaces_centers = {}
+        self.surface_area_from_element_integration = {}
+        self.cylindrical_surfaces_data = {}
 
         self.nodal_area = defaultdict(list)
 
-        self.nodes_collapsed_elements = list()
+        self.nodes_collapsed_elements = []
 
         self.cache_nodal_coordinates = None
         self.cache_lines_connectivity = None
         self.cache_faces_connectivity = None
         self.cache_solids_connectivity = None
 
-        self.cache_surfaces_from_volume = dict()
-        self.cache_lines_from_surface = dict()
-        self.cache_points_from_line = dict()
+        self.cache_surfaces_from_volume = {}
+        self.cache_lines_from_surface = {}
+        self.cache_points_from_line = {}
 
-        self.error_data = dict()
+        self.error_data = {}
 
     def has_decoupling(self) -> bool:
         return all(
@@ -512,9 +512,9 @@ class Mesh:
         filt_connectivities = deepcopy([list(nodes) for nodes in self.faces_connectivity[filt_rows, 4:]])
 
         if not filt_connectivities:
-            return dict()
+            return {}
 
-        connectivities = list()
+        connectivities = []
         for connect in filt_connectivities:
             # filter the 1D element connectivities from 2D connectivities
             line_connect = [int(node) for node in connect if node in node_ids]
@@ -532,7 +532,7 @@ class Mesh:
 
         do_not_update = False
         while len(connectivities) > 0 and iter_count <= 1000:
-            non_mapped = list()
+            non_mapped = []
 
             if not do_not_update:
                 index += 1
@@ -582,7 +582,7 @@ class Mesh:
         self.lines_connectivity = np.empty((0, 4 + n_nodes_1d), dtype=int)
 
         for line_id, node_ids in self.external_nodes_from_lines.items():
-            connectivity_from_line = list()
+            connectivity_from_line = []
             filt_rows = np.sum(np.isin(connect_data, node_ids), axis=1) == n_nodes_1d
 
             for _connect in connect_data[filt_rows, :]:
@@ -691,7 +691,7 @@ class Mesh:
             line_connect = self.get_connectivity_from_line(line_id)
             corner_nodes = get_non_repeated_values(line_connect)
 
-            points_from_line = list()
+            points_from_line = []
 
             for _node_id in corner_nodes:
                 node_id = int(_node_id)
@@ -745,11 +745,10 @@ class Mesh:
         """ """
         self.elements_from_volume.clear()
 
-        aux = list()
+        aux = []
         for key, connect_data in connectivity.items():
             self.elements_from_volume[key[0]] = connect_data[:, 0] - 1
-            for nodes in connect_data:
-                aux.append(nodes)
+            aux.extend(connect_data)
 
         data = np.array(aux, dtype=int)
         rows, cols = data.shape
@@ -783,13 +782,12 @@ class Mesh:
         """ """
         self.elements_from_surface.clear()
 
-        aux_list = list()
+        aux = []
         for key, connect_data in connectivity.items():
             self.elements_from_surface[key[0]] = connect_data[:, 0] - 1
-            for nodes in connect_data:
-                aux_list.append(nodes)
+            aux.extend(connect_data)
 
-        data = np.array(aux_list, dtype=int)
+        data = np.array(aux, dtype=int)
         rows, cols = data.shape
 
         indices = data[:, 0]
@@ -1233,12 +1231,12 @@ class Mesh:
         if isinstance(nodes_from_lines, np.ndarray):
             self.nodes_from_lines = np.unique(nodes_from_lines) - 1
 
-        connectivity_dim1 = dict()
-        connectivity_dim2 = dict()
-        connectivity_dim3 = dict()
+        connectivity_dim1 = {}
+        connectivity_dim2 = {}
+        connectivity_dim3 = {}
 
         for dim, tag in gmsh.model.getEntities():
-            elements_data = dict()
+            elements_data = {}
             element_types, element_indices, element_nodes = gmsh.model.mesh.getElements(dim, tag)
 
             if not element_indices:
@@ -1397,7 +1395,7 @@ class Mesh:
 
         mask = np.sum(np.isin(self.faces_connectivity[:, 4:], node_id), axis=1) == 1
         if not mask.any():
-            return list()
+            return []
 
         surfaces_from_node = [int(surf_id) for surf_id in np.unique(self.faces_connectivity[:, 1][mask])]
         return surfaces_from_node
@@ -1597,7 +1595,7 @@ class Mesh:
         return volume_id
 
     def get_elements_from_lines(self, line_ids: list[int]):
-        element_ids = list()
+        element_ids = []
         for line_id in line_ids:
             rows = np.where(self.lines_connectivity[:, 1] == line_id)[0]
             element_ids.extend(self.lines_connectivity[rows, 0])
@@ -1632,7 +1630,7 @@ class Mesh:
         return np.unique(self.solids_connectivity[rows, 4:]).astype(int)
 
     def map_face_elements_to_solid_elements_reference(self):
-        self.face_to_solid_element = dict()
+        self.face_to_solid_element = {}
         self.solid_to_face_elements = defaultdict(list)
 
         if len(self.solids_connectivity) == 0:
@@ -1693,11 +1691,11 @@ class Mesh:
             for node in solid_nodes:
                 node_to_solid_ids[node].add(solid_id)
 
-        self.face_to_solid_element = dict()
+        self.face_to_solid_element = {}
         self.solid_to_face_elements = defaultdict(list)
 
         for face_id, _, _, _, *face_nodes in self.faces_connectivity:
-            candidate_solids = list()
+            candidate_solids = []
             for node in face_nodes:
                 candidate = node_to_solid_ids[node]
                 candidate_solids.append(candidate)
@@ -1896,7 +1894,7 @@ class Mesh:
 
         progress = 0
         nodes_number = len(node_ids)
-        face_elements_connected_to_nodes = dict()
+        face_elements_connected_to_nodes = {}
 
         for i, node_id in enumerate(node_ids):
             if surface_id is None:
@@ -1947,7 +1945,7 @@ class Mesh:
 
         # progress = 0
         # number_nodes = len(node_ids)
-        solid_elements_connected_to_nodes = dict()
+        solid_elements_connected_to_nodes = {}
 
         for i, node_id in enumerate(node_ids):
             # mask = np.sum(connect_nodes == node_id, axis=1) == 1
@@ -2011,12 +2009,12 @@ class Mesh:
 
         nodes_from_surface = self.get_nodes_from_surface(surface_id)
         if nodes_from_surface is None:
-            return dict()
+            return {}
 
         nodes_from_surface = np.sort(nodes_from_surface)
         face_elements_connected_to_nodes = self.get_face_elements_connected_to_nodes(nodes_from_surface, surface_id)
 
-        data_normals = dict()
+        data_normals = {}
         for node_id in nodes_from_surface:
             face_elem_connect = face_elements_connected_to_nodes[node_id, surface_id]
 
@@ -2051,7 +2049,7 @@ class Mesh:
             for elements in solid_elements_connected_to_nodes.values():
                 elements_set |= set(elements)
 
-            filtered_elements = list()
+            filtered_elements = []
             for elem3d_id in elements_set:
                 if self.solids_connectivity[elem3d_id, 1] == volume_id:
                     filtered_elements.append(elem3d_id)
@@ -2107,7 +2105,7 @@ class Mesh:
                 for node in e_nodes:
                     Vn_sum[node] += norm_cross[i, :] * factor
 
-        nodal_unit_normals = dict()
+        nodal_unit_normals = {}
 
         for node in self.get_nodes_from_surface(surface_id):
             Vn = Vn_sum[node]
@@ -2255,7 +2253,7 @@ class Mesh:
             ]
 
         else:
-            points_nodes = list()
+            points_nodes = []
 
         area = 0.0
         for nodes in points_nodes:
@@ -2264,7 +2262,7 @@ class Mesh:
         return area
 
     def set_face_element_thickness(self, surface_id: int, data: dict):
-        for face_element in self.elements_from_surface.get(surface_id, list()):
+        for face_element in self.elements_from_surface.get(surface_id, []):
             self.face_element_thickness[face_element] = data
 
     def get_mesh_info(self):
@@ -2305,7 +2303,7 @@ class Mesh:
 
         # compute the mesh quality statistics
         logging.info("Computing mesh quality metrics... [70/100]")
-        quality_statistics: dict[MeshQualityParams, list[float]] = dict()
+        quality_statistics: dict[MeshQualityParams, list[float]] = {}
         for i, parameter in enumerate(quality_parameters):
             column = quality_table[:, i]
             worst = np.max(column) if (parameter == "aspectRatio") else np.min(column)
@@ -2313,7 +2311,7 @@ class Mesh:
 
         # compute the bad elements
         logging.info("Computing mesh quality metrics... [85/100]")
-        bad_elements: dict[MeshQualityParams, np.ndarray] = dict()
+        bad_elements: dict[MeshQualityParams, np.ndarray] = {}
         for j, parameter in enumerate(quality_parameters):
             limit = self.quality_bins.get(parameter)
             if parameter == "aspectRatio":
@@ -2323,7 +2321,7 @@ class Mesh:
 
         # compute the histogram data
         logging.info("Computing mesh quality metrics... [95/100]")
-        histograms_data: dict[MeshQualityParams, dict] = dict()
+        histograms_data: dict[MeshQualityParams, dict] = {}
         for i, parameter in enumerate(quality_parameters):
             column = quality_table[:, i]
             bins = np.linspace(np.min(column), np.max(column), 30)
@@ -2496,7 +2494,7 @@ class Mesh:
             raise TypeError("get_connectivity_data only accepts dicts as input.")
 
         max_cols = 0
-        n_list = list()
+        n_list = []
         for data_0 in input_dict.values():
             for data_1 in data_0.values():
                 if "indices" in data_1:
@@ -2571,7 +2569,7 @@ class Mesh:
 
         """
 
-        solid_elements_center = dict()
+        solid_elements_center = {}
 
         for i, element_id in enumerate(element_ids):
             nodes = self.get_nodes_from_solid_elements(element_id)
@@ -2582,7 +2580,7 @@ class Mesh:
     def get_average_nodal_coordinates(self, surface_ids: list[int], averaged=False):
         nodal_coordinates = self.nodal_coordinates
 
-        rows = list()
+        rows = []
         for surface_id in surface_ids:
             nodes = self.get_nodes_from_surface(surface_id)
             if nodes is None:
@@ -2594,7 +2592,7 @@ class Mesh:
             else:
                 rows.append(list(nodes))
 
-        center_coords = list()
+        center_coords = []
         if rows:
             if averaged:
                 avg_coords = np.average(nodal_coordinates[rows, 1:], axis=0)
@@ -2740,7 +2738,7 @@ class Mesh:
             elif isinstance(selected_ids, int):
                 list_ids = [selected_ids]
 
-            all_ids = list()
+            all_ids = []
             if selection == "nodes":
                 all_ids = list(self.nodal_coordinates[:, 0])
 
@@ -2847,10 +2845,10 @@ class Mesh:
         list_center_coords = self.get_average_nodal_coordinates(surface_ids, averaged=averaged)
 
         if not list_center_coords:
-            return list(), list()
+            return [], []
 
-        selected_elements = list()
-        nodes_inside_sphere = list()
+        selected_elements = []
+        nodes_inside_sphere = []
         node_indices = self.nodal_coordinates[:, 0]
         nodal_coordinates = self.nodal_coordinates[:, 1:]
 
@@ -2927,7 +2925,7 @@ class Mesh:
 
         selection_data = self.get_solid_elements_connected_to_nodes(node_ids=nodes_inside_sphere)
 
-        _selected_elements = list()
+        _selected_elements = []
         for _node, element_ids in selection_data.items():
             _selected_elements.extend(element_ids)
 

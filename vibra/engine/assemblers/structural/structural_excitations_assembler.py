@@ -10,7 +10,7 @@ import numpy as np
 from vibra.engine.analysis_info import HarmonicAnalysisSetup
 
 if TYPE_CHECKING:
-    from vibra.engine.assemblers.structural_assembler import StructuralAssembler
+    from vibra.engine.assemblers.structural.structural_assembler import StructuralAssembler
 
 
 @dataclass

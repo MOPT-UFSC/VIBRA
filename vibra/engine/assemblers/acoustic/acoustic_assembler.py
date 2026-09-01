@@ -1,16 +1,14 @@
-import sys
-
-from tqdm import tqdm
-
 import logging
+import sys
 from time import time
 
 import numpy as np
 from scipy.sparse import block_array, csr_matrix
+from tqdm import tqdm
 
 from vibra.engine.analysis_info import HarmonicAnalysisSetup
-from vibra.engine.assemblers.acoustic_excitations_assembler import AcousticExcitationsAssembler
-from vibra.engine.assemblers.acoustic_impedances_assembler import AcousticImpedancesAssembler
+from vibra.engine.assemblers.acoustic.acoustic_excitations_assembler import AcousticExcitationsAssembler
+from vibra.engine.assemblers.acoustic.acoustic_impedances_assembler import AcousticImpedancesAssembler
 from vibra.engine.model import Model
 from vibra.engine.properties.fluid import Fluid
 
@@ -545,6 +543,9 @@ class AcousticAssembler:
         """
         This method assembles the global matrices of the acoustic model.
         """
+
+        if not self.model.model_domains:
+            self.model.update_domains_mappings()
 
         logging.info("Processing data to assemble global matrices... [10/100]")
         self.define_acoustic_elements()
