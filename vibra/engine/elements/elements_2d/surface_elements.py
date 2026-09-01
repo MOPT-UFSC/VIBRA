@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from vibra.engine.elements.dof_indexes_processor import DOFIndexesProcessor
-from vibra.engine.elements.element_data_processor import get_jacobian_determinant_2d
+from vibra.engine.elements.common.dof_indexes_processor import DOFIndexesProcessor
+from vibra.engine.elements.common.element_data_processor import get_jacobian_determinant_2d
 
 if TYPE_CHECKING:
     from vibra.engine.model import Model
@@ -59,8 +59,22 @@ class Element2D:
         pass
 
 
-    def get_jacobian_determinant_2d(self, int_point: int, dphi: np.ndarray, coords: np.ndarray, return_vectors: bool = False):
-        return get_jacobian_determinant_2d(int_point, dphi, coords, return_vectors=return_vectors)
+    def get_jacobian_determinant_2d(
+            self,
+            int_point: int,
+            dphi: np.ndarray,
+            coords: np.ndarray,
+            return_normal: bool = False,
+            return_inverse: bool = False,
+            ):
+
+        return get_jacobian_determinant_2d(
+            int_point,
+            dphi,
+            coords,
+            return_normal=return_normal,
+            return_inverse=return_inverse,
+            )
 
 
     def elementary_matrices(self) -> tuple[np.ndarray]:
@@ -69,68 +83,6 @@ class Element2D:
 
     def reorder_connect(self, connectivities: np.ndarray):
         pass
-
-
-    def get_detJAC(self, JAC: np.ndarray) -> float:
-        """
-        This function computes the determinant of the Jacobian
-        matrix in both stacked and non-stacked matrices form.
-
-        Parameter
-        ---------
-        JAC: np.ndarray
-            The Jacobian 2D or 3D matrix.
-        
-        Return
-        ------
-        det_jac: float
-            The determinant of the Jacobian matrix.
-        """
-        if len(JAC.shape) == 3:
-            det_jac = JAC[:, 0, 0] * JAC[:, 1, 1]  - JAC[:, 0, 1] * JAC[:, 1, 0]
-            return det_jac.reshape(-1, 1, 1)
-
-        else:
-            det_jac = JAC[0, 0] * JAC[1, 1]  - JAC[0, 1] * JAC[1, 0]  
-            return det_jac
-
-
-    def get_detJAC_and_invJAC(self, JAC: np.ndarray) -> np.ndarray:
-        """
-        This function computes the determinants and inverses
-        of Jacobian matrices in stacked form.
-
-        Parameters
-        ----------
-        JAC: np.array
-            The stacked Jacobian matrices.
-
-        Returns
-        -------
-        det_jacs: np.ndarray
-            The stacked determinants of Jacobian matrices.
-
-        inv_jacs: np.ndarray
-            The stacked inverse of Jacobian matrices.
-
-        """
-
-        # determinant of the Jacobian matrix
-        det_jacs = JAC[:, 0, 0] * JAC[:, 1, 1]  - JAC[:, 0, 1] * JAC[:, 1, 0] 
-        det_jacs = det_jacs.reshape(-1, 1, 1)
-
-        # the adjoint matrix AUJJ
-        AUJJ = np.zeros((JAC.shape[0], 2, 2), dtype=float)
-
-        AUJJ[:, 0, 0] =  JAC[:, 1, 1]
-        AUJJ[:, 0, 1] = -JAC[:, 0, 1]
-        AUJJ[:, 1, 0] = -JAC[:, 1, 0]
-        AUJJ[:, 1, 1] =  JAC[:, 0, 0]
-
-        # inverse of the Jacobian matrix
-        inv_jacs = (1 / det_jacs) * AUJJ
-
-        return det_jacs, inv_jacs
 
 
     def integration_points_data_for_quadrangles(self, integration_points: int):

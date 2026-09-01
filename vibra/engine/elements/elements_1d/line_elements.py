@@ -2,8 +2,8 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from vibra.engine.elements.dof_indexes_processor import DOFIndexesProcessor
-from vibra.engine.elements.element_data_processor import get_jacobian_determinant_1d
+from vibra.engine.elements.common.dof_indexes_processor import DOFIndexesProcessor
+from vibra.engine.elements.common.element_data_processor import get_jacobian_determinant_1d
 
 if TYPE_CHECKING:
     from vibra.engine.model import Model
@@ -11,6 +11,7 @@ if TYPE_CHECKING:
 
 class Element1D:
     def __init__(self, model: "Model", dof_per_node: int, nodes_per_element: int):
+
         self.model = model
         self.dof_per_node = dof_per_node
         self.nodes_per_element = nodes_per_element

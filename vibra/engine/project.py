@@ -398,6 +398,7 @@ class Project:
 
         if print_log:
             print(f"Elapsed time to solve acoustic modal analysis: {dt: .6f} [s]")
+
         logging.info(f"Elapsed time to solve acoustic modal analysis: {dt: .6f} [s]")
 
         return self.model.solution
