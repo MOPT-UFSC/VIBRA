@@ -128,12 +128,12 @@ def load_external_mesh_and_solve(distribute_mass: bool=False):
     assembler = StructuralAssembler(model)
 
     # Set the analysis frequency setup
-    assembler.assemble_global_matrices_and_excitations(reorder=False)
+    assembler.assemble_global_matrices_and_excitations(reorder=False, print_log=True)
 
     t0 = time()
     # Run modal analysis
     modal_solver = ModalSolver(assembler)
-    modal_solver.solve()
+    modal_solver.solve(print_log=True)
     natural_frequencies = modal_solver.natural_frequencies
     dt = time() - t0
     print(f"Elapsed time to solve modal analysis: {round(dt, 4)}s")
