@@ -52,6 +52,7 @@ markers = [
 [tool.ruff]
 exclude = ["__pycache__", "vibra/interface/ui_generated"]
 line-length = 150
+lint.ignore = ["SIM102"]
 
 [tool.ruff.lint.per-file-ignores]
 "vibra/__init__.py" = ["E402"] # Ignore import violations
