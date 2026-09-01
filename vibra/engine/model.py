@@ -24,34 +24,34 @@ from vibra.engine.dissipation_models.viscous_thermal_loss_models import ViscousT
 
 # 1d elements
 from vibra.engine.elements.elements_1d import (
-    ActLine2,
-    ActLine3,
-    StructLine2,
-    StructLine3,
+    AcousticLine2,
+    AcousticLine3,
+    StructuralLine2,
+    StructuralLine3,
 )
 
 # 2d elements
 from vibra.engine.elements.elements_2d import (
-    ActQuadrangle4,
-    ActQuadrangle8,
-    ActTriangle3,
-    ActTriangle6,
-    StructQuadrangle4,
-    StructQuadrangle8,
-    StructTriangle_3,
-    StructTriangle_6,
+    AcousticQuadrangle4,
+    AcousticQuadrangle8,
+    AcousticTriangle3,
+    AcousticTriangle6,
+    StructuralQuadrangle4,
+    StructuralQuadrangle8,
+    StructuralTriangle3,
+    StructuralTriangle6,
 )
 
 # 3d elements
 from vibra.engine.elements.elements_3d import (
-    ActHexahedron8,
-    ActHexahedron20,
-    ActTetrahedron4,
-    ActTetrahedron10,
-    StructHexahedron8,
-    StructHexahedron20,
-    StructTetrahedron4,
-    StructTetrahedron10,
+    AcousticHexahedron8,
+    AcousticHexahedron20,
+    AcousticTetrahedron4,
+    AcousticTetrahedron10,
+    StructuralHexahedron4,
+    StructuralHexahedron20,
+    StructuralTetrahedron4,
+    StructuralTetrahedron10,
 )
 from vibra.engine.geometry.geometry import LengthUnits
 from vibra.engine.mesher.degrees_of_freedom_decoupling_new import DegreesOfFreedomDecoupling
@@ -657,16 +657,16 @@ class Model:
         element_type = self.element_topology
 
         if element_type == Tetrahedron4:
-            return StructTetrahedron4(self), StructTriangle_3(self), StructLine2(self)
+            return StructuralTetrahedron4(self), StructuralTriangle3(self), StructuralLine2(self)
 
         elif element_type == Tetrahedron10:
-            return StructTetrahedron10(self), StructTriangle_6(self), StructLine3(self)
+            return StructuralTetrahedron10(self), StructuralTriangle6(self), StructuralLine3(self)
 
         elif element_type == Hexahedron8:
-            return StructHexahedron8(self), StructQuadrangle4(self), StructLine2(self)
+            return StructuralHexahedron4(self), StructuralQuadrangle4(self), StructuralLine2(self)
 
         elif element_type == Hexahedron20:
-            return StructHexahedron20(self), StructQuadrangle8(self), StructLine3(self)
+            return StructuralHexahedron20(self), StructuralQuadrangle8(self), StructuralLine3(self)
 
         else:
             raise NotImplementedError(f'Element type "{element_type}" is not supported yet.')
@@ -675,16 +675,16 @@ class Model:
         element_type = self.element_topology
 
         if element_type == Tetrahedron4:
-            return ActTetrahedron4(self), ActTriangle3(self), ActLine2(self)
+            return AcousticTetrahedron4(self), AcousticTriangle3(self), AcousticLine2(self)
 
         elif element_type == Tetrahedron10:
-            return ActTetrahedron10(self), ActTriangle6(self), ActLine3(self)
+            return AcousticTetrahedron10(self), AcousticTriangle6(self), AcousticLine3(self)
 
         elif element_type == Hexahedron8:
-            return ActHexahedron8(self), ActQuadrangle4(self), ActLine2(self)
+            return AcousticHexahedron8(self), AcousticQuadrangle4(self), AcousticLine2(self)
 
         elif element_type == Hexahedron20:
-            return ActHexahedron20(self), ActQuadrangle8(self), ActLine3(self)
+            return AcousticHexahedron20(self), AcousticQuadrangle8(self), AcousticLine3(self)
 
         else:
             raise NotImplementedError(f'Element type "{element_type}" is not supported yet.')
@@ -1035,7 +1035,7 @@ class Model:
 
     def is_element2d_triangular(self):
         _, acoustic_element_2d, _ = self.get_acoustic_elements()
-        return isinstance(acoustic_element_2d, ActTriangle3 | ActTriangle6)
+        return isinstance(acoustic_element_2d, AcousticTriangle3 | AcousticTriangle6)
 
     def get_downstream_pressure_and_particle_velocity(self, surface_id: int):
         """

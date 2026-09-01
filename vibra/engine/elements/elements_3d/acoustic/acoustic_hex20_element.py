@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 import numpy as np
 
 
-class ActHexahedron20(Acoustic3DElement, Hexahedron20):
+class AcousticHexahedron20(Acoustic3DElement, Hexahedron20):
 
     def __init__(self, model: "Model", dof_per_node: int = 1, nodes_per_element: int = 20):
         super().__init__(model, dof_per_node, nodes_per_element)

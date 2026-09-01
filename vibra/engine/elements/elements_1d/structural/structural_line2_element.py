@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     from vibra.engine.model import Model
 
 
-class StructLine2(Structural1DElement, Line2):
+class StructuralLine2(Structural1DElement, Line2):
 
     def __init__(self, model: "Model", dof_per_node: int = 3, nodes_per_element: int = 2):
         super().__init__(model, dof_per_node, nodes_per_element)

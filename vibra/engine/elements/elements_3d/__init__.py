@@ -1,13 +1,13 @@
-from .acoustic.acoustic_hex8_element import ActHexahedron8
-from .acoustic.acoustic_hex20_element import ActHexahedron20
-from .acoustic.acoustic_tet4_element import ActTetrahedron4
-from .acoustic.acoustic_tet10_element import ActTetrahedron10
+from .acoustic.acoustic_hex8_element import AcousticHexahedron8
+from .acoustic.acoustic_hex20_element import AcousticHexahedron20
+from .acoustic.acoustic_tet4_element import AcousticTetrahedron4
+from .acoustic.acoustic_tet10_element import AcousticTetrahedron10
 
-# from .structural.structural_hex8_element_ref import StructHexahedron8
-# from .structural.structural_hex20_element_ref import StructHexahedron20
-# from .structural.structural_tet4_element_ref import StructTetrahedron4S
-# from .structural.structural_tet10_element_ref import StructTetrahedron10S
-from .structural.structural_hex8_element import StructHexahedron8
-from .structural.structural_hex20_element import StructHexahedron20
-from .structural.structural_tet4_element import StructTetrahedron4
-from .structural.structural_tet10_element import StructTetrahedron10
+# from .structural.structural_hex8_element_ref import StructuralHexahedron4
+# from .structural.structural_hex20_element_ref import StructuralHexahedron20
+# from .structural.structural_tet4_element_ref import StructuralTetrahedron4S
+# from .structural.structural_tet10_element_ref import StructuralTetrahedron10S
+from .structural.structural_hex8_element import StructuralHexahedron4
+from .structural.structural_hex20_element import StructuralHexahedron20
+from .structural.structural_tet4_element import StructuralTetrahedron4
+from .structural.structural_tet10_element import StructuralTetrahedron10

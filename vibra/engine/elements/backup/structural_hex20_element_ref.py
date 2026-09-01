@@ -4,7 +4,7 @@ from vibra.engine.elements.elements_3d.solid_elements import Element3D
 from vibra.engine.properties.material import Material
 
 
-class StructHexahedron20(Element3D):
+class StructuralHexahedron20(Element3D):
     #
     nodes_per_element = 20
     dof_per_node = 3

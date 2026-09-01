@@ -213,7 +213,7 @@ def get_detJAC_and_invJAC(JAC: np.ndarray):
     return detJAC, (1 / detJAC) * AUJJ
 
 
-class StructTriangle_3(Element2D):
+class StructuralTriangle3(Element2D):
 
     nodes_per_element = 3
     dof_per_node = 6

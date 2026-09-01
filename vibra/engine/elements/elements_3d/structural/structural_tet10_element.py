@@ -7,7 +7,7 @@ if TYPE_CHECKING:
     from vibra.engine.model import Model
 
 
-class StructTetrahedron10(Structural3DElement, Tetrahedron10):
+class StructuralTetrahedron10(Structural3DElement, Tetrahedron10):
 
     def __init__(self, model: "Model", dof_per_node: int = 3, nodes_per_element: int = 10):
         super().__init__(model, dof_per_node, nodes_per_element)

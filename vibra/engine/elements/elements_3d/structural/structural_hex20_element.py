@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from vibra.engine.model import Model
 
 
-class StructHexahedron20(Structural3DElement, Hexahedron20):
+class StructuralHexahedron20(Structural3DElement, Hexahedron20):
 
     def __init__(self, model: "Model", dof_per_node: int = 3, nodes_per_element: int = 20):
         super().__init__(model, dof_per_node, nodes_per_element)

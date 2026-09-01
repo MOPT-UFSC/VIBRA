@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 import numpy as np
 
 
-class ActTetrahedron4(Acoustic3DElement, Tetrahedron4):
+class AcousticTetrahedron4(Acoustic3DElement, Tetrahedron4):
 
     def __init__(self, model: "Model", dof_per_node: int = 1, nodes_per_element: int = 4):
         super().__init__(model, dof_per_node, nodes_per_element)
