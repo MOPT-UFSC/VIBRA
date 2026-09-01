@@ -15,6 +15,6 @@ class StructTetrahedron10(Structural3DElement, Tetrahedron10):
         self.model = model
         self.element_label = "structural_tetrahedron_10"
 
-        self.define_integration_points()
+        self.define_integration_points(4)
         self.process_shape_functions_and_derivatives()
         self.process_N_matrix()

@@ -158,4 +158,4 @@ def load_external_mesh_and_solve(distributed_mass: bool=False):
 
 if __name__ == "__main__":
 
-    load_external_mesh_and_solve(distributed_mass=True)
+    load_external_mesh_and_solve(distributed_mass=False)
