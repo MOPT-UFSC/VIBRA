@@ -634,17 +634,15 @@ class AcousticPostprocessing:
 
         sound_power = 0.0
         for i, connect in enumerate(surface_connectivities):
-            _connect = self.model.fluid_node_mapping[connect]
-            node_indices = [map_nodes.get(node) for node in _connect]
 
-            # print(i, connect, _connect, node_indices)
-            # print(pressures[node_indices, :].shape, particle_velocities[node_indices, :].shape)
+            # process the element rows to access the reduced nodal results for pressures and particle velocities
+            rows = [map_nodes.get(_node) for _node in self.model.fluid_node_mapping[connect]]
 
-            L_sv = pressures[node_indices, :].T.reshape(-1, 1, edof)
-            R_sv = particle_velocities[node_indices, :].T.reshape(-1, edof, 1)
+            L_sv = pressures[rows, :].T.reshape(-1, 1, edof)
+            R_sv = particle_velocities[rows, :].T.reshape(-1, edof, 1)
 
-            normalized_data = element_2d.elementary_sound_power(_connect, L_sv, R_sv)
-            sound_power += np.real(normalized_data) / 2
+            elem_sound_power = element_2d.elementary_sound_power(connect, L_sv, R_sv)
+            sound_power += np.real(elem_sound_power) / 2
 
         if dB_scale:
             return 10 * np.log10(sound_power / 1e-12)
