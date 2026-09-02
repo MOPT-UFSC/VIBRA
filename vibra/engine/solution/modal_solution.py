@@ -1,5 +1,5 @@
 from functools import cached_property
-from typing import Generator, Optional, Self
+from typing import Generator, Self
 
 import numpy as np
 
@@ -13,13 +13,22 @@ class ModalSolution(CommonSolution):
         self,
         analysis_id: AnalysisID,
         natural_frequencies: Array1D,
-        modal_shapes: Array2D,
-        complex_natural_frequencies: Optional[Array1D] = None,
-        displacement_dof: Optional[Array2D] = None,
+        structural_modal_shapes: Array2D | None = None,
+        acoustic_modal_shapes: Array2D | None = None,
+        coupled_modal_shapes: Array2D | None = None,
+        complex_natural_frequencies: Array1D | None = None,
+        displacement_dof: Array2D | None = None,
     ):
+        if all(i is None for i in [structural_modal_shapes, acoustic_modal_shapes, coupled_modal_shapes]):
+            raise ValueError("Either structural_modal_shapes, acoustic_modal_shapes, or coupled_modal_shapes must be provided")
+
         self.analysis_id = analysis_id
         self.natural_frequencies = self._immutable_array(natural_frequencies)
-        self.modal_shapes = self._immutable_array(modal_shapes)
+        
+        self.structural_modal_shapes: Array2D | None = self._optional_immutable_array(structural_modal_shapes)
+        self.acoustic_modal_shapes: Array2D | None = self._optional_immutable_array(acoustic_modal_shapes)
+        self.coupled_modal_shapes: Array2D | None = self._optional_immutable_array(coupled_modal_shapes)
+
         self.complex_natural_frequencies = self._optional_immutable_array(complex_natural_frequencies)
         self.displacement_dof = self._optional_immutable_array(displacement_dof)
 
