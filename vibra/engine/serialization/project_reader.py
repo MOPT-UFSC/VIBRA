@@ -541,9 +541,9 @@ class ProjectReader:
                 return ModalSolution(
                     analysis_id=model.analysis_id,
                     natural_frequencies=file["frequencies"],
-                    structural_modal_shapes=file["structural_modal_shapes"],
-                    acoustic_modal_shapes=file["acoustic_modal_shapes"],
-                    coupled_modal_shapes=file["coupled_modal_shapes"],
+                    structural_modal_shapes=file.get("structural_modal_shapes"),
+                    acoustic_modal_shapes=file.get("acoustic_modal_shapes"),
+                    coupled_modal_shapes=file.get("coupled_modal_shapes"),
                     displacement_dof=file.get("displacement_dof"),
                     complex_natural_frequencies=file.get("complex_natural_frequencies"),
                 )

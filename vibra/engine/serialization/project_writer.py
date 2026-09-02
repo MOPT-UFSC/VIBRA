@@ -331,17 +331,8 @@ class ProjectWriter:
     def write_modal_solution(self, solution: ModalSolution):
         logger.info("Writing modal solution")
 
-        current_hash = ProjectHasher.hash_modal_solution(solution)
-        previous_hash = self._read_hash(HashEnum.MODAL_SOLUTION)
-
-        if self.project_paths.imported_table_data_filepath.exists():
-            if (current_hash == previous_hash) and self.use_hash:
-                logger.info("Modal solution was not written since it did not changed.")
-                return
-
         with h5py.File(self.project_paths.modal_solution_filepath, "w") as file:
             file["frequencies"] = solution.natural_frequencies
-            file["solution"] = solution.modal_shapes
 
             if solution.structural_modal_shapes is not None:
                 file.create_dataset("structural_modal_shapes", data=solution.structural_modal_shapes)
@@ -357,8 +348,6 @@ class ProjectWriter:
 
             if isinstance(solution.complex_natural_frequencies, np.ndarray):
                 file["complex_natural_frequencies"] = solution.complex_natural_frequencies
-
-        self._write_hash(HashEnum.MODAL_SOLUTION, current_hash)
 
     def get_solution_writer(self, num_rows, columns, dtype, is_resume):
         return LazyHDF5MatrixWriter(

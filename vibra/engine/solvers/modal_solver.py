@@ -134,7 +134,7 @@ class ModalSolver:
             self.solution = ModalSolution(
                 analysis_id=self.assembler.model.analysis_id,
                 natural_frequencies=self.natural_frequencies,
-                structural_modal_shapes=self.nodal_solution,
+                acoustic_modal_shapes=self.nodal_solution,
                 complex_natural_frequencies=cnf,
             )
 
