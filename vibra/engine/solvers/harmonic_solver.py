@@ -160,11 +160,19 @@ class HarmonicSolver:
 
         nodal_solution_buffer = self._get_nodal_solution_buffer(is_resume)
         # self._initialize_file_writer(is_resume)
+        #
+
+        if isinstance(self.assembler, StructuralAssembler):
+            modal_shapes = modal_solution.structural_modal_shapes
+        elif isinstance(self.assembler, AcousticAssembler):
+            modal_shapes = modal_solution.acoustic_modal_shapes
+        else:
+            raise ValueError(f"Unsupported assembler type: {type(self.assembler)}")
 
         if is_proportionally_damped:
             self.compute_proportionally_damped_frequency_sweep(
                 nodal_solution_buffer,
-                modal_solution.modal_shapes,
+                modal_shapes,
                 modal_solution.natural_frequencies,
                 print_log,
                 is_resume,
@@ -237,7 +245,7 @@ class HarmonicSolver:
                     continue
 
                 # if print_log:
-                    # print(f"Solution step {i} -> frequency {freq} Hz")
+                # print(f"Solution step {i} -> frequency {freq} Hz")
 
                 f = self.assembler.get_combined_nodal_loads_vector(index=i)
 
