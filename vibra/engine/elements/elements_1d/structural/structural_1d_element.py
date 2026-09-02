@@ -45,7 +45,7 @@ class Structural1DElement(Element1D):
         # integration loop
         for i in range(self.nint_M):
 
-            det_jacs = self.get_jacobian_determinant_1d(i, self.dphi_M, coords)
+            det_jacs = self.get_jacobian_determinant_1d(self.dphi_M[i, :, :], coords)
 
             # integrate all elementary areas
             dL += det_jacs * self.wps_M[i]
@@ -84,7 +84,7 @@ class Structural1DElement(Element1D):
         for i in range(self.nint_M):
 
             # determinant of Jacobian for the i-th integration point
-            det_jac = self.get_jacobian_determinant_1d(i, self.dphi_M, coords)
+            det_jac = self.get_jacobian_determinant_1d(self.dphi_M[i, :, :], coords)
 
             # matrix of shape functions for all DOF
             N = self.N_matrix[i, :, :]
@@ -125,7 +125,7 @@ class Structural1DElement(Element1D):
         for i in range(self.nint_M):
 
             # determinant of Jacobian for the i-th integration point
-            det_jac = self.get_jacobian_determinant_1d(i, self.dphi_M, coords)
+            det_jac = self.get_jacobian_determinant_1d(self.dphi_M[i, :, :], coords)
 
             # matrix of shape functions for all DOF
             N = self.N_matrix[i, :, :]

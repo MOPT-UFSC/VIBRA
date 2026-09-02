@@ -52,8 +52,8 @@ class Element1D:
         pass
 
 
-    def get_jacobian_determinant_1d(self, int_point: int, dphi: np.ndarray, coords: np.ndarray):
-        return get_jacobian_determinant_1d(int_point, dphi, coords)
+    def get_jacobian_determinant_1d(self, dphi: np.ndarray, coords: np.ndarray):
+        return get_jacobian_determinant_1d(dphi, coords)
 
 
     def elementary_matrices(self) -> tuple[np.ndarray]:

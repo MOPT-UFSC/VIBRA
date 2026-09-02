@@ -48,21 +48,16 @@ class ElementDataProcessor:
 
 
 def get_jacobian_determinant_2d(
-        int_point: int, 
         dphi: np.ndarray, 
         coords: np.ndarray, 
         return_normal: bool = False, 
         return_inverse: bool = False,
         ):
     """
-    This method evaluates the Jacobian determinant for the i-th integrarion point.
+    This method evaluates the Jacobian determinant for the i-th integration point.
     
     Parameters
     ----------
-
-    int_point: int
-        The integration point to be evaluated.
-
     coords:  np.ndarray
         A three-dimensional coordinate matrix of the element. 
 
@@ -89,8 +84,8 @@ def get_jacobian_determinant_2d(
     multiple_elements = len(coords.shape) == 3
 
     # vectors tangent to the element's surface
-    g_xi = dphi[int_point, 0, :] @ coords
-    g_eta = dphi[int_point, 1, :] @ coords
+    g_xi = dphi[0, :] @ coords
+    g_eta = dphi[1, :] @ coords
 
     # compute the normal vector(s) for the i-th integration point
     normal_vector = np.cross(g_xi, g_eta)
@@ -118,30 +113,33 @@ def get_jacobian_determinant_2d(
         e_1 = g_xi / np.linalg.norm(g_xi)
 
     # calculate the y' vector
-    e_2 = np.cross(e_3, e_1)
+    e_2 = np.cross(e_3, e_1, axis=1)
 
     # Jacobian matrix
-    jac = dphi[int_point, :, :] @ coords
+    jac = dphi @ coords
+
+    if multiple_elements:
+        dir = np.zeros((coords.shape[0], 3, 2), dtype=float)
+        dir[:, :, 0] = e_1.reshape(-1, 3)
+        dir[:, :, 1] = e_2.reshape(-1, 3)
+    else:
+        dir = np.array([e_1, e_2], dtype=float).T
 
     # compute the plane Jacobian
-    jac_2d = jac @ np.array([e_1, e_2], dtype=float).T
+    jac_2d = jac @ dir
 
     # finally, calculate the inverse of plane Jacobian
     inv_jac_2d, _ = get_2x2_matrix_inverse(jac_2d)
 
-    return det_jac, e_3, inv_jac_2d
+    return det_jac, inv_jac_2d
 
 
-def get_jacobian_determinant_1d(int_point: int, dphi: np.ndarray, coords: np.ndarray):
+def get_jacobian_determinant_1d(dphi: np.ndarray, coords: np.ndarray):
     """
-    This method evaluates the Jacobian determinant for the i-th integrarion point.
+    This method evaluates the Jacobian determinant for the i-th integration point.
     
     Parameters
     ----------
-
-    int_point: int
-        The integration point to be evaluated.
-
     coords:  np.ndarray
         A three-dimensional coordinate matrix of the element. 
 
@@ -155,7 +153,7 @@ def get_jacobian_determinant_1d(int_point: int, dphi: np.ndarray, coords: np.nda
     multiple_elements = len(coords.shape) == 3
 
     # Jacobian matrix
-    jac = dphi[int_point, 0, :] @ coords
+    jac = dphi[0, :] @ coords
 
     # determinant of Jacobian matrix
     if multiple_elements:

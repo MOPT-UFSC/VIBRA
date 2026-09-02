@@ -61,20 +61,13 @@ class Element2D:
 
     def get_jacobian_determinant_2d(
             self,
-            int_point: int,
             dphi: np.ndarray,
             coords: np.ndarray,
             return_normal: bool = False,
             return_inverse: bool = False,
             ):
 
-        return get_jacobian_determinant_2d(
-            int_point,
-            dphi,
-            coords,
-            return_normal=return_normal,
-            return_inverse=return_inverse,
-            )
+        return get_jacobian_determinant_2d(dphi, coords, return_normal=return_normal, return_inverse=return_inverse)
 
 
     def elementary_matrices(self) -> tuple[np.ndarray]:

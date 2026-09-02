@@ -49,7 +49,7 @@ class Structural2DElement(Element2D):
         for i in range(self.nint):
 
             # determinant of Jacobian for the i-th integration point
-            det_jacs = self.get_jacobian_determinant_2d(i, self.dphi, coords)
+            det_jacs = self.get_jacobian_determinant_2d(self.dphi[i, :, :], coords)
 
             # integrate all elementary areas
             dA += det_jacs * self.wps[i]
@@ -88,7 +88,7 @@ class Structural2DElement(Element2D):
         for i in range(self.nint):
 
             # determinant of Jacobian and normal vector for the i-th integration point
-            det_jac, normal_vector = self.get_jacobian_determinant_2d(i, self.dphi, coords, return_normal=True)
+            det_jac, normal_vector = self.get_jacobian_determinant_2d(self.dphi[i, :, :], coords, return_normal=True)
 
             # matrix of shape functions for all DOF
             N = self.N_matrix[i, :, :]
@@ -130,7 +130,7 @@ class Structural2DElement(Element2D):
         for i in range(self.nint):
 
             # determinant of Jacobian for the i-th integration point
-            det_jac = self.get_jacobian_determinant_2d(i, self.dphi, coords)
+            det_jac = self.get_jacobian_determinant_2d(self.dphi[i, :, :], coords)
 
             # matrix of shape functions for all DOF
             N = self.N_matrix[i, :, :]
@@ -171,7 +171,7 @@ class Structural2DElement(Element2D):
         for i in range(self.nint):
 
             # determinant of Jacobian for the i-th integration point
-            det_jac = self.get_jacobian_determinant_2d(i, self.dphi, coords)
+            det_jac = self.get_jacobian_determinant_2d(self.dphi[i, :, :], coords)
 
             # matrix of shape functions for all DOF
             N = self.N_matrix[i, :, :]

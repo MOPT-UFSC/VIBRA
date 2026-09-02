@@ -1,6 +1,7 @@
 
 from typing import TYPE_CHECKING
 
+# from vibra.engine.elements.common.matrix_utils import get_2x2_matrix_inverse
 from vibra.engine.elements.elements_2d.surface_elements import Element2D
 
 if TYPE_CHECKING:
@@ -53,7 +54,7 @@ class Acoustic2DElement(Element2D):
         for i in range(self.nint):
 
             # determinant of Jacobian for the i-th integration point
-            det_jac = self.get_jacobian_determinant_2d(i, self.dphi, coords)
+            det_jac = self.get_jacobian_determinant_2d(self.dphi[i, :, :], coords)
 
             # matrix of shape functions for all DOF
             N = self.phi[i, :].reshape(1, -1)
@@ -94,7 +95,7 @@ class Acoustic2DElement(Element2D):
         for i in range(self.nint):
 
             # determinant of Jacobian for the i-th integration point
-            det_jac = self.get_jacobian_determinant_2d(i, self.dphi, coords)
+            det_jac = self.get_jacobian_determinant_2d(self.dphi[i, :, :], coords)
 
             # shape functions
             N = self.phi[i, :].reshape(1, -1)
@@ -138,7 +139,7 @@ class Acoustic2DElement(Element2D):
         for i in range(self.nint):
 
             # determinant of Jacobian for the i-th integration point
-            det_jacs = self.get_jacobian_determinant_2d(i, self.dphi, coords)
+            det_jacs = self.get_jacobian_determinant_2d(self.dphi[i, :, :], coords)
 
             # shape functions
             N = self.phi[i, :].reshape(1, -1)
@@ -169,7 +170,7 @@ class Acoustic2DElement(Element2D):
         for i in range(self.nint):
 
             # determinant of Jacobian for the i-th integration point
-            det_jacs = self.get_jacobian_determinant_2d(i, self.dphi, coords)
+            det_jacs = self.get_jacobian_determinant_2d(self.dphi[i, :, :], coords)
 
             # shape functions
             N = self.phi[i, :].reshape(1, -1)
@@ -207,11 +208,11 @@ class Acoustic2DElement(Element2D):
         for i in range(self.nint):
 
             # # Jacobian matrices of all elements
-            # JAC_stacked = self.dphi[i, :, :] @ local_coords
+            # jacs = self.dphi[i, :, :] @ local_coords
 
             # # Jacobian determinants and inverses of all elements
-            # det_jacs, inv_jacs = self.get_detJAC_and_invJAC(JAC_stacked)
-            det_jacs, _, inv_jacs = self.get_jacobian_determinant_2d(i, self.dphi, coords, full_data=True)
+            # inv_jacs, det_jacs = get_2x2_matrix_inverse(jacs)
+            det_jacs, inv_jacs = self.get_jacobian_determinant_2d(self.dphi[i, :, :], coords, return_inverse=True)
 
             # shape functions
             N = self.phi[i, :].reshape(1, -1)
