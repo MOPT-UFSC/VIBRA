@@ -127,6 +127,8 @@ class Project:
                 return self.solve_acoustic_modal_analysis(is_resume=is_resume, print_log=print_log)
             case AnalysisID.ACOUSTIC_HARMONIC:
                 return self.solve_acoustic_harmonic_analysis(is_resume=is_resume, print_log=print_log)
+            case AnalysisID.COUPLED_HARMONIC:
+                return self.solve_coupled_harmonic_analysis(is_resume=is_resume, print_log=print_log)
             case AnalysisID.NO_ANALYSIS:
                 raise errors.IncompleteSetupError("No AnalysisID was provided.")
             case _:
@@ -444,6 +446,12 @@ class Project:
 
         return self.model.solution
 
+    def solve_coupled_harmonic_analysis(self, is_resume: bool = False, print_log: bool = False) -> HarmonicSolution:
+        print("resolveu o acústico")
+        self.acoustic_solution = self.solve_acoustic_harmonic_analysis(is_resume=is_resume, print_log=print_log)
+        print("resolveu o estrutural")
+        self.structural_soltuion = self.solve_structural_harmonic_analysis(is_resume=is_resume, print_log=print_log)
+    
     def update_post_processing(self):
         self.postprocessing = None
         if AnalysisID(self.model.analysis_id).is_acoustic():
@@ -539,7 +547,7 @@ class Project:
             return PhysicalDomain.ACOUSTIC
         elif self.model.analysis_id.is_structural():
             return PhysicalDomain.STRUCTURAL
-        elif self.model.analysis_id.is_coupled():
+        elif self.model.analysis_id.is_harmonic_coupled():
             return PhysicalDomain.COUPLED
         else:
             return PhysicalDomain.NO_PHYSICAL_DOMAIN

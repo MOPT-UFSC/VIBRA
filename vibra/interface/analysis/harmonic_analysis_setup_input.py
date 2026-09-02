@@ -496,6 +496,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
                 analysis_setup_data.update(freq_data)
 
         is_harmonic_acoustic = AnalysisID(analysis_id).is_harmonic_acoustic()
+        is_harmonic_coupled = AnalysisID(analysis_id).is_harmonic_coupled()
         is_harmonic_structural = AnalysisID(analysis_id).is_harmonic_structural()
         if is_harmonic_structural:
             analysis_setup_data["global_damping"] = self.check_damping_inputs()
@@ -508,7 +509,7 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
             if self.model.properties.is_there_a_prescribed_velocity_or_acceleration_in_the_model():
                 analysis_setup = self.model.modify_analysis_setup_to_filter_zero_frequency(analysis_setup)
 
-        elif is_harmonic_acoustic:
+        elif is_harmonic_acoustic or is_harmonic_coupled:
             analysis_setup = self.model.modify_analysis_setup_to_filter_zero_frequency(analysis_setup)
 
         app().project.configure_analysis(analysis_setup)

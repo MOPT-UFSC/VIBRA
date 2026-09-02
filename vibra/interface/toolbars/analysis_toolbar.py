@@ -65,15 +65,17 @@ class AnalysisToolbar(QToolBar):
         self.resume_solution_action = QAction(self.resume_solution_icon, "Resume Solution", self)
 
     def _create_connections(self):
-        #
+
+        # QComboBox connections
         self.combo_box_physical_domain.currentTextChanged.connect(self.check_analysis_setup_callback)
         self.combo_box_analysis_type.currentTextChanged.connect(self.analysis_type_callback)
-        #
+
+        # QAction connections
         self.run_analysis_action.triggered.connect(self.run_analysis_callback)
         self.resume_solution_action.triggered.connect(lambda: self.run_analysis_callback(True))
         self.configure_analysis_action.triggered.connect(self.configure_analysis_callback)
         self.reset_solution_action.triggered.connect(self.reset_solution_callback)
-        #
+
         self.enable_pushbutons.connect(self.check_analysis_setup_callback)
         self.enable_pushbutons.connect(self.update_reset_solution_button_accessibility)
 
@@ -139,7 +141,7 @@ class AnalysisToolbar(QToolBar):
         for analysis_type in ["Harmonic", "Modal"]:
             self.combo_box_analysis_type.addItem(analysis_type)
 
-        for physical_domain in ["Structural", "Acoustic"]:
+        for physical_domain in ["Structural", "Acoustic", "Coupled"]:
             self.combo_box_physical_domain.addItem(physical_domain)
 
         # default setup
@@ -189,10 +191,12 @@ class AnalysisToolbar(QToolBar):
         physical_domain = self.combo_box_physical_domain.currentText()
 
         if analysis_type == "Harmonic":
-            if physical_domain == "Structural":
+            if physical_domain == "Acoustic":
+                return AnalysisID.ACOUSTIC_HARMONIC
+            elif physical_domain == "Structural":
                 return AnalysisID.STRUCTURAL_HARMONIC
             else:
-                return AnalysisID.ACOUSTIC_HARMONIC
+                return AnalysisID.COUPLED_HARMONIC
 
         elif analysis_type == "Modal":
             if physical_domain == "Structural":
@@ -332,6 +336,8 @@ class AnalysisToolbar(QToolBar):
                 self.harmonic_analysis_setup_callback(AnalysisID.STRUCTURAL_HARMONIC)
             case AnalysisID.ACOUSTIC_HARMONIC:
                 self.harmonic_analysis_setup_callback(AnalysisID.ACOUSTIC_HARMONIC)
+            case AnalysisID.COUPLED_HARMONIC:
+                self.harmonic_analysis_setup_callback(AnalysisID.COUPLED_HARMONIC)
             case AnalysisID.STRUCTURAL_MODAL:
                 self.modal_analysis_setup_callback(AnalysisID.STRUCTURAL_MODAL)
             case AnalysisID.ACOUSTIC_MODAL:

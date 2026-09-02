@@ -359,10 +359,16 @@ class ModelSetupItems(CommonMenuItems):
             self.item_top_acoustic_model_setup.setHidden(False)
             self.item_top_structural_model_setup.setHidden(True)
 
-        else:
+        elif physical_domain == "structural":
             self.item_child_fluid.setHidden(True)
             self.item_child_material.setHidden(False)
             self.item_top_acoustic_model_setup.setHidden(True)
+            self.item_top_structural_model_setup.setHidden(False)
+
+        elif physical_domain == "coupled":
+            self.item_child_fluid.setHidden(False)
+            self.item_child_material.setHidden(False)
+            self.item_top_acoustic_model_setup.setHidden(False)
             self.item_top_structural_model_setup.setHidden(False)
 
     def _are_there_collapsed_elements(self, item_child) -> bool:
