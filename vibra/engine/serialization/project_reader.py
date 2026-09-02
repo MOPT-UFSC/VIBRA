@@ -20,6 +20,7 @@ from vibra.engine.properties import Fluid, FluidLibrary, Material, MaterialLibra
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.engine.serialization.file_helpers import read_image, read_json
 from vibra.engine.solution import HarmonicSolution, ModalSolution, Solution
+from vibra.engine.solution.common_solution import Array2D
 from vibra.engine.solvers import HarmonicSolver, ModalSolver
 
 from .project_paths import ProjectPaths
@@ -443,7 +444,6 @@ class ProjectReader:
             frequencies = np.array(file["frequencies"])
             logger.info("Reading harmonic solution [20/100]")
 
-
             solution_status = np.array(file["solution_status"])
             logger.info("Reading harmonic solution [80/100]")
 
@@ -457,14 +457,13 @@ class ProjectReader:
             coupled_solution = file.get("coupled_solution")
             logger.info("Reading harmonic solution [95/100]")
 
-
-            # Remove after version 0.8
             if all(s is None for s in [structural_solution, acoustic_solution, coupled_solution]):
+                # Remove after version 0.8
                 solution = file.get("solution")
                 if solution is None:
                     raise ValueError("No solution found")
-
                 logger.warning("This file is deprecated and will not be supported after version 0.8")
+
                 if model.analysis_id.is_structural():
                     return HarmonicSolution(
                         analysis_id=model.analysis_id,
@@ -473,14 +472,13 @@ class ProjectReader:
                         status=solution_status,
                         displacement_dof=displacement_dof,
                     )
-    
+
                 elif model.analysis_id.is_acoustic():
                     return HarmonicSolution(
                         analysis_id=model.analysis_id,
                         frequencies=frequencies,
                         acoustic_solution=solution,
                         status=solution_status,
-                        displacement_dof=displacement_dof,
                     )
 
                 else:
@@ -498,7 +496,6 @@ class ProjectReader:
                     displacement_dof=displacement_dof,
                 )
 
-
     def read_modal_solution(self, model: Model) -> Optional[ModalSolution]:
         if not self.project_paths.modal_solution_filepath.exists():
             return None
@@ -506,13 +503,51 @@ class ProjectReader:
         with h5py.File(self.project_paths.modal_solution_filepath, "r") as file:
             file: h5py.File
 
-            return ModalSolution(
-                analysis_id=model.analysis_id,
-                natural_frequencies=file["frequencies"],
-                modal_shapes=file["solution"],
-                displacement_dof=file.get("displacement_dof"),
-                complex_natural_frequencies=file.get("complex_natural_frequencies"),
-            )
+            structural_modal_shapes = file.get("structural_modal_shapes")
+            acoustic_modal_shapes = file.get("acoustic_modal_shapes")
+            coupled_modal_shapes = file.get("coupled_modal_shapes")
+
+            if all(s is None for s in [structural_modal_shapes, acoustic_modal_shapes, coupled_modal_shapes]):
+                # Remove after version 0.8
+
+                solution = file.get("solution")
+                if solution is None:
+                    raise ValueError("No solution found")
+                logger.warning("This file is deprecated and will not be supported after version 0.8")
+
+                solution = np.array(solution)
+
+                if model.analysis_id.is_structural():
+                    return ModalSolution(
+                        analysis_id=model.analysis_id,
+                        natural_frequencies=file["frequencies"],
+                        structural_modal_shapes=solution,
+                        displacement_dof=file.get("displacement_dof"),
+                        complex_natural_frequencies=file.get("complex_natural_frequencies"),
+                    )
+
+                elif model.analysis_id.is_acoustic():
+                    return ModalSolution(
+                        analysis_id=model.analysis_id,
+                        natural_frequencies=file["frequencies"],
+                        acoustic_modal_shapes=solution,
+                        complex_natural_frequencies=file.get("complex_natural_frequencies"),
+                    )
+
+                else:
+                    raise ValueError("Invalid analysis")
+
+            else:
+                # Keep only this part after version 0.8
+                return ModalSolution(
+                    analysis_id=model.analysis_id,
+                    natural_frequencies=file["frequencies"],
+                    structural_modal_shapes=file["structural_modal_shapes"],
+                    acoustic_modal_shapes=file["acoustic_modal_shapes"],
+                    coupled_modal_shapes=file["coupled_modal_shapes"],
+                    displacement_dof=file.get("displacement_dof"),
+                    complex_natural_frequencies=file.get("complex_natural_frequencies"),
+                )
 
     def read_assembler_and_solver(self, model: Model) -> tuple[AcousticAssembler | StructuralAssembler | None, HarmonicSolver | ModalSolver | None]:
 
