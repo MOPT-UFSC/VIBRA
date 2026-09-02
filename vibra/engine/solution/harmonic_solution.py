@@ -1,6 +1,6 @@
 from copy import deepcopy
 from functools import cached_property
-from typing import Generator, Optional, Self
+from typing import Generator, Self
 
 import numpy as np
 
@@ -15,20 +15,41 @@ class HarmonicSolution(CommonSolution):
         self,
         analysis_id: AnalysisID,
         frequencies: Array1D,
-        nodal_solution: Array2D,
-        status: Optional[np.ndarray[tuple[int], bool]] = None,
-        displacement_dof: Optional[Array2D] = None,
+        structural_solution: Array2D | None = None,
+        acoustic_solution: Array2D | None = None,
+        coupled_solution: Array2D | None = None,
+        status: np.ndarray[tuple[int], bool] | None = None,
+        displacement_dof: Array2D | None = None,
     ):
+        if all(i is None for i in [structural_solution, acoustic_solution, coupled_solution]):
+            raise ValueError("Either structural_solution, acoustic_solution, or coupled_solution must be provided")
+
         self.analysis_id = analysis_id
         self.frequencies = self._immutable_array(frequencies)
-        self.nodal_solution: Array2D = self._immutable_array(nodal_solution)
         self.status = self._create_status(status)
-        self.displacement_dof: Array2D = self._optional_immutable_array(displacement_dof)
+
+        self.structural_solution: Array2D | None = self._optional_immutable_array(structural_solution)
+        self.acoustic_solution: Array2D | None = self._optional_immutable_array(acoustic_solution)
+        self.coupled_solution: Array2D | None = self._optional_immutable_array(coupled_solution)
+
+        self.displacement_dof: Array2D | None = self._optional_immutable_array(displacement_dof)
         super().__init__()
 
     @cached_property
-    def iscomplex(self):
-        return np.iscomplex(self.frequencies) or np.iscomplex(self.nodal_solution)
+    def iscomplex(self) -> bool:
+        if np.iscomplex(self.frequencies):
+            return True
+
+        if (self.structural_solution is not None) and np.iscomplex(self.structural_solution):
+            return True
+
+        if (self.acoustic_solution is not None) and np.iscomplex(self.acoustic_solution):
+            return True
+
+        if (self.coupled_solution is not None) and np.iscomplex(self.coupled_solution):
+            return True
+
+        return False
 
     @cached_property
     def number_of_frequencies(self):
@@ -55,7 +76,7 @@ class HarmonicSolution(CommonSolution):
     def get_column(self, column_index: int) -> Array1D:
         return self.nodal_solution[:, column_index]
 
-    def _create_status(self, status: Optional[np.ndarray[tuple[int], bool]]):
+    def _create_status(self, status: np.ndarray[tuple[int], bool] | None):
         if status is None:
             return np.ones_like(self.frequencies, dtype=bool)
         return self._immutable_array(status)
