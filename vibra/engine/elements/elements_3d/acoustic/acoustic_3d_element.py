@@ -1,7 +1,7 @@
 
 from typing import TYPE_CHECKING
 
-from vibra.engine.elements.common.matrix_tools import get_3x3_matrix_inverse
+from vibra.engine.elements.common.matrix_utils import get_3x3_matrix_inverse
 from vibra.engine.elements.elements_3d.solid_elements import Element3D
 
 if TYPE_CHECKING:

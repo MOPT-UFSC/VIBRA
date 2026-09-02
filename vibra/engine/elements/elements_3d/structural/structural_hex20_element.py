@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from vibra.engine.elements.common.matrix_tools import get_3x3_matrix_determinant, get_3x3_matrix_inverse
+from vibra.engine.elements.common.matrix_utils import get_3x3_matrix_determinant, get_3x3_matrix_inverse
 from vibra.engine.elements.elements_3d.hex20_element import Hexahedron20
 from vibra.engine.elements.elements_3d.structural.structural_3d_element import Structural3DElement
 from vibra.engine.properties.material import Material

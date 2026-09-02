@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from vibra.engine.elements.common.matrix_tools import get_2x2_matrix_inverse
+from vibra.engine.elements.common.matrix_utils import get_2x2_matrix_inverse
 
 if TYPE_CHECKING:
     from vibra.engine.model import Model

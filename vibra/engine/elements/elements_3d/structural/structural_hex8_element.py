@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 import numpy as np
 
 from vibra.engine.elements.common.element_options import BbarDilatationalEvaluation, HEX8_structural
-from vibra.engine.elements.common.matrix_tools import get_3x3_matrix_determinant, get_3x3_matrix_inverse
+from vibra.engine.elements.common.matrix_utils import get_3x3_matrix_determinant, get_3x3_matrix_inverse
 from vibra.engine.elements.elements_3d.hex8_element import Hexahedron8
 from vibra.engine.elements.elements_3d.structural.flanagan_belytschko_formulation import (
     compute_hourglass_stiffness,

@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from vibra.engine.elements.common.matrix_tools import get_3x3_matrix_inverse
+from vibra.engine.elements.common.matrix_utils import get_3x3_matrix_inverse
 from vibra.engine.elements.elements_3d.acoustic.acoustic_3d_element import Acoustic3DElement
 from vibra.engine.elements.elements_3d.tet10_element import Tetrahedron10
 
