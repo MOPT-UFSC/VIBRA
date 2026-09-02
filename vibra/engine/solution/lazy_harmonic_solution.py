@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, override
 
 import h5py
 
@@ -19,7 +19,7 @@ class LazyHarmonicSolution(HarmonicSolution):
             raise FileExistsError(msg)
 
         self.frequencies: LazyArray = LazyArray(hs, "frequencies")
-        self.nodal_solution: LazyArray = LazyArray(hs, "solution")
+        # self.nodal_solution: LazyArray = LazyArray(hs, "solution")
         self.status: LazyArray = LazyArray(hs, "solution_status")
 
     @property
@@ -30,19 +30,45 @@ class LazyHarmonicSolution(HarmonicSolution):
         return reader.read_current_analysis_id()
 
     @property
-    def displacement_dof(self) -> Optional[LazyArray]:
+    @override
+    def structural_solution(self) -> LazyArray | None:  # pyright: ignore[reportIncompatibleVariableOverride]
         hs = self.project_paths.harmonic_solution_filepath
+        with h5py.File(hs, "r") as f:
+            if "structural_solution" not in f:
+                return None
+        return LazyArray(hs, "structural_solution")
 
+    @property
+    @override
+    def acoustic_solution(self) -> LazyArray | None:  # pyright: ignore[reportIncompatibleVariableOverride]
+        hs = self.project_paths.harmonic_solution_filepath
+        with h5py.File(hs, "r") as f:
+            if "acoustic_solution" not in f:
+                return None
+        return LazyArray(hs, "acoustic_solution")
+
+    @property
+    @override
+    def coupled_solution(self) -> LazyArray | None:  # pyright: ignore[reportIncompatibleVariableOverride]
+        hs = self.project_paths.harmonic_solution_filepath
+        with h5py.File(hs, "r") as f:
+            if "coupled_solution" not in f:
+                return None
+        return LazyArray(hs, "coupled_solution")
+
+    @property
+    @override
+    def displacement_dof(self) -> LazyArray | None:  # pyright: ignore[reportIncompatibleVariableOverride]
+        hs = self.project_paths.harmonic_solution_filepath
         with h5py.File(hs, "r") as f:
             if "displacement_dof" not in f:
                 return None
-
         return LazyArray(hs, "displacement_dof")
 
     def get_nodal_displacement_at_column(self, column_index: int):
         """
         It is VERY important to get the columns first.
-        Otherwise the whole file will be loaded to extract a single column.  
+        Otherwise the whole file will be loaded to extract a single column.
         """
         col = self.get_column(column_index)
         return col[self.displacement_dof]

@@ -33,8 +33,6 @@ def test_regression_structural_harmonic_solver_solution(datadir, structural_harm
 
 
 def test_structural_harmonic_modal_solver_solution(structural_harmonic_analysis: Model):
-    frequencies = structural_harmonic_analysis.frequencies
-
     # Direct solver setup and solve
     assembler = StructuralAssembler(structural_harmonic_analysis)
     assembler.assemble_global_matrices_and_excitations()
