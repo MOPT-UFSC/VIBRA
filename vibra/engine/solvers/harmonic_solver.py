@@ -39,7 +39,6 @@ class HarmonicSolver:
         self._linear_solver: Optional[LinearSolver] = None
         self._file_writer: Optional[LazyHDF5MatrixWriter] = None
 
-    @RamMonitor()
     def solve_direct(self, print_log: bool = False, is_resume: bool = False) -> HarmonicSolution:
         """
         This method solves the acoustic harmonic analysis using the
