@@ -48,7 +48,7 @@ class AcousticPressureWaveform2DPlotInputs(AcousticPressureWaveform2dPlotInputs_
 
     @property
     def nodal_solution(self):
-        return app().project.model.solution.nodal_solution
+        return app().project.model.solution.acoustic_solution
 
     def showEvent(self, event):
         super().showEvent(event)

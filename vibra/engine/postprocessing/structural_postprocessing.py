@@ -243,7 +243,7 @@ class StructuralPostprocessing:
             element_stresses = element_3d.process_stresses_at_integration_points(
                 element_id,
                 nodal_solution = None, #self.solution.nodal_solution[dofs_indices, :]
-                solution = self.solution.nodal_solution,
+                solution = self.solution.structural_solution,
                 )
 
             enodal_stresses = element_3d.extrapolate_stresses_to_nodes(element_stresses)
@@ -349,7 +349,7 @@ class StructuralPostprocessing:
 
         # Load all frequency solutions to optimize multiple load on the `process_particle_velocity` method below.
         node_to_index = dict(zip(filtered_nodes, np.arange(filtered_nodes.size, dtype=int)))
-        solution = self.solution.nodal_solution[dofs_indices.flatten(), :]
+        solution = self.solution.structural_solution[dofs_indices.flatten(), :]
 
         nodal_stresses_data = {}
         avg_nodal_stresses_data = defaultdict(float)

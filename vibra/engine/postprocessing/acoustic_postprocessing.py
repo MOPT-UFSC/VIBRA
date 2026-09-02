@@ -14,6 +14,7 @@ from vibra.engine.model import Model
 from vibra.engine.postprocessing.acoustic_post_solution_dataclass import NodalParticleVelocities
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.solution import HarmonicSolution, Solution
+from vibra.engine.solution.modal_solution import ModalSolution
 from vibra.interface.numeric_checks.unit_utilities import convert_pressure_unit
 from vibra.interface.viewer_3d.plot_setup import PressurePlotType
 from vibra.utils.lazy_array import LazyArray
@@ -66,9 +67,11 @@ class AcousticPostprocessing:
         """
 
         if is_modal:
-            nodal_solution = self.solution.modal_shapes
+            assert isinstance(self.solution, ModalSolution)
+            nodal_solution = self.solution.acoustic_modal_shapes
         else:
-            nodal_solution = self.solution.nodal_solution
+            assert isinstance(self.solution, HarmonicSolution)
+            nodal_solution = self.solution.acoustic_solution
 
         if isinstance(nodal_solution, LazyArray) and not nodal_solution.is_valid():
             return None
@@ -126,9 +129,11 @@ class AcousticPostprocessing:
             return
 
         if is_modal:
-            nodal_solution = self.solution.modal_shapes
+            assert isinstance(self.solution, ModalSolution)
+            nodal_solution = self.solution.acoustic_modal_shapes
         else:
-            nodal_solution = self.solution.nodal_solution
+            assert isinstance(self.solution, HarmonicSolution)
+            nodal_solution = self.solution.acoustic_solution
 
         if isinstance(nodal_solution, LazyArray) and not nodal_solution.is_valid():
             return
@@ -236,13 +241,14 @@ class AcousticPostprocessing:
     @cache
     def compute_multiple_ifft(self) -> tuple[np.ndarray, np.ndarray]:
         assert isinstance(self.solution, HarmonicSolution)
+        assert self.solution.acoustic_solution is not None
         assert self.solution.analysis_id.is_acoustic()  # for now, I guess
 
         # t0 = perf_counter()
         logging.info("Computing multiple iffts... [25/100]")
         time_vector, waveforms = process_multiple_iffts_from_one_sided_spectrum_signals(
             self.solution.frequencies,
-            self.solution.nodal_solution,
+            self.solution.acoustic_solution,
             dc_included=False,
         )
 
@@ -284,6 +290,8 @@ class AcousticPostprocessing:
             return np.average(array_particle_velocities_Vj, axis=0)
 
     def compute_acoustic_impedance(self, node_id: int | None = None, surface_id: int | None = None, volume_id: int | None = None):
+        assert isinstance(self.solution, HarmonicSolution)
+        assert self.solution.acoustic_solution is not None
 
         frequencies = self.model.frequencies
         zeros = np.zeros_like(frequencies, dtype=complex)
@@ -304,13 +312,13 @@ class AcousticPostprocessing:
         particle_velocities_data = self.get_particle_velocity_from_surface(surface_id, volume_id=volume_id)
 
         if isinstance(node_id, int):
-            pressure = self.solution.nodal_solution[node_id, :]
+            pressure = self.solution.acoustic_solution[node_id, :]
             particle_velocities_Vn: dict = getattr(particle_velocities_data, "Vn")
             particle_velocity = particle_velocities_Vn.get(node_id)
             return pressure / particle_velocity
 
         else:
-            pressures = self.solution.nodal_solution[nodes, :]
+            pressures = self.solution.acoustic_solution[nodes, :]
             surface_impedance = pressures / particle_velocities_data.Vn_array()
             return np.average(surface_impedance, axis=0)
 
@@ -336,10 +344,10 @@ class AcousticPostprocessing:
         return alpha
 
     def get_particle_velocity_from_surface(
-            self,
-            surface_id: int,
-            volume_id: int | None = None,
-            ) -> NodalParticleVelocities:
+        self,
+        surface_id: int,
+        volume_id: int | None = None,
+    ) -> NodalParticleVelocities:
         """
         This method computes the nodal average particle velocity in the selected surface.
 
@@ -358,6 +366,8 @@ class AcousticPostprocessing:
             A dictionary with the normal particle velocity and its components in
             the x, y, and z directions, computed in the selected surface.
         """
+        assert isinstance(self.solution, HarmonicSolution)
+        assert self.solution.acoustic_solution is not None
 
         frequencies = self.model.frequencies
         zeros = np.zeros_like(frequencies, dtype=complex)
@@ -384,11 +394,11 @@ class AcousticPostprocessing:
         # Load all frequency solutions to optimize multiple load on the `process_particle_velocity` method below.
         _filtered_nodes = self.model.fluid_node_mapping[filtered_nodes]
 
-        # print(self.solution.nodal_solution.shape)
+        # print(self.solution.acoustic_solution.shape)
         # print(_filtered_nodes.shape)
 
         node_to_index = dict(zip(_filtered_nodes, np.arange(filtered_nodes.size, dtype=int)))
-        solution = self.solution.nodal_solution[_filtered_nodes, :]
+        solution = self.solution.acoustic_solution[_filtered_nodes, :]
 
         pv_data = {}
         for node_id, solid_element_ids in map_elements_to_nodes.items():
@@ -474,6 +484,9 @@ class AcousticPostprocessing:
 
         """
 
+        assert isinstance(self.solution, HarmonicSolution)
+        assert self.solution.acoustic_solution is not None
+
         frequencies = self.model.frequencies
 
         logging.info("Processing the transmission loss... [10/100]")
@@ -481,8 +494,8 @@ class AcousticPostprocessing:
         nodes_output = np.sort(self.mesh.get_nodes_from_surface(output_surface_id))
 
         logging.info("Processing the transmission loss... [20/100]")
-        # P_in = self.solution.nodal_solution[self.model.fluid_node_mapping[nodes_input], :]
-        P_out = self.solution.nodal_solution[self.model.fluid_node_mapping[nodes_output], :]
+        # P_in = self.solution.acoustic_solution[self.model.fluid_node_mapping[nodes_input], :]
+        P_out = self.solution.acoustic_solution[self.model.fluid_node_mapping[nodes_output], :]
 
         logging.info("Processing the transmission loss... [40/100]")
 
@@ -634,7 +647,6 @@ class AcousticPostprocessing:
 
         sound_power = 0.0
         for i, connect in enumerate(surface_connectivities):
-
             # process the element rows to access the reduced nodal results for pressures and particle velocities
             rows = [map_nodes.get(_node) for _node in self.model.fluid_node_mapping[connect]]
 
@@ -672,13 +684,15 @@ class AcousticPostprocessing:
             The vector of computed noise reduction values in dB.
 
         """
+        assert isinstance(self.solution, HarmonicSolution)
+        assert self.solution.acoustic_solution is not None
 
         frequencies = self.model.frequencies
         rows_input = self.mesh.get_nodes_from_surface(input_surface_id)
         rows_output = self.mesh.get_nodes_from_surface(output_surface_id)
 
-        P_in = np.average(self.solution.nodal_solution[rows_input, :], axis=0)
-        P_out = np.average(self.solution.nodal_solution[rows_output, :], axis=0)
+        P_in = np.average(self.solution.acoustic_solution[rows_input, :], axis=0)
+        P_out = np.average(self.solution.acoustic_solution[rows_output, :], axis=0)
 
         # the zero_shift constant is summed to avoid zero values either in P_input2 or P_output2 variables
         zero_shift = 1e-12

@@ -46,7 +46,7 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
 
     @property
     def nodal_solution(self):
-        return app().project.model.solution.nodal_solution
+        return app().project.model.solution.structural_solution
 
     def showEvent(self, event):
         super().showEvent(event)
