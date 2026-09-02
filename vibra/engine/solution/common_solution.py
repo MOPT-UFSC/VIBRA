@@ -4,19 +4,6 @@ import numpy as np
 
 from vibra.engine.analysis_info import AnalysisID
 
-# Até dá pra deixar o tipo do array configurável
-# mas só depois do python 3.12, acho que é muito
-# recente pra forçar uma versão mais nova
-Array1D = np.ndarray[
-    tuple[int],
-    float | complex,
-]
-
-Array2D = np.ndarray[
-    tuple[int, int],
-    float | complex,
-]
-
 
 class CommonSolution:
     analysis_id: AnalysisID = AnalysisID.NO_ANALYSIS
@@ -25,7 +12,7 @@ class CommonSolution:
         # After calling the init this "cannot" be modified anymore
         self._writeable = False
 
-    def _immutable_array[T: Array1D | Array2D](self, array_like: T) -> T:
+    def _immutable_array(self, array_like: np.ndarray) -> np.ndarray:
         """
         This methods converts to array and makes it immutable.
 
@@ -36,7 +23,7 @@ class CommonSolution:
         array.setflags(write=False)
         return array
 
-    def _optional_immutable_array[T: Array1D | Array2D | None](self, array_like: T) -> T:
+    def _optional_immutable_array(self, array_like: np.ndarray | None) -> np.ndarray | None:
         if array_like is None:
             return None
         return self._immutable_array(array_like)

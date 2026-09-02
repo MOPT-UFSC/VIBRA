@@ -7,19 +7,19 @@ import numpy as np
 from vibra.engine import AnalysisID
 from vibra.utils.lazy_array import LazyArray
 
-from .common_solution import Array1D, Array2D, CommonSolution
+from .common_solution import CommonSolution
 
 
 class HarmonicSolution(CommonSolution):
     def __init__(
         self,
         analysis_id: AnalysisID,
-        frequencies: Array1D,
-        structural_solution: Array2D | None = None,
-        acoustic_solution: Array2D | None = None,
-        coupled_solution: Array2D | None = None,
-        status: np.ndarray[tuple[int], bool] | None = None,
-        displacement_dof: Array2D | None = None,
+        frequencies: np.ndarray,
+        structural_solution: np.ndarray | None = None,
+        acoustic_solution: np.ndarray | None = None,
+        coupled_solution: np.ndarray | None = None,
+        status: np.ndarray | None = None,
+        displacement_dof: np.ndarray | None = None,
     ):
         if all(i is None for i in [structural_solution, acoustic_solution, coupled_solution]):
             raise ValueError("Either structural_solution, acoustic_solution, or coupled_solution must be provided")
@@ -64,7 +64,7 @@ class HarmonicSolution(CommonSolution):
         _nodal_displacements = self.nodal_solution[self.displacement_dof, :]
         return self._immutable_array(_nodal_displacements)
 
-    def get_nodal_displacement_at_column(self, column_index: int) -> Array1D:
+    def get_nodal_displacement_at_column(self, column_index: int) -> np.ndarray:
         return self.nodal_solution[self.displacement_dof, column_index].copy()
 
     def copy(self):
@@ -81,7 +81,7 @@ class HarmonicSolution(CommonSolution):
             return np.ones_like(self.frequencies, dtype=bool)
         return self._immutable_array(status)
 
-    def __iter__(self) -> Generator[tuple[float | complex, Array1D], None, None]:
+    def __iter__(self) -> Generator[tuple[float | complex, np.ndarray], None, None]:
         yield from zip(self.frequencies, self.nodal_solution)
 
     def __eq__(self, other: Self) -> bool:

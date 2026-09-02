@@ -1,23 +1,23 @@
 from functools import cached_property
-from typing import Generator, Self
+from typing import Generator, Self, Iterator
 
 import numpy as np
 
 from vibra.engine import AnalysisID
 
-from .common_solution import Array1D, Array2D, CommonSolution
+from .common_solution import CommonSolution
 
 
 class ModalSolution(CommonSolution):
     def __init__(
         self,
         analysis_id: AnalysisID,
-        natural_frequencies: Array1D,
-        structural_modal_shapes: Array2D | None = None,
-        acoustic_modal_shapes: Array2D | None = None,
-        coupled_modal_shapes: Array2D | None = None,
-        complex_natural_frequencies: Array1D | None = None,
-        displacement_dof: Array2D | None = None,
+        natural_frequencies: np.ndarray,
+        structural_modal_shapes: np.ndarray | None = None,
+        acoustic_modal_shapes: np.ndarray | None = None,
+        coupled_modal_shapes: np.ndarray | None = None,
+        complex_natural_frequencies: np.ndarray | None = None,
+        displacement_dof: np.ndarray | None = None,
     ):
         if all(i is None for i in [structural_modal_shapes, acoustic_modal_shapes, coupled_modal_shapes]):
             raise ValueError("Either structural_modal_shapes, acoustic_modal_shapes, or coupled_modal_shapes must be provided")
@@ -25,9 +25,9 @@ class ModalSolution(CommonSolution):
         self.analysis_id = analysis_id
         self.natural_frequencies = self._immutable_array(natural_frequencies)
         
-        self.structural_modal_shapes: Array2D | None = self._optional_immutable_array(structural_modal_shapes)
-        self.acoustic_modal_shapes: Array2D | None = self._optional_immutable_array(acoustic_modal_shapes)
-        self.coupled_modal_shapes: Array2D | None = self._optional_immutable_array(coupled_modal_shapes)
+        self.structural_modal_shapes: np.ndarray | None = self._optional_immutable_array(structural_modal_shapes)
+        self.acoustic_modal_shapes: np.ndarray | None = self._optional_immutable_array(acoustic_modal_shapes)
+        self.coupled_modal_shapes: np.ndarray | None = self._optional_immutable_array(coupled_modal_shapes)
 
         self.complex_natural_frequencies = self._optional_immutable_array(complex_natural_frequencies)
         self.displacement_dof = self._optional_immutable_array(displacement_dof)
@@ -43,20 +43,20 @@ class ModalSolution(CommonSolution):
         return len(self.natural_frequencies)
 
     @cached_property
-    def nodal_displacements(self) -> Array2D:
+    def nodal_displacements(self) -> np.ndarray:
         _nodal_displacements = self.modal_shapes[self.displacement_dof, :]
         return self._immutable_array(_nodal_displacements)
 
-    def get_nodal_displacement_at_column(self, column_index: int) -> Array1D:
+    def get_nodal_displacement_at_column(self, column_index: int) -> np.ndarray:
         return self.modal_shapes[self.displacement_dof, column_index].copy()
 
-    def get_row(self, row_index: int) -> Array1D:
+    def get_row(self, row_index: int) -> np.ndarray:
         return self.modal_shapes[row_index, :]
 
-    def get_column(self, column_index: int) -> Array1D:
+    def get_column(self, column_index: int) -> np.ndarray:
         return self.modal_shapes[:, column_index]
 
-    def __iter__(self) -> Generator[tuple[float | complex, Array1D], None, None]:
+    def __iter__(self) -> Iterator[tuple[float | complex, np.ndarray]]:
         yield from zip(self.natural_frequencies, self.modal_shapes)
 
     def __eq__(self, other: Self) -> bool:
