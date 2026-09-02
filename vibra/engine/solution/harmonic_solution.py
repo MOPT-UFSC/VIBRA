@@ -1,11 +1,11 @@
+from collections.abc import Generator, Iterator
 from copy import deepcopy
 from functools import cached_property
-from typing import Generator, Self
+from typing import override
 
 import numpy as np
 
 from vibra.engine import AnalysisID
-from vibra.utils.lazy_array import LazyArray
 
 from .common_solution import CommonSolution
 
@@ -76,31 +76,26 @@ class HarmonicSolution(CommonSolution):
     def get_column(self, column_index: int) -> np.ndarray:
         return self.nodal_solution[:, column_index]
 
-    def _create_status(self, status: np.ndarray[tuple[int], bool] | None):
+    def _create_status(self, status: np.ndarray | None) -> np.ndarray:
         if status is None:
             return np.ones_like(self.frequencies, dtype=bool)
         return self._immutable_array(status)
 
-    def __iter__(self) -> Generator[tuple[float | complex, np.ndarray], None, None]:
+    def __iter__(self) -> Iterator[tuple[float | complex, np.ndarray]]:
         yield from zip(self.frequencies, self.nodal_solution)
 
-    def __eq__(self, other: Self) -> bool:
+    @override
+    def __eq__(self, other: object) -> bool:
         if not isinstance(other, HarmonicSolution):
             return False
 
-        match self.displacement_dof, other.displacement_dof:
-            case np.ndarray() | LazyArray(), np.ndarray() | LazyArray():
-                dofs_equal = np.allclose(self.displacement_dof, other.displacement_dof)
-            case None, None:
-                dofs_equal = True
-            case _, _:
-                dofs_equal = False
-
         return all(
             [
-                dofs_equal,
                 np.allclose(self.frequencies, other.frequencies),
-                np.allclose(self.nodal_solution, other.nodal_solution),
                 np.allclose(self.status, other.status),
+                self._compare_optional_arrays(self.structural_solution, other.structural_solution),
+                self._compare_optional_arrays(self.acoustic_solution, other.acoustic_solution),
+                self._compare_optional_arrays(self.coupled_solution, other.coupled_solution),
+                self._compare_optional_arrays(self.displacement_dof, other.displacement_dof),
             ]
         )

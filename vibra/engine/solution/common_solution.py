@@ -1,6 +1,7 @@
 from typing import Any, override
 
 import numpy as np
+import numpy.typing as npt
 
 from vibra.engine.analysis_info import AnalysisID
 
@@ -27,6 +28,15 @@ class CommonSolution:
         if array_like is None:
             return None
         return self._immutable_array(array_like)
+
+    def _compare_optional_arrays(self, a: npt.ArrayLike | None, b: npt.ArrayLike | None) -> bool:
+        if (a is None) and (b is None):
+            return True
+
+        if (a is None) or (b is None):
+            return True
+
+        return np.allclose(a, b)
 
     @override
     def __setattr__(self, name: str, value: Any):

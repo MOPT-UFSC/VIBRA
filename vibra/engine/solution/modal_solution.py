@@ -1,5 +1,5 @@
 from functools import cached_property
-from typing import Generator, Self, Iterator
+from typing import Generator, Iterator, Self, override
 
 import numpy as np
 
@@ -24,7 +24,7 @@ class ModalSolution(CommonSolution):
 
         self.analysis_id = analysis_id
         self.natural_frequencies = self._immutable_array(natural_frequencies)
-        
+
         self.structural_modal_shapes: np.ndarray | None = self._optional_immutable_array(structural_modal_shapes)
         self.acoustic_modal_shapes: np.ndarray | None = self._optional_immutable_array(acoustic_modal_shapes)
         self.coupled_modal_shapes: np.ndarray | None = self._optional_immutable_array(coupled_modal_shapes)
@@ -59,19 +59,17 @@ class ModalSolution(CommonSolution):
     def __iter__(self) -> Iterator[tuple[float | complex, np.ndarray]]:
         yield from zip(self.natural_frequencies, self.modal_shapes)
 
-    def __eq__(self, other: Self) -> bool:
-        match self.displacement_dof, other.displacement_dof:
-            case np.ndarray(), np.ndarray() as a, b:
-                cnf_equal = np.allclose(a, b)
-            case None, None:
-                cnf_equal = True
-            case _, _:
-                cnf_equal = False
+    @override
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, ModalSolution):
+            return False
 
         return all(
             [
                 np.allclose(self.natural_frequencies, other.natural_frequencies),
-                np.allclose(self.modal_shapes, other.modal_shapes),
-                cnf_equal,
+                self._compare_optional_arrays(self.structural_modal_shapes, other.structural_modal_shapes),
+                self._compare_optional_arrays(self.acoustic_modal_shapes, other.acoustic_modal_shapes),
+                self._compare_optional_arrays(self.coupled_modal_shapes, other.coupled_modal_shapes),
+                self._compare_optional_arrays(self.displacement_dof, other.displacement_dof),
             ]
         )
