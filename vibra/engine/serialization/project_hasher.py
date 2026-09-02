@@ -41,8 +41,16 @@ class ProjectHasher:
         hasher = xxhash.xxh128()
         hasher.update(solution.analysis_id.to_bytes())
         hasher.update(solution.frequencies.flatten())
-        hasher.update(solution.nodal_solution.flatten())
         hasher.update(solution.status.flatten())
+
+        if solution.structural_solution is not None:
+            hasher.update(solution.structural_solution.flatten())
+
+        if solution.acoustic_solution is not None:
+            hasher.update(solution.acoustic_solution.flatten())
+
+        if solution.coupled_solution is not None:
+            hasher.update(solution.coupled_solution.flatten())
 
         if solution.displacement_dof is not None:
             hasher.update(solution.displacement_dof.flatten())
@@ -54,7 +62,15 @@ class ProjectHasher:
         hasher = xxhash.xxh128()
         hasher.update(solution.analysis_id.to_bytes())
         hasher.update(solution.natural_frequencies.flatten())
-        hasher.update(solution.modal_shapes.flatten())
+
+        if solution.structural_modal_shapes is not None:
+            hasher.update(solution.structural_modal_shapes.flatten())
+
+        if solution.acoustic_modal_shapes is not None:
+            hasher.update(solution.acoustic_modal_shapes.flatten())
+
+        if solution.coupled_modal_shapes is not None:
+            hasher.update(solution.coupled_modal_shapes.flatten())
 
         if solution.complex_natural_frequencies is not None:
             hasher.update(solution.complex_natural_frequencies.flatten())
