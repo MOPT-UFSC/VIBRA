@@ -105,11 +105,11 @@ def get_jacobian_determinant_2d(
         det_jac = np.linalg.norm(normal_vector)
         e_3 = normal_vector / det_jac
 
-    if not (return_normal and return_inverse):
-        return det_jac
-
-    elif return_normal:
+    if return_normal:
         return det_jac, e_3
+
+    if not return_inverse:
+        return det_jac
 
     # calculate the x' vector
     if multiple_elements:
@@ -127,7 +127,7 @@ def get_jacobian_determinant_2d(
     jac_2d = jac @ np.array([e_1, e_2], dtype=float).T
 
     # finally, calculate the inverse of plane Jacobian
-    inv_jac_2d = get_2x2_matrix_inverse(jac_2d)
+    inv_jac_2d, _ = get_2x2_matrix_inverse(jac_2d)
 
     return det_jac, e_3, inv_jac_2d
 

@@ -2,6 +2,7 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
+from vibra.engine.elements.common.matrix_tools import get_3x3_matrix_determinant, get_3x3_matrix_inverse
 from vibra.engine.elements.elements_3d.hex20_element import Hexahedron20
 from vibra.engine.elements.elements_3d.structural.structural_3d_element import Structural3DElement
 from vibra.engine.properties.material import Material
@@ -172,10 +173,10 @@ class StructuralHexahedron20(Structural3DElement, Hexahedron20):
         return phi
 
 
-    def process_detJAC_and_B_matrix(self, element_id: int, return_coords: bool=False):
+    def process_det_jac_and_B_matrix(self, element_id: int, return_coords: bool=False):
         """
         This method computes and returns the matrix of shape functions 
-        derivatives B and the determinant of the Jacobian matrix detJAC. 
+        derivatives B and the determinant of the Jacobian matrix det_jac. 
         """
 
         # nodes from element
@@ -185,13 +186,13 @@ class StructuralHexahedron20(Structural3DElement, Hexahedron20):
         coords = self.model.mesh.nodal_coordinates[elem_nodes, 1:4]
 
         # Jacobian matrix
-        JAC_K = self.dphi_K @ coords
+        jac_K = self.dphi_K @ coords
 
         # Jacobian determinant and inverse
-        detJAC_K, invJAC_K = self.get_detJAC_and_invJAC(JAC_K)
+        inv_jac_K, det_jac_K = get_3x3_matrix_inverse(jac_K)
 
         # derivatives
-        dphi_t = invJAC_K @ self.dphi_K
+        dphi_t = inv_jac_K @ self.dphi_K
 
         # initialize the B matrix
         B = np.zeros((self.nint_K, 6, self.dof_per_element), dtype=float)
@@ -207,9 +208,9 @@ class StructuralHexahedron20(Structural3DElement, Hexahedron20):
         B[:, 5, 2::3] = dphi_t[:, 1, :]
 
         if return_coords:
-            return detJAC_K, B, coords
+            return det_jac_K, B, coords
 
-        return detJAC_K, B
+        return det_jac_K, B
 
 
     def elementary_matrices(self, element_id: int, material: Material):
@@ -238,13 +239,13 @@ class StructuralHexahedron20(Structural3DElement, Hexahedron20):
         const_mat, rho = self.get_constitutive_model(material, model_type="linear-isotropic")
 
         # process the determinant of Jacobian and the B matrix  
-        detJAC_K, B, coords = self.process_detJAC_and_B_matrix(element_id, return_coords=True)
+        det_jac_K, B, coords = self.process_det_jac_and_B_matrix(element_id, return_coords=True)
 
         # Jacobian matrix
-        JAC_M = self.dphi_M @ coords
+        jac_M = self.dphi_M @ coords
 
         # Jacobian determinant and inverse
-        detJAC_M = self.get_detJAC(JAC_M)
+        det_jac_M = get_3x3_matrix_determinant(jac_M)
 
         # matrix of shape functions N
         N = self.N_matrix
@@ -253,10 +254,10 @@ class StructuralHexahedron20(Structural3DElement, Hexahedron20):
         Ke, Me = 0, 0
 
         for i in range(self.nint_K):
-            Ke += B[i, :, :].T @ const_mat @ B[i, :, :] * (detJAC_K[i, :, :] * self.wps_K[i])
+            Ke += B[i, :, :].T @ const_mat @ B[i, :, :] * (det_jac_K[i, :, :] * self.wps_K[i])
 
         for i in range(self.nint_M):
-            Me += rho * N[i, :, :].T @ N[i, :, :] * (detJAC_M[i, :, :] * self.wps_M[i])
+            Me += rho * N[i, :, :].T @ N[i, :, :] * (det_jac_M[i, :, :] * self.wps_M[i])
 
         return Ke, Me
 
@@ -299,7 +300,7 @@ class StructuralHexahedron20(Structural3DElement, Hexahedron20):
         D, _ = self.get_constitutive_model(material, model_type="linear-isotropic")
 
         # get data to compute the stress
-        _, B = self.process_detJAC_and_B_matrix(element_id)
+        _, B = self.process_det_jac_and_B_matrix(element_id)
 
         # initialize the element stresses matrix
         element_stresses = np.zeros((6, self.nint_K, Ue.shape[1]), dtype=complex)

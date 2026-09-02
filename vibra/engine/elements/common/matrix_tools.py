@@ -69,23 +69,23 @@ def get_2x2_matrix_determinant(A: np.ndarray):
     return det_A
 
 
-def get_2x2_matrix_inverse(A: np.ndarray, return_det: bool = False) -> np.ndarray:
+def get_2x2_matrix_inverse(A: np.ndarray) -> np.ndarray:
     """
-    This function computes the determinants and inverses
-    of Jacobian matrices in stacked form.
+    This function computes the inverse and determinant 
+    of an input matrix in stacked form or not.
 
     Parameters
     ----------
     A: np.array
-        The matrix 2x2 to be inverted.
-
-    return_det: bool, optional
-        Control when the determinant will be returned.
+        A 2D matrix 2x2 or a 3D 2x2xN to be inverted.
 
     Returns
     -------
-    inv_mat: np.ndarray
-        The inverse of 2x2 matrices.
+    inv_A: np.ndarray
+        The inverse of A matrix.
+
+    det_A: np.ndarray
+        The determinant of A matrix.
 
     """
 
@@ -110,29 +110,26 @@ def get_2x2_matrix_inverse(A: np.ndarray, return_det: bool = False) -> np.ndarra
     # inverse of the Jacobian matrix
     inv_A = (1 / det_A) * adj_matrix
 
-    if return_det:
-        return inv_A, det_A
-
-    return inv_A
+    return inv_A, det_A
 
 
-def get_3x3_matrix_inverse(A: np.ndarray, return_det: bool = False) -> np.ndarray:
+def get_3x3_matrix_inverse(A: np.ndarray) -> np.ndarray:
     """
-    This function computes the determinants and inverses
-    of Jacobian matrices in stacked form.
+    This function computes the inverse and determinant 
+    of an input matrix in stacked form or not.
 
     Parameters
     ----------
     A: np.array
-        The matrix 3x3 to be inverted.
-
-    return_det: bool, optional
-        Control when the determinant will be returned.
+        A 2D matrix 3x3 or a 3D 3x3xN to be inverted.
 
     Returns
     -------
-    inv_mat: np.ndarray
-        The inverse of 3x3 matrices.
+    inv_A: np.ndarray
+        The inverse of A matrix.
+
+    det_A: np.ndarray
+        The determinant of A matrix.
 
     """
 
@@ -167,10 +164,7 @@ def get_3x3_matrix_inverse(A: np.ndarray, return_det: bool = False) -> np.ndarra
     # inverse of the Jacobian matrix
     inv_A = (1 / det_A) * adj_matrix
 
-    if return_det:
-        return inv_A, det_A
-
-    return inv_A
+    return inv_A, det_A
 
 
     # def get_detJAC(self, JAC: np.ndarray):

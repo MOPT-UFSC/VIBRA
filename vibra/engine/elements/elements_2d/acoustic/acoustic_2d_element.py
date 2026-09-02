@@ -93,6 +93,7 @@ class Acoustic2DElement(Element2D):
         # integration loop
         for i in range(self.nint):
 
+            # determinant of Jacobian for the i-th integration point
             det_jac = self.get_jacobian_determinant_2d(i, self.dphi, coords)
 
             # shape functions
@@ -136,6 +137,7 @@ class Acoustic2DElement(Element2D):
         # integration loop
         for i in range(self.nint):
 
+            # determinant of Jacobian for the i-th integration point
             det_jacs = self.get_jacobian_determinant_2d(i, self.dphi, coords)
 
             # shape functions
@@ -166,6 +168,7 @@ class Acoustic2DElement(Element2D):
         # integration loop
         for i in range(self.nint):
 
+            # determinant of Jacobian for the i-th integration point
             det_jacs = self.get_jacobian_determinant_2d(i, self.dphi, coords)
 
             # shape functions
@@ -190,11 +193,11 @@ class Acoustic2DElement(Element2D):
             The array containing the elementary stacked matrices int(Bt @ B, gamma_s).
         """
 
-        # # compute local coordinates for all elements
-        local_coords = self.get_stacked_local_coordinates()
+        # # # compute local coordinates for all elements
+        # local_coords = self.get_stacked_local_coordinates()
 
-        # # stack the element nodes coordinates for all elements
-        # coords = self.model.mesh.nodal_coordinates[[connect for connect in self.connectivities], 1:]
+        # stack the element nodes coordinates for all elements
+        coords = self.model.mesh.nodal_coordinates[[connect for connect in self.connectivities], 1:]
 
         # initialize variables
         int2d_NtN = 0.
@@ -203,14 +206,12 @@ class Acoustic2DElement(Element2D):
         # integration loop
         for i in range(self.nint):
 
-            # Jacobian matrices of all elements
-            JAC_stacked = self.dphi[i, :, :] @ local_coords
+            # # Jacobian matrices of all elements
+            # JAC_stacked = self.dphi[i, :, :] @ local_coords
 
-            # Jacobian determinants and inverses of all elements
-            det_jacs, inv_jacs = self.get_detJAC_and_invJAC(JAC_stacked)
-
-            # det_jacs, normal_vectors = self.get_jacobian_determinant_2d(i, coords, self.dphi, return_vectors=True)
-            # inv_jacs = np.linalg.inv(normal_vectors)
+            # # Jacobian determinants and inverses of all elements
+            # det_jacs, inv_jacs = self.get_detJAC_and_invJAC(JAC_stacked)
+            det_jacs, _, inv_jacs = self.get_jacobian_determinant_2d(i, self.dphi, coords, full_data=True)
 
             # shape functions
             N = self.phi[i, :].reshape(1, -1)

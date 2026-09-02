@@ -1,6 +1,7 @@
 
 from typing import TYPE_CHECKING
 
+from vibra.engine.elements.common.matrix_tools import get_3x3_matrix_inverse
 from vibra.engine.elements.elements_3d.solid_elements import Element3D
 
 if TYPE_CHECKING:
@@ -52,19 +53,19 @@ class Acoustic3DElement(Element3D):
         for i in range(self.nint):
 
             # Jacobian matrix
-            JAC = self.dphi[i, :, :] @ coords
+            jac = self.dphi[i, :, :] @ coords
 
             # Jacobian determinant and inverse
-            detJAC, invJAC = self.get_detJAC_and_invJAC(JAC)
+            inv_jac, det_jac = get_3x3_matrix_inverse(jac)
 
             # shape functions
             N = self.phi[i, :].reshape(1, -1)
 
             # derivative of shape functions
-            B = invJAC @ self.dphi[i, :, :]
+            B = inv_jac @ self.dphi[i, :, :]
 
-            Ke += B.T @ B * (detJAC * self.wps[i])
-            Me += N.T @ N * (detJAC * self.wps[i])
+            Ke += B.T @ B * (det_jac * self.wps[i])
+            Me += N.T @ N * (det_jac * self.wps[i])
 
         # if el_index == 0:
         #     np.savetxt("Me_base.dat", Me, fmt="%.16e", delimiter=",")
@@ -103,10 +104,10 @@ class Acoustic3DElement(Element3D):
             logging.info(f"Processing the elementary matrices data... [{progress}/100]")
 
             # Jacobian matrices of all elements
-            JAC_stacked = self.dphi[i, :, :] @ stacked_coords
+            jacs = self.dphi[i, :, :] @ stacked_coords
 
             # Jacobian determinants and inverses of all elements
-            det_jacs, inv_jacs = self.get_detJAC_and_invJAC(JAC_stacked)
+            inv_jacs, det_jacs = get_3x3_matrix_inverse(jacs)
 
             # shape functions
             N = self.phi[i, :].reshape(1, -1)
