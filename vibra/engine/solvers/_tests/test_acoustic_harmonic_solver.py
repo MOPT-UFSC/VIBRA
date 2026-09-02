@@ -21,7 +21,6 @@ def test_regression_acoustic_harmonic_solver_solution(datadir, viscous_thermal_a
 
     project_paths = ProjectPaths(datadir)
     harmonic_solver = HarmonicSolver(assembler, project_paths)
-    frequencies = viscous_thermal_acoustic_model.frequencies
 
     # Solve and store solutions into hdf5 files
     # but returns in-memory data
@@ -32,12 +31,7 @@ def test_regression_acoustic_harmonic_solver_solution(datadir, viscous_thermal_a
 
     assert type(lazy_solution) is LazyHarmonicSolution
     assert type(in_memory_solution) is HarmonicSolution
-
-    for i, _ in enumerate(frequencies):
-        assert np.allclose(
-            lazy_solution.nodal_solution[:, i],
-            in_memory_solution.nodal_solution[:, i],
-        )
+    assert lazy_solution == in_memory_solution
 
 
 def test_acoustic_harmonic_modal_solver_solution(acoustic_model: "Model"):
@@ -66,5 +60,4 @@ def test_acoustic_harmonic_modal_solver_solution(acoustic_model: "Model"):
     modal_harmonic_solver = HarmonicSolver(assembler)
     modal_solutions = modal_harmonic_solver.solve_mode_superposition()
 
-    for i in range(analysis_setup.f_size):
-        assert np.allclose(direct_solutions.nodal_solution[:, i], modal_solutions.nodal_solution[:, i])
+    assert direct_solutions == modal_solutions

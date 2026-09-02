@@ -300,14 +300,6 @@ class ProjectWriter:
 
         logger.info("Writing harmonic solution")
 
-        current_hash = ProjectHasher.hash_harmonic_solution(solution)
-        previous_hash = self._read_hash(HashEnum.HARMONIC_SOLUTION)
-
-        if self.project_paths.imported_table_data_filepath.exists():
-            if (current_hash == previous_hash) and self.use_hash:
-                logger.info("Harmonic solution was not written since it did not changed.")
-                return
-
         with h5py.File(self.project_paths.harmonic_solution_filepath, "w") as file:
             file: h5py.File
 
@@ -325,8 +317,6 @@ class ProjectWriter:
 
             if solution.displacement_dof is not None:
                 file["displacement_dof"] = solution.displacement_dof
-
-        self._write_hash(HashEnum.HARMONIC_SOLUTION, current_hash)
 
     def write_modal_solution(self, solution: ModalSolution):
         logger.info("Writing modal solution")
