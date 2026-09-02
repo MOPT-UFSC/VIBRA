@@ -30,6 +30,8 @@ class AnalysisChecker:
                 self.check_acoustic_modal_analysis()
             case AnalysisID.ACOUSTIC_HARMONIC:
                 self.check_acoustic_harmonic_analysis()
+            case AnalysisID.COUPLED_HARMONIC:
+                self.check_coupled_harmonic_analysis()
             case _:
                 raise NotImplementedError(f'Analysis type "{self.model.analysis_id.name}" is not implemented.')
 
@@ -52,6 +54,10 @@ class AnalysisChecker:
 
         if not self.model.is_there_a_valid_analysis_setup():
             raise errors.InvalidAnalysisSetupError("An invalid analysis setup has been configured.")
+
+    def check_coupled_harmonic_analysis(self, is_resume: bool = False):
+        self.check_acoustic_harmonic_analysis(is_resume=is_resume)
+        self.check_structural_harmonic_analysis(is_resume=is_resume)
 
     def check_acoustic_harmonic_analysis(self, is_resume: bool = False):
         self.check_can_resume(is_resume)

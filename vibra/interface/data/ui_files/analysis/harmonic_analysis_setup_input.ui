@@ -211,7 +211,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="../../icons/resources.qrc">
+            <iconset resource="../../icons/dark_theme/resources.qrc">
              <normaloff>:/icons/preview_data.png</normaloff>:/icons/preview_data.png</iconset>
            </property>
            <property name="iconSize">
@@ -556,7 +556,7 @@
                 <string>Solution steps configurator</string>
                </property>
                <property name="icon">
-                <iconset resource="../../icons/resources.qrc">
+                <iconset resource="../../icons/dark_theme/resources.qrc">
                  <normaloff>:/icons/user_preferences_icon.png</normaloff>:/icons/user_preferences_icon.png</iconset>
                </property>
                <property name="iconSize">
@@ -730,7 +730,7 @@
                 <string/>
                </property>
                <property name="icon">
-                <iconset resource="../../icons/resources.qrc">
+                <iconset resource="../../icons/dark_theme/resources.qrc">
                  <normaloff>:/icons/reset_settings.png</normaloff>:/icons/reset_settings.png</iconset>
                </property>
                <property name="iconSize">
@@ -1509,7 +1509,7 @@
          <string>Exit</string>
         </property>
         <property name="icon">
-         <iconset resource="../../icons/resources.qrc">
+         <iconset resource="../../icons/dark_theme/resources.qrc">
           <normaloff>:/icons/exit_to_app_icon.png</normaloff>:/icons/exit_to_app_icon.png</iconset>
         </property>
         <property name="iconSize">
@@ -1552,7 +1552,7 @@
          <string>Enter setup</string>
         </property>
         <property name="icon">
-         <iconset resource="../../icons/resources.qrc">
+         <iconset resource="../../icons/dark_theme/resources.qrc">
           <normaloff>:/icons/settings_b_roll.png</normaloff>:/icons/settings_b_roll.png</iconset>
         </property>
         <property name="iconSize">
@@ -1595,7 +1595,7 @@
          <string>Run analysis</string>
         </property>
         <property name="icon">
-         <iconset resource="../../icons/resources.qrc">
+         <iconset resource="../../icons/dark_theme/resources.qrc">
           <normaloff>:/icons/start_solution.png</normaloff>:/icons/start_solution.png</iconset>
         </property>
         <property name="iconSize">
@@ -1647,7 +1647,7 @@
   <tabstop>pushButton_exit</tabstop>
  </tabstops>
  <resources>
-  <include location="../../icons/resources.qrc"/>
+  <include location="../../icons/dark_theme/resources.qrc"/>
  </resources>
  <connections/>
 </ui>

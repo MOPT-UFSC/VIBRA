@@ -166,7 +166,7 @@ class ResultsViewerItems(CommonMenuItems):
         elif analysis_id.is_acoustic():
             self.update_acoustic_analysis_visibility_items()
 
-        elif analysis_id.is_coupled():
+        elif analysis_id.is_harmonic_coupled():
             self.update_coupled_analysis_visibility_items()
 
         if analysis_id == AnalysisID.STRUCTURAL_HARMONIC:

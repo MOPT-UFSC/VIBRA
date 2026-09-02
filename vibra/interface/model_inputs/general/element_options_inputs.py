@@ -3,9 +3,8 @@ from enum import IntEnum
 from PySide6.QtCore import Qt
 
 from vibra import app
-from vibra.engine.elements.element_options import HEX8_structural
-from vibra.engine.mesher.mesh_setup import Hexahedron8, Hexahedron20, Tetrahedron4, Tetrahedron10, ElementTopology
-from vibra.engine.mesher.mesh_setup import MeshSetup
+from vibra.engine.elements.common.element_options import HEX8_structural
+from vibra.engine.mesher.mesh_setup import ElementTopology, Hexahedron8, Hexahedron20, MeshSetup, Tetrahedron4, Tetrahedron10
 
 # from vibra.interface import error_title, warning_title
 # from vibra.interface.general.print_message_input import PrintMessageInput

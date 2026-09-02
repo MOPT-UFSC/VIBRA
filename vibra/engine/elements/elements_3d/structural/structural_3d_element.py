@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 
+from vibra.engine.elements.common.matrix_utils import get_3x3_matrix_inverse
 from vibra.engine.elements.elements_3d.solid_elements import Element3D
 from vibra.engine.properties.material import Material
 
@@ -45,13 +46,13 @@ class Structural3DElement(Element3D):
         coords = self.model.mesh.nodal_coordinates[elem_nodes, 1:4]
 
         # Jacobian matrix
-        JAC = self.dphi @ coords
+        jac = self.dphi @ coords
 
         # Jacobian determinant and inverse
-        detJAC, invJAC = self.get_detJAC_and_invJAC(JAC)
+        inv_jac, det_jac = get_3x3_matrix_inverse(jac)
 
         # derivatives
-        dphi_t = invJAC @ self.dphi
+        dphi_t = inv_jac @ self.dphi
         
         # initialize the B matrix
         B = np.zeros((self.nint, 6, self.dof_per_element), dtype=float)
@@ -67,9 +68,9 @@ class Structural3DElement(Element3D):
         B[:, 5, 2::3] = dphi_t[:, 1, :]
 
         if return_coords:
-            return detJAC, B, coords
+            return det_jac, B, coords
 
-        return detJAC, B
+        return det_jac, B
 
 
     def elementary_matrices(self, element_id: int, material: Material):
