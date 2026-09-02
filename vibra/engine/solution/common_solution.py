@@ -1,4 +1,4 @@
-from typing import Any, Optional
+from typing import Any, override
 
 import numpy as np
 
@@ -25,7 +25,7 @@ class CommonSolution:
         # After calling the init this "cannot" be modified anymore
         self._writeable = False
 
-    def _immutable_array(self, array_like: np.typing.ArrayLike) -> Array1D | Array2D:
+    def _immutable_array[T: Array1D | Array2D](self, array_like: T) -> T:
         """
         This methods converts to array and makes it immutable.
 
@@ -36,11 +36,12 @@ class CommonSolution:
         array.setflags(write=False)
         return array
 
-    def _optional_immutable_array(self, array_like: Optional[np.typing.ArrayLike]) -> Optional[Array1D | Array2D]:
+    def _optional_immutable_array[T: Array1D | Array2D | None](self, array_like: T) -> T:
         if array_like is None:
             return None
         return self._immutable_array(array_like)
 
+    @override
     def __setattr__(self, name: str, value: Any):
         # workaround to make this class immutable
         if hasattr(self, "writeable") and not self._writeable and name != "writeable":
