@@ -38,7 +38,7 @@ class HarmonicSolver:
         if isinstance(self.assembler, AcousticAssembler):
             return self.assembler.acoustic_ndofs
         elif isinstance(self.assembler, StructuralAssembler):
-            return self.assembler.structural_ndofs          
+            return self.assembler.structural_ndofs
 
     def reset_variables(self):
         self.solution: Optional[HarmonicSolution] = None
@@ -60,23 +60,31 @@ class HarmonicSolver:
 
         logging.info("Solving harmonic analysis (direct method)... [10/100]")
 
-        if isinstance(self.assembler, StructuralAssembler):
-            self.displacement_dof = self.assembler.displacement_dof
-
         nodal_solution_buffer = self._get_nodal_solution_buffer(is_resume)
-
         self._initialize_file_writer(is_resume)
         self.compute_frequency_sweep(nodal_solution_buffer, print_log, is_resume)
         self._close_file_writer()
 
         logging.info("Solving harmonic analysis (direct method)... [99/100]")
 
-        self.solution = HarmonicSolution(
-            analysis_id=self.assembler.model.analysis_id,
-            frequencies=self.assembler.model.frequencies,
-            nodal_solution=nodal_solution_buffer,
-            displacement_dof=self.displacement_dof,
-        )
+        if isinstance(self.assembler, StructuralAssembler):
+            self.displacement_dof = self.assembler.displacement_dof
+            self.solution = HarmonicSolution(
+                analysis_id=self.assembler.model.analysis_id,
+                frequencies=self.assembler.model.frequencies,
+                structural_solution=nodal_solution_buffer,
+                displacement_dof=self.assembler.displacement_dof,
+            )
+
+        elif isinstance(self.assembler, AcousticAssembler):
+            self.solution = HarmonicSolution(
+                analysis_id=self.assembler.model.analysis_id,
+                frequencies=self.assembler.model.frequencies,
+                acoustic_solution=nodal_solution_buffer,
+            )
+
+        else:
+            raise ValueError(f"Unsupported assembler type: {type(self.assembler)}")
 
         if self.assembler.model.stop_processing:
             self.solution = None
@@ -151,7 +159,7 @@ class HarmonicSolver:
         print(f"Elapsed time to solve modal analysis: {dt: .6f} [s]")
 
         nodal_solution_buffer = self._get_nodal_solution_buffer(is_resume)
-        self._initialize_file_writer(is_resume)
+        # self._initialize_file_writer(is_resume)
 
         if is_proportionally_damped:
             self.compute_proportionally_damped_frequency_sweep(
@@ -169,13 +177,26 @@ class HarmonicSolver:
                 is_resume,
             )
 
-        self._close_file_writer()
-        self.solution = HarmonicSolution(
-            analysis_id=self.assembler.model.analysis_id,
-            frequencies=self.assembler.model.frequencies,
-            nodal_solution=nodal_solution_buffer,
-            displacement_dof=self.displacement_dof,
-        )
+        # self._close_file_writer()
+
+        if isinstance(self.assembler, StructuralAssembler):
+            self.displacement_dof = self.assembler.displacement_dof
+            self.solution = HarmonicSolution(
+                analysis_id=self.assembler.model.analysis_id,
+                frequencies=self.assembler.model.frequencies,
+                structural_solution=nodal_solution_buffer,
+                displacement_dof=self.assembler.displacement_dof,
+            )
+
+        elif isinstance(self.assembler, AcousticAssembler):
+            self.solution = HarmonicSolution(
+                analysis_id=self.assembler.model.analysis_id,
+                frequencies=self.assembler.model.frequencies,
+                acoustic_solution=nodal_solution_buffer,
+            )
+
+        else:
+            raise ValueError(f"Unsupported assembler type: {type(self.assembler)}")
 
         return self.solution
 
