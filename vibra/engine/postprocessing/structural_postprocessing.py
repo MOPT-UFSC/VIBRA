@@ -112,7 +112,8 @@ class StructuralPostprocessing:
         if isinstance(self.solution, LazyHarmonicSolution) and not self.solution.is_valid():
             return
 
-        data_complex = self.solution.get_nodal_displacement_at_column(column)
+        modal_shapes = self.solution.structural_modal_shapes
+        data_complex = modal_shapes[self.solution.displacement_dof, column].copy()
 
         if self.model.analysis_id == AnalysisID.STRUCTURAL_HARMONIC:
             freq = self.model.frequencies[column]
