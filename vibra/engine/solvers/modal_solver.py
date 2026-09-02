@@ -122,13 +122,23 @@ class ModalSolver:
 
         if isinstance(self.assembler, StructuralAssembler):
             self.displacement_dof = self.assembler.displacement_dof
+            self.solution = ModalSolution(
+                analysis_id=self.assembler.model.analysis_id,
+                natural_frequencies=self.natural_frequencies,
+                structural_modal_shapes=self.nodal_solution,
+                displacement_dof=self.displacement_dof,
+                complex_natural_frequencies=cnf,
+            )
 
-        self.solution = ModalSolution(
-            analysis_id=self.assembler.model.analysis_id,
-            natural_frequencies=self.natural_frequencies,
-            modal_shapes=self.nodal_solution,
-            displacement_dof=self.displacement_dof,
-            complex_natural_frequencies=cnf,
-        )
+        elif isinstance(self.assembler, AcousticAssembler):
+            self.solution = ModalSolution(
+                analysis_id=self.assembler.model.analysis_id,
+                natural_frequencies=self.natural_frequencies,
+                structural_modal_shapes=self.nodal_solution,
+                complex_natural_frequencies=cnf,
+            )
+
+        else:
+            raise ValueError(f"Unsupported assembler type: {type(self.assembler)}")
 
         return self.solution
