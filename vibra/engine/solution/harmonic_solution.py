@@ -28,11 +28,11 @@ class HarmonicSolution(CommonSolution):
         self.frequencies = self._immutable_array(frequencies)
         self.status = self._create_status(status)
 
-        self.structural_solution: Array2D | None = self._optional_immutable_array(structural_solution)
-        self.acoustic_solution: Array2D | None = self._optional_immutable_array(acoustic_solution)
-        self.coupled_solution: Array2D | None = self._optional_immutable_array(coupled_solution)
+        self.structural_solution: np.ndarray | None = self._optional_immutable_array(structural_solution)
+        self.acoustic_solution: np.ndarray | None = self._optional_immutable_array(acoustic_solution)
+        self.coupled_solution: np.ndarray | None = self._optional_immutable_array(coupled_solution)
 
-        self.displacement_dof: Array2D | None = self._optional_immutable_array(displacement_dof)
+        self.displacement_dof: np.ndarray | None = self._optional_immutable_array(displacement_dof)
         super().__init__()
 
     @cached_property
@@ -60,7 +60,7 @@ class HarmonicSolution(CommonSolution):
         return not all(self.status)
 
     @cached_property
-    def nodal_displacements(self) -> Array2D:
+    def nodal_displacements(self) -> np.ndarray:
         _nodal_displacements = self.nodal_solution[self.displacement_dof, :]
         return self._immutable_array(_nodal_displacements)
 
@@ -70,10 +70,10 @@ class HarmonicSolution(CommonSolution):
     def copy(self):
         return deepcopy(self)
 
-    def get_row(self, row_index: int) -> Array1D:
+    def get_row(self, row_index: int) -> np.ndarray:
         return self.nodal_solution[row_index, :]
 
-    def get_column(self, column_index: int) -> Array1D:
+    def get_column(self, column_index: int) -> np.ndarray:
         return self.nodal_solution[:, column_index]
 
     def _create_status(self, status: np.ndarray[tuple[int], bool] | None):

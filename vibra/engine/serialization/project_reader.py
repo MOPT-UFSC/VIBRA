@@ -20,7 +20,6 @@ from vibra.engine.properties import Fluid, FluidLibrary, Material, MaterialLibra
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.engine.serialization.file_helpers import read_image, read_json
 from vibra.engine.solution import HarmonicSolution, ModalSolution, Solution
-from vibra.engine.solution.common_solution import Array2D
 from vibra.engine.solvers import HarmonicSolver, ModalSolver
 
 from .project_paths import ProjectPaths
