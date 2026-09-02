@@ -59,30 +59,13 @@ class HarmonicSolution(CommonSolution):
     def has_partial_solutions(self):
         return not all(self.status)
 
-    @cached_property
-    def nodal_displacements(self) -> np.ndarray:
-        _nodal_displacements = self.nodal_solution[self.displacement_dof, :]
-        return self._immutable_array(_nodal_displacements)
-
-    def get_nodal_displacement_at_column(self, column_index: int) -> np.ndarray:
-        return self.nodal_solution[self.displacement_dof, column_index].copy()
-
     def copy(self):
         return deepcopy(self)
-
-    def get_row(self, row_index: int) -> np.ndarray:
-        return self.nodal_solution[row_index, :]
-
-    def get_column(self, column_index: int) -> np.ndarray:
-        return self.nodal_solution[:, column_index]
 
     def _create_status(self, status: np.ndarray | None) -> np.ndarray:
         if status is None:
             return np.ones_like(self.frequencies, dtype=bool)
         return self._immutable_array(status)
-
-    def __iter__(self) -> Iterator[tuple[float | complex, np.ndarray]]:
-        yield from zip(self.frequencies, self.nodal_solution)
 
     @override
     def __eq__(self, other: object) -> bool:

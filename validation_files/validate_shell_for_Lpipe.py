@@ -188,7 +188,7 @@ def load_external_mesh_and_solve():
     ux_rows = gdof[:, dof_index["ux"]]
     uy_rows = gdof[:, dof_index["uy"]]
 
-    nodal_solution = model.solution.nodal_solution
+    nodal_solution = model.solution.structural_solution
 
     response_ux = np.average(nodal_solution[ux_rows, :], axis=0).flatten()
     response_uy = np.average(nodal_solution[uy_rows, :], axis=0).flatten()
