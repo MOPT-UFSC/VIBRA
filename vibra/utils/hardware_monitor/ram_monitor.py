@@ -4,7 +4,7 @@ import psutil
 import threading
 import time
 
-from vibra.utils.hardware_monitor.memory_metric import MemoryMetric, MemorySample
+from vibra.utils.hardware_monitor.memory_metric import MemoryMetric, MemoryRecord, MemorySample
 
 
 class RamMonitor:
@@ -27,6 +27,7 @@ class RamMonitor:
         self.rss = MemoryMetric()
         self.uss = MemoryMetric()
         self.vms = MemoryMetric()
+        self.ram_record: list[MemoryRecord] = list()
 
         self.process = psutil.Process()
         self.monitor_thread: threading.Thread | None = None
@@ -61,6 +62,14 @@ class RamMonitor:
                 rss=memory.rss / self._BYTES_PER_MIB,
                 vms=memory.vms / self._BYTES_PER_MIB,
             )
+            self.ram_record.append(
+                MemoryRecord(
+                    elapsed=time.monotonic(),
+                    rss=sample.rss,
+                    uss=sample.uss,
+                )
+            )
+
             return sample
 
         except psutil.Error as error:
@@ -76,6 +85,15 @@ class RamMonitor:
                 uss=memory.uss / self._BYTES_PER_MIB,
                 vms=memory.vms / self._BYTES_PER_MIB,
             )
+            self.ram_record.append(
+                MemoryRecord(
+                    elapsed=time.monotonic(),
+                    rss=sample.rss,
+                    uss=sample.uss,
+                    vms=sample.vms,
+                )
+            )
+
             return sample
 
         except psutil.Error as error:
@@ -112,6 +130,8 @@ class RamMonitor:
         self.rss = MemoryMetric()
         self.uss = MemoryMetric()
         self.vms = MemoryMetric()
+        self.ram_record: list[MemoryRecord] = list()
+
         self.monitor_error = None
 
         sample = self._read_full_memory_mib()
