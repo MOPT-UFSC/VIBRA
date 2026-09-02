@@ -264,7 +264,7 @@ def load_external_mesh_and_solve(assignment_type: str):
     input_rows = mesh.external_nodes_from_surfaces[1]
     output_rows = mesh.external_nodes_from_surfaces[2]
 
-    nodal_solution = model.solution.nodal_solution
+    nodal_solution = model.solution.acoustic_solution
     input_pressure = np.average(nodal_solution[input_rows, :], axis=0).flatten()
     output_pressure = np.average(nodal_solution[output_rows, :], axis=0).flatten()
 

@@ -184,7 +184,7 @@ def load_external_mesh_and_solve(**kwargs):
     dt = perf_counter() - t0
     print(f"Elapsed time to post-process data: {round(dt, 4)}")
 
-    nodal_solution = model.solution.nodal_solution
+    nodal_solution = model.solution.acoustic_solution
 
     # Load the external data
     results_path = PROJECT_DIR / "validation_files/data/WB/acoustic/excitations/tet4/results/ipw_in_duct/"
@@ -247,7 +247,7 @@ def load_external_mesh_and_solve(**kwargs):
                 node_id,
                 dofs_per_node,
                 frequencies,
-                model.solution.nodal_solution,
+                model.solution.acoustic_solution,
                 WB_pressure_data,
                 named_selection,
                 plot_type=plot_type,

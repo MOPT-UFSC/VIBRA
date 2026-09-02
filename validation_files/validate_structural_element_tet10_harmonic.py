@@ -191,7 +191,7 @@ def load_external_mesh_and_solve(**kwargs):
                 dofs_per_node,
                 udof_label,
                 frequencies,
-                model.solution.nodal_solution,
+                model.solution.structural_solution,
                 False,
                 WB_displacements_data,
                 plot_type=plot_type,
