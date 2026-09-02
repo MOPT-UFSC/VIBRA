@@ -23,6 +23,7 @@ class LazyHarmonicSolution(HarmonicSolution):
         self.status: LazyArray = LazyArray(hs, "solution_status")
 
     @property
+    @override
     def analysis_id(self) -> AnalysisID:
         from vibra.engine.serialization.project_reader import ProjectReader
 
