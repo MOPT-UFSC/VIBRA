@@ -2,7 +2,8 @@ from typing import TYPE_CHECKING
 
 import numpy as np
 
-from vibra.engine.elements.element_options import BbarDilatationalEvaluation, HEX8_structural
+from vibra.engine.elements.common.element_options import BbarDilatationalEvaluation, HEX8_structural
+from vibra.engine.elements.common.matrix_utils import get_3x3_matrix_determinant, get_3x3_matrix_inverse
 from vibra.engine.elements.elements_3d.hex8_element import Hexahedron8
 from vibra.engine.elements.elements_3d.structural.flanagan_belytschko_formulation import (
     compute_hourglass_stiffness,
@@ -276,16 +277,16 @@ class StructuralHexahedron4(Structural3DElement, Hexahedron8):
         coords = self.model.mesh.nodal_coordinates[elem_nodes, 1:4]
 
         # Jacobian matrix
-        JAC = self.dphi @ coords
+        jac = self.dphi @ coords
 
         # Jacobian determinant and inverse
-        detJAC, invJAC = self.get_detJAC_and_invJAC(JAC)
+        inv_jac, det_jac = get_3x3_matrix_inverse(jac)
 
         # derivatives
-        dphi_t = invJAC @ self.dphi
+        dphi_t = inv_jac @ self.dphi
 
         # for validation purposes
-        self.B_grad = np.sum(dphi_t * detJAC * self.wps, axis=0) / np.sum(detJAC * self.wps, axis=0)
+        self.B_grad = np.sum(dphi_t * det_jac * self.wps, axis=0) / np.sum(det_jac * self.wps, axis=0)
 
         # initialize the B matrix
         edof = self.dof_per_element
@@ -308,22 +309,22 @@ class StructuralHexahedron4(Structural3DElement, Hexahedron8):
             if self.element_options.Bbar_dilatational_evaluation == BbarDilatationalEvaluation.VOLUME_AVERAGED:
 
                 # integrate the element volume
-                elem_vol = np.sum(detJAC * self.wps, axis=0)
+                elem_vol = np.sum(det_jac * self.wps, axis=0)
                 
                 # compute the volume-averaged B matrix
-                B0 = np.sum((B * detJAC * self.wps), axis=0) / elem_vol
+                B0 = np.sum((B * det_jac * self.wps), axis=0) / elem_vol
 
             # compute B at centroid (0, 0, 0)
             else:
 
                 # Jacobian matrix at the centroid (0, 0, 0)
-                JAC_0 = self.dphi_0 @ coords
+                jac_0 = self.dphi_0 @ coords
 
                 # Jacobian determinant and inverse at the centroid
-                detJAC_0, invJAC_0 = self.get_detJAC_and_invJAC(JAC_0)
+                inv_jac_0, det_jac_0 = get_3x3_matrix_inverse(jac_0)
 
                 # derivatives in global coordinates variables
-                dphi_t0 = invJAC_0 @ self.dphi_0
+                dphi_t0 = inv_jac_0 @ self.dphi_0
         
                 # initialize the B0 matrix that corresponds to the B matrix evaluated at the element centre
                 B0 = np.zeros((6, edof), dtype=float)
@@ -351,7 +352,7 @@ class StructuralHexahedron4(Structural3DElement, Hexahedron8):
             # B-bar: replace dilatational part of B by centroid dilatational part
             B_bar = B_dev + B_bar_dil
 
-            return detJAC, B_bar
+            return det_jac, B_bar
 
         elif self.element_options.extra_shape_functions:
 
@@ -359,13 +360,13 @@ class StructuralHexahedron4(Structural3DElement, Hexahedron8):
             # Zienkiewicz, O. C., Taylor, R. L. The Finite Element Method: Its Basis and Fundamentals. Seventh Edition. pg 271-275
 
             # Jacobian matrix at the centroid (0, 0, 0)
-            JAC_0 = self.dphi_0 @ coords
+            jac_0 = self.dphi_0 @ coords
 
             # Jacobian determinant and inverse at the centroid
-            detJAC_0, invJAC_0 = self.get_detJAC_and_invJAC(JAC_0)
+            inv_jac_0, det_jac0 = get_3x3_matrix_inverse(jac_0)
         
             # adjusted derivatives in global coordinates variables (satisfy the stress patch test)
-            dphi_esf_t = (detJAC_0 / detJAC) * invJAC_0 @ self.dphi_esf
+            dphi_esf_t = (det_jac0 / det_jac) * inv_jac_0 @ self.dphi_esf
 
             # fill the B matrix with ESF-related derivatives
             B[:, 0, edof + 0::3] = dphi_esf_t[:, 0, :]
@@ -381,32 +382,32 @@ class StructuralHexahedron4(Structural3DElement, Hexahedron8):
         elif self.element_options.enhanced_assumed_strain:
 
             # # Jacobian matrix at the centroid (0, 0, 0)
-            JAC_0 = self.dphi_0 @ coords
+            jac_0 = self.dphi_0 @ coords
 
             # # integrate the element volume
-            # e_vol = np.sum(detJAC * self.wps, axis=0)
+            # e_vol = np.sum(det_jac * self.wps, axis=0)
 
             # Jacobian determinant and inverse at the centroid
-            detJAC_0, _ = self.get_detJAC_and_invJAC(JAC_0)
+            det_jac_0 = get_3x3_matrix_determinant(jac_0)
 
             # compute the inverse transpose T0 matrix
-            inv_T0 = self.get_inverse_T0_matrix(JAC_0)
+            inv_T0 = self.get_inverse_T0_matrix(jac_0)
 
             # compute the interpolation matrix M_xi
             M_xi = self.get_interpolation_matrix_Mxi()
 
             # extend the matrix of shape function derivatives B
-            B[:, :, edof:] = (detJAC_0 / detJAC) * inv_T0.T @ M_xi
+            B[:, :, edof:] = (det_jac_0 / det_jac) * inv_T0.T @ M_xi
 
             # # evaluate the patch test
             # integral_patch_test = 0.
             # for i in range(self.nint):
-            #     integral_patch_test += (detJAC_0 / detJAC[i, :, :]) * (inv_T0.T @ M_xi[i, :, :]) * (detJAC[i, :, :] * self.wps[i])
+            #     integral_patch_test += (detjac_0 / detjac[i, :, :]) * (inv_T0.T @ M_xi[i, :, :]) * (detjac[i, :, :] * self.wps[i])
 
             # if np.linalg.norm(integral_patch_test) > 1e-15:
             #     print(f"Patch test not satisfied for the element #{element_id}")
 
-        return detJAC, B
+        return det_jac, B
 
 
     def get_B_matrix(self, dphi_t: np.ndarray):

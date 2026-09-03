@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 
+from vibra.engine.elements.common.matrix_utils import get_3x3_matrix_inverse
 from vibra.engine.elements.elements_3d.acoustic.acoustic_3d_element import Acoustic3DElement
 from vibra.engine.elements.elements_3d.hex20_element import Hexahedron20
 
@@ -114,13 +115,13 @@ class AcousticHexahedron20(Acoustic3DElement, Hexahedron20):
         coords = self.model.mesh.nodal_coordinates[node_ids, 1:4]
 
         # Jacobian matrix
-        JAC = dphi @ coords
+        jac = dphi @ coords
 
         # inverse of Jacobian matrix
-        _, invJAC = self.get_detJAC_and_invJAC(JAC)
+        inv_jac, _ = get_3x3_matrix_inverse(jac)
 
         # derivative of shape functions
-        B = invJAC @ dphi
+        B = inv_jac @ dphi
 
         # calculate the particle velocities components
         particle_velocity = -(1 / (1j * rho * omega)) * (B @ Pe)
