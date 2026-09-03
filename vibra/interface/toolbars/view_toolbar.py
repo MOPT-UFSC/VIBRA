@@ -79,12 +79,12 @@ class ViewToolbar(QToolBar):
         self.addAction(self.action_rotation_tool)
         self.addAction(self.action_zoom_tool)
         # self.addSeparator()
-        self.addAction(self.action_top_view)
-        self.addAction(self.action_bottom_view)
-        self.addAction(self.action_right_view)
-        self.addAction(self.action_left_view)
         self.addAction(self.action_front_view)
         self.addAction(self.action_back_view)
+        self.addAction(self.action_left_view)
+        self.addAction(self.action_right_view)
+        self.addAction(self.action_top_view)
+        self.addAction(self.action_bottom_view)
         self.addAction(self.action_isometric_view)
         self.addAction(self.action_zoom_to_fit)
 
@@ -147,7 +147,7 @@ class ViewToolbar(QToolBar):
         if isinstance(widget, CommonRenderWidget):
             widget.renderer.ResetCamera()
             widget.update()
-        
+
     def action_grab_tool_callback(self):
         if self.action_grab_tool.isChecked():
             self.discheck_all_actions_of_render_tools_toolbar_except(self.action_grab_tool)
@@ -178,7 +178,7 @@ class ViewToolbar(QToolBar):
             _action.setChecked(False)
 
         action.setChecked(True)
-    
+
     def enable_selection_tool(self):
         self.action_selection_tool.setEnabled(True)
 

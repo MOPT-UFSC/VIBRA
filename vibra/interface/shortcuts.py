@@ -40,16 +40,18 @@ SHORTCUTS = {
     "?": ("callback", "show_shortcuts_help", "Show this shortcut list"),
     "Q": ("action", "action_model_workspace", "Model workspace"),
     "W": ("action", "action_mesh_workspace", "Mesh workspace"),
-    "E": ("action", "action_results_workspace", "Results workspace"),
+    "E": ("action", "action_results_workspace", "Results workspace"
+    ),
     "Ctrl+S": ("action", "action_save", "Save the project"),
     "Ctrl+H": ("action", "action_hide_selection", "Hide the selection"),
     "Ctrl+U": ("action", "action_unhide_all", "Unhide everything"),
-    "Ctrl+1": ("action", "view_toolbar.action_top_view", "Top view"),
-    "Ctrl+2": ("action", "view_toolbar.action_bottom_view", "Bottom view"),
-    "Ctrl+3": ("action", "view_toolbar.action_right_view", "Right view"),
-    "Ctrl+4": ("action", "view_toolbar.action_left_view", "Left view"),
-    "Ctrl+5": ("action", "view_toolbar.action_front_view", "Front view"),
-    "Ctrl+6": ("action", "view_toolbar.action_back_view", "Back view"),
+
+    "Ctrl+1": ("action", "view_toolbar.action_front_view", "Front view"),
+    "Ctrl+2": ("action", "view_toolbar.action_back_view", "Back view"),
+    "Ctrl+3": ("action", "view_toolbar.action_left_view", "Left view"),
+    "Ctrl+4": ("action", "view_toolbar.action_right_view", "Right view"),
+    "Ctrl+5": ("action", "view_toolbar.action_top_view", "Top view"),
+    "Ctrl+6": ("action", "view_toolbar.action_bottom_view", "Bottom view"),
     "Ctrl+7": ("action", "view_toolbar.action_isometric_view", "Isometric view"),
 }
 
