@@ -263,7 +263,11 @@ class Triangle_6(Element2D):
         the GMSH connectivity to the FE model
         """
         self.connectivities = connectivities[:, [1, 2, 0, 4, 5, 3]]
-        # self.connectivities = connectivities[:, [0, 1, 2, 3, 4, 5]]
+
+
+    def invert_element_connectivity(self, el_index: int):
+        indexes = [2, 1, 0, 4, 3, 5]
+        self.connectivities[el_index, :] = self.connectivities[el_index, indexes]
 
 
 def get_shape_functions_and_derivatives(rrx: np.ndarray, ssx: np.ndarray):

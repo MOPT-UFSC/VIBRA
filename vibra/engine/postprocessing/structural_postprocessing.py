@@ -144,7 +144,7 @@ class StructuralPostprocessing:
 
         min_value, max_value = self.get_max_min_values_of_selected_data(tuple(data_complex), data_type)
 
-        return phase_shifted_data, color_scalars, min_value, max_value, np.imag(phase_shifted_data).any()
+        return phase_shifted_data, color_scalars, min_value, max_value, np.imag(data_complex).any()
 
     def get_structural_stresses(
             self,

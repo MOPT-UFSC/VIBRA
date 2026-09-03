@@ -219,6 +219,11 @@ class Triangle_3(Element2D):
         self.connectivities = connect_face[:, [0, 1, 2]]
 
 
+    def invert_element_connectivity(self, el_index: int):
+        indexes = [2, 1, 0]
+        self.connectivities[el_index, :] = self.connectivities[el_index, indexes]
+
+
 def get_shape_functions_and_derivatives(ssx: np.ndarray, ttx: np.ndarray):
 
     """

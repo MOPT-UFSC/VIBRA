@@ -88,7 +88,10 @@ class Model:
         self.length_unit: LengthUnits = "millimeter"
         self.mesh_setup: Optional[MeshSetup] = None
         self.analysis_setup: Optional[AnalysisSetup] = None
+
         self.solution: Optional[Solution] = None
+        self.acoustic_solution: Optional[Solution] = None
+        self.structural_solution: Optional[Solution] = None
 
         # TODO: review these variables
         self.mesh: Optional[Mesh] = None
@@ -232,8 +235,9 @@ class Model:
             self.fluid_structure_interfaces[surface_id] = {
                 "fluid_volume" : fluid_volume,
                 "structure_volume" : structure_volume,
-                "surface_nodes" : self.mesh.get_nodes_from_surface(surface_id)
                 }
+
+        print(self.fluid_structure_interfaces)
 
     def map_nodes_by_domain(self):
         self.nodes_per_domain.clear()

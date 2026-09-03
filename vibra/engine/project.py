@@ -447,17 +447,20 @@ class Project:
         return self.model.solution
 
     def solve_coupled_harmonic_analysis(self, is_resume: bool = False, print_log: bool = False) -> HarmonicSolution:
-        print("resolveu o acústico")
-        self.acoustic_solution = self.solve_acoustic_harmonic_analysis(is_resume=is_resume, print_log=print_log)
-        print("resolveu o estrutural")
-        self.structural_soltuion = self.solve_structural_harmonic_analysis(is_resume=is_resume, print_log=print_log)
+        logging.info("Building the acoustic harmonic problem...")
+        self.model.acoustic_solution = self.solve_acoustic_harmonic_analysis(is_resume=is_resume, print_log=print_log)
+
+        logging.info("Building the structural harmonic problem...")
+        self.model.structural_solution = self.solve_structural_harmonic_analysis(is_resume=is_resume, print_log=print_log)
 
         return HarmonicSolution(
             analysis_id=self.model.analysis_id,
-            frequencies=self.acoustic_solution.frequencies,
-            structural_solution=self.structural_soltuion.structural_solution,
-            acoustic_solution=self.acoustic_solution.acoustic_solution,
+            frequencies=self.model.acoustic_solution.frequencies,
+            structural_solution=self.model.structural_solution.structural_solution,
+            acoustic_solution=self.model.acoustic_solution.acoustic_solution,
         )
+
+
 
     def update_post_processing(self):
         self.postprocessing = None

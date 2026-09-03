@@ -303,7 +303,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         assert isinstance(postprocessing, StructuralPostprocessing)
 
         analysis_id = app().project.model.analysis_id
-        assert analysis_id.is_structural()
+        assert analysis_id.is_structural() or analysis_id.is_harmonic_coupled()
 
         if animation_frame is None:
             phase = self.plot_setup.phase

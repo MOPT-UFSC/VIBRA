@@ -75,7 +75,10 @@ class AnalysisChecker:
         else:
             self.check_materials_surfaces()
 
-        self.check_structural_harmonic_excitations()
+        if self.model.analysis_id.is_harmonic_coupled():
+            self.check_acoustic_harmonic_excitations()
+        else:
+            self.check_structural_harmonic_excitations()
 
         if self.model.analysis_setup.analysis_method == AnalysisMethod.MODE_SUPERPOSITION:
             self.check_mode_superposition_prescribed_dof_criterion()
