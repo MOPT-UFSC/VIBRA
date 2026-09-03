@@ -38,31 +38,24 @@ class ViewToolbar(QToolBar):
 
     def _create_actions(self):
         self.action_top_view = QAction(self.top_icon, "Top View", self)
-        self.action_top_view.setShortcut("Ctrl+Shift+1")
         self.action_top_view.triggered.connect(self.set_top_view)
 
         self.action_bottom_view = QAction(self.bottom_icon, "Bottom View", self)
-        self.action_bottom_view.setShortcut("Ctrl+Shift+2")
         self.action_bottom_view.triggered.connect(self.set_bottom_view)
 
         self.action_right_view = QAction(self.right_icon, "Right View", self)
-        self.action_right_view.setShortcut("Ctrl+Shift+3")
         self.action_right_view.triggered.connect(self.set_right_view)
 
         self.action_left_view = QAction(self.left_icon, "Left View", self)
-        self.action_left_view.setShortcut("Ctrl+Shift+4")
         self.action_left_view.triggered.connect(self.set_left_view)
 
         self.action_front_view = QAction(self.front_icon, "Front View", self)
-        self.action_front_view.setShortcut("Ctrl+Shift+5")
         self.action_front_view.triggered.connect(self.set_front_view)
 
         self.action_back_view = QAction(self.back_icon, "Back View", self)
-        self.action_back_view.setShortcut("Ctrl+Shift+6")
         self.action_back_view.triggered.connect(self.set_back_view)
 
         self.action_isometric_view = QAction(self.isometric_icon, "Isometric View", self)
-        self.action_isometric_view.setShortcut("Ctrl+Shift+7")
         self.action_isometric_view.triggered.connect(self.set_isometric_view)
 
         self.action_zoom_to_fit = QAction(self.zoom_to_fit_icon, "Zoom To Fit", self)
@@ -86,12 +79,12 @@ class ViewToolbar(QToolBar):
         self.addAction(self.action_rotation_tool)
         self.addAction(self.action_zoom_tool)
         # self.addSeparator()
-        self.addAction(self.action_top_view)
-        self.addAction(self.action_bottom_view)
-        self.addAction(self.action_right_view)
-        self.addAction(self.action_left_view)
         self.addAction(self.action_front_view)
         self.addAction(self.action_back_view)
+        self.addAction(self.action_left_view)
+        self.addAction(self.action_right_view)
+        self.addAction(self.action_top_view)
+        self.addAction(self.action_bottom_view)
         self.addAction(self.action_isometric_view)
         self.addAction(self.action_zoom_to_fit)
 
@@ -154,7 +147,7 @@ class ViewToolbar(QToolBar):
         if isinstance(widget, CommonRenderWidget):
             widget.renderer.ResetCamera()
             widget.update()
-        
+
     def action_grab_tool_callback(self):
         if self.action_grab_tool.isChecked():
             self.discheck_all_actions_of_render_tools_toolbar_except(self.action_grab_tool)
@@ -185,7 +178,7 @@ class ViewToolbar(QToolBar):
             _action.setChecked(False)
 
         action.setChecked(True)
-    
+
     def enable_selection_tool(self):
         self.action_selection_tool.setEnabled(True)
 

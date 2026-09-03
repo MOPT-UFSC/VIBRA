@@ -8,12 +8,14 @@ from shutil import rmtree
 import gmsh
 from molde import stylesheets
 from molde.render_widgets import CommonRenderWidget
+from PIL import ImageQt
 from PySide6.QtCore import QEvent, Qt, Signal
 from PySide6.QtGui import QAction
 from PySide6.QtWidgets import QFileDialog, QMenu, QMessageBox
 
 from vibra import SUPPORTED_GEOMETRY_EXTENSIONS, SUPPORTED_MESH_EXTENSIONS, TEMP_PROJECT_DIR, app
 from vibra.engine.assemblers import AcousticAssembler
+from vibra.engine.mesher.mesh_setup import MeshSetup
 from vibra.engine.solvers import HarmonicSolver
 from vibra.interface.data.icons.theme_resources import set_icon_theme
 from vibra.interface.data_handler.export_mesh_data import ExportMeshData
@@ -29,6 +31,7 @@ from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetup
 from vibra.interface.plots.acoustic.export_element_transfer_data_inputs import ExportElementTransferDataInputs
 from vibra.interface.project.save_project_data_selector import SaveProjectDataSelector
 from vibra.interface.section_plane_widget import SectionPlaneWidget
+from vibra.interface.shortcuts import is_focus_on_text_input, open_shortcuts_help, register_global_shortcuts
 from vibra.interface.status_bar import StatusBar
 from vibra.interface.toolbars.analysis_toolbar import AnalysisToolbar
 from vibra.interface.toolbars.view_toolbar import ViewToolbar
@@ -164,6 +167,7 @@ class MainWindow(MainWindow_UI):
         self._create_basic_layout()
         self._configure_render_widgets_stack()
         self._configure_stacked_setup()
+        register_global_shortcuts(self)
 
         app().splash.update_progress(90)
         self.load_user_preferences()
@@ -960,6 +964,70 @@ class MainWindow(MainWindow_UI):
     def set_input_widget(self, dialog):
         self.dialog = dialog
 
+    def copy_screenshot_to_clipboard(self):
+        if is_focus_on_text_input():
+            return
+
+        widget = self.render_widgets_stack.currentWidget()
+        if not isinstance(widget, CommonRenderWidget):
+            return
+
+        image = widget.get_screenshot()
+        app().clipboard().setImage(ImageQt.ImageQt(image))
+
+    def select_all_entities_shortcut(self):
+        if is_focus_on_text_input():
+            return
+
+        if self.action_mesh_workspace.isChecked():
+            self.selection.select_all_mesh()
+        else:
+            self.selection.select_all_geometry()
+        self.reload_visualization_filter()
+
+    def toggle_section_plane(self):
+        if is_focus_on_text_input():
+            return
+
+        if self.section_plane.isVisible():
+            return
+
+        active = self.action_section_plane.isChecked()
+        self.action_section_plane.blockSignals(True)
+        self.action_section_plane.setChecked(not active)
+        self.action_section_plane.blockSignals(False)
+        self.section_plane.cutting = not active
+        self.section_plane.value_changed.emit()
+
+    def show_shortcuts_help(self):
+        if is_focus_on_text_input():
+            return
+
+        open_shortcuts_help(self)
+
+    def generate_mesh_with_current_setup(self):
+        """
+        Generates the mesh with the current mesh setup configuration.
+        When the mesh setup window is open, the mesh is generated using the
+        current values of its widgets.
+        """
+        if isinstance(self.dialog, MesherSetupInputs) and self.dialog.isVisible():
+            self.dialog.apply_callback()
+            return
+
+        model = app().project.model
+        if model.geometry_path is None or not isinstance(model.mesh_setup, MeshSetup):
+            return
+
+        mesh_setup = model.mesh_setup
+
+        def generate():
+            app().project.generate_mesh(mesh_setup)
+
+        LoadingWindow(generate).run()
+        self.action_mesh_workspace_callback()
+        self.update_plots()
+
     def action_capture_image_callback(self):
         self.capture_image()
 
@@ -1143,24 +1211,8 @@ class MainWindow(MainWindow_UI):
         LoadingWindow(update_plot_callback).run()
 
     def eventFilter(self, obj, event: QEvent):
-        modifiers = app().keyboardModifiers()
-        alt_pressed = modifiers & Qt.KeyboardModifier.AltModifier
         if event.type() == QEvent.Type.ShortcutOverride:
-            if event.key() == Qt.Key.Key_F5:
-                self.update_plots()
-
-            elif alt_pressed and (event.key() == Qt.Key.Key_P):
-                if self.section_plane.isVisible():
-                    return super(MainWindow, self).eventFilter(obj, event)
-
-                active = self.action_section_plane.isChecked()
-                self.action_section_plane.blockSignals(True)
-                self.action_section_plane.setChecked(not active)
-                self.action_section_plane.blockSignals(False)
-                self.section_plane.cutting = not active
-                self.section_plane.value_changed.emit()
-
-            elif event.key() == Qt.Key.Key_Delete:
+            if event.key() == Qt.Key.Key_Delete:
                 self.remove_property()
 
         return super(MainWindow, self).eventFilter(obj, event)
