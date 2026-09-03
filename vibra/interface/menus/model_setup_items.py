@@ -66,8 +66,8 @@ class ModelSetupItems(CommonMenuItems):
 
         # external impedances
         self.item_child_anechoic_termination = self.add_item("Anechoic Termination")
-        self.item_child_absorption_surface = self.add_item("Absorption Surface")
         self.item_child_specific_impedance = self.add_item("Specific Impedance")
+        self.item_child_absorption_surface = self.add_item("Absorption Surface")
         self.item_child_anechoic_termination.setToolTip(0, "equivalent to the long pipe boundary condition")
 
         # internal impedances

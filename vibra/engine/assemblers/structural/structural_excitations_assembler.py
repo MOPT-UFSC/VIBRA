@@ -38,6 +38,11 @@ class StructuralExcitationsAssembler:
 
 
     @property
+    def mesh(self):
+        return self.assembler.model.mesh
+
+
+    @property
     def properties(self):
         return self.assembler.model.properties
 
@@ -293,8 +298,8 @@ class StructuralExcitationsAssembler:
             # normalize data type to array
             complex_values_array = self.process_loads_arrays(complex_values)
 
-            elements = list(self.model.mesh.elements_from_line.get(line_id))
-            connect = self.model.mesh.get_connectivity_from_line(line_id)
+            elements = list(self.mesh.elements_from_line.get(line_id))
+            connect = self.mesh.get_connectivity_from_line(line_id)
 
             if property_label == "nodal_loads":
                 line_length = self.element_1d.integrate_length(connect)
@@ -357,8 +362,8 @@ class StructuralExcitationsAssembler:
             # normalize data type to array
             complex_values_array = self.process_loads_arrays(complex_values)
 
-            elements = list(self.model.mesh.elements_from_surface.get(surface_id))
-            connect = self.model.mesh.get_connectivity_from_surface(surface_id)
+            elements = list(self.mesh.elements_from_surface.get(surface_id))
+            connect = self.mesh.get_connectivity_from_surface(surface_id)
 
             if property_label == "nodal_loads":
                 surface_area = self.element_2d.integrate_area(connect)
@@ -430,18 +435,13 @@ class StructuralExcitationsAssembler:
 
     def process_normal_pressure_load(self, integration_data: StructuralExcitationData):
 
-        element_ids = integration_data.element_ids
         connectivities = integration_data.connectivities
         pdata_values = integration_data.pdata_values
-
-        surface_elements_connectivities = self.model.mesh.faces_connectivity[element_ids, :]
-        elements_normals = self.model.mesh.get_element_face_normal_batched(surface_elements_connectivities)
 
         self.element_2d.reorder_connect(connectivities)
         for i, complex_values in enumerate(pdata_values):
             indices = self.element_2d.get_rows_and_cols_indices_1D(i)
-            e_normal = elements_normals[i, :].reshape(-1, 1)
-            self.structural_load[indices, :] += self.element_2d.integrate_normal_pressure_load(i, e_normal, complex_values)
+            self.structural_load[indices, :] += self.element_2d.integrate_normal_pressure_load(i, complex_values)
 
 
     def process_distributed_load_1d(self, integration_data: StructuralExcitationData):
@@ -466,6 +466,56 @@ class StructuralExcitationsAssembler:
             self.structural_load[indices, :] += self.element_2d.integrate_distributed_load(i, complex_values)
 
 
+    def process_structural_loading_from_acoustic_solution(self):
+
+        structural_domains = self.model.model_domains.get("structural", [])
+        surface_ids = list(self.model.fluid_structure_interfaces.keys())
+
+        mask = np.isin(self.mesh.faces_connectivity[:, 1], surface_ids)
+        interface_connectivities = self.mesh.faces_connectivity[mask, :]
+
+        # reorder the connectivities
+        self.element_2d.reorder_connect(interface_connectivities[:, 4:].copy())
+
+        # TODO: remove after validation is concluded
+        self.mesh.element_normals_data.clear()
+
+        # correct the connectivities order
+        for i, elem2d_id in enumerate(interface_connectivities[:, 0]):
+
+            elem3d_ids = self.mesh.face_to_solid_element.get(elem2d_id, [])
+
+            if len(elem3d_ids) != 2:
+                print(f"The element 2D {elem2d_id} touches the solid elements: {[int(elem_id) for elem_id in elem3d_ids]}")
+                continue
+
+            # cache_connect = self.element_2d.connectivities[i, :].copy()
+
+            for elem3d_id in self.mesh.face_to_solid_element.get(elem2d_id, []):
+                vol_id = self.mesh.solids_connectivity[elem3d_id, 1]
+                face_coords = self.mesh.nodal_coordinates[self.element_2d.connectivities[i, :], 1:]
+                solid_coords = self.mesh.nodal_coordinates[self.mesh.solids_connectivity[elem3d_id, 4:], 1:]
+                is_inverted = self.mesh.is_element_normal_vector_inverted(elem2d_id, face_coords, solid_coords)
+                if vol_id in structural_domains and is_inverted:
+                    self.element_2d.invert_element_connectivity(i)
+                    # print(f"O elemento {i} foi invertido: {cache_connect} >> {self.element_2d.connectivities[i, :]}")
+                    break
+
+        from vibra import app
+        app().main_window.results_widget.visualization_filter.element_normal_symbols = True
+        app().main_window.update_symbols()
+
+        # acoustic solution data
+        nodal_solution = self.model.acoustic_solution.nodal_solution
+
+        # integrate the structural loads caused by the acoustic pressure field on fluid-structure domain interfaces
+        for i, connect in enumerate(self.element_2d.connectivities):
+            _nodes = self.model.fluid_node_mapping[connect]
+            element_pressures = nodal_solution[_nodes, :]
+            indices = self.element_2d.get_rows_and_cols_indices_1D(i)
+            self.structural_load[indices, :] += self.element_2d.integrate_normal_pressure_load(i, element_pressures, acoustic_excitation=True)
+
+
     def process_distributed_loads_for_shell_elements(self):
 
         for (property, surface_id), data in self.properties.surface_properties.items():
@@ -475,7 +525,7 @@ class StructuralExcitationsAssembler:
             if data.get("element_type") != "element_2d":
                 continue
 
-            connectivities_from_surface = self.model.mesh.get_connectivity_from_surface(surface_id)
+            connectivities_from_surface = self.mesh.get_connectivity_from_surface(surface_id)
             if property == "distributed_loads":
                 surface_load = self.process_loads_arrays(data["values"])
                 if surface_load is None:
@@ -507,12 +557,12 @@ class StructuralExcitationsAssembler:
             if line_load is None:
                 continue
 
-            nodes = self.model.mesh.get_nodes_from_line(line_id)
+            nodes = self.mesh.get_nodes_from_line(line_id)
             if nodes is None:
                 continue
 
-            for surface_id in self.model.mesh.surfaces_from_line[line_id]:
-                connectivities_from_surface = self.model.mesh.get_connectivity_from_surface(surface_id)
+            for surface_id in self.mesh.surfaces_from_line[line_id]:
+                connectivities_from_surface = self.mesh.get_connectivity_from_surface(surface_id)
                 rows = np.sum(np.isin(connectivities_from_surface, nodes), axis=1) == 2
 
                 for connect_2d in connectivities_from_surface[rows, :]:
@@ -532,6 +582,9 @@ class StructuralExcitationsAssembler:
         self.process_structural_excitations_by_nodal_attribution()
         self.process_structural_excitations_by_1d_element_integration()
         self.process_structural_excitations_by_2d_element_integration()
+
+        if self.model.analysis_id.is_harmonic_coupled():
+            self.process_structural_loading_from_acoustic_solution()
 
         # loads of shell structure
         self.process_distributed_loads_for_shell_elements()

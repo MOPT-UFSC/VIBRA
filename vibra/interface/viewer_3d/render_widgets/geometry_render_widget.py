@@ -244,9 +244,10 @@ class GeometryRenderWidget(CommonRenderWidget):
         except Exception:
             physical_domain = app().project.get_physical_domain()
 
-        self.symbols_actor_structural.SetVisibility(visualization.symbols and (physical_domain == "Structural"))
-        self.symbols_actor_acoustic.SetVisibility(visualization.symbols and (physical_domain == "Acoustic"))
-        self.symbols_actor_acoustic_fixed_size.SetVisibility(visualization.symbols and (physical_domain == "Acoustic"))
+        self.symbols_actor_structural.SetVisibility(visualization.symbols and (physical_domain in ["Structural", "Coupled"]))
+        self.symbols_actor_acoustic.SetVisibility(visualization.symbols and (physical_domain in ["Acoustic", "Coupled"]))
+        self.symbols_actor_acoustic_fixed_size.SetVisibility(visualization.symbols and (physical_domain in ["Acoustic", "Coupled"]))
+
         self.points_actor.SetVisibility(visualization.points)
         self.lines_actor.SetVisibility(visualization.lines)
         self.multimaterial.SetVisibility(visualization.faces)
