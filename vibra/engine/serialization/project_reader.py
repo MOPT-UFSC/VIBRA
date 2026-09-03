@@ -463,7 +463,7 @@ class ProjectReader:
                     raise ValueError("No solution found")
                 logger.warning("This file is deprecated and will not be supported after version 0.8")
 
-                if model.analysis_id.is_structural():
+                if model.analysis_id.is_structural() or model.analysis_id.is_coupled():
                     return HarmonicSolution(
                         analysis_id=model.analysis_id,
                         frequencies=frequencies,
