@@ -5,6 +5,7 @@ from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
     QLineEdit,
+    QMenu,
     QPlainTextEdit,
     QTableWidget,
     QTableWidgetItem,
@@ -15,7 +16,21 @@ from PySide6.QtWidgets import (
 from vibra import app
 
 
-TEXT_INPUT_WIDGETS = (QLineEdit, QTextEdit, QPlainTextEdit, QComboBox, QAbstractSpinBox)
+TEXT_INPUT_WIDGETS = (QLineEdit, QTextEdit, QPlainTextEdit, QAbstractSpinBox)
+
+
+def is_typing_input(widget) -> bool:
+    """
+    True when the focused widget actually accepts keyboard text input.
+
+    Non-editable QComboBoxes (selection-only) and read-only widgets should not
+    count as text input: they never consume letters/arrows for typing, so we
+    should not grey out shortcut actions while the user is simply picking an
+    option (e.g. analysis type / physical domain).
+    """
+    if isinstance(widget, QComboBox):
+        return widget.isEditable()
+    return isinstance(widget, TEXT_INPUT_WIDGETS)
 
 # Single source of truth for the application keymap.
 # Each entry maps a key sequence to a (kind, target, description) tuple:
@@ -69,50 +84,49 @@ SHORTCUTS = {
 
 def register_global_shortcuts(main_window):
     """
-    Registers all shortcuts from the SHORTCUTS registry. This is the single
-    source of truth for the application keymap.
+    Registers every entry of the SHORTCUTS registry as a standalone
+    application-wide QShortcut, wired to a target.
 
-    Callback entries become application-wide QShortcuts. Action entries set the
-    shortcut of an existing QAction (resolved through the dotted path) and make
-    it application-wide, so Qt also shows the shortcut next to the toolbar
-    button and in the menu. While typing in a text field, both QShortcuts and
-    the guarded QActions are disabled (the enabled state of the actions is
-    restored afterwards).
+    - kind "callback" -> the QShortcut triggers a main window method.
+    - kind "action"   -> the QShortcut triggers the resolved QAction.
+
+    The QActions themselves are never disabled, so their toolbar/menu icons
+    stay enabled and visible the whole time. Only the QShortcut objects are
+    toggled while the focus is in a widget that truly accepts text input, so
+    keystrokes are not stolen while the user types (non-editable QComboBoxes
+    are not treated as text input).
+
+    Because the key sequences are not attached to the QActions anymore, Qt
+    will no longer draw the shortcut next to a menu entry/toolbar button by
+    itself. Use the SHORTCUTS registry (shown by the "?" help) to discover
+    and/or display the hints in the UI as needed.
     """
-    qshortcuts = list()
-    actions = list()
-    action_states = dict()
+    all_shortcuts = list()
 
     for keys, (kind, target, description) in SHORTCUTS.items():
-        if kind == "callback":
-            shortcut = QShortcut(QKeySequence(keys), main_window)
-            shortcut.setContext(Qt.ShortcutContext.ApplicationShortcut)
-            shortcut.activated.connect(getattr(main_window, target))
-            qshortcuts.append(shortcut)
+        shortcut = QShortcut(QKeySequence(keys), main_window)
+        shortcut.setContext(Qt.ShortcutContext.ApplicationShortcut)
 
+        if kind == "callback":
+            shortcut.activated.connect(getattr(main_window, target))
         elif kind == "action":
             action = _resolve_action(main_window, target)
-            action.setShortcut(QKeySequence(keys))
-            action.setShortcutContext(Qt.ShortcutContext.ApplicationShortcut)
-            actions.append(action)
-
+            shortcut.activated.connect(action.trigger)
         else:
             raise ValueError(f"Unknown shortcut kind: {kind!r}")
 
-    main_window._global_shortcuts = qshortcuts
+        all_shortcuts.append(shortcut)
+
+    main_window._global_shortcuts = all_shortcuts
 
     def update_shortcuts_enabled(old_widget, new_widget):
-        typing = isinstance(new_widget, TEXT_INPUT_WIDGETS)
-        for shortcut in qshortcuts:
+        typing = is_typing_input(new_widget)
+        for shortcut in all_shortcuts:
             shortcut.setEnabled(not typing)
-        for action in actions:
-            if typing:
-                action_states[action] = action.isEnabled()
-                action.setEnabled(False)
-            elif action in action_states:
-                action.setEnabled(action_states.pop(action))
 
     app().focusChanged.connect(update_shortcuts_enabled)
+
+    _label_menu_shortcuts(main_window)
 
 
 def _resolve_action(main_window, dotted_path: str):
@@ -122,8 +136,30 @@ def _resolve_action(main_window, dotted_path: str):
     return obj
 
 
+def _label_menu_shortcuts(main_window):
+    """_resolve_action
+    Appends each shortcut's key sequence to the text of the actions that are
+    shown inside a QMenu (e.g. Project > Save, Open…). Using a tab separator
+    makes Qt right-align the key in menu items, so users see "Save  Ctrl+S"
+    even though the shortcut itself is held by a separate QShortcut (not by the
+    action). Toolbar/button-only actions are left untouched.
+    """
+    menus = main_window.findChildren(QMenu)
+    menu_actions = set()
+    for menu in menus:
+        menu_actions.update(menu.actions())
+
+    for keys, (kind, target, description) in SHORTCUTS.items():
+        if kind != "action":
+            continue
+
+        action = _resolve_action(main_window, target)
+        if action in menu_actions:
+            action.setText(f"{action.text()}\t{keys}")
+
+
 def is_focus_on_text_input() -> bool:
-    return isinstance(app().focusWidget(), TEXT_INPUT_WIDGETS)
+    return is_typing_input(app().focusWidget())
 
 
 def open_shortcuts_help(parent):
