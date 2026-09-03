@@ -161,9 +161,6 @@ class AcousticExcitationsAssembler:
         F_Cadd = 1j * omega * Cr_add
         F_eq = F_Kadd + F_Madd + F_Cadd
 
-        if self.model.drop_domain:
-            F_eq = F_eq[self.acoustic_dofs]
-
         return F_eq[self.unprescribed_dof_indices]
 
 
