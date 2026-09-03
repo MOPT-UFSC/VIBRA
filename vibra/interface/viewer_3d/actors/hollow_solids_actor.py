@@ -20,7 +20,7 @@ class HollowSolidsActor(FacesActor):
 
         for i in range(face_indices.GetNumberOfTuples()):
             cell2d = face_indices.GetValue(i)
-            cell3d = self.mesh.face_to_solid_element.get(cell2d, -1)
+            cell3d, *_ = self.mesh.face_to_solid_element.get(cell2d, -1)
             solid_indices.SetValue(i, cell3d)
         
         self.data.GetCellData().AddArray(solid_indices)
