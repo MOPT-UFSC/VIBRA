@@ -266,8 +266,8 @@ class Triangle_6(Element2D):
 
 
     def invert_element_connectivity(self, el_index: int):
-        connect = self.connectivities[el_index, :].copy()
-        self.connectivities[el_index, :] = connect[[2, 1, 0, 4, 3, 5]]
+        indexes = [2, 1, 0, 4, 3, 5]
+        self.connectivities[el_index, :] = self.connectivities[el_index, indexes]
 
 
 def get_shape_functions_and_derivatives(rrx: np.ndarray, ssx: np.ndarray):

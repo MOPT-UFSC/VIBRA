@@ -223,5 +223,5 @@ class Quadrangle4(Element2D):
 
 
     def invert_element_connectivity(self, el_index: int):
-        connect = self.connectivities[el_index, :].copy()
-        self.connectivities[el_index, :] = connect[[3, 2, 1, 0]]
+        indexes = [3, 2, 1, 0]
+        self.connectivities[el_index, :] = self.connectivities[el_index, indexes]
