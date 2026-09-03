@@ -15,6 +15,21 @@ from PySide6.QtWidgets import (
 
 from vibra import app
 
+# --- How to add a shortcut -------------------------------------------------
+# Add an entry to the SHORTCUTS dict below. Each key is a Qt key sequence; each value is a
+# (kind, target, description) tuple:
+#
+#   "callback" -> call a method on the main window, e.g.:
+#       "F5": ("callback", "update_plots", "Refresh the plots")
+#
+#   "action"   -> trigger an existing QAction, addressed as a dotted path
+#       from the main window, e.g.:
+#       "Ctrl+S": ("action", "action_save", "Save the project")
+#       "Ctrl+1": ("action", "view_toolbar.action_front_view", "Front view")
+#
+# register_global_shortcuts() wires everything at startup and the "?" dialog
+# lists the keymap automatically.
+# ---------------------------------------------------------------------------
 
 TEXT_INPUT_WIDGETS = (QLineEdit, QTextEdit, QPlainTextEdit, QAbstractSpinBox)
 
