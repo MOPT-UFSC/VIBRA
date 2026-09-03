@@ -451,7 +451,14 @@ class Project:
         self.acoustic_solution = self.solve_acoustic_harmonic_analysis(is_resume=is_resume, print_log=print_log)
         print("resolveu o estrutural")
         self.structural_soltuion = self.solve_structural_harmonic_analysis(is_resume=is_resume, print_log=print_log)
-    
+
+        return HarmonicSolution(
+            analysis_id=self.model.analysis_id,
+            frequencies=self.acoustic_solution.frequencies,
+            structural_solution=self.structural_soltuion.structural_solution,
+            acoustic_solution=self.acoustic_solution.acoustic_solution,
+        )
+
     def update_post_processing(self):
         self.postprocessing = None
         if AnalysisID(self.model.analysis_id).is_acoustic():
