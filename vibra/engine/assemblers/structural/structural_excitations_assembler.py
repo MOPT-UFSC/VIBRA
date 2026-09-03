@@ -430,18 +430,13 @@ class StructuralExcitationsAssembler:
 
     def process_normal_pressure_load(self, integration_data: StructuralExcitationData):
 
-        element_ids = integration_data.element_ids
         connectivities = integration_data.connectivities
         pdata_values = integration_data.pdata_values
-
-        surface_elements_connectivities = self.model.mesh.faces_connectivity[element_ids, :]
-        elements_normals = self.model.mesh.get_element_face_normal_batched(surface_elements_connectivities)
 
         self.element_2d.reorder_connect(connectivities)
         for i, complex_values in enumerate(pdata_values):
             indices = self.element_2d.get_rows_and_cols_indices_1D(i)
-            e_normal = elements_normals[i, :].reshape(-1, 1)
-            self.structural_load[indices, :] += self.element_2d.integrate_normal_pressure_load(i, e_normal, complex_values)
+            self.structural_load[indices, :] += self.element_2d.integrate_normal_pressure_load(i, complex_values)
 
 
     def process_distributed_load_1d(self, integration_data: StructuralExcitationData):
@@ -464,6 +459,56 @@ class StructuralExcitationsAssembler:
         for i, complex_values in enumerate(pdata_values):
             indices = self.element_2d.get_rows_and_cols_indices_1D(i)
             self.structural_load[indices, :] += self.element_2d.integrate_distributed_load(i, complex_values)
+
+
+    def process_structural_loading_from_acoustic_solution(self):
+
+        print("process_structural_loading_from_acoustic_solution")
+        # return
+
+        structural_domains = self.model.model_domains.get("structural", [])
+        surface_ids = list(self.model.fluid_structure_interfaces.keys())
+
+        mask = np.isin(self.model.mesh.faces_connectivity[:, 1], surface_ids)
+        interface_connectivities = self.model.mesh.faces_connectivity[mask, :]
+        interface_nodes = np.unique(interface_connectivities).astype(int)
+
+        # initialize the corrected connectivities array
+        corrected_connectivities = interface_connectivities.copy()
+
+        self.model.mesh.element_normals_data.clear()
+
+        # correct the connectivities order
+        for i, connect_data in enumerate(interface_connectivities):
+
+            elem2d_id = connect_data[0]
+            elem3d_ids = self.model.mesh.face_to_solid_element.get(elem2d_id, [])
+
+            if len(elem3d_ids) != 2:
+                print(f"The element 2D {elem2d_id} touches the solid elements: {[int(elem_id) for elem_id in elem3d_ids]}")
+                continue
+
+            for elem3d_id in self.model.mesh.face_to_solid_element.get(elem2d_id, []):
+                vol_id = self.model.mesh.solids_connectivity[elem3d_id, 1]
+                is_inverted = self.model.mesh.is_element_normal_vector_inverted(elem2d_id, elem3d_id)
+                if vol_id in structural_domains and is_inverted:
+                    corrected_connectivities[i, 4:] = np.flip(connect_data[4:])
+                    # print(f"Foi invertido: {connect_data[4:]} >>> {np.flip(connect_data[4:])}")
+                    break
+
+        from vibra import app
+        app().main_window.results_widget.visualization_filter.element_normal_symbols = True
+        app().main_window.update_symbols()
+
+        # acoustic solution data
+        nodal_solution = self.model.acoustic_solution.nodal_solution
+
+        self.element_2d.reorder_connect(corrected_connectivities[:, 4:])
+        for i, connect in enumerate(corrected_connectivities[:, 4:]):
+            _nodes = self.model.fluid_node_mapping[connect]
+            element_pressures = nodal_solution[_nodes, :]
+            indices = self.element_2d.get_rows_and_cols_indices_1D(i)
+            self.structural_load[indices, :] += self.element_2d.integrate_normal_pressure_load(i, element_pressures)
 
 
     def process_distributed_loads_for_shell_elements(self):
@@ -532,6 +577,9 @@ class StructuralExcitationsAssembler:
         self.process_structural_excitations_by_nodal_attribution()
         self.process_structural_excitations_by_1d_element_integration()
         self.process_structural_excitations_by_2d_element_integration()
+
+        if self.model.analysis_id.is_harmonic_coupled():
+            self.process_structural_loading_from_acoustic_solution()
 
         # loads of shell structure
         self.process_distributed_loads_for_shell_elements()

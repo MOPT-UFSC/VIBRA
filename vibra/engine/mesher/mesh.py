@@ -1691,8 +1691,8 @@ class Mesh:
             for node in solid_nodes:
                 node_to_solid_ids[node].add(solid_id)
 
-        self.face_to_solid_element = {}
-        self.solid_to_face_elements = defaultdict(list)
+        self.face_to_solid_element.clear()
+        self.solid_to_face_elements.clear()
 
         for face_id, _, _, _, *face_nodes in self.faces_connectivity:
             candidate_solids = []
@@ -1706,9 +1706,9 @@ class Mesh:
                 continue
 
             # Populate the dicts using the first solid found.
-            solid_id, *_ = correspondent_solids
-            self.face_to_solid_element[face_id] = solid_id
-            self.solid_to_face_elements[solid_id].append(face_id)
+            self.face_to_solid_element[face_id] = correspondent_solids
+            for solid_id in correspondent_solids:
+                self.solid_to_face_elements[solid_id].append(face_id)
 
         number_2d_elements = len(self.faces_connectivity)
         number_3d_elements = len(self.solids_connectivity)
@@ -2689,9 +2689,42 @@ class Mesh:
                     print(f"Inverted normal found on face element {f} associated to solid element {s}.")
 
             if original_ndim == 1:
-                cross = cross.ravel()
+                cross: np.ndarray = cross.ravel()
 
         return cross
+
+    def is_element_normal_vector_inverted(self, elem2d_id: int, elem3d_id: int):
+
+        face_connectivity = self.faces_connectivity[elem2d_id, 4:]
+        face_coords = self.nodal_coordinates[face_connectivity, 1:]
+
+        P1 = face_coords[0, :]
+        P2 = face_coords[1, :]
+        P3 = face_coords[2, :]
+
+        P2P1 = np.array(P2 - P1, dtype=float)
+        P3P1 = np.array(P3 - P1, dtype=float)
+
+        cross = np.cross(P2P1, P3P1)
+        norm_cross = np.linalg.norm(cross)
+        cross /= norm_cross
+
+        solid_connectivity = self.solids_connectivity[elem3d_id, 4:]
+        solid_coords = self.nodal_coordinates[solid_connectivity, 1:]
+
+        face_element_center = np.average(face_coords, axis=0)
+        solid_element_center = np.average(solid_coords, axis=0)
+        vector = solid_element_center - face_element_center
+
+        e_normal = cross.copy()
+        if np.dot(cross, vector) > 0:
+            e_normal *= -1
+
+        surf_id = self.faces_connectivity[elem2d_id, 1]
+        element_normals_data = {int(elem2d_id) : (face_element_center, e_normal)}
+        self.set_elements_normals_data(surf_id, element_normals_data)
+
+        return np.dot(cross, vector) > 0
 
     def get_element2d_center_coordinates(self, connectivities: np.ndarray):
         element_nodes_coords = np.array([self.nodal_coordinates[node_ids, 1:] for node_ids in connectivities[:, 4:].T])

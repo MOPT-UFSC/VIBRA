@@ -57,7 +57,7 @@ class Structural2DElement(Element2D):
         return np.sum(dA)
 
 
-    def integrate_normal_pressure_load(self, el_index: int, e_normal: np.ndarray,  normal_pressure: np.ndarray) -> np.ndarray:
+    def integrate_normal_pressure_load(self, el_index: int, element_pressures: np.ndarray) -> np.ndarray:
         """ 
         This method computes the elementary load vector.
 
@@ -90,11 +90,17 @@ class Structural2DElement(Element2D):
             # determinant of Jacobian and normal vector for the i-th integration point
             det_jac, normal_vector = self.get_jacobian_determinant_2d(self.dphi[i, :, :], coords, return_normal=True)
 
-            # matrix of shape functions for all DOF
+            # vector of shape functions (structural dofs)
             N = self.N_matrix[i, :, :]
 
+            # vector of shape functions (acoustic dofs)
+            N_act = self.phi[i, :].reshape(1, -1)
+
+            #
+            Pe = N_act @ element_pressures
+
             # the negative value of the normal is used to point the normal toward the interior of the domain.
-            Fe += (N.T @ (-normal_vector @ normal_pressure)) * (det_jac * self.wps[i])
+            Fe += (N.T @ (-normal_vector @ Pe)) * (det_jac * self.wps[i])
 
         return Fe
 
