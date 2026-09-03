@@ -86,6 +86,7 @@ class Mesh:
         self.suppressed_volumes: set[int] = set()
 
         self.nodes_from_collapsed_elements = []
+        self.disconnected_nodes = []
 
         self.nodes_from_points = dict()
         self.points_from_nodes = dict()
@@ -195,7 +196,7 @@ class Mesh:
         else:
             return 1
 
-    def get_disconnected_nodes(self) -> list[int]:
+    def find_disconnected_nodes(self) -> list[int]:
         mask = self.get_disconnected_nodes_mask()
         return np.where(mask)[0].tolist()
 
@@ -1138,6 +1139,7 @@ class Mesh:
         self.collapsed_elements_data.clear()
 
         self.nodes_from_collapsed_elements.clear()
+        self.disconnected_nodes.clear()
 
         self.nodes_from_points.clear()
         self.points_from_nodes.clear()
@@ -1856,17 +1858,19 @@ class Mesh:
         """
         This method processes the disconnected nodes criterion for volumes,
         surfaces and lines-related elements.
+        It recomputes the disconnected nodes and stores them in the
+        ``self.disconnected_nodes`` attribute.
         """
-        disconnected_nodes = self.get_disconnected_nodes()
+        self.disconnected_nodes = self.find_disconnected_nodes()
 
         if not print_log:
             return
 
-        n_nodes = len(disconnected_nodes)
+        n_nodes = len(self.disconnected_nodes)
         if n_nodes == 0:
             return
 
-        nodes_list = disconnected_nodes if n_nodes < 10 else disconnected_nodes[:10]
+        nodes_list = self.disconnected_nodes if n_nodes < 10 else self.disconnected_nodes[:10]
         message = f">> At least {n_nodes} disconnected nodes have been detected.\n"
         message += f"Nodes list: {nodes_list}"
         if n_nodes > 10:

@@ -219,7 +219,7 @@ class ModelSetupItems(CommonMenuItems):
 
         # test for mesh. Not ideal, but it works. Since the mesh config is not part of the properties, the necessary check is performed here
         if property_name == "mesh_setup":
-            disconnected_nodes = bool(mesh.get_disconnected_nodes())
+            disconnected_nodes = bool(mesh.disconnected_nodes)
             collapsed_elements = bool(mesh.collapsed_elements_data)
             if collapsed_elements or disconnected_nodes:
                 return False
@@ -362,7 +362,7 @@ class ModelSetupItems(CommonMenuItems):
         if item_child.property_name == "mesh_setup":
             mesh = app().project.model.mesh
             if mesh is not None:
-                disconnected_nodes = bool(mesh.get_disconnected_nodes())
+                disconnected_nodes = bool(mesh.disconnected_nodes)
                 item_child.set_error(disconnected_nodes)
                 if disconnected_nodes:
                     return True

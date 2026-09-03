@@ -95,7 +95,7 @@ class NodesActor(vtkActor):
         else:
             self.set_color(Color(0, 0, 0, 0))
 
-        disconnected_nodes = self.mesh.get_disconnected_nodes()
+        disconnected_nodes = self.mesh.disconnected_nodes
         nodes_collapsed_elements = self.mesh.nodes_from_collapsed_elements
 
         if disconnected_nodes:

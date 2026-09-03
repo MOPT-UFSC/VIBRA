@@ -601,7 +601,7 @@ class MainWindow(MainWindow_UI):
                 len(self.distinguished_solids) != 0,
                 self.section_plane.cutting,
                 bool(mesh.collapsed_elements_data),
-                bool(mesh.get_disconnected_nodes()),
+                bool(mesh.disconnected_nodes),
             ]
         )
 

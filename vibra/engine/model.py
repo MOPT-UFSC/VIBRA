@@ -391,7 +391,7 @@ class Model:
 
         assert self.mesh is not None
 
-        disconnected_nodes = bool(self.mesh.get_disconnected_nodes())
+        disconnected_nodes = bool(self.mesh.disconnected_nodes)
         collapsed_elements = bool(self.mesh.collapsed_elements_data)
 
         if disconnected_nodes or collapsed_elements:

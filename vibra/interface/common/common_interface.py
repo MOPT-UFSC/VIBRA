@@ -208,7 +208,7 @@ def check_mesh_related_issues(run_analysis_button: QPushButton):
     mesh = app().project.model.mesh
     assert mesh is not None
 
-    disconnected_nodes = bool(mesh.get_disconnected_nodes())
+    disconnected_nodes = bool(mesh.disconnected_nodes)
     collapsed_elements = bool(mesh.collapsed_elements_data)
     problematic_mesh = collapsed_elements or disconnected_nodes
 
@@ -297,7 +297,7 @@ def generate_mesh_and_finalize() -> bool:
 
 def prompt_if_disconnected_nodes():
     mesh = app().project.model.mesh
-    if mesh is None or not mesh.get_disconnected_nodes():
+    if mesh is None or not mesh.disconnected_nodes:
         return
 
     confirmation = GetUserConfirmationInput(

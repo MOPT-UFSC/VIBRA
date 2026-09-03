@@ -79,7 +79,7 @@ class EdgesActor(vtkActor):
 
     def paint_edges_when_mesh_has_error(self):
 
-        disconnected_nodes = app().project.model.mesh.get_disconnected_nodes()
+        disconnected_nodes = app().project.model.mesh.disconnected_nodes
         nodes_collapsed_elements = app().project.model.mesh.nodes_from_collapsed_elements
 
         edges_error_color = color_names.GRAY_3
@@ -131,7 +131,7 @@ class EdgesActor(vtkActor):
         else:
             self.set_color(Color(0, 0, 0, 0))
 
-        disconnected_nodes = app().project.model.mesh.get_disconnected_nodes()
+        disconnected_nodes = app().project.model.mesh.disconnected_nodes
         nodes_collapsed_elements = app().project.model.mesh.nodes_from_collapsed_elements
 
         if disconnected_nodes:
