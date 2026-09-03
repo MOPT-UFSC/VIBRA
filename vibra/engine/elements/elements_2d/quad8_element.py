@@ -264,3 +264,8 @@ class Quadrangle8(Element2D):
     def reorder_connect(self, connect_face: np.ndarray):
         """Reordering connectivity matrix to adequate the GMSH connectivity to the FE model"""
         self.connectivities = connect_face[:, [0, 1, 2, 3, 4, 5, 6, 7]]
+
+
+    def invert_element_connectivity(self, el_index: int):
+        connect = self.connectivities[el_index, :].copy()
+        self.connectivities[el_index, :] = connect[[3, 2, 1, 0, 4, 7, 6, 5]]

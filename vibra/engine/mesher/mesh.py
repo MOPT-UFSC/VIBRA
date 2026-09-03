@@ -1279,6 +1279,10 @@ class Mesh:
         self.faces_connectivity, self.map_face_elements = self._get_connectivity_array(connectivity_dim2)
         self.solids_connectivity, self.map_solid_elements = self._get_connectivity_array(connectivity_dim3)
 
+        # self.export_nodal_coordinates("nodal_coordinates.dat")
+        # self.export_solid_elements_connectivity("solids_connectivity.dat")
+        # self.export_face_elements_connectivity("faces_connectivity.dat")
+
         logging.info("Post-processing mesh... [68/100]")
         self.process_mesh_related_mappings("Post-processing")
 
@@ -2693,10 +2697,7 @@ class Mesh:
 
         return cross
 
-    def is_element_normal_vector_inverted(self, elem2d_id: int, elem3d_id: int):
-
-        face_connectivity = self.faces_connectivity[elem2d_id, 4:]
-        face_coords = self.nodal_coordinates[face_connectivity, 1:]
+    def is_element_normal_vector_inverted(self, elem2d_id: int, face_coords: np.ndarray, solid_coords: np.ndarray):
 
         P1 = face_coords[0, :]
         P2 = face_coords[1, :]
@@ -2708,9 +2709,6 @@ class Mesh:
         cross = np.cross(P2P1, P3P1)
         norm_cross = np.linalg.norm(cross)
         cross /= norm_cross
-
-        solid_connectivity = self.solids_connectivity[elem3d_id, 4:]
-        solid_coords = self.nodal_coordinates[solid_connectivity, 1:]
 
         face_element_center = np.average(face_coords, axis=0)
         solid_element_center = np.average(solid_coords, axis=0)

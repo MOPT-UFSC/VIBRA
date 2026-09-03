@@ -57,7 +57,7 @@ class Structural2DElement(Element2D):
         return np.sum(dA)
 
 
-    def integrate_normal_pressure_load(self, el_index: int, element_pressures: np.ndarray) -> np.ndarray:
+    def integrate_normal_pressure_load(self, el_index: int, element_pressure: np.ndarray, acoustic_excitation: bool = False) -> np.ndarray:
         """ 
         This method computes the elementary load vector.
 
@@ -66,8 +66,12 @@ class Structural2DElement(Element2D):
         el_index: int
             The element index.
 
-        load: float, optional
-            The load vector.
+        element_pressure: np.ndarray
+            An array containing the element pressure data.
+
+        acoustic_excitation: bool, optional
+            Use this argument to control when the structural loading caused by
+            acoustic pressures excitation is calculated.
 
         Returns
         -------
@@ -93,14 +97,18 @@ class Structural2DElement(Element2D):
             # vector of shape functions (structural dofs)
             N = self.N_matrix[i, :, :]
 
-            # vector of shape functions (acoustic dofs)
-            N_act = self.phi[i, :].reshape(1, -1)
+            if acoustic_excitation:
+                # vector of shape functions (acoustic dofs)
+                N_act = self.phi[i, :].reshape(1, -1)
 
-            #
-            Pe = N_act @ element_pressures
+                # pressure in terms of the isoparametric coordinates (xi, eta)
+                P_i = N_act @ element_pressure
+
+            else:
+                P_i = element_pressure
 
             # the negative value of the normal is used to point the normal toward the interior of the domain.
-            Fe += (N.T @ (-normal_vector @ Pe)) * (det_jac * self.wps[i])
+            Fe += (N.T @ (-normal_vector @ P_i)) * (det_jac * self.wps[i])
 
         return Fe
 
