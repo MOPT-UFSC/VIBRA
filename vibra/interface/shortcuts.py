@@ -152,7 +152,7 @@ def _resolve_action(main_window, dotted_path: str):
 
 
 def _label_menu_shortcuts(main_window):
-    """_resolve_action
+    """
     Appends each shortcut's key sequence to the text of the actions that are
     shown inside a QMenu (e.g. Project > Save, Open…). Using a tab separator
     makes Qt right-align the key in menu items, so users see "Save  Ctrl+S"
