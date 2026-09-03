@@ -158,6 +158,7 @@ class ProjectReader:
             element_order=element_order,
             compute_quality_metrics=mesh_setup_dict.get("compute_quality_metrics", False),
             merge_connected_volumes=mesh_setup_dict.get("merge_connected_volumes", False),
+            suppressed_volume_ids=mesh_setup_dict.get("suppressed_volume_ids", []),
             local_mesh_size_control_parameters=size_control_parameters,
             custom_element_setup=custom_element,
             random_seed=mesh_setup_dict.get("random_seed", 1234),
@@ -209,6 +210,10 @@ class ProjectReader:
             mesh.lines_connectivity = np.array(file["connectivity/lines_connectivity"])
             mesh.faces_connectivity = np.array(file["connectivity/faces_connectivity"])
             mesh.solids_connectivity = np.array(file["connectivity/solids_connectivity"])
+
+            suppression = file.get("suppression", dict())
+            suppressed_volume_ids = suppression.get("suppressed_volume_ids", list())
+            mesh.suppressed_volumes = {int(vol_id) for vol_id in suppressed_volume_ids}
 
             curvatures = file.get("curvatures", dict())
             for key, value in curvatures.get("curvatures_surface", dict()).items():

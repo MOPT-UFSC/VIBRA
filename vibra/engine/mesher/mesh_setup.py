@@ -25,6 +25,9 @@ class MeshSetup:
     compute_quality_metrics: bool = False
     merge_connected_volumes: bool = True
 
+    # Suppression
+    suppressed_volume_ids: list[int] = field(default_factory=list)
+
     # Advanced stuff
     local_mesh_size_control_parameters: list[LocalMeshSizeControlSetup] = field(default_factory=list)
     custom_element_setup: Optional[ElementSetup] = None

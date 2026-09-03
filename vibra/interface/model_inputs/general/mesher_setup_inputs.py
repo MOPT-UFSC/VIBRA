@@ -119,12 +119,9 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.setWindowTitle("Vibra")
 
     def _create_connections(self):
-        #
         self.comboBox_element_geometry.currentIndexChanged.connect(self.element_topology_changed_callback)
         self.comboBox_element_order.currentIndexChanged.connect(self.element_topology_changed_callback)
-        #
         self.doubleSpinBox_maximum_element_size.valueChanged.connect(self.maximum_element_size_changed_callback)
-        #
         self.pushButton_add.clicked.connect(self.add_button_callback)
         self.pushButton_apply.clicked.connect(self.apply_callback)
         self.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
@@ -133,29 +130,25 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.pushButton_plot_histogram.clicked.connect(self.plot_mesh_parameter_histogram)
         self.pushButton_show_bad_elements.clicked.connect(self.plot_bad_elements)
         self.pushButton_syncrhonize.clicked.connect(self.synchronize_button_callback)
+
         # #
         # self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         # #
         self.tableWidget_local_mesh_size_control_data.itemClicked.connect(self.local_mesh_size_control_item_clicked_callback)
         self.tableWidget_mesh_quality.itemClicked.connect(self.mesh_quality_item_clicked_callback)
-        #
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
     def _config_widgets(self):
-        #
         self.comboBox_2d_algorithm.setDisabled(True)
         self.comboBox_2d_algorithm.setDisabled(True)
         self.comboBox_recombination_algorithm.setDisabled(True)
         self.comboBox_subdivision_algorithm.setDisabled(True)
         self.comboBox_second_order_incomplete.setDisabled(True)
         self.comboBox_recombine_all.setDisabled(True)
-        #
         self.pushButton_show_bad_elements.setDisabled(True)
         self.pushButton_apply.setAutoDefault(False)
         self.pushButton_apply_and_close.setAutoDefault(False)
-        #
         self.pushButton_plot_histogram.setDisabled(True)
-        #
         self.doubleSpinBox_maximum_element_size.setKeyboardTracking(False)
         self.doubleSpinBox_minimum_element_size.setKeyboardTracking(False)
 
@@ -193,6 +186,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.lineEdit_geometry_tolerance.setText(str(mesh_setup.geometry_tolerance))
         self.comboBox_volumes_interface_behavior.setCurrentIndex(int(mesh_setup.merge_connected_volumes))
         self.comboBox_mesh_quality_metrics.setCurrentIndex(int(mesh_setup.compute_quality_metrics))
+
 
         self.update_local_mesh_size_control_table()
         self.update_mesh_quality_table()
@@ -424,6 +418,10 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
             LoadingWindow(self.actions_to_finalize).run()
 
+            from vibra.interface.common.common_interface import prompt_if_disconnected_nodes
+
+            prompt_if_disconnected_nodes()
+
             self.update_local_mesh_size_control_table()
             self.update_mesh_quality_table()
 
@@ -583,6 +581,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             element_order=element_order,
             merge_connected_volumes=merge_connected_volumes,
             compute_quality_metrics=compute_quality_metrics,
+            suppressed_volume_ids=self._get_stored_suppressed_volume_ids(),
             custom_element_setup=self._get_custom_element_setup(),
             local_mesh_size_control_parameters=self._get_local_mesh_size_control_parameters(),
         )
@@ -619,6 +618,10 @@ class MesherSetupInputs(MesherSetupInputs_UI):
     def _get_local_mesh_size_control_parameters(self) -> list[LocalMeshSizeControlSetup]:
         return deepcopy(self.tmp_local_mesh_size_control_parameters)
 
+    def _get_stored_suppressed_volume_ids(self) -> list[int]:
+        mesh_setup = app().project.model.mesh_setup
+        return list(mesh_setup.suppressed_volume_ids) if mesh_setup else []
+
     def actions_to_finalize(self):
         if self.close_after_generate:
             self.close()
@@ -642,6 +645,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         app().main_window.analysis_toolbar.reset_solution_action.setDisabled(True)
         app().main_window.analysis_toolbar.check_analysis_setup_callback()
         app().main_window.action_export_element_transfer_data.setDisabled(True)
+
 
     def get_element_setup(self) -> ElementSetup | None:
         element_geometry = self.comboBox_element_geometry.currentText().lower()

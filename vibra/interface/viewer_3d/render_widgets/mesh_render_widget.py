@@ -201,7 +201,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.nodes_actor.SetVisibility(True)
 
         mesh = app().project.model.mesh
-        mesh_error = mesh.collapsed_elements_data or mesh.disconnected_nodes_data
+        mesh_error = mesh.collapsed_elements_data or mesh.disconnected_nodes
         distinguished_solids = app().main_window.distinguished_solids
 
         visualization = self.visualization_filter
@@ -294,7 +294,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.edges_actor.configure_appearance()
 
         mesh = app().project.model.mesh
-        mesh_error = mesh.collapsed_elements_data or mesh.disconnected_nodes_data
+        mesh_error = mesh.collapsed_elements_data or mesh.disconnected_nodes
         if mesh_error:
             self.add_problematic_mesh_legend()
 
@@ -459,7 +459,7 @@ class MeshRenderWidget(CommonRenderWidget):
     def add_problematic_mesh_legend(self):
         legend_actor = LegendActor()
 
-        if app().project.model.mesh.disconnected_nodes_data:
+        if app().project.model.mesh.disconnected_nodes:
             legend_actor.add_item("Disconnected nodes", color_names.GREEN)
 
         if app().project.model.mesh.collapsed_elements_data:
