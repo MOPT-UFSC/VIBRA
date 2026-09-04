@@ -39,10 +39,8 @@ from vibra.interface.model_inputs.structural.surface_thickness_inputs import Sur
 from vibra.interface.plots.acoustic.acoustic_pressure_frf_inputs import AcousticPressureFRFInputs
 from vibra.interface.plots.acoustic.acoustic_waves_decomposition_inputs import AcousticWavesDecompositionInputs
 from vibra.interface.plots.acoustic.acoustic_impedance_inputs import AcousticImpedanceInputs
-from vibra.interface.plots.acoustic.acoustic_mode_shape_inputs import AcousticModeShapeInputs
 
 #
-from vibra.interface.plots.acoustic.acoustic_pressure_field_inputs import AcousticPressureFieldInputs
 from vibra.interface.plots.acoustic.acoustic_pressure_frequency_response_inputs import AcousticPressureFrequencyResponseInputs
 from vibra.interface.plots.acoustic.acoustic_pressure_waveform_2d_plot_inputs import AcousticPressureWaveform2DPlotInputs
 from vibra.interface.plots.acoustic.acoustic_pressure_waveform_3d_plot_inputs import AcousticPressureWaveform3DPlotInputs
@@ -55,11 +53,9 @@ from vibra.interface.plots.acoustic.particle_velocity_inputs import ParticleVelo
 #
 from vibra.interface.plots.acoustic.surface_absorption_coefficient_inputs import SurfaceAbsorptionCoefficientInputs
 from vibra.interface.plots.acoustic.transmission_loss_inputs import TransmissionLossInputs
-from vibra.interface.plots.structural.structural_response_fields_inputs import StructuralResponseFieldsInputs
 
 #
 from vibra.interface.plots.structural.structural_frequency_response_inputs import PlotStructuralFrequencyResponseInputs
-from vibra.interface.plots.structural.structural_mode_shape_inputs import PlotStructuralModeShapeInputs
 
 
 class InputUi:
@@ -87,57 +83,44 @@ class InputUi:
             self.model_setup_items.expand_menu_items()
 
     def advanced_element_options(self):
-        if not self.model_setup_items.item_child_element_options.isDisabled():
-            app().main_window.action_model_workspace_callback()
-            self.process_input(ElementOptionsInputs)
+        app().main_window.action_model_workspace_callback()
+        self.process_input(ElementOptionsInputs)
 
     def set_material(self):
-        if not self.model_setup_items.item_child_material.isDisabled():
-            self.process_input(MaterialInputs)
+        self.process_input(MaterialInputs)
 
     def set_fluid(self):
-        if not self.model_setup_items.item_child_fluid.isDisabled():
-            self.process_input(SetFluidInputs)
+        self.process_input(SetFluidInputs)
 
     def set_surface_thickness(self):
-        if not self.model_setup_items.item_child_surface_thickness.isDisabled():
-            self.process_input(SurfaceThicknessInputs)
+        self.process_input(SurfaceThicknessInputs)
 
     def prescribe_structural_dof(self):
-        if not self.model_setup_items.item_child_prescribed_dof.isDisabled():
-            self.process_input(DofPrescriptionInputs)
+        self.process_input(DofPrescriptionInputs)
 
     def set_nodal_loads(self):
-        if not self.model_setup_items.item_child_nodal_loads.isDisabled():
-            self.process_input(NodalLoadsInputs)
+        self.process_input(NodalLoadsInputs)
 
     def set_distributed_loads(self):
-        if not self.model_setup_items.item_child_distributed_loads.isDisabled():
-            self.process_input(DistributedLoadsInputs)
+        self.process_input(DistributedLoadsInputs)
 
     def set_distributed_mass(self):
-        if not self.model_setup_items.item_child_distributed_mass.isDisabled():
-            self.process_input(DistributedMassInputs)
+        self.process_input(DistributedMassInputs)
 
     def set_normal_pressure_load(self):
-        if not self.model_setup_items.item_child_normal_pressure_load.isDisabled():
-            self.process_input(NormalPressureLoadInputs)
+        self.process_input(NormalPressureLoadInputs)
 
     def set_acoustic_pressure(self):
-        if not self.model_setup_items.item_child_acoustic_pressure.isDisabled():
-            self.process_input(AcousticPressureInputs)
+        self.process_input(AcousticPressureInputs)
 
     def set_mass_source(self):
-        if not self.model_setup_items.item_child_mass_source.isDisabled():
-            self.process_input(MassSourceInputs)
+        self.process_input(MassSourceInputs)
 
     def set_surface_velocity(self):
-        if not self.model_setup_items.item_child_surface_velocity.isDisabled():
-            self.process_input(SurfaceVelocityInputs)
+        self.process_input(SurfaceVelocityInputs)
 
     def set_incident_plane_wave(self):
-        if not self.model_setup_items.item_child_incident_plane_wave.isDisabled():
-            self.process_input(IncidentPlaneWaveInputs)
+        self.process_input(IncidentPlaneWaveInputs)
 
     def compressor_excitation_waveform(self):
         self.process_input(CompressorExcitationWaveformInputs)
@@ -155,124 +138,82 @@ class InputUi:
         self.process_input(TransferImpedanceInputs)
 
     def set_anechoic_termination(self):
-        if not self.model_setup_items.item_child_anechoic_termination.isDisabled():
-            self.process_input(AnechoicTerminationInputs)
+        self.process_input(AnechoicTerminationInputs)
 
     def set_absorption_surface(self):
-        if not self.model_setup_items.item_child_absorption_surface.isDisabled():
-            self.process_input(AbsorptionSurfaceInputs)
+        self.process_input(AbsorptionSurfaceInputs)
 
     def set_proportional_damping_for_acoustic_model(self):
-        if not self.model_setup_items.item_child_proportional_damping.isDisabled():
-            self.process_input(ProportionalDampingInput)
+        self.process_input(ProportionalDampingInput)
 
     def set_perforated_plate_model(self):
-        if not self.model_setup_items.item_child_perforated_plate_model.isDisabled():
-            self.process_input(PerforatedPlateModelInputs)
+        self.process_input(PerforatedPlateModelInputs)
 
     def set_porous_material_model(self):
-        if not self.model_setup_items.item_child_porous_material_model.isDisabled():
-            self.process_input(PorousMaterialModelInputs)
+        self.process_input(PorousMaterialModelInputs)
 
     def set_viscous_thermal_model(self):
-        if not self.model_setup_items.item_child_viscous_thermal_model.isDisabled():
-            self.process_input(ViscousThermalLossModelInputs)
+        self.process_input(ViscousThermalLossModelInputs)
 
     def set_degrees_of_freedom_decoupling(self):
-        if not self.model_setup_items.item_child_degrees_of_freedom_decoupling.isDisabled():
-            self.process_input(DegreesOfFreedomDecouplingInputs)
+        self.process_input(DegreesOfFreedomDecouplingInputs)
 
     def set_acoustic_properties_grandient(self):
-        if not self.model_setup_items.item_child_acoustic_properties_gradient.isDisabled():
-            self.process_input(AcousticPropertiesGradientInputs)
+        self.process_input(AcousticPropertiesGradientInputs)
 
     def set_acoustic_transfer_element_setup(self):
-        if not self.model_setup_items.item_child_acoustic_transfer_element_setup.isDisabled():
-            self.process_input(AcousticTransferElementInputs)
-
-    def plot_structural_mode_shapes(self):
-        if app().project.model.analysis_id in [AnalysisID.STRUCTURAL_MODAL, AnalysisID.ACOUSTIC_MODAL]:
-            return self.process_input(PlotStructuralModeShapeInputs)
-
-    def plot_displacement_field(self):
-        if app().project.model.analysis_id == AnalysisID.STRUCTURAL_HARMONIC:
-            return self.process_input(StructuralResponseFieldsInputs)
+        self.process_input(AcousticTransferElementInputs)
 
     def plot_structural_frequency_response(self):
-        if app().project.model.analysis_id == AnalysisID.STRUCTURAL_HARMONIC:
-            return self.process_input(PlotStructuralFrequencyResponseInputs)
+        return self.process_input(PlotStructuralFrequencyResponseInputs)
 
-    def plot_reaction_frequency_response(self):
-        if self.projct:
-            app().main_window.show_geometry_render_widget()
+    # def plot_reaction_frequency_response(self):
+    #     app().main_window.show_geometry_render_widget()
 
-    def plot_stress_field(self):
-        if not self.results_viewer_items.item_child_stress_field.isDisabled():
-            app().main_window.configure_results_render_widget()
+    # def plot_stress_field(self):
+    #     app().main_window.configure_results_render_widget()
 
-    def plot_stress_frequency_response(self):
-        if not self.results_viewer_items.item_child_stress_frequency_response.isDisabled():
-            app().main_window.show_geometry_render_widget()
-
-    def plot_acoustic_mode_shapes(self):
-        if app().project.model.analysis_id == AnalysisID.ACOUSTIC_MODAL:
-            return self.process_input(AcousticModeShapeInputs)
-
-    def plot_acoustic_pressure_field(self):
-        if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
-            return self.process_input(AcousticPressureFieldInputs)
+    # def plot_stress_frequency_response(self):
+    #     app().main_window.show_geometry_render_widget()
 
     def plot_acoustic_pressure_frequency_response(self):
-        if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
-            return self.process_input(AcousticPressureFrequencyResponseInputs)
+        return self.process_input(AcousticPressureFrequencyResponseInputs)
 
     def plot_acoustic_pressure_frequency_response_function(self):
-        if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
-            return self.process_input(AcousticPressureFRFInputs)
+        return self.process_input(AcousticPressureFRFInputs)
 
     def plot_acoustic_shaking_forces(self):
-        if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
-            return self.process_input(AcousticShakingForcesInputs)
+        return self.process_input(AcousticShakingForcesInputs)
 
     def plot_acoustic_pressure_waveform_2d(self):
-        if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
-            return self.process_input(AcousticPressureWaveform2DPlotInputs)
+        return self.process_input(AcousticPressureWaveform2DPlotInputs)
 
     def plot_acoustic_pressure_waveform_3d(self):
-        if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
-            return self.process_input(AcousticPressureWaveform3DPlotInputs)
+        return self.process_input(AcousticPressureWaveform3DPlotInputs)
 
     def plot_allowable_pulsation_criteria_for_reciprocating_compressor(self):
-        if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
-            return self.process_input(AllowablePulsationsForReciprocatingCompressorInputs)
+        return self.process_input(AllowablePulsationsForReciprocatingCompressorInputs)
 
     def plot_allowable_pulsation_2d_for_screw_compressor(self):
-        if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
-            return self.process_input(AllowablePulsations2DPlotForScrewCompressorInputs)
+        return self.process_input(AllowablePulsations2DPlotForScrewCompressorInputs)
 
     def plot_allowable_pulsation_3d_for_screw_compressor(self):
-        if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
-            return self.process_input(AllowablePulsations3DPlotForScrewCompressorInputs)
+        return self.process_input(AllowablePulsations3DPlotForScrewCompressorInputs)
 
     def plot_TL_NR(self):
-        if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
-            return self.process_input(TransmissionLossInputs)
+        return self.process_input(TransmissionLossInputs)
 
     def plot_particle_velocity(self):
-        if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
-            return self.process_input(ParticleVelocityInputs)
+        return self.process_input(ParticleVelocityInputs)
 
     def plot_acoustic_impedance(self):
-        if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
-            return self.process_input(AcousticImpedanceInputs)
+        return self.process_input(AcousticImpedanceInputs)
 
     def plot_absorption_coefficient_from_surface(self):
-        if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
-            return self.process_input(SurfaceAbsorptionCoefficientInputs)
+        return self.process_input(SurfaceAbsorptionCoefficientInputs)
 
     def decompose_acoustic_pressure_waves(self):
-        if app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
-            return self.process_input(AcousticWavesDecompositionInputs)
+        return self.process_input(AcousticWavesDecompositionInputs)
 
     def empty_project_action_message(self):
         title = "EMPTY PROJECT"
