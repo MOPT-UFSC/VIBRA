@@ -10,7 +10,7 @@ from vibra.utils.hardware_monitor.memory_metric import MemoryMetric, MemoryRecor
 class RamMonitor:
     _BYTES_PER_MIB = 1024**2
 
-    def __init__(self, rss_interval: float = 0.05, uss_interval: float = 0.5, label: str | None = None) -> None:
+    def __init__(self, rss_interval: float = 0.05, uss_interval: float = 0.5, label: str | None = None, record_history: bool = False) -> None:
         if rss_interval <= 0:
             raise ValueError("rss_interval must be greater than 0")
 
@@ -23,6 +23,7 @@ class RamMonitor:
         self.__rss_interval = rss_interval
         self.__uss_interval = uss_interval
         self.label = label
+        self.record_history = record_history
 
         self.rss = MemoryMetric()
         self.uss = MemoryMetric()
@@ -91,6 +92,9 @@ class RamMonitor:
         if self._start_time is None:
             return
 
+        if sample.rss is None and sample.uss is None and sample.vms is None:
+            return
+
         self.ram_record.append(
             MemoryRecord(
                 elapsed=time.monotonic() - self._start_time,
@@ -118,7 +122,9 @@ class RamMonitor:
             else:
                 sample = self._read_basic_memory_mib()
 
-            self._record_sample(sample)
+            if self.record_history:
+                self._record_sample(sample)
+
             self._update_peak(self.rss, sample.rss)
             self._update_peak(self.uss, sample.uss)
             self._update_peak(self.vms, sample.vms)
@@ -136,7 +142,9 @@ class RamMonitor:
         self.monitor_error = None
 
         sample = self._read_full_memory_mib()
-        self._record_sample(sample)
+        if self.record_history:
+            self._record_sample(sample)
+
         if sample.rss is None and sample.uss is None and sample.vms is None:
             return self
 
@@ -160,7 +168,9 @@ class RamMonitor:
             self.monitor_thread = None
 
         sample = self._read_full_memory_mib()
-        self._record_sample(sample)
+        if self.record_history:
+            self._record_sample(sample)
+
         self._update_peak(self.rss, sample.rss)
         self.rss.final = sample.rss
         self._update_peak(self.uss, sample.uss)
