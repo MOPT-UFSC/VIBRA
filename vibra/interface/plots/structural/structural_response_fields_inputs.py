@@ -76,7 +76,7 @@ class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
 
     def update_plotting_results_combo_box_items(self):
         prefixes = ["u", "v", "a"]
-        ind = self.comboBox_plotting_results.currentIndex()
+        ind = self.get_number_of_differentiations()
         prefix = prefixes[ind]
 
         self.comboBox_plot_type.blockSignals(True)
@@ -100,14 +100,18 @@ class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
         prefixes = ["u", "v", "a"]
         suffixes = ["sum", "x", "y", "z"]
 
-        ind_dformat = self.comboBox_plotting_results.currentIndex()
+        ind_dformat = self.get_number_of_differentiations()
         ind_ptype = self.comboBox_plot_type.currentIndex()
 
         return DisplacementPlotType(f"{prefixes[ind_dformat]}_{suffixes[ind_ptype]}")
 
     def get_plot_units(self) -> str:
-        units = ["m", "m/s", "m/s²"]
+        units = ["m", "m/s", "m/s²", "mm", "mm/s", "mm/s²", "um", "um/s", "um/s²"]
         return units[self.comboBox_plotting_results.currentIndex()]
+
+    def get_unit_scale_factor(self) -> float:
+        convertion_factors = [1.0, 1e3, 1e6]
+        return convertion_factors[self.comboBox_plotting_results.currentIndex() // 3]
 
     def update_plot(self):
         self.update_animation_widget_visibility()
@@ -132,7 +136,8 @@ class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
             index=self.selected_frequency_index,
             plot_type=self.get_plot_type(),
             unit=self.get_plot_units(),
-            n_diff=self.comboBox_plotting_results.currentIndex(),
+            n_diff=self.get_number_of_differentiations(),
+            unit_scale_factor=self.get_unit_scale_factor()
         )
 
         LoadingWindow(app().main_window.results_widget.update_plot).run(
@@ -147,7 +152,7 @@ class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
         return 0
 
     def get_number_of_differentiations(self):
-        return self.comboBox_plotting_results.currentIndex()
+        return self.comboBox_plotting_results.currentIndex() % 3
 
     def configure_results_display_widget(self):
         self.results_display_widget.configure_widget()

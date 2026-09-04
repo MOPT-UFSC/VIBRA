@@ -39,6 +39,7 @@ class FrequencyDisplacementPlotSetup:
     plot_type: DisplacementPlotType
     unit: str = "--"
     n_diff: int = 0
+    unit_scale_factor: float = 1.0
 
 
 @dataclass(slots=True)

@@ -104,6 +104,7 @@ class StructuralPostprocessing:
         phase_rad: float,
         data_type: DataTypes,
         n_diff: int = 0,
+        unit_scale_factor: float = 1.0,
         is_modal: bool = False,
     ):
         if not isinstance(self.solution, ModalSolution | HarmonicSolution):
@@ -118,6 +119,9 @@ class StructuralPostprocessing:
         else:
             nodal_solution = self.solution.structural_solution
             data_complex = nodal_solution[self.solution.displacement_dof, column].copy()
+
+        if unit_scale_factor != 1.0:
+            data_complex *= unit_scale_factor
 
         if self.model.analysis_id.is_harmonic():
             freq = self.model.frequencies[column]
