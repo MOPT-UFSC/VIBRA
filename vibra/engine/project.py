@@ -41,12 +41,14 @@ class Project:
         # Except if it is used to cache a few matrices somehow.
         self.assembler: Optional[AcousticAssembler | StructuralAssembler] = None
         self.solver: Optional[HarmonicSolver | ModalSolver] = None
-        self.postprocessing: Optional[AcousticPostprocessing | StructuralPostprocessing] = None
+        self.acoustic_postprocessing: Optional[AcousticPostprocessing] = None
+        self.structural_postprocessing: Optional[StructuralPostprocessing] = None
 
     def reset_solution(self):
         self.assembler = None
         self.solver = None
-        self.postprocessing = None
+        self.acoustic_postprocessing = None
+        self.structural_postprocessing = None
         self.project_writer.delete_results_data()
         self.model.reset_current_solution()
         self.needs_saving = True
@@ -324,7 +326,7 @@ class Project:
 
         self.assembler = StructuralAssembler(self.model)
         self.solver = ModalSolver(self.assembler)
-        self.postprocessing = StructuralPostprocessing(self.model)
+        self.structural_postprocessing = StructuralPostprocessing(self.model)
 
         self.assembler.assemble_global_matrices(print_log=print_log)
 
@@ -349,7 +351,7 @@ class Project:
 
         self.assembler = StructuralAssembler(self.model)
         self.solver = HarmonicSolver(self.assembler, self.project_paths)
-        self.postprocessing = StructuralPostprocessing(self.model)
+        self.structural_postprocessing = StructuralPostprocessing(self.model)
 
         self.assembler.assemble_global_matrices_and_excitations(print_log=print_log)
 
@@ -388,7 +390,7 @@ class Project:
 
         self.assembler = AcousticAssembler(self.model)
         self.solver = ModalSolver(self.assembler)
-        self.postprocessing = AcousticPostprocessing(self.model)
+        self.acoustic_postprocessing = AcousticPostprocessing(self.model)
 
         self.assembler.assemble_global_matrices(print_log=print_log)
 
@@ -414,7 +416,7 @@ class Project:
 
         self.assembler = AcousticAssembler(self.model)
         self.solver = HarmonicSolver(self.assembler, self.project_paths)
-        self.postprocessing = AcousticPostprocessing(self.model)
+        self.acoustic_postprocessing = AcousticPostprocessing(self.model)
 
         self.model.reset_dissipation_model_properties()
         self.model.process_porous_material_properties()
@@ -460,24 +462,26 @@ class Project:
             acoustic_solution=self.model.acoustic_solution.acoustic_solution,
         )
 
-
-
     def update_post_processing(self):
-        self.postprocessing = None
+        self.acoustic_postprocessing = None
+        self.structural_postprocessing = None
         if AnalysisID(self.model.analysis_id).is_acoustic():
-            self.postprocessing = AcousticPostprocessing(self.model)
+            self.acoustic_postprocessing = AcousticPostprocessing(self.model)
         elif AnalysisID(self.model.analysis_id).is_structural():
-            self.postprocessing = StructuralPostprocessing(self.model)
+            self.structural_postprocessing = StructuralPostprocessing(self.model)
+        elif AnalysisID(self.model.analysis_id).is_harmonic_coupled():
+            self.acoustic_postprocessing = AcousticPostprocessing(self.model)
+            self.structural_postprocessing = StructuralPostprocessing(self.model)
 
     def get_acoustic_postprocessing(self) -> AcousticPostprocessing:
-        if not isinstance(self.postprocessing, AcousticPostprocessing):
+        if not isinstance(self.acoustic_postprocessing, AcousticPostprocessing):
             self.update_post_processing()
-        return self.postprocessing
+        return self.acoustic_postprocessing
 
     def get_structural_postprocessing(self) -> StructuralPostprocessing:
-        if not isinstance(self.postprocessing, StructuralPostprocessing):
+        if not isinstance(self.structural_postprocessing, StructuralPostprocessing):
             self.update_post_processing()
-        return self.postprocessing
+        return self.structural_postprocessing
 
     def is_mesh_configured(self) -> bool:
         """
