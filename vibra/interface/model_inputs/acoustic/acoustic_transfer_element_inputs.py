@@ -1,15 +1,15 @@
 import logging
 from collections import defaultdict
-from pathlib import Path
 from time import sleep
 
 import numpy as np
 from PySide6.QtCore import QEvent, QObject, Qt, Signal
 from PySide6.QtGui import QCloseEvent
-from PySide6.QtWidgets import QFileDialog, QLineEdit
+from PySide6.QtWidgets import QLineEdit
 
 from vibra import app
 from vibra.engine.analysis_info import AnalysisID, FrequencySpacing, HarmonicAnalysisSetup
+from vibra.extensions import SUPPORTED_SPREADSHEET_EXTENSIONS
 from vibra.interface import error_title
 from vibra.interface.common.common_interface import mesher_interface_callback
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -17,6 +17,7 @@ from vibra.interface.general.utils import clear_style_sheet
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
 from vibra.interface.ui_generated.model.acoustic.element_transfer.acoustic_transfer_element_inputs_ui import AcousticTransferElementInputs_UI
+from vibra.interface.user_input.data_handler.file_dialog_service import FileDialogService
 
 
 class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
@@ -152,31 +153,17 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         self.lineEdit_fstep.setText(str(analysis_setup.f_step))
 
     def search_callback(self):
-
         caption = "Set a file name to export the acoustic element transfer data"
 
-        last_path = app().config.get_last_folder_for(
-            "exported_data_folder",
-            default=Path().home(),
-        )
+        path = FileDialogService.save_file(file_extensions=SUPPORTED_SPREADSHEET_EXTENSIONS,
+                                           caption=caption,
+                                           last_folder="exported_data_folder")
 
-        _filter = "Spreadsheet (*.xlsx);; Spreadsheet (*.xls)"
-
-        path, check = QFileDialog.getSaveFileName(self, caption, str(last_path), filter=_filter)
-
-        if not check:
+        if path is None:
             return True
 
-        file_extension = self.get_file_extension_from_string(check)
-
-        if file_extension not in path:
-            path += f".{file_extension}"
-
-        self.lineEdit_spreadsheet_path.setText(path)
+        self.lineEdit_spreadsheet_path.setText(str(path))
         app().config.write_last_folder_path_in_file("exported_data_folder", path)
-
-    def get_file_extension_from_string(self, string: str) -> str:
-        return string.split(".")[1][:-1]
 
     def check_typed_ids(self):
 

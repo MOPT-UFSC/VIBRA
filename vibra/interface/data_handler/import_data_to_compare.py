@@ -1,15 +1,18 @@
-from typing import TYPE_CHECKING, List
+from dataclasses import asdict
+from typing import TYPE_CHECKING
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QCheckBox, QHBoxLayout, QTreeWidgetItem, QWidget
 
 from vibra import app
-from vibra.interface.data_handler.data_importer import DataImporter
-from vibra.interface.data_handler.imported_data import ImportedData
+from vibra.extensions import SUPPORTED_SPREADSHEET_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
 from vibra.interface.ui_generated.data_handler.import_data_to_compare_ui import (
     ImportDataToCompare_UI,
 )
+from vibra.interface.user_input.data_handler.file_dialog_service import FileDialogService
+from vibra.interface.user_input.data_handler.file_handlers.file_handler import FileHandler
+from vibra.interface.user_input.data_handler.imported_data import ImportedData, SpreadsheetData, TextData
 
 if TYPE_CHECKING:
     from vibra.interface.plots.general.frequency_response_plotter import (
@@ -20,10 +23,9 @@ import numpy as np
 
 
 class ImportDataToCompare(ImportDataToCompare_UI):
-
-    def __init__(self, plotter: 'FrequencyResponsePlotter', *args, **kwargs):
+    def __init__(self, plotter: "FrequencyResponsePlotter", *args, **kwargs):
         super().__init__(*args, **kwargs)
-        
+
         self.plotter = plotter
 
         app().main_window.set_input_widget(self)
@@ -32,8 +34,8 @@ class ImportDataToCompare(ImportDataToCompare_UI):
         self._initialize()
         self._create_connections()
         self._config_widgets()
-        
-    def _config_window(self):    
+
+    def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
@@ -48,15 +50,7 @@ class ImportDataToCompare(ImportDataToCompare_UI):
         self.ids_to_checkBox = dict()
         self.checkButtons_state = dict()
 
-        self.colors = ( 
-                        [0,0,0],
-                        [1,0,0],
-                        [1,0,1],
-                        [0,1,1],
-                        [0.75,0.75,0.75],
-                        [0.5, 0.5, 0.5],
-                        [0.25, 0.25, 0.25]
-                        )
+        self.colors = ([0, 0, 0], [1, 0, 0], [1, 0, 1], [0, 1, 1], [0.75, 0.75, 0.75], [0.5, 0.5, 0.5], [0.25, 0.25, 0.25])
 
     def _create_connections(self):
         #
@@ -66,7 +60,6 @@ class ImportDataToCompare(ImportDataToCompare_UI):
         self.pushButton_search_file_to_import.clicked.connect(self.import_results)
 
     def _config_widgets(self):
-
         for i, width in enumerate([320, 60]):
             self.treeWidget_import_text_files.setColumnWidth(i, width)
 
@@ -74,33 +67,30 @@ class ImportDataToCompare(ImportDataToCompare_UI):
             self.treeWidget_import_sheet_files.setColumnWidth(i, width)
 
     def import_results(self):
-        extensions = ["xlsx", "xls", "csv", "txt", "dat"]
-        self.imported_data = DataImporter.import_multiple_files("imported_data_folder", extensions)
+        extensions = SUPPORTED_SPREADSHEET_EXTENSIONS + SUPPORTED_TEXT_EXTENSIONS
 
-        if self.imported_data is None:
+        imported_files = FileDialogService.open_multiple_files(file_extensions=extensions,
+                                              last_folder="imported_data_folder")
+
+        if imported_files is None:
             return
+
+        self.imported_data = FileHandler.read(imported_files)
         
         self.organize_imported_results_according_to_file_type(self.imported_data)
         self.update_treeWidget_info()
-    
-    def organize_imported_results_according_to_file_type(self, imported_data: List[ImportedData]): 
-        for data in imported_data:
+
+    def organize_imported_results_according_to_file_type(self, imported_files: list[ImportedData]):
+        for file in imported_files:
             key = len(self.imported_results)
 
-            if data.sheetname == "":
-                self.imported_results[key] = {
-                                              "data" : data.data,
-                                              "filename" : data.filename,
-                                              "extension" : data.extension
-                                              }
-
-            else:
-                self.imported_results[key] = {
-                                              "data" : data.data,
-                                              "filename" : data.filename,
-                                              "extension" : data.extension,
-                                              "sheetname" : data.sheetname
-                                              }
+            if isinstance(file, TextData):
+                self.imported_results[key] = asdict(file)
+                
+            elif isinstance(file, SpreadsheetData):
+                for sheet in file.sheets:
+                    self.imported_results[key] = {key: value for key, value in asdict(file) if key != "sheets"} | asdict(sheet)
+                    key = len(self.imported_results)
 
     def update_treeWidget_info(self):
         self.cache_checkButtons_state()
@@ -136,29 +126,13 @@ class ImportDataToCompare(ImportDataToCompare_UI):
                 for i in range(5):
                     _item.setTextAlignment(i, Qt.AlignCenter)
 
-    def get_data_index(self):
-        index = 1
-        run = True
-        while run:
-            # if index in self.plotter.model_results_data.keys() or index in self.imported_results.keys():
-            if index in self.imported_results.keys():
-                index += 1
-            else:
-                key = index
-                run = False
-                
-        return key
-    
     def join_imported_data(self):
-
         j = 0
         imported_results_data = dict()
         for id, checkBox in self.ids_to_checkBox.items():
-            
             checkBox: QCheckBox
 
             if checkBox.isChecked():
-
                 if len(imported_results_data) <= len(self.colors):
                     color = self.colors[j]
                     j += 1
@@ -181,19 +155,19 @@ class ImportDataToCompare(ImportDataToCompare_UI):
 
                 y_label = self.plotter.y_label.replace(" [dB]", "").split(" - ")[0]
 
-                key = (id)
-                imported_results_data[key] = { 
-                                                "type" : "imported_data",
-                                                "x_data" : x_values,
-                                                "y_data" : y_values,
-                                                "x_label" : "Frequency [Hz]",
-                                                "y_label" : y_label,
-                                                "legend" : legend_label,
-                                                "unit" : "",
-                                                "title" : "",
-                                                "color" : color,
-                                                "linestyle" : "--" 
-                                                }
+                key = id
+                imported_results_data[key] = {
+                    "type": "imported_data",
+                    "x_data": x_values,
+                    "y_data": y_values,
+                    "x_label": "Frequency [Hz]",
+                    "y_label": y_label,
+                    "legend": legend_label,
+                    "unit": "",
+                    "title": "",
+                    "color": color,
+                    "linestyle": "--",
+                }
 
         self.plotter._set_imported_results_data_to_plot(imported_results_data)
 
@@ -219,7 +193,6 @@ class ImportDataToCompare(ImportDataToCompare_UI):
             self.close()
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
-
         # if self.exporter is not None:
         #     self.exporter.close()
 

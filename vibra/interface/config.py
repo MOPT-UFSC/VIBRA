@@ -86,7 +86,7 @@ class Config:
 
         self.write_data_in_file(data)
 
-    def write_last_folder_path_in_file(self, label: str, file_path: str):
+    def write_last_folder_path_in_file(self, label: str, file_path: str | Path):
         data = self.get_config_data()
         path = str(Path(file_path).parent)
 
@@ -115,9 +115,9 @@ class Config:
 
         return Path(last_path)
 
-    def write_refprop_path_in_file(self, path: str):
+    def write_refprop_path_in_file(self, path: str | Path):
         data = self.get_config_data()
-        data["refprop_path"] = path
+        data["refprop_path"] = str(path)
 
         self.write_data_in_file(data)
 

@@ -1,12 +1,12 @@
 import os
-from pathlib import Path
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QFileDialog
 
 from vibra import app
+from vibra.extensions import SUPPORTED_SPREADSHEET_EXTENSIONS
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.ui_generated.model.fluid.load_fluid_composition_ui import LoadFluidComposition_UI
+from vibra.interface.user_input.data_handler.file_dialog_service import FileDialogService
 
 
 class LoadFluidCompositionInputs(LoadFluidComposition_UI):
@@ -32,8 +32,6 @@ class LoadFluidCompositionInputs(LoadFluidComposition_UI):
         self.fluid_composition_data: list[tuple[int, str, str, str]] = []
         self.state_properties_data: list[tuple[int, str, str, str]] = []
 
-        self.desktop_path = Path.home() / "Desktop"
-
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
@@ -56,23 +54,17 @@ class LoadFluidCompositionInputs(LoadFluidComposition_UI):
             self.load_composition_data_from_file()
 
     def search_button_callback(self):
+        file_path = FileDialogService.open_file(file_extensions=SUPPORTED_SPREADSHEET_EXTENSIONS,
+                                                caption="Open file",
+                                                last_folder="fluid_composition_folder")
 
-        last_path = app().config.get_last_folder_for("fluid_composition_folder", default=self.desktop_path)
-
-        file_path, check = QFileDialog.getOpenFileName(
-            self,
-            "Open file",
-            str(last_path),
-            "Files (*.xlsx *.xls)",
-        )
-
-        if not check:
+        if file_path is None:
             return True
 
-        self.file_path = file_path
+        self.file_path = str(file_path)
 
-        app().config.write_last_folder_path_in_file("fluid_composition_folder", file_path)
-        self.lineEdit_file_path.setText(file_path)
+        app().config.write_last_folder_path_in_file("fluid_composition_folder", self.file_path)
+        self.lineEdit_file_path.setText(self.file_path)
 
         self.load_composition_data_from_file()
 

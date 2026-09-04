@@ -1,7 +1,6 @@
 
 from collections import defaultdict
 from enum import IntEnum
-from os.path import basename
 from pathlib import Path
 
 import numpy as np
@@ -11,9 +10,9 @@ from PySide6.QtWidgets import QAbstractItemView, QLabel, QLineEdit, QTreeWidgetI
 
 from vibra import app
 from vibra.engine.analysis_info import AnalysisID
+from vibra.extensions import SUPPORTED_SPREADSHEET_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
 from vibra.interface import error_title
-from vibra.interface.common.common_interface import save_table_values, update_analysis_setup_in_file
-from vibra.interface.data_handler.data_importer import DataImporter
+from vibra.interface.common.common_interface import save_table_values
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.structural.definitions.enums import StandardTabType
@@ -21,6 +20,8 @@ from vibra.interface.numeric_checks.double_validator import StrictDoubleValidato
 
 # from vibra.utils.utils import are_there_values_different_from_zero
 from vibra.interface.ui_generated.model.structural.excitations.dof_prescription_inputs_ui import DofPrescriptionInputs_UI
+from vibra.interface.user_input.data_handler.file_dialog_service import FileDialogService
+from vibra.interface.user_input.data_handler.file_handlers.file_handler import FileHandler
 
 
 class ElementFormulation(IntEnum):
@@ -627,25 +628,25 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
             app().project.configure_analysis(analysis_setup)
 
     def load_table(self, lineEdit : QLineEdit, dof_label : str, direct_load = False):
-
         try:
             if direct_load:
-                if lineEdit.text() == "":
-                    return None, None
-
-                imported_table_path = lineEdit.text()
-                imported_values = DataImporter.read_data_in_file(imported_table_path)[0].data
+                imported_path = lineEdit.text()
 
             else:
-                imported_data = DataImporter.import_single_file(
-                    "imported_table_folder", ["csv", "dat", "txt", "xlsx", "xls"], f"Choose a table to import the {dof_label} data"
-                )
-                if not imported_data:
-                    return None, None
+                extensions = SUPPORTED_SPREADSHEET_EXTENSIONS + SUPPORTED_TEXT_EXTENSIONS
+                imported_path = FileDialogService.open_file(file_extensions=extensions,
+                                                            caption=f"Choose a table to import the {dof_label} data",
+                                                            last_folder="imported_table_folder")
 
-                imported_values = imported_data.data
-                imported_table_path = imported_data.path
+            imported_data = FileHandler.read(imported_path)
 
+            if imported_data is None:
+                return None, None
+
+            imported_values = imported_data.data
+            imported_table_path = str(imported_data.path)
+
+            if not direct_load:
                 lineEdit.setText(imported_table_path)
                 lineEdit.setToolTip(imported_table_path)
 
@@ -698,45 +699,6 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         self.rz_table_values, self.rz_table_path = self.load_table(self.lineEdit_path_table_rz, "Rz")
         if self.rz_table_path is None:
             self.lineEdit_reset(self.lineEdit_path_table_rz)
-
-    def integrate_and_save_table_files(self, dof_label: str, selected_id: int, selection: str, values: np.ndarray):
-
-        if self.frequencies[0] == 0:
-            self.frequencies[0] = float(1e-6)
-
-        # n_diff = self.comboBox_data_type.currentIndex()
-        # if n_diff:
-        #     values /= (1j*2*np.pi*self.frequencies)**n_diff
-
-        if self.frequencies[0] == float(1e-6):
-            self.frequencies[0] = 0
-
-        if app().project.model.change_analysis_frequency_setup(list(self.frequencies)):
-
-            app().main_window.hide_dialogs()
-            lineEdit = self.table_line_edits.get(dof_label)
-            imported_filename = basename(lineEdit.text())
-            self.lineEdit_reset(lineEdit)
-
-            title = "Project frequency setup cannot be modified"
-            message = "The following imported table of values has a frequency setup "
-            message += "different from the others already imported ones. The current "
-            message += "project frequency setup is not going to be modified."
-            message += f"\n\nFile name: {imported_filename}"
-            PrintMessageInput([error_title, title, message])
-
-            return None, None
-
-        table_name = f"prescribed_dof_{dof_label}_from_{selection[:-1]}_{selected_id}"
-
-        real_values = np.real(values)
-        imag_values = np.imag(values)
-        data = np.array([self.frequencies, real_values, imag_values], dtype=float).T
-
-        update_analysis_setup_in_file(self.frequencies)
-        self.properties.add_imported_tables("structural", table_name, data)
-
-        return table_name, data
 
     def table_values_attribution(self):
 
@@ -1069,13 +1031,12 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
         if list_tab:
             app().main_window.selection.set_geometry_selection()
+            self.lineEdit_selection_id.setText("")
         else:
             view = self.comboBox_assignment_type.view()
             view.setRowHidden(4, True)
             self.comboBox_assignment_type.setCurrentIndex(AssignmentType.SURFACES)
-
-        self.lineEdit_selection_id.setText("")
-        self.treeWidget_prescribed_dof.clearSelection()
+            self.treeWidget_prescribed_dof.clearSelection()
 
     def item_selection_clicked_callback(self):
         self.item_clicked_callback(None)

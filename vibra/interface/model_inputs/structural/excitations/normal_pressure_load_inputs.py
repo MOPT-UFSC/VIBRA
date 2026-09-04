@@ -8,14 +8,16 @@ from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QAbstractItemView, QLineEdit, QTreeWidgetItem
 
 from vibra import app
+from vibra.extensions import SUPPORTED_SPREADSHEET_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
 from vibra.interface import error_title
 from vibra.interface.common.common_interface import InputDataType, check_input_entries, update_analysis_setup_in_file
-from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.structural.definitions.enums import StandardTabType
 from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
 from vibra.interface.ui_generated.model.structural.excitations.normal_pressure_load_inputs_ui import NormalPressureLoadInputs_UI
+from vibra.interface.user_input.data_handler.file_dialog_service import FileDialogService
+from vibra.interface.user_input.data_handler.file_handlers.file_handler import FileHandler
 
 
 class AssignmentType(IntEnum):
@@ -209,28 +211,28 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
             self.properties._set_property("normal_pressure_load", data, surface=surface_id)
 
     def load_table(self, lineEdit : QLineEdit, load_label : str, direct_load = False):
-
         title = "Error while loading table"
 
         try:
             if direct_load:
-                if lineEdit.text() == "":
-                    return None, None
-
-                imported_table_path = lineEdit.text()
-                imported_values = DataImporter.read_data_in_file(imported_table_path)[0].data
+                imported_path = lineEdit.text()
 
             else:
+                extensions = SUPPORTED_SPREADSHEET_EXTENSIONS + SUPPORTED_TEXT_EXTENSIONS
+                imported_path = FileDialogService.open_file(file_extensions=extensions,
+                                                            caption=f"Choose a table to import the {load_label} data",
+                                                            last_folder="imported_table_folder")
 
-                imported_data = DataImporter.import_single_file("imported_table_folder",
-                    ["csv", "dat", "txt", "xlsx", "xls"], f"Choose a table to import the {load_label} data")
+            imported_data = FileHandler.read(imported_path)
 
-                if not imported_data:
-                    return None, None
+            if imported_data is None:
+                return None, None
 
-                imported_values = imported_data.data
-                lineEdit.setText(imported_data.path)
-                imported_table_path = imported_data.path
+            if not direct_load:
+                lineEdit.setText(str(imported_data.path))
+
+            imported_values = imported_data.data
+            imported_table_path = str(imported_data.path)
 
             if imported_values.shape[1] < 3:
                 message = "The imported table has insufficient number of columns. The spectrum "
@@ -422,9 +424,9 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
 
         if list_tab:
             app().main_window.selection.set_geometry_selection()
-        
-        self.lineEdit_selection_id.setText("")
-        self.treeWidget_normal_pressure_loads.clearSelection()
+            self.lineEdit_selection_id.setText("")
+        else:
+            self.treeWidget_normal_pressure_loads.clearSelection()
 
     def item_selection_clicked_callback(self):
         self.item_clicked_callback(None)

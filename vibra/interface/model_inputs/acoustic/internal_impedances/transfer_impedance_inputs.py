@@ -1,24 +1,25 @@
 import logging
 import warnings
-from copy import deepcopy
 from collections import defaultdict
+from copy import deepcopy
 
 import numpy as np
 from PySide6.QtCore import QItemSelectionModel, QPoint, Qt
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QLineEdit, QTreeWidgetItem
-from vibra.interface import warning_title
 
 from vibra import app
-from vibra.interface import error_title
+from vibra.extensions import SUPPORTED_SPREADSHEET_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
+from vibra.interface import error_title, warning_title
 from vibra.interface.common.common_interface import update_analysis_setup_in_file
 from vibra.interface.data.data_manager import get_spectral_data_from_array
-from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.model_inputs.acoustic.definitions.enums import StandardTabType
 from vibra.interface.ui_generated.model.acoustic.internal_impedances.transfer_impedance_inputs_ui import TransferImpedanceInputs_UI
+from vibra.interface.user_input.data_handler.file_dialog_service import FileDialogService
+from vibra.interface.user_input.data_handler.file_handlers.file_handler import FileHandler
 from vibra.utils.bidict import bidict
 
 
@@ -310,23 +311,27 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         self.clear_line_edit_selection_id()
 
     def load_table(self, lineEdit : QLineEdit, direct_load=False):
-
-        title = "Error reached while loading 'specific impedance' table"
-        imported_values = None
+        title = "Error reached while loading 'transfer impedance' table"
 
         try:
             if direct_load:
-                imported_table_path = lineEdit.text()
-                imported_values = DataImporter.read_data_in_file(imported_table_path)[0].data
+                imported_path = lineEdit.text()
+
             else:
-                imported_data = DataImporter.import_single_file("imported_table_folder",
-                    ["csv", "dat", "txt", "xlsx", "xls"], "Choose a table to import the specific impedance")
+                extensions = SUPPORTED_SPREADSHEET_EXTENSIONS + SUPPORTED_TEXT_EXTENSIONS
+                imported_path = FileDialogService.open_file(file_extensions=extensions,
+                                                            caption="Choose a table to import the transfer impedance",
+                                                            last_folder="imported_table_folder")
 
-                if not imported_data:
-                    return None
+            imported_data = FileHandler.read(imported_path)
 
-                imported_values = imported_data.data
-                lineEdit.setText(imported_data.path)
+            if imported_data is None:
+                return None
+
+            if not direct_load:
+                lineEdit.setText(str(imported_data.path))
+
+            imported_values = imported_data.data
 
             if imported_values.shape[1] < 3:
                 message = "The imported table has insufficient number of columns. The spectrum"
@@ -344,7 +349,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
             message = str(log_error)
             PrintMessageInput([error_title, title, message])
             lineEdit.setFocus()
-            return None, None
+            return None
 
     def save_table_values(self, table_name: str, imported_values: np.ndarray):
 

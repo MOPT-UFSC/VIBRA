@@ -321,13 +321,12 @@ class DistributedMassInputs(DistributedMassInputs_UI):
 
         if list_tab:
             app().main_window.selection.set_geometry_selection()
+            self.lineEdit_selection_id.setText("")
         else:
             view = self.comboBox_assignment_type.view() 
             view.setRowHidden(2, True)
             self.comboBox_assignment_type.setCurrentIndex(AssignmentType.SURFACES)
-
-        self.lineEdit_selection_id.setText("")
-        self.treeWidget_distributed_mass.clearSelection()
+            self.treeWidget_distributed_mass.clearSelection()
 
     def item_selection_clicked_callback(self):
         self.item_clicked_callback(None)
