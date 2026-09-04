@@ -33,10 +33,9 @@ ALWAYS_FALSE.SetRadius(0)
 
 
 class SolidsActor(vtkActor):
-    def __init__(self, mesh: "Mesh", allow_hidding=True):
+    def __init__(self, mesh: "Mesh"):
         self.mesh = mesh
         self.data = None
-        self.allow_hidding = allow_hidding
         self.has_distinguished_cells = False
 
         self.create_geometry()
@@ -73,7 +72,7 @@ class SolidsActor(vtkActor):
         elif self.mesh.element_topology == Hexahedron20:
             cell_type = VTK_QUADRATIC_HEXAHEDRON
             nodes_order = (
-                0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 
+                0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
                 15, 17, 13, 20, 22, 23, 21, 14, 16, 18, 19
             )  # fmt: skip
             nodes_connectivity = self.mesh.solids_connectivity[:, nodes_order]
@@ -95,7 +94,7 @@ class SolidsActor(vtkActor):
         coordinates = self.get_coordinates()
         points.SetData(numpy_to_vtk(coordinates))
 
-        hidden_volumes = app().main_window.entity_visibility.get_hidden_volumes()
+        hidden_volumes = self.get_hidden_volumes()
         self.visible_indices = dict()
 
         for i, volume, _, _, *nodes in nodes_connectivity:
@@ -134,6 +133,9 @@ class SolidsActor(vtkActor):
     def update_coordinates(self, coordinates):
         points = self.data.GetPoints()
         points.SetData(numpy_to_vtk(coordinates))
+
+    def get_hidden_volumes(self):
+        return app().main_window.entity_visibility.get_hidden_volumes()
 
     def configure_appearance(self):
         self.GetProperty().SetInterpolationToPhong()
@@ -194,7 +196,7 @@ class SolidsActor(vtkActor):
     def paint_cells(self, color: Color, cells: tuple[int]):
         if self.data is None:
             return
-    
+
         color = color.to_rgba()
         cell_colors = self.data.GetCellData().GetScalars()
         for cell in cells:

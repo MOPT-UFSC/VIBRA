@@ -38,7 +38,6 @@ class FacesActor(vtkActor):
     def __init__(
         self,
         mesh: Mesh,
-        allow_hidding=True,
         update_normals=True,
         visualization_filter: Optional[VisualizationFilter] = None,
     ):
@@ -48,7 +47,6 @@ class FacesActor(vtkActor):
 
         self.mesh = mesh
         self.data = None
-        self.allow_hidding = allow_hidding
         self.update_normals = update_normals
 
         self.create_geometry()
@@ -102,10 +100,8 @@ class FacesActor(vtkActor):
             for surface in surfaces:
                 surface_to_volume[surface] = volume
 
+        hidden_surfaces = self.get_hidden_surfaces()
         self.visible_indices = dict()
-        hidden_surfaces = app().main_window.entity_visibility.get_hidden_surfaces()
-        if not self.allow_hidding:
-            hidden_surfaces.clear()
 
         for i, surface, _, _, *values in self.mesh.faces_connectivity:
             if surface in hidden_surfaces:
@@ -148,6 +144,9 @@ class FacesActor(vtkActor):
         self.GetProperty().SetSpecularPower(40)
         self.GetProperty().SetSpecularColor(1, 1, 1)
         self.clear_colors()
+
+    def get_hidden_surfaces(self) -> set:
+        return app().main_window.entity_visibility.get_hidden_surfaces()
 
     def clear_colors(self):
         if self.data is None:
