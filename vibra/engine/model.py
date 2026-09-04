@@ -199,6 +199,9 @@ class Model:
         return False
 
     def map_model_domains(self):
+        """
+        This method maps the volumes of each domain.
+        """
         self.model_domains.clear()
         for vol_id in self.mesh.elements_from_volume:
 
@@ -212,6 +215,9 @@ class Model:
                 self.model_domains["structural"].append(vol_id)
 
     def map_fluid_structure_interfaces(self):
+        """
+        This method maps the fluid-structure interfaces.
+        """
         self.fluid_structure_interfaces.clear()
         for surface_id, vol_ids in self.mesh.volumes_from_surface.items():
             if len(vol_ids) == 1:
@@ -237,7 +243,10 @@ class Model:
                 "structure_volume" : structure_volume,
                 }
 
-    def map_nodes_by_domain(self):
+    def map_nodes_and_elements_by_domain(self):
+        """
+        This method groups the nodes and elements for acoustic and structural domains.
+        """
         self.nodes_per_domain.clear()
         self.elements_per_domain.clear()
         for domain, vol_ids in self.model_domains.items():
@@ -248,7 +257,10 @@ class Model:
         self.number_3d_acoustic_elements = len(self.elements_per_domain.get("acoustic", []))
         self.number_3d_structural_elements = len(self.elements_per_domain.get("structural", []))
 
-    def process_dof_mappings_for_fsi(self):
+    def process_nodes_mappings_by_domain(self):
+        """
+        This method maps the nodes of each domain to a continuous list of indices.
+        """
 
         if self.acoustic_element_3d is None:
             self.set_acoustic_elements()
@@ -287,38 +299,10 @@ class Model:
         for index, node_id in enumerate(nodes_str):
             self.struct_node_mapping[node_id] = index
 
-        # define the dof shifts for each domain
-        self.structural_dofs_shift = 0
-        self.acoustic_dofs_shift = self.total_str_dofs
-
-        # process the structural dofs (continuos nodes list + dofs shift)
-        nodes_str_seq = np.arange(self.number_structural_nodes, dtype=int).reshape(-1, 1)
-        structural_dofs_indices = dof_str * nodes_str_seq + np.arange(dof_str) + self.structural_dofs_shift
-        self.structural_dofs_indices = structural_dofs_indices.flatten()
-
-        # process the acoustic dofs (continuos nodes list + dofs shift)
-        nodes_act_seq = np.arange(self.number_acoustic_nodes, dtype=int).reshape(-1, 1)
-        acoustic_dofs_indices = dof_act * nodes_act_seq + np.arange(dof_act) + self.acoustic_dofs_shift
-        self.acoustic_dofs_indices = acoustic_dofs_indices.flatten()
-
-        # data = np.array([self.fluid_node_mapping, self.struct_node_mapping]).T
-        # np.savetxt("nodes_mappings.dat", data, delimiter=",", fmt="%i")
-
-        # all_indices = np.arange(self.total_dof, dtype=int)
-        # all_indices_conc = np.sort(np.append(self.structural_dofs_indices, self.acoustic_dofs_indices))
-        # data = np.array([all_indices, all_indices_conc], dtype=int).T
-        # np.savetxt("dof_indices.dat", data, delimiter=",", fmt="%i")
-        # print(np.allclose(all_indices, all_indices_conc))
-
-        # mask = np.isin(all_indices, str_dof_indices, invert=True)
-        # act_dof_indices = all_indices[mask]
-
-        # print(total_dof, str_dof_indices.size, act_dof_indices.size)
-
-        # return total_dof, str_dof_indices, act_dof_indices
-
-
     def process_element_mappings_by_domain(self):
+        """
+        This method maps the elements of each domain to a continuous list of indices.
+        """
 
         elements_act: np.ndarray = self.elements_per_domain.get("acoustic", np.array([]))
         elements_str: np.ndarray = self.elements_per_domain.get("structural", np.array([]))
@@ -337,12 +321,52 @@ class Model:
         for index, element_id in enumerate(elements_str):
             self.struct_element_mapping[element_id] = index
 
+    def process_dof_by_domain(self):
+        """
+        This method processes the DOF indices arrays of each domain.
+        """
+
+        dof_act = self.acoustic_element_3d.dof_per_node
+        dof_str = self.structural_element_3d.dof_per_node
+
+        # define the dof shifts for each domain
+        self.structural_dofs_shift = 0
+        self.acoustic_dofs_shift = self.total_str_dofs
+
+        # process the structural dofs (continuos nodes list + dofs shift)
+        nodes_str_seq = np.arange(self.number_structural_nodes, dtype=int).reshape(-1, 1)
+        structural_dofs_indices = dof_str * nodes_str_seq + np.arange(dof_str) + self.structural_dofs_shift
+        self.structural_dofs_indices = structural_dofs_indices.flatten()
+
+        # process the acoustic dofs (continuos nodes list + dofs shift)
+        nodes_act_seq = np.arange(self.number_acoustic_nodes, dtype=int).reshape(-1, 1)
+        acoustic_dofs_indices = dof_act * nodes_act_seq + np.arange(dof_act) + self.acoustic_dofs_shift
+        self.acoustic_dofs_indices = acoustic_dofs_indices.flatten()
+
+        # TODO: to be removed after validation has been done
+        # data = np.array([self.fluid_node_mapping, self.struct_node_mapping]).T
+        # np.savetxt("nodes_mappings.dat", data, delimiter=",", fmt="%i")
+
+        # all_indices = np.arange(self.total_dof, dtype=int)
+        # all_indices_conc = np.sort(np.append(self.structural_dofs_indices, self.acoustic_dofs_indices))
+        # data = np.array([all_indices, all_indices_conc], dtype=int).T
+        # np.savetxt("dof_indices.dat", data, delimiter=",", fmt="%i")
+        # print(np.allclose(all_indices, all_indices_conc))
+
+        # mask = np.isin(all_indices, str_dof_indices, invert=True)
+        # act_dof_indices = all_indices[mask]
+
+        # print(total_dof, str_dof_indices.size, act_dof_indices.size)
+
+        # return total_dof, str_dof_indices, act_dof_indices
+
     def update_domains_mappings(self):
         self.map_model_domains()
         self.map_fluid_structure_interfaces()
-        self.map_nodes_by_domain()
-        self.process_dof_mappings_for_fsi()
+        self.map_nodes_and_elements_by_domain()
+        self.process_nodes_mappings_by_domain()
         self.process_element_mappings_by_domain()
+        self.process_dof_by_domain()
 
     def reset_current_solution(self):
         self.solution = None
