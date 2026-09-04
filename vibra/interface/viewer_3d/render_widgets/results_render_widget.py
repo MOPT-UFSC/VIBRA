@@ -314,6 +314,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.plot_setup.index,
             phase,
             self.plot_setup.plot_type,
+            n_diff=self.plot_setup.n_diff,
             is_modal=analysis_id.is_modal(),
         )
 

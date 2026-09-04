@@ -119,7 +119,7 @@ class StructuralPostprocessing:
             nodal_solution = self.solution.structural_solution
             data_complex = nodal_solution[self.solution.displacement_dof, column].copy()
 
-        if self.model.analysis_id == AnalysisID.STRUCTURAL_HARMONIC:
+        if self.model.analysis_id.is_harmonic():
             freq = self.model.frequencies[column]
             data_complex *= (1j * 2 * np.pi * freq)**n_diff
 

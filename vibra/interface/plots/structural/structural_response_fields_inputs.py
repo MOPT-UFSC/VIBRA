@@ -34,21 +34,24 @@ class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
         self.selected_frequency_index = None
 
     def _configure_widgets(self):
+
         self.lineEdit_selected_frequency.setDisabled(True)
         self.lineEdit_selected_frequency.setProperty("status", "information")
-        #
+
         for i, width in enumerate([80, 140]):
             self.treeWidget_frequencies.setColumnWidth(i, width)
             self.treeWidget_frequencies.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def _create_connections(self):
-        #
+
+        # QComboBox connections
         self.comboBox_plot_type.currentIndexChanged.connect(self.update_plot)
         self.comboBox_plotting_results.currentIndexChanged.connect(self.update_plotting_results_combo_box_items)
-        #
+
+        # QTreeWidget connections
         self.treeWidget_frequencies.itemClicked.connect(self.on_click_item)
         self.treeWidget_frequencies.itemDoubleClicked.connect(self.on_click_item)
-        #
+
         self.results_display_widget.colormap_changed.connect(self.animation_widget.update_color_and_deformation)
         self.results_display_widget.pressure_value_changed.connect(self.animation_widget.update_color_and_deformation)
         self.update_animation_widget_visibility()
@@ -129,7 +132,11 @@ class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
             index=self.selected_frequency_index,
             plot_type=self.get_plot_type(),
             unit=self.get_plot_units(),
+            n_diff=self.comboBox_plotting_results.currentIndex(),
         )
+
+        print(plot_setup)
+
         LoadingWindow(app().main_window.results_widget.update_plot).run(
             reset_camera=False,
             plot_setup=plot_setup,
