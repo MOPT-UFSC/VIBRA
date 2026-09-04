@@ -8,7 +8,7 @@ from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
 
 from vibra import app
 from vibra.interface import error_title
-from vibra.interface.common.common_interface import InputType, update_analysis_setup_in_file
+from vibra.interface.common.common_interface import InputDataType, update_analysis_setup_in_file
 from vibra.interface.data.data_manager import get_spectral_data_from_array
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
@@ -137,8 +137,8 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
 
             ipw_vector = [round(value, 8) for value in data.get("ipw_vector")]
 
-            if "table_names" in data.keys():
-                str_value = "Table of values"
+            if "table_names" in data:
+                str_value = "Table"
 
             else:
                 complex_values = data.get("values")[0]
@@ -230,18 +230,18 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
             if self.constant_data_assignment(surface_ids):
                 return
 
-        elif tab_index == StandardTabType.TABULAR_DATA:
+        if tab_index == StandardTabType.TABULAR_DATA:
             if self.tabular_data_assignment(surface_ids):
                 return
 
         self.actions_to_finalize(close_window)
 
     def input_mode_callback(self):
-        real_imag_imode = self.comboBox_input_mode.currentIndex() == InputType.REAL_IMAGINARY
-        self.label_pinc0_constant.setText("Incident pressure ({}):".format("real" if real_imag_imode else "amp."))
-        self.label_pinc1_constant.setText("Incident pressure ({}):".format("imag." if real_imag_imode else "phase"))
+        real_imag_dtype = self.comboBox_input_mode.currentIndex() == InputDataType.REAL_IMAGINARY
+        self.label_pinc0_constant.setText("Incident pressure ({}):".format("real" if real_imag_dtype else "amp."))
+        self.label_pinc1_constant.setText("Incident pressure ({}):".format("imag." if real_imag_dtype else "phase"))
         self.label_pinc0_unit.setText("[Pa]:")
-        self.label_pinc1_unit.setText("[{}]:".format("Pa" if real_imag_imode else "deg"))
+        self.label_pinc1_unit.setText("[{}]:".format("Pa" if real_imag_dtype else "deg"))
 
     def check_incident_plane_wave_values(self, line_edit_fieldA: QLineEdit, line_edit_fieldB: QLineEdit, label: str):
 
@@ -254,7 +254,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
             value_b = float(line_edit_fieldB.text())
 
         if self.comboBox_wave_direction.currentIndex() == WaveDirection.NORMAL:
-            if value_a <= 0 and self.comboBox_input_mode.currentIndex() == InputType.REAL_IMAGINARY:
+            if value_a <= 0 and self.comboBox_input_mode.currentIndex() == InputDataType.REAL_IMAGINARY:
                 line_edit_fieldA.setFocus()
                 title = "Invalid value detected"
                 message = "Enter a positive value for the normal "
@@ -352,7 +352,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
         if values is None:
             return None
 
-        real_imag_imode = self.comboBox_input_mode.currentIndex() == InputType.REAL_IMAGINARY
+        real_imag_imode = self.comboBox_input_mode.currentIndex() == InputDataType.REAL_IMAGINARY
 
         data = {
             "wave_direction": self.wave_direction,
@@ -498,12 +498,6 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
 
             self.properties._set_property("incident_plane_wave", data, surface=surface_id)
 
-    def process_table_file_removal(self, table_names: list):
-        for table_name in table_names:
-            self.properties.remove_imported_tables("acoustic", table_name)
-        if table_names:
-            app().project.update_model_properties_file()
-
     def remove_conflicting_excitations(self, surface_ids: int | list):
 
         if isinstance(surface_ids, int):
@@ -521,13 +515,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
 
         for surface_id in surface_ids:
             for label in labels:
-                table_names = self.properties.get_property_related_table_names(label, surface_id, "surfaces")
                 self.properties._remove_surface_property(label, surface_id)
-                self.process_table_file_removal(table_names)
-
-    def remove_table_files_from_surfaces(self, surface_id : list):
-        table_names = self.properties.get_property_related_table_names("incident_plane_wave", surface_id, "surfaces")
-        self.process_table_file_removal(table_names)
 
     def remove_callback(self):
         
@@ -536,20 +524,11 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
             return
 
         surface_id = int(str_selection_id)
-        self.remove_table_files_from_surfaces(surface_id)
 
         self.properties._remove_surface_property("incident_plane_wave", surface_id)
         self.actions_to_finalize()
 
     def reset_callback(self):
-
-        surface_ids = list()
-        for (property, *args) in self.properties.surface_properties.keys():
-            if property == "incident_plane_wave":
-                surface_ids.append(args[0])
-
-        if not surface_ids:
-            return
 
         title = "Incident pressure wave reset"
         message = "Would you like to remove the all applied incident pressure waves from model?"
@@ -560,14 +539,9 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
         if read._cancel:
             return
 
-        if not read._continue:
-            return
-
-        self.remove_table_files_from_surfaces(surface_ids)
-        for surface_id in surface_ids:
-            self.properties._remove_surface_property("incident_plane_wave", surface_id)
-
-        self.actions_to_finalize()
+        if read._continue:
+            self.properties._reset_property("incident_plane_wave")
+            self.actions_to_finalize()
 
     def actions_to_finalize(self, close_window: bool = False):
         self.load_model_info()
@@ -580,7 +554,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
 
     def update_tabs_visibility(self):
 
-        for key in self.properties.surface_properties.keys():
+        for key in self.properties.surface_properties:
             property, *args = key
             if property != "incident_plane_wave":
                 continue

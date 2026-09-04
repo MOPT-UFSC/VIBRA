@@ -669,19 +669,12 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
                 "table_names" : [table_name],
                 "table_paths" : [table_path],
                 "values" : [complex_values],
-                "averaged" : False,
-                "nodal_attribution" : False,
+                "element_integration": True,
                 }
 
             self.properties._set_property("compressor_excitation_waveform", data, surface=surface_id)
 
         self.actions_to_finalize(close_window)
-
-    def process_table_file_removal(self, table_names: list):
-        for table_name in table_names:
-            self.properties.remove_imported_tables("acoustic", table_name)
-        if table_names:
-            app().project.update_model_properties_file()
 
     def remove_conflicting_excitations(self, surface_ids: int | list):
 
@@ -700,13 +693,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
 
         for surface_id in surface_ids:
             for label in labels:
-                table_names = self.properties.get_property_related_table_names(label, surface_id, "surfaces")
                 self.properties._remove_surface_property(label, surface_id)
-                self.process_table_file_removal(table_names)
-
-    def remove_table_files_from_surfaces(self, surface_id : int | list):
-        table_names = self.properties.get_property_related_table_names("compressor_excitation_waveform", surface_id, "surfaces")
-        self.process_table_file_removal(table_names)
 
     def remove_callback(self):
 
@@ -714,14 +701,13 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
             return
 
         surface_id = int(self.lineEdit_selection_id.text())
-        self.remove_table_files_from_surfaces(surface_id)
 
         self.properties._remove_surface_property("compressor_excitation_waveform", surface_id)
         self.actions_to_finalize()
 
     def reset_callback(self):
 
-        title = "External comrpressor excitation resetting"
+        title = "External comrpressor excitation reset"
         message = "Would you like to remove the all external compressor excitations from model?"
 
         buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
@@ -731,15 +717,6 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
             return
 
         if read._continue:
-
-            surface_ids = list()
-            for (property, *args) in self.properties.surface_properties.keys():
-                if property == "compressor_excitation_waveform":
-                    surface_id = args[0]
-                    surface_ids.append(surface_id)
-
-            self.remove_table_files_from_surfaces(surface_ids)
-
             self.properties._reset_property("compressor_excitation_waveform")
             self.actions_to_finalize()
 
@@ -754,7 +731,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
 
     def update_tabs_visibility(self):
 
-        for key in self.properties.surface_properties.keys():
+        for key in self.properties.surface_properties:
             property, *args = key
             if property != "compressor_excitation_waveform":
                 continue

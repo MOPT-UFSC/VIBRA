@@ -24,6 +24,7 @@ class ChoosePropertyToDelete(ChoosePropertyToDelete_UI):
         if len(self.properties_formated) == 1:
             self.tableWidget.selectAll()
             self.remove_callback()
+            return
 
         self._config_window()
         self._create_connections()
@@ -46,6 +47,7 @@ class ChoosePropertyToDelete(ChoosePropertyToDelete_UI):
     def _create_connections(self):
         self.lineEdit_filter.textChanged.connect(self._start_timer)
         self.pushButton_remove.clicked.connect(self.remove_callback)
+        self.pushButton_remove.setAutoDefault(True)
         self.pushButton_cancel.clicked.connect(self.close)
 
     def _configure_lineEdit(self):

@@ -28,6 +28,7 @@ dependencies = [
     "xxhash>=3.6.0",
     "pint>=0.24.4",
     "psutil>=7.2.2",
+    "tqdm>=4.67.1",
 ]
 
 [dependency-groups]

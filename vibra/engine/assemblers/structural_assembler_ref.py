@@ -390,7 +390,7 @@ class StructuralAssembler:
 
             rows_fe, cols_fe = self.element_2d.generate_ind_rows_cols()
 
-            dof = self.element_2d.DOF_PER_ELEMENT
+            dof = self.element_2d.dfo_per_element
             nel = len(self.element_2d.connectivity)
 
             self.ind_rows = np.append(self.ind_rows, rows_fe)

@@ -383,7 +383,7 @@ class MaterialInputs(SetMaterial_UI):
 
     def reset_callback(self):
 
-        title = "Materials resetting"
+        title = "Materials reset"
         message = "Would you like to remove the all assigned materials from model?"
 
         buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
@@ -456,7 +456,7 @@ class MaterialInputs(SetMaterial_UI):
 
     def update_tabs_visibility(self):
 
-        for key in self.properties.volume_properties.keys():
+        for key in self.properties.volume_properties:
             property, _ = key
             if property != "material":
                 continue
@@ -464,7 +464,7 @@ class MaterialInputs(SetMaterial_UI):
             self.tabWidget_main.setTabVisible(TabType.LIST, True)
             return
 
-        for key in self.properties.surface_properties.keys():
+        for key in self.properties.surface_properties:
             property, _ = key
             if property == "material":
                 continue

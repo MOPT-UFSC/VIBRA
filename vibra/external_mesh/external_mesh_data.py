@@ -16,9 +16,9 @@ class ExternalMeshData():
         self.named_selection = None
         self.skip_format_row = False
 
-        self.nodal_coordinates = list()
-        self.faces_connectivities = dict()
-        self.solids_connectivities = dict()
+        self.nodal_coordinates = []
+        self.faces_connectivities = {}
+        self.solids_connectivities = {}
 
         self.connectivity = defaultdict(list)
         self.nodes_from_named_selection = defaultdict(list)
@@ -92,7 +92,7 @@ class ExternalMeshData():
                     size = len(line)
                     N_int = int((size-start_col)/(spacing_cols))
 
-                    coordinates = list()
+                    coordinates = []
                     coordinates.append(int(line[:start_col]))
                     for j in range(N_int):
                         start = start_col + j*spacing_cols
@@ -104,7 +104,6 @@ class ExternalMeshData():
 
                 except Exception:
                     self.modo = None
-                    pass
 
             elif self.modo == "connectivity":
                 
@@ -174,7 +173,7 @@ class ExternalMeshData():
                                     cache_nodes.insert(2, nodes_per_element)
                                     # print(f"solid187 - tet10: {cache_nodes}")
                                     self.connectivity[body_id, "solid187_tet10"].append(cache_nodes)
-                                    cache_nodes = list()
+                                    cache_nodes = []
 
                         elif nodes_per_element == 20:
                             if len(connect_data) == number_of_cols:
@@ -190,13 +189,12 @@ class ExternalMeshData():
                                     cache_nodes.insert(2, nodes_per_element)
                                     # print(f"solid186 - hex20: {cache_nodes}")
                                     self.connectivity[body_id, "solid186_hex20"].append(cache_nodes)
-                                    cache_nodes = list()
+                                    cache_nodes = []
                         else:
                             continue
 
                 except Exception:
                     self.modo = None
-                    pass   
 
             elif self.modo == "named_selection":
 
@@ -332,7 +330,7 @@ class ExternalMeshData():
     def process_named_selection_elements(self, export: bool = False):
 
         start, end = 0, 0
-        self.elements_from_named_selection = dict()
+        self.elements_from_named_selection = {}
 
         for key, data in self.connectivity.items():
             vol_id, element_type = key
@@ -347,7 +345,7 @@ class ExternalMeshData():
             for ns_key, ns_nodes in self.nodes_from_named_selection.items():
 
                 surface_id += 1
-                face_connectivity = list()
+                face_connectivity = []
 
                 mask = np.sum(np.isin(connect[:, 3:], ns_nodes), axis=1) == nodes_face_element
 
@@ -371,14 +369,12 @@ class ExternalMeshData():
                     face_connectivity.append(face_nodes)
 
                 if face_connectivity:
-
                     end += len(face_connectivity)
-                    element2d_indexes = np.arange(1+start, end+1)
+                    element2d_indexes = np.arange(start + 1, end + 1, dtype=int)
+                    connect_data = np.array(face_connectivity, dtype=int)
                     start = end
 
-                    connect_data = np.array(face_connectivity, dtype=int)
-
-                    if ns_key in self.elements_from_named_selection.keys():
+                    if ns_key in self.elements_from_named_selection:
                         actual_connect_data = self.elements_from_named_selection[ns_key]["connectivity"]
                         if len(connect_data) < len(actual_connect_data):
                             continue
@@ -408,13 +404,14 @@ class ExternalMeshData():
 
     def post_process_faces_connectivities(self):
 
-        faces_connectivity = list()
+        faces_connectivity = []
         self.faces_connectivities.clear()
 
         for ns_key, data in self.elements_from_named_selection.items():
+            data: dict
             surface_id = data.get("surface_id", -1)
             connect_data = data.get("connectivity")
-            indexes = np.arange(1, len(connect_data)+1, dtype=int) + len(faces_connectivity)
+            indexes = data.get("element2d_indexes")
             surface_ids = np.ones_like(indexes, dtype=int) * surface_id
             nodes_per_element = np.ones_like(indexes, dtype=int) * len(connect_data[0])
 
@@ -501,7 +498,7 @@ def filter_collapsed_nodes(input_nodes: list[int]):
     reorders the elements in the array. This reordering should be avoided as it 
     compromises the finite element integration rules.
     """
-    connectivity = list()
+    connectivity = []
     for node_id in input_nodes:
         if node_id not in connectivity:
             connectivity.append(node_id)
