@@ -1279,10 +1279,6 @@ class Mesh:
         self.faces_connectivity, self.map_face_elements = self._get_connectivity_array(connectivity_dim2)
         self.solids_connectivity, self.map_solid_elements = self._get_connectivity_array(connectivity_dim3)
 
-        # self.export_nodal_coordinates("nodal_coordinates.dat")
-        # self.export_solid_elements_connectivity("solids_connectivity.dat")
-        # self.export_face_elements_connectivity("faces_connectivity.dat")
-
         logging.info("Post-processing mesh... [68/100]")
         self.process_mesh_related_mappings("Post-processing")
 
@@ -2714,13 +2710,13 @@ class Mesh:
         solid_element_center = np.average(solid_coords, axis=0)
         vector = solid_element_center - face_element_center
 
-        e_normal = cross.copy()
-        if np.dot(cross, vector) > 0:
-            e_normal *= -1
+        # e_normal = cross.copy()
+        # if np.dot(cross, vector) > 0:
+        #     e_normal *= -1
 
-        surf_id = self.faces_connectivity[elem2d_id, 1]
-        element_normals_data = {int(elem2d_id) : (face_element_center, e_normal)}
-        self.set_elements_normals_data(surf_id, element_normals_data)
+        # surf_id = self.faces_connectivity[elem2d_id, 1]
+        # element_normals_data = {int(elem2d_id) : (face_element_center, e_normal)}
+        # self.set_elements_normals_data(surf_id, element_normals_data)
 
         return np.dot(cross, vector) > 0
 

@@ -16,10 +16,11 @@ class AnalysisChecker:
     def __init__(self, model: Model):
         self.model = model
 
-    def check_analysis_requirements(self, is_resume: bool = False):
+    def check_analysis_requirements(self, is_resume: bool = False, update_domain_mappings: bool = True):
 
         # update the domains mappings
-        self.model.update_domains_mappings()
+        if update_domain_mappings:
+            self.model.update_domains_mappings()
 
         match self.model.analysis_id:
             case AnalysisID.STRUCTURAL_MODAL:

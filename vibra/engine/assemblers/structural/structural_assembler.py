@@ -533,7 +533,7 @@ class StructuralAssembler:
             if self.model.stop_processing:
                 return True
 
-            progress = int(100 * (index / self.number_3d_elements))
+            progress = int((100 * (index / self.number_3d_elements) // 5) * 5)
             if progress != last_progress:
                 logging.info(f"Processing the elementary matrices data for solid elements... [{int(progress)}/100]")
 

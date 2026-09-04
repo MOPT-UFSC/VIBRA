@@ -342,12 +342,17 @@ class Project:
 
         return self.model.solution
 
-    def solve_structural_harmonic_analysis(self, is_resume: bool = False, print_log: bool = False) -> HarmonicSolution:
+    def solve_structural_harmonic_analysis(
+            self, 
+            is_resume: bool = False, 
+            print_log: bool = False, 
+            update_domain_mappings: bool = True,
+            ) -> HarmonicSolution:
 
         self.update_project_setup_file()
 
         checker = AnalysisChecker(self.model)
-        checker.check_analysis_requirements()
+        checker.check_analysis_requirements(update_domain_mappings=update_domain_mappings)
 
         self.assembler = StructuralAssembler(self.model)
         self.solver = HarmonicSolver(self.assembler, self.project_paths)
@@ -453,7 +458,11 @@ class Project:
         self.model.acoustic_solution = self.solve_acoustic_harmonic_analysis(is_resume=is_resume, print_log=print_log)
 
         logging.info("Building the structural harmonic problem...")
-        self.model.structural_solution = self.solve_structural_harmonic_analysis(is_resume=is_resume, print_log=print_log)
+        self.model.structural_solution = self.solve_structural_harmonic_analysis(
+            is_resume=is_resume,
+            print_log=print_log,
+            update_domain_mappings=False,
+            )
 
         return HarmonicSolution(
             analysis_id=self.model.analysis_id,
