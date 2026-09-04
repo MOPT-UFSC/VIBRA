@@ -6,7 +6,10 @@ from .faces_actor import FacesActor
 
 class GhostActor(FacesActor):
     def __init__(self, mesh):
-        super().__init__(mesh, allow_hidding=False, update_normals=False)
+        super().__init__(mesh, update_normals=False)
+
+    def get_hidden_surfaces(self) -> set:
+        return set()
 
     def update_coordinates(self, coordinates):
         points = self.data.GetPoints()
