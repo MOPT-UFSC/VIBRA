@@ -14,7 +14,6 @@ from vibra.engine.solution import HarmonicSolution
 from vibra.engine.solution.lazy_harmonic_solution import LazyHarmonicSolution
 from vibra.engine.solvers import ModalSolver
 from vibra.engine.solvers.linear_solver import LinearSolver, SolverType, initialize_solver
-from vibra.utils.hardware_monitor.ram_monitor import RamMonitor
 
 
 class HarmonicSolver:
