@@ -424,9 +424,9 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
 
         if list_tab:
             app().main_window.selection.set_geometry_selection()
-        
-        self.lineEdit_selection_id.setText("")
-        self.treeWidget_normal_pressure_loads.clearSelection()
+            self.lineEdit_selection_id.setText("")
+        else:
+            self.treeWidget_normal_pressure_loads.clearSelection()
 
     def item_selection_clicked_callback(self):
         self.item_clicked_callback(None)

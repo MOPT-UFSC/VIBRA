@@ -1,7 +1,6 @@
 
 from collections import defaultdict
 from enum import IntEnum
-from os.path import basename
 from pathlib import Path
 
 import numpy as np
@@ -13,7 +12,7 @@ from vibra import app
 from vibra.engine.analysis_info import AnalysisID
 from vibra.extensions import SUPPORTED_SPREADSHEET_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
 from vibra.interface import error_title
-from vibra.interface.common.common_interface import save_table_values, update_analysis_setup_in_file
+from vibra.interface.common.common_interface import save_table_values
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.structural.definitions.enums import StandardTabType
@@ -701,45 +700,6 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         if self.rz_table_path is None:
             self.lineEdit_reset(self.lineEdit_path_table_rz)
 
-    def integrate_and_save_table_files(self, dof_label: str, selected_id: int, selection: str, values: np.ndarray):
-
-        if self.frequencies[0] == 0:
-            self.frequencies[0] = float(1e-6)
-
-        # n_diff = self.comboBox_data_type.currentIndex()
-        # if n_diff:
-        #     values /= (1j*2*np.pi*self.frequencies)**n_diff
-
-        if self.frequencies[0] == float(1e-6):
-            self.frequencies[0] = 0
-
-        if app().project.model.change_analysis_frequency_setup(list(self.frequencies)):
-
-            app().main_window.hide_dialogs()
-            lineEdit = self.table_line_edits.get(dof_label)
-            imported_filename = basename(lineEdit.text())
-            self.lineEdit_reset(lineEdit)
-
-            title = "Project frequency setup cannot be modified"
-            message = "The following imported table of values has a frequency setup "
-            message += "different from the others already imported ones. The current "
-            message += "project frequency setup is not going to be modified."
-            message += f"\n\nFile name: {imported_filename}"
-            PrintMessageInput([error_title, title, message])
-
-            return None, None
-
-        table_name = f"prescribed_dof_{dof_label}_from_{selection[:-1]}_{selected_id}"
-
-        real_values = np.real(values)
-        imag_values = np.imag(values)
-        data = np.array([self.frequencies, real_values, imag_values], dtype=float).T
-
-        update_analysis_setup_in_file(self.frequencies)
-        self.properties.add_imported_tables("structural", table_name, data)
-
-        return table_name, data
-
     def table_values_attribution(self):
 
         input_ids = self.lineEdit_selection_id.text()
@@ -1071,13 +1031,12 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
         if list_tab:
             app().main_window.selection.set_geometry_selection()
+            self.lineEdit_selection_id.setText("")
         else:
             view = self.comboBox_assignment_type.view()
             view.setRowHidden(4, True)
             self.comboBox_assignment_type.setCurrentIndex(AssignmentType.SURFACES)
-
-        self.lineEdit_selection_id.setText("")
-        self.treeWidget_prescribed_dof.clearSelection()
+            self.treeWidget_prescribed_dof.clearSelection()
 
     def item_selection_clicked_callback(self):
         self.item_clicked_callback(None)

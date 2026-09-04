@@ -577,14 +577,9 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
 
                 values = data.get("values", [])
                 element_type = data.get("element_type")
-                dof_labels = str(self.text_label([bool(value) for value in values]))
+                dof_labels = self.text_label([isinstance(value, np.ndarray | complex) for value in values])
 
-                new = QTreeWidgetItem([
-                    f"{args[0]}", 
-                    key, 
-                    element_type, 
-                    dof_labels, 
-                    ])
+                new = QTreeWidgetItem([f"{args[0]}", key, element_type, dof_labels])
 
                 for i in range(5):
                     new.setTextAlignment(i, Qt.AlignCenter)
@@ -625,13 +620,12 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
 
         if list_tab:
             app().main_window.selection.set_geometry_selection()
+            self.lineEdit_selection_id.setText("")
         else:
             view = self.comboBox_assignment_type.view()
             view.setRowHidden(2, True)
             self.comboBox_assignment_type.setCurrentIndex(AssignmentType.SURFACES)
-
-        self.lineEdit_selection_id.setText("")
-        self.treeWidget_distributed_loads.clearSelection()
+            self.treeWidget_distributed_loads.clearSelection()
 
     def item_selection_clicked_callback(self):
         self.item_clicked_callback(None)

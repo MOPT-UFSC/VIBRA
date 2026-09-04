@@ -474,7 +474,6 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
             imported_values = imported_data.data
             imported_table_path = str(imported_data.path)
-            imported_filename = basename(imported_table_path)
 
             if imported_values.shape[1] < 3:
                 message = "The imported table has insufficient number of columns. The spectrum "
@@ -483,18 +482,6 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                 lineEdit.setFocus()
                 return None, None
         
-            if app().project.model.change_analysis_frequency_setup(list(self.frequencies)):
-
-                self.lineEdit_reset(lineEdit)
-
-                title = "Project frequency setup cannot be modified"
-                message = "The following imported table of values has a frequency setup "
-                message += "different from the others already imported ones. The current "
-                message += "project frequency setup is not going to be modified."
-                message += f"\n\n{imported_filename}"
-                PrintMessageInput([error_title, title, message])
-                return None, None
-
             return imported_values, imported_table_path
 
         except Exception as log_error:
@@ -547,7 +534,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         if frequencies[0] == 1e-6:
             frequencies[0] = 0
 
-        if app().project.model.change_analysis_frequency_setup(list(self.frequencies)):
+        if app().project.model.change_analysis_frequency_setup(list(frequencies)):
 
             lineEdit = self.table_line_edits[load_label]
             imported_filename = basename(lineEdit.text())
@@ -757,15 +744,9 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
                 values = data.get("values")
                 element_type = data.get("element_type")
+                dof_labels = self.text_label([isinstance(value, np.ndarray | complex) for value in values])
 
-                dof_labels = str(self.text_label([bool(value) for value in values]))
-
-                new = QTreeWidgetItem([
-                    f"{args[0]}", 
-                    key, 
-                    element_type, 
-                    dof_labels, 
-                    ])
+                new = QTreeWidgetItem([f"{args[0]}", key, element_type, dof_labels])
 
                 for i in range(4):
                     new.setTextAlignment(i, Qt.AlignCenter)
@@ -805,14 +786,13 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         self.pushButton_remove.setDisabled(True)
 
         if list_tab:
+            self.lineEdit_selection_id.setText("")
             app().main_window.selection.set_geometry_selection()
         else:
             view = self.comboBox_assignment_type.view()
             view.setRowHidden(4, True)
             self.comboBox_assignment_type.setCurrentIndex(AssignmentType.SURFACES)
-
-        self.lineEdit_selection_id.setText("")
-        self.treeWidget_nodal_loads.clearSelection()
+            self.treeWidget_nodal_loads.clearSelection()
 
     def item_selection_clicked_callback(self):
         self.item_clicked_callback(None)
