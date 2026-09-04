@@ -237,8 +237,6 @@ class Model:
                 "structure_volume" : structure_volume,
                 }
 
-        print(self.fluid_structure_interfaces)
-
     def map_nodes_by_domain(self):
         self.nodes_per_domain.clear()
         self.elements_per_domain.clear()
