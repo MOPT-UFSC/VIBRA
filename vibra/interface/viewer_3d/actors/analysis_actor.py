@@ -1,15 +1,21 @@
 import numpy as np
-from vtkmodules.vtkCommonCore import vtkFloatArray
 from vtkmodules.util.numpy_support import vtk_to_numpy
+from vtkmodules.vtkCommonCore import vtkFloatArray
 from vtkmodules.vtkCommonDataModel import vtkPlane
 from vtkmodules.vtkFiltersCore import vtkCutter
 from vtkmodules.vtkRenderingCore import vtkPolyDataMapper
 
+from vibra import app
+from vibra.engine.analysis_info.analysis_enums import PhysicalDomain
 from vibra.interface.viewer_3d.actors.solids_actor import SolidsActor
+
 from ..coloring.color_table import ColorTable
 
 
 class AnalysisActor(SolidsActor):
+    def __init__(self, *args, physical_domain: PhysicalDomain | None = None, **kwargs):
+        self.physial_domain = physical_domain
+        super().__init__(*args, **kwargs)
 
     def create_geometry(self):
         super().create_geometry()
@@ -20,6 +26,23 @@ class AnalysisActor(SolidsActor):
         self.cutter_mapper.SetInputConnection(self.cutter.GetOutputPort())
         self.cutter_mapper.InterpolateScalarsBeforeMappingOn()
         self.SetMapper(self.cutter_mapper)
+
+    def get_hidden_volumes(self):
+        mesh = app().project.mesh
+        if mesh is None:
+            return set()
+
+        match self.physial_domain:
+            case PhysicalDomain.ACOUSTIC:
+                domain_specific_volumes = app().project.model.model_domains.get("acoustic", set())
+            case PhysicalDomain.STRUCTURAL:
+                domain_specific_volumes = app().project.model.model_domains.get("structural", set())
+            case _:
+                domain_specific_volumes = mesh.all_solid_ids()
+
+        visible_volumes = set(domain_specific_volumes)
+        visible_volumes &= app().main_window.entity_visibility.get_visible_volumes()
+        return mesh.all_surface_ids() - visible_volumes
 
     def apply_deformation(self, deformed_coordinates: np.ndarray):
         self.update_coordinates(deformed_coordinates)
@@ -54,7 +77,6 @@ class AnalysisActor(SolidsActor):
         super().apply_cut(origin, normal)
         self.clipper.Update()
         self.SetMapper(self.clipper_mapper)
-
 
     def apply_cutter(self, origin, normal):
         if self.data is None:

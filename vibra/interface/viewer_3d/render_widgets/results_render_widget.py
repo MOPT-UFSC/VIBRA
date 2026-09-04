@@ -623,7 +623,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             return
 
         if not isinstance(self._cache_full_solids_actor, AnalysisActor):
-            self._cache_full_solids_actor = AnalysisActor(mesh)
+            self._cache_full_solids_actor = AnalysisActor(mesh, physical_domain=self.get_physical_domain())
 
         self._cache_hollow_solids_actor = self.analysis_actor
 

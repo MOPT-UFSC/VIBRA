@@ -33,7 +33,6 @@ class HollowAnalysisActor(HollowSolidsActor):
             visible_surfaces |= set(surfaces)
 
         visible_surfaces &= app().main_window.entity_visibility.get_visible_surfaces()
-        print(domain_specific_volumes, visible_surfaces, mesh.all_surface_ids() - visible_surfaces)
         return mesh.all_surface_ids() - visible_surfaces
 
     def apply_deformation(self, deformed_coordinates: np.ndarray):
