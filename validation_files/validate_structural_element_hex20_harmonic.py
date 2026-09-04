@@ -214,7 +214,7 @@ def load_external_mesh_and_solve(integration_type: str):
                 dofs_per_node,
                 dof_label,
                 frequencies,
-                model.solution.nodal_solution,
+                model.solution.structural_solution,
                 integration_type,
                 WB_displacements_data,
                 plot_type=plot_type,

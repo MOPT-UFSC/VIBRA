@@ -36,15 +36,16 @@ class FrequencyDisplacementPlotSetup:
     phase: float
     index: int
     magnification_factor: float
-    plot_type: PressurePlotType
+    plot_type: DisplacementPlotType
     unit: str = "--"
+    n_diff: int = 0
 
 
 @dataclass(slots=True)
 class FrequencyPressurePlotSetup:
     phase: float
     index: int
-    plot_type: DisplacementPlotType
+    plot_type: PressurePlotType
     unit: str = "--"
 
 

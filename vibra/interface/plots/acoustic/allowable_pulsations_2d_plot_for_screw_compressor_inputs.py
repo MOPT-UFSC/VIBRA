@@ -52,7 +52,7 @@ class AllowablePulsations2DPlotForScrewCompressorInputs(AllowablePulsations2dFor
 
     @property
     def nodal_solution(self):
-        return app().project.model.solution.nodal_solution
+        return app().project.model.solution.acoustic_solution
 
     def _load_analysis_setup_and_solution(self):
         self.analysis_method = ""

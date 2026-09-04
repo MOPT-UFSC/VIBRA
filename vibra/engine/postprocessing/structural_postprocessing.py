@@ -112,9 +112,14 @@ class StructuralPostprocessing:
         if isinstance(self.solution, LazyHarmonicSolution) and not self.solution.is_valid():
             return
 
-        data_complex = self.solution.get_nodal_displacement_at_column(column)
+        if is_modal:
+            modal_shapes = self.solution.structural_modal_shapes
+            data_complex = modal_shapes[self.solution.displacement_dof, column].copy()
+        else:
+            nodal_solution = self.solution.structural_solution
+            data_complex = nodal_solution[self.solution.displacement_dof, column].copy()
 
-        if self.model.analysis_id == AnalysisID.STRUCTURAL_HARMONIC:
+        if self.model.analysis_id.is_harmonic():
             freq = self.model.frequencies[column]
             data_complex *= (1j * 2 * np.pi * freq)**n_diff
 
@@ -152,7 +157,7 @@ class StructuralPostprocessing:
             volume_ids: list[int] | None = None,
             ):
         """
-        This method computes the nodal averaged stresses and the nodal stresses 
+        This method computes the nodal averaged stresses and the nodal stresses
         for each element.
 
         Parameters
@@ -173,7 +178,7 @@ class StructuralPostprocessing:
             nodal stresses.
 
         nodal_stresses_data: dict
-            A dictionary whose keys are the tuples in the form (element_id, node_id) 
+            A dictionary whose keys are the tuples in the form (element_id, node_id)
             and the values are the nodal stresses for each element.
 
         """
@@ -243,7 +248,7 @@ class StructuralPostprocessing:
             element_stresses = element_3d.process_stresses_at_integration_points(
                 element_id,
                 nodal_solution = None, #self.solution.nodal_solution[dofs_indices, :]
-                solution = self.solution.nodal_solution,
+                solution = self.solution.structural_solution,
                 )
 
             enodal_stresses = element_3d.extrapolate_stresses_to_nodes(element_stresses)
@@ -278,7 +283,7 @@ class StructuralPostprocessing:
             volume_ids: list[int] | None = None,
             ):
         """
-        This method computes the nodal averaged stresses and the nodal stresses 
+        This method computes the nodal averaged stresses and the nodal stresses
         for each element.
 
         Parameters
@@ -299,7 +304,7 @@ class StructuralPostprocessing:
             nodal stresses.
 
         nodal_stresses_data: dict
-            A dictionary whose keys are the tuples in the form (element_id, node_id) 
+            A dictionary whose keys are the tuples in the form (element_id, node_id)
             and the values are the nodal stresses for each element.
         """
 
@@ -334,7 +339,7 @@ class StructuralPostprocessing:
                 for volume_id in volume_ids:
                     volume_nodes = mesh.get_nodes_from_volume(volume_id)
                     node_ids.extend(volume_nodes)
-    
+
         if not node_ids:
             print("Invalid node ids")
             return {}, {}
@@ -349,7 +354,7 @@ class StructuralPostprocessing:
 
         # Load all frequency solutions to optimize multiple load on the `process_particle_velocity` method below.
         node_to_index = dict(zip(filtered_nodes, np.arange(filtered_nodes.size, dtype=int)))
-        solution = self.solution.nodal_solution[dofs_indices.flatten(), :]
+        solution = self.solution.structural_solution[dofs_indices.flatten(), :]
 
         nodal_stresses_data = {}
         avg_nodal_stresses_data = defaultdict(float)
@@ -364,7 +369,7 @@ class StructuralPostprocessing:
 
                 dofs_indices = indices.reshape(-1, 1) * element_3d.dof_per_node + local_dofs
                 dofs_indices = dofs_indices.flatten()
-                
+
                 element_stresses = element_3d.process_stresses_at_integration_points(
                     element_id,
                     nodal_solution = solution[dofs_indices, :]
@@ -374,7 +379,7 @@ class StructuralPostprocessing:
                 for i, e_node in enumerate(connect):
                     nodal_stresses_data[(element_id, e_node)] = nodal_stresses[:, i, :]
 
-                avg_nodal_stresses_data[node_id] += nodal_stresses_data[(element_id, node_id)] / n_el         
+                avg_nodal_stresses_data[node_id] += nodal_stresses_data[(element_id, node_id)] / n_el
 
         return avg_nodal_stresses_data, nodal_stresses_data
 

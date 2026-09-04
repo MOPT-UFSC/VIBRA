@@ -188,9 +188,9 @@ class StructuralExcitationsAssembler:
 
         return f_eq
 
-    
+
     def get_combined_nodal_loads_vector(self, index: int):
-        
+
         f_eq = self.get_prescribed_dof_model_excitation(index=index)
         f = self.structural_load[:, index] - f_eq
 
@@ -210,7 +210,7 @@ class StructuralExcitationsAssembler:
 
     def process_loads_arrays(self, values: list[np.ndarray | None]):
         """
-        For a given list of values, this method returns an output list of two-dimensional 
+        For a given list of values, this method returns an output list of two-dimensional
         arrays whose columns have the same size as the frequencies vector.
 
         Parameters
@@ -246,7 +246,7 @@ class StructuralExcitationsAssembler:
             print(str(_error_log))
             # TODO: check matrix dimensions for compatibility
             return aux_ones
-        
+
         array_of_values = np.array(values_list, dtype=complex)
 
         # filter values based on frequency mask
@@ -257,7 +257,7 @@ class StructuralExcitationsAssembler:
 
 
     def get_excitation_data_for_1d_element_integration(self, property_label: str) -> StructuralExcitationData | None:
-        """ 
+        """
         This method processes the excitation property data for element face
         integration.
 
@@ -321,7 +321,7 @@ class StructuralExcitationsAssembler:
 
 
     def get_excitation_data_for_2d_element_integration(self, property_label: str) -> StructuralExcitationData | None:
-        """ 
+        """
         This method processes the excitation property data for element face
         integration.
 
@@ -385,7 +385,7 @@ class StructuralExcitationsAssembler:
 
 
     def process_structural_excitations_by_1d_element_integration(self):
-        """ 
+        """
         This method processes the acoustic model excitations and
         returns the output data in the form of mass flow rate.
         """
@@ -408,7 +408,7 @@ class StructuralExcitationsAssembler:
 
 
     def process_structural_excitations_by_2d_element_integration(self):
-        """ 
+        """
         This method processes the acoustic model excitations and
         returns the output data in the form of mass flow rate.
         """
@@ -506,7 +506,7 @@ class StructuralExcitationsAssembler:
         app().main_window.update_symbols()
 
         # acoustic solution data
-        nodal_solution = self.model.acoustic_solution.nodal_solution
+        nodal_solution = self.model.acoustic_solution.acoustic_solution
 
         # integrate the structural loads caused by the acoustic pressure field on fluid-structure domain interfaces
         for i, connect in enumerate(self.element_2d.connectivities):
@@ -552,7 +552,7 @@ class StructuralExcitationsAssembler:
 
             if data.get("element_type") != "element_2d":
                 continue
-        
+
             line_load = self.process_loads_arrays(data["values"])
             if line_load is None:
                 continue

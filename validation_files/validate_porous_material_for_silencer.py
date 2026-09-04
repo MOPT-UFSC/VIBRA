@@ -195,7 +195,7 @@ def load_external_mesh_and_solve():
         freq_ref = pressure_at_output_face[:, 0]
         results_ref = pressure_at_output_face[:, 1] + 1j * pressure_at_output_face[:, 2]
 
-    nodal_solution = model.solution.nodal_solution
+    nodal_solution = model.solution.acoustic_solution
     nodal_solution_face = np.average(nodal_solution[rows, :], axis=0).flatten()
 
     title = f"Harmonic response at {output_ns}"

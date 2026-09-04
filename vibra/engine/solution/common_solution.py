@@ -1,21 +1,9 @@
-from typing import Any, Optional
+from typing import Any, override
 
 import numpy as np
+import numpy.typing as npt
 
 from vibra.engine.analysis_info import AnalysisID
-
-# Até dá pra deixar o tipo do array configurável
-# mas só depois do python 3.12, acho que é muito
-# recente pra forçar uma versão mais nova
-Array1D = np.ndarray[
-    tuple[int],
-    float | complex,
-]
-
-Array2D = np.ndarray[
-    tuple[int, int],
-    float | complex,
-]
 
 
 class CommonSolution:
@@ -25,7 +13,7 @@ class CommonSolution:
         # After calling the init this "cannot" be modified anymore
         self._writeable = False
 
-    def _immutable_array(self, array_like: np.typing.ArrayLike) -> Array1D | Array2D:
+    def _immutable_array(self, array_like: np.ndarray) -> np.ndarray:
         """
         This methods converts to array and makes it immutable.
 
@@ -36,11 +24,21 @@ class CommonSolution:
         array.setflags(write=False)
         return array
 
-    def _optional_immutable_array(self, array_like: Optional[np.typing.ArrayLike]) -> Optional[Array1D | Array2D]:
+    def _optional_immutable_array(self, array_like: np.ndarray | None) -> np.ndarray | None:
         if array_like is None:
             return None
         return self._immutable_array(array_like)
 
+    def _compare_optional_arrays(self, a: npt.ArrayLike | None, b: npt.ArrayLike | None) -> bool:
+        if (a is None) and (b is None):
+            return True
+
+        if (a is None) or (b is None):
+            return True
+
+        return np.allclose(a, b)
+
+    @override
     def __setattr__(self, name: str, value: Any):
         # workaround to make this class immutable
         if hasattr(self, "writeable") and not self._writeable and name != "writeable":
