@@ -72,3 +72,13 @@ PlotSetup = Union[
     TransientPressurePlotSetup,
     AllowablePulsationForScrewCompressorsPlotSetup,
 ]
+
+AcousticPlotSetups = Union[
+    FrequencyPressurePlotSetup,
+    TransientPressurePlotSetup,
+    AllowablePulsationForScrewCompressorsPlotSetup,
+]
+
+StructuralPlotSetups = Union[
+    FrequencyDisplacementPlotSetup,
+]

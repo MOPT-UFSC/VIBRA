@@ -11,15 +11,18 @@ from vtkmodules.vtkCommonDataModel import vtkPointData
 
 from vibra import LOGO_DIR, app
 from vibra.engine import AnalysisID
+from vibra.engine.analysis_info.analysis_enums import PhysicalDomain
 from vibra.engine.postprocessing import AcousticPostprocessing, StructuralPostprocessing
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.viewer_3d.plot_setup import (
+    AcousticPlotSetups,
+    AllowablePulsationForScrewCompressorsPlotSetup,
     FrequencyDisplacementPlotSetup,
     FrequencyPressurePlotSetup,
     NoPlotSetup,
     PlotSetup,
+    StructuralPlotSetups,
     TransientPressurePlotSetup,
-    AllowablePulsationForScrewCompressorsPlotSetup,
 )
 from vibra.interface.viewer_3d.render_tools import RenderTool, SelectionTool
 from vibra.utils.interface_utils import VisualizationFilter
@@ -33,8 +36,8 @@ from ..actors import (
     SectionPlaneActor,
 )
 from .model_info_text import (
-    analysis_info_text,
     allowable_pulsation_for_screw_compressor_info_text,
+    analysis_info_text,
 )
 
 
@@ -142,7 +145,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.remove_all_actors()
 
         logging.info("Updating the results render... [25/100]")
-        self.analysis_actor = HollowAnalysisActor(mesh)
+        self.analysis_actor = HollowAnalysisActor(mesh, physical_domain=self.get_physical_domain())
 
         logging.info("Updating the results render... [75/100]")
         self.edges_actor = EdgesActor(
@@ -187,6 +190,14 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.update()
 
         self.set_analysis_actors_transparency(self.transparency)
+
+    def get_physical_domain(self) -> PhysicalDomain | None:
+        if isinstance(self.plot_setup, StructuralPlotSetups):
+            return PhysicalDomain.STRUCTURAL
+        elif isinstance(self.plot_setup, AcousticPlotSetups):
+            return PhysicalDomain.ACOUSTIC
+        else:
+            return None
 
     def configure_plot(self, plot_setup: PlotSetup):
         assert isinstance(plot_setup, PlotSetup)
@@ -423,7 +434,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         # apply the penalization factor, if necessary
         penalization_factor = self.plot_setup.penalization_factor / 100
-        self.max_value *= (1 - penalization_factor)
+        self.max_value *= 1 - penalization_factor
 
         self.screw_compressor_allowable_pulsation_criterion = self.max_value
 
@@ -586,7 +597,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             return
 
         if not isinstance(self._cache_hollow_solids_actor, HollowAnalysisActor):
-            self._cache_hollow_solids_actor = HollowAnalysisActor(mesh)
+            self._cache_hollow_solids_actor = HollowAnalysisActor(mesh, physical_domain=self.get_physical_domain())
 
         self._cache_full_solids_actor = self.analysis_actor
 
