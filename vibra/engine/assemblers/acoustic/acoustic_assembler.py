@@ -373,7 +373,8 @@ class AcousticAssembler:
         factor_Cvisc = np.zeros(self.number_3d_elements, complex)
         factor_fvisc = np.zeros(self.number_3d_elements, complex)
 
-        for vol_id, elements_from_volume in self.model.mesh.elements_from_volume.items():
+        for vol_id, element_ids in self.model.mesh.elements_from_volume.items():
+
             fluid_data = self.fluid_properties_from_volume.get(vol_id)
             if not isinstance(fluid_data, dict):
                 continue
@@ -384,12 +385,15 @@ class AcousticAssembler:
             rho_0 = fluid_data.get("rho_0")
             C_0 = fluid_data.get("C_0")
 
-            aux_ones = np.ones(elements_from_volume.size, dtype=float)
+            aux_ones = np.ones(element_ids.size, dtype=float)
 
-            factor_K[elements_from_volume] = aux_ones / (rho_f)
-            factor_M[elements_from_volume] = aux_ones / (rho_f * C_f**2)
-            factor_Cvisc[elements_from_volume] = ((4 * mu_0) / (3 * ((rho_0 * C_0)**2)))
-            factor_fvisc[elements_from_volume] = ((4 * mu_0) / (3 * (rho_0**2)))
+            # convert the element indices
+            _element_ids = self.model.fluid_element_mapping[element_ids]
+
+            factor_K[_element_ids] = aux_ones / (rho_f)
+            factor_M[_element_ids] = aux_ones / (rho_f * C_f**2)
+            factor_Cvisc[_element_ids] = ((4 * mu_0) / (3 * ((rho_0 * C_0)**2)))
+            factor_fvisc[_element_ids] = ((4 * mu_0) / (3 * (rho_0**2)))
 
         factor_K = factor_K.reshape(-1, 1, 1)
         factor_M = factor_M.reshape(-1, 1, 1)

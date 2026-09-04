@@ -245,7 +245,7 @@ class Model:
         for domain, vol_ids in self.model_domains.items():
             rows = np.isin(self.mesh.solids_connectivity[:, 1], vol_ids)
             self.nodes_per_domain[domain] = np.unique(self.mesh.solids_connectivity[rows, 4:])
-            self.elements_per_domain[domain] = self.mesh.solids_connectivity[rows, 0]
+            self.elements_per_domain[domain] = np.unique(self.mesh.solids_connectivity[rows, 0])
 
         self.number_3d_acoustic_elements = len(self.elements_per_domain.get("acoustic", []))
         self.number_3d_structural_elements = len(self.elements_per_domain.get("structural", []))
@@ -319,11 +319,32 @@ class Model:
 
         # return total_dof, str_dof_indices, act_dof_indices
 
+
+    def process_element_mappings_by_domain(self):
+
+        elements_act: np.ndarray = self.elements_per_domain.get("acoustic", np.array([]))
+        elements_str: np.ndarray = self.elements_per_domain.get("structural", np.array([]))
+
+        self.number_acoustic_elements = len(elements_act)
+        self.number_structural_elements = len(elements_str)
+
+        total_elements = len(self.mesh.solids_connectivity)
+
+        self.struct_element_mapping = np.full(total_elements, -1, dtype=int)
+        self.fluid_element_mapping = np.full(total_elements, -1, dtype=int)
+
+        for index, element_id in enumerate(elements_act):
+            self.fluid_element_mapping[element_id] = index
+
+        for index, element_id in enumerate(elements_str):
+            self.struct_element_mapping[element_id] = index
+
     def update_domains_mappings(self):
         self.map_model_domains()
         self.map_fluid_structure_interfaces()
         self.map_nodes_by_domain()
         self.process_dof_mappings_for_fsi()
+        self.process_element_mappings_by_domain()
 
     def reset_current_solution(self):
         self.solution = None
