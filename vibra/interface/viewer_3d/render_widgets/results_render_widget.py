@@ -250,7 +250,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         assert isinstance(postprocessing, AcousticPostprocessing)
 
         analysis_id = app().project.model.analysis_id
-        assert analysis_id.is_acoustic()
+        assert analysis_id.is_acoustic() or analysis_id.is_coupled()
 
         if animation_frame is None:
             phase = self.plot_setup.phase
@@ -303,7 +303,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         assert isinstance(postprocessing, StructuralPostprocessing)
 
         analysis_id = app().project.model.analysis_id
-        assert analysis_id.is_structural() or analysis_id.is_harmonic_coupled()
+        assert analysis_id.is_structural() or analysis_id.is_coupled()
 
         if animation_frame is None:
             phase = self.plot_setup.phase
