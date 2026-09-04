@@ -555,7 +555,7 @@ class ProjectReader:
 
         if model.analysis_id.is_acoustic():
             assembler = AcousticAssembler(model)
-        elif model.analysis_id.is_structural():
+        elif model.analysis_id.is_structural() or model.analysis_id.is_coupled():
             assembler = StructuralAssembler(model)
         else:
             return None, None

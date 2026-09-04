@@ -135,8 +135,6 @@ class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
             n_diff=self.comboBox_plotting_results.currentIndex(),
         )
 
-        print(plot_setup)
-
         LoadingWindow(app().main_window.results_widget.update_plot).run(
             reset_camera=False,
             plot_setup=plot_setup,
