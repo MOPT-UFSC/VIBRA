@@ -26,6 +26,7 @@ class MemorySample:
     uss: float | None = None
     vms: float | None = None
 
+
 @dataclass(frozen=True)
 class MemoryRecord:
     elapsed: float

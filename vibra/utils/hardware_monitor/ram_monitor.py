@@ -28,6 +28,7 @@ class RamMonitor:
         self.uss = MemoryMetric()
         self.vms = MemoryMetric()
         self.ram_record: list[MemoryRecord] = list()
+        self._start_time: float | None = None
 
         self.process = psutil.Process()
         self.monitor_thread: threading.Thread | None = None
@@ -44,7 +45,11 @@ class RamMonitor:
         return wrapper
 
     def _new_session(self, label: str | None = None) -> "RamMonitor":
-        return type(self)(rss_interval=self.__rss_interval, uss_interval=self.__uss_interval, label=label)
+        return type(self)(
+            rss_interval=self.__rss_interval,
+            uss_interval=self.__uss_interval,
+            label=label,
+        )
 
     def get_ppid(self) -> int | None:
         try:
@@ -58,19 +63,10 @@ class RamMonitor:
     def _read_basic_memory_mib(self) -> MemorySample:
         try:
             memory = self.process.memory_info()
-            sample = MemorySample(
+            return MemorySample(
                 rss=memory.rss / self._BYTES_PER_MIB,
                 vms=memory.vms / self._BYTES_PER_MIB,
             )
-            self.ram_record.append(
-                MemoryRecord(
-                    elapsed=time.monotonic(),
-                    rss=sample.rss,
-                    uss=sample.uss,
-                )
-            )
-
-            return sample
 
         except psutil.Error as error:
             if self.monitor_error is None:
@@ -80,26 +76,29 @@ class RamMonitor:
     def _read_full_memory_mib(self) -> MemorySample:
         try:
             memory = self.process.memory_full_info()
-            sample = MemorySample(
+            return MemorySample(
                 rss=memory.rss / self._BYTES_PER_MIB,
                 uss=memory.uss / self._BYTES_PER_MIB,
                 vms=memory.vms / self._BYTES_PER_MIB,
             )
-            self.ram_record.append(
-                MemoryRecord(
-                    elapsed=time.monotonic(),
-                    rss=sample.rss,
-                    uss=sample.uss,
-                    vms=sample.vms,
-                )
-            )
-
-            return sample
 
         except psutil.Error as error:
             if self.monitor_error is None:
                 self.monitor_error = error
             return self._read_basic_memory_mib()
+
+    def _record_sample(self, sample: MemorySample) -> None:
+        if self._start_time is None:
+            return
+
+        self.ram_record.append(
+            MemoryRecord(
+                elapsed=time.monotonic() - self._start_time,
+                rss=sample.rss,
+                uss=sample.uss,
+                vms=sample.vms,
+            )
+        )
 
     def _update_peak(self, metric: MemoryMetric, value: float | None) -> None:
         if value is None:
@@ -119,6 +118,7 @@ class RamMonitor:
             else:
                 sample = self._read_basic_memory_mib()
 
+            self._record_sample(sample)
             self._update_peak(self.rss, sample.rss)
             self._update_peak(self.uss, sample.uss)
             self._update_peak(self.vms, sample.vms)
@@ -130,11 +130,13 @@ class RamMonitor:
         self.rss = MemoryMetric()
         self.uss = MemoryMetric()
         self.vms = MemoryMetric()
-        self.ram_record: list[MemoryRecord] = list()
+        self.ram_record = list()
+        self._start_time = time.monotonic()
 
         self.monitor_error = None
 
         sample = self._read_full_memory_mib()
+        self._record_sample(sample)
         if sample.rss is None and sample.uss is None and sample.vms is None:
             return self
 
@@ -158,6 +160,7 @@ class RamMonitor:
             self.monitor_thread = None
 
         sample = self._read_full_memory_mib()
+        self._record_sample(sample)
         self._update_peak(self.rss, sample.rss)
         self.rss.final = sample.rss
         self._update_peak(self.uss, sample.uss)
