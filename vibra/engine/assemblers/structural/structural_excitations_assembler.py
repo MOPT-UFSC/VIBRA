@@ -62,22 +62,12 @@ class StructuralExcitationsAssembler:
 
     @property
     def structural_dofs(self):
-        return self.model.structural_dofs_indices
+        return self.model.domains_processor.structural_dofs_indices
 
 
     @property
     def structural_ndofs(self):
-        return len(self.model.structural_dofs_indices)
-
-
-    @property
-    def total_dofs(self):
-        return self.model.total_dof
-
-
-    @property
-    def gm_shape(self):
-        return (self.model.total_dof, self.model.total_dof)
+        return len(self.model.domains_processor.structural_dofs_indices)
 
 
     @property
@@ -472,8 +462,8 @@ class StructuralExcitationsAssembler:
 
         logging.info(f"Processing acoustic-related loadings... [1/3]")
 
-        structural_domains = self.model.model_domains.get("structural", [])
-        surface_ids = list(self.model.fluid_structure_interfaces.keys())
+        structural_domains = self.model.volumes_of_domain.get("structural", [])
+        surface_ids = list(self.model.domains_processor.fluid_structure_interfaces.keys())
 
         mask = np.isin(self.mesh.faces_connectivity[:, 1], surface_ids)
         interface_connectivities = self.mesh.faces_connectivity[mask, :]
@@ -516,9 +506,9 @@ class StructuralExcitationsAssembler:
                     self.element_2d.invert_element_connectivity(i)
                     break
 
-        # from vibra import app
-        # app().main_window.results_widget.visualization_filter.element_normal_symbols = True
-        # app().main_window.update_symbols()
+        from vibra import app
+        app().main_window.results_widget.visualization_filter.element_normal_symbols = True
+        app().main_window.update_symbols()
 
         logging.info(f"Processing acoustic-related loadings... [3/3]")
 
@@ -534,7 +524,7 @@ class StructuralExcitationsAssembler:
             if progress != last_progress:
                 logging.info(f"Processing the structural loading for weak coupling... [{progress}/100]")
                 
-            _nodes = self.model.fluid_node_mapping[connect]
+            _nodes = self.model.get_mapped_nodes(connect, "acoustic")
             element_pressures = nodal_solution[_nodes, :]
             indices = self.element_2d.get_rows_and_cols_indices_1D(i)
             self.structural_load[indices, :] += self.element_2d.integrate_normal_pressure_load(i, element_pressures, acoustic_excitation=True)
@@ -599,9 +589,11 @@ class StructuralExcitationsAssembler:
         """
         This method assembles the excitations of the structural model.
         """
+        if self.model.stop_processing:
+            return
 
         # initialize the structural load vector
-        self.structural_load = np.zeros((self.total_dofs, self.number_frequencies), dtype=complex)
+        self.structural_load = np.zeros((self.model.total_dofs, self.number_frequencies), dtype=complex)
 
         self.process_structural_excitations_by_nodal_attribution()
         self.process_structural_excitations_by_1d_element_integration()

@@ -56,26 +56,17 @@ class AcousticAssembler:
 
     @property
     def number_3d_elements(self):
-        return self.model.number_3d_acoustic_elements
+        return self.model.domains_processor.number_3d_acoustic_elements
 
 
     @property
     def acoustic_dofs(self):
-        return self.model.acoustic_dofs_indices
+        return self.model.domains_processor.acoustic_dofs_indices
 
 
     @property
     def acoustic_ndofs(self):
-        return len(self.model.acoustic_dofs_indices)
-
-    @property
-    def total_dofs(self):
-        return self.model.total_dof
-
-
-    @property
-    def gm_shape(self):
-        return (self.model.total_dof, self.model.total_dof)
+        return len(self.model.domains_processor.acoustic_dofs_indices)
 
 
     def define_acoustic_elements(self):
@@ -182,10 +173,8 @@ class AcousticAssembler:
             if nodes is None:
                 continue
 
-            _nodes = self.model.fluid_node_mapping[nodes]
-
-            global_dofs = self.model.get_acoustic_global_dof_from_nodes(_nodes)
-            prescribed_dof_indices.extend(global_dofs)
+            global_dofs = self.model.get_dof_indices_from_nodes(nodes, "acoustic")
+            prescribed_dof_indices.extend(global_dofs[:, 0])
 
         self.prescribed_dof_indices = prescribed_dof_indices
 
@@ -194,7 +183,7 @@ class AcousticAssembler:
         """ 
         Returns the unprescribed dof indices.
         """
-        all_indices = np.arange(self.model.total_act_dofs, dtype=int)
+        all_indices = np.arange(self.model.domains_processor.total_act_dofs, dtype=int)
         self.unprescribed_dof_indices = np.delete(all_indices, self.prescribed_dof_indices)
 
 
@@ -327,7 +316,7 @@ class AcousticAssembler:
         self.ind_rows, self.ind_cols, _ = self.element_3d.generate_ind_rows_cols(reorder=reorder)
 
         last_progress = 0
-        for index, element_id in enumerate(self.model.elements_per_domain.get("acoustic", [])):
+        for index, element_id in enumerate(self.model.domains_processor.elements_of_domain.get("acoustic", [])):
 
             if self.model.stop_processing:
                 return True
@@ -388,7 +377,7 @@ class AcousticAssembler:
             aux_ones = np.ones(element_ids.size, dtype=float)
 
             # convert the element indices
-            _element_ids = self.model.fluid_element_mapping[element_ids]
+            _element_ids = self.model.domains_processor.acoustic_elements_mapping[element_ids]
 
             factor_K[_element_ids] = aux_ones / (rho_f)
             factor_M[_element_ids] = aux_ones / (rho_f * C_f**2)
@@ -413,7 +402,7 @@ class AcousticAssembler:
             An array containing all elementary mass factors in stacked form.
         """
         data_M = self.int3d_NtN * factor_M
-        self.mass_matrix = csr_matrix((data_M.flatten(), (self.ind_rows, self.ind_cols)), shape=self.gm_shape)
+        self.mass_matrix = csr_matrix((data_M.flatten(), (self.ind_rows, self.ind_cols)), shape=self.model.gm_shape)
 
         if self.model.drop_domain:
             self.mass_matrix = self.mass_matrix[self.acoustic_dofs, :][:, self.acoustic_dofs]
@@ -434,7 +423,7 @@ class AcousticAssembler:
             An array containing all elementary stiffness factors in stacked form.
         """
         data_K = self.int3d_BtB * factor_K
-        self.stiffness_matrix = csr_matrix((data_K.flatten(), (self.ind_rows, self.ind_cols)), shape=self.gm_shape)
+        self.stiffness_matrix = csr_matrix((data_K.flatten(), (self.ind_rows, self.ind_cols)), shape=self.model.gm_shape)
 
         if self.model.drop_domain:
             self.stiffness_matrix = self.stiffness_matrix[self.acoustic_dofs, :][:, self.acoustic_dofs]
@@ -453,10 +442,10 @@ class AcousticAssembler:
         """
 
         data_C = self.int3d_BtB * factor_Cvsic
-        self.visc_damping_matrix = csr_matrix((data_C.flatten(), (self.ind_rows, self.ind_cols)), shape=self.gm_shape)
+        self.visc_damping_matrix = csr_matrix((data_C.flatten(), (self.ind_rows, self.ind_cols)), shape=self.model.gm_shape)
 
         data_f = self.int3d_BtB * factor_fvsic
-        self.visc_load_matrix = csr_matrix((data_f.flatten(), (self.ind_rows, self.ind_cols)), shape=self.gm_shape)
+        self.visc_load_matrix = csr_matrix((data_f.flatten(), (self.ind_rows, self.ind_cols)), shape=self.model.gm_shape)
 
         if self.model.drop_domain:
             self.visc_damping_matrix = self.visc_damping_matrix[self.acoustic_dofs, :][:, self.acoustic_dofs]
@@ -480,31 +469,31 @@ class AcousticAssembler:
             It corresponds to the frequency step index.
         """
 
-        self.damping_matrix = csr_matrix(self.gm_shape)
+        self.damping_matrix = csr_matrix(self.model.gm_shape)
 
         if self.impedances_assembler.integration_data_Zsi is not None:
             rows_Zout = self.impedances_assembler.rows_Zsi
             cols_Zout = self.impedances_assembler.cols_Zsi
             data_Zout = self.impedances_assembler.data_Zsi[index].flatten()
-            self.damping_matrix += csr_matrix((data_Zout, (rows_Zout, cols_Zout)), shape=self.gm_shape)
+            self.damping_matrix += csr_matrix((data_Zout, (rows_Zout, cols_Zout)), shape=self.model.gm_shape)
 
         if self.impedances_assembler.integration_data_Zat is not None:
             rows_Zout = self.impedances_assembler.rows_Zat
             cols_Zout = self.impedances_assembler.cols_Zat
             data_Zout = self.impedances_assembler.data_Zat[index].flatten()
-            self.damping_matrix += csr_matrix((data_Zout, (rows_Zout, cols_Zout)), shape=self.gm_shape)
+            self.damping_matrix += csr_matrix((data_Zout, (rows_Zout, cols_Zout)), shape=self.model.gm_shape)
 
         if self.impedances_assembler.integration_data_ipw is not None:
             rows_Zout = self.impedances_assembler.rows_Zipw
             cols_Zout = self.impedances_assembler.cols_Zipw
             data_Zout = self.impedances_assembler.data_Zipw[index].flatten()
-            self.damping_matrix += csr_matrix((data_Zout, (rows_Zout, cols_Zout)), shape=self.gm_shape)
+            self.damping_matrix += csr_matrix((data_Zout, (rows_Zout, cols_Zout)), shape=self.model.gm_shape)
 
         if self.impedances_assembler.integration_data_Zas is not None:
             rows_Zout = self.impedances_assembler.rows_Zas
             cols_Zout = self.impedances_assembler.cols_Zas
             data_Zout = self.impedances_assembler.data_Zas[index].flatten()
-            self.damping_matrix += csr_matrix((data_Zout, (rows_Zout, cols_Zout)), shape=self.gm_shape)
+            self.damping_matrix += csr_matrix((data_Zout, (rows_Zout, cols_Zout)), shape=self.model.gm_shape)
 
         if self.impedances_assembler.integration_data_Zpp is not None:
             rows_A = self.impedances_assembler.rows_Zpp_A
@@ -518,7 +507,7 @@ class AcousticAssembler:
             rows_Zin = np.concatenate((rows_A, rows_A, rows_B, rows_B))
             cols_Zin = np.concatenate((cols_A, cols_B, cols_A, cols_B))
 
-            self.damping_matrix += csr_matrix((values_Zin, (rows_Zin, cols_Zin)), shape=self.gm_shape)
+            self.damping_matrix += csr_matrix((values_Zin, (rows_Zin, cols_Zin)), shape=self.model.gm_shape)
 
         if self.impedances_assembler.integration_data_Zti is not None:
             rows_A = self.impedances_assembler.rows_Zti_A
@@ -532,7 +521,7 @@ class AcousticAssembler:
             rows_Zin = np.concatenate((rows_A, rows_A, rows_B, rows_B))
             cols_Zin = np.concatenate((cols_A, cols_B, cols_A, cols_B))
 
-            self.damping_matrix += csr_matrix((values_Zin, (rows_Zin, cols_Zin)), shape=self.gm_shape)
+            self.damping_matrix += csr_matrix((values_Zin, (rows_Zin, cols_Zin)), shape=self.model.gm_shape)
 
         if self.model.drop_domain:
             self.damping_matrix = self.damping_matrix[self.acoustic_dofs, :][:, self.acoustic_dofs]
@@ -548,8 +537,8 @@ class AcousticAssembler:
         This method assembles the global matrices of the acoustic model.
         """
 
-        if not self.model.model_domains:
-            self.model.update_domains_mappings()
+        if not self.model.volumes_of_domain:
+            self.model.domains_processor.update_domains_mappings()
 
         logging.info("Processing data to assemble global matrices... [10/100]")
         self.define_acoustic_elements()

@@ -80,22 +80,17 @@ class AcousticExcitationsAssembler:
 
     @property
     def acoustic_dofs(self):
-        return self.model.acoustic_dofs_indices
+        return self.model.domains_processor.acoustic_dofs_indices
 
 
     @property
     def acoustic_ndofs(self):
-        return len(self.model.acoustic_dofs_indices)
+        return len(self.model.domains_processor.acoustic_dofs_indices)
 
 
     @property
     def total_dofs(self):
-        return self.model.total_dof
-
-
-    @property
-    def gm_shape(self):
-        return (self.model.total_dof, self.model.total_dof)
+        return self.model.total_dofs
 
 
     @property
@@ -664,10 +659,10 @@ class AcousticExcitationsAssembler:
         factor_Qms2 = self.integration_data_Qms_1d.factor_Qms2
 
         data_Qms1: np.ndarray = factor_Qms1[:, index].reshape(-1, 1, 1) * self.int1d_NtN
-        self.Qms1_1d = csr_matrix((data_Qms1.flatten(), (self.ind_rows_Qmsf_1d, self.ind_cols_Qmsf_1d)), shape=self.gm_shape)
+        self.Qms1_1d = csr_matrix((data_Qms1.flatten(), (self.ind_rows_Qmsf_1d, self.ind_cols_Qmsf_1d)), shape=self.self.model.gm_shape)
 
         data_Qms2: np.ndarray = factor_Qms2[:, index].reshape(-1, 1, 1) * self.int1d_BtB
-        self.Qms2_1d = csr_matrix((data_Qms2.flatten(), (self.ind_rows_Qmsf_1d, self.ind_cols_Qmsf_1d)), shape=self.gm_shape)
+        self.Qms2_1d = csr_matrix((data_Qms2.flatten(), (self.ind_rows_Qmsf_1d, self.ind_cols_Qmsf_1d)), shape=self.self.model.gm_shape)
 
         if self.model.drop_domain:
             self.Qms1_1d = self.Qms1_1d[self.acoustic_dofs, :][:, self.acoustic_dofs]
@@ -696,10 +691,10 @@ class AcousticExcitationsAssembler:
         factor_Qms2 = self.integration_data_Qms_2d.factor_Qms2
 
         data_Qms1: np.ndarray = factor_Qms1[:, index].reshape(-1, 1, 1) * self.int2d_NtN
-        self.Qms1_2d = csr_matrix((data_Qms1.flatten(), (self.ind_rows_Qmsf_2d, self.ind_cols_Qmsf_2d)), shape=self.gm_shape)
+        self.Qms1_2d = csr_matrix((data_Qms1.flatten(), (self.ind_rows_Qmsf_2d, self.ind_cols_Qmsf_2d)), shape=self.self.model.gm_shape)
 
         data_Qms2: np.ndarray = factor_Qms2[:, index].reshape(-1, 1, 1) * self.int2d_BtB
-        self.Qms2_2d = csr_matrix((data_Qms2.flatten(), (self.ind_rows_Qmsf_2d, self.ind_cols_Qmsf_2d)), shape=self.gm_shape)
+        self.Qms2_2d = csr_matrix((data_Qms2.flatten(), (self.ind_rows_Qmsf_2d, self.ind_cols_Qmsf_2d)), shape=self.self.model.gm_shape)
 
         if self.model.drop_domain:
             self.Qms1_2d = self.Qms1_2d[self.acoustic_dofs, :][:, self.acoustic_dofs]
@@ -727,10 +722,10 @@ class AcousticExcitationsAssembler:
         factor_Qms1, factor_Qms2 = self.compute_mass_source_load_factors_for_volumes(index=index)
 
         data_Qms1: np.ndarray = factor_Qms1 * self.int3d_NtN
-        self.Qms1_3d = csr_matrix((data_Qms1.flatten(), (self.ind_rows, self.ind_cols)), shape=self.gm_shape)
+        self.Qms1_3d = csr_matrix((data_Qms1.flatten(), (self.ind_rows, self.ind_cols)), shape=self.self.model.gm_shape)
 
         data_Qms2: np.ndarray = factor_Qms2 * self.int3d_BtB
-        self.Qms2_3d = csr_matrix((data_Qms2.flatten(), (self.ind_rows, self.ind_cols)), shape=self.gm_shape)
+        self.Qms2_3d = csr_matrix((data_Qms2.flatten(), (self.ind_rows, self.ind_cols)), shape=self.self.model.gm_shape)
 
         if self.model.drop_domain:
             self.Qms1_3d = self.Qms1_3d[self.acoustic_dofs, :][:, self.acoustic_dofs]
@@ -817,7 +812,7 @@ class AcousticExcitationsAssembler:
                 if nodes is None:
                     continue
 
-                _nodes = self.model.fluid_node_mapping[nodes]
+                _nodes = self.model.get_mapped_nodes(nodes, "acoustic")
 
                 self.model.mesh.process_face_elements_connected_to_nodes(surface_id)
                 area = self.model.mesh.surface_area_from_element_integration[surface_id]

@@ -112,22 +112,12 @@ class AcousticImpedancesAssembler:
 
     @property
     def acoustic_dofs(self):
-        return self.model.acoustic_dofs_indices
+        return self.model.domains_processor.acoustic_dofs_indices
 
 
     @property
     def acoustic_ndofs(self):
-        return len(self.model.acoustic_dofs_indices)
-
-
-    @property
-    def total_dofs(self):
-        return self.model.total_dof
-
-
-    @property
-    def gm_shape(self):
-        return (self.model.total_dof, self.model.total_dof)
+        return len(self.model.domains_processor.acoustic_dofs_indices)
 
 
     @property
@@ -276,7 +266,7 @@ class AcousticImpedancesAssembler:
             surf_connect = self.model.mesh.get_connectivity_from_surface(surface_id) 
 
             for i, el in enumerate(surf_elements):
-                connectivities[el] = self.model.fluid_node_mapping[surf_connect[i]]
+                connectivities[el] = self.model.get_mapped_nodes(surf_connect[i], "acoustic")
                 elements_normals[el] = surface_elements_normals[i, :]
 
         if connectivities:

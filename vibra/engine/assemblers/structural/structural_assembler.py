@@ -55,27 +55,17 @@ class StructuralAssembler:
 
     @property
     def number_3d_elements(self):
-        return self.model.number_3d_structural_elements
+        return self.model.domains_processor.number_3d_structural_elements
 
 
     @property
     def structural_dofs_indices(self):
-        return self.model.structural_dofs_indices
+        return self.model.domains_processor.structural_dofs_indices
 
 
     @property
     def structural_ndofs(self):
-        return len(self.model.structural_dofs_indices)
-
-
-    @property
-    def total_dofs(self):
-        return self.model.total_dof
-
-
-    @property
-    def gm_shape(self):
-        return (self.model.total_dof, self.model.total_dof)
+        return len(self.model.domains_processor.structural_dofs_indices)
 
 
     def define_structural_elements(self):
@@ -123,7 +113,7 @@ class StructuralAssembler:
             if nodes is None:
                 continue
 
-            _nodes = self.model.struct_node_mapping[nodes]
+            _nodes = self.model.get_mapped_nodes(nodes, "structural")
 
             property_data_from_nodes = self.model.get_structural_property_data_from_nodes(_nodes, data, "surfaces")
             for gdof, p_data in property_data_from_nodes.items():
@@ -141,7 +131,7 @@ class StructuralAssembler:
             if nodes is None:
                 continue
 
-            _nodes = self.model.struct_node_mapping[nodes]
+            _nodes = self.model.get_mapped_nodes(nodes, "structural")
 
             property_data_from_nodes = self.model.get_structural_property_data_from_nodes(_nodes, data, "lines")
             for gdof, p_data in property_data_from_nodes.items():
@@ -155,7 +145,7 @@ class StructuralAssembler:
             if node_id is None:
                 continue
 
-            _nodes = self.model.struct_node_mapping[node_id]
+            _nodes = self.model.get_mapped_nodes(node_id, "structural")
             # _nodes = np.array([node_id], dtype=int)
             property_data_from_nodes = self.model.get_structural_property_data_from_nodes(_nodes, data, "points")
             for gdof, p_data in property_data_from_nodes.items():
@@ -165,7 +155,7 @@ class StructuralAssembler:
             if property != selected_property:
                 continue
 
-            _nodes = self.model.struct_node_mapping[node_id]
+            _nodes = self.model.get_mapped_nodes(node_id, "structural")
             # _nodes = np.array([node_id], dtype=int)
             property_data_from_nodes = self.model.get_structural_property_data_from_nodes(_nodes, data, "nodes")
             for gdof, p_data in property_data_from_nodes.items():
@@ -233,7 +223,7 @@ class StructuralAssembler:
         """ 
         Returns the unprescribed dof indices.
         """
-        all_indices = np.arange(self.model.total_str_dofs, dtype=int)
+        all_indices = np.arange(self.model.domains_processor.total_str_dofs, dtype=int)
         self.unprescribed_dof_indices = np.delete(all_indices, self.prescribed_dof_indices)
 
 
@@ -510,9 +500,6 @@ class StructuralAssembler:
 
         self.displacement_dof = self.get_displacement_dof()
 
-        print(f"Number of acoustic elements: {self.model.number_3d_acoustic_elements}")
-        print(f"Number of structural elements: {self.model.number_3d_structural_elements}")
-
         self.data_K = np.zeros((self.number_3d_elements, self.dof, self.dof), dtype=complex)
         self.data_M = np.zeros((self.number_3d_elements, self.dof, self.dof), dtype=complex)
 
@@ -528,7 +515,7 @@ class StructuralAssembler:
         # ) as progress_bar:
 
         # loop for 3d elements
-        for index, element_id in enumerate(self.model.elements_per_domain.get("structural", [])):
+        for index, element_id in enumerate(self.model.domains_processor.elements_of_domain.get("structural", [])):
 
             if self.model.stop_processing:
                 return True
@@ -586,7 +573,7 @@ class StructuralAssembler:
         for i, surface_density in enumerate(pdata_values):
             data_Mdist[i, :, :] = self.element_1d.integrate_distributed_mass(i, surface_density)
 
-        self.mass_matrix += csr_matrix((data_Mdist.flatten(), (ind_rows, ind_cols)), shape=self.gm_shape)
+        self.mass_matrix += csr_matrix((data_Mdist.flatten(), (ind_rows, ind_cols)), shape=self.self.model.gm_shape)
 
 
     def assemble_distributed_mass_matrix_for_surfaces(self):
@@ -607,14 +594,14 @@ class StructuralAssembler:
         for i, surface_density in enumerate(pdata_values):
             data_Mdist[i, :, :] = self.element_2d.integrate_distributed_mass(i, surface_density)
 
-        self.mass_matrix += csr_matrix((data_Mdist.flatten(), (ind_rows, ind_cols)), shape=self.gm_shape)
+        self.mass_matrix += csr_matrix((data_Mdist.flatten(), (ind_rows, ind_cols)), shape=self.self.model.gm_shape)
 
 
     def assemble_global_mass_matrix(self):
         """
         This method assembles the global mass matrix.
         """
-        self.mass_matrix = csr_matrix((self.data_M.flatten(), (self.ind_rows, self.ind_cols)), shape=self.gm_shape)
+        self.mass_matrix = csr_matrix((self.data_M.flatten(), (self.ind_rows, self.ind_cols)), shape=self.self.model.gm_shape)
 
         self.assemble_distributed_mass_matrix_for_lines()
         self.assemble_distributed_mass_matrix_for_surfaces()
@@ -632,7 +619,7 @@ class StructuralAssembler:
         """
         This method assembles the global stiffness matrix.
         """
-        self.stiffness_matrix = csr_matrix((self.data_K.flatten(), (self.ind_rows, self.ind_cols)), shape=self.gm_shape)
+        self.stiffness_matrix = csr_matrix((self.data_K.flatten(), (self.ind_rows, self.ind_cols)), shape=self.self.model.gm_shape)
 
         if self.model.drop_domain:
             self.stiffness_matrix = self.stiffness_matrix[self.structural_dofs, :][:, self.structural_dofs]
@@ -648,8 +635,8 @@ class StructuralAssembler:
         This method assembles the global matrices of the structural model.
         """
 
-        if not self.model.model_domains:
-            self.model.update_domains_mappings()
+        if not self.model.volumes_of_domain:
+            self.model.domains_processor.update_domains_mappings()
 
         logging.info("Gathering data to assemble global matrices... [10/100]")
         self.define_structural_elements()
