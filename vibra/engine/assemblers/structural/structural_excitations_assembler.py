@@ -55,36 +55,6 @@ class StructuralExcitationsAssembler:
         return self.assembler.element_2d
 
 
-    @property
-    def number_3d_elements(self):
-        return self.model.number_3d_structural_elements
-
-
-    @property
-    def structural_dofs(self):
-        return self.model.domains_processor.structural_dofs_indices
-
-
-    @property
-    def structural_ndofs(self):
-        return len(self.model.domains_processor.structural_dofs_indices)
-
-
-    @property
-    def number_frequencies(self):
-        return self.assembler.number_frequencies
-
-
-    @property
-    def prescribed_dof_indices(self):
-        return self.assembler.prescribed_dof_indices
-
-
-    @property
-    def unprescribed_dof_indices(self):
-        return self.assembler.unprescribed_dof_indices
-
-
     def get_prescribed_dof_model_excitation(self, index: int = 0):
         """
         This method adds the effects of prescribed acoustic pressure into mass flow global vector.
@@ -121,7 +91,7 @@ class StructuralExcitationsAssembler:
 
         f_eq = (1 + 1j*(eta + omega * beta)) * Kr_add + (-(omega**2) + 1j*(omega * alpha)) * Mr_add
 
-        return f_eq[self.unprescribed_dof_indices]
+        return f_eq[self.assembler.unprescribed_dof_indices]
 
 
     def get_prescribed_dof_model_excitation_reference(self, freq_dependent: bool = False):
@@ -143,10 +113,8 @@ class StructuralExcitationsAssembler:
         alpha, beta, eta = self.model.global_damping
         frequencies = self.model.frequencies
 
-        unprescribed_indices = self.unprescribed_dof_indices
-
-        Kr = (self.assembler.stiffness_matrix_r.toarray())[unprescribed_indices, :]
-        Mr = (self.assembler.mass_matrix_r.toarray())[unprescribed_indices, :]
+        Kr = (self.assembler.stiffness_matrix_r.toarray())[self.assembler.unprescribed_dof_indices, :]
+        Mr = (self.assembler.mass_matrix_r.toarray())[self.assembler.unprescribed_dof_indices, :]
 
         logging.info(f"Processing prescribed dof model excitation... [10/{len(frequencies)}]")
 
@@ -215,9 +183,11 @@ class StructuralExcitationsAssembler:
 
         try:
 
+            n_freq = self.assembler.number_frequencies
+
             values_list = []
-            aux_ones = np.ones(self.number_frequencies, dtype=complex)
-            aux_zeros = np.zeros(self.number_frequencies, dtype=complex)
+            aux_ones = np.ones(n_freq, dtype=complex)
+            aux_zeros = np.zeros(n_freq, dtype=complex)
 
             for value in values:
 
@@ -228,7 +198,7 @@ class StructuralExcitationsAssembler:
                     values_list.append(aux_ones * value)
 
                 elif isinstance(value, np.ndarray):
-                    values_list.append(value[: self.number_frequencies])
+                    values_list.append(value[: n_freq])
 
         except Exception as _error_log:
             print(str(_error_log))
@@ -238,7 +208,7 @@ class StructuralExcitationsAssembler:
         array_of_values = np.array(values_list, dtype=complex)
 
         # filter values based on frequency mask
-        if array_of_values.shape[1] - self.number_frequencies:
+        if array_of_values.shape[1] - n_freq:
             return array_of_values[self.model.solution_steps_mask, :]
 
         return array_of_values
@@ -593,7 +563,7 @@ class StructuralExcitationsAssembler:
             return
 
         # initialize the structural load vector
-        self.structural_load = np.zeros((self.model.total_dofs, self.number_frequencies), dtype=complex)
+        self.structural_load = np.zeros((self.model.total_dofs, self.assembler.number_frequencies), dtype=complex)
 
         self.process_structural_excitations_by_nodal_attribution()
         self.process_structural_excitations_by_1d_element_integration()
@@ -607,9 +577,10 @@ class StructuralExcitationsAssembler:
 
         # partitioning the load vector
         if self.model.drop_domain:
-            self.structural_load = self.structural_load[self.structural_dofs, :]
+            structural_dofs = self.assembler.structural_dofs_indices
+            self.structural_load = self.structural_load[structural_dofs, :]
 
-        if self.prescribed_dof_indices:
-            self.structural_load = self.structural_load[self.unprescribed_dof_indices, :]
+        if self.assembler.prescribed_dof_indices:
+            self.structural_load = self.structural_load[self.assembler.unprescribed_dof_indices, :]
 
         return self.structural_load

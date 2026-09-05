@@ -53,6 +53,7 @@ class StructuralAssembler:
         self.stiffness_matrix_r = None
         self.structural_load = None
 
+
     @property
     def number_3d_elements(self):
         return self.model.domains_processor.number_3d_structural_elements
@@ -61,11 +62,6 @@ class StructuralAssembler:
     @property
     def structural_dofs_indices(self):
         return self.model.domains_processor.structural_dofs_indices
-
-
-    @property
-    def structural_ndofs(self):
-        return len(self.model.domains_processor.structural_dofs_indices)
 
 
     def define_structural_elements(self):
@@ -239,7 +235,7 @@ class StructuralAssembler:
         the 2d face elements, otherwise.
         """
         if self.model.mesh.solids_connectivity.size:
-            return self.structural_dofs
+            return self.structural_dofs_indices
 
         else:
             nodes_from_2d_elements = np.array([*set(self.model.mesh.faces_connectivity[:, 4:].flatten())], dtype=int)
@@ -496,7 +492,7 @@ class StructuralAssembler:
         self.active_2d_element_dof = []
         self.dof = self.element_3d.dof_per_element
 
-        self.ind_rows, self.ind_cols, self.structural_dofs = self.element_3d.generate_ind_rows_cols(reorder=reorder)
+        self.ind_rows, self.ind_cols, _ = self.element_3d.generate_ind_rows_cols(reorder=reorder)
 
         self.displacement_dof = self.get_displacement_dof()
 
@@ -573,7 +569,7 @@ class StructuralAssembler:
         for i, surface_density in enumerate(pdata_values):
             data_Mdist[i, :, :] = self.element_1d.integrate_distributed_mass(i, surface_density)
 
-        self.mass_matrix += csr_matrix((data_Mdist.flatten(), (ind_rows, ind_cols)), shape=self.self.model.gm_shape)
+        self.mass_matrix += csr_matrix((data_Mdist.flatten(), (ind_rows, ind_cols)), shape=self.model.gm_shape)
 
 
     def assemble_distributed_mass_matrix_for_surfaces(self):
@@ -594,20 +590,20 @@ class StructuralAssembler:
         for i, surface_density in enumerate(pdata_values):
             data_Mdist[i, :, :] = self.element_2d.integrate_distributed_mass(i, surface_density)
 
-        self.mass_matrix += csr_matrix((data_Mdist.flatten(), (ind_rows, ind_cols)), shape=self.self.model.gm_shape)
+        self.mass_matrix += csr_matrix((data_Mdist.flatten(), (ind_rows, ind_cols)), shape=self.model.gm_shape)
 
 
     def assemble_global_mass_matrix(self):
         """
         This method assembles the global mass matrix.
         """
-        self.mass_matrix = csr_matrix((self.data_M.flatten(), (self.ind_rows, self.ind_cols)), shape=self.self.model.gm_shape)
+        self.mass_matrix = csr_matrix((self.data_M.flatten(), (self.ind_rows, self.ind_cols)), shape=self.model.gm_shape)
 
         self.assemble_distributed_mass_matrix_for_lines()
         self.assemble_distributed_mass_matrix_for_surfaces()
 
         if self.model.drop_domain:
-            self.mass_matrix = self.mass_matrix[self.structural_dofs, :][:, self.structural_dofs]
+            self.mass_matrix = self.mass_matrix[self.structural_dofs_indices, :][:, self.structural_dofs_indices]
 
         self.mass_matrix_r = self.mass_matrix[:, self.prescribed_dof_indices]
 
@@ -619,10 +615,10 @@ class StructuralAssembler:
         """
         This method assembles the global stiffness matrix.
         """
-        self.stiffness_matrix = csr_matrix((self.data_K.flatten(), (self.ind_rows, self.ind_cols)), shape=self.self.model.gm_shape)
+        self.stiffness_matrix = csr_matrix((self.data_K.flatten(), (self.ind_rows, self.ind_cols)), shape=self.model.gm_shape)
 
         if self.model.drop_domain:
-            self.stiffness_matrix = self.stiffness_matrix[self.structural_dofs, :][:, self.structural_dofs]
+            self.stiffness_matrix = self.stiffness_matrix[self.structural_dofs_indices, :][:, self.structural_dofs_indices]
 
         self.stiffness_matrix_r = self.stiffness_matrix[:, self.prescribed_dof_indices]
 

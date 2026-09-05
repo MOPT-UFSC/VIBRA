@@ -73,46 +73,6 @@ class AcousticExcitationsAssembler:
         return self.assembler.element_2d
 
 
-    @property
-    def number_3d_elements(self):
-        return self.model.number_3d_acoustic_elements
-
-
-    @property
-    def acoustic_dofs(self):
-        return self.model.domains_processor.acoustic_dofs_indices
-
-
-    @property
-    def acoustic_ndofs(self):
-        return len(self.model.domains_processor.acoustic_dofs_indices)
-
-
-    @property
-    def total_dofs(self):
-        return self.model.total_dofs
-
-
-    @property
-    def number_frequencies(self):
-        return self.assembler.number_frequencies
-
-
-    @property
-    def prescribed_dof_indices(self):
-        return self.assembler.prescribed_dof_indices
-
-
-    @property
-    def unprescribed_dof_indices(self):
-        return self.assembler.unprescribed_dof_indices
-
-
-    @property
-    def fluid_properties_from_volume(self):
-        return self.assembler.fluid_properties_from_volume
-
-
     def get_prescribed_pressure_model_excitation(self, index: int = 0):
         """
         This method computes the equivalent loads resulting from the degrees of freedom 
@@ -142,10 +102,10 @@ class AcousticExcitationsAssembler:
 
         values = prescribed_values[:, index]
 
-        self.Kr = self.assembler.stiffness_matrix_r
-        self.Mr = self.assembler.mass_matrix_r
-        self.Cr = self.assembler.damping_matrix_r
-        self.Cr_visc = self.assembler.visc_damping_matrix_r
+        self.Kr = self.stiffness_matrix_r
+        self.Mr = self.mass_matrix_r
+        self.Cr = self.damping_matrix_r
+        self.Cr_visc = self.visc_damping_matrix_r
 
         Kr_add = self.Kr @ values
         Mr_add = self.Mr @ values
@@ -156,7 +116,7 @@ class AcousticExcitationsAssembler:
         F_Cadd = 1j * omega * Cr_add
         F_eq = F_Kadd + F_Madd + F_Cadd
 
-        return F_eq[self.unprescribed_dof_indices]
+        return F_eq[self.assembler.unprescribed_dof_indices]
 
 
     def get_excitation_data_for_element_integration(self, property_label: str) -> AcousticExcitationData | None:
@@ -288,7 +248,7 @@ class AcousticExcitationsAssembler:
             data: dict
 
             volume_id = data.get("volume_id")
-            fluid_properties = self.fluid_properties_from_volume.get(volume_id)
+            fluid_properties = self.assembler.fluid_properties_from_volume.get(volume_id)
 
             mu_0 = fluid_properties.get("mu_0")
             rho_f = fluid_properties.get("rho_f")
@@ -342,7 +302,7 @@ class AcousticExcitationsAssembler:
             data: dict
 
             volume_id = data.get("volume_id")
-            fluid_properties = self.fluid_properties_from_volume.get(volume_id)
+            fluid_properties = self.assembler.fluid_properties_from_volume.get(volume_id)
 
             mu_0 = fluid_properties.get("mu_0")
             rho_f = fluid_properties.get("rho_f")
@@ -401,7 +361,7 @@ class AcousticExcitationsAssembler:
                     continue
 
                 if self.mass_source_vector_points is None:
-                    self.mass_source_vector_points = np.zeros((self.total_dofs, self.number_frequencies), dtype=complex)
+                    self.mass_source_vector_points = np.zeros((self.model.total_dofs, self.assembler.number_frequencies), dtype=complex)
 
                 volume_id = data.get("volume_id")
                 if volume_id is None:
@@ -430,10 +390,11 @@ class AcousticExcitationsAssembler:
             return
 
         if self.model.drop_domain:
-            self.mass_source_vector_points = self.mass_source_vector_points[self.acoustic_dofs, :]
+            acoustic_dofs_indices = self.assembler.acoustic_dofs_indices
+            self.mass_source_vector_points = self.mass_source_vector_points[acoustic_dofs_indices, :]
 
-        if self.prescribed_dof_indices:
-            self.mass_source_vector_points = self.mass_source_vector_points[self.unprescribed_dof_indices, :]
+        if self.assembler.prescribed_dof_indices:
+            self.mass_source_vector_points = self.mass_source_vector_points[self.assembler.unprescribed_dof_indices, :]
 
 
     def process_nodal_mass_source_data_for_lines(self):
@@ -451,7 +412,7 @@ class AcousticExcitationsAssembler:
                 continue
 
             if self.mass_source_vector_lines is None:
-                self.mass_source_vector_lines = np.zeros((self.total_dofs, self.number_frequencies), dtype=complex)
+                self.mass_source_vector_lines = np.zeros((self.model.total_dofs, self.assembler.number_frequencies), dtype=complex)
 
             values = data.get("values")
             if values is None:
@@ -472,10 +433,11 @@ class AcousticExcitationsAssembler:
             return
 
         if self.model.drop_domain:
-            self.mass_source_vector_lines = self.mass_source_vector_lines[self.acoustic_dofs, :]
+            acoustic_dofs_indices = self.assembler.acoustic_dofs_indices
+            self.mass_source_vector_lines = self.mass_source_vector_lines[acoustic_dofs_indices, :]
 
-        if self.prescribed_dof_indices:
-            self.mass_source_vector_lines = self.mass_source_vector_lines[self.unprescribed_dof_indices, :]
+        if self.assembler.prescribed_dof_indices:
+            self.mass_source_vector_lines = self.mass_source_vector_lines[self.assembler.unprescribed_dof_indices, :]
 
 
     def process_nodal_mass_source_data_for_surfaces(self):
@@ -493,7 +455,7 @@ class AcousticExcitationsAssembler:
                 continue
 
             if self.mass_source_vector_surfaces is None:
-                self.mass_source_vector_surfaces = np.zeros((self.total_dofs, self.number_frequencies), dtype=complex)
+                self.mass_source_vector_surfaces = np.zeros((self.model.total_dofs, self.assembler.number_frequencies), dtype=complex)
 
             values = data.get("values")
             if values is None:
@@ -514,10 +476,11 @@ class AcousticExcitationsAssembler:
             return
 
         if self.model.drop_domain:
-            self.mass_source_vector_surfaces = self.mass_source_vector_surfaces[self.acoustic_dofs, :]
+            acoustic_dofs_indices = self.assembler.acoustic_dofs_indices
+            self.mass_source_vector_surfaces = self.mass_source_vector_surfaces[acoustic_dofs_indices, :]
 
-        if self.prescribed_dof_indices:
-            self.mass_source_vector_surfaces = self.mass_source_vector_surfaces[self.unprescribed_dof_indices, :]
+        if self.assembler.prescribed_dof_indices:
+            self.mass_source_vector_surfaces = self.mass_source_vector_surfaces[self.assembler.unprescribed_dof_indices, :]
 
 
     def process_nodal_mass_source_data_for_volumes(self):
@@ -535,7 +498,7 @@ class AcousticExcitationsAssembler:
                 continue
 
             if self.mass_source_vector_volumes is None:
-                self.mass_source_vector_volumes = np.zeros((self.total_dofs, self.number_frequencies), dtype=complex)
+                self.mass_source_vector_volumes = np.zeros((self.model.total_dofs, self.assembler.number_frequencies), dtype=complex)
 
             values = data.get("values")
             if values is None:
@@ -556,10 +519,11 @@ class AcousticExcitationsAssembler:
             return
 
         if self.model.drop_domain:
-            self.mass_source_vector_volumes = self.mass_source_vector_volumes[self.acoustic_dofs, :]
+            acoustic_dofs_indices = self.assembler.acoustic_dofs_indices
+            self.mass_source_vector_volumes = self.mass_source_vector_volumes[acoustic_dofs_indices, :]
 
-        if self.prescribed_dof_indices:
-            self.mass_source_vector_volumes = self.mass_source_vector_volumes[self.unprescribed_dof_indices, :]
+        if self.assembler.prescribed_dof_indices:
+            self.mass_source_vector_volumes = self.mass_source_vector_volumes[self.assembler.unprescribed_dof_indices, :]
 
 
     def process_mass_source_data_to_assemble_matrices(self):
@@ -615,11 +579,11 @@ class AcousticExcitationsAssembler:
             An array containing the first and second mass-source vector factors.
         """
 
-        factor_Qms1 = np.zeros(self.number_3d_elements, complex)
-        factor_Qms2 = np.zeros(self.number_3d_elements, complex)
+        factor_Qms1 = np.zeros(self.assembler.number_3d_elements, complex)
+        factor_Qms2 = np.zeros(self.assembler.number_3d_elements, complex)
 
         for vol_id, elements_from_volume in self.model.mesh.elements_from_volume.items():
-            fluid_data = self.fluid_properties_from_volume.get(vol_id)
+            fluid_data = self.assembler.fluid_properties_from_volume.get(vol_id)
             if not isinstance(fluid_data, dict):
                 continue
 
@@ -665,12 +629,14 @@ class AcousticExcitationsAssembler:
         self.Qms2_1d = csr_matrix((data_Qms2.flatten(), (self.ind_rows_Qmsf_1d, self.ind_cols_Qmsf_1d)), shape=self.self.model.gm_shape)
 
         if self.model.drop_domain:
-            self.Qms1_1d = self.Qms1_1d[self.acoustic_dofs, :][:, self.acoustic_dofs]
-            self.Qms2_1d = self.Qms2_1d[self.acoustic_dofs, :][:, self.acoustic_dofs]
+            acoustic_dofs_indices = self.assembler.acoustic_dofs_indices
+            self.Qms1_1d = self.Qms1_1d[acoustic_dofs_indices, :][:, acoustic_dofs_indices]
+            self.Qms2_1d = self.Qms2_1d[acoustic_dofs_indices, :][:, acoustic_dofs_indices]
 
-        if self.prescribed_dof_indices:
-            self.Qms1_1d = self.Qms1_1d[self.unprescribed_dof_indices, :][:, self.unprescribed_dof_indices]
-            self.Qms2_1d = self.Qms2_1d[self.unprescribed_dof_indices, :][:, self.unprescribed_dof_indices]
+        if self.assembler.prescribed_dof_indices:
+            unprescribed_dof_indices = self.assembler.unprescribed_dof_indices
+            self.Qms1_1d = self.Qms1_1d[unprescribed_dof_indices, :][:, unprescribed_dof_indices]
+            self.Qms2_1d = self.Qms2_1d[unprescribed_dof_indices, :][:, unprescribed_dof_indices]
 
 
     def assemble_mass_source_matrices_from_surfaces(self, index: int = 0):
@@ -697,12 +663,14 @@ class AcousticExcitationsAssembler:
         self.Qms2_2d = csr_matrix((data_Qms2.flatten(), (self.ind_rows_Qmsf_2d, self.ind_cols_Qmsf_2d)), shape=self.self.model.gm_shape)
 
         if self.model.drop_domain:
-            self.Qms1_2d = self.Qms1_2d[self.acoustic_dofs, :][:, self.acoustic_dofs]
-            self.Qms2_2d = self.Qms2_2d[self.acoustic_dofs, :][:, self.acoustic_dofs]
+            acoustic_dofs_indices = self.assembler.acoustic_dofs_indices
+            self.Qms1_2d = self.Qms1_2d[acoustic_dofs_indices, :][:, acoustic_dofs_indices]
+            self.Qms2_2d = self.Qms2_2d[acoustic_dofs_indices, :][:, acoustic_dofs_indices]
 
-        if self.prescribed_dof_indices:
-            self.Qms1_2d = self.Qms1_2d[self.unprescribed_dof_indices, :][:, self.unprescribed_dof_indices]
-            self.Qms2_2d = self.Qms2_2d[self.unprescribed_dof_indices, :][:, self.unprescribed_dof_indices]
+        if self.assembler.prescribed_dof_indices:
+            unprescribed_dof_indices = self.assembler.unprescribed_dof_indices
+            self.Qms1_2d = self.Qms1_2d[unprescribed_dof_indices, :][:, unprescribed_dof_indices]
+            self.Qms2_2d = self.Qms2_2d[unprescribed_dof_indices, :][:, unprescribed_dof_indices]
 
 
     def assemble_mass_source_matrices_from_volumes(self, index: int = 0):
@@ -728,12 +696,14 @@ class AcousticExcitationsAssembler:
         self.Qms2_3d = csr_matrix((data_Qms2.flatten(), (self.ind_rows, self.ind_cols)), shape=self.self.model.gm_shape)
 
         if self.model.drop_domain:
-            self.Qms1_3d = self.Qms1_3d[self.acoustic_dofs, :][:, self.acoustic_dofs]
-            self.Qms2_3d = self.Qms2_3d[self.acoustic_dofs, :][:, self.acoustic_dofs]
+            acoustic_dofs_indices = self.assembler.acoustic_dofs_indices
+            self.Qms1_3d = self.Qms1_3d[acoustic_dofs_indices, :][:, acoustic_dofs_indices]
+            self.Qms2_3d = self.Qms2_3d[acoustic_dofs_indices, :][:, acoustic_dofs_indices]
 
-        if self.prescribed_dof_indices:
-            self.Qms1_3d = self.Qms1_3d[self.unprescribed_dof_indices, :][:, self.unprescribed_dof_indices]
-            self.Qms2_3d = self.Qms2_3d[self.unprescribed_dof_indices, :][:, self.unprescribed_dof_indices]
+        if self.assembler.prescribed_dof_indices:
+            unprescribed_dof_indices = self.assembler.unprescribed_dof_indices
+            self.Qms1_3d = self.Qms1_3d[unprescribed_dof_indices, :][:, unprescribed_dof_indices]
+            self.Qms2_3d = self.Qms2_3d[unprescribed_dof_indices, :][:, unprescribed_dof_indices]
 
 
     def compute_mass_source_load_vector(self, omega: float, index: int = 0):
@@ -781,10 +751,10 @@ class AcousticExcitationsAssembler:
         """
 
         if self.mass_flow_vector is None:
-            self.mass_flow_vector = np.zeros((self.total_dofs, self.number_frequencies), dtype=complex)
+            self.mass_flow_vector = np.zeros((self.model.total_dofs, self.assembler.number_frequencies), dtype=complex)
 
         acoustic_excitation = defaultdict(float)
-        aux_ones = np.ones((self.number_frequencies), dtype=complex)
+        aux_ones = np.ones((self.assembler.number_frequencies), dtype=complex)
 
         for (property, surface_id), data in self.properties.surface_properties.items():
             if property in ["surface_velocity", "reciprocating_compressor_excitation"]:
@@ -833,7 +803,7 @@ class AcousticExcitationsAssembler:
         """
 
         if self.mass_flow_vector is None:
-            self.mass_flow_vector = np.zeros((self.total_dofs, self.number_frequencies), dtype=complex)
+            self.mass_flow_vector = np.zeros((self.model.total_dofs, self.assembler.number_frequencies), dtype=complex)
 
         prop_labels = [
             "surface_velocity",
@@ -907,9 +877,10 @@ class AcousticExcitationsAssembler:
         logging.info("Partitioning the load vector... [95/100]")
 
         if self.model.drop_domain:
-            self.mass_flow_vector = self.mass_flow_vector[self.acoustic_dofs, :]
+            acoustic_dofs_indices = self.assembler.acoustic_dofs_indices
+            self.mass_flow_vector = self.mass_flow_vector[acoustic_dofs_indices, :]
 
-        if self.prescribed_dof_indices:
-            self.mass_flow_vector = self.mass_flow_vector[self.unprescribed_dof_indices, :]
+        if self.assembler.prescribed_dof_indices:
+            self.mass_flow_vector = self.mass_flow_vector[self.assembler.unprescribed_dof_indices, :]
 
         return self.mass_flow_vector
