@@ -14,16 +14,13 @@ class ModelSelectionTools:
 
         self.model = model
 
-
     @property
     def mesh(self):
         return self.model.mesh
 
-
     @property
     def domains_processor(self):
         return self.model.domains_processor
-
 
     def filter_selected_entities_based_on_domain(self, selected_ids: list[int] | np.ndarray, selection_label: str, domain: str):
         """
@@ -65,7 +62,6 @@ class ModelSelectionTools:
         filtered_ids = [int(_id) for _id in np.intersect1d(all_ids, selected_ids)]
 
         return filtered_ids
-
 
     def check_selected_ids(self, input_ids: str | int | Iterable, selection_label: str, domain: str = "both", single_id: bool = False):
         """
@@ -163,7 +159,6 @@ class ModelSelectionTools:
             return selected_ids[0], None
 
         return selected_ids, None
-
 
 def check_input_values(input_ids: str | list | tuple | np.ndarray):
 

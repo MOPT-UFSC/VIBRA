@@ -11,6 +11,7 @@ import numpy as np
 
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
+from vibra.errors import InvalidDomainError
 
 
 class ModelDomainsProcessor:
@@ -30,22 +31,19 @@ class ModelDomainsProcessor:
         self.nodes_of_domain = {}
         self.elements_of_domain = {}
 
-        self.structural_dofs_shift = 0
-        self.acoustic_dofs_shift = 0
+        self.structural_dofs_offset = 0
+        self.acoustic_dofs_offset = 0
 
         self.acoustic_dofs_indices = None
         self.structural_dofs_indices = None
-
 
     @property
     def mesh(self):
         return self.model.mesh
 
-
     @property
     def properties(self):
         return self.model.properties
-
 
     def map_model_domains(self):
         """
@@ -57,7 +55,7 @@ class ModelDomainsProcessor:
         self.lines_of_domain.clear()
         self.points_of_domain.clear()
 
-        for vol_id in self.mesh.elements_from_volume:
+        for vol_id in self.mesh.all_volume_ids():
             fluid = self.properties._get_property("fluid", volume=vol_id)
             if isinstance(fluid, Fluid):
                 self.volumes_of_domain["acoustic"].append(int(vol_id))
@@ -117,7 +115,6 @@ class ModelDomainsProcessor:
                 "structure_volume" : structure_volume,
                 }
 
-
     def map_nodes_and_elements_by_domain(self):
         """
         This method groups the nodes and elements for acoustic and structural domains.
@@ -129,14 +126,13 @@ class ModelDomainsProcessor:
             self.nodes_of_domain[domain] = np.unique(self.mesh.solids_connectivity[rows, 4:])
             self.elements_of_domain[domain] = np.unique(self.mesh.solids_connectivity[rows, 0])
 
-
     def process_nodes_mappings_by_domain(self):
         """
         This method maps the nodes of each domain to a continuous list of indices.
         """
 
-        acoustic_nodes: np.ndarray = self.nodes_of_domain.get("acoustic", np.ndarray([]))
-        structural_nodes: np.ndarray = self.nodes_of_domain.get("structural", np.ndarray([]))
+        acoustic_nodes: np.ndarray = self.nodes_of_domain.get("acoustic", [])
+        structural_nodes: np.ndarray = self.nodes_of_domain.get("structural", [])
 
         # the total number of nodes (per domain)
         self.number_acoustic_nodes = len(acoustic_nodes)
@@ -158,14 +154,13 @@ class ModelDomainsProcessor:
         print(f"Number of acoustic nodes: {self.number_acoustic_nodes}")
         print(f"Number of structural nodes: {self.number_structural_nodes}")
 
-
     def process_element_mappings_by_domain(self):
         """
         This method maps the elements of each domain to a continuous list of indices.
         """
 
-        acoustic_elements: np.ndarray = self.elements_of_domain.get("acoustic", np.ndarray([]))
-        structural_elements: np.ndarray = self.elements_of_domain.get("structural", np.ndarray([]))
+        acoustic_elements: np.ndarray = self.elements_of_domain.get("acoustic", [])
+        structural_elements: np.ndarray = self.elements_of_domain.get("structural", [])
 
         # the total number of elements (per domain)
         self.number_3d_acoustic_elements = len(acoustic_elements)
@@ -187,7 +182,6 @@ class ModelDomainsProcessor:
         print(f"Number of acoustic elements: {self.number_3d_acoustic_elements}")
         print(f"Number of structural elements: {self.number_3d_structural_elements}")
 
-
     def process_dof_by_domain(self):
         """
         This method processes the DOF indices arrays of each domain.
@@ -208,17 +202,17 @@ class ModelDomainsProcessor:
         self.total_dof = self.total_act_dofs + self.total_str_dofs
 
         # define the dof shifts for each domain
-        self.structural_dofs_shift = 0
-        self.acoustic_dofs_shift = self.total_str_dofs
+        self.structural_dofs_offset = 0
+        self.acoustic_dofs_offset = self.total_str_dofs
 
         # process the structural dofs (continuous nodes sequence + dofs shift)
         nodes_str_seq = np.arange(self.number_structural_nodes, dtype=int).reshape(-1, 1)
-        structural_dofs_indices = dof_str * nodes_str_seq + np.arange(dof_str) + self.structural_dofs_shift
+        structural_dofs_indices = dof_str * nodes_str_seq + np.arange(dof_str) + self.structural_dofs_offset
         self.structural_dofs_indices = structural_dofs_indices.flatten()
 
         # process the acoustic dofs (continuous nodes sequence + dofs shift)
         nodes_act_seq = np.arange(self.number_acoustic_nodes, dtype=int).reshape(-1, 1)
-        acoustic_dofs_indices = dof_act * nodes_act_seq + np.arange(dof_act) + self.acoustic_dofs_shift
+        acoustic_dofs_indices = dof_act * nodes_act_seq + np.arange(dof_act) + self.acoustic_dofs_offset
         self.acoustic_dofs_indices = acoustic_dofs_indices.flatten()
 
         print(f"Number of acoustic DOF: {self.total_act_dofs}")
@@ -242,10 +236,29 @@ class ModelDomainsProcessor:
 
         # return total_dof, str_dof_indices, act_dof_indices
 
+    def get_dofs_offset(self, domain: str) -> int:
+        """
+        This method returns, for a specific domain, the dofs shift.
+        
+        Parameter
+        ---------
+        domain: str
+            The domain label (acoustic or structural)
+        
+        Return
+        ------
+        dofs_offset: int
+            An integer representing the DOFs offset.
 
-    def get_dofs_shift(self, domain: str):
-        return self.acoustic_dofs_shift if domain == "acoustic" else self.structural_dofs_shift
+        """
+        if domain == "acoustic":
+            dofs_offset = self.acoustic_dofs_offset
+        elif domain == "structural":
+            dofs_offset = self.structural_dofs_offset
+        else:
+            raise InvalidDomainError(f"The domains {domain} is not supported.")
 
+        return dofs_offset
 
     def update_domains_mappings(self):
         t0 = perf_counter()
