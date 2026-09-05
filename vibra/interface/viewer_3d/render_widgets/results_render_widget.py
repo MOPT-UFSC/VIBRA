@@ -292,7 +292,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         # filter acoustic nodes
         model = postprocessing.model
-        acoustic_nodes = model.nodes_per_domain.get("acoustic")
+        acoustic_nodes = model.domains_processor.nodes_of_domain.get("acoustic")
 
         _color_scalars = np.zeros(len(model.mesh.nodal_coordinates), dtype=float)
         _color_scalars[acoustic_nodes] = color_scalars
@@ -350,7 +350,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         # filter structural nodes
         model = postprocessing.model
-        structural_nodes = model.nodes_per_domain.get("structural")
+        structural_nodes = model.domains_processor.nodes_of_domain.get("structural")
 
         deformed_coords = model.mesh.nodal_coordinates[:, 1:].copy()
         deformed_coords[structural_nodes, :] += (magnification_factor / (10 * max_value)) * displacements

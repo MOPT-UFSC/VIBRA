@@ -506,9 +506,9 @@ class StructuralExcitationsAssembler:
                     self.element_2d.invert_element_connectivity(i)
                     break
 
-        from vibra import app
-        app().main_window.results_widget.visualization_filter.element_normal_symbols = True
-        app().main_window.update_symbols()
+        # from vibra import app
+        # app().main_window.results_widget.visualization_filter.element_normal_symbols = True
+        # app().main_window.update_symbols()
 
         logging.info(f"Processing acoustic-related loadings... [3/3]")
 

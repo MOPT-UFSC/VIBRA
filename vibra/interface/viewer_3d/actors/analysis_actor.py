@@ -34,9 +34,9 @@ class AnalysisActor(SolidsActor):
 
         match self.physial_domain:
             case PhysicalDomain.ACOUSTIC:
-                domain_specific_volumes = app().project.model.model_domains.get("acoustic", set())
+                domain_specific_volumes = app().project.model.volumes_of_domain.get("acoustic", set())
             case PhysicalDomain.STRUCTURAL:
-                domain_specific_volumes = app().project.model.model_domains.get("structural", set())
+                domain_specific_volumes = app().project.model.volumes_of_domain.get("structural", set())
             case _:
                 domain_specific_volumes = mesh.all_solid_ids()
 

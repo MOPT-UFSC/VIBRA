@@ -68,7 +68,8 @@ class AcousticTetrahedron10(Acoustic3DElement, Tetrahedron10):
         if isinstance(nodal_pressures, np.ndarray):
             Pe = nodal_pressures
         elif isinstance(solution, np.ndarray):
-            Pe = solution[self.model.fluid_node_mapping[node_ids], :]
+            _nodes = self.model.get_mapped_nodes(node_ids, "acoustic")
+            Pe = solution[_nodes, :]
         else:
             return
 

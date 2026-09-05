@@ -233,11 +233,8 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
         # Note: the negative signal ensures the assembly consistency of acoustic transfer element
         volume_velocity = -surface_velocity * area
 
-        # process the dofs of the selected entities
-        _nodes = self.model.fluid_node_mapping[np.sort(surface_nodes)]
-        dof_per_node = self.model.acoustic_element_3d.dof_per_node
-
-        gdof = dof_per_node * _nodes.reshape(-1, 1) + np.arange(dof_per_node, dtype=int)
+        # process the acoustic dofs of the selected entities
+        gdof = self.model.get_dof_indices_from_nodes(np.sort(surface_nodes), "acoustic")
         rows = gdof[:, 0]
 
         avg_pressure = np.average(self.nodal_solution[rows, :], axis=0)

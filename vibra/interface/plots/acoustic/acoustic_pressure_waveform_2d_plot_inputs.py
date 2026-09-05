@@ -166,11 +166,8 @@ class AcousticPressureWaveform2DPlotInputs(AcousticPressureWaveform2dPlotInputs_
         else:
             nodes = selected_id
 
-        # process the dofs of the selected entities
-        _nodes = self.model.fluid_node_mapping[nodes]
-        dof_per_node = self.model.acoustic_element_3d.dof_per_node
-
-        gdof = dof_per_node * _nodes.reshape(-1, 1) + np.arange(dof_per_node, dtype=int)
+        # process the acoustic dofs of the selected entities
+        gdof = self.model.get_dof_indices_from_nodes(nodes, "acoustic")
         rows = gdof[:, 0]
 
         if isinstance(rows, int):

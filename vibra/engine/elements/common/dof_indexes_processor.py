@@ -16,19 +16,14 @@ class DOFIndexesProcessor:
         self.dof_per_element = dof_per_node * nodes_per_element
         self.local_dof = np.arange(dof_per_node, dtype=int)
 
-    @ property
-    def nodes_mapping(self):
-        if self.domain == "acoustic":
-            return self.model.fluid_node_mapping
-
-        return self.model.struct_node_mapping
 
     @property
     def dofs_shift(self):
         if self.domain == "acoustic":
-            return self.model.acoustic_dofs_shift
+            return self.model.domains_processor.acoustic_dofs_shift
 
-        return self.model.structural_dofs_shift
+        return self.model.domains_processor.structural_dofs_shift
+
 
     def get_rows_and_cols_indices_1D(
             self,
@@ -45,7 +40,7 @@ class DOFIndexesProcessor:
 
         dof = self.dof_per_node
         elem_nodes = connectivities[index, :]
-        _elem_nodes = self.nodes_mapping[elem_nodes]
+        _elem_nodes = self.model.get_mapped_nodes(elem_nodes, self.domain)
 
         dof_indices = dof * _elem_nodes.reshape(-1, 1) + self.local_dof + self.dofs_shift
 
@@ -73,8 +68,8 @@ class DOFIndexesProcessor:
         for j in range(self.nodes_per_element):
             start = j * dof
             end = (j + 1) * dof
-            elem_nodes = self.nodes_mapping[connectivities[:, j]]
-            ind_dof[:, start : end] = dof * elem_nodes.reshape(-1, 1) + self.local_dof
+            _elem_nodes = self.model.get_mapped_nodes(connectivities[:, j], self.domain)
+            ind_dof[:, start : end] = dof * _elem_nodes.reshape(-1, 1) + self.local_dof
 
         ind_dof += self.dofs_shift
 
@@ -95,7 +90,7 @@ class DOFIndexesProcessor:
         """
 
         # filter the acoustic elements connectivities
-        element_ids = self.model.elements_per_domain.get(self.domain, [])
+        element_ids = self.model.domains_processor.elements_of_domain.get(self.domain, [])
         reduced_connect = connectivities[element_ids, :]
 
         dof = self.dof_per_node
@@ -107,8 +102,9 @@ class DOFIndexesProcessor:
         for j in range(self.nodes_per_element):
             start = j * dof
             end = (j + 1) * dof
-            elem_nodes = self.nodes_mapping[reduced_connect[:, j]]
-            ind_dof[:, start : end] = dof * elem_nodes.reshape(-1, 1) + self.local_dof
+            _elem_nodes = self.model.get_mapped_nodes(reduced_connect[:, j], self.domain)
+
+            ind_dof[:, start : end] = dof * _elem_nodes.reshape(-1, 1) + self.local_dof
 
         ind_dof += self.dofs_shift
 

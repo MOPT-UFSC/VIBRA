@@ -35,7 +35,7 @@ class ElementDataProcessor:
         """
 
         # filter the elements connectivities
-        element_ids = self.model.elements_per_domain.get(self.domain, [])
+        element_ids = self.model.domains_processor.elements_of_domain.get(self.domain, [])
         reduced_connect = connectivities[element_ids, :]
 
         nel = len(reduced_connect)

@@ -504,12 +504,12 @@ class GeometryRenderWidget(CommonRenderWidget):
         text += faces_info_text()
         text += volumes_info_text()
 
-        if physical_domain == "structural":
+        if physical_domain in ["structural", "coupled"]:
             text += material_info_text()
             text += structural_boundary_conditions_info_text()
             text += structural_additional_info_text()
 
-        elif physical_domain == "acoustic":
+        if physical_domain in ["acoustic", "coupled"]:
             text += fluid_info_text()
             text += proportional_damping_info_text()
             text += porous_material_info_text()

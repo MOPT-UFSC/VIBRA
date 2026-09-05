@@ -81,7 +81,7 @@ class ProjectReader:
         model.properties = self.read_model_properties()
         model.solution = self.read_solution(model)
 
-        model.update_domains_mappings()
+        model.domains_processor.update_domains_mappings()
 
         return model
 

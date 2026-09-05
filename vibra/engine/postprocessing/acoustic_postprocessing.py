@@ -392,7 +392,7 @@ class AcousticPostprocessing:
         #     surface_id=surface_id, return_nodes=True)
 
         # Load all frequency solutions to optimize multiple load on the `process_particle_velocity` method below.
-        _filtered_nodes = self.model.fluid_node_mapping[filtered_nodes]
+        _filtered_nodes = self.model.get_mapped_nodes(filtered_nodes, "acoustic")
 
         # print(self.solution.acoustic_solution.shape)
         # print(_filtered_nodes.shape)
@@ -405,7 +405,7 @@ class AcousticPostprocessing:
             Vk = 0.0
             for element_id in solid_element_ids:
                 connect = element_3d.connectivities[element_id, :]
-                _connect = self.model.fluid_node_mapping[connect]
+                _connect = self.model.get_mapped_nodes(connect, "acoustic")
                 indices = np.array([node_to_index.get(node) for node in _connect])
                 enodal_pressures = solution[indices, :]
                 Vk += element_3d.process_particle_velocity(
@@ -494,8 +494,8 @@ class AcousticPostprocessing:
         nodes_output = np.sort(self.mesh.get_nodes_from_surface(output_surface_id))
 
         logging.info("Processing the transmission loss... [20/100]")
-        # P_in = self.solution.acoustic_solution[self.model.fluid_node_mapping[nodes_input], :]
-        P_out = self.solution.acoustic_solution[self.model.fluid_node_mapping[nodes_output], :]
+        # P_in = self.solution.acoustic_solution[self.model.get_mapped_nodes(nodes_input, "acoustic"), :]
+        P_out = self.solution.acoustic_solution[self.model.get_mapped_nodes(nodes_output, "acoustic") :]
 
         logging.info("Processing the transmission loss... [40/100]")
 
@@ -636,7 +636,7 @@ class AcousticPostprocessing:
         surface_connectivities = self.mesh.get_connectivity_from_surface(surface_id)
 
         number_nodes = len(nodes)
-        _nodes = self.model.fluid_node_mapping[nodes]
+        _nodes = self.model.get_mapped_nodes(nodes, "acoustic")
         map_nodes = dict(zip(_nodes, np.arange(number_nodes, dtype=int)))
 
         if len(pressures.shape) == 1:
@@ -648,7 +648,7 @@ class AcousticPostprocessing:
         sound_power = 0.0
         for i, connect in enumerate(surface_connectivities):
             # process the element rows to access the reduced nodal results for pressures and particle velocities
-            rows = [map_nodes.get(_node) for _node in self.model.fluid_node_mapping[connect]]
+            rows = [map_nodes.get(_node) for _node in self.model.get_mapped_nodes(connect, "acoustic")]
 
             L_sv = pressures[rows, :].T.reshape(-1, 1, edof)
             R_sv = particle_velocities[rows, :].T.reshape(-1, edof, 1)

@@ -202,7 +202,7 @@ class ModelSetupItems(CommonMenuItems):
                 volume_ids.sort()
                 volumes_without_material = properties.get_entities_without_property("material", volumes=volume_ids)
                 if volumes_without_material:
-                    acoustic_volumes = model.model_domains.get("acoustic", [])
+                    acoustic_volumes = model.volumes_of_domain.get("acoustic", [])
                     if volumes_without_material == volume_ids:
                         return False
 
@@ -223,7 +223,7 @@ class ModelSetupItems(CommonMenuItems):
                 volume_ids.sort()
                 volumes_without_fluid = properties.get_entities_without_property("fluid", volumes=volume_ids)
                 if volumes_without_fluid:
-                    structural_volumes = model.model_domains.get("structural", [])
+                    structural_volumes = model.volumes_of_domain.get("structural", [])
                     if volumes_without_fluid == volume_ids:
                         return False
 

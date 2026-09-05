@@ -20,7 +20,7 @@ class AnalysisChecker:
 
         # update the domains mappings
         if update_domain_mappings:
-            self.model.update_domains_mappings()
+            self.model.domains_processor.update_domains_mappings()
 
         match self.model.analysis_id:
             case AnalysisID.STRUCTURAL_MODAL:
@@ -134,7 +134,7 @@ class AnalysisChecker:
         if not volumes_without_material:
             return
 
-        acoustic_domain_volumes = self.model.model_domains.get("acoustic", [])
+        acoustic_domain_volumes = self.model.volumes_of_domain.get("acoustic", [])
         if len(acoustic_domain_volumes) != len(volumes_without_material):
             for vol_id in volumes_without_material:
                 if vol_id in acoustic_domain_volumes:
@@ -168,7 +168,7 @@ class AnalysisChecker:
         if not volumes_without_fluid:
             return
 
-        structural_domain_volumes = self.model.model_domains.get("structural", [])
+        structural_domain_volumes = self.model.volumes_of_domain.get("structural", [])
         if len(structural_domain_volumes) != len(volumes_without_fluid):
             for vol_id in volumes_without_fluid:
                 if vol_id in structural_domain_volumes:

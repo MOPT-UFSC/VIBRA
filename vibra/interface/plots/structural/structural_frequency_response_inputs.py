@@ -211,10 +211,8 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
                     self.model.set_structural_elements()
                 dof_per_node = self.model.structural_element_3d.dof_per_node
 
-        # map structural dofs
-        _nodes = self.model.struct_node_mapping[nodes]
-
-        gdof = dof_per_node * _nodes.reshape(-1, 1) + np.arange(dof_per_node, dtype=int)
+        # process the structural dofs of the selected entities
+        gdof = self.model.get_dof_indices_from_nodes(nodes, "structural")
         rows = gdof[:, dof_index]
 
         if isinstance(rows, int):
