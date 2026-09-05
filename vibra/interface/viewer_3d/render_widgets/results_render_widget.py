@@ -411,8 +411,16 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         self.is_animation_symetric = False
 
+        # filter acoustic nodes
+        model = postprocessing.model
+        acoustic_nodes = model.domains_processor.nodes_of_domain.get("acoustic")
+
+        _color_scalars = np.zeros(len(model.mesh.nodal_coordinates), dtype=float)
+        _color_scalars[acoustic_nodes] = color_scalars
+
         colormap = app().config.user_preferences.color_map
-        self.analysis_actor.plot_color_bar(color_scalars, min_value, max_value, colormap)
+
+        self.analysis_actor.plot_color_bar(_color_scalars, min_value, max_value, colormap)
         self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.update()
 
@@ -448,8 +456,16 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if self.user_max_value is not None:
             max_value = self.user_max_value
 
+        # filter acoustic nodes
+        model = postprocessing.model
+        acoustic_nodes = model.domains_processor.nodes_of_domain.get("acoustic")
+
+        _color_scalars = np.zeros(len(model.mesh.nodal_coordinates), dtype=float)
+        _color_scalars[acoustic_nodes] = color_scalars
+
         colormap = app().config.user_preferences.color_map
-        self.analysis_actor.plot_color_bar(color_scalars, min_value, max_value, colormap)
+
+        self.analysis_actor.plot_color_bar(_color_scalars, min_value, max_value, colormap)
         self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.update()
 

@@ -5,6 +5,7 @@ if TYPE_CHECKING:
     from vibra.engine.model import Model
 
 from collections import defaultdict
+from time import perf_counter
 
 import numpy as np
 
@@ -244,9 +245,32 @@ class ModelDomainsProcessor:
 
 
     def update_domains_mappings(self):
+        t0 = perf_counter()
         self.map_model_domains()
+        dt = perf_counter() - t0
+        print(f"Elapsed time to process domains mappings (A): {dt : .6f} s")
+
+        t0 = perf_counter()
         self.map_fluid_structure_interfaces()
+        dt = perf_counter() - t0
+        print(f"Elapsed time to process domains mappings (B): {dt : .6f} s")
+
+        t0 = perf_counter()
         self.map_nodes_and_elements_by_domain()
+        dt = perf_counter() - t0
+        print(f"Elapsed time to process domains mappings (C): {dt : .6f} s")
+
+        t0 = perf_counter()
         self.process_nodes_mappings_by_domain()
+        dt = perf_counter() - t0
+        print(f"Elapsed time to process domains mappings (D): {dt : .6f} s")
+
+        t0 = perf_counter()
         self.process_element_mappings_by_domain()
+        dt = perf_counter() - t0
+        print(f"Elapsed time to process domains mappings (E): {dt : .6f} s")
+
+        t0 = perf_counter()
         self.process_dof_by_domain()
+        dt = perf_counter() - t0
+        print(f"Elapsed time to process domains mappings (F): {dt : .6f} s")

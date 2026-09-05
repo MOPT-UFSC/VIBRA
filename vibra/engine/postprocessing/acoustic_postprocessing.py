@@ -242,7 +242,7 @@ class AcousticPostprocessing:
     def compute_multiple_ifft(self) -> tuple[np.ndarray, np.ndarray]:
         assert isinstance(self.solution, HarmonicSolution)
         assert self.solution.acoustic_solution is not None
-        assert self.solution.analysis_id.is_acoustic()  # for now, I guess
+        assert self.solution.analysis_id.is_acoustic() or self.solution.analysis_id.is_coupled()
 
         # t0 = perf_counter()
         logging.info("Computing multiple iffts... [25/100]")
