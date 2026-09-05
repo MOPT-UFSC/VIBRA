@@ -1,6 +1,5 @@
 import logging
-from collections import defaultdict
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from copy import deepcopy
 from enum import IntEnum
 from numbers import Number
@@ -261,9 +260,7 @@ class Model:
 
         return global_dof_indices
 
-    def check_selected_ids(
-        self, selected_ids: str | int | list[int] | np.ndarray, selection_label: str, domain: str = "both", single_id: bool = False
-    ):
+    def check_selected_ids(self, selected_ids: str | int | Iterable, selection_label: str, domain: str = "both", single_id: bool = False):
         return self.model_selection_tools.check_selected_ids(selected_ids, selection_label, domain=domain, single_id=single_id)
 
     def reset_current_solution(self):

@@ -21,7 +21,7 @@ class ModelDomainsProcessor:
         self.reset()
 
     def reset(self):
-        self.volumes_of_domain = {}
+        self.volumes_of_domain = defaultdict(list)
         self.surfaces_of_domain = {}
         self.lines_of_domain = {}
         self.points_of_domain = {}
@@ -52,34 +52,27 @@ class ModelDomainsProcessor:
         This method maps all entities of each domain.
         """
 
-        all_ids = defaultdict(list)
-        volumes_of_domain = defaultdict(list)
-
         self.volumes_of_domain.clear()
         self.surfaces_of_domain.clear()
         self.lines_of_domain.clear()
         self.points_of_domain.clear()
 
         for vol_id in self.mesh.elements_from_volume:
-
             fluid = self.properties._get_property("fluid", volume=vol_id)
             if isinstance(fluid, Fluid):
-                all_ids["volumes"].append(vol_id)
-                volumes_of_domain["acoustic"].append(int(vol_id))
+                self.volumes_of_domain["acoustic"].append(int(vol_id))
                 continue
 
             material = self.properties._get_property("material", volume=vol_id)
             if isinstance(material, Material):
-                all_ids["volumes"].append(vol_id)
-                volumes_of_domain["structural"].append(int(vol_id))
+                self.volumes_of_domain["structural"].append(int(vol_id))
 
         for domain in ["acoustic", "structural"]:
             surfaces_of_domain = set()
             lines_of_domain = set()
             points_of_domain = set()
-            _volumes_of_domain = volumes_of_domain.get(domain, [])
 
-            for vol_id in _volumes_of_domain:
+            for vol_id in self.volumes_of_domain.get(domain, []):
                 surface_ids = self.mesh.surfaces_from_volume.get(vol_id, [])
                 surfaces_of_domain |= set(surface_ids)
 
@@ -91,20 +84,9 @@ class ModelDomainsProcessor:
                         point_ids = self.mesh.points_from_line.get(line_id, [])
                         points_of_domain |= set(point_ids)
 
-            all_ids["surfaces"].extend(surfaces_of_domain)
-            all_ids["lines"].extend(surfaces_of_domain)
-            all_ids["points"].extend(surfaces_of_domain)
-
-            self.volumes_of_domain[domain] = sorted(_volumes_of_domain)
             self.surfaces_of_domain[domain] = sorted(surfaces_of_domain)
             self.lines_of_domain[domain] = sorted(lines_of_domain)
             self.points_of_domain[domain] = sorted(points_of_domain)
-
-        self.volumes_of_domain["both"] = [int(_id) for _id in np.unique([all_ids.get("volumes", [])])]
-        self.surfaces_of_domain["both"] = [int(_id) for _id in np.unique([all_ids.get("surfaces", [])])]
-        self.lines_of_domain["both"] = [int(_id) for _id in np.unique([all_ids.get("lines", [])])]
-        self.points_of_domain["both"] = [int(_id) for _id in np.unique([all_ids.get("points", [])])]
-
 
     def map_fluid_structure_interfaces(self):
         """
