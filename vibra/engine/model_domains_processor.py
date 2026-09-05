@@ -212,12 +212,12 @@ class ModelDomainsProcessor:
         self.structural_dofs_shift = 0
         self.acoustic_dofs_shift = self.total_str_dofs
 
-        # process the structural dofs (continuos nodes list + dofs shift)
+        # process the structural dofs (continuous nodes sequence + dofs shift)
         nodes_str_seq = np.arange(self.number_structural_nodes, dtype=int).reshape(-1, 1)
         structural_dofs_indices = dof_str * nodes_str_seq + np.arange(dof_str) + self.structural_dofs_shift
         self.structural_dofs_indices = structural_dofs_indices.flatten()
 
-        # process the acoustic dofs (continuos nodes list + dofs shift)
+        # process the acoustic dofs (continuous nodes sequence + dofs shift)
         nodes_act_seq = np.arange(self.number_acoustic_nodes, dtype=int).reshape(-1, 1)
         acoustic_dofs_indices = dof_act * nodes_act_seq + np.arange(dof_act) + self.acoustic_dofs_shift
         self.acoustic_dofs_indices = acoustic_dofs_indices.flatten()
@@ -244,33 +244,38 @@ class ModelDomainsProcessor:
         # return total_dof, str_dof_indices, act_dof_indices
 
 
+    def get_dofs_shift(self, domain: str):
+        return self.acoustic_dofs_shift if domain == "acoustic" else self.structural_dofs_shift
+
+
     def update_domains_mappings(self):
         t0 = perf_counter()
         self.map_model_domains()
-        dt = perf_counter() - t0
-        print(f"Elapsed time to process domains mappings (A): {dt : .6f} s")
+        dt1 = perf_counter() - t0
 
         t0 = perf_counter()
         self.map_fluid_structure_interfaces()
-        dt = perf_counter() - t0
-        print(f"Elapsed time to process domains mappings (B): {dt : .6f} s")
+        dt2 = perf_counter() - t0
 
         t0 = perf_counter()
         self.map_nodes_and_elements_by_domain()
-        dt = perf_counter() - t0
-        print(f"Elapsed time to process domains mappings (C): {dt : .6f} s")
+        dt3 = perf_counter() - t0
 
         t0 = perf_counter()
         self.process_nodes_mappings_by_domain()
-        dt = perf_counter() - t0
-        print(f"Elapsed time to process domains mappings (D): {dt : .6f} s")
+        dt4 = perf_counter() - t0
 
         t0 = perf_counter()
         self.process_element_mappings_by_domain()
-        dt = perf_counter() - t0
-        print(f"Elapsed time to process domains mappings (E): {dt : .6f} s")
+        dt5 = perf_counter() - t0
 
         t0 = perf_counter()
         self.process_dof_by_domain()
-        dt = perf_counter() - t0
-        print(f"Elapsed time to process domains mappings (F): {dt : .6f} s")
+        dt6 = perf_counter() - t0
+
+        print(f"Elapsed time to 'map_model_domains': {dt1 : .6f} s")
+        print(f"Elapsed time to 'map_fluid_structure_interfaces': {dt2 : .6f} s")
+        print(f"Elapsed time to 'map_nodes_and_elements_by_domain': {dt3 : .6f} s")
+        print(f"Elapsed time to 'process_nodes_mappings_by_domain': {dt4 : .6f} s")
+        print(f"Elapsed time to 'process_element_mappings_by_domain': {dt5 : .6f} s")
+        print(f"Elapsed time 'process_dof_by_domain': {dt6 : .6f} s")

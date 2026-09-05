@@ -40,9 +40,11 @@ class HarmonicSolver:
     @property
     def total_dofs(self) -> int:
         if isinstance(self.assembler, AcousticAssembler):
-            return self.assembler.acoustic_ndofs
+            return len(self.assembler.acoustic_dofs_indices)
         elif isinstance(self.assembler, StructuralAssembler):
-            return self.assembler.structural_ndofs
+            return len(self.assembler.structural_dofs_indices)
+        else:
+            return -1
 
     def reset_variables(self):
         self.solution: Optional[HarmonicSolution] = None

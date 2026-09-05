@@ -19,10 +19,7 @@ class DOFIndexesProcessor:
 
     @property
     def dofs_shift(self):
-        if self.domain == "acoustic":
-            return self.model.domains_processor.acoustic_dofs_shift
-
-        return self.model.domains_processor.structural_dofs_shift
+        return self.model.domains_processor.get_dofs_shift(self.domain)
 
 
     def get_rows_and_cols_indices_1D(
