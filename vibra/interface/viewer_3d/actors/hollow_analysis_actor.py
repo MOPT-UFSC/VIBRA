@@ -25,7 +25,7 @@ class HollowAnalysisActor(HollowSolidsActor):
             case PhysicalDomain.STRUCTURAL:
                 domain_specific_volumes = app().project.model.volumes_of_domain.get("structural", set())
             case _:
-                domain_specific_volumes = mesh.all_solid_ids()
+                domain_specific_volumes = mesh.all_volume_ids()
 
         visible_surfaces = set()
         for volume in domain_specific_volumes:

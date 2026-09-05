@@ -173,7 +173,7 @@ class Mesh:
     def all_surface_ids(self) -> set[int]:
         return set(self.geometry_information.get("surfaces", set()))
 
-    def all_solid_ids(self) -> set[int]:
+    def all_volume_ids(self) -> set[int]:
         return set(self.geometry_information.get("volumes", set()))
 
     def set_length_unit(self, length_unit: str = "millimeter"):

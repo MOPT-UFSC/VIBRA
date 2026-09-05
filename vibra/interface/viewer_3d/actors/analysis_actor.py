@@ -38,7 +38,7 @@ class AnalysisActor(SolidsActor):
             case PhysicalDomain.STRUCTURAL:
                 domain_specific_volumes = app().project.model.volumes_of_domain.get("structural", set())
             case _:
-                domain_specific_volumes = mesh.all_solid_ids()
+                domain_specific_volumes = mesh.all_volume_ids()
 
         visible_volumes = set(domain_specific_volumes)
         visible_volumes &= app().main_window.entity_visibility.get_visible_volumes()

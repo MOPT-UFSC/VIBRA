@@ -45,7 +45,7 @@ class EntityVisibilityHandler(QObject):
         if mesh is None:
             return set()
 
-        all_volumes = mesh.all_solid_ids()
+        all_volumes = mesh.all_volume_ids()
         return all_volumes - self.get_hidden_volumes()
 
     def hide_surfaces(self, surfaces: Sequence[int]):
