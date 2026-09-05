@@ -76,7 +76,6 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
         self.selection_types = ["surfaces", "lines", "points", "nodes"]
 
     def _config_widgets(self):
-        #
         unit = units_abreviations.get(self.mesh.length_unit)
         self.label_unit_combo_box.setText(f"[{unit}]")
 
@@ -142,10 +141,10 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
         selection = self.selection_types[index]
 
         input_ids = self.lineEdit_selection_id.text()
-        self.selected_ids, error_data = self.mesh.check_selected_ids(
+        self.selected_ids, error_data = self.model.check_selected_ids(
             input_ids,
-            selection = selection,
-            single_id = False,
+            selection,
+            domain="acoustic",
             )
 
         if error_data is not None:

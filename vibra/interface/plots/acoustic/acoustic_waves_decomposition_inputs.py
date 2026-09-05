@@ -169,7 +169,11 @@ class AcousticWavesDecompositionInputs(AcousticWavesDecompositionInputs_UI):
     def check_inputs(self):
  
         selected_input_id = self.lineEdit_input_selected_id.text()
-        self.input_selection_id, error_data = self.mesh.check_selected_ids(selected_input_id, selection="surfaces", single_id=True)
+        self.input_selection_id, error_data = self.model.check_selected_ids(
+            selected_input_id,
+            "surfaces",
+            single_id=True,
+            )
 
         if error_data is not None:
             self.lineEdit_input_selected_id.setFocus()
@@ -177,7 +181,11 @@ class AcousticWavesDecompositionInputs(AcousticWavesDecompositionInputs_UI):
             return True
 
         selected_output_id = self.lineEdit_output_selected_id.text()
-        self.output_selection_id, error_data = self.mesh.check_selected_ids(selected_output_id, selection="surfaces", single_id=True)
+        self.output_selection_id, error_data = self.model.check_selected_ids(
+            selected_output_id, 
+            "surfaces",
+            single_id=True,
+            )
 
         if error_data is not None:
             self.lineEdit_output_selected_id.setFocus()

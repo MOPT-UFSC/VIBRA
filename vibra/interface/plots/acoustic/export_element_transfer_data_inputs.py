@@ -161,11 +161,12 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
     def check_inputs(self):
  
         input_selected_id = self.lineEdit_input_selected_id.text()
-        self.input_selection_id, error_data = self.mesh.check_selected_ids(   
-                                                                           input_selected_id, 
-                                                                           selection = "surfaces", 
-                                                                           single_id = True
-                                                                           )
+        self.input_selection_id, error_data = self.model.check_selected_ids(   
+            input_selected_id,
+            "surfaces",
+            domain="acoustic",
+            single_id=True,
+            )
 
         if error_data is not None:
             self.lineEdit_input_selected_id.setFocus()
@@ -174,11 +175,12 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
             return True
 
         output_selected_id = self.lineEdit_output_selected_id.text()
-        self.output_selection_id, error_data = self.mesh.check_selected_ids(  
-                                                                            output_selected_id, 
-                                                                            selection = "surfaces", 
-                                                                            single_id = True
-                                                                            )
+        self.output_selection_id, error_data = self.model.check_selected_ids(  
+            output_selected_id,
+            "surfaces",
+            domain="acoustic",
+            single_id=True,
+            )
 
         if error_data is not None:
             self.lineEdit_output_selected_id.setFocus()

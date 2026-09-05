@@ -358,12 +358,12 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         selected_items = self.treeWidget_perforated_plate_model.selectedItems()
 
         if not selected_items:
-            return list()
+            return []
         
         return [int(item.text(0)) for item in selected_items]
 
     def set_selection_text(self, selected_surfaces: list | set):
-        selected_surfaces_decoupled = list()
+        selected_surfaces_decoupled = []
 
         for selected_surface in selected_surfaces:
             decouple_surface = self.decoupling_map[selected_surface] if selected_surface in self.decoupling_map.keys() else self.decoupling_map.inverse[selected_surface][0]
@@ -406,7 +406,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         self.map_model_id_to_model : Dict[int, PerforatedPlateData] = dict()
         self.map_model_id_to_surfaces : Dict[int, List[int]] = defaultdict(list)
 
-        models = list()
+        models = []
         for key, data in deepcopy(self.properties.surface_properties).items():
             property, surface_id = key
             if property != "perforated_plate_model":
@@ -723,22 +723,22 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
     def check_selected_surfaces(self):
 
-        surface_ids = list()
+        surface_ids = []
 
         input_ids = self.lineEdit_selection_id.text()
-        surface_ids, error_data = self.mesh.check_selected_ids(
-                                                                input_ids,
-                                                                selection = "surfaces",
-                                                                single_id = False,
-                                                                )
+        surface_ids, error_data = self.model.check_selected_ids(
+            input_ids,
+            "surfaces",
+            domain="acoustic",
+            )
 
         if error_data is not None:
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
-            return list()
+            return []
 
         if self.check_selection_type(surface_ids):
-            return list()
+            return []
 
         surface_ids.sort()
 
@@ -911,10 +911,11 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         if not input_ids:
             return
 
-        surface_ids, error_data = self.mesh.check_selected_ids(
-                                                                input_ids, 
-                                                                selection = "surfaces", 
-                                                                )
+        surface_ids, error_data = self.model.check_selected_ids(
+            input_ids,
+            "surfaces",
+            domain="acoustic",
+            )
 
         if error_data is not None:
             self.lineEdit_selection_id.setFocus()
@@ -943,7 +944,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
     def reset_callback(self):
 
-        surface_ids = list()
+        surface_ids = []
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key
             if property == "perforated_plate_model":
@@ -964,7 +965,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         if not read._continue:
             return
 
-        new_surface_ids = list()
+        new_surface_ids = []
         for surf_id in surface_ids:
             data = self.properties._get_property("degrees_of_freedom_decoupling", surface=surf_id)
             if isinstance(data, dict):

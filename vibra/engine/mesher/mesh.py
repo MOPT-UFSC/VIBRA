@@ -889,8 +889,6 @@ class Mesh:
         setup_sizes = [setup.element_size for setup in size_control_setups]
         max_size = max([global_size, *setup_sizes])
 
-        self._check_local_mesh_size_control_ids(size_control_setups) #checks if selected IDs actually exist
-
         fields_list = []
 
         for setup in size_control_setups:
@@ -951,19 +949,6 @@ class Mesh:
         minimum_field = gmsh.model.mesh.field.add("Min")
         gmsh.model.mesh.field.setNumbers(minimum_field, "FieldsList", fields_list)
         gmsh.model.mesh.field.setAsBackgroundMesh(minimum_field)
-
-    def _check_local_mesh_size_control_ids(self, size_control_setups: list[LocalMeshSizeControlSetup]):
-        """Raises InvalidMeshSetupError if a size control setup references
-        an entity that does not exist in the loaded geometry."""
-        self.process_geometry_information()
-
-        for setup in size_control_setups:
-            if setup.entity_type not in ("surfaces", "volumes"):
-                continue
-
-            _, error_data = self.check_selected_ids(setup.entity_ids, selection=setup.entity_type)
-            if error_data is not None:
-                raise InvalidMeshSetupError(error_data[2])
 
     def _get_coarsened_entities(
         self,
@@ -2743,94 +2728,6 @@ class Mesh:
         x_max, y_max, z_max = np.max(nodal_coordinates[:, 1:], axis=0)
         principal_diagonal = np.sqrt((x_max - x_min) ** 2 + (y_max - y_min) ** 2 + (z_max - z_min) ** 2)
         return principal_diagonal
-
-    def check_selected_ids(
-        self,
-        selected_ids: str | int | list[int] | np.ndarray,
-        selection: str = "nodes",
-        single_id: bool = False,
-    ):
-        try:
-            message = ""
-            if isinstance(selected_ids, str):
-                tokens = selected_ids.replace(" ", "").split(",")
-                list_ids = [int(_id) for _id in tokens]
-
-            elif isinstance(selected_ids, list):
-                list_ids = selected_ids
-
-            elif isinstance(selected_ids, (tuple, np.ndarray)):
-                list_ids = list(selected_ids)
-
-            elif isinstance(selected_ids, int):
-                list_ids = [selected_ids]
-
-            all_ids = []
-            if selection == "nodes":
-                all_ids = list(self.nodal_coordinates[:, 0])
-
-            elif selection == "face_elements":
-                all_ids = list(self.faces_connectivity[:, 0])
-
-            elif selection == "solid_elements":
-                all_ids = list(self.solids_connectivity[:, 0])
-
-            elif selection == "points":
-                if selection in self.geometry_information:
-                    all_ids = self.geometry_information.get("points")
-
-            elif selection == "lines":
-                if "lines" in self.geometry_information:
-                    all_ids = self.geometry_information.get("lines")
-
-            elif selection == "surfaces":
-                if selection in self.geometry_information:
-                    all_ids = self.geometry_information.get("surfaces")
-
-            elif selection == "volumes":
-                if selection in self.geometry_information:
-                    all_ids = self.geometry_information.get("volumes")
-
-            else:
-                return
-
-            _size = len(all_ids)
-
-            if len(list_ids) == 0:
-                message = "The Selected ID field is empty. "
-                message += "Please enter one or more valid IDs to proceed."
-
-            elif len(list_ids) >= 1:
-                if single_id and len(list_ids) > 1:
-                    message = "Only one Selected ID is allowed here."
-
-                else:
-                    try:
-                        for _id in list_ids:
-                            if _id not in all_ids:
-                                message = f"The selected ID does not exist in the geometry. "
-                                message += f"Please enter a valid ID between 1 and {_size}."
-                                break
-
-                    except Exception as error_log:
-                        message = "The selected ID must be an integer. "
-                        message += f"Please enter a valid ID between 1 and {_size}."
-                        message += f"\n\n{str(error_log)}"
-
-        except Exception as log_error:
-            message = "Invalid input for the Selected ID. "
-            message += f"\n\n{str(log_error)}"
-
-        if message != "":
-            window_title = "Error"
-            title = "Invalid entry to the Selection ID"
-            error_data = [window_title, title, message]
-            return None, error_data
-
-        if single_id:
-            return list_ids[0], None
-        else:
-            return list_ids, None
 
     def get_nearest_node_from_coordinate(self, point_coords: np.ndarray):
         """

@@ -59,6 +59,7 @@ from vibra.engine.mesher.element_setup import GMSH_VISUAL_MESH
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.mesh_setup import Hexahedron8, Hexahedron20, Tetrahedron4, Tetrahedron10, ElementTopology, MeshSetup
 from vibra.engine.model_domains_processor import ModelDomainsProcessor
+from vibra.engine.model_selection_tools import ModelSelectionTools
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
 from vibra.engine.properties.model_properties import ModelProperties
@@ -79,10 +80,12 @@ class CouplingType(IntEnum):
 
 class Model:
     def __init__(self, disable_resume_callback: Optional[Callable] = None):
+
         self.disable_resume_callback = disable_resume_callback
         self.reset_variables()
 
         self.domains_processor = ModelDomainsProcessor(self)
+        self.model_selection_tools = ModelSelectionTools(self)
 
     def reset_variables(self):
         self.name: str = "Model"
@@ -209,8 +212,7 @@ class Model:
         Parameters
         ----------
         nodes: list or np.ndarray
-            A list or array with the nodes in which the global DOF
-            indices must be evaluated.
+            A list or an array with the nodes be mapped.
 
         domain: str
             The domain label (acoustic or structural).
@@ -231,12 +233,12 @@ class Model:
 
     def get_dof_indices_from_nodes(self, nodes: list[int] | np.ndarray, domain: str):
         """
-        This method returns the global DOF indices associated with a set of nodes.
+        This method returns the global DOFs indices associated with a set of nodes.
 
         Parameters
         ----------
         nodes: list or np.ndarray
-            A list or array with the nodes in which the global DOF
+            A list or an array with the nodes in which the global DOFs
             indices must be evaluated.
 
         domain: str
@@ -245,7 +247,7 @@ class Model:
         Return
         ------
         global_dof_indices: np.ndarray
-            An array with the global DOF indices.
+            An array with the global DOFs indices.
         """
 
         # process the dofs of selected nodes
@@ -258,6 +260,11 @@ class Model:
         global_dof_indices = dof_per_node * _nodes.reshape(-1, 1) + np.arange(dof_per_node, dtype=int)
 
         return global_dof_indices
+
+    def check_selected_ids(
+        self, selected_ids: str | int | list[int] | np.ndarray, selection_label: str, domain: str = "both", single_id: bool = False
+    ):
+        return self.model_selection_tools.check_selected_ids(selected_ids, selection_label, domain=domain, single_id=single_id)
 
     def reset_current_solution(self):
         self.solution = None

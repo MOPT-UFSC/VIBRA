@@ -203,10 +203,11 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
         input_ids = self.lineEdit_selection_id.text()
         selection_type = self.comboBox_selector_filter.currentText().lower()
 
-        self.selected_ids, error_data = self.mesh.check_selected_ids(
-                                                                     input_ids, 
-                                                                     selection = selection_type
-                                                                     )
+        self.selected_ids, error_data = self.model.check_selected_ids(
+            input_ids,
+            selection_type,
+            domain="acoustic",
+            )
 
         if error_data is not None:
             self.lineEdit_selection_id.setFocus()

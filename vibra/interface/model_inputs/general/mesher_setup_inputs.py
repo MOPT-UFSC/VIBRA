@@ -119,12 +119,15 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.setWindowTitle("Vibra")
 
     def _create_connections(self):
-        #
+
+        # QComboBox connections
         self.comboBox_element_geometry.currentIndexChanged.connect(self.element_topology_changed_callback)
         self.comboBox_element_order.currentIndexChanged.connect(self.element_topology_changed_callback)
-        #
+
+        # QDoubleSpinBox connection
         self.doubleSpinBox_maximum_element_size.valueChanged.connect(self.maximum_element_size_changed_callback)
-        #
+
+        # QPushButton connections
         self.pushButton_add.clicked.connect(self.add_button_callback)
         self.pushButton_apply.clicked.connect(self.apply_callback)
         self.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
@@ -133,29 +136,31 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.pushButton_plot_histogram.clicked.connect(self.plot_mesh_parameter_histogram)
         self.pushButton_show_bad_elements.clicked.connect(self.plot_bad_elements)
         self.pushButton_syncrhonize.clicked.connect(self.synchronize_button_callback)
-        # #
+
+        # QTableWidget connection
         # self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
-        # #
+        
+        # QTableWidget connections
         self.tableWidget_local_mesh_size_control_data.itemClicked.connect(self.local_mesh_size_control_item_clicked_callback)
         self.tableWidget_mesh_quality.itemClicked.connect(self.mesh_quality_item_clicked_callback)
-        #
+
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
     def _config_widgets(self):
-        #
+
         self.comboBox_2d_algorithm.setDisabled(True)
         self.comboBox_2d_algorithm.setDisabled(True)
         self.comboBox_recombination_algorithm.setDisabled(True)
         self.comboBox_subdivision_algorithm.setDisabled(True)
         self.comboBox_second_order_incomplete.setDisabled(True)
         self.comboBox_recombine_all.setDisabled(True)
-        #
+
         self.pushButton_show_bad_elements.setDisabled(True)
         self.pushButton_apply.setAutoDefault(False)
         self.pushButton_apply_and_close.setAutoDefault(False)
-        #
+
         self.pushButton_plot_histogram.setDisabled(True)
-        #
+
         self.doubleSpinBox_maximum_element_size.setKeyboardTracking(False)
         self.doubleSpinBox_minimum_element_size.setKeyboardTracking(False)
 
@@ -177,8 +182,16 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
         minimum_spinbox.stepBy = step_by.__get__(minimum_spinbox)
 
+    @property
+    def model(self):
+        return app().project.model
+
+    @property
+    def mesh(self):
+        return app().project.model.mesh
+
     def _load_current_mesh_setup(self):
-        mesh_setup = app().project.model.mesh_setup
+        mesh_setup = self.model.mesh_setup
         if mesh_setup is None:
             self._load_initial_element_size()
             self._show_quality_table(False)
@@ -198,7 +211,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.update_mesh_quality_table()
 
     def _load_initial_element_size(self):
-        element_size = app().project.model.initial_element_size
+        element_size = self.model.initial_element_size
         if element_size is not None:
             self.doubleSpinBox_maximum_element_size.setValue(element_size)
             self.doubleSpinBox_minimum_element_size.setValue(int(0.9 * element_size))
@@ -307,11 +320,14 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         if not selected_ids:
             return
 
-        mesh = app().project.model.mesh
-        if mesh is None:
+        if self.mesh is None:
             return
 
-        _, error_data = mesh.check_selected_ids(selected_ids, selection=selected_type)
+        _, error_data = self.model.check_selected_ids(
+            selected_ids,
+            selected_type,
+            )
+
         if error_data is not None:
             PrintMessageInput(error_data)
             self.show()
@@ -394,10 +410,10 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
         def load_mesh_from_working_dir():
             logging.info("Loading generated mesh... [10/100]")
-            app().project.model.mesh = app().project.project_reader.read_mesh()
+            self.model.mesh = app().project.project_reader.read_mesh()
 
             logging.info("Reading model properties... [65/100]")
-            app().project.model.properties = app().project.project_reader.read_model_properties()
+            self.model.properties = app().project.project_reader.read_model_properties()
 
             logging.info("Updating project state... [85/100]")
             app().project.reset_solution()
@@ -464,7 +480,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             )
 
     def update_mesh_quality_table(self):
-        mesh = app().project.model.mesh
+        mesh = self.model.mesh
 
         if mesh.mesh_quality_data:
             self._show_quality_table(True)
@@ -625,7 +641,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
         ## Temporarily highlights nodes from non-mapped 2D elements after mesh processing
 
-        # mesh = app().project.model.mesh
+        # mesh = self.model.mesh
         # rows = np.isin(np.unique(mesh.faces_connectivity[:, 0].flatten()), list(mesh.face_to_solid_element.keys()), invert=True)
         # elements_2d = mesh.faces_connectivity[rows, 0]
         # if elements_2d.size:
@@ -660,7 +676,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             # raise NotImplementedError(f"Element type not defined!")
 
     def update_combo_boxes_according_to_geometry_info(self):
-        mesh = app().project.model.mesh
+        mesh = self.model.mesh
         if mesh is None:
             return
 
@@ -673,7 +689,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.update_interface_controls(element_setup)
 
     def update_mesh_quality_metric_buttons_accessibility(self):
-        volume_exists = app().project.model.mesh.are_there_volumes_in_geometry()
+        volume_exists = self.model.mesh.are_there_volumes_in_geometry()
         is_tetrahedral = self.comboBox_element_geometry.currentText() == "Tetrahedral"
         enable_mesh_metrics = volume_exists and is_tetrahedral
         self.comboBox_mesh_quality_metrics.setEnabled(enable_mesh_metrics)
@@ -684,7 +700,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
     def mesh_quality_item_clicked_callback(self, item):
         self.pushButton_show_bad_elements.setEnabled(False)
 
-        mesh = app().project.model.mesh
+        mesh = self.model.mesh
         if mesh is None:
             return
 
@@ -704,7 +720,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.pushButton_plot_histogram.setEnabled(True)
 
     def plot_mesh_parameter_histogram(self):
-        mesh = app().project.model.mesh
+        mesh = self.model.mesh
         if mesh is None:
             return
 
@@ -795,7 +811,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         plot_ui.exec_()
 
     def plot_bad_elements(self):
-        mesh = app().project.model.mesh
+        mesh = self.model.mesh
         if mesh is None:
             return
 
@@ -819,7 +835,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.bad_elements_showed = True
 
     def check_unprocessed_local_mesh_size_control(self):
-        mesh_setup = app().project.model.mesh_setup
+        mesh_setup = self.model.mesh_setup
         if mesh_setup is None:
             return
 

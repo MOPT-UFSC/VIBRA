@@ -179,19 +179,19 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
     def check_selected_surfaces(self):
 
         input_ids = self.lineEdit_selection_id.text()
-        surface_ids, error_data = self.mesh.check_selected_ids(
-                                                                input_ids,
-                                                                selection = "surfaces",
-                                                                single_id = False,
-                                                                )
+        surface_ids, error_data = self.model.check_selected_ids(
+            input_ids,
+            "surfaces",
+            "acoustic",
+            )
 
         if error_data is not None:
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
-            return list()
+            return []
 
         if self.check_selection_type(surface_ids):
-            return list()
+            return []
 
         surface_ids.sort()
 
@@ -459,12 +459,12 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
     def get_selected_surfaces_from_tree_widget_transfer_impedance(self) -> list:
         selected_items = self.treeWidget_transfer_impedance.selectedItems()
         if not selected_items:
-            return list()
+            return []
         
         return [int(item.text(0)) for item in selected_items]
     
     def set_selection_text(self, selected_surfaces: list | set):
-        selected_surfaces_decoupled = list()
+        selected_surfaces_decoupled = []
 
         for selected_surface in selected_surfaces:
             decouple_surface = self.decoupling_map.get(selected_surface)
@@ -612,11 +612,12 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         if not input_ids:
             return
 
-        surface_ids, error_data = self.mesh.check_selected_ids(
-                                                                input_ids, 
-                                                                selection = "surfaces", 
-                                                                )
-        
+        surface_ids, error_data = self.model.check_selected_ids(
+            input_ids,
+            "surfaces",
+            domain="acoustic",
+            )
+
         if error_data is not None:
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
@@ -648,7 +649,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
     def reset_callback(self):
 
-        surface_ids = list()
+        surface_ids = []
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key
             if property == "transfer_impedance":
@@ -669,7 +670,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         if not read._continue:
             return
 
-        new_surface_ids = list()
+        new_surface_ids = []
         for surf_id in surface_ids:
             data = self.properties._get_property("degrees_of_freedom_decoupling", surface=surf_id)
             if isinstance(data, dict):

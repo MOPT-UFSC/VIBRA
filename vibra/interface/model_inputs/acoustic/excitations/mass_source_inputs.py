@@ -540,10 +540,11 @@ class MassSourceInputs(MassSourceInputs_UI):
         selection_type = self.selection_type.get(attribution_type)
 
         input_ids = self.lineEdit_selection_id.text()
-        selection_ids, error_data = self.mesh.check_selected_ids(
-                                                                 input_ids, 
-                                                                 selection = selection_type
-                                                                 )
+        selection_ids, error_data = self.model.check_selected_ids(
+            input_ids,
+            selection_type,
+            domain="acoustic",
+            )
 
         if error_data is not None:
             if print_message:

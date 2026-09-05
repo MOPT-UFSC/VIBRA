@@ -23,6 +23,7 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
 
+        self.model = app().project.model
         self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
 
@@ -161,7 +162,11 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
             return
 
         input_ids = self.lineEdit_selection_id.text()
-        surface_ids, error_data = self.mesh.check_selected_ids(input_ids, selection="surfaces", single_id=False)
+        surface_ids, error_data = self.model.check_selected_ids(
+            input_ids,
+            "surfaces",
+            domain="acoustic",
+        )
 
         if error_data is not None:
             self.lineEdit_selection_id.setFocus()

@@ -48,6 +48,10 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
         self.check_and_load_transmission_loss_data()
 
     @property
+    def model(self):
+        return app().project.model
+
+    @property
     def mesh(self):
         return app().project.model.mesh
 
@@ -274,7 +278,12 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
     def check_inputs(self):
 
         input_surface_id = self.lineEdit_input_surface_id.text()
-        self.input_surface_id, error_data = self.mesh.check_selected_ids(input_surface_id, selection="surfaces", single_id=True)
+        self.input_surface_id, error_data = self.model.check_selected_ids(
+            input_surface_id,
+            "surfaces",
+            domain="acoustic",
+            single_id=True,
+            )
 
         if error_data is not None:
             self.lineEdit_input_surface_id.setFocus()
@@ -283,7 +292,12 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
             return True
 
         output_surface_id = self.lineEdit_output_surface_id.text()
-        self.output_surface_id, error_data = self.mesh.check_selected_ids(output_surface_id, selection="surfaces", single_id=True)
+        self.output_surface_id, error_data = self.model.check_selected_ids(
+            output_surface_id,
+            "surfaces",
+            domain="acoustic",
+            single_id=True,
+            )
 
         if error_data is not None:
             self.lineEdit_output_surface_id.setFocus()

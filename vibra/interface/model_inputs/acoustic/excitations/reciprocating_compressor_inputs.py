@@ -274,7 +274,12 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             self.lineEdit_selection_id.setText(surface_ids[0])
 
             input_ids = self.lineEdit_selection_id.text()
-            surface_id, error_data = self.mesh.check_selected_ids(input_ids, selection="surfaces", single_id=True)
+            surface_id, error_data = self.model.check_selected_ids(
+                input_ids,
+                "surfaces",
+                domain="acoustic",
+                single_id=True,
+            )
 
             if error_data is not None:
                 self.lineEdit_selection_id.setFocus()
@@ -593,7 +598,12 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
     def check_input_surfaces(self):
 
         input_ids = self.lineEdit_selection_id.text()
-        surface_id, error_data = self.model.mesh.check_selected_ids(input_ids, selection="surfaces", single_id=True)
+        surface_id, error_data = self.model.check_selected_ids(
+            input_ids,
+            "surfaces",
+            domain="acoustic",
+            single_id=True
+        )
 
         if error_data is not None:
             self.lineEdit_selection_id.setFocus()

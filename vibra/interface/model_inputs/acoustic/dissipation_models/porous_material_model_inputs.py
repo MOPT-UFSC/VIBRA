@@ -806,13 +806,17 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             
             volume_ids = list()
             if attribute_type == AttributionBodiesType.ALL_BODIES:
-                if "volumes" in self.mesh.geometry_information.keys():
+                if "volumes" in self.mesh.geometry_information:
                     volume_ids = self.mesh.geometry_information["volumes"]
 
             elif attribute_type == AttributionBodiesType.SELECTED_BODIES:
 
                 input_ids = self.lineEdit_selection_id.text()
-                volume_ids, error_data = self.mesh.check_selected_ids(input_ids, selection = "volumes", single_id = False)
+                volume_ids, error_data = self.model.check_selected_ids(
+                    input_ids,
+                    "volumes",
+                    domain="acoustic",
+                )
 
                 if error_data is not None:
                     self.lineEdit_selection_id.setFocus()

@@ -193,7 +193,11 @@ class DistributedMassInputs(DistributedMassInputs_UI):
         surface_assignment = self.comboBox_assignment_type.currentIndex() == AssignmentType.SURFACES
 
         selection = "surfaces" if surface_assignment else "lines"
-        selected_ids, error_data = self.mesh.check_selected_ids(input_ids, selection=selection, single_id=False)
+        selected_ids, error_data = self.model.check_selected_ids(
+            input_ids,
+            selection,
+            domain="structural",
+            )
 
         if error_data is not None:
             self.lineEdit_selection_id.setFocus()

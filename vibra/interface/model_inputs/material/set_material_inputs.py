@@ -45,12 +45,16 @@ class MaterialInputs(SetMaterial_UI):
             self.exec()
 
     @property
-    def properties(self):
-        return app().project.model.properties
+    def model(self):
+        return app().project.model
 
     @property
     def mesh(self):
         return app().project.model.mesh
+
+    @property
+    def properties(self):
+        return app().project.model.properties
 
     def _initialize(self):
         self.keep_window_open = True
@@ -242,7 +246,7 @@ class MaterialInputs(SetMaterial_UI):
 
     def get_table_widget_model_materials_items_map(self) -> dict:
         num_of_rows = self.tableWidget_model_materials.rowCount()
-        map_id_to_row = dict()
+        map_id_to_row = {}
 
         for row in range(num_of_rows):
             selected_item = self.tableWidget_model_materials.item(row, 0)
@@ -331,7 +335,10 @@ class MaterialInputs(SetMaterial_UI):
 
             else:
                 input_ids = self.lineEdit_selection_id.text()
-                surface_ids, error_data = self.mesh.check_selected_ids(input_ids, selection="surfaces", single_id=False)
+                surface_ids, error_data = self.model.check_selected_ids(
+                    input_ids,
+                    "surfaces",
+                    )
 
                 if error_data is not None:
                     self.lineEdit_selection_id.setFocus()
@@ -349,7 +356,10 @@ class MaterialInputs(SetMaterial_UI):
 
             else:
                 input_ids = self.lineEdit_selection_id.text()
-                volume_ids, error_data = self.mesh.check_selected_ids(input_ids, selection="volumes", single_id=False)
+                volume_ids, error_data = self.model.check_selected_ids(
+                    input_ids,
+                    "volumes",
+                    )
 
                 if error_data is not None:
                     self.lineEdit_selection_id.setFocus()
@@ -414,8 +424,9 @@ class MaterialInputs(SetMaterial_UI):
         self.pushButton_remove.setDisabled(True)
 
         self.load_model_info()
+
+        self.model.domains_processor.map_model_domains()
         app().project.update_model_properties_file()
-        app().project.model.map_model_domains()
         app().main_window.update_info_text()
         app().main_window.selection.clear_selection()  # this also updates
         app().main_window.update_symbols()
@@ -427,7 +438,7 @@ class MaterialInputs(SetMaterial_UI):
 
         properties = {"Surface": self.properties.surface_properties, "Volume": self.properties.volume_properties}
 
-        self.materials_from_model = dict()
+        self.materials_from_model = {}
 
         for selection, _property in properties.items():
             for key, data in _property.items():

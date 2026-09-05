@@ -170,7 +170,10 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
             return
 
         input_ids = self.lineEdit_selection_id.text()
-        surface_ids, message_log = self.mesh.check_selected_ids(input_ids, selection="surfaces")
+        surface_ids, message_log = self.model.check_selected_ids(
+            input_ids,
+            "surfaces",
+            )
 
         if message_log is not None:
             self.lineEdit_selection_id.setFocus()
@@ -251,7 +254,7 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
 
         if read._continue:
 
-            new_surface_ids = list()
+            new_surface_ids = []
             for (property, _), data in self.properties.surface_properties.items():
                 if property != "degrees_of_freedom_decoupling":
                     continue
@@ -336,12 +339,12 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
     def get_selected_surfaces_from_tree_widget_transfer_impedance(self) -> list:
         selected_items = self.treeWidget_dof_decoupling.selectedItems()
         if not selected_items:
-            return list()
+            return []
 
         return [int(item.text(0)) for item in selected_items]
 
     def set_selection_text(self, selected_surfaces: list | set):
-        selected_surfaces_decoupled = list()
+        selected_surfaces_decoupled = []
 
         for selected_surface in selected_surfaces:
             decouple_surface = self.decoupling_map.get(selected_surface)

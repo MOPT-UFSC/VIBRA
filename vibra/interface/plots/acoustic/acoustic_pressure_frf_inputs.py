@@ -229,9 +229,10 @@ class AcousticPressureFRFInputs(AcousticPressureFrfInputs_UI):
         selection = self.selection_types[index]
  
         selected_input_id = self.lineEdit_input_selected_id.text()
-        self.input_selection_id, error_data = self.mesh.check_selected_ids(
+        self.input_selection_id, error_data = self.model.check_selected_ids(
             selected_input_id,
-            selection=selection,
+            selection,
+            domain="acoustic",
             single_id=True,
         )
 
@@ -241,9 +242,10 @@ class AcousticPressureFRFInputs(AcousticPressureFrfInputs_UI):
             return True
 
         selected_output_id = self.lineEdit_output_selected_id.text()
-        self.output_selection_id, error_data = self.mesh.check_selected_ids(
+        self.output_selection_id, error_data = self.model.check_selected_ids(
             selected_output_id,
-            selection=selection,
+            selection,
+            domain="acoustic",
             single_id=True,
         )
 

@@ -222,7 +222,11 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
             return
 
         input_ids = self.lineEdit_selection_id.text()
-        surface_ids, error_data = self.mesh.check_selected_ids(input_ids, selection = "surfaces")
+        surface_ids, error_data = self.model.check_selected_ids(
+            input_ids,
+            "surfaces",
+            domain="acoustic",
+        )
 
         if error_data is not None:
             self.lineEdit_selection_id.setFocus()

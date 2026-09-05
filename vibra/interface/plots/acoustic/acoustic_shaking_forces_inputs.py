@@ -126,10 +126,10 @@ class AcousticShakingForcesInputs(AcousticShakingForcesInputs_UI):
             self.selected_ids = np.unique(self.mesh.faces_connectivity[:, 1]).astype(int)
 
         else:
-            self.selected_ids, error_data = self.mesh.check_selected_ids(
+            self.selected_ids, error_data = self.model.check_selected_ids(
                 self.lineEdit_selection_id.text(),
-                selection = "surfaces",
-                single_id = False,
+                "surfaces",
+                domain="acoustic",
                 )
 
         if error_data is not None:

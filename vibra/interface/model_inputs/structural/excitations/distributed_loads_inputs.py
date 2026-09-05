@@ -293,7 +293,11 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         selection = "surfaces" if assignment_type == AssignmentType.SURFACES else "lines"
         unit = "N/m²" if assignment_type == AssignmentType.SURFACES else "N/m"
 
-        selected_ids, error_data = self.mesh.check_selected_ids(input_ids, selection=selection, single_id=False)
+        selected_ids, error_data = self.model.check_selected_ids(
+            input_ids,
+            selection,
+            domain="structural",
+            )
 
         if error_data is not None:
             self.lineEdit_selection_id.setFocus()
@@ -461,7 +465,11 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         selection = "surfaces" if surfaces_assignment else "lines"
         unit = "N/m²" if surfaces_assignment else "N/m"
 
-        selected_ids, error_data = self.mesh.check_selected_ids(input_ids, selection=selection, single_id=False)
+        selected_ids, error_data = self.model.check_selected_ids(
+            input_ids,
+            selection,
+            domain="structural",
+            )
 
         if error_data is not None:
             self.lineEdit_selection_id.setFocus()

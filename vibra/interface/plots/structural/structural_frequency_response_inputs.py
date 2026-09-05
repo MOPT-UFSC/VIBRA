@@ -144,10 +144,10 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
         selection = self.selection_types[index]
 
         input_ids = self.lineEdit_selection_id.text()
-        self.selected_ids, error_data = self.mesh.check_selected_ids(  
-            input_ids, 
-            selection = selection,
-            single_id = False,
+        self.selected_ids, error_data = self.model.check_selected_ids(  
+            input_ids,
+            selection,
+            domain="structural",
             )
 
         if error_data is not None:

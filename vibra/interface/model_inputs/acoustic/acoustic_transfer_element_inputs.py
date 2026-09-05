@@ -187,10 +187,11 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
 
         self.surface_ids.clear()
         for line_edit in line_edits:
-            surface_id, error_data = self.mesh.check_selected_ids(
-                line_edit.text(),
-                selection="surfaces",
-                single_id=True,
+            input_id = line_edit.text()
+            surface_id, error_data = self.model.check_selected_ids(
+                input_id,
+                "surfaces",
+                domain="acoustic",
             )
 
             if error_data is not None:

@@ -169,7 +169,11 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
     def constant_values_attribution(self):
 
         input_ids = self.lineEdit_selection_id.text()
-        surface_ids, error_data = self.mesh.check_selected_ids(input_ids, selection="surfaces")
+        surface_ids, error_data = self.model.check_selected_ids(
+            input_ids,
+            "surfaces",
+            domain="structural",
+            )
 
         if error_data is not None:
             self.lineEdit_selection_id.setFocus()
@@ -305,7 +309,11 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
     def table_values_attribution(self):
 
         input_ids = self.lineEdit_selection_id.text()
-        surface_ids, error_data = self.mesh.check_selected_ids(input_ids, selection="surfaces")
+        surface_ids, error_data = self.model.check_selected_ids(
+            input_ids,
+            "surfaces",
+            domain="structural",
+            )
 
         if error_data is not None:
             self.lineEdit_selection_id.setFocus()
