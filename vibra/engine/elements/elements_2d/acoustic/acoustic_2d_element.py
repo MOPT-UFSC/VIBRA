@@ -104,8 +104,7 @@ class Acoustic2DElement(Element2D):
 
         return We.flatten()
 
-
-    def acoustic_pressure_load(self, e_normals: np.ndarray, nodal_solution: np.ndarray) -> np.ndarray:
+    def acoustic_pressure_load(self, nodal_solution: np.ndarray) -> np.ndarray:
         """ 
         This method computes the acoustic pressure loads over a surface.
 
@@ -139,7 +138,7 @@ class Acoustic2DElement(Element2D):
         for i in range(self.nint):
 
             # determinant of Jacobian for the i-th integration point
-            det_jacs = self.get_jacobian_determinant_2d(self.dphi[i, :, :], coords)
+            det_jacs, e_normals = self.get_jacobian_determinant_2d(self.dphi[i, :, :], coords, return_normal=True)
 
             # shape functions
             N = self.phi[i, :].reshape(1, -1)

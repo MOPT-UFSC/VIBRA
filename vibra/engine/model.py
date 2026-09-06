@@ -260,6 +260,54 @@ class Model:
 
         return global_dof_indices
 
+    def process_connectivities_at_fluid_structure_interfaces(self, plot_element_normals: bool = False):
+
+        logging.info("Processing the fluid-structure interfaces connectivities... [1/3]")
+
+        structural_domains = self.volumes_of_domain.get("structural", [])
+        surface_ids = list(self.domains_processor.fluid_structure_interfaces.keys())
+
+        mask = np.isin(self.mesh.faces_connectivity[:, 1], surface_ids)
+        interface_connectivities = self.mesh.faces_connectivity[mask, :]
+
+        # reorder the connectivities
+        self.structural_element_2d.reorder_connect(interface_connectivities[:, 4:].copy())
+
+        # clears the element normals data attribute
+        self.mesh.element_normals_data.clear()
+
+        logging.info("Processing the fluid-structure interfaces connectivities... [2/3]")
+
+        # initialize logging variables
+        last_progress = 0
+        n_el = len(self.structural_element_2d.connectivities)
+
+        # correct the connectivities order
+        for i, elem2d_id in enumerate(interface_connectivities[:, 0]):
+
+            progress = int((100 * (i / n_el) // 5) * 5)
+            if progress != last_progress:
+                logging.info(f"Processing the 2D elements connectivities... [{progress}/100]")
+
+            elem3d_ids = self.mesh.face_to_solid_element.get(elem2d_id, [])
+
+            if len(elem3d_ids) != 2:
+                print(f"The element 2D {elem2d_id} touches the solid elements: {[int(elem_id) for elem_id in elem3d_ids]}")
+                continue
+
+            for elem3d_id in self.mesh.face_to_solid_element.get(elem2d_id, []):
+                vol_id = self.mesh.solids_connectivity[elem3d_id, 1]
+                face_coords = self.mesh.nodal_coordinates[self.structural_element_2d.connectivities[i, :], 1:]
+                solid_coords = self.mesh.nodal_coordinates[self.mesh.solids_connectivity[elem3d_id, 4:], 1:]
+                
+                if vol_id in structural_domains:
+                    is_inverted = self.mesh.is_element_normal_vector_inverted(elem2d_id, face_coords, solid_coords, plot_element_normals=plot_element_normals)
+                    if not is_inverted:
+                        continue
+
+                    self.structural_element_2d.invert_element_connectivity(i)
+                    break
+
     def check_selected_ids(self, input_ids: str | int | Iterable, selection_label: str, domain: str = "both", single_id: bool = False):
         return self.model_selection_tools.check_selected_ids(input_ids, selection_label, domain=domain, single_id=single_id)
 

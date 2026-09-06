@@ -430,62 +430,15 @@ class StructuralExcitationsAssembler:
         pressure field on the fluid-structure domain interface.
         """
 
-        logging.info(f"Processing acoustic-related loadings... [1/3]")
-
-        structural_domains = self.model.volumes_of_domain.get("structural", [])
-        surface_ids = list(self.model.domains_processor.fluid_structure_interfaces.keys())
-
-        mask = np.isin(self.mesh.faces_connectivity[:, 1], surface_ids)
-        interface_connectivities = self.mesh.faces_connectivity[mask, :]
-
-        # reorder the connectivities
-        self.element_2d.reorder_connect(interface_connectivities[:, 4:].copy())
-
-        # TODO: remove after validation is concluded
-        self.mesh.element_normals_data.clear()
-
-        logging.info(f"Processing acoustic-related loadings... [2/3]")
-
-        # initialize logging variables
-        last_progress = 0
-        n_el = len(self.element_2d.connectivities)
-
-        # correct the connectivities order
-        for i, elem2d_id in enumerate(interface_connectivities[:, 0]):
-
-            progress = int((100 * (i / n_el) // 5) * 5)
-            if progress != last_progress:
-                logging.info(f"Processing the 2D elements connectivities... [{progress}/100]")
-
-            elem3d_ids = self.mesh.face_to_solid_element.get(elem2d_id, [])
-
-            if len(elem3d_ids) != 2:
-                print(f"The element 2D {elem2d_id} touches the solid elements: {[int(elem_id) for elem_id in elem3d_ids]}")
-                continue
-
-            for elem3d_id in self.mesh.face_to_solid_element.get(elem2d_id, []):
-                vol_id = self.mesh.solids_connectivity[elem3d_id, 1]
-                face_coords = self.mesh.nodal_coordinates[self.element_2d.connectivities[i, :], 1:]
-                solid_coords = self.mesh.nodal_coordinates[self.mesh.solids_connectivity[elem3d_id, 4:], 1:]
-                
-                if vol_id in structural_domains:
-                    is_inverted = self.mesh.is_element_normal_vector_inverted(elem2d_id, face_coords, solid_coords)
-                    if not is_inverted:
-                        continue
-
-                    self.element_2d.invert_element_connectivity(i)
-                    break
-
-        # from vibra import app
-        # app().main_window.results_widget.visualization_filter.element_normal_symbols = True
-        # app().main_window.update_symbols()
-
-        logging.info(f"Processing acoustic-related loadings... [3/3]")
+        # processing the fluid-structure interfaces connectivities
+        self.model.process_connectivities_at_fluid_structure_interfaces()
 
         # acoustic solution data
         nodal_solution = self.model.acoustic_solution.acoustic_solution
 
+        # initialize logging variables
         last_progress = 0
+        n_el = len(self.element_2d.connectivities)
 
         # integrate the structural loads caused by the acoustic pressure field on fluid-structure domain interfaces
         for i, connect in enumerate(self.element_2d.connectivities):

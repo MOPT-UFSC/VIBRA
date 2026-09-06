@@ -216,6 +216,7 @@ class AnalysisToolbar(QToolBar):
         self.run_analysis_action.setEnabled(analysis_id == new_analysis_id)
         self.combo_box_physical_domain.blockSignals(False)
         self.check_analysis_setup_callback()
+        self.update_fsi_normals_plot_accessibility()
 
     def check_analysis_setup_callback(self):
         app().main_window.update_symbols()
@@ -223,6 +224,12 @@ class AnalysisToolbar(QToolBar):
         valid_analysis_setup = self.is_analysis_setup_valid()
         self.run_analysis_action.setEnabled(valid_analysis_setup)
         # self.domain_changed.emit()
+        self.update_fsi_normals_plot_accessibility()
+
+    def update_fsi_normals_plot_accessibility(self):
+        new_analysis_id = self.get_current_analysis_id()
+        enable_normals_plot = new_analysis_id.is_coupled() and len(self.model.domains_processor.fluid_structure_interfaces)
+        app().main_window.action_show_fluid_structure_interface_normals.setEnabled(enable_normals_plot)
 
     def run_analysis_callback(self, is_resume: bool = False):
         app().project.mark_solution_as_outdated(reset=True)

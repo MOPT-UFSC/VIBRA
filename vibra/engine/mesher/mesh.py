@@ -1691,7 +1691,7 @@ class Mesh:
                 continue
 
             # Populate the dicts using the first solid found.
-            self.face_to_solid_element[face_id] = correspondent_solids
+            self.face_to_solid_element[face_id] = list(correspondent_solids)
             for solid_id in correspondent_solids:
                 self.solid_to_face_elements[solid_id].append(face_id)
 
@@ -2656,6 +2656,9 @@ class Mesh:
 
         if self.solids_connectivity.size:
             solid_element_ids = np.array([self.face_to_solid_element[i] for i in face_connectivity[:, 0]])
+            if solid_element_ids.shape[1] == 1:
+                solid_element_ids = solid_element_ids.flatten()
+
             solid_connectivity = self.solids_connectivity[solid_element_ids]
             solid_coords = self.nodal_coordinates[solid_connectivity[:, 4:], 1:]
 
@@ -2678,7 +2681,7 @@ class Mesh:
 
         return cross
 
-    def is_element_normal_vector_inverted(self, elem2d_id: int, face_coords: np.ndarray, solid_coords: np.ndarray):
+    def is_element_normal_vector_inverted(self, elem2d_id: int, face_coords: np.ndarray, solid_coords: np.ndarray, plot_element_normals: bool = False):
 
         P1 = face_coords[0, :]
         P2 = face_coords[1, :]
@@ -2695,13 +2698,14 @@ class Mesh:
         solid_element_center = np.average(solid_coords, axis=0)
         vector = solid_element_center - face_element_center
 
-        # e_normal = cross.copy()
-        # if np.dot(cross, vector) > 0:
-        #     e_normal *= -1
+        if plot_element_normals:
+            e_normal = cross.copy()
+            if np.dot(cross, vector) > 0:
+                e_normal *= -1
 
-        # surf_id = self.faces_connectivity[elem2d_id, 1]
-        # element_normals_data = {int(elem2d_id) : (face_element_center, e_normal)}
-        # self.set_elements_normals_data(surf_id, element_normals_data)
+            surf_id = self.faces_connectivity[elem2d_id, 1]
+            element_normals_data = {int(elem2d_id) : (face_element_center, e_normal)}
+            self.set_elements_normals_data(surf_id, element_normals_data)
 
         return np.dot(cross, vector) > 0
 
