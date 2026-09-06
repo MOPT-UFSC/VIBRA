@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 from vibra.engine.analysis_info import HarmonicAnalysisSetup
 from vibra.engine.assemblers.acoustic.acoustic_excitations_assembler import AcousticExcitationsAssembler
-from vibra.engine.assemblers.acoustic.acoustic_impedances_assembler import AcousticImpedancesAssembler
+from vibra.engine.assemblers.acoustic.acoustic_impedances_assembler import AcousticImpedancesAssembler, DampingMatrices2D, DampingMatrices3D
 from vibra.engine.model import Model
 from vibra.engine.properties.fluid import Fluid
 
@@ -32,6 +32,8 @@ class AcousticAssembler:
         self.stiffness_matrix_r = None
         self.mass_matrix = None
         self.mass_matrix_r = None
+        self.damping_matrices_2d: DampingMatrices2D = None
+        self.damping_matrices_3d: DampingMatrices3D = None
         self.mass_flow_vector = None
 
         self.frequencies = None
@@ -482,8 +484,8 @@ class AcousticAssembler:
 
         logging.info("Assembling global mass matrix... [70/100]")
         t0 = time()
-        self.impedances_assembler.assemble_global_damping_matrix_3d_elements(factor_Cvisc, factor_fvisc)
-        self.impedances_assembler.assemble_global_damping_matrix_2d_elements()
+        self.damping_matrices_3d = self.impedances_assembler.assemble_global_damping_matrix_3d_elements(factor_Cvisc, factor_fvisc)
+        self.damping_matrices_2d = self.impedances_assembler.assemble_global_damping_matrix_2d_elements()
         dt = time() - t0
         if print_log:
             print(f"Elapsed time to assemble the global damping matrix: {dt : .6f} [s]\n")
@@ -507,10 +509,10 @@ class AcousticAssembler:
         omega = 2 * np.pi * freq
 
         # update the damping matrix [C]
-        self.impedances_assembler.assemble_global_damping_matrix_2d_elements(index=i)
-        
+        self.damping_matrices_2d = self.impedances_assembler.assemble_global_damping_matrix_2d_elements(index=i)
+
         # sum damping matrices
-        C = self.impedances_assembler.damping_matrix + self.impedances_assembler.visc_damping_matrix
+        C = self.damping_matrices_2d.damping_matrix + self.damping_matrices_3d.visc_damping_matrix
 
         if self.frequency_dependent:
             # reassemble the global mass and stiffness matrices
@@ -532,7 +534,7 @@ class AcousticAssembler:
         f_ms = self.excitations_assembler.compute_mass_source_load_vector(omega, index=i)
 
         # viscous damping-related load vector
-        f_visc = self.impedances_assembler.visc_load_matrix @ self.mass_flow_vector[:, i]
+        f_visc = self.damping_matrices_3d.visc_load_matrix @ self.mass_flow_vector[:, i]
 
         # mass flow-related load vector
         f_mf = 1j * omega * self.mass_flow_vector[:, i]
@@ -553,8 +555,8 @@ class AcousticAssembler:
         K = self.stiffness_matrix
         M = self.mass_matrix
 
-        C_imp = self.impedances_assembler.damping_matrix
-        
+        C_imp = self.damping_matrices_2d.damping_matrix
+
         is_complex = np.any(np.iscomplex(K.data)) or np.any(np.iscomplex(M.data)) or np.any(np.iscomplex(C_imp.data))
         if not is_complex:
             K.data = np.real(K.data)

@@ -36,6 +36,20 @@ class IncidentPlaneWaveData:
     element_face_normals: np.ndarray
 
 
+@dataclass
+class DampingMatrices2D:
+    damping_matrix: np.ndarray
+    damping_matrix_r: np.ndarray
+
+
+@dataclass
+class DampingMatrices3D:
+    visc_damping_matrix: np.ndarray
+    visc_damping_matrix_r: np.ndarray
+    visc_load_matrix: np.ndarray
+    visc_load_matrix_r: np.ndarray
+
+
 class AcousticImpedancesAssembler:
     def __init__(self, assembler : "AcousticAssembler"):
 
@@ -84,12 +98,6 @@ class AcousticImpedancesAssembler:
         self.data_Zpp_B = {}
         self.rows_Zpp_B = np.array([], dtype=int)
         self.cols_Zpp_B = np.array([], dtype=int)
-
-        self.damping_matrix = None
-        self.damping_matrix_r = None
-        self.visc_damping_matrix = None
-        self.visc_damping_matrix_r = None
-        self.visc_load_matrix = None
 
 
     @property
@@ -653,7 +661,7 @@ class AcousticImpedancesAssembler:
         self.process_perforated_plate_impedance_data_to_assemble_damping_matrix()
 
 
-    def assemble_global_damping_matrix_3d_elements(self, factor_Cvsic: np.ndarray, factor_fvsic: np.ndarray):
+    def assemble_global_damping_matrix_3d_elements(self, factor_Cvsic: np.ndarray, factor_fvsic: np.ndarray) -> DampingMatrices3D:
         """
         This method assembles the global damping matrix to account
         the bulk damping effects.
@@ -662,28 +670,30 @@ class AcousticImpedancesAssembler:
         """
 
         data_C = self.assembler.int3d_BtB * factor_Cvsic
-        self.visc_damping_matrix = csr_matrix((data_C.flatten(), (self.assembler.ind_rows, self.assembler.ind_cols)), shape=self.model.gm_shape)
+        visc_damping_matrix = csr_matrix((data_C.flatten(), (self.assembler.ind_rows, self.assembler.ind_cols)), shape=self.model.gm_shape)
 
         data_f = self.assembler.int3d_BtB * factor_fvsic
-        self.visc_load_matrix = csr_matrix((data_f.flatten(), (self.assembler.ind_rows, self.assembler.ind_cols)), shape=self.model.gm_shape)
+        visc_load_matrix = csr_matrix((data_f.flatten(), (self.assembler.ind_rows, self.assembler.ind_cols)), shape=self.model.gm_shape)
 
         if self.model.drop_domain:
             acoustic_dofs_indices = self.assembler.acoustic_dofs_indices
-            self.visc_damping_matrix = self.visc_damping_matrix[acoustic_dofs_indices, :][:, acoustic_dofs_indices]
-            self.visc_load_matrix = self.visc_load_matrix[acoustic_dofs_indices, :][:, acoustic_dofs_indices]
+            visc_damping_matrix = visc_damping_matrix[acoustic_dofs_indices, :][:, acoustic_dofs_indices]
+            visc_load_matrix = visc_load_matrix[acoustic_dofs_indices, :][:, acoustic_dofs_indices]
 
         prescribed_dof_indices = self.assembler.prescribed_dof_indices
 
-        self.visc_damping_matrix_r = self.visc_damping_matrix[:, prescribed_dof_indices]
-        self.visc_load_matrix_r = self.visc_load_matrix[:, prescribed_dof_indices]
+        visc_damping_matrix_r = visc_damping_matrix[:, prescribed_dof_indices]
+        visc_load_matrix_r = visc_load_matrix[:, prescribed_dof_indices]
 
         if prescribed_dof_indices:
             unprescribed_dof_indices = self.assembler.unprescribed_dof_indices
-            self.visc_damping_matrix = self.visc_damping_matrix[unprescribed_dof_indices, :][:, unprescribed_dof_indices]
-            self.visc_load_matrix = self.visc_load_matrix[unprescribed_dof_indices, :][:, unprescribed_dof_indices]
+            visc_damping_matrix = visc_damping_matrix[unprescribed_dof_indices, :][:, unprescribed_dof_indices]
+            visc_load_matrix = visc_load_matrix[unprescribed_dof_indices, :][:, unprescribed_dof_indices]
+
+        return DampingMatrices3D(visc_damping_matrix, visc_damping_matrix_r, visc_load_matrix, visc_load_matrix_r)
 
 
-    def assemble_global_damping_matrix_2d_elements(self, index: int = 0):
+    def assemble_global_damping_matrix_2d_elements(self, index: int = 0) -> DampingMatrices2D:
         """
         This method assembles the global damping matrix at the boundaries.
 
@@ -693,31 +703,31 @@ class AcousticImpedancesAssembler:
             It corresponds to the frequency step index.
         """
 
-        self.damping_matrix = csr_matrix(self.model.gm_shape)
+        damping_matrix = csr_matrix(self.model.gm_shape)
 
         if self.integration_data_Zsi is not None:
             rows_Zout = self.rows_Zsi
             cols_Zout = self.cols_Zsi
             data_Zout = self.data_Zsi[index].flatten()
-            self.damping_matrix += csr_matrix((data_Zout, (rows_Zout, cols_Zout)), shape=self.model.gm_shape)
+            damping_matrix += csr_matrix((data_Zout, (rows_Zout, cols_Zout)), shape=self.model.gm_shape)
 
         if self.integration_data_Zat is not None:
             rows_Zout = self.rows_Zat
             cols_Zout = self.cols_Zat
             data_Zout = self.data_Zat[index].flatten()
-            self.damping_matrix += csr_matrix((data_Zout, (rows_Zout, cols_Zout)), shape=self.model.gm_shape)
+            damping_matrix += csr_matrix((data_Zout, (rows_Zout, cols_Zout)), shape=self.model.gm_shape)
 
         if self.integration_data_ipw is not None:
             rows_Zout = self.rows_Zipw
             cols_Zout = self.cols_Zipw
             data_Zout = self.data_Zipw[index].flatten()
-            self.damping_matrix += csr_matrix((data_Zout, (rows_Zout, cols_Zout)), shape=self.model.gm_shape)
+            damping_matrix += csr_matrix((data_Zout, (rows_Zout, cols_Zout)), shape=self.model.gm_shape)
 
         if self.integration_data_Zas is not None:
             rows_Zout = self.rows_Zas
             cols_Zout = self.cols_Zas
             data_Zout = self.data_Zas[index].flatten()
-            self.damping_matrix += csr_matrix((data_Zout, (rows_Zout, cols_Zout)), shape=self.model.gm_shape)
+            damping_matrix += csr_matrix((data_Zout, (rows_Zout, cols_Zout)), shape=self.model.gm_shape)
 
         if self.integration_data_Zpp is not None:
             rows_A = self.rows_Zpp_A
@@ -731,7 +741,7 @@ class AcousticImpedancesAssembler:
             rows_Zin = np.concatenate((rows_A, rows_A, rows_B, rows_B))
             cols_Zin = np.concatenate((cols_A, cols_B, cols_A, cols_B))
 
-            self.damping_matrix += csr_matrix((values_Zin, (rows_Zin, cols_Zin)), shape=self.model.gm_shape)
+            damping_matrix += csr_matrix((values_Zin, (rows_Zin, cols_Zin)), shape=self.model.gm_shape)
 
         if self.integration_data_Zti is not None:
             rows_A = self.rows_Zti_A
@@ -745,20 +755,17 @@ class AcousticImpedancesAssembler:
             rows_Zin = np.concatenate((rows_A, rows_A, rows_B, rows_B))
             cols_Zin = np.concatenate((cols_A, cols_B, cols_A, cols_B))
 
-            self.damping_matrix += csr_matrix((values_Zin, (rows_Zin, cols_Zin)), shape=self.model.gm_shape)
+            damping_matrix += csr_matrix((values_Zin, (rows_Zin, cols_Zin)), shape=self.model.gm_shape)
 
         if self.model.drop_domain:
             acoustic_dofs_indices = self.assembler.acoustic_dofs_indices
-            self.damping_matrix = self.damping_matrix[acoustic_dofs_indices, :][:, acoustic_dofs_indices]
+            damping_matrix = damping_matrix[acoustic_dofs_indices, :][:, acoustic_dofs_indices]
 
         prescribed_dof_indices = self.assembler.prescribed_dof_indices
-        self.damping_matrix_r = self.damping_matrix[:, prescribed_dof_indices]
+        damping_matrix_r = damping_matrix[:, prescribed_dof_indices]
 
         if prescribed_dof_indices:
             unprescribed_dof_indices = self.assembler.unprescribed_dof_indices
-            self.damping_matrix = self.damping_matrix[unprescribed_dof_indices, :][:, unprescribed_dof_indices]
+            damping_matrix = damping_matrix[unprescribed_dof_indices, :][:, unprescribed_dof_indices]
 
-
-    def assemble_damping_matrices(self):
-        self.assemble_global_damping_matrix_2d_elements()
-        self.assemble_global_damping_matrix_3d_elements()
+        return DampingMatrices2D(damping_matrix, damping_matrix_r)

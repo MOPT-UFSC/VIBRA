@@ -102,14 +102,14 @@ class AcousticExcitationsAssembler:
 
         values = prescribed_values[:, index]
 
-        self.Kr = self.stiffness_matrix_r
-        self.Mr = self.mass_matrix_r
-        self.Cr = self.damping_matrix_r
-        self.Cr_visc = self.visc_damping_matrix_r
+        Kr = self.assembler.stiffness_matrix_r
+        Mr = self.assembler.mass_matrix_r
+        Cr = self.assembler.damping_matrices_2d.damping_matrix_r
+        Cr_visc = self.assembler.damping_matrices_3d.visc_damping_matrix_r
 
-        Kr_add = self.Kr @ values
-        Mr_add = self.Mr @ values
-        Cr_add = (self.Cr + self.Cr_visc) @ values
+        Kr_add = Kr @ values
+        Mr_add = Mr @ values
+        Cr_add = (Cr + Cr_visc) @ values
 
         F_Kadd = Kr_add
         F_Madd = -(omega**2) * Mr_add 
