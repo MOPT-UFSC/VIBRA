@@ -283,7 +283,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
             "surfaces",
             domain="acoustic",
             single_id=True,
-            )
+        )
 
         if error_data is not None:
             self.lineEdit_input_surface_id.setFocus()

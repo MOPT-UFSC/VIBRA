@@ -17,6 +17,7 @@ from vibra.engine.dissipation_models.porous_materials_models import (
 )
 from vibra.engine.properties.fluid import Fluid
 from vibra.interface import error_title
+from vibra.interface.common.common_interface import update_entities_selection
 from vibra.interface.formatters.icons import Icon
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -25,6 +26,7 @@ from vibra.interface.model_inputs.acoustic.dissipation_models.dbm_data import De
 from vibra.interface.model_inputs.acoustic.dissipation_models.jcal_data import JhonsonChampouxAllardLafargeData
 from vibra.interface.model_inputs.acoustic.dissipation_models.show_porous_material_model_equations import ShowPorousMaterialModelEquations
 from vibra.interface.model_inputs.fluid.set_fluid_inputs_simplified import SetFluidInputsSimplified
+from vibra.interface.numeric_checks.int_list_validator import IntListValidator
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
 from vibra.interface.ui_generated.model.acoustic.dissipation_models.porous_material_model_inputs_ui import PorousMaterialModelInputs_UI
 
@@ -86,10 +88,12 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         self.setWindowTitle("Vibra")
 
     def _configure_widgets(self):
-        #
+
+        self.lineEdit_selection_id.setValidator(IntListValidator())
+
         for i, width in enumerate([120, 160]):
             self.treeWidget_porous_material_model.setColumnWidth(i, width)
-        #
+
         self.tableWidget_DBM.verticalHeader().setVisible(True)
         self.tableWidget_JCAL.verticalHeader().setVisible(True)
 
@@ -104,14 +108,17 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         app().main_window.selection.volume_selection_mode = True
 
     def _create_connections(self):
-        #
+
+        # QCheckBox connections
         self.checkBox_advanced_porous_material_plots.stateChanged.connect(self.advanced_porous_material_callback)
         self.checkBox_load_material_data_from_selection.stateChanged.connect(self.geometry_selection_callback)
-        #
+
+        # QComboBox connections
         self.comboBox_attribution_type.currentIndexChanged.connect(self.update_attribution_type)
         self.comboBox_DBM_constants.currentIndexChanged.connect(self.update_DBM_constants_callback)
         self.comboBox_plot_type.currentIndexChanged.connect(self.plot_type_callback)
-        #
+
+        # QPushButton connections
         self.pushButton_apply.clicked.connect(self.apply_callback)
         self.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
         self.pushButton_cancel.clicked.connect(self.close)
@@ -120,17 +127,20 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         self.pushButton_get_fluid.clicked.connect(self.get_fluid_callback)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
         self.pushButton_DB_equations.clicked.connect(self.show_equations_for_DBM_callback)
-        #
+        
+        # QTabWidget connection
         self.tabWidget_main.currentChanged.connect(self.tab_event_porous_material_model)
-        #
+        
+        # QTableWidget connections
         self.tableWidget_DBM.cellChanged.connect(lambda row, column: self.cell_changed_callback(row, column, model="delany"))
         self.tableWidget_JCAL.cellChanged.connect(lambda row, column: self.cell_changed_callback(row, column, model="jca"))
-        #
+        
+        # QTreeWidget connections
         self.treeWidget_porous_material_model.itemClicked.connect(self.on_click_item)
         self.treeWidget_porous_material_model.itemDoubleClicked.connect(self.on_doubleclick_item)
-        #
+
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
-        #
+
         self.update_attribution_type()
         self.update_plot_buttons_access()
         self.advanced_porous_material_callback()
@@ -231,7 +241,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             return
 
         if len(volumes) == 1 and self.update_tabs:
-            volume_id = list(volumes)[0]
+            volume_id = next(iter(volumes))
             pm_data = self.properties._get_property("porous_material_model", volume=volume_id)
             if pm_data is None:
                 return
@@ -810,7 +820,6 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
                     volume_ids = self.mesh.geometry_information["volumes"]
 
             elif attribute_type == AttributionBodiesType.SELECTED_BODIES:
-
                 input_ids = self.lineEdit_selection_id.text()
                 volume_ids, error_data = self.model.check_selected_ids(
                     input_ids,
@@ -822,6 +831,10 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
                     self.lineEdit_selection_id.setFocus()
                     PrintMessageInput(error_data)
                     return True
+
+                app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
+                update_entities_selection(self.lineEdit_selection_id, "volumes", volume_ids)
+                app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
             for volume_id in volume_ids:
                 self.properties._set_property("porous_material_model", model_data.get_data(), volume=volume_id)

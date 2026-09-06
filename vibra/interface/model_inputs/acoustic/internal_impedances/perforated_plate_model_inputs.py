@@ -5,7 +5,6 @@ from copy import deepcopy
 from enum import IntEnum
 from pathlib import Path
 from typing import Dict, List
-from vibra.interface import warning_title
 
 import numpy as np
 from PySide6.QtCore import QItemSelectionModel, QPoint, Qt
@@ -15,8 +14,8 @@ from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QLineEdit, QTableW
 from vibra import app
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.transfer_impedances.perforated_plate_models import PerforatedPlateModels
-from vibra.interface import error_title
-from vibra.interface.common.common_interface import update_analysis_setup_in_file
+from vibra.interface import error_title, warning_title
+from vibra.interface.common.common_interface import update_analysis_setup_in_file, update_entities_selection
 from vibra.interface.data.data_manager import get_spectral_data_from_array
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
@@ -736,6 +735,10 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
             return []
+
+        app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
+        update_entities_selection(self.lineEdit_selection_id, "surfaces", surface_ids)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
         if self.check_selection_type(surface_ids):
             return []

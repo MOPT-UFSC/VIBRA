@@ -166,7 +166,7 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
             "surfaces",
             domain="acoustic",
             single_id=True,
-            )
+        )
 
         if error_data is not None:
             self.lineEdit_input_selected_id.setFocus()
@@ -180,7 +180,7 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
             "surfaces",
             domain="acoustic",
             single_id=True,
-            )
+        )
 
         if error_data is not None:
             self.lineEdit_output_selected_id.setFocus()

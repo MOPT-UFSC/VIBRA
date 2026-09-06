@@ -7,6 +7,7 @@ from PySide6.QtGui import QCloseEvent
 from vibra import app
 from vibra.engine import AnalysisID
 from vibra.interface import error_title
+from vibra.interface.common.common_interface import update_entities_selection
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
@@ -105,7 +106,8 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
         if volumes:
             if len(volumes) == 1:
                 try:
-                    self.comboBox_volumes.setCurrentText(f"{list(volumes)[0]}")
+                    volume = next(iter(volumes))
+                    self.comboBox_volumes.setCurrentText(f"{volume}")
                 except Exception:
                     pass
             return
@@ -191,12 +193,16 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
             input_ids,
             "surfaces",
             domain="acoustic",
-            )
+        )
 
         if error_data is not None:
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
             return True
+
+        app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
+        update_entities_selection(self.lineEdit_selection_id, "surfaces", self.selected_ids)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
     def plot_data_callback(self):
 

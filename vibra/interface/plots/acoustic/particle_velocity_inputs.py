@@ -7,6 +7,7 @@ from PySide6.QtGui import QCloseEvent
 from vibra import app
 from vibra.engine import AnalysisID
 from vibra.interface import error_title
+from vibra.interface.common.common_interface import update_entities_selection
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
@@ -201,18 +202,22 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
     def check_inputs(self):
 
         input_ids = self.lineEdit_selection_id.text()
-        selection_type = self.comboBox_selector_filter.currentText().lower()
+        selection = self.comboBox_selector_filter.currentText().lower()
 
         self.selected_ids, error_data = self.model.check_selected_ids(
             input_ids,
-            selection_type,
+            selection,
             domain="acoustic",
-            )
+        )
 
         if error_data is not None:
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
             return True
+
+        app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
+        update_entities_selection(self.lineEdit_selection_id, selection, self.selected_ids)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
     def plot_data_callback(self):
 

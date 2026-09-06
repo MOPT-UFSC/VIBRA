@@ -11,6 +11,7 @@ from vibra import app
 from vibra.engine.dissipation_models.viscous_thermal_loss_models import ViscousThermalLossModels
 from vibra.engine.properties.fluid import Fluid
 from vibra.interface import error_title
+from vibra.interface.common.common_interface import update_entities_selection
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.acoustic.definitions.enums import AttributionBodiesType, PlotTypesTab
@@ -709,7 +710,11 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
                 if error_data is not None:
                     self.lineEdit_selection_id.setFocus()
                     PrintMessageInput(error_data)
-                    return
+                    return True
+
+                app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
+                update_entities_selection(self.lineEdit_selection_id, "volumes", volume_ids)
+                app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
                 self.verify_and_remove_model_conflicts_if_it_exists(volume_ids)
 

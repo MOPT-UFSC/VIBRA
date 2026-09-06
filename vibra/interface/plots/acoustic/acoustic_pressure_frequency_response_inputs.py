@@ -7,6 +7,7 @@ from PySide6.QtGui import QCloseEvent
 from vibra import app
 from vibra.engine import AnalysisID
 from vibra.engine.properties.fluid import Fluid
+from vibra.interface.common.common_interface import update_entities_selection
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
@@ -145,12 +146,16 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
             input_ids,
             selection,
             domain="acoustic",
-            )
+        )
 
         if error_data is not None:
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
             return True
+
+        app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
+        update_entities_selection(self.lineEdit_selection_id, selection, self.selected_ids)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
         if self.comboBox_cutoff_frequency_options.currentIndex() != CutoffFrequency.DISABLED:
             line_edit = self.lineEdit_cutoff_frequency

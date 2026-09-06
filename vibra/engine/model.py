@@ -260,8 +260,8 @@ class Model:
 
         return global_dof_indices
 
-    def check_selected_ids(self, selected_ids: str | int | Iterable, selection_label: str, domain: str = "both", single_id: bool = False):
-        return self.model_selection_tools.check_selected_ids(selected_ids, selection_label, domain=domain, single_id=single_id)
+    def check_selected_ids(self, input_ids: str | int | Iterable, selection_label: str, domain: str = "both", single_id: bool = False):
+        return self.model_selection_tools.check_selected_ids(input_ids, selection_label, domain=domain, single_id=single_id)
 
     def reset_current_solution(self):
         self.solution = None
@@ -295,10 +295,7 @@ class Model:
             path = str(path)
 
         ext = path.split(".")[-1].lower()
-        if ext in SUPPORTED_GEOMETRY_EXTENSIONS:
-            return True
-
-        return False
+        return ext in SUPPORTED_GEOMETRY_EXTENSIONS
 
     def set_properties(self, properties):
         self.properties = properties
@@ -493,16 +490,10 @@ class Model:
             return False
 
         if self.mesh.surfaces_from_volume:
-            if self.mesh.solids_connectivity.any():
-                return True
-            else:
-                return False
+            return self.mesh.solids_connectivity.any()
 
         if self.mesh.lines_from_surface:
-            if self.mesh.faces_connectivity.any():
-                return True
-            else:
-                return False
+            return self.mesh.faces_connectivity.any()
 
         return False
 

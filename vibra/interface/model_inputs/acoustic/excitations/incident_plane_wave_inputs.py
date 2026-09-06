@@ -8,7 +8,7 @@ from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
 
 from vibra import app
 from vibra.interface import error_title
-from vibra.interface.common.common_interface import InputDataType, update_analysis_setup_in_file
+from vibra.interface.common.common_interface import InputDataType, update_analysis_setup_in_file, update_entities_selection
 from vibra.interface.data.data_manager import get_spectral_data_from_array
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
@@ -219,6 +219,10 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
             return
+
+        app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
+        update_entities_selection(self.lineEdit_selection_id, "surfaces", surface_ids)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
         if self.check_for_inside_surfaces(surface_ids):
             title = "Invalid surface selected"

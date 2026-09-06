@@ -144,10 +144,12 @@ class ModelSelectionTools:
 
         # filter selected IDs based on a specific domain
         if domain != "both":
-            selected_ids = self.filter_selected_entities_based_on_domain(selected_ids, selection_label, domain)
-            if not selected_ids:
-                message = f"The selected {selected_ids} ID(s) does not belong to the {domain} domain. Please, "
+            filtered_ids = self.filter_selected_entities_based_on_domain(selected_ids, selection_label, domain)
+            if not filtered_ids:
+                message = f"The selected ID(s) {selected_ids} does not belong to the {domain} domain. Please, "
                 message += "enter or selected at least one valid ID to proceed."
+
+            selected_ids = filtered_ids.copy()
 
         if message != "":
             window_title = "Error"

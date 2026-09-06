@@ -10,7 +10,7 @@ from PySide6.QtWidgets import QAbstractItemView, QLineEdit, QTreeWidgetItem
 
 from vibra import app
 from vibra.interface import error_title
-from vibra.interface.common.common_interface import InputDataType, check_input_entries, update_analysis_setup_in_file
+from vibra.interface.common.common_interface import InputDataType, check_input_entries, update_analysis_setup_in_file, update_entities_selection
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -364,22 +364,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         volume_exists = self.mesh.are_there_volumes_in_geometry()
         self.comboBox_element_type.setCurrentIndex(int(volume_exists))
 
-    def constant_values_assignment(self):
-
-        input_ids = self.lineEdit_selection_id.text()
-        assignment_type = self.comboBox_assignment_type.currentIndex()
-        selection = self.assignment_types.get(assignment_type)
-
-        selected_ids, error_data = self.model.check_selected_ids(
-            input_ids,
-            selection, 
-            domain="structural",
-            )
-
-        if error_data is not None:
-            self.lineEdit_selection_id.setFocus()
-            PrintMessageInput(error_data)
-            return True
+    def constant_values_assignment(self, selection: str, selected_ids: list[int]):
  
         element_type = self.element_types[self.comboBox_element_type.currentIndex()]
         real_imag_input = self.comboBox_data_type.currentIndex() == InputDataType.REAL_IMAGINARY
@@ -441,17 +426,18 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                 "element_integration": self.element_integration,
             }
 
-            if assignment_type == AssignmentType.SURFACES:
-                self.properties._set_property("nodal_loads", data, surface=selected_id)
+            match selection:
+                case "surfaces":
+                    self.properties._set_property("nodal_loads", data, surface=selected_id)
 
-            elif assignment_type == AssignmentType.LINES:
-                self.properties._set_property("nodal_loads", data, line=selected_id)
+                case "lines":
+                    self.properties._set_property("nodal_loads", data, line=selected_id)
 
-            elif assignment_type == AssignmentType.POINTS:
-                self.properties._set_property("nodal_loads", data, point=selected_id)
+                case "points": 
+                    self.properties._set_property("nodal_loads", data, point=selected_id)
 
-            elif assignment_type == AssignmentType.NODES:
-                self.properties._set_property("nodal_loads", data, node=selected_id)
+                case "nodes":
+                    self.properties._set_property("nodal_loads", data, node=selected_id)
 
     def load_table(self, lineEdit : QLineEdit, load_label : str, direct_load = False):
 
@@ -586,22 +572,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
         return table_name, data
 
-    def table_values_assignment(self):
-
-        input_ids = self.lineEdit_selection_id.text()
-        assignment_type = self.comboBox_assignment_type.currentIndex()
-        selection = self.assignment_types.get(assignment_type)
-
-        selected_ids, error_data = self.model.check_selected_ids(
-            input_ids,
-            selection, 
-            domain="structural",
-            )
-
-        if error_data is not None:
-            self.lineEdit_selection_id.setFocus()
-            PrintMessageInput(error_data)
-            return True
+    def table_values_assignment(self, selection: str, selected_ids: list[int]):
 
         index = self.comboBox_element_type.currentIndex()
         element_type = self.element_types[index]
@@ -685,33 +656,52 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                 "element_integration": self.element_integration,
             }
 
-            if assignment_type == AssignmentType.SURFACES:
-                self.properties._set_property("nodal_loads", data, surface=selected_id)
+            match selection:
+                case "surfaces":
+                    self.properties._set_property("nodal_loads", data, surface=selected_id)
 
-            elif assignment_type == AssignmentType.LINES:
-                self.properties._set_property("nodal_loads", data, line=selected_id)
+                case "lines":
+                    self.properties._set_property("nodal_loads", data, line=selected_id)
 
-            elif assignment_type == AssignmentType.POINTS:
-                self.properties._set_property("nodal_loads", data, point=selected_id)
+                case "points": 
+                    self.properties._set_property("nodal_loads", data, point=selected_id)
 
-            elif assignment_type == AssignmentType.NODES:
-                self.properties._set_property("nodal_loads", data, node=selected_id)
+                case "nodes":
+                    self.properties._set_property("nodal_loads", data, node=selected_id)
 
         self.reset_table_variables()
 
     def apply_callback(self, close_window: bool=False):
 
-        if self.tabWidget_main.currentIndex() == StandardTabType.LIST:
+        tab_index = self.tabWidget_main.currentIndex()
+        if tab_index == StandardTabType.LIST:
             return
 
-        tab_index = self.tabWidget_main.currentIndex()
+        input_ids = self.lineEdit_selection_id.text()
+        assignment_type = self.comboBox_assignment_type.currentIndex()
+        selection = self.assignment_types.get(assignment_type)
+
+        selected_ids, error_data = self.model.check_selected_ids(
+            input_ids,
+            selection,
+            domain="structural",
+        )
+
+        if error_data is not None:
+            self.lineEdit_selection_id.setFocus()
+            PrintMessageInput(error_data)
+            return True
+
+        app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
+        update_entities_selection(self.lineEdit_selection_id, selection, selected_ids)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
         if tab_index == StandardTabType.CONSTANT_DATA:
-            if self.constant_values_assignment():
+            if self.constant_values_assignment(selection, selected_ids):
                 return
 
         if tab_index == StandardTabType.TABULAR_DATA:
-            if self.table_values_assignment():
+            if self.table_values_assignment(selection, selected_ids):
                 return
 
         self.actions_to_finalize(close_window)
