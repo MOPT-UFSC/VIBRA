@@ -351,7 +351,7 @@ class AcousticAssembler:
         factor_Cvisc = np.zeros(self.number_3d_elements, complex)
         factor_fvisc = np.zeros(self.number_3d_elements, complex)
 
-        for vol_id, element_ids in self.model.mesh.elements_from_volume.items():
+        for vol_id in self.model.domains_processor.volumes_of_domain.get("acoustic", []):
 
             fluid_data = self.fluid_properties_from_volume.get(vol_id)
             if not isinstance(fluid_data, dict):
@@ -363,7 +363,11 @@ class AcousticAssembler:
             rho_0 = fluid_data.get("rho_0")
             C_0 = fluid_data.get("C_0")
 
-            aux_ones = np.ones(element_ids.size, dtype=float)
+            # 3D elements of the volume
+            element_ids = self.model.mesh.elements_from_volume.get(vol_id)
+
+            # auxiliar vector
+            aux_ones = np.ones(len(element_ids), dtype=float)
 
             # convert the element indices
             _element_ids = self.model.domains_processor.acoustic_elements_mapping[element_ids]

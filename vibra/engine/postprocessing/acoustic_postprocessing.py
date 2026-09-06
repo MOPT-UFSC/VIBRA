@@ -493,9 +493,12 @@ class AcousticPostprocessing:
         nodes_input = np.sort(self.mesh.get_nodes_from_surface(input_surface_id))
         nodes_output = np.sort(self.mesh.get_nodes_from_surface(output_surface_id))
 
+        # input_dofs = self.model.get_dof_indices_from_nodes(nodes_input, "acoustic")[:, 0]
+        output_dofs = self.model.get_dof_indices_from_nodes(nodes_output, "acoustic")[:, 0]
+
         logging.info("Processing the transmission loss... [20/100]")
-        # P_in = self.solution.acoustic_solution[self.model.get_mapped_nodes(nodes_input, "acoustic"), :]
-        P_out = self.solution.acoustic_solution[self.model.get_mapped_nodes(nodes_output, "acoustic") :]
+        # P_in = self.solution.acoustic_solution[input_dofs, :]
+        P_out = self.solution.acoustic_solution[output_dofs :]
 
         logging.info("Processing the transmission loss... [40/100]")
 

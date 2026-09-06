@@ -819,8 +819,13 @@ class Mesh:
         self.volumes_from_surface.clear()
         self.surfaces_from_volume.clear()
         for vol_id, surf_ids in surfaces_from_volume.items():
+            self.geometry_information["volumes"].append(vol_id)
             for surf_id in surf_ids:
                 self.volumes_from_surface[surf_id] = [vol_id]
+                if surf_id in self.geometry_information.get("surfaces", []):
+                    continue
+
+                self.geometry_information["surfaces"].append(surf_id)
 
             self.surfaces_from_volume[vol_id] = surf_ids
     

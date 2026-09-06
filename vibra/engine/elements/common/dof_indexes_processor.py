@@ -93,7 +93,7 @@ class DOFIndexesProcessor:
         dof = self.dof_per_node
         edof = self.dof_per_element
 
-        n_el = element_ids.size
+        n_el = len(element_ids)
         ind_dof = np.zeros((n_el, edof), dtype=int)
 
         for j in range(self.nodes_per_element):
