@@ -49,12 +49,16 @@ class SetFluidInputs(SetFluidInputs_UI):
             self.exec()
 
     @property
-    def properties(self):
-        return app().project.model.properties
+    def model(self):
+        return app().project.model
 
     @property
     def mesh(self):
         return app().project.model.mesh
+
+    @property
+    def properties(self):
+        return app().project.model.properties
 
     def _initialize(self):
         self.fluid = None
@@ -267,10 +271,9 @@ class SetFluidInputs(SetFluidInputs_UI):
 
         else:
             input_ids = self.lineEdit_selection_id.text()
-            volume_ids, error_data = self.mesh.check_selected_ids(
+            volume_ids, error_data = self.model.check_selected_ids(
                 input_ids,
-                selection="volumes",
-                single_id=False,
+                "volumes",
             )
 
             if error_data is not None:
@@ -282,6 +285,8 @@ class SetFluidInputs(SetFluidInputs_UI):
             return
 
         for volume_id in volume_ids:
+            # we cannot have two physical domains active on the same volume
+            self.properties._remove_volume_property("material", volume_id)
             self.properties._set_property("fluid", selected_fluid, volume=volume_id)
 
             for surface_id in self.mesh.surfaces_from_volume[volume_id]:
@@ -331,15 +336,17 @@ class SetFluidInputs(SetFluidInputs_UI):
             app().main_window.selection.set_geometry_selection()
 
     def actions_to_finalize(self, close_window: bool = False):
-        self.load_model_info()
         self.clear_line_edit_seletction_id()
         self.lineEdit_selected_fluid_name.clear()
         self.pushButton_remove.setDisabled(True)
 
+        self.load_model_info()
+
+        self.model.domains_processor.map_model_domains()
+        app().project.update_model_properties_file()
         app().main_window.update_info_text()
         app().main_window.selection.clear_selection()  # this also updates
         app().main_window.update_symbols()
-        app().project.update_model_properties_file()
 
         self.complete = True
 

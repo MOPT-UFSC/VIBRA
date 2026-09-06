@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING
 from validation_files.data.WB.load_external_data import LoadExternalData
 from vibra import PROJECT_DIR
 from vibra.engine.analysis_info import AnalysisID, FrequencySpacing
-from vibra.engine.assemblers.structural_assembler import StructuralAssembler
-from vibra.engine.elements.element_options import BbarDilatationalEvaluation, HEX8_structural
+from vibra.engine.assemblers.structural.structural_assembler import StructuralAssembler
+from vibra.engine.elements.common.element_options import BbarDilatationalEvaluation, HEX8_structural
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.engine.postprocessing import StructuralPostprocessing
@@ -217,7 +217,7 @@ def load_external_mesh_and_solve(**kwargs):
     # element_averaged_stresses = structural_post.nodal_stresses_post_process(element_stresses)
 
    # Nodal results comparisons
-    dofs_per_node = assembler.element_3d.DOF_PER_NODE
+    dofs_per_node = assembler.element_3d.dof_per_node
 
     # define the plot type
     plot_type = "absolute"
@@ -238,7 +238,7 @@ def load_external_mesh_and_solve(**kwargs):
                 dofs_per_node,
                 udof_label,
                 frequencies,
-                model.solution.nodal_solution,
+                model.solution.structural_solution,
                 extra_shape_function,
                 WB_displacements_data,
                 plot_type=plot_type,

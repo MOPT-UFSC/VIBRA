@@ -27,6 +27,8 @@ from vibra.engine.solution.lazy_harmonic_solution import LazyHarmonicSolution
 from .project_hasher import HashEnum, ProjectHasher
 from .project_paths import ProjectPaths
 
+logger = logging.getLogger(__name__)
+
 
 class ProjectWriter:
     def __init__(self, project_paths: ProjectPaths):
@@ -34,7 +36,7 @@ class ProjectWriter:
         self.use_hash = True
 
     def write_file(self, vibra_path: Path | str):
-        logging.info(f'Writing working directory "{self.project_paths.working_directory}" into file "{vibra_path}".')
+        logger.info('Writing working directory "%s" into file "%s".', self.project_paths.working_directory, vibra_path)
 
         vibra_path = Path(vibra_path)
         working_dir = self.project_paths.working_directory
@@ -48,7 +50,7 @@ class ProjectWriter:
                 file.write(path, arcname)
 
     def write_model(self, model: Model):
-        logging.info("Writing Model.")
+        logger.info("Writing Model.")
 
         self.write_project_setup(model)
         self.write_model_properties(model.properties)
@@ -68,7 +70,7 @@ class ProjectWriter:
             self.write_solution(model.solution)
 
     def write_project_setup(self, model: Model):
-        logging.info("Writing project setup.")
+        logger.info("Writing project setup.")
 
         project_setup = {
             "mesh_setup": {},
@@ -92,14 +94,14 @@ class ProjectWriter:
                 asdict(mesh_setup),
             )
             project_setup["mesh_setup"]["local_mesh_size_control_parameters"] = [
-                (i.entity_type, i.element_size, i.entity_ids) 
+                (i.entity_type, i.element_size, i.entity_ids)
                 for i in mesh_setup.local_mesh_size_control_parameters
             ]  # fmt: skip
 
         write_json(self.project_paths.project_setup_filepath, project_setup)
 
     def write_analysis_setup(self, analysis_setup: Optional[AnalysisSetup]):
-        logging.info("Writing AnalysisSetup.")
+        logger.info("Writing AnalysisSetup.")
 
         if isinstance(analysis_setup, AnalysisSetup):
             analysis_setup_dict = asdict(analysis_setup)
@@ -119,7 +121,7 @@ class ProjectWriter:
         if geometry_path.expanduser().resolve() == internal_path.expanduser().resolve():
             return geometry_path
 
-        logging.info("Writing geometry.")
+        logger.info("Writing geometry.")
         shutil.rmtree(self.project_paths.geometry_folder, ignore_errors=True)
         self.project_paths.geometry_folder.mkdir(exist_ok=True)
 
@@ -127,7 +129,7 @@ class ProjectWriter:
         return internal_path
 
     def write_mesh(self, mesh: Mesh):
-        logging.info("Writing Mesh.")
+        logger.info("Writing Mesh.")
 
         current_hash = ProjectHasher.hash_mesh(mesh)
         previous_hash = self._read_hash(HashEnum.MESH)
@@ -140,7 +142,7 @@ class ProjectWriter:
         required_paths_exist = all([i.exists() for i in required_paths])
 
         if (current_hash == previous_hash) and self.use_hash and required_paths_exist:
-            logging.info("Mesh was not written since it did not changed.")
+            logger.info("Mesh was not written since it did not changed.")
             return
 
         with h5py.File(self.project_paths.mesh_data_filepath, "w") as file:
@@ -205,7 +207,7 @@ class ProjectWriter:
         )
 
     def write_model_properties(self, model_properties: ModelProperties):
-        logging.info("Writing ModelProperties.")
+        logger.info("Writing ModelProperties.")
 
         self.write_fluid_library(model_properties.fluid_library)
         self.write_material_library(model_properties.material_library)
@@ -226,7 +228,7 @@ class ProjectWriter:
         write_json(self.project_paths.model_properties_filepath, data)
 
     def write_material_library(self, material_library: MaterialLibrary, export_path: Path | None = None):
-        logging.info("Writing MaterialLibrary.")
+        logger.info("Writing MaterialLibrary.")
 
         material_library_dict = {}
         for material_id, material in material_library.items():
@@ -238,7 +240,7 @@ class ProjectWriter:
         write_json(export_path, material_library_dict)
 
     def write_fluid_library(self, fluid_library: FluidLibrary, export_path: Path | None = None):
-        logging.info("Writing FluidLibrary.")
+        logger.info("Writing FluidLibrary.")
 
         fluid_library_dict = {}
         for fluid_id, fluid in fluid_library.items():
@@ -259,14 +261,14 @@ class ProjectWriter:
             self._remove_hash(HashEnum.TABLES)
             return
 
-        logging.info("Writing project tables.")
+        logger.info("Writing project tables.")
 
         current_hash = ProjectHasher.hash_tables(acoustic_tables, structural_tables)
         previous_hash = self._read_hash(HashEnum.TABLES)
 
         if self.project_paths.imported_table_data_filepath.exists():
             if (current_hash == previous_hash) and self.use_hash:
-                logging.info("Mesh was not written since it did not changed.")
+                logger.info("Mesh was not written since it did not changed.")
                 return
 
         with h5py.File(self.project_paths.imported_table_data_filepath, "w") as file:
@@ -279,7 +281,7 @@ class ProjectWriter:
         self._write_hash(HashEnum.TABLES, current_hash)
 
     def write_thumbnail(self, thumbnail: Image):
-        logging.info("Writing thumbnail")
+        logger.info("Writing thumbnail")
         write_image(self.project_paths.thumbnail_filepath, thumbnail)
 
     def write_solution(self, solution: ModalSolution | HarmonicSolution):
@@ -296,50 +298,46 @@ class ProjectWriter:
         if isinstance(solution, LazyHarmonicSolution):
             return
 
-        logging.info("Writing harmonic solution")
-
-        current_hash = ProjectHasher.hash_harmonic_solution(solution)
-        previous_hash = self._read_hash(HashEnum.HARMONIC_SOLUTION)
-
-        if self.project_paths.imported_table_data_filepath.exists():
-            if (current_hash == previous_hash) and self.use_hash:
-                logging.info("Harmonic solution was not written since it did not changed.")
-                return
+        logger.info("Writing harmonic solution")
 
         with h5py.File(self.project_paths.harmonic_solution_filepath, "w") as file:
             file: h5py.File
 
-            file.create_dataset("solution", data=solution.nodal_solution)
             file["frequencies"] = solution.frequencies
             file["solution_status"] = np.ones_like(solution.frequencies, dtype=bool)
+
+            if solution.structural_solution is not None:
+                file.create_dataset("structural_solution", data=solution.structural_solution)
+
+            if solution.acoustic_solution is not None:
+                file.create_dataset("acoustic_solution", data=solution.acoustic_solution)
+
+            if solution.coupled_solution is not None:
+                file.create_dataset("coupled_solution", data=solution.coupled_solution)
 
             if solution.displacement_dof is not None:
                 file["displacement_dof"] = solution.displacement_dof
 
-        self._write_hash(HashEnum.HARMONIC_SOLUTION, current_hash)
-
     def write_modal_solution(self, solution: ModalSolution):
-        logging.info("Writing modal solution")
-
-        current_hash = ProjectHasher.hash_modal_solution(solution)
-        previous_hash = self._read_hash(HashEnum.MODAL_SOLUTION)
-
-        if self.project_paths.imported_table_data_filepath.exists():
-            if (current_hash == previous_hash) and self.use_hash:
-                logging.info("Modal solution was not written since it did not changed.")
-                return
+        logger.info("Writing modal solution")
 
         with h5py.File(self.project_paths.modal_solution_filepath, "w") as file:
             file["frequencies"] = solution.natural_frequencies
-            file["solution"] = solution.modal_shapes
+
+            if solution.structural_modal_shapes is not None:
+                file.create_dataset("structural_modal_shapes", data=solution.structural_modal_shapes)
+
+            if solution.acoustic_modal_shapes is not None:
+                file.create_dataset("acoustic_modal_shapes", data=solution.acoustic_modal_shapes)
+
+            if solution.coupled_modal_shapes is not None:
+                file.create_dataset("coupled_modal_shapes", data=solution.coupled_modal_shapes)
 
             if solution.displacement_dof is not None:
                 file["displacement_dof"] = solution.displacement_dof
 
             if isinstance(solution.complex_natural_frequencies, np.ndarray):
                 file["complex_natural_frequencies"] = solution.complex_natural_frequencies
-
-        self._write_hash(HashEnum.MODAL_SOLUTION, current_hash)
 
     def get_solution_writer(self, num_rows, columns, dtype, is_resume):
         return LazyHDF5MatrixWriter(
@@ -351,7 +349,7 @@ class ProjectWriter:
         )
 
     def delete_results_data(self):
-        logging.info("Deleting solution data.")
+        logger.info("Deleting solution data.")
 
         self.project_paths.results_data_filepath.unlink(missing_ok=True)
         self.project_paths.harmonic_solution_filepath.unlink(missing_ok=True)
@@ -360,7 +358,7 @@ class ProjectWriter:
         self._remove_hash(HashEnum.MODAL_SOLUTION)
 
     def delete_mesh_data(self):
-        logging.info("Deleting mesh data")
+        logger.info("Deleting mesh data")
         self.project_paths.mesh_data_filepath.unlink(missing_ok=True)
         self._remove_hash(HashEnum.MESH)
 

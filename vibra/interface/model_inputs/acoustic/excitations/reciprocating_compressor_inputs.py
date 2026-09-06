@@ -11,7 +11,7 @@ from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QLineEdit, QTreeWi
 from vibra import SUPPORTED_OUTPUT_DATA_EXTENSIONS, USER_PATH, app
 from vibra.engine.properties.fluid import Fluid
 from vibra.interface import error_title
-from vibra.interface.common.common_interface import mesher_interface_callback, update_analysis_setup_in_file
+from vibra.interface.common.common_interface import mesher_interface_callback, update_analysis_setup_in_file, update_entities_selection
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -268,19 +268,8 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
         selected_surfaces = app().main_window.selection.geometry_surfaces
 
-        if selected_surfaces:
-
-            surface_ids = [str(i) for i in selected_surfaces]
-            self.lineEdit_selection_id.setText(surface_ids[0])
-
-            input_ids = self.lineEdit_selection_id.text()
-            surface_id, error_data = self.mesh.check_selected_ids(input_ids, selection="surfaces", single_id=True)
-
-            if error_data is not None:
-                self.lineEdit_selection_id.setFocus()
-                PrintMessageInput(error_data)
-                return True
-
+        if len(selected_surfaces) == 1:
+            surface_id = next(iter(selected_surfaces))
             data = self.properties._get_property("reciprocating_compressor_excitation", surface=surface_id)
 
             if isinstance(data, dict):
@@ -593,7 +582,12 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
     def check_input_surfaces(self):
 
         input_ids = self.lineEdit_selection_id.text()
-        surface_id, error_data = self.model.mesh.check_selected_ids(input_ids, selection="surfaces", single_id=True)
+        surface_id, error_data = self.model.check_selected_ids(
+            input_ids,
+            "surfaces",
+            domain="acoustic",
+            single_id=True
+        )
 
         if error_data is not None:
             self.lineEdit_selection_id.setFocus()

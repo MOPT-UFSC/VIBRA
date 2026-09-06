@@ -997,6 +997,27 @@ class MainWindow(MainWindow_UI):
     def action_ghost_view_callback(self):
         self.visualization_changed_callback()
 
+    def action_show_fluid_structure_interface_normals_callback(self):
+
+        current_name = self.action_show_fluid_structure_interface_normals.text()
+
+        if "Show" in current_name:
+            new_name = current_name.replace("Show", "Hide")
+            self.results_widget.visualization_filter.element_normal_symbols = True
+        else:
+            new_name = current_name.replace("Hide", "Show")
+            self.results_widget.visualization_filter.element_normal_symbols = False
+
+        self.action_show_fluid_structure_interface_normals.setText(new_name)
+
+        def function_callback():
+            if not app().project.model.mesh.element_normals_data:
+                app().project.model.process_connectivities_at_fluid_structure_interfaces(plot_element_normals=True)
+
+            self.update_symbols()
+
+        LoadingWindow(function_callback).run()
+
     def get_current_render_widget(self) -> CommonRenderWidget | None:
         return self.render_widgets_stack.currentWidget()
 

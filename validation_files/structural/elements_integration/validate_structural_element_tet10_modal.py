@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 from vibra import PROJECT_DIR
 from vibra.engine.analysis_info import AnalysisID, ModalAnalysisSetup
-from vibra.engine.assemblers.structural_assembler import StructuralAssembler
+from vibra.engine.assemblers.structural.structural_assembler import StructuralAssembler
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.engine.properties.material import Material
@@ -128,12 +128,12 @@ def load_external_mesh_and_solve(distribute_mass: bool=False):
     assembler = StructuralAssembler(model)
 
     # Set the analysis frequency setup
-    assembler.assemble_global_matrices_and_excitations(reorder=False)
+    assembler.assemble_global_matrices_and_excitations(reorder=False, print_log=True)
 
     t0 = time()
     # Run modal analysis
     modal_solver = ModalSolver(assembler)
-    modal_solver.solve()
+    modal_solver.solve(print_log=True)
     natural_frequencies = modal_solver.natural_frequencies
     dt = time() - t0
     print(f"Elapsed time to solve modal analysis: {round(dt, 4)}s")
@@ -144,8 +144,8 @@ def load_external_mesh_and_solve(distribute_mass: bool=False):
 
     natural_frequencies_ref = np.loadtxt(results_path / "natural_frequencies_reference.dat")[:, 1]
 
-    # modes_indexes = np.arange(natural_frequencies.size)
-    # nat_freq_data = np.array([modes_indexes, natural_frequencies]).T
+    # modes_indices = np.arange(natural_frequencies.size)
+    # nat_freq_data = np.array([modes_indices, natural_frequencies]).T
     # np.savetxt("natural_frequencies_Vibra.dat", nat_freq_data, fmt = "%i %.12e", delimiter=',')
 
     fnat_diff = 100 * (np.abs(natural_frequencies[1:] - natural_frequencies_ref[1:]) / natural_frequencies_ref[1:])

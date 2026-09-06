@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from validation_files.data.WB.load_external_data import LoadExternalData
 from vibra import PROJECT_DIR
 from vibra.engine.analysis_info import AnalysisID, FrequencySpacing
-from vibra.engine.assemblers.structural_assembler import StructuralAssembler
+from vibra.engine.assemblers.structural.structural_assembler import StructuralAssembler
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.engine.postprocessing import StructuralPostprocessing
@@ -167,7 +167,7 @@ def load_external_mesh_and_solve(integration_type: str):
     print(f"Elapsed time to solve modal analysis: {round(dt, 4)}s")
 
     # Nodal results comparisons
-    dofs_per_node = assembler.element_3d.DOF_PER_NODE
+    dofs_per_node = assembler.element_3d.dof_per_node
 
     path = PROJECT_DIR / f"validation_files/data/WB/structural/elements/hex20/results/{integration_type}/harmonic/"
     ext_data = LoadExternalData(path)
@@ -214,7 +214,7 @@ def load_external_mesh_and_solve(integration_type: str):
                 dofs_per_node,
                 dof_label,
                 frequencies,
-                model.solution.nodal_solution,
+                model.solution.structural_solution,
                 integration_type,
                 WB_displacements_data,
                 plot_type=plot_type,

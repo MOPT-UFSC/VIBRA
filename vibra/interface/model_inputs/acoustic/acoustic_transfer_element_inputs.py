@@ -187,10 +187,11 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
 
         self.surface_ids.clear()
         for line_edit in line_edits:
-            surface_id, error_data = self.mesh.check_selected_ids(
-                line_edit.text(),
-                selection="surfaces",
-                single_id=True,
+            input_id = line_edit.text()
+            surface_id, error_data = self.model.check_selected_ids(
+                input_id,
+                "surfaces",
+                domain="acoustic",
             )
 
             if error_data is not None:
@@ -398,7 +399,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         volume_velocity = -surface_velocity * area
 
         node_ids = np.sort(surface_nodes)
-        pressures = self.solution.nodal_solution[node_ids, :]
+        pressures = self.solution.acoustic_solution[node_ids, :]
         avg_pressure = np.average(pressures, axis=0)
 
         return avg_pressure / volume_velocity

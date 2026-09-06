@@ -10,7 +10,7 @@ from PySide6.QtWidgets import QAbstractItemView, QLineEdit, QTreeWidgetItem
 
 from vibra import app
 from vibra.interface import error_title
-from vibra.interface.common.common_interface import InputDataType, check_input_entries, update_analysis_setup_in_file
+from vibra.interface.common.common_interface import InputDataType, check_input_entries, update_analysis_setup_in_file, update_entities_selection
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -62,6 +62,10 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
     def _initialize(self):
         self.keep_window_open = True
         self.element_types = ["2d_element", "3d_element"]
+        self.assignment_types = {
+            0 : "surfaces",
+            1 : "lines",
+        }
         self.reset_table_variables()
 
     def _configure_validators(self):
@@ -285,20 +289,9 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         volume_exists = self.mesh.are_there_volumes_in_geometry()
         self.comboBox_element_type.setCurrentIndex(int(volume_exists))
 
-    def constant_values_attribution(self):
+    def constant_values_attribution(self, selection: str, selected_ids: list[int]):
 
-        input_ids = self.lineEdit_selection_id.text()
-        assignment_type = self.comboBox_assignment_type.currentIndex()
-
-        selection = "surfaces" if assignment_type == AssignmentType.SURFACES else "lines"
-        unit = "N/m²" if assignment_type == AssignmentType.SURFACES else "N/m"
-
-        selected_ids, error_data = self.mesh.check_selected_ids(input_ids, selection=selection, single_id=False)
-
-        if error_data is not None:
-            self.lineEdit_selection_id.setFocus()
-            PrintMessageInput(error_data)
-            return True
+        unit = "N/m²" if selection == "surfaces" else "N/m"
 
         self.remove_conflicting_excitations(selected_ids, selection)
 
@@ -344,11 +337,12 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
                 "unit": unit,
             }
 
-            if assignment_type == AssignmentType.SURFACES:
-                self.properties._set_property("distributed_loads", data, surface=selected_id)
+            match selection:
+                case "surfaces":
+                    self.properties._set_property("distributed_loads", data, surface=selected_id)
 
-            elif assignment_type == AssignmentType.LINES:
-                self.properties._set_property("distributed_loads", data, line=selected_id)
+                case "lines":
+                    self.properties._set_property("distributed_loads", data, line=selected_id)
 
     def load_table(self, lineEdit : QLineEdit, load_label: str, direct_load = False):
 
@@ -453,20 +447,9 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
 
         return table_name, data
 
-    def table_values_attribution(self):
+    def table_values_attribution(self, selection: str, selected_ids: list[int]):
 
-        input_ids = self.lineEdit_selection_id.text()
-        surfaces_assignment = self.comboBox_assignment_type.currentIndex() == AssignmentType.SURFACES
-
-        selection = "surfaces" if surfaces_assignment else "lines"
-        unit = "N/m²" if surfaces_assignment else "N/m"
-
-        selected_ids, error_data = self.mesh.check_selected_ids(input_ids, selection=selection, single_id=False)
-
-        if error_data is not None:
-            self.lineEdit_selection_id.setFocus()
-            PrintMessageInput(error_data)
-            return True
+        unit = "N/m²" if selection == "surfaces" else "N/m"
 
         self.remove_conflicting_excitations(selected_ids, selection)
 
@@ -518,11 +501,12 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
                 "unit" : unit,
             }
 
-            if surfaces_assignment:
-                self.properties._set_property("distributed_loads", data, surface=selected_id)
+            match selection:
+                case "surfaces":
+                    self.properties._set_property("distributed_loads", data, surface=selected_id)
 
-            else:
-                self.properties._set_property("distributed_loads", data, line=selected_id)
+                case "lines":
+                    self.properties._set_property("distributed_loads", data, line=selected_id)
 
         self.reset_table_variables()
 
@@ -532,12 +516,31 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         if tab_index == StandardTabType.LIST:
             return
 
+        input_ids = self.lineEdit_selection_id.text()
+        assignment_type = self.comboBox_assignment_type.currentIndex()
+        selection = self.assignment_types.get(assignment_type)
+
+        selected_ids, error_data = self.model.check_selected_ids(
+            input_ids,
+            selection,
+            domain="structural",
+        )
+
+        if error_data is not None:
+            self.lineEdit_selection_id.setFocus()
+            PrintMessageInput(error_data)
+            return True
+
+        app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
+        update_entities_selection(self.lineEdit_selection_id, selection, selected_ids)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
+
         if tab_index == StandardTabType.CONSTANT_DATA:
-            if self.constant_values_attribution():
+            if self.constant_values_attribution(selection, selected_ids):
                 return
 
-        else:
-            if self.table_values_attribution():
+        if tab_index == StandardTabType.TABULAR_DATA:
+            if self.table_values_attribution(selection, selected_ids):
                 return
 
         self.actions_to_finalize(close_window)

@@ -24,6 +24,8 @@ from vibra.engine.solvers import HarmonicSolver, ModalSolver
 
 from .project_paths import ProjectPaths
 
+logger = logging.getLogger(__name__)
+
 
 class ProjectReader:
     """
@@ -49,7 +51,7 @@ class ProjectReader:
         if not vibra_path.is_file():
             raise FileExistsError("Vibra file path does not exist.")
 
-        logging.info(f'Reading file "{vibra_path}" into working directory "{self.project_paths.working_directory}".')
+        logger.info(f'Reading file "{vibra_path}" into working directory "{self.project_paths.working_directory}".')
 
         self.project_paths.clear_data()
         with zipfile.ZipFile(vibra_path, "r") as file:
@@ -59,7 +61,7 @@ class ProjectReader:
         if model is None:
             model = Model()
 
-        logging.info("Reading the model data... (25%)")
+        logger.info("Reading the model data... (25%)")
 
         model.reset_variables()
         model.thumbnail = self.read_thumbnail()
@@ -79,10 +81,12 @@ class ProjectReader:
         model.properties = self.read_model_properties()
         model.solution = self.read_solution(model)
 
+        model.domains_processor.update_domains_mappings()
+
         return model
 
     def read_current_analysis_id(self) -> AnalysisID:
-        logging.info("Reading AnalysisID")
+        logger.info("Reading AnalysisID")
 
         project_setup = read_json(self.project_paths.project_setup_filepath)
         if not isinstance(project_setup, dict):
@@ -96,7 +100,7 @@ class ProjectReader:
         return AnalysisID(analysis_id)
 
     def read_analysis_setup(self) -> Optional[AnalysisSetup]:
-        logging.info("Reading AnalysisSetup")
+        logger.info("Reading AnalysisSetup")
 
         project_setup = read_json(self.project_paths.project_setup_filepath)
         if not isinstance(project_setup, dict):
@@ -119,7 +123,7 @@ class ProjectReader:
             return None
 
     def read_mesh_setup(self) -> Optional[MeshSetup]:
-        logging.info("Reading MeshSetup.")
+        logger.info("Reading MeshSetup.")
 
         project_setup = read_json(self.project_paths.project_setup_filepath)
         if not isinstance(project_setup, dict):
@@ -166,7 +170,7 @@ class ProjectReader:
         return mesh_setup
 
     def read_geometry_path(self) -> Optional[Path]:
-        logging.info("Reading geometry path.")
+        logger.info("Reading geometry path.")
 
         project_setup = read_json(self.project_paths.project_setup_filepath)
         if not isinstance(project_setup, dict):
@@ -200,7 +204,7 @@ class ProjectReader:
             "connectivity/cache_solids_connectivity",
         ]
 
-        logging.info("Reading Mesh")
+        logger.info("Reading Mesh")
         with h5py.File(mesh_data_path, "r") as file:
             mesh.nodes_from_points = {int(key): int(value) for key, value in file["nodal_data/nodes_from_points"]}
             mesh.points_from_nodes = {value: key for key, value in mesh.nodes_from_points.items()}
@@ -226,7 +230,7 @@ class ProjectReader:
 
             mesh.process_cylindrical_surfaces()
 
-        logging.info("Reading Geometry related Mesh informations")
+        logger.info("Reading Geometry related Mesh informations")
         with h5py.File(geometry_data_path, "r") as file:
             for key, value in file.get("entities", dict()).items():
                 mesh.geometry_information[key] = [int(val) for val in value]
@@ -300,7 +304,7 @@ class ProjectReader:
             model_properties = ModelProperties()
         model_properties._reset_variables()
 
-        logging.info("Reading ModelProperties")
+        logger.info("Reading ModelProperties")
 
         fluid_library = self.read_fluid_library()
         material_library = self.read_material_library()
@@ -344,7 +348,7 @@ class ProjectReader:
         return model_properties
 
     def read_material_library(self, import_path: Path | None = None) -> MaterialLibrary:
-        logging.info("Reading MaterialLibrary")
+        logger.info("Reading MaterialLibrary")
 
         if import_path is None:
             import_path = self.project_paths.material_library_filepath
@@ -362,7 +366,7 @@ class ProjectReader:
         return material_library
 
     def read_fluid_library(self, import_path: Path | None = None) -> FluidLibrary:
-        logging.info("Reading FluidLibrary")
+        logger.info("Reading FluidLibrary")
 
         if import_path is None:
             import_path = self.project_paths.fluid_library_filepath
@@ -415,7 +419,7 @@ class ProjectReader:
         if not self.project_paths.thumbnail_filepath.exists():
             return None
 
-        logging.info("Reading Thumbnail")
+        logger.info("Reading Thumbnail")
 
         return read_image(self.project_paths.thumbnail_filepath)
 
@@ -434,29 +438,62 @@ class ProjectReader:
         with h5py.File(self.project_paths.harmonic_solution_filepath, "r") as file:
             file: h5py.File
 
-            logging.info("Reading harmonic solution [5/100]")
+            logger.info("Reading harmonic solution [5/100]")
 
             frequencies = np.array(file["frequencies"])
-            logging.info("Reading harmonic solution [20/100]")
-
-            solution = np.array(file["solution"])
-            logging.info("Reading harmonic solution [80/100]")
+            logger.info("Reading harmonic solution [20/100]")
 
             solution_status = np.array(file["solution_status"])
-            logging.info("Reading harmonic solution [90/100]")
+            logger.info("Reading harmonic solution [80/100]")
 
             displacement_dof = file.get("displacement_dof")
             if displacement_dof is not None:
                 displacement_dof = np.array(displacement_dof)
-            logging.info("Reading harmonic solution [95/100]")
+            logger.info("Reading harmonic solution [90/100]")
 
-            return HarmonicSolution(
-                analysis_id=model.analysis_id,
-                frequencies=frequencies,
-                nodal_solution=solution,
-                status=solution_status,
-                displacement_dof=displacement_dof,
-            )
+            structural_solution = file.get("structural_solution")
+            acoustic_solution = file.get("acoustic_solution")
+            coupled_solution = file.get("coupled_solution")
+            logger.info("Reading harmonic solution [95/100]")
+
+            if all(s is None for s in [structural_solution, acoustic_solution, coupled_solution]):
+                # Remove after version 0.8
+                solution = file.get("solution")
+                if solution is None:
+                    raise ValueError("No solution found")
+                logger.warning("This file is deprecated and will not be supported after version 0.8")
+
+                if model.analysis_id.is_structural() or model.analysis_id.is_coupled():
+                    return HarmonicSolution(
+                        analysis_id=model.analysis_id,
+                        frequencies=frequencies,
+                        structural_solution=solution,
+                        status=solution_status,
+                        displacement_dof=displacement_dof,
+                    )
+
+                elif model.analysis_id.is_acoustic():
+                    return HarmonicSolution(
+                        analysis_id=model.analysis_id,
+                        frequencies=frequencies,
+                        acoustic_solution=solution,
+                        status=solution_status,
+                    )
+
+                else:
+                    raise ValueError("Invalid analysis")
+
+            else:
+                # Keep only this part after version 0.8
+                return HarmonicSolution(
+                    analysis_id=model.analysis_id,
+                    frequencies=frequencies,
+                    structural_solution=structural_solution,
+                    acoustic_solution=acoustic_solution,
+                    coupled_solution=coupled_solution,
+                    status=solution_status,
+                    displacement_dof=displacement_dof,
+                )
 
     def read_modal_solution(self, model: Model) -> Optional[ModalSolution]:
         if not self.project_paths.modal_solution_filepath.exists():
@@ -465,22 +502,60 @@ class ProjectReader:
         with h5py.File(self.project_paths.modal_solution_filepath, "r") as file:
             file: h5py.File
 
-            return ModalSolution(
-                analysis_id=model.analysis_id,
-                natural_frequencies=file["frequencies"],
-                modal_shapes=file["solution"],
-                displacement_dof=file.get("displacement_dof"),
-                complex_natural_frequencies=file.get("complex_natural_frequencies"),
-            )
+            structural_modal_shapes = file.get("structural_modal_shapes")
+            acoustic_modal_shapes = file.get("acoustic_modal_shapes")
+            coupled_modal_shapes = file.get("coupled_modal_shapes")
+
+            if all(s is None for s in [structural_modal_shapes, acoustic_modal_shapes, coupled_modal_shapes]):
+                # Remove after version 0.8
+
+                solution = file.get("solution")
+                if solution is None:
+                    raise ValueError("No solution found")
+                logger.warning("This file is deprecated and will not be supported after version 0.8")
+
+                solution = np.array(solution)
+
+                if model.analysis_id.is_structural():
+                    return ModalSolution(
+                        analysis_id=model.analysis_id,
+                        natural_frequencies=file["frequencies"],
+                        structural_modal_shapes=solution,
+                        displacement_dof=file.get("displacement_dof"),
+                        complex_natural_frequencies=file.get("complex_natural_frequencies"),
+                    )
+
+                elif model.analysis_id.is_acoustic():
+                    return ModalSolution(
+                        analysis_id=model.analysis_id,
+                        natural_frequencies=file["frequencies"],
+                        acoustic_modal_shapes=solution,
+                        complex_natural_frequencies=file.get("complex_natural_frequencies"),
+                    )
+
+                else:
+                    raise ValueError("Invalid analysis")
+
+            else:
+                # Keep only this part after version 0.8
+                return ModalSolution(
+                    analysis_id=model.analysis_id,
+                    natural_frequencies=file["frequencies"],
+                    structural_modal_shapes=file.get("structural_modal_shapes"),
+                    acoustic_modal_shapes=file.get("acoustic_modal_shapes"),
+                    coupled_modal_shapes=file.get("coupled_modal_shapes"),
+                    displacement_dof=file.get("displacement_dof"),
+                    complex_natural_frequencies=file.get("complex_natural_frequencies"),
+                )
 
     def read_assembler_and_solver(self, model: Model) -> tuple[AcousticAssembler | StructuralAssembler | None, HarmonicSolver | ModalSolver | None]:
 
         # TODO: create Solution classes, so we don't need to create pointless Assemblers and Solvers here
-        logging.info("Reading Solution.")
+        logger.info("Reading Solution.")
 
         if model.analysis_id.is_acoustic():
             assembler = AcousticAssembler(model)
-        elif model.analysis_id.is_structural():
+        elif model.analysis_id.is_structural() or model.analysis_id.is_coupled():
             assembler = StructuralAssembler(model)
         else:
             return None, None

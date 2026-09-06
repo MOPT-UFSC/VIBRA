@@ -17,7 +17,7 @@ def pick_actor_cell_info(
     x,
     y,
     target_actor: vtkActor,
-    indexes_array: str,
+    indices_array: str,
     renderer: vtkRenderer,
 ) -> tuple[int, tuple[float, float, float]]:
     cell_picker = vtkCellPicker()
@@ -57,7 +57,7 @@ def pick_actor_cell_info(
     if not data:
         return DEFAULT_RETURN_VALUE
 
-    cell_info_array: vtkIntArray = data.GetCellData().GetArray(indexes_array)
+    cell_info_array: vtkIntArray = data.GetCellData().GetArray(indices_array)
     if not cell_info_array:
         return DEFAULT_RETURN_VALUE
 

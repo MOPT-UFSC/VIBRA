@@ -16,7 +16,12 @@ class AnalysisChecker:
     def __init__(self, model: Model):
         self.model = model
 
-    def check_analysis_requirements(self, is_resume: bool = False):
+    def check_analysis_requirements(self, is_resume: bool = False, update_domain_mappings: bool = True):
+
+        # update the domains mappings
+        if update_domain_mappings:
+            self.model.domains_processor.update_domains_mappings()
+
         match self.model.analysis_id:
             case AnalysisID.STRUCTURAL_MODAL:
                 self.check_structural_modal_analysis()
@@ -26,6 +31,8 @@ class AnalysisChecker:
                 self.check_acoustic_modal_analysis()
             case AnalysisID.ACOUSTIC_HARMONIC:
                 self.check_acoustic_harmonic_analysis()
+            case AnalysisID.COUPLED_HARMONIC:
+                self.check_coupled_harmonic_analysis()
             case _:
                 raise NotImplementedError(f'Analysis type "{self.model.analysis_id.name}" is not implemented.')
 
@@ -49,6 +56,10 @@ class AnalysisChecker:
         if not self.model.is_there_a_valid_analysis_setup():
             raise errors.InvalidAnalysisSetupError("An invalid analysis setup has been configured.")
 
+    def check_coupled_harmonic_analysis(self, is_resume: bool = False):
+        self.check_acoustic_harmonic_analysis(is_resume=is_resume)
+        self.check_structural_harmonic_analysis(is_resume=is_resume)
+
     def check_acoustic_harmonic_analysis(self, is_resume: bool = False):
         self.check_can_resume(is_resume)
         self.check_mesh()
@@ -65,7 +76,10 @@ class AnalysisChecker:
         else:
             self.check_materials_surfaces()
 
-        self.check_structural_harmonic_excitations()
+        if self.model.analysis_id.is_harmonic_coupled():
+            self.check_acoustic_harmonic_excitations()
+        else:
+            self.check_structural_harmonic_excitations()
 
         if self.model.analysis_setup.analysis_method == AnalysisMethod.MODE_SUPERPOSITION:
             self.check_mode_superposition_prescribed_dof_criterion()
@@ -117,12 +131,20 @@ class AnalysisChecker:
             "volumes",
         )
 
-        if volumes_without_material:
-            raise errors.InvalidModelSetupError(
-                f"You should assign one material for volumes {volumes_without_material} "
-                "to proceed with the analysis solution.",
-                volumes=volumes_without_material,
-            )  # fmt: skip
+        if not volumes_without_material:
+            return
+
+        acoustic_domain_volumes = self.model.volumes_of_domain.get("acoustic", [])
+        if len(acoustic_domain_volumes) != len(volumes_without_material):
+            for vol_id in volumes_without_material:
+                if vol_id in acoustic_domain_volumes:
+                    continue
+
+                raise errors.InvalidModelSetupError(
+                    f"You should assign one material for volumes {volumes_without_material} "
+                    "to proceed with the analysis solution.",
+                    volumes=volumes_without_material,
+                )  # fmt: skip
 
     def check_materials_surfaces(self):
         surfaces_without_material = self._entities_without_property(
@@ -143,12 +165,20 @@ class AnalysisChecker:
             "volumes",
         )
 
-        if volumes_without_fluid:
-            raise errors.InvalidModelSetupError(
-                f"You should assign one fluid for volumes {volumes_without_fluid} "
-                "to proceed with the analysis solution.",
-                volumes=volumes_without_fluid,
-            )  # fmt: skip
+        if not volumes_without_fluid:
+            return
+
+        structural_domain_volumes = self.model.volumes_of_domain.get("structural", [])
+        if len(structural_domain_volumes) != len(volumes_without_fluid):
+            for vol_id in volumes_without_fluid:
+                if vol_id in structural_domain_volumes:
+                    continue
+    
+                raise errors.InvalidModelSetupError(
+                    f"You should assign one fluid for volumes {volumes_without_fluid} "
+                    "to proceed with the analysis solution.",
+                    volumes=volumes_without_fluid,
+                )  # fmt: skip
 
     def check_fluids_surfaces(self):
         surfaces_without_fluid = self._entities_without_property(

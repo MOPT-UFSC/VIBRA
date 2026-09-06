@@ -1,10 +1,10 @@
 from enum import IntEnum
+from numbers import Number
 from pathlib import Path
 from typing import Literal
-from numbers import Number
 
 import numpy as np
-from PySide6.QtWidgets import QDialog, QFileDialog, QPushButton, QWidget
+from PySide6.QtWidgets import QDialog, QFileDialog, QLineEdit, QPushButton, QWidget
 
 from vibra import app
 from vibra.engine.analysis_info import AnalysisID, FrequencySpacing
@@ -192,7 +192,7 @@ def check_structural_model_frequency_controls():
             if property not in prop_labels:
                 continue
 
-            if "table_names" in data.keys():
+            if "table_names" in data:
                 return
 
     # No idea of what it does
@@ -299,3 +299,38 @@ def export_modal_analysis_results(parent: QDialog | QWidget, modes_to_frequencie
             header = header.split(",")
             df = DataFrame(modal_data_to_export, schema=header)
             df.to_pandas().to_excel(writer, sheet_name="Exported modal results", index=False)
+
+def update_entities_selection(line_edit: QLineEdit, selection_label: str, selected_ids: list[int]):
+    input_ids = line_edit.text()
+    tokens = input_ids.replace(" ", "").split(",")
+    list_ids = [int(_id) for _id in tokens]
+
+    volumes = surfaces = lines = points = nodes = None
+
+    match selection_label:
+        case "volumes":
+            volumes = selected_ids
+        case "surfaces":
+            surfaces = selected_ids
+        case "lines":
+            lines = selected_ids
+        case "points":
+            points = selected_ids
+        case "nodes":
+            nodes = selected_ids
+
+    if len(list_ids) == len(selected_ids):
+        return
+
+    line_edit.setText(", ".join(map(str, selected_ids)))
+
+    if selection_label == "nodes":
+        app().main_window.selection.set_mesh_selection(nodes=nodes)
+
+    else:
+        app().main_window.selection.set_geometry_selection(
+            volumes=volumes,
+            surfaces=surfaces,
+            lines=lines,
+            points=points,
+            )

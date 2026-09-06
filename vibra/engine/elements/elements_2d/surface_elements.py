@@ -1,82 +1,81 @@
 
+from typing import TYPE_CHECKING
+
 import numpy as np
+
+from vibra.engine.elements.common.dof_indexes_processor import DOFIndexesProcessor
+from vibra.engine.elements.common.element_data_processor import get_jacobian_determinant_2d
+
+if TYPE_CHECKING:
+    from vibra.engine.model import Model
 
 
 class Element2D:
-    """
-    This determines the attributes and methods
-    that need to exist in EVERY element.
-    """
 
-    # Constants of the element
-    NODES_PER_ELEMENT: int = 0
-    DOF_PER_NODE: int = 0
-    DOF_PER_ELEMENT: int = NODES_PER_ELEMENT * DOF_PER_NODE
+    def __init__(self, model: "Model", dof_per_node: int, nodes_per_element: int):
+
+        self.model = model
+        self.dof_per_node = dof_per_node
+        self.nodes_per_element = nodes_per_element
+
+        self.initialize()
+        self.local_dof = np.arange(dof_per_node, dtype=int)
+
+
+    def initialize(self):
+
+        self.nint: np.ndarray | None = None
+        self.nint_M: np.ndarray | None = None
+        self.nint_K: np.ndarray | None = None
+
+        self.wps: np.ndarray | None = None
+        self.wps_M: np.ndarray | None = None
+        self.wps_K: np.ndarray | None = None
+
+        self.phi: np.ndarray | None = None
+        self.phi_M: np.ndarray | None = None
+        self.phi_K: np.ndarray | None = None
+
+        self.dphi: np.ndarray | None = None
+        self.dphi_M: np.ndarray | None = None
+        self.dphi_K: np.ndarray | None = None
+
+
+    @property
+    def dof_per_element(self):
+        return self.dof_per_node * self.nodes_per_element
+
+
+    @property
+    def nodal_coordinates(self):
+        return self.model.mesh.nodal_coordinates
+
+
+    def dof_indexes_processor(self, domain: str) -> DOFIndexesProcessor:
+        return DOFIndexesProcessor(self.model, domain, self.dof_per_node, self.nodes_per_element)
+
+
+    def get_stacked_local_coordinates(self):
+        pass
+
+
+    def get_jacobian_determinant_2d(
+            self,
+            dphi: np.ndarray,
+            coords: np.ndarray,
+            return_normal: bool = False,
+            return_inverse: bool = False,
+            ):
+
+        return get_jacobian_determinant_2d(dphi, coords, return_normal=return_normal, return_inverse=return_inverse)
+
 
     def elementary_matrices(self) -> tuple[np.ndarray]:
         raise NotImplementedError("The function elementary_matrices was not implemented")
 
 
-    def get_detJAC(self, JAC: np.ndarray) -> float:
-        """
-        This function computes the determinant of the Jacobian
-        matrix in both stacked and non-stacked matrices form.
-
-        Parameter
-        ---------
-        JAC: np.ndarray
-            The Jacobian 2D or 3D matrix.
-        
-        Return
-        ------
-        det_jac: float
-            The determinant of the Jacobian matrix.
-        """
-        if len(JAC.shape) == 3:
-            det_jac = JAC[:, 0, 0] * JAC[:, 1, 1]  - JAC[:, 0, 1] * JAC[:, 1, 0]
-            return det_jac.reshape(-1, 1, 1)
-
-        else:
-            det_jac = JAC[0, 0] * JAC[1, 1]  - JAC[0, 1] * JAC[1, 0]  
-            return det_jac
-
-
-    def get_detJAC_and_invJAC(self, JAC: np.ndarray) -> np.ndarray:
-        """
-        This function computes the determinants and inverses
-        of Jacobian matrices in stacked form.
-
-        Parameters
-        ----------
-        JAC: np.array
-            The stacked Jacobian matrices.
-
-        Returns
-        -------
-        det_jacs: np.ndarray
-            The stacked determinants of Jacobian matrices.
-
-        inv_jacs: np.ndarray
-            The stacked inverse of Jacobian matrices.
-
-        """
-
-        # determinant of the Jacobian matrix
-        det_jacs = JAC[:, 0, 0] * JAC[:, 1, 1]  - JAC[:, 0, 1] * JAC[:, 1, 0] 
-        det_jacs = det_jacs.reshape(-1, 1, 1)
-
-        # the adjoint matrix AUJJ
-        AUJJ = np.zeros((JAC.shape[0], 2, 2), dtype=float)
-
-        AUJJ[:, 0, 0] =  JAC[:, 1, 1]
-        AUJJ[:, 0, 1] = -JAC[:, 0, 1]
-        AUJJ[:, 1, 0] = -JAC[:, 1, 0]
-        AUJJ[:, 1, 1] =  JAC[:, 0, 0]
-
-        # inverse of the Jacobian matrix
-        inv_jacs = (1 / det_jacs) * AUJJ
-
-        return det_jacs, inv_jacs
+    def reorder_connect(self, connectivities: np.ndarray):
+        pass
 
 
     def integration_points_data_for_quadrangles(self, integration_points: int):

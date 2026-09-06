@@ -78,8 +78,8 @@ class LocalMeshSizeControlSetup:
         return len(self.entity_ids) == 0
 
 
-TETRAHEDRON_4 = ElementTopology("tetrahedral", "linear")
-TETRAHEDRON_10 = ElementTopology("tetrahedral", "quadratic")
-HEXAHEDRON_8 = ElementTopology("hexahedral", "linear")
-HEXAHEDRON_20 = ElementTopology("hexahedral", "quadratic")
-DEFAULT_ELEMENT_TYPE = TETRAHEDRON_4
+Tetrahedron4 = ElementTopology("tetrahedral", "linear")
+Tetrahedron10 = ElementTopology("tetrahedral", "quadratic")
+Hexahedron8 = ElementTopology("hexahedral", "linear")
+Hexahedron20 = ElementTopology("hexahedral", "quadratic")
+DEFAULT_ELEMENT_TYPE = Tetrahedron4

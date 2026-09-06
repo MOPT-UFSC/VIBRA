@@ -8,6 +8,7 @@ from vibra import app
 from vibra.engine import AnalysisID
 from vibra.engine.properties.fluid import Fluid
 from vibra.interface import error_title
+from vibra.interface.common.common_interface import update_entities_selection
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
@@ -60,7 +61,7 @@ class AcousticShakingForcesInputs(AcousticShakingForcesInputs_UI):
 
     @property
     def nodal_solution(self):
-        return app().project.model.solution.nodal_solution
+        return app().project.model.solution.acoustic_solution
 
     def showEvent(self, event):
         super().showEvent(event)
@@ -126,16 +127,20 @@ class AcousticShakingForcesInputs(AcousticShakingForcesInputs_UI):
             self.selected_ids = np.unique(self.mesh.faces_connectivity[:, 1]).astype(int)
 
         else:
-            self.selected_ids, error_data = self.mesh.check_selected_ids(
+            self.selected_ids, error_data = self.model.check_selected_ids(
                 self.lineEdit_selection_id.text(),
-                selection = "surfaces",
-                single_id = False,
-                )
+                "surfaces",
+                domain="acoustic",
+            )
 
         if error_data is not None:
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
             return True
+
+        app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
+        update_entities_selection(self.lineEdit_selection_id, "surfaces", self.selected_ids)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
         if self.comboBox_cutoff_frequency_options.currentIndex() != CutoffFrequency.DISABLED:
             line_edit = self.lineEdit_cutoff_frequency

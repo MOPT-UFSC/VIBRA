@@ -66,8 +66,8 @@ class ModelSetupItems(CommonMenuItems):
 
         # external impedances
         self.item_child_anechoic_termination = self.add_item("Anechoic Termination")
-        self.item_child_absorption_surface = self.add_item("Absorption Surface")
         self.item_child_specific_impedance = self.add_item("Specific Impedance")
+        self.item_child_absorption_surface = self.add_item("Absorption Surface")
         self.item_child_anechoic_termination.setToolTip(0, "equivalent to the long pipe boundary condition")
 
         # internal impedances
@@ -199,8 +199,19 @@ class ModelSetupItems(CommonMenuItems):
         if property_name == "material":
             if mesh.are_there_volumes_in_geometry():
                 volume_ids = mesh.geometry_information.get("volumes")
+                volume_ids.sort()
                 volumes_without_material = properties.get_entities_without_property("material", volumes=volume_ids)
-                return not bool(len(volumes_without_material))
+                if volumes_without_material:
+                    acoustic_volumes = model.volumes_of_domain.get("acoustic", [])
+                    if volumes_without_material == volume_ids:
+                        return False
+
+                    for vol_id in volumes_without_material:
+                        if vol_id not in acoustic_volumes:
+                            return False
+
+                return True
+
             else:
                 surface_ids = mesh.geometry_information.get("surfaces")
                 surfaces_without_material = properties.get_entities_without_property("material", surfaces=surface_ids)
@@ -209,8 +220,18 @@ class ModelSetupItems(CommonMenuItems):
         if property_name == "fluid":
             if mesh.are_there_volumes_in_geometry():
                 volume_ids = mesh.geometry_information.get("volumes")
+                volume_ids.sort()
                 volumes_without_fluid = properties.get_entities_without_property("fluid", volumes=volume_ids)
-                return not bool(len(volumes_without_fluid))
+                if volumes_without_fluid:
+                    structural_volumes = model.volumes_of_domain.get("structural", [])
+                    if volumes_without_fluid == volume_ids:
+                        return False
+
+                    for vol_id in volumes_without_fluid:
+                        if vol_id not in structural_volumes:
+                            return False
+
+                return True
             # else:
             #     surface_ids = mesh.geometry_information.get("surfaces")
             #     surfaces_without_fluid = properties.get_entities_without_property("fluid", surfaces=surface_ids)
@@ -230,10 +251,7 @@ class ModelSetupItems(CommonMenuItems):
             if mesh is not None:
                 st_check = model.is_surface_thickness_properly_applied_in_model()
                 if isinstance(st_check, list) and st_check:
-                    if st_check:
-                        return False
-                    else:
-                        return True
+                    return not st_check
 
         # As anechoic_termination is a subproperty of specific_impedance, 
         # we need to garantee there is a specific_impedance that is not anechoic_termination
@@ -341,10 +359,16 @@ class ModelSetupItems(CommonMenuItems):
             self.item_top_acoustic_model_setup.setHidden(False)
             self.item_top_structural_model_setup.setHidden(True)
 
-        else:
+        elif physical_domain == "structural":
             self.item_child_fluid.setHidden(True)
             self.item_child_material.setHidden(False)
             self.item_top_acoustic_model_setup.setHidden(True)
+            self.item_top_structural_model_setup.setHidden(False)
+
+        elif physical_domain == "coupled":
+            self.item_child_fluid.setHidden(False)
+            self.item_child_material.setHidden(False)
+            self.item_top_acoustic_model_setup.setHidden(False)
             self.item_top_structural_model_setup.setHidden(False)
 
     def _are_there_collapsed_elements(self, item_child) -> bool:
