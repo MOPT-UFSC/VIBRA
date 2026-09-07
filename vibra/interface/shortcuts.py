@@ -47,6 +47,18 @@ def is_typing_input(widget) -> bool:
 # Each entry maps a key sequence to a (target, description) tuple:
 
 SHORTCUTS = {
+    # project
+    "Ctrl+N": ("action_new_project", "New project"),
+    "Ctrl+O": ("action_open_project", "Open a project"),
+    "Ctrl+I": ("action_import_geometry", "Import geometry"),
+    "Ctrl+Shift+I": ("action_import_mesh", "Import mesh"),
+    "Ctrl+S": ("action_save", "Save the project"),
+    "Ctrl+Shift+S": ("action_save_as", "Save the project as"),
+    "Ctrl+E": ("action_export_mesh", "Export the mesh"),
+    "Ctrl+P": ("action_capture_image", "Capture the image"),
+    "Ctrl+W": ("action_home_exit", "Go to home"),
+
+    # model
     "Ctrl+Shift+G": ("action_generate_mesh_with_current_setup", "Generate the mesh"),
     "Ctrl+R": ("analysis_toolbar.run_analysis_action", "Run the analysis"),
     "Ctrl+A": ("action_select_all_entities", "Select all entities"),
@@ -62,13 +74,15 @@ SHORTCUTS = {
     "Ctrl+Shift+I": ("action_import_mesh", "Import mesh"),
     "F5": ("action_update_plots", "Refresh the plots"),
     "Alt+P": ("action_toggle_section_plane", "Toggle the section plane"),
-    "?": ("action_show_shortcuts_help", "Show this shortcut list"),
+    "Ctrl+H": ("action_hide_selection", "Hide the selection"),
+    "Ctrl+U": ("action_unhide_all", "Unhide everything"),
+
+    # workspaces
     "Q": ("action_model_workspace", "Model workspace"),
     "W": ("action_mesh_workspace", "Mesh workspace"),
     "E": ("action_results_workspace", "Results workspace"),
-    "Ctrl+S": ("action_save", "Save the project"),
-    "Ctrl+H": ("action_hide_selection", "Hide the selection"),
-    "Ctrl+U": ("action_unhide_all", "Unhide everything"),
+
+    # views
     "Ctrl+1": ("view_toolbar.action_front_view", "Front view"),
     "Ctrl+2": ("view_toolbar.action_back_view", "Back view"),
     "Ctrl+3": ("view_toolbar.action_left_view", "Left view"),
@@ -76,6 +90,9 @@ SHORTCUTS = {
     "Ctrl+5": ("view_toolbar.action_top_view", "Top view"),
     "Ctrl+6": ("view_toolbar.action_bottom_view", "Bottom view"),
     "Ctrl+7": ("view_toolbar.action_isometric_view", "Isometric view"),
+
+    # other
+    "?": ("action_show_shortcuts_help", "Show this shortcut list"),
 }
 
 # Dialog conventions (Enter/Escape/Delete/Backspace) and widget-local keys are
