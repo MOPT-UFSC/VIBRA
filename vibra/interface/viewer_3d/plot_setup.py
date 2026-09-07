@@ -26,17 +26,36 @@ class DisplacementPlotType(StrEnum):
     A_Z = auto()
 
 
+class StressPlotType(StrEnum):
+    ABSOLUTE_ANIMATION = auto()
+    NON_ABSOLUTE_ANIMATION = auto()
+    ABSOLUTE_VALUES = auto()
+    REAL_VALUES = auto()
+    IMAG_VALUES = auto()
+
+
 @dataclass(slots=True)
 class NoPlotSetup:
     unit: str = "--"
 
 
 @dataclass(slots=True)
-class FrequencyDisplacementPlotSetup:
+class DisplacementFieldPlotSetupFrequency:
     phase: float
     index: int
     magnification_factor: float
     plot_type: DisplacementPlotType
+    unit: str = "--"
+    n_diff: int = 0
+    unit_scale_factor: float = 1.0
+
+
+@dataclass(slots=True)
+class StressFieldPlotSetupFrequency:
+    phase: float
+    index: int
+    magnification_factor: float
+    plot_type: StressPlotType
     unit: str = "--"
     n_diff: int = 0
     unit_scale_factor: float = 1.0
@@ -68,7 +87,8 @@ class AllowablePulsationForScrewCompressorsPlotSetup:
 # Do not forget to add the type here
 PlotSetup = Union[
     NoPlotSetup,
-    FrequencyDisplacementPlotSetup,
+    DisplacementFieldPlotSetupFrequency,
+    StressFieldPlotSetupFrequency,
     FrequencyPressurePlotSetup,
     TransientPressurePlotSetup,
     AllowablePulsationForScrewCompressorsPlotSetup,
@@ -81,5 +101,5 @@ AcousticPlotSetups = Union[
 ]
 
 StructuralPlotSetups = Union[
-    FrequencyDisplacementPlotSetup,
+    DisplacementFieldPlotSetupFrequency,
 ]

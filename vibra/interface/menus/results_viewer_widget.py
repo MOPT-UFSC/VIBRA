@@ -8,6 +8,7 @@ from vibra.interface.plots.acoustic.acoustic_pressure_waveform_3d_plot_inputs im
 from vibra.interface.plots.general.animation_widget import AnimationWidget
 from vibra.interface.plots.structural.structural_mode_shape_inputs import PlotStructuralModeShapeInputs
 from vibra.interface.plots.structural.structural_response_fields_inputs import StructuralResponseFieldsInputs
+from vibra.interface.plots.structural.structural_stresses_fields_inputs import StructuralStressesFieldsInputs
 from vibra.interface.ui_generated.menu.left_menu_widget_ui import LeftMenuWidget_UI
 
 
@@ -17,6 +18,8 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
 
         self.plot_structural_modal = PlotStructuralModeShapeInputs()
         self.plot_structural_harmonic = StructuralResponseFieldsInputs()
+        self.plot_structural_harmonic = StructuralResponseFieldsInputs()
+
         self.plot_acoustic_modal = AcousticModeShapeInputs()
         self.plot_acoustic_harmonic = AcousticPressureFieldInputs()
 
@@ -34,6 +37,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         return isinstance(self.current_widget, (
             PlotStructuralModeShapeInputs,
             StructuralResponseFieldsInputs,
+            StructuralStressesFieldsInputs,
             AcousticModeShapeInputs,
             AcousticPressureFieldInputs,
             AcousticPressureWaveform3DPlotInputs,
@@ -62,6 +66,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.results_viewer_items.item_child_structural_mode_shapes.clicked.connect(self.add_structural_modal_widget)
         self.results_viewer_items.item_child_structural_frequency_response.clicked.connect(self.add_structural_frequency_response_widget)
         self.results_viewer_items.item_child_structural_results_fields.clicked.connect(self.add_structural_harmonic_widget)
+        self.results_viewer_items.item_child_stress_field.clicked.connect(self.add_stress_field_for_harmonic_widget)
 
         # Acoustic
         self.results_viewer_items.item_child_acoustic_pressure_field.clicked.connect(self.add_acoustic_harmonic_widget)
@@ -108,6 +113,14 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.plot_structural_harmonic.configure_results_display_widget()
 
         self.add_widget(self.plot_structural_harmonic)
+
+    def add_stress_field_for_harmonic_widget(self):
+        self.current_widget = app().main_window.input_ui.plot_stress_field()
+
+        if app().main_window.results_widget.playing_animation:
+            app().main_window.results_widget.stop_animation()
+
+        self.add_widget(self.current_widget)
 
     def add_acoustic_modal_widget(self):
         self.top_widget.setFixedHeight(220)

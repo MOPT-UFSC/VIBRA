@@ -35,8 +35,8 @@ class ResultsViewerItems(CommonMenuItems):
         self.item_child_structural_mode_shapes = self.add_item("Plot Structural Mode Shapes")
         self.item_child_structural_results_fields = self.add_item("Structural Results Fields")
         self.item_child_structural_frequency_response = self.add_item("Plot Structural Frequency Response")
+        self.item_child_stress_field = self.add_item("Plot Stress Field")
         # self.item_child_reaction_frequency_response = self.add_item("Plot Reactions Frequency Response")
-        # self.item_child_stress_field = self.add_item("Plot Stress Field")
         # self.item_child_stress_frequency_response = self.add_item("Plot Stress Frequency Response")
 
         ## Acoustic results items
@@ -138,7 +138,7 @@ class ResultsViewerItems(CommonMenuItems):
         self.item_child_structural_results_fields.setDisabled(key)
         self.item_child_structural_frequency_response.setDisabled(key)
         # self.item_child_reaction_frequency_response.setDisabled(key)
-        # self.item_child_stress_field.setDisabled(key)
+        self.item_child_stress_field.setDisabled(key)
         self.item_child_structural_mode_shapes.setDisabled(key)
 
     def update_structural_analysis_visibility_items(self):
@@ -173,27 +173,20 @@ class ResultsViewerItems(CommonMenuItems):
         elif analysis_id.is_harmonic_coupled():
             self.update_coupled_analysis_visibility_items()
 
-        if analysis_id == AnalysisID.STRUCTURAL_HARMONIC:
+        if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
             self.item_child_structural_frequency_response.setDisabled(False)
             self.item_child_structural_results_fields.setDisabled(False)
             # self.item_child_reaction_frequency_response.setDisabled(False)
-            # self.item_child_stress_field.setDisabled(False)
+            self.item_child_stress_field.setDisabled(False)
             # self.item_child_stress_frequency_response.setDisabled(False)
 
-        elif analysis_id == AnalysisID.STRUCTURAL_MODAL:
+        if analysis_id == AnalysisID.STRUCTURAL_MODAL:
             self.item_child_structural_mode_shapes.setDisabled(False)
 
-        elif analysis_id == AnalysisID.ACOUSTIC_MODAL:
+        if analysis_id == AnalysisID.ACOUSTIC_MODAL:
             self.item_child_acoustic_mode_shapes.setDisabled(False)
 
-        elif analysis_id in [AnalysisID.ACOUSTIC_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
-            if analysis_id == AnalysisID.COUPLED_HARMONIC:
-                self.item_child_structural_results_fields.setDisabled(False)
-                self.item_child_structural_frequency_response.setDisabled(False)
-                # self.item_child_stress_field.setDisabled(False)
-                # self.item_child_stress_frequency_response.setDisabled(False)
-                # self.item_child_reaction_frequency_response.setDisabled(False)
-
+        if analysis_id in [AnalysisID.ACOUSTIC_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
             self.item_child_acoustic_pressure_field.setDisabled(False)
             self.item_child_acoustic_pressure_frequency_response.setDisabled(False)
             self.item_child_acoustic_pressure_frf.setDisabled(False)

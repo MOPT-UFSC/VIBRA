@@ -17,7 +17,8 @@ from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.viewer_3d.plot_setup import (
     AcousticPlotSetups,
     AllowablePulsationForScrewCompressorsPlotSetup,
-    FrequencyDisplacementPlotSetup,
+    DisplacementFieldPlotSetupFrequency,
+    StressFieldPlotSetupFrequency,
     FrequencyPressurePlotSetup,
     NoPlotSetup,
     PlotSetup,
@@ -235,7 +236,10 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             case FrequencyPressurePlotSetup():
                 self._plot_frequency_pressure(animation_frame, clear_cache)
 
-            case FrequencyDisplacementPlotSetup():
+            case DisplacementFieldPlotSetupFrequency():
+                self._plot_frequency_displacement(animation_frame, clear_cache)
+
+            case StressFieldPlotSetupFrequency():
                 self._plot_frequency_displacement(animation_frame, clear_cache)
 
             case TransientPressurePlotSetup():
@@ -308,7 +312,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         animation_frame: Optional[int] = None,
         clear_cache: bool = True,
     ):
-        assert isinstance(self.plot_setup, FrequencyDisplacementPlotSetup)
+        assert isinstance(self.plot_setup, DisplacementFieldPlotSetupFrequency)
 
         postprocessing = app().project.get_structural_postprocessing()
         assert isinstance(postprocessing, StructuralPostprocessing)
@@ -745,7 +749,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             return
 
         match self.plot_setup:
-            case FrequencyDisplacementPlotSetup() | FrequencyPressurePlotSetup():
+            case DisplacementFieldPlotSetupFrequency() | FrequencyPressurePlotSetup():
                 text += analysis_info_text(self.plot_setup.index)
 
             case AllowablePulsationForScrewCompressorsPlotSetup():

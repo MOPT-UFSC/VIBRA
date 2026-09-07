@@ -1,26 +1,64 @@
+from enum import IntEnum
+from time import perf_counter
+
 import numpy as np
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QGridLayout, QTreeWidgetItem
 
 from vibra import app
+from vibra.engine import AnalysisID
 from vibra.interface.loading_window import LoadingWindow
+from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
 from vibra.interface.plots.general.animation_widget import AnimationWidget
 from vibra.interface.plots.general.results_display_widget import ResultsDisplayWidget
-from vibra.interface.ui_generated.plots.structural.structural_response_fields_inputs_ui import StructuralResponseFieldsInputs_UI
-from vibra.interface.viewer_3d.plot_setup import DisplacementPlotType, DisplacementFieldPlotSetupFrequency
+from vibra.interface.ui_generated.plots.structural.structural_stresses_field_inputs_ui import StructuralStressesFieldInputs_UI
+from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
+from vibra.interface.viewer_3d.plot_setup import StressFieldPlotSetupFrequency, StressPlotType
 
 
-class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
+class ReduceLoopType(IntEnum):
+    DISABLED = 0
+    USER_DEFINED = 1
+    ROTATIONAL_SPEED = 2
+
+
+class StructuralStressesFieldsInputs(StructuralStressesFieldInputs_UI):
+
+    value_changed = Signal()
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        app().main_window.show_geometry_render_widget()
+
         self._initialize()
         self._configure_widgets()
-        self.add_animation_widget()
-        self.add_color_widget()
+        self._add_animation_widget()
+        self._add_color_widget()
         self._create_connections()
 
-        self.load_frequencies()
+        # self.load_frequencies()
+
+    @property
+    def model(self):
+        return app().project.model
+
+    @property
+    def mesh(self):
+        return app().project.model.mesh
+
+    @property
+    def properties(self):
+        return app().project.model.properties
+
+    @property
+    def nodal_solution(self):
+        return app().project.model.solution.structural_solution
+
+    @property
+    def structural_post(self):
+        return app().project.get_structural_postprocessing()
 
     def showEvent(self, event):
         super().showEvent(event)
@@ -44,19 +82,20 @@ class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
 
     def _create_connections(self):
 
-        # QComboBox connections
+        # QComboBox connection
         self.comboBox_plot_type.currentIndexChanged.connect(self.update_plot)
-        self.comboBox_plotting_results.currentIndexChanged.connect(self.update_plotting_results_combo_box_items)
 
-        # QTreeWidget connections
+        # QPushButton connection
+        self.pushButton_plot_data.clicked.connect(self.process_stress_field)
+
+        # QTreeWiget connections
         self.treeWidget_frequencies.itemClicked.connect(self.on_click_item)
         self.treeWidget_frequencies.itemDoubleClicked.connect(self.on_click_item)
 
         self.results_display_widget.colormap_changed.connect(self.animation_widget.update_color_and_deformation)
         self.results_display_widget.pressure_value_changed.connect(self.animation_widget.update_color_and_deformation)
-        self.update_animation_widget_visibility()
 
-    def add_animation_widget(self):
+    def _add_animation_widget(self):
         self.grid_layout = QGridLayout()
         self.grid_layout.setContentsMargins(0, 0, 0, 0)
         self.frame_animation.setLayout(self.grid_layout)
@@ -65,7 +104,7 @@ class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
         self.grid_layout.addWidget(self.animation_widget)
         self.frame_animation.adjustSize()
 
-    def add_color_widget(self):
+    def _add_color_widget(self):
         grid_layout = QGridLayout()
         grid_layout.setContentsMargins(0, 0, 0, 0)
         self.frame_color.setLayout(grid_layout)
@@ -74,44 +113,29 @@ class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
         grid_layout.addWidget(self.results_display_widget)
         self.frame_color.adjustSize()
 
-    def update_plotting_results_combo_box_items(self):
-        prefixes = ["u", "v", "a"]
-        ind = self.get_number_of_differentiations()
-        prefix = prefixes[ind]
-
-        self.comboBox_plot_type.blockSignals(True)
-        self.comboBox_plot_type.clear()
-
-        for suffix in ["sum", "x", "y", "z"]:
-            self.comboBox_plot_type.addItem(f"{prefix}_{suffix}")
-
-        self.comboBox_plot_type.blockSignals(False)
-        self.update_plot()
+    def configure_results_display_widget(self):
+        self.results_display_widget.configure_widget()
 
     def update_animation_widget_visibility(self):
-        return
         index = self.comboBox_plot_type.currentIndex()
-        if index >= 4:
+        if index >= 2:
             self.animation_widget.setDisabled(True)
         else:
             self.animation_widget.setDisabled(False)
 
-    def get_plot_type(self) -> DisplacementPlotType:
-        prefixes = ["u", "v", "a"]
-        suffixes = ["sum", "x", "y", "z"]
+    def process_stress_field(self):
 
-        ind_dformat = self.get_number_of_differentiations()
-        ind_ptype = self.comboBox_plot_type.currentIndex()
+        structural_post = self.structural_post
 
-        return DisplacementPlotType(f"{prefixes[ind_dformat]}_{suffixes[ind_ptype]}")
+        t0 = perf_counter()
+        avg_nodal_stresses, _ = structural_post.get_structural_stresses()
+        dt = perf_counter() - t0
+        print(f"Time to compute nodal stresses: {dt} s")
 
-    def get_plot_units(self) -> str:
-        units = ["m", "m/s", "m/s²", "mm", "mm/s", "mm/s²", "um", "um/s", "um/s²"]
-        return units[self.comboBox_plotting_results.currentIndex()]
+        nodal_averaged_stresses = structural_post.nodal_stresses_post_process(avg_nodal_stresses)
+        # element_averaged_stresses = structural_post.nodal_stresses_post_process(element_stresses)
 
-    def get_unit_scale_factor(self) -> float:
-        convertion_factors = [1.0, 1e3, 1e6]
-        return convertion_factors[self.comboBox_plotting_results.currentIndex() // 3]
+        self.load_frequencies()
 
     def update_plot(self):
         self.update_animation_widget_visibility()
@@ -127,42 +151,42 @@ class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
         if self.selected_frequency_index is None:
             return
 
-        self.animation_widget.reset_sliders()
-        self.results_display_widget.configure_validators(-1e14, 1e14)
+        if self.get_plot_type() in [StressPlotType.ABSOLUTE_ANIMATION, StressPlotType.ABSOLUTE_VALUES]:
+            self.results_display_widget.configure_validators(0, 1e14)
+        else:
+            self.results_display_widget.configure_validators(-1e14, 1e14)
 
-        plot_setup = DisplacementFieldPlotSetupFrequency(
+        plot_setup = StressFieldPlotSetupFrequency(
             phase=self.animation_widget.phase_in_radians,
-            magnification_factor=self.animation_widget.magnification_factor,
             index=self.selected_frequency_index,
+            magnification_factor=self.animation_widget.magnification_factor,
             plot_type=self.get_plot_type(),
-            unit=self.get_plot_units(),
-            n_diff=self.get_number_of_differentiations(),
-            unit_scale_factor=self.get_unit_scale_factor()
+            unit="MPa",
         )
 
+        self.animation_widget.reset_sliders()
         LoadingWindow(app().main_window.results_widget.update_plot).run(
             reset_camera=False,
             plot_setup=plot_setup,
         )
 
-    def get_selected_frequency_index(self):
-        if self.selected_frequency_index is not None:
-            return self.selected_frequency_index
-
-        return 0
-
-    def get_number_of_differentiations(self):
-        return self.comboBox_plotting_results.currentIndex() % 3
-
-    def configure_results_display_widget(self):
-        self.results_display_widget.configure_widget()
+    def get_plot_type(self) -> StressPlotType:
+        plot_types = [
+            "non_absolute_animation",
+            "absolute_animation",
+            "absolute_values",
+            "real_values",
+            "imag_values",
+        ]
+        index = self.comboBox_plot_type.currentIndex()
+        return StressPlotType(plot_types[index])
 
     def load_frequencies(self):
-        self.treeWidget_frequencies.setDisabled(False)
-        if not isinstance(app().project.model.frequencies, np.ndarray):
+        if isinstance(app().project.model.frequencies, np.ndarray):
+            self.frequencies = app().project.model.frequencies
+        else:
             return
 
-        self.frequencies = app().project.model.frequencies
         self.indices = np.arange(len(self.frequencies), dtype=int)
 
         self.treeWidget_frequencies.clear()
@@ -179,6 +203,12 @@ class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
         first_item.setSelected(True)
         self.treeWidget_frequencies.itemClicked.emit(first_item, 0)
 
+    def get_selected_frequency_index(self):
+        if self.selected_frequency_index is None:
+            return 0
+
+        return self.selected_frequency_index
+
     def on_click_item(self, item: QTreeWidgetItem):
         self.lineEdit_selected_frequency.setText(item.text(1))
         self.update_plot()
@@ -186,5 +216,3 @@ class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
             self.update_plot()
-        elif event.key() == Qt.Key_Escape:
-            self.close()

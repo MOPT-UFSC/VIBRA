@@ -16,9 +16,10 @@ from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.ui_generated.plots.general.animation_widget_ui import AnimationWidget_UI
 from vibra.interface.viewer_3d.plot_setup import (
     AllowablePulsationForScrewCompressorsPlotSetup,
-    FrequencyDisplacementPlotSetup,
+    DisplacementFieldPlotSetupFrequency,
     FrequencyPressurePlotSetup,
     PlotSetup,
+    StressFieldPlotSetupFrequency,
     TransientPressurePlotSetup,
 )
 
@@ -218,7 +219,7 @@ class AnimationWidget(AnimationWidget_UI):
         match plot_setup:
             case FrequencyPressurePlotSetup():
                 plot_setup.phase = self.phase_in_radians
-            case FrequencyDisplacementPlotSetup():
+            case DisplacementFieldPlotSetupFrequency() | StressFieldPlotSetupFrequency():
                 plot_setup.phase = self.phase_in_radians
                 plot_setup.magnification_factor = self.magnification_factor
             case TransientPressurePlotSetup():
