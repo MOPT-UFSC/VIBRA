@@ -151,6 +151,8 @@ class ProjectWriter:
             file["nodal_data/nodal_coordinates"] = mesh.nodal_coordinates
             file["nodal_data/nodes_from_points"] = np.array(list(mesh.nodes_from_points.items()))
 
+            file["suppression/suppressed_volume_ids"] = np.array(sorted(mesh.suppressed_volumes), dtype=int)
+
             if mesh.has_decoupling():
                 file["nodal_data/cache_nodal_coordinates"] = mesh.cache_nodal_coordinates
                 file["connectivity/cache_lines_connectivity"] = mesh.cache_lines_connectivity

@@ -61,3 +61,15 @@ line-length = 150
 [project.scripts]
 bump = "scripts.bump_version:main"
 icons = "scripts.paint_icons:main"
+
+[tool.pyright]
+reportExplicitAny = false
+reportUnknownMemberType = false
+reportAny = false
+reportUnknownArgumentType = false
+reportUnknownLambdaType = false
+reportUnknownParameterType = false
+reportUnknownVariableType = false
+reportUnannotatedClassAttribute = false
+reportMissingTypeStubs = false
+reportUnnecessaryIsInstance = false

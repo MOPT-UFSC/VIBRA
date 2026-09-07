@@ -384,13 +384,14 @@ class Model:
         return False
 
     def is_there_a_valid_mesh(self):
-
         if isinstance(self.geometry_path, str | Path):
             if self.is_there_a_geometry_imported():
                 if not isinstance(self.mesh_setup, MeshSetup):
                     return False
 
-        disconnected_nodes = bool(self.mesh.disconnected_nodes_data)
+        assert self.mesh is not None
+
+        disconnected_nodes = bool(self.mesh.disconnected_nodes)
         collapsed_elements = bool(self.mesh.collapsed_elements_data)
 
         if disconnected_nodes or collapsed_elements:
