@@ -215,6 +215,8 @@ class MeshRenderWidget(CommonRenderWidget):
             self.switch_to_solids_actor()
             self.solids_actor.distinguish_solids(distinguished_solids)
             self.solids_actor.SetVisibility(True)
+            self.edges_actor.distinguish_cells(self._distinguished_cells(distinguished_solids))
+            self.edges_actor.SetVisibility(visualization.lines)
 
         self.update_selection()
         self.update()
@@ -375,6 +377,14 @@ class MeshRenderWidget(CommonRenderWidget):
         )
         self.add_actors(self.solids_actor, self.edges_actor)
         self.visualization_changed_callback()
+
+    def _distinguished_cells(self, distinguished_solids):
+        cells = []
+        for i in distinguished_solids:
+            visible_index = self.solids_actor.visible_indexes.get(i, -1)
+            if visible_index >= 0:
+                cells.append(visible_index)
+        return cells
 
     def update_section_plane(self):
         if not self.actors_exists():
