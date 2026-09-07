@@ -15,7 +15,7 @@ class ShortcutsHelp(ShortcutsHelp_UI):
         table = self.tableWidget_shortcuts
         table.setRowCount(len(SHORTCUTS))
 
-        for row, (keys, (kind, target, description)) in enumerate(SHORTCUTS.items()):
+        for row, (keys, (target, description)) in enumerate(SHORTCUTS.items()):
             table.setItem(row, 0, QTableWidgetItem(keys))
             table.setItem(row, 1, QTableWidgetItem(description))
 

@@ -972,7 +972,7 @@ class MainWindow(MainWindow_UI):
     def set_input_widget(self, dialog):
         self.dialog = dialog
 
-    def copy_screenshot_to_clipboard(self):
+    def action_copy_screenshot_to_clipboard_callback(self):
         if is_focus_on_text_input():
             return
 
@@ -983,7 +983,7 @@ class MainWindow(MainWindow_UI):
         image = widget.get_screenshot()
         app().clipboard().setImage(ImageQt.ImageQt(image))
 
-    def select_all_entities_shortcut(self):
+    def action_select_all_entities(self):
         if is_focus_on_text_input():
             return
 
@@ -993,7 +993,10 @@ class MainWindow(MainWindow_UI):
             self.selection.select_all_geometry()
         self.reload_visualization_filter()
 
-    def toggle_section_plane(self):
+    def action_update_plots_callback(self):
+        self.update_plots()
+
+    def action_toggle_section_plane_calback(self):
         if is_focus_on_text_input():
             return
 
@@ -1007,13 +1010,12 @@ class MainWindow(MainWindow_UI):
         self.section_plane.cutting = not active
         self.section_plane.value_changed.emit()
 
-    def show_shortcuts_help(self):
+    def action_show_shortcuts_help_callback(self):
         if is_focus_on_text_input():
             return
-
         shortcuts_help = ShortcutsHelp()
 
-    def generate_mesh_with_current_setup(self):
+    def action_generate_mesh_with_current_setup_callback(self):
         """
         Generates the mesh with the current mesh setup configuration.
         When the mesh setup window is open, the mesh is generated using the

@@ -1,5 +1,5 @@
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QKeySequence, QShortcut
+from PySide6.QtGui import QAction, QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QAbstractSpinBox,
     QComboBox,
@@ -13,7 +13,7 @@ from vibra import app
 
 # --- How to add a shortcut -------------------------------------------------
 # Add an entry to the SHORTCUTS dict below. Each key is a Qt key sequence; each value is a
-# (kind, target, description) tuple:
+# (target, description) tuple:
 #
 #   "callback" -> call a method on the main window, e.g.:
 #       "F5": ("callback", "update_plots", "Refresh the plots")
@@ -44,39 +44,38 @@ def is_typing_input(widget) -> bool:
     return isinstance(widget, TEXT_INPUT_WIDGETS)
 
 # Single source of truth for the application keymap.
-# Each entry maps a key sequence to a (kind, target, description) tuple:
-#   - kind "callback" -> application-wide QShortcut wired to a main window method
-#   - kind "action"   -> applied to an existing QAction (dotted path on the main window)
+# Each entry maps a key sequence to a (target, description) tuple:
+
 SHORTCUTS = {
-    "Ctrl+Shift+G": ("callback", "generate_mesh_with_current_setup", "Generate the mesh"),
-    "Ctrl+R": ("action", "analysis_toolbar.run_analysis_action", "Run the analysis"),
-    "Ctrl+A": ("callback", "select_all_entities_shortcut", "Select all entities"),
-    "Ctrl+E": ("action", "action_export_mesh", "Export the mesh"),
-    "Ctrl+C": ("callback", "copy_screenshot_to_clipboard", "Copy screenshot to clipboard"),
-    "Ctrl+P": ("action", "action_capture_image", "Capture the image"),
-    "Ctrl+D": ("action", "analysis_toolbar.reset_solution_action", "Reset the solution"),
-    "Ctrl+N": ("action", "action_new_project", "New project"),
-    "Ctrl+O": ("action", "action_open_project", "Open a project"),
-    "Ctrl+W": ("action", "action_home_exit", "Go to home"),
-    "Ctrl+Shift+S": ("action", "action_save_as", "Save the project as"),
-    "Ctrl+I": ("action", "action_import_geometry", "Import geometry"),
-    "Ctrl+Shift+I": ("action", "action_import_mesh", "Import mesh"),
-    "F5": ("callback", "update_plots", "Refresh the plots"),
-    "Alt+P": ("callback", "toggle_section_plane", "Toggle the section plane"),
-    "?": ("callback", "show_shortcuts_help", "Show this shortcut list"),
-    "Q": ("action", "action_model_workspace", "Model workspace"),
-    "W": ("action", "action_mesh_workspace", "Mesh workspace"),
-    "E": ("action", "action_results_workspace", "Results workspace"),
-    "Ctrl+S": ("action", "action_save", "Save the project"),
-    "Ctrl+H": ("action", "action_hide_selection", "Hide the selection"),
-    "Ctrl+U": ("action", "action_unhide_all", "Unhide everything"),
-    "Ctrl+1": ("action", "view_toolbar.action_front_view", "Front view"),
-    "Ctrl+2": ("action", "view_toolbar.action_back_view", "Back view"),
-    "Ctrl+3": ("action", "view_toolbar.action_left_view", "Left view"),
-    "Ctrl+4": ("action", "view_toolbar.action_right_view", "Right view"),
-    "Ctrl+5": ("action", "view_toolbar.action_top_view", "Top view"),
-    "Ctrl+6": ("action", "view_toolbar.action_bottom_view", "Bottom view"),
-    "Ctrl+7": ("action", "view_toolbar.action_isometric_view", "Isometric view"),
+    "Ctrl+Shift+G": ("action_generate_mesh_with_current_setup", "Generate the mesh"),
+    "Ctrl+R": ("analysis_toolbar.run_analysis_action", "Run the analysis"),
+    "Ctrl+A": ("action_select_all_entities", "Select all entities"),
+    "Ctrl+E": ("action_export_mesh", "Export the mesh"),
+    "Ctrl+C": ("action_copy_screenshot_to_clipboard", "Copy screenshot to clipboard"),
+    "Ctrl+P": ("action_capture_image", "Capture the image"),
+    "Ctrl+D": ("analysis_toolbar.reset_solution_action", "Reset the solution"),
+    "Ctrl+N": ("action_new_project", "New project"),
+    "Ctrl+O": ("action_open_project", "Open a project"),
+    "Ctrl+W": ("action_home_exit", "Go to home"),
+    "Ctrl+Shift+S": ("action_save_as", "Save the project as"),
+    "Ctrl+I": ("action_import_geometry", "Import geometry"),
+    "Ctrl+Shift+I": ("action_import_mesh", "Import mesh"),
+    "F5": ("action_update_plots", "Refresh the plots"),
+    "Alt+P": ("action_toggle_section_plane", "Toggle the section plane"),
+    "?": ("action_show_shortcuts_help", "Show this shortcut list"),
+    "Q": ("action_model_workspace", "Model workspace"),
+    "W": ("action_mesh_workspace", "Mesh workspace"),
+    "E": ("action_results_workspace", "Results workspace"),
+    "Ctrl+S": ("action_save", "Save the project"),
+    "Ctrl+H": ("action_hide_selection", "Hide the selection"),
+    "Ctrl+U": ("action_unhide_all", "Unhide everything"),
+    "Ctrl+1": ("view_toolbar.action_front_view", "Front view"),
+    "Ctrl+2": ("view_toolbar.action_back_view", "Back view"),
+    "Ctrl+3": ("view_toolbar.action_left_view", "Left view"),
+    "Ctrl+4": ("view_toolbar.action_right_view", "Right view"),
+    "Ctrl+5": ("view_toolbar.action_top_view", "Top view"),
+    "Ctrl+6": ("view_toolbar.action_bottom_view", "Bottom view"),
+    "Ctrl+7": ("view_toolbar.action_isometric_view", "Isometric view"),
 }
 
 # Dialog conventions (Enter/Escape/Delete/Backspace) and widget-local keys are
@@ -112,19 +111,14 @@ def register_global_shortcuts(main_window):
     """
     all_shortcuts = list()
 
-    for keys, (kind, target, description) in SHORTCUTS.items():
+    for keys, (target, description) in SHORTCUTS.items():
         shortcut = QShortcut(QKeySequence(keys), main_window)
         shortcut.setContext(Qt.ShortcutContext.ApplicationShortcut)
+        action = _resolve_action(main_window, target)
 
-        if kind == "callback":
-            shortcut.activated.connect(getattr(main_window, target))
-        elif kind == "action":
-            action = _resolve_action(main_window, target)
+        if isinstance(action, QAction):
             shortcut.activated.connect(action.trigger)
-        else:
-            raise ValueError(f"Unknown shortcut kind: {kind!r}")
-
-        all_shortcuts.append(shortcut)
+            all_shortcuts.append(shortcut)
 
     main_window._global_shortcuts = all_shortcuts
 
@@ -158,10 +152,7 @@ def _label_menu_shortcuts(main_window):
     for menu in menus:
         menu_actions.update(menu.actions())
 
-    for keys, (kind, target, description) in SHORTCUTS.items():
-        if kind != "action":
-            continue
-
+    for keys, (target, description) in SHORTCUTS.items():
         action = _resolve_action(main_window, target)
         if action in menu_actions:
             action.setText(f"{action.text()}\t{keys}")
