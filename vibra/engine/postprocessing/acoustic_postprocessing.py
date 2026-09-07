@@ -498,7 +498,7 @@ class AcousticPostprocessing:
 
         logging.info("Processing the transmission loss... [20/100]")
         # P_in = self.solution.acoustic_solution[input_dofs, :]
-        P_out = self.solution.acoustic_solution[output_dofs :]
+        P_out = self.solution.acoustic_solution[output_dofs, :]
 
         logging.info("Processing the transmission loss... [40/100]")
 
