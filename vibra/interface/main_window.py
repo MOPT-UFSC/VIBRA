@@ -31,7 +31,8 @@ from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetup
 from vibra.interface.plots.acoustic.export_element_transfer_data_inputs import ExportElementTransferDataInputs
 from vibra.interface.project.save_project_data_selector import SaveProjectDataSelector
 from vibra.interface.section_plane_widget import SectionPlaneWidget
-from vibra.interface.shortcuts import is_focus_on_text_input, open_shortcuts_help, register_global_shortcuts
+from vibra.interface.shortcuts import is_focus_on_text_input, register_global_shortcuts
+from vibra.interface.shortcuts_help import ShortcutsHelp
 from vibra.interface.status_bar import StatusBar
 from vibra.interface.toolbars.analysis_toolbar import AnalysisToolbar
 from vibra.interface.toolbars.view_toolbar import ViewToolbar
@@ -1010,7 +1011,7 @@ class MainWindow(MainWindow_UI):
         if is_focus_on_text_input():
             return
 
-        open_shortcuts_help(self)
+        shortcuts_help = ShortcutsHelp()
 
     def generate_mesh_with_current_setup(self):
         """

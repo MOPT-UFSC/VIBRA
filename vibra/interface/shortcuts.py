@@ -3,14 +3,10 @@ from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QAbstractSpinBox,
     QComboBox,
-    QDialog,
     QLineEdit,
     QMenu,
     QPlainTextEdit,
-    QTableWidget,
-    QTableWidgetItem,
     QTextEdit,
-    QVBoxLayout,
 )
 
 from vibra import app
@@ -70,12 +66,10 @@ SHORTCUTS = {
     "?": ("callback", "show_shortcuts_help", "Show this shortcut list"),
     "Q": ("action", "action_model_workspace", "Model workspace"),
     "W": ("action", "action_mesh_workspace", "Mesh workspace"),
-    "E": ("action", "action_results_workspace", "Results workspace"
-    ),
+    "E": ("action", "action_results_workspace", "Results workspace"),
     "Ctrl+S": ("action", "action_save", "Save the project"),
     "Ctrl+H": ("action", "action_hide_selection", "Hide the selection"),
     "Ctrl+U": ("action", "action_unhide_all", "Unhide everything"),
-
     "Ctrl+1": ("action", "view_toolbar.action_front_view", "Front view"),
     "Ctrl+2": ("action", "view_toolbar.action_back_view", "Back view"),
     "Ctrl+3": ("action", "view_toolbar.action_left_view", "Left view"),
@@ -175,35 +169,3 @@ def _label_menu_shortcuts(main_window):
 
 def is_focus_on_text_input() -> bool:
     return is_typing_input(app().focusWidget())
-
-
-def open_shortcuts_help(parent):
-    """
-    Shows a dialog listing every shortcut defined in SHORTCUTS.
-    """
-    dialog = QDialog(parent)
-    dialog.setWindowTitle("Keyboard Shortcuts")
-    dialog.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
-
-    icon = getattr(app().main_window, "vibra_icon", None)
-    if icon is not None:
-        dialog.setWindowIcon(icon)
-
-    table = QTableWidget(len(SHORTCUTS), 2)
-    table.setHorizontalHeaderLabels(["Shortcut", "Action"])
-    table.verticalHeader().setVisible(False)
-    table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
-    table.setSelectionMode(QTableWidget.SelectionMode.NoSelection)
-    table.setAlternatingRowColors(True)
-
-    for row, (keys, (kind, target, description)) in enumerate(SHORTCUTS.items()):
-        table.setItem(row, 0, QTableWidgetItem(keys))
-        table.setItem(row, 1, QTableWidgetItem(description))
-
-    table.resizeColumnsToContents()
-    table.horizontalHeader().setStretchLastSection(True)
-
-    layout = QVBoxLayout(dialog)
-    layout.addWidget(table)
-    dialog.resize(440, 440)
-    dialog.exec()
