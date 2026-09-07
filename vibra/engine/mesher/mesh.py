@@ -14,7 +14,15 @@ from vtkmodules.vtkCommonCore import vtkPoints
 from vtkmodules.vtkCommonDataModel import VTK_HEXAHEDRON, VTK_QUADRATIC_HEXAHEDRON, VTK_QUADRATIC_TETRA, VTK_TETRA, vtkUnstructuredGrid
 from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridWriter
 
-from vibra.engine.mesher.mesh_setup import HEXAHEDRON_8, HEXAHEDRON_20, TETRAHEDRON_4, TETRAHEDRON_10, ElementTopology, LocalMeshSizeControlSetup, MeshSetup
+from vibra.engine.mesher.mesh_setup import (
+    HEXAHEDRON_8,
+    HEXAHEDRON_20,
+    TETRAHEDRON_4,
+    TETRAHEDRON_10,
+    ElementTopology,
+    LocalMeshSizeControlSetup,
+    MeshSetup,
+)
 from vibra.errors import InvalidMeshSetupError, MeshingAlgorithmError
 from vibra.interface.numeric_checks.unit_utilities import convert_length_unit
 
@@ -73,11 +81,12 @@ class Mesh:
 
         self.mesh_quality_data = dict()
 
-        self.disconnected_nodes_data = dict()
         self.collapsed_elements_data = dict()
 
-        self.disconnected_nodes = []
+        self.suppressed_volumes: set[int] = set()
+
         self.nodes_from_collapsed_elements = []
+        self.disconnected_nodes = []
 
         self.nodes_from_points = dict()
         self.points_from_nodes = dict()
@@ -187,27 +196,90 @@ class Mesh:
         else:
             return 1
 
-    def _remove_orphan_points(self, print_log: bool = True):
+    def find_disconnected_nodes(self) -> list[int]:
+        mask = self.get_disconnected_nodes_mask()
+        return np.where(mask)[0].tolist()
 
-        orphan_points = []
-        for dim, tag in gmsh.model.getEntities(dim=0):
-            upward, _ = gmsh.model.getAdjacencies(dim, tag)
+    def get_disconnected_nodes_mask(self) -> np.typing.NDArray[np.bool_]:
+        assert self.nodal_coordinates is not None
+        assert self.solids_connectivity is not None
+        assert self.faces_connectivity is not None
+        assert self.lines_connectivity is not None
 
-            if len(upward) == 0:
-                orphan_points.append(tag)
+        all_node_ids = self.nodal_coordinates[:, 0].astype(int)
+        used_nodes = np.isin(all_node_ids, self.solids_connectivity[:, 4:])
+        used_nodes |= np.isin(all_node_ids, self.faces_connectivity[:, 4:])
+        used_nodes |= np.isin(all_node_ids, self.lines_connectivity[:, 4:])
+        return all_node_ids[~used_nodes]
 
-        if not orphan_points:
+    def remove_disconnected_nodes(self):
+        disconnected_nodes = self.get_disconnected_nodes_mask()
+
+        if not len(disconnected_nodes):
             return
 
-        if print_log:
-            for orphan_point in orphan_points:
-                point_coords = gmsh.model.getValue(0, orphan_point, [])
-                print("The following orphan points have been detected:")
-                print(f"Point {orphan_point}: ({point_coords[0]}, {point_coords[1]}, {point_coords[2]})")
+        # Remove disconnected nodes
+        mask_remaining_nodes = ~np.isin(self.nodal_coordinates[:, 0].astype(int), disconnected_nodes)
+        self.nodal_coordinates = self.nodal_coordinates[mask_remaining_nodes]
 
-        dim_tags = [(0, orphan_point) for orphan_point in orphan_points]
-        gmsh.model.occ.remove(dim_tags, recursive=False)
-        gmsh.model.occ.synchronize()
+        # Shift left the node indexes after the removed
+        self.nodal_coordinates[:, 0] -= np.searchsorted(
+            disconnected_nodes,
+            self.nodal_coordinates[:, 0],
+            side="right",
+        )
+
+        self.solids_connectivity[:, 4:] -= np.searchsorted(
+            disconnected_nodes,
+            self.solids_connectivity[:, 4:],
+            side="right",
+        )
+
+        self.faces_connectivity[:, 4:] -= np.searchsorted(
+            disconnected_nodes,
+            self.faces_connectivity[:, 4:],
+            side="right",
+        )
+
+        self.lines_connectivity[:, 4:] -= np.searchsorted(
+            disconnected_nodes,
+            self.lines_connectivity[:, 4:],
+            side="right",
+        )
+
+        # Filter out the removed nodes and shift left the remaining ones
+        mask_valid_nodes = ~np.isin(self.nodes_from_volumes, disconnected_nodes)
+        self.nodes_from_volumes = self.nodes_from_volumes[mask_valid_nodes].astype(int)
+        self.nodes_from_volumes -= np.searchsorted(
+            disconnected_nodes,
+            self.nodes_from_volumes,
+            side="right",
+        )
+
+        mask_valid_nodes = ~np.isin(self.nodes_from_surfaces, disconnected_nodes)
+        self.nodes_from_surfaces = self.nodes_from_surfaces[mask_valid_nodes].astype(int)
+        self.nodes_from_surfaces -= np.searchsorted(
+            disconnected_nodes,
+            self.nodes_from_surfaces,
+            side="right",
+        )
+
+        mask_valid_nodes = ~np.isin(self.nodes_from_lines, disconnected_nodes)
+        self.nodes_from_lines = self.nodes_from_lines[mask_valid_nodes].astype(int)
+        self.nodes_from_lines -= np.searchsorted(
+            disconnected_nodes,
+            self.nodes_from_lines,
+            side="right",
+        )
+
+        # Update the node-point mappings for the new numbering
+        removed_nodes = set(int(node_id) for node_id in disconnected_nodes)
+        self.nodes_from_points = {
+            tag: int(node_id) - int(np.searchsorted(disconnected_nodes, node_id, side="right"))
+            for tag, node_id in self.nodes_from_points.items()
+            if int(node_id) not in removed_nodes
+        }
+        self.points_from_nodes = {node_id: tag for tag, node_id in self.nodes_from_points.items()}
 
     def load_cad(self, path: str | Path, mesh_setup: MeshSetup, threads: int = 0) -> Self:
         if not gmsh.is_initialized():
@@ -224,14 +296,17 @@ class Mesh:
             logging.info("Loading geometry... [10/100]")
             gmsh.open(str(path))
 
+        if mesh_setup.suppressed_volume_ids:
+            dim_tags = [(3, vid) for vid in mesh_setup.suppressed_volume_ids]
+            self.suppress(dim_tags)
+
         if mesh_setup.merge_connected_volumes:
-            self._merge_nodes_from_adjacent_volumes()
+            self._merge_nodes_from_adjacent_volumes(mesh_setup.suppressed_volume_ids)
 
         logging.info("Configuring mesh... [20/100]")
         self._configure_mesh(mesh_setup)
 
         logging.info("Processing geometry data... [25/100]")
-        self._remove_orphan_points()
 
         logging.info("Processing geometry data... [30/100]")
         self.process_geometry_information()
@@ -257,7 +332,9 @@ class Mesh:
             raise exception from e
 
         logging.info("Post-processing mesh... [60/100]")
+        self.suppressed_volumes = set(mesh_setup.suppressed_volume_ids)
         self.post_process_mesh_data()
+
         self.update_element_topology_based_on_connectivity()
 
         logging.info("Post-processing mesh... [95/100]")
@@ -294,18 +371,33 @@ class Mesh:
         gmsh.option.setNumber("Mesh.RecombineAll", mesh_setup.element_setup.recombine_all)
         gmsh.option.setNumber("Mesh.ElementOrder", mesh_setup.element_setup.element_order)
         gmsh.option.setNumber("Mesh.SecondOrderIncomplete", mesh_setup.element_setup.second_order_incomplete)
+        gmsh.option.setNumber("Mesh.MeshOnlyVisible", 1)
 
         gmsh.model.mesh.clear()
         gmsh.model.occ.synchronize()
 
-    def _merge_nodes_from_adjacent_volumes(self):
+    def _merge_nodes_from_adjacent_volumes(self, suppressed_volume_ids: list[int] | None = None):
         """This method merges all nodes from adjacent volumes."""
-        # lines_list = gmsh.model.getEntities(1)
         gmsh.model.occ.synchronize()
         volumes_list = gmsh.model.getEntities(3)
-        # gmsh.model.occ.fragment(lines_list, lines_list)
+
+        if suppressed_volume_ids:
+            volumes_list = [v for v in volumes_list if v[1] not in suppressed_volume_ids]
+
+        if len(volumes_list) < 2:
+            return
+
         gmsh.model.occ.fragment(volumes_list, volumes_list)
         gmsh.model.occ.synchronize()
+
+    def suppress(self, dim_tags):
+        gmsh.model.setVisibility(dim_tags, 0, recursive=True)
+
+    def unsuppress(self, dim_tags):
+        gmsh.model.setVisibility(dim_tags, 1, recursive=True)
+
+    def is_suppressed(self, dim, tag):
+        return gmsh.model.getVisibility(dim, tag) == 0
 
     def load_mesh(self, path: Path | str, **kwargs):
         geometry_tolerance = kwargs.get("geometry_tolerance", 1e-8)
@@ -825,7 +917,7 @@ class Mesh:
                 self.volumes_from_surface[surf_id] = [vol_id]
 
             self.surfaces_from_volume[vol_id] = surf_ids
-    
+
     def export_nodal_coordinates(self, filename):
         fmt = ["%i", "%.16f", "%.16f", "%.16f"]
         header = "Node index || Coordinate x [m] || Coordinate y [m] || Coordinate z [m]"
@@ -891,7 +983,7 @@ class Mesh:
         setup_sizes = [setup.element_size for setup in size_control_setups]
         max_size = max([global_size, *setup_sizes])
 
-        self._check_local_mesh_size_control_ids(size_control_setups) #checks if selected IDs actually exist
+        self._check_local_mesh_size_control_ids(size_control_setups)  # checks if selected IDs actually exist
 
         fields_list = []
 
@@ -913,22 +1005,24 @@ class Mesh:
         # this is the complementary set of entities size control part
         if max_size > global_size:
             # Coarsening: the global size is applied as a refinement of every
-            # region that is not explicitly coarsened. 
+            # region that is not explicitly coarsened.
 
-            gmsh.option.setNumber("Mesh.MeshSizeFromPoints", 0) # Necessary call for the fields to override this setting
+            gmsh.option.setNumber("Mesh.MeshSizeFromPoints", 0)  # Necessary call for the fields to override this setting
 
             all_volumes = {tag for dim, tag in gmsh.model.getEntities(3)}
             all_faces = {tag for dim, tag in gmsh.model.getEntities(2)}
 
-            # Pin (i.e. spefifically defining the global size for NOT coarsened entities) the complement: 
+            # Pin (i.e. spefifically defining the global size for NOT coarsened entities) the complement:
             # every entity that is not to be coarsened is forced to the global size
             targeted_volumes, targeted_faces = self._get_coarsened_entities(size_control_setups, global_size)
             coarsened_volumes = targeted_volumes
             pinned_volumes = all_volumes - coarsened_volumes
 
-            coarsened_faces = self._get_faces_to_coarsen(targeted_faces, targeted_volumes) # needed beacause faces of targeted volumes would be pinned otherwise
+            coarsened_faces = self._get_faces_to_coarsen(
+                targeted_faces, targeted_volumes
+            )  # needed beacause faces of targeted volumes would be pinned otherwise
             pinned_faces = all_faces - coarsened_faces
-            
+
             pinned_curves, pinned_points = self._get_pinned_boundary_entities(all_faces, pinned_faces, coarsened_faces)
 
             global_size_control_field = gmsh.model.mesh.field.add("Constant")
@@ -1028,16 +1122,8 @@ class Mesh:
                 if dim == 0:
                     faces_per_point.setdefault(tag, set()).add(face)
 
-        pinned_curves = {
-            curve
-            for curve, faces in faces_per_curve.items()
-            if (faces & pinned_faces) and not (faces & coarsened_faces)
-        }
-        pinned_points = {
-            point
-            for point, faces in faces_per_point.items()
-            if (faces & pinned_faces) and not (faces & coarsened_faces)
-        }
+        pinned_curves = {curve for curve, faces in faces_per_curve.items() if (faces & pinned_faces) and not (faces & coarsened_faces)}
+        pinned_points = {point for point, faces in faces_per_point.items() if (faces & pinned_faces) and not (faces & coarsened_faces)}
         return pinned_curves, pinned_points
 
     def clear_mesh_data(self):
@@ -1050,11 +1136,10 @@ class Mesh:
         self.faces_connectivity = np.zeros((0, 4), dtype=int)
         self.solids_connectivity = np.zeros((0, 4), dtype=int)
 
-        self.disconnected_nodes_data.clear()
         self.collapsed_elements_data.clear()
 
-        self.disconnected_nodes.clear()
         self.nodes_from_collapsed_elements.clear()
+        self.disconnected_nodes.clear()
 
         self.nodes_from_points.clear()
         self.points_from_nodes.clear()
@@ -1237,11 +1322,25 @@ class Mesh:
         connectivity_dim2 = dict()
         connectivity_dim3 = dict()
 
+        valid_surfaces = set()
+        for surfaces in self.surfaces_from_volume.values():
+            valid_surfaces.update(surfaces)
+
+        valid_lines = set()
+        for line_tags in self.lines_from_surface.values():
+            valid_lines.update(line_tags)
+
         for dim, tag in gmsh.model.getEntities():
             elements_data = dict()
             element_types, element_indexes, element_nodes = gmsh.model.mesh.getElements(dim, tag)
 
             if not element_indexes:
+                continue
+
+            if (dim == 2) and valid_surfaces and (tag not in valid_surfaces):
+                continue
+
+            if dim == 1 and valid_lines and tag not in valid_lines:
                 continue
 
             if dim == 2:
@@ -1280,6 +1379,9 @@ class Mesh:
         self.lines_connectivity, self.map_line_elements = self._get_connectivity_array(connectivity_dim1)
         self.faces_connectivity, self.map_face_elements = self._get_connectivity_array(connectivity_dim2)
         self.solids_connectivity, self.map_solid_elements = self._get_connectivity_array(connectivity_dim3)
+
+        if self.suppressed_volumes:
+            self.remove_disconnected_nodes()
 
         logging.info("Post-processing mesh... [68/100]")
         self.process_mesh_related_mappings("Post-processing")
@@ -1756,74 +1858,25 @@ class Mesh:
         """
         This method processes the disconnected nodes criterion for volumes,
         surfaces and lines-related elements.
+        It recomputes the disconnected nodes and stores them in the
+        ``self.disconnected_nodes`` attribute.
         """
-
-        self.disconnected_nodes_data.clear()
-
-        if self.geometry_information.get("volumes"):
-            all_node_ids = self.nodal_coordinates[:, 0].astype(int)
-            nodes_from_3d_elements = np.unique(self.solids_connectivity[:, 4:].flatten())
-            if nodes_from_3d_elements.size and nodes_from_3d_elements.size != all_node_ids.size:
-                mask_3d = np.isin(all_node_ids, nodes_from_3d_elements, invert=True)
-                if mask_3d.any():
-                    self.disconnected_nodes_data["elements_3D"] = [int(node_id) for node_id in all_node_ids[mask_3d]]
-
-        if self.geometry_information.get("surfaces") and self.nodes_from_surfaces.size:
-            nodes_from_2d_elements = np.unique(self.faces_connectivity[:, 4:].flatten())
-            if self.nodes_from_surfaces.size != nodes_from_2d_elements.size:
-                mask_2d = np.isin(self.nodes_from_surfaces, nodes_from_2d_elements, invert=True)
-                if mask_2d.any():
-                    self.disconnected_nodes_data["elements_2D"] = [int(node_id) for node_id in self.nodes_from_surfaces[mask_2d]]
-
-        if self.geometry_information.get("lines") and self.nodes_from_lines.size:
-            nodes_from_1d_elements = np.unique(self.lines_connectivity[:, 4:].flatten())
-            if self.nodes_from_lines.size != nodes_from_1d_elements.size:
-                mask_1d = np.isin(self.nodes_from_lines, nodes_from_1d_elements, invert=True)
-                if mask_1d.any():
-                    self.disconnected_nodes_data["elements_1D"] = [int(node_id) for node_id in self.nodes_from_lines[mask_1d]]
-
-        self.disconnected_nodes = self.get_list_of_disconnected_nodes()
+        self.disconnected_nodes = self.find_disconnected_nodes()
 
         if not print_log:
             return
 
-        for key, data in self.disconnected_nodes_data.items():
-            n_nodes = len(data)
-            if n_nodes == 0:
-                continue
+        n_nodes = len(self.disconnected_nodes)
+        if n_nodes == 0:
+            return
 
-            nodes_list = data if n_nodes < 10 else data[:10]
+        nodes_list = self.disconnected_nodes if n_nodes < 10 else self.disconnected_nodes[:10]
+        message = f">> At least {n_nodes} disconnected nodes have been detected.\n"
+        message += f"Nodes list: {nodes_list}"
+        if n_nodes > 10:
+            message += ", ..."
 
-            message = f">> At least {n_nodes} disconnected nodes have been detected for {key}:\n"
-            message += f"Nodes list: {nodes_list}"
-            if n_nodes > 10:
-                message += ", ..."
-
-            print(message)
-
-    def get_list_of_disconnected_nodes(self):
-        """
-        This method returns the disconnected nodes list if they exist.
-        """
-
-        disconnected_nodes = []
-
-        disconnected_nodes_3d = self.disconnected_nodes_data.get("elements_3D")
-        if isinstance(disconnected_nodes_3d, list) and len(disconnected_nodes_3d):
-            disconnected_nodes.extend(disconnected_nodes_3d)
-
-        disconnected_nodes_2d = self.disconnected_nodes_data.get("elements_2D")
-        if isinstance(disconnected_nodes_2d, list) and len(disconnected_nodes_2d):
-            disconnected_nodes.extend(disconnected_nodes_2d)
-
-        disconnected_nodes_1d = self.disconnected_nodes_data.get("elements_1D")
-        if isinstance(disconnected_nodes_1d, list) and len(disconnected_nodes_1d):
-            disconnected_nodes.extend(disconnected_nodes_1d)
-
-        if not disconnected_nodes:
-            return []
-
-        return [int(node_id) for node_id in np.unique(disconnected_nodes)]
+        logging.warning(message)
 
     def get_list_of_nodes_from_collapsed_elements(self):
         """
@@ -1850,7 +1903,7 @@ class Mesh:
 
         if not nodes_from_collapsed_elements:
             return []
-        
+
         return [int(node_id) for node_id in np.unique(nodes_from_collapsed_elements)]
 
     def process_collapsed_elements_data_criterion(self):
@@ -2409,6 +2462,9 @@ class Mesh:
         labels = ["points", "lines", "surfaces", "volumes"]
 
         for dim, tag in gmsh.model.getEntities():
+            if gmsh.model.getVisibility(dim, tag) == 0:
+                continue
+
             label = labels[dim]
             self.geometry_information[label].append(tag)
 
@@ -2446,6 +2502,9 @@ class Mesh:
         self.points_from_line.clear()
 
         for dim, tag in gmsh.model.getEntities():
+            if gmsh.model.getVisibility(dim, tag) == 0:
+                continue
+
             _, downwards = gmsh.model.getAdjacencies(dim, tag)
             downwards = [int(_id) for _id in downwards]
 
