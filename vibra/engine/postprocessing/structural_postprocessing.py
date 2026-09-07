@@ -1,8 +1,9 @@
 from __future__ import annotations
+import logging
 
 from collections import defaultdict
 from functools import cache
-from time import time
+from time import perf_counter
 from typing import Literal
 
 import numpy as np
@@ -187,17 +188,22 @@ class StructuralPostprocessing:
 
         """
 
-        t0 = time()
+        logging.info("Recovering the structural stresses... (1/3)")
+
+        t0 = perf_counter()
 
         element_3d = self.structural_element_3d
 
         if element_3d.connectivities is None:
             element_3d.reorder_connect()
 
-        if isinstance(node_ids, int):
+        if all(item is None for item in (node_ids, surface_ids, volume_ids)):
+            node_ids = self.model.domains_processor.nodes_of_domain.get("structural", [])
+
+        elif isinstance(node_ids, int):
             node_ids = [node_ids]
 
-        if not isinstance(node_ids, np.ndarray | list):
+        elif not isinstance(node_ids, np.ndarray | list):
 
             node_ids = []
             if isinstance(surface_ids, int):
@@ -216,17 +222,20 @@ class StructuralPostprocessing:
                     volume_nodes = self.mesh.get_nodes_from_volume(volume_id)
                     node_ids.extend(volume_nodes)
 
-        if not node_ids:
+            node_ids = np.unique(node_ids)
+
+        if not isinstance(node_ids, np.ndarray | list):
             print("Invalid node ids")
             return {}, {}
 
-        node_ids = np.unique(node_ids)
-        element_ids = self.mesh.get_solid_elements_from_nodes(node_ids)
+        logging.info("Recovering the structural stresses... (2/3)")
 
-        dt = time() - t0
+        element_ids = self.model.get_solid_elements_from_nodes(node_ids, "structural")
+
+        dt = perf_counter() - t0
         print(f"Time 1: {dt} s")
 
-        t0 = time()
+        t0 = perf_counter()
 
         # local_dofs = np.arange(element_3d.dof_per_node, dtype=int)
         # dofs_indices = element_nodes.reshape(-1, 1) * element_3d.dof_per_node + local_dofs
@@ -262,20 +271,21 @@ class StructuralPostprocessing:
 
                 if i in corner_indices:
                     avg_nodal_stresses_data[e_node] += enodal_stresses[:, i, :]
-                    nodal_stresses_data[(element_id, e_node)] = enodal_stresses[:, i, :]
+                    nodal_stresses = enodal_stresses[:, i, :]
 
                 else:
-
                     (index_1, index_2) = midside_indices_map.get(i)
                     avg_stress = (enodal_stresses[:, index_1, :] + enodal_stresses[:, index_2, :]) / 2
 
                     avg_nodal_stresses_data[e_node] += avg_stress
-                    nodal_stresses_data[(element_id, e_node)] = avg_stress
+                    nodal_stresses = avg_stress
+
+                nodal_stresses_data[(element_id, e_node)] = nodal_stresses
 
         for _node_id, den in avg_den.items():
             avg_nodal_stresses_data[_node_id] /= den
 
-        dt = time() - t0
+        dt = perf_counter() - t0
         print(f"Time 2: {dt} s")
 
         return avg_nodal_stresses_data, nodal_stresses_data
@@ -392,7 +402,7 @@ class StructuralPostprocessing:
 
         nodal_stresses = NodalStresses()
 
-        for key in input_stresses_data.keys():
+        for key in input_stresses_data:
             stresses = input_stresses_data.get(key)
             if stresses is None:
                 continue

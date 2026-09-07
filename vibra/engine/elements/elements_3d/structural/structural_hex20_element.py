@@ -280,7 +280,8 @@ class StructuralHexahedron20(Structural3DElement, Hexahedron20):
             Ue = nodal_solution
 
         elif isinstance(solution, np.ndarray):
-            indices = node_ids.reshape(-1, 1) * self.dof_per_node + self.local_dof
+            # indices = node_ids.reshape(-1, 1) * self.dof_per_node + self.local_dof
+            indices = self.model.get_dof_indices_from_nodes(node_ids, "structural")
             Ue = solution[indices.flatten(), :]
 
         else:
