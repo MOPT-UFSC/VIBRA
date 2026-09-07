@@ -15,9 +15,9 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
-from PySide6.QtWidgets import (QApplication, QDialog, QFrame, QGridLayout,
-    QHeaderView, QLabel, QSizePolicy, QTableWidget,
-    QTableWidgetItem, QWidget)
+from PySide6.QtWidgets import (QAbstractItemView, QApplication, QDialog, QFrame,
+    QGridLayout, QHeaderView, QLabel, QSizePolicy,
+    QTableWidget, QTableWidgetItem, QWidget)
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
@@ -34,6 +34,7 @@ class Ui_Dialog(object):
         __qtablewidgetitem1 = QTableWidgetItem()
         self.tableWidget_shortcuts.setHorizontalHeaderItem(1, __qtablewidgetitem1)
         self.tableWidget_shortcuts.setObjectName(u"tableWidget_shortcuts")
+        self.tableWidget_shortcuts.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.tableWidget_shortcuts.horizontalHeader().setStretchLastSection(True)
         self.tableWidget_shortcuts.verticalHeader().setVisible(False)
         self.tableWidget_shortcuts.verticalHeader().setStretchLastSection(True)
