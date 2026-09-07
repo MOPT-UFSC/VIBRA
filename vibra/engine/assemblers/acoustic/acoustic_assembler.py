@@ -509,7 +509,8 @@ class AcousticAssembler:
         omega = 2 * np.pi * freq
 
         # update the damping matrix [C]
-        self.damping_matrices_2d = self.impedances_assembler.assemble_global_damping_matrix_2d_elements(index=i)
+        if i > 0:
+            self.damping_matrices_2d = self.impedances_assembler.assemble_global_damping_matrix_2d_elements(index=i)
 
         # sum damping matrices
         C = self.damping_matrices_2d.damping_matrix + self.damping_matrices_3d.visc_damping_matrix

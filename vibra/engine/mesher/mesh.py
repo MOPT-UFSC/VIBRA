@@ -778,6 +778,8 @@ class Mesh:
         for key, values in nodes_from_volume.items():
             self.external_nodes_from_volumes[key] = np.unique(values).astype(int)
 
+        self.geometry_information["volumes"] = [int(_id) for _id in np.unique(volumes)]
+
     def import_external_faces_connectivity(self, connectivity: dict, index_zero: bool = True, etype_tag: float = 1):
         """ """
         self.elements_from_surface.clear()
@@ -791,7 +793,7 @@ class Mesh:
         rows, cols = data.shape
 
         indices = data[:, 0]
-        surface = data[:, 1]
+        surfaces = data[:, 1]
         nodes_per_element = data[:, 2]
         connect = data[:, 3:]
 
@@ -802,7 +804,7 @@ class Mesh:
         aux = np.ones(rows)
         self.faces_connectivity = np.zeros((rows, cols + 1), dtype=int)
         self.faces_connectivity[:, 0] = indices
-        self.faces_connectivity[:, 1] = surface
+        self.faces_connectivity[:, 1] = surfaces
         self.faces_connectivity[:, 2] = aux * etype_tag
         self.faces_connectivity[:, 3] = nodes_per_element
         self.faces_connectivity[:, 4:] = connect
@@ -815,17 +817,14 @@ class Mesh:
         for key, values in nodes_from_surface.items():
             self.external_nodes_from_surfaces[key] = np.unique(values).astype(int)
 
+        self.geometry_information["surfaces"] = [int(_id) for _id in np.unique(surfaces)]
+
     def map_surfaces_to_volumes(self, surfaces_from_volume: dict[int, list[int]]):
         self.volumes_from_surface.clear()
         self.surfaces_from_volume.clear()
         for vol_id, surf_ids in surfaces_from_volume.items():
-            self.geometry_information["volumes"].append(vol_id)
             for surf_id in surf_ids:
                 self.volumes_from_surface[surf_id] = [vol_id]
-                if surf_id in self.geometry_information.get("surfaces", []):
-                    continue
-
-                self.geometry_information["surfaces"].append(surf_id)
 
             self.surfaces_from_volume[vol_id] = surf_ids
     
