@@ -330,6 +330,10 @@ def prompt_if_disconnected_nodes():
 
 def export_modal_analysis_results(parent: QDialog | QWidget, modes_to_frequencies: dict, physical_domain: str):
 
+    solution = app().project.model.solution
+    if not isinstance(solution, ModalSolution):
+        return
+
     last_path = app().config.get_last_folder_for("exported_table_folder")
     if last_path is None:
         last_path = str(Path().home())
@@ -349,12 +353,7 @@ def export_modal_analysis_results(parent: QDialog | QWidget, modes_to_frequencie
 
     app().config.write_last_folder_path_in_file("exported_table_folder", export_path)
 
-    complex_natural_frequencies = None
-
-    if isinstance(app().project.model.solution, ModalSolution):
-        complex_natural_frequencies = app().project.model.solution.complex_natural_frequencies
-
-    if isinstance(complex_natural_frequencies, np.ndarray):
+    if isinstance(solution.complex_natural_frequencies, np.ndarray):
         cols = 3
         fmt = "%i %.12e %.12e"
         header = "Mode, Damped frequency [Hz], Damping ratio [--]"
