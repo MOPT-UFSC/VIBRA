@@ -133,7 +133,7 @@
      <x>0</x>
      <y>0</y>
      <width>1056</width>
-     <height>22</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_project">
@@ -244,6 +244,9 @@
    <property name="text">
     <string>New project</string>
    </property>
+   <property name="toolTip">
+    <string>Create a new project</string>
+   </property>
   </action>
   <action name="action_open_project">
    <property name="icon">
@@ -252,6 +255,9 @@
    </property>
    <property name="text">
     <string>Open Project</string>
+   </property>
+      <property name="toolTip">
+    <string>Open an existing project file (.vibra)</string>
    </property>
   </action>
   <action name="action_recent">
@@ -271,8 +277,8 @@
    <property name="text">
     <string>Save</string>
    </property>
-   <property name="shortcut">
-    <string>Ctrl+S</string>
+   <property name="toolTip">
+    <string>Save project</string>
    </property>
   </action>
   <action name="action_save_as">
@@ -282,6 +288,9 @@
    </property>
    <property name="text">
     <string>Save as</string>
+   </property>
+   <property name="toolTip">
+    <string>Save project as</string>
    </property>
   </action>
   <action name="action_export_mesh">
@@ -301,6 +310,9 @@
    <property name="text">
     <string>Capture Image</string>
    </property>
+   <property name="toolTip">
+    <string>Capture and save Image</string>
+   </property>
   </action>
   <action name="action_exit">
    <property name="icon">
@@ -310,6 +322,9 @@
    <property name="text">
     <string>Exit</string>
    </property>
+    <property name="toolTip">
+    <string>Exit application</string>
+    </property>
   </action>
   <action name="action_show_menu_items">
    <property name="icon">
@@ -379,6 +394,9 @@
    <property name="text">
     <string>Node View</string>
    </property>
+   <property name="toolTip">
+    <string>Toggle nodes visualization</string>
+   </property>
   </action>
   <action name="action_line_view">
    <property name="checkable">
@@ -393,6 +411,9 @@
    </property>
    <property name="text">
     <string>Line View</string>
+   </property>
+   <property name="toolTip">
+    <string>Toggle lines visualization</string>
    </property>
   </action>
   <action name="action_face_view">
@@ -409,6 +430,9 @@
    <property name="text">
     <string>Face View</string>
    </property>
+    <property name="toolTip">
+    <string>Toggle faces visualization</string>
+    </property>
   </action>
   <action name="section_plane_show_action">
    <property name="icon">
@@ -433,20 +457,8 @@
    <property name="text">
     <string>Symbols</string>
    </property>
-  </action>
-  <action name="action_structural_workspace">
-   <property name="text">
-    <string>Structural Workspace</string>
-   </property>
-  </action>
-  <action name="action_acoustic_workspace">
-   <property name="text">
-    <string>Acoustic Workspace</string>
-   </property>
-  </action>
-  <action name="action_coupled_workspace">
-   <property name="text">
-    <string>Coupled Workspace</string>
+   <property name="toolTip">
+    <string>Toggle symbols visualization</string>
    </property>
   </action>
   <action name="action_hide_selection">
@@ -457,8 +469,8 @@
    <property name="text">
     <string>Hide Selection</string>
    </property>
-   <property name="shortcut">
-    <string>Ctrl+H</string>
+   <property name="toolTip">
+    <string>Hide selected entities</string>
    </property>
   </action>
   <action name="action_unhide_all">
@@ -469,8 +481,8 @@
    <property name="text">
     <string>Unhide Selection</string>
    </property>
-   <property name="shortcut">
-    <string>Ctrl+U</string>
+   <property name="toolTip">
+    <string>Unhide selected entities</string>
    </property>
   </action>
   <action name="action_section_plane">
@@ -511,6 +523,9 @@
    <property name="text">
     <string>Theme</string>
    </property>
+   <property name="toolTip">
+    <string>Change application theme</string>
+   </property>
   </action>
   <action name="action_model_workspace">
    <property name="checkable">
@@ -524,7 +539,7 @@
     <string>Model</string>
    </property>
    <property name="toolTip">
-    <string>Model</string>
+    <string>Go to model setup workspace</string>
    </property>
   </action>
   <action name="action_mesh_workspace">
@@ -541,6 +556,9 @@
    <property name="text">
     <string>Mesh</string>
    </property>
+   <property name="toolTip">
+    <string>Go to mesh setup workspace</string>
+   </property>
   </action>
   <action name="action_results_workspace">
    <property name="checkable">
@@ -556,6 +574,9 @@
    <property name="text">
     <string>Results</string>
    </property>
+   <property name="toolTip">
+    <string>Go to results workspace</string>
+   </property>
   </action>
   <action name="action_user_preferences">
    <property name="icon">
@@ -565,15 +586,8 @@
    <property name="text">
     <string>User Preferences</string>
    </property>
-  </action>
-  <action name="action_show_materials">
-   <property name="text">
-    <string>Show Materials</string>
-   </property>
-  </action>
-  <action name="action_show_fluids">
-   <property name="text">
-    <string>Show Fluids</string>
+   <property name="toolTip">
+    <string>Open user preferences dialog</string>
    </property>
   </action>
   <action name="action_show_empty">
@@ -592,6 +606,9 @@
    <property name="text">
     <string>Import geometry</string>
    </property>
+   <property name="toolTip">
+    <string>Import a geometry</string>
+   </property>
   </action>
   <action name="action_home_exit">
    <property name="icon">
@@ -601,6 +618,9 @@
    <property name="text">
     <string>Home Exit</string>
    </property>
+   <property name="toolTip">
+    <string>Go to home window</string>
+   </property>
   </action>
   <action name="action_import_mesh">
    <property name="icon">
@@ -609,6 +629,9 @@
    </property>
    <property name="text">
     <string>Import mesh</string>
+   </property>
+   <property name="toolTip">
+    <string>Import a mesh</string>
    </property>
   </action>
   <action name="action_ghost_view">
@@ -621,6 +644,9 @@
    </property>
    <property name="text">
     <string>Ghost</string>
+   </property>
+   <property name="toolTip">
+    <string>Toggle ghost visualization for hidden entities</string>
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>
@@ -657,6 +683,9 @@
    <property name="text">
     <string>Points</string>
    </property>
+   <property name="toolTip">
+    <string>Select all points</string>
+   </property>
   </action>
   <action name="action_faces">
    <property name="checkable">
@@ -664,6 +693,9 @@
    </property>
    <property name="text">
     <string>Faces</string>
+   </property>
+   <property name="toolTip">
+    <string>Select all faces</string>
    </property>
   </action>
   <action name="action_solid">
@@ -673,6 +705,9 @@
    <property name="text">
     <string>Solids</string>
    </property>
+   <property name="toolTip">
+    <string>Select all volumes</string>
+   </property>
   </action>
   <action name="action_all_entities_geometry">
    <property name="checkable">
@@ -680,6 +715,9 @@
    </property>
    <property name="text">
     <string>All Entities</string>
+   </property>
+   <property name="toolTip">
+    <string>Select all entities</string>
    </property>
   </action>
   <action name="action_nodes">
@@ -689,6 +727,9 @@
    <property name="text">
     <string>Nodes</string>
    </property>
+   <property name="toolTip">
+    <string>Select all nodes</string>
+   </property>
   </action>
   <action name="action_surface_elements">
    <property name="checkable">
@@ -696,6 +737,9 @@
    </property>
    <property name="text">
     <string>Surface Elements</string>
+   </property>
+   <property name="toolTip">
+    <string>Select all surface elements</string>
    </property>
   </action>
   <action name="action_solid_elements">
@@ -705,10 +749,82 @@
    <property name="text">
     <string>Solid Elements</string>
    </property>
+   <property name="toolTip">
+    <string>Select all solid elements</string>
+   </property>
   </action>
   <action name="action_all_entities_mesh">
    <property name="text">
     <string>All Entities</string>
+   </property>
+   <property name="toolTip">
+    <string>Select all mesh entities</string>
+   </property>
+  </action>
+  <action name="action_generate_mesh_with_current_setup">
+   <property name="text">
+    <string>Generate mesh with current setup</string>
+   </property>
+   <property name="toolTip">
+    <string>Generates the mesh with current setup</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="action_copy_screenshot_to_clipboard">
+   <property name="text">
+    <string>Copy screenshot to clipboard</string>
+   </property>
+   <property name="toolTip">
+    <string>Copies a screenhsot of the active render to the clipboard</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="action_select_all_entities">
+   <property name="text">
+    <string>Select all entities</string>
+   </property>
+   <property name="toolTip">
+    <string>Select all entities</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="action_update_plots">
+   <property name="text">
+    <string>Update plots</string>
+   </property>
+   <property name="toolTip">
+    <string>Updates the active render</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="action_toggle_section_plane">
+   <property name="text">
+    <string>Toggle section plane</string>
+   </property>
+   <property name="toolTip">
+    <string>Toggles the section plane visualization</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="action_show_shortcuts_help">
+   <property name="text">
+    <string>Show shortcuts help</string>
+   </property>
+   <property name="toolTip">
+    <string>Show this window</string>
+   </property>
+   <property name="menuRole">
+    <enum>QAction::MenuRole::NoRole</enum>
    </property>
   </action>
   <action name="action_show_fluid_structure_interface_normals">
