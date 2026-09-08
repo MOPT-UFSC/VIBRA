@@ -12,7 +12,7 @@ from PySide6.QtWidgets import QApplication, QMainWindow
 
 from vibra.engine.project import Project
 from vibra.interface.viewer_3d.render_widgets.preview_render_widget import PreviewRenderWidget
-from vibra.utils.preview_utils import SectionPlaneConfig
+from vibra.utils.interface_utils import SectionPlane
 
 
 class ScriptRunner(QThread):
@@ -89,7 +89,7 @@ class MainWindow(QMainWindow):
                     self.render_widget.update_model(project.model)
                     self.setWindowTitle(project.model.name)
 
-                case SectionPlaneConfig() as section_plane:
+                case SectionPlane() as section_plane:
                     self.render_widget.update_section_plane(section_plane)
 
                 case _:

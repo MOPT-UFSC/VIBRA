@@ -17,8 +17,8 @@ from vtkmodules.vtkRenderingCore import vtkActor, vtkHardwarePicker, vtkPolyData
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.engine.properties.model_properties import ModelProperties
+from vibra.utils.interface_utils import SectionPlane
 from vibra.utils.math_functions import inside_plane
-from vibra.utils.preview_utils import SectionPlaneConfig
 from vibra.utils.time_utils import function_timer
 
 
@@ -43,7 +43,7 @@ class MeshActor(vtkPropAssembly):
         super().__init__()
 
         self.model = model
-        self.section_plane: SectionPlaneConfig | None = None
+        self.section_plane: SectionPlane | None = None
         self.cached_info = CachedInfo()
 
         self._create_variables()
@@ -247,7 +247,7 @@ class MeshActor(vtkPropAssembly):
             faces_before_plane_mask = self.masked_nodes[faces_connectivity].all(axis=1)
 
             solids_triangulated = self._explode_to_2d_cells(self.mesh.solids_connectivity[solids_in_middle_mask])
-            all_faces = np.row_stack((self.mesh.faces_connectivity[faces_before_plane_mask], solids_triangulated))
+            all_faces = np.vstack((self.mesh.faces_connectivity[faces_before_plane_mask], solids_triangulated))
 
         else:
             all_faces = self.mesh.faces_connectivity
@@ -269,7 +269,7 @@ class MeshActor(vtkPropAssembly):
         if self.section_plane is not None:
             plane = vtkPlane()
             plane.SetOrigin(self.section_plane.origin)
-            plane.SetNormal(self.section_plane.normal)
+            plane.SetNormal(self.section_plane.get_normal())
             self.surface_mapper.AddClippingPlane(plane)
 
         connectivity = self.mesh.faces_connectivity[:, 4:]
@@ -598,9 +598,9 @@ class MeshActor(vtkPropAssembly):
         coordinates = self.mesh.nodal_coordinates[:, 1:]
 
         mask = inside_plane(
-            coordinates,  # pyright: ignore[reportArgumentType]
+            coordinates,
             self.section_plane.origin,
-            self.section_plane.normal,
+            self.section_plane.get_normal(),
         ).flatten()
 
         return mask

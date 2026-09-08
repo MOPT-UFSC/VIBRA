@@ -1,10 +1,16 @@
+import builtins
+import functools
+import hashlib
+import inspect
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
-from dataclasses import dataclass
-from enum import IntEnum, auto
+from dataclasses import dataclass, fields
+from enum import Enum, IntEnum, auto
 from functools import partial, wraps
-from typing import Generator, TypeVar
+from typing import Any
 
 import numpy as np
+from molde.colors import Color, color_names
 from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QWidget
 from vtkmodules.vtkRenderingCore import vtkCoordinate
@@ -33,22 +39,67 @@ class VisualizationFilter:
 
     @classmethod
     def all_false(cls):
-        # It is dumb, but it works
-        args = [False] * 8
-        return cls(*args)
+        obj = cls()
+        for field in fields(obj):
+            if isinstance(getattr(obj, field.name), bool):
+                setattr(obj, field.name, False)
+        return obj
 
     @classmethod
     def all_true(cls):
-        # It is dumb, but it works
-        args = [True] * 8
-        return cls(*args)
+        obj = cls()
+        for field in fields(obj):
+            if isinstance(getattr(obj, field.name), bool):
+                setattr(obj, field.name, True)
+        return obj
 
 
-T = TypeVar("T", bound=QWidget)
+@dataclass
+class GeometryRendererColors:
+    points: Color = color_names.WHITE
+    lines: Color = color_names.WHITE
+    surfaces: Color = color_names.WHITE
+    selected_points: Color = color_names.RED
+    selected_lines: Color = color_names.RED
+    selected_surfaces: Color = color_names.BLUE
+    points_size: int = 15
+    lines_thickness: int = 3
+
+
+@dataclass
+class MeshRendererColors:
+    nodes: Color = color_names.YELLOW_5
+    edges: Color = color_names.BLACK
+    surfaces: Color = color_names.WHITE
+    solids: Color = color_names.GRAY
+    selected_nodes: Color = color_names.RED
+    selected_edges: Color = color_names.RED
+    selected_surfaces: Color = color_names.BLUE
+    selected_solids: Color = color_names.BLUE
+    nodes_size: int = 10
+    edges_thickness: int = 1
+
+
+@dataclass(frozen=True)
+class SectionPlane:
+    class SectionPlaneMode(Enum):
+        DISABLED = auto()
+        PREVIEWING = auto()
+        CUTTING = auto()
+
+    origin: tuple[float, float, float]
+    normal: tuple[float, float, float]
+    invert_value: bool = False
+    mode: SectionPlaneMode = SectionPlaneMode.CUTTING
+
+    def get_normal(self) -> tuple[float, float, float]:
+        if self.invert_value:
+            return tuple(-i for i in self.normal)  # pyright: ignore[reportReturnType]
+        return self.normal
 
 
 @contextmanager
-def block_signals(widget: T) -> Generator[T, None, None]:
+def block_signals[T: QWidget](widget: T) -> Generator[T, None, None]:
     widget.blockSignals(True)
     try:
         yield widget
@@ -96,3 +147,21 @@ def screen_to_world_coords(xyz, renderer):
 
 def qt_extensions(extensions: list[str]) -> str:
     return " ".join(f"*.{ext.upper()} *.{ext.lower()}" for ext in extensions)
+
+
+def preview_cache[T: Callable[..., Any]](func: T) -> T:
+    source_code = inspect.getsource(func)
+    func_hash = hashlib.md5(source_code.encode("utf-8")).hexdigest()
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        cache_store = getattr(builtins, "__HOT_RELOAD_CACHE__", {})
+
+        key = (func.__name__, func_hash, args, frozenset(kwargs.items()))
+
+        if key not in cache_store:
+            cache_store[key] = func(*args, **kwargs)
+
+        return cache_store[key]
+
+    return wrapper  # pyright: ignore[reportReturnType]

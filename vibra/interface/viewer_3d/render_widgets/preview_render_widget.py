@@ -9,7 +9,7 @@ from vibra.engine.model import Model
 from vibra.interface.viewer_3d import sources
 from vibra.interface.viewer_3d.actors.mesh_actor import MeshActor
 from vibra.interface.viewer_3d.actors.symbols_actor import SymbolsActor
-from vibra.utils.preview_utils import SectionPlaneConfig
+from vibra.utils.interface_utils import SectionPlane
 from vibra.utils.time_utils import context_timer, function_timer
 
 
@@ -48,7 +48,7 @@ class PreviewRenderWidget(CommonRenderWidget):
         self.model = model
         self.mesh_actor.model = model
 
-    def update_section_plane(self, section_plane: SectionPlaneConfig | None):
+    def update_section_plane(self, section_plane: SectionPlane | None):
         self.section_plane = section_plane
         self.mesh_actor.section_plane = section_plane
 

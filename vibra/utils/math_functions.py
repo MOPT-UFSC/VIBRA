@@ -1,5 +1,6 @@
+from collections.abc import Iterable
+
 import numpy as np
-from typing_extensions import Sequence
 
 
 def lerp(a, b, t):
@@ -16,9 +17,9 @@ def bounds_distance(bounds):
 
 
 def inside_plane(
-    test_points: Sequence[float],
-    origin: Sequence[float],
-    normal: Sequence[float],
+    test_points: Iterable[float],
+    origin: Iterable[float],
+    normal: Iterable[float],
 ) -> np.typing.NDArray[np.bool_]:
     return (
         np.dot(
@@ -30,10 +31,10 @@ def inside_plane(
 
 
 def points_in_between(
-    test_points: np.ndarray[float],
-    origin_a: np.ndarray[float],
-    origin_b: np.ndarray[float],
-) -> bool | np.ndarray[bool]:
+    test_points: np.ndarray,
+    origin_a: np.ndarray,
+    origin_b: np.ndarray,
+) -> bool | np.ndarray:
     """
     Tests if test_points are in between the parallel planes
     defined by the two planes orthogonal to the (A - B) line.
