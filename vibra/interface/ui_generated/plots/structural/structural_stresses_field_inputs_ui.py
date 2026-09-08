@@ -323,11 +323,11 @@ class Ui_Form(object):
         self.comboBox_plotting_results.setItemText(3, QCoreApplication.translate("Form", u"Shear stress xy (MPa)", None))
         self.comboBox_plotting_results.setItemText(4, QCoreApplication.translate("Form", u"Shear stress xz (MPa)", None))
         self.comboBox_plotting_results.setItemText(5, QCoreApplication.translate("Form", u"Shear stress yz (MPa)", None))
-        self.comboBox_plotting_results.setItemText(6, QCoreApplication.translate("Form", u"Maximum principal stress 1 (MPa)", None))
-        self.comboBox_plotting_results.setItemText(7, QCoreApplication.translate("Form", u"Maximum principal stress 2 (MPa)", None))
-        self.comboBox_plotting_results.setItemText(8, QCoreApplication.translate("Form", u"Maximum principal stress 3 (MPa)", None))
-        self.comboBox_plotting_results.setItemText(9, QCoreApplication.translate("Form", u"Von-Misses stress (MPa)", None))
-        self.comboBox_plotting_results.setItemText(10, QCoreApplication.translate("Form", u"Tresca stress (NPa)", None))
+        self.comboBox_plotting_results.setItemText(6, QCoreApplication.translate("Form", u"von-Misses stress (MPa)", None))
+        self.comboBox_plotting_results.setItemText(7, QCoreApplication.translate("Form", u"Tresca stress (MPa)", None))
+        self.comboBox_plotting_results.setItemText(8, QCoreApplication.translate("Form", u"Maximum principal stress 1 (MPa)", None))
+        self.comboBox_plotting_results.setItemText(9, QCoreApplication.translate("Form", u"Maximum principal stress 2 (MPa)", None))
+        self.comboBox_plotting_results.setItemText(10, QCoreApplication.translate("Form", u"Maximum principal stress 3 (MPa)", None))
 
         ___qtreewidgetitem = self.treeWidget_frequencies.headerItem()
         ___qtreewidgetitem.setText(0, QCoreApplication.translate("Form", u"Index", None));

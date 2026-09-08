@@ -17,12 +17,6 @@ from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
 from vibra.interface.viewer_3d.plot_setup import StressFieldPlotSetupFrequency, StressPlotType
 
 
-class ReduceLoopType(IntEnum):
-    DISABLED = 0
-    USER_DEFINED = 1
-    ROTATIONAL_SPEED = 2
-
-
 class StructuralStressesFieldsInputs(StructuralStressesFieldInputs_UI):
 
     value_changed = Signal()
@@ -38,8 +32,6 @@ class StructuralStressesFieldsInputs(StructuralStressesFieldInputs_UI):
         self._add_color_widget()
         self._create_connections()
 
-        # self.load_frequencies()
-
     @property
     def model(self):
         return app().project.model
@@ -53,20 +45,17 @@ class StructuralStressesFieldsInputs(StructuralStressesFieldInputs_UI):
         return app().project.model.properties
 
     @property
-    def nodal_solution(self):
-        return app().project.model.solution.structural_solution
-
-    @property
     def structural_post(self):
         return app().project.get_structural_postprocessing()
 
-    def showEvent(self, event):
-        super().showEvent(event)
+    def show_results_render(self):
+        curent_render_widget = app().main_window.get_current_render_widget()
+        results_render_widget = app().main_window.results_widget
 
-        render_widget = app().main_window.results_widget
-        app().main_window.render_widgets_stack.setCurrentWidget(render_widget)
-        app().main_window.render_widget_changed.emit()
-        app().main_window.view_toolbar.disable_selection_tool()
+        if curent_render_widget != results_render_widget:
+            app().main_window.render_widgets_stack.setCurrentWidget(results_render_widget)
+            app().main_window.render_widget_changed.emit()
+            app().main_window.view_toolbar.disable_selection_tool()
 
     def _initialize(self):
         self.selected_frequency_index = None
@@ -82,8 +71,9 @@ class StructuralStressesFieldsInputs(StructuralStressesFieldInputs_UI):
 
     def _create_connections(self):
 
-        # QComboBox connection
+        # QComboBox connections
         self.comboBox_plot_type.currentIndexChanged.connect(self.update_plot)
+        self.comboBox_plotting_results.currentIndexChanged.connect(self.update_plot)
 
         # QPushButton connection
         self.pushButton_plot_data.clicked.connect(self.process_stress_field)
@@ -125,19 +115,25 @@ class StructuralStressesFieldsInputs(StructuralStressesFieldInputs_UI):
 
     def process_stress_field(self):
 
-        structural_post = self.structural_post
+        curent_render_widget = app().main_window.get_current_render_widget()
+        results_render_widget = app().main_window.results_widget
 
-        t0 = perf_counter()
-        avg_nodal_stresses, _ = structural_post.get_structural_stresses()
-        dt = perf_counter() - t0
-        print(f"Time to compute nodal stresses: {dt} s")
+        if curent_render_widget == results_render_widget:
+            return
 
-        nodal_averaged_stresses = structural_post.nodal_stresses_post_process(avg_nodal_stresses)
-        # element_averaged_stresses = structural_post.nodal_stresses_post_process(element_stresses)
+        def recover_stresses():
+            t0 = perf_counter()
+            self.structural_post.get_structural_stresses()
+            dt = perf_counter() - t0
+            print(f"Time to compute all nodal stresses: {dt} s")
 
+        LoadingWindow(recover_stresses).run()
+        
         self.load_frequencies()
+        self.show_results_render()
 
     def update_plot(self):
+
         self.update_animation_widget_visibility()
         if self.lineEdit_selected_frequency.text() == "":
             return
@@ -160,6 +156,7 @@ class StructuralStressesFieldsInputs(StructuralStressesFieldInputs_UI):
             phase=self.animation_widget.phase_in_radians,
             index=self.selected_frequency_index,
             magnification_factor=self.animation_widget.magnification_factor,
+            stress_type=self.comboBox_plotting_results.currentIndex(),
             plot_type=self.get_plot_type(),
             unit="MPa",
         )

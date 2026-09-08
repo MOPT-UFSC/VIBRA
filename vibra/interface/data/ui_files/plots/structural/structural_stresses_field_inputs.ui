@@ -590,6 +590,16 @@
                </item>
                <item>
                 <property name="text">
+                 <string>von-Misses stress (MPa)</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Tresca stress (MPa)</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
                  <string>Maximum principal stress 1 (MPa)</string>
                 </property>
                </item>
@@ -601,16 +611,6 @@
                <item>
                 <property name="text">
                  <string>Maximum principal stress 3 (MPa)</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>Von-Misses stress (MPa)</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>Tresca stress (NPa)</string>
                 </property>
                </item>
               </widget>
