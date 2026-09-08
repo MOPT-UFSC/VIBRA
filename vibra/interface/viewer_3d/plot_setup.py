@@ -136,4 +136,5 @@ AcousticPlotSetups = Union[
 
 StructuralPlotSetups = Union[
     DisplacementFieldPlotSetupFrequency,
+    StressFieldPlotSetupFrequency,
 ]
