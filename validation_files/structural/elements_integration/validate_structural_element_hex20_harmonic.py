@@ -203,12 +203,9 @@ def load_external_mesh_and_solve(load_position, load_type: str, distributed_mass
     structural_post = StructuralPostprocessing(model)
 
     t0 = time()
-    avg_nodal_stresses, _ = structural_post.get_structural_stresses(volume_ids=1)
+    avg_nodal_stresses = structural_post.get_structural_stresses(volume_ids=1)
     dt = time() - t0
     print(f"Time to compute nodal stresses: {dt} s")
-
-    nodal_averaged_stresses = structural_post.nodal_stresses_post_process(avg_nodal_stresses)
-    # element_averaged_stresses = structural_post.nodal_stresses_post_process(element_stresses)
 
    # Nodal results comparisons
     dofs_per_node = assembler.element_3d.dof_per_node
@@ -219,6 +216,8 @@ def load_external_mesh_and_solve(load_position, load_type: str, distributed_mass
     # displacements plots
     for node_id in [1388, 1402, 143]:
     # for node_id in [373, 281, 143]:
+
+        mapped_node_id = model.get_mapped_nodes(node_id-1, "structural")
 
         print()
         # plots for displacements
@@ -237,10 +236,11 @@ def load_external_mesh_and_solve(load_position, load_type: str, distributed_mass
         # plots for stresses
         for stress_label in stresses_labels[0:3]:
             compare_averaged_nodal_stresses_results(
-                node_id, 
+                node_id,
+                mapped_node_id,
                 stress_label, 
                 frequencies, 
-                nodal_averaged_stresses, 
+                avg_nodal_stresses, 
                 False, 
                 WB_stresses_data,
                 plot_type=plot_type,
@@ -314,17 +314,19 @@ def compare_nodal_displacements_results(
 
 
 def compare_averaged_nodal_stresses_results(
-    node_id: int, 
-    stress_label: str, 
-    frequencies: np.ndarray, 
-    nodal_averaged_stresses: NodalStresses,
+    node_id: int,
+    mapped_node_id: int,
+    stress_label: str,
+    frequencies: np.ndarray,
+    avg_nodal_stresses: np.ndarray,
     esf: bool,
     solution_reference,
     named_selection: str = "all_solutions",
     plot_type: str = "absolute",
     ):
 
-    response_vibra = getattr(nodal_averaged_stresses, stress_label)[node_id - 1]
+    stress_index = stresses_labels.index(stress_label)
+    response_vibra = avg_nodal_stresses[mapped_node_id, stress_index, :]
 
     freq_ref, response_ref = get_reference_nodal_response(
         node_id, 
