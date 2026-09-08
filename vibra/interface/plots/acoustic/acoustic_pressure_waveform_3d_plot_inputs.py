@@ -48,10 +48,6 @@ class AcousticPressureWaveform3DPlotInputs(AcousticPressureWaveform3dPlotInputs_
     def properties(self):
         return app().project.model.properties
 
-    @property
-    def nodal_solution(self):
-        return app().project.model.solution.acoustic_solution
-
     def show_results_render(self):
         curent_render_widget = app().main_window.get_current_render_widget()
         results_render_widget = app().main_window.results_widget
