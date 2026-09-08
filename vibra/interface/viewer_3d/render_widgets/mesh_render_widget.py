@@ -8,7 +8,6 @@ from PySide6.QtWidgets import QApplication
 
 from vibra import LOGO_DIR, app
 from vibra.interface.loading_window import LoadingWindow
-from vibra.utils.interface_utils import VisualizationFilter
 
 from ..actors.edges_actor import EdgesActor
 from ..actors.faces_actor import FacesActor
@@ -33,12 +32,7 @@ class MeshRenderWidget(CommonRenderWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.visualization_filter = VisualizationFilter(
-            lines=True,
-            faces=True,
-            solids=True,
-            symbols=True,
-        )
+        self.visualization_filter = app().config.get_visualization_filter()
 
         self.mesh_selection = MeshSelection(self)
         self.selection_color = (20, 106, 245)

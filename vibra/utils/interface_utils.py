@@ -1,5 +1,5 @@
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from enum import IntEnum, auto
 from functools import partial, wraps
 from typing import Generator, TypeVar
@@ -43,6 +43,15 @@ class VisualizationFilter:
         args = [True] * 8
         return cls(*args)
 
+    @classmethod
+    def default(cls):
+        return cls(lines=True,
+                    faces=True,
+                    solids=True,
+                    symbols=True)
+
+    def to_dict(self) -> dict:
+        return asdict(self)
 
 T = TypeVar("T", bound=QWidget)
 

@@ -110,7 +110,6 @@ class MainWindow(MainWindow_UI):
         self.render_widgets_stack.currentChanged.connect(self.render_changed_callback)
         self.visualization_changed.connect(self.reload_visualization_filter)
         self.render_widget_changed.connect(self.reload_visualization_filter)
-        self.reload_visualization_filter()
 
         self.stacked_setup.addWidget(self.model_setup_widget)
         self.stacked_setup.addWidget(self.results_viewer_widget)
@@ -172,6 +171,7 @@ class MainWindow(MainWindow_UI):
 
         app().splash.update_progress(90)
         self.load_user_preferences()
+        self.load_visualization_filters()
         self.config_tool_tip_appearance()
         self.create_temporary_vibra_folder()
 
@@ -286,6 +286,10 @@ class MainWindow(MainWindow_UI):
         show = app().config.user_preferences.show_reference_scale_bar
         self.update_scale_bar(show)
         self.update_renderer_font_size()
+
+    def load_visualization_filters(self):
+        visualization_filter = app().config.get_visualization_filter()
+        self.apply_visualization_filter(visualization_filter)
 
     def create_recents_menu(self):
         self.recent_icon = Icon(":/icons/recent.png")
@@ -418,12 +422,6 @@ class MainWindow(MainWindow_UI):
         self.results_viewer_widget.hide_bottom_widget()
         self.results_viewer_widget.results_viewer_items.clear_last_item()
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
-
-        self.action_results_workspace.setEnabled(True)
-        self.action_results_workspace.setChecked(True)
-        self.action_mesh_workspace.setChecked(False)
-        self.action_model_workspace.setChecked(False)
-        self.reload_visualization_filter()
 
     def show_geometry_render_widget(self):
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
@@ -1095,6 +1093,9 @@ class MainWindow(MainWindow_UI):
             self.action_line_view.setChecked(filter.lines)
             self.action_face_view.setChecked(filter.faces or filter.solids)
             self.action_ghost_view.setChecked(filter.ghost)
+            self.action_hide_show_symbols.setChecked(filter.symbols)
+
+        self.update_visualization_filters(filter)
 
     def update_visualization_filter(self, filter: VisualizationFilter):
         filter.points = self.action_node_view.isChecked()
@@ -1107,6 +1108,13 @@ class MainWindow(MainWindow_UI):
     def reload_visualization_filter(self):
         if visualization_filter := self.get_current_visualization_filter():
             self.apply_visualization_filter(visualization_filter)
+
+    def update_visualization_filters(self, filter: VisualizationFilter):
+        for render in self.get_renderer_widgets():
+            if hasattr(render, "visualization_filter"):
+                render.visualization_filter = filter
+
+        app().config.write_visualization_filters_in_file(filter)
 
     def action_about_vibra_callback(self):
         self.close_dialogs()

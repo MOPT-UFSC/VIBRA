@@ -3,6 +3,7 @@ from dataclasses import fields
 import json
 
 from vibra.interface.user_preferences import UserPreferences
+from vibra.utils.interface_utils import VisualizationFilter
 
 from molde.colors import Color
 
@@ -142,3 +143,21 @@ class Config:
     def write_data_in_file(self, data: dict):
         with open(self.config_path, "w") as file:
             json.dump(data, file, indent=2)
+
+    def write_visualization_filters_in_file(self, visualization_filter: VisualizationFilter):
+        config_data = self.get_config_data()
+        visualization_filter_data = visualization_filter.to_dict()
+
+        self.write_data_in_file(config_data | visualization_filter_data)
+
+    def get_visualization_filter(self) -> VisualizationFilter:
+        config_data = self.get_config_data()
+        visualization_filter_data = {}
+
+        for field in fields(VisualizationFilter):
+            visualization_filter_data[field.name] = config_data.get(field.name)
+
+        if len(visualization_filter_data) == 0:
+            return VisualizationFilter.default()
+
+        return VisualizationFilter(**visualization_filter_data)
