@@ -1,4 +1,5 @@
 from functools import wraps
+from collections import deque
 from typing import Callable
 import psutil
 import threading
@@ -10,7 +11,13 @@ from vibra.utils.hardware_monitor.memory_metric import MemoryMetric, MemoryRecor
 class RamMonitor:
     _BYTES_PER_MIB = 1024**2
 
-    def __init__(self, rss_interval: float = 0.05, uss_interval: float = 0.5, label: str | None = None, record_history: bool = False) -> None:
+    def __init__(self, label: str, *, max_hist_size: int = 10_000, rss_interval: float = 0.05, uss_interval: float = 0.5, record_history: bool = False) -> None:
+        '''
+        max_hist_size: set the amount of records it will hold
+        '''
+        if max_hist_size <= 0:
+            raise ValueError("max_hist_size must be greater than 0")
+
         if rss_interval <= 0:
             raise ValueError("rss_interval must be greater than 0")
 
@@ -20,6 +27,10 @@ class RamMonitor:
         if uss_interval < rss_interval:
             raise ValueError("uss_interval must be greater than or equal to rss_interval")
 
+        self.min_available_bytes: int | None = None
+        self.min_available_percent: float | None = None
+
+        self.max_hist_size = max_hist_size
         self.__rss_interval = rss_interval
         self.__uss_interval = uss_interval
         self.label = label
@@ -28,7 +39,7 @@ class RamMonitor:
         self.rss = MemoryMetric()
         self.uss = MemoryMetric()
         self.vms = MemoryMetric()
-        self.ram_record: list[MemoryRecord] = list()
+        self.ram_record: deque[MemoryRecord] = deque(maxlen=self.max_hist_size)
         self._start_time: float | None = None
 
         self.process = psutil.Process()
@@ -45,11 +56,13 @@ class RamMonitor:
 
         return wrapper
 
-    def _new_session(self, label: str | None = None) -> "RamMonitor":
+    def _new_session(self, label: str) -> "RamMonitor":
         return type(self)(
+            label=label,
+            max_hist_size=self.max_hist_size,
             rss_interval=self.__rss_interval,
             uss_interval=self.__uss_interval,
-            label=label,
+            record_history=False,
         )
 
     def get_ppid(self) -> int | None:
@@ -104,6 +117,30 @@ class RamMonitor:
             )
         )
 
+    def _update_available_memory(self):
+        try:
+            memory = psutil.virtual_memory()
+
+            if memory.total <= 0:
+                raise ValueError(f'Could not get memory from psutil: {memory.total}')
+
+            available_bytes = memory.available
+            available_percent = 100 * memory.available / memory.total
+        except (OSError, psutil.Error, ValueError) as e:
+            if self.monitor_error is None:
+                self.monitor_error = e
+            return
+
+        if self.min_available_bytes is None:
+            self.min_available_bytes = available_bytes
+        else:
+            self.min_available_bytes = min(self.min_available_bytes, available_bytes)
+
+        if self.min_available_percent is None:
+            self.min_available_percent = available_percent
+        else:
+            self.min_available_percent = min(self.min_available_percent, available_percent)
+
     def _update_peak(self, metric: MemoryMetric, value: float | None) -> None:
         if value is None:
             return
@@ -128,15 +165,19 @@ class RamMonitor:
             self._update_peak(self.rss, sample.rss)
             self._update_peak(self.uss, sample.uss)
             self._update_peak(self.vms, sample.vms)
+            self._update_available_memory()
 
     def start(self) -> "RamMonitor":
         if self.monitor_thread is not None and self.monitor_thread.is_alive():
             raise RuntimeError("RAM monitor is already running")
 
+        self.min_available_bytes = None
+        self.min_available_percent = None
+
         self.rss = MemoryMetric()
         self.uss = MemoryMetric()
         self.vms = MemoryMetric()
-        self.ram_record = list()
+        self.ram_record = deque(maxlen=self.max_hist_size)
         self._start_time = time.monotonic()
 
         self.monitor_error = None
@@ -145,15 +186,13 @@ class RamMonitor:
         if self.record_history:
             self._record_sample(sample)
 
-        if sample.rss is None and sample.uss is None and sample.vms is None:
-            return self
-
         self._update_peak(self.rss, sample.rss)
         self.rss.initial = sample.rss
         self._update_peak(self.uss, sample.uss)
         self.uss.initial = sample.uss
         self._update_peak(self.vms, sample.vms)
         self.vms.initial = sample.vms
+        self._update_available_memory()
 
         self.stop_event = threading.Event()
         self.monitor_thread = threading.Thread(target=self._monitor, args=(self.stop_event,), daemon=True)
@@ -162,10 +201,12 @@ class RamMonitor:
         return self
 
     def stop(self) -> None:
-        if self.monitor_thread is not None:
-            self.stop_event.set()
-            self.monitor_thread.join()
-            self.monitor_thread = None
+        if self.monitor_thread is None:
+            return
+
+        self.stop_event.set()
+        self.monitor_thread.join()
+        self.monitor_thread = None
 
         sample = self._read_full_memory_mib()
         if self.record_history:
@@ -177,6 +218,7 @@ class RamMonitor:
         self.uss.final = sample.uss
         self._update_peak(self.vms, sample.vms)
         self.vms.final = sample.vms
+        self._update_available_memory()
 
     def __enter__(self) -> "RamMonitor":
         self.start()
@@ -192,31 +234,46 @@ class RamMonitor:
         return False
 
     def __str__(self) -> str:
-        def _format_memory(value: float | None) -> str:
+        def _format_number(value: float | None, *, signed: bool = False) -> str:
             if value is None:
                 return "N/A"
 
-            return f"{value:.2f} MiB"
+            return f"{value:+.2f}" if signed else f"{value:.2f}"
 
-        return f"""
-             Measurement: {self.label or "unnamed block"}
-                PID (Parent PID):     {self.process.pid} ({self.get_ppid()})
-                Resident memory (RSS):
-                    Initial:              {_format_memory(self.rss.initial)}
-                    Peak:                 {_format_memory(self.rss.peak)}
-                    Peak increase:        {_format_memory(self.rss.peak_increase)}
-                    Final:                {_format_memory(self.rss.final)}
-                    Final change:         {_format_memory(self.rss.final_change)}
-                Unique Set Size (USS):
-                    Initial:              {_format_memory(self.uss.initial)}
-                    Peak:                 {_format_memory(self.uss.peak)}
-                    Peak increase:        {_format_memory(self.uss.peak_increase)}
-                    Final:                {_format_memory(self.uss.final)}
-                    Final change:         {_format_memory(self.uss.final_change)}
-                VMS (Linux and Windows differ):
-                    Initial:              {_format_memory(self.vms.initial)}
-                    Peak:                 {_format_memory(self.vms.peak)}
-                    Peak increase:        {_format_memory(self.vms.peak_increase)}
-                    Final:                {_format_memory(self.vms.final)}
-                    Final change:         {_format_memory(self.vms.final_change)}
-                """
+        table = [f"{'Metric':<6} {'Initial':>12} {'Peak':>12} {'Δ peak':>12} {'Final':>12} {'Δ final':>12}"]
+        for name, metric in (("RSS", self.rss), ("USS", self.uss), ("VMS", self.vms)):
+            table.append(
+                f"{name:<6} "
+                f"{_format_number(metric.initial):>12} "
+                f"{_format_number(metric.peak):>12} "
+                f"{_format_number(metric.peak_increase, signed=True):>12} "
+                f"{_format_number(metric.final):>12} "
+                f"{_format_number(metric.final_change, signed=True):>12}"
+            )
+
+        available_memory = "N/A"
+        if self.min_available_bytes is not None:
+            available_mib = self.min_available_bytes / self._BYTES_PER_MIB
+            available_memory = f"{available_mib:.2f} MiB"
+
+        available_percent = "N/A"
+        if self.min_available_percent is not None:
+            available_percent = f"{self.min_available_percent:.2f}%"
+
+        ppid = self.get_ppid()
+        return "\n".join(
+            [
+                f"RAM — {self.label or 'unnamed block'} | PID: {self.process.pid} | PPID: {ppid if ppid is not None else 'N/A'}",
+                "",
+                "Process — values in MiB",
+                *table,
+                "",
+                "System — observed minima",
+                f"Available RAM: {available_memory}",
+                f"Available / total: {available_percent}",
+                "",
+                "Δ peak and Δ final are relative to the initial value.",
+                "Peaks and minima are based on sampled measurements.",
+                "VMS has different meanings on Linux and Windows.",
+            ]
+        )
