@@ -22,6 +22,7 @@ from vibra.interface.viewer_3d.plot_setup import (
     NoPlotSetup,
     PlotSetup,
     StressFieldPlotSetupFrequency,
+    StressType,
     StructuralPlotSetups,
     TransientPressurePlotSetup,
 )
@@ -389,25 +390,32 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         else:
             phase = self._interpolate_phase(animation_frame)
 
-        displacements, max_disp = postprocessing.compute_structural_response_field(
+        displacements, max_disp = postprocessing.compute_structural_response_field_for_stress_plot(
             self.plot_setup.index,
             phase,
             self.plot_setup.plot_type,
             n_diff=self.plot_setup.n_diff,
             unit_scale_factor=self.plot_setup.unit_scale_factor,
             is_modal=analysis_id.is_modal(),
-            stress_plot=True,
         )
 
-        stress_data = postprocessing.compute_structural_stresses_field(
-            self.plot_setup.index,
-            phase,
-            self.plot_setup.stress_type,
-            self.plot_setup.plot_type,
-        )
+        if StressType(self.plot_setup.stress_type).is_normal_or_shear_stress():
+            stress_data = postprocessing.compute_structural_stresses_field(
+                self.plot_setup.index,
+                phase,
+                self.plot_setup.stress_type,
+                self.plot_setup.plot_type,
+            )
 
-        color_scalars, self.min_value, self.max_value, complex_result = stress_data
-        self.is_animation_symetric = not complex_result
+        else:
+            stress_data = postprocessing.compute_advanced_structural_stresses_field(
+                self.plot_setup.index,
+                phase,
+                self.plot_setup.stress_type,
+                self.plot_setup.plot_type,
+            )
+
+        color_scalars, self.min_value, self.max_value, self.is_animation_symetric = stress_data
 
         min_value = self.min_value
         max_value = self.max_value
