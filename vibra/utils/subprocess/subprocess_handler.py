@@ -2,7 +2,6 @@ import logging
 import subprocess
 import sys
 from enum import Enum, auto
-from pathlib import Path
 from queue import Empty, Queue
 from threading import Thread
 from time import sleep

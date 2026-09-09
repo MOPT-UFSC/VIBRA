@@ -116,7 +116,7 @@ class Project:
     def run_analysis(self, is_resume: bool = False, print_log: bool = False):
         """
         It performs the solution of the currently configured model.
-        It might raise errors if the analysis is not propperly configured.
+        It might raise errors if the analysis is not properly configured.
         """
         match self.model.analysis_id:
             case AnalysisID.STRUCTURAL_MODAL:
