@@ -104,7 +104,7 @@ class StructuralPostprocessing:
 
 
     @cache
-    def get_max_min_values_for_stress_data(self, data_complex: tuple[complex], data_type: str) -> list[float, float]:
+    def get_max_min_values_for_stress_data(self, column: int, stress_index: int, data_type: str) -> list[float, float]:
         """
         This method returns the minimum and maximum values of selected frequency for animation purposes.
 
@@ -119,8 +119,17 @@ class StructuralPostprocessing:
         r_min, r_max: float values for minimum and maximum displacements,
 
         """
-        if not data_complex:
-            return
+
+        t0 = perf_counter()
+        avg_nodal_stresses = self.recover_nodal_averaged_structural_stresses()
+        if avg_nodal_stresses is None:
+            return (0, 0)
+
+        dt = perf_counter() - t0
+        print(f"Time to compute nodal stresses (dentro): {dt} s")
+
+        # initialize the stress vector and convert to MPa
+        data_complex = avg_nodal_stresses[:, stress_index, column].copy() / 1e6
 
         amplitudes = np.abs(data_complex)
         phases = np.angle(data_complex)
@@ -132,13 +141,13 @@ class StructuralPostprocessing:
         thetas = np.linspace(0, 2 * np.pi, divisions + 1, endpoint=True)
 
         if data_type == "absolute_values":
-            return 0, max(np.abs(data_complex))
+            return (0, max(np.abs(data_complex)))
 
         if data_type == "real_values":
-            return min(np.real(data_complex)), max(np.real(data_complex))
+            return (min(np.real(data_complex)), max(np.real(data_complex)))
 
         if data_type == "imag_values":
-            return min(np.imag(data_complex)), max(np.imag(data_complex))
+            return (min(np.imag(data_complex)), max(np.imag(data_complex)))
 
         for theta in thetas:
             pressures = amplitudes * np.cos(theta + phases)
@@ -160,7 +169,65 @@ class StructuralPostprocessing:
             s_min = -max_value
             s_max = max_value
 
-        return s_min, s_max
+        return (s_min, s_max)
+
+
+    @cache
+    def get_max_min_values_for_advanced_stress_data(self, data_complex: tuple, data_type: str) -> list[float, float]:
+        """
+        This method returns the minimum and maximum values of selected frequency for animation purposes.
+
+        Parameters
+        ----------
+        data_complex: a tuple of complex values in which the phase sweep will be applied.
+
+        data_type: a string of type DataTypes that represents the data to be processed.
+
+        Return
+        ------
+        r_min, r_max: float values for minimum and maximum displacements,
+
+        """
+
+        amplitudes = np.abs(data_complex)
+        phases = np.angle(data_complex)
+
+        s_min = 1
+        s_max = 0
+
+        divisions = 36
+        thetas = np.linspace(0, 2 * np.pi, divisions + 1, endpoint=True)
+
+        if data_type == "absolute_values":
+            return (0, max(np.abs(data_complex)))
+
+        if data_type == "real_values":
+            return (min(np.real(data_complex)), max(np.real(data_complex)))
+
+        if data_type == "imag_values":
+            return (min(np.imag(data_complex)), max(np.imag(data_complex)))
+
+        for theta in thetas:
+            pressures = amplitudes * np.cos(theta + phases)
+
+            if data_type == "absolute_animation":
+                pressures = np.abs(pressures)
+
+            s_min_i = min(pressures)
+            s_max_i = max(pressures)
+
+            s_min = min(s_min, s_min_i)
+            s_max = max(s_max, s_max_i)
+
+        if data_type == "absolute_animation":
+            s_min = 0
+
+        if data_type == "non_absolute_animation":
+            max_value = np.max(np.abs([s_min, s_max]))
+            s_min = -max_value
+            s_max = max_value
+
+        return (s_min, s_max)
 
 
     def compute_structural_response_field(
@@ -192,11 +259,7 @@ class StructuralPostprocessing:
             freq = self.model.frequencies[column]
             data_complex *= (1j * 2 * np.pi * freq)**n_diff
 
-        amplitudes = np.abs(data_complex)
-        phases = np.angle(data_complex)
-        delta = -phases[np.argmax(amplitudes)]
-
-        phase_shifted_data = amplitudes * np.cos(phases + phase_rad + delta)
+        phase_shifted_data  = compute_shifted_values(data_complex, phase_rad)
         current_solution = phase_shifted_data.reshape(-1, 3).copy()
 
         if data_type in ["u_sum", "v_sum", "a_sum"]:
@@ -249,11 +312,7 @@ class StructuralPostprocessing:
             freq = self.model.frequencies[column]
             data_complex *= (1j * 2 * np.pi * freq)**n_diff
 
-        amplitudes = np.abs(data_complex)
-        phases = np.angle(data_complex)
-        delta = -phases[np.argmax(amplitudes)]
-
-        phase_shifted_data = amplitudes * np.cos(phases + phase_rad + delta)
+        phase_shifted_data  = compute_shifted_values(data_complex, phase_rad)
         current_solution = phase_shifted_data.reshape(-1, 3).copy()
 
         min_value, max_value = self.get_max_min_values_of_selected_data(tuple(data_complex), data_type)
@@ -267,7 +326,7 @@ class StructuralPostprocessing:
             node_ids : int | list[int] | None = None,
             surface_ids: int | list[int] | None = None,
             volume_ids: list[int] | None = None,
-            ) -> np.ndarray | None:
+            ) -> np.ndarray:
         """
         This method computes the nodal averaged.
 
@@ -517,23 +576,14 @@ class StructuralPostprocessing:
         avg_nodal_stresses = self.recover_nodal_averaged_structural_stresses()
         if avg_nodal_stresses is None:
             return
+
         dt = perf_counter() - t0
         print(f"Time to compute nodal stresses: {dt} s")
 
         t0 = perf_counter()
-        n_nodes = len(avg_nodal_stresses)
 
-        # initialize the stress vector
-        stress_vector = np.zeros(n_nodes, dtype=complex)
-
-        for index, nodal_stresses in enumerate(avg_nodal_stresses):
-            stress_vector[index] = nodal_stresses[stress_type, column]
-
-        amplitudes = np.abs(stress_vector)
-        phases = np.angle(stress_vector)
-        delta = -phases[np.argmax(amplitudes)]
-
-        stress_values = amplitudes * np.cos(phases + phase_rad + delta)
+        # initialize the stress vector and convert to MPa
+        stress_vector = avg_nodal_stresses[:, stress_type, column].copy() / 1e6
 
         match data_type:
             case StressPlotType.ABSOLUTE_VALUES:
@@ -543,21 +593,19 @@ class StructuralPostprocessing:
             case StressPlotType.IMAG_VALUES:
                 stress_values = np.imag(stress_vector)
             case StressPlotType.ABSOLUTE_ANIMATION:
+                stress_values = compute_shifted_values(stress_vector, phase_rad)
                 stress_values = np.abs(stress_values)
-
-        # convert stresses to MPa
-        stress_vector /= 1e6
-        stress_values /= 1e6
+            case StressPlotType.NON_ABSOLUTE_ANIMATION:
+                stress_values = compute_shifted_values(stress_vector, phase_rad)
 
         dt = perf_counter() - t0
         print(f"Time to post-process the nodal stresses (A): {dt} s")
 
         t0 = perf_counter()
-
-        min_value, max_value = self.get_max_min_values_for_stress_data(tuple(stress_vector), data_type)
-        symmetric_animation = not np.imag(stress_vector).any()
-
+        min_value, max_value = self.get_max_min_values_for_stress_data(column, stress_type, data_type)
+        symmetric_animation = not np.any(stress_vector.imag)
         dt = perf_counter() - t0
+
         print(f"Time to post-process the nodal stresses (B): {dt} s")
 
         return stress_values, min_value, max_value, symmetric_animation
@@ -575,57 +623,95 @@ class StructuralPostprocessing:
         avg_nodal_stresses = self.recover_nodal_averaged_structural_stresses()
         if avg_nodal_stresses is None:
             return
+
         dt = perf_counter() - t0
         print(f"Time to compute nodal stresses: {dt} s")
 
         t0 = perf_counter()
-        n_nodes = len(avg_nodal_stresses)
 
-        # initialize the stress vector
-        stress_vector = np.zeros(n_nodes, dtype=complex)
+        # evaluate the stresses in MPa at a specific time/phase (phase_rad = omega * t)
+        stresses = compute_phase_shifted_values(avg_nodal_stresses[:, :, column], phase_rad) / 1e6
 
-        for index, nodal_stresses in enumerate(avg_nodal_stresses):
+        if stress_type == StressType.VON_MISES_STRESS:
+            stress_vector = np.sqrt((1/2) * (
+                (stresses[:, 0]-stresses[:, 1])**2 + 
+                (stresses[:, 1]-stresses[:, 2])**2 + 
+                (stresses[:, 2]-stresses[:, 0])**2 +
+                6 * (stresses[:, 3]**2 + stresses[:, 4]**2 + stresses[:, 5]**2)
+                ))
 
-            # evaluate the stresses at a specific time/phase (phase_rad = omega * t)
-            sigma_x, sigma_y, sigma_z, tau_xy, tau_xz, tau_yz = compute_phase_shifted_values(nodal_stresses[:, column], phase_rad)
+        else:
 
-            if stress_type == StressType.VON_MISES_STRESS:
-                stress_vector[index] = np.sqrt((1/2) * (
-                    (sigma_x-sigma_y)**2 + 
-                    (sigma_y-sigma_z)**2 + 
-                    (sigma_z-sigma_x)**2 +
-                    6 * (tau_xy**2 + tau_xz**2 + tau_yz**2)
-                    ))
+            """
+            stress_tensor = |sigma_x, tau_xy, tau_xz| 
+                            |tau_xy, sigma_y, tau_yz|
+                            |tau_xz, tau_yz, sigma_z|
+            """
 
+            # compute the stress tensor at a specific time/phase (phase_rad = omega * t)
+            stress_tensor = stresses[:, [0, 3, 4, 3, 1, 5, 4, 5, 2]].reshape(-1, 3, 3)
+
+            # compute the maximum principal stresses
+            eigen_values = np.linalg.eigvalsh(stress_tensor)
+
+            # order the maximum principal stresses
+            sigmas = np.sort(eigen_values, axis=1)
+
+            if stress_type == StressType.TRESCA_STRESS:
+                stress_vector = sigmas[:, 2] - sigmas[:, 0]  # sigma_1 - sigma_3
+
+            elif stress_type == StressType.MAXIMUM_PRINCIPAL_STRESS_1:
+                stress_vector = sigmas[:, 2] # sigma_1
+
+            elif stress_type == StressType.MAXIMUM_PRINCIPAL_STRESS_2:
+                stress_vector = sigmas[:, 1] # sigma_2
+            
             else:
+                stress_vector = sigmas[:, 0] # sigma_3
 
-                # compute the stress tensor at a specific time/phase (phase_rad = omega * t)
-                stress_tensor = np.array([
-                    [sigma_x, tau_xy, tau_xz], 
-                    [tau_xy, sigma_y, tau_yz],
-                    [tau_xz, tau_yz, sigma_z],
-                    ], dtype=complex)
+        # # initialize the stress vector
+        # n_nodes = len(avg_nodal_stresses)
+        # stress_vector = np.zeros(n_nodes, dtype=complex)
 
-                # compute the maximum principal stresses
-                eigen_values = np.linalg.eigvalsh(stress_tensor)
+        # for index, nodal_stresses in enumerate(avg_nodal_stresses):
 
-                # order the maximum principal stresses (sigma_1 >= sigma_2 >= sigma_3)
-                sigma_1, sigma_2, sigma_3 = sorted(eigen_values, reverse=True)
+        #     # evaluate the stresses at a specific time/phase (phase_rad = omega * t)
+        #     sigma_x, sigma_y, sigma_z, tau_xy, tau_xz, tau_yz = compute_phase_shifted_values(nodal_stresses[:, column], phase_rad)
 
-                if stress_type == StressType.MAXIMUM_PRINCIPAL_STRESS_1:
-                    stress_vector[index] = sigma_1
+        #     if stress_type == StressType.VON_MISES_STRESS:
+        #         stress_vector[index] = np.sqrt((1/2) * (
+        #             (sigma_x-sigma_y)**2 + 
+        #             (sigma_y-sigma_z)**2 + 
+        #             (sigma_z-sigma_x)**2 +
+        #             6 * (tau_xy**2 + tau_xz**2 + tau_yz**2)
+        #             ))
 
-                elif stress_type == StressType.MAXIMUM_PRINCIPAL_STRESS_2:
-                    stress_vector[index] = sigma_2
+        #     else:
+
+        #         # compute the stress tensor at a specific time/phase (phase_rad = omega * t)
+        #         stress_tensor = np.array([
+        #             [sigma_x, tau_xy, tau_xz], 
+        #             [tau_xy, sigma_y, tau_yz],
+        #             [tau_xz, tau_yz, sigma_z],
+        #             ], dtype=complex)
+
+        #         # compute the maximum principal stresses
+        #         eigen_values = np.linalg.eigvalsh(stress_tensor)
+
+        #         # order the maximum principal stresses (sigma_1 >= sigma_2 >= sigma_3)
+        #         sigma_1, sigma_2, sigma_3 = sorted(eigen_values, reverse=True)
+
+        #         if stress_type == StressType.MAXIMUM_PRINCIPAL_STRESS_1:
+        #             stress_vector[index] = sigma_1
+
+        #         elif stress_type == StressType.MAXIMUM_PRINCIPAL_STRESS_2:
+        #             stress_vector[index] = sigma_2
                 
-                elif stress_type == StressType.MAXIMUM_PRINCIPAL_STRESS_3:
-                    stress_vector[index] = sigma_3
+        #         elif stress_type == StressType.MAXIMUM_PRINCIPAL_STRESS_3:
+        #             stress_vector[index] = sigma_3
 
-                elif stress_type == StressType.TRESCA_STRESS:
-                    stress_vector[index] = sigma_1 - sigma_3
-
-        # copy the estress vector
-        stress_values = stress_vector.copy()
+        #         elif stress_type == StressType.TRESCA_STRESS:
+        #             stress_vector[index] = sigma_1 - sigma_3
 
         match data_type:
             case StressPlotType.ABSOLUTE_VALUES:
@@ -635,18 +721,16 @@ class StructuralPostprocessing:
             case StressPlotType.IMAG_VALUES:
                 stress_values = np.imag(stress_vector)
             case StressPlotType.ABSOLUTE_ANIMATION:
-                stress_values = np.abs(stress_values)
-
-        # convert stresses to MPa
-        stress_vector /= 1e6
-        stress_values /= 1e6
+                stress_values = np.abs(stress_vector.copy())
+            case StressPlotType.NON_ABSOLUTE_ANIMATION:
+                stress_values = stress_vector.copy()
 
         dt = perf_counter() - t0
         print(f"Time to post-process the nodal stresses (A): {dt} s")
 
         t0 = perf_counter()
 
-        min_value, max_value = self.get_max_min_values_for_stress_data(tuple(stress_vector), data_type)
+        min_value, max_value = self.get_max_min_values_for_advanced_stress_data(tuple(stress_vector), data_type)
 
         # force the processing of all animation frames
         symmetric_animation = False
@@ -792,5 +876,12 @@ class StructuralPostprocessing:
         # np.savetxt(fname, output_data, fmt=["%i", "%.16f", "%.16f", "%.16f"], delimiter=",", header=header)
 
 
-def compute_phase_shifted_values(values: np.ndarray[complex], phase_rad: float):
+def compute_shifted_values(data: np.ndarray, phase_rad: float):
+    amplitudes = np.abs(data)
+    phases = np.angle(data)
+    delta = -phases[np.argmax(amplitudes)]
+    return amplitudes * np.cos(phases + phase_rad + delta)
+
+
+def compute_phase_shifted_values(values: np.ndarray, phase_rad: float) -> np.ndarray:
     return values.real * np.cos(phase_rad) -  values.imag * np.sin(phase_rad)
