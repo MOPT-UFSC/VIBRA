@@ -203,7 +203,7 @@ def load_external_mesh_and_solve(load_position, load_type: str, distributed_mass
     structural_post = StructuralPostprocessing(model)
 
     t0 = time()
-    avg_nodal_stresses = structural_post.get_structural_stresses(volume_ids=1)
+    avg_nodal_stresses = structural_post.recover_nodal_averaged_structural_stresses(volume_ids=1)
     dt = time() - t0
     print(f"Time to compute nodal stresses: {dt} s")
 
