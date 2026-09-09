@@ -41,6 +41,18 @@ class Tetrahedron10(Element3D):
             }
 
 
+    @property
+    def midside_nodes_indices(self):
+        return np.array([
+            [4, 0, 1],     # M -> (I, J)
+            [5, 1, 2],     # N -> (J, K)
+            [6, 2, 0],     # O -> (K, I)
+            [7, 0, 3],     # P -> (I, L)
+            [8, 1, 3],     # Q -> (J, L)
+            [9, 2, 3],     # R -> (K, L)
+        ], dtype=int)
+
+
     def define_integration_points(self, integration_points: int=11):
         """ 
         This method defines the integration points and their

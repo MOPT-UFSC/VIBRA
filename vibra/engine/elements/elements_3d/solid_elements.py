@@ -69,6 +69,11 @@ class Element3D:
         return {}
 
 
+    @property
+    def midside_nodes_indices(self):
+        return np.array([])
+
+
     def get_constitutive_model(self, material: Material, model_type: str = "linear-isotropic"):
         """
         This method returns the material constitutive model.
