@@ -119,19 +119,14 @@ class Structural3DElement(Element3D):
         nodal_solution : np.ndarray | None = None,
         solution: np.ndarray | None = None,
         element_averaged: bool = False,
-        **kwargs
+        extrapolate: bool = False,
         ):
-
-        node_ids = kwargs.get("node_ids")
-
-        if node_ids is None:
-            node_ids = self.connectivities[element_id, :]
 
         if isinstance(nodal_solution, np.ndarray):
             Ue = nodal_solution
 
         elif isinstance(solution, np.ndarray):
-            # indices = node_ids.reshape(-1, 1) * self.dof_per_node + self.local_dof
+            node_ids = self.connectivities[element_id, :]
             indices = self.model.get_dof_indices_from_nodes(node_ids, "structural")
             Ue = solution[indices.flatten(), :]
 
@@ -154,12 +149,12 @@ class Structural3DElement(Element3D):
         # get data to compute the stress
         _, B = self.process_detJAC_and_B_matrix(element_id)
 
-        # initialize the element stresses matrix
-        element_stresses = np.zeros((6, self.nint, Ue.shape[1]), dtype=complex)
-
         # calculate the nodal stress tensor
-        for i in range(self.nint):
-            element_stresses[:, i, :] = D @ (B[i, :, :] @ Ue)
+        element_stresses = D @ (B @ Ue)
+
+        if extrapolate:
+            extrapolated_stresses = self.phi_inv @ element_stresses.transpose(1, 0, 2)
+            return extrapolated_stresses.transpose(1, 0, 2)
 
         if element_averaged:
             return np.average(element_stresses, axis=1)

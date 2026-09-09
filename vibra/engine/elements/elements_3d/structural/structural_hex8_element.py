@@ -627,10 +627,8 @@ class StructuralHexahedron4(Structural3DElement, Hexahedron8):
         nodal_solution : np.ndarray | None = None,
         solution: np.ndarray | None = None,
         element_averaged: bool = False,
-        **kwargs
+        extrapolate: bool = False,
         ):
-
-        node_ids = kwargs.get("node_ids")
 
         if node_ids is None:
             node_ids = self.connectivities[element_id, :]
@@ -639,7 +637,8 @@ class StructuralHexahedron4(Structural3DElement, Hexahedron8):
             Ue = nodal_solution
 
         elif isinstance(solution, np.ndarray):
-            indices = node_ids.reshape(-1, 1) * self.dof_per_node + self.local_dof
+            node_ids = self.connectivities[element_id, :]
+            indices = self.model.get_dof_indices_from_nodes(node_ids, "structural")
             Ue = solution[indices.flatten(), :]    
 
         else:
@@ -661,12 +660,12 @@ class StructuralHexahedron4(Structural3DElement, Hexahedron8):
         # get data to compute the stress (with or without ESF)
         B, Ue = self.get_data_to_compute_stresses(element_id, Ue, D)
 
-        # initialize the element stresses matrix
-        element_stresses = np.zeros((6, self.nint, Ue.shape[1]), dtype=complex)
-
         # calculate the nodal stress tensor
-        for i in range(self.nint):
-            element_stresses[:, i, :] = D @ (B[i, :, :] @ Ue)
+        element_stresses = D @ (B @ Ue)
+
+        if extrapolate:
+            extrapolated_stresses = self.phi_inv @ element_stresses.transpose(1, 0, 2)
+            return extrapolated_stresses.transpose(1, 0, 2)
 
         if element_averaged:
             return np.average(element_stresses, axis=1)
