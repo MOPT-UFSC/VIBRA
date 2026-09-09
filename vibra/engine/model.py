@@ -204,7 +204,7 @@ class Model:
         except Exception:
             return False
 
-    def get_mapped_nodes(self, node_ids: list[int] | np.ndarray, domain: str):
+    def get_mapped_nodes(self, node_ids: list[int] | np.ndarray, domain: str) -> np.ndarray:
         """
         This method returns the mapped nodes indices according to the domain.
 
@@ -230,7 +230,7 @@ class Model:
 
         return mapped_nodes
 
-    def get_dof_indices_from_nodes(self, nodes: list[int] | np.ndarray, domain: str):
+    def get_dof_indices_from_nodes(self, nodes: list[int] | np.ndarray, domain: str) -> np.ndarray:
         """
         This method returns the global DOFs indices associated with a set of nodes.
 

@@ -41,7 +41,7 @@ class StressType(IntEnum):
     SHEAR_STRESS_XY = 3
     SHEAR_STRESS_XZ = 4
     SHEAR_STRESS_YZ = 5
-    VON_MISSES_STRESS = 6
+    VON_MISES_STRESS = 6
     TRESCA_STRESS = 7
     MAXIMUM_PRINCIPAL_STRESS_1 = 8
     MAXIMUM_PRINCIPAL_STRESS_2 = 9
@@ -59,7 +59,7 @@ class StressType(IntEnum):
 
     def is_post_processed_stress(self):
         return self in [
-            StressType.VON_MISSES_STRESS,
+            StressType.VON_MISES_STRESS,
             StressType.TRESCA_STRESS,
             StressType.MAXIMUM_PRINCIPAL_STRESS_1,
             StressType.MAXIMUM_PRINCIPAL_STRESS_2,
