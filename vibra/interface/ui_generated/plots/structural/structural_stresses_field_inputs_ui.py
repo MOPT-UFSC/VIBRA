@@ -24,7 +24,7 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(340, 806)
+        Form.resize(364, 806)
         Form.setMaximumSize(QSize(16777215, 16777215))
         self.gridLayout_2 = QGridLayout(Form)
         self.gridLayout_2.setSpacing(2)
@@ -36,7 +36,7 @@ class Ui_Form(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 319, 838))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 343, 838))
         self.gridLayout_6 = QGridLayout(self.scrollAreaWidgetContents)
         self.gridLayout_6.setObjectName(u"gridLayout_6")
         self.gridLayout_6.setHorizontalSpacing(2)
@@ -93,16 +93,16 @@ class Ui_Form(object):
         self.gridLayout_5.setSpacing(4)
         self.gridLayout_5.setObjectName(u"gridLayout_5")
         self.gridLayout_5.setContentsMargins(4, 4, 4, 4)
-        self.frame = QFrame(self.frame_main)
-        self.frame.setObjectName(u"frame")
-        self.frame.setMinimumSize(QSize(0, 40))
-        self.frame.setMaximumSize(QSize(16777215, 16777215))
-        self.frame.setFrameShape(QFrame.Shape.NoFrame)
-        self.frame.setFrameShadow(QFrame.Shadow.Raised)
-        self.gridLayout_13 = QGridLayout(self.frame)
+        self.frame_plot_type = QFrame(self.frame_main)
+        self.frame_plot_type.setObjectName(u"frame_plot_type")
+        self.frame_plot_type.setMinimumSize(QSize(0, 40))
+        self.frame_plot_type.setMaximumSize(QSize(16777215, 16777215))
+        self.frame_plot_type.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_plot_type.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_13 = QGridLayout(self.frame_plot_type)
         self.gridLayout_13.setObjectName(u"gridLayout_13")
         self.gridLayout_13.setContentsMargins(0, 6, 0, 6)
-        self.label = QLabel(self.frame)
+        self.label = QLabel(self.frame_plot_type)
         self.label.setObjectName(u"label")
         self.label.setMinimumSize(QSize(80, 26))
         self.label.setMaximumSize(QSize(80, 26))
@@ -121,7 +121,7 @@ class Ui_Form(object):
 
         self.gridLayout_13.addItem(self.horizontalSpacer_4, 0, 0, 1, 1)
 
-        self.comboBox_plot_type = QComboBox(self.frame)
+        self.comboBox_plot_type = QComboBox(self.frame_plot_type)
         self.comboBox_plot_type.addItem("")
         self.comboBox_plot_type.addItem("")
         self.comboBox_plot_type.addItem("")
@@ -135,7 +135,7 @@ class Ui_Form(object):
         self.gridLayout_13.addWidget(self.comboBox_plot_type, 0, 2, 1, 1)
 
 
-        self.gridLayout_5.addWidget(self.frame, 3, 0, 1, 1)
+        self.gridLayout_5.addWidget(self.frame_plot_type, 3, 0, 1, 1)
 
         self.frame_frequency = QFrame(self.frame_main)
         self.frame_frequency.setObjectName(u"frame_frequency")
@@ -215,7 +215,7 @@ class Ui_Form(object):
         self.comboBox_plotting_results.addItem("")
         self.comboBox_plotting_results.addItem("")
         self.comboBox_plotting_results.setObjectName(u"comboBox_plotting_results")
-        self.comboBox_plotting_results.setMinimumSize(QSize(160, 28))
+        self.comboBox_plotting_results.setMinimumSize(QSize(180, 28))
         self.comboBox_plotting_results.setMaximumSize(QSize(180, 28))
         self.comboBox_plotting_results.setSizeIncrement(QSize(0, 0))
         self.comboBox_plotting_results.setFont(font1)
@@ -225,17 +225,17 @@ class Ui_Form(object):
 
         self.gridLayout_5.addWidget(self.frame_frequency, 1, 0, 1, 1)
 
-        self.frame_treeWidget = QFrame(self.frame_main)
-        self.frame_treeWidget.setObjectName(u"frame_treeWidget")
-        self.frame_treeWidget.setMinimumSize(QSize(0, 200))
-        self.frame_treeWidget.setMaximumSize(QSize(16777215, 250))
-        self.frame_treeWidget.setFrameShape(QFrame.Shape.NoFrame)
-        self.frame_treeWidget.setFrameShadow(QFrame.Shadow.Raised)
-        self.gridLayout_3 = QGridLayout(self.frame_treeWidget)
+        self.frame_tree_widget = QFrame(self.frame_main)
+        self.frame_tree_widget.setObjectName(u"frame_tree_widget")
+        self.frame_tree_widget.setMinimumSize(QSize(0, 200))
+        self.frame_tree_widget.setMaximumSize(QSize(16777215, 250))
+        self.frame_tree_widget.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_tree_widget.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_3 = QGridLayout(self.frame_tree_widget)
         self.gridLayout_3.setSpacing(0)
         self.gridLayout_3.setObjectName(u"gridLayout_3")
         self.gridLayout_3.setContentsMargins(0, 0, 0, 0)
-        self.treeWidget_frequencies = QTreeWidget(self.frame_treeWidget)
+        self.treeWidget_frequencies = QTreeWidget(self.frame_tree_widget)
         font4 = QFont()
         font4.setFamilies([u"MS Shell Dlg 2"])
         font4.setPointSize(10)
@@ -256,7 +256,7 @@ class Ui_Form(object):
         self.gridLayout_3.addWidget(self.treeWidget_frequencies, 0, 0, 1, 1)
 
 
-        self.gridLayout_5.addWidget(self.frame_treeWidget, 2, 0, 1, 1)
+        self.gridLayout_5.addWidget(self.frame_tree_widget, 2, 0, 1, 1)
 
         self.frame_3 = QFrame(self.frame_main)
         self.frame_3.setObjectName(u"frame_3")
@@ -270,8 +270,8 @@ class Ui_Form(object):
         self.gridLayout_47.setContentsMargins(2, 2, 2, 2)
         self.pushButton_plot_data = QPushButton(self.frame_3)
         self.pushButton_plot_data.setObjectName(u"pushButton_plot_data")
-        self.pushButton_plot_data.setMinimumSize(QSize(100, 32))
-        self.pushButton_plot_data.setMaximumSize(QSize(160, 32))
+        self.pushButton_plot_data.setMinimumSize(QSize(160, 32))
+        self.pushButton_plot_data.setMaximumSize(QSize(180, 32))
         self.pushButton_plot_data.setFont(font1)
         self.pushButton_plot_data.setStyleSheet(u"")
         self.pushButton_plot_data.setFlat(False)
@@ -305,7 +305,7 @@ class Ui_Form(object):
 
     def retranslateUi(self, Form):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Plot stress field", None))
-        self.label_title.setText(QCoreApplication.translate("Form", u"Plot the stresses fields", None))
+        self.label_title.setText(QCoreApplication.translate("Form", u"Plot the stress field", None))
         self.label.setText(QCoreApplication.translate("Form", u"Plot type:", None))
         self.comboBox_plot_type.setItemText(0, QCoreApplication.translate("Form", u"Non-absolute (animation)", None))
         self.comboBox_plot_type.setItemText(1, QCoreApplication.translate("Form", u"Absolute (animation)", None))
@@ -317,24 +317,24 @@ class Ui_Form(object):
         self.label_4.setText(QCoreApplication.translate("Form", u"Frequency:", None))
         self.label_5.setText(QCoreApplication.translate("Form", u"[Hz]", None))
         self.label_7.setText(QCoreApplication.translate("Form", u"Plotting results:", None))
-        self.comboBox_plotting_results.setItemText(0, QCoreApplication.translate("Form", u"Normal stress x (MPa)", None))
-        self.comboBox_plotting_results.setItemText(1, QCoreApplication.translate("Form", u"Normal stress y (MPa)", None))
-        self.comboBox_plotting_results.setItemText(2, QCoreApplication.translate("Form", u"Normal stress z (MPa)", None))
-        self.comboBox_plotting_results.setItemText(3, QCoreApplication.translate("Form", u"Shear stress xy (MPa)", None))
-        self.comboBox_plotting_results.setItemText(4, QCoreApplication.translate("Form", u"Shear stress xz (MPa)", None))
-        self.comboBox_plotting_results.setItemText(5, QCoreApplication.translate("Form", u"Shear stress yz (MPa)", None))
-        self.comboBox_plotting_results.setItemText(6, QCoreApplication.translate("Form", u"von-Misses stress (MPa)", None))
-        self.comboBox_plotting_results.setItemText(7, QCoreApplication.translate("Form", u"Tresca stress (MPa)", None))
-        self.comboBox_plotting_results.setItemText(8, QCoreApplication.translate("Form", u"Maximum principal stress 1 (MPa)", None))
-        self.comboBox_plotting_results.setItemText(9, QCoreApplication.translate("Form", u"Maximum principal stress 2 (MPa)", None))
-        self.comboBox_plotting_results.setItemText(10, QCoreApplication.translate("Form", u"Maximum principal stress 3 (MPa)", None))
+        self.comboBox_plotting_results.setItemText(0, QCoreApplication.translate("Form", u"Normal stress x", None))
+        self.comboBox_plotting_results.setItemText(1, QCoreApplication.translate("Form", u"Normal stress y", None))
+        self.comboBox_plotting_results.setItemText(2, QCoreApplication.translate("Form", u"Normal stress z", None))
+        self.comboBox_plotting_results.setItemText(3, QCoreApplication.translate("Form", u"Shear stress xy", None))
+        self.comboBox_plotting_results.setItemText(4, QCoreApplication.translate("Form", u"Shear stress xz", None))
+        self.comboBox_plotting_results.setItemText(5, QCoreApplication.translate("Form", u"Shear stress yz", None))
+        self.comboBox_plotting_results.setItemText(6, QCoreApplication.translate("Form", u"von Mises stress", None))
+        self.comboBox_plotting_results.setItemText(7, QCoreApplication.translate("Form", u"Tresca stress", None))
+        self.comboBox_plotting_results.setItemText(8, QCoreApplication.translate("Form", u"Max. principal stress 1", None))
+        self.comboBox_plotting_results.setItemText(9, QCoreApplication.translate("Form", u"Max. principal stress 2", None))
+        self.comboBox_plotting_results.setItemText(10, QCoreApplication.translate("Form", u"Max. principal stress 3", None))
 
         ___qtreewidgetitem = self.treeWidget_frequencies.headerItem()
         ___qtreewidgetitem.setText(0, QCoreApplication.translate("Form", u"Index", None));
 #if QT_CONFIG(tooltip)
         self.treeWidget_frequencies.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Select a frequency to plot the strutural response field</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
-        self.pushButton_plot_data.setText(QCoreApplication.translate("Form", u"Process stresses", None))
+        self.pushButton_plot_data.setText(QCoreApplication.translate("Form", u"Process nodal stresses", None))
     # retranslateUi
 
 
@@ -353,7 +353,7 @@ class StructuralStressesFieldInputs_UI(QWidget, Ui_Form):
                                             - label_title: QLabel
                                 - frame_main: QFrame
                                     - (Layout): QGridLayout
-                                            - frame: QFrame
+                                            - frame_plot_type: QFrame
                                                 - (Layout): QGridLayout
                                                         - label: QLabel
                                                         - comboBox_plot_type: QComboBox
@@ -364,7 +364,7 @@ class StructuralStressesFieldInputs_UI(QWidget, Ui_Form):
                                                         - label_5: QLabel
                                                         - label_7: QLabel
                                                         - comboBox_plotting_results: QComboBox
-                                            - frame_treeWidget: QFrame
+                                            - frame_tree_widget: QFrame
                                                 - (Layout): QGridLayout
                                                         - treeWidget_frequencies: QTreeWidget
                                             - frame_3: QFrame

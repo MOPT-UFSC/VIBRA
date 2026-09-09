@@ -1,19 +1,14 @@
-from enum import IntEnum
 from time import perf_counter
 
 import numpy as np
-from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QCloseEvent
+from PySide6.QtCore import QSignalBlocker, Qt, Signal
 from PySide6.QtWidgets import QGridLayout, QTreeWidgetItem
 
 from vibra import app
-from vibra.engine import AnalysisID
 from vibra.interface.loading_window import LoadingWindow
-from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
 from vibra.interface.plots.general.animation_widget import AnimationWidget
 from vibra.interface.plots.general.results_display_widget import ResultsDisplayWidget
 from vibra.interface.ui_generated.plots.structural.structural_stresses_field_inputs_ui import StructuralStressesFieldInputs_UI
-from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
 from vibra.interface.viewer_3d.plot_setup import StressFieldPlotSetupFrequency, StressPlotType
 
 
@@ -48,19 +43,12 @@ class StructuralStressesFieldsInputs(StructuralStressesFieldInputs_UI):
     def structural_post(self):
         return app().project.get_structural_postprocessing()
 
-    def show_results_render(self):
-        curent_render_widget = app().main_window.get_current_render_widget()
-        results_render_widget = app().main_window.results_widget
-
-        if curent_render_widget != results_render_widget:
-            app().main_window.render_widgets_stack.setCurrentWidget(results_render_widget)
-            app().main_window.render_widget_changed.emit()
-            app().main_window.view_toolbar.disable_selection_tool()
-
     def _initialize(self):
         self.selected_frequency_index = None
 
     def _configure_widgets(self):
+
+        self.set_frames_disabled(True)
 
         self.lineEdit_selected_frequency.setDisabled(True)
         self.lineEdit_selected_frequency.setProperty("status", "information")
@@ -68,6 +56,14 @@ class StructuralStressesFieldsInputs(StructuralStressesFieldInputs_UI):
         for i, width in enumerate([80, 140]):
             self.treeWidget_frequencies.setColumnWidth(i, width)
             self.treeWidget_frequencies.headerItem().setTextAlignment(i, Qt.AlignCenter)
+
+    def set_frames_disabled(self, disabled: bool):
+        self.frame_animation.setDisabled(disabled)
+        self.frame_color.setDisabled(disabled)
+        self.frame_frequency.setDisabled(disabled)
+        self.frame_plot_type.setDisabled(disabled)
+        self.frame_tree_widget.setDisabled(disabled)
+        self.pushButton_plot_data.setEnabled(disabled)
 
     def _create_connections(self):
 
@@ -113,17 +109,20 @@ class StructuralStressesFieldsInputs(StructuralStressesFieldInputs_UI):
         else:
             self.animation_widget.setDisabled(False)
 
-    def process_stress_field(self):
-
+    def show_results_render(self):
         curent_render_widget = app().main_window.get_current_render_widget()
         results_render_widget = app().main_window.results_widget
 
-        if curent_render_widget == results_render_widget:
-            return
+        if curent_render_widget != results_render_widget:
+            app().main_window.render_widgets_stack.setCurrentWidget(results_render_widget)
+            app().main_window.render_widget_changed.emit()
+            app().main_window.view_toolbar.disable_selection_tool()
+
+    def process_stress_field(self):
 
         def recover_stresses():
             t0 = perf_counter()
-            self.structural_post.get_structural_stresses()
+            self.structural_post.recover_nodal_averaged_structural_stresses()
             dt = perf_counter() - t0
             print(f"Time to compute all nodal stresses: {dt} s")
 
@@ -131,8 +130,17 @@ class StructuralStressesFieldsInputs(StructuralStressesFieldInputs_UI):
         
         self.load_frequencies()
         self.show_results_render()
+        self.set_frames_disabled(False)
 
     def update_plot(self):
+
+        stress_index = self.comboBox_plotting_results.currentIndex()
+        plot_type = self.get_plot_type()
+
+        if stress_index == 6 and plot_type == StressPlotType.NON_ABSOLUTE_ANIMATION:
+            with QSignalBlocker(self.comboBox_plot_type):
+                self.comboBox_plot_type.setCurrentIndex(1)
+                plot_type = self.get_plot_type()
 
         self.update_animation_widget_visibility()
         if self.lineEdit_selected_frequency.text() == "":
@@ -152,12 +160,13 @@ class StructuralStressesFieldsInputs(StructuralStressesFieldInputs_UI):
         else:
             self.results_display_widget.configure_validators(-1e14, 1e14)
 
+
         plot_setup = StressFieldPlotSetupFrequency(
             phase=self.animation_widget.phase_in_radians,
             index=self.selected_frequency_index,
             magnification_factor=self.animation_widget.magnification_factor,
-            stress_type=self.comboBox_plotting_results.currentIndex(),
-            plot_type=self.get_plot_type(),
+            stress_type=stress_index,
+            plot_type=plot_type,
             unit="MPa",
         )
 

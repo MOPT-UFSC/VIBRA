@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>340</width>
+    <width>364</width>
     <height>806</height>
    </rect>
   </property>
@@ -48,7 +48,7 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>319</width>
+        <width>343</width>
         <height>838</height>
        </rect>
       </property>
@@ -158,7 +158,7 @@
              <enum>QFrame::Shadow::Raised</enum>
             </property>
             <property name="text">
-             <string>Plot the stresses fields</string>
+             <string>Plot the stress field</string>
             </property>
             <property name="textFormat">
              <enum>Qt::TextFormat::AutoText</enum>
@@ -214,7 +214,7 @@
            <number>4</number>
           </property>
           <item row="3" column="0">
-           <widget class="QFrame" name="frame">
+           <widget class="QFrame" name="frame_plot_type">
             <property name="minimumSize">
              <size>
               <width>0</width>
@@ -537,7 +537,7 @@
               <widget class="QComboBox" name="comboBox_plotting_results">
                <property name="minimumSize">
                 <size>
-                 <width>160</width>
+                 <width>180</width>
                  <height>28</height>
                 </size>
                </property>
@@ -560,57 +560,57 @@
                </property>
                <item>
                 <property name="text">
-                 <string>Normal stress x (MPa)</string>
+                 <string>Normal stress x</string>
                 </property>
                </item>
                <item>
                 <property name="text">
-                 <string>Normal stress y (MPa)</string>
+                 <string>Normal stress y</string>
                 </property>
                </item>
                <item>
                 <property name="text">
-                 <string>Normal stress z (MPa)</string>
+                 <string>Normal stress z</string>
                 </property>
                </item>
                <item>
                 <property name="text">
-                 <string>Shear stress xy (MPa)</string>
+                 <string>Shear stress xy</string>
                 </property>
                </item>
                <item>
                 <property name="text">
-                 <string>Shear stress xz (MPa)</string>
+                 <string>Shear stress xz</string>
                 </property>
                </item>
                <item>
                 <property name="text">
-                 <string>Shear stress yz (MPa)</string>
+                 <string>Shear stress yz</string>
                 </property>
                </item>
                <item>
                 <property name="text">
-                 <string>von-Misses stress (MPa)</string>
+                 <string>von Mises stress</string>
                 </property>
                </item>
                <item>
                 <property name="text">
-                 <string>Tresca stress (MPa)</string>
+                 <string>Tresca stress</string>
                 </property>
                </item>
                <item>
                 <property name="text">
-                 <string>Maximum principal stress 1 (MPa)</string>
+                 <string>Max. principal stress 1</string>
                 </property>
                </item>
                <item>
                 <property name="text">
-                 <string>Maximum principal stress 2 (MPa)</string>
+                 <string>Max. principal stress 2</string>
                 </property>
                </item>
                <item>
                 <property name="text">
-                 <string>Maximum principal stress 3 (MPa)</string>
+                 <string>Max. principal stress 3</string>
                 </property>
                </item>
               </widget>
@@ -619,7 +619,7 @@
            </widget>
           </item>
           <item row="2" column="0">
-           <widget class="QFrame" name="frame_treeWidget">
+           <widget class="QFrame" name="frame_tree_widget">
             <property name="minimumSize">
              <size>
               <width>0</width>
@@ -760,13 +760,13 @@
               <widget class="QPushButton" name="pushButton_plot_data">
                <property name="minimumSize">
                 <size>
-                 <width>100</width>
+                 <width>160</width>
                  <height>32</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
-                 <width>160</width>
+                 <width>180</width>
                  <height>32</height>
                 </size>
                </property>
@@ -779,7 +779,7 @@
                 <string notr="true"/>
                </property>
                <property name="text">
-                <string>Process stresses</string>
+                <string>Process nodal stresses</string>
                </property>
                <property name="flat">
                 <bool>false</bool>
