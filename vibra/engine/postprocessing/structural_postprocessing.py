@@ -694,9 +694,9 @@ class StructuralPostprocessing:
 
         if stress_type == StressType.VON_MISES_STRESS:
             stress_vector = np.sqrt((1/2) * (
-                (stresses[:, 0]-stresses[:, 1])**2 + 
-                (stresses[:, 1]-stresses[:, 2])**2 + 
-                (stresses[:, 2]-stresses[:, 0])**2 +
+                (stresses[:, 0] - stresses[:, 1])**2 + 
+                (stresses[:, 1] - stresses[:, 2])**2 + 
+                (stresses[:, 2] - stresses[:, 0])**2 +
                 6 * (stresses[:, 3]**2 + stresses[:, 4]**2 + stresses[:, 5]**2)
                 ))
 
@@ -729,50 +729,6 @@ class StructuralPostprocessing:
             else:
                 stress_vector = sigmas[:, 0] # sigma_3
 
-        # # initialize the stress vector
-        # n_nodes = len(avg_nodal_stresses)
-        # stress_vector = np.zeros(n_nodes, dtype=complex)
-
-        # for index, nodal_stresses in enumerate(avg_nodal_stresses):
-
-        #     # evaluate the stresses at a specific time/phase (phase_rad = omega * t)
-        #     sigma_x, sigma_y, sigma_z, tau_xy, tau_xz, tau_yz = compute_phase_shifted_values(nodal_stresses[:, column], phase_rad)
-
-        #     if stress_type == StressType.VON_MISES_STRESS:
-        #         stress_vector[index] = np.sqrt((1/2) * (
-        #             (sigma_x-sigma_y)**2 + 
-        #             (sigma_y-sigma_z)**2 + 
-        #             (sigma_z-sigma_x)**2 +
-        #             6 * (tau_xy**2 + tau_xz**2 + tau_yz**2)
-        #             ))
-
-        #     else:
-
-        #         # compute the stress tensor at a specific time/phase (phase_rad = omega * t)
-        #         stress_tensor = np.array([
-        #             [sigma_x, tau_xy, tau_xz], 
-        #             [tau_xy, sigma_y, tau_yz],
-        #             [tau_xz, tau_yz, sigma_z],
-        #             ], dtype=complex)
-
-        #         # compute the maximum principal stresses
-        #         eigen_values = np.linalg.eigvalsh(stress_tensor)
-
-        #         # order the maximum principal stresses (sigma_1 >= sigma_2 >= sigma_3)
-        #         sigma_1, sigma_2, sigma_3 = sorted(eigen_values, reverse=True)
-
-        #         if stress_type == StressType.MAXIMUM_PRINCIPAL_STRESS_1:
-        #             stress_vector[index] = sigma_1
-
-        #         elif stress_type == StressType.MAXIMUM_PRINCIPAL_STRESS_2:
-        #             stress_vector[index] = sigma_2
-                
-        #         elif stress_type == StressType.MAXIMUM_PRINCIPAL_STRESS_3:
-        #             stress_vector[index] = sigma_3
-
-        #         elif stress_type == StressType.TRESCA_STRESS:
-        #             stress_vector[index] = sigma_1 - sigma_3
-
         match data_type:
             case StressPlotType.ABSOLUTE_VALUES:
                 stress_values = np.abs(stress_vector)
@@ -799,32 +755,6 @@ class StructuralPostprocessing:
         print(f"Time to post-process the nodal stresses (B): {dt} s")
 
         return stress_values, min_value, max_value, symmetric_animation
-
-
-    # TODO: remove if not used
-    def nodal_stresses_post_process(self, input_stresses_data: np.ndarray):
-
-        nodal_stresses = NodalStresses()
-
-        nodal_stresses.sigma_x = input_stresses_data[:, 0, :]
-        nodal_stresses.sigma_y = input_stresses_data[:, 1, :]
-        nodal_stresses.sigma_z = input_stresses_data[:, 2, :]
-        nodal_stresses.tau_xy = input_stresses_data[:, 3, :]
-        nodal_stresses.tau_xz = input_stresses_data[:, 4, :]
-        nodal_stresses.tau_yz = input_stresses_data[:, 5, :]
-
-        return nodal_stresses
-
-        ## Only for validation purposes
-        # output_data = np.zeros((len(ordered_nodes), 4), dtype=float)
-        # output_data[:, 0] = ordered_nodes
-
-        # for row, node_id in enumerate(ordered_nodes):
-        #     output_data[row, 1:] =  self.assembler.model.mesh.nodal_normals_data[node_id]
-
-        # fname = f"nodal_normals_data_surface_{surface_id}.dat"
-        # header = "Node index || x-axis component [m] || y-axis component [m] || z-axis component [m]"
-        # np.savetxt(fname, output_data, fmt=["%i", "%.16f", "%.16f", "%.16f"], delimiter=",", header=header)
 
 
 def compute_shifted_values(data: np.ndarray, phase_rad: float):
