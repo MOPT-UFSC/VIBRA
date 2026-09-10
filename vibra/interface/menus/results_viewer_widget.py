@@ -100,6 +100,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.plot_structural_modal.configure_results_display_widget()
 
         self.add_widget(self.plot_structural_modal)
+        self.set_results_workspace()
 
     def add_structural_harmonic_widget(self):
         self.top_widget.setFixedHeight(120)
@@ -108,20 +109,25 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.plot_structural_harmonic.configure_results_display_widget()
 
         self.add_widget(self.plot_structural_harmonic)
+        self.set_results_workspace()
 
     def add_acoustic_modal_widget(self):
         self.top_widget.setFixedHeight(220)
         self.current_widget = self.plot_acoustic_modal
         self.plot_acoustic_modal.load_natural_frequencies()
         self.plot_acoustic_modal.configure_results_display_widget()
+
         self.add_widget(self.plot_acoustic_modal)
+        self.set_results_workspace()
 
     def add_acoustic_harmonic_widget(self):
         self.top_widget.setFixedHeight(220)
         self.current_widget = self.plot_acoustic_harmonic
         self.plot_acoustic_harmonic.load_frequencies()
         self.plot_acoustic_harmonic.configure_results_display_widget()
+
         self.add_widget(self.plot_acoustic_harmonic)
+        self.set_results_workspace()
 
     def add_structural_frequency_response_widget(self):
         self.current_widget = app().main_window.input_ui.plot_structural_frequency_response()
@@ -257,3 +263,11 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
 
         self.adjustSize()
         widget.show()
+
+    def set_results_workspace(self):
+        app().main_window.action_results_workspace.setEnabled(True)
+        app().main_window.action_results_workspace.setChecked(True)
+        
+        app().main_window.action_model_workspace.setChecked(False)
+        app().main_window.action_mesh_workspace.setChecked(False)
+        

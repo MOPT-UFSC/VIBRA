@@ -33,7 +33,7 @@ class VisualizationFilter:
     color_mode: GeometryColorMode = GeometryColorMode.COLORED
 
     def is_all_false(self) -> bool:
-        return not all([self.points, self.lines, self.faces, self.solids, self.symbols])
+        return not any([self.points, self.lines, self.faces, self.solids, self.symbols])
 
     def to_dict(self) -> dict:
         return asdict(self)

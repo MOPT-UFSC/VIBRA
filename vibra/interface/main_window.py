@@ -172,7 +172,6 @@ class MainWindow(MainWindow_UI):
 
         app().splash.update_progress(90)
         self.load_user_preferences()
-        self.load_visualization_filters()
         self.config_tool_tip_appearance()
         self.create_temporary_vibra_folder()
 
@@ -287,10 +286,6 @@ class MainWindow(MainWindow_UI):
         show = app().config.user_preferences.show_reference_scale_bar
         self.update_scale_bar(show)
         self.update_renderer_font_size()
-
-    def load_visualization_filters(self):
-        visualization_filter = app().config.get_visualization_filter(Workspaces.GEOMETRY)
-        self.apply_visualization_filter(visualization_filter)
 
     def create_recents_menu(self):
         self.recent_icon = Icon(":/icons/recent.png")
@@ -537,7 +532,7 @@ class MainWindow(MainWindow_UI):
         self.action_model_workspace.setChecked(False)
         self.action_mesh_workspace.setChecked(False)
 
-        self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
+        self.render_widgets_stack.setCurrentWidget(self.results_widget)
         self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
         self.results_viewer_widget.results_viewer_items.update_items()
         self.analysis_toolbar.update_analysis_combo_boxes()
@@ -1083,14 +1078,16 @@ class MainWindow(MainWindow_UI):
             return None
         return render_widget.visualization_filter
 
-    def get_current_workspace(self) -> Workspaces:
+    def get_current_workspace(self) -> Workspaces | None:
         render_widget = self.get_current_render_widget()
 
         if isinstance(render_widget, GeometryRenderWidget):
             return Workspaces.GEOMETRY
         elif isinstance(render_widget, MeshRenderWidget):
             return Workspaces.MESH
-        return Workspaces.RESULTS
+        elif isinstance(render_widget, ResultsRenderWidget):
+            return Workspaces.RESULTS
+        return None
 
     def visualization_changed_callback(self):
         if visualization_filter := self.get_current_visualization_filter():
