@@ -75,7 +75,7 @@ class AcousticExcitationsAssembler:
 
     def get_prescribed_pressure_model_excitation(self, index: int = 0):
         """
-        This method computes the equivalent loads resulting from the degrees of freedom 
+        This method computes the equivalent loads resulting from the degrees of freedom
         prescription to compound the acoustic model excitation vector.
 
         Parameters
@@ -112,7 +112,7 @@ class AcousticExcitationsAssembler:
         Cr_add = (Cr + Cr_visc) @ values
 
         F_Kadd = Kr_add
-        F_Madd = -(omega**2) * Mr_add 
+        F_Madd = -(omega**2) * Mr_add
         F_Cadd = 1j * omega * Cr_add
         F_eq = F_Kadd + F_Madd + F_Cadd
 
@@ -120,7 +120,7 @@ class AcousticExcitationsAssembler:
 
 
     def get_excitation_data_for_element_integration(self, property_label: str) -> AcousticExcitationData | None:
-        """ 
+        """
         This method processes the excitation property data for element face
         integration.
 
@@ -159,7 +159,7 @@ class AcousticExcitationsAssembler:
 
                     # compute the nozzle area
                     self.model.mesh.process_face_elements_connected_to_nodes(surface_id)
-                    area = self.model.mesh.surface_area_from_element_integration.get(surface_id, 0)                    
+                    area = self.model.mesh.surface_area_from_element_integration.get(surface_id, 0)
 
                     if excitation_type == "mass flow rate":
                         # get the fluid density
@@ -197,7 +197,7 @@ class AcousticExcitationsAssembler:
         volumes_from_surface = self.model.mesh.volumes_from_surface[surface_id]
         if len(volumes_from_surface) != 1:
             return None, None
-        
+
         volume_id = volumes_from_surface[0]
         pm_properties = self.model.porous_material_properties.get(volume_id)
         vt_properties = self.model.viscous_thermal_model_properties.get(volume_id)
@@ -223,7 +223,7 @@ class AcousticExcitationsAssembler:
 
 
     def get_mass_source_data_for_1d_element_integration(self) -> MassSourceData | None:
-        """ 
+        """
         This method processes the mass source data for element line
         integration.
 
@@ -277,7 +277,7 @@ class AcousticExcitationsAssembler:
 
 
     def get_mass_source_data_for_2d_element_integration(self) -> MassSourceData | None:
-        """ 
+        """
         This method processes the mass source data for element face
         integration.
 
@@ -312,7 +312,7 @@ class AcousticExcitationsAssembler:
             _factor_Qms2 = (4 * mu_0) / (3 * _rho_f**2)
 
             surf_elements = list(self.model.mesh.elements_from_surface.get(surface_id))
-            surf_connect = self.model.mesh.get_connectivity_from_surface(surface_id) 
+            surf_connect = self.model.mesh.get_connectivity_from_surface(surface_id)
 
             for i, el in enumerate(surf_elements):
                 aux_connect[el] = surf_connect[i]
@@ -331,7 +331,7 @@ class AcousticExcitationsAssembler:
 
 
     def process_nodal_mass_source_data(self):
-        """ 
+        """
         This method processes the nodal mass source vector data.
         """
         self.process_nodal_mass_source_data_for_nodes_and_points()
@@ -341,8 +341,8 @@ class AcousticExcitationsAssembler:
 
 
     def process_nodal_mass_source_data_for_nodes_and_points(self):
-        """ 
-        This method processes the nodal mass source vector data assigned 
+        """
+        This method processes the nodal mass source vector data assigned
         to nodes and points.
         """
 
@@ -398,8 +398,8 @@ class AcousticExcitationsAssembler:
 
 
     def process_nodal_mass_source_data_for_lines(self):
-        """ 
-        This method processes the nodal mass source vector data assigned 
+        """
+        This method processes the nodal mass source vector data assigned
         to lines.
         """
 
@@ -441,8 +441,8 @@ class AcousticExcitationsAssembler:
 
 
     def process_nodal_mass_source_data_for_surfaces(self):
-        """ 
-        This method processes the nodal mass source vector data assigned 
+        """
+        This method processes the nodal mass source vector data assigned
         to surfaces.
         """
 
@@ -484,8 +484,8 @@ class AcousticExcitationsAssembler:
 
 
     def process_nodal_mass_source_data_for_volumes(self):
-        """ 
-        This method processes the nodal mass source vector data assigned 
+        """
+        This method processes the nodal mass source vector data assigned
         to volumes.
         """
 
@@ -539,7 +539,7 @@ class AcousticExcitationsAssembler:
         self.process_nodal_mass_source_data()
 
         if isinstance(self.mass_source_vector_lines, np.ndarray):
-        
+
             self.integration_data_Qms_1d = self.get_mass_source_data_for_1d_element_integration()
             if self.integration_data_Qms_1d is not None:
 
@@ -565,7 +565,7 @@ class AcousticExcitationsAssembler:
 
     def compute_mass_source_load_factors_for_volumes(self, index: int = 0):
         """
-        This method evaluates the mass source factors that will multiply the 
+        This method evaluates the mass source factors that will multiply the
         normalized global matrices.
 
         Parameters
@@ -589,7 +589,7 @@ class AcousticExcitationsAssembler:
 
             ms_data = self.properties._get_property("mass_source", volume=vol_id)
             if ms_data is None:
-                continue 
+                continue
 
             rho_f = fluid_data.get("rho_f")[index]
             # C_f = fluid_data.get("C_f")[index]
@@ -623,10 +623,10 @@ class AcousticExcitationsAssembler:
         factor_Qms2 = self.integration_data_Qms_1d.factor_Qms2
 
         data_Qms1: np.ndarray = factor_Qms1[:, index].reshape(-1, 1, 1) * self.int1d_NtN
-        self.Qms1_1d = csr_matrix((data_Qms1.flatten(), (self.ind_rows_Qmsf_1d, self.ind_cols_Qmsf_1d)), shape=self.self.model.gm_shape)
+        self.Qms1_1d = csr_matrix((data_Qms1.flatten(), (self.ind_rows_Qmsf_1d, self.ind_cols_Qmsf_1d)), shape=self.model.gm_shape)
 
         data_Qms2: np.ndarray = factor_Qms2[:, index].reshape(-1, 1, 1) * self.int1d_BtB
-        self.Qms2_1d = csr_matrix((data_Qms2.flatten(), (self.ind_rows_Qmsf_1d, self.ind_cols_Qmsf_1d)), shape=self.self.model.gm_shape)
+        self.Qms2_1d = csr_matrix((data_Qms2.flatten(), (self.ind_rows_Qmsf_1d, self.ind_cols_Qmsf_1d)), shape=self.model.gm_shape)
 
         if self.model.drop_domain:
             acoustic_dofs_indices = self.assembler.acoustic_dofs_indices
@@ -657,10 +657,10 @@ class AcousticExcitationsAssembler:
         factor_Qms2 = self.integration_data_Qms_2d.factor_Qms2
 
         data_Qms1: np.ndarray = factor_Qms1[:, index].reshape(-1, 1, 1) * self.int2d_NtN
-        self.Qms1_2d = csr_matrix((data_Qms1.flatten(), (self.ind_rows_Qmsf_2d, self.ind_cols_Qmsf_2d)), shape=self.self.model.gm_shape)
+        self.Qms1_2d = csr_matrix((data_Qms1.flatten(), (self.ind_rows_Qmsf_2d, self.ind_cols_Qmsf_2d)), shape=self.model.gm_shape)
 
         data_Qms2: np.ndarray = factor_Qms2[:, index].reshape(-1, 1, 1) * self.int2d_BtB
-        self.Qms2_2d = csr_matrix((data_Qms2.flatten(), (self.ind_rows_Qmsf_2d, self.ind_cols_Qmsf_2d)), shape=self.self.model.gm_shape)
+        self.Qms2_2d = csr_matrix((data_Qms2.flatten(), (self.ind_rows_Qmsf_2d, self.ind_cols_Qmsf_2d)), shape=self.model.gm_shape)
 
         if self.model.drop_domain:
             acoustic_dofs_indices = self.assembler.acoustic_dofs_indices
@@ -690,10 +690,10 @@ class AcousticExcitationsAssembler:
         factor_Qms1, factor_Qms2 = self.compute_mass_source_load_factors_for_volumes(index=index)
 
         data_Qms1: np.ndarray = factor_Qms1 * self.int3d_NtN
-        self.Qms1_3d = csr_matrix((data_Qms1.flatten(), (self.ind_rows, self.ind_cols)), shape=self.self.model.gm_shape)
+        self.Qms1_3d = csr_matrix((data_Qms1.flatten(), (self.ind_rows, self.ind_cols)), shape=self.model.gm_shape)
 
         data_Qms2: np.ndarray = factor_Qms2 * self.int3d_BtB
-        self.Qms2_3d = csr_matrix((data_Qms2.flatten(), (self.ind_rows, self.ind_cols)), shape=self.self.model.gm_shape)
+        self.Qms2_3d = csr_matrix((data_Qms2.flatten(), (self.ind_rows, self.ind_cols)), shape=self.model.gm_shape)
 
         if self.model.drop_domain:
             acoustic_dofs_indices = self.assembler.acoustic_dofs_indices
@@ -717,12 +717,12 @@ class AcousticExcitationsAssembler:
 
         index: int, optional
             The frequency index.
-        
+
         Returns
         -------
 
         Q_ms: np.ndarray
-            The compound mass source vector. 
+            The compound mass source vector.
         """
         Q_ms = 0.
         if isinstance(self.mass_source_vector_points, np.ndarray):
@@ -745,7 +745,7 @@ class AcousticExcitationsAssembler:
 
 
     def process_acoustic_excitations_by_nodal_attribution(self):
-        """ 
+        """
         This method processes the acoustic model excitations and
         returns the output data in the form of mass flow rate.
         """
@@ -761,7 +761,7 @@ class AcousticExcitationsAssembler:
 
                 if not isinstance(data, dict):
                     continue
-        
+
                 if data.get("element_integration", True):
                     continue
 
@@ -797,7 +797,7 @@ class AcousticExcitationsAssembler:
 
 
     def process_acoustic_excitations_by_element_integration(self):
-        """ 
+        """
         This method processes the acoustic model excitations and
         returns the output data in the form of mass flow rate.
         """
@@ -834,7 +834,7 @@ class AcousticExcitationsAssembler:
         integration_data_ipw = self.assembler.impedances_assembler.integration_data_ipw
         if integration_data_ipw is None:
             return
-    
+
         p_inc: np.ndarray = integration_data_ipw.ipw_pressure
         s_vector: np.ndarray = integration_data_ipw.ipw_vector
         Z_ipw: np.ndarray = integration_data_ipw.ipw_impedance
