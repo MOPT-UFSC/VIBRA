@@ -192,7 +192,7 @@ def load_external_mesh_and_solve(load_position, load_type: str, element_integrat
     harmonic_solver = HarmonicSolver(assembler)
     model.solution = harmonic_solver.solve_direct(print_log=True)
     dt = time() - t0
-    print(f"Elapsed time to solve modal analysis: {round(dt, 4)}s")
+    print(f"Elapsed time to solve structural harmonic analysis: {round(dt, 4)}s")
 
     results_path = PROJECT_DIR / f"validation_files/data/WB/structural/elements_integration/tet10/results/harmonic/{load_type}"
     ext_data = LoadExternalData(results_path)

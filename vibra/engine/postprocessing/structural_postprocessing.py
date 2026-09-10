@@ -9,6 +9,7 @@ from typing import Literal
 import numpy as np
 
 from vibra.engine.model import Model
+from vibra.engine.properties.material import Material
 from vibra.engine.postprocessing.structural_post_solution_dataclass import NodalStresses
 from vibra.engine.solution import HarmonicSolution, LazyHarmonicSolution, ModalSolution
 from vibra.interface.viewer_3d.plot_setup import DisplacementFieldPlotSetupFrequency, StressPlotType, StressType
@@ -320,12 +321,52 @@ class StructuralPostprocessing:
         return current_solution, max_value
 
 
+    def map_material_to_elements(self, element_ids: list[int]) -> dict[int, list[int]]:
+        """
+        This method maps the materials to the elements.
+
+        Parameter
+        ---------
+        element_ids: list
+            The list of elements to map the materials.
+        
+        Return
+        ------
+        material_to_elements: dict
+            The material-to-elements mapping dictionary.
+        """
+        t0 = perf_counter()
+
+        material_to_volumes = defaultdict(list)
+
+        for vol_id in self.model.domains_processor.volumes_of_domain.get("structural", []):
+            material = self.model.properties._get_property("material", volume=vol_id)
+            if isinstance(material, Material):
+                material_to_volumes[material.identifier].append(vol_id)
+
+        material_to_elements = defaultdict(list)
+
+        for mat_id, volume_ids in material_to_volumes.items():
+
+            mask = np.isin(self.mesh.solids_connectivity[:, 1], volume_ids)
+            elements_from_volumes = self.mesh.solids_connectivity[mask, 0]
+
+            valid_element_ids = np.intersect1d(element_ids, elements_from_volumes)
+            material_to_elements[mat_id] = np.unique(valid_element_ids)
+
+        dt = perf_counter() - t0
+        print(f"Tempo gasto: {dt} s")
+
+        return material_to_elements
+
+
     @cache
     def recover_nodal_averaged_structural_stresses(
             self,
             node_ids : int | list[int] | None = None,
             surface_ids: int | list[int] | None = None,
             volume_ids: list[int] | None = None,
+            elements_per_loop: int | None = None,
             ) -> np.ndarray:
         """
         This method computes the nodal averaged.
@@ -351,8 +392,6 @@ class StructuralPostprocessing:
 
         logging.info("Recovering the structural stresses... (1/3)")
 
-        t0 = perf_counter()
-
         element_3d = self.structural_element_3d
 
         if element_3d.connectivities is None:
@@ -360,6 +399,7 @@ class StructuralPostprocessing:
 
         if all(item is None for item in (node_ids, surface_ids, volume_ids)):
             node_ids = self.model.domains_processor.nodes_of_domain.get("structural", [])
+            element_ids = self.model.domains_processor.elements_of_domain.get("structural", [])
 
         elif isinstance(node_ids, int):
             node_ids = [node_ids]
@@ -383,27 +423,15 @@ class StructuralPostprocessing:
                     volume_nodes = self.mesh.get_nodes_from_volume(volume_id)
                     node_ids.extend(volume_nodes)
 
-            node_ids = np.unique(node_ids)
-
-        if not isinstance(node_ids, np.ndarray | list):
-            print("Invalid node ids")
-            return
-
-        logging.info("Recovering the structural stresses... (2/3)")
-        element_ids = self.model.get_solid_elements_from_nodes(node_ids, "structural")
-
-        dt = perf_counter() - t0
-        print(f"Time 1: {dt} s")
-
-        t0 = perf_counter()
+            logging.info("Recovering the structural stresses... (2/3)")
+            if isinstance(node_ids, np.ndarray | list):
+                node_ids = np.unique(node_ids)
+                element_ids = self.model.get_solid_elements_from_nodes(node_ids, "structural")
 
         # initialize variables
         n_nodes = len(node_ids)
         n_el = len(element_ids)
         n_freq = len(self.model.frequencies)
-
-        avg_nodal_stresses = np.zeros((n_nodes, 6, n_freq), dtype=complex)
-        _, counts = np.unique(self.mesh.solids_connectivity[element_ids, 4:], return_counts=True)
 
         corner_indices = element_3d.corner_nodes_indices
         midside_data = element_3d.midside_nodes_indices
@@ -414,36 +442,80 @@ class StructuralPostprocessing:
             ind_1 = midside_data[:, 1]
             ind_2 = midside_data[:, 2]
 
-        # initialize logging variable
+        # initialize variables
         last_progress = 0
+        avg_nodal_stresses = np.zeros((n_nodes, 6, n_freq), dtype=complex)
+        _, counts = np.unique(self.mesh.solids_connectivity[element_ids, 4:], return_counts=True)
 
-        for i, element_id in enumerate(element_ids):
+        # map all elements connectivities
+        _connect_flat = self.model.get_mapped_nodes(element_3d.connectivities[element_ids, :].ravel(), "structural")
+        _connectivities = _connect_flat.reshape(-1, element_3d.nodes_per_element)
 
-            progress = int((100 * (i / n_el) // 5) * 5)
-            if progress != last_progress:
-                logging.info(f"Recovering the structural stresses... [{progress}/100]")
+        t0 = perf_counter()
 
-            # process the extrapolated nodal stresses
-            enodal_stresses = element_3d.process_stresses_at_integration_points(
-                element_id,
-                solution = self.solution.structural_solution,
-                extrapolate=True,
-                )
+        if elements_per_loop is None:
 
-            # map the node indexes
-            connect = element_3d.connectivities[element_id, :]
-            _connect = self.model.get_mapped_nodes(connect, "structural")
+            for i, _connect in enumerate(_connectivities):
 
-            avg_nodal_stresses[_connect[corner_indices], :, :] += enodal_stresses
+                progress = int((100 * (i / n_el) // 5) * 5)
+                if progress != last_progress:
+                    logging.info(f"Sweeping elements to calculate the structural stresses... [{progress}/100]")
 
-            if is_quadratic:
-                avg_nodal_stresses[_connect[midside_indices], :, :] += (enodal_stresses[ind_1, :, :] + enodal_stresses[ind_2, :, :]) / 2
+                # process the extrapolated nodal stresses
+                enodal_stresses = element_3d.process_stresses_at_integration_points(element_ids[i], extrapolate=True)
+
+                # sum the nodal stresses at the corner nodes
+                avg_nodal_stresses[_connect[corner_indices], :, :] += enodal_stresses
+
+                # sum the nodal stresses at the midside nodes
+                if is_quadratic:
+                    avg_nodal_stresses[_connect[midside_indices], :, :] += (enodal_stresses[ind_1, :, :] + enodal_stresses[ind_2, :, :]) / 2
+
+        else:
+
+            material_to_elements = self.map_material_to_elements(element_ids)
+
+            for mat_id, _element_ids in material_to_elements.items():
+
+                n_steps = len(_element_ids) // elements_per_loop
+                material = self.model.properties.material_library.get(mat_id)
+
+                for j in range(n_steps + 1):
+
+                    progress = int((100 * (j / (n_steps + 1)) // 5) * 5)
+                    if progress != last_progress:
+                        logging.info(f"Recovering the structural stresses... [{progress}/100]")
+
+                    start = j * elements_per_loop
+                    if j < n_steps:
+                        end = (j + 1) * elements_per_loop
+                    else:
+                        end = None
+
+                    elements_stresses = element_3d.process_stresses_at_integration_points_batched(
+                        element_ids[start:end],
+                        material,
+                        extrapolate=True,
+                        )
+
+                    connect = element_3d.connectivities[element_ids[start:end], :]
+                    _connect_flat = self.model.get_mapped_nodes(connect.ravel(), "structural")
+                    _connect = _connect_flat.reshape(-1, element_3d.nodes_per_element)
+
+                    for i, e_connect in enumerate(_connect):
+                        avg_nodal_stresses[e_connect[corner_indices], :, :] += elements_stresses[i]
+
+                        if is_quadratic:
+                            avg_nodal_stresses[e_connect[midside_indices], :, :] += (
+                                elements_stresses[i, ind_1, :, :] + 
+                                elements_stresses[i, ind_2, :, :]
+                                ) / 2
 
         # average the nodal stresses
         avg_nodal_stresses /= counts.reshape(-1, 1, 1)
 
         dt = perf_counter() - t0
-        print(f"Time 2: {dt} s")
+        print(f"Tempo para calcular as tensões nodais: {dt} s")
 
         return avg_nodal_stresses
 
@@ -478,8 +550,6 @@ class StructuralPostprocessing:
 
         logging.info("Recovering the structural stresses... (1/3)")
 
-        t0 = perf_counter()
-
         element_3d = self.structural_element_3d
 
         if element_3d.connectivities is None:
@@ -487,6 +557,7 @@ class StructuralPostprocessing:
 
         if all(item is None for item in (node_ids, surface_ids, volume_ids)):
             node_ids = self.model.domains_processor.nodes_of_domain.get("structural", [])
+            element_ids = self.model.domains_processor.elements_of_domain.get("structural", [])
 
         elif isinstance(node_ids, int):
             node_ids = [node_ids]
@@ -510,23 +581,15 @@ class StructuralPostprocessing:
                     volume_nodes = self.mesh.get_nodes_from_volume(volume_id)
                     node_ids.extend(volume_nodes)
 
-            node_ids = np.unique(node_ids)
-
-        if not isinstance(node_ids, np.ndarray | list):
-            print("Invalid node ids")
-            return
-
-        logging.info("Recovering the structural stresses... (2/3)")
-        element_ids = self.model.get_solid_elements_from_nodes(node_ids, "structural")
-
-        dt = perf_counter() - t0
-        print(f"Time 1: {dt} s")
-
-        t0 = perf_counter()
+            logging.info("Recovering the structural stresses... (2/3)")
+            if isinstance(node_ids, np.ndarray | list):
+                node_ids = np.unique(node_ids)
+                element_ids = self.model.get_solid_elements_from_nodes(node_ids, "structural")
 
         # initialize variables
+        n_nodes = len(node_ids)
         n_el = len(element_ids)
-        element_stress_data = {}
+        n_freq = len(self.model.frequencies)
 
         midside_data = element_3d.midside_nodes_indices
         is_quadratic = np.any(midside_data)
@@ -535,8 +598,9 @@ class StructuralPostprocessing:
             ind_1 = midside_data[:, 1]
             ind_2 = midside_data[:, 2]
 
-        # initialize logging variable
+        # initialize variables
         last_progress = 0
+        element_stress_data = np.zeros((n_el, n_nodes, 6, n_freq), dtype=complex)
 
         for i, element_id in enumerate(element_ids):
 
@@ -547,7 +611,6 @@ class StructuralPostprocessing:
             # process the extrapolated nodal stresses
             enodal_stresses = element_3d.process_stresses_at_integration_points(
                 element_id,
-                solution = self.solution.structural_solution,
                 extrapolate=True,
                 )
 
@@ -557,9 +620,6 @@ class StructuralPostprocessing:
                 element_stress_data[element_id] = np.append(enodal_stresses, midside_stresses, axis=0)
             else:
                 element_stress_data[element_id] = enodal_stresses
-
-        dt = perf_counter() - t0
-        print(f"Time 2: {dt} s")
 
         return element_stress_data
 
@@ -739,115 +799,6 @@ class StructuralPostprocessing:
         print(f"Time to post-process the nodal stresses (B): {dt} s")
 
         return stress_values, min_value, max_value, symmetric_animation
-
-
-    ##TODO: remove as soon as the stresses recovering has been validated
-    def recover_nodal_averaged_structural_stresses_ref(
-            self,
-            node_ids : int | list[int] | None = None,
-            surface_ids: int | list[int] | None = None,
-            volume_ids: list[int] | None = None,
-            ):
-        """
-        This method computes the nodal averaged stresses and the nodal stresses
-        for each element.
-
-        Parameters
-        ----------
-        node_ids: int, list[int], None. (default None)
-            The selected node IDs.
-
-        surface_ids: int, list[int], None. (default None)
-            The selected surface IDs.
-
-        volume_ids: int, list[int], None. (default None)
-            The selected volume IDss.
-
-        Return
-        ------
-        avg_nodal_stresses_data: dict
-            A dictionary whose keys are the node_ids and the values are the averaged
-            nodal stresses.
-
-        nodal_stresses_data: dict
-            A dictionary whose keys are the tuples in the form (element_id, node_id)
-            and the values are the nodal stresses for each element.
-        """
-
-        mesh = self.model.mesh
-        element_3d = self.model.structural_element_3d
-
-        # if element_3d is None:
-        #     self.harmonic_solver.assembler.define_structural_elements()
-        #     element_3d = self.harmonic_solver.assembler.element_3d
-
-        if element_3d.connectivities is None:
-            element_3d.reorder_connect()
-
-        if isinstance(node_ids, int):
-            node_ids = [node_ids]
-
-        if not isinstance(node_ids, np.ndarray | list):
-
-            node_ids = []
-            if isinstance(surface_ids, int):
-                surface_ids = [surface_ids]
-
-            if isinstance(surface_ids, list):
-                for surface_id in surface_ids:
-                    surface_nodes = mesh.get_nodes_from_surface(surface_id)
-                    node_ids.extend(surface_nodes)
-
-            if isinstance(volume_ids, int):
-                volume_ids = [volume_ids]
-
-            if isinstance(volume_ids, list):
-                for volume_id in volume_ids:
-                    volume_nodes = mesh.get_nodes_from_volume(volume_id)
-                    node_ids.extend(volume_nodes)
-
-        if not node_ids:
-            print("Invalid node ids")
-            return {}, {}
-
-        node_ids = np.unique(node_ids)
-
-        map_elements_to_nodes, filtered_nodes = mesh.get_solid_elements_connected_to_nodes(
-            node_ids=node_ids, return_nodes=True)
-
-        local_dofs = np.arange(element_3d.dof_per_node, dtype=int)
-        dofs_indices = filtered_nodes.reshape(-1, 1) * element_3d.dof_per_node + local_dofs
-
-        # Load all frequency solutions to optimize multiple load on the `process_particle_velocity` method below.
-        node_to_index = dict(zip(filtered_nodes, np.arange(filtered_nodes.size, dtype=int)))
-        solution = self.solution.structural_solution[dofs_indices.flatten(), :]
-
-        nodal_stresses_data = {}
-        avg_nodal_stresses_data = defaultdict(float)
-
-        for node_id, solid_element_ids in map_elements_to_nodes.items():
-
-            n_el = len(solid_element_ids)
-
-            for element_id in solid_element_ids:
-                connect = element_3d.connectivities[element_id, :]
-                indices = np.array([node_to_index.get(node) for node in connect], dtype=int)
-
-                dofs_indices = indices.reshape(-1, 1) * element_3d.dof_per_node + local_dofs
-                dofs_indices = dofs_indices.flatten()
-
-                element_stresses = element_3d.process_stresses_at_integration_points(
-                    element_id,
-                    nodal_solution = solution[dofs_indices, :]
-                    )
-
-                nodal_stresses = element_3d.extrapolate_stresses_to_nodes(element_stresses)
-                for i, e_node in enumerate(connect):
-                    nodal_stresses_data[(element_id, e_node)] = nodal_stresses[:, i, :]
-
-                avg_nodal_stresses_data[node_id] += nodal_stresses_data[(element_id, node_id)] / n_el
-
-        return avg_nodal_stresses_data, nodal_stresses_data
 
 
     # TODO: remove if not used

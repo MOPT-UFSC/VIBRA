@@ -1,4 +1,5 @@
 
+from functools import cache
 from typing import TYPE_CHECKING
 
 import numpy as np
@@ -73,11 +74,14 @@ class Element3D:
     def midside_nodes_indices(self):
         return np.array([])
 
-
-    def get_constitutive_model(self, material: Material, model_type: str = "linear-isotropic"):
+    @cache
+    def get_constitutive_model(self, material_id: int, model_type: str = "linear-isotropic"):
         """
         This method returns the material constitutive model.
         """
+
+        material = self.model.properties.material_library.get(material_id)
+
         rho = material.material_density
         vv = material.poisson_ratio
         E = material.elasticity_modulus
@@ -101,6 +105,11 @@ class Element3D:
                 dtype=float)
 
             return factor * const_law, rho
+
+    @cache
+    def get_material(self, volume_id: int):
+        material: Material = self.model.properties._get_property("material", volume=volume_id)
+        return material
 
 
     def integration_points_data_for_hexahedrons(self, integration_points: int):

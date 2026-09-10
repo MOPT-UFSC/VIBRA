@@ -190,7 +190,7 @@ def load_external_mesh_and_solve(load_position, load_type: str, distributed_mass
     harmonic_solver = HarmonicSolver(assembler)
     model.solution = harmonic_solver.solve_direct(print_log=True)
     dt = time() - t0
-    print(f"Elapsed time to solve modal analysis: {round(dt, 4)}s")
+    print(f"Elapsed time to solve structural harmonic analysis: {round(dt, 4)}s")
 
     folder_name = "distributed_mass" if distributed_mass else load_type
 

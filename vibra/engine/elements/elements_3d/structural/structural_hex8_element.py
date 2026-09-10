@@ -466,7 +466,7 @@ class StructuralHexahedron4(Structural3DElement, Hexahedron8):
 
         """
         # get constitutive law matrix D and the material's density
-        D, rho = self.get_constitutive_model(material, model_type="linear-isotropic")
+        D, rho = self.get_constitutive_model(material.identifier, model_type="linear-isotropic")
 
         # process the determinant of Jacobian and the B matrix
         detJAC, B = self.process_detJAC_and_B_matrix(element_id)
@@ -624,38 +624,21 @@ class StructuralHexahedron4(Structural3DElement, Hexahedron8):
     def process_stresses_at_integration_points(
         self,
         element_id : int,
-        nodal_solution : np.ndarray | None = None,
-        solution: np.ndarray | None = None,
         element_averaged: bool = False,
         extrapolate: bool = False,
         ):
 
-        if node_ids is None:
-            node_ids = self.connectivities[element_id, :]
+        node_ids = self.connectivities[element_id, :]
+        indices = self.model.get_dof_indices_from_nodes(node_ids, "structural")
 
-        if isinstance(nodal_solution, np.ndarray):
-            Ue = nodal_solution
+        # define the element's solution matrix
+        Ue = self.model.solution.structural_solution[indices.flatten(), :]
 
-        elif isinstance(solution, np.ndarray):
-            node_ids = self.connectivities[element_id, :]
-            indices = self.model.get_dof_indices_from_nodes(node_ids, "structural")
-            Ue = solution[indices.flatten(), :]    
+        # get the material ID of the element
+        material = self.get_material(self.model.mesh.solids_connectivity[element_id, 1])
 
-        else:
-            return 0.
-
-        if self.connectivities is None:
-            self.reorder_connect()
-
-        # get the volume ID from element
-        vol_id = self.model.mesh.solids_connectivity[element_id, 1]
-
-        # get the material from element
-        material = self.model.properties._get_property("material", volume=vol_id)
-        if not isinstance(material, Material):
-            return 0.
-
-        D, _ = self.get_constitutive_model(material, model_type="linear-isotropic")
+        # constitutive material law
+        D, _ = self.get_constitutive_model(material.identifier, model_type="linear-isotropic")
 
         # get data to compute the stress (with or without ESF)
         B, Ue = self.get_data_to_compute_stresses(element_id, Ue, D)
