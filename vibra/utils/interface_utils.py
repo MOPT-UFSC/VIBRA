@@ -36,8 +36,8 @@ class VisualizationFilter:
         return not any([self.points, self.lines, self.faces, self.solids, self.symbols])
 
     def to_dict(self) -> dict:
-        return asdict(self)
-    
+        return {key: value for key, value in asdict(self).items() if value != False}
+
     @classmethod
     def all_true(cls):
         # It is dumb, but it works

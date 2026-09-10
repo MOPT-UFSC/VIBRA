@@ -156,22 +156,21 @@ class Config:
         config_data = self.get_config_data()
         key = workspace.value + "_visualization_filter"
 
+        if key not in config_data:
+            if workspace == Workspaces.RESULTS:
+                return VisualizationFilter(faces=True,
+                                           solids=True)
+            
+            return VisualizationFilter.default()
+        
         visualization_filter_data = {}
         for field in fields(VisualizationFilter):
-            if key in config_data:
-                visualization_filter_data[field.name] = config_data[key].get(field.name)
+            visualization_filter_data[field.name] = config_data[key].get(field.name, False)
 
-        if len(visualization_filter_data) != 0:
-            filter = VisualizationFilter(**visualization_filter_data)
+        filter = VisualizationFilter(**visualization_filter_data)
 
-            if filter.is_all_false():
-                filter.faces = True
+        if filter.is_all_false():
+            filter.faces = True
 
-            return filter
-
-        if workspace == Workspaces.RESULTS:
-            return VisualizationFilter(faces=True,
-                                       solids=True)
-
-        return VisualizationFilter.default()
+        return filter
 
