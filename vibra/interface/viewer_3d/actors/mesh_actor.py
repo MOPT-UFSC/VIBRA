@@ -372,6 +372,9 @@ class MeshActor(vtkPropAssembly):
         for i in range(3):
             self.node_colors.FillComponent(i, rgb[i])
 
+    def set_edge_color(self, color: Color):
+        self.edge_actor.GetProperty().SetColor(*color.to_rgb_f())
+
     def set_surface_color(self, color: Color):
         rgb = color.to_rgb()
         for i in range(3):
@@ -381,6 +384,12 @@ class MeshActor(vtkPropAssembly):
         rgb = color.to_rgb()
         for i in range(3):
             self.volume_colors.FillComponent(i, rgb[i])
+
+    def set_nodes_size(self, size: int):
+        self.node_actor.GetProperty().SetPointSize(size)
+
+    def set_edge_width(self, size: int):
+        self.edge_actor.GetProperty().SetLineWidth(size)
 
     def paint_nodes(self, color: Color, nodes: Sequence[int] | np.ndarray):
         if self.mesh is None:
@@ -576,7 +585,6 @@ class MeshActor(vtkPropAssembly):
 
         stacked = []
         for order in column_order:
-            print(order, connectivity.shape)
             connect = connectivity[:, order]
             stacked.append(connect)
 

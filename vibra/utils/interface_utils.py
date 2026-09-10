@@ -55,27 +55,27 @@ class VisualizationFilter:
 
 
 @dataclass
-class GeometryRendererColors:
-    points: Color = color_names.WHITE
-    lines: Color = color_names.WHITE
-    surfaces: Color = color_names.WHITE
-    selected_points: Color = color_names.RED
-    selected_lines: Color = color_names.RED
-    selected_surfaces: Color = color_names.BLUE
+class GeometryRendererConfig:
+    points_color: Color = color_names.WHITE
+    lines_color: Color = color_names.WHITE
+    surfaces_color: Color = color_names.WHITE
+    selected_points_color: Color = color_names.RED
+    selected_lines_color: Color = color_names.RED
+    selected_surfaces_color: Color = color_names.BLUE
     points_size: int = 15
     lines_thickness: int = 3
 
 
 @dataclass
-class MeshRendererColors:
-    nodes: Color = color_names.YELLOW_5
-    edges: Color = color_names.BLACK
-    surfaces: Color = color_names.WHITE
-    solids: Color = color_names.GRAY
-    selected_nodes: Color = color_names.RED
-    selected_edges: Color = color_names.RED
-    selected_surfaces: Color = color_names.BLUE
-    selected_solids: Color = color_names.BLUE
+class MeshRendererConfig:
+    nodes_color: Color = color_names.YELLOW_5
+    edges_color: Color = color_names.BLACK
+    surfaces_color: Color = color_names.WHITE
+    volumes_color: Color = color_names.GRAY_7
+    selected_nodes_color: Color = color_names.RED
+    selected_edges_color: Color = color_names.RED
+    selected_surfaces_color: Color = color_names.BLUE_6
+    selected_volumes_color: Color = color_names.BLUE
     nodes_size: int = 10
     edges_thickness: int = 1
 

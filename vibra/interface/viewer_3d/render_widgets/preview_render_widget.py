@@ -9,7 +9,7 @@ from vibra.engine.model import Model
 from vibra.interface.viewer_3d import sources
 from vibra.interface.viewer_3d.actors.mesh_actor import MeshActor
 from vibra.interface.viewer_3d.actors.symbols_actor import SymbolsActor
-from vibra.utils.interface_utils import SectionPlane
+from vibra.utils.interface_utils import MeshRendererConfig, SectionPlane
 from vibra.utils.time_utils import context_timer, function_timer
 
 
@@ -26,6 +26,7 @@ class PreviewRenderWidget(CommonRenderWidget):
 
         self.model = None
         self.section_plane = None
+        self.mesh_config = MeshRendererConfig()
         self.create_actors()
 
     def create_actors(self):
@@ -58,11 +59,18 @@ class PreviewRenderWidget(CommonRenderWidget):
         self.mesh_actor.update()
         self.symbols.build()
 
+        self.update_colors()
+
         if reset_camera:
             self.renderer.ResetCamera()
 
         with context_timer("render"):
             self.update()
+
+    def update_colors(self):
+        self.mesh_actor.set_node_color(self.mesh_config.nodes_color)
+        self.mesh_actor.set_surface_color(self.mesh_config.surfaces_color)
+        self.mesh_actor.set_volume_color(self.mesh_config.volumes_color)
 
     @override
     def resizeEvent(self, event):
@@ -78,7 +86,7 @@ class PreviewRenderWidget(CommonRenderWidget):
             return
 
         something_picked = self.picker.Pick(x, y, 0, self.renderer)
-        self.mesh_actor.set_color(color_names.WHITE)  # Keep it after the pick
+        self.update_colors()  # Keep it after the pick
 
         if not something_picked:
             self.mesh_actor.update_caches()
@@ -87,17 +95,17 @@ class PreviewRenderWidget(CommonRenderWidget):
 
         match self.mesh_actor.picked_dim_tag(self.picker):
             case 0, tag:
-                self.mesh_actor.paint_nodes(color_names.GREEN, [tag])
+                self.mesh_actor.paint_nodes(self.mesh_config.selected_nodes_color, [tag])
 
             case 2, tag:
                 assert mesh.faces_connectivity is not None
                 surface = mesh.faces_connectivity[tag, 1]
-                self.mesh_actor.paint_surfaces(color_names.BLUE, [surface])
+                self.mesh_actor.paint_surfaces(self.mesh_config.selected_surfaces_color, [surface])
 
             case 3, tag:
                 assert mesh.solids_connectivity is not None
                 volume = mesh.solids_connectivity[tag, 1]
-                self.mesh_actor.paint_volumes(color_names.RED, [volume])
+                self.mesh_actor.paint_volumes(self.mesh_config.selected_volumes_color, [volume])
 
             case _:
                 pass
