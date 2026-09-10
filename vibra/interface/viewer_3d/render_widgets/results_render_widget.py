@@ -12,17 +12,17 @@ from vtkmodules.vtkCommonDataModel import vtkPointData
 from vibra import LOGO_DIR, app
 from vibra.engine import AnalysisID
 from vibra.engine.postprocessing import AcousticPostprocessing, StructuralPostprocessing
+from vibra.interface.enums import Workspaces
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.viewer_3d.plot_setup import (
+    AllowablePulsationForScrewCompressorsPlotSetup,
     FrequencyDisplacementPlotSetup,
     FrequencyPressurePlotSetup,
     NoPlotSetup,
     PlotSetup,
     TransientPressurePlotSetup,
-    AllowablePulsationForScrewCompressorsPlotSetup,
 )
 from vibra.interface.viewer_3d.render_tools import RenderTool, SelectionTool
-from vibra.utils.interface_utils import VisualizationFilter
 from vibra.utils.time_utils import warn_delays
 
 from ..actors import (
@@ -33,8 +33,8 @@ from ..actors import (
     SectionPlaneActor,
 )
 from .model_info_text import (
-    analysis_info_text,
     allowable_pulsation_for_screw_compressor_info_text,
+    analysis_info_text,
 )
 
 
@@ -48,10 +48,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         app().main_window.visualization_changed.connect(self.visualization_changed_callback)
 
         self.plot_setup: PlotSetup = NoPlotSetup()
-        self.visualization_filter = VisualizationFilter(
-            faces=True,
-            solids=True,
-        )
+        self.visualization_filter = app().config.get_visualization_filter(Workspaces.RESULTS)
         # dont't remove, transparency depends on it
         self.renderer.SetUseDepthPeeling(True)
 

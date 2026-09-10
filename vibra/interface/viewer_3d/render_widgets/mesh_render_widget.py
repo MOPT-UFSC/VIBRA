@@ -1,4 +1,3 @@
-from vibra.utils.time_utils import warn_delays
 import logging
 
 from molde.colors import Color, color_names
@@ -7,7 +6,9 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
 
 from vibra import LOGO_DIR, app
+from vibra.interface.enums import Workspaces
 from vibra.interface.loading_window import LoadingWindow
+from vibra.utils.time_utils import warn_delays
 
 from ..actors.edges_actor import EdgesActor
 from ..actors.faces_actor import FacesActor
@@ -32,7 +33,7 @@ class MeshRenderWidget(CommonRenderWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.visualization_filter = app().config.get_visualization_filter()
+        self.visualization_filter = app().config.get_visualization_filter(Workspaces.MESH)
 
         self.mesh_selection = MeshSelection(self)
         self.selection_color = (20, 106, 245)

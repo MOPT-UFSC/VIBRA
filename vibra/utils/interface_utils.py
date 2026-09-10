@@ -1,8 +1,9 @@
+from collections.abc import Generator
 from contextlib import contextmanager
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from enum import IntEnum, auto
 from functools import partial, wraps
-from typing import Generator, TypeVar
+from typing import TypeVar
 
 import numpy as np
 from PySide6.QtCore import QTimer
@@ -31,12 +32,12 @@ class VisualizationFilter:
     element_normal_symbols: bool = False
     color_mode: GeometryColorMode = GeometryColorMode.COLORED
 
-    @classmethod
-    def all_false(cls):
-        # It is dumb, but it works
-        args = [False] * 8
-        return cls(*args)
+    def is_all_false(self) -> bool:
+        return not all([self.points, self.lines, self.faces, self.solids, self.symbols])
 
+    def to_dict(self) -> dict:
+        return asdict(self)
+    
     @classmethod
     def all_true(cls):
         # It is dumb, but it works
@@ -45,13 +46,8 @@ class VisualizationFilter:
 
     @classmethod
     def default(cls):
-        return cls(lines=True,
-                    faces=True,
-                    solids=True,
-                    symbols=True)
+        return cls(lines=True, faces=True, solids=True, symbols=True)
 
-    def to_dict(self) -> dict:
-        return asdict(self)
 
 T = TypeVar("T", bound=QWidget)
 

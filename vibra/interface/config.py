@@ -1,11 +1,12 @@
-from pathlib import Path
-from dataclasses import fields
 import json
-
-from vibra.interface.user_preferences import UserPreferences
-from vibra.utils.interface_utils import VisualizationFilter
+from dataclasses import fields
+from pathlib import Path
 
 from molde.colors import Color
+
+from vibra.interface.enums import Workspaces
+from vibra.interface.user_preferences import UserPreferences
+from vibra.utils.interface_utils import VisualizationFilter
 
 
 class Config:
@@ -144,20 +145,33 @@ class Config:
         with open(self.config_path, "w") as file:
             json.dump(data, file, indent=2)
 
-    def write_visualization_filters_in_file(self, visualization_filter: VisualizationFilter):
+    def write_visualization_filters_in_file(self, workspace: Workspaces, visualization_filter: VisualizationFilter):
         config_data = self.get_config_data()
-        visualization_filter_data = visualization_filter.to_dict()
+        key = workspace.value + "_visualization_filter"
+        config_data[key] = visualization_filter.to_dict()
 
-        self.write_data_in_file(config_data | visualization_filter_data)
+        self.write_data_in_file(config_data)
 
-    def get_visualization_filter(self) -> VisualizationFilter:
+    def get_visualization_filter(self, workspace: Workspaces) -> VisualizationFilter:
         config_data = self.get_config_data()
+        key = workspace.value + "_visualization_filter"
+
         visualization_filter_data = {}
-
         for field in fields(VisualizationFilter):
-            visualization_filter_data[field.name] = config_data.get(field.name)
+            if key in config_data:
+                visualization_filter_data[field.name] = config_data[key].get(field.name)
 
-        if len(visualization_filter_data) == 0:
-            return VisualizationFilter.default()
+        if len(visualization_filter_data) != 0:
+            filter = VisualizationFilter(**visualization_filter_data)
 
-        return VisualizationFilter(**visualization_filter_data)
+            if filter.is_all_false():
+                filter.faces = True
+
+            return filter
+
+        if workspace == Workspaces.RESULTS:
+            return VisualizationFilter(faces=True,
+                                       solids=True)
+
+        return VisualizationFilter.default()
+
