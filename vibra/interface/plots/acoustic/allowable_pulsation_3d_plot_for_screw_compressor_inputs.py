@@ -42,7 +42,7 @@ class AllowablePulsations3DPlotForScrewCompressorInputs(AllowablePulsations3dPlo
 
     @property
     def nodal_solution(self):
-        return app().project.model.solution.nodal_solution
+        return app().project.model.solution.acoustic_solution
 
     def show_results_render(self):
         curent_render_widget = app().main_window.get_current_render_widget()

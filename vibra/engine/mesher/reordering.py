@@ -84,9 +84,9 @@ class Reordering:
         for i, values in enumerate(self.solids_connectivity):
             n_nodes = self.nodes_by_element_type[values[2]]
             mat = self.get_elementary_graph_info(values[2])
-            indexes = values[4 : 4 + n_nodes]
+            indices = values[4 : 4 + n_nodes]
             end += len(mat)
-            aux = np.tile(indexes, (len(indexes), 1))
+            aux = np.tile(indices, (len(indices), 1))
             rows[start:end] = aux.T.flatten()
             cols[start:end] = aux.flatten()
             graph_data[start:end] = mat
@@ -100,16 +100,16 @@ class Reordering:
     def _process_reordering(self):
         """
         """
-        self.map_nodes_indexes = dict()
+        self.map_nodes_indices = dict()
         graph = self.get_global_graph()
         # self.plot_graph(graph)
         perm_rcm = rcm(graph, symmetric_mode=True)
-        indexes = (self.nodal_coordinates[:, 0]).astype(int)
-        self.perm = self.sp_permute_vector(indexes.reshape(-1, 1), perm_rcm).flatten()
-        self.map_nodes_indexes = dict(zip(indexes, self.perm))
+        indices = (self.nodal_coordinates[:, 0]).astype(int)
+        self.perm = self.sp_permute_vector(indices.reshape(-1, 1), perm_rcm).flatten()
+        self.map_nodes_indices = dict(zip(indices, self.perm))
 
-        # for node_id_gmsh in indexes:
-        #     self.map_nodes_indexes[node_id_gmsh] = self.perm[node_id_gmsh]
+        # for node_id_gmsh in indices:
+        #     self.map_nodes_indices[node_id_gmsh] = self.perm[node_id_gmsh]
 
         # # saving data
         # gmsh_id = self.nodal_coordinates[:, 0]
@@ -121,8 +121,8 @@ class Reordering:
     def get_new_nodal_coordinates(self):
         """
         """
-        indexes = np.argsort(self.perm)
-        self.nodal_coordinates[:, 1:] = self.nodal_coordinates[indexes, 1:]
+        indices = np.argsort(self.perm)
+        self.nodal_coordinates[:, 1:] = self.nodal_coordinates[indices, 1:]
         return self.nodal_coordinates
 
     def get_new_connectivity(self, connectivity_array):
@@ -131,23 +131,23 @@ class Reordering:
         _connectivity = connectivity_array.copy()
         for el, values in enumerate(connectivity_array):
             n_nodes = self.nodes_by_element_type[values[2]]
-            _connectivity[el, 4 : 4 + n_nodes] = self.get_new_indexes_nodes_for_vector(values[4 : 4 + n_nodes])
+            _connectivity[el, 4 : 4 + n_nodes] = self.get_new_indices_nodes_for_vector(values[4 : 4 + n_nodes])
         return _connectivity
 
-    def get_new_indexes_nodes_for_vector(self, indexes):
+    def get_new_indices_nodes_for_vector(self, indices):
         """ This method returns ...
         """
-        vect_nodes = np.zeros_like(indexes, dtype=int)
-        for i, index in enumerate(indexes):
-            vect_nodes[i] = self.map_nodes_indexes[index]
+        vect_nodes = np.zeros_like(indices, dtype=int)
+        for i, index in enumerate(indices):
+            vect_nodes[i] = self.map_nodes_indices[index]
         return vect_nodes
 
-    def get_new_indexes_nodes_for_matrix(self, mat_indexes):
+    def get_new_indices_nodes_for_matrix(self, mat_indices):
         """ This method returns ...
         """
-        mat_nodes = np.zeros_like(mat_indexes, dtype=int)
-        for i, vector in enumerate(mat_indexes):
-            mat_nodes[i, :] = self.get_new_indexes_nodes_for_vector(vector)
+        mat_nodes = np.zeros_like(mat_indices, dtype=int)
+        for i, vector in enumerate(mat_indices):
+            mat_nodes[i, :] = self.get_new_indices_nodes_for_vector(vector)
         return mat_nodes
 
     def updates_nodes_from(self, input_data):
@@ -159,13 +159,13 @@ class Reordering:
         for key, data in input_data.items():
             if isinstance(data, dict):
                 temp = dict()
-                if "element_indexes" in data.keys():
-                    temp["element_indexes"] = data["element_indexes"]  
+                if "element_indices" in data.keys():
+                    temp["element_indices"] = data["element_indices"]  
                 if "connectivity" in data.keys():
-                    temp["connectivity"] = self.get_new_indexes_nodes_for_matrix(data["connectivity"])
+                    temp["connectivity"] = self.get_new_indices_nodes_for_matrix(data["connectivity"])
                 aux_dict[key] = temp
             else:
-                aux_dict[key] = self.get_new_indexes_nodes_for_vector(data)
+                aux_dict[key] = self.get_new_indices_nodes_for_vector(data)
         return aux_dict
 
     def get_elementary_graph_info(self, etype_tag):

@@ -1,15 +1,21 @@
 import numpy as np
-from vtkmodules.vtkCommonCore import vtkFloatArray
 from vtkmodules.util.numpy_support import vtk_to_numpy
+from vtkmodules.vtkCommonCore import vtkFloatArray
 from vtkmodules.vtkCommonDataModel import vtkPlane
 from vtkmodules.vtkFiltersCore import vtkCutter
 from vtkmodules.vtkRenderingCore import vtkPolyDataMapper
 
+from vibra import app
+from vibra.engine.analysis_info.analysis_enums import PhysicalDomain
 from vibra.interface.viewer_3d.actors.solids_actor import SolidsActor
+
 from ..coloring.color_table import ColorTable
 
 
 class AnalysisActor(SolidsActor):
+    def __init__(self, *args, physical_domain: PhysicalDomain | None = None, **kwargs):
+        self.physial_domain = physical_domain
+        super().__init__(*args, **kwargs)
 
     def create_geometry(self):
         super().create_geometry()
@@ -21,14 +27,24 @@ class AnalysisActor(SolidsActor):
         self.cutter_mapper.InterpolateScalarsBeforeMappingOn()
         self.SetMapper(self.cutter_mapper)
 
-    def apply_deformation(self, displacements: np.ndarray, magnification_factor: float, max_abs: float):
+    def get_hidden_volumes(self):
+        mesh = app().project.mesh
+        if mesh is None:
+            return set()
 
-        if max_abs == 0:
-            max_abs = 1
+        match self.physial_domain:
+            case PhysicalDomain.ACOUSTIC:
+                domain_specific_volumes = app().project.model.volumes_of_domain.get("acoustic", set())
+            case PhysicalDomain.STRUCTURAL:
+                domain_specific_volumes = app().project.model.volumes_of_domain.get("structural", set())
+            case _:
+                domain_specific_volumes = mesh.all_volume_ids()
 
-        deltas = (magnification_factor / (10 * max_abs)) * displacements
-        deformed_coordinates = deltas + self.mesh.nodal_coordinates[:, 1:]
+        visible_volumes = set(domain_specific_volumes)
+        visible_volumes &= app().main_window.entity_visibility.get_visible_volumes()
+        return mesh.all_surface_ids() - visible_volumes
 
+    def apply_deformation(self, deformed_coordinates: np.ndarray):
         self.update_coordinates(deformed_coordinates)
 
     def plot_color_bar(self, values, min_value, max_value, colormap="jet"):
@@ -61,7 +77,6 @@ class AnalysisActor(SolidsActor):
         super().apply_cut(origin, normal)
         self.clipper.Update()
         self.SetMapper(self.clipper_mapper)
-
 
     def apply_cutter(self, origin, normal):
         if self.data is None:

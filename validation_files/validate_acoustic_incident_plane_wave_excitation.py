@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from validation_files.data.WB.load_external_data import LoadExternalData
 from vibra import PROJECT_DIR
 from vibra.engine.analysis_info import AnalysisID, FrequencySpacing
-from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
+from vibra.engine.assemblers.acoustic.acoustic_assembler import AcousticAssembler
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.engine.postprocessing import AcousticPostprocessing
@@ -184,7 +184,7 @@ def load_external_mesh_and_solve(**kwargs):
     dt = perf_counter() - t0
     print(f"Elapsed time to post-process data: {round(dt, 4)}")
 
-    nodal_solution = model.solution.nodal_solution
+    nodal_solution = model.solution.acoustic_solution
 
     # Load the external data
     results_path = PROJECT_DIR / "validation_files/data/WB/acoustic/excitations/tet4/results/ipw_in_duct/"
@@ -221,7 +221,7 @@ def load_external_mesh_and_solve(**kwargs):
             print(f"Deviation of the averaged particle velocity {pv_label} (Surface #{surf_id}): {100 * np.max(abs_diff_pressure)} %")
 
    # Nodal results comparisons
-    dofs_per_node = assembler.element_3d.DOF_PER_NODE
+    dofs_per_node = assembler.element_3d.dof_per_node
 
     # define the plot type
     plot_type = "real"
@@ -247,7 +247,7 @@ def load_external_mesh_and_solve(**kwargs):
                 node_id,
                 dofs_per_node,
                 frequencies,
-                model.solution.nodal_solution,
+                model.solution.acoustic_solution,
                 WB_pressure_data,
                 named_selection,
                 plot_type=plot_type,

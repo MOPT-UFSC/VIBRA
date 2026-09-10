@@ -2,8 +2,8 @@ from typing import TYPE_CHECKING
 
 from vibra import PROJECT_DIR
 from vibra.engine.analysis_info import AnalysisID, ModalAnalysisSetup
-from vibra.engine.assemblers.structural_assembler import StructuralAssembler
-from vibra.engine.elements.element_options import BbarDilatationalEvaluation, HEX8_structural
+from vibra.engine.assemblers.structural.structural_assembler import StructuralAssembler
+from vibra.engine.elements.common.element_options import BbarDilatationalEvaluation, HEX8_structural
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.engine.properties.material import Material
@@ -172,8 +172,8 @@ def load_external_mesh_and_solve(**kwargs):
 
     natural_frequencies_ref = np.loadtxt(results_path / "natural_frequencies_reference.dat")[:, 1]
 
-    # modes_indexes = np.arange(natural_frequencies.size)
-    # nat_freq_data = np.array([modes_indexes, natural_frequencies]).T
+    # modes_indices = np.arange(natural_frequencies.size)
+    # nat_freq_data = np.array([modes_indices, natural_frequencies]).T
     # np.savetxt("natural_frequencies_Vibra.dat", nat_freq_data, fmt = "%i %.12e", delimiter=',')
 
     fnat_diff = 100 * (np.abs(natural_frequencies[1:] - natural_frequencies_ref[1:]) / natural_frequencies_ref[1:])

@@ -3,12 +3,15 @@ from pathlib import Path
 import numpy as np
 
 from vibra import PROJECT_DIR
+from vibra.engine import solution
 from vibra.engine.analysis_info import (
     AnalysisID,
     FrequencySpacing,
     ModalAnalysisSetup,
 )
 from vibra.engine.project import Project
+from vibra.engine.solution.harmonic_solution import HarmonicSolution
+from vibra.engine.solution.modal_solution import ModalSolution
 
 
 def test_write_and_read_mesh_project(fluid, datadir: Path):
@@ -24,19 +27,27 @@ def test_write_and_read_mesh_project(fluid, datadir: Path):
     project_a.configure_analysis(
         ModalAnalysisSetup(
             analysis_id=AnalysisID.ACOUSTIC_MODAL,
-            modes_number = 5,
-            sigma_factor = 0.01,
+            modes_number=5,
+            sigma_factor=0.01,
         ),
     )
     project_a.run_analysis()
     solution_a = project_a.model.solution
     project_a.save_project(project_path)
 
-    project_b = Project()
-    project_b.load_project(project_path)
-
+    project_b = Project().load_project(project_path)
+    solution_b = project_b.model.solution
     project_path.unlink()
-    assert np.allclose(solution_a.modal_shapes, project_b.model.solution.modal_shapes[:])
+
+    assert isinstance(solution_a, ModalSolution)
+    assert isinstance(solution_b, ModalSolution)
+    assert solution_a.acoustic_modal_shapes is not None
+    assert solution_b.acoustic_modal_shapes is not None
+
+    assert np.allclose(
+        solution_a.acoustic_modal_shapes,
+        solution_b.acoustic_modal_shapes[:],
+    )
 
 
 def test_compare_interface_based_mesh_project():
@@ -70,17 +81,25 @@ def test_compare_interface_based_mesh_project():
 
     ## Define the analysis frequency setup
     analysis_setup = project_cli.model.get_harmonic_analysis_setup(
-        frequency_spacing = FrequencySpacing.EQUALLY_DISTRIBUTED,
-        analysis_id = AnalysisID.ACOUSTIC_HARMONIC,
-        f_min = 200,
-        f_max = 500,
-        f_step = 100,
+        frequency_spacing=FrequencySpacing.EQUALLY_DISTRIBUTED,
+        analysis_id=AnalysisID.ACOUSTIC_HARMONIC,
+        f_min=200,
+        f_max=500,
+        f_step=100,
     )
 
     project_cli.configure_analysis(analysis_setup)
     project_cli.run_analysis()
 
+    solution_a = project_interface.model.solution
+    solution_b = project_cli.model.solution
+
+    assert isinstance(solution_a, HarmonicSolution)
+    assert isinstance(solution_b, HarmonicSolution)
+    assert solution_a.acoustic_solution is not None
+    assert solution_b.acoustic_solution is not None
+
     assert np.allclose(
-        project_interface.model.solution.nodal_solution[:],
-        project_cli.model.solution.nodal_solution[:],
+        solution_a.acoustic_solution[:],
+        solution_b.acoustic_solution[:],
     )

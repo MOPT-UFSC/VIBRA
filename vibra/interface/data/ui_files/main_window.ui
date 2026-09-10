@@ -182,6 +182,7 @@
      <string>Advanced</string>
     </property>
     <addaction name="action_export_element_transfer_data"/>
+    <addaction name="action_show_fluid_structure_interface_normals"/>
    </widget>
    <widget class="QMenu" name="menu_selection">
     <property name="title">
@@ -255,8 +256,17 @@
    <property name="text">
     <string>Open Project</string>
    </property>
-   <property name="toolTip">
+      <property name="toolTip">
     <string>Open an existing project file (.vibra)</string>
+   </property>
+  </action>
+  <action name="action_recent">
+   <property name="icon">
+    <iconset resource="../icons/dark_theme/resources.qrc">
+     <normaloff>:/icons/recent.png</normaloff>:/icons/recent.png</iconset>
+   </property>
+   <property name="text">
+    <string>Recent</string>
    </property>
   </action>
   <action name="action_save">
@@ -312,8 +322,44 @@
    <property name="text">
     <string>Exit</string>
    </property>
-   <property name="toolTip">
+    <property name="toolTip">
     <string>Exit application</string>
+    </property>
+  </action>
+  <action name="action_show_menu_items">
+   <property name="icon">
+    <iconset resource="../icons/dark_theme/resources.qrc">
+     <normaloff>:/icons/new_file.png</normaloff>:/icons/new_file.png</iconset>
+   </property>
+   <property name="text">
+    <string>Hide menu items</string>
+   </property>
+  </action>
+  <action name="action_set_fluid">
+   <property name="icon">
+    <iconset resource="../icons/dark_theme/resources.qrc">
+     <normaloff>:/icons/new_file.png</normaloff>:/icons/new_file.png</iconset>
+   </property>
+   <property name="text">
+    <string>Set fluid</string>
+   </property>
+  </action>
+  <action name="action_set_material">
+   <property name="icon">
+    <iconset resource="../icons/dark_theme/resources.qrc">
+     <normaloff>:/icons/new_file.png</normaloff>:/icons/new_file.png</iconset>
+   </property>
+   <property name="text">
+    <string>Set material</string>
+   </property>
+  </action>
+  <action name="action_mesher_setup">
+   <property name="icon">
+    <iconset resource="../icons/dark_theme/resources.qrc">
+     <normaloff>:/icons/new_file.png</normaloff>:/icons/new_file.png</iconset>
+   </property>
+   <property name="text">
+    <string>Mesher setup</string>
    </property>
   </action>
   <action name="action_about_vibra">
@@ -323,6 +369,15 @@
    </property>
    <property name="text">
     <string>About Vibra</string>
+   </property>
+  </action>
+  <action name="action_reset_project">
+   <property name="icon">
+    <iconset resource="../icons/dark_theme/resources.qrc">
+     <normaloff>:/icons/recent.png</normaloff>:/icons/recent.png</iconset>
+   </property>
+   <property name="text">
+    <string>Reset Project</string>
    </property>
   </action>
   <action name="action_node_view">
@@ -375,8 +430,17 @@
    <property name="text">
     <string>Face View</string>
    </property>
-   <property name="toolTip">
+    <property name="toolTip">
     <string>Toggle faces visualization</string>
+    </property>
+  </action>
+  <action name="section_plane_show_action">
+   <property name="icon">
+    <iconset resource="../icons/dark_theme/resources.qrc">
+     <normaloff>:/icons/visibility/section_plane_view.png</normaloff>:/icons/visibility/section_plane_view.png</iconset>
+   </property>
+   <property name="text">
+    <string>Clip Plane</string>
    </property>
   </action>
   <action name="action_hide_show_symbols">
@@ -440,6 +504,15 @@
    </property>
    <property name="text">
     <string>Export element transfer data</string>
+   </property>
+  </action>
+  <action name="action_generate_mesh">
+   <property name="icon">
+    <iconset resource="../icons/dark_theme/resources.qrc">
+     <normaloff>:/icons/new_file.png</normaloff>:/icons/new_file.png</iconset>
+   </property>
+   <property name="text">
+    <string>Generate Mesh</string>
    </property>
   </action>
   <action name="action_theme">
@@ -752,6 +825,11 @@
    </property>
    <property name="menuRole">
     <enum>QAction::MenuRole::NoRole</enum>
+   </property>
+  </action>
+  <action name="action_show_fluid_structure_interface_normals">
+   <property name="text">
+    <string>Show FSI normals</string>
    </property>
   </action>
  </widget>

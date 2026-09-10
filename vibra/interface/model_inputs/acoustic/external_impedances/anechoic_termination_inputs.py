@@ -5,7 +5,7 @@ from PySide6.QtWidgets import QAbstractItemView, QTreeWidgetItem
 
 from vibra import app
 from vibra.interface import warning_title
-from vibra.interface.common.common_interface import filter_outside_surfaces
+from vibra.interface.common.common_interface import filter_outside_surfaces, update_entities_selection
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.acoustic.definitions.enums import SetupTabType
@@ -116,7 +116,11 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
 
         self.treeWidget_selection_info.clear()
         input_ids = self.lineEdit_selection_id.text()
-        surface_ids, error_data = self.mesh.check_selected_ids(input_ids, selection="surfaces")
+        surface_ids, error_data = self.model.check_selected_ids(
+            input_ids,
+            "surfaces",
+            domain="acoustic",
+        )
 
         if error_data is not None:
             self.lineEdit_selection_id.setFocus()
@@ -153,12 +157,20 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
             return
         
         input_ids = self.lineEdit_selection_id.text()
-        surface_ids, error_data = self.mesh.check_selected_ids(input_ids, selection="surfaces")
+        surface_ids, error_data = self.model.check_selected_ids(
+            input_ids,
+            "surfaces",
+            domain="acoustic",
+        )
 
         if error_data is not None:
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
             return
+
+        app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
+        update_entities_selection(self.lineEdit_selection_id, "surfaces", surface_ids)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
         self.remove_conflicting_excitations(surface_ids)
 

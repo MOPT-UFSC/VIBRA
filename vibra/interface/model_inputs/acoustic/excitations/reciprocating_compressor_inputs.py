@@ -11,7 +11,7 @@ from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QLineEdit, QTreeWi
 from vibra import SUPPORTED_OUTPUT_DATA_EXTENSIONS, USER_PATH, app
 from vibra.engine.properties.fluid import Fluid
 from vibra.interface import error_title
-from vibra.interface.common.common_interface import mesher_interface_callback, update_analysis_setup_in_file
+from vibra.interface.common.common_interface import mesher_interface_callback, update_analysis_setup_in_file, update_entities_selection
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -203,19 +203,23 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.lineEdit_isentropic_exponent.setValidator(StrictDoubleValidator(1e-8, 10, 6))
 
     def _create_connections(self):
-        #
+
+        # QCheckBox connection
         self.checkBox_export_data.stateChanged.connect(self.export_data_checkbox_callback)
-        #
+
+        # QComboBox connection
         self.comboBox_cylinder_acting.currentIndexChanged.connect(self.update_compressing_cylinders_setup)
         self.comboBox_frequency_resolution.currentIndexChanged.connect(self.comboBox_event_frequency_resolution)
         self.comboBox_pressure_units.currentIndexChanged.connect(self.pressure_unit_callback)
         self.comboBox_temperature_units.currentIndexChanged.connect(self.temperature_unit_callback)
-        #
+
+        # QLineEdit connection
         self.lineEdit_isentropic_exponent.textChanged.connect(self.update_state_properties_at_discharge)
         self.lineEdit_suction_pressure.textChanged.connect(self.update_state_properties_at_discharge)
         self.lineEdit_pressure_ratio.textChanged.connect(self.update_state_properties_at_discharge)
         self.lineEdit_suction_temperature.textChanged.connect(self.update_state_properties_at_discharge)
-        #
+
+        # QPushButton connection
         self.pushButton_plot_PV_diagram_head_end.clicked.connect(self.plot_PV_diagram_head_end)
         self.pushButton_plot_PV_diagram_crank_end.clicked.connect(self.plot_PV_diagram_crank_end)
         self.pushButton_plot_PV_diagram_both_ends.clicked.connect(self.plot_PV_diagram_both_ends)
@@ -232,7 +236,6 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.pushButton_plot_volume_crank_end_angle.clicked.connect(self.plot_volume_crank_end_angle)
         self.pushButton_process_aquisition_parameters.clicked.connect(self.process_aquisition_parameters)
         self.pushButton_export_path.clicked.connect(self.export_path_callback)
-        #
         self.pushButton_apply.clicked.connect(self.apply_callback)
         self.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
         self.pushButton_cancel.clicked.connect(self.close)
@@ -240,15 +243,17 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
         self.pushButton_reset_entries.clicked.connect(self.reset_entries)
-        #
+
+        # QSpinBox connection
         self.spinBox_number_of_points.valueChanged.connect(self.spinBox_event_number_of_points)        
         self.spinBox_max_frequency.valueChanged.connect(self.spinBox_event_max_frequency)
-        #
+
+        # QTabWidget connection
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         self.treeWidget_compressor_excitation.itemClicked.connect(self.on_click_item)
-        #
+
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
-        #
+
         self.export_data_checkbox_callback()
         self.update_compressing_cylinders_setup()
         self.update_state_properties_at_discharge()
@@ -267,24 +272,18 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             return
 
         selected_surfaces = app().main_window.selection.geometry_surfaces
+        if not selected_surfaces:
+            return
 
-        if selected_surfaces:
+        self.lineEdit_selection_id.setText(" ,".join([str(_id) for _id in selected_surfaces]))    
+        if len(selected_surfaces) != 1:
+            return
 
-            surface_ids = [str(i) for i in selected_surfaces]
-            self.lineEdit_selection_id.setText(surface_ids[0])
+        surface_id = next(iter(selected_surfaces))
+        data = self.properties._get_property("reciprocating_compressor_excitation", surface=surface_id)
 
-            input_ids = self.lineEdit_selection_id.text()
-            surface_id, error_data = self.mesh.check_selected_ids(input_ids, selection="surfaces", single_id=True)
-
-            if error_data is not None:
-                self.lineEdit_selection_id.setFocus()
-                PrintMessageInput(error_data)
-                return True
-
-            data = self.properties._get_property("reciprocating_compressor_excitation", surface=surface_id)
-
-            if isinstance(data, dict):
-                self.update_compressor_inputs(data)
+        if isinstance(data, dict):
+            self.update_compressor_inputs(data)
     
     def verify_if_selected_surfaces_are_in_tree_widget_compressor_excitation(self):
         if self.tree_item_clicked:
@@ -593,7 +592,12 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
     def check_input_surfaces(self):
 
         input_ids = self.lineEdit_selection_id.text()
-        surface_id, error_data = self.model.mesh.check_selected_ids(input_ids, selection="surfaces", single_id=True)
+        surface_id, error_data = self.model.check_selected_ids(
+            input_ids,
+            "surfaces",
+            domain="acoustic",
+            single_id=True
+        )
 
         if error_data is not None:
             self.lineEdit_selection_id.setFocus()

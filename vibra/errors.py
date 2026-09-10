@@ -65,6 +65,10 @@ class InvalidFluidError(VibraException):
     pass
 
 
+class InvalidDomainError(VibraException):
+    pass
+
+
 class InvalidModelSetupError(ModelException):
     pass
 

@@ -133,7 +133,7 @@ class MeshSelection:
             x,
             y,
             self.mesh_render_widget.faces_actor,
-            "face_indexes",
+            "face_indices",
             self.mesh_render_widget.renderer,
         )
 
@@ -147,7 +147,7 @@ class MeshSelection:
             x,
             y,
             self.mesh_render_widget.solids_actor,
-            "solid_indexes",
+            "solid_indices",
             self.mesh_render_widget.renderer,
         )
 
@@ -174,8 +174,8 @@ class MeshSelection:
             self.mesh_render_widget.renderer,
         )
 
-        node_indexes = mesh.nodal_coordinates[:, 0].astype(int)
-        picked_nodes = set(node_indexes[mask & plane_mask])
+        node_indices = mesh.nodal_coordinates[:, 0].astype(int)
+        picked_nodes = set(node_indices[mask & plane_mask])
         return picked_nodes
 
     def _area_pick_faces(self, x0: int, y0: int, x1: int, y1: int) -> set[int]:
@@ -193,8 +193,8 @@ class MeshSelection:
             self.mesh_render_widget.renderer,
         )
 
-        face_indexes = mesh.faces_connectivity[:, 0].astype(int)
-        return set(face_indexes[mask_selected_faces & plane_mask])
+        face_indices = mesh.faces_connectivity[:, 0].astype(int)
+        return set(face_indices[mask_selected_faces & plane_mask])
 
     def _area_pick_solids(
         self,
@@ -217,8 +217,8 @@ class MeshSelection:
             self.mesh_render_widget.renderer,
         )
 
-        solid_indexes = mesh.solids_connectivity[:, 0].astype(int)
-        return set(solid_indexes[mask_selected_elements & plane_mask])
+        solid_indices = mesh.solids_connectivity[:, 0].astype(int)
+        return set(solid_indices[mask_selected_elements & plane_mask])
 
     def _section_plane_mask(self, coordinates: np.ndarray):
         if self.section_plane_config is None:

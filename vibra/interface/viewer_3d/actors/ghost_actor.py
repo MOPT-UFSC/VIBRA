@@ -6,7 +6,10 @@ from .faces_actor import FacesActor
 
 class GhostActor(FacesActor):
     def __init__(self, mesh):
-        super().__init__(mesh, allow_hidding=False, update_normals=False)
+        super().__init__(mesh, update_normals=False)
+
+    def get_hidden_surfaces(self) -> set:
+        return set()
 
     def update_coordinates(self, coordinates):
         points = self.data.GetPoints()
@@ -14,12 +17,7 @@ class GhostActor(FacesActor):
             points.SetPoint(i, xyz)
         points.Modified()
 
-    def apply_deformation(self, displacements: np.ndarray, magnification_factor: float, max_abs: float):
-        if max_abs == 0:
-            max_abs = 1
-
-        deltas = (magnification_factor / (10 * max_abs)) * displacements
-        deformed_coordinates = deltas + self.mesh.nodal_coordinates[:, 1:]
+    def apply_deformation(self, deformed_coordinates: np.ndarray):
         self.update_coordinates(deformed_coordinates)
 
     def configure_appearance(self):

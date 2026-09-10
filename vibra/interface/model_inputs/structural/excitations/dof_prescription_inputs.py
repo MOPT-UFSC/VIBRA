@@ -12,7 +12,7 @@ from PySide6.QtWidgets import QAbstractItemView, QLabel, QLineEdit, QTreeWidgetI
 from vibra import app
 from vibra.engine.analysis_info import AnalysisID
 from vibra.interface import error_title
-from vibra.interface.common.common_interface import save_table_values, update_analysis_setup_in_file
+from vibra.interface.common.common_interface import save_table_values, update_analysis_setup_in_file, update_entities_selection
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -538,18 +538,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
         return False, values
 
-    def constant_values_attribution(self):
-
-        input_ids = self.lineEdit_selection_id.text()
-        assignment_type = self.comboBox_assignment_type.currentIndex()
-        selection = self.assignment_types.get(assignment_type)
-        selected_ids, error_data = self.mesh.check_selected_ids(input_ids, selection=selection, single_id=False)
-
-        if error_data is not None:
-            app().main_window.hide_dialogs()
-            self.lineEdit_selection_id.setFocus()
-            PrintMessageInput(error_data)
-            return True
+    def constant_values_attribution(self, selection: str, selected_ids: list[int]):
 
         etype_index = self.comboBox_element_type.currentIndex()
         element_type = self.element_types[etype_index]
@@ -606,17 +595,18 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                 "integrate" : self.comboBox_data_type.currentIndex(),
             }
 
-            if assignment_type == AssignmentType.SURFACES:
-                self.properties._set_property("prescribed_dof", data, surface=selected_id)
+            match selection:
+                case "surfaces":
+                    self.properties._set_property("prescribed_dof", data, surface=selected_id)
 
-            elif assignment_type == AssignmentType.LINES:
-                self.properties._set_property("prescribed_dof", data, line=selected_id)
+                case "lines":
+                    self.properties._set_property("prescribed_dof", data, line=selected_id)
 
-            elif assignment_type == AssignmentType.POINTS:
-                self.properties._set_property("prescribed_dof", data, point=selected_id)
+                case "points": 
+                    self.properties._set_property("prescribed_dof", data, point=selected_id)
 
-            elif assignment_type == AssignmentType.NODES:
-                self.properties._set_property("prescribed_dof", data, node=selected_id)
+                case "nodes":
+                    self.properties._set_property("prescribed_dof", data, node=selected_id)
 
         if self.comboBox_data_type.currentIndex() != DataType.DISPLACEMENT:
             self.update_analysis_setup_to_filter_zero_frequency()
@@ -699,59 +689,10 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         if self.rz_table_path is None:
             self.lineEdit_reset(self.lineEdit_path_table_rz)
 
-    def integrate_and_save_table_files(self, dof_label: str, selected_id: int, selection: str, values: np.ndarray):
+    def table_values_attribution(self, selection: str, selected_ids: list[int]):
 
-        if self.frequencies[0] == 0:
-            self.frequencies[0] = float(1e-6)
-
-        # n_diff = self.comboBox_data_type.currentIndex()
-        # if n_diff:
-        #     values /= (1j*2*np.pi*self.frequencies)**n_diff
-
-        if self.frequencies[0] == float(1e-6):
-            self.frequencies[0] = 0
-
-        if app().project.model.change_analysis_frequency_setup(list(self.frequencies)):
-
-            app().main_window.hide_dialogs()
-            lineEdit = self.table_line_edits.get(dof_label)
-            imported_filename = basename(lineEdit.text())
-            self.lineEdit_reset(lineEdit)
-
-            title = "Project frequency setup cannot be modified"
-            message = "The following imported table of values has a frequency setup "
-            message += "different from the others already imported ones. The current "
-            message += "project frequency setup is not going to be modified."
-            message += f"\n\nFile name: {imported_filename}"
-            PrintMessageInput([error_title, title, message])
-
-            return None, None
-
-        table_name = f"prescribed_dof_{dof_label}_from_{selection[:-1]}_{selected_id}"
-
-        real_values = np.real(values)
-        imag_values = np.imag(values)
-        data = np.array([self.frequencies, real_values, imag_values], dtype=float).T
-
-        update_analysis_setup_in_file(self.frequencies)
-        self.properties.add_imported_tables("structural", table_name, data)
-
-        return table_name, data
-
-    def table_values_attribution(self):
-
-        input_ids = self.lineEdit_selection_id.text()
-        assignment_type = self.comboBox_assignment_type.currentIndex()
-        selection = self.assignment_types.get(assignment_type)
-        selected_ids, error_data = self.mesh.check_selected_ids(input_ids, selection=selection, single_id=False)
-
-        if error_data is not None:
-            app().main_window.hide_dialogs()
-            self.lineEdit_selection_id.setFocus()
-            PrintMessageInput(error_data)
-            return True
-
-        element_type = "3d_element" if self.comboBox_element_type.currentIndex() else "2d_element"
+        etype_index = self.comboBox_element_type.currentIndex()
+        element_type = self.element_types[etype_index]
 
         for i, label in enumerate(["ux", "uy", "uz", "rx", "ry", "rz"]):
             if element_type == "3d_element" and i >= 3:
@@ -808,17 +749,18 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                 "integrate" : self.comboBox_data_type.currentIndex(),
             }
 
-            if assignment_type == AssignmentType.SURFACES:
-                self.properties._set_property("prescribed_dof", data, surface=selected_id)
+            match selection:
+                case "surfaces":
+                    self.properties._set_property("prescribed_dof", data, surface=selected_id)
 
-            elif assignment_type == AssignmentType.LINES:
-                self.properties._set_property("prescribed_dof", data, line=selected_id)
+                case "lines":
+                    self.properties._set_property("prescribed_dof", data, line=selected_id)
 
-            elif assignment_type == AssignmentType.POINTS:
-                self.properties._set_property("prescribed_dof", data, point=selected_id)
+                case "points": 
+                    self.properties._set_property("prescribed_dof", data, point=selected_id)
 
-            elif assignment_type == AssignmentType.NODES:
-                self.properties._set_property("prescribed_dof", data, node=selected_id)
+                case "nodes":
+                    self.properties._set_property("prescribed_dof", data, node=selected_id)
                 
         if self.comboBox_data_type.currentIndex() != DataType.DISPLACEMENT:
             self.update_analysis_setup_to_filter_zero_frequency()
@@ -917,17 +859,35 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
     def apply_callback(self, close_window: bool=False):
 
-        if self.tabWidget_main.currentIndex() == StandardTabType.LIST:
+        tab_index = self.tabWidget_main.currentIndex()
+        if tab_index == StandardTabType.LIST:
             return
 
-        tab_index = self.tabWidget_main.currentIndex()
+        input_ids = self.lineEdit_selection_id.text()
+        assignment_type = self.comboBox_assignment_type.currentIndex()
+        selection = self.assignment_types.get(assignment_type)
+
+        selected_ids, error_data = self.model.check_selected_ids(
+            input_ids,
+            selection,
+            domain="structural",
+        )
+
+        if error_data is not None:
+            self.lineEdit_selection_id.setFocus()
+            PrintMessageInput(error_data)
+            return True
+
+        app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
+        update_entities_selection(self.lineEdit_selection_id, selection, selected_ids)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
         if tab_index == StandardTabType.CONSTANT_DATA:
-            if self.constant_values_attribution():
+            if self.constant_values_attribution(selection, selected_ids):
                 return
 
         if tab_index == StandardTabType.TABULAR_DATA:
-            if self.table_values_attribution():
+            if self.table_values_attribution(selection, selected_ids):
                 return
 
         self.actions_to_finalize(close_window)

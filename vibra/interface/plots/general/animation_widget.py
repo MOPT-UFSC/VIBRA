@@ -118,7 +118,7 @@ class AnimationWidget(AnimationWidget_UI):
 
     def update_toolbar(self):
         current_domain = app().main_window.analysis_toolbar.combo_box_physical_domain.currentText()
-        structural_domain = current_domain.lower() == PhysicalDomain.STRUCTURAL
+        structural_domain = current_domain.lower() in [PhysicalDomain.STRUCTURAL, PhysicalDomain.COUPLED]
         self.magnification_factor_slider.setEnabled(structural_domain)
         self.label_magnification_factor.setEnabled(structural_domain)
         self.label_factor.setEnabled(structural_domain)

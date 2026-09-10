@@ -12,7 +12,7 @@ from scipy.signal.windows import hann
 
 from vibra import app
 from vibra.interface import error_title
-from vibra.interface.common.common_interface import update_analysis_setup_in_file
+from vibra.interface.common.common_interface import update_analysis_setup_in_file, update_entities_selection
 from vibra.interface.data.data_manager import get_spectral_data_from_array
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
@@ -285,10 +285,10 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
             min_coords = np.min(coords, axis=0)
             max_coords = np.max(coords, axis=0)
             range_coords = np.abs(max_coords - min_coords)
-            indexes = np.argsort(range_coords)
-            if round(range_coords[indexes[0]], 4) == 0:
+            indices = np.argsort(range_coords)
+            if round(range_coords[indices[0]], 4) == 0:
                 axis_labels = ["x-axis (+)", "y-axis (+)", "z-axis (+)"]
-                self.comboBox_normal_velocity_axis.setCurrentText(axis_labels[indexes[0]])
+                self.comboBox_normal_velocity_axis.setCurrentText(axis_labels[indices[0]])
 
     def compute_compressor_excitation_spectrum(self):
 
@@ -585,16 +585,20 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
             return
 
         input_ids = self.lineEdit_selection_id.text()
-        surface_ids, error_data = self.mesh.check_selected_ids(
+        surface_ids, error_data = self.model.check_selected_ids(
             input_ids,
-            selection="surfaces",
-            single_id=False,
+            "surfaces",
+            domain="acoustic",
         )
 
         if error_data is not None:
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
             return
+
+        app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
+        update_entities_selection(self.lineEdit_selection_id, "surfaces", surface_ids)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
         self.remove_conflicting_excitations(surface_ids)
 

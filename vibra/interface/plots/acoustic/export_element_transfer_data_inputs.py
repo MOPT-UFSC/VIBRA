@@ -49,7 +49,7 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
 
     @property
     def nodal_solution(self):
-        return app().project.model.solution.nodal_solution
+        return app().project.model.solution.acoustic_solution
 
     def _load_analysis_setup_and_solution(self):
         self.analysis_method = ""
@@ -67,8 +67,8 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
     def _reset_variables(self):
         self.exporter = None
         self.keep_window_open = True
-        self.particle_velocity = dict()
-        self.element_transfer_data = dict()
+        self.particle_velocity = {}
+        self.element_transfer_data = {}
 
     def _configure_qt_variables(self):
         self.current_lineEdit = self.lineEdit_output_selected_id
@@ -161,11 +161,12 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
     def check_inputs(self):
  
         input_selected_id = self.lineEdit_input_selected_id.text()
-        self.input_selection_id, error_data = self.mesh.check_selected_ids(   
-                                                                           input_selected_id, 
-                                                                           selection = "surfaces", 
-                                                                           single_id = True
-                                                                           )
+        self.input_selection_id, error_data = self.model.check_selected_ids(   
+            input_selected_id,
+            "surfaces",
+            domain="acoustic",
+            single_id=True,
+        )
 
         if error_data is not None:
             self.lineEdit_input_selected_id.setFocus()
@@ -174,11 +175,12 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
             return True
 
         output_selected_id = self.lineEdit_output_selected_id.text()
-        self.output_selection_id, error_data = self.mesh.check_selected_ids(  
-                                                                            output_selected_id, 
-                                                                            selection = "surfaces", 
-                                                                            single_id = True
-                                                                            )
+        self.output_selection_id, error_data = self.model.check_selected_ids(  
+            output_selected_id,
+            "surfaces",
+            domain="acoustic",
+            single_id=True,
+        )
 
         if error_data is not None:
             self.lineEdit_output_selected_id.setFocus()
@@ -233,9 +235,11 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
         # Note: the negative signal ensures the assembly consistency of acoustic transfer element
         volume_velocity = -surface_velocity * area
 
-        node_ids = np.sort(surface_nodes)
-        pressures = self.nodal_solution[node_ids, :]
-        avg_pressure = np.average(pressures, axis=0)
+        # process the acoustic dofs of the selected entities
+        gdof = self.model.get_dof_indices_from_nodes(np.sort(surface_nodes), "acoustic")
+        rows = gdof[:, 0]
+
+        avg_pressure = np.average(self.nodal_solution[rows, :], axis=0)
 
         return avg_pressure / volume_velocity
 
@@ -253,7 +257,7 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
 
         self.hide()
 
-        self.model_results = dict()
+        self.model_results = {}
         self.process_areas()
 
         for i, selected_id in enumerate([self.input_selection_id, self.output_selection_id]):

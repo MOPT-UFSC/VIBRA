@@ -631,17 +631,47 @@
                </property>
                <item>
                 <property name="text">
-                 <string>Displacement</string>
+                 <string>Displacement (m)</string>
                 </property>
                </item>
                <item>
                 <property name="text">
-                 <string>Velocity</string>
+                 <string>Velocity (m/s)</string>
                 </property>
                </item>
                <item>
                 <property name="text">
-                 <string>Acceleration</string>
+                 <string>Acceleration (m/s²)</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Displacement (mm)</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Velocity (mm/s)</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Acceleration (mm/s²)</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Displacement (um)</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Velocity (um/s)</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Acceleration (um/s²)</string>
                 </property>
                </item>
               </widget>

@@ -1,11 +1,11 @@
 import logging
 from enum import IntEnum
+from numbers import Number
 from pathlib import Path
 from typing import Literal
-from numbers import Number
 
 import numpy as np
-from PySide6.QtWidgets import QDialog, QFileDialog, QPushButton, QWidget
+from PySide6.QtWidgets import QDialog, QFileDialog, QLineEdit, QPushButton, QWidget
 
 from vibra import app
 from vibra.engine.analysis_info import AnalysisID, FrequencySpacing
@@ -16,7 +16,7 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
 from vibra.utils.subprocess.subprocess_handler import SubProcessHandler, SubProcessStatus
-
+from vibra.engine.solution import ModalSolution
 
 class InputDataType(IntEnum):
     REAL_IMAGINARY = 0
@@ -196,7 +196,7 @@ def check_structural_model_frequency_controls():
             if property not in prop_labels:
                 continue
 
-            if "table_names" in data.keys():
+            if "table_names" in data:
                 return
 
     # No idea of what it does
@@ -330,6 +330,10 @@ def prompt_if_disconnected_nodes():
 
 def export_modal_analysis_results(parent: QDialog | QWidget, modes_to_frequencies: dict, physical_domain: str):
 
+    solution = app().project.model.solution
+    if not isinstance(solution, ModalSolution):
+        return
+
     last_path = app().config.get_last_folder_for("exported_table_folder")
     if last_path is None:
         last_path = str(Path().home())
@@ -349,12 +353,7 @@ def export_modal_analysis_results(parent: QDialog | QWidget, modes_to_frequencie
 
     app().config.write_last_folder_path_in_file("exported_table_folder", export_path)
 
-    if physical_domain == "acoustic":
-        complex_natural_frequencies = app().project.solver.complex_natural_frequencies
-    else:
-        complex_natural_frequencies = app().project.solver.complex_natural_frequencies
-
-    if complex_natural_frequencies.size:
+    if isinstance(solution.complex_natural_frequencies, np.ndarray):
         cols = 3
         fmt = "%i %.12e %.12e"
         header = "Mode, Damped frequency [Hz], Damping ratio [--]"
@@ -387,3 +386,39 @@ def export_modal_analysis_results(parent: QDialog | QWidget, modes_to_frequencie
             header = header.split(",")
             df = DataFrame(modal_data_to_export, schema=header)
             df.to_pandas().to_excel(writer, sheet_name="Exported modal results", index=False)
+
+
+def update_entities_selection(line_edit: QLineEdit, selection_label: str, selected_ids: list[int]):
+    input_ids = line_edit.text()
+    tokens = input_ids.replace(" ", "").split(",")
+    list_ids = [int(_id) for _id in tokens]
+
+    volumes = surfaces = lines = points = nodes = None
+
+    match selection_label:
+        case "volumes":
+            volumes = selected_ids
+        case "surfaces":
+            surfaces = selected_ids
+        case "lines":
+            lines = selected_ids
+        case "points":
+            points = selected_ids
+        case "nodes":
+            nodes = selected_ids
+
+    if len(list_ids) == len(selected_ids):
+        return
+
+    line_edit.setText(", ".join(map(str, selected_ids)))
+
+    if selection_label == "nodes":
+        app().main_window.selection.set_mesh_selection(nodes=nodes)
+
+    else:
+        app().main_window.selection.set_geometry_selection(
+            volumes=volumes,
+            surfaces=surfaces,
+            lines=lines,
+            points=points,
+            )

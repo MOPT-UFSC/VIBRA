@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from vibra.engine.analysis_info import AnalysisID, FrequencySpacing
-from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
+from vibra.engine.assemblers.acoustic.acoustic_assembler import AcousticAssembler
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.engine.postprocessing import AcousticPostprocessing
@@ -203,7 +203,7 @@ def load_external_mesh_and_solve():
         freq_ref = pressure_at_output_face[:, 0]
         results_ref = pressure_at_output_face[:, 1] + 1j * pressure_at_output_face[:, 2]
 
-    nodal_solution = model.solution.nodal_solution
+    nodal_solution = model.solution.acoustic_solution
     nodal_solution_face = np.average(nodal_solution[rows, :], axis=0).flatten()
 
     title = f"Harmonic response at {output_ns}"
