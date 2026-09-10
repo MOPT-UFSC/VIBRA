@@ -56,10 +56,6 @@ class AnalysisChecker:
         if not self.model.is_there_a_valid_analysis_setup():
             raise errors.InvalidAnalysisSetupError("An invalid analysis setup has been configured.")
 
-    def check_coupled_harmonic_analysis(self, is_resume: bool = False):
-        self.check_acoustic_harmonic_analysis(is_resume=is_resume)
-        self.check_structural_harmonic_analysis(is_resume=is_resume)
-
     def check_acoustic_harmonic_analysis(self, is_resume: bool = False):
         self.check_can_resume(is_resume)
         self.check_mesh()
@@ -83,6 +79,27 @@ class AnalysisChecker:
 
         if self.model.analysis_setup.analysis_method == AnalysisMethod.MODE_SUPERPOSITION:
             self.check_mode_superposition_prescribed_dof_criterion()
+
+    def check_coupled_harmonic_analysis(self, is_resume: bool = False):
+        if self.model.analysis_id.is_harmonic_coupled():
+            self.check_if_there_are_multiple_domains()
+
+        self.check_acoustic_harmonic_analysis(is_resume=is_resume)
+        self.check_structural_harmonic_analysis(is_resume=is_resume)
+
+    def check_if_there_are_multiple_domains(self):
+        for domain in ["acoustic", "structural"]:
+            volumes_of_domain = self.model.domains_processor.volumes_of_domain.get(domain, [])
+            if len(volumes_of_domain):
+                continue
+
+            message = "You have configured a coupled harmonic analysis, however, no volumes were "
+            message += f"detected for the {domain} domain. We recommend assigning at least one "
+            message += "fluid and one material for the model volumes to enable the fluid-structure "
+            message += "interface effects. Alternatively, it's possible to reconfigure the analysis "
+            message += "of interest by changing the analysis type and/or the physical domain."
+
+            raise errors.InvalidModelSetupError(message)
 
     def check_acoustic_modal_analysis(self, is_resume: bool = False):
         self.check_can_resume(is_resume)
