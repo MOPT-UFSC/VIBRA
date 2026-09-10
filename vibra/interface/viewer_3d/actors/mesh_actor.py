@@ -1,5 +1,5 @@
-from collections.abc import Sequence
-from dataclasses import dataclass
+from collections.abc import Iterable, Sequence
+from dataclasses import dataclass, field
 from itertools import chain, combinations
 
 import numpy as np
@@ -12,7 +12,7 @@ from vtkmodules.vtkCommonDataModel import (
     vtkPlane,
     vtkPolyData,
 )
-from vtkmodules.vtkRenderingCore import vtkActor, vtkHardwarePicker, vtkPolyDataMapper, vtkPropAssembly
+from vtkmodules.vtkRenderingCore import vtkActor, vtkAreaPicker, vtkHardwarePicker, vtkPolyDataMapper, vtkPropAssembly, vtkRenderer
 
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
@@ -36,6 +36,13 @@ class CachedInfo:
         hasher = xxhash.xxh128()
         hasher.update(ndarray)
         return hasher.hexdigest()
+
+
+@dataclass
+class PickedMesh:
+    picked_nodes: set[int] = field(default_factory=set)
+    picked_faces: set[int] = field(default_factory=set)
+    picked_solids: set[int] = field(default_factory=set)
 
 
 class MeshActor(vtkPropAssembly):
@@ -95,6 +102,11 @@ class MeshActor(vtkPropAssembly):
         self.volume_colors.Modified()
 
     def _create_variables(self):
+        self.hardware_picker = vtkHardwarePicker()
+        self.hardware_picker.SetPixelTolerance(0)
+        self.hardware_picker.SnapToMeshPointOff()
+        self.area_picker = vtkAreaPicker()
+
         self.points = vtkPoints()
         self.masked_nodes = np.array([], dtype=int)
 
@@ -336,29 +348,66 @@ class MeshActor(vtkPropAssembly):
         mesh_id = id(self.mesh)
         if mesh_id != self.cached_info.mesh_id:
             self.cached_info.mesh_id = mesh_id
-            # Don't need to modify anything, but might
+            # Don't need to modify anything, but might in the future
 
         section_plane_hash = hash(self.section_plane)
         if section_plane_hash != self.cached_info.section_plane_hash:
             self.cached_info.section_plane_hash = section_plane_hash
 
-    def picked_dim_tag(self, picker: vtkHardwarePicker) -> tuple[int, int] | None:
-        match picker.GetActor():
-            case self.volume_actor:
-                dim = 3
-                ids = vtk_to_numpy(self.volume_ids)
-            case self.surface_actor:
-                dim = 2
-                ids = vtk_to_numpy(self.surface_ids)
-            case self.node_actor:
-                dim = 0
-                ids = vtk_to_numpy(self.node_ids)
-            case _:
-                return
+    def pick(self, x: int, y: int, renderer: vtkRenderer) -> PickedMesh:
+        self.hardware_picker.Pick(x, y, 0, renderer)
+        cell_id = self.hardware_picker.GetCellId()
 
-        cell_id = picker.GetCellId()
-        if 0 < cell_id < len(ids):
-            return dim, ids[cell_id]
+        match self.hardware_picker.GetActor():
+            case self.volume_actor:
+                ids = vtk_to_numpy(self.volume_ids)
+                if 0 < cell_id < len(ids):
+                    return PickedMesh(picked_solids={ids[cell_id]})
+
+            case self.surface_actor:
+                ids = vtk_to_numpy(self.surface_ids)
+                if 0 < cell_id < len(ids):
+                    return PickedMesh(picked_faces={ids[cell_id]})
+
+            case self.node_actor:
+                ids = vtk_to_numpy(self.node_ids)
+                if 0 < cell_id < len(ids):
+                    return PickedMesh(picked_nodes={ids[cell_id]})
+            case _:
+                ...
+
+        return PickedMesh()
+
+    def area_pick(self, x0: int, y0: int, x1: int, y1: int, renderer: vtkRenderer) -> PickedMesh:
+        assert self.mesh is not None
+        assert self.mesh.nodal_coordinates is not None
+        assert self.mesh.faces_connectivity is not None
+        assert self.mesh.solids_connectivity is not None
+
+        nodes_mask = self.masked_nodes.copy()
+        coordinates = self.mesh.nodal_coordinates[:, 1:]
+        faces_coordinates = self.mesh.faces_connectivity[:, 4:]
+        solid_coordinates = self.mesh.solids_connectivity[:, 4:]
+
+        self.area_picker.AreaPick(x0, y0, x1, y1, renderer)
+        frustum = self.area_picker.GetFrustum()
+
+        for i in range(frustum.GetNumberOfPlanes()):
+            plane = frustum.GetPlane(i)
+            nodes_mask &= inside_plane(
+                coordinates,
+                plane.GetOrigin(),
+                [-i for i in plane.GetNormal()],
+            ).flatten()
+
+        faces_mask = nodes_mask[faces_coordinates].any(axis=1)
+        solids_mask = nodes_mask[solid_coordinates].any(axis=1)
+
+        return PickedMesh(
+            picked_nodes=set(self.mesh.nodal_coordinates[nodes_mask, 0].astype(int)),
+            picked_faces=set(self.mesh.faces_connectivity[faces_mask, 0].astype(int)),
+            picked_solids=set(self.mesh.solids_connectivity[solids_mask, 0].astype(int)),
+        )
 
     def set_color(self, color: Color):
         rgb = color.to_rgb()
@@ -391,8 +440,12 @@ class MeshActor(vtkPropAssembly):
     def set_edge_width(self, size: int):
         self.edge_actor.GetProperty().SetLineWidth(size)
 
-    def paint_nodes(self, color: Color, nodes: Sequence[int] | np.ndarray):
+    def paint_nodes(self, color: Color, nodes: Iterable[int]):
         if self.mesh is None:
+            return
+
+        nodes = list(nodes)
+        if not nodes:
             return
 
         node_ids = vtk_to_numpy(self.node_ids)
@@ -401,8 +454,12 @@ class MeshActor(vtkPropAssembly):
         paint_position_mask = np.isin(node_ids, nodes)
         node_colors[paint_position_mask, :3] = color.to_rgb()
 
-    def paint_face_elements(self, color: Color, face_elements: Sequence[int] | np.ndarray):
+    def paint_face_elements(self, color: Color, face_elements: Iterable[int]):
         if self.mesh is None:
+            return
+
+        face_elements = list(face_elements)
+        if not face_elements:
             return
 
         surface_ids = vtk_to_numpy(self.surface_ids)
@@ -410,12 +467,16 @@ class MeshActor(vtkPropAssembly):
         paint_position_mask = np.isin(surface_ids, face_elements)
         surface_colors[paint_position_mask, :3] = color.to_rgb()
 
-    def paint_solid_elements(self, color: Color, solid_elements: Sequence[int] | np.ndarray):
+    def paint_solid_elements(self, color: Color, solid_elements: Iterable[int]):
         if self.mesh is None:
             return
 
         assert self.mesh.faces_connectivity is not None
         assert self.mesh.solids_connectivity is not None
+
+        solid_elements = list(solid_elements)
+        if not solid_elements:
+            return
 
         # First paint the elements with solid IDs
         section_ids = vtk_to_numpy(self.volume_ids)
@@ -432,19 +493,28 @@ class MeshActor(vtkPropAssembly):
         face_elements = self.mesh.faces_connectivity[face_mask, 0]
         self.paint_face_elements(color, face_elements)
 
-    def paint_surfaces(self, color: Color, surfaces: Sequence[int] | np.ndarray):
+    def paint_surfaces(self, color: Color, surfaces: Iterable[int]):
         if self.mesh is None:
             return
 
         assert self.mesh.faces_connectivity is not None
+
+        surfaces = list(surfaces)
+        if not surfaces:
+            return
+
         selected_face_elements, *_ = np.where(np.isin(self.mesh.faces_connectivity[:, 1], surfaces))
         self.paint_face_elements(color, selected_face_elements)
 
-    def paint_volumes(self, color: Color, volumes: Sequence[int] | np.ndarray):
+    def paint_volumes(self, color: Color, volumes: Iterable[int]):
         if self.mesh is None:
             return
 
         assert self.mesh.solids_connectivity is not None
+
+        volumes = list(volumes)
+        if not volumes:
+            return
 
         surface_groups = [self.mesh.surfaces_from_volume[v] for v in volumes if (v in self.mesh.surfaces_from_volume)]
         surfaces = list(chain.from_iterable(surface_groups))
@@ -456,6 +526,7 @@ class MeshActor(vtkPropAssembly):
         section_ids = vtk_to_numpy(self.volume_ids)
         section_colors = vtk_to_numpy(self.volume_colors)
 
+        volumes = list(volumes)
         selected_elements, *_ = np.where(np.isin(self.mesh.solids_connectivity[:, 1], volumes))
         paint_position_mask = np.isin(section_ids, selected_elements)
         section_colors[paint_position_mask, :3] = color.to_rgb()

@@ -1,7 +1,7 @@
 from typing import override
 
 import numpy as np
-from molde.colors import Color, color_names
+from molde.colors import color_names
 from molde.render_widgets import CommonRenderWidget
 from PySide6.QtGui import QResizeEvent
 from vtkmodules.vtkRenderingCore import vtkHardwarePicker
@@ -100,30 +100,20 @@ class PreviewRenderWidget(CommonRenderWidget):
         if (mesh := model.mesh) is None:
             return
 
-        something_picked = self.picker.Pick(x, y, 0, self.renderer)
-        self.update_visualization()  # Keep it after the pick
+        picked_mesh = self.mesh_actor.pick(x, y, self.renderer)
 
-        if not something_picked:
-            self.mesh_actor.update_caches()
-            self.update()
-            return
+        self.update_visualization()
+        self.mesh_actor.paint_nodes(self.mesh_config.selected_nodes_color, picked_mesh.picked_nodes)
 
-        match self.mesh_actor.picked_dim_tag(self.picker):
-            case 0, tag:
-                self.mesh_actor.paint_nodes(self.mesh_config.selected_nodes_color, [tag])
+        for tag in picked_mesh.picked_faces:
+            assert mesh.faces_connectivity is not None
+            surface = mesh.faces_connectivity[tag, 1]
+            self.mesh_actor.paint_surfaces(self.mesh_config.selected_surfaces_color, [surface])
 
-            case 2, tag:
-                assert mesh.faces_connectivity is not None
-                surface = mesh.faces_connectivity[tag, 1]
-                self.mesh_actor.paint_surfaces(self.mesh_config.selected_surfaces_color, [surface])
-
-            case 3, tag:
-                assert mesh.solids_connectivity is not None
-                volume = mesh.solids_connectivity[tag, 1]
-                self.mesh_actor.paint_volumes(self.mesh_config.selected_volumes_color, [volume])
-
-            case _:
-                pass
+        for tag in picked_mesh.picked_solids:
+            assert mesh.solids_connectivity is not None
+            volume = mesh.solids_connectivity[tag, 1]
+            self.mesh_actor.paint_volumes(self.mesh_config.selected_volumes_color, [volume])
 
         self.mesh_actor.update_caches()
         self.update()
