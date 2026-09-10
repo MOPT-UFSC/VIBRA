@@ -23,8 +23,7 @@ class Hexahedron8(Element3D):
 
     @property
     def corner_nodes_indices(self):
-        indices = np.arange(self.nodes_per_element, dtype=int)
-        return indices[:8]
+        return np.arange(self.nodes_per_element, dtype=int)
 
 
     def define_integration_points(self, integration_points: int=8):
