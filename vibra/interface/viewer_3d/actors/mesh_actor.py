@@ -398,7 +398,7 @@ class MeshActor(vtkPropAssembly):
                 coordinates,
                 plane.GetOrigin(),
                 [-i for i in plane.GetNormal()],
-            ).flatten()
+            ).ravel()
 
         faces_mask = nodes_mask[faces_coordinates].any(axis=1)
         solids_mask = nodes_mask[solid_coordinates].any(axis=1)
@@ -633,7 +633,7 @@ class MeshActor(vtkPropAssembly):
             connectivity = connectivity.reshape(-1, 1)
 
         helper = np.insert(connectivity, 0, connectivity.shape[1], axis=1)
-        vtk_id_array = numpy_to_vtkIdTypeArray(helper.flatten())
+        vtk_id_array = numpy_to_vtkIdTypeArray(helper.ravel())
         cell_array = vtkCellArray()
         cell_array.SetCells(connectivity.shape[0], vtk_id_array)
         return cell_array
@@ -692,7 +692,7 @@ class MeshActor(vtkPropAssembly):
             coordinates,
             self.section_plane.origin,
             self.section_plane.get_normal(),
-        ).flatten()
+        ).ravel()
 
         return mask
 

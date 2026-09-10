@@ -2,6 +2,7 @@ from typing import override
 
 import numpy as np
 from molde.colors import color_names
+from molde.interactor_styles import BoxSelectionInteractorStyle
 from molde.render_widgets import CommonRenderWidget
 from PySide6.QtGui import QResizeEvent
 from vtkmodules.vtkRenderingCore import vtkHardwarePicker
@@ -18,11 +19,14 @@ class PreviewRenderWidget(CommonRenderWidget):
     def __init__(self):
         super().__init__()
         self.create_axes()
+        self.set_interactor_style(BoxSelectionInteractorStyle())
 
         self.picker = vtkHardwarePicker()
         self.picker.SetPixelTolerance(0)
         self.picker.SnapToMeshPointOff()
 
+        self.mouse_click = (0, 0)
+        self.left_clicked.connect(self.click_start)
         self.left_released.connect(self.click)
 
         self.model = None
@@ -92,28 +96,41 @@ class PreviewRenderWidget(CommonRenderWidget):
         super().resizeEvent(event)
         self.renderer.ResetCamera()
 
+    def click_start(self, x: int, y: int):
+        self.mouse_click = (x, y)
+
     @function_timer
-    def click(self, x, y):
+    def click(self, x1: int, y1: int):
         if (model := self.model) is None:
             return
 
         if (mesh := model.mesh) is None:
             return
 
-        picked_mesh = self.mesh_actor.pick(x, y, self.renderer)
+        x0, y0 = self.mouse_click
+        dist = np.sqrt((x1 - x0) ** 2 + (y1 - y0) ** 2)
+
+        if dist > 10:
+            picked_mesh = self.mesh_actor.area_pick(x0, y0, x1, y1, self.renderer)
+        else:
+            picked_mesh = self.mesh_actor.pick(x1, y1, self.renderer)
 
         self.update_visualization()
+
+        # The node painting can stay in a separate region
         self.mesh_actor.paint_nodes(self.mesh_config.selected_nodes_color, picked_mesh.picked_nodes)
 
-        for tag in picked_mesh.picked_faces:
+        if picked_mesh.picked_faces:
             assert mesh.faces_connectivity is not None
-            surface = mesh.faces_connectivity[tag, 1]
-            self.mesh_actor.paint_surfaces(self.mesh_config.selected_surfaces_color, [surface])
+            surfaces_mask = np.isin(mesh.faces_connectivity[:, 0], list(picked_mesh.picked_faces))
+            surfaces = np.unique(mesh.faces_connectivity[surfaces_mask, 1])
+            self.mesh_actor.paint_surfaces(self.mesh_config.selected_surfaces_color, surfaces)
 
-        for tag in picked_mesh.picked_solids:
+        if picked_mesh.picked_solids:
             assert mesh.solids_connectivity is not None
-            volume = mesh.solids_connectivity[tag, 1]
-            self.mesh_actor.paint_volumes(self.mesh_config.selected_volumes_color, [volume])
+            volumes_mask = np.isin(mesh.solids_connectivity[:, 0], list(picked_mesh.picked_solids))
+            volumes = np.unique(mesh.solids_connectivity[volumes_mask, 1])
+            self.mesh_actor.paint_volumes(self.mesh_config.selected_volumes_color, volumes)
 
         self.mesh_actor.update_caches()
         self.update()
