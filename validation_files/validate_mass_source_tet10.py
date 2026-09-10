@@ -114,7 +114,11 @@ def load_external_mesh_and_solve(assignment_type: str):
         model.properties._set_property("fluid", fluid, surface=_surf_id)
 
     ## normal surface velocity data
-    data_Vn = {"real_values": [1], "imag_values": [0], "nodal_attribution": False, "averaged": False}
+    data_Vn = {
+        "real_values": [1], 
+        "imag_values": [0], 
+        "element_integration": True, 
+        }
 
     ## mass source data
     data_ms = {
@@ -181,7 +185,7 @@ def load_external_mesh_and_solve(assignment_type: str):
     assembler = AcousticAssembler(model)
 
     # Set the analysis frequency setup
-    assembler.assemble_global_matrices_and_excitations(reorder=False)
+    assembler.assemble_global_matrices_and_excitations(reorder=False, print_log=True)
 
     # Define the analysis type and load setup
     harmonic_solver = HarmonicSolver(assembler)

@@ -110,7 +110,7 @@ def load_external_mesh_and_solve():
         model.properties._set_property("fluid", fluid, surface=_surf_id)
 
     # ## normal surface velocity data
-    # data_Vn = {"real_values": [1], "imag_values": [0], "nodal_attribution": False, "averaged": False}
+    # data_Vn = {"real_values": [1], "imag_values": [0], "element_integration": True}
 
     # model.properties._set_property("surface_velocity", data_Vn, surface=1)
 
@@ -138,12 +138,12 @@ def load_external_mesh_and_solve():
     assembler = AcousticAssembler(model)
 
     # Set the analysis frequency setup
-    assembler.assemble_global_matrices_and_excitations(reorder=False)
+    assembler.assemble_global_matrices_and_excitations(reorder=False, print_log=True)
 
     t0 = time()
     # Run modal analysis
     modal_solver = ModalSolver(assembler)
-    solution = modal_solver.solve()
+    solution = modal_solver.solve(print_log=True)
     natural_frequencies = solution.natural_frequencies
     dt = time() - t0
     print(f"Elapsed time to solve modal analysis: {round(dt, 4)}s")

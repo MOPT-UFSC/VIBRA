@@ -157,17 +157,17 @@ class Ui_Dialog(object):
 
         self.gridLayout_5.addItem(self.horizontalSpacer_6, 0, 0, 1, 1)
 
-        self.comboBox_attribution_type = QComboBox(self.frame_4)
-        self.comboBox_attribution_type.addItem("")
-        self.comboBox_attribution_type.addItem("")
-        self.comboBox_attribution_type.addItem("")
-        self.comboBox_attribution_type.addItem("")
-        self.comboBox_attribution_type.setObjectName(u"comboBox_attribution_type")
-        self.comboBox_attribution_type.setMinimumSize(QSize(0, 28))
-        self.comboBox_attribution_type.setMaximumSize(QSize(16777215, 28))
-        self.comboBox_attribution_type.setFont(font2)
+        self.comboBox_assignment_type = QComboBox(self.frame_4)
+        self.comboBox_assignment_type.addItem("")
+        self.comboBox_assignment_type.addItem("")
+        self.comboBox_assignment_type.addItem("")
+        self.comboBox_assignment_type.addItem("")
+        self.comboBox_assignment_type.setObjectName(u"comboBox_assignment_type")
+        self.comboBox_assignment_type.setMinimumSize(QSize(0, 28))
+        self.comboBox_assignment_type.setMaximumSize(QSize(16777215, 28))
+        self.comboBox_assignment_type.setFont(font2)
 
-        self.gridLayout_5.addWidget(self.comboBox_attribution_type, 0, 3, 1, 1)
+        self.gridLayout_5.addWidget(self.comboBox_assignment_type, 0, 3, 1, 1)
 
         self.comboBox_data_type = QComboBox(self.frame_4)
         self.comboBox_data_type.addItem("")
@@ -766,13 +766,14 @@ class Ui_Dialog(object):
         self.gridLayout_2.setObjectName(u"gridLayout_2")
         self.treeWidget_prescribed_dof = QTreeWidget(self.frame_5)
         __qtreewidgetitem = QTreeWidgetItem()
+        __qtreewidgetitem.setTextAlignment(3, Qt.AlignCenter);
         __qtreewidgetitem.setTextAlignment(2, Qt.AlignCenter);
         __qtreewidgetitem.setTextAlignment(1, Qt.AlignCenter);
         __qtreewidgetitem.setTextAlignment(0, Qt.AlignCenter);
         self.treeWidget_prescribed_dof.setHeaderItem(__qtreewidgetitem)
         self.treeWidget_prescribed_dof.setObjectName(u"treeWidget_prescribed_dof")
         self.treeWidget_prescribed_dof.setMinimumSize(QSize(320, 170))
-        self.treeWidget_prescribed_dof.setMaximumSize(QSize(380, 200))
+        self.treeWidget_prescribed_dof.setMaximumSize(QSize(16777215, 200))
         self.treeWidget_prescribed_dof.setFont(font3)
         self.treeWidget_prescribed_dof.setIndentation(1)
         self.treeWidget_prescribed_dof.setHeaderHidden(False)
@@ -898,18 +899,18 @@ class Ui_Dialog(object):
         self.label.setText(QCoreApplication.translate("Dialog", u"Degrees of freedom prescription setup", None))
         self.label_linear.setText(QCoreApplication.translate("Dialog", u"Data type:", None))
         self.label_2.setText(QCoreApplication.translate("Dialog", u"Selection ID:", None))
-        self.comboBox_element_type.setItemText(0, QCoreApplication.translate("Dialog", u" Face element", None))
-        self.comboBox_element_type.setItemText(1, QCoreApplication.translate("Dialog", u" Solid element", None))
+        self.comboBox_element_type.setItemText(0, QCoreApplication.translate("Dialog", u"Face element", None))
+        self.comboBox_element_type.setItemText(1, QCoreApplication.translate("Dialog", u"Solid element", None))
 
         self.label_3.setText(QCoreApplication.translate("Dialog", u"Element type:", None))
-        self.comboBox_attribution_type.setItemText(0, QCoreApplication.translate("Dialog", u"Selected faces", None))
-        self.comboBox_attribution_type.setItemText(1, QCoreApplication.translate("Dialog", u"Selected lines", None))
-        self.comboBox_attribution_type.setItemText(2, QCoreApplication.translate("Dialog", u"Selected points", None))
-        self.comboBox_attribution_type.setItemText(3, QCoreApplication.translate("Dialog", u"Selected nodes", None))
+        self.comboBox_assignment_type.setItemText(0, QCoreApplication.translate("Dialog", u"Selected faces", None))
+        self.comboBox_assignment_type.setItemText(1, QCoreApplication.translate("Dialog", u"Selected lines", None))
+        self.comboBox_assignment_type.setItemText(2, QCoreApplication.translate("Dialog", u"Selected points", None))
+        self.comboBox_assignment_type.setItemText(3, QCoreApplication.translate("Dialog", u"Selected nodes", None))
 
-        self.comboBox_data_type.setItemText(0, QCoreApplication.translate("Dialog", u" Displacement", None))
-        self.comboBox_data_type.setItemText(1, QCoreApplication.translate("Dialog", u" Velocity", None))
-        self.comboBox_data_type.setItemText(2, QCoreApplication.translate("Dialog", u" Acceleration", None))
+        self.comboBox_data_type.setItemText(0, QCoreApplication.translate("Dialog", u"Displacement", None))
+        self.comboBox_data_type.setItemText(1, QCoreApplication.translate("Dialog", u"Velocity", None))
+        self.comboBox_data_type.setItemText(2, QCoreApplication.translate("Dialog", u"Acceleration", None))
 
         self.label_Rx_constant.setText(QCoreApplication.translate("Dialog", u"Rx:", None))
         self.comboBox_displacement_ux.setItemText(0, QCoreApplication.translate("Dialog", u"Value (m)", None))
@@ -961,9 +962,10 @@ class Ui_Dialog(object):
         self.label_Rx_table.setText(QCoreApplication.translate("Dialog", u"Rx:", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_tabular_data), QCoreApplication.translate("Dialog", u"Tabular data", None))
         ___qtreewidgetitem = self.treeWidget_prescribed_dof.headerItem()
+        ___qtreewidgetitem.setText(3, QCoreApplication.translate("Dialog", u"Prescribed DOF", None));
         ___qtreewidgetitem.setText(2, QCoreApplication.translate("Dialog", u"Element type", None));
-        ___qtreewidgetitem.setText(1, QCoreApplication.translate("Dialog", u"Prescribed DOF", None));
-        ___qtreewidgetitem.setText(0, QCoreApplication.translate("Dialog", u"Selection-ID", None));
+        ___qtreewidgetitem.setText(1, QCoreApplication.translate("Dialog", u"Entity", None));
+        ___qtreewidgetitem.setText(0, QCoreApplication.translate("Dialog", u"ID", None));
 #if QT_CONFIG(tooltip)
         self.treeWidget_prescribed_dof.setToolTip(QCoreApplication.translate("Dialog", u"Select a node to remove the attributed boundary condition.", None))
 #endif // QT_CONFIG(tooltip)
@@ -994,7 +996,7 @@ class DofPrescriptionInputs_UI(QDialog, Ui_Dialog):
                                         - label_2: QLabel
                                         - comboBox_element_type: QComboBox
                                         - label_3: QLabel
-                                        - comboBox_attribution_type: QComboBox
+                                        - comboBox_assignment_type: QComboBox
                                         - comboBox_data_type: QComboBox
                             - frame_6: QFrame
                                 - (Layout): QGridLayout

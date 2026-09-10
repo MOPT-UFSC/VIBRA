@@ -263,7 +263,6 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
             message += str(error_log)
 
         if message != "":
-            self.hide()
             line_edit.setFocus()
             PrintMessageInput([error_title, title, message])
             return None

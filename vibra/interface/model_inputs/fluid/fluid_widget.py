@@ -1,25 +1,28 @@
+import platform
 from copy import deepcopy
 from enum import IntEnum
 from itertools import count
+from pathlib import Path
 from typing import Optional
 
 from molde import Color
 from molde.colors import color_names
 from numpy.random import randint
 from PySide6.QtCore import QSize, Qt, Signal
-from PySide6.QtWidgets import QAbstractItemDelegate, QAbstractItemView, QDialog, QHeaderView, QTableWidgetItem
+from PySide6.QtWidgets import QAbstractItemDelegate, QAbstractItemView, QDialog, QFileDialog, QHeaderView, QTableWidgetItem
 
 from vibra import app
-from vibra.interface.numeric_checks.unit_utilities import convert_pressure_unit, convert_temperature_unit
 from vibra.engine.properties import FluidLibrary
 from vibra.engine.properties.fluid import Fluid
 from vibra.errors import InvalidFluidError
+from vibra.interface import error_title
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.pick_color_input import PickColorInput
+from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.fluid.set_fluid_composition_inputs import SetFluidCompositionInputs
+from vibra.interface.numeric_checks.unit_utilities import convert_pressure_unit, convert_temperature_unit
 from vibra.interface.ui_generated.model.fluid.fluid_widget_ui import FluidWidget_UI
 from vibra.utils.interface_utils import block_signals, qt_run_delayed
-
 
 
 class RowsEnum(IntEnum):
@@ -46,7 +49,7 @@ class FluidWidget(FluidWidget_UI):
         app().main_window.action_model_workspace_callback()
 
         self.dialog = kwargs.get("dialog", None)
-        self.state_properties = kwargs.get("state_properties", dict())
+        self.state_properties = kwargs.get("state_properties", {})
 
         self._initialize()
         self._config_widgets()
@@ -59,7 +62,9 @@ class FluidWidget(FluidWidget_UI):
 
     def _initialize(self):
         self.refprop = None
-        self.refprop_fluids = dict()
+        self.refprop_fluids = {}
+
+        self.desktop_path = Path.home() / "Desktop"
 
     def _config_widgets(self):
         self.tableWidget_fluid_data.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
@@ -67,12 +72,14 @@ class FluidWidget(FluidWidget_UI):
         self.tableWidget_fluid_data.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
 
     def _create_connections(self):
-        #
+
+        # QPushButton connections
         self.pushButton_add_column.clicked.connect(self.add_buffer_column)
         self.pushButton_duplicate.clicked.connect(self.duplicate_selected_fluid)
         self.pushButton_remove_column.clicked.connect(self.remove_selected_fluid)
         self.pushButton_refprop.clicked.connect(self.refprop_interface_callback)
-        #
+
+        # QTableWidget connections
         self.tableWidget_fluid_data.cellClicked.connect(self.cell_clicked_callback)
         self.tableWidget_fluid_data.cellDoubleClicked.connect(self.cell_double_clicked_callback)
         self.tableWidget_fluid_data.itemChanged.connect(self.item_changed_callback)
@@ -211,7 +218,7 @@ class FluidWidget(FluidWidget_UI):
         if not isinstance(selected_fluid, Fluid):
             return
 
-        if identifier not in self.refprop_fluids.keys():
+        if identifier not in self.refprop_fluids:
             return
 
         if self.refprop_interface_callback(selected_fluid = selected_fluid):
@@ -484,7 +491,7 @@ class FluidWidget(FluidWidget_UI):
             if not isinstance(data, Fluid):
                 continue
 
-            if not data.identifier == fluid_to_update.identifier:
+            if data.identifier != fluid_to_update.identifier:
                 continue
     
             was_updated = True
@@ -498,8 +505,8 @@ class FluidWidget(FluidWidget_UI):
 
     def update_properties_after_fluid_removal(self, fluid_identifiers : list):
 
-        surfaces_to_remove_fluid = list()
-        volumes_to_remove_fluid = list()
+        surfaces_to_remove_fluid = []
+        volumes_to_remove_fluid = []
 
         for key, data in self.properties.volume_properties.items():
             property, volume_id = key
@@ -588,7 +595,7 @@ class FluidWidget(FluidWidget_UI):
 
         pick = PickColorInput()
         if not pick.complete:
-            return list()
+            return []
 
         return pick.color
 
@@ -617,7 +624,7 @@ class FluidWidget(FluidWidget_UI):
 
         for j, fluid_data in enumerate(fluids_data):
 
-            filtered_fluid_data = dict()
+            filtered_fluid_data = {}
 
             # check all inputs before proceeding
             for key in fluid_data_keys:
@@ -657,8 +664,8 @@ class FluidWidget(FluidWidget_UI):
 
     def get_new_identifiers(self, N: int):
 
-        new_identifiers = list()
-        already_used_ids = list(self.properties.fluid_library.keys())
+        new_identifiers = []
+        already_used_ids = list(self.properties.fluid_library)
         for n in range(N):
             for i in count(1):
                 if i not in already_used_ids:
@@ -737,6 +744,82 @@ class FluidWidget(FluidWidget_UI):
         molar_mass = self.state_properties.get("molar_mass")
         if isinstance(molar_mass, float):
             self.tableWidget_fluid_data.item(11, column_index).setText(f"{molar_mass}")
+
+    def export_library_callback(self):
+        """
+        Call this method if you're interested in exporting fluid library data.
+        """
+
+        last_path = app().config.get_last_folder_for("exported_fluid_library_folder", default=self.desktop_path)
+        ext_filter = ("Fluid library file (*.json)")
+
+        kwargs = {}
+        if platform.system() == "Linux":
+            kwargs["options"] = QFileDialog.Option.DontUseNativeDialog
+
+        file_path, check = QFileDialog.getSaveFileName(
+            self,
+            "Export the fluid library data",
+            str(last_path),
+            filter=ext_filter,
+            **kwargs,
+        )
+
+        if not check:
+            return False
+
+        app().config.write_last_folder_path_in_file("exported_fluid_library_folder", file_path)
+        app().project.project_writer.write_fluid_library(self.properties.fluid_library, export_path=Path(file_path))
+
+        return True
+
+    def import_library_callback(self):
+        """
+        Call this method if you're interested in importing fluid library data.
+        """
+
+        last_path = app().config.get_last_folder_for("imported_fluid_library_folder", default=self.desktop_path)
+        ext_filter = ("Fluid library file (*.json)")
+
+        kwargs = {}
+        if platform.system() == "Linux":
+            kwargs["options"] = QFileDialog.Option.DontUseNativeDialog
+
+        file_path, check = QFileDialog.getOpenFileName(
+            self,
+            "Import the fluid library file",
+            str(last_path),
+            filter=ext_filter,
+            **kwargs,
+        )
+
+        if not check:
+            return False
+
+        app().config.write_last_folder_path_in_file("imported_fluid_library_folder", file_path)
+
+        try:
+            fluid_library = app().project.project_reader.read_fluid_library(import_path=Path(file_path))
+            if not isinstance(fluid_library, FluidLibrary):
+                return False
+
+            fluids_to_remove = list(self.properties.fluid_library.values())
+            for fluid in fluids_to_remove:
+                self.properties.remove_fluid(fluid)
+
+            self.update_properties_after_fluid_removal(fluids_to_remove)
+            self.properties.fluid_library = fluid_library
+
+        except Exception:
+            title = "Error when importing the fluid library"
+            message = "An error has been detected while importing the fluid library file. The import "
+            message += "action was interrupted, and the current fluid library will not be modified."
+            PrintMessageInput([error_title, title, message])
+            return False
+
+        self.reload_table_of_fluids()
+
+        return True
 
     def keyPressEvent(self, event):
         window = self.nativeParentWidget()

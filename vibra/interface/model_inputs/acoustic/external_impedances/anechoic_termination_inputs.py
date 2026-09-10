@@ -119,7 +119,6 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
         surface_ids, error_data = self.mesh.check_selected_ids(input_ids, selection="surfaces")
 
         if error_data is not None:
-            self.hide()
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
             return
@@ -157,7 +156,6 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
         surface_ids, error_data = self.mesh.check_selected_ids(input_ids, selection="surfaces")
 
         if error_data is not None:
-            self.hide()
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
             return
@@ -168,8 +166,7 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
 
             volume_ids = self.model.mesh.volumes_from_surface[surface_ids[0]]
             if len(surface_ids) > 1 and len(volume_ids) > 1:
-                
-                self.hide()
+
                 title = "Undefined volume"
                 
                 # message = f"The selected face ID [{face_id}] is associated to the volumes {volume_ids}. "
@@ -188,12 +185,6 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
 
         self.actions_to_finalize(close_window)
 
-    def process_table_file_removal(self, table_names: list):
-        for table_name in table_names:
-            self.properties.remove_imported_tables("acoustic", table_name)
-        if table_names:
-            app().project.update_model_properties_file()
-
     def remove_conflicting_excitations(self, surface_ids: int | list):
 
         if isinstance(surface_ids, int):
@@ -207,13 +198,7 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
 
         for surface_id in surface_ids:
             for label in labels:
-                table_names = self.properties.get_property_related_table_names(label, surface_id, "surfaces")
                 self.properties._remove_surface_property(label, surface_id)
-                self.process_table_file_removal(table_names)
-
-    def remove_table_files_from_surfaces(self, surface_id : list):
-        table_names = self.properties.get_property_related_table_names("specific_impedance", surface_id, "surfaces")
-        self.process_table_file_removal(table_names)
 
     def remove_callback(self):
         selected_surfaces = self.get_selected_surfaces_from_tree_widget()
@@ -221,7 +206,6 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
             return
 
         for surface_id in selected_surfaces:
-            self.remove_table_files_from_surfaces(surface_id)
             self.properties._remove_surface_property("specific_impedance", surface_id)
 
         self.clear_line_edit_selection_id()
@@ -232,9 +216,7 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
 
     def reset_callback(self):
 
-        self.hide()
-
-        title = "Anechoic termination resetting"
+        title = "Anechoic termination reset"
         message = "Would you like to remove the all applied anechoic termination from model?"
 
         buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
@@ -243,23 +225,9 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
         if read._cancel:
             return
 
-        if not read._continue:
-            return
-
-        surface_ids = list()
-        for (property, *args), data in self.properties.surface_properties.items():
-            if property != "specific_impedance":
-                continue
-
-            if "anechoic_termination" not in data.keys():
-                continue
-
-            surface_id = args[0]
-            surface_ids.append(surface_id)
-
-        self.remove_table_files_from_surfaces(surface_ids)
-        self.properties._reset_property("specific_impedance")
-        self.actions_to_finalize()
+        if read._continue:
+            self.properties._reset_property("specific_impedance")
+            self.actions_to_finalize()
 
     def actions_to_finalize(self, close_window: bool = False):
         self.load_model_info()
@@ -277,7 +245,7 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
             if property != "specific_impedance":
                 continue
 
-            if "anechoic_termination" in data.keys():
+            if "anechoic_termination" in data:
                 self.tabWidget_main.setTabVisible(SetupTabType.LIST, True)
                 return
 

@@ -1219,6 +1219,7 @@ dependencies = [
     { name = "pyside6" },
     { name = "scipy" },
     { name = "sounddevice" },
+    { name = "tqdm" },
     { name = "vtk" },
     { name = "xxhash" },
 ]
@@ -1254,6 +1255,7 @@ requires-dist = [
     { name = "pyside6", specifier = "==6.9.2" },
     { name = "scipy", specifier = ">=1.15.3,<2.0.0" },
     { name = "sounddevice", specifier = ">=0.5.3,<0.6.0" },
+    { name = "tqdm", specifier = ">=4.67.1" },
     { name = "vtk", specifier = ">=9.4.2,<9.5" },
     { name = "xxhash", specifier = ">=3.6.0" },
 ]

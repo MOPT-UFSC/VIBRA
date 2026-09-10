@@ -1,0 +1,13 @@
+*_ui.py linguist-generated
+*_rc.py linguist-generated
+*.qrc linguist-generated
+*.lock -diff
+*.dat -diff
+*.step -diff
+*.STEP -diff
+*.stp -diff
+*.STP -diff
+*.iges -diff
+*.IGES -diff
+*.igs -diff
+*.IGS -diff

@@ -132,7 +132,6 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
                 message += "with two volumes to proceed with dofs decoupling."
 
             if message != "":
-                self.hide()
                 title = "Invalid surface selected"
                 PrintMessageInput([warning_title, title, message])
                 return
@@ -174,7 +173,6 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
         surface_ids, message_log = self.mesh.check_selected_ids(input_ids, selection="surfaces")
 
         if message_log is not None:
-            self.hide()
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(message_log)
             return
@@ -242,9 +240,7 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
 
     def reset_callback(self):
 
-        self.hide()
-
-        title = "Degrees of freedom decoupling resetting"
+        title = "Degrees of freedom decoupling reset"
         message = "Would you like to revert the acoustic degrees of freedom decoupling from model?"
 
         buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
@@ -257,11 +253,13 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
 
             new_surface_ids = list()
             for (property, _), data in self.properties.surface_properties.items():
-                if property == "degrees_of_freedom_decoupling":
-                    data: dict
-                    new_surface_id = data.get("new_surface_id")
-                    if isinstance(new_surface_id, int):
-                        new_surface_ids.append(new_surface_id)
+                if property != "degrees_of_freedom_decoupling":
+                    continue
+            
+                data: dict
+                new_surface_id = data.get("new_surface_id")
+                if isinstance(new_surface_id, int):
+                    new_surface_ids.append(new_surface_id)
 
             self.remove_all_surface_properties_from_surface([new_surface_id])
             self.remove_all_line_properties_boundind_surface([new_surface_id]) 
@@ -450,10 +448,7 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
             self.hide()
             app().main_window.input_ui.mesh_setup()
             app().main_window.set_input_widget(self)
-            if not app().project.model.is_there_a_valid_mesh():
-                return True
-            else:
-                return False
+            return app().project.model.is_there_a_valid_mesh()
 
         if self.mesh.cache_nodal_coordinates is None:
             # self.mesh.cache_mesh_information()

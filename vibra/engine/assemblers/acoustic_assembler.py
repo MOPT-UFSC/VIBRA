@@ -1,3 +1,6 @@
+import sys
+
+from tqdm import tqdm
 
 import logging
 from collections import defaultdict
@@ -313,12 +316,16 @@ class AcousticAssembler:
                 continue
 
             data: dict
+            if not data.get("element_integration", True):
+                continue
+
             complex_values = data.get("values")[0]
 
             if property_label in ["compressor_excitation_spectrum", "compressor_excitation_waveform"]:
                 excitation_type = data.get("excitation_type")
 
                 if excitation_type in ["mass flow rate", "volumetric flow rate"]:
+
                     # compute the nozzle area
                     self.model.mesh.process_face_elements_connected_to_nodes(surface_id)
                     area = self.model.mesh.surface_area_from_element_integration.get(surface_id, 0)                    
@@ -907,8 +914,8 @@ class AcousticAssembler:
             if not isinstance(data, dict):
                 continue
 
-            if not self.mass_source_vector_points.any():
-                self.mass_source_vector_points = np.zeros((self.total_dof, self.number_frequencies), dtype=complex)
+            if not self.mass_source_vector_surfaces.any():
+                self.mass_source_vector_surfaces = np.zeros((self.total_dof, self.number_frequencies), dtype=complex)
 
             values = data.get("values")
             if values is None:
@@ -1044,7 +1051,7 @@ class AcousticAssembler:
         self.process_indexes()
 
 
-    def compute_data_to_assemble_global_matrices_using_loop(self, reorder: bool = True):
+    def compute_data_to_assemble_global_matrices_using_loop(self, reorder: bool = True, print_log: bool = False):
         """ 
         This method processes the data required to assemble the global matrices
         sweeping all solid elements.
@@ -1068,24 +1075,29 @@ class AcousticAssembler:
         self.int3d_NtN = np.zeros((self.number_3d_elements, self.dof, self.dof), dtype=complex)
 
         last_progress = 0
-        for element_id in range(self.number_3d_elements):
+        with tqdm(
+            range(self.number_3d_elements),
+            desc="Processing the elementary matrices data",
+            unit="element",
+            file=sys.stdout,
+            disable=not print_log,
+        ) as progress_bar:
+            for element_id in progress_bar:
+                if self.model.stop_processing:
+                    return True
 
-            if self.model.stop_processing:
-                return True
+                progress = int(100 * (element_id / self.number_3d_elements))
+                if progress != last_progress:
+                    logging.info(f"Processing the elementary matrices data... [{progress}/100]")
 
-            progress = int(100 * (element_id / self.number_3d_elements))
-            if progress != last_progress:
-                logging.info(f"Processing the elementary matrices data... [{progress}/100]")
+                last_progress = progress
 
-            last_progress = progress
-
-            Ke, Me = self.element_3d.elementary_matrices(element_id)
-            self.int3d_BtB[element_id, :, :] = Ke
-            self.int3d_NtN[element_id, :, :] = Me
+                Ke, Me = self.element_3d.elementary_matrices(element_id)
+                self.int3d_BtB[element_id, :, :] = Ke
+                self.int3d_NtN[element_id, :, :] = Me
 
         self.fluid_properties_from_volume, self.frequency_dependent = self.model.map_fluid_properties_to_volumes()
         self.process_indexes()
-
 
     def compute_global_matrices_factors(self, index: int = 0):
         """
@@ -1307,8 +1319,8 @@ class AcousticAssembler:
         self.ind_rows_Zsi = np.array([], dtype=int)
         self.ind_cols_Zsi = np.array([], dtype=int)
 
-        dof = self.element_2d.DOF_PER_ELEMENT
-        self.total_dof_2d = self.element_2d.DOF_PER_NODE * len(self.element_2d.nodal_coordinates)
+        dof = self.element_2d.dof_per_element
+        self.total_dof_2d = self.element_2d.dof_per_node * len(self.element_2d.nodal_coordinates)
 
         self.integration_data_Zsi = self.get_impedance_data_for_element_integration("specific_impedance")
         if not self.integration_data_Zsi:
@@ -1340,8 +1352,8 @@ class AcousticAssembler:
         self.ind_rows_Zat = np.array([], dtype=int)
         self.ind_cols_Zat = np.array([], dtype=int)
 
-        dof = self.element_2d.DOF_PER_ELEMENT
-        self.total_dof_2d = self.element_2d.DOF_PER_NODE * len(self.element_2d.nodal_coordinates)
+        dof = self.element_2d.dof_per_element
+        self.total_dof_2d = self.element_2d.dof_per_node * len(self.element_2d.nodal_coordinates)
 
         self.integration_data_Zat = self.get_impedance_data_for_element_integration("anechoic_termination")
         if not self.integration_data_Zat:
@@ -1383,8 +1395,8 @@ class AcousticAssembler:
         connectivities: np.ndarray = self.integration_data_ipw.connectivities
         element_normals: np.ndarray = self.integration_data_ipw.element_face_normals
 
-        dof = self.element_2d.DOF_PER_ELEMENT
-        self.total_dof_2d = self.element_2d.DOF_PER_NODE * len(self.element_2d.nodal_coordinates)
+        dof = self.element_2d.dof_per_element
+        self.total_dof_2d = self.element_2d.dof_per_node * len(self.element_2d.nodal_coordinates)
 
         nel = connectivities.shape[0]
         for j in range(self.number_frequencies):
@@ -1415,8 +1427,8 @@ class AcousticAssembler:
         self.ind_rows_Zas = np.array([])
         self.ind_cols_Zas = np.array([])
 
-        dof = self.element_2d.DOF_PER_ELEMENT
-        self.total_dof_2d = self.element_2d.DOF_PER_NODE * len(self.element_2d.nodal_coordinates)
+        dof = self.element_2d.dof_per_element
+        self.total_dof_2d = self.element_2d.dof_per_node * len(self.element_2d.nodal_coordinates)
 
         self.integration_data_Zas = self.get_impedance_data_for_element_integration("absorption_surface")
         if not self.integration_data_Zas:
@@ -1452,8 +1464,8 @@ class AcousticAssembler:
         self.ind_rows_Zti_B = np.array([])
         self.ind_cols_Zti_B = np.array([])
 
-        dof = self.element_2d.DOF_PER_ELEMENT
-        self.total_dof_2d = self.element_2d.DOF_PER_NODE * len(self.element_2d.nodal_coordinates)
+        dof = self.element_2d.dof_per_element
+        self.total_dof_2d = self.element_2d.dof_per_node * len(self.element_2d.nodal_coordinates)
 
         self.integration_data_Zti = self.get_transfer_impedance_data_for_element_integration()
         if not self.integration_data_Zti:
@@ -1505,8 +1517,8 @@ class AcousticAssembler:
         self.ind_rows_Zpp_B = np.array([])
         self.ind_cols_Zpp_B = np.array([])
 
-        dof = self.element_2d.DOF_PER_ELEMENT
-        self.total_dof_2d = self.element_2d.DOF_PER_NODE * len(self.element_2d.nodal_coordinates)
+        dof = self.element_2d.dof_per_element
+        self.total_dof_2d = self.element_2d.dof_per_node * len(self.element_2d.nodal_coordinates)
 
         self.integration_data_Zpp = self.get_perforated_plate_data_for_element_integration(solution)
         if not self.integration_data_Zpp:
@@ -1694,6 +1706,12 @@ class AcousticAssembler:
         for (property, surface_id), data in self.properties.surface_properties.items():
             if property in ["surface_velocity", "reciprocating_compressor_excitation"]:
 
+                if not isinstance(data, dict):
+                    continue
+        
+                if data.get("element_integration", True):
+                    continue
+
                 _complex_values = data["values"][0]
                 if isinstance(_complex_values, complex):
                     complex_values = _complex_values * aux_ones
@@ -1707,20 +1725,15 @@ class AcousticAssembler:
                     else:
                         complex_values = _complex_values
 
-                if data["nodal_attribution"]:
-                    nodes = self.model.mesh.get_nodes_from_surface(surface_id)
-                    if nodes is None:
-                        continue
+                nodes = self.model.mesh.get_nodes_from_surface(surface_id)
+                if nodes is None:
+                    continue
 
-                    N = len(nodes)
-                    self.model.mesh.process_face_elements_connected_to_nodes(surface_id)
-                    area = self.model.mesh.surface_area_from_element_integration[surface_id]
+                self.model.mesh.process_face_elements_connected_to_nodes(surface_id)
+                area = self.model.mesh.surface_area_from_element_integration[surface_id]
 
-                    for index in self.model.get_acoustic_global_dof_from_nodes(nodes):
-                        if data["averaged"]:
-                            acoustic_excitation[index] += (complex_values * area) / N
-                        else:
-                            acoustic_excitation[index] += complex_values * area
+                for index in self.model.get_acoustic_global_dof_from_nodes(nodes):
+                    acoustic_excitation[index] += complex_values * area
 
         total_dof = self.element_3d.DOF_PER_NODE * len(self.element_3d.nodal_coordinates)
         output = np.zeros((total_dof, self.number_frequencies), dtype=complex)
@@ -1742,7 +1755,7 @@ class AcousticAssembler:
         returns the output data in the form of mass flow rate.
         """
 
-        total_dof = self.element_2d.DOF_PER_NODE * len(self.element_2d.nodal_coordinates)
+        total_dof = self.element_2d.dof_per_node * len(self.element_2d.nodal_coordinates)
         output = np.zeros((total_dof, self.number_frequencies), dtype=complex)
 
         prop_labels = [
@@ -1793,7 +1806,7 @@ class AcousticAssembler:
         return output
 
 
-    def assemble_global_matrices(self, reorder: bool=True, stacked_matrices: bool=True):
+    def assemble_global_matrices(self, reorder: bool = True, stacked_matrices: bool = True, print_log: bool = False):
         """
         This method assembles the global matrices of the acoustic model.
         """
@@ -1807,9 +1820,10 @@ class AcousticAssembler:
         if stacked_matrices:
             self.compute_data_to_assemble_global_matrices(reorder=reorder)
         else:
-            self.compute_data_to_assemble_global_matrices_using_loop(reorder=reorder)
+            self.compute_data_to_assemble_global_matrices_using_loop(reorder=reorder, print_log=print_log)
         dt = time() - t0
-        print(f"Elapsed time to gather data to assemble global matrices: {dt : .6f} [s]")
+        if print_log:
+            print(f"Elapsed time to gather data to assemble global matrices: {dt : .6f} [s]")
 
         if self.model.stop_processing:
             return
@@ -1818,32 +1832,37 @@ class AcousticAssembler:
         t0 = time()
         self.compute_data_to_assemble_damping_matrix()
         dt = time() - t0
-        print(f"Elapsed time to gather data to assemble damping matrices: {dt : .6f} [s]")
+        if print_log:
+            print(f"Elapsed time to gather data to assemble damping matrices: {dt : .6f} [s]")
 
         logging.info("Computing the global matrices factors... [45/100]")
         t0 = time()
         factor_K, factor_M, factor_Cvisc, factor_fvisc = self.compute_global_matrices_factors()
         dt = time() - t0
-        print(f"Elapsed time to compute global matrices factor: {dt : .6f} [s]")
+        if print_log:
+            print(f"Elapsed time to compute global matrices factor: {dt : .6f} [s]")
 
         logging.info("Assembling global stiffness matrix... [50/100]")
         t0 = time()
         self.assemble_global_stiffness_matrix(factor_K)
         dt = time() - t0
-        print(f"Elapsed time to assemble the global stiffness matrix: {dt : .6f} [s]")
+        if print_log:
+            print(f"Elapsed time to assemble the global stiffness matrix: {dt : .6f} [s]")
 
         logging.info("Assembling global mass matrix... [60/100]")
         t0 = time()
         self.assemble_global_mass_matrix(factor_M)
         dt = time() - t0
-        print(f"Elapsed time to assemble the global mass matrix: {dt : .6f} [s]")
+        if print_log:
+            print(f"Elapsed time to assemble the global mass matrix: {dt : .6f} [s]")
 
         logging.info("Assembling global mass matrix... [70/100]")
         t0 = time()
         self.assemble_global_damping_matrix_3d_elements(factor_Cvisc, factor_fvisc)
         self.assemble_global_damping_matrix_2d_elements()
         dt = time() - t0
-        print(f"Elapsed time to assemble the global damping matrix: {dt : .6f} [s]\n")
+        if print_log:
+            print(f"Elapsed time to assemble the global damping matrix: {dt : .6f} [s]\n")
 
 
     def assemble_model_excitations(self):
@@ -1867,12 +1886,12 @@ class AcousticAssembler:
         self.mass_flow_vectors = A + B
 
 
-    def assemble_global_matrices_and_excitations(self, reorder: bool=True, stacked_matrices: bool=True, **kwargs):
+    def assemble_global_matrices_and_excitations(self, reorder: bool = True, stacked_matrices: bool = True, print_log: bool = False, **kwargs):
         """
         This method assembles the global matrices and excitations of the acoustic model.
         """
 
-        self.assemble_global_matrices(reorder = reorder, stacked_matrices = stacked_matrices)        
+        self.assemble_global_matrices(reorder=reorder, stacked_matrices=stacked_matrices, print_log=print_log)
         self.assemble_model_excitations()
 
 

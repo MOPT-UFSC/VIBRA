@@ -1,4 +1,6 @@
 import logging
+import sys
+from tqdm import tqdm
 
 import numpy as np
 from scipy.sparse.linalg import eigs
@@ -21,7 +23,7 @@ class ModalSolver:
         self.complex_natural_frequencies = np.array([])
         self.displacement_dof: np.ndarray | None = None
 
-    def solve(self, which="LM", full_solution: bool = True) -> ModalSolution:
+    def solve(self, which="LM", full_solution: bool = True, print_log: bool = False) -> ModalSolution:
         """
         This method solves the acoustic modal analysis for both damped and undamped problems.
         """
@@ -30,7 +32,7 @@ class ModalSolver:
 
         n_modes = self.assembler.model.analysis_setup.modes_number
         sigma = self.assembler.model.analysis_setup.sigma_factor
-
+        
         logging.info("Solving the eigenproblem... [75/100]")
 
         A, B, is_symmetric = self.assembler.build_eigenproblem_system()
@@ -42,18 +44,33 @@ class ModalSolver:
 
         est_operations = min(A.shape[0], max(3 * (n_modes + 1), 20))
 
+        progress_bar = tqdm(
+            total=100,
+            desc="Solving eigenproblem",
+            unit="%",
+            file=sys.stdout,
+            disable=not print_log,
+        )
+        def update_progress(percentage: int):
+            if (increment := percentage - progress_bar.n) > 0:
+                progress_bar.update(increment)
+
         try:
             logging.info("Solving eigenproblem... [0/100]")
 
-            opinv = linear_solver.build_linear_operator(A - sigma * B, est_operations=est_operations)
+            opinv = linear_solver.build_linear_operator(A - sigma * B, est_operations=est_operations, progress_callback=update_progress)
             eigenvalues, eigenvectors = eigs(A, M=B, k=n_modes, sigma=sigma, which=which, OPinv=opinv)
-            linear_solver.clear_memory()
 
         except Exception as error_log:
             from traceback import print_exception
 
             print_exception(error_log)
             eigenvalues, eigenvectors = eigs(A, M=B, k=n_modes, sigma=sigma, which=which)
+
+        finally:
+            linear_solver.clear_memory()
+            update_progress(100)
+            progress_bar.close()
 
         if not is_symmetric:
             logging.info("Post-processing the solution... [95/100]")

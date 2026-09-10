@@ -1,6 +1,8 @@
+import logging
+from enum import IntEnum
 from pathlib import Path
 from typing import Literal
-from enum import IntEnum
+from numbers import Number
 
 import numpy as np
 from PySide6.QtWidgets import QDialog, QFileDialog, QPushButton, QWidget
@@ -9,17 +11,56 @@ from vibra import app
 from vibra.engine.analysis_info import AnalysisID, FrequencySpacing
 from vibra.interface import error_title, warning_title
 from vibra.interface.data.data_manager import is_frequencies_vector_equally_distributed
+from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
+from vibra.utils.subprocess.subprocess_handler import SubProcessHandler, SubProcessStatus
 
 
-class InputType(IntEnum):
+class InputDataType(IntEnum):
     REAL_IMAGINARY = 0
     MAGNITUDE_PHASE = 1
 
 
+def check_input_entries(input_left: str, input_right: str, label: str):
+
+    value_left = None
+    if input_left != "":
+        try:
+            input_left = input_left.replace(",", ".")
+            value_left = float(input_left)
+
+        except Exception:
+            title = f"Invalid entry to the {label}"
+            message = f"Wrong input for real part of {label}."
+            PrintMessageInput([error_title, title, message])
+            return
+
+    value_right = None
+    if input_right != "":
+        try:
+            input_right = input_right.replace(",", ".")
+            value_right = float(input_right)
+
+        except Exception:
+            title = f"Invalid entry to the {label}"
+            message = f"Wrong input for imaginary part of {label}."
+            PrintMessageInput([error_title, title, message])
+            return
+
+    if value_left is None and isinstance(value_right, Number):
+        value_left = 0.0
+
+    if value_right is None and isinstance(value_left, Number):
+        value_right = 0.0
+
+    output = [value_left, value_right] 
+
+    return output
+
 def save_table_values(table_name: str, imported_values: np.ndarray, physical_domain: Literal["acoustic", "structural"]):
-    
+
     # define the frequencies vector
     frequencies = imported_values[:, 0]
 
@@ -37,7 +78,7 @@ def save_table_values(table_name: str, imported_values: np.ndarray, physical_dom
 
     # real values vector
     real_values = imported_values[:, 1]
-    
+
     # imaginary values vector
     imag_values = imported_values[:, 2]
 
@@ -165,7 +206,9 @@ def check_mesh_related_issues(run_analysis_button: QPushButton):
 
     # disable run_analysis button if there are disconnected nodes or collapsed elements
     mesh = app().project.model.mesh
-    disconnected_nodes = bool(mesh.disconnected_nodes_data)
+    assert mesh is not None
+
+    disconnected_nodes = bool(mesh.disconnected_nodes)
     collapsed_elements = bool(mesh.collapsed_elements_data)
     problematic_mesh = collapsed_elements or disconnected_nodes
 
@@ -202,6 +245,88 @@ def mesher_interface_callback(parent: QDialog, close_after_generate: bool = Fals
         return True
 
     app().main_window.update_plots()
+
+def generate_mesh_and_finalize() -> bool:
+    """
+    Generate the mesh from the current mesh setup and finalize
+    the interface state afterwards. Returns True on success.
+    """
+
+    def _load_mesh_from_working_dir():
+        logging.info("Loading generated mesh... [10/100]")
+        app().project.model.mesh = app().project.project_reader.read_mesh()
+
+        logging.info("Reading model properties... [65/100]")
+        app().project.model.properties = app().project.project_reader.read_model_properties()
+
+        logging.info("Updating project state... [85/100]")
+        app().project.reset_solution()
+        app().project.mark_project_as_modified()
+
+    def _generate_in_process():
+        mesh_setup = app().project.model.mesh_setup
+        app().project.generate_mesh(mesh_setup)
+
+    def _finalize():
+        logging.info("Updating render... [95/100]")
+        app().main_window.action_mesh_workspace_callback()
+        app().main_window.update_plots()
+        app().main_window.analysis_toolbar.reset_solution_action.setDisabled(True)
+        app().main_window.analysis_toolbar.check_analysis_setup_callback()
+        app().main_window.action_export_element_transfer_data.setDisabled(True)
+
+    if app().config.user_preferences.generate_mesh_in_subprocess:
+        app().project.write_to_working_dir()
+
+        command = f"{SubProcessHandler.get_executable()} --generate-mesh {app().project.working_directory!s}"
+        status = SubProcessHandler(command).run()
+        if status != SubProcessStatus.SUCCESS:
+            return False
+
+        LoadingWindow(_load_mesh_from_working_dir).run()
+
+    else:
+        LoadingWindow(_generate_in_process).run()
+
+    LoadingWindow(_finalize).run()
+
+    prompt_if_disconnected_nodes()
+
+    return True
+
+
+def prompt_if_disconnected_nodes():
+    mesh = app().project.model.mesh
+    if mesh is None or not mesh.disconnected_nodes:
+        return
+
+    confirmation = GetUserConfirmationInput(
+        "Disconnected nodes detected",
+        "The generated mesh contains disconnected nodes.\n"
+        + "The model solution will stay deactivated until this is addressed.\n\n"
+        + "Choose an option:\n"
+        + "\"Go to Mesh Setup\" to adjust the mesh parameters and regenerate\n"
+        + "the mesh to try to solve the problem.\n"
+        + "\"Remove disconnected nodes\" to forcibly delete them from the\n"
+        + "current mesh and keep using it as is.",
+        buttons_config={
+            "left_button_label": "Go to Mesh Setup",
+            "right_button_label": "Remove disconnected nodes",
+            "left_button_size": 160,
+            "right_button_size": 230,
+        },
+    )
+
+    # right button = remove the disconnected nodes
+    if confirmation._continue:
+        mesh.remove_disconnected_nodes()
+        mesh.process_disconnected_nodes_criterion(print_log=True)
+        app().main_window.update_plots()
+        return
+
+    # left button = open mesh setup
+    app().main_window.input_ui.mesh_setup()
+
 
 def export_modal_analysis_results(parent: QDialog | QWidget, modes_to_frequencies: dict, physical_domain: str):
 

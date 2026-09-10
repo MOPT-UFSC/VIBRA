@@ -1,6 +1,7 @@
 from collections import defaultdict
 
 import numpy as np
+from scipy.linalg import svd
 
 from vibra.engine.mesher.mesh import Mesh
 
@@ -76,8 +77,8 @@ class SymbolsPositioner:
         # remove projections on normal
         plane_vectors = vectors_from_center - np.outer(vectors_from_center @ unit_normal, unit_normal)
 
-        _, _, vh = np.linalg.svd(plane_vectors, full_matrices=False)
-        axis = vh[0] / np.linalg.norm(vh[0])
+        _, _, vh = svd(plane_vectors, full_matrices=False, compute_uv=True)
+        axis = vh[0]
 
         projections = plane_vectors @ axis
         min_projection = np.min(projections)

@@ -70,8 +70,6 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
 
     def reset_callback(self):
 
-        self.hide()
-
         title = "Solution steps reset"
         message = "Would you like to remove all solution steps that have already been added?"
 
@@ -183,7 +181,6 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
                 message = f"Enter a positive value in the '{label}' input field."
 
         if message != "":
-            self.hide()
             title = "Invalid input to the analysis setup"
             PrintMessageInput([error_title, title, message])
             return None
@@ -203,7 +200,6 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
                     return True
                 
                 if solution_step in self.user_defined_solution_steps:
-                    self.hide()
                     title = "Invalid solution step"
                     message = "The entered solution step has already been "
                     message += "added to the solution steps list."
@@ -244,7 +240,6 @@ class UserDefinedSolutionStepsByManualInput(UserDefinedSolutionStepsByManualInpu
     def confirm_callback(self):
 
         if len(self.user_defined_solution_steps) == 0:
-            self.hide()
             title = "No solution step was selected"
             message = "Select at least one solution step to proceed "
             message += "with the model solution."

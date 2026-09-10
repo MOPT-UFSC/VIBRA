@@ -112,8 +112,7 @@ def load_external_mesh_and_solve(**kwargs):
     # data_Vn = {
     #     "real_values": [1],
     #     "imag_values": [0],
-    #     "nodal_attribution": False,
-    #     "averaged": False,
+    #     "element_integration": True,
     # }
 
     # model.properties._set_property("surface_velocity", data_Vn, surface=1)
@@ -162,7 +161,7 @@ def load_external_mesh_and_solve(**kwargs):
     assembler = AcousticAssembler(model)
 
     # Set the analysis frequency setup
-    assembler.assemble_global_matrices_and_excitations(reorder=False)
+    assembler.assemble_global_matrices_and_excitations(reorder=False, print_log=True)
 
     # Define the analysis type and load setup
     harmonic_solver = HarmonicSolver(assembler)

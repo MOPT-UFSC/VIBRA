@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from typing import Optional
 
 from molde.colors import Color, color_names
@@ -119,10 +120,10 @@ class NodesActor(vtkActor):
         self.GetMapper().ScalarVisibilityOff()  # Just to force color updates
         self.GetMapper().ScalarVisibilityOn()
 
-    def paint_nodes(self, color: Color, nodes: tuple[int]):
+    def paint_nodes(self, color: Color, nodes: Sequence[int]):
         self.paint_cells(color, nodes)
 
-    def paint_cells(self, color: Color, cells: tuple[int]):
+    def paint_cells(self, color: Color, cells: Sequence[int]):
         if self.data is None:
             return
 

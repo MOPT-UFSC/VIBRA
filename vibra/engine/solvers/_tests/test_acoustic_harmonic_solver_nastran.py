@@ -34,8 +34,7 @@ def _acoustic_model_nastran(path: str, fluid: Fluid) -> Model:
     # data_Vn = {
     #     "real_values": [1],
     #     "imag_values": [0],
-    #     "nodal_attribution": False,
-    #     "averaged": False,
+    #     "element_integration": True,
     # }
 
     ## normal surface velocity data

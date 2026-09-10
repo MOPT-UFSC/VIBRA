@@ -117,8 +117,7 @@ def load_external_mesh_and_solve(case: str):
         "element_type": "3d_element",
         "real_values": [0.0, 1.0, 0.0],
         "imag_values": [0.0, 0.0, 0.0],
-        "nodal_attribution": True,
-        "averaged": False,
+        "element_integration": True,
         }
 
     model.properties._set_property("nodal_loads", nodal_load_data, surface=2)
@@ -140,7 +139,7 @@ def load_external_mesh_and_solve(case: str):
     assembler = StructuralAssembler(model)
 
     # Set the analysis frequency setup
-    assembler.assemble_global_matrices_and_excitations(reorder=False)
+    assembler.assemble_global_matrices_and_excitations(reorder=False, print_log=True)
 
     Ke = assembler.data_K[0, :, :]
     Me = assembler.data_M[0, :, :]
