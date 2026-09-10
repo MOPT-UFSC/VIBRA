@@ -157,11 +157,7 @@ class Config:
         key = workspace.value + "_visualization_filter"
 
         if key not in config_data:
-            if workspace == Workspaces.RESULTS:
-                return VisualizationFilter(faces=True,
-                                           solids=True)
-            
-            return VisualizationFilter.default()
+            return VisualizationFilter.default(workspace)
         
         visualization_filter_data = {}
         for field in fields(VisualizationFilter):

@@ -10,6 +10,8 @@ from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QWidget
 from vtkmodules.vtkRenderingCore import vtkCoordinate
 
+from vibra.interface.enums import Workspaces
+
 window_title = "Error"
 
 
@@ -45,7 +47,10 @@ class VisualizationFilter:
         return cls(*args)
 
     @classmethod
-    def default(cls):
+    def default(cls, workspace: Workspaces):
+        if workspace == Workspaces.RESULTS:
+            return cls(faces=True, solids=True)
+        
         return cls(lines=True, faces=True, solids=True, symbols=True)
 
 
