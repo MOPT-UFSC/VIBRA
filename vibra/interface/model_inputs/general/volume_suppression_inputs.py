@@ -110,11 +110,11 @@ class VolumeSuppressionInputs(VolumeSuppressionDialog_UI):
         if not new_ids:
             return
 
-        mesh = app().project.model.mesh
-        if mesh is None:
+        model = app().project.model
+        if model.mesh is None:
             return
 
-        _, error_data = mesh.check_selected_ids(new_ids, selection="volumes")
+        _, error_data = model.check_selected_ids(new_ids, selection_label="volumes")
         if error_data is not None:
             return
 
@@ -231,7 +231,7 @@ class VolumeSuppressionInputs(VolumeSuppressionDialog_UI):
         if mesh is None:
             return
 
-        if self.suppressed_volume_ids >= set(mesh.all_solid_ids()) | set(mesh.suppressed_volumes):
+        if self.suppressed_volume_ids >= mesh.all_volume_ids() | set(mesh.suppressed_volumes):
             message = (
                 "You are trying to suppress every volume of the geometry.\n"
                 "Suppressing all volumes would leave the model with no mesh.\n"

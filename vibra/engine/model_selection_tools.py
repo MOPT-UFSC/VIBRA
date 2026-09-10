@@ -118,24 +118,24 @@ class ModelSelectionTools:
 
             message = ""
             if len(selected_ids) == 0:
-                message = "The Selected ID field is empty. Please, enter "
+                message = "The entity selection ID field is empty. Please, enter "
                 message += "or select at least one valid IDs to proceed."
 
             else:
                 if single_id and len(selected_ids) > 1:
-                    message = "Only one Selected ID is allowed here."
+                    message = "Only one entity selected ID is allowed here."
 
                 else:
                     try:
                         for _id in selected_ids:
                             if _id not in all_ids:
-                                message = "The selected ID does not exist in the geometry. "
-                                message += f"Please enter a valid ID between 1 and {len(all_ids)}."
+                                message = "The selected entity ID does not exist in the geometry. "
+                                message += f"Please enter a valid entity ID between 1 and {len(all_ids)}."
                                 break
 
                     except Exception as error_log:
-                        message = "The selected ID must be an integer. "
-                        message += f"Please enter a valid ID between 1 and {len(all_ids)}.\n\n"
+                        message = "The selected entity ID must be an integer. "
+                        message += f"Please enter a valid entity ID between 1 and {len(all_ids)}.\n\n"
                         message += str(error_log)
 
         except Exception as log_error:
@@ -143,11 +143,14 @@ class ModelSelectionTools:
             message += str(log_error)
 
         # filter selected IDs based on a specific domain
-        if domain != "both":
+        if domain != "both" and len(selected_ids):
             filtered_ids = self.filter_selected_entities_based_on_domain(selected_ids, selection_label, domain)
             if not filtered_ids:
-                message = f"The selected IDs {selected_ids} do not belong to the {domain} domain. Please, "
-                message += "enter or selected at least one valid ID to proceed."
+                if len(selected_ids) > 1:
+                    message = f"The selected {selection_label} {selected_ids} do not belong to the {domain} domain. Please, "
+                else:
+                    message = f"The selected {selection_label[:-1]} {selected_ids} does not belong to the {domain} domain. Please, "
+                message += "enter or selected at least one valid entity ID to proceed."
 
             selected_ids = filtered_ids.copy()
 
@@ -165,6 +168,9 @@ class ModelSelectionTools:
 def check_input_values(input_ids: str | list | tuple | np.ndarray):
 
     if isinstance(input_ids, str):
+        if input_ids == "":
+            return []
+
         tokens = input_ids.replace(" ", "").split(",")
         return [int(_id) for _id in tokens]
 
