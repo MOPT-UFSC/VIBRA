@@ -21,13 +21,10 @@ def inside_plane(
     origin: Iterable[float],
     normal: Iterable[float],
 ) -> np.typing.NDArray[np.bool_]:
-    return (
-        np.dot(
-            np.array(test_points) - np.array(origin),
-            np.array(normal),
-        )
-        >= 0
-    )
+    points = np.asarray(test_points)
+    origin = np.asarray(origin)
+    normal = np.asarray(normal)
+    return points @ normal >= origin @ normal
 
 
 def points_in_between(
