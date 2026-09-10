@@ -12,7 +12,7 @@ from PySide6.QtWidgets import QApplication, QMainWindow
 
 from vibra.engine.project import Project
 from vibra.interface.viewer_3d.render_widgets.preview_render_widget import PreviewRenderWidget
-from vibra.utils.interface_utils import SectionPlane
+from vibra.utils.interface_utils import SectionPlane, VisualizationFilter
 
 
 class ScriptRunner(QThread):
@@ -74,8 +74,9 @@ class MainWindow(QMainWindow):
         self.script_runner.start()
 
     def on_script_finished(self, script_variables: dict[str, Any]):
-        self.render_widget.update_model(None)
-        self.render_widget.update_section_plane(None)
+        self.render_widget.set_model(None)
+        self.render_widget.set_section_plane(None)
+        self.render_widget.set_visualization_filter(None)
         reset_camera = True
 
         for name, var in script_variables.items():
@@ -86,11 +87,14 @@ class MainWindow(QMainWindow):
                 case Project() as project:
                     reset_camera = self._last_project_id != id(project)
                     self._last_project_id = id(project)
-                    self.render_widget.update_model(project.model)
+                    self.render_widget.set_model(project.model)
                     self.setWindowTitle(project.model.name)
 
                 case SectionPlane() as section_plane:
-                    self.render_widget.update_section_plane(section_plane)
+                    self.render_widget.set_section_plane(section_plane)
+
+                case VisualizationFilter() as visualization_filter:
+                    self.render_widget.set_visualization_filter(visualization_filter)
 
                 case _:
                     pass

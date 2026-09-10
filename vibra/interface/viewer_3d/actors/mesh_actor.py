@@ -460,6 +460,18 @@ class MeshActor(vtkPropAssembly):
         paint_position_mask = np.isin(section_ids, selected_elements)
         section_colors[paint_position_mask, :3] = color.to_rgb()
 
+    def set_nodes_visibility(self, visible: bool):
+        self.node_actor.SetVisibility(visible)
+
+    def set_edges_visibility(self, visible: bool):
+        self.edge_actor.SetVisibility(visible)
+
+    def set_surfaces_visibility(self, visible: bool):
+        self.surface_actor.SetVisibility(visible)
+
+    def set_solids_visibility(self, visible: bool):
+        self.volume_actor.SetVisibility(visible)
+
     def hide_nodes(self, nodes: Sequence[int] | None = None):
         if nodes is None:
             vtk_to_numpy(self.node_colors)[:, 3] = 0

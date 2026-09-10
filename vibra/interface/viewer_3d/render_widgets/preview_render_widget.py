@@ -3,13 +3,14 @@ from typing import override
 import numpy as np
 from molde.colors import Color, color_names
 from molde.render_widgets import CommonRenderWidget
+from PySide6.QtGui import QResizeEvent
 from vtkmodules.vtkRenderingCore import vtkHardwarePicker
 
 from vibra.engine.model import Model
 from vibra.interface.viewer_3d import sources
 from vibra.interface.viewer_3d.actors.mesh_actor import MeshActor
 from vibra.interface.viewer_3d.actors.symbols_actor import SymbolsActor
-from vibra.utils.interface_utils import MeshRendererConfig, SectionPlane
+from vibra.utils.interface_utils import MeshRendererConfig, SectionPlane, VisualizationFilter
 from vibra.utils.time_utils import context_timer, function_timer
 
 
@@ -27,6 +28,7 @@ class PreviewRenderWidget(CommonRenderWidget):
         self.model = None
         self.section_plane = None
         self.mesh_config = MeshRendererConfig()
+        self.visualization_filter = VisualizationFilter().all_true()
         self.create_actors()
 
     def create_actors(self):
@@ -45,13 +47,18 @@ class PreviewRenderWidget(CommonRenderWidget):
         self.symbols.PickableOff()
         self.add_actors(self.symbols)
 
-    def update_model(self, model: Model | None):
+    def set_model(self, model: Model | None):
         self.model = model
         self.mesh_actor.model = model
 
-    def update_section_plane(self, section_plane: SectionPlane | None):
+    def set_section_plane(self, section_plane: SectionPlane | None):
         self.section_plane = section_plane
         self.mesh_actor.section_plane = section_plane
+
+    def set_visualization_filter(self, visualization_filter: VisualizationFilter | None):
+        if visualization_filter is None:
+            visualization_filter = VisualizationFilter(faces=True, symbols=True)
+        self.visualization_filter = visualization_filter
 
     @function_timer
     @override
@@ -59,7 +66,7 @@ class PreviewRenderWidget(CommonRenderWidget):
         self.mesh_actor.update()
         self.symbols.build()
 
-        self.update_colors()
+        self.update_visualization()
 
         if reset_camera:
             self.renderer.ResetCamera()
@@ -67,13 +74,21 @@ class PreviewRenderWidget(CommonRenderWidget):
         with context_timer("render"):
             self.update()
 
-    def update_colors(self):
+    def update_visualization(self):
         self.mesh_actor.set_node_color(self.mesh_config.nodes_color)
+        self.mesh_actor.set_edge_color(self.mesh_config.edges_color)
         self.mesh_actor.set_surface_color(self.mesh_config.surfaces_color)
         self.mesh_actor.set_volume_color(self.mesh_config.volumes_color)
+        self.mesh_actor.set_nodes_size(self.mesh_config.nodes_size)
+        self.mesh_actor.set_edge_width(self.mesh_config.edges_thickness)
+
+        self.mesh_actor.set_nodes_visibility(visible=self.visualization_filter.points)
+        self.mesh_actor.set_edges_visibility(visible=self.visualization_filter.lines)
+        self.mesh_actor.set_surfaces_visibility(visible=self.visualization_filter.faces)
+        self.mesh_actor.set_solids_visibility(visible=self.visualization_filter.faces)
 
     @override
-    def resizeEvent(self, event):
+    def resizeEvent(self, event: QResizeEvent):
         super().resizeEvent(event)
         self.renderer.ResetCamera()
 
@@ -86,7 +101,7 @@ class PreviewRenderWidget(CommonRenderWidget):
             return
 
         something_picked = self.picker.Pick(x, y, 0, self.renderer)
-        self.update_colors()  # Keep it after the pick
+        self.update_visualization()  # Keep it after the pick
 
         if not something_picked:
             self.mesh_actor.update_caches()
