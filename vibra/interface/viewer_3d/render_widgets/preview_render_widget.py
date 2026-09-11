@@ -9,7 +9,7 @@ from vtkmodules.vtkRenderingCore import vtkHardwarePicker
 
 from vibra.engine.model import Model
 from vibra.interface.viewer_3d import sources
-from vibra.interface.viewer_3d.actors.mesh_actor import MeshActor
+from vibra.interface.viewer_3d.actors.mesh_actor import MeshActor, PickedMesh
 from vibra.interface.viewer_3d.actors.symbols_actor import SymbolsActor
 from vibra.utils.interface_utils import MeshRendererConfig, SectionPlane, VisualizationFilter
 from vibra.utils.time_utils import context_timer, function_timer
@@ -33,6 +33,7 @@ class PreviewRenderWidget(CommonRenderWidget):
         self.section_plane = None
         self.mesh_config = MeshRendererConfig()
         self.visualization_filter = VisualizationFilter().all_true()
+        self.picked_mesh = PickedMesh()
         self.create_actors()
 
     def create_actors(self):
@@ -78,6 +79,7 @@ class PreviewRenderWidget(CommonRenderWidget):
         with context_timer("render"):
             self.update()
 
+    @function_timer
     def update_visualization(self):
         self.mesh_actor.set_node_color(self.mesh_config.nodes_color)
         self.mesh_actor.set_edge_color(self.mesh_config.edges_color)
@@ -91,6 +93,12 @@ class PreviewRenderWidget(CommonRenderWidget):
         self.mesh_actor.set_surfaces_visibility(visible=self.visualization_filter.faces)
         self.mesh_actor.set_solids_visibility(visible=self.visualization_filter.faces)
 
+        self.mesh_actor.paint_nodes(self.mesh_config.selected_nodes_color, self.picked_mesh.picked_nodes)
+        self.mesh_actor.paint_face_elements(self.mesh_config.selected_surfaces_color, self.picked_mesh.picked_faces)
+        self.mesh_actor.paint_solid_elements(self.mesh_config.selected_volumes_color, self.picked_mesh.picked_solids)
+
+        self.mesh_actor.update_caches()
+
     @override
     def resizeEvent(self, event: QResizeEvent):
         super().resizeEvent(event)
@@ -101,36 +109,12 @@ class PreviewRenderWidget(CommonRenderWidget):
 
     @function_timer
     def click(self, x1: int, y1: int):
-        if (model := self.model) is None:
-            return
-
-        if (mesh := model.mesh) is None:
-            return
-
         x0, y0 = self.mouse_click
         dist = np.sqrt((x1 - x0) ** 2 + (y1 - y0) ** 2)
 
         if dist > 10:
-            picked_mesh = self.mesh_actor.area_pick(x0, y0, x1, y1, self.renderer)
+            self.picked_mesh = self.mesh_actor.area_pick(x0, y0, x1, y1, self.renderer)
         else:
-            picked_mesh = self.mesh_actor.pick(x1, y1, self.renderer)
+            self.picked_mesh = self.mesh_actor.pick(x1, y1, self.renderer)
 
         self.update_visualization()
-
-        # The node painting can stay in a separate region
-        self.mesh_actor.paint_nodes(self.mesh_config.selected_nodes_color, picked_mesh.picked_nodes)
-
-        if picked_mesh.picked_faces:
-            assert mesh.faces_connectivity is not None
-            surfaces_mask = np.isin(mesh.faces_connectivity[:, 0], list(picked_mesh.picked_faces))
-            surfaces = np.unique(mesh.faces_connectivity[surfaces_mask, 1])
-            self.mesh_actor.paint_surfaces(self.mesh_config.selected_surfaces_color, surfaces)
-
-        if picked_mesh.picked_solids:
-            assert mesh.solids_connectivity is not None
-            volumes_mask = np.isin(mesh.solids_connectivity[:, 0], list(picked_mesh.picked_solids))
-            volumes = np.unique(mesh.solids_connectivity[volumes_mask, 1])
-            self.mesh_actor.paint_volumes(self.mesh_config.selected_volumes_color, volumes)
-
-        self.mesh_actor.update_caches()
-        self.update()

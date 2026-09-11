@@ -106,6 +106,7 @@ class MeshActor(vtkPropAssembly):
         self.hardware_picker.SetPixelTolerance(0)
         self.hardware_picker.SnapToMeshPointOff()
         self.area_picker = vtkAreaPicker()
+        self.area_picker.PickFromListOn()
 
         self.points = vtkPoints()
         self.masked_nodes = np.array([], dtype=int)
@@ -384,10 +385,17 @@ class MeshActor(vtkPropAssembly):
         assert self.mesh.faces_connectivity is not None
         assert self.mesh.solids_connectivity is not None
 
-        nodes_mask = self.masked_nodes.copy()
         coordinates = self.mesh.nodal_coordinates[:, 1:]
         faces_coordinates = self.mesh.faces_connectivity[:, 4:]
         solid_coordinates = self.mesh.solids_connectivity[:, 4:]
+
+        if self.section_plane is None:
+            nodes_mask = np.ones(len(coordinates), dtype=bool)
+        else:
+            nodes_mask = self.masked_nodes.copy()
+            visible_node_ids = vtk_to_numpy(self.node_ids)
+            visible_nodes_mask = np.isin(self.mesh.nodal_coordinates[:, 0], visible_node_ids)
+            nodes_mask[visible_nodes_mask] = True
 
         self.area_picker.AreaPick(x0, y0, x1, y1, renderer)
         frustum = self.area_picker.GetFrustum()
@@ -405,8 +413,8 @@ class MeshActor(vtkPropAssembly):
 
         return PickedMesh(
             picked_nodes=set(self.mesh.nodal_coordinates[nodes_mask, 0].astype(int)),
-            picked_faces=set(self.mesh.faces_connectivity[faces_mask, 0].astype(int)),
-            picked_solids=set(self.mesh.solids_connectivity[solids_mask, 0].astype(int)),
+            picked_faces=set(self.mesh.faces_connectivity[faces_mask, 0]),
+            picked_solids=set(self.mesh.solids_connectivity[solids_mask, 0]),
         )
 
     def set_color(self, color: Color):
