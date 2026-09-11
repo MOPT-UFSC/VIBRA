@@ -49,7 +49,7 @@ class StructuralPostprocessing:
 
 
     @cache
-    def get_max_min_values_of_selected_data(self, column: int, data_type: str, is_modal: bool) -> list[float, float]:
+    def get_max_min_values_of_selected_data(self, column: int, n_diff: int, unit_factor: float, data_type: str, is_modal: bool) -> list[float, float]:
         """
         This method returns the minimum and maximum values of selected frequency for animation purposes.
 
@@ -57,6 +57,12 @@ class StructuralPostprocessing:
         ----------
         column: int
             The column index of the nodal solution.
+
+        n_diff: int
+            The number of differentiations.
+
+        unit_factor: float
+            The unit conversion factor.
 
         data_type: str 
             A string of type DataTypes that represents the data to be processed.
@@ -72,10 +78,14 @@ class StructuralPostprocessing:
         else:
             data_complex = self.solution.structural_solution[self.solution.displacement_dof, column]
 
+        if self.model.analysis_id.is_harmonic():
+            freq = self.model.frequencies[column]
+            data_complex *= (1j * 2 * np.pi * freq)**n_diff
+
         divisions = 36
         thetas = np.linspace(0, 2 * np.pi, divisions + 1, endpoint=True).reshape(-1, 1, 1)
 
-        data_complex = data_complex.reshape(-1, 3)
+        data_complex = unit_factor * data_complex.reshape(-1, 3)
 
         # u_xyz_all = Re{data_complex * exp(1j * thetas)}
         u_xyz_all = data_complex.real * np.cos(thetas) - data_complex.imag * np.sin(thetas)
@@ -104,15 +114,20 @@ class StructuralPostprocessing:
 
 
     @cache
-    def get_max_min_values_for_stress_data(self, column: int, stress_index: int, data_type: str) -> list[float, float]:
+    def get_max_min_values_for_stress_data(self, column: int, unit_factor: float, stress_index: int, data_type: str) -> list[float, float]:
         """
         This method returns the minimum and maximum values of selected frequency for animation purposes.
 
         Parameters
         ----------
-        data_complex: a tuple of complex values in which the phase sweep will be applied.
+        column: int
+            The column index of the nodal solution.
 
-        data_type: a string of type DataTypes that represents the data to be processed.
+        unit_factor: float
+            The unit conversion factor.
+
+        data_type: str 
+            A string of type DataTypes that represents the data to be processed.
 
         Return
         ------
@@ -129,7 +144,7 @@ class StructuralPostprocessing:
         print(f"Time to compute nodal stresses (get_max_min_values): {dt} s")
 
         # initialize the stress vector and convert to MPa
-        data_complex = avg_nodal_stresses[:, stress_index, column].copy() / 1e6
+        data_complex = unit_factor * avg_nodal_stresses[:, stress_index, column].copy()
 
         if data_type == "absolute_values":
             return (0, max(np.abs(data_complex)))
@@ -218,7 +233,7 @@ class StructuralPostprocessing:
         phase_rad: float,
         data_type: DataTypes,
         n_diff: int = 0,
-        unit_scale_factor: float = 1.0,
+        unit_factor: float = 1.0,
         is_modal: bool = False,
     ):
         if not isinstance(self.solution, ModalSolution | HarmonicSolution):
@@ -234,8 +249,8 @@ class StructuralPostprocessing:
             nodal_solution = self.solution.structural_solution
             data_complex = nodal_solution[self.solution.displacement_dof, column].copy()
 
-        if unit_scale_factor != 1.0:
-            data_complex *= unit_scale_factor
+        if unit_factor != 1.0:
+            data_complex *= unit_factor
 
         if self.model.analysis_id.is_harmonic():
             freq = self.model.frequencies[column]
@@ -260,7 +275,7 @@ class StructuralPostprocessing:
             color_scalars = current_solution[:, 2]
             phase_shifted_data = current_solution * np.array([0.0, 0.0, 1.0])
 
-        min_value, max_value = self.get_max_min_values_of_selected_data(column, data_type, is_modal)
+        min_value, max_value = self.get_max_min_values_of_selected_data(column, n_diff, round(unit_factor, 10), data_type, is_modal)
 
         return phase_shifted_data, color_scalars, min_value, max_value, np.imag(data_complex).any()
 
@@ -271,7 +286,7 @@ class StructuralPostprocessing:
         phase_rad: float,
         data_type: DataTypes,
         n_diff: int = 0,
-        unit_scale_factor: float = 1.0,
+        unit_factor: float = 1.0,
         is_modal: bool = False,
     ):
         if not isinstance(self.solution, ModalSolution | HarmonicSolution):
@@ -287,8 +302,8 @@ class StructuralPostprocessing:
             nodal_solution = self.solution.structural_solution
             data_complex = nodal_solution[self.solution.displacement_dof, column].copy()
 
-        if unit_scale_factor != 1.0:
-            data_complex *= unit_scale_factor
+        if unit_factor != 1.0:
+            data_complex *= unit_factor
 
         if self.model.analysis_id.is_harmonic():
             freq = self.model.frequencies[column]
@@ -297,7 +312,7 @@ class StructuralPostprocessing:
         phase_shifted_data  = compute_shifted_values(data_complex, phase_rad)
         current_solution = phase_shifted_data.reshape(-1, 3).copy()
 
-        min_value, max_value = self.get_max_min_values_of_selected_data(column, data_type, False)
+        _, max_value = self.get_max_min_values_of_selected_data(column, 0, unit_factor, data_type, False)
 
         return current_solution, max_value
 
@@ -606,6 +621,7 @@ class StructuralPostprocessing:
         phase_rad: float,
         stress_type: StressType,
         data_type: StressPlotType,
+        unit_factor: float = 1.0,
     ):
 
         t0 = perf_counter()
@@ -619,7 +635,7 @@ class StructuralPostprocessing:
         t0 = perf_counter()
 
         # initialize the stress vector and convert to MPa
-        stress_vector = avg_nodal_stresses[:, stress_type, column].copy() / 1e6
+        stress_vector = avg_nodal_stresses[:, stress_type, column].copy() * unit_factor
 
         match data_type:
             case StressPlotType.ABSOLUTE_VALUES:
@@ -638,7 +654,7 @@ class StructuralPostprocessing:
         print(f"Time to post-process the nodal stresses (A): {dt} s")
 
         t0 = perf_counter()
-        min_value, max_value = self.get_max_min_values_for_stress_data(column, stress_type, data_type)
+        min_value, max_value = self.get_max_min_values_for_stress_data(column, round(unit_factor, 10), stress_type, data_type)
         symmetric_animation = not np.any(stress_vector.imag)
         dt = perf_counter() - t0
 
@@ -653,6 +669,7 @@ class StructuralPostprocessing:
         phase_rad: float,
         stress_type: StressType,
         data_type: StressPlotType,
+        unit_factor: float = 1.0,
     ):
 
         t0 = perf_counter()
@@ -666,8 +683,8 @@ class StructuralPostprocessing:
         t0 = perf_counter()
 
         # evaluate the stresses in MPa at a specific time/phase (phase_rad = omega * t)
-        stresses = compute_phase_shifted_values(avg_nodal_stresses[:, :, column], phase_rad) / 1e6
-
+        stresses = unit_factor * compute_phase_shifted_values(avg_nodal_stresses[:, :, column], phase_rad)
+ 
         if stress_type == StressType.VON_MISES_STRESS:
             stress_vector = np.sqrt((1/2) * (
                 (stresses[:, 0] - stresses[:, 1])**2 + 

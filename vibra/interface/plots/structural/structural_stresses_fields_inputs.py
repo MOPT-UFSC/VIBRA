@@ -6,6 +6,7 @@ from PySide6.QtWidgets import QGridLayout, QTreeWidgetItem
 
 from vibra import app
 from vibra.interface.loading_window import LoadingWindow
+from vibra.interface.numeric_checks.unit_utilities import convert_stress_unit
 from vibra.interface.plots.general.animation_widget import AnimationWidget
 from vibra.interface.plots.general.results_display_widget import ResultsDisplayWidget
 from vibra.interface.ui_generated.plots.structural.structural_stresses_field_inputs_ui import StructuralStressesFieldInputs_UI
@@ -43,12 +44,15 @@ class StructuralStressesFieldsInputs(StructuralStressesFieldInputs_UI):
     def structural_post(self):
         return app().project.get_structural_postprocessing()
 
+    @property
+    def is_stress_data_cached(self):
+        cache_info = self.structural_post.recover_nodal_averaged_structural_stresses.cache_info()
+        return cache_info.currsize != 0
+
     def _initialize(self):
         self.selected_frequency_index = None
 
     def _configure_widgets(self):
-
-        self.set_frames_disabled(True)
 
         self.lineEdit_selected_frequency.setDisabled(True)
         self.lineEdit_selected_frequency.setProperty("status", "information")
@@ -57,22 +61,29 @@ class StructuralStressesFieldsInputs(StructuralStressesFieldInputs_UI):
             self.treeWidget_frequencies.setColumnWidth(i, width)
             self.treeWidget_frequencies.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
+        # update the widgets accessibility
+        if self.is_stress_data_cached:
+            self.process_stress_field()
+        else:
+            self.set_frames_disabled(True)
+
     def set_frames_disabled(self, disabled: bool):
         self.frame_animation.setDisabled(disabled)
         self.frame_color.setDisabled(disabled)
         self.frame_frequency.setDisabled(disabled)
         self.frame_plot_type.setDisabled(disabled)
         self.frame_tree_widget.setDisabled(disabled)
-        self.pushButton_plot_data.setEnabled(disabled)
+        self.pushButton_process_nodal_stresses.setEnabled(disabled)
 
     def _create_connections(self):
 
         # QComboBox connections
         self.comboBox_plot_type.currentIndexChanged.connect(self.update_plot)
         self.comboBox_plotting_results.currentIndexChanged.connect(self.update_plot)
+        self.comboBox_stress_units.currentIndexChanged.connect(self.update_plot)
 
         # QPushButton connection
-        self.pushButton_plot_data.clicked.connect(self.process_stress_field)
+        self.pushButton_process_nodal_stresses.clicked.connect(self.process_stress_field)
 
         # QTreeWiget connections
         self.treeWidget_frequencies.itemClicked.connect(self.on_click_item)
@@ -120,17 +131,19 @@ class StructuralStressesFieldsInputs(StructuralStressesFieldInputs_UI):
 
     def process_stress_field(self):
 
-        def recover_stresses():
-            t0 = perf_counter()
-            self.structural_post.recover_nodal_averaged_structural_stresses()
-            dt = perf_counter() - t0
-            print(f"Time to compute all nodal stresses: {dt} s")
+        # recover the averaged structural stresses
+        if not self.is_stress_data_cached:    
+            def recover_stresses():
+                t0 = perf_counter()
+                self.structural_post.recover_nodal_averaged_structural_stresses()
+                dt = perf_counter() - t0
+                print(f"Time to compute all nodal stresses: {dt} s")
 
-        LoadingWindow(recover_stresses).run()
-        
+            LoadingWindow(recover_stresses).run()
+
+        self.set_frames_disabled(False)
         self.load_frequencies()
         self.show_results_render()
-        self.set_frames_disabled(False)
 
     def update_plot(self):
 
@@ -160,6 +173,8 @@ class StructuralStressesFieldsInputs(StructuralStressesFieldInputs_UI):
         else:
             self.results_display_widget.configure_validators(-1e14, 1e14)
 
+        stress_units = self.comboBox_stress_units.currentText()
+        unit_factor = convert_stress_unit(1, "Pa", stress_units)
 
         plot_setup = StressFieldPlotSetupFrequency(
             phase=self.animation_widget.phase_in_radians,
@@ -167,7 +182,8 @@ class StructuralStressesFieldsInputs(StructuralStressesFieldInputs_UI):
             magnification_factor=self.animation_widget.magnification_factor,
             stress_type=stress_index,
             plot_type=plot_type,
-            unit="MPa",
+            unit=stress_units,
+            unit_factor=unit_factor,
         )
 
         self.animation_widget.reset_sliders()

@@ -67,6 +67,11 @@ class StructuralStressesFrequencyResponseInputs(StructuralStressesFrequencyRespo
     def structural_post(self):
         return app().project.get_structural_postprocessing()
 
+    @property
+    def is_stress_data_cached(self):
+        cache_info = self.structural_post.recover_nodal_averaged_structural_stresses.cache_info()
+        return cache_info.currsize != 0
+
     def _initialize(self):
         self.selected_frequency_index = None
 
@@ -90,7 +95,11 @@ class StructuralStressesFrequencyResponseInputs(StructuralStressesFrequencyRespo
         self.model_results = {}
         self.selection_types = ["surfaces", "lines", "points", "nodes"]
 
-        self.set_frames_disabled(True)
+        # update the widgets accessibility
+        if self.is_stress_data_cached:
+            self.process_stress_field()
+        else:
+            self.set_frames_disabled(True)
 
     def _create_connections(self):
 
@@ -151,15 +160,15 @@ class StructuralStressesFrequencyResponseInputs(StructuralStressesFrequencyRespo
     def process_stress_field(self):
 
         # recover the averaged structural stresses
-        def recover_stresses():
-            t0 = perf_counter()
-            self.structural_post.recover_nodal_averaged_structural_stresses()
-            dt = perf_counter() - t0
-            print(f"Time to compute all nodal stresses: {dt} s")
+        if not self.is_stress_data_cached:
+            def recover_stresses():
+                t0 = perf_counter()
+                self.structural_post.recover_nodal_averaged_structural_stresses()
+                dt = perf_counter() - t0
+                print(f"Time to compute all nodal stresses: {dt} s")
 
-        LoadingWindow(recover_stresses).run()
+            LoadingWindow(recover_stresses).run()
 
-        # update the frames accessibility
         self.set_frames_disabled(False)
 
     def check_inputs(self):
@@ -263,12 +272,12 @@ class StructuralStressesFrequencyResponseInputs(StructuralStressesFrequencyRespo
         for i, selected_id in enumerate(self.selected_ids):
 
             key = (selection_type, (selected_id))
-            legend_label = f"Structural response {self.y_label.lower()} at {selection_type} [{selected_id}]"
+            legend_label = f"{self.y_label} at {selection_type} [{selected_id}]"
             y_data = self.get_response(selection_type, selected_id, stress_index)
 
             self.model_results[key] = {
                 "x_data": self.frequencies,
-                "y_data": self.unit_convertion_factor * y_data,
+                "y_data": self.unit_factor * y_data,
                 "x_label": "Frequency [Hz]",
                 "y_label": self.y_label,
                 "title": self.title,
@@ -279,19 +288,9 @@ class StructuralStressesFrequencyResponseInputs(StructuralStressesFrequencyRespo
                 "linestyle": "-",
             }
 
-    def get_structure_data_index(self) -> int:
-        """
-        This method returns an integer corresponding to the structural data, where 0 represents 
-        displacement, 1 represents velocity, and 2 represents acceleration.
-        """
-        volume_exists = self.mesh.are_there_volumes_in_geometry()
-        n_dofs = 3 if volume_exists else 6
-        index = self.comboBox_structural_stresses.currentIndex()
-        return index // n_dofs
-
     def process_units_data(self) -> str:
         self.stress_units = self.comboBox_stress_units.currentText()
-        self.unit_convertion_factor = convert_stress_unit(1, "Pa", self.stress_units)
+        self.unit_factor = convert_stress_unit(1, "Pa", self.stress_units)
 
     def get_ylabel(self) -> str:
         dof_index = self.comboBox_structural_stresses.currentIndex()

@@ -209,12 +209,12 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
             if isinstance(surf_data, dict):
                 if self.model.structural_element_2d is None:
                     self.model.set_structural_elements()
-                dof_per_node = self.model.structural_element_2d.dof_per_node
+                # dof_per_node = self.model.structural_element_2d.dof_per_node
 
             else:
                 if self.model.structural_element_3d is None:
                     self.model.set_structural_elements()
-                dof_per_node = self.model.structural_element_3d.dof_per_node
+                # dof_per_node = self.model.structural_element_3d.dof_per_node
 
         # process the structural dofs of the selected entities
         gdof = self.model.get_dof_indices_from_nodes(nodes, "structural")

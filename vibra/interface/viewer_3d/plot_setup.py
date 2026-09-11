@@ -80,7 +80,7 @@ class DisplacementFieldPlotSetupFrequency:
     plot_type: DisplacementPlotType
     unit: str = "--"
     n_diff: int = 0
-    unit_scale_factor: float = 1.0
+    unit_factor: float = 1.0
 
 
 @dataclass(slots=True)
@@ -92,7 +92,7 @@ class StressFieldPlotSetupFrequency:
     plot_type: StressPlotType
     unit: str = "--"
     n_diff: int = 0
-    unit_scale_factor: float = 1.0
+    unit_factor: float = 1.0
 
 
 @dataclass(slots=True)

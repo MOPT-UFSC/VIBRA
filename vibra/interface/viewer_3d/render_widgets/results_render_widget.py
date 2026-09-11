@@ -331,7 +331,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             phase,
             self.plot_setup.plot_type,
             n_diff=self.plot_setup.n_diff,
-            unit_scale_factor=self.plot_setup.unit_scale_factor,
+            unit_factor=self.plot_setup.unit_factor,
             is_modal=analysis_id.is_modal(),
         )
 
@@ -395,7 +395,6 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             phase,
             self.plot_setup.plot_type,
             n_diff=self.plot_setup.n_diff,
-            unit_scale_factor=self.plot_setup.unit_scale_factor,
             is_modal=analysis_id.is_modal(),
         )
 
@@ -405,6 +404,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
                 phase,
                 self.plot_setup.stress_type,
                 self.plot_setup.plot_type,
+                unit_factor=self.plot_setup.unit_factor,
             )
 
         else:
@@ -413,6 +413,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
                 phase,
                 self.plot_setup.stress_type,
                 self.plot_setup.plot_type,
+                unit_factor=self.plot_setup.unit_factor,
             )
 
         color_scalars, self.min_value, self.max_value, self.is_animation_symetric = stress_data

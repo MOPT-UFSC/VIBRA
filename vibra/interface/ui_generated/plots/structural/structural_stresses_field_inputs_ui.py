@@ -24,7 +24,7 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(364, 806)
+        Form.resize(384, 806)
         Form.setMaximumSize(QSize(16777215, 16777215))
         self.gridLayout_2 = QGridLayout(Form)
         self.gridLayout_2.setSpacing(2)
@@ -36,7 +36,7 @@ class Ui_Form(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 343, 838))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 363, 874))
         self.gridLayout_6 = QGridLayout(self.scrollAreaWidgetContents)
         self.gridLayout_6.setObjectName(u"gridLayout_6")
         self.gridLayout_6.setHorizontalSpacing(2)
@@ -147,61 +147,6 @@ class Ui_Form(object):
         self.gridLayout_4.setSpacing(6)
         self.gridLayout_4.setObjectName(u"gridLayout_4")
         self.gridLayout_4.setContentsMargins(0, 6, 0, 6)
-        self.lineEdit_selected_frequency = QLineEdit(self.frame_frequency)
-        self.lineEdit_selected_frequency.setObjectName(u"lineEdit_selected_frequency")
-        self.lineEdit_selected_frequency.setEnabled(False)
-        self.lineEdit_selected_frequency.setMinimumSize(QSize(160, 28))
-        self.lineEdit_selected_frequency.setMaximumSize(QSize(180, 28))
-        font2 = QFont()
-        font2.setFamilies([u"MS Shell Dlg 2"])
-        font2.setPointSize(10)
-        font2.setBold(False)
-        font2.setItalic(False)
-        self.lineEdit_selected_frequency.setFont(font2)
-        self.lineEdit_selected_frequency.setStyleSheet(u"")
-        self.lineEdit_selected_frequency.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.gridLayout_4.addWidget(self.lineEdit_selected_frequency, 1, 2, 1, 1)
-
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_4.addItem(self.horizontalSpacer, 1, 4, 1, 1)
-
-        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_4.addItem(self.horizontalSpacer_2, 1, 0, 1, 1)
-
-        self.label_4 = QLabel(self.frame_frequency)
-        self.label_4.setObjectName(u"label_4")
-        self.label_4.setMinimumSize(QSize(0, 28))
-        self.label_4.setMaximumSize(QSize(16777215, 28))
-        font3 = QFont()
-        font3.setFamilies([u"MS Shell Dlg 2"])
-        font3.setPointSize(10)
-        font3.setBold(False)
-        self.label_4.setFont(font3)
-        self.label_4.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
-
-        self.gridLayout_4.addWidget(self.label_4, 1, 1, 1, 1)
-
-        self.label_5 = QLabel(self.frame_frequency)
-        self.label_5.setObjectName(u"label_5")
-        self.label_5.setMinimumSize(QSize(0, 28))
-        self.label_5.setMaximumSize(QSize(16777215, 28))
-        self.label_5.setFont(font3)
-        self.label_5.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.gridLayout_4.addWidget(self.label_5, 1, 3, 1, 1)
-
-        self.label_7 = QLabel(self.frame_frequency)
-        self.label_7.setObjectName(u"label_7")
-        self.label_7.setMinimumSize(QSize(0, 28))
-        self.label_7.setMaximumSize(QSize(16777215, 28))
-        self.label_7.setFont(font3)
-        self.label_7.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.gridLayout_4.addWidget(self.label_7, 0, 1, 1, 1)
-
         self.comboBox_plotting_results = QComboBox(self.frame_frequency)
         self.comboBox_plotting_results.addItem("")
         self.comboBox_plotting_results.addItem("")
@@ -222,6 +167,88 @@ class Ui_Form(object):
 
         self.gridLayout_4.addWidget(self.comboBox_plotting_results, 0, 2, 1, 1)
 
+        self.label_7 = QLabel(self.frame_frequency)
+        self.label_7.setObjectName(u"label_7")
+        self.label_7.setMinimumSize(QSize(0, 28))
+        self.label_7.setMaximumSize(QSize(16777215, 28))
+        font2 = QFont()
+        font2.setFamilies([u"MS Shell Dlg 2"])
+        font2.setPointSize(10)
+        font2.setBold(False)
+        self.label_7.setFont(font2)
+        self.label_7.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+
+        self.gridLayout_4.addWidget(self.label_7, 0, 1, 1, 1)
+
+        self.label_5 = QLabel(self.frame_frequency)
+        self.label_5.setObjectName(u"label_5")
+        self.label_5.setMinimumSize(QSize(0, 28))
+        self.label_5.setMaximumSize(QSize(16777215, 28))
+        self.label_5.setFont(font2)
+        self.label_5.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_4.addWidget(self.label_5, 2, 3, 1, 1)
+
+        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_4.addItem(self.horizontalSpacer_2, 2, 0, 1, 1)
+
+        self.lineEdit_selected_frequency = QLineEdit(self.frame_frequency)
+        self.lineEdit_selected_frequency.setObjectName(u"lineEdit_selected_frequency")
+        self.lineEdit_selected_frequency.setEnabled(False)
+        self.lineEdit_selected_frequency.setMinimumSize(QSize(160, 28))
+        self.lineEdit_selected_frequency.setMaximumSize(QSize(180, 28))
+        font3 = QFont()
+        font3.setFamilies([u"MS Shell Dlg 2"])
+        font3.setPointSize(10)
+        font3.setBold(False)
+        font3.setItalic(False)
+        self.lineEdit_selected_frequency.setFont(font3)
+        self.lineEdit_selected_frequency.setStyleSheet(u"")
+        self.lineEdit_selected_frequency.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_4.addWidget(self.lineEdit_selected_frequency, 2, 2, 1, 1)
+
+        self.label_4 = QLabel(self.frame_frequency)
+        self.label_4.setObjectName(u"label_4")
+        self.label_4.setMinimumSize(QSize(0, 28))
+        self.label_4.setMaximumSize(QSize(16777215, 28))
+        self.label_4.setFont(font2)
+        self.label_4.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+
+        self.gridLayout_4.addWidget(self.label_4, 2, 1, 1, 1)
+
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_4.addItem(self.horizontalSpacer, 2, 4, 1, 1)
+
+        self.label_linear_2 = QLabel(self.frame_frequency)
+        self.label_linear_2.setObjectName(u"label_linear_2")
+        self.label_linear_2.setMinimumSize(QSize(0, 28))
+        self.label_linear_2.setMaximumSize(QSize(16777215, 28))
+        font4 = QFont()
+        font4.setPointSize(10)
+        font4.setBold(False)
+        self.label_linear_2.setFont(font4)
+        self.label_linear_2.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+
+        self.gridLayout_4.addWidget(self.label_linear_2, 1, 1, 1, 1)
+
+        self.comboBox_stress_units = QComboBox(self.frame_frequency)
+        self.comboBox_stress_units.addItem("")
+        self.comboBox_stress_units.addItem("")
+        self.comboBox_stress_units.addItem("")
+        self.comboBox_stress_units.addItem("")
+        self.comboBox_stress_units.addItem("")
+        self.comboBox_stress_units.addItem("")
+        self.comboBox_stress_units.setObjectName(u"comboBox_stress_units")
+        self.comboBox_stress_units.setMinimumSize(QSize(180, 30))
+        self.comboBox_stress_units.setMaximumSize(QSize(180, 30))
+        self.comboBox_stress_units.setFont(font1)
+        self.comboBox_stress_units.setStyleSheet(u"")
+
+        self.gridLayout_4.addWidget(self.comboBox_stress_units, 1, 2, 1, 1)
+
 
         self.gridLayout_5.addWidget(self.frame_frequency, 1, 0, 1, 1)
 
@@ -236,20 +263,20 @@ class Ui_Form(object):
         self.gridLayout_3.setObjectName(u"gridLayout_3")
         self.gridLayout_3.setContentsMargins(0, 0, 0, 0)
         self.treeWidget_frequencies = QTreeWidget(self.frame_tree_widget)
-        font4 = QFont()
-        font4.setFamilies([u"MS Shell Dlg 2"])
-        font4.setPointSize(10)
+        font5 = QFont()
+        font5.setFamilies([u"MS Shell Dlg 2"])
+        font5.setPointSize(10)
         __qtreewidgetitem = QTreeWidgetItem()
         __qtreewidgetitem.setText(1, u"Frequency [Hz]");
         __qtreewidgetitem.setTextAlignment(1, Qt.AlignCenter);
-        __qtreewidgetitem.setFont(1, font2);
+        __qtreewidgetitem.setFont(1, font3);
         __qtreewidgetitem.setTextAlignment(0, Qt.AlignCenter);
-        __qtreewidgetitem.setFont(0, font4);
+        __qtreewidgetitem.setFont(0, font5);
         self.treeWidget_frequencies.setHeaderItem(__qtreewidgetitem)
         self.treeWidget_frequencies.setObjectName(u"treeWidget_frequencies")
         self.treeWidget_frequencies.setMinimumSize(QSize(260, 160))
         self.treeWidget_frequencies.setMaximumSize(QSize(260, 240))
-        self.treeWidget_frequencies.setFont(font2)
+        self.treeWidget_frequencies.setFont(font3)
         self.treeWidget_frequencies.setAlternatingRowColors(True)
         self.treeWidget_frequencies.setIndentation(0)
 
@@ -268,15 +295,15 @@ class Ui_Form(object):
         self.gridLayout_47.setSpacing(2)
         self.gridLayout_47.setObjectName(u"gridLayout_47")
         self.gridLayout_47.setContentsMargins(2, 2, 2, 2)
-        self.pushButton_plot_data = QPushButton(self.frame_3)
-        self.pushButton_plot_data.setObjectName(u"pushButton_plot_data")
-        self.pushButton_plot_data.setMinimumSize(QSize(160, 32))
-        self.pushButton_plot_data.setMaximumSize(QSize(180, 32))
-        self.pushButton_plot_data.setFont(font1)
-        self.pushButton_plot_data.setStyleSheet(u"")
-        self.pushButton_plot_data.setFlat(False)
+        self.pushButton_process_nodal_stresses = QPushButton(self.frame_3)
+        self.pushButton_process_nodal_stresses.setObjectName(u"pushButton_process_nodal_stresses")
+        self.pushButton_process_nodal_stresses.setMinimumSize(QSize(160, 32))
+        self.pushButton_process_nodal_stresses.setMaximumSize(QSize(180, 32))
+        self.pushButton_process_nodal_stresses.setFont(font1)
+        self.pushButton_process_nodal_stresses.setStyleSheet(u"")
+        self.pushButton_process_nodal_stresses.setFlat(False)
 
-        self.gridLayout_47.addWidget(self.pushButton_plot_data, 0, 0, 1, 1)
+        self.gridLayout_47.addWidget(self.pushButton_process_nodal_stresses, 0, 0, 1, 1)
 
 
         self.gridLayout_5.addWidget(self.frame_3, 0, 0, 1, 1)
@@ -300,6 +327,9 @@ class Ui_Form(object):
 
         self.retranslateUi(Form)
 
+        self.comboBox_stress_units.setCurrentIndex(0)
+
+
         QMetaObject.connectSlotsByName(Form)
     # setupUi
 
@@ -313,10 +343,6 @@ class Ui_Form(object):
         self.comboBox_plot_type.setItemText(3, QCoreApplication.translate("Form", u"Real values", None))
         self.comboBox_plot_type.setItemText(4, QCoreApplication.translate("Form", u"Imag values", None))
 
-        self.lineEdit_selected_frequency.setText("")
-        self.label_4.setText(QCoreApplication.translate("Form", u"Frequency:", None))
-        self.label_5.setText(QCoreApplication.translate("Form", u"[Hz]", None))
-        self.label_7.setText(QCoreApplication.translate("Form", u"Plotting results:", None))
         self.comboBox_plotting_results.setItemText(0, QCoreApplication.translate("Form", u"Normal stress x", None))
         self.comboBox_plotting_results.setItemText(1, QCoreApplication.translate("Form", u"Normal stress y", None))
         self.comboBox_plotting_results.setItemText(2, QCoreApplication.translate("Form", u"Normal stress z", None))
@@ -329,12 +355,24 @@ class Ui_Form(object):
         self.comboBox_plotting_results.setItemText(9, QCoreApplication.translate("Form", u"Max. principal stress 2", None))
         self.comboBox_plotting_results.setItemText(10, QCoreApplication.translate("Form", u"Max. principal stress 3", None))
 
+        self.label_7.setText(QCoreApplication.translate("Form", u"Plotting results:", None))
+        self.label_5.setText(QCoreApplication.translate("Form", u"[Hz]", None))
+        self.lineEdit_selected_frequency.setText("")
+        self.label_4.setText(QCoreApplication.translate("Form", u"Frequency:", None))
+        self.label_linear_2.setText(QCoreApplication.translate("Form", u"Stress units:", None))
+        self.comboBox_stress_units.setItemText(0, QCoreApplication.translate("Form", u"MPa", None))
+        self.comboBox_stress_units.setItemText(1, QCoreApplication.translate("Form", u"kPa", None))
+        self.comboBox_stress_units.setItemText(2, QCoreApplication.translate("Form", u"Pa", None))
+        self.comboBox_stress_units.setItemText(3, QCoreApplication.translate("Form", u"ksi", None))
+        self.comboBox_stress_units.setItemText(4, QCoreApplication.translate("Form", u"psi", None))
+        self.comboBox_stress_units.setItemText(5, QCoreApplication.translate("Form", u"N/m\u00b2", None))
+
         ___qtreewidgetitem = self.treeWidget_frequencies.headerItem()
         ___qtreewidgetitem.setText(0, QCoreApplication.translate("Form", u"Index", None));
 #if QT_CONFIG(tooltip)
         self.treeWidget_frequencies.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Select a frequency to plot the strutural response field</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
-        self.pushButton_plot_data.setText(QCoreApplication.translate("Form", u"Process nodal stresses", None))
+        self.pushButton_process_nodal_stresses.setText(QCoreApplication.translate("Form", u"Process nodal stresses", None))
     # retranslateUi
 
 
@@ -359,17 +397,19 @@ class StructuralStressesFieldInputs_UI(QWidget, Ui_Form):
                                                         - comboBox_plot_type: QComboBox
                                             - frame_frequency: QFrame
                                                 - (Layout): QGridLayout
+                                                        - comboBox_plotting_results: QComboBox
+                                                        - label_7: QLabel
+                                                        - label_5: QLabel
                                                         - lineEdit_selected_frequency: QLineEdit
                                                         - label_4: QLabel
-                                                        - label_5: QLabel
-                                                        - label_7: QLabel
-                                                        - comboBox_plotting_results: QComboBox
+                                                        - label_linear_2: QLabel
+                                                        - comboBox_stress_units: QComboBox
                                             - frame_tree_widget: QFrame
                                                 - (Layout): QGridLayout
                                                         - treeWidget_frequencies: QTreeWidget
                                             - frame_3: QFrame
                                                 - (Layout): QGridLayout
-                                                        - pushButton_plot_data: QPushButton
+                                                        - pushButton_process_nodal_stresses: QPushButton
                                 - frame_animation: QFrame
     """
 
