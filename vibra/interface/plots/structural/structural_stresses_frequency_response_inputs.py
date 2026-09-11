@@ -293,16 +293,23 @@ class StructuralStressesFrequencyResponseInputs(StructuralStressesFrequencyRespo
         self.unit_factor = convert_stress_unit(1, "Pa", self.stress_units)
 
     def get_ylabel(self) -> str:
-        dof_index = self.comboBox_structural_stresses.currentIndex()
-        directions = ["x", "y", "z", "xy", "xz", "yz"]
-        dof_label = "\u03c3" if dof_index < 3 else "\u03c4"
 
-        text = f"${dof_label}_{directions[dof_index]}$"
+        # stress index
+        index = self.comboBox_structural_stresses.currentIndex()
 
-        if dof_index >= 3:
-            return f"Shear stress {text}"
+        # stress subscript
+        subscript = ["x", "y", "z", "xy", "xz", "yz"]
 
-        return f"Normal stress {text}"
+        # stress Greek letter
+        stress_letter = "\u03c3" if index < 3 else "\u03c4"
+
+        # stress label
+        stress_label = f"${stress_letter}" + r"_{" + subscript[index] + r"}$"
+
+        if index >= 3:
+            return f"Shear stress {stress_label}"
+
+        return f"Normal stress {stress_label}"
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:

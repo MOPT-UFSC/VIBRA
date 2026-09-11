@@ -207,7 +207,7 @@ class StructuralPostprocessing:
         divisions = 36
         thetas = np.linspace(0, 2 * np.pi, divisions + 1, endpoint=True)
 
-        data_complex = data_complex.reshape(-1, 1)
+        data_complex = np.array(data_complex).reshape(-1, 1)
 
         # stresses = Re{data_complex * exp(1j * thetas)}
         stresses = data_complex.real * np.cos(thetas) - data_complex.imag * np.sin(thetas)
