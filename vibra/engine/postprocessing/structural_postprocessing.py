@@ -50,51 +50,51 @@ class StructuralPostprocessing:
 
 
     @cache
-    def get_max_min_values_of_selected_data(self, data_complex: tuple[complex], data_type: str) -> list[float, float]:
+    def get_max_min_values_of_selected_data(self, column: int, data_type: str, is_modal: bool) -> list[float, float]:
         """
         This method returns the minimum and maximum values of selected frequency for animation purposes.
 
         Parameters
         ----------
-        data_complex: a tuple of complex values in which the phase sweep will be applied.
+        column: int
+            The column index of the nodal solution.
 
-        data_type: a string of type DataTypes that represents the data to be processed.
+        data_type: str 
+            A string of type DataTypes that represents the data to be processed.
 
         Return
         ------
         r_min, r_max: float values for minimum and maximum displacements,
 
         """
-        if not data_complex:
-            return
 
-        amplitudes = np.abs(data_complex)
-        phases = np.angle(data_complex)
+        if is_modal:
+            data_complex = self.solution.structural_modal_shapes[self.solution.displacement_dof, column]
+        else:
+            data_complex = self.solution.structural_solution[self.solution.displacement_dof, column]
 
-        r_min = 1
-        r_max = 0
-        thetas = np.arange(0, 360, 2) * (np.pi / 180)
+        divisions = 36
+        thetas = np.linspace(0, 2 * np.pi, divisions + 1, endpoint=True).reshape(-1, 1, 1)
 
-        for theta in thetas:
-            results = (amplitudes * np.cos(phases + theta)).reshape(-1, 3)
+        data_complex = data_complex.reshape(-1, 3)
 
-            if data_type in ["u_x", "v_x", "a_x"]:
-                u_xyz = results * np.array([1.0, 0.0, 0.0])
-            elif data_type in ["u_y", "v_y", "a_y"]:
-                u_xyz = results * np.array([0.0, 1.0, 0.0])
-            elif data_type in ["u_z", "v_z", "a_z"]:
-                u_xyz = results * np.array([0.0, 0.0, 1.0])
-            else:
-                u_xyz = np.linalg.norm(results, axis=1)
+        # u_xyz_all = Re{data_complex * exp(1j * thetas)}
+        u_xyz_all = data_complex.real * np.cos(thetas) - data_complex.imag * np.sin(thetas)
 
-            r_min_i = np.min(u_xyz)
-            r_min = min(r_min, r_min_i)
+        if data_type in ["u_x", "v_x", "a_x"]:
+            u_xyz = u_xyz_all[:, :, 0]
+        elif data_type in ["u_y", "v_y", "a_y"]:
+            u_xyz = u_xyz_all[:, :, 1]
+        elif data_type in ["u_z", "v_z", "a_z"]:
+            u_xyz = u_xyz_all[:, :, 2]
+        else:
+            u_xyz = np.linalg.norm(u_xyz_all, axis=2)
 
-            r_max_i = np.max(u_xyz)
-            r_max = max(r_max, r_max_i)
+        r_min = np.min(u_xyz)
+        r_max = np.max(u_xyz)
 
         if data_type in ["u_sum", "v_sum", "a_sum"]:
-            return 0.0, r_max
+            return 0.0, np.max(np.abs([r_min, r_max]))
 
         if np.abs(r_min) != np.abs(r_max):
             max_abs = np.max(np.abs([r_min, r_max]))
@@ -127,19 +127,10 @@ class StructuralPostprocessing:
             return (0, 0)
 
         dt = perf_counter() - t0
-        print(f"Time to compute nodal stresses (dentro): {dt} s")
+        print(f"Time to compute nodal stresses (get_max_min_values): {dt} s")
 
         # initialize the stress vector and convert to MPa
         data_complex = avg_nodal_stresses[:, stress_index, column].copy() / 1e6
-
-        amplitudes = np.abs(data_complex)
-        phases = np.angle(data_complex)
-
-        s_min = 1
-        s_max = 0
-
-        divisions = 36
-        thetas = np.linspace(0, 2 * np.pi, divisions + 1, endpoint=True)
 
         if data_type == "absolute_values":
             return (0, max(np.abs(data_complex)))
@@ -150,27 +141,27 @@ class StructuralPostprocessing:
         if data_type == "imag_values":
             return (min(np.imag(data_complex)), max(np.imag(data_complex)))
 
-        for theta in thetas:
-            pressures = amplitudes * np.cos(theta + phases)
+        divisions = 36
+        thetas = np.linspace(0, 2 * np.pi, divisions + 1, endpoint=True)
 
-            if data_type == "absolute_animation":
-                pressures = np.abs(pressures)
+        data_complex = data_complex.reshape(-1, 1)
 
-            s_min_i = min(pressures)
-            s_max_i = max(pressures)
+        # stresses = Re{data_complex * exp(1j * thetas)}
+        stresses = data_complex.real * np.cos(thetas) - data_complex.imag * np.sin(thetas)
 
-            s_min = min(s_min, s_min_i)
-            s_max = max(s_max, s_max_i)
+        s_min = np.min(stresses.ravel())
+        s_max = np.max(stresses.ravel())
 
         if data_type == "absolute_animation":
             s_min = 0
+            s_max = max(s_max, abs(s_min))
 
         if data_type == "non_absolute_animation":
             max_value = np.max(np.abs([s_min, s_max]))
             s_min = -max_value
             s_max = max_value
 
-        return (s_min, s_max)
+        return s_min, s_max
 
 
     @cache
@@ -190,15 +181,6 @@ class StructuralPostprocessing:
 
         """
 
-        amplitudes = np.abs(data_complex)
-        phases = np.angle(data_complex)
-
-        s_min = 1
-        s_max = 0
-
-        divisions = 36
-        thetas = np.linspace(0, 2 * np.pi, divisions + 1, endpoint=True)
-
         if data_type == "absolute_values":
             return (0, max(np.abs(data_complex)))
 
@@ -208,27 +190,27 @@ class StructuralPostprocessing:
         if data_type == "imag_values":
             return (min(np.imag(data_complex)), max(np.imag(data_complex)))
 
-        for theta in thetas:
-            pressures = amplitudes * np.cos(theta + phases)
+        divisions = 36
+        thetas = np.linspace(0, 2 * np.pi, divisions + 1, endpoint=True)
 
-            if data_type == "absolute_animation":
-                pressures = np.abs(pressures)
+        data_complex = data_complex.reshape(-1, 1)
 
-            s_min_i = min(pressures)
-            s_max_i = max(pressures)
+        # stresses = Re{data_complex * exp(1j * thetas)}
+        stresses = data_complex.real * np.cos(thetas) - data_complex.imag * np.sin(thetas)
 
-            s_min = min(s_min, s_min_i)
-            s_max = max(s_max, s_max_i)
+        s_min = np.min(stresses.ravel())
+        s_max = np.max(stresses.ravel())
 
         if data_type == "absolute_animation":
             s_min = 0
+            s_max = np.max(np.abs([s_max, s_min]))
 
         if data_type == "non_absolute_animation":
             max_value = np.max(np.abs([s_min, s_max]))
             s_min = -max_value
             s_max = max_value
 
-        return (s_min, s_max)
+        return s_min, s_max
 
 
     def compute_structural_response_field(
@@ -279,7 +261,7 @@ class StructuralPostprocessing:
             color_scalars = current_solution[:, 2]
             phase_shifted_data = current_solution * np.array([0.0, 0.0, 1.0])
 
-        min_value, max_value = self.get_max_min_values_of_selected_data(tuple(data_complex), data_type)
+        min_value, max_value = self.get_max_min_values_of_selected_data(column, data_type, is_modal)
 
         return phase_shifted_data, color_scalars, min_value, max_value, np.imag(data_complex).any()
 
@@ -316,7 +298,7 @@ class StructuralPostprocessing:
         phase_shifted_data  = compute_shifted_values(data_complex, phase_rad)
         current_solution = phase_shifted_data.reshape(-1, 3).copy()
 
-        min_value, max_value = self.get_max_min_values_of_selected_data(tuple(data_complex), data_type)
+        min_value, max_value = self.get_max_min_values_of_selected_data(column, data_type, False)
 
         return current_solution, max_value
 
@@ -451,8 +433,6 @@ class StructuralPostprocessing:
         _connect_flat = self.model.get_mapped_nodes(element_3d.connectivities[element_ids, :].ravel(), "structural")
         _connectivities = _connect_flat.reshape(-1, element_3d.nodes_per_element)
 
-        t0 = perf_counter()
-
         if elements_per_loop is None:
 
             for i, _connect in enumerate(_connectivities):
@@ -513,9 +493,6 @@ class StructuralPostprocessing:
 
         # average the nodal stresses
         avg_nodal_stresses /= counts.reshape(-1, 1, 1)
-
-        dt = perf_counter() - t0
-        print(f"Tempo para calcular as tensões nodais: {dt} s")
 
         return avg_nodal_stresses
 

@@ -76,40 +76,32 @@ class AcousticPostprocessing:
         if isinstance(nodal_solution, LazyArray) and not nodal_solution.is_valid():
             return None
 
-        data = nodal_solution[:, column]
+        # define the complex data vector
+        complex_data = nodal_solution[:, column]
 
-        amplitudes = np.abs(data)
-        phases = np.angle(data)
+        if plot_type == "absolute_values":
+            return 0, max(np.abs(complex_data))
 
-        p_min = 1
-        p_max = 0
+        if plot_type == "real_values":
+            return min(np.real(complex_data)), max(np.real(complex_data))
+
+        if plot_type == "imag_values":
+            return min(np.imag(complex_data)), max(np.imag(complex_data))
 
         divisions = 36
         thetas = np.linspace(0, 2 * np.pi, divisions + 1, endpoint=True)
 
-        if plot_type == "absolute_values":
-            return 0, max(np.abs(data))
+        complex_data = complex_data.reshape(-1, 1)
 
-        if plot_type == "real_values":
-            return min(np.real(data)), max(np.real(data))
+        # pressures = Re{data_complex * exp(1j * thetas)}
+        pressures = complex_data.real * np.cos(thetas) - complex_data.imag * np.sin(thetas)
 
-        if plot_type == "imag_values":
-            return min(np.imag(data)), max(np.imag(data))
-
-        for theta in thetas:
-            pressures = amplitudes * np.cos(theta + phases)
-
-            if plot_type == "absolute_animation":
-                pressures = np.abs(pressures)
-
-            p_min_i = min(pressures)
-            p_max_i = max(pressures)
-
-            p_min = min(p_min, p_min_i)
-            p_max = max(p_max, p_max_i)
+        p_min = np.min(pressures.ravel())
+        p_max = np.max(pressures.ravel())
 
         if plot_type == "absolute_animation":
             p_min = 0
+            p_max = max(p_max, abs(p_min))
 
         if plot_type == "non_absolute_animation":
             max_value = np.max(np.abs([p_min, p_max]))
@@ -149,6 +141,7 @@ class AcousticPostprocessing:
         delta = -phases[np.argmax(amplitudes)]
 
         acoustic_pressures = amplitudes * np.cos(phases + phase_rad + delta)
+
         match plot_type:
             case PressurePlotType.ABSOLUTE_VALUES:
                 acoustic_pressures = np.abs(_nodal_solution)

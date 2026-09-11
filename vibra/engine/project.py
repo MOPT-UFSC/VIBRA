@@ -454,6 +454,7 @@ class Project:
         return self.model.solution
 
     def solve_coupled_harmonic_analysis(self, is_resume: bool = False, print_log: bool = False) -> HarmonicSolution:
+        print_log = True
         logging.info("Building the acoustic harmonic problem...")
         self.model.acoustic_solution = self.solve_acoustic_harmonic_analysis(is_resume=is_resume, print_log=print_log)
 
