@@ -34,8 +34,11 @@ class VisualizationFilter:
     element_normal_symbols: bool = False
     color_mode: GeometryColorMode = GeometryColorMode.COLORED
 
-    def is_all_false(self) -> bool:
-        return not any([self.points, self.lines, self.faces, self.solids, self.symbols])
+    def is_visible(self, workspace: Workspaces) -> bool:
+        if workspace == Workspaces.RESULTS:
+            return any([self.faces, self.lines])
+        
+        return any([self.points, self.lines, self.faces, self.solids])
 
     def to_dict(self) -> dict:
         return {key: value for key, value in asdict(self).items() if value != False}

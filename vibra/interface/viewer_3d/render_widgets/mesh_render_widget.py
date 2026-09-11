@@ -203,7 +203,6 @@ class MeshRenderWidget(CommonRenderWidget):
         self.edges_actor.SetVisibility(visualization.lines and not distinguished_solids)
         self.faces_actor.SetVisibility(visualization.faces and not mesh_error)
         self.solids_actor.SetVisibility(visualization.solids and not mesh_error)
-        self.faces_actor.SetVisibility(visualization.faces and not mesh_error)
         self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
 
         if distinguished_solids:

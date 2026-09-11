@@ -164,9 +164,12 @@ class Config:
             visualization_filter_data[field.name] = config_data[key].get(field.name, False)
 
         filter = VisualizationFilter(**visualization_filter_data)
-
-        if filter.is_all_false():
-            filter.faces = True
+        if filter.is_visible(workspace):
+            return filter
+        
+        filter.faces = True
+        if workspace == Workspaces.MESH:
+            filter.solids = True
 
         return filter
 
