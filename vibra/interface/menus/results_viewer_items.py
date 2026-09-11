@@ -36,8 +36,8 @@ class ResultsViewerItems(CommonMenuItems):
         self.item_child_displacement_field = self.add_item("Displacement Field")
         self.item_child_structural_frequency_response = self.add_item("Structural Frequency Response")
         self.item_child_stress_field = self.add_item("Stress Field")
+        self.item_child_stress_frequency_response = self.add_item("Plot Stress Frequency Response")
         # self.item_child_reaction_frequency_response = self.add_item("Plot Reactions Frequency Response")
-        # self.item_child_stress_frequency_response = self.add_item("Plot Stress Frequency Response")
 
         ## Acoustic results items
         self.item_top_results_viewer_acoustic = self.add_top_item("Results Viewer - Acoustic")
@@ -123,11 +123,12 @@ class ResultsViewerItems(CommonMenuItems):
 
     def modify_structural_results_viewer_items(self, key: bool):
         self.item_top_results_viewer_structural.setHidden(key)
+        self.item_child_structural_mode_shapes.setDisabled(key)
         self.item_child_displacement_field.setDisabled(key)
         self.item_child_structural_frequency_response.setDisabled(key)
-        # self.item_child_reaction_frequency_response.setDisabled(key)
         self.item_child_stress_field.setDisabled(key)
-        self.item_child_structural_mode_shapes.setDisabled(key)
+        self.item_child_stress_frequency_response.setDisabled(key)
+        # self.item_child_reaction_frequency_response.setDisabled(key)
 
     def update_structural_analysis_visibility_items(self):
         self.item_top_results_viewer_structural.setHidden(False)
@@ -164,9 +165,9 @@ class ResultsViewerItems(CommonMenuItems):
         if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
             self.item_child_structural_frequency_response.setDisabled(False)
             self.item_child_displacement_field.setDisabled(False)
-            # self.item_child_reaction_frequency_response.setDisabled(False)
             self.item_child_stress_field.setDisabled(False)
-            # self.item_child_stress_frequency_response.setDisabled(False)
+            self.item_child_stress_frequency_response.setDisabled(False)
+            # self.item_child_reaction_frequency_response.setDisabled(False)
 
         if analysis_id == AnalysisID.STRUCTURAL_MODAL:
             self.item_child_structural_mode_shapes.setDisabled(False)

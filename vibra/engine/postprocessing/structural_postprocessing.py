@@ -10,9 +10,8 @@ import numpy as np
 
 from vibra.engine.model import Model
 from vibra.engine.properties.material import Material
-from vibra.engine.postprocessing.structural_post_solution_dataclass import NodalStresses
 from vibra.engine.solution import HarmonicSolution, LazyHarmonicSolution, ModalSolution
-from vibra.interface.viewer_3d.plot_setup import DisplacementFieldPlotSetupFrequency, StressPlotType, StressType
+from vibra.interface.viewer_3d.plot_setup import StressPlotType, StressType
 
 DataTypes = Literal["u_sum", "u_x", "u_y", "u_z", "v_svm", "v_x", "v_y", "v_z", "a_sum", "a_x", "a_y", "a_z"]
 

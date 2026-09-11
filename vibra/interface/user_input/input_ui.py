@@ -45,6 +45,7 @@ from vibra.interface.plots.acoustic.surface_absorption_coefficient_inputs import
 from vibra.interface.plots.acoustic.transmission_loss_inputs import TransmissionLossInputs
 from vibra.interface.plots.structural.structural_frequency_response_inputs import PlotStructuralFrequencyResponseInputs
 from vibra.interface.plots.structural.structural_stresses_fields_inputs import StructuralStressesFieldsInputs
+from vibra.interface.plots.structural.structural_stresses_frequency_response_inputs import StructuralStressesFrequencyResponseInputs
 
 
 class InputUi:
@@ -160,13 +161,13 @@ class InputUi:
     def plot_structural_frequency_response(self):
         return self.process_input(PlotStructuralFrequencyResponseInputs)
 
-    # def plot_reaction_frequency_response(self):
-    #     app().main_window.show_geometry_render_widget()
-
     def plot_stress_field(self):
         return self.process_input(StructuralStressesFieldsInputs)
 
-    # def plot_stress_frequency_response(self):
+    def plot_stress_frequency_response(self):
+        return self.process_input(StructuralStressesFrequencyResponseInputs)
+
+    # def plot_reaction_frequency_response(self):
     #     app().main_window.show_geometry_render_widget()
 
     def plot_acoustic_pressure_frequency_response(self):

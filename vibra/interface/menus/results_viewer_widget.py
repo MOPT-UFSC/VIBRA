@@ -67,6 +67,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.results_viewer_items.item_child_structural_frequency_response.clicked.connect(self.add_structural_frequency_response_widget)
         self.results_viewer_items.item_child_displacement_field.clicked.connect(self.add_structural_harmonic_widget)
         self.results_viewer_items.item_child_stress_field.clicked.connect(self.add_stress_field_for_harmonic_widget)
+        self.results_viewer_items.item_child_stress_frequency_response.clicked.connect(self.add_stress_frequency_response_for_harmonic_widget)
 
         # Acoustic
         self.results_viewer_items.item_child_acoustic_pressure_field.clicked.connect(self.add_acoustic_harmonic_widget)
@@ -116,6 +117,14 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
 
     def add_stress_field_for_harmonic_widget(self):
         self.current_widget = app().main_window.input_ui.plot_stress_field()
+
+        if app().main_window.results_widget.playing_animation:
+            app().main_window.results_widget.stop_animation()
+
+        self.add_widget(self.current_widget)
+
+    def add_stress_frequency_response_for_harmonic_widget(self):
+        self.current_widget = app().main_window.input_ui.plot_stress_frequency_response()
 
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
