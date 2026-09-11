@@ -1,10 +1,12 @@
-from pathlib import Path
-from dataclasses import fields
 import json
-
-from vibra.interface.user_preferences import UserPreferences
+from dataclasses import fields
+from pathlib import Path
 
 from molde.colors import Color
+
+from vibra.interface.enums import Workspaces
+from vibra.interface.user_preferences import UserPreferences
+from vibra.utils.interface_utils import VisualizationFilter
 
 
 class Config:
@@ -142,3 +144,32 @@ class Config:
     def write_data_in_file(self, data: dict):
         with open(self.config_path, "w") as file:
             json.dump(data, file, indent=2)
+
+    def write_visualization_filters_in_file(self, workspace: Workspaces, visualization_filter: VisualizationFilter):
+        config_data = self.get_config_data()
+        key = workspace.value + "_visualization_filter"
+        config_data[key] = visualization_filter.to_dict()
+
+        self.write_data_in_file(config_data)
+
+    def get_visualization_filter(self, workspace: Workspaces) -> VisualizationFilter:
+        config_data = self.get_config_data()
+        key = workspace.value + "_visualization_filter"
+
+        if key not in config_data:
+            return VisualizationFilter.default(workspace)
+        
+        visualization_filter_data = {}
+        for field in fields(VisualizationFilter):
+            visualization_filter_data[field.name] = config_data[key].get(field.name, False)
+
+        filter = VisualizationFilter(**visualization_filter_data)
+        if filter.is_visible(workspace):
+            return filter
+        
+        filter.faces = True
+        if workspace == Workspaces.MESH:
+            filter.solids = True
+
+        return filter
+

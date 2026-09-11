@@ -19,6 +19,7 @@ from vibra.engine.mesher.mesh_setup import MeshSetup
 from vibra.engine.solvers import HarmonicSolver
 from vibra.interface.data.icons.theme_resources import set_icon_theme
 from vibra.interface.data_handler.export_mesh_data import ExportMeshData
+from vibra.interface.enums import Workspaces
 from vibra.interface.formatters.icons import Icon, get_vibra_icon
 from vibra.interface.general.entity_visibility_handler import EntityVisibilityHandler
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -110,7 +111,6 @@ class MainWindow(MainWindow_UI):
         self.render_widgets_stack.currentChanged.connect(self.render_changed_callback)
         self.visualization_changed.connect(self.reload_visualization_filter)
         self.render_widget_changed.connect(self.reload_visualization_filter)
-        self.reload_visualization_filter()
 
         self.stacked_setup.addWidget(self.model_setup_widget)
         self.stacked_setup.addWidget(self.results_viewer_widget)
@@ -419,12 +419,6 @@ class MainWindow(MainWindow_UI):
         self.results_viewer_widget.results_viewer_items.clear_last_item()
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
 
-        self.action_results_workspace.setEnabled(True)
-        self.action_results_workspace.setChecked(True)
-        self.action_mesh_workspace.setChecked(False)
-        self.action_model_workspace.setChecked(False)
-        self.reload_visualization_filter()
-
     def show_geometry_render_widget(self):
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
         self.view_toolbar.enable_selection_tool()
@@ -538,7 +532,7 @@ class MainWindow(MainWindow_UI):
         self.action_model_workspace.setChecked(False)
         self.action_mesh_workspace.setChecked(False)
 
-        self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
+        self.render_widgets_stack.setCurrentWidget(self.results_widget)
         self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
         self.results_viewer_widget.results_viewer_items.update_items()
         self.analysis_toolbar.update_analysis_combo_boxes()
@@ -1084,6 +1078,17 @@ class MainWindow(MainWindow_UI):
             return None
         return render_widget.visualization_filter
 
+    def get_current_workspace(self) -> Workspaces | None:
+        render_widget = self.get_current_render_widget()
+
+        if isinstance(render_widget, GeometryRenderWidget):
+            return Workspaces.GEOMETRY
+        elif isinstance(render_widget, MeshRenderWidget):
+            return Workspaces.MESH
+        elif isinstance(render_widget, ResultsRenderWidget):
+            return Workspaces.RESULTS
+        return None
+
     def visualization_changed_callback(self):
         if visualization_filter := self.get_current_visualization_filter():
             self.update_visualization_filter(visualization_filter)
@@ -1095,6 +1100,10 @@ class MainWindow(MainWindow_UI):
             self.action_line_view.setChecked(filter.lines)
             self.action_face_view.setChecked(filter.faces or filter.solids)
             self.action_ghost_view.setChecked(filter.ghost)
+            self.action_hide_show_symbols.setChecked(filter.symbols)
+
+        current_workspace = self.get_current_workspace()
+        app().config.write_visualization_filters_in_file(current_workspace, filter)
 
     def update_visualization_filter(self, filter: VisualizationFilter):
         filter.points = self.action_node_view.isChecked()
