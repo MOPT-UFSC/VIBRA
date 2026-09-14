@@ -739,7 +739,7 @@ class MainWindow(MainWindow_UI):
         if not obj.complete:
             return False
 
-        file_path = FileDialogService.save_file(file_extensions=["vibra"],
+        file_path = FileDialogService.save_file(file_extensions=["vibra", "vibra.zip"],
                                     caption="Save As",
                                     last_folder="project_folder")
 
@@ -782,7 +782,7 @@ class MainWindow(MainWindow_UI):
         print(message)
 
     def open_project_dialog(self):
-        project_path = FileDialogService.open_file(file_extensions=["vibra"],
+        project_path = FileDialogService.open_file(file_extensions=["vibra", "vibra.zip"],
                                     caption="Open Project", 
                                     last_folder="project_folder")
         
