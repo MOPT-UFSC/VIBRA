@@ -15,7 +15,13 @@ from vibra import app
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.transfer_impedances.perforated_plate_models import PerforatedPlateModels
 from vibra.interface import error_title, warning_title
-from vibra.interface.common.common_interface import update_analysis_setup_in_file, update_entities_selection
+from vibra.interface.common.common_interface import (
+    process_decoupling_actions,
+    remove_all_properties_assigned_to_new_surfaces,
+    restore_mesh_data_modified_by_decoupling,
+    update_analysis_setup_in_file,
+    update_entities_selection,
+)
 from vibra.interface.data.data_manager import get_spectral_data_from_array
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
@@ -883,31 +889,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             for label in labels:
                 self.properties._remove_surface_property(label, surface_id)
 
-    def remove_all_surface_properties_from_surface(self, new_surface_ids: list[int]):
-        if not new_surface_ids:
-            return
-
-        surface_properties = deepcopy(self.properties.surface_properties)
-        for new_surface_id in new_surface_ids:
-            for (property, surf_id) in surface_properties:
-                if surf_id == new_surface_id:
-                    self.properties._remove_surface_property(property, new_surface_id)
-
-    def remove_all_line_properties_boundind_surface(self, new_surface_ids: list[int]):
-        if not new_surface_ids:
-            return
-
-        line_properties = deepcopy(self.properties.line_properties)
-        for new_surface_id in new_surface_ids:
-            lines_from_surface = self.mesh.lines_from_surface.get(new_surface_id)
-            if lines_from_surface is None:
-                continue
-
-            for line_from_surface in lines_from_surface:
-                for (property, line_id) in line_properties:
-                    if line_from_surface == line_id:
-                        self.properties._remove_line_property(property, line_id)
-
     def remove_callback(self):
         input_ids = self.get_selected_surfaces_from_tree_widget_perforated_plate_model()
 
@@ -929,20 +910,22 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             self.properties._remove_surface_property("perforated_plate_model", surface_id)
 
             data = self.properties._get_property("degrees_of_freedom_decoupling", surface=surface_id)
-            if isinstance(data, dict):
-                new_surface_id = data.get("new_surface_id")
-                if isinstance(new_surface_id, int):   
-                    self.remove_all_surface_properties_from_surface([new_surface_id])
-                    self.remove_all_line_properties_boundind_surface([new_surface_id]) 
+            if not isinstance(data, dict):
+                continue
+        
+            new_surface_id = data.get("new_surface_id")
+            if not isinstance(new_surface_id, int):
+                continue
 
-                self.properties._remove_surface_property("degrees_of_freedom_decoupling", surface_id)
+            remove_all_properties_assigned_to_new_surfaces([new_surface_id])
+            self.properties._remove_surface_property("degrees_of_freedom_decoupling", surface_id)
         
         self.clear_line_edit_selection_id()
         self.pushButton_remove.setDisabled(True)
 
         self.hide()
         self.actions_to_finalize()
-        self.restore_mesh_data_modified_by_decoupling()
+        restore_mesh_data_modified_by_decoupling()
         app().main_window.selection.clear_selection()
 
     def reset_callback(self):
@@ -978,12 +961,11 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
     
                 self.properties._remove_surface_property("degrees_of_freedom_decoupling", surf_id)
 
-        self.remove_all_surface_properties_from_surface(new_surface_ids)
-        self.remove_all_line_properties_boundind_surface(new_surface_ids)
+        remove_all_properties_assigned_to_new_surfaces(new_surface_ids)
         self.properties._reset_property("perforated_plate_model")
 
         self.actions_to_finalize()
-        self.restore_mesh_data_modified_by_decoupling()
+        restore_mesh_data_modified_by_decoupling()
 
     def actions_to_finalize(self, close_window: bool = False):
 
@@ -1014,46 +996,6 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
         if close_window:
             self.close()
-
-    def process_decoupling_actions(self):
-
-        def callback():
-            logging.info("Processing degress of freedom decoupling... [10/100]")
-            self.model.process_degrees_of_freedom_decoupling()
-
-            logging.info("Processing degress of freedom decoupling... [70/100]")
-            app().project.write_to_working_dir()
-
-            # the degrees of freedom modifies the surfaces properties
-            logging.info("Processing degress of freedom decoupling... [80/100]")
-            app().project.update_model_properties_file()
-
-            logging.info("Processing degress of freedom decoupling... [85/100]")
-            app().main_window.update_mesh_information()
-
-            logging.info("Processing degress of freedom decoupling... [90/100]")
-            app().main_window.update_geometry_information()
-
-            logging.info("Processing degress of freedom decoupling... [92/100]")
-            app().project.model.mesh.process_disconnected_nodes_criterion()
-
-            logging.info("Processing degress of freedom decoupling... [95/100]")
-            app().main_window.update_plots()
-
-        LoadingWindow(callback).run()
-
-    def restore_mesh_data_modified_by_decoupling(self):
-
-        if self.mesh.cache_nodal_coordinates is None:
-            return
-
-        self.mesh.restore_data_from_cache()
-        self.mesh.process_upwards_adjacencies_from_entities()
-
-        # if self.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
-        #     self.mesh.cache_mesh_information()
-
-        self.process_decoupling_actions()
 
     def check_inputs(self, lineEdit: QLineEdit, label, _float=True):
 
@@ -1225,7 +1167,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
             self.mesh.process_upwards_adjacencies_from_entities()
             # self.mesh.cache_mesh_information()
 
-        self.process_decoupling_actions()
+        process_decoupling_actions()
 
         return False
 
