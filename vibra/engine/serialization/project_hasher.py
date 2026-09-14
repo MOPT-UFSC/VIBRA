@@ -22,6 +22,7 @@ class ProjectHasher:
         hasher.update(mesh.faces_connectivity.flatten())
         hasher.update(mesh.solids_connectivity.flatten())
         hasher.update(mesh.nodal_coordinates.flatten())
+        hasher.update(np.array(sorted(mesh.suppressed_volumes), dtype=int))
 
         if mesh.has_decoupling():
             hasher.update(mesh.cache_lines_connectivity.flatten())

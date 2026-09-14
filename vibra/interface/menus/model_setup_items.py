@@ -23,7 +23,7 @@ class ModelSetupItems(CommonMenuItems):
         self._initial_configuration()
         self._filter_visible_items_based_on_current_mode()
         self.update_items_appearance()
-    
+
     def _create_items(self):
         """Creates all TreeWidgetItems."""
         self.item_top_general_settings = self.add_top_item('General Settings')
@@ -32,14 +32,15 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_mesh_setup = self.add_item("Mesh Setup")
         self.item_child_element_options = self.add_item("Element Options")
         self.item_child_degrees_of_freedom_decoupling = self.add_item("DOF Decoupling")
+        self.item_child_volume_suppression = self.add_item("Volumes Suppression")
 
         self.item_top_structural_model_setup = self.add_top_item('Structural Model Setup (Beta)')
 
         tooltip_html = '''
                         <p><b>Structural Properties</b></p>
                         <p><span style="color:red;">
-                        <b>Note:</b> The calculations for these structural properties are currently undergoing refinement.</span> 
-                        While we are actively working to ensure complete accuracy, please be aware that simulation results may 
+                        <b>Note:</b> The calculations for these structural properties are currently undergoing refinement.</span>
+                        While we are actively working to ensure complete accuracy, please be aware that simulation results may
                         exhibit minor variations. We appreciate your understanding as we continue to improve the precision of our models.</p>
                         '''
         self.item_top_structural_model_setup.setToolTip(0, tooltip_html)
@@ -52,7 +53,6 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_distributed_loads = self.add_item("Distributed Loads")
         self.item_child_normal_pressure_load = self.add_item("Normal Pressure Load")
         self.item_child_distributed_mass = self.add_item("Distributed Mass")
-    
         self.item_top_acoustic_model_setup = self.add_top_item('Acoustic Model Setup')
 
         # acoustic model excitations
@@ -91,7 +91,7 @@ class ModelSetupItems(CommonMenuItems):
             self.item_top_structural_model_setup,
             self.item_top_acoustic_model_setup,
         ]
-        
+
         # correlate each menu item with the name of the related property.
         self.property_names = {
             "item_child_material": "material",
@@ -99,6 +99,7 @@ class ModelSetupItems(CommonMenuItems):
             "item_child_mesh_setup": "mesh_setup",
             "item_child_element_options": "element_options",
             "item_child_degrees_of_freedom_decoupling": "degrees_of_freedom_decoupling",
+            "item_child_volume_suppression": "volume_suppression",
             "item_child_surface_thickness": "surface_thickness",
             "item_child_prescribed_dof": "prescribed_dof",
             "item_child_nodal_loads": "nodal_loads",
@@ -176,7 +177,7 @@ class ModelSetupItems(CommonMenuItems):
         for attr_name, attr_value in self.__dict__.items():
             if attr_value == qtree_widet_item:
                 return attr_name
-    
+
     def _contains_property(self, property_name: str) -> bool:
 
         model = app().project.model
@@ -218,7 +219,7 @@ class ModelSetupItems(CommonMenuItems):
 
         # test for mesh. Not ideal, but it works. Since the mesh config is not part of the properties, the necessary check is performed here
         if property_name == "mesh_setup":
-            disconnected_nodes = bool(mesh.disconnected_nodes_data)
+            disconnected_nodes = bool(mesh.disconnected_nodes)
             collapsed_elements = bool(mesh.collapsed_elements_data)
             if collapsed_elements or disconnected_nodes:
                 return False
@@ -235,7 +236,7 @@ class ModelSetupItems(CommonMenuItems):
                     else:
                         return True
 
-        # As anechoic_termination is a subproperty of specific_impedance, 
+        # As anechoic_termination is a subproperty of specific_impedance,
         # we need to garantee there is a specific_impedance that is not anechoic_termination
         if property_name == "specific_impedance":
             for key, data in properties.surface_properties.items():
@@ -243,7 +244,7 @@ class ModelSetupItems(CommonMenuItems):
                     if "anechoic_termination" not in data.keys():
                         return True
             return False
-        
+
         # search for anechoic_termination in specific_impedance
         if property_name == "anechoic_termination":
             for key, data in properties.surface_properties.items():
@@ -290,11 +291,11 @@ class ModelSetupItems(CommonMenuItems):
                         return True
 
         return False
-    
+
     def filter_available_items_and_analyzes_according_to_geometry_information(self):
         """
         This method filters the available analyzes and items according to the geometry information.
-        If there are no volumes in geometry, the physical domain comboBox will be switched and disabled 
+        If there are no volumes in geometry, the physical domain comboBox will be switched and disabled
         in structural type because there is no implementation for 2D acoustic models.
         """
 
@@ -327,7 +328,7 @@ class ModelSetupItems(CommonMenuItems):
         Parameters:
         -----------
         analysis_type: str
-        It represents the analysis type (harmonic or modal).  
+        It represents the analysis type (harmonic or modal).
 
         physical_domain: str
         It represents the physical domain (structural or acoustic).
@@ -361,7 +362,7 @@ class ModelSetupItems(CommonMenuItems):
         if item_child.property_name == "mesh_setup":
             mesh = app().project.model.mesh
             if mesh is not None:
-                disconnected_nodes = bool(mesh.disconnected_nodes_data)
+                disconnected_nodes = bool(mesh.disconnected_nodes)
                 item_child.set_error(disconnected_nodes)
                 if disconnected_nodes:
                     return True
@@ -369,7 +370,7 @@ class ModelSetupItems(CommonMenuItems):
 
     def update_items_appearance(self):
 
-        # It may happen that the analysis toolbar has not been created yet. If so, 
+        # It may happen that the analysis toolbar has not been created yet. If so,
         # retrieve the analysis type and physical domain from the project
         try:
             analysis_type = app().main_window.analysis_toolbar.combo_box_analysis_type.currentText()
@@ -396,13 +397,13 @@ class ModelSetupItems(CommonMenuItems):
 
                 item_child.set_warning(False)
                 item_child.set_tool_tip(item_child.property_name)
-                
+
                 if item_child.isDisabled():
                     continue
 
                 if self._are_there_collapsed_elements(item_child):
                     continue
-                    
+
                 if self._are_there_disconnected_nodes(item_child):
                     continue
 
@@ -422,7 +423,7 @@ class ModelSetupItems(CommonMenuItems):
                                     item_child.set_icon("reciprocating_compressor_excitation")
                                 else:
                                     item_child.set_icon("other_compressor")
-                    
+
                     if item_child.property_name == "compressor_excitation_spectrum":
                         surface_properties = app().project.model.properties.surface_properties
                         for key in surface_properties.items():
@@ -435,6 +436,13 @@ class ModelSetupItems(CommonMenuItems):
                                     item_child.set_icon("reciprocating_compressor_excitation")
                                 else:
                                     item_child.set_icon("other_compressor")
+
+                elif item_child.property_name == "volume_suppression":
+                    mesh = app().project.model.mesh
+                    mesh_setup = app().project.model.mesh_setup
+                    configured = bool(mesh_setup is not None and mesh_setup.suppressed_volume_ids)
+                    applied = bool(mesh is not None and mesh.suppressed_volumes)
+                    item_child.set_icon("suppress_volume", visible=configured or applied)
 
                 elif self._needs_property(item_child.property_name, analysis_type, physical_domain):
                     item_child.set_warning(True)
@@ -450,7 +458,7 @@ class ModelSetupItems(CommonMenuItems):
                 item_child.set_icon(visible=False)
                 item_child.set_warning(False)
                 item_child.set_tool_tip()
-    
+
     # Callbacks
     def item_child_material_callback(self):
         app().main_window.input_ui.set_material()
@@ -472,19 +480,19 @@ class ModelSetupItems(CommonMenuItems):
 
     def item_child_nodal_loads_callback(self):
        app().main_window.input_ui.set_nodal_loads()
-    
+
     def item_child_distributed_loads_callback(self):
         app().main_window.input_ui.set_distributed_loads()
 
     def item_child_distributed_mass_callback(self):
         app().main_window.input_ui.set_distributed_mass()
-    
+
     def item_child_normal_pressure_load_callback(self):
         app().main_window.input_ui.set_normal_pressure_load()
-    
+
     def item_child_acoustic_pressure_callback(self):
         app().main_window.input_ui.set_acoustic_pressure()
-    
+
     def item_child_compressor_excitation_waveform_callback(self):
         app().main_window.input_ui.compressor_excitation_waveform()
 
@@ -496,16 +504,16 @@ class ModelSetupItems(CommonMenuItems):
 
     def item_child_mass_source_callback(self):
         app().main_window.input_ui.set_mass_source()
-    
+
     def item_child_surface_velocity_callback(self):
         app().main_window.input_ui.set_surface_velocity()
 
     def item_child_incident_plane_wave_callback(self):
         app().main_window.input_ui.set_incident_plane_wave()
-    
+
     def item_child_anechoic_termination_callback(self):
         app().main_window.input_ui.set_anechoic_termination()
-    
+
     def item_child_specific_impedance_callback(self):
         app().main_window.input_ui.set_specific_impedance()
 
@@ -517,13 +525,16 @@ class ModelSetupItems(CommonMenuItems):
 
     def item_child_proportional_damping_callback(self):
         app().main_window.input_ui.set_proportional_damping_for_acoustic_model()
-    
+
     def item_child_porous_material_model_callback(self):
         app().main_window.input_ui.set_porous_material_model()
 
     def item_child_degrees_of_freedom_decoupling_callback(self):
         app().main_window.input_ui.set_degrees_of_freedom_decoupling()
-    
+
+    def item_child_volume_suppression_callback(self):
+        app().main_window.input_ui.set_volume_suppression()
+
     def item_child_viscous_thermal_model_callback(self):
         app().main_window.input_ui.set_viscous_thermal_model()
 
@@ -532,7 +543,7 @@ class ModelSetupItems(CommonMenuItems):
 
     def item_child_acoustic_properties_gradient_callback(self):
         app().main_window.input_ui.set_acoustic_properties_grandient()
-    
+
     def item_child_acoustic_transfer_element_setup_callback(self):
         app().main_window.input_ui.set_acoustic_transfer_element_setup()
 
@@ -540,6 +551,7 @@ class ModelSetupItems(CommonMenuItems):
         imported_geometry = app().project.model.is_there_a_geometry_imported()
         self.item_child_mesh_setup.setDisabled(not imported_geometry)
         self.item_child_element_options.setDisabled(not imported_geometry)
+        self.item_child_volume_suppression.setDisabled(not imported_geometry)
 
     def hide_all_top_items(self):
         self.item_top_general_settings.setHidden(True)

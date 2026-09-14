@@ -201,7 +201,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.nodes_actor.SetVisibility(True)
 
         mesh = app().project.model.mesh
-        mesh_error = mesh.collapsed_elements_data or mesh.disconnected_nodes_data
+        mesh_error = mesh.collapsed_elements_data or mesh.disconnected_nodes
         distinguished_solids = app().main_window.distinguished_solids
 
         visualization = self.visualization_filter
@@ -215,6 +215,8 @@ class MeshRenderWidget(CommonRenderWidget):
             self.switch_to_solids_actor()
             self.solids_actor.distinguish_solids(distinguished_solids)
             self.solids_actor.SetVisibility(True)
+            self.edges_actor.distinguish_cells(self._distinguished_cells(distinguished_solids))
+            self.edges_actor.SetVisibility(visualization.lines)
 
         self.update_selection()
         self.update()
@@ -294,7 +296,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.edges_actor.configure_appearance()
 
         mesh = app().project.model.mesh
-        mesh_error = mesh.collapsed_elements_data or mesh.disconnected_nodes_data
+        mesh_error = mesh.collapsed_elements_data or mesh.disconnected_nodes
         if mesh_error:
             self.add_problematic_mesh_legend()
 
@@ -375,6 +377,14 @@ class MeshRenderWidget(CommonRenderWidget):
         )
         self.add_actors(self.solids_actor, self.edges_actor)
         self.visualization_changed_callback()
+
+    def _distinguished_cells(self, distinguished_solids):
+        cells = []
+        for i in distinguished_solids:
+            visible_index = self.solids_actor.visible_indexes.get(i, -1)
+            if visible_index >= 0:
+                cells.append(visible_index)
+        return cells
 
     def update_section_plane(self):
         if not self.actors_exists():
@@ -459,7 +469,7 @@ class MeshRenderWidget(CommonRenderWidget):
     def add_problematic_mesh_legend(self):
         legend_actor = LegendActor()
 
-        if app().project.model.mesh.disconnected_nodes_data:
+        if app().project.model.mesh.disconnected_nodes:
             legend_actor.add_item("Disconnected nodes", color_names.GREEN)
 
         if app().project.model.mesh.collapsed_elements_data:
