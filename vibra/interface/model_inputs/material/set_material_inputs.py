@@ -14,6 +14,10 @@ from PySide6.QtWidgets import (
 from vibra import app
 from vibra.engine.properties.material import Material
 from vibra.interface import error_title
+from vibra.interface.common.common_interface import (
+    remove_all_properties_assigned_to_new_surfaces,
+    restore_mesh_data_modified_by_decoupling,
+)
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.material.material_widget import MaterialWidget
@@ -90,9 +94,11 @@ class MaterialInputs(SetMaterial_UI):
         self.lineEdit_selected_material_name.clear()
 
     def _create_connections(self):
-        #
+
+        # QComboBox connection
         self.comboBox_attribution_type.currentIndexChanged.connect(self.attribution_type_callback)
-        #
+
+        # QPushButton connections
         self.material_widget.modified.connect(self.load_model_info)
         self.material_widget.pushButton_apply.clicked.connect(self.apply_callback)
         self.material_widget.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
@@ -103,14 +109,14 @@ class MaterialInputs(SetMaterial_UI):
         self.material_widget.pushButton_import_library.clicked.connect(self.import_material_library_callback)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
-        #
+
+        # QTableWidget connections
         self.tableWidget_material_data.currentCellChanged.connect(self.current_cell_changed)
         self.tableWidget_model_materials.cellClicked.connect(self.cell_clicked_callback)
-        #
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
-        #
+
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
-        #
+
         self.attribution_type_callback()
         self.update_selection_combo_box_texts()
 
@@ -315,6 +321,59 @@ class MaterialInputs(SetMaterial_UI):
         self.comboBox_attribution_type.clear()
         self.comboBox_attribution_type.addItems(labels)
 
+    def check_conflicting_model_properties(self, volume_ids: list[int]):
+        if not self.model.domains_processor.is_there_a_property_assigned_to_a_domain("acoustic", volume_ids):
+            return False
+
+        title = "Conflicting properties detected"
+        message = "You're trying to assign a material to a volume that already has a fluid assigned. "
+        message += "Would you like to proceed with material assignment and remove the all "
+        message += "acoustic-related properties?"
+
+        buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
+        obj = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
+
+        if obj._cancel:
+            return True
+
+        existing_properties = self.model.domains_processor.get_properties_assigned_to_a_domain("acoustic", volume_ids)
+        if not existing_properties:
+            return False
+
+        decoupled_surface_ids = []
+
+        for (prop_name, entity_name, entity_id) in existing_properties:
+            if prop_name in ["perforated_plate_model", "transfer_impedance"]:
+                decoupled_surface_ids.append(entity_id)
+
+            match entity_name:
+                case "volume":
+                    self.properties._remove_volume_property(prop_name, volume_id=entity_id)
+                case "surface":
+                    self.properties._remove_surface_property(prop_name, surface_id=entity_id)
+                case "line":
+                    self.properties._remove_line_property(prop_name, line_id=entity_id)
+                case "point":
+                    self.properties._remove_point_property(prop_name, point_id=entity_id)
+                case "node":
+                    self.properties._remove_nodal_property(prop_name, node_id=entity_id)
+
+        if not decoupled_surface_ids:
+            return
+
+        new_surface_ids = []
+        for surf_id in decoupled_surface_ids:
+            data = self.properties._get_property("degrees_of_freedom_decoupling", surface=surf_id)
+            if isinstance(data, dict):
+                new_surface_id = data.get("new_surface_id")
+                if isinstance(new_surface_id, int):
+                    new_surface_ids.append(new_surface_id)
+
+                self.properties._remove_surface_property("degrees_of_freedom_decoupling", surf_id)
+
+        remove_all_properties_assigned_to_new_surfaces(new_surface_ids)
+        restore_mesh_data_modified_by_decoupling()
+
     def apply_callback(self, close_window: bool = False):
 
         selected_material = self.material_widget.get_selected_material()
@@ -365,6 +424,9 @@ class MaterialInputs(SetMaterial_UI):
                     self.lineEdit_selection_id.setFocus()
                     PrintMessageInput(error_data)
                     return True
+
+            if self.check_conflicting_model_properties(volume_ids):
+                return
 
             for volume_id in volume_ids:
 

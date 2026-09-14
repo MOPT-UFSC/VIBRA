@@ -92,9 +92,11 @@ class SetFluidInputs(SetFluidInputs_UI):
         self.tableWidget_model_fluids.setSelectionBehavior(QAbstractItemView.SelectRows)
 
     def _create_connections(self):
-        #
+
+        # QComboBox connection
         self.comboBox_attribution_type.currentIndexChanged.connect(self.attribution_type_callback)
-        #
+
+        # QPushButton connections
         self.fluid_widget.modified.connect(self.load_model_info)
         self.fluid_widget.pushButton_apply.clicked.connect(self.apply_callback)
         self.fluid_widget.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
@@ -105,14 +107,14 @@ class SetFluidInputs(SetFluidInputs_UI):
         self.fluid_widget.pushButton_import_library.clicked.connect(self.import_fluid_library_callback)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
-        #
+
+        # QTableWidget connections
         self.fluid_widget.tableWidget_fluid_data.currentCellChanged.connect(self.current_cell_changed)
         self.tableWidget_model_fluids.cellClicked.connect(self.cell_clicked_callback)
-        #
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
-        #
+
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
-        #
+
         self.attribution_type_callback()
         self.geometry_selection_callback()
 
@@ -252,6 +254,39 @@ class SetFluidInputs(SetFluidInputs_UI):
         self.lineEdit_selection_id.setText(text)
         self.lineEdit_selection_id.setEnabled(bool(index))
 
+    def check_conflicting_model_properties(self, volume_ids: list[int]):
+        if not self.model.domains_processor.is_there_a_property_assigned_to_a_domain("structural", volume_ids):
+            return
+
+        title = "Conflicting properties detected"
+        message = "You're trying to assign a fluid to a volume that already has a material "
+        message += "assigned. Would you like to proceed with fluid assignment and remove "
+        message += "the all structural-related properties?"
+
+        buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
+        obj = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
+
+        if obj._cancel:
+            return True
+
+        existing_properties = self.model.domains_processor.get_properties_assigned_to_a_domain("structural", volume_ids)
+        if not existing_properties:
+            return False
+
+        for (prop_name, entity_name, entity_id) in existing_properties:
+
+            match entity_name:
+                case "volume":
+                    self.properties._remove_volume_property(prop_name, volume_id=entity_id)
+                case "surface":
+                    self.properties._remove_surface_property(prop_name, surface_id=entity_id)
+                case "line":
+                    self.properties._remove_line_property(prop_name, line_id=entity_id)
+                case "point":
+                    self.properties._remove_point_property(prop_name, point_id=entity_id)
+                case "node":
+                    self.properties._remove_nodal_property(prop_name, node_id=entity_id)
+
     def apply_callback(self, close_window: bool = False):
 
         selected_fluid = self.fluid_widget.get_selected_fluid()
@@ -282,6 +317,9 @@ class SetFluidInputs(SetFluidInputs_UI):
                 return
 
         if not volume_ids:
+            return
+
+        if self.check_conflicting_model_properties(volume_ids):
             return
 
         for volume_id in volume_ids:
