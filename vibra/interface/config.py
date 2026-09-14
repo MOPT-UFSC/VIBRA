@@ -147,14 +147,14 @@ class Config:
 
     def write_visualization_filters_in_file(self, workspace: Workspaces, visualization_filter: VisualizationFilter):
         config_data = self.get_config_data()
-        key = workspace.value + "_visualization_filter"
+        key = f"{workspace.value}_visualization_filter"
         config_data[key] = visualization_filter.to_dict()
 
         self.write_data_in_file(config_data)
 
     def get_visualization_filter(self, workspace: Workspaces) -> VisualizationFilter:
         config_data = self.get_config_data()
-        key = workspace.value + "_visualization_filter"
+        key = f"{workspace.value}_visualization_filter"
 
         if key not in config_data:
             return VisualizationFilter.default(workspace)
