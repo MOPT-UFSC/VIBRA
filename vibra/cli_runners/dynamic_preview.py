@@ -12,7 +12,7 @@ from PySide6.QtWidgets import QApplication, QMainWindow
 
 from vibra.engine.project import Project
 from vibra.interface.viewer_3d.render_widgets.preview_render_widget import PreviewRenderWidget
-from vibra.utils.interface_utils import SectionPlane, VisualizationFilter
+from vibra.utils.interface_utils import MeshRendererConfig, SectionPlane, VisualizationFilter
 
 
 class ScriptRunner(QThread):
@@ -77,6 +77,7 @@ class MainWindow(QMainWindow):
         self.render_widget.set_model(None)
         self.render_widget.set_section_plane(None)
         self.render_widget.set_visualization_filter(None)
+        self.render_widget.set_mesh_render_config(None)
         reset_camera = True
 
         for name, var in script_variables.items():
@@ -95,6 +96,9 @@ class MainWindow(QMainWindow):
 
                 case VisualizationFilter() as visualization_filter:
                     self.render_widget.set_visualization_filter(visualization_filter)
+
+                case MeshRendererConfig() as config:
+                    self.render_widget.set_mesh_render_config(config)
 
                 case _:
                     pass

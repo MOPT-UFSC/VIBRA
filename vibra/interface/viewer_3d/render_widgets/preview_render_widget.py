@@ -65,6 +65,11 @@ class PreviewRenderWidget(CommonRenderWidget):
             visualization_filter = VisualizationFilter(faces=True, symbols=True)
         self.visualization_filter = visualization_filter
 
+    def set_mesh_render_config(self, config: MeshRendererConfig | None):
+        if config is None:
+            config = MeshRendererConfig()
+        self.mesh_config = config
+
     @function_timer
     @override
     def update_plot(self, reset_camera: bool = False):
