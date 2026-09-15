@@ -1,6 +1,5 @@
 import logging
 from enum import IntEnum
-from time import time
 
 import numpy as np
 from PySide6.QtCore import Qt
@@ -11,6 +10,7 @@ from vibra.engine import AnalysisID
 from vibra.interface.common.common_interface import update_entities_selection
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.numeric_checks.unit_utilities import convert_pressure_unit
 from vibra.interface.plots.general.frequency_response_plotter import DataFormat, FrequencyResponsePlotter
 from vibra.interface.ui_generated.plots.acoustic.acoustic_pressure_waveform_2d_plot_inputs_ui import AcousticPressureWaveform2dPlotInputs_UI
 from vibra.utils.signal_processing import process_ifft_from_one_sided_spectrum_signal, process_multiple_iffts_from_one_sided_spectrum_signals
@@ -65,16 +65,18 @@ class AcousticPressureWaveform2DPlotInputs(AcousticPressureWaveform2dPlotInputs_
     def _reset_variables(self):
         self.exporter = None
         self.plotter = None
-        self.unit_label = "Pa"
+        self.model_results = {}
         self.selection_types = ["surfaces", "lines", "points", "nodes"]
 
     def _create_connections(self):
-        #
+
+        # QComboBox connection
         self.comboBox_selector_filter.currentIndexChanged.connect(self.update_render_according_to_selector)
-        #
+
+        # QPushButton conenctions
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
-        #
+
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
     
     def geometry_selection_callback(self):
@@ -191,7 +193,6 @@ class AcousticPressureWaveform2DPlotInputs(AcousticPressureWaveform2dPlotInputs_
         logging.info("Computing multiple iffts... [10/100]")
         solution = self.nodal_solution[:, :]
 
-        t0 = time()
         logging.info("Computing multiple iffts... [25/100]")
         _time_vector, acoustic_pressure_waveform_vectors = process_multiple_iffts_from_one_sided_spectrum_signals(                
             self.frequencies, 
@@ -199,20 +200,13 @@ class AcousticPressureWaveform2DPlotInputs(AcousticPressureWaveform2dPlotInputs_
             dc_included = False,
             )
 
-        dt = time() - t0
-        print(f"Elapsed time to process ifft: {dt : .6f} s")
-        ##
-
     def join_model_data(self):
 
         current_text = self.comboBox_selector_filter.currentText()
         selection_type = current_text.lower()[:-1]
 
-        self.model_results = dict()
         self.title = "Acoustic pressure waveform"
-
-        ## TODO: only for tests
-        # LoadingWindow(self.compute_multiple_ifft).run()
+        self.process_units_data()
 
         for i, selected_id in enumerate(self.selected_ids):
 
@@ -228,28 +222,32 @@ class AcousticPressureWaveform2DPlotInputs(AcousticPressureWaveform2dPlotInputs_
 
             self.model_results[key] = { 
                 "x_data" : time_vector,
-                "y_data" : acoustic_pressure,
+                "y_data" : self.unit_factor * acoustic_pressure,
                 "x_label" : "Time [s]",
                 "y_label" : "Acoustic pressure",
                 "title" : self.title,
                 "data_type" : "acoustic pressure",
                 "legend" : legend_label,
-                "unit" : self.unit_label,
+                "unit" : self.pressure_units,
                 "color" : self.get_color(i),
                 "linestyle" : "-"  
             }
 
+    def process_units_data(self) -> str:
+        self.pressure_units = self.comboBox_pressure_units.currentText()
+        self.unit_factor = convert_pressure_unit(1, "Pa", self.pressure_units)
+
     def get_color(self, index):
 
-        colors = [  
-                  (0,0,1), 
-                  (0,0,0), 
-                  (1,0,0),
-                  (0,1,1), 
-                  (1,0,1), 
-                  (1,1,0),
-                  (0.25,0.25,0.25)
-                  ]
+        colors = [
+            (0, 0, 1),
+            (0, 0, 0),
+            (1, 0, 0),
+            (0, 1, 1),
+            (1, 0, 1),
+            (1, 1, 0),
+            (0.25, 0.25, 0.25),
+        ]
 
         if index <= 6:
             return colors[index]

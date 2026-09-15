@@ -18,13 +18,13 @@ from vibra.interface.viewer_3d.plot_setup import (
     AcousticPlotSetups,
     AllowablePulsationForScrewCompressorsPlotSetup,
     DisplacementFieldPlotSetupFrequency,
-    FrequencyPressurePlotSetup,
+    PressureFieldPlotSetupFrequency,
     NoPlotSetup,
     PlotSetup,
     StressFieldPlotSetupFrequency,
     StressType,
     StructuralPlotSetups,
-    TransientPressurePlotSetup,
+    PressureFieldPlotSetupTime,
 )
 from vibra.interface.viewer_3d.render_tools import RenderTool, SelectionTool
 from vibra.utils.interface_utils import VisualizationFilter
@@ -234,17 +234,17 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             case NoPlotSetup():
                 self._plot_empty()
 
-            case FrequencyPressurePlotSetup():
-                self._plot_frequency_pressure(animation_frame, clear_cache)
+            case PressureFieldPlotSetupFrequency():
+                self._plot_pressure_field_frequency_domain(animation_frame, clear_cache)
 
             case DisplacementFieldPlotSetupFrequency():
-                self._plot_frequency_displacement(animation_frame, clear_cache)
+                self._plot_displacement_field_frequency_domain(animation_frame, clear_cache)
 
             case StressFieldPlotSetupFrequency():
                 self._plot_stress_field_frequency_domain(animation_frame, clear_cache)
 
-            case TransientPressurePlotSetup():
-                self._plot_transient_pressure(animation_frame, clear_cache)
+            case PressureFieldPlotSetupTime():
+                self._plot_pressure_field_time_domain(animation_frame, clear_cache)
 
             case AllowablePulsationForScrewCompressorsPlotSetup():
                 self._plot_allowable_pulsation_for_screw_compressor(clear_cache)
@@ -255,12 +255,12 @@ class ResultsRenderWidget(AnimatedRenderWidget):
     def _plot_empty(self):
         assert isinstance(self.plot_setup, NoPlotSetup)
 
-    def _plot_frequency_pressure(
+    def _plot_pressure_field_frequency_domain(
         self,
         animation_frame: Optional[int],
         clear_cache: bool = True,
     ):
-        assert isinstance(self.plot_setup, FrequencyPressurePlotSetup)
+        assert isinstance(self.plot_setup, PressureFieldPlotSetupFrequency)
 
         postprocessing = app().project.get_acoustic_postprocessing()
         assert isinstance(postprocessing, AcousticPostprocessing)
@@ -277,6 +277,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.plot_setup.index,
             phase,
             self.plot_setup.plot_type,
+            unit_factor=self.plot_setup.unit_factor,
             is_modal=analysis_id.is_modal(),
         )
 
@@ -308,7 +309,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.update()
 
-    def _plot_frequency_displacement(
+    def _plot_displacement_field_frequency_domain(
         self,
         animation_frame: Optional[int] = None,
         clear_cache: bool = True,
@@ -449,13 +450,13 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.update()
 
-    def _plot_transient_pressure(
+    def _plot_pressure_field_time_domain(
         self,
         animation_frame: Optional[int] = None,
         clear_cache: bool = True,
     ):
 
-        assert isinstance(self.plot_setup, TransientPressurePlotSetup)
+        assert isinstance(self.plot_setup, PressureFieldPlotSetupTime)
 
         postprocessing = app().project.get_acoustic_postprocessing()
         assert isinstance(postprocessing, AcousticPostprocessing)
@@ -468,6 +469,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         data = postprocessing.compute_acoustic_transient_pressure_field(
             time_index,
             self.plot_setup.plot_type,
+            unit_factor=self.plot_setup.unit_factor,
             reduced_loop_time=self.plot_setup.reduced_loop_time,
         )
 
@@ -827,7 +829,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             return
 
         match self.plot_setup:
-            case DisplacementFieldPlotSetupFrequency() | FrequencyPressurePlotSetup():
+            case DisplacementFieldPlotSetupFrequency() | PressureFieldPlotSetupFrequency():
                 text += analysis_info_text(self.plot_setup.index)
 
             case AllowablePulsationForScrewCompressorsPlotSetup():

@@ -51,7 +51,7 @@ class AcousticPostprocessing:
         return self.model.acoustic_element_3d
 
     @cache
-    def get_min_max_values_of_pressures(self, column: int, plot_type: str, is_modal: bool = False):
+    def get_min_max_values_of_pressures(self, column: int, unit_factor: float, plot_type: str, is_modal: bool = False):
         """
         This method returns the minimum and maximum pressure values
         of selected frequency used in the animation processing.
@@ -59,6 +59,9 @@ class AcousticPostprocessing:
         Parameters
         ----------
         column: int value relative to frequency column index.
+
+        unit_factor: float
+            The unit conversion factor.
 
         Returns
         -------
@@ -77,7 +80,7 @@ class AcousticPostprocessing:
             return None
 
         # define the complex data vector
-        complex_data = nodal_solution[:, column]
+        complex_data = unit_factor * nodal_solution[:, column]
 
         if plot_type == "absolute_values":
             return 0, max(np.abs(complex_data))
@@ -115,6 +118,7 @@ class AcousticPostprocessing:
         index: int,
         phase_rad: float,
         plot_type: PressurePlotType,
+        unit_factor: float = 1.0,
         is_modal: bool = False,
     ):
         if self.solution is None:
@@ -134,7 +138,7 @@ class AcousticPostprocessing:
             return
 
         # selected nodal solution
-        _nodal_solution = nodal_solution[:, index]
+        _nodal_solution = unit_factor * nodal_solution[:, index].copy()
 
         amplitudes = np.abs(_nodal_solution)
         phases = np.angle(_nodal_solution)
@@ -152,7 +156,7 @@ class AcousticPostprocessing:
             case PressurePlotType.ABSOLUTE_ANIMATION:
                 acoustic_pressures = np.abs(acoustic_pressures)
 
-        min_value, max_value = self.get_min_max_values_of_pressures(index, plot_type, is_modal)
+        min_value, max_value = self.get_min_max_values_of_pressures(index, round(unit_factor, 10), plot_type, is_modal)
 
         return acoustic_pressures, min_value, max_value, np.imag(_nodal_solution).any()
 
@@ -160,6 +164,7 @@ class AcousticPostprocessing:
         self,
         time_index: int,
         plot_type: PressurePlotType,
+        unit_factor: float = 1.0,
         reduced_loop_time: float | None = None,
     ):
 
@@ -171,8 +176,8 @@ class AcousticPostprocessing:
             n = np.sum(time_vector <= reduced_loop_time)
 
         # cache the minimum and maximum values of the nodal pressure waveforms
-        min_max_values = self.get_acoustic_waveforms_minimum_and_maximum_values(int(n))
-        acoustic_pressures = self.waveforms[:, time_index].flatten()
+        min_max_values = self.get_acoustic_waveforms_minimum_and_maximum_values(int(n), round(unit_factor, 10))
+        acoustic_pressures = unit_factor * self.waveforms[:, time_index].flatten()
 
         match plot_type:
             case PressurePlotType.ABSOLUTE_ANIMATION:
@@ -253,8 +258,8 @@ class AcousticPostprocessing:
         return time_vector, waveforms
 
     @cache
-    def get_acoustic_waveforms_minimum_and_maximum_values(self, N: float):
-        _waveforms = self.waveforms[:, :N]
+    def get_acoustic_waveforms_minimum_and_maximum_values(self, N: float, unit_factor: float):
+        _waveforms = unit_factor * self.waveforms[:, :N]
         return (_waveforms.min(), _waveforms.max())
 
     def compute_particle_velocity(

@@ -96,18 +96,20 @@ class StressFieldPlotSetupFrequency:
 
 
 @dataclass(slots=True)
-class FrequencyPressurePlotSetup:
+class PressureFieldPlotSetupFrequency:
     phase: float
     index: int
     plot_type: PressurePlotType
     unit: str = "--"
+    unit_factor: float = 1.0
 
 
 @dataclass(slots=True)
-class TransientPressurePlotSetup:
+class PressureFieldPlotSetupTime:
     time_index: int
     plot_type: PressurePlotType
     unit: str = "--"
+    unit_factor: float = 1.0
     reduced_loop_time: float | None = None
 
 
@@ -123,14 +125,14 @@ PlotSetup = Union[
     NoPlotSetup,
     DisplacementFieldPlotSetupFrequency,
     StressFieldPlotSetupFrequency,
-    FrequencyPressurePlotSetup,
-    TransientPressurePlotSetup,
+    PressureFieldPlotSetupFrequency,
+    PressureFieldPlotSetupTime,
     AllowablePulsationForScrewCompressorsPlotSetup,
 ]
 
 AcousticPlotSetups = Union[
-    FrequencyPressurePlotSetup,
-    TransientPressurePlotSetup,
+    PressureFieldPlotSetupFrequency,
+    PressureFieldPlotSetupTime,
     AllowablePulsationForScrewCompressorsPlotSetup,
 ]
 

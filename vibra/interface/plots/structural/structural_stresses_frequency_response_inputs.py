@@ -264,10 +264,9 @@ class StructuralStressesFrequencyResponseInputs(StructuralStressesFrequencyRespo
         index = self.comboBox_selector_filter.currentIndex()
         selection_type = self.selection_types[index][:-1]
 
-        self.process_units_data()
-
-        self.y_label = self.get_ylabel()
         self.title = f"Structural frequency response - {self.analysis_method}"
+        self.y_label = self.get_ylabel()
+        self.process_units_data()
 
         for i, selected_id in enumerate(self.selected_ids):
 
