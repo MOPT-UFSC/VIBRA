@@ -414,6 +414,82 @@ def restore_mesh_data_modified_by_decoupling():
     process_decoupling_actions()
 
 
+def check_conflicting_model_properties(volume_ids: list[int], domain: str):
+    """
+    Use this function to map and remove the model properties that will 
+    cause conflicts if the domain is changed.
+
+    Parameters
+    ----------
+    volume_ids: list
+        A list of volume IDs where the domain should be modified.
+
+    domain: str
+        The domain label (acoustic or structural)
+
+    """
+
+    model = app().project.model
+    if not model.domains_processor.is_there_a_property_assigned_to_a_domain(domain, volume_ids):
+        return False
+
+    is_acoustic = domain == "acoustic"
+    if is_acoustic:
+        text = ["material", "fluid"]
+    else:
+        text = ["fluid", "material"]
+
+    title = "Conflicting properties detected"
+    message = f"You're trying to assign a {text[0]} to a volume that already has a {text[1]} assigned. "
+    message += f"Would you like to proceed with {text[0]} assignment and remove all the "
+    message += f"{domain}-related properties?"
+
+    buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
+    obj = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
+
+    if obj._cancel:
+        return True
+
+    existing_properties = model.domains_processor.get_properties_assigned_to_a_domain(domain, volume_ids)
+    if not existing_properties:
+        return False
+
+    surfaces_with_decoupling = []
+    properties = app().project.model.properties
+
+    for (prop_name, entity_name, entity_id) in existing_properties:
+        if is_acoustic and prop_name in ["perforated_plate_model", "transfer_impedance"]:
+            surfaces_with_decoupling.append(entity_id)
+
+        match entity_name:
+            case "volume":
+                properties._remove_volume_property(prop_name, volume_id=entity_id)
+            case "surface":
+                properties._remove_surface_property(prop_name, surface_id=entity_id)
+            case "line":
+                properties._remove_line_property(prop_name, line_id=entity_id)
+            case "point":
+                properties._remove_point_property(prop_name, point_id=entity_id)
+            case "node":
+                properties._remove_nodal_property(prop_name, node_id=entity_id)
+
+    if not surfaces_with_decoupling:
+        return False
+
+    new_surface_ids = []
+    for surf_id in surfaces_with_decoupling:
+        data = properties._get_property("degrees_of_freedom_decoupling", surface=surf_id)
+        if isinstance(data, dict):
+            new_surface_id = data.get("new_surface_id")
+            if isinstance(new_surface_id, int):
+                new_surface_ids.append(new_surface_id)
+
+            properties._remove_surface_property("degrees_of_freedom_decoupling", surf_id)
+
+    remove_all_properties_assigned_to_new_surfaces(new_surface_ids)
+    restore_mesh_data_modified_by_decoupling()
+
+
 def export_modal_analysis_results(parent: QDialog | QWidget, modes_to_frequencies: dict, physical_domain: str):
 
     solution = app().project.model.solution

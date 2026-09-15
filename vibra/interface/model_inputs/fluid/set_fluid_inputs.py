@@ -8,6 +8,7 @@ from PySide6.QtWidgets import QAbstractItemView, QGridLayout, QHeaderView, QTabl
 from vibra import app
 from vibra.engine.properties.fluid import Fluid
 from vibra.interface import error_title
+from vibra.interface.common.common_interface import check_conflicting_model_properties
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.fluid.fluid_widget import FluidWidget
@@ -254,39 +255,6 @@ class SetFluidInputs(SetFluidInputs_UI):
         self.lineEdit_selection_id.setText(text)
         self.lineEdit_selection_id.setEnabled(bool(index))
 
-    def check_conflicting_model_properties(self, volume_ids: list[int]):
-        if not self.model.domains_processor.is_there_a_property_assigned_to_a_domain("structural", volume_ids):
-            return
-
-        title = "Conflicting properties detected"
-        message = "You're trying to assign a fluid to a volume that already has a material "
-        message += "assigned. Would you like to proceed with fluid assignment and remove "
-        message += "the all structural-related properties?"
-
-        buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
-        obj = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
-
-        if obj._cancel:
-            return True
-
-        existing_properties = self.model.domains_processor.get_properties_assigned_to_a_domain("structural", volume_ids)
-        if not existing_properties:
-            return False
-
-        for (prop_name, entity_name, entity_id) in existing_properties:
-
-            match entity_name:
-                case "volume":
-                    self.properties._remove_volume_property(prop_name, volume_id=entity_id)
-                case "surface":
-                    self.properties._remove_surface_property(prop_name, surface_id=entity_id)
-                case "line":
-                    self.properties._remove_line_property(prop_name, line_id=entity_id)
-                case "point":
-                    self.properties._remove_point_property(prop_name, point_id=entity_id)
-                case "node":
-                    self.properties._remove_nodal_property(prop_name, node_id=entity_id)
-
     def apply_callback(self, close_window: bool = False):
 
         selected_fluid = self.fluid_widget.get_selected_fluid()
@@ -319,7 +287,7 @@ class SetFluidInputs(SetFluidInputs_UI):
         if not volume_ids:
             return
 
-        if self.check_conflicting_model_properties(volume_ids):
+        if check_conflicting_model_properties(volume_ids, "structural"):
             return
 
         for volume_id in volume_ids:
