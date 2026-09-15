@@ -280,7 +280,7 @@ class AcousticImpedancesAssembler:
         connectivity_surface_B = {}
         integration_data = {}
 
-        # aux_ones = np.ones(self.number_frequencies, dtype=complex)
+        # aux_ones = np.ones(self.assembler.number_frequencies, dtype=complex)
 
         for (property_label, surface_ids), p_data in self.properties.surface_properties.items():
 
@@ -648,7 +648,7 @@ class AcousticImpedancesAssembler:
         self.rows_Zpp_B, self.cols_Zpp_B = self.element_2d.get_rows_and_cols_indices_2D(connectivities_B)
         int2d_NtN_B = self.element_2d.stacked_matrices_NtN()
 
-        for j in range(self.number_frequencies):
+        for j in range(self.assembler.number_frequencies):
             self.data_Zpp_B[j] = int2d_NtN_B / Zpp_B[:, j].reshape(-1, 1, 1)
 
 

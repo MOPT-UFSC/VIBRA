@@ -5,6 +5,7 @@ if TYPE_CHECKING:
     from vibra.engine.model import Model
 
 from collections import defaultdict
+from functools import cache
 from time import perf_counter
 
 import numpy as np
@@ -261,33 +262,150 @@ class ModelDomainsProcessor:
         return dofs_offset
 
     def update_domains_mappings(self):
-        t0 = perf_counter()
+        # t0 = perf_counter()
         self.map_model_domains()
-        dt1 = perf_counter() - t0
+        # dt1 = perf_counter() - t0
 
-        t0 = perf_counter()
+        # t0 = perf_counter()
         self.map_fluid_structure_interfaces()
-        dt2 = perf_counter() - t0
+        # dt2 = perf_counter() - t0
 
-        t0 = perf_counter()
+        # t0 = perf_counter()
         self.map_nodes_and_elements_by_domain()
-        dt3 = perf_counter() - t0
+        # dt3 = perf_counter() - t0
 
-        t0 = perf_counter()
+        # t0 = perf_counter()
         self.process_nodes_mappings_by_domain()
-        dt4 = perf_counter() - t0
+        # dt4 = perf_counter() - t0
 
-        t0 = perf_counter()
+        # t0 = perf_counter()
         self.process_element_mappings_by_domain()
-        dt5 = perf_counter() - t0
+        # dt5 = perf_counter() - t0
 
-        t0 = perf_counter()
+        # t0 = perf_counter()
         self.process_dof_by_domain()
-        dt6 = perf_counter() - t0
+        # dt6 = perf_counter() - t0
 
-        print(f"Elapsed time to 'map_model_domains': {dt1 : .6f} s")
-        print(f"Elapsed time to 'map_fluid_structure_interfaces': {dt2 : .6f} s")
-        print(f"Elapsed time to 'map_nodes_and_elements_by_domain': {dt3 : .6f} s")
-        print(f"Elapsed time to 'process_nodes_mappings_by_domain': {dt4 : .6f} s")
-        print(f"Elapsed time to 'process_element_mappings_by_domain': {dt5 : .6f} s")
-        print(f"Elapsed time 'process_dof_by_domain': {dt6 : .6f} s")
+        # print(f"Elapsed time to 'map_model_domains': {dt1 : .6f} s")
+        # print(f"Elapsed time to 'map_fluid_structure_interfaces': {dt2 : .6f} s")
+        # print(f"Elapsed time to 'map_nodes_and_elements_by_domain': {dt3 : .6f} s")
+        # print(f"Elapsed time to 'process_nodes_mappings_by_domain': {dt4 : .6f} s")
+        # print(f"Elapsed time to 'process_element_mappings_by_domain': {dt5 : .6f} s")
+        # print(f"Elapsed time 'process_dof_by_domain': {dt6 : .6f} s")
+
+    @cache
+    def get_entities_mapping(self, volume_ids: tuple[int]) -> dict:
+        """
+        This method groups all entities related to the volume_ids.
+
+        Parameter
+        ---------
+        volume_ids: tuple
+            A tuple with the volume IDs.
+
+        Return
+        ------
+        entities_mapping: dict
+            A dictionary mapping each entity type to its corresponding 
+            index list.
+        """
+        entities_mapping = {}
+        aux_map = defaultdict(list)
+        aux_map["volume"].extend(volume_ids)
+
+        for vol_id in volume_ids:
+            surfaces = self.mesh.surfaces_from_volume.get(vol_id)
+            aux_map["surface"].extend(surfaces)
+
+            for surf_id in surfaces:
+                lines = self.mesh.lines_from_surface.get(surf_id)
+                aux_map["line"].extend(lines)
+
+                for line_id in lines:
+                    points = self.mesh.points_from_line.get(line_id)
+                    aux_map["point"].extend(points)
+
+        for key, values in aux_map.items():
+            entities_mapping[key] = np.unique(values)
+
+        return entities_mapping
+        
+    def is_there_a_property_assigned_to_a_domain(self, domain: str, volume_ids: list[int]):
+        """
+        This method checks whether a valid property assigned to a domain 
+        exists, returning `True` if it does and `False` otherwise.
+
+        Parameter
+        ---------
+        domain: str
+            The domain label (acoustic or structural)
+        """
+
+        if domain == "structural":
+            properties = self.properties.structural_labels
+
+        elif domain == "acoustic":
+            properties = self.properties.acoustic_labels
+
+        else:
+            return False
+
+        nodes_included = False
+        entities_maping = self.get_entities_mapping(tuple(volume_ids))
+
+        for entity_name, prop_name, tags, _ in self.properties.iterate_properties():
+            if prop_name not in properties:
+                continue
+
+            if entity_name == "node" and not nodes_included:
+                mask = np.isin(self.mesh.solids_connectivity[:, 1], volume_ids)
+                entities_maping["node"] = np.unique(self.mesh.solids_connectivity[mask, 4:])
+                nodes_included = True
+
+            if tags in entities_maping.get(entity_name, []):
+                return True
+
+        return False
+
+    def get_properties_assigned_to_a_domain(self, domain: str, volume_ids: list[int]):
+        """
+        This method returns a list with the properties
+        assigned to a domain.
+
+        Parameter
+        ---------
+        domain: str
+            The domain label (acoustic or structural)
+        """
+
+        if domain == "structural":
+            properties = self.properties.structural_labels
+
+        elif domain == "acoustic":
+            properties = self.properties.acoustic_labels
+
+        else:
+            return False
+
+        nodes_included = False
+        existing_properties = []
+        entities_maping = self.get_entities_mapping(tuple(volume_ids))
+
+        for entity_name, prop_name, tag, _ in self.properties.iterate_properties():
+            if prop_name not in properties:
+                continue
+
+            if entity_name == "node" and not nodes_included:
+                mask = np.isin(self.mesh.solids_connectivity[:, 1], volume_ids)
+                entities_maping["node"] = np.unique(self.mesh.solids_connectivity[mask, 4:])
+                nodes_included = True
+
+            if tag not in entities_maping.get(entity_name, []):
+                continue
+
+            if prop_name in existing_properties:
+                continue
+
+            existing_properties.append((prop_name, entity_name, tag))
+
+        return existing_properties
