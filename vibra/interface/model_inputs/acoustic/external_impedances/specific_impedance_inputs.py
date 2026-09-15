@@ -1,4 +1,5 @@
 from collections import defaultdict
+from copy import deepcopy
 
 import numpy as np
 from PySide6.QtCore import QItemSelectionModel, QPoint, Qt
@@ -430,9 +431,19 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
         if read._cancel:
             return
 
-        if read._continue:
-            self.properties._reset_property("specific_impedance")
-            self.actions_to_finalize()
+        if not read._continue:
+            return
+
+        for (property, surface_id), data in deepcopy(self.properties.surface_properties).items():
+            if property != "specific_impedance":
+                continue
+
+            if "anechoic_termination" in data:
+                continue
+
+            self.properties._remove_surface_property(property, surface_id)
+
+        self.actions_to_finalize()
 
     def actions_to_finalize(self, close_window: bool = False):
         self.load_model_info()
