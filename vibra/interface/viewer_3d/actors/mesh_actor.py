@@ -481,25 +481,16 @@ class MeshActor(vtkPropAssembly):
 
         assert self.mesh.faces_connectivity is not None
         assert self.mesh.solids_connectivity is not None
+        assert self.mesh.nodal_coordinates is not None
 
         solid_elements = list(solid_elements)
         if not solid_elements:
             return
 
-        # First paint the elements with solid IDs
         section_ids = vtk_to_numpy(self.volume_ids)
         section_colors = vtk_to_numpy(self.volume_colors)
         paint_position_mask = np.isin(section_ids, solid_elements)
         section_colors[paint_position_mask, :3] = color.to_rgb()
-
-        # Second paint the elements with face IDs (which can also be solids)
-        solids_mask = np.isin(self.mesh.solids_connectivity[:, 0], solid_elements)
-        face_mask = np.isin(
-            self.mesh.faces_connectivity[:, 4:],
-            self.mesh.solids_connectivity[solids_mask, 4:],
-        ).all(axis=1)
-        face_elements = self.mesh.faces_connectivity[face_mask, 0]
-        self.paint_face_elements(color, face_elements)
 
     def paint_surfaces(self, color: Color, surfaces: Iterable[int]):
         if self.mesh is None:
