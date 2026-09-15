@@ -331,8 +331,6 @@ class StructuralPostprocessing:
         material_to_elements: dict
             The material-to-elements mapping dictionary.
         """
-        t0 = perf_counter()
-
         material_to_volumes = defaultdict(list)
 
         for vol_id in self.model.domains_processor.volumes_of_domain.get("structural", []):
@@ -350,9 +348,6 @@ class StructuralPostprocessing:
             valid_element_ids = np.intersect1d(element_ids, elements_from_volumes)
             material_to_elements[mat_id] = np.unique(valid_element_ids)
 
-        dt = perf_counter() - t0
-        print(f"Tempo gasto: {dt} s")
-
         return material_to_elements
 
 
@@ -362,7 +357,6 @@ class StructuralPostprocessing:
             node_ids : int | list[int] | None = None,
             surface_ids: int | list[int] | None = None,
             volume_ids: list[int] | None = None,
-            elements_per_loop: int | None = None,
             ) -> np.ndarray:
         """
         This method computes the nodal averaged.
@@ -447,63 +441,21 @@ class StructuralPostprocessing:
         _connect_flat = self.model.get_mapped_nodes(element_3d.connectivities[element_ids, :].ravel(), "structural")
         _connectivities = _connect_flat.reshape(-1, element_3d.nodes_per_element)
 
-        if elements_per_loop is None:
+        for i, _connect in enumerate(_connectivities):
 
-            for i, _connect in enumerate(_connectivities):
+            progress = int((100 * (i / n_el) // 5) * 5)
+            if progress != last_progress:
+                logging.info(f"Calculating the nodal stresses for each element... [{progress}/100]")
 
-                progress = int((100 * (i / n_el) // 5) * 5)
-                if progress != last_progress:
-                    logging.info(f"Sweeping elements to calculate the structural stresses... [{progress}/100]")
+            # process the extrapolated nodal stresses
+            enodal_stresses = element_3d.process_stresses_at_integration_points(element_ids[i], extrapolate=True)
 
-                # process the extrapolated nodal stresses
-                enodal_stresses = element_3d.process_stresses_at_integration_points(element_ids[i], extrapolate=True)
+            # sum the nodal stresses at the corner nodes
+            avg_nodal_stresses[_connect[corner_indices], :, :] += enodal_stresses
 
-                # sum the nodal stresses at the corner nodes
-                avg_nodal_stresses[_connect[corner_indices], :, :] += enodal_stresses
-
-                # sum the nodal stresses at the midside nodes
-                if is_quadratic:
-                    avg_nodal_stresses[_connect[midside_indices], :, :] += (enodal_stresses[ind_1, :, :] + enodal_stresses[ind_2, :, :]) / 2
-
-        else:
-
-            material_to_elements = self.map_material_to_elements(element_ids)
-
-            for mat_id, _element_ids in material_to_elements.items():
-
-                n_steps = len(_element_ids) // elements_per_loop
-                material = self.model.properties.material_library.get(mat_id)
-
-                for j in range(n_steps + 1):
-
-                    progress = int((100 * (j / (n_steps + 1)) // 5) * 5)
-                    if progress != last_progress:
-                        logging.info(f"Recovering the structural stresses... [{progress}/100]")
-
-                    start = j * elements_per_loop
-                    if j < n_steps:
-                        end = (j + 1) * elements_per_loop
-                    else:
-                        end = None
-
-                    elements_stresses = element_3d.process_stresses_at_integration_points_batched(
-                        element_ids[start:end],
-                        material,
-                        extrapolate=True,
-                        )
-
-                    connect = element_3d.connectivities[element_ids[start:end], :]
-                    _connect_flat = self.model.get_mapped_nodes(connect.ravel(), "structural")
-                    _connect = _connect_flat.reshape(-1, element_3d.nodes_per_element)
-
-                    for i, e_connect in enumerate(_connect):
-                        avg_nodal_stresses[e_connect[corner_indices], :, :] += elements_stresses[i]
-
-                        if is_quadratic:
-                            avg_nodal_stresses[e_connect[midside_indices], :, :] += (
-                                elements_stresses[i, ind_1, :, :] + 
-                                elements_stresses[i, ind_2, :, :]
-                                ) / 2
+            # sum the nodal stresses at the midside nodes
+            if is_quadratic:
+                avg_nodal_stresses[_connect[midside_indices], :, :] += (enodal_stresses[ind_1, :, :] + enodal_stresses[ind_2, :, :]) / 2
 
         # average the nodal stresses
         avg_nodal_stresses /= counts.reshape(-1, 1, 1)

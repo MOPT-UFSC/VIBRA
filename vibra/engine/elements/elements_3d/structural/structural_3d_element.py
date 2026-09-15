@@ -73,47 +73,6 @@ class Structural3DElement(Element3D):
         return det_jac, B
 
 
-    def process_detJAC_and_B_matrix2(self, element_ids: int):
-        """
-        This method computes and returns the matrix of shape functions 
-        derivatives B and the determinant of the Jacobian matrix detJAC. 
-        """
-
-        reduced_connect = self.connectivities[element_ids, :]
-
-        nel = len(reduced_connect)
-
-        stacked_coords = np.zeros((nel, self.nodes_per_element, 3), dtype=float)
-        for j in range(self.nodes_per_element):
-            stacked_coords[:, j, :] = self.model.mesh.nodal_coordinates[reduced_connect[:, j], 1:4]
-
-        # initialize the B matrix
-        B = np.zeros((nel, self.nint, 6, self.dof_per_element), dtype=float)
-
-        for i in range(self.nint):
-
-            # Jacobian matrix
-            jacs = self.dphi[i, :, :] @ stacked_coords
-
-            # Jacobian determinant and inverse
-            inv_jacs, _ = get_3x3_matrix_inverse(jacs)
-
-            # derivatives
-            dphi_t = inv_jacs @ self.dphi[i, :, :]
-
-            B[:, i, 0, 0::3] = dphi_t[:, 0, :]
-            B[:, i, 1, 1::3] = dphi_t[:, 1, :]
-            B[:, i, 2, 2::3] = dphi_t[:, 2, :]
-            B[:, i, 3, 0::3] = dphi_t[:, 1, :]
-            B[:, i, 3, 1::3] = dphi_t[:, 0, :]
-            B[:, i, 4, 0::3] = dphi_t[:, 2, :]
-            B[:, i, 4, 2::3] = dphi_t[:, 0, :]
-            B[:, i, 5, 1::3] = dphi_t[:, 2, :]
-            B[:, i, 5, 2::3] = dphi_t[:, 1, :]
-
-        return B
-
-
     def elementary_matrices(self, element_id: int, material: Material):
         """
         This method integrates the elementary stiffness and mass matrices
@@ -187,37 +146,6 @@ class Structural3DElement(Element3D):
             return np.average(element_stresses, axis=1)
 
         return element_stresses
-
-
-    def process_stresses_at_integration_points_batched(
-        self,
-        element_ids : list[int],
-        material: Material | None,
-        extrapolate: bool = False,
-        ):
-
-        n_el = len(element_ids)
-        n_freq = len(self.model.frequencies)
-
-        _dof_indices_from_nodes = self.model.get_dof_indices_from_nodes(self.connectivities[element_ids, :].ravel(), "structural")
-
-        # define the nodal solution matrix (batched)
-        Ue_batch = self.model.solution.structural_solution[_dof_indices_from_nodes.ravel(), :].reshape(n_el, 1, self.dof_per_element, n_freq)
-
-        # constitutive material law
-        D, _ = self.get_constitutive_model(material.identifier, model_type="linear-isotropic")
-
-        # get batched data to compute the elements stresses
-        B_batch = self.process_detJAC_and_B_matrix2(element_ids)
-
-        # calculate the nodal stress tensor (batched)
-        elements_stresses = D @ (B_batch @ Ue_batch)
-
-        if extrapolate:
-            extrapolated_stresses = self.phi_inv @ elements_stresses.transpose(0, 2, 1, 3)
-            return extrapolated_stresses.transpose(0, 2, 1, 3)
-
-        return elements_stresses
 
 
     def generate_ind_rows_cols(self, reorder: bool = True):
