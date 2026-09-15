@@ -262,36 +262,36 @@ class ModelDomainsProcessor:
         return dofs_offset
 
     def update_domains_mappings(self):
-        t0 = perf_counter()
+        # t0 = perf_counter()
         self.map_model_domains()
-        dt1 = perf_counter() - t0
+        # dt1 = perf_counter() - t0
 
-        t0 = perf_counter()
+        # t0 = perf_counter()
         self.map_fluid_structure_interfaces()
-        dt2 = perf_counter() - t0
+        # dt2 = perf_counter() - t0
 
-        t0 = perf_counter()
+        # t0 = perf_counter()
         self.map_nodes_and_elements_by_domain()
-        dt3 = perf_counter() - t0
+        # dt3 = perf_counter() - t0
 
-        t0 = perf_counter()
+        # t0 = perf_counter()
         self.process_nodes_mappings_by_domain()
-        dt4 = perf_counter() - t0
+        # dt4 = perf_counter() - t0
 
-        t0 = perf_counter()
+        # t0 = perf_counter()
         self.process_element_mappings_by_domain()
-        dt5 = perf_counter() - t0
+        # dt5 = perf_counter() - t0
 
-        t0 = perf_counter()
+        # t0 = perf_counter()
         self.process_dof_by_domain()
-        dt6 = perf_counter() - t0
+        # dt6 = perf_counter() - t0
 
-        print(f"Elapsed time to 'map_model_domains': {dt1 : .6f} s")
-        print(f"Elapsed time to 'map_fluid_structure_interfaces': {dt2 : .6f} s")
-        print(f"Elapsed time to 'map_nodes_and_elements_by_domain': {dt3 : .6f} s")
-        print(f"Elapsed time to 'process_nodes_mappings_by_domain': {dt4 : .6f} s")
-        print(f"Elapsed time to 'process_element_mappings_by_domain': {dt5 : .6f} s")
-        print(f"Elapsed time 'process_dof_by_domain': {dt6 : .6f} s")
+        # print(f"Elapsed time to 'map_model_domains': {dt1 : .6f} s")
+        # print(f"Elapsed time to 'map_fluid_structure_interfaces': {dt2 : .6f} s")
+        # print(f"Elapsed time to 'map_nodes_and_elements_by_domain': {dt3 : .6f} s")
+        # print(f"Elapsed time to 'process_nodes_mappings_by_domain': {dt4 : .6f} s")
+        # print(f"Elapsed time to 'process_element_mappings_by_domain': {dt5 : .6f} s")
+        # print(f"Elapsed time 'process_dof_by_domain': {dt6 : .6f} s")
 
     @cache
     def get_entities_mapping(self, volume_ids: tuple[int]) -> dict:
