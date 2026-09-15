@@ -43,12 +43,29 @@ class PreviewRenderWidget(CommonRenderWidget):
         self.symbols = SymbolsActor(self.renderer.GetActiveCamera())
         for i in range(10):
             self.symbols.add_entity(
-                sources.create_impedance_source,
+                sources.create_arrow_source,
                 (0, np.cos(i), np.sin(i)),
-                (0, 0, 1),
-                color_names.BLUE,
+                (1, 0, 0),
+                color_names.RED,
                 0.5,
             )
+
+        for i in range(10):
+            self.symbols.add_marker(
+                sources.create_impedance_source,
+                (2, np.cos(i), np.sin(i)),
+                (0, 0, 1),
+                color_names.GREEN,
+            )
+
+        for i in range(10):
+            self.symbols.add_billboard(
+                sources.create_impedance_source,
+                (4, np.cos(i), np.sin(i)),
+                color_names.BLUE,
+            )
+
+
         self.symbols.PickableOff()
         self.add_actors(self.symbols)
 
