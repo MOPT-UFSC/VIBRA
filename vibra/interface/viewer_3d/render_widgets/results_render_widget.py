@@ -11,15 +11,18 @@ from vtkmodules.vtkCommonDataModel import vtkPointData
 
 from vibra import LOGO_DIR, app
 from vibra.engine import AnalysisID
+from vibra.engine.analysis_info.analysis_enums import PhysicalDomain
 from vibra.engine.postprocessing import AcousticPostprocessing, StructuralPostprocessing
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.viewer_3d.plot_setup import (
+    AcousticPlotSetups,
+    AllowablePulsationForScrewCompressorsPlotSetup,
     FrequencyDisplacementPlotSetup,
     FrequencyPressurePlotSetup,
     NoPlotSetup,
     PlotSetup,
+    StructuralPlotSetups,
     TransientPressurePlotSetup,
-    AllowablePulsationForScrewCompressorsPlotSetup,
 )
 from vibra.interface.viewer_3d.render_tools import RenderTool, SelectionTool
 from vibra.utils.interface_utils import VisualizationFilter
@@ -33,8 +36,8 @@ from ..actors import (
     SectionPlaneActor,
 )
 from .model_info_text import (
-    analysis_info_text,
     allowable_pulsation_for_screw_compressor_info_text,
+    analysis_info_text,
 )
 
 
@@ -125,7 +128,10 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         *,
         plot_setup: Optional[PlotSetup] = None,
     ):
-        if plot_setup is not None:
+
+        if plot_setup is None:
+            self.plot_setup = NoPlotSetup()
+        else:
             self.configure_plot(plot_setup)
 
         mesh = app().project.model.mesh
@@ -139,7 +145,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.remove_all_actors()
 
         logging.info("Updating the results render... [25/100]")
-        self.analysis_actor = HollowAnalysisActor(mesh)
+        self.analysis_actor = HollowAnalysisActor(mesh, physical_domain=self.get_physical_domain())
 
         logging.info("Updating the results render... [75/100]")
         self.edges_actor = EdgesActor(
@@ -184,6 +190,14 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.update()
 
         self.set_analysis_actors_transparency(self.transparency)
+
+    def get_physical_domain(self) -> PhysicalDomain | None:
+        if isinstance(self.plot_setup, StructuralPlotSetups):
+            return PhysicalDomain.STRUCTURAL
+        elif isinstance(self.plot_setup, AcousticPlotSetups):
+            return PhysicalDomain.ACOUSTIC
+        else:
+            return None
 
     def configure_plot(self, plot_setup: PlotSetup):
         assert isinstance(plot_setup, PlotSetup)
@@ -247,7 +261,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         assert isinstance(postprocessing, AcousticPostprocessing)
 
         analysis_id = app().project.model.analysis_id
-        assert analysis_id.is_acoustic()
+        assert analysis_id.is_acoustic() or analysis_id.is_coupled()
 
         if animation_frame is None:
             phase = self.plot_setup.phase
@@ -276,8 +290,16 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if self.user_max_value is not None:
             max_value = self.user_max_value
 
+        # filter acoustic nodes
+        model = postprocessing.model
+        acoustic_nodes = model.domains_processor.nodes_of_domain.get("acoustic")
+
+        _color_scalars = np.zeros(len(model.mesh.nodal_coordinates), dtype=float)
+        _color_scalars[acoustic_nodes] = color_scalars
+
         colormap = app().config.user_preferences.color_map
-        self.analysis_actor.plot_color_bar(color_scalars, min_value, max_value, colormap)
+
+        self.analysis_actor.plot_color_bar(_color_scalars, min_value, max_value, colormap)
         self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.update()
 
@@ -292,7 +314,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         assert isinstance(postprocessing, StructuralPostprocessing)
 
         analysis_id = app().project.model.analysis_id
-        assert analysis_id.is_structural()
+        assert analysis_id.is_structural() or analysis_id.is_coupled()
 
         if animation_frame is None:
             phase = self.plot_setup.phase
@@ -303,6 +325,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.plot_setup.index,
             phase,
             self.plot_setup.plot_type,
+            n_diff=self.plot_setup.n_diff,
+            unit_scale_factor=self.plot_setup.unit_scale_factor,
             is_modal=analysis_id.is_modal(),
         )
 
@@ -321,11 +345,25 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if self.user_max_value is not None:
             max_value = self.user_max_value
 
-        self.analysis_actor.apply_deformation(displacements, self.plot_setup.magnification_factor, max_value)
-        self.edges_actor.extract_data(self.analysis_actor.data)
+        max_value = max_value if max_value != 0 else 1.0
+        magnification_factor = self.plot_setup.magnification_factor
+
+        # filter structural nodes
+        model = postprocessing.model
+        structural_nodes = model.domains_processor.nodes_of_domain.get("structural")
+
+        deformed_coords = model.mesh.nodal_coordinates[:, 1:].copy()
+        deformed_coords[structural_nodes, :] += (magnification_factor / (10 * max_value)) * displacements
+
+        _color_scalars = np.zeros(len(model.mesh.nodal_coordinates), dtype=float)
+        _color_scalars[structural_nodes] = color_scalars
 
         colormap = app().config.user_preferences.color_map
-        self.analysis_actor.plot_color_bar(color_scalars, min_value, max_value, colormap)
+
+        self.analysis_actor.apply_deformation(deformed_coords)
+        self.edges_actor.extract_data(self.analysis_actor.data)
+
+        self.analysis_actor.plot_color_bar(_color_scalars, min_value, max_value, colormap)
         self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.update()
 
@@ -373,8 +411,16 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         self.is_animation_symetric = False
 
+        # filter acoustic nodes
+        model = postprocessing.model
+        acoustic_nodes = model.domains_processor.nodes_of_domain.get("acoustic")
+
+        _color_scalars = np.zeros(len(model.mesh.nodal_coordinates), dtype=float)
+        _color_scalars[acoustic_nodes] = color_scalars
+
         colormap = app().config.user_preferences.color_map
-        self.analysis_actor.plot_color_bar(color_scalars, min_value, max_value, colormap)
+
+        self.analysis_actor.plot_color_bar(_color_scalars, min_value, max_value, colormap)
         self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.update()
 
@@ -397,7 +443,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         # apply the penalization factor, if necessary
         penalization_factor = self.plot_setup.penalization_factor / 100
-        self.max_value *= (1 - penalization_factor)
+        self.max_value *= 1 - penalization_factor
 
         self.screw_compressor_allowable_pulsation_criterion = self.max_value
 
@@ -410,8 +456,16 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if self.user_max_value is not None:
             max_value = self.user_max_value
 
+        # filter acoustic nodes
+        model = postprocessing.model
+        acoustic_nodes = model.domains_processor.nodes_of_domain.get("acoustic")
+
+        _color_scalars = np.zeros(len(model.mesh.nodal_coordinates), dtype=float)
+        _color_scalars[acoustic_nodes] = color_scalars
+
         colormap = app().config.user_preferences.color_map
-        self.analysis_actor.plot_color_bar(color_scalars, min_value, max_value, colormap)
+
+        self.analysis_actor.plot_color_bar(_color_scalars, min_value, max_value, colormap)
         self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.update()
 
@@ -560,7 +614,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             return
 
         if not isinstance(self._cache_hollow_solids_actor, HollowAnalysisActor):
-            self._cache_hollow_solids_actor = HollowAnalysisActor(mesh)
+            self._cache_hollow_solids_actor = HollowAnalysisActor(mesh, physical_domain=self.get_physical_domain())
 
         self._cache_full_solids_actor = self.analysis_actor
 
@@ -586,7 +640,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             return
 
         if not isinstance(self._cache_full_solids_actor, AnalysisActor):
-            self._cache_full_solids_actor = AnalysisActor(mesh)
+            self._cache_full_solids_actor = AnalysisActor(mesh, physical_domain=self.get_physical_domain())
 
         self._cache_hollow_solids_actor = self.analysis_actor
 

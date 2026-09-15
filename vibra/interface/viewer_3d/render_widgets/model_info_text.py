@@ -187,6 +187,8 @@ def material_info_text():
     surfaces = list(app().main_window.selection.geometry_surfaces)
 
     text = ""
+    material = None
+
     if len(volumes) != 1 and len(surfaces) != 1:
         return text
 
@@ -217,6 +219,8 @@ def fluid_info_text():
     surfaces = list(app().main_window.selection.geometry_surfaces)
 
     text = ""
+    fluid = None
+
     if len(volumes) != 1 and len(surfaces) != 1:
         return text
 

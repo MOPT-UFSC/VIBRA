@@ -11,6 +11,7 @@ from vibra import app
 from vibra.engine.dissipation_models.viscous_thermal_loss_models import ViscousThermalLossModels
 from vibra.engine.properties.fluid import Fluid
 from vibra.interface import error_title
+from vibra.interface.common.common_interface import update_entities_selection
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.acoustic.definitions.enums import AttributionBodiesType, PlotTypesTab
@@ -77,7 +78,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         self.selected_fluid = None
         self.keep_window_open = True
         self.material_model_data = dict()
-        self.models: list[RectangularDuctData | CircularDuctData] = list()
+        self.models: list[RectangularDuctData | CircularDuctData] = []
         self.last_tab = self.tabWidget_main.currentIndex()
         self.tree_item_clicked = False
 
@@ -279,7 +280,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         selected_items = self.treeWidget_viscous_thermal_model.selectedItems()
 
         if not selected_items:
-            return list()
+            return []
 
         return [int(item.text(0)) for item in selected_items]
 
@@ -471,7 +472,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         is_there_rectangular_model = False
         is_there_circular_model = False
 
-        model_ids = list()
+        model_ids = []
         for model_id in self.map_model_id_to_models:
             model_ids.append(model_id)
 
@@ -560,7 +561,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             self.lineEdit_diameter_circular.setText(f"{diameters[0]}")
 
     def get_surfaces_from_selected_volumes(self, volume_ids: list[int]):
-        surfaces_from_volumes = list()
+        surfaces_from_volumes = []
         for volume_id in volume_ids:
             for surface_id in self.mesh.surfaces_from_volume.get(volume_id):
                 if surface_id is None:
@@ -574,7 +575,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         return surfaces_from_volumes
 
     def get_diameters_from_surfaces(self, surface_ids: list[int]):
-        diameters = list()
+        diameters = []
         for surface_id in surface_ids:
             diameter = self.mesh.cylindrical_surfaces_data.get(surface_id)
             if diameter is None:
@@ -691,25 +692,29 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
         assignment_type = self.comboBox_attribution_type.currentIndex()
 
         if assignment_type in [AttributionBodiesType.ALL_BODIES, AttributionBodiesType.SELECTED_BODIES]:
-            volume_ids = list()
+            volume_ids = []
             if assignment_type == AttributionBodiesType.ALL_BODIES:
-                self.models = list()
+                self.models = []
 
-                if "volumes" in self.mesh.geometry_information.keys():
+                if "volumes" in self.mesh.geometry_information:
                     volume_ids = self.mesh.geometry_information["volumes"]
 
             else:
                 input_ids = self.lineEdit_selection_id.text()
-                volume_ids, error_data = self.mesh.check_selected_ids(
+                volume_ids, error_data = self.model.check_selected_ids(
                     input_ids,
-                    selection="volumes",
-                    single_id=False,
+                    "volumes",
+                    domain="acoustic",
                 )
 
                 if error_data is not None:
                     self.lineEdit_selection_id.setFocus()
                     PrintMessageInput(error_data)
-                    return
+                    return True
+
+                app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
+                update_entities_selection(self.lineEdit_selection_id, "volumes", volume_ids)
+                app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
                 self.verify_and_remove_model_conflicts_if_it_exists(volume_ids)
 

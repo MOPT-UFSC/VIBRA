@@ -21,7 +21,7 @@ from vtkmodules.vtkFiltersExtraction import vtkExtractGeometry
 from vtkmodules.vtkRenderingCore import vtkActor, vtkDataSetMapper
 
 from vibra import app
-from vibra.engine.mesher.mesh_setup import HEXAHEDRON_8, HEXAHEDRON_20, TETRAHEDRON_4, TETRAHEDRON_10
+from vibra.engine.mesher.mesh_setup import Hexahedron8, Hexahedron20, Tetrahedron4, Tetrahedron10
 from molde import Color
 
 from typing import TYPE_CHECKING
@@ -33,10 +33,9 @@ ALWAYS_FALSE.SetRadius(0)
 
 
 class SolidsActor(vtkActor):
-    def __init__(self, mesh: "Mesh", allow_hidding=True):
+    def __init__(self, mesh: "Mesh"):
         self.mesh = mesh
         self.data = None
-        self.allow_hidding = allow_hidding
         self.has_distinguished_cells = False
 
         self.create_geometry()
@@ -54,26 +53,26 @@ class SolidsActor(vtkActor):
         points = vtkPoints()
         point_colors = vtkFloatArray()
         cell_colors = vtkUnsignedCharArray()
-        solid_indexes = vtkIntArray()
-        solid_indexes.SetName("solid_indexes")
+        solid_indices = vtkIntArray()
+        solid_indices.SetName("solid_indices")
 
-        if self.mesh.element_topology == TETRAHEDRON_4:
+        if self.mesh.element_topology == Tetrahedron4:
             cell_type = VTK_TETRA
             nodes_connectivity = self.mesh.solids_connectivity
 
-        elif self.mesh.element_topology == TETRAHEDRON_10:
+        elif self.mesh.element_topology == Tetrahedron10:
             cell_type = VTK_QUADRATIC_TETRA
             nodes_order = (0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 13, 12)
             nodes_connectivity = self.mesh.solids_connectivity[:, nodes_order]
 
-        elif self.mesh.element_topology == HEXAHEDRON_8:
+        elif self.mesh.element_topology == Hexahedron8:
             cell_type = VTK_HEXAHEDRON
             nodes_connectivity = self.mesh.solids_connectivity
 
-        elif self.mesh.element_topology == HEXAHEDRON_20:
+        elif self.mesh.element_topology == Hexahedron20:
             cell_type = VTK_QUADRATIC_HEXAHEDRON
             nodes_order = (
-                0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 
+                0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12,
                 15, 17, 13, 20, 22, 23, 21, 14, 16, 18, 19
             )  # fmt: skip
             nodes_connectivity = self.mesh.solids_connectivity[:, nodes_order]
@@ -90,27 +89,27 @@ class SolidsActor(vtkActor):
         point_colors.SetNumberOfTuples(number_of_nodes)
         cell_colors.SetNumberOfComponents(4)
         cell_colors.SetNumberOfTuples(number_of_elements)
-        solid_indexes.Allocate(number_of_elements)
+        solid_indices.Allocate(number_of_elements)
 
         coordinates = self.get_coordinates()
         points.SetData(numpy_to_vtk(coordinates))
 
-        hidden_volumes = app().main_window.entity_visibility.get_hidden_volumes()
-        self.visible_indexes = dict()
+        hidden_volumes = self.get_hidden_volumes()
+        self.visible_indices = dict()
 
         for i, volume, _, _, *nodes in nodes_connectivity:
             if volume in hidden_volumes:
                 continue
 
             # This is usefull if part of the cells are hidden
-            visible_index = solid_indexes.InsertNextValue(i)
-            self.visible_indexes[i] = visible_index
+            visible_index = solid_indices.InsertNextValue(i)
+            self.visible_indices[i] = visible_index
             data.InsertNextCell(cell_type, len(nodes), nodes)
 
         data.SetPoints(points)
         data.GetPointData().SetScalars(point_colors)
         data.GetCellData().SetScalars(cell_colors)
-        data.GetCellData().AddArray(solid_indexes)
+        data.GetCellData().AddArray(solid_indices)
         self.data: vtkPolyData = data
 
         self.has_distinguished_cells = False
@@ -134,6 +133,9 @@ class SolidsActor(vtkActor):
     def update_coordinates(self, coordinates):
         points = self.data.GetPoints()
         points.SetData(numpy_to_vtk(coordinates))
+
+    def get_hidden_volumes(self):
+        return app().main_window.entity_visibility.get_hidden_volumes()
 
     def configure_appearance(self):
         self.GetProperty().SetInterpolationToPhong()
@@ -186,7 +188,7 @@ class SolidsActor(vtkActor):
     def paint_solids(self, color: Color, solids: tuple[int]):
         cells = []
         for i in solids:
-            visible_index = self.visible_indexes.get(i, -1)
+            visible_index = self.visible_indices.get(i, -1)
             if visible_index >= 0:
                 cells.append(visible_index)
         self.paint_cells(color, cells)
@@ -194,7 +196,7 @@ class SolidsActor(vtkActor):
     def paint_cells(self, color: Color, cells: tuple[int]):
         if self.data is None:
             return
-    
+
         color = color.to_rgba()
         cell_colors = self.data.GetCellData().GetScalars()
         for cell in cells:
@@ -217,7 +219,7 @@ class SolidsActor(vtkActor):
     def distinguish_solids(self, solids: tuple[int]):
         cells = []
         for i in solids:
-            visible_index = self.visible_indexes.get(i, -1)
+            visible_index = self.visible_indices.get(i, -1)
             if visible_index >= 0:
                 cells.append(visible_index)
 

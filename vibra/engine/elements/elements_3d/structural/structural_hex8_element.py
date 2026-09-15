@@ -1,53 +1,52 @@
-
-from vibra.engine.elements.solid_elements import Element3D
-from vibra.engine.properties.material import Material
-
 from typing import TYPE_CHECKING
-if TYPE_CHECKING:
-    from vibra.engine.model import Model
-
-# from vibra.engine.elements.elements_3d.structural.FEMSTHEX8_FB import matricesH8S_FB
-from vibra.engine.elements.elements_3d.structural.flanagan_belytschko_formulation import get_B_analytic, compute_hourglass_stiffness#, calcular_k_stab_corrigido
-
-from vibra.engine.elements.element_options import HEX8_structural, BbarDilatationalEvaluation
 
 import numpy as np
 
-class STRUCT_HEXAHEDRON_8(Element3D):
+from vibra.engine.elements.common.element_options import BbarDilatationalEvaluation, HEX8_structural
+from vibra.engine.elements.common.matrix_utils import get_3x3_matrix_determinant, get_3x3_matrix_inverse
+from vibra.engine.elements.elements_3d.hex8_element import Hexahedron8
+from vibra.engine.elements.elements_3d.structural.flanagan_belytschko_formulation import (
+    compute_hourglass_stiffness,
+    get_B_analytic,
+)
+from vibra.engine.elements.elements_3d.structural.structural_3d_element import Structural3DElement
+from vibra.engine.properties.material import Material
 
-    NODES_PER_ELEMENT = 8
-    DOF_PER_NODE = 3
-    DOF_PER_ELEMENT = NODES_PER_ELEMENT * DOF_PER_NODE
-    LOCAL_DOF = np.arange(DOF_PER_NODE, dtype=int)
-
-    aux_ones = np.ones(DOF_PER_ELEMENT, dtype=float)
-
-    dil_projector = np.array([1, 1, 1, 0, 0, 0], dtype=float).reshape(-1, 1)
-    m_mt = dil_projector @ dil_projector.T
+if TYPE_CHECKING:
+    from vibra.engine.model import Model
 
 
-    def __init__(self, model: "Model"):
+class StructuralHexahedron4(Structural3DElement, Hexahedron8):
+
+    def __init__(self, model: "Model", dof_per_node: int = 3, nodes_per_element: int = 8):
+        super().__init__(model, dof_per_node, nodes_per_element)
 
         self.model = model
-
-        self.connectivity = None
         self.element_label = "structural_hexahedron_8"
 
-        self.nodal_coordinates = self.model.mesh.nodal_coordinates
-        self.solids_connectivity = self.model.mesh.solids_connectivity
-
-        self.number_of_nodes = len(self.nodal_coordinates)
-        self.number_of_elements = len(self.solids_connectivity)
-
-        self.define_integration_points()
         self.load_element_options()
+        self.define_integration_points()
         self.process_shape_functions_and_derivatives()
 
+        self.initialize()
+        self.process_N_matrix()
 
-    @property
-    def corner_nodes_indexes(self):
-        indexes = np.arange(self.NODES_PER_ELEMENT, dtype=int)
-        return indexes[:8]
+
+    def initialize(self):
+        self.aux_ones = np.ones(self.dof_per_element, dtype=float)
+        dil_projector = np.array([1, 1, 1, 0, 0, 0], dtype=float).reshape(-1, 1)
+        self.m_mt = dil_projector @ dil_projector.T
+
+
+    def process_N_matrix(self):
+        N = np.zeros((self.nint, 3, self.dof_per_element), dtype=float)
+
+        for i in range(self.nint):
+            N[i, 0, 0::3] = self.phi[i, :]
+            N[i, 1, 1::3] = self.phi[i, :]
+            N[i, 2, 2::3] = self.phi[i, :]
+
+        self.N_matrix = N
 
 
     def load_element_options(self):
@@ -67,16 +66,6 @@ class STRUCT_HEXAHEDRON_8(Element3D):
             self.element_options = element_options
 
         self.static_condensation_required = element_options.extra_shape_functions or element_options.enhanced_assumed_strain
-
-
-    def define_integration_points(self, integration_points: int = 8):
-        """
-        This method defines the integration points and their
-        weights for numerical integration.
-        """
-        self.nint = integration_points
-        self.num_int_data = self.integration_points_data_for_hexahedrons(integration_points)
-        self.wps = self.num_int_data[:, -1].reshape(-1, 1, 1)
 
 
     def process_shape_functions_and_derivatives(self):
@@ -110,7 +99,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         This method returns the inverse of shape functions matrix N applied
         at integration points (Gauss-Legendre quadrature points).
         """
-        N = self.phi[:, :self.NODES_PER_ELEMENT]
+        N = self.phi[:, :self.nodes_per_element]
         n_intp, n_nodes = N.shape
 
         if n_intp == n_nodes:
@@ -121,91 +110,6 @@ class STRUCT_HEXAHEDRON_8(Element3D):
 
         else:
             return None
-
-
-    def get_shape_functions_and_derivatives(
-            self, 
-            xi_1: np.ndarray | float, 
-            xi_2: np.ndarray | float, 
-            xi_3: np.ndarray | float,
-            ):
-
-        """
-        This method returns the shape functions and its derivatives.
-        
-        Parameters
-        ----------
-        xi_1: np.ndarray
-            The x coordinates of the integration points.
-        
-        xi_2: np.ndarray
-            The y coordinates of the integration points.
-
-        xi_3: np.ndarray
-            The z coordinates of the integration points.
-
-        Returns
-        -------
-        phi: np.ndarray
-            The shape functions evaluated in the integration points.
-
-        dphi: np.ndarray
-            The shape functions derivatives.
-        """
-
-        if isinstance(xi_1, np.ndarray):
-            Nz = xi_1.size
-        else:
-            Nz = 1
-
-        ##NOTE: Atalla, Noureddine.; Sgard Franck. Finite Element and Boundary Methods in Structural Acoustics and Vibration. 1st Ed. 2015
-
-        # define the shape functions (Atalla and Sgard, 2015, pg. 171)
-        phi = np.zeros((Nz, self.NODES_PER_ELEMENT), dtype=float)
-
-        phi[:, 0] = (1.0 - xi_1) * (1.0 - xi_2) * (1.0 - xi_3) / 8       # ->      (-1.0, -1.0, -1.0)   Node 1
-        phi[:, 1] = (1.0 + xi_1) * (1.0 - xi_2) * (1.0 - xi_3) / 8       # ->      ( 1.0, -1.0, -1.0)   Node 2
-        phi[:, 2] = (1.0 + xi_1) * (1.0 + xi_2) * (1.0 - xi_3) / 8       # ->      ( 1.0,  1.0, -1.0)   Node 3
-        phi[:, 3] = (1.0 - xi_1) * (1.0 + xi_2) * (1.0 - xi_3) / 8       # ->      (-1.0,  1.0, -1.0)   Node 4
-        phi[:, 4] = (1.0 - xi_1) * (1.0 - xi_2) * (1.0 + xi_3) / 8       # ->      (-1.0, -1.0,  1.0)   Node 5
-        phi[:, 5] = (1.0 + xi_1) * (1.0 - xi_2) * (1.0 + xi_3) / 8       # ->      ( 1.0, -1.0,  1.0)   Node 6
-        phi[:, 6] = (1.0 + xi_1) * (1.0 + xi_2) * (1.0 + xi_3) / 8       # ->      ( 1.0,  1.0,  1.0)   Node 7
-        phi[:, 7] = (1.0 - xi_1) * (1.0 + xi_2) * (1.0 + xi_3) / 8       # ->      (-1.0,  1.0,  1.0)   Node 8
-
-        ## derivatives of shape functions (obtained from the Atalla and Sgard proposed shape functions)
-        dphi = np.zeros((Nz, 3, self.NODES_PER_ELEMENT), dtype=float)
-
-        dphi[:, 0, 0] = -(1.0 - xi_2) * (1.0 - xi_3) / 8
-        dphi[:, 0, 1] =  (1.0 - xi_2) * (1.0 - xi_3) / 8
-        dphi[:, 0, 2] =  (1.0 + xi_2) * (1.0 - xi_3) / 8
-        dphi[:, 0, 3] = -(1.0 + xi_2) * (1.0 - xi_3) / 8
-        dphi[:, 0, 4] = -(1.0 - xi_2) * (1.0 + xi_3) / 8
-        dphi[:, 0, 5] =  (1.0 - xi_2) * (1.0 + xi_3) / 8
-        dphi[:, 0, 6] =  (1.0 + xi_2) * (1.0 + xi_3) / 8
-        dphi[:, 0, 7] = -(1.0 + xi_2) * (1.0 + xi_3) / 8
-
-        dphi[:, 1, 0] = -(1.0 - xi_1) * (1.0 - xi_3) / 8
-        dphi[:, 1, 1] = -(1.0 + xi_1) * (1.0 - xi_3) / 8
-        dphi[:, 1, 2] =  (1.0 + xi_1) * (1.0 - xi_3) / 8
-        dphi[:, 1, 3] =  (1.0 - xi_1) * (1.0 - xi_3) / 8
-        dphi[:, 1, 4] = -(1.0 - xi_1) * (1.0 + xi_3) / 8
-        dphi[:, 1, 5] = -(1.0 + xi_1) * (1.0 + xi_3) / 8
-        dphi[:, 1, 6] =  (1.0 + xi_1) * (1.0 + xi_3) / 8
-        dphi[:, 1, 7] =  (1.0 - xi_1) * (1.0 + xi_3) / 8
-
-        dphi[:, 2, 0] = -(1.0 - xi_1) * (1.0 - xi_2) / 8
-        dphi[:, 2, 1] = -(1.0 + xi_1) * (1.0 - xi_2) / 8
-        dphi[:, 2, 2] = -(1.0 + xi_1) * (1.0 + xi_2) / 8
-        dphi[:, 2, 3] = -(1.0 - xi_1) * (1.0 + xi_2) / 8
-        dphi[:, 2, 4] =  (1.0 - xi_1) * (1.0 - xi_2) / 8
-        dphi[:, 2, 5] =  (1.0 + xi_1) * (1.0 - xi_2) / 8
-        dphi[:, 2, 6] =  (1.0 + xi_1) * (1.0 + xi_2) / 8
-        dphi[:, 2, 7] =  (1.0 - xi_1) * (1.0 + xi_2) / 8
-
-        if Nz == 1:
-            return phi[0, :], dphi[0, :, :]
-
-        return phi, dphi
 
 
     def get_shape_functions_derivatives_for_extra_shape_functions(
@@ -237,7 +141,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
     @property
     def extra_dofs(self):
         if self.element_options.extra_shape_functions:
-            return int(3 * self.DOF_PER_NODE)
+            return int(3 * self.dof_per_node)
 
         elif self.element_options.enhanced_assumed_strain:
             return self.element_options.EAS_internal_dofs
@@ -367,25 +271,25 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         """
 
         # nodes from element
-        elem_nodes = self.connectivity[element_id, 1:]
+        elem_nodes = self.connectivities[element_id, :]
 
         # element nodal coords
-        coords = self.nodal_coordinates[elem_nodes, 1:4]
+        coords = self.model.mesh.nodal_coordinates[elem_nodes, 1:4]
 
         # Jacobian matrix
-        JAC = self.dphi @ coords
+        jac = self.dphi @ coords
 
         # Jacobian determinant and inverse
-        detJAC, invJAC = self.get_detJAC_and_invJAC(JAC)
+        inv_jac, det_jac = get_3x3_matrix_inverse(jac)
 
         # derivatives
-        dphi_t = invJAC @ self.dphi
+        dphi_t = inv_jac @ self.dphi
 
         # for validation purposes
-        self.B_grad = np.sum(dphi_t * detJAC * self.wps, axis=0) / np.sum(detJAC * self.wps, axis=0)
+        self.B_grad = np.sum(dphi_t * det_jac * self.wps, axis=0) / np.sum(det_jac * self.wps, axis=0)
 
         # initialize the B matrix
-        edof = self.DOF_PER_ELEMENT
+        edof = self.dof_per_element
         B = np.zeros((self.nint, 6, edof + self.extra_dofs), dtype=float)
 
         # fill the B matrix
@@ -405,22 +309,22 @@ class STRUCT_HEXAHEDRON_8(Element3D):
             if self.element_options.Bbar_dilatational_evaluation == BbarDilatationalEvaluation.VOLUME_AVERAGED:
 
                 # integrate the element volume
-                elem_vol = np.sum(detJAC * self.wps, axis=0)
+                elem_vol = np.sum(det_jac * self.wps, axis=0)
                 
                 # compute the volume-averaged B matrix
-                B0 = np.sum((B * detJAC * self.wps), axis=0) / elem_vol
+                B0 = np.sum((B * det_jac * self.wps), axis=0) / elem_vol
 
             # compute B at centroid (0, 0, 0)
             else:
 
                 # Jacobian matrix at the centroid (0, 0, 0)
-                JAC_0 = self.dphi_0 @ coords
+                jac_0 = self.dphi_0 @ coords
 
                 # Jacobian determinant and inverse at the centroid
-                detJAC_0, invJAC_0 = self.get_detJAC_and_invJAC(JAC_0)
+                inv_jac_0, det_jac_0 = get_3x3_matrix_inverse(jac_0)
 
                 # derivatives in global coordinates variables
-                dphi_t0 = invJAC_0 @ self.dphi_0
+                dphi_t0 = inv_jac_0 @ self.dphi_0
         
                 # initialize the B0 matrix that corresponds to the B matrix evaluated at the element centre
                 B0 = np.zeros((6, edof), dtype=float)
@@ -448,7 +352,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
             # B-bar: replace dilatational part of B by centroid dilatational part
             B_bar = B_dev + B_bar_dil
 
-            return detJAC, B_bar
+            return det_jac, B_bar
 
         elif self.element_options.extra_shape_functions:
 
@@ -456,13 +360,13 @@ class STRUCT_HEXAHEDRON_8(Element3D):
             # Zienkiewicz, O. C., Taylor, R. L. The Finite Element Method: Its Basis and Fundamentals. Seventh Edition. pg 271-275
 
             # Jacobian matrix at the centroid (0, 0, 0)
-            JAC_0 = self.dphi_0 @ coords
+            jac_0 = self.dphi_0 @ coords
 
             # Jacobian determinant and inverse at the centroid
-            detJAC_0, invJAC_0 = self.get_detJAC_and_invJAC(JAC_0)
+            inv_jac_0, det_jac0 = get_3x3_matrix_inverse(jac_0)
         
             # adjusted derivatives in global coordinates variables (satisfy the stress patch test)
-            dphi_esf_t = (detJAC_0 / detJAC) * invJAC_0 @ self.dphi_esf
+            dphi_esf_t = (det_jac0 / det_jac) * inv_jac_0 @ self.dphi_esf
 
             # fill the B matrix with ESF-related derivatives
             B[:, 0, edof + 0::3] = dphi_esf_t[:, 0, :]
@@ -478,32 +382,65 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         elif self.element_options.enhanced_assumed_strain:
 
             # # Jacobian matrix at the centroid (0, 0, 0)
-            JAC_0 = self.dphi_0 @ coords
+            jac_0 = self.dphi_0 @ coords
 
             # # integrate the element volume
-            # e_vol = np.sum(detJAC * self.wps, axis=0)
+            # e_vol = np.sum(det_jac * self.wps, axis=0)
 
             # Jacobian determinant and inverse at the centroid
-            detJAC_0, _ = self.get_detJAC_and_invJAC(JAC_0)
+            det_jac_0 = get_3x3_matrix_determinant(jac_0)
 
             # compute the inverse transpose T0 matrix
-            inv_T0 = self.get_inverse_T0_matrix(JAC_0)
+            inv_T0 = self.get_inverse_T0_matrix(jac_0)
 
             # compute the interpolation matrix M_xi
             M_xi = self.get_interpolation_matrix_Mxi()
 
             # extend the matrix of shape function derivatives B
-            B[:, :, edof:] = (detJAC_0 / detJAC) * inv_T0.T @ M_xi
+            B[:, :, edof:] = (det_jac_0 / det_jac) * inv_T0.T @ M_xi
 
             # # evaluate the patch test
             # integral_patch_test = 0.
             # for i in range(self.nint):
-            #     integral_patch_test += (detJAC_0 / detJAC[i, :, :]) * (inv_T0.T @ M_xi[i, :, :]) * (detJAC[i, :, :] * self.wps[i])
+            #     integral_patch_test += (detjac_0 / detjac[i, :, :]) * (inv_T0.T @ M_xi[i, :, :]) * (detjac[i, :, :] * self.wps[i])
 
             # if np.linalg.norm(integral_patch_test) > 1e-15:
             #     print(f"Patch test not satisfied for the element #{element_id}")
 
-        return detJAC, B
+        return det_jac, B
+
+
+    def get_B_matrix(self, dphi_t: np.ndarray):
+        """ Assemble B matrix (6x24) from dphi_t (3x8).
+        """
+        if len(dphi_t.shape) == 2:
+            B = np.zeros((6, self.dof_per_element), dtype=float)
+            # fill the B matrix
+            B[0, 0::3] = dphi_t[0, :]
+            B[1, 1::3] = dphi_t[1, :]
+            B[2, 2::3] = dphi_t[2, :]
+            B[3, 0::3] = dphi_t[1, :]
+            B[3, 1::3] = dphi_t[0, :]
+            B[4, 0::3] = dphi_t[2, :]
+            B[4, 2::3] = dphi_t[0, :]
+            B[5, 1::3] = dphi_t[2, :]
+            B[5, 2::3] = dphi_t[1, :]
+
+        else:
+            B = np.zeros((dphi_t.shape[0], 6, self.dof_per_element), dtype=float)
+
+            # fill the B matrix
+            B[:, 0, 0::3] = dphi_t[:, 0, :]
+            B[:, 1, 1::3] = dphi_t[:, 1, :]
+            B[:, 2, 2::3] = dphi_t[:, 2, :]
+            B[:, 3, 0::3] = dphi_t[:, 1, :]
+            B[:, 3, 1::3] = dphi_t[:, 0, :]
+            B[:, 4, 0::3] = dphi_t[:, 2, :]
+            B[:, 4, 2::3] = dphi_t[:, 0, :]
+            B[:, 5, 1::3] = dphi_t[:, 2, :]
+            B[:, 5, 2::3] = dphi_t[:, 1, :]
+
+        return B
 
 
     def elementary_matrices(self, element_id: int, material: Material):
@@ -543,16 +480,16 @@ class STRUCT_HEXAHEDRON_8(Element3D):
             e_vol = np.sum(detJAC * self.wps, axis=0)
 
             # calculate the nodal mass (total mass divided by element nodes)
-            nodal_mass = (rho * e_vol[0]) / self.NODES_PER_ELEMENT
+            nodal_mass = (rho * e_vol[0]) / self.nodes_per_element
 
             # compute the lumped mass matrix
             Me = np.diag(self.aux_ones * nodal_mass)
 
             # nodes from element
-            elem_nodes = self.connectivity[element_id, 1:]
+            elem_nodes = self.connectivities[element_id, :]
 
             # element nodal coords
-            coords = self.nodal_coordinates[elem_nodes, 1:4]
+            coords = self.model.mesh.nodal_coordinates[elem_nodes, 1:4]
 
             # obtain the analytical B_mean and volume
             B_mean, V = get_B_analytic(coords)
@@ -561,7 +498,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
             dphi_t_an = B_mean / V                 
 
             # create the averaged B matrix
-            B0 = self.calcB(dphi_t_an)
+            B0 = self.get_B_matrix(dphi_t_an)
             
             # uniform strain stiffness
             K_unif = B0.T @ D @ B0 * V             
@@ -571,13 +508,13 @@ class STRUCT_HEXAHEDRON_8(Element3D):
             # hourglass stabilization matrix K_hg
             K_hg = compute_hourglass_stiffness(K_unif, coords, dphi_t_an, material, e_vol[0])
             # K_hg = calcular_k_stab_corrigido(coords, material.elasticity_modulus, material.poisson_ratio, 0.1)
-            # K_hg = matricesH8S_FB(element_id, self.nodal_coordinates, self.connectivity, material.elasticity_modulus, material.poisson_ratio, material.material_density, 0, kappa=0.125)
+            # K_hg = matricesH8S_FB(element_id, self.model.mesh.nodal_coordinates, self.connectivities, material.elasticity_modulus, material.poisson_ratio, material.material_density, 0, kappa=0.125)
 
             ## PATCH TEST FOR ORTHOGONAL STABILIZATION ()
             
             # constant rotation about z-axis
             theta_z = 0.01
-            u_rot = np.zeros(self.DOF_PER_ELEMENT, dtype=float)
+            u_rot = np.zeros(self.dof_per_element, dtype=float)
             
             u_rot[0::3] = -theta_z * coords[:, 1]
             u_rot[1::3] =  theta_z * coords[:, 0]
@@ -591,7 +528,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
 
             # constant deformation epsilon_x
             e_def = 0.01
-            u_def = np.zeros(self.DOF_PER_ELEMENT, dtype=float)
+            u_def = np.zeros(self.dof_per_element, dtype=float)
 
             u_def[0::3] = e_def * coords[:, 0]
             u_def[1::3] = 0
@@ -613,10 +550,7 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         else:
 
             # initialize the matrix of shape functions N
-            N = np.zeros((self.nint, 3, self.DOF_PER_ELEMENT), dtype=float)
-            N[:, 0, 0::3] = self.phi
-            N[:, 1, 1::3] = self.phi
-            N[:, 2, 2::3] = self.phi
+            N = self.N_matrix
 
             # integration loop
             Ke, Me = 0., 0.
@@ -626,18 +560,18 @@ class STRUCT_HEXAHEDRON_8(Element3D):
 
             # static condensation of the elementary stiffness matrix Ke
             if self.static_condensation_required:
-                Kuu = Ke[0 : self.DOF_PER_ELEMENT, 0 : self.DOF_PER_ELEMENT]
-                Kua = Ke[0 : self.DOF_PER_ELEMENT, self.DOF_PER_ELEMENT :]
+                Kuu = Ke[0 : self.dof_per_element, 0 : self.dof_per_element]
+                Kua = Ke[0 : self.dof_per_element, self.dof_per_element :]
                 Kau = Kua.T
-                Kbb = Ke[self.DOF_PER_ELEMENT :, self.DOF_PER_ELEMENT :]
+                Kbb = Ke[self.dof_per_element :, self.dof_per_element :]
 
                 Ke = Kuu - Kua @ np.linalg.inv(Kbb) @ Kau
 
         # # nodes from element
-        # elem_nodes = self.connectivity[element_id, 1:]
+        # elem_nodes = self.connectivities[element_id, :]
 
         # # element nodal coords
-        # coords = self.nodal_coordinates[elem_nodes, 1:4]
+        # coords = self.model.mesh.nodal_coordinates[elem_nodes, 1:4]
 
 
         # if element_id < 2:
@@ -675,8 +609,8 @@ class STRUCT_HEXAHEDRON_8(Element3D):
             for i in range(self.nint):
                 Ke += B[i, :, :].T @ D @ B[i, :, :] * (detJAC[i, :, :] * self.wps[i])
 
-            Kau = Ke[self.DOF_PER_ELEMENT :, 0 : self.DOF_PER_ELEMENT]
-            Kaa = Ke[self.DOF_PER_ELEMENT :, self.DOF_PER_ELEMENT :]
+            Kau = Ke[self.dof_per_element :, 0 : self.dof_per_element]
+            Kaa = Ke[self.dof_per_element :, self.dof_per_element :]
 
             # extra dofs results
             alpha = -np.linalg.inv(Kaa) @ (Kau @ Ue)
@@ -699,19 +633,19 @@ class STRUCT_HEXAHEDRON_8(Element3D):
         node_ids = kwargs.get("node_ids")
 
         if node_ids is None:
-            node_ids = self.connectivity[element_id, 1:]
+            node_ids = self.connectivities[element_id, :]
 
         if isinstance(nodal_solution, np.ndarray):
             Ue = nodal_solution
 
         elif isinstance(solution, np.ndarray):
-            indexes = node_ids.reshape(-1, 1) * self.DOF_PER_NODE + self.LOCAL_DOF
-            Ue = solution[indexes.flatten(), :]    
+            indices = node_ids.reshape(-1, 1) * self.dof_per_node + self.local_dof
+            Ue = solution[indices.flatten(), :]    
 
         else:
             return 0.
 
-        if self.connectivity is None:
+        if self.connectivities is None:
             self.reorder_connect()
 
         # get the volume ID from element
@@ -738,89 +672,3 @@ class STRUCT_HEXAHEDRON_8(Element3D):
             return np.average(element_stresses, axis=1)
 
         return element_stresses
-
-
-    def extrapolate_stresses_to_nodes(self, element_stresses: np.ndarray) -> np.ndarray:
-        """
-        This method extrapolates the nodal stresses from 
-        the stresses calculated at the integration points.
-
-        Parameters
-        ----------
-        element_stresses: np.ndarray
-            The stresses calculate at integration points.
-
-        """
-
-        # Nf = element_stresses.shape[2]
-        # nodal_stresses = np.zeros((self.NODES_PER_ELEMENT, 6, Nf), dtype=complex)
-
-        # for i in range(6):
-        #     nodal_stresses[:, i, :] = self.phi_inv @ element_stresses[:, i, :]
-
-        nodal_stresses = self.phi_inv @ element_stresses
-        # nodal_stresses = np.transpose(nodal_stresses, axes=(1, 0, 2))
-
-        return nodal_stresses
-
-
-    def reorder_connect(self):
-        """Reordering connectivity matrix to adequate the GMSH connectivity to the FE model"""
-        if self.solids_connectivity.shape[1] == self.NODES_PER_ELEMENT + 4:
-            self.connectivity = self.solids_connectivity[:, [0, 4, 5, 6, 7, 8, 9, 10, 11]]
-
-
-    def generate_ind_rows_cols(self, reorder: bool = True):
-        """This method processess the dof indices (rows and columns) for assembly"""
-
-        if reorder:
-            self.reorder_connect()
-        else:
-            self.connectivity = self.solids_connectivity[:, [0, 4, 5, 6, 7, 8, 9, 10, 11]]
-
-        dof, edof = self.DOF_PER_NODE, self.DOF_PER_ELEMENT
-        n_el = self.solids_connectivity.shape[0]
-
-        local_dof = np.arange(dof, dtype=int)
-        ind_dof = np.zeros((n_el, edof), dtype=int)
-
-        for j in range(self.NODES_PER_ELEMENT):
-            ind_dof[:, j*dof : (1 + j)*dof] = dof * self.connectivity[:, j+1].reshape(-1, 1) + local_dof
-
-        vect_indices = ind_dof.flatten()
-        self.ind_rows = ((np.tile(vect_indices, (edof, 1))).T).flatten()
-        self.ind_cols = (np.tile(ind_dof, edof)).flatten()
-
-        return self.ind_rows, self.ind_cols
-
-    def calcB(self, dphi_t):
-        """ Assemble B matrix (6x24) from dphi_t (3x8).
-        """
-        if len(dphi_t.shape) == 2:
-            B = np.zeros((6, self.DOF_PER_ELEMENT), dtype=float)
-            # fill the B matrix
-            B[0, 0::3] = dphi_t[0, :]
-            B[1, 1::3] = dphi_t[1, :]
-            B[2, 2::3] = dphi_t[2, :]
-            B[3, 0::3] = dphi_t[1, :]
-            B[3, 1::3] = dphi_t[0, :]
-            B[4, 0::3] = dphi_t[2, :]
-            B[4, 2::3] = dphi_t[0, :]
-            B[5, 1::3] = dphi_t[2, :]
-            B[5, 2::3] = dphi_t[1, :]
-
-        else:
-            B = np.zeros((dphi_t.shape[0], 6, self.DOF_PER_ELEMENT), dtype=float)
-
-            # fill the B matrix
-            B[:, 0, 0::3] = dphi_t[:, 0, :]
-            B[:, 1, 1::3] = dphi_t[:, 1, :]
-            B[:, 2, 2::3] = dphi_t[:, 2, :]
-            B[:, 3, 0::3] = dphi_t[:, 1, :]
-            B[:, 3, 1::3] = dphi_t[:, 0, :]
-            B[:, 4, 0::3] = dphi_t[:, 2, :]
-            B[:, 4, 2::3] = dphi_t[:, 0, :]
-            B[:, 5, 1::3] = dphi_t[:, 2, :]
-            B[:, 5, 2::3] = dphi_t[:, 1, :]
-
-        return B

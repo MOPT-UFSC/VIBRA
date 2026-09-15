@@ -1,7 +1,7 @@
 import json
 from collections import defaultdict
-from collections.abc import Iterable
-from typing import Callable, Optional
+from collections.abc import Callable, Iterable
+from typing import Optional
 
 import numpy as np
 
@@ -74,6 +74,33 @@ class ModelProperties:
         self.point_properties = {}
         self.element_properties = {}
         self.nodal_properties = {}
+
+        self.acoustic_labels = [
+            "acoustic_pressure",
+            "surface_velocity",
+            "incident_plane_wave",
+            "specific_impedance",
+            "transfer_impedance",
+            "absorption_surface",
+            "perforated_plate_model",
+            "compressor_excitation_spectrum",
+            "compressor_excitation_waveform",
+            "reciprocating_compressor_excitation",
+            "acoustic_transfer_element",
+            "porous_material_model",
+            "viscous_thermal_model",
+            "proportional_damping",
+            "mass_source",
+        ]
+
+        self.structural_labels = [
+            "surface_thickness",
+            "prescribed_dof",
+            "nodal_loads",
+            "distributed_loads",
+            "distributed_mass",
+            "normal_pressure_load",
+        ]
 
         # self.global_properties["material", "global"] = DEFAULT_MATERIAL
         # self.global_properties["fluid", "global"] = DEFAULT_FLUID
@@ -435,33 +462,9 @@ class ModelProperties:
 
     def get_data_group_label(self, property : str) -> str:
 
-        acoustic_labels = [ 
-                           "acoustic_pressure",
-                           "surface_velocity",
-                           "incident_plane_wave",
-                           "specific_impedance",
-                           "transfer_impedance",
-                           "absorption_surface",
-                           "perforated_plate_model",
-                           "compressor_excitation_spectrum",
-                           "compressor_excitation_waveform",
-                           "reciprocating_compressor_excitation",
-                           "acoustic_transfer_element",
-                            "porous_material_model",
-                           "mass_source",
-                           ]
-
-        structural_labels = [
-                            "surface_thickness",
-                            "prescribed_dof",
-                            "nodal_loads", 
-                            "distributed_loads", 
-                            "normal_pressure_load",
-                            ]
-
-        if property in acoustic_labels:
+        if property in self.acoustic_labels:
             return "acoustic"
-        elif property in structural_labels:
+        elif property in self.structural_labels:
             return "structural"
         else:
             return "general"
@@ -571,6 +574,8 @@ class ModelProperties:
                 data = self._get_property(property, surface=surface_id)
                 if data is None:
                     entities_without_property.append(surface_id)
+
+        entities_without_property.sort()
     
         return entities_without_property
     

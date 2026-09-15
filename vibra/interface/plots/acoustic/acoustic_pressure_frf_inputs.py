@@ -16,6 +16,13 @@ from vibra.interface.plots.general.frequency_response_plotter import FrequencyRe
 from vibra.interface.ui_generated.plots.acoustic.acoustic_pressure_frf_inputs_ui import AcousticPressureFrfInputs_UI
 
 
+class SelectionType(IntEnum):
+    SURFACES = 0
+    LINES = 1
+    POINTS = 2
+    NODES = 3
+
+
 class CutoffFrequency(IntEnum):
     DISABLED = 0
     USER_DEFINED = 1
@@ -50,7 +57,7 @@ class AcousticPressureFRFInputs(AcousticPressureFrfInputs_UI):
 
     @property
     def nodal_solution(self):
-        return app().project.model.solution.nodal_solution
+        return app().project.model.solution.acoustic_solution
 
     def showEvent(self, event):
         super().showEvent(event)
@@ -72,20 +79,22 @@ class AcousticPressureFRFInputs(AcousticPressureFrfInputs_UI):
         self.lineEdit_cutoff_frequency.setValidator(StrictDoubleValidator(0, 1e8, 6))
 
     def _create_connections(self):
-        #
+
+        # QComboBox connections
         self.comboBox_selector_filter.currentIndexChanged.connect(self.update_render_according_to_selector)
         self.comboBox_cutoff_frequency.currentIndexChanged.connect(self.compute_pipe_cutoff_frequency_callback)
         self.comboBox_cutoff_frequency_options.currentIndexChanged.connect(self.cutoff_frequency_options_callback)
-        #
+
+        # QPushButton connections
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
         self.pushButton_flip_selection.clicked.connect(self.flip_nodes)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
-        #
+
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
-        #
+
         self.clickable(self.lineEdit_input_selected_id).connect(self.lineEdit_input_clicked)
         self.clickable(self.lineEdit_output_selected_id).connect(self.lineEdit_output_clicked)
-        #
+
         self.lineEdit_output_clicked()
         self.update_cutoff_related_widgets_visibility()
 
@@ -93,7 +102,7 @@ class AcousticPressureFRFInputs(AcousticPressureFrfInputs_UI):
 
         self.geometry_selection_callback()
 
-        if self.comboBox_selector_filter.currentIndex() == 3:
+        if self.comboBox_selector_filter.currentIndex() == SelectionType.NODES:
             app().main_window.show_mesh_render_widget()
         else:
             app().main_window.show_geometry_render_widget()
@@ -157,40 +166,32 @@ class AcousticPressureFRFInputs(AcousticPressureFrfInputs_UI):
             if len(surfaces) > 1:
                 return
 
-            else:
-                _surfaces = [str(i) for i in surfaces]
-                self.current_lineEdit.setText(_surfaces[0])
+            _surfaces = [str(i) for i in surfaces]
+            self.current_lineEdit.setText(_surfaces[0])
 
         elif lines and index == 1:
 
             if len(lines) > 1:
                 return
 
-            else:
-                _lines = [str(i) for i in lines]
-                self.current_lineEdit.setText(_lines[0])
+            _lines = [str(i) for i in lines]
+            self.current_lineEdit.setText(_lines[0])
 
         elif points and index == 2:
 
             if len(points) > 1:
                 return
 
-            else:
-                _points = [str(i) for i in points]
-                self.current_lineEdit.setText(_points[0])
+            _points = [str(i) for i in points]
+            self.current_lineEdit.setText(_points[0])
 
         elif nodes and index == 3:
             
             if len(nodes) > 1:
                 return
 
-            else:
-                _nodes = [str(i) for i in nodes]
-                self.current_lineEdit.setText(_nodes[0])
-
-        elif not any([nodes, lines, points, nodes]):
-            return
-            self.current_lineEdit.setText("")
+            _nodes = [str(i) for i in nodes]
+            self.current_lineEdit.setText(_nodes[0])
 
     def flip_nodes(self):
         temp_input = self.lineEdit_input_selected_id.text()
@@ -228,9 +229,10 @@ class AcousticPressureFRFInputs(AcousticPressureFrfInputs_UI):
         selection = self.selection_types[index]
  
         selected_input_id = self.lineEdit_input_selected_id.text()
-        self.input_selection_id, error_data = self.mesh.check_selected_ids(
+        self.input_selection_id, error_data = self.model.check_selected_ids(
             selected_input_id,
-            selection=selection,
+            selection,
+            domain="acoustic",
             single_id=True,
         )
 
@@ -240,9 +242,10 @@ class AcousticPressureFRFInputs(AcousticPressureFrfInputs_UI):
             return True
 
         selected_output_id = self.lineEdit_output_selected_id.text()
-        self.output_selection_id, error_data = self.mesh.check_selected_ids(
+        self.output_selection_id, error_data = self.model.check_selected_ids(
             selected_output_id,
-            selection=selection,
+            selection,
+            domain="acoustic",
             single_id=True,
         )
 
@@ -261,18 +264,28 @@ class AcousticPressureFRFInputs(AcousticPressureFrfInputs_UI):
 
         index = self.comboBox_selector_filter.currentIndex()
 
-        if index == 0:
-            rows_num = self.mesh.get_nodes_from_surface(self.output_selection_id)
-            rows_den = self.mesh.get_nodes_from_surface(self.input_selection_id)
-        elif index == 1:
-            rows_num = self.mesh.get_nodes_from_line(self.output_selection_id)
-            rows_den = self.mesh.get_nodes_from_line(self.input_selection_id)
-        elif index == 2:
-            rows_num = self.mesh.nodes_from_points.get(self.output_selection_id)
-            rows_den = self.mesh.nodes_from_points.get(self.input_selection_id)
+        if index == SelectionType.SURFACES:
+            nodes_num = self.mesh.get_nodes_from_surface(self.output_selection_id)
+            nodes_den = self.mesh.get_nodes_from_surface(self.input_selection_id)
+
+        elif index == SelectionType.LINES:
+            nodes_num = self.mesh.get_nodes_from_line(self.output_selection_id)
+            nodes_den = self.mesh.get_nodes_from_line(self.input_selection_id)
+
+        elif index == SelectionType.POINTS:
+            nodes_num = self.mesh.nodes_from_points.get(self.output_selection_id)
+            nodes_den = self.mesh.nodes_from_points.get(self.input_selection_id)
+
         else:
-            rows_num = self.output_selection_id
-            rows_den = self.input_selection_id
+            nodes_num = self.output_selection_id
+            nodes_den = self.input_selection_id
+
+        # process the acoustic dofs of the selected entities
+        gdof_num = self.model.get_dof_indices_from_nodes(nodes_num, "acoustic")
+        gdof_den = self.model.get_dof_indices_from_nodes(nodes_den, "acoustic")
+
+        rows_num = gdof_num[:, 0]
+        rows_den = gdof_den[:, 0]
 
         if isinstance(rows_num, int) and isinstance(rows_den, int):
             numerator = self.nodal_solution[rows_num,:]

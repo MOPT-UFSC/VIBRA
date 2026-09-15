@@ -9,7 +9,7 @@ from PySide6.QtWidgets import QAbstractItemView, QLineEdit, QTreeWidgetItem
 
 from vibra import app
 from vibra.interface import error_title
-from vibra.interface.common.common_interface import InputDataType, check_input_entries, update_analysis_setup_in_file
+from vibra.interface.common.common_interface import InputDataType, check_input_entries, update_analysis_setup_in_file, update_entities_selection
 from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -166,15 +166,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         volume_exists = self.mesh.are_there_volumes_in_geometry()
         self.comboBox_element_type.setCurrentIndex(int(volume_exists))
 
-    def constant_values_attribution(self):
-
-        input_ids = self.lineEdit_selection_id.text()
-        surface_ids, error_data = self.mesh.check_selected_ids(input_ids, selection="surfaces")
-
-        if error_data is not None:
-            self.lineEdit_selection_id.setFocus()
-            PrintMessageInput(error_data)
-            return True
+    def constant_values_attribution(self, surface_ids: list[int]):
 
         self.remove_conflicting_excitations(surface_ids, "surfaces")
 
@@ -302,15 +294,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
 
         return table_name, data
 
-    def table_values_attribution(self):
-
-        input_ids = self.lineEdit_selection_id.text()
-        surface_ids, error_data = self.mesh.check_selected_ids(input_ids, selection="surfaces")
-
-        if error_data is not None:
-            self.lineEdit_selection_id.setFocus()
-            PrintMessageInput(error_data)
-            return True
+    def table_values_attribution(self, surface_ids: list[int]):
 
         self.remove_conflicting_excitations(surface_ids, "surfaces")
 
@@ -352,17 +336,32 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
 
     def apply_callback(self, close_window: bool=False):
 
-        if self.tabWidget_main.currentIndex() == StandardTabType.LIST:
+        tab_index = self.tabWidget_main.currentIndex()
+        if tab_index == StandardTabType.LIST:
             return
 
-        tab_index = self.tabWidget_main.currentIndex()
+        input_ids = self.lineEdit_selection_id.text()
+        surface_ids, error_data = self.model.check_selected_ids(
+            input_ids,
+            "surfaces",
+            domain="structural",
+        )
+
+        if error_data is not None:
+            self.lineEdit_selection_id.setFocus()
+            PrintMessageInput(error_data)
+            return True
+
+        app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
+        update_entities_selection(self.lineEdit_selection_id, "surfaces", surface_ids)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
         if tab_index == StandardTabType.CONSTANT_DATA:
-            if self.constant_values_attribution():
+            if self.constant_values_attribution(surface_ids):
                 return
 
         if tab_index == StandardTabType.TABULAR_DATA:
-            if self.table_values_attribution():
+            if self.table_values_attribution(surface_ids):
                 return
 
         self.actions_to_finalize(close_window)

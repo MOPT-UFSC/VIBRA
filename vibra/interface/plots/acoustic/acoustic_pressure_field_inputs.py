@@ -95,7 +95,7 @@ class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
         selector_mask = np.abs(self.frequencies - frequency_selected) < 1e-6
 
         if selector_mask.any():
-            self.selected_frequency_index = self.indexes[selector_mask][0]
+            self.selected_frequency_index = self.indices[selector_mask][0]
 
         if self.selected_frequency_index is None:
             return
@@ -141,7 +141,7 @@ class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
         else:
             return
 
-        self.indexes = np.arange(len(self.frequencies), dtype=int)
+        self.indices = np.arange(len(self.frequencies), dtype=int)
 
         self.treeWidget_frequencies.clear()
         for index, frequency in enumerate(self.frequencies):
