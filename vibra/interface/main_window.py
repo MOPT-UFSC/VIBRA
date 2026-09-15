@@ -419,6 +419,12 @@ class MainWindow(MainWindow_UI):
         self.results_viewer_widget.results_viewer_items.clear_last_item()
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
 
+        self.action_results_workspace.setEnabled(True)
+        self.action_results_workspace.setChecked(True)
+        self.action_mesh_workspace.setChecked(False)
+        self.action_model_workspace.setChecked(False)
+        self.reload_visualization_filter()
+
     def show_geometry_render_widget(self):
         self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
         self.view_toolbar.enable_selection_tool()
@@ -532,7 +538,7 @@ class MainWindow(MainWindow_UI):
         self.action_model_workspace.setChecked(False)
         self.action_mesh_workspace.setChecked(False)
 
-        self.render_widgets_stack.setCurrentWidget(self.results_widget)
+        self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
         self.stacked_setup.setCurrentWidget(self.results_viewer_widget)
         self.results_viewer_widget.results_viewer_items.update_items()
         self.analysis_toolbar.update_analysis_combo_boxes()
