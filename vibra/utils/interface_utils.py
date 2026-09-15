@@ -62,6 +62,8 @@ class GeometryRendererConfig:
     selected_points_color: Color = color_names.RED
     selected_lines_color: Color = color_names.RED
     selected_surfaces_color: Color = color_names.BLUE
+    background_top: Color = Color("#0b0f17")
+    background_bottom: Color = Color("#3e424d")
     points_size: int = 15
     lines_thickness: int = 3
 
@@ -76,6 +78,8 @@ class MeshRendererConfig:
     selected_edges_color: Color = color_names.RED
     selected_surfaces_color: Color = color_names.BLUE_6
     selected_volumes_color: Color = color_names.BLUE
+    background_top: Color = Color("#3e424d")
+    background_bottom: Color = Color("#0b0f17")
     nodes_size: int = 10
     edges_thickness: int = 1
 

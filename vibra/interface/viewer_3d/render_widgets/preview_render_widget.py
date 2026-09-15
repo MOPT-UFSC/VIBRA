@@ -86,6 +86,9 @@ class PreviewRenderWidget(CommonRenderWidget):
 
     @function_timer
     def update_visualization(self):
+        self.renderer.SetBackground(self.mesh_config.background_bottom.to_rgb_f())
+        self.renderer.SetBackground2(self.mesh_config.background_top.to_rgb_f())
+
         self.mesh_actor.set_node_color(self.mesh_config.nodes_color)
         self.mesh_actor.set_edge_color(self.mesh_config.edges_color)
         self.mesh_actor.set_surface_color(self.mesh_config.surfaces_color)
