@@ -185,14 +185,14 @@ class StructuralStressesFieldsInputs(StructuralStressesFieldInputs_UI):
             unit_factor=unit_factor,
         )
 
-        # update the results render
-        self.show_results_render()
-
         self.animation_widget.reset_sliders()
         LoadingWindow(app().main_window.results_widget.update_plot).run(
             reset_camera=False,
             plot_setup=plot_setup,
         )
+
+        # update the results render
+        self.show_results_render()
 
     def get_plot_type(self) -> StressPlotType:
         plot_types = [
