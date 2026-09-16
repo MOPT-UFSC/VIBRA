@@ -143,7 +143,6 @@ class StructuralStressesFieldsInputs(StructuralStressesFieldInputs_UI):
 
         self.set_frames_disabled(False)
         self.load_frequencies()
-        self.show_results_render()
 
     def update_plot(self):
 
@@ -185,6 +184,9 @@ class StructuralStressesFieldsInputs(StructuralStressesFieldInputs_UI):
             unit=stress_units,
             unit_factor=unit_factor,
         )
+
+        # update the results render
+        self.show_results_render()
 
         self.animation_widget.reset_sliders()
         LoadingWindow(app().main_window.results_widget.update_plot).run(
