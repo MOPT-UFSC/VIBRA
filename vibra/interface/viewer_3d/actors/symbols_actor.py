@@ -1,14 +1,13 @@
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from enum import IntEnum, auto
-from functools import cached_property
+from functools import cache, cached_property
 from itertools import chain
 from typing import Any
 
 import numpy as np
 from molde.colors.color import Color
 from scipy.spatial.transform import Rotation
-from scipy.special import pro_ang1
 from vtkmodules.util.numpy_support import vtk_to_numpy
 from vtkmodules.vtkCommonCore import vtkCommand, vtkDoubleArray, vtkIntArray, vtkPoints, vtkUnsignedCharArray
 from vtkmodules.vtkCommonDataModel import vtkPolyData
@@ -34,8 +33,7 @@ class Entity:
 @dataclass
 class Marker:
     """
-    A symbol that resizes with the camera.
-    Always keeping a constant size to the viewer.
+    A symbol that always keeps a constant size to the viewer.
     """
 
     shape_function: Callable[[], vtkPolyData]
@@ -70,24 +68,26 @@ class SymbolType(IntEnum):
     BILLBOARD = auto()
 
     @classmethod
-    def from_symbol(cls, symbol: Symbol) -> "SymbolType":
-        return cls.ENTITY._class_to_type[type(symbol)]
+    def from_symbol(cls, symbol: Symbol) -> "SymbolType|None":
+        return cls._class_to_type().get(type(symbol))
 
     @property
     def symbol_class(self) -> type[Symbol]:
-        return self._type_to_class[self]
+        return self._type_to_class()[self]
 
-    @cached_property
-    def _class_to_type(self) -> dict[type[Symbol], "SymbolType"]:
+    @cache
+    @classmethod
+    def _class_to_type(cls) -> dict[type[Symbol], "SymbolType"]:
         return {
             Entity: SymbolType.ENTITY,
             Marker: SymbolType.MARKER,
             Billboard: SymbolType.BILLBOARD,
         }
 
-    @cached_property
-    def _type_to_class(self) -> dict["SymbolType", type[Symbol]]:
-        return {symbol_type: symbol_class for symbol_class, symbol_type in self._class_to_type.items()}
+    @cache
+    @classmethod
+    def _type_to_class(cls) -> dict["SymbolType", type[Symbol]]:
+        return {symbol_type: symbol_class for symbol_class, symbol_type in cls._class_to_type().items()}
 
 
 class SymbolsActor(vtkPropAssembly):
@@ -178,7 +178,9 @@ class SymbolsActor(vtkPropAssembly):
             else:
                 self.symbol_rotation.InsertNextTuple((0, 0, 0, 0))
 
-            self.symbol_type.InsertNextValue(SymbolType.from_symbol(symbol))
+            tp = SymbolType.from_symbol(symbol)
+            if tp is not None:
+                self.symbol_type.InsertNextValue(tp)
 
             self.symbol_points.InsertNextPoint(symbol.position)
             self.symbol_colors.InsertNextTuple(symbol.color.to_rgb())
