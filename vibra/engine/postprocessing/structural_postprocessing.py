@@ -49,7 +49,7 @@ class StructuralPostprocessing:
 
 
     @cache
-    def get_max_min_values_of_selected_data(self, column: int, n_diff: int, unit_factor: float, data_type: str, is_modal: bool) -> list[float, float]:
+    def get_max_min_values_for_displacements_data(self, column: int, n_diff: int, unit_factor: float, data_type: str, is_modal: bool) -> list[float, float]:
         """
         This method returns the minimum and maximum values of selected frequency for animation purposes.
 
@@ -275,7 +275,7 @@ class StructuralPostprocessing:
             color_scalars = current_solution[:, 2]
             phase_shifted_data = current_solution * np.array([0.0, 0.0, 1.0])
 
-        min_value, max_value = self.get_max_min_values_of_selected_data(column, n_diff, round(unit_factor, 10), data_type, is_modal)
+        min_value, max_value = self.get_max_min_values_for_displacements_data(column, n_diff, round(unit_factor, 10), data_type, is_modal)
 
         return phase_shifted_data, color_scalars, min_value, max_value, np.imag(data_complex).any()
 
@@ -312,7 +312,7 @@ class StructuralPostprocessing:
         phase_shifted_data  = compute_shifted_values(data_complex, phase_rad)
         current_solution = phase_shifted_data.reshape(-1, 3).copy()
 
-        _, max_value = self.get_max_min_values_of_selected_data(column, 0, unit_factor, data_type, False)
+        _, max_value = self.get_max_min_values_for_displacements_data(column, 0, unit_factor, data_type, False)
 
         return current_solution, max_value
 
