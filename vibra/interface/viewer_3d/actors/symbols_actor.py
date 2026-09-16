@@ -3,10 +3,12 @@ from dataclasses import dataclass
 from enum import IntEnum, auto
 from functools import cached_property
 from itertools import chain
+from typing import Any
 
 import numpy as np
 from molde.colors.color import Color
 from scipy.spatial.transform import Rotation
+from scipy.special import pro_ang1
 from vtkmodules.util.numpy_support import vtk_to_numpy
 from vtkmodules.vtkCommonCore import vtkCommand, vtkDoubleArray, vtkIntArray, vtkPoints, vtkUnsignedCharArray
 from vtkmodules.vtkCommonDataModel import vtkPolyData
@@ -93,14 +95,96 @@ class SymbolsActor(vtkPropAssembly):
         super().__init__()
 
         self.camera = camera
-        self._symbols: list[Symbol] = []
+        self.symbols: list[Symbol] = []
         self._create_variables()
+        self._configure_actor()
+
+    @property
+    def entities(self) -> list[Entity]:
+        return [symbol for symbol in self.symbols if isinstance(symbol, Entity)]
+
+    @property
+    def markers(self) -> list[Marker]:
+        return [symbol for symbol in self.symbols if isinstance(symbol, Marker)]
+
+    @property
+    def billboards(self) -> list[Billboard]:
+        return [symbol for symbol in self.symbols if isinstance(symbol, Billboard)]
+
+    def _create_variables(self):
+        self.symbol_points = vtkPoints()
+        self.symbol_sources = vtkIntArray()
+        self.symbol_rotation = vtkDoubleArray()
+        self.symbol_scales = vtkDoubleArray()
+        self.symbol_colors = vtkUnsignedCharArray()
+        self.symbol_type = vtkIntArray()
+        self.symbol_data = vtkPolyData()
+        self.symbol_mapper = vtkGlyph3DMapper()
+        self.entity_actor = vtkActor()
+
+    def _configure_actor(self):
+        self.camera.AddObserver(vtkCommand.ModifiedEvent, self.update_camera_callback)
+
+        self.symbol_sources.SetName("sources")
+        self.symbol_rotation.SetNumberOfComponents(4)
+        self.symbol_rotation.SetName("rotations")
+        self.symbol_scales.SetName("scales")
+        self.symbol_colors.SetNumberOfComponents(3)
+        self.symbol_colors.SetName("colors")
+        self.symbol_type.SetName("type")
+
+        self.symbol_data.SetPoints(self.symbol_points)
+        self.symbol_data.GetPointData().AddArray(self.symbol_sources)
+        self.symbol_data.GetPointData().AddArray(self.symbol_rotation)
+        self.symbol_data.GetPointData().AddArray(self.symbol_scales)
+        self.symbol_data.GetPointData().SetScalars(self.symbol_colors)
+
+        self.symbol_mapper.SetInputData(self.symbol_data)
+        self.symbol_mapper.SetSourceIndexArray("sources")
+        self.symbol_mapper.SetOrientationArray("rotations")
+        self.symbol_mapper.SetScaleArray("scales")
+        self.symbol_mapper.SourceIndexingOn()
+        self.symbol_mapper.ScalarVisibilityOn()
+        self.symbol_mapper.SetScaleModeToScaleByMagnitude()
+        self.symbol_mapper.SetScalarModeToUsePointData()
+        self.symbol_mapper.SetOrientationModeToQuaternion()
+
+        self.entity_actor.SetMapper(self.symbol_mapper)
+        self.AddPart(self.entity_actor)
 
     @function_timer
     def build(self):
-        self.build_entities()
-        # self.build_markers()
-        # self.build_billboards()
+        self.symbol_points.Reset()
+        self.symbol_rotation.Reset()
+        self.symbol_colors.Reset()
+        self.symbol_scales.Reset()
+        self.symbol_sources.Reset()
+
+        shape_function_to_index = {}
+        for symbol in self.symbols:
+            if symbol.shape_function not in shape_function_to_index:
+                index = len(shape_function_to_index)
+                shape_function_to_index[symbol.shape_function] = index
+                self.symbol_mapper.SetSourceData(index, symbol.shape_function())
+
+            if isinstance(symbol, Entity):
+                self.symbol_scales.InsertNextValue(symbol.scale)
+            else:
+                self.symbol_scales.InsertNextValue(1)
+
+            if isinstance(symbol, Entity | Marker):
+                quaternion = self._get_vector_orienting_quaternion(symbol.orientation)
+                self.symbol_rotation.InsertNextTuple(quaternion)
+            else:
+                self.symbol_rotation.InsertNextTuple((0, 0, 0, 0))
+
+            self.symbol_type.InsertNextValue(SymbolType.from_symbol(symbol))
+
+            self.symbol_points.InsertNextPoint(symbol.position)
+            self.symbol_colors.InsertNextTuple(symbol.color.to_rgb())
+            self.symbol_sources.InsertNextValue(shape_function_to_index[symbol.shape_function])
+
+        self.symbol_mapper.Modified()
 
     def add_entity(
         self,
@@ -115,7 +199,7 @@ class SymbolsActor(vtkPropAssembly):
             group = set()
 
         entity = Entity(shape_function, position, orientation, color, scale, group)
-        self._symbols.append(entity)
+        self.symbols.append(entity)
 
     def add_marker(
         self,
@@ -129,7 +213,7 @@ class SymbolsActor(vtkPropAssembly):
             group = set()
 
         marker = Marker(shape_function, position, orientation, color, group)
-        self._symbols.append(marker)
+        self.symbols.append(marker)
 
     def add_billboard(
         self,
@@ -142,21 +226,9 @@ class SymbolsActor(vtkPropAssembly):
             group = set()
 
         billboard = Billboard(shape_function, position, color, group)
-        self._symbols.append(billboard)
+        self.symbols.append(billboard)
 
-    def get_camera_facing_rotation(self):
-        forward = -np.array(self.camera.GetDirectionOfProjection())
-        forward /= np.linalg.norm(forward)
-        up = np.array(self.camera.GetViewUp())
-        right = np.cross(up, forward)
-        right /= np.linalg.norm(right)
-        up = np.cross(forward, right)
-
-        matrix = np.column_stack((forward, -up, right))
-        x, y, z, w = Rotation.from_matrix(matrix).as_quat("zxy")
-        return w, x, y, z
-
-    def camera_update(self, *args):
+    def update_camera_callback(self, *_args: Any, **_kwargs: Any):
         points_view = vtk_to_numpy(self.symbol_points.GetData())
         scale_view = vtk_to_numpy(self.symbol_scales)
         rotation_view = vtk_to_numpy(self.symbol_rotation)
@@ -168,92 +240,43 @@ class SymbolsActor(vtkPropAssembly):
         camera_position = self.camera.GetPosition()
         diff = points_view[markers | billboards] - camera_position
         scale_view[markers | billboards] = 0.02 * np.linalg.norm(diff, axis=1)
-        rotation = self.get_camera_facing_rotation()
+        rotation = self._get_camera_facing_rotation()
         rotation_view[billboards] = rotation
 
         self.symbol_scales.Modified()
         self.symbol_data.Modified()
         self.symbol_mapper.Modified()
 
-    def _create_variables(self):
-        self.camera.AddObserver(vtkCommand.ModifiedEvent, self.camera_update)
+    def _get_camera_facing_rotation(self) -> tuple[float, float, float, float]:
+        """
+        Return a quaternion (w, x, y, z) that rotates the billboard so that its
+        local +X axis points toward the viewer, while keeping its local +Z axis
+        aligned with the camera up direction.
+        """
 
-        self.symbol_points = vtkPoints()
-        self.symbol_sources = vtkIntArray()
-        self.symbol_sources.SetName("sources")
-        self.symbol_sources = vtkIntArray()
-        self.symbol_sources.SetName("sources")
-        self.symbol_rotation = vtkDoubleArray()
-        self.symbol_rotation.SetNumberOfComponents(4)
-        self.symbol_rotation.SetName("rotations")
-        self.symbol_scales = vtkDoubleArray()
-        self.symbol_scales.SetName("scales")
-        self.symbol_colors = vtkUnsignedCharArray()
-        self.symbol_colors.SetNumberOfComponents(3)
-        self.symbol_colors.SetName("colors")
-        self.symbol_type = vtkIntArray()
-        self.symbol_type.SetName("type")
+        forward = -np.array(self.camera.GetDirectionOfProjection())
+        forward /= np.linalg.norm(forward)
+        up = np.array(self.camera.GetViewUp())
+        right = np.cross(up, forward)
+        right /= np.linalg.norm(right)
+        up = np.cross(forward, right)
 
-        self.symbol_data = vtkPolyData()
-        self.symbol_data.SetPoints(self.symbol_points)
-        self.symbol_data.GetPointData().AddArray(self.symbol_sources)
-        self.symbol_data.GetPointData().AddArray(self.symbol_rotation)
-        self.symbol_data.GetPointData().AddArray(self.symbol_scales)
-        self.symbol_data.GetPointData().SetScalars(self.symbol_colors)
+        matrix = np.column_stack((forward, -up, right))
+        x, y, z, w = Rotation.from_matrix(matrix).as_quat("zxy")
+        return w, x, y, z
 
-        self.symbol_mapper = vtkGlyph3DMapper()
-        self.symbol_mapper.SetInputData(self.symbol_data)
-        self.symbol_mapper.SetSourceIndexArray("sources")
-        self.symbol_mapper.SetOrientationArray("rotations")
-        self.symbol_mapper.SetScaleArray("scales")
-        self.symbol_mapper.SourceIndexingOn()
-        self.symbol_mapper.ScalarVisibilityOn()
-        self.symbol_mapper.SetScaleModeToScaleByMagnitude()
-        self.symbol_mapper.SetScalarModeToUsePointData()
-        self.symbol_mapper.SetOrientationModeToQuaternion()
+    def _get_vector_orienting_quaternion(self, orientation: Sequence[float]) -> tuple[float, float, float, float]:
+        """
+        Return a quaternion (w, x, y, z) that rotates the symbols from its
+        canonical direction (pointing toward +X) to the given direction vector.
+        """
+        target = np.asarray(orientation, dtype=float)
+        norm = np.linalg.norm(target)
+        if norm == 0:
+            return (1, 0, 0, 0)
 
-        self.entity_actor = vtkActor()
-        self.entity_actor.SetMapper(self.symbol_mapper)
-        self.AddPart(self.entity_actor)
+        reference = np.array([1.0, 0.0, 0.0])
+        target = target / norm
 
-    def _entities(self) -> list[Entity]:
-        return [symbol for symbol in self._symbols if isinstance(symbol, Entity)]
-
-    def _markers(self) -> list[Marker]:
-        return [symbol for symbol in self._symbols if isinstance(symbol, Marker)]
-
-    def _billboards(self) -> list[Billboard]:
-        return [symbol for symbol in self._symbols if isinstance(symbol, Billboard)]
-
-    def build_entities(self):
-        self.symbol_points.Reset()
-        self.symbol_rotation.Reset()
-        self.symbol_colors.Reset()
-        self.symbol_scales.Reset()
-        self.symbol_sources.Reset()
-
-        shape_function_to_index = {}
-        for symbol in self._symbols:
-            if symbol.shape_function not in shape_function_to_index:
-                index = len(shape_function_to_index)
-                shape_function_to_index[symbol.shape_function] = index
-                self.symbol_mapper.SetSourceData(index, symbol.shape_function())
-
-            if isinstance(symbol, Entity):
-                self.symbol_scales.InsertNextValue(symbol.scale)
-            else:
-                self.symbol_scales.InsertNextValue(1)
-
-            if isinstance(symbol, Entity | Marker):
-                quaternion = Rotation.from_euler("XYZ", symbol.orientation, degrees=True).as_quat()
-                self.symbol_rotation.InsertNextTuple((quaternion[3], quaternion[0], quaternion[1], quaternion[2]))
-            else:
-                self.symbol_rotation.InsertNextTuple((0, 0, 0, 0))
-
-            self.symbol_type.InsertNextValue(SymbolType.from_symbol(symbol))
-
-            self.symbol_points.InsertNextPoint(symbol.position)
-            self.symbol_colors.InsertNextTuple(symbol.color.to_rgb())
-            self.symbol_sources.InsertNextValue(shape_function_to_index[symbol.shape_function])
-
-        self.symbol_mapper.Modified()
+        quaternion = Rotation.align_vectors(target.reshape(1, 3), reference.reshape(1, 3))[0].as_quat()
+        return (quaternion[3], quaternion[0], quaternion[1], quaternion[2])
