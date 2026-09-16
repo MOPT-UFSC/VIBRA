@@ -1,8 +1,7 @@
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from enum import IntEnum, auto
-from functools import cache, cached_property
-from itertools import chain
+from functools import cache
 from typing import Any
 
 import numpy as np
@@ -11,7 +10,7 @@ from scipy.spatial.transform import Rotation
 from vtkmodules.util.numpy_support import vtk_to_numpy
 from vtkmodules.vtkCommonCore import vtkCommand, vtkDoubleArray, vtkIntArray, vtkPoints, vtkUnsignedCharArray
 from vtkmodules.vtkCommonDataModel import vtkPolyData
-from vtkmodules.vtkRenderingCore import vtkActor, vtkCamera, vtkGlyph3DMapper, vtkPropAssembly
+from vtkmodules.vtkRenderingCore import vtkActor, vtkCamera, vtkGlyph3DMapper
 
 from vibra.utils.time_utils import function_timer
 
@@ -75,8 +74,8 @@ class SymbolType(IntEnum):
     def symbol_class(self) -> type[Symbol]:
         return self._type_to_class()[self]
 
-    @cache
     @classmethod
+    @cache
     def _class_to_type(cls) -> dict[type[Symbol], "SymbolType"]:
         return {
             Entity: SymbolType.ENTITY,
@@ -84,13 +83,13 @@ class SymbolType(IntEnum):
             Billboard: SymbolType.BILLBOARD,
         }
 
-    @cache
     @classmethod
+    @cache
     def _type_to_class(cls) -> dict["SymbolType", type[Symbol]]:
         return {symbol_type: symbol_class for symbol_class, symbol_type in cls._class_to_type().items()}
 
 
-class SymbolsActor(vtkPropAssembly):
+class SymbolsActor(vtkActor):
     def __init__(self, camera: vtkCamera):
         super().__init__()
 
@@ -120,7 +119,6 @@ class SymbolsActor(vtkPropAssembly):
         self.symbol_type = vtkIntArray()
         self.symbol_data = vtkPolyData()
         self.symbol_mapper = vtkGlyph3DMapper()
-        self.entity_actor = vtkActor()
 
     def _configure_actor(self):
         self.camera.AddObserver(vtkCommand.ModifiedEvent, self.update_camera_callback)
@@ -149,8 +147,7 @@ class SymbolsActor(vtkPropAssembly):
         self.symbol_mapper.SetScalarModeToUsePointData()
         self.symbol_mapper.SetOrientationModeToQuaternion()
 
-        self.entity_actor.SetMapper(self.symbol_mapper)
-        self.AddPart(self.entity_actor)
+        self.SetMapper(self.symbol_mapper)
 
     @function_timer
     def build(self):
@@ -241,7 +238,7 @@ class SymbolsActor(vtkPropAssembly):
 
         camera_position = self.camera.GetPosition()
         diff = points_view[markers | billboards] - camera_position
-        scale_view[markers | billboards] = 0.02 * np.linalg.norm(diff, axis=1)
+        scale_view[markers | billboards] = 0.015 * np.linalg.norm(diff, axis=1)
         rotation = self._get_camera_facing_rotation()
         rotation_view[billboards] = rotation
 
