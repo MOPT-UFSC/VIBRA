@@ -156,6 +156,7 @@ class SymbolsActor(vtkActor):
         self.symbol_colors.Reset()
         self.symbol_scales.Reset()
         self.symbol_sources.Reset()
+        self.symbol_type.Reset()
 
         shape_function_to_index = {}
         for symbol in self.symbols:
@@ -184,6 +185,7 @@ class SymbolsActor(vtkActor):
             self.symbol_sources.InsertNextValue(shape_function_to_index[symbol.shape_function])
 
         self.symbol_mapper.Modified()
+        self.update_camera_callback()
 
     def add_entity(
         self,
