@@ -3,8 +3,8 @@ from typing import TYPE_CHECKING
 from validation_files.data.WB.load_external_data import LoadExternalData
 from vibra import PROJECT_DIR
 from vibra.engine.analysis_info import AnalysisID, FrequencySpacing
-from vibra.engine.assemblers.structural_assembler import StructuralAssembler
-from vibra.engine.elements.element_options import BbarDilatationalEvaluation, HEX8_structural
+from vibra.engine.assemblers.structural.structural_assembler import StructuralAssembler
+from vibra.engine.elements.common.element_options import BbarDilatationalEvaluation, HEX8_structural
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.engine.postprocessing import StructuralPostprocessing
@@ -209,15 +209,12 @@ def load_external_mesh_and_solve(**kwargs):
     structural_post = StructuralPostprocessing(model)
 
     t0 = time()
-    avg_nodal_stresses, _ = structural_post.get_structural_stresses(volume_ids=1)
+    avg_nodal_stresses = structural_post.recover_nodal_averaged_structural_stresses(volume_ids=1)
     dt = time() - t0
     print(f"Time to compute nodal stresses: {dt} s")
 
-    nodal_averaged_stresses = structural_post.nodal_stresses_post_process(avg_nodal_stresses)
-    # element_averaged_stresses = structural_post.nodal_stresses_post_process(element_stresses)
-
    # Nodal results comparisons
-    dofs_per_node = assembler.element_3d.DOF_PER_NODE
+    dofs_per_node = assembler.element_3d.dof_per_node
 
     # define the plot type
     plot_type = "absolute"
@@ -230,6 +227,8 @@ def load_external_mesh_and_solve(**kwargs):
     # displacements plots
     for node_id in node_ids:
 
+        mapped_node_id = model.get_mapped_nodes(node_id-1, "structural")
+
         print()
         # plots for displacements
         for udof_label in udof_labels:
@@ -238,7 +237,7 @@ def load_external_mesh_and_solve(**kwargs):
                 dofs_per_node,
                 udof_label,
                 frequencies,
-                model.solution.nodal_solution,
+                model.solution.structural_solution,
                 extra_shape_function,
                 WB_displacements_data,
                 plot_type=plot_type,
@@ -247,10 +246,11 @@ def load_external_mesh_and_solve(**kwargs):
         # plots for stresses
         for stress_label in stresses_labels[0:3]:
             compare_averaged_nodal_stresses_results(
-                node_id, 
-                stress_label, 
+                node_id,
+                mapped_node_id,
+                stress_label,
                 frequencies, 
-                nodal_averaged_stresses, 
+                avg_nodal_stresses, 
                 extra_shape_function, 
                 WB_stresses_data,
                 plot_type=plot_type,
@@ -323,17 +323,19 @@ def compare_nodal_displacements_results(
 
 
 def compare_averaged_nodal_stresses_results(
-    node_id: int, 
-    stress_label: str, 
-    frequencies: np.ndarray, 
-    nodal_averaged_stresses: NodalStresses,
+    node_id: int,
+    mapped_node_id: int,
+    stress_label: str,
+    frequencies: np.ndarray,
+    avg_nodal_stresses: np.ndarray,
     esf: bool,
     solution_reference,
     named_selection: str = "all_solutions",
     plot_type: str = "absolute",
     ):
 
-    response_vibra = getattr(nodal_averaged_stresses, stress_label)[node_id - 1]
+    stress_index = stresses_labels.index(stress_label)
+    response_vibra = avg_nodal_stresses[mapped_node_id, stress_index, :]
 
     freq_ref, response_ref = get_reference_nodal_response(
         node_id, 

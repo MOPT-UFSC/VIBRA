@@ -1,26 +1,29 @@
 import logging
 from threading import Lock
-from time import perf_counter, time
-from typing import Optional
+from time import time
 
 import numpy as np
 from molde.render_widgets import AnimatedRenderWidget
-from vtkmodules.vtkCommonCore import vtkPoints
-from vtkmodules.vtkCommonDataModel import vtkPointData
+from vtkmodules.util.numpy_support import vtk_to_numpy
 
 from vibra import LOGO_DIR, app
 from vibra.engine import AnalysisID
+from vibra.engine.analysis_info.analysis_enums import PhysicalDomain
 from vibra.engine.postprocessing import AcousticPostprocessing, StructuralPostprocessing
 from vibra.extensions import SUPPORTED_ANIMATION_EXTENSIONS, SUPPORTED_VIDEO_EXTENSIONS
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.user_input.data_handler.file_dialog_service import FileDialogService
 from vibra.interface.viewer_3d.plot_setup import (
+    AcousticPlotSetups,
     AllowablePulsationForScrewCompressorsPlotSetup,
-    FrequencyDisplacementPlotSetup,
-    FrequencyPressurePlotSetup,
+    DisplacementFieldPlotSetupFrequency,
     NoPlotSetup,
     PlotSetup,
-    TransientPressurePlotSetup,
+    PressureFieldPlotSetupFrequency,
+    PressureFieldPlotSetupTime,
+    StressFieldPlotSetupFrequency,
+    StressType,
+    StructuralPlotSetups,
 )
 from vibra.interface.viewer_3d.render_tools import RenderTool, SelectionTool
 from vibra.utils.interface_utils import VisualizationFilter
@@ -37,6 +40,37 @@ from .model_info_text import (
     allowable_pulsation_for_screw_compressor_info_text,
     analysis_info_text,
 )
+
+
+class AnimationCache:
+    def __init__(self) -> None:
+        self.color_arrays: dict[int, np.ndarray] = {}
+        self.position_arrays: dict[int, np.ndarray | None] = {}
+        self.min_colors: float = 0
+        self.max_colors: float = 0
+        self.lock = Lock()
+
+    def add_frame(self, frame: int, colors: np.ndarray, positions: np.ndarray | None):
+        self.min_colors = min(self.min_colors, colors.min())
+        self.max_colors = max(self.max_colors, colors.max())
+        self.color_arrays[frame] = colors
+        if positions is not None:
+            self.position_arrays[frame] = positions
+
+    def get_frame(self, frame: int) -> tuple[np.ndarray | None, np.ndarray | None]:
+        return self.color_arrays.get(frame), self.position_arrays.get(frame)
+
+    def clear(self):
+        self.min_colors = 0
+        self.max_colors = 0
+        self.color_arrays.clear()
+        self.position_arrays.clear()
+
+    def __contains__(self, item: int) -> bool:
+        return item in self.color_arrays
+
+    def __bool__(self) -> bool:
+        return bool(self.color_arrays)
 
 
 class ResultsRenderWidget(AnimatedRenderWidget):
@@ -56,8 +90,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         # dont't remove, transparency depends on it
         self.renderer.SetUseDepthPeeling(True)
 
-        self._animation_cached_data = dict()
-        self._animation_cache_lock = Lock()
+        self._animation_cache = AnimationCache()
 
         self.min_value = 0
         self.max_value = 0
@@ -124,9 +157,12 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self,
         reset_camera: bool = True,
         *,
-        plot_setup: Optional[PlotSetup] = None,
+        plot_setup: PlotSetup | None = None,
     ):
-        if plot_setup is not None:
+
+        if plot_setup is None:
+            self.plot_setup = NoPlotSetup()
+        else:
             self.configure_plot(plot_setup)
 
         mesh = app().project.model.mesh
@@ -140,7 +176,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.remove_all_actors()
 
         logging.info("Updating the results render... [25/100]")
-        self.analysis_actor = HollowAnalysisActor(mesh)
+        self.analysis_actor = HollowAnalysisActor(mesh, physical_domain=self.get_physical_domain())
 
         logging.info("Updating the results render... [75/100]")
         self.edges_actor = EdgesActor(
@@ -186,6 +222,14 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         self.set_analysis_actors_transparency(self.transparency)
 
+    def get_physical_domain(self) -> PhysicalDomain | None:
+        if isinstance(self.plot_setup, StructuralPlotSetups):
+            return PhysicalDomain.STRUCTURAL
+        elif isinstance(self.plot_setup, AcousticPlotSetups):
+            return PhysicalDomain.ACOUSTIC
+        else:
+            return None
+
     def configure_plot(self, plot_setup: PlotSetup):
         assert isinstance(plot_setup, PlotSetup)
         self.plot_setup = plot_setup
@@ -206,7 +250,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
     def update_color_and_deformation(
         self,
-        animation_frame: Optional[int] = None,
+        animation_frame: int | None = None,
         clear_cache: bool = True,
     ):
         if not self.actors_exists():
@@ -219,14 +263,17 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             case NoPlotSetup():
                 self._plot_empty()
 
-            case FrequencyPressurePlotSetup():
-                self._plot_frequency_pressure(animation_frame, clear_cache)
+            case PressureFieldPlotSetupFrequency():
+                self._plot_pressure_field_frequency_domain(animation_frame, clear_cache)
 
-            case FrequencyDisplacementPlotSetup():
-                self._plot_frequency_displacement(animation_frame, clear_cache)
+            case DisplacementFieldPlotSetupFrequency():
+                self._plot_displacement_field_frequency_domain(animation_frame, clear_cache)
 
-            case TransientPressurePlotSetup():
-                self._plot_transient_pressure(animation_frame, clear_cache)
+            case StressFieldPlotSetupFrequency():
+                self._plot_stress_field_frequency_domain(animation_frame, clear_cache)
+
+            case PressureFieldPlotSetupTime():
+                self._plot_pressure_field_time_domain(animation_frame, clear_cache)
 
             case AllowablePulsationForScrewCompressorsPlotSetup():
                 self._plot_allowable_pulsation_for_screw_compressor(clear_cache)
@@ -237,18 +284,18 @@ class ResultsRenderWidget(AnimatedRenderWidget):
     def _plot_empty(self):
         assert isinstance(self.plot_setup, NoPlotSetup)
 
-    def _plot_frequency_pressure(
+    def _plot_pressure_field_frequency_domain(
         self,
-        animation_frame: Optional[int],
+        animation_frame: int | None,
         clear_cache: bool = True,
     ):
-        assert isinstance(self.plot_setup, FrequencyPressurePlotSetup)
+        assert isinstance(self.plot_setup, PressureFieldPlotSetupFrequency)
 
         postprocessing = app().project.get_acoustic_postprocessing()
         assert isinstance(postprocessing, AcousticPostprocessing)
 
         analysis_id = app().project.model.analysis_id
-        assert analysis_id.is_acoustic()
+        assert analysis_id.is_acoustic() or analysis_id.is_coupled()
 
         if animation_frame is None:
             phase = self.plot_setup.phase
@@ -259,6 +306,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.plot_setup.index,
             phase,
             self.plot_setup.plot_type,
+            unit_factor=self.plot_setup.unit_factor,
             is_modal=analysis_id.is_modal(),
         )
 
@@ -277,23 +325,31 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if self.user_max_value is not None:
             max_value = self.user_max_value
 
+        # filter acoustic nodes
+        model = postprocessing.model
+        acoustic_nodes = model.domains_processor.nodes_of_domain.get("acoustic")
+
+        _color_scalars = np.zeros(len(model.mesh.nodal_coordinates), dtype=float)
+        _color_scalars[acoustic_nodes] = color_scalars
+
         colormap = app().config.user_preferences.color_map
-        self.analysis_actor.plot_color_bar(color_scalars, min_value, max_value, colormap)
+
+        self.analysis_actor.plot_color_bar(_color_scalars, min_value, max_value, colormap)
         self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.update()
 
-    def _plot_frequency_displacement(
+    def _plot_displacement_field_frequency_domain(
         self,
-        animation_frame: Optional[int] = None,
+        animation_frame: int | None = None,
         clear_cache: bool = True,
     ):
-        assert isinstance(self.plot_setup, FrequencyDisplacementPlotSetup)
+        assert isinstance(self.plot_setup, DisplacementFieldPlotSetupFrequency | StressFieldPlotSetupFrequency)
 
         postprocessing = app().project.get_structural_postprocessing()
         assert isinstance(postprocessing, StructuralPostprocessing)
 
         analysis_id = app().project.model.analysis_id
-        assert analysis_id.is_structural()
+        assert analysis_id.is_structural() or analysis_id.is_coupled()
 
         if animation_frame is None:
             phase = self.plot_setup.phase
@@ -304,6 +360,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.plot_setup.index,
             phase,
             self.plot_setup.plot_type,
+            n_diff=self.plot_setup.n_diff,
+            unit_factor=self.plot_setup.unit_factor,
             is_modal=analysis_id.is_modal(),
         )
 
@@ -322,21 +380,112 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if self.user_max_value is not None:
             max_value = self.user_max_value
 
-        self.analysis_actor.apply_deformation(displacements, self.plot_setup.magnification_factor, max_value)
-        self.edges_actor.extract_data(self.analysis_actor.data)
+        max_value = max_value if max_value != 0 else 1.0
+        magnification_factor = self.plot_setup.magnification_factor
+
+        # filter structural nodes
+        model = postprocessing.model
+        structural_nodes = model.domains_processor.nodes_of_domain.get("structural")
+
+        deformed_coords = model.mesh.nodal_coordinates[:, 1:].copy()
+        deformed_coords[structural_nodes, :] += (magnification_factor / (10 * max_value)) * displacements
+
+        _color_scalars = np.zeros(len(model.mesh.nodal_coordinates), dtype=float)
+        _color_scalars[structural_nodes] = color_scalars
 
         colormap = app().config.user_preferences.color_map
-        self.analysis_actor.plot_color_bar(color_scalars, min_value, max_value, colormap)
+
+        self.analysis_actor.apply_deformation(deformed_coords)
+        self.edges_actor.extract_data(self.analysis_actor.data)
+
+        self.analysis_actor.plot_color_bar(_color_scalars, min_value, max_value, colormap)
         self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.update()
 
-    def _plot_transient_pressure(
+    def _plot_stress_field_frequency_domain(
         self,
-        animation_frame: Optional[int] = None,
+        animation_frame: int | None = None,
+        clear_cache: bool = True,
+    ):
+        assert isinstance(self.plot_setup, StressFieldPlotSetupFrequency)
+
+        postprocessing = app().project.get_structural_postprocessing()
+        assert isinstance(postprocessing, StructuralPostprocessing)
+
+        analysis_id = app().project.model.analysis_id
+        assert analysis_id.is_structural() or analysis_id.is_coupled()
+
+        if animation_frame is None:
+            phase = self.plot_setup.phase
+        else:
+            phase = self._interpolate_phase(animation_frame)
+
+        displacements, max_disp = postprocessing.compute_structural_response_field_for_stress_plot(
+            self.plot_setup.index,
+            phase,
+            self.plot_setup.plot_type,
+            n_diff=self.plot_setup.n_diff,
+            is_modal=analysis_id.is_modal(),
+        )
+
+        if StressType(self.plot_setup.stress_type).is_normal_or_shear_stress():
+            stress_data = postprocessing.compute_structural_stresses_field(
+                self.plot_setup.index,
+                phase,
+                self.plot_setup.stress_type,
+                self.plot_setup.plot_type,
+                unit_factor=self.plot_setup.unit_factor,
+            )
+
+        else:
+            stress_data = postprocessing.compute_advanced_structural_stresses_field(
+                self.plot_setup.index,
+                phase,
+                self.plot_setup.stress_type,
+                self.plot_setup.plot_type,
+                unit_factor=self.plot_setup.unit_factor,
+            )
+
+        color_scalars, self.min_value, self.max_value, self.is_animation_symetric = stress_data
+
+        min_value = self.min_value
+        max_value = self.max_value
+
+        if self.user_min_value is not None:
+            min_value = self.user_min_value
+
+        if self.user_max_value is not None:
+            max_value = self.user_max_value
+
+        max_value = max_value if max_value != 0 else 1.0
+        magnification_factor = self.plot_setup.magnification_factor
+
+        # filter structural nodes
+        model = postprocessing.model
+        structural_nodes = model.domains_processor.nodes_of_domain.get("structural")
+
+        deformed_coords = model.mesh.nodal_coordinates[:, 1:].copy()
+        deformed_coords[structural_nodes, :] += (magnification_factor / (10 * max_disp)) * displacements
+
+        _color_scalars = np.zeros(len(model.mesh.nodal_coordinates), dtype=float)
+        _color_scalars[structural_nodes] = color_scalars
+
+        colormap = app().config.user_preferences.color_map
+
+        self.analysis_actor.apply_deformation(deformed_coords)
+        self.edges_actor.extract_data(self.analysis_actor.data)
+
+        self.analysis_actor.plot_color_bar(_color_scalars, min_value, max_value, colormap)
+        self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
+        self.update()
+
+    def _plot_pressure_field_time_domain(
+        self,
+        animation_frame: int | None = None,
         clear_cache: bool = True,
     ):
 
-        assert isinstance(self.plot_setup, TransientPressurePlotSetup)
+        assert isinstance(self.plot_setup, PressureFieldPlotSetupTime)
 
         postprocessing = app().project.get_acoustic_postprocessing()
         assert isinstance(postprocessing, AcousticPostprocessing)
@@ -349,6 +498,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         data = postprocessing.compute_acoustic_transient_pressure_field(
             time_index,
             self.plot_setup.plot_type,
+            unit_factor=self.plot_setup.unit_factor,
             reduced_loop_time=self.plot_setup.reduced_loop_time,
         )
 
@@ -374,8 +524,16 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         self.is_animation_symetric = False
 
+        # filter acoustic nodes
+        model = postprocessing.model
+        acoustic_nodes = model.domains_processor.nodes_of_domain.get("acoustic")
+
+        _color_scalars = np.zeros(len(model.mesh.nodal_coordinates), dtype=float)
+        _color_scalars[acoustic_nodes] = color_scalars
+
         colormap = app().config.user_preferences.color_map
-        self.analysis_actor.plot_color_bar(color_scalars, min_value, max_value, colormap)
+
+        self.analysis_actor.plot_color_bar(_color_scalars, min_value, max_value, colormap)
         self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.update()
 
@@ -398,7 +556,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         # apply the penalization factor, if necessary
         penalization_factor = self.plot_setup.penalization_factor / 100
-        self.max_value *= (1 - penalization_factor)
+        self.max_value *= 1 - penalization_factor
 
         self.screw_compressor_allowable_pulsation_criterion = self.max_value
 
@@ -411,8 +569,16 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if self.user_max_value is not None:
             max_value = self.user_max_value
 
+        # filter acoustic nodes
+        model = postprocessing.model
+        acoustic_nodes = model.domains_processor.nodes_of_domain.get("acoustic")
+
+        _color_scalars = np.zeros(len(model.mesh.nodal_coordinates), dtype=float)
+        _color_scalars[acoustic_nodes] = color_scalars
+
         colormap = app().config.user_preferences.color_map
-        self.analysis_actor.plot_color_bar(color_scalars, min_value, max_value, colormap)
+
+        self.analysis_actor.plot_color_bar(_color_scalars, min_value, max_value, colormap)
         self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.update()
 
@@ -427,10 +593,10 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
     def clear_cache(self):
         logging.info("Clearing animation cache")
-        with self._animation_cache_lock:
+        with self._animation_cache.lock:
             timestamp = time()
             self.timestamp = timestamp
-            self._animation_cached_data.clear()
+            self._animation_cache.clear()
             if not self.user_changed_pressure_values:
                 self.min_value = 0
                 self.max_value = 0
@@ -448,11 +614,11 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         for frame in range(self._animation_total_frames):
             logging.info(f"Caching animation frames [{frame}/{self._animation_total_frames}]")
 
-            with self._animation_cache_lock:
+            with self._animation_cache.lock:
                 if self.timestamp != timestamp:
                     break
 
-                if frame in self._animation_cached_data:
+                if frame in self._animation_cache:
                     continue
 
                 self.cache_frame(frame)
@@ -462,15 +628,18 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         with self.update_lock:
             self.update_color_and_deformation(animation_frame=frame, clear_cache=False)
 
-        point_data = vtkPointData()
-        point_position = vtkPoints()
-        point_data.DeepCopy(self.analysis_actor.data.GetPointData())
-        point_position.DeepCopy(self.analysis_actor.data.GetPoints())
-        self._animation_cached_data[frame] = (point_data, point_position)
+        assert self.analysis_actor is not None
+        assert self.analysis_actor.data is not None
 
+        pos = None
+        if isinstance(self.plot_setup, StructuralPlotSetups):
+            pos = vtk_to_numpy(self.analysis_actor.data.GetPoints().GetData()).copy()
+        colors = vtk_to_numpy(self.analysis_actor.data.GetPointData().GetScalars()).copy()
+            
+        self._animation_cache.add_frame(frame, colors, pos)
         if self.is_animation_symetric:
             mirrored_frame = self._animation_total_frames - frame - 1
-            self._animation_cached_data[mirrored_frame] = self._animation_cached_data[frame]
+            self._animation_cache.add_frame(mirrored_frame, colors, pos)
 
     def start_animation(self, *args, **kwargs):
         super().start_animation(*args, **kwargs)
@@ -490,23 +659,35 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.stop_animation()
             return
 
-        if self._animation_cache_lock.locked():
+        if self._animation_cache.lock.locked():
             return
 
-        if not self._animation_cached_data:
+        if self.analysis_actor is None:
+            return
+
+        if self.analysis_actor.data is None:
+            return
+
+        if not self._animation_cache:
             LoadingWindow(self.cache_animation_frames).run()
 
-        if frame in self._animation_cached_data:
-            logging.info(f"Rendering animation frame [{frame}/{self._animation_total_frames}]")
-            point_data, point_position = self._animation_cached_data[frame]
-            self.analysis_actor.data.GetPointData().DeepCopy(point_data)
-            self.analysis_actor.data.GetPoints().DeepCopy(point_position)
-            self.update()
-        else:
-            # It will only enter here if something wrong happened
-            # in the function that caches the frames
-            logging.warning(f"Cache miss on update_animation function for frame {frame}")
-            self.cache_frame(frame)
+        cached_color, cached_pos = self._animation_cache.get_frame(frame)
+
+        if cached_color is not None:
+            colors_array = vtk_to_numpy(self.analysis_actor.data.GetPointData().GetScalars())
+            colors_array[:] = cached_color
+            self.analysis_actor.data.GetPointData().Modified()
+            self.analysis_actor.color_table.SetTableRange(
+                self._animation_cache.min_colors if self.user_min_value is None else self.user_min_value,
+                self._animation_cache.max_colors if self.user_max_value is None else self.user_max_value,
+            )
+
+        if cached_pos is not None:
+            positions_array = vtk_to_numpy(self.analysis_actor.data.GetPoints().GetData())
+            positions_array[:] = cached_pos
+            self.analysis_actor.data.GetPoints().Modified()
+
+        self.update()
 
     def set_analysis_actors_transparency(self, transparency):
         if not self.actors_exists():
@@ -559,7 +740,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             return
 
         if not isinstance(self._cache_hollow_solids_actor, HollowAnalysisActor):
-            self._cache_hollow_solids_actor = HollowAnalysisActor(mesh)
+            self._cache_hollow_solids_actor = HollowAnalysisActor(mesh, physical_domain=self.get_physical_domain())
 
         self._cache_full_solids_actor = self.analysis_actor
 
@@ -585,7 +766,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             return
 
         if not isinstance(self._cache_full_solids_actor, AnalysisActor):
-            self._cache_full_solids_actor = AnalysisActor(mesh)
+            self._cache_full_solids_actor = AnalysisActor(mesh, physical_domain=self.get_physical_domain())
 
         self._cache_hollow_solids_actor = self.analysis_actor
 
@@ -690,8 +871,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             return
 
         match self.plot_setup:
-            case FrequencyDisplacementPlotSetup() | FrequencyPressurePlotSetup():
-                text += analysis_info_text(self.plot_setup.index)
+            case DisplacementFieldPlotSetupFrequency() | PressureFieldPlotSetupFrequency() | StressFieldPlotSetupFrequency():
+                text += analysis_info_text(self.plot_setup)
 
             case AllowablePulsationForScrewCompressorsPlotSetup():
                 text += allowable_pulsation_for_screw_compressor_info_text(

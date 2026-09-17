@@ -121,7 +121,7 @@ def _mean_edge_length_per_volume(mesh: Mesh) -> dict[int, float]:
     coords = mesh.nodal_coordinates[:, 1:]
 
     mean_edges = {}
-    for volume_id in mesh.all_solid_ids():
+    for volume_id in mesh.all_volume_ids():
         rows = mesh.solids_connectivity[mesh.solids_connectivity[:, 1] == volume_id]
         lengths = []
         for connect in rows[:, 4:]:

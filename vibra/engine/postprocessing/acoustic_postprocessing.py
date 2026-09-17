@@ -14,6 +14,7 @@ from vibra.engine.model import Model
 from vibra.engine.postprocessing.acoustic_post_solution_dataclass import NodalParticleVelocities
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.solution import HarmonicSolution, Solution
+from vibra.engine.solution.modal_solution import ModalSolution
 from vibra.interface.numeric_checks.unit_utilities import convert_pressure_unit
 from vibra.interface.viewer_3d.plot_setup import PressurePlotType
 from vibra.utils.lazy_array import LazyArray
@@ -50,7 +51,7 @@ class AcousticPostprocessing:
         return self.model.acoustic_element_3d
 
     @cache
-    def get_min_max_values_of_pressures(self, column: int, plot_type: str, is_modal: bool = False):
+    def get_min_max_values_of_pressures(self, column: int, unit_factor: float, plot_type: str, is_modal: bool = False):
         """
         This method returns the minimum and maximum pressure values
         of selected frequency used in the animation processing.
@@ -59,6 +60,9 @@ class AcousticPostprocessing:
         ----------
         column: int value relative to frequency column index.
 
+        unit_factor: float
+            The unit conversion factor.
+
         Returns
         -------
         p_min, p_max: float values for minimum and maximum pressures,
@@ -66,47 +70,41 @@ class AcousticPostprocessing:
         """
 
         if is_modal:
-            nodal_solution = self.solution.modal_shapes
+            assert isinstance(self.solution, ModalSolution)
+            nodal_solution = self.solution.acoustic_modal_shapes
         else:
-            nodal_solution = self.solution.nodal_solution
+            assert isinstance(self.solution, HarmonicSolution)
+            nodal_solution = self.solution.acoustic_solution
 
         if isinstance(nodal_solution, LazyArray) and not nodal_solution.is_valid():
             return None
 
-        data = nodal_solution[:, column]
+        # define the complex data vector
+        complex_data = unit_factor * nodal_solution[:, column]
 
-        amplitudes = np.abs(data)
-        phases = np.angle(data)
+        if plot_type == "absolute_values":
+            return 0, max(np.abs(complex_data))
 
-        p_min = 1
-        p_max = 0
+        if plot_type == "real_values":
+            return min(np.real(complex_data)), max(np.real(complex_data))
+
+        if plot_type == "imag_values":
+            return min(np.imag(complex_data)), max(np.imag(complex_data))
 
         divisions = 36
         thetas = np.linspace(0, 2 * np.pi, divisions + 1, endpoint=True)
 
-        if plot_type == "absolute_values":
-            return 0, max(np.abs(data))
+        complex_data = complex_data.reshape(-1, 1)
 
-        if plot_type == "real_values":
-            return min(np.real(data)), max(np.real(data))
+        # pressures = Re{data_complex * exp(1j * thetas)}
+        pressures = complex_data.real * np.cos(thetas) - complex_data.imag * np.sin(thetas)
 
-        if plot_type == "imag_values":
-            return min(np.imag(data)), max(np.imag(data))
-
-        for theta in thetas:
-            pressures = amplitudes * np.cos(theta + phases)
-
-            if plot_type == "absolute_animation":
-                pressures = np.abs(pressures)
-
-            p_min_i = min(pressures)
-            p_max_i = max(pressures)
-
-            p_min = min(p_min, p_min_i)
-            p_max = max(p_max, p_max_i)
+        p_min = np.min(pressures.ravel())
+        p_max = np.max(pressures.ravel())
 
         if plot_type == "absolute_animation":
             p_min = 0
+            p_max = max(p_max, abs(p_min))
 
         if plot_type == "non_absolute_animation":
             max_value = np.max(np.abs([p_min, p_max]))
@@ -120,15 +118,18 @@ class AcousticPostprocessing:
         index: int,
         phase_rad: float,
         plot_type: PressurePlotType,
+        unit_factor: float = 1.0,
         is_modal: bool = False,
     ):
         if self.solution is None:
             return
 
         if is_modal:
-            nodal_solution = self.solution.modal_shapes
+            assert isinstance(self.solution, ModalSolution)
+            nodal_solution = self.solution.acoustic_modal_shapes
         else:
-            nodal_solution = self.solution.nodal_solution
+            assert isinstance(self.solution, HarmonicSolution)
+            nodal_solution = self.solution.acoustic_solution
 
         if isinstance(nodal_solution, LazyArray) and not nodal_solution.is_valid():
             return
@@ -137,13 +138,14 @@ class AcousticPostprocessing:
             return
 
         # selected nodal solution
-        _nodal_solution = nodal_solution[:, index]
+        _nodal_solution = unit_factor * nodal_solution[:, index].copy()
 
         amplitudes = np.abs(_nodal_solution)
         phases = np.angle(_nodal_solution)
         delta = -phases[np.argmax(amplitudes)]
 
         acoustic_pressures = amplitudes * np.cos(phases + phase_rad + delta)
+
         match plot_type:
             case PressurePlotType.ABSOLUTE_VALUES:
                 acoustic_pressures = np.abs(_nodal_solution)
@@ -154,7 +156,7 @@ class AcousticPostprocessing:
             case PressurePlotType.ABSOLUTE_ANIMATION:
                 acoustic_pressures = np.abs(acoustic_pressures)
 
-        min_value, max_value = self.get_min_max_values_of_pressures(index, plot_type, is_modal)
+        min_value, max_value = self.get_min_max_values_of_pressures(index, round(unit_factor, 10), plot_type, is_modal)
 
         return acoustic_pressures, min_value, max_value, np.imag(_nodal_solution).any()
 
@@ -162,6 +164,7 @@ class AcousticPostprocessing:
         self,
         time_index: int,
         plot_type: PressurePlotType,
+        unit_factor: float = 1.0,
         reduced_loop_time: float | None = None,
     ):
 
@@ -173,8 +176,8 @@ class AcousticPostprocessing:
             n = np.sum(time_vector <= reduced_loop_time)
 
         # cache the minimum and maximum values of the nodal pressure waveforms
-        min_max_values = self.get_acoustic_waveforms_minimum_and_maximum_values(int(n))
-        acoustic_pressures = self.waveforms[:, time_index].flatten()
+        min_max_values = self.get_acoustic_waveforms_minimum_and_maximum_values(int(n), round(unit_factor, 10))
+        acoustic_pressures = unit_factor * self.waveforms[:, time_index].flatten()
 
         match plot_type:
             case PressurePlotType.ABSOLUTE_ANIMATION:
@@ -236,13 +239,14 @@ class AcousticPostprocessing:
     @cache
     def compute_multiple_ifft(self) -> tuple[np.ndarray, np.ndarray]:
         assert isinstance(self.solution, HarmonicSolution)
-        assert self.solution.analysis_id.is_acoustic()  # for now, I guess
+        assert self.solution.acoustic_solution is not None
+        assert self.solution.analysis_id.is_acoustic() or self.solution.analysis_id.is_coupled()
 
         # t0 = perf_counter()
         logging.info("Computing multiple iffts... [25/100]")
         time_vector, waveforms = process_multiple_iffts_from_one_sided_spectrum_signals(
             self.solution.frequencies,
-            self.solution.nodal_solution,
+            self.solution.acoustic_solution,
             dc_included=False,
         )
 
@@ -254,8 +258,8 @@ class AcousticPostprocessing:
         return time_vector, waveforms
 
     @cache
-    def get_acoustic_waveforms_minimum_and_maximum_values(self, N: float):
-        _waveforms = self.waveforms[:, :N]
+    def get_acoustic_waveforms_minimum_and_maximum_values(self, N: float, unit_factor: float):
+        _waveforms = unit_factor * self.waveforms[:, :N]
         return (_waveforms.min(), _waveforms.max())
 
     def compute_particle_velocity(
@@ -284,6 +288,8 @@ class AcousticPostprocessing:
             return np.average(array_particle_velocities_Vj, axis=0)
 
     def compute_acoustic_impedance(self, node_id: int | None = None, surface_id: int | None = None, volume_id: int | None = None):
+        assert isinstance(self.solution, HarmonicSolution)
+        assert self.solution.acoustic_solution is not None
 
         frequencies = self.model.frequencies
         zeros = np.zeros_like(frequencies, dtype=complex)
@@ -304,13 +310,13 @@ class AcousticPostprocessing:
         particle_velocities_data = self.get_particle_velocity_from_surface(surface_id, volume_id=volume_id)
 
         if isinstance(node_id, int):
-            pressure = self.solution.nodal_solution[node_id, :]
+            pressure = self.solution.acoustic_solution[node_id, :]
             particle_velocities_Vn: dict = getattr(particle_velocities_data, "Vn")
             particle_velocity = particle_velocities_Vn.get(node_id)
             return pressure / particle_velocity
 
         else:
-            pressures = self.solution.nodal_solution[nodes, :]
+            pressures = self.solution.acoustic_solution[nodes, :]
             surface_impedance = pressures / particle_velocities_data.Vn_array()
             return np.average(surface_impedance, axis=0)
 
@@ -335,7 +341,11 @@ class AcousticPostprocessing:
 
         return alpha
 
-    def get_particle_velocity_from_surface(self, surface_id: int, volume_id: int | None = None) -> NodalParticleVelocities:
+    def get_particle_velocity_from_surface(
+        self,
+        surface_id: int,
+        volume_id: int | None = None,
+    ) -> NodalParticleVelocities:
         """
         This method computes the nodal average particle velocity in the selected surface.
 
@@ -354,6 +364,8 @@ class AcousticPostprocessing:
             A dictionary with the normal particle velocity and its components in
             the x, y, and z directions, computed in the selected surface.
         """
+        assert isinstance(self.solution, HarmonicSolution)
+        assert self.solution.acoustic_solution is not None
 
         frequencies = self.model.frequencies
         zeros = np.zeros_like(frequencies, dtype=complex)
@@ -364,7 +376,7 @@ class AcousticPostprocessing:
 
         element_3d = self.acoustic_element_3d
 
-        if element_3d.connectivity is None:
+        if element_3d.connectivities is None:
             element_3d.reorder_connect()
 
         data_normals = self.mesh.get_surface_nodal_normals(surface_id, volume_id)
@@ -378,16 +390,22 @@ class AcousticPostprocessing:
         #     surface_id=surface_id, return_nodes=True)
 
         # Load all frequency solutions to optimize multiple load on the `process_particle_velocity` method below.
-        node_to_index = dict(zip(filtered_nodes, np.arange(filtered_nodes.size, dtype=int)))
-        solution = self.solution.nodal_solution[filtered_nodes, :]
+        _filtered_nodes = self.model.get_mapped_nodes(filtered_nodes, "acoustic")
+
+        # print(self.solution.acoustic_solution.shape)
+        # print(_filtered_nodes.shape)
+
+        node_to_index = dict(zip(_filtered_nodes, np.arange(filtered_nodes.size, dtype=int)))
+        solution = self.solution.acoustic_solution[_filtered_nodes, :]
 
         pv_data = {}
         for node_id, solid_element_ids in map_elements_to_nodes.items():
             Vk = 0.0
             for element_id in solid_element_ids:
-                connect = element_3d.connectivity[element_id, 1:]
-                indexes = np.array([node_to_index.get(node) for node in connect])
-                enodal_pressures = solution[indexes, :]
+                connect = element_3d.connectivities[element_id, :]
+                _connect = self.model.get_mapped_nodes(connect, "acoustic")
+                indices = np.array([node_to_index.get(node) for node in _connect])
+                enodal_pressures = solution[indices, :]
                 Vk += element_3d.process_particle_velocity(
                     element_id,
                     node_id,
@@ -464,15 +482,21 @@ class AcousticPostprocessing:
 
         """
 
+        assert isinstance(self.solution, HarmonicSolution)
+        assert self.solution.acoustic_solution is not None
+
         frequencies = self.model.frequencies
 
         logging.info("Processing the transmission loss... [10/100]")
         nodes_input = np.sort(self.mesh.get_nodes_from_surface(input_surface_id))
         nodes_output = np.sort(self.mesh.get_nodes_from_surface(output_surface_id))
 
+        # input_dofs = self.model.get_dof_indices_from_nodes(nodes_input, "acoustic")[:, 0]
+        output_dofs = self.model.get_dof_indices_from_nodes(nodes_output, "acoustic")[:, 0]
+
         logging.info("Processing the transmission loss... [20/100]")
-        # P_in = self.solution.nodal_solution[nodes_input, :]
-        P_out = self.solution.nodal_solution[nodes_output, :]
+        # P_in = self.solution.acoustic_solution[input_dofs, :]
+        P_out = self.solution.acoustic_solution[output_dofs, :]
 
         logging.info("Processing the transmission loss... [40/100]")
 
@@ -580,7 +604,11 @@ class AcousticPostprocessing:
         return frequencies, transmission_loss
 
     def integrate_surface_sound_power(
-        self, surface_id: int, pressures: np.ndarray, particle_velocities: np.ndarray, dB_scale: bool = True
+        self,
+        surface_id: int,
+        pressures: np.ndarray,
+        particle_velocities: np.ndarray,
+        dB_scale: bool = True,
     ) -> np.ndarray:
         """
         This method integrates the sound power intensity over the selected surface.
@@ -602,11 +630,15 @@ class AcousticPostprocessing:
             The sound power level in dB if dB_scale is True or the sound power in watts otherwise.
         """
 
+        element_2d = self.acoustic_element_2d
+        edof = element_2d.dof_per_element
+
         nodes = np.sort(self.mesh.get_nodes_from_surface(surface_id))
         surface_connectivities = self.mesh.get_connectivity_from_surface(surface_id)
 
         number_nodes = len(nodes)
-        map_nodes = dict(zip(nodes, np.arange(number_nodes)))
+        _nodes = self.model.get_mapped_nodes(nodes, "acoustic")
+        map_nodes = dict(zip(_nodes, np.arange(number_nodes, dtype=int)))
 
         if len(pressures.shape) == 1:
             pressures = np.tile(pressures, (number_nodes, 1))
@@ -614,16 +646,16 @@ class AcousticPostprocessing:
         if len(particle_velocities.shape) == 1:
             particle_velocities = np.tile(particle_velocities, (number_nodes, 1))
 
-        element_2d = self.acoustic_element_2d
-
         sound_power = 0.0
-        for i, e_connect in enumerate(surface_connectivities):
-            node_indexes = [map_nodes.get(node) for node in e_connect]
-            L_sv = pressures[node_indexes, :].T.reshape(-1, 1, element_2d.DOF_PER_ELEMENT)
-            R_sv = particle_velocities[node_indexes, :].T.reshape(-1, element_2d.DOF_PER_ELEMENT, 1)
+        for i, connect in enumerate(surface_connectivities):
+            # process the element rows to access the reduced nodal results for pressures and particle velocities
+            rows = [map_nodes.get(_node) for _node in self.model.get_mapped_nodes(connect, "acoustic")]
 
-            normalized_data = element_2d.elementary_sound_power(e_connect, L_sv, R_sv)
-            sound_power += np.real(normalized_data) / 2
+            L_sv = pressures[rows, :].T.reshape(-1, 1, edof)
+            R_sv = particle_velocities[rows, :].T.reshape(-1, edof, 1)
+
+            elem_sound_power = element_2d.elementary_sound_power(connect, L_sv, R_sv)
+            sound_power += np.real(elem_sound_power) / 2
 
         if dB_scale:
             return 10 * np.log10(sound_power / 1e-12)
@@ -653,13 +685,15 @@ class AcousticPostprocessing:
             The vector of computed noise reduction values in dB.
 
         """
+        assert isinstance(self.solution, HarmonicSolution)
+        assert self.solution.acoustic_solution is not None
 
         frequencies = self.model.frequencies
         rows_input = self.mesh.get_nodes_from_surface(input_surface_id)
         rows_output = self.mesh.get_nodes_from_surface(output_surface_id)
 
-        P_in = np.average(self.solution.nodal_solution[rows_input, :], axis=0)
-        P_out = np.average(self.solution.nodal_solution[rows_output, :], axis=0)
+        P_in = np.average(self.solution.acoustic_solution[rows_input, :], axis=0)
+        P_out = np.average(self.solution.acoustic_solution[rows_output, :], axis=0)
 
         # the zero_shift constant is summed to avoid zero values either in P_input2 or P_output2 variables
         zero_shift = 1e-12
@@ -692,15 +726,13 @@ class AcousticPostprocessing:
             if len(self.model.mesh.volumes_from_surface.get(surface_id)) != 1:
                 continue
 
-            # surf_connect = self.model.mesh.get_connectivity_from_surface(surface_id)
-
             rows = self.model.mesh.faces_connectivity[:, 1] == surface_id
 
             surface_elements_connectivities = self.model.mesh.faces_connectivity[rows, :]
             surface_elements_normals = self.model.mesh.get_element_face_normal_batched(surface_elements_connectivities)
 
             element_2d.reorder_connect(surface_elements_connectivities[:, 4:])
-            acoustic_loads += element_2d.acoustic_pressure_load(surface_elements_normals.reshape(-1, 3, 1), nodal_solution)
+            acoustic_loads += element_2d.acoustic_pressure_load(nodal_solution)
 
             element_normals_data = {}
             element_center_coords = self.mesh.get_element2d_center_coordinates(surface_elements_connectivities)

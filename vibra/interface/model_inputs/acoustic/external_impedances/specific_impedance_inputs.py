@@ -1,4 +1,5 @@
 from collections import defaultdict
+from copy import deepcopy
 
 import numpy as np
 from PySide6.QtCore import QItemSelectionModel, QPoint, Qt
@@ -8,7 +9,7 @@ from PySide6.QtWidgets import QAbstractItemView, QLineEdit, QTreeWidgetItem
 from vibra import app
 from vibra.extensions import SUPPORTED_SPREADSHEET_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
 from vibra.interface import error_title
-from vibra.interface.common.common_interface import InputDataType, check_input_entries, update_analysis_setup_in_file
+from vibra.interface.common.common_interface import InputDataType, check_input_entries, update_analysis_setup_in_file, update_entities_selection
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.acoustic.definitions.enums import StandardTabType
@@ -218,12 +219,20 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
             return
 
         input_ids = self.lineEdit_selection_id.text()
-        surface_ids, error_data = self.mesh.check_selected_ids(input_ids, selection="surfaces", single_id=False)
+        surface_ids, error_data = self.model.check_selected_ids(
+            input_ids, 
+            "surfaces",
+            domain="acoustic",
+            )
 
         if error_data is not None:
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
             return True
+
+        app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
+        update_entities_selection(self.lineEdit_selection_id, "surfaces", surface_ids)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
         self.remove_conflicting_excitations(surface_ids)
 
@@ -428,9 +437,19 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
         if read._cancel:
             return
 
-        if read._continue:
-            self.properties._reset_property("specific_impedance")
-            self.actions_to_finalize()
+        if not read._continue:
+            return
+
+        for (property, surface_id), data in deepcopy(self.properties.surface_properties).items():
+            if property != "specific_impedance":
+                continue
+
+            if "anechoic_termination" in data:
+                continue
+
+            self.properties._remove_surface_property(property, surface_id)
+
+        self.actions_to_finalize()
 
     def actions_to_finalize(self, close_window: bool = False):
         self.load_model_info()

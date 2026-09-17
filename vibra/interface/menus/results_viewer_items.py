@@ -24,23 +24,27 @@ class ResultsViewerItems(CommonMenuItems):
         self._create_items()
         self._create_connections()
 
+    @property
+    def analysis_id(self):
+        return app().project.model.analysis_id
+
     def _create_items(self):
 
         ## Structural results items
         self.item_top_results_viewer_structural = self.add_top_item("Results Viewer - Structural")
-        self.item_child_structural_mode_shapes = self.add_item("Plot Structural Mode Shapes")
-        self.item_child_structural_results_fields = self.add_item("Structural Results Fields")
-        self.item_child_structural_frequency_response = self.add_item("Plot Structural Frequency Response")
+        self.item_child_structural_mode_shapes = self.add_item("Structural Mode Shapes")
+        self.item_child_displacement_field = self.add_item("Displacement Field")
+        self.item_child_structural_frequency_response = self.add_item("Structural Frequency Response")
+        self.item_child_stress_field = self.add_item("Stress Field")
+        self.item_child_stress_frequency_response = self.add_item("Plot Stress Frequency Response")
         # self.item_child_reaction_frequency_response = self.add_item("Plot Reactions Frequency Response")
-        # self.item_child_stress_field = self.add_item("Plot Stress Field")
-        # self.item_child_stress_frequency_response = self.add_item("Plot Stress Frequency Response")
 
         ## Acoustic results items
         self.item_top_results_viewer_acoustic = self.add_top_item("Results Viewer - Acoustic")
         self.item_child_acoustic_mode_shapes = self.add_item("Acoustic Mode Shapes")
         self.item_child_acoustic_pressure_field = self.add_item("Acoustic Pressure Field")
-        self.item_child_acoustic_pressure_waveform_2d_plot = self.add_item("Acoustic Pressure Waveform (2D PLot)")
-        self.item_child_acoustic_pressure_waveform_3d_plot = self.add_item("Acoustic Pressure Waveform (3D PLot)")
+        self.item_child_acoustic_pressure_waveform_2d_plot = self.add_item("Acoustic Pressure Waveform (2D Plot)")
+        self.item_child_acoustic_pressure_waveform_3d_plot = self.add_item("Acoustic Pressure Waveform (3D Plot)")
         self.item_child_acoustic_pressure_frequency_response = self.add_item("Acoustic Pressure Frequency Response")
         self.item_child_acoustic_pressure_frf = self.add_item("Acoustic Presssure FRF")
         self.item_child_acoustic_shaking_forces = self.add_item("Acoustic Shaking Forces")
@@ -89,18 +93,6 @@ class ResultsViewerItems(CommonMenuItems):
             if attr_value == qtree_widet_item:
                 return attr_name
 
-    def item_child_reaction_frequency_response_callback(self):
-        return
-        app().main_window.input_ui.plot_reaction_frequency_response()
-
-    def item_child_stress_field_callback(self):
-        return
-        app().main_window.input_ui.plot_stress_field()
-
-    def item_child_stress_frequency_response_callback(self):
-        return
-        app().main_window.input_ui.plot_stress_frequency_response()
-
     def modify_acoustic_results_viewer_items(self, key: bool):
         self.item_top_results_viewer_acoustic.setHidden(key)
         self.item_child_acoustic_mode_shapes.setDisabled(key)
@@ -117,11 +109,11 @@ class ResultsViewerItems(CommonMenuItems):
         self.item_child_acoustic_impedance.setDisabled(key)
         self.item_child_absorption_coefficient.setDisabled(key)
 
-        if AnalysisID(app().project.model.analysis_id).is_modal():
+        if AnalysisID(self.analysis_id).is_modal():
             self.item_child_acoustic_pressure_waveform_2d_plot.setHidden(True)
             self.item_child_acoustic_pressure_waveform_3d_plot.setHidden(True)
 
-        elif app().project.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
+        elif self.analysis_id in [AnalysisID.ACOUSTIC_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
             # only allow waveform plots for equally distributed solution steps
             # with a compressor as the main excitation source
             cond_A = self.project.model.has_spectral_content_been_modified()
@@ -131,11 +123,12 @@ class ResultsViewerItems(CommonMenuItems):
 
     def modify_structural_results_viewer_items(self, key: bool):
         self.item_top_results_viewer_structural.setHidden(key)
-        self.item_child_structural_results_fields.setDisabled(key)
-        self.item_child_structural_frequency_response.setDisabled(key)
-        # self.item_child_reaction_frequency_response.setDisabled(key)
-        # self.item_child_stress_field.setDisabled(key)
         self.item_child_structural_mode_shapes.setDisabled(key)
+        self.item_child_displacement_field.setDisabled(key)
+        self.item_child_structural_frequency_response.setDisabled(key)
+        self.item_child_stress_field.setDisabled(key)
+        self.item_child_stress_frequency_response.setDisabled(key)
+        # self.item_child_reaction_frequency_response.setDisabled(key)
 
     def update_structural_analysis_visibility_items(self):
         self.item_top_results_viewer_structural.setHidden(False)
@@ -156,7 +149,7 @@ class ResultsViewerItems(CommonMenuItems):
         self.modify_acoustic_results_viewer_items(True)
         self.modify_structural_results_viewer_items(True)
 
-        analysis_id = app().project.model.analysis_id
+        analysis_id = self.analysis_id
         if analysis_id == AnalysisID.NO_ANALYSIS:
             return
 
@@ -166,30 +159,23 @@ class ResultsViewerItems(CommonMenuItems):
         elif analysis_id.is_acoustic():
             self.update_acoustic_analysis_visibility_items()
 
-        elif analysis_id.is_coupled():
+        elif analysis_id.is_harmonic_coupled():
             self.update_coupled_analysis_visibility_items()
 
-        if analysis_id == AnalysisID.STRUCTURAL_HARMONIC:
+        if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
             self.item_child_structural_frequency_response.setDisabled(False)
-            self.item_child_structural_results_fields.setDisabled(False)
+            self.item_child_displacement_field.setDisabled(False)
+            self.item_child_stress_field.setDisabled(False)
+            self.item_child_stress_frequency_response.setDisabled(False)
             # self.item_child_reaction_frequency_response.setDisabled(False)
-            # self.item_child_stress_field.setDisabled(False)
-            # self.item_child_stress_frequency_response.setDisabled(False)
 
-        elif analysis_id == AnalysisID.STRUCTURAL_MODAL:
+        if analysis_id == AnalysisID.STRUCTURAL_MODAL:
             self.item_child_structural_mode_shapes.setDisabled(False)
 
-        elif analysis_id == AnalysisID.ACOUSTIC_MODAL:
+        if analysis_id == AnalysisID.ACOUSTIC_MODAL:
             self.item_child_acoustic_mode_shapes.setDisabled(False)
 
-        elif analysis_id in [AnalysisID.ACOUSTIC_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
-            if analysis_id == AnalysisID.COUPLED_HARMONIC:
-                self.item_child_structural_results_fields.setDisabled(False)
-                self.item_child_structural_frequency_response.setDisabled(False)
-                # self.item_child_stress_field.setDisabled(False)
-                # self.item_child_stress_frequency_response.setDisabled(False)
-                # self.item_child_reaction_frequency_response.setDisabled(False)
-
+        if analysis_id in [AnalysisID.ACOUSTIC_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
             self.item_child_acoustic_pressure_field.setDisabled(False)
             self.item_child_acoustic_pressure_frequency_response.setDisabled(False)
             self.item_child_acoustic_pressure_frf.setDisabled(False)
@@ -212,14 +198,14 @@ class ResultsViewerItems(CommonMenuItems):
 
     def update_allowable_pulsation_criteria_visibility_for_reciprocating_compressor(self, analysis_id: int):
         compressor_exists = False
-        if analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
+        if analysis_id in [AnalysisID.ACOUSTIC_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
             compressor_exists = app().project.model.is_the_property_present_in_model("reciprocating_compressor_excitation", "surfaces")
 
         self.item_child_allowable_pulsations_for_reciprocating_compressor.setHidden(not compressor_exists)
 
     def update_allowable_pulsation_criteria_visibility_screw_compressor(self, analysis_id: int):
         compressor_exists = False
-        if analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
+        if analysis_id in [AnalysisID.ACOUSTIC_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
             for (prop_label, *args), prop_data in app().project.model.properties.surface_properties.items():
                 if prop_label in ["compressor_excitation_spectrum", "compressor_excitation_waveform"]:
                     compressor_type = prop_data.get("compressor_type")
@@ -234,7 +220,7 @@ class ResultsViewerItems(CommonMenuItems):
         """Expands and collapses the Top Level Items on
         the menu after the solution is done.
         """
-        analysis_id = app().project.model.analysis_id
+        analysis_id = self.analysis_id
 
         if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.STRUCTURAL_MODAL]:
             self.expandItem(self.item_top_results_viewer_structural)
