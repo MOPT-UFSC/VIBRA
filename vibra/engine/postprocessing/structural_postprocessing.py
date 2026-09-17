@@ -135,13 +135,9 @@ class StructuralPostprocessing:
 
         """
 
-        t0 = perf_counter()
         avg_nodal_stresses = self.recover_nodal_averaged_structural_stresses()
         if avg_nodal_stresses is None:
             return (0, 0)
-
-        dt = perf_counter() - t0
-        print(f"Time to compute nodal stresses (get_max_min_values): {dt} s")
 
         # initialize the stress vector and convert to MPa
         data_complex = unit_factor * avg_nodal_stresses[:, stress_index, column].copy()
@@ -584,8 +580,6 @@ class StructuralPostprocessing:
         dt = perf_counter() - t0
         print(f"Time to compute nodal stresses: {dt} s")
 
-        t0 = perf_counter()
-
         # initialize the stress vector and convert to MPa
         stress_vector = avg_nodal_stresses[:, stress_type, column].copy() * unit_factor
 
@@ -602,15 +596,8 @@ class StructuralPostprocessing:
             case StressPlotType.NON_ABSOLUTE_ANIMATION:
                 stress_values = compute_shifted_values(stress_vector, phase_rad)
 
-        dt = perf_counter() - t0
-        print(f"Time to post-process the nodal stresses (A): {dt} s")
-
-        t0 = perf_counter()
         min_value, max_value = self.get_max_min_values_for_stress_data(column, round(unit_factor, 10), stress_type, data_type)
         symmetric_animation = not np.any(stress_vector.imag)
-        dt = perf_counter() - t0
-
-        print(f"Time to post-process the nodal stresses (B): {dt} s")
 
         return stress_values, min_value, max_value, symmetric_animation
 
@@ -631,8 +618,6 @@ class StructuralPostprocessing:
 
         dt = perf_counter() - t0
         print(f"Time to compute nodal stresses: {dt} s")
-
-        t0 = perf_counter()
 
         # evaluate the stresses in MPa at a specific time/phase (phase_rad = omega * t)
         stresses = unit_factor * compute_phase_shifted_values(avg_nodal_stresses[:, :, column], phase_rad)
@@ -686,18 +671,10 @@ class StructuralPostprocessing:
             case StressPlotType.NON_ABSOLUTE_ANIMATION:
                 stress_values = stress_vector.copy()
 
-        dt = perf_counter() - t0
-        print(f"Time to post-process the nodal stresses (A): {dt} s")
-
-        t0 = perf_counter()
-
         min_value, max_value = self.get_max_min_values_for_advanced_stress_data(tuple(stress_vector), data_type)
 
         # force the processing of all animation frames
         symmetric_animation = False
-
-        dt = perf_counter() - t0
-        print(f"Time to post-process the nodal stresses (B): {dt} s")
 
         return stress_values, min_value, max_value, symmetric_animation
 

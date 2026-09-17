@@ -20,6 +20,9 @@ class ModelDomainsProcessor:
 
         self.model = model
 
+        # use this attribute to control when logs are printed to the terminal
+        self.auxiliar_logs = False
+
         self.reset()
 
     def reset(self):
@@ -152,8 +155,10 @@ class ModelDomainsProcessor:
         for index, node_id in enumerate(structural_nodes):
             self.structural_nodes_mapping[node_id] = index
 
-        print(f"Number of acoustic nodes: {self.number_acoustic_nodes}")
-        print(f"Number of structural nodes: {self.number_structural_nodes}")
+        if self.auxiliar_logs:
+            print()
+            print(f"Number of acoustic nodes: {self.number_acoustic_nodes}")
+            print(f"Number of structural nodes: {self.number_structural_nodes}")
 
     def process_element_mappings_by_domain(self):
         """
@@ -180,12 +185,13 @@ class ModelDomainsProcessor:
         for index, element_id in enumerate(structural_elements):
             self.structural_elements_mapping[element_id] = index
 
-        print(f"Number of acoustic elements: {self.number_3d_acoustic_elements}")
-        print(f"Number of structural elements: {self.number_3d_structural_elements}")
+        if self.auxiliar_logs:
+            print(f"Number of acoustic elements: {self.number_3d_acoustic_elements}")
+            print(f"Number of structural elements: {self.number_3d_structural_elements}")
 
     def process_dof_by_domain(self):
         """
-        This method processes the DOF indices arrays of each domain.
+        This method processes the DOFs indices arrays of each domain.
         """
 
         if self.model.acoustic_element_3d is None:
@@ -216,9 +222,10 @@ class ModelDomainsProcessor:
         acoustic_dofs_indices = dof_act * nodes_act_seq + np.arange(dof_act) + self.acoustic_dofs_offset
         self.acoustic_dofs_indices = acoustic_dofs_indices.flatten()
 
-        print(f"Number of acoustic DOF: {self.total_act_dofs}")
-        print(f"Number of structural DOF: {self.total_str_dofs}")
-        print(f"Total number of DOF: {self.total_dof}")
+        if self.auxiliar_logs:
+            print(f"Number of acoustic DOFs: {self.total_act_dofs}")
+            print(f"Number of structural DOFs: {self.total_str_dofs}")
+            print(f"Total number of DOFs: {self.total_dof}")
 
         # TODO: to be removed after validation has been done
         # data = np.array([self.acoustic_nodes_mapping, self.structural_nodes_mapping]).T
@@ -262,36 +269,38 @@ class ModelDomainsProcessor:
         return dofs_offset
 
     def update_domains_mappings(self):
-        # t0 = perf_counter()
+        t0 = perf_counter()
         self.map_model_domains()
-        # dt1 = perf_counter() - t0
+        dt1 = perf_counter() - t0
 
-        # t0 = perf_counter()
+        t0 = perf_counter()
         self.map_fluid_structure_interfaces()
-        # dt2 = perf_counter() - t0
+        dt2 = perf_counter() - t0
 
-        # t0 = perf_counter()
+        t0 = perf_counter()
         self.map_nodes_and_elements_by_domain()
-        # dt3 = perf_counter() - t0
+        dt3 = perf_counter() - t0
 
-        # t0 = perf_counter()
+        t0 = perf_counter()
         self.process_nodes_mappings_by_domain()
-        # dt4 = perf_counter() - t0
+        dt4 = perf_counter() - t0
 
-        # t0 = perf_counter()
+        t0 = perf_counter()
         self.process_element_mappings_by_domain()
-        # dt5 = perf_counter() - t0
+        dt5 = perf_counter() - t0
 
-        # t0 = perf_counter()
+        t0 = perf_counter()
         self.process_dof_by_domain()
-        # dt6 = perf_counter() - t0
+        dt6 = perf_counter() - t0
 
-        # print(f"Elapsed time to 'map_model_domains': {dt1 : .6f} s")
-        # print(f"Elapsed time to 'map_fluid_structure_interfaces': {dt2 : .6f} s")
-        # print(f"Elapsed time to 'map_nodes_and_elements_by_domain': {dt3 : .6f} s")
-        # print(f"Elapsed time to 'process_nodes_mappings_by_domain': {dt4 : .6f} s")
-        # print(f"Elapsed time to 'process_element_mappings_by_domain': {dt5 : .6f} s")
-        # print(f"Elapsed time 'process_dof_by_domain': {dt6 : .6f} s")
+        if self.auxiliar_logs:
+            print()
+            print(f"Elapsed time to 'map_model_domains': {dt1 : .6f} s")
+            print(f"Elapsed time to 'map_fluid_structure_interfaces': {dt2 : .6f} s")
+            print(f"Elapsed time to 'map_nodes_and_elements_by_domain': {dt3 : .6f} s")
+            print(f"Elapsed time to 'process_nodes_mappings_by_domain': {dt4 : .6f} s")
+            print(f"Elapsed time to 'process_element_mappings_by_domain': {dt5 : .6f} s")
+            print(f"Elapsed time 'process_dof_by_domain': {dt6 : .6f} s")
 
     @cache
     def get_entities_mapping(self, volume_ids: tuple[int]) -> dict:
