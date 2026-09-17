@@ -829,8 +829,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             return
 
         match self.plot_setup:
-            case DisplacementFieldPlotSetupFrequency() | PressureFieldPlotSetupFrequency():
-                text += analysis_info_text(self.plot_setup.index)
+            case DisplacementFieldPlotSetupFrequency() | PressureFieldPlotSetupFrequency() | StressFieldPlotSetupFrequency():
+                text += analysis_info_text(self.plot_setup)
 
             case AllowablePulsationForScrewCompressorsPlotSetup():
                 text += allowable_pulsation_for_screw_compressor_info_text(

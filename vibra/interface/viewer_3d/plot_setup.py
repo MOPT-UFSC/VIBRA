@@ -47,6 +47,31 @@ class StressType(IntEnum):
     MAXIMUM_PRINCIPAL_STRESS_2 = 9
     MAXIMUM_PRINCIPAL_STRESS_3 = 10
 
+    def get_stress_label(self):
+        match self:
+            case self.NORMAL_STRESS_X:
+                return "Normal stress x"
+            case self.NORMAL_STRESS_Y:
+                return "Normal stress y"
+            case self.NORMAL_STRESS_Z:
+                return "Normal stress z"
+            case self.SHEAR_STRESS_XY:
+                return "Shear stress xy"
+            case self.SHEAR_STRESS_XZ:
+                return "Shear stress xz"
+            case self.SHEAR_STRESS_YZ:
+                return "Shear stress yz"
+            case self.VON_MISES_STRESS:
+                return "von Mises stress"
+            case self.TRESCA_STRESS:
+                return "Tresca stress"
+            case self.MAXIMUM_PRINCIPAL_STRESS_1:
+                return "Max. principal stress 1"
+            case self.MAXIMUM_PRINCIPAL_STRESS_2:
+                return "Max. principal stress 2"
+            case self.MAXIMUM_PRINCIPAL_STRESS_3:
+                return "Max. principal stress 3"
+
     def is_normal_or_shear_stress(self):
         return self in [
             StressType.NORMAL_STRESS_X,
