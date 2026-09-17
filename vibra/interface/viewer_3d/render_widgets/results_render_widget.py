@@ -45,9 +45,13 @@ class AnimationCache:
     def __init__(self) -> None:
         self.color_arrays: dict[int, np.ndarray] = {}
         self.position_arrays: dict[int, np.ndarray | None] = {}
+        self.min_colors: float = 0
+        self.max_colors: float = 0
         self.lock = Lock()
 
     def add_frame(self, frame: int, colors: np.ndarray, positions: np.ndarray | None):
+        self.min_colors = min(self.min_colors, colors.min())
+        self.max_colors = max(self.max_colors, colors.max())
         self.color_arrays[frame] = colors
         if positions is not None:
             self.position_arrays[frame] = positions
@@ -58,6 +62,8 @@ class AnimationCache:
         return self.color_arrays[frame], self.position_arrays.get(frame)
 
     def clear(self):
+        self.min_colors = 0
+        self.max_colors = 0
         self.color_arrays.clear()
         self.position_arrays.clear()
 
@@ -664,6 +670,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             positions_array = vtk_to_numpy(self.analysis_actor.data.GetPoints().GetData())
             colors_array = vtk_to_numpy(self.analysis_actor.data.GetPointData().GetScalars())
             colors_array[:], positions_array[:] = cached_frame
+            self.analysis_actor.color_table.SetTableRange(self._animation_cache.min_colors, self._animation_cache.max_colors)
             self.analysis_actor.data.GetPoints().Modified()
             self.analysis_actor.data.Modified()
             # self.analysis_actor.data.GetPointData().DeepCopy(point_data)
