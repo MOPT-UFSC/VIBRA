@@ -56,10 +56,8 @@ class AnimationCache:
         if positions is not None:
             self.position_arrays[frame] = positions
 
-    def get_frame(self, frame: int) -> tuple[np.ndarray, np.ndarray | None] | None:
-        if frame not in self.color_arrays:
-            return None
-        return self.color_arrays[frame], self.position_arrays.get(frame)
+    def get_frame(self, frame: int) -> tuple[np.ndarray | None, np.ndarray | None]:
+        return self.color_arrays.get(frame), self.position_arrays.get(frame)
 
     def clear(self):
         self.min_colors = 0
@@ -632,13 +630,15 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         assert self.analysis_actor is not None
         assert self.analysis_actor.data is not None
 
-        pos = vtk_to_numpy(self.analysis_actor.data.GetPoints().GetData())
-        colors = vtk_to_numpy(self.analysis_actor.data.GetPointData().GetScalars())
-        self._animation_cache.add_frame(frame, colors.copy(), pos.copy())
-
+        pos = None
+        if isinstance(self.plot_setup, StructuralPlotSetups):
+            pos = vtk_to_numpy(self.analysis_actor.data.GetPoints().GetData()).copy()
+        colors = vtk_to_numpy(self.analysis_actor.data.GetPointData().GetScalars()).copy()
+            
+        self._animation_cache.add_frame(frame, colors, pos)
         if self.is_animation_symetric:
             mirrored_frame = self._animation_total_frames - frame - 1
-            self._animation_cache.add_frame(mirrored_frame, colors.copy(), pos.copy())
+            self._animation_cache.add_frame(mirrored_frame, colors, pos)
 
     def start_animation(self, *args, **kwargs):
         super().start_animation(*args, **kwargs)
@@ -661,26 +661,32 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if self._animation_cache.lock.locked():
             return
 
+        if self.analysis_actor is None:
+            return
+
+        if self.analysis_actor.data is None:
+            return
+
         if not self._animation_cache:
             LoadingWindow(self.cache_animation_frames).run()
 
-        cached_frame = self._animation_cache.get_frame(frame)
-        if cached_frame is not None and cached_frame[1] is not None:
-            logging.info(f"Rendering animation frame [{frame}/{self._animation_total_frames}]")
-            positions_array = vtk_to_numpy(self.analysis_actor.data.GetPoints().GetData())
+        cached_color, cached_pos = self._animation_cache.get_frame(frame)
+
+        if cached_color is not None:
             colors_array = vtk_to_numpy(self.analysis_actor.data.GetPointData().GetScalars())
-            colors_array[:], positions_array[:] = cached_frame
-            self.analysis_actor.color_table.SetTableRange(self._animation_cache.min_colors, self._animation_cache.max_colors)
+            colors_array[:] = cached_color
+            self.analysis_actor.data.GetPointData().Modified()
+            self.analysis_actor.color_table.SetTableRange(
+                self._animation_cache.min_colors,
+                self._animation_cache.max_colors,
+            )
+
+        if cached_pos is not None:
+            positions_array = vtk_to_numpy(self.analysis_actor.data.GetPoints().GetData())
+            positions_array[:] = cached_pos
             self.analysis_actor.data.GetPoints().Modified()
-            self.analysis_actor.data.Modified()
-            # self.analysis_actor.data.GetPointData().DeepCopy(point_data)
-            # self.analysis_actor.data.GetPoints().DeepCopy(point_position)
-            self.update()
-        else:
-            # It will only enter here if something wrong happened
-            # in the function that caches the frames
-            logging.warning(f"Cache miss on update_animation function for frame {frame}")
-            self.cache_frame(frame)
+
+        self.update()
 
     def set_analysis_actors_transparency(self, transparency):
         if not self.actors_exists():
