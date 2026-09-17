@@ -44,6 +44,24 @@ class Hexahedron20(Element3D):
             }
 
 
+    @property
+    def midside_nodes_indices(self):
+        return np.array([
+            [8, 0, 1],      # Q -> (I, J)
+            [9, 1, 2],      # R -> (J, K)
+            [10, 2, 3],     # S -> (K, L)
+            [11, 3, 4],     # T -> (L, I)
+            [12, 4, 5],     # U -> (M, N)
+            [13, 5, 6],     # V -> (N, O)
+            [14, 6, 7],     # W -> (O, P)
+            [15, 7, 4],     # X -> (P, M)
+            [16, 4, 0],     # Y -> (M, I)
+            [17, 5, 1],     # Z -> (N, J)
+            [18, 6, 2],     # A -> (O, K)
+            [19, 7, 3],     # B -> (P, L)
+        ], dtype=int)
+
+
     def define_integration_points(self, integration_points: int = 27):
         """ 
         This method defines the integration points and their

@@ -16,10 +16,11 @@ from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.ui_generated.plots.general.animation_widget_ui import AnimationWidget_UI
 from vibra.interface.viewer_3d.plot_setup import (
     AllowablePulsationForScrewCompressorsPlotSetup,
-    FrequencyDisplacementPlotSetup,
-    FrequencyPressurePlotSetup,
+    DisplacementFieldPlotSetupFrequency,
+    PressureFieldPlotSetupFrequency,
     PlotSetup,
-    TransientPressurePlotSetup,
+    StressFieldPlotSetupFrequency,
+    PressureFieldPlotSetupTime,
 )
 
 
@@ -216,12 +217,12 @@ class AnimationWidget(AnimationWidget_UI):
         plot_setup = app().main_window.results_widget.plot_setup
 
         match plot_setup:
-            case FrequencyPressurePlotSetup():
+            case PressureFieldPlotSetupFrequency():
                 plot_setup.phase = self.phase_in_radians
-            case FrequencyDisplacementPlotSetup():
+            case DisplacementFieldPlotSetupFrequency() | StressFieldPlotSetupFrequency():
                 plot_setup.phase = self.phase_in_radians
                 plot_setup.magnification_factor = self.magnification_factor
-            case TransientPressurePlotSetup():
+            case PressureFieldPlotSetupTime():
                 plot_setup.time_index = self.time_index
             case AllowablePulsationForScrewCompressorsPlotSetup():
                 pass    
@@ -238,7 +239,7 @@ class AnimationWidget(AnimationWidget_UI):
         self.phase_slider.setValue(0)
 
         # update labels
-        if isinstance(plot_setup, TransientPressurePlotSetup):
+        if isinstance(plot_setup, PressureFieldPlotSetupTime):
             self.update_time_frame_label()
         else:
             self.update_degree_label()

@@ -466,7 +466,7 @@ class StructuralHexahedron4(Structural3DElement, Hexahedron8):
 
         """
         # get constitutive law matrix D and the material's density
-        D, rho = self.get_constitutive_model(material, model_type="linear-isotropic")
+        D, rho = self.get_constitutive_model(material.identifier, model_type="linear-isotropic")
 
         # process the determinant of Jacobian and the B matrix
         detJAC, B = self.process_detJAC_and_B_matrix(element_id)
@@ -624,49 +624,31 @@ class StructuralHexahedron4(Structural3DElement, Hexahedron8):
     def process_stresses_at_integration_points(
         self,
         element_id : int,
-        nodal_solution : np.ndarray | None = None,
-        solution: np.ndarray | None = None,
         element_averaged: bool = False,
-        **kwargs
+        extrapolate: bool = False,
         ):
 
-        node_ids = kwargs.get("node_ids")
+        node_ids = self.connectivities[element_id, :]
+        indices = self.model.get_dof_indices_from_nodes(node_ids, "structural")
 
-        if node_ids is None:
-            node_ids = self.connectivities[element_id, :]
+        # define the element's solution matrix
+        Ue = self.model.solution.structural_solution[indices.flatten(), :]
 
-        if isinstance(nodal_solution, np.ndarray):
-            Ue = nodal_solution
+        # get the material ID of the element
+        material = self.get_material(self.model.mesh.solids_connectivity[element_id, 1])
 
-        elif isinstance(solution, np.ndarray):
-            indices = node_ids.reshape(-1, 1) * self.dof_per_node + self.local_dof
-            Ue = solution[indices.flatten(), :]    
-
-        else:
-            return 0.
-
-        if self.connectivities is None:
-            self.reorder_connect()
-
-        # get the volume ID from element
-        vol_id = self.model.mesh.solids_connectivity[element_id, 1]
-
-        # get the material from element
-        material = self.model.properties._get_property("material", volume=vol_id)
-        if not isinstance(material, Material):
-            return 0.
-
-        D, _ = self.get_constitutive_model(material, model_type="linear-isotropic")
+        # constitutive material law
+        D, _ = self.get_constitutive_model(material.identifier, model_type="linear-isotropic")
 
         # get data to compute the stress (with or without ESF)
         B, Ue = self.get_data_to_compute_stresses(element_id, Ue, D)
 
-        # initialize the element stresses matrix
-        element_stresses = np.zeros((6, self.nint, Ue.shape[1]), dtype=complex)
-
         # calculate the nodal stress tensor
-        for i in range(self.nint):
-            element_stresses[:, i, :] = D @ (B[i, :, :] @ Ue)
+        element_stresses = D @ (B @ Ue)
+
+        if extrapolate:
+            extrapolated_stresses = self.phi_inv @ element_stresses.transpose(1, 0, 2)
+            return extrapolated_stresses.transpose(1, 0, 2)
 
         if element_averaged:
             return np.average(element_stresses, axis=1)

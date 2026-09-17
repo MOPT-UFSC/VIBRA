@@ -115,11 +115,32 @@ class Project:
         self.project_paths.clear_data()
         self.mark_project_as_modified()
 
+    def clear_caches(self):
+
+        # clears the acoustic domain-related caches
+        acoustic_postprocessing = self.get_acoustic_postprocessing()
+        if isinstance(acoustic_postprocessing, AcousticPostprocessing):
+            acoustic_postprocessing.get_acoustic_waveforms_minimum_and_maximum_values.cache_clear()
+            acoustic_postprocessing.get_min_max_values_of_pressures.cache_clear()
+            acoustic_postprocessing.compute_allowable_pulsation_field_for_screw_compressor.cache_clear()
+            acoustic_postprocessing.compute_multiple_ifft.cache_clear()
+
+        # clears the structural domain-related caches
+        structural_postprocessing = self.get_structural_postprocessing()
+        if isinstance(structural_postprocessing, StructuralPostprocessing):
+            structural_postprocessing.get_max_min_values_for_advanced_stress_data.cache_clear()
+            structural_postprocessing.get_max_min_values_for_stress_data.cache_clear()
+            structural_postprocessing.get_max_min_values_for_displacements_data.cache_clear()
+            structural_postprocessing.recover_nodal_averaged_structural_stresses.cache_clear()
+
     def run_analysis(self, is_resume: bool = False, print_log: bool = False):
         """
         It performs the solution of the currently configured model.
         It might raise errors if the analysis is not propperly configured.
         """
+        print("run_analysis")
+        self.clear_caches()
+
         match self.model.analysis_id:
             case AnalysisID.STRUCTURAL_MODAL:
                 return self.solve_structural_modal_analysis(is_resume=is_resume, print_log=print_log)
@@ -454,6 +475,7 @@ class Project:
         return self.model.solution
 
     def solve_coupled_harmonic_analysis(self, is_resume: bool = False, print_log: bool = False) -> HarmonicSolution:
+        print_log = True
         logging.info("Building the acoustic harmonic problem...")
         self.model.acoustic_solution = self.solve_acoustic_harmonic_analysis(is_resume=is_resume, print_log=print_log)
 

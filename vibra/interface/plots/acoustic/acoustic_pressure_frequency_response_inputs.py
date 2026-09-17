@@ -11,7 +11,7 @@ from vibra.interface.common.common_interface import update_entities_selection
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
-from vibra.interface.numeric_checks.unit_utilities import convert_length_unit, units_abreviations
+from vibra.interface.numeric_checks.unit_utilities import convert_length_unit, convert_pressure_unit, units_abreviations
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
 from vibra.interface.ui_generated.plots.acoustic.acoustic_pressure_frequency_response_inputs_ui import AcousticPressureFrequencyResponseInputs_UI
 
@@ -73,7 +73,7 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
     def _initialize(self):
         self.exporter = None
         self.plotter = None
-        self.unit_label = "Pa"
+        self.model_results = {}
         self.selection_types = ["surfaces", "lines", "points", "nodes"]
 
     def _config_widgets(self):
@@ -270,22 +270,22 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
 
     def compute_pipe_cutoff_frequency_callback(self):
         if self.comboBox_cutoff_frequency.currentText() == "":
-            return None
+            return
         
         if not self.map_curvatures_to_fluid:
-            return None
+            return
         
         key = float(self.comboBox_cutoff_frequency.currentText())
         data = self.map_curvatures_to_fluid.get(key)
         if data is None:
-            return None
+            return
 
         d_in, fluid = data
         if not isinstance(fluid, Fluid):
-            return None
+            return
 
         if d_in == 0:
-            return None
+            return
 
         # speed of sound in m/s
         Co = fluid.speed_of_sound
@@ -298,11 +298,13 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
 
     def join_model_data(self):
 
+        self.model_results.clear()
+
         index = self.comboBox_selector_filter.currentIndex()
         selection_type = self.selection_types[index][:-1]
 
-        self.model_results = dict()
         self.title = "Acoustic frequency response"
+        self.process_units_data()
 
         for i, selected_id in enumerate(self.selected_ids):
 
@@ -315,16 +317,20 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
 
             self.model_results[key] = { 
                 "x_data" : self.frequencies,
-                "y_data" : y_data,
+                "y_data" : self.unit_factor * y_data,
                 "x_label" : "Frequency [Hz]",
                 "y_label" : "Acoustic pressure",
                 "title" : self.title,
                 "data_type" : "acoustic pressure",
                 "legend" : legend_label,
-                "unit" : self.unit_label,
+                "unit" : self.pressure_units,
                 "color" : get_color(i),
                 "linestyle" : "-",
                 }
+
+    def process_units_data(self) -> str:
+        self.pressure_units = self.comboBox_pressure_units.currentText()
+        self.unit_factor = convert_pressure_unit(1, "Pa", self.pressure_units)
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:

@@ -17,12 +17,14 @@ from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.viewer_3d.plot_setup import (
     AcousticPlotSetups,
     AllowablePulsationForScrewCompressorsPlotSetup,
-    FrequencyDisplacementPlotSetup,
-    FrequencyPressurePlotSetup,
+    DisplacementFieldPlotSetupFrequency,
+    PressureFieldPlotSetupFrequency,
     NoPlotSetup,
     PlotSetup,
+    StressFieldPlotSetupFrequency,
+    StressType,
     StructuralPlotSetups,
-    TransientPressurePlotSetup,
+    PressureFieldPlotSetupTime,
 )
 from vibra.interface.viewer_3d.render_tools import RenderTool, SelectionTool
 from vibra.utils.interface_utils import VisualizationFilter
@@ -232,14 +234,17 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             case NoPlotSetup():
                 self._plot_empty()
 
-            case FrequencyPressurePlotSetup():
-                self._plot_frequency_pressure(animation_frame, clear_cache)
+            case PressureFieldPlotSetupFrequency():
+                self._plot_pressure_field_frequency_domain(animation_frame, clear_cache)
 
-            case FrequencyDisplacementPlotSetup():
-                self._plot_frequency_displacement(animation_frame, clear_cache)
+            case DisplacementFieldPlotSetupFrequency():
+                self._plot_displacement_field_frequency_domain(animation_frame, clear_cache)
 
-            case TransientPressurePlotSetup():
-                self._plot_transient_pressure(animation_frame, clear_cache)
+            case StressFieldPlotSetupFrequency():
+                self._plot_stress_field_frequency_domain(animation_frame, clear_cache)
+
+            case PressureFieldPlotSetupTime():
+                self._plot_pressure_field_time_domain(animation_frame, clear_cache)
 
             case AllowablePulsationForScrewCompressorsPlotSetup():
                 self._plot_allowable_pulsation_for_screw_compressor(clear_cache)
@@ -250,12 +255,12 @@ class ResultsRenderWidget(AnimatedRenderWidget):
     def _plot_empty(self):
         assert isinstance(self.plot_setup, NoPlotSetup)
 
-    def _plot_frequency_pressure(
+    def _plot_pressure_field_frequency_domain(
         self,
         animation_frame: Optional[int],
         clear_cache: bool = True,
     ):
-        assert isinstance(self.plot_setup, FrequencyPressurePlotSetup)
+        assert isinstance(self.plot_setup, PressureFieldPlotSetupFrequency)
 
         postprocessing = app().project.get_acoustic_postprocessing()
         assert isinstance(postprocessing, AcousticPostprocessing)
@@ -272,6 +277,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.plot_setup.index,
             phase,
             self.plot_setup.plot_type,
+            unit_factor=self.plot_setup.unit_factor,
             is_modal=analysis_id.is_modal(),
         )
 
@@ -303,12 +309,12 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.update()
 
-    def _plot_frequency_displacement(
+    def _plot_displacement_field_frequency_domain(
         self,
         animation_frame: Optional[int] = None,
         clear_cache: bool = True,
     ):
-        assert isinstance(self.plot_setup, FrequencyDisplacementPlotSetup)
+        assert isinstance(self.plot_setup, DisplacementFieldPlotSetupFrequency | StressFieldPlotSetupFrequency)
 
         postprocessing = app().project.get_structural_postprocessing()
         assert isinstance(postprocessing, StructuralPostprocessing)
@@ -326,7 +332,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             phase,
             self.plot_setup.plot_type,
             n_diff=self.plot_setup.n_diff,
-            unit_scale_factor=self.plot_setup.unit_scale_factor,
+            unit_factor=self.plot_setup.unit_factor,
             is_modal=analysis_id.is_modal(),
         )
 
@@ -367,13 +373,90 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.update()
 
-    def _plot_transient_pressure(
+    def _plot_stress_field_frequency_domain(
+        self,
+        animation_frame: Optional[int] = None,
+        clear_cache: bool = True,
+    ):
+        assert isinstance(self.plot_setup, StressFieldPlotSetupFrequency)
+
+        postprocessing = app().project.get_structural_postprocessing()
+        assert isinstance(postprocessing, StructuralPostprocessing)
+
+        analysis_id = app().project.model.analysis_id
+        assert analysis_id.is_structural() or analysis_id.is_coupled()
+
+        if animation_frame is None:
+            phase = self.plot_setup.phase
+        else:
+            phase = self._interpolate_phase(animation_frame)
+
+        displacements, max_disp = postprocessing.compute_structural_response_field_for_stress_plot(
+            self.plot_setup.index,
+            phase,
+            self.plot_setup.plot_type,
+            n_diff=self.plot_setup.n_diff,
+            is_modal=analysis_id.is_modal(),
+        )
+
+        if StressType(self.plot_setup.stress_type).is_normal_or_shear_stress():
+            stress_data = postprocessing.compute_structural_stresses_field(
+                self.plot_setup.index,
+                phase,
+                self.plot_setup.stress_type,
+                self.plot_setup.plot_type,
+                unit_factor=self.plot_setup.unit_factor,
+            )
+
+        else:
+            stress_data = postprocessing.compute_advanced_structural_stresses_field(
+                self.plot_setup.index,
+                phase,
+                self.plot_setup.stress_type,
+                self.plot_setup.plot_type,
+                unit_factor=self.plot_setup.unit_factor,
+            )
+
+        color_scalars, self.min_value, self.max_value, self.is_animation_symetric = stress_data
+
+        min_value = self.min_value
+        max_value = self.max_value
+
+        if self.user_min_value is not None:
+            min_value = self.user_min_value
+
+        if self.user_max_value is not None:
+            max_value = self.user_max_value
+
+        max_value = max_value if max_value != 0 else 1.0
+        magnification_factor = self.plot_setup.magnification_factor
+
+        # filter structural nodes
+        model = postprocessing.model
+        structural_nodes = model.domains_processor.nodes_of_domain.get("structural")
+
+        deformed_coords = model.mesh.nodal_coordinates[:, 1:].copy()
+        deformed_coords[structural_nodes, :] += (magnification_factor / (10 * max_disp)) * displacements
+
+        _color_scalars = np.zeros(len(model.mesh.nodal_coordinates), dtype=float)
+        _color_scalars[structural_nodes] = color_scalars
+
+        colormap = app().config.user_preferences.color_map
+
+        self.analysis_actor.apply_deformation(deformed_coords)
+        self.edges_actor.extract_data(self.analysis_actor.data)
+
+        self.analysis_actor.plot_color_bar(_color_scalars, min_value, max_value, colormap)
+        self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
+        self.update()
+
+    def _plot_pressure_field_time_domain(
         self,
         animation_frame: Optional[int] = None,
         clear_cache: bool = True,
     ):
 
-        assert isinstance(self.plot_setup, TransientPressurePlotSetup)
+        assert isinstance(self.plot_setup, PressureFieldPlotSetupTime)
 
         postprocessing = app().project.get_acoustic_postprocessing()
         assert isinstance(postprocessing, AcousticPostprocessing)
@@ -386,6 +469,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         data = postprocessing.compute_acoustic_transient_pressure_field(
             time_index,
             self.plot_setup.plot_type,
+            unit_factor=self.plot_setup.unit_factor,
             reduced_loop_time=self.plot_setup.reduced_loop_time,
         )
 
@@ -745,8 +829,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             return
 
         match self.plot_setup:
-            case FrequencyDisplacementPlotSetup() | FrequencyPressurePlotSetup():
-                text += analysis_info_text(self.plot_setup.index)
+            case DisplacementFieldPlotSetupFrequency() | PressureFieldPlotSetupFrequency() | StressFieldPlotSetupFrequency():
+                text += analysis_info_text(self.plot_setup)
 
             case AllowablePulsationForScrewCompressorsPlotSetup():
                 text += allowable_pulsation_for_screw_compressor_info_text(

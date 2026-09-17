@@ -1,4 +1,5 @@
 from enum import IntEnum
+from time import perf_counter
 
 import numpy as np
 from PySide6.QtCore import Qt
@@ -9,8 +10,12 @@ from vibra.engine.analysis_info import HarmonicAnalysisSetup
 from vibra.interface.common.common_interface import update_entities_selection
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.loading_window import LoadingWindow
+from vibra.interface.numeric_checks.unit_utilities import convert_stress_unit
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
-from vibra.interface.ui_generated.plots.structural.structural_frequency_response_inputs_ui import StructuralFrequencyResponseInputs_UI
+from vibra.interface.ui_generated.plots.structural.structural_stresses_frequency_response_inputs_ui import (
+    StructuralStressesFrequencyResponseInputs_UI,
+)
 
 
 class SelectionType(IntEnum):
@@ -20,7 +25,8 @@ class SelectionType(IntEnum):
     NODES = 3
 
 
-class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI):
+class StructuralStressesFrequencyResponseInputs(StructuralStressesFrequencyResponseInputs_UI):
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -49,6 +55,31 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
     def nodal_solution(self):
         return app().project.model.solution.structural_solution
 
+    @property
+    def nodal_averaged_stresses(self):
+        t0 = perf_counter()
+        nodal_averaged_stresses = self.structural_post.recover_nodal_averaged_structural_stresses()
+        dt = perf_counter() - t0
+        print(f"Time to compute all nodal stresses: {dt} s")
+        return nodal_averaged_stresses
+
+    @property
+    def structural_post(self):
+        return app().project.get_structural_postprocessing()
+
+    @property
+    def is_stress_data_cached(self):
+        cache_info = self.structural_post.recover_nodal_averaged_structural_stresses.cache_info()
+        return cache_info.currsize != 0
+
+    def _initialize(self):
+        self.selected_frequency_index = None
+
+    def set_frames_disabled(self, disabled: bool):
+        self.frame_selection_controls.setDisabled(disabled)
+        self.frame_plot.setDisabled(disabled)
+        self.pushButton_process_nodal_stresses.setEnabled(disabled)
+
     def showEvent(self, event):
         super().showEvent(event)
         self.selection_type_callback()
@@ -64,37 +95,24 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
         self.model_results = {}
         self.selection_types = ["surfaces", "lines", "points", "nodes"]
 
+        # update the widgets accessibility
+        if self.is_stress_data_cached:
+            self.process_stress_field()
+        else:
+            self.set_frames_disabled(True)
+
     def _create_connections(self):
 
         # QComboBox connection
         self.comboBox_selector_filter.currentIndexChanged.connect(self.selection_type_callback)
+        self.comboBox_stress_units.currentIndexChanged.connect(self.process_units_data)
 
         # QPushButton connection
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
+        self.pushButton_process_nodal_stresses.clicked.connect(self.process_stress_field)
 
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
-        self.update_combo_box_items_callback()
-
-    def update_combo_box_items_callback(self):
-
-        self.comboBox_structural_results.clear()
-
-        def dof_label(dof_index: str, n_int: int):
-            dof_type = "U" if dof_index < 3 else "\u03b8"
-            directions = ["x", "y", "z", "x", "y", "z"]
-            data_types = ["{}{}", "d{}{}/dt", "d²{}{}/dt²"]
-            # data_types = ["{}<sub>{}</sub>", "d{}<sub>{}</sub>/dt", "d²{}<sub>{}</sub>/dt²"]
-            return data_types[n_int].format(dof_type, directions[dof_index])
-
-        volume_exists = self.mesh.are_there_volumes_in_geometry()
-        n_dofs = 3 if volume_exists else 6
-
-        for j, results_label in enumerate(["Displacement", "Velocity", "Acceleration"]):
-            for dof_index in range(n_dofs):
-                _dof_label = dof_label(dof_index, j)
-                # self.comboBox_structural_results.setItemText(dof_index, f"{_dof_label}")
-                self.comboBox_structural_results.addItem(f"{results_label} {_dof_label}")
 
     def selection_type_callback(self):
         if self.comboBox_selector_filter.currentIndex() == SelectionType.NODES:
@@ -139,6 +157,20 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
 
         self.frequencies = self.model.frequencies
 
+    def process_stress_field(self):
+
+        # recover the averaged structural stresses
+        if not self.is_stress_data_cached:
+            def recover_stresses():
+                t0 = perf_counter()
+                self.structural_post.recover_nodal_averaged_structural_stresses()
+                dt = perf_counter() - t0
+                print(f"Time to compute all nodal stresses: {dt} s")
+
+            LoadingWindow(recover_stresses).run()
+
+        self.set_frames_disabled(False)
+
     def check_inputs(self):
 
         index = self.comboBox_selector_filter.currentIndex()
@@ -180,7 +212,7 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
         self.exporter = ExportModelResults()
         self.exporter._set_data_to_export(self.model_results)
 
-    def get_response(self, selection_type: str, selected_id: int, dof_index: int):
+    def get_response(self, selection_type: str, selected_id: int, stress_type_index: int):
 
         surface_ids = []
 
@@ -209,103 +241,74 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
             if isinstance(surf_data, dict):
                 if self.model.structural_element_2d is None:
                     self.model.set_structural_elements()
-                # dof_per_node = self.model.structural_element_2d.dof_per_node
 
             else:
                 if self.model.structural_element_3d is None:
                     self.model.set_structural_elements()
-                # dof_per_node = self.model.structural_element_3d.dof_per_node
 
         # process the structural dofs of the selected entities
-        gdof = self.model.get_dof_indices_from_nodes(nodes, "structural")
-        rows = gdof[:, dof_index]
+        _node_ids = self.model.get_mapped_nodes(nodes, "structural")
 
-        if isinstance(rows, int):
-            response = self.nodal_solution[rows,:]
+        if isinstance(_node_ids, int):
+            response = self.nodal_averaged_stresses[_node_ids, stress_type_index, :]
         else:
-            response = np.average(self.nodal_solution[rows,:], axis=0)
-
-        n_int = self.get_structure_data_index()
-
-        if n_int:
-            response *= (1j * 2 * np.pi * self.frequencies)**n_int
+            response = np.average(self.nodal_averaged_stresses[_node_ids, stress_type_index, :], axis=0)
 
         return response
 
     def join_model_data(self):
 
         self.model_results.clear()
-        dof_index = self.get_dof_index()
+        stress_index = self.comboBox_structural_stresses.currentIndex()
+
         index = self.comboBox_selector_filter.currentIndex()
         selection_type = self.selection_types[index][:-1]
 
-        self.y_label = self.get_ylabel()
-        self.unit = self.get_unit()
         self.title = f"Structural frequency response - {self.analysis_method}"
+        self.y_label = self.get_ylabel()
+        self.process_units_data()
 
         for i, selected_id in enumerate(self.selected_ids):
 
             key = (selection_type, (selected_id))
-            legend_label = f"Structural response {self.y_label.lower()} at {selection_type} [{selected_id}]"
-            y_data = self.get_response(selection_type, selected_id, dof_index)
+            legend_label = f"{self.y_label} at {selection_type} [{selected_id}]"
+            y_data = self.get_response(selection_type, selected_id, stress_index)
 
             self.model_results[key] = {
                 "x_data": self.frequencies,
-                "y_data": y_data,
+                "y_data": self.unit_factor * y_data,
                 "x_label": "Frequency [Hz]",
                 "y_label": self.y_label,
                 "title": self.title,
                 "data_type": self.y_label,
                 "legend": legend_label,
-                "unit": self.unit,
+                "unit": self.stress_units,
                 "color": get_color(i),
                 "linestyle": "-",
             }
 
-    def get_structure_data_index(self) -> int:
-        """
-        This method returns an integer corresponding to the structural data, where 0 represents 
-        displacement, 1 represents velocity, and 2 represents acceleration.
-        """
-        volume_exists = self.mesh.are_there_volumes_in_geometry()
-        n_dofs = 3 if volume_exists else 6
-        index = self.comboBox_structural_results.currentIndex()
-        return index // n_dofs
-
-    def get_dof_index(self) -> int:
-        """
-        This method returns an integer corresponding to the structural local dof index.
-        """
-        volume_exists = self.mesh.are_there_volumes_in_geometry()
-        n_dofs = 3 if volume_exists else 6
-        index = self.comboBox_structural_results.currentIndex()
-        return index % n_dofs
-
-    def get_unit(self) -> str:
-        index = self.get_structure_data_index()
-        dof_index = self.get_dof_index()
-
-        suffixes = ["", "/s", "/s²"]
-        unit_den = suffixes[index]
-        unit_num = "m" if dof_index < 3 else "rad"
-
-        return f"{unit_num}{unit_den}"
+    def process_units_data(self) -> str:
+        self.stress_units = self.comboBox_stress_units.currentText()
+        self.unit_factor = convert_stress_unit(1, "Pa", self.stress_units)
 
     def get_ylabel(self) -> str:
-        dof_index = self.get_dof_index()
-        index = self.get_structure_data_index()
 
-        directions = ["x", "y", "z", "x", "y", "z"]
-        dof_label = "u" if dof_index < 3 else "\u03b8"
-        data_types = ["${}_{}$", "$d{}_{}$/dt", "d²${}_{}$/dt²"]
+        # stress index
+        index = self.comboBox_structural_stresses.currentIndex()
 
-        text = data_types[index].format(dof_label, directions[dof_index])
-        results_label = self.comboBox_structural_results.currentText().split(" ")[0]
+        # stress subscript
+        subscript = ["x", "y", "z", "xy", "xz", "yz"]
 
-        if index and dof_index >= 3:
-            return f"Angular {results_label.lower()} {text}"
+        # stress Greek letter
+        stress_letter = "\u03c3" if index < 3 else "\u03c4"
 
-        return f"{results_label} {text}"
+        # stress label
+        stress_label = f"${stress_letter}" + r"_{" + subscript[index] + r"}$"
+
+        if index >= 3:
+            return f"Shear stress {stress_label}"
+
+        return f"Normal stress {stress_label}"
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:

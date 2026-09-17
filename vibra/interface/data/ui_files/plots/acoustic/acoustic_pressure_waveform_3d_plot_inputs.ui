@@ -174,7 +174,98 @@
              <property name="bottomMargin">
               <number>0</number>
              </property>
-             <item row="0" column="3">
+             <item row="3" column="4">
+              <widget class="QLabel" name="label_animation_time_unit">
+               <property name="minimumSize">
+                <size>
+                 <width>40</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>40</width>
+                 <height>16777215</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
+               <property name="text">
+                <string>[s]</string>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="0">
+              <spacer name="horizontalSpacer_14">
+               <property name="orientation">
+                <enum>Qt::Orientation::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item row="3" column="1">
+              <widget class="QLabel" name="label_animation_time">
+               <property name="minimumSize">
+                <size>
+                 <width>110</width>
+                 <height>26</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>110</width>
+                 <height>26</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
+               <property name="text">
+                <string>Animation time:</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QLabel" name="label_reduced_time">
+               <property name="minimumSize">
+                <size>
+                 <width>110</width>
+                 <height>26</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>110</width>
+                 <height>26</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
+               <property name="text">
+                <string>Reduced time:</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="3">
               <widget class="QComboBox" name="comboBox_plot_type">
                <property name="minimumSize">
                 <size>
@@ -205,7 +296,7 @@
                </item>
               </widget>
              </item>
-             <item row="1" column="3">
+             <item row="2" column="3">
               <widget class="QComboBox" name="comboBox_reduced_time">
                <property name="minimumSize">
                 <size>
@@ -241,74 +332,7 @@
                </item>
               </widget>
              </item>
-             <item row="2" column="5">
-              <spacer name="horizontalSpacer">
-               <property name="orientation">
-                <enum>Qt::Orientation::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item row="1" column="1">
-              <widget class="QLabel" name="label_reduced_time">
-               <property name="minimumSize">
-                <size>
-                 <width>110</width>
-                 <height>26</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>110</width>
-                 <height>26</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <pointsize>10</pointsize>
-                </font>
-               </property>
-               <property name="text">
-                <string>Reduced time:</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="1">
-              <widget class="QLabel" name="label_animation_time">
-               <property name="minimumSize">
-                <size>
-                 <width>110</width>
-                 <height>26</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>110</width>
-                 <height>26</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <pointsize>10</pointsize>
-                </font>
-               </property>
-               <property name="text">
-                <string>Animation time:</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item row="2" column="3">
+             <item row="3" column="3">
               <widget class="QLineEdit" name="lineEdit_animation_time">
                <property name="minimumSize">
                 <size>
@@ -329,31 +353,7 @@
                </property>
               </widget>
              </item>
-             <item row="2" column="4">
-              <widget class="QLabel" name="label_animation_time_unit">
-               <property name="minimumSize">
-                <size>
-                 <width>40</width>
-                 <height>0</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>40</width>
-                 <height>16777215</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <pointsize>10</pointsize>
-                </font>
-               </property>
-               <property name="text">
-                <string>[s]</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
+             <item row="1" column="1">
               <widget class="QLabel" name="label_color_scalling">
                <property name="minimumSize">
                 <size>
@@ -380,8 +380,8 @@
                </property>
               </widget>
              </item>
-             <item row="2" column="0">
-              <spacer name="horizontalSpacer_14">
+             <item row="3" column="5">
+              <spacer name="horizontalSpacer">
                <property name="orientation">
                 <enum>Qt::Orientation::Horizontal</enum>
                </property>
@@ -392,6 +392,106 @@
                 </size>
                </property>
               </spacer>
+             </item>
+             <item row="0" column="1">
+              <widget class="QLabel" name="label_linear_2">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>30</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>30</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                 <bold>false</bold>
+                </font>
+               </property>
+               <property name="text">
+                <string>Pressure units:</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="3">
+              <widget class="QComboBox" name="comboBox_pressure_units">
+               <property name="minimumSize">
+                <size>
+                 <width>160</width>
+                 <height>30</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>180</width>
+                 <height>30</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
+               <property name="styleSheet">
+                <string notr="true"/>
+               </property>
+               <property name="currentIndex">
+                <number>0</number>
+               </property>
+               <item>
+                <property name="text">
+                 <string>Pa</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>kPa</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>MPa</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>atm</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>bar</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>kgf/cm²</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>ksi</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>psi</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>N/m²</string>
+                </property>
+               </item>
+              </widget>
              </item>
             </layout>
            </widget>

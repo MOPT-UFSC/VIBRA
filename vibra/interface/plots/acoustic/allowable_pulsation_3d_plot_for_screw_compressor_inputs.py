@@ -96,11 +96,13 @@ class AllowablePulsations3DPlotForScrewCompressorInputs(AllowablePulsations3dPlo
         self.frame_color.adjustSize()
 
     def _create_connections(self):
+
         # QPushButton connection
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
+
         # QSpinBox connection
         self.comboBox_penalization_factor.currentIndexChanged.connect(self.penalize_allowable_pulsation_callback)
-        #
+
         self.results_display_widget.colormap_changed.connect(self.animation_widget.update_color_and_deformation)
         self.results_display_widget.pressure_value_changed.connect(self.animation_widget.update_color_and_deformation)
 

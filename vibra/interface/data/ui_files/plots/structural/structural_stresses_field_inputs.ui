@@ -6,12 +6,18 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>375</width>
-    <height>842</height>
+    <width>384</width>
+    <height>806</height>
    </rect>
   </property>
+  <property name="maximumSize">
+   <size>
+    <width>16777215</width>
+    <height>16777215</height>
+   </size>
+  </property>
   <property name="windowTitle">
-   <string>Plot pressure field</string>
+   <string>Plot stress field</string>
   </property>
   <layout class="QGridLayout" name="gridLayout_2">
    <property name="leftMargin">
@@ -37,13 +43,13 @@
      <property name="widgetResizable">
       <bool>true</bool>
      </property>
-     <widget class="QWidget" name="scrollAreaWidgetContents_2">
+     <widget class="QWidget" name="scrollAreaWidgetContents">
       <property name="geometry">
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>371</width>
-        <height>838</height>
+        <width>363</width>
+        <height>874</height>
        </rect>
       </property>
       <layout class="QGridLayout" name="gridLayout_6">
@@ -87,8 +93,86 @@
          </property>
         </widget>
        </item>
+       <item row="0" column="0">
+        <widget class="QFrame" name="frame_title">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>40</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>40</height>
+          </size>
+         </property>
+         <property name="frameShape">
+          <enum>QFrame::Shape::Box</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Shadow::Raised</enum>
+         </property>
+         <property name="lineWidth">
+          <number>1</number>
+         </property>
+         <layout class="QGridLayout" name="gridLayout">
+          <property name="leftMargin">
+           <number>10</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <property name="spacing">
+           <number>0</number>
+          </property>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_title">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>32</height>
+             </size>
+            </property>
+            <property name="font">
+             <font>
+              <family>MS Shell Dlg 2</family>
+              <pointsize>11</pointsize>
+              <italic>false</italic>
+              <bold>false</bold>
+             </font>
+            </property>
+            <property name="frameShape">
+             <enum>QFrame::Shape::NoFrame</enum>
+            </property>
+            <property name="frameShadow">
+             <enum>QFrame::Shadow::Raised</enum>
+            </property>
+            <property name="text">
+             <string>Plot the stress field</string>
+            </property>
+            <property name="textFormat">
+             <enum>Qt::TextFormat::AutoText</enum>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignmentFlag::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
        <item row="1" column="0">
-        <widget class="QFrame" name="frame_2">
+        <widget class="QFrame" name="frame_main">
          <property name="maximumSize">
           <size>
            <width>16777215</width>
@@ -129,8 +213,8 @@
           <property name="spacing">
            <number>4</number>
           </property>
-          <item row="2" column="0">
-           <widget class="QFrame" name="frame_3">
+          <item row="3" column="0">
+           <widget class="QFrame" name="frame_plot_type">
             <property name="minimumSize">
              <size>
               <width>0</width>
@@ -140,7 +224,7 @@
             <property name="maximumSize">
              <size>
               <width>16777215</width>
-              <height>40</height>
+              <height>16777215</height>
              </size>
             </property>
             <property name="frameShape">
@@ -149,36 +233,30 @@
             <property name="frameShadow">
              <enum>QFrame::Shadow::Raised</enum>
             </property>
-            <layout class="QGridLayout" name="gridLayout_9">
+            <layout class="QGridLayout" name="gridLayout_13">
              <property name="leftMargin">
               <number>0</number>
              </property>
              <property name="topMargin">
-              <number>0</number>
+              <number>6</number>
              </property>
              <property name="rightMargin">
               <number>0</number>
              </property>
              <property name="bottomMargin">
-              <number>0</number>
-             </property>
-             <property name="horizontalSpacing">
               <number>6</number>
              </property>
-             <property name="verticalSpacing">
-              <number>0</number>
-             </property>
              <item row="0" column="1">
-              <widget class="QLabel" name="label_color_scalling">
+              <widget class="QLabel" name="label">
                <property name="minimumSize">
                 <size>
-                 <width>90</width>
+                 <width>80</width>
                  <height>26</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
-                 <width>90</width>
+                 <width>80</width>
                  <height>26</height>
                 </size>
                </property>
@@ -196,7 +274,7 @@
               </widget>
              </item>
              <item row="0" column="3">
-              <spacer name="horizontalSpacer_2">
+              <spacer name="horizontalSpacer_3">
                <property name="orientation">
                 <enum>Qt::Orientation::Horizontal</enum>
                </property>
@@ -209,7 +287,7 @@
               </spacer>
              </item>
              <item row="0" column="0">
-              <spacer name="horizontalSpacer">
+              <spacer name="horizontalSpacer_4">
                <property name="orientation">
                 <enum>Qt::Orientation::Horizontal</enum>
                </property>
@@ -270,18 +348,18 @@
             </layout>
            </widget>
           </item>
-          <item row="0" column="0">
-           <widget class="QFrame" name="frame_selector">
+          <item row="1" column="0">
+           <widget class="QFrame" name="frame_frequency">
             <property name="minimumSize">
              <size>
               <width>0</width>
-              <height>72</height>
+              <height>0</height>
              </size>
             </property>
             <property name="maximumSize">
              <size>
               <width>16777215</width>
-              <height>72</height>
+              <height>16777215</height>
              </size>
             </property>
             <property name="frameShape">
@@ -295,21 +373,129 @@
               <number>0</number>
              </property>
              <property name="topMargin">
-              <number>0</number>
+              <number>6</number>
              </property>
              <property name="rightMargin">
               <number>0</number>
              </property>
              <property name="bottomMargin">
-              <number>0</number>
-             </property>
-             <property name="horizontalSpacing">
               <number>6</number>
              </property>
-             <property name="verticalSpacing">
-              <number>0</number>
+             <property name="spacing">
+              <number>6</number>
              </property>
-             <item row="0" column="3">
+             <item row="0" column="2">
+              <widget class="QComboBox" name="comboBox_plotting_results">
+               <property name="minimumSize">
+                <size>
+                 <width>180</width>
+                 <height>28</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>180</width>
+                 <height>28</height>
+                </size>
+               </property>
+               <property name="sizeIncrement">
+                <size>
+                 <width>0</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
+               <item>
+                <property name="text">
+                 <string>Normal stress x</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Normal stress y</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Normal stress z</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Shear stress xy</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Shear stress xz</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Shear stress yz</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>von Mises stress</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Tresca stress</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Max. principal stress 1</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Max. principal stress 2</string>
+                </property>
+               </item>
+               <item>
+                <property name="text">
+                 <string>Max. principal stress 3</string>
+                </property>
+               </item>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QLabel" name="label_7">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>28</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>28</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <family>MS Shell Dlg 2</family>
+                 <pointsize>10</pointsize>
+                 <bold>false</bold>
+                </font>
+               </property>
+               <property name="text">
+                <string>Plotting results:</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="3">
               <widget class="QLabel" name="label_5">
                <property name="minimumSize">
                 <size>
@@ -325,7 +511,9 @@
                </property>
                <property name="font">
                 <font>
+                 <family>MS Shell Dlg 2</family>
                  <pointsize>10</pointsize>
+                 <bold>false</bold>
                 </font>
                </property>
                <property name="text">
@@ -336,35 +524,8 @@
                </property>
               </widget>
              </item>
-             <item row="0" column="1">
-              <widget class="QLabel" name="label_4">
-               <property name="minimumSize">
-                <size>
-                 <width>0</width>
-                 <height>30</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>16777215</width>
-                 <height>30</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <pointsize>10</pointsize>
-                </font>
-               </property>
-               <property name="text">
-                <string>Frequency:</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="0">
-              <spacer name="horizontalSpacer_3">
+             <item row="2" column="0">
+              <spacer name="horizontalSpacer_2">
                <property name="orientation">
                 <enum>Qt::Orientation::Horizontal</enum>
                </property>
@@ -376,20 +537,7 @@
                </property>
               </spacer>
              </item>
-             <item row="0" column="4">
-              <spacer name="horizontalSpacer_4">
-               <property name="orientation">
-                <enum>Qt::Orientation::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item row="0" column="2">
+             <item row="2" column="2">
               <widget class="QLineEdit" name="lineEdit_selected_frequency">
                <property name="enabled">
                 <bool>false</bool>
@@ -425,18 +573,60 @@
                </property>
               </widget>
              </item>
-             <item row="1" column="1">
-              <widget class="QLabel" name="label_linear_2">
+             <item row="2" column="1">
+              <widget class="QLabel" name="label_4">
                <property name="minimumSize">
                 <size>
                  <width>0</width>
-                 <height>30</height>
+                 <height>28</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
                  <width>16777215</width>
-                 <height>30</height>
+                 <height>28</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <family>MS Shell Dlg 2</family>
+                 <pointsize>10</pointsize>
+                 <bold>false</bold>
+                </font>
+               </property>
+               <property name="text">
+                <string>Frequency:</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="4">
+              <spacer name="horizontalSpacer">
+               <property name="orientation">
+                <enum>Qt::Orientation::Horizontal</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>40</width>
+                 <height>20</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+             <item row="1" column="1">
+              <widget class="QLabel" name="label_linear_2">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>28</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>28</height>
                 </size>
                </property>
                <property name="font">
@@ -446,7 +636,7 @@
                 </font>
                </property>
                <property name="text">
-                <string>Pressure units:</string>
+                <string>Stress units:</string>
                </property>
                <property name="alignment">
                 <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
@@ -454,10 +644,10 @@
               </widget>
              </item>
              <item row="1" column="2">
-              <widget class="QComboBox" name="comboBox_pressure_units">
+              <widget class="QComboBox" name="comboBox_stress_units">
                <property name="minimumSize">
                 <size>
-                 <width>160</width>
+                 <width>180</width>
                  <height>30</height>
                 </size>
                </property>
@@ -480,7 +670,7 @@
                </property>
                <item>
                 <property name="text">
-                 <string>Pa</string>
+                 <string>MPa</string>
                 </property>
                </item>
                <item>
@@ -490,22 +680,7 @@
                </item>
                <item>
                 <property name="text">
-                 <string>MPa</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>atm</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>bar</string>
-                </property>
-               </item>
-               <item>
-                <property name="text">
-                 <string>kgf/cm²</string>
+                 <string>Pa</string>
                 </property>
                </item>
                <item>
@@ -528,8 +703,8 @@
             </layout>
            </widget>
           </item>
-          <item row="1" column="0">
-           <widget class="QFrame" name="frame_treeWidget">
+          <item row="2" column="0">
+           <widget class="QFrame" name="frame_tree_widget">
             <property name="minimumSize">
              <size>
               <width>0</width>
@@ -586,6 +761,9 @@
                  <bold>false</bold>
                 </font>
                </property>
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Select a frequency to plot the strutural response field&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
                <property name="alternatingRowColors">
                 <bool>true</bool>
                </property>
@@ -627,66 +805,19 @@
             </layout>
            </widget>
           </item>
-         </layout>
-        </widget>
-       </item>
-       <item row="0" column="0">
-        <widget class="QFrame" name="frame">
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>40</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>16777215</width>
-           <height>40</height>
-          </size>
-         </property>
-         <property name="frameShape">
-          <enum>QFrame::Shape::Box</enum>
-         </property>
-         <property name="frameShadow">
-          <enum>QFrame::Shadow::Raised</enum>
-         </property>
-         <property name="lineWidth">
-          <number>1</number>
-         </property>
-         <layout class="QGridLayout" name="gridLayout">
-          <property name="leftMargin">
-           <number>10</number>
-          </property>
-          <property name="topMargin">
-           <number>0</number>
-          </property>
-          <property name="bottomMargin">
-           <number>0</number>
-          </property>
-          <property name="spacing">
-           <number>0</number>
-          </property>
           <item row="0" column="0">
-           <widget class="QLabel" name="label">
+           <widget class="QFrame" name="frame_3">
             <property name="minimumSize">
              <size>
               <width>0</width>
-              <height>0</height>
+              <height>52</height>
              </size>
             </property>
             <property name="maximumSize">
              <size>
               <width>16777215</width>
-              <height>16777215</height>
+              <height>52</height>
              </size>
-            </property>
-            <property name="font">
-             <font>
-              <family>Segoe UI</family>
-              <pointsize>10</pointsize>
-              <italic>false</italic>
-              <bold>false</bold>
-             </font>
             </property>
             <property name="frameShape">
              <enum>QFrame::Shape::NoFrame</enum>
@@ -694,15 +825,53 @@
             <property name="frameShadow">
              <enum>QFrame::Shadow::Raised</enum>
             </property>
-            <property name="text">
-             <string>Select the frequency to be plotted</string>
-            </property>
-            <property name="textFormat">
-             <enum>Qt::TextFormat::AutoText</enum>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignmentFlag::AlignCenter</set>
-            </property>
+            <layout class="QGridLayout" name="gridLayout_47">
+             <property name="leftMargin">
+              <number>2</number>
+             </property>
+             <property name="topMargin">
+              <number>2</number>
+             </property>
+             <property name="rightMargin">
+              <number>2</number>
+             </property>
+             <property name="bottomMargin">
+              <number>2</number>
+             </property>
+             <property name="spacing">
+              <number>2</number>
+             </property>
+             <item row="0" column="0">
+              <widget class="QPushButton" name="pushButton_process_nodal_stresses">
+               <property name="minimumSize">
+                <size>
+                 <width>160</width>
+                 <height>32</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>180</width>
+                 <height>32</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>10</pointsize>
+                </font>
+               </property>
+               <property name="styleSheet">
+                <string notr="true"/>
+               </property>
+               <property name="text">
+                <string>Process nodal stresses</string>
+               </property>
+               <property name="flat">
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </widget>
           </item>
          </layout>

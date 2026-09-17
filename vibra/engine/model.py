@@ -204,7 +204,7 @@ class Model:
         except Exception:
             return False
 
-    def get_mapped_nodes(self, node_ids: list[int] | np.ndarray, domain: str):
+    def get_mapped_nodes(self, node_ids: list[int] | np.ndarray, domain: str) -> np.ndarray:
         """
         This method returns the mapped nodes indices according to the domain.
 
@@ -230,7 +230,7 @@ class Model:
 
         return mapped_nodes
 
-    def get_dof_indices_from_nodes(self, nodes: list[int] | np.ndarray, domain: str):
+    def get_dof_indices_from_nodes(self, nodes: list[int] | np.ndarray, domain: str) -> np.ndarray:
         """
         This method returns the global DOFs indices associated with a set of nodes.
 
@@ -307,6 +307,34 @@ class Model:
 
                     self.structural_element_2d.invert_element_connectivity(i)
                     break
+
+    def get_solid_elements_from_nodes(self, node_ids: list[int] | np.ndarray, domain: str):
+        """
+        This method processes the solid elements whose connectivities contain at least one
+        element of the "node_ids" list or array.
+
+        Parameters
+        ----------
+        node_ids: list or np.ndarray
+            A list or an array of the node indices.
+
+        domain: str
+            The domain label (acoustic or structural)
+
+        Return
+        ------
+        valid_element_ids: np.ndarray
+            An array with the valid element IDs according to the selected domain.
+
+        """
+
+        mask = np.sum(np.isin(self.mesh.solids_connectivity[:, 4:], node_ids), axis=1) >= 1
+        element_ids = self.mesh.solids_connectivity[mask, 0]
+
+        element_ids_domain = self.domains_processor.elements_of_domain.get(domain, [])
+        valid_element_ids = np.intersect1d(element_ids, element_ids_domain)
+
+        return valid_element_ids
 
     def check_selected_ids(self, input_ids: str | int | Iterable, selection_label: str, domain: str = "both", single_id: bool = False):
         return self.model_selection_tools.check_selected_ids(input_ids, selection_label, domain=domain, single_id=single_id)

@@ -24,6 +24,11 @@ class Tetrahedron4(Element3D):
         self.process_shape_functions_and_derivatives()
 
 
+    @property
+    def corner_nodes_indices(self):
+        return np.arange(self.nodes_per_element, dtype=int)
+
+
     def define_integration_points(self, integration_points: int=4):
         """ 
         This method defines the integration points and their

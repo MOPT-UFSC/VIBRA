@@ -9,6 +9,11 @@ from vibra import app
 from vibra.engine import AnalysisID
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
+from vibra.interface.viewer_3d.plot_setup import (
+    PlotSetup,
+    StressFieldPlotSetupFrequency,
+    StressType,
+)
 from vibra.utils.utils import are_there_values_different_from_zero
 
 
@@ -968,7 +973,7 @@ def problematic_nodes_info_text(self):
     
 # RESULTS RENDER WIDGET INFO TEXTS
 
-def analysis_info_text(frequency_index: int):
+def analysis_info_text(plot_setup: PlotSetup):
 
     project = app().project
     if not project.is_there_a_valid_solution():
@@ -987,6 +992,8 @@ def analysis_info_text(frequency_index: int):
         AnalysisID.STRUCTURAL_HARMONIC : "Structural Harmonic Analysis",
         AnalysisID.COUPLED_HARMONIC : "Coupled Harmonic Analysis",
         }
+
+    frequency_index = plot_setup.index
 
     tree = TreeInfo(display_name.get(analysis_id))
 
@@ -1046,6 +1053,10 @@ def analysis_info_text(frequency_index: int):
 
         frequency = frequencies[frequency_index]
         tree.add_item("Frequency", f"{frequency:.4f}", "Hz")
+
+        if isinstance(plot_setup, StressFieldPlotSetupFrequency):
+            stress_type = StressType(plot_setup.stress_type).get_stress_label()
+            tree.add_item("Stress type", stress_type)
 
     return str(tree)
 

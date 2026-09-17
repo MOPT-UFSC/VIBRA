@@ -9,11 +9,11 @@ from vibra import app
 from vibra.engine import AnalysisID
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
+from vibra.interface.numeric_checks.unit_utilities import convert_pressure_unit
 from vibra.interface.plots.general.animation_widget import AnimationWidget
 from vibra.interface.plots.general.results_display_widget import ResultsDisplayWidget
 from vibra.interface.ui_generated.plots.acoustic.acoustic_pressure_waveform_3d_plot_inputs_ui import AcousticPressureWaveform3dPlotInputs_UI
-from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
-from vibra.interface.viewer_3d.plot_setup import PressurePlotType, TransientPressurePlotSetup
+from vibra.interface.viewer_3d.plot_setup import PressureFieldPlotSetupTime, PressurePlotType
 
 
 class ReduceLoopType(IntEnum):
@@ -48,10 +48,6 @@ class AcousticPressureWaveform3DPlotInputs(AcousticPressureWaveform3dPlotInputs_
     def properties(self):
         return app().project.model.properties
 
-    @property
-    def nodal_solution(self):
-        return app().project.model.solution.acoustic_solution
-
     def show_results_render(self):
         curent_render_widget = app().main_window.get_current_render_widget()
         results_render_widget = app().main_window.results_widget
@@ -74,26 +70,26 @@ class AcousticPressureWaveform3DPlotInputs(AcousticPressureWaveform3dPlotInputs_
         self.update_slider_configuration()
 
     def _reset_variables(self):
-        self.unit_label = "Pa"
         self.time_vector = None
         self.plot_setup = None
 
     def _create_connections(self):
-        #
+
+        # QComboBox connections
         self.comboBox_plot_type.currentIndexChanged.connect(self.plot_data_callback)
+        self.comboBox_pressure_units.currentIndexChanged.connect(self.plot_data_callback)
         self.comboBox_reduced_time.currentIndexChanged.connect(lambda: self.reduced_loop_time_type_callback(True))
 
         # QLineEdit connections
         self.lineEdit_animation_time.editingFinished.connect(self.plot_data_callback)
-        #
-        self.results_display_widget.colormap_changed.connect(self.animation_widget.update_color_and_deformation)
-        self.results_display_widget.pressure_value_changed.connect(self.animation_widget.update_color_and_deformation)
 
         # QPushButton connections
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
 
-        self.reduced_loop_time_type_callback()
+        self.results_display_widget.colormap_changed.connect(self.animation_widget.update_color_and_deformation)
+        self.results_display_widget.pressure_value_changed.connect(self.animation_widget.update_color_and_deformation)
 
+        self.reduced_loop_time_type_callback()
 
     def add_animation_widget(self):
 
@@ -124,14 +120,6 @@ class AcousticPressureWaveform3DPlotInputs(AcousticPressureWaveform3dPlotInputs_
             T = 1 / df
 
         self.animation_widget.configure_animation_widget_for_transient_plot(T, N_steps)
-
-    def update_colormap_type(self):
-        app().config.user_preferences.color_map = self.get_colormap()
-        app().config.update_config_file()
-        try:
-            self.animation_widget.update_color_and_deformation()
-        except AttributeError:
-            pass
 
     def reduced_loop_time_type_callback(self, update_plot: bool = False):
         index = self.comboBox_reduced_time.currentIndex()
@@ -178,10 +166,14 @@ class AcousticPressureWaveform3DPlotInputs(AcousticPressureWaveform3dPlotInputs_
 
     def plot_data_callback(self):
 
-        plot_setup = TransientPressurePlotSetup(
+        pressure_units = self.comboBox_pressure_units.currentText()
+        unit_factor = convert_pressure_unit(1, "Pa", pressure_units)
+
+        plot_setup = PressureFieldPlotSetupTime(
             time_index=0,
             plot_type=self.get_plot_type(),
-            unit="Pa",
+            unit=pressure_units,
+            unit_factor=unit_factor,
             reduced_loop_time=self.get_reduced_loop_time(),
         )
 
@@ -208,12 +200,6 @@ class AcousticPressureWaveform3DPlotInputs(AcousticPressureWaveform3dPlotInputs_
         ]
         index = self.comboBox_plot_type.currentIndex()
         return PressurePlotType(plot_types[index])
-
-    def get_colormap(self) -> str:
-        index = self.comboBox_colormaps.currentIndex()
-        if not (0 <= index < len(COLORMAP_NAMES)):
-            return "jet"
-        return COLORMAP_NAMES[index]
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:

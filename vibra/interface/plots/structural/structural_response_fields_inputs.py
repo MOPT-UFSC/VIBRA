@@ -7,7 +7,7 @@ from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.plots.general.animation_widget import AnimationWidget
 from vibra.interface.plots.general.results_display_widget import ResultsDisplayWidget
 from vibra.interface.ui_generated.plots.structural.structural_response_fields_inputs_ui import StructuralResponseFieldsInputs_UI
-from vibra.interface.viewer_3d.plot_setup import DisplacementPlotType, FrequencyDisplacementPlotSetup
+from vibra.interface.viewer_3d.plot_setup import DisplacementPlotType, DisplacementFieldPlotSetupFrequency
 
 
 class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
@@ -109,9 +109,9 @@ class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
         units = ["m", "m/s", "m/s²", "mm", "mm/s", "mm/s²", "um", "um/s", "um/s²"]
         return units[self.comboBox_plotting_results.currentIndex()]
 
-    def get_unit_scale_factor(self) -> float:
-        convertion_factors = [1.0, 1e3, 1e6]
-        return convertion_factors[self.comboBox_plotting_results.currentIndex() // 3]
+    def get_unit_factor(self) -> float:
+        unit_factors = [1.0, 1e3, 1e6]
+        return unit_factors[self.comboBox_plotting_results.currentIndex() // 3]
 
     def update_plot(self):
         self.update_animation_widget_visibility()
@@ -130,14 +130,14 @@ class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
         self.animation_widget.reset_sliders()
         self.results_display_widget.configure_validators(-1e14, 1e14)
 
-        plot_setup = FrequencyDisplacementPlotSetup(
+        plot_setup = DisplacementFieldPlotSetupFrequency(
             phase=self.animation_widget.phase_in_radians,
             magnification_factor=self.animation_widget.magnification_factor,
             index=self.selected_frequency_index,
             plot_type=self.get_plot_type(),
             unit=self.get_plot_units(),
             n_diff=self.get_number_of_differentiations(),
-            unit_scale_factor=self.get_unit_scale_factor()
+            unit_factor=self.get_unit_factor()
         )
 
         LoadingWindow(app().main_window.results_widget.update_plot).run(
