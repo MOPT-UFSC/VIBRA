@@ -19,7 +19,7 @@ from vibra.engine.model import Model
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.utils.interface_utils import SectionPlane
 from vibra.utils.math_functions import inside_plane
-from vibra.utils.time_utils import function_timer
+from vibra.utils.time_utils import context_timer, function_timer
 
 
 @dataclass
@@ -109,7 +109,7 @@ class MeshActor(vtkPropAssembly):
         self.area_picker.PickFromListOn()
 
         self.points = vtkPoints()
-        self.masked_nodes = np.array([], dtype=int)
+        self._masked_nodes = np.array([], dtype=int)
 
         self.node_colors = vtkUnsignedCharArray()
         self.node_ids = vtkIntArray()
@@ -202,7 +202,8 @@ class MeshActor(vtkPropAssembly):
         if not self._mesh_updated():
             return
 
-        self.masked_nodes = self._find_masked_nodes()
+        self._masked_nodes = self._find_masked_nodes()
+        self._solids_in_middle_mask = 0
 
         coordinates = self.mesh.nodal_coordinates[:, 1:]
         self.points.SetData(numpy_to_vtk(coordinates))
@@ -223,9 +224,9 @@ class MeshActor(vtkPropAssembly):
             node_indexes = np.unique(faces_connectivity)
         else:
             solids_connectivity = self.mesh.solids_connectivity[:, 4:]
-            counts = self.masked_nodes[solids_connectivity].sum(axis=1, dtype=np.int8)
+            counts = self._masked_nodes[solids_connectivity].sum(axis=1, dtype=np.int8)
             solids_in_middle_mask = (0 < counts) & (counts < solids_connectivity.shape[1])
-            faces_before_plane_mask = self.masked_nodes[faces_connectivity].all(axis=1)
+            faces_before_plane_mask = self._masked_nodes[faces_connectivity].all(axis=1)
 
             external_nodes = faces_connectivity[faces_before_plane_mask].ravel()
             section_nodes = solids_connectivity[solids_in_middle_mask].ravel()
@@ -255,12 +256,13 @@ class MeshActor(vtkPropAssembly):
             faces_connectivity = self.mesh.faces_connectivity[:, 4:]
             solids_connectivity = self.mesh.solids_connectivity[:, 4:]
 
-            counts = self.masked_nodes[solids_connectivity].sum(axis=1, dtype=np.int8)
+            counts = self._masked_nodes[solids_connectivity].sum(axis=1, dtype=np.int8)
             solids_in_middle_mask = (0 < counts) & (counts < solids_connectivity.shape[1])
-            faces_before_plane_mask = self.masked_nodes[faces_connectivity].all(axis=1)
+            faces_before_plane_mask = self._masked_nodes[faces_connectivity].all(axis=1)
 
-            solids_triangulated = self._explode_to_2d_cells(self.mesh.solids_connectivity[solids_in_middle_mask])
-            all_faces = np.vstack((self.mesh.faces_connectivity[faces_before_plane_mask], solids_triangulated))
+            solid_faces = self._simplify_3d_cells(self.mesh.solids_connectivity[solids_in_middle_mask])
+            other_faces = self._simplify_2d_cells(self.mesh.faces_connectivity[faces_before_plane_mask])
+            all_faces = np.vstack((other_faces, solid_faces))
 
         else:
             all_faces = self.mesh.faces_connectivity
@@ -285,10 +287,10 @@ class MeshActor(vtkPropAssembly):
             plane.SetNormal(self.section_plane.get_normal())
             self.surface_mapper.AddClippingPlane(plane)
 
-        connectivity = self.mesh.faces_connectivity[:, 4:]
+        connectivity = self._simplify_2d_cells(self.mesh.faces_connectivity)
         n_cells = len(connectivity)
 
-        cells = self._create_cells(connectivity)
+        cells = self._create_cells(connectivity[:, 4:])
         self.surface_data.SetPolys(cells)
         self.surface_colors.SetNumberOfTuples(n_cells)
         self.surface_mapper.Modified()
@@ -296,7 +298,7 @@ class MeshActor(vtkPropAssembly):
         self.surface_colors.Fill(255)
         self.surface_ids.SetNumberOfTuples(n_cells)
         view = vtk_to_numpy(self.surface_ids)
-        view[:] = self.mesh.faces_connectivity[:, 0]
+        view[:] = connectivity[:, 0]
 
     def update_solids(self):
         assert self.mesh is not None
@@ -315,9 +317,9 @@ class MeshActor(vtkPropAssembly):
             return
 
         connectivity = self.mesh.solids_connectivity[:, 4:]
-        counts = self.masked_nodes[connectivity].sum(axis=1, dtype=np.int8)
+        counts = self._masked_nodes[connectivity].sum(axis=1, dtype=np.int8)
         elements_in_middle = (0 < counts) & (counts < connectivity.shape[1])
-        triangulated_connectivity = self._explode_to_2d_cells(self.mesh.solids_connectivity[elements_in_middle])
+        triangulated_connectivity = self._simplify_3d_cells(self.mesh.solids_connectivity[elements_in_middle])
         n_cells = len(triangulated_connectivity)
 
         cells = self._create_cells(triangulated_connectivity[:, 4:])
@@ -392,7 +394,7 @@ class MeshActor(vtkPropAssembly):
         if self.section_plane is None:
             nodes_mask = np.ones(len(coordinates), dtype=bool)
         else:
-            nodes_mask = self.masked_nodes.copy()
+            nodes_mask = self._masked_nodes.copy()
             visible_node_ids = vtk_to_numpy(self.node_ids)
             visible_nodes_mask = np.isin(self.mesh.nodal_coordinates[:, 0], visible_node_ids)
             nodes_mask[visible_nodes_mask] = True
@@ -648,12 +650,32 @@ class MeshActor(vtkPropAssembly):
 
         return self._explode_cells(connectivity, reorderings)
 
-    def _explode_to_2d_cells(self, connectivity: np.ndarray) -> np.ndarray:
+    @function_timer
+    def _simplify_2d_cells(self, connectivity: np.ndarray) -> np.ndarray:
+        n_nodes = connectivity[:, 4:].shape[1]
+        match n_nodes:
+            case 3:
+                return connectivity
+            case 6:
+                reorderings = [[0, 3, 5], [1, 4, 3], [2, 5, 4], [3, 4, 5]]
+            case _:
+                raise NotImplementedError(f"Exploding to 2D cells is not supported for {n_nodes}-node cells")
+        return self._explode_cells(connectivity, reorderings)
+
+    @function_timer
+    def _simplify_3d_cells(self, connectivity: np.ndarray) -> np.ndarray:
         n_nodes = connectivity[:, 4:].shape[1]
 
         match n_nodes:
-            case 4:
+            case 4:  # Tetrahedron Linear
                 reorderings = list(combinations(range(n_nodes), 3))
+            case 10:  # Tetrahedron Quadratic
+                reorderings = [
+                    [0, 4, 6], [1, 5, 4], [2, 6, 5], [4, 5, 6],
+                    [0, 7, 4], [3, 9, 7], [1, 4, 9], [7, 9, 4],
+                    [0, 6, 7], [2, 8, 6], [3, 7, 8], [6, 8, 7],
+                    [1, 9, 5], [3, 8, 9], [2, 5, 8], [9, 8, 5],
+                ]  # fmt: skip
             case _:
                 raise NotImplementedError(f"Exploding to 2D cells is not supported for {n_nodes}-node cells")
 
