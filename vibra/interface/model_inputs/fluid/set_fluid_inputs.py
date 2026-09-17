@@ -8,6 +8,7 @@ from PySide6.QtWidgets import QAbstractItemView, QGridLayout, QHeaderView, QTabl
 from vibra import app
 from vibra.engine.properties.fluid import Fluid
 from vibra.interface import error_title
+from vibra.interface.common.common_interface import check_conflicting_model_properties
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.fluid.fluid_widget import FluidWidget
@@ -49,12 +50,16 @@ class SetFluidInputs(SetFluidInputs_UI):
             self.exec()
 
     @property
-    def properties(self):
-        return app().project.model.properties
+    def model(self):
+        return app().project.model
 
     @property
     def mesh(self):
         return app().project.model.mesh
+
+    @property
+    def properties(self):
+        return app().project.model.properties
 
     def _initialize(self):
         self.fluid = None
@@ -88,9 +93,11 @@ class SetFluidInputs(SetFluidInputs_UI):
         self.tableWidget_model_fluids.setSelectionBehavior(QAbstractItemView.SelectRows)
 
     def _create_connections(self):
-        #
+
+        # QComboBox connection
         self.comboBox_attribution_type.currentIndexChanged.connect(self.attribution_type_callback)
-        #
+
+        # QPushButton connections
         self.fluid_widget.modified.connect(self.load_model_info)
         self.fluid_widget.pushButton_apply.clicked.connect(self.apply_callback)
         self.fluid_widget.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
@@ -101,14 +108,14 @@ class SetFluidInputs(SetFluidInputs_UI):
         self.fluid_widget.pushButton_import_library.clicked.connect(self.import_fluid_library_callback)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
-        #
+
+        # QTableWidget connections
         self.fluid_widget.tableWidget_fluid_data.currentCellChanged.connect(self.current_cell_changed)
         self.tableWidget_model_fluids.cellClicked.connect(self.cell_clicked_callback)
-        #
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
-        #
+
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
-        #
+
         self.attribution_type_callback()
         self.geometry_selection_callback()
 
@@ -267,10 +274,9 @@ class SetFluidInputs(SetFluidInputs_UI):
 
         else:
             input_ids = self.lineEdit_selection_id.text()
-            volume_ids, error_data = self.mesh.check_selected_ids(
+            volume_ids, error_data = self.model.check_selected_ids(
                 input_ids,
-                selection="volumes",
-                single_id=False,
+                "volumes",
             )
 
             if error_data is not None:
@@ -281,7 +287,12 @@ class SetFluidInputs(SetFluidInputs_UI):
         if not volume_ids:
             return
 
+        if check_conflicting_model_properties(volume_ids, "structural"):
+            return
+
         for volume_id in volume_ids:
+            # we cannot have two physical domains active on the same volume
+            self.properties._remove_volume_property("material", volume_id)
             self.properties._set_property("fluid", selected_fluid, volume=volume_id)
 
             for surface_id in self.mesh.surfaces_from_volume[volume_id]:
@@ -331,15 +342,17 @@ class SetFluidInputs(SetFluidInputs_UI):
             app().main_window.selection.set_geometry_selection()
 
     def actions_to_finalize(self, close_window: bool = False):
-        self.load_model_info()
         self.clear_line_edit_seletction_id()
         self.lineEdit_selected_fluid_name.clear()
         self.pushButton_remove.setDisabled(True)
 
+        self.load_model_info()
+
+        self.model.domains_processor.map_model_domains()
+        app().project.update_model_properties_file()
         app().main_window.update_info_text()
         app().main_window.selection.clear_selection()  # this also updates
         app().main_window.update_symbols()
-        app().project.update_model_properties_file()
 
         self.complete = True
 
