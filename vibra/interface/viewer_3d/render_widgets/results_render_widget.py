@@ -677,8 +677,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             colors_array[:] = cached_color
             self.analysis_actor.data.GetPointData().Modified()
             self.analysis_actor.color_table.SetTableRange(
-                self._animation_cache.min_colors,
-                self._animation_cache.max_colors,
+                self._animation_cache.min_colors if self.user_min_value is None else self.user_min_value,
+                self._animation_cache.max_colors if self.user_max_value is None else self.user_max_value,
             )
 
         if cached_pos is not None:
