@@ -76,11 +76,11 @@ class MeshActor(vtkPropAssembly):
             self.clear_data()
             return
 
-        self.update_mesh_common()
-        self.update_node()
-        self.update_edges()
-        self.update_surface()
-        self.update_solids()
+        if self.section_plane is None:
+            self.build_mesh_without_section_plane()
+        else:
+            self.build_mesh_with_section_plane()
+
         self.update_caches()
 
     def clear_data(self):
@@ -191,146 +191,102 @@ class MeshActor(vtkPropAssembly):
         self.volume_actor.SetMapper(self.volume_mapper)
         self.AddPart(self.volume_actor)
 
-    def update_mesh_common(self):
-        if self.mesh is None:
-            self.clear_data()
-            return
-
-        if self.mesh.nodal_coordinates is None:
-            return
+    @function_timer
+    def build_mesh_without_section_plane(self):
+        assert self.mesh is not None
+        assert self.mesh.nodal_coordinates is not None
+        assert self.mesh.faces_connectivity is not None
+        assert self.mesh.solids_connectivity is not None
 
         if not self._mesh_updated():
             return
 
-        self._masked_nodes = self._find_masked_nodes()
-        self._solids_in_middle_mask = 0
-
-        coordinates = self.mesh.nodal_coordinates[:, 1:]
-        self.points.SetData(numpy_to_vtk(coordinates))
+        self.points.SetData(numpy_to_vtk(self.mesh.nodal_coordinates[:, 1:]))
         self.points.Modified()
 
-    def update_node(self):
-        assert self.mesh is not None
-        assert self.mesh.nodal_coordinates is not None
-        assert self.mesh.faces_connectivity is not None
-        assert self.mesh.solids_connectivity is not None
-
-        if not self._mesh_updated():
-            return
-
-        faces_connectivity = self.mesh.faces_connectivity[:, 4:]
-
-        if self.section_plane is None:
-            node_indexes = np.unique(faces_connectivity)
-        else:
-            solids_connectivity = self.mesh.solids_connectivity[:, 4:]
-            counts = self._masked_nodes[solids_connectivity].sum(axis=1, dtype=np.int8)
-            solids_in_middle_mask = (0 < counts) & (counts < solids_connectivity.shape[1])
-            faces_before_plane_mask = self._masked_nodes[faces_connectivity].all(axis=1)
-
-            external_nodes = faces_connectivity[faces_before_plane_mask].ravel()
-            section_nodes = solids_connectivity[solids_in_middle_mask].ravel()
-            node_indexes = np.unique(np.concatenate((external_nodes, section_nodes)))
-
-        n_cells = len(node_indexes)
-        cells = self._create_cells(node_indexes)
-        self.node_data.SetVerts(cells)
-        self.node_colors.SetNumberOfTuples(n_cells)
+        node_indexes = np.unique(self.mesh.faces_connectivity[:, 4:])
+        node_cells = self._create_cells(node_indexes)
+        self.node_data.SetVerts(node_cells)
+        self.node_colors.SetNumberOfTuples(len(node_indexes))
         self.node_colors.Fill(255)
         self.node_mapper.Modified()
+        self.node_ids.SetNumberOfTuples(len(node_indexes))
+        vtk_to_numpy(self.node_ids)[:] = node_indexes
 
-        self.node_ids.SetNumberOfTuples(n_cells)
-        view = vtk_to_numpy(self.node_ids)
-        view[:] = node_indexes
+        edges_linearized = self._linearize_2d_cells(self.mesh.faces_connectivity)
+        cells = self._create_cells(edges_linearized[:, 4:])
+        self.edge_data.SetLines(cells)
 
-    def update_edges(self):
-        assert self.mesh is not None
-        assert self.mesh.nodal_coordinates is not None
-        assert self.mesh.faces_connectivity is not None
-        assert self.mesh.solids_connectivity is not None
-
-        if not self._mesh_updated():
-            return
-
-        if self.section_plane is not None:
-            faces_connectivity = self.mesh.faces_connectivity[:, 4:]
-            solids_connectivity = self.mesh.solids_connectivity[:, 4:]
-
-            counts = self._masked_nodes[solids_connectivity].sum(axis=1, dtype=np.int8)
-            solids_in_middle_mask = (0 < counts) & (counts < solids_connectivity.shape[1])
-            faces_before_plane_mask = self._masked_nodes[faces_connectivity].all(axis=1)
-
-            solid_faces = self._simplify_3d_cells(self.mesh.solids_connectivity[solids_in_middle_mask])
-            other_faces = self._simplify_2d_cells(self.mesh.faces_connectivity[faces_before_plane_mask])
-            all_faces = np.vstack((other_faces, solid_faces))
-
-        else:
-            all_faces = self.mesh.faces_connectivity
-
-        # Although I am creating polys, this actor is
-        # configured to show only wireframes
-        cells = self._create_cells(all_faces[:, 4:])
-        self.edge_data.SetPolys(cells)
-
-    def update_surface(self):
-        assert self.mesh is not None
-        assert self.mesh.nodal_coordinates is not None
-        assert self.mesh.faces_connectivity is not None
-
-        if not self._mesh_updated():
-            return
-
-        self.surface_mapper.RemoveAllClippingPlanes()
-        if self.section_plane is not None:
-            plane = vtkPlane()
-            plane.SetOrigin(self.section_plane.origin)
-            plane.SetNormal(self.section_plane.get_normal())
-            self.surface_mapper.AddClippingPlane(plane)
-
-        connectivity = self._simplify_2d_cells(self.mesh.faces_connectivity)
-        n_cells = len(connectivity)
-
-        cells = self._create_cells(connectivity[:, 4:])
-        self.surface_data.SetPolys(cells)
-        self.surface_colors.SetNumberOfTuples(n_cells)
+        faces_triangulated = self._triangulate_2d_cells(self.mesh.faces_connectivity)
+        face_cells = self._create_cells(faces_triangulated[:, 4:])
+        self.surface_data.SetPolys(face_cells)
+        self.surface_colors.SetNumberOfTuples(len(faces_triangulated))
         self.surface_mapper.Modified()
-
         self.surface_colors.Fill(255)
-        self.surface_ids.SetNumberOfTuples(n_cells)
-        view = vtk_to_numpy(self.surface_ids)
-        view[:] = connectivity[:, 0]
+        self.surface_ids.SetNumberOfTuples(len(faces_triangulated))
+        vtk_to_numpy(self.surface_ids)[:] = faces_triangulated[:, 0]
 
-    def update_solids(self):
+        self.volume_data.SetPolys(vtkCellArray())
+        self.volume_colors.SetNumberOfTuples(0)
+        self.volume_ids.SetNumberOfTuples(0)
+        self.volume_colors.Modified()
+
+    @function_timer
+    def build_mesh_with_section_plane(self):
         assert self.mesh is not None
         assert self.mesh.nodal_coordinates is not None
         assert self.mesh.faces_connectivity is not None
         assert self.mesh.solids_connectivity is not None
+        assert self.section_plane is not None
 
         if not self._mesh_updated():
             return
 
-        if self.section_plane is None:
-            self.volume_data.SetPolys(vtkCellArray())
-            self.volume_colors.SetNumberOfTuples(0)
-            self.volume_ids.SetNumberOfTuples(0)
-            self.volume_colors.Modified()
-            return
+        self.points.SetData(numpy_to_vtk(self.mesh.nodal_coordinates[:, 1:]))
+        self.points.Modified()
 
-        connectivity = self.mesh.solids_connectivity[:, 4:]
-        counts = self._masked_nodes[connectivity].sum(axis=1, dtype=np.int8)
-        elements_in_middle = (0 < counts) & (counts < connectivity.shape[1])
-        triangulated_connectivity = self._simplify_3d_cells(self.mesh.solids_connectivity[elements_in_middle])
-        n_cells = len(triangulated_connectivity)
+        faces_connectivity = self.mesh.faces_connectivity[:, 4:]
+        solids_connectivity = self.mesh.solids_connectivity[:, 4:]
+        self._masked_nodes = self._find_masked_nodes()
+        visible_nodes_per_solid = self._masked_nodes[solids_connectivity].sum(axis=1, dtype=np.int8)
+        solids_in_middle_mask = (0 < visible_nodes_per_solid) & (visible_nodes_per_solid < solids_connectivity.shape[1])
+        faces_before_plane_mask = self._masked_nodes[faces_connectivity].all(axis=1)
+        solids_in_middle = self.mesh.solids_connectivity[solids_in_middle_mask]
+        faces_before_plane = self.mesh.faces_connectivity[faces_before_plane_mask]
 
-        cells = self._create_cells(triangulated_connectivity[:, 4:])
-        self.volume_data.SetPolys(cells)
-        self.volume_colors.SetNumberOfTuples(n_cells)
+        node_indexes = np.unique(np.concatenate((solids_in_middle[:, 4:].ravel(), faces_before_plane[:, 4:].ravel())))
+        node_cells = self._create_cells(node_indexes)
+        self.node_data.SetVerts(node_cells)
+        self.node_colors.SetNumberOfTuples(len(node_indexes))
+        self.node_colors.Fill(255)
+        self.node_mapper.Modified()
+        self.node_ids.SetNumberOfTuples(len(node_indexes))
+        vtk_to_numpy(self.node_ids)[:] = node_indexes
+
+        edges_linearized = np.vstack((
+            self._linearize_2d_cells(faces_before_plane), 
+            self._linearize_3d_cells(solids_in_middle),
+        ))  # fmt: skip
+        cells = self._create_cells(edges_linearized[:, 4:])
+        self.edge_data.SetLines(cells)
+
+        faces_triangulated = self._triangulate_2d_cells(faces_before_plane)
+        face_cells = self._create_cells(faces_triangulated[:, 4:])
+        self.surface_data.SetPolys(face_cells)
+        self.surface_colors.SetNumberOfTuples(len(faces_triangulated))
+        self.surface_mapper.Modified()
+        self.surface_colors.Fill(255)
+        self.surface_ids.SetNumberOfTuples(len(faces_triangulated))
+        vtk_to_numpy(self.surface_ids)[:] = faces_triangulated[:, 0]
+
+        solids_triangulated = self._triangulate_3d_cells(solids_in_middle)
+        solid_cells = self._create_cells(solids_triangulated[:, 4:])
+        self.volume_data.SetPolys(solid_cells)
+        self.volume_colors.SetNumberOfTuples(len(solids_triangulated))
         self.volume_mapper.Modified()
-
         self.volume_colors.Fill(255)
-        self.volume_ids.SetNumberOfTuples(n_cells)
-        view = vtk_to_numpy(self.volume_ids)
-        view[:] = triangulated_connectivity[:, 0]
+        self.volume_ids.SetNumberOfTuples(len(solids_triangulated))
+        vtk_to_numpy(self.volume_ids)[:] = solids_triangulated[:, 0]
 
     def update_caches(self):
         node_colors_hash = CachedInfo.array_hash(self.node_colors)
@@ -650,8 +606,36 @@ class MeshActor(vtkPropAssembly):
 
         return self._explode_cells(connectivity, reorderings)
 
-    @function_timer
-    def _simplify_2d_cells(self, connectivity: np.ndarray) -> np.ndarray:
+    def _linearize_2d_cells(self, connectivity: np.ndarray) -> np.ndarray:
+        n_nodes = connectivity[:, 4:].shape[1]
+        match n_nodes:
+            case 3:
+                reorderings = list(combinations(range(n_nodes), 2))
+            case 6:
+                reorderings = [
+                    [0, 3], [3, 1],
+                    [1, 4], [4, 2],
+                    [2, 5], [5, 0],
+                ]  # fmt: skip
+            case _:
+                raise NotImplementedError(f"Exploding to 2D cells is not supported for {n_nodes}-node cells")
+        return self._explode_cells(connectivity, reorderings)
+
+    def _linearize_3d_cells(self, connectivity: np.ndarray) -> np.ndarray:
+        n_nodes = connectivity[:, 4:].shape[1]
+        match n_nodes:
+            case 4:
+                reorderings = list(combinations(range(n_nodes), 2))
+            case 10:
+                reorderings = [
+                    [0, 4], [4, 1], [1, 5], [5, 2], [0, 6], [6, 2],
+                    [0, 7], [7, 3], [2, 8], [8, 3], [1, 9], [9, 3], 
+                ]  # fmt: skip
+            case _:
+                raise NotImplementedError(f"Exploding to 2D cells is not supported for {n_nodes}-node cells")
+        return self._explode_cells(connectivity, reorderings)
+
+    def _triangulate_2d_cells(self, connectivity: np.ndarray) -> np.ndarray:
         n_nodes = connectivity[:, 4:].shape[1]
         match n_nodes:
             case 3:
@@ -663,7 +647,7 @@ class MeshActor(vtkPropAssembly):
         return self._explode_cells(connectivity, reorderings)
 
     @function_timer
-    def _simplify_3d_cells(self, connectivity: np.ndarray) -> np.ndarray:
+    def _triangulate_3d_cells(self, connectivity: np.ndarray) -> np.ndarray:
         n_nodes = connectivity[:, 4:].shape[1]
 
         match n_nodes:
