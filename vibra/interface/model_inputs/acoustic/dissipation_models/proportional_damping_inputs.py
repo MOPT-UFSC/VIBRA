@@ -4,6 +4,7 @@ from PySide6.QtWidgets import QAbstractItemView, QLineEdit, QTreeWidgetItem
 
 from vibra import app
 from vibra.interface import error_title
+from vibra.interface.common.common_interface import update_entities_selection
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.acoustic.definitions.enums import AttributionBodiesType, SetupTabType
@@ -18,6 +19,7 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
         app().main_window.workspace_updating_for_model_setup()
         app().main_window.selection.volume_selection_mode = True
 
+        self.model = app().project.model
         self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
 
@@ -198,17 +200,25 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
             
         volume_ids = list()
         if attribute_type == AttributionBodiesType.ALL_BODIES:
-            if "volumes" in self.mesh.geometry_information.keys():
+            if "volumes" in self.mesh.geometry_information:
                 volume_ids = self.mesh.geometry_information["volumes"]
 
         elif attribute_type == AttributionBodiesType.SELECTED_BODIES:
             input_ids = self.lineEdit_selection_id.text()
-            volume_ids, error_data = self.mesh.check_selected_ids(input_ids, selection="volumes", single_id=False)
+            volume_ids, error_data = self.model.check_selected_ids(
+                input_ids,
+                "volumes",
+                domain="acoustic",
+            )
 
             if error_data is not None:
                 self.lineEdit_selection_id.setFocus()
                 PrintMessageInput(error_data)
-                return
+                return True
+
+            app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
+            update_entities_selection(self.lineEdit_selection_id, "volumes", volume_ids)
+            app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
         lineEdit = self.lineEdit_speed_of_sound_complex_factor
         speed_of_sound_factor = self.check_inputs(lineEdit, "Speed of sound complex factor", only_positive=True)

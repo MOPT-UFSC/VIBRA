@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>410</width>
-    <height>320</height>
+    <height>360</height>
    </rect>
   </property>
   <property name="minimumSize">
@@ -19,7 +19,7 @@
   <property name="maximumSize">
    <size>
     <width>16777215</width>
-    <height>320</height>
+    <height>360</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -127,7 +127,7 @@
      <property name="maximumSize">
       <size>
        <width>520</width>
-       <height>280</height>
+       <height>16777215</height>
       </size>
      </property>
      <property name="frameShape">
@@ -191,79 +191,6 @@
          <property name="verticalSpacing">
           <number>8</number>
          </property>
-         <item row="0" column="0">
-          <spacer name="horizontalSpacer">
-           <property name="orientation">
-            <enum>Qt::Orientation::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item row="0" column="2">
-          <widget class="QLineEdit" name="lineEdit_selection_id">
-           <property name="minimumSize">
-            <size>
-             <width>140</width>
-             <height>30</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>140</width>
-             <height>30</height>
-            </size>
-           </property>
-           <property name="font">
-            <font>
-             <pointsize>10</pointsize>
-            </font>
-           </property>
-           <property name="styleSheet">
-            <string notr="true"/>
-           </property>
-           <property name="text">
-            <string/>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignmentFlag::AlignCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="0" column="1">
-          <widget class="QLabel" name="label_10">
-           <property name="minimumSize">
-            <size>
-             <width>110</width>
-             <height>30</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>110</width>
-             <height>30</height>
-            </size>
-           </property>
-           <property name="font">
-            <font>
-             <family>MS Shell Dlg 2</family>
-             <pointsize>10</pointsize>
-             <italic>false</italic>
-             <bold>false</bold>
-            </font>
-           </property>
-           <property name="text">
-            <string>Selected ID: </string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-           </property>
-          </widget>
-         </item>
          <item row="0" column="3">
           <widget class="QPushButton" name="pushButton_export_data">
            <property name="minimumSize">
@@ -296,7 +223,7 @@
             <string/>
            </property>
            <property name="icon">
-            <iconset resource="../../../icons/resources.qrc">
+            <iconset resource="../../../icons/dark_theme/resources.qrc">
              <normaloff>:/icons/save_as.png</normaloff>:/icons/save_as.png</iconset>
            </property>
            <property name="iconSize">
@@ -310,17 +237,17 @@
            </property>
           </widget>
          </item>
-         <item row="3" column="2">
-          <widget class="QComboBox" name="comboBox_cutoff_frequency">
+         <item row="1" column="1">
+          <widget class="QLabel" name="label_2">
            <property name="minimumSize">
             <size>
-             <width>140</width>
+             <width>0</width>
              <height>30</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>140</width>
+             <width>16777215</width>
              <height>30</height>
             </size>
            </property>
@@ -329,22 +256,15 @@
              <pointsize>10</pointsize>
             </font>
            </property>
+           <property name="text">
+            <string>Selector filter: </string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+           </property>
           </widget>
          </item>
-         <item row="0" column="4">
-          <spacer name="horizontalSpacer_2">
-           <property name="orientation">
-            <enum>Qt::Orientation::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item row="2" column="1">
+         <item row="3" column="1">
           <widget class="QLabel" name="label_cutoff_frequency">
            <property name="minimumSize">
             <size>
@@ -373,7 +293,92 @@
            </property>
           </widget>
          </item>
-         <item row="2" column="2">
+         <item row="0" column="2">
+          <widget class="QLineEdit" name="lineEdit_selection_id">
+           <property name="minimumSize">
+            <size>
+             <width>140</width>
+             <height>30</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>140</width>
+             <height>30</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
+           <property name="styleSheet">
+            <string notr="true"/>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignmentFlag::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="1">
+          <widget class="QLabel" name="label_fc_combo_box">
+           <property name="minimumSize">
+            <size>
+             <width>120</width>
+             <height>30</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>140</width>
+             <height>30</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+             <italic>false</italic>
+             <bold>false</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Section diameter:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="4">
+          <spacer name="horizontalSpacer_2">
+           <property name="orientation">
+            <enum>Qt::Orientation::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="0" column="0">
+          <spacer name="horizontalSpacer">
+           <property name="orientation">
+            <enum>Qt::Orientation::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="3" column="2">
           <widget class="QComboBox" name="comboBox_cutoff_frequency_options">
            <property name="minimumSize">
             <size>
@@ -409,8 +414,8 @@
            </item>
           </widget>
          </item>
-         <item row="3" column="1">
-          <widget class="QLabel" name="label_fc_combo_box">
+         <item row="5" column="1">
+          <widget class="QLabel" name="label_fc_line_edit">
            <property name="minimumSize">
             <size>
              <width>120</width>
@@ -431,14 +436,125 @@
             </font>
            </property>
            <property name="text">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Section diameter:&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:11pt;&quot;&gt;f&lt;/span&gt;&lt;span style=&quot; font-size:11pt; vertical-align:sub;&quot;&gt;c&lt;/span&gt; (circular section):&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
            </property>
           </widget>
          </item>
-         <item row="3" column="3">
+         <item row="5" column="3">
+          <widget class="QLabel" name="label_unit_line_edit">
+           <property name="minimumSize">
+            <size>
+             <width>40</width>
+             <height>30</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>40</width>
+             <height>30</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
+           <property name="text">
+            <string>[Hz]</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="2">
+          <widget class="QLineEdit" name="lineEdit_cutoff_frequency">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>140</width>
+             <height>30</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>140</width>
+             <height>30</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;f&lt;span style=&quot; vertical-align:sub;&quot;&gt;c&lt;/span&gt; = 1.8412 x C&lt;span style=&quot; vertical-align:sub;&quot;&gt;o &lt;/span&gt;/ (π * D&lt;span style=&quot; vertical-align:sub;&quot;&gt;in&lt;/span&gt;), &lt;/p&gt;&lt;p align=&quot;justify&quot;&gt;where C&lt;span style=&quot; vertical-align:sub;&quot;&gt;0&lt;/span&gt; is the fluid speed of sound in m/s, and D&lt;span style=&quot; vertical-align:sub;&quot;&gt;in&lt;/span&gt; is the pipe's internal diameter in m.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="layoutDirection">
+            <enum>Qt::LayoutDirection::LeftToRight</enum>
+           </property>
+           <property name="styleSheet">
+            <string notr="true"/>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignmentFlag::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="2">
+          <widget class="QComboBox" name="comboBox_cutoff_frequency">
+           <property name="minimumSize">
+            <size>
+             <width>140</width>
+             <height>30</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>140</width>
+             <height>30</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLabel" name="label_10">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>30</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>30</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <family>MS Shell Dlg 2</family>
+             <pointsize>10</pointsize>
+             <italic>false</italic>
+             <bold>false</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Selected ID: </string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="3">
           <widget class="QLabel" name="label_unit_combo_box">
            <property name="minimumSize">
             <size>
@@ -509,67 +625,36 @@
            </item>
           </widget>
          </item>
-         <item row="1" column="1">
-          <widget class="QLabel" name="label_2">
+         <item row="2" column="1">
+          <widget class="QLabel" name="label_linear_2">
            <property name="minimumSize">
             <size>
-             <width>110</width>
+             <width>0</width>
              <height>30</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>110</width>
+             <width>16777215</width>
              <height>30</height>
             </size>
            </property>
            <property name="font">
             <font>
              <pointsize>10</pointsize>
-            </font>
-           </property>
-           <property name="text">
-            <string>Selector filter: </string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="4" column="1">
-          <widget class="QLabel" name="label_fc_line_edit">
-           <property name="minimumSize">
-            <size>
-             <width>120</width>
-             <height>30</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>140</width>
-             <height>30</height>
-            </size>
-           </property>
-           <property name="font">
-            <font>
-             <pointsize>10</pointsize>
-             <italic>false</italic>
              <bold>false</bold>
             </font>
            </property>
            <property name="text">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:11pt;&quot;&gt;f&lt;/span&gt;&lt;span style=&quot; font-size:11pt; vertical-align:sub;&quot;&gt;c&lt;/span&gt; (circular section):&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+            <string>Pressure units:</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
            </property>
           </widget>
          </item>
-         <item row="4" column="2">
-          <widget class="QLineEdit" name="lineEdit_cutoff_frequency">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
+         <item row="2" column="2">
+          <widget class="QComboBox" name="comboBox_pressure_units">
            <property name="minimumSize">
             <size>
              <width>140</width>
@@ -586,43 +671,58 @@
             <font>
              <pointsize>10</pointsize>
             </font>
-           </property>
-           <property name="toolTip">
-            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;f&lt;span style=&quot; vertical-align:sub;&quot;&gt;c&lt;/span&gt; = 1.8412 x C&lt;span style=&quot; vertical-align:sub;&quot;&gt;o &lt;/span&gt;/ (π * D&lt;span style=&quot; vertical-align:sub;&quot;&gt;in&lt;/span&gt;), &lt;/p&gt;&lt;p align=&quot;justify&quot;&gt;where C&lt;span style=&quot; vertical-align:sub;&quot;&gt;0&lt;/span&gt; is the fluid speed of sound in m/s, and D&lt;span style=&quot; vertical-align:sub;&quot;&gt;in&lt;/span&gt; is the pipe's internal diameter in m.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-           </property>
-           <property name="layoutDirection">
-            <enum>Qt::LayoutDirection::LeftToRight</enum>
            </property>
            <property name="styleSheet">
             <string notr="true"/>
            </property>
-           <property name="alignment">
-            <set>Qt::AlignmentFlag::AlignCenter</set>
+           <property name="currentIndex">
+            <number>0</number>
            </property>
-          </widget>
-         </item>
-         <item row="4" column="3">
-          <widget class="QLabel" name="label_unit_line_edit">
-           <property name="minimumSize">
-            <size>
-             <width>40</width>
-             <height>30</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>40</width>
-             <height>30</height>
-            </size>
-           </property>
-           <property name="font">
-            <font>
-             <pointsize>10</pointsize>
-            </font>
-           </property>
-           <property name="text">
-            <string>[Hz]</string>
-           </property>
+           <item>
+            <property name="text">
+             <string>Pa</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>kPa</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>MPa</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>atm</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>bar</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>kgf/cm²</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>ksi</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>psi</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>N/m²</string>
+            </property>
+           </item>
           </widget>
          </item>
         </layout>
@@ -703,7 +803,7 @@
   </layout>
  </widget>
  <resources>
-  <include location="../../../icons/resources.qrc"/>
+  <include location="../../../icons/dark_theme/resources.qrc"/>
  </resources>
  <connections/>
 </ui>

@@ -9,9 +9,9 @@ class NodalDisplacements:
 
 @dataclass
 class NodalStresses:
-    sigma_x: dict[int, np.ndarray[tuple[int], complex]] = field(default_factory=dict)
-    sigma_y: dict[int, np.ndarray[tuple[int], complex]] = field(default_factory=dict)
-    sigma_z: dict[int, np.ndarray[tuple[int], complex]] = field(default_factory=dict)
-    tau_xy: dict[int, np.ndarray[tuple[int], complex]] = field(default_factory=dict)
-    tau_xz: dict[int, np.ndarray[tuple[int], complex]] = field(default_factory=dict)
-    tau_yz: dict[int, np.ndarray[tuple[int], complex]] = field(default_factory=dict)
+    sigma_x: np.ndarray
+    sigma_y: np.ndarray
+    sigma_z: np.ndarray
+    tau_xy: np.ndarray
+    tau_xz: np.ndarray
+    tau_yz: np.ndarray

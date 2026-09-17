@@ -15,6 +15,7 @@ from PySide6.QtWidgets import (
 )
 
 from vibra import app
+from vibra.engine.analysis_info import PhysicalDomain
 from vibra.interface import error_title
 from vibra.interface.formatters.icons import Icon
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -134,14 +135,13 @@ class AnimationToolbar(QToolBar):
         self.update_phase_slider_steps()
 
     def update_toolbar(self):
-        if app().main_window.analysis_toolbar.combo_box_physical_domain.currentIndex() == 1:
-            self.magnification_factor_slider.setDisabled(True)
-            self.label_magnification_factor.setDisabled(True)
-            self.label_factor.setDisabled(True)
-        else:
-            self.magnification_factor_slider.setDisabled(False)
-            self.label_magnification_factor.setDisabled(False)
-            self.label_factor.setDisabled(False)
+
+        physical_domain = app().main_window.analysis_toolbar.combo_box_physical_domain.currentText()
+        acoustic_domain = physical_domain.lower() == PhysicalDomain.ACOUSTIC
+
+        self.magnification_factor_slider.setDisabled(acoustic_domain)
+        self.label_magnification_factor.setDisabled(acoustic_domain)
+        self.label_factor.setDisabled(acoustic_domain)
 
     def update_current_render_widget(self):
         self.current_render_widget = app().main_window.render_widgets_stack.currentWidget()

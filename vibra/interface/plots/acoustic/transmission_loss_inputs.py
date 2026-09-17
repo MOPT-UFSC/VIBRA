@@ -48,6 +48,10 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
         self.check_and_load_transmission_loss_data()
 
     @property
+    def model(self):
+        return app().project.model
+
+    @property
     def mesh(self):
         return app().project.model.mesh
 
@@ -274,7 +278,12 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
     def check_inputs(self):
 
         input_surface_id = self.lineEdit_input_surface_id.text()
-        self.input_surface_id, error_data = self.mesh.check_selected_ids(input_surface_id, selection="surfaces", single_id=True)
+        self.input_surface_id, error_data = self.model.check_selected_ids(
+            input_surface_id,
+            "surfaces",
+            domain="acoustic",
+            single_id=True,
+        )
 
         if error_data is not None:
             self.lineEdit_input_surface_id.setFocus()
@@ -283,7 +292,12 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
             return True
 
         output_surface_id = self.lineEdit_output_surface_id.text()
-        self.output_surface_id, error_data = self.mesh.check_selected_ids(output_surface_id, selection="surfaces", single_id=True)
+        self.output_surface_id, error_data = self.model.check_selected_ids(
+            output_surface_id,
+            "surfaces",
+            domain="acoustic",
+            single_id=True,
+            )
 
         if error_data is not None:
             self.lineEdit_output_surface_id.setFocus()
@@ -333,7 +347,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
 
     def map_cylindrical_surfaces_to_fluids(self):
 
-        self.map_curvatures_to_fluid = dict()
+        self.map_curvatures_to_fluid = {}
         self.comboBox_cutoff_frequency.clear()
         self.comboBox_cutoff_frequency.blockSignals(True)
 
@@ -364,22 +378,22 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
 
     def compute_pipe_cutoff_frequency_callback(self):
         if self.comboBox_cutoff_frequency.currentText() == "":
-            return None
+            return
         
         if not self.map_curvatures_to_fluid:
-            return None
+            return
         
         key = float(self.comboBox_cutoff_frequency.currentText())
         data = self.map_curvatures_to_fluid.get(key)
         if data is None:
-            return None
+            return
 
         d_in, fluid = data
         if not isinstance(fluid, Fluid):
-            return None
+            return
 
         if d_in == 0:
-            return None
+            return
 
         # speed of sound in m/s
         Co = fluid.speed_of_sound
@@ -392,7 +406,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
 
     def join_model_data(self):
 
-        self.model_results = dict()
+        self.model_results = {}
 
         if self.comboBox_processing_selector.currentIndex() == DataType.TRANSMISSION_LOSS:
 

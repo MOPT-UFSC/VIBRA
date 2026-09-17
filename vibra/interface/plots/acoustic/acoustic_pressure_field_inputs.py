@@ -4,11 +4,11 @@ from PySide6.QtWidgets import QGridLayout, QTreeWidgetItem
 
 from vibra import app
 from vibra.interface.loading_window import LoadingWindow
+from vibra.interface.numeric_checks.unit_utilities import convert_pressure_unit
 from vibra.interface.plots.general.animation_widget import AnimationWidget
 from vibra.interface.plots.general.results_display_widget import ResultsDisplayWidget
 from vibra.interface.ui_generated.plots.acoustic.acoustic_pressure_field_inputs_ui import AcousticPressureFieldInputs_UI
-from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
-from vibra.interface.viewer_3d.plot_setup import FrequencyPressurePlotSetup, PlotSetup, PressurePlotType
+from vibra.interface.viewer_3d.plot_setup import PressureFieldPlotSetupFrequency, PressurePlotType
 
 
 class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
@@ -37,20 +37,24 @@ class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
         self.selected_frequency_index = None
 
     def _configure_widgets(self):
-        #
+
         self.lineEdit_selected_frequency.setDisabled(True)
         self.lineEdit_selected_frequency.setProperty("status", "information")
-        #
+
         for i, width in enumerate([80, 140]):
             self.treeWidget_frequencies.setColumnWidth(i, width)
             self.treeWidget_frequencies.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def _create_connections(self):
+
+        # QComboBox connection
         self.comboBox_plot_type.currentIndexChanged.connect(self.update_plot)
-        #
+        self.comboBox_pressure_units.currentIndexChanged.connect(self.update_plot)
+
+        # QTreeWidget connection
         self.treeWidget_frequencies.itemClicked.connect(self.on_click_item)
         self.treeWidget_frequencies.itemDoubleClicked.connect(self.on_click_item)
-        #
+
         self.results_display_widget.colormap_changed.connect(self.animation_widget.update_color_and_deformation)
         self.results_display_widget.pressure_value_changed.connect(self.animation_widget.update_color_and_deformation)
 
@@ -95,7 +99,7 @@ class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
         selector_mask = np.abs(self.frequencies - frequency_selected) < 1e-6
 
         if selector_mask.any():
-            self.selected_frequency_index = self.indexes[selector_mask][0]
+            self.selected_frequency_index = self.indices[selector_mask][0]
 
         if self.selected_frequency_index is None:
             return
@@ -105,11 +109,15 @@ class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
         else:
             self.results_display_widget.configure_validators(-1e14, 1e14)
 
-        plot_setup = FrequencyPressurePlotSetup(
+        pressure_units = self.comboBox_pressure_units.currentText()
+        unit_factor = convert_pressure_unit(1, "Pa", pressure_units)
+
+        plot_setup = PressureFieldPlotSetupFrequency(
             phase=self.animation_widget.phase_in_radians,
             index=self.selected_frequency_index,
             plot_type=self.get_plot_type(),
-            unit="Pa",
+            unit=pressure_units,
+            unit_factor=unit_factor
         )
 
         self.animation_widget.reset_sliders()
@@ -117,12 +125,6 @@ class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
             reset_camera=False,
             plot_setup=plot_setup,
         )
-
-    def get_colormap(self) -> str:
-        index = self.comboBox_colormaps.currentIndex()
-        if not (0 <= index < len(COLORMAP_NAMES)):
-            return "jet"
-        return COLORMAP_NAMES[index]
 
     def get_plot_type(self) -> PressurePlotType:
         plot_types = [
@@ -141,7 +143,7 @@ class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
         else:
             return
 
-        self.indexes = np.arange(len(self.frequencies), dtype=int)
+        self.indices = np.arange(len(self.frequencies), dtype=int)
 
         self.treeWidget_frequencies.clear()
         for index, frequency in enumerate(self.frequencies):

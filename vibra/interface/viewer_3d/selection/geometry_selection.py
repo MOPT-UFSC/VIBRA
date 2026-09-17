@@ -64,12 +64,12 @@ class GeometrySelection:
         set[int],
         set[int],
     ]:
-        internal_picked_nodes = self._area_pick_node_internal_indexes(x0, y0, x1, y1)
+        internal_picked_nodes = self._area_pick_node_internal_indices(x0, y0, x1, y1)
 
         points = self._area_pick_points(x0, y0, x1, y1)
-        lines = self._pick_lines_from_indexes(internal_picked_nodes)
-        surfaces = self._pick_surfaces_from_indexes(internal_picked_nodes)
-        volumes = self._pick_volumes_from_indexes(internal_picked_nodes)
+        lines = self._pick_lines_from_indices(internal_picked_nodes)
+        surfaces = self._pick_surfaces_from_indices(internal_picked_nodes)
+        volumes = self._pick_volumes_from_indices(internal_picked_nodes)
 
         mesh = app().project.model.mesh
         if (mesh is not None) and ((mesh.solids_connectivity is None) or (mesh.solids_connectivity.size == 0)):
@@ -126,7 +126,7 @@ class GeometrySelection:
             x,
             y,
             self.geometry_render_widget.lines_actor,
-            "line_indexes",
+            "line_indices",
             self.geometry_render_widget.renderer,
         )
         if line_id >= 0:
@@ -145,7 +145,7 @@ class GeometrySelection:
             x,
             y,
             self.geometry_render_widget.multimaterial,
-            "surface_indexes",
+            "surface_indices",
             self.geometry_render_widget.renderer,
         )
         default_actor.SetVisibility(visibility)
@@ -160,7 +160,7 @@ class GeometrySelection:
             x,
             y,
             self.geometry_render_widget.multimaterial,
-            "volume_indexes",
+            "volume_indices",
             self.geometry_render_widget.renderer,
         )
         if volume_id >= 0:
@@ -190,10 +190,10 @@ class GeometrySelection:
             renderer,
         )
 
-        equivalent_node_indexes = points_coords[mask & plane_mask, 0].astype(int)
-        return {mesh.points_from_nodes[i] for i in equivalent_node_indexes}
+        equivalent_node_indices = points_coords[mask & plane_mask, 0].astype(int)
+        return {mesh.points_from_nodes[i] for i in equivalent_node_indices}
 
-    def _pick_lines_from_indexes(self, internal_picked_nodes: list[int]) -> set[int]:
+    def _pick_lines_from_indices(self, internal_picked_nodes: list[int]) -> set[int]:
         mesh = app().project.model.mesh
         if mesh is None:
             return set()
@@ -207,12 +207,12 @@ class GeometrySelection:
             axis=1,
         )
 
-        line_indexes = mesh.lines_connectivity[:, 1].astype(int)
-        all_lines = np.unique(line_indexes)
-        unselected = np.unique(line_indexes[mask_unselected])
+        line_indices = mesh.lines_connectivity[:, 1].astype(int)
+        all_lines = np.unique(line_indices)
+        unselected = np.unique(line_indices[mask_unselected])
         return set(all_lines) - set(unselected)
 
-    def _pick_surfaces_from_indexes(self, internal_picked_nodes: list[int]) -> set[int]:
+    def _pick_surfaces_from_indices(self, internal_picked_nodes: list[int]) -> set[int]:
         mesh = app().project.model.mesh
         if mesh is None:
             return set()
@@ -226,12 +226,12 @@ class GeometrySelection:
             axis=1,
         )
 
-        surface_indexes = mesh.faces_connectivity[:, 1].astype(int)
-        all_surfaces = np.unique(surface_indexes)
-        unselected = np.unique(surface_indexes[mask_unselected])
+        surface_indices = mesh.faces_connectivity[:, 1].astype(int)
+        all_surfaces = np.unique(surface_indices)
+        unselected = np.unique(surface_indices[mask_unselected])
         return set(all_surfaces) - set(unselected)
 
-    def _pick_volumes_from_indexes(self, internal_picked_nodes: list[int]) -> set[int]:
+    def _pick_volumes_from_indices(self, internal_picked_nodes: list[int]) -> set[int]:
         mesh = app().project.model.mesh
         if mesh is None:
             return set()
@@ -248,13 +248,13 @@ class GeometrySelection:
         if mesh is None:
             return set()
 
-        node_indexes = list()
+        node_indices = list()
         for _, node_id in mesh.nodes_from_points.items():
-            node_indexes.append(node_id)
+            node_indices.append(node_id)
 
-        return mesh.nodal_coordinates[node_indexes]
+        return mesh.nodal_coordinates[node_indices]
 
-    def _area_pick_node_internal_indexes(self, x0: int, y0: int, x1: int, y1: int) -> list[int]:
+    def _area_pick_node_internal_indices(self, x0: int, y0: int, x1: int, y1: int) -> list[int]:
         mesh = app().project.model.mesh
         if mesh is None:
             return set()
