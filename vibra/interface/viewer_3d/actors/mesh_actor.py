@@ -638,7 +638,7 @@ class MeshActor(vtkPropAssembly):
         return cell_array
 
     def _explode_to_1d_cells(self, connectivity: np.ndarray) -> np.ndarray:
-        n_nodes = connectivity[:, :4].shape[1]
+        n_nodes = connectivity[:, 4:].shape[1]
 
         match n_nodes:
             case 3 | 4:
@@ -649,7 +649,7 @@ class MeshActor(vtkPropAssembly):
         return self._explode_cells(connectivity, reorderings)
 
     def _explode_to_2d_cells(self, connectivity: np.ndarray) -> np.ndarray:
-        n_nodes = connectivity[:, :4].shape[1]
+        n_nodes = connectivity[:, 4:].shape[1]
 
         match n_nodes:
             case 4:
