@@ -24,7 +24,7 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(375, 757)
+        Form.resize(375, 842)
         self.gridLayout_2 = QGridLayout(Form)
         self.gridLayout_2.setSpacing(2)
         self.gridLayout_2.setObjectName(u"gridLayout_2")
@@ -35,7 +35,7 @@ class Ui_Form(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents_2 = QWidget()
         self.scrollAreaWidgetContents_2.setObjectName(u"scrollAreaWidgetContents_2")
-        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, 0, 371, 753))
+        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, 0, 371, 838))
         self.gridLayout_6 = QGridLayout(self.scrollAreaWidgetContents_2)
         self.gridLayout_6.setObjectName(u"gridLayout_6")
         self.gridLayout_6.setHorizontalSpacing(2)
@@ -109,8 +109,8 @@ class Ui_Form(object):
 
         self.frame_selector = QFrame(self.frame_2)
         self.frame_selector.setObjectName(u"frame_selector")
-        self.frame_selector.setMinimumSize(QSize(0, 40))
-        self.frame_selector.setMaximumSize(QSize(16777215, 40))
+        self.frame_selector.setMinimumSize(QSize(0, 72))
+        self.frame_selector.setMaximumSize(QSize(16777215, 72))
         self.frame_selector.setFrameShape(QFrame.Shape.NoFrame)
         self.frame_selector.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_4 = QGridLayout(self.frame_selector)
@@ -118,6 +118,28 @@ class Ui_Form(object):
         self.gridLayout_4.setHorizontalSpacing(6)
         self.gridLayout_4.setVerticalSpacing(0)
         self.gridLayout_4.setContentsMargins(0, 0, 0, 0)
+        self.label_5 = QLabel(self.frame_selector)
+        self.label_5.setObjectName(u"label_5")
+        self.label_5.setMinimumSize(QSize(0, 28))
+        self.label_5.setMaximumSize(QSize(16777215, 28))
+        self.label_5.setFont(font)
+        self.label_5.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_4.addWidget(self.label_5, 0, 3, 1, 1)
+
+        self.label_4 = QLabel(self.frame_selector)
+        self.label_4.setObjectName(u"label_4")
+        self.label_4.setMinimumSize(QSize(0, 30))
+        self.label_4.setMaximumSize(QSize(16777215, 30))
+        self.label_4.setFont(font)
+        self.label_4.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+
+        self.gridLayout_4.addWidget(self.label_4, 0, 1, 1, 1)
+
+        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_4.addItem(self.horizontalSpacer_3, 0, 0, 1, 1)
+
         self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.gridLayout_4.addItem(self.horizontalSpacer_4, 0, 4, 1, 1)
@@ -138,27 +160,35 @@ class Ui_Form(object):
 
         self.gridLayout_4.addWidget(self.lineEdit_selected_frequency, 0, 2, 1, 1)
 
-        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        self.label_linear_2 = QLabel(self.frame_selector)
+        self.label_linear_2.setObjectName(u"label_linear_2")
+        self.label_linear_2.setMinimumSize(QSize(0, 30))
+        self.label_linear_2.setMaximumSize(QSize(16777215, 30))
+        font2 = QFont()
+        font2.setPointSize(10)
+        font2.setBold(False)
+        self.label_linear_2.setFont(font2)
+        self.label_linear_2.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
-        self.gridLayout_4.addItem(self.horizontalSpacer_3, 0, 0, 1, 1)
+        self.gridLayout_4.addWidget(self.label_linear_2, 1, 1, 1, 1)
 
-        self.label_4 = QLabel(self.frame_selector)
-        self.label_4.setObjectName(u"label_4")
-        self.label_4.setMinimumSize(QSize(0, 28))
-        self.label_4.setMaximumSize(QSize(16777215, 28))
-        self.label_4.setFont(font)
-        self.label_4.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.comboBox_pressure_units = QComboBox(self.frame_selector)
+        self.comboBox_pressure_units.addItem("")
+        self.comboBox_pressure_units.addItem("")
+        self.comboBox_pressure_units.addItem("")
+        self.comboBox_pressure_units.addItem("")
+        self.comboBox_pressure_units.addItem("")
+        self.comboBox_pressure_units.addItem("")
+        self.comboBox_pressure_units.addItem("")
+        self.comboBox_pressure_units.addItem("")
+        self.comboBox_pressure_units.addItem("")
+        self.comboBox_pressure_units.setObjectName(u"comboBox_pressure_units")
+        self.comboBox_pressure_units.setMinimumSize(QSize(160, 30))
+        self.comboBox_pressure_units.setMaximumSize(QSize(180, 30))
+        self.comboBox_pressure_units.setFont(font)
+        self.comboBox_pressure_units.setStyleSheet(u"")
 
-        self.gridLayout_4.addWidget(self.label_4, 0, 1, 1, 1)
-
-        self.label_5 = QLabel(self.frame_selector)
-        self.label_5.setObjectName(u"label_5")
-        self.label_5.setMinimumSize(QSize(0, 28))
-        self.label_5.setMaximumSize(QSize(16777215, 28))
-        self.label_5.setFont(font)
-        self.label_5.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.gridLayout_4.addWidget(self.label_5, 0, 3, 1, 1)
+        self.gridLayout_4.addWidget(self.comboBox_pressure_units, 1, 2, 1, 1)
 
 
         self.gridLayout_5.addWidget(self.frame_selector, 0, 0, 1, 1)
@@ -174,15 +204,15 @@ class Ui_Form(object):
         self.gridLayout_3.setObjectName(u"gridLayout_3")
         self.gridLayout_3.setContentsMargins(0, 0, 0, 0)
         self.treeWidget_frequencies = QTreeWidget(self.frame_treeWidget)
-        font2 = QFont()
-        font2.setFamilies([u"MS Shell Dlg 2"])
-        font2.setPointSize(10)
+        font3 = QFont()
+        font3.setFamilies([u"MS Shell Dlg 2"])
+        font3.setPointSize(10)
         __qtreewidgetitem = QTreeWidgetItem()
         __qtreewidgetitem.setText(1, u"Frequency [Hz]");
         __qtreewidgetitem.setTextAlignment(1, Qt.AlignCenter);
         __qtreewidgetitem.setFont(1, font1);
         __qtreewidgetitem.setTextAlignment(0, Qt.AlignCenter);
-        __qtreewidgetitem.setFont(0, font2);
+        __qtreewidgetitem.setFont(0, font3);
         self.treeWidget_frequencies.setHeaderItem(__qtreewidgetitem)
         self.treeWidget_frequencies.setObjectName(u"treeWidget_frequencies")
         self.treeWidget_frequencies.setMinimumSize(QSize(260, 160))
@@ -214,12 +244,12 @@ class Ui_Form(object):
         self.label.setObjectName(u"label")
         self.label.setMinimumSize(QSize(0, 0))
         self.label.setMaximumSize(QSize(16777215, 16777215))
-        font3 = QFont()
-        font3.setFamilies([u"Segoe UI"])
-        font3.setPointSize(10)
-        font3.setBold(False)
-        font3.setItalic(False)
-        self.label.setFont(font3)
+        font4 = QFont()
+        font4.setFamilies([u"Segoe UI"])
+        font4.setPointSize(10)
+        font4.setBold(False)
+        font4.setItalic(False)
+        self.label.setFont(font4)
         self.label.setFrameShape(QFrame.Shape.NoFrame)
         self.label.setFrameShadow(QFrame.Shadow.Raised)
         self.label.setTextFormat(Qt.TextFormat.AutoText)
@@ -246,6 +276,9 @@ class Ui_Form(object):
 
         self.retranslateUi(Form)
 
+        self.comboBox_pressure_units.setCurrentIndex(0)
+
+
         QMetaObject.connectSlotsByName(Form)
     # setupUi
 
@@ -258,9 +291,20 @@ class Ui_Form(object):
         self.comboBox_plot_type.setItemText(3, QCoreApplication.translate("Form", u"Real values", None))
         self.comboBox_plot_type.setItemText(4, QCoreApplication.translate("Form", u"Imag values", None))
 
-        self.lineEdit_selected_frequency.setText("")
-        self.label_4.setText(QCoreApplication.translate("Form", u"Frequency:", None))
         self.label_5.setText(QCoreApplication.translate("Form", u"[Hz]", None))
+        self.label_4.setText(QCoreApplication.translate("Form", u"Frequency:", None))
+        self.lineEdit_selected_frequency.setText("")
+        self.label_linear_2.setText(QCoreApplication.translate("Form", u"Pressure units:", None))
+        self.comboBox_pressure_units.setItemText(0, QCoreApplication.translate("Form", u"Pa", None))
+        self.comboBox_pressure_units.setItemText(1, QCoreApplication.translate("Form", u"kPa", None))
+        self.comboBox_pressure_units.setItemText(2, QCoreApplication.translate("Form", u"MPa", None))
+        self.comboBox_pressure_units.setItemText(3, QCoreApplication.translate("Form", u"atm", None))
+        self.comboBox_pressure_units.setItemText(4, QCoreApplication.translate("Form", u"bar", None))
+        self.comboBox_pressure_units.setItemText(5, QCoreApplication.translate("Form", u"kgf/cm\u00b2", None))
+        self.comboBox_pressure_units.setItemText(6, QCoreApplication.translate("Form", u"ksi", None))
+        self.comboBox_pressure_units.setItemText(7, QCoreApplication.translate("Form", u"psi", None))
+        self.comboBox_pressure_units.setItemText(8, QCoreApplication.translate("Form", u"N/m\u00b2", None))
+
         ___qtreewidgetitem = self.treeWidget_frequencies.headerItem()
         ___qtreewidgetitem.setText(0, QCoreApplication.translate("Form", u"Index", None));
         self.label.setText(QCoreApplication.translate("Form", u"Select the frequency to be plotted", None))
@@ -285,9 +329,11 @@ class AcousticPressureFieldInputs_UI(QWidget, Ui_Form):
                                                         - comboBox_plot_type: QComboBox
                                             - frame_selector: QFrame
                                                 - (Layout): QGridLayout
-                                                        - lineEdit_selected_frequency: QLineEdit
-                                                        - label_4: QLabel
                                                         - label_5: QLabel
+                                                        - label_4: QLabel
+                                                        - lineEdit_selected_frequency: QLineEdit
+                                                        - label_linear_2: QLabel
+                                                        - comboBox_pressure_units: QComboBox
                                             - frame_treeWidget: QFrame
                                                 - (Layout): QGridLayout
                                                         - treeWidget_frequencies: QTreeWidget

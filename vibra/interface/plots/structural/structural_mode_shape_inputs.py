@@ -10,7 +10,7 @@ from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.plots.general.animation_widget import AnimationWidget
 from vibra.interface.plots.general.results_display_widget import ResultsDisplayWidget
 from vibra.interface.ui_generated.plots.structural.structural_mode_shape_inputs_ui import StructuralModeShapeInputs_UI
-from vibra.interface.viewer_3d.plot_setup import DisplacementPlotType, FrequencyDisplacementPlotSetup
+from vibra.interface.viewer_3d.plot_setup import DisplacementPlotType, DisplacementFieldPlotSetupFrequency
 
 
 class PlotStructuralModeShapeInputs(StructuralModeShapeInputs_UI):
@@ -108,7 +108,7 @@ class PlotStructuralModeShapeInputs(StructuralModeShapeInputs_UI):
         self.animation_widget.reset_sliders()
         self.results_display_widget.configure_validators(-1e14, 1e14)
 
-        plot_setup = FrequencyDisplacementPlotSetup(
+        plot_setup = DisplacementFieldPlotSetupFrequency(
             phase=self.animation_widget.phase_in_radians,
             magnification_factor=self.animation_widget.magnification_factor,
             index=self.mode_index,

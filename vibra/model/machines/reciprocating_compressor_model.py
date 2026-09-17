@@ -265,7 +265,7 @@ class ReciprocatingCompressorModel:
         V1_index = volumes.index(value)
 
         N = len(volumes)
-        _indexes = self.get_shifted_vector(np.arange(N), V1_index)
+        _indices = self.get_shifted_vector(np.arange(N), V1_index)
         _thetas = self.get_shifted_vector(theta, V1_index)
         _volumes = self.get_shifted_vector(volumes, V1_index)
         _v_piston = self.get_shifted_vector(v_piston, V1_index)
@@ -281,12 +281,12 @@ class ReciprocatingCompressorModel:
                     spot_criteria = [_v_piston[i] > 0, Vi-Vj < 0, _v_piston[i] < 0, Vi-Vj > 0]   
                     if spot_criteria[j]:
                         cache_ind = i + 1
-                        n_index = int(_indexes[i+1])
+                        n_index = int(_indices[i+1])
                         cache_theta = _thetas[i+1]
                         cache_Vi = _volumes[i+1]
                     else:
                         cache_ind = i
-                        n_index = int(_indexes[i])
+                        n_index = int(_indices[i])
                         cache_theta = _thetas[i]
                         cache_Vi = _volumes[i]
                 else:
@@ -309,7 +309,7 @@ class ReciprocatingCompressorModel:
             end_volume = volumes[end_index]
 
             boundary_data[labels[j]] = {
-                "indexes": [start_index, end_index],
+                "indices": [start_index, end_index],
                 "angles": [start_angle, end_angle],
                 "volumes": [start_volume, end_volume],
             }
@@ -367,10 +367,10 @@ class ReciprocatingCompressorModel:
             capacity = self.capacity_fraction
 
         if capacity < 1:
-            start_index, end_index = angle_data["V4"]["indexes"]
-            indexes = self.get_cycle_indexes(start_index, end_index, N)
+            start_index, end_index = angle_data["V4"]["indices"]
+            indices = self.get_cycle_indices(start_index, end_index, N)
             V4_i = capacity*(V4-V0) + V0
-            for i in indexes:
+            for i in indices:
                 V_i = volumes[i]
                 if V_i >= V4_i:
                     V4c = V_i
@@ -386,9 +386,9 @@ class ReciprocatingCompressorModel:
         stage_log = f"Capacity (head-end) = {capacity}\n\n"
 
         # Compression cycle (3) -> (4)
-        start_index, end_index = angle_data["V3"]["indexes"]
-        indexes = self.get_cycle_indexes(start_index, end_index, N)
-        for i in indexes:
+        start_index, end_index = angle_data["V3"]["indices"]
+        indices = self.get_cycle_indices(start_index, end_index, N)
+        for i in indices:
             V_i = volumes[i]
 
             if (round(V3c,8) <= round(V_i,8) <= round(V3,8)):
@@ -425,9 +425,9 @@ class ReciprocatingCompressorModel:
             pressures[i] = P_i
 
         # Discharge cycle (4) -> (1)
-        start_index, end_index = angle_data["V4"]["indexes"]
-        indexes = self.get_cycle_indexes(start_index, end_index, N)
-        for i in indexes:
+        start_index, end_index = angle_data["V4"]["indices"]
+        indices = self.get_cycle_indices(start_index, end_index, N)
+        for i in indices:
             V_i = volumes[i]
 
             if (round(V3c,8) >= round(V_i,8) > round(V4c,8)) and (round(v_piston[i],8) >= 0):
@@ -442,9 +442,9 @@ class ReciprocatingCompressorModel:
             pressures[i] = P_i
 
         # Expasion cycle (1) -> (2)
-        start_index, end_index = angle_data["V1"]["indexes"]
-        indexes = self.get_cycle_indexes(start_index, end_index, N)
-        for i in indexes:
+        start_index, end_index = angle_data["V1"]["indices"]
+        indices = self.get_cycle_indices(start_index, end_index, N)
+        for i in indices:
             V_i = volumes[i]
             if (V1 < round(V_i,8) <= round(V2,8)) and (round(v_piston[i],8) < 0):
                 P_i = ((V1/V_i)**(self.k))*self.P_discharge
@@ -458,9 +458,9 @@ class ReciprocatingCompressorModel:
             pressures[i] = P_i
 
         # Suction cycle (2) -> (3)
-        start_index, end_index = angle_data["V2"]["indexes"]
-        indexes = self.get_cycle_indexes(start_index, end_index, N)
-        for i in indexes:
+        start_index, end_index = angle_data["V2"]["indices"]
+        indices = self.get_cycle_indices(start_index, end_index, N)
+        for i in indices:
             V_i = volumes[i]
             if (V2 < round(V_i,8) <= round(V3,8)) and (round(v_piston[i],8) <= 0):
                 P_i = self.P_suction
@@ -486,8 +486,8 @@ class ReciprocatingCompressorModel:
             header += f"V3 = {V3}\n"
             header += f"V4 = {V4}\n"
 
-            indexes = np.arange(N)
-            data = np.array([indexes, time, angle, v_piston, volumes, pressures, open_suc, open_disc], dtype=float)
+            indices = np.arange(N)
+            data = np.array([indices, time, angle, v_piston, volumes, pressures, open_suc, open_disc], dtype=float)
 
             np.savetxt(fname, data.T, delimiter=",", header=header, fmt="%i, %.14e, %.14e, %.14e, %.14e, %.14e, %i, %i")
 
@@ -538,10 +538,10 @@ class ReciprocatingCompressorModel:
             capacity = self.capacity_fraction
 
         if capacity < 1:
-            start_index, end_index = angle_data["V4"]["indexes"]
-            indexes = self.get_cycle_indexes(start_index, end_index, N)
+            start_index, end_index = angle_data["V4"]["indices"]
+            indices = self.get_cycle_indices(start_index, end_index, N)
             V4_i = capacity*(V4-V0) + V0
-            for i in indexes:
+            for i in indices:
                 V_i = volumes[i]
                 if V_i >= V4_i:
                     V4c = V_i
@@ -558,9 +558,9 @@ class ReciprocatingCompressorModel:
         stage_log = f"Capacity (crank-end) = {capacity}\n\n"
         
         # Compression cycle (3) -> (4)
-        start_index, end_index = angle_data["V3"]["indexes"]
-        indexes = self.get_cycle_indexes(start_index, end_index, N)
-        for i in indexes:
+        start_index, end_index = angle_data["V3"]["indices"]
+        indices = self.get_cycle_indices(start_index, end_index, N)
+        for i in indices:
             V_i = volumes[i]
 
             if (round(V3c,8) <= round(V_i,8) <= round(V3,8)):
@@ -597,9 +597,9 @@ class ReciprocatingCompressorModel:
             pressures[i] = P_i
 
         # Discharge cycle (4) -> (1)
-        start_index, end_index = angle_data["V4"]["indexes"]
-        indexes = self.get_cycle_indexes(start_index, end_index, N)
-        for i in indexes:
+        start_index, end_index = angle_data["V4"]["indices"]
+        indices = self.get_cycle_indices(start_index, end_index, N)
+        for i in indices:
             V_i = volumes[i]
 
             if (round(V3c,8) >= round(V_i,8) > round(V4c,8)) and (round(v_piston[i],8) >= 0):
@@ -614,9 +614,9 @@ class ReciprocatingCompressorModel:
             pressures[i] = P_i
 
         # Expasion cycle (1) -> (2)
-        start_index, end_index = angle_data["V1"]["indexes"]
-        indexes = self.get_cycle_indexes(start_index, end_index, N)
-        for i in indexes:
+        start_index, end_index = angle_data["V1"]["indices"]
+        indices = self.get_cycle_indices(start_index, end_index, N)
+        for i in indices:
             V_i = volumes[i]
             if (V1 < V_i <= round(V2,8)) and (round(v_piston[i],8) < 0):
                 P_i = ((V1/V_i)**(self.k))*self.P_discharge
@@ -631,9 +631,9 @@ class ReciprocatingCompressorModel:
             pressures[i] = P_i
 
         # Suction cycle (2) -> (3)
-        start_index, end_index = angle_data["V2"]["indexes"]
-        indexes = self.get_cycle_indexes(start_index, end_index, N)
-        for i in indexes:
+        start_index, end_index = angle_data["V2"]["indices"]
+        indices = self.get_cycle_indices(start_index, end_index, N)
+        for i in indices:
             V_i = volumes[i]
             if (V2 < round(V_i,8) <= round(V3,8)) and (round(v_piston[i],8) <= 0):
                 P_i = self.P_suction
@@ -659,8 +659,8 @@ class ReciprocatingCompressorModel:
             header += f"V3 = {V3}\n"
             header += f"V4 = {V4}\n"
 
-            indexes = np.arange(N)
-            data = np.array([indexes, time, angle, v_piston, volumes, pressures, open_suc, open_disc], dtype=float)
+            indices = np.arange(N)
+            data = np.array([indices, time, angle, v_piston, volumes, pressures, open_suc, open_disc], dtype=float)
 
             np.savetxt(fname, data.T, delimiter=",", header=header, fmt="%i, %.14e, %.14e, %.14e, %.14e, %.14e, %i, %i")
    
@@ -669,17 +669,17 @@ class ReciprocatingCompressorModel:
 
         return volumes, pressures, valves_info
 
-    def get_cycle_indexes(self, start_index: int, end_index: int, N: int):
+    def get_cycle_indices(self, start_index: int, end_index: int, N: int):
 
         if end_index > start_index:
-            indexes = np.arange(start_index, end_index+1, 1)
+            indices = np.arange(start_index, end_index+1, 1)
 
         else:
             left_ind = np.arange(start_index, N, 1)
             right_ind = np.arange(0, end_index + 1, 1)
-            indexes = np.append(left_ind, right_ind)
+            indices = np.append(left_ind, right_ind)
 
-        return indexes
+        return indices
 
     def flow_head_end(self, tdc=None, capacity=1):
 
@@ -792,12 +792,12 @@ class ReciprocatingCompressorModel:
 
         values = np.array([self.get_in_mass_flow(capacity=_cap) for _cap in list_caps])
         if nearest_absolute:
-            indexes = np.argsort(np.abs(values - self.final_mass_flow))
+            indices = np.argsort(np.abs(values - self.final_mass_flow))
 
         else:
-            indexes = np.argsort(values - np.min(values))
+            indices = np.argsort(values - np.min(values))
 
-        output = np.array(list_caps)[indexes]
+        output = np.array(list_caps)[indices]
 
         return output[0]
 

@@ -1,16 +1,17 @@
 from __future__ import annotations
 
+import logging
 from collections import defaultdict
 from functools import cache
-from time import time
+from time import perf_counter
 from typing import Literal
 
 import numpy as np
 
-from vibra.engine import AnalysisID
 from vibra.engine.model import Model
-from vibra.engine.postprocessing.structural_post_solution_dataclass import NodalStresses
+from vibra.engine.properties.material import Material
 from vibra.engine.solution import HarmonicSolution, LazyHarmonicSolution, ModalSolution
+from vibra.interface.viewer_3d.plot_setup import StressPlotType, StressType
 
 DataTypes = Literal["u_sum", "u_x", "u_y", "u_z", "v_svm", "v_x", "v_y", "v_z", "a_sum", "a_x", "a_y", "a_z"]
 
@@ -22,13 +23,16 @@ class StructuralPostprocessing:
 
         self.model = model
 
+
     @property
     def mesh(self):
         return self.model.mesh
 
+
     @property
     def solution(self):
         return self.model.solution
+
 
     @property
     def structural_element_2d(self):
@@ -36,14 +40,142 @@ class StructuralPostprocessing:
             self.model.set_structural_elements()
         return self.model.structural_element_2d
 
+
     @property
     def structural_element_3d(self):
         if self.model.structural_element_3d is None:
             self.model.set_structural_elements()
         return self.model.structural_element_3d
 
+
     @cache
-    def get_max_min_values_of_selected_data(self, data_complex: tuple[complex], data_type: str) -> list[float, float]:
+    def get_max_min_values_for_displacements_data(self, column: int, n_diff: int, unit_factor: float, data_type: str, is_modal: bool) -> list[float, float]:
+        """
+        This method returns the minimum and maximum values of selected frequency for animation purposes.
+
+        Parameters
+        ----------
+        column: int
+            The column index of the nodal solution.
+
+        n_diff: int
+            The number of differentiations.
+
+        unit_factor: float
+            The unit conversion factor.
+
+        data_type: str 
+            A string of type DataTypes that represents the data to be processed.
+
+        Return
+        ------
+        r_min, r_max: float values for minimum and maximum displacements,
+
+        """
+
+        if is_modal:
+            data_complex = self.solution.structural_modal_shapes[self.solution.displacement_dof, column]
+        else:
+            data_complex = self.solution.structural_solution[self.solution.displacement_dof, column]
+
+        if self.model.analysis_id.is_harmonic():
+            freq = self.model.frequencies[column]
+            data_complex *= (1j * 2 * np.pi * freq)**n_diff
+
+        divisions = 36
+        thetas = np.linspace(0, 2 * np.pi, divisions + 1, endpoint=True).reshape(-1, 1, 1)
+
+        data_complex = unit_factor * data_complex.reshape(-1, 3)
+
+        # u_xyz_all = Re{data_complex * exp(1j * thetas)}
+        u_xyz_all = data_complex.real * np.cos(thetas) - data_complex.imag * np.sin(thetas)
+
+        if data_type in ["u_x", "v_x", "a_x"]:
+            u_xyz = u_xyz_all[:, :, 0]
+        elif data_type in ["u_y", "v_y", "a_y"]:
+            u_xyz = u_xyz_all[:, :, 1]
+        elif data_type in ["u_z", "v_z", "a_z"]:
+            u_xyz = u_xyz_all[:, :, 2]
+        else:
+            u_xyz = np.linalg.norm(u_xyz_all, axis=2)
+
+        r_min = np.min(u_xyz)
+        r_max = np.max(u_xyz)
+
+        if data_type in ["u_sum", "v_sum", "a_sum"]:
+            return 0.0, np.max(np.abs([r_min, r_max]))
+
+        if np.abs(r_min) != np.abs(r_max):
+            max_abs = np.max(np.abs([r_min, r_max]))
+            r_min = -max_abs
+            r_max = max_abs
+
+        return r_min, r_max
+
+
+    @cache
+    def get_max_min_values_for_stress_data(self, column: int, unit_factor: float, stress_index: int, data_type: str) -> list[float, float]:
+        """
+        This method returns the minimum and maximum values of selected frequency for animation purposes.
+
+        Parameters
+        ----------
+        column: int
+            The column index of the nodal solution.
+
+        unit_factor: float
+            The unit conversion factor.
+
+        data_type: str 
+            A string of type DataTypes that represents the data to be processed.
+
+        Return
+        ------
+        r_min, r_max: float values for minimum and maximum displacements,
+
+        """
+
+        avg_nodal_stresses = self.recover_nodal_averaged_structural_stresses()
+        if avg_nodal_stresses is None:
+            return (0, 0)
+
+        # initialize the stress vector and convert to MPa
+        data_complex = unit_factor * avg_nodal_stresses[:, stress_index, column].copy()
+
+        if data_type == "absolute_values":
+            return (0, max(np.abs(data_complex)))
+
+        if data_type == "real_values":
+            return (min(np.real(data_complex)), max(np.real(data_complex)))
+
+        if data_type == "imag_values":
+            return (min(np.imag(data_complex)), max(np.imag(data_complex)))
+
+        divisions = 36
+        thetas = np.linspace(0, 2 * np.pi, divisions + 1, endpoint=True)
+
+        data_complex = data_complex.reshape(-1, 1)
+
+        # stresses = Re{data_complex * exp(1j * thetas)}
+        stresses = data_complex.real * np.cos(thetas) - data_complex.imag * np.sin(thetas)
+
+        s_min = np.min(stresses.ravel())
+        s_max = np.max(stresses.ravel())
+
+        if data_type == "absolute_animation":
+            s_min = 0
+            s_max = max(s_max, abs(s_min))
+
+        if data_type == "non_absolute_animation":
+            max_value = np.max(np.abs([s_min, s_max]))
+            s_min = -max_value
+            s_max = max_value
+
+        return s_min, s_max
+
+
+    @cache
+    def get_max_min_values_for_advanced_stress_data(self, data_complex: tuple, data_type: str) -> list[float, float]:
         """
         This method returns the minimum and maximum values of selected frequency for animation purposes.
 
@@ -58,45 +190,38 @@ class StructuralPostprocessing:
         r_min, r_max: float values for minimum and maximum displacements,
 
         """
-        if not data_complex:
-            return
 
-        amplitudes = np.abs(data_complex)
-        phases = np.angle(data_complex)
+        if data_type == "absolute_values":
+            return (0, max(np.abs(data_complex)))
 
-        r_min = 1
-        r_max = 0
-        thetas = np.arange(0, 360, 2) * (np.pi / 180)
+        if data_type == "real_values":
+            return (min(np.real(data_complex)), max(np.real(data_complex)))
 
-        for theta in thetas:
-            results = (amplitudes * np.cos(phases + theta)).reshape(-1, 3)
+        if data_type == "imag_values":
+            return (min(np.imag(data_complex)), max(np.imag(data_complex)))
 
-            if data_type in ["u_x", "v_x", "a_x"]:
-                u_xyz = results * np.array([1.0, 0.0, 0.0])
-            elif data_type in ["u_y", "v_y", "a_y"]:
-                u_xyz = results * np.array([0.0, 1.0, 0.0])
-            elif data_type in ["u_z", "v_z", "a_z"]:
-                u_xyz = results * np.array([0.0, 0.0, 1.0])
-            else:
-                u_xyz = np.linalg.norm(results, axis=1)
+        divisions = 36
+        thetas = np.linspace(0, 2 * np.pi, divisions + 1, endpoint=True)
 
-            r_min_i = np.min(u_xyz)
-            if r_min_i < r_min:
-                r_min = r_min_i
+        data_complex = np.array(data_complex).reshape(-1, 1)
 
-            r_max_i = np.max(u_xyz)
-            if r_max_i > r_max:
-                r_max = r_max_i
+        # stresses = Re{data_complex * exp(1j * thetas)}
+        stresses = data_complex.real * np.cos(thetas) - data_complex.imag * np.sin(thetas)
 
-        if data_type in ["u_sum", "v_sum", "a_sum"]:
-            return 0.0, r_max
+        s_min = np.min(stresses.ravel())
+        s_max = np.max(stresses.ravel())
 
-        if np.abs(r_min) != np.abs(r_max):
-            max_abs = np.max(np.abs([r_min, r_max]))
-            r_min = -max_abs
-            r_max = max_abs
+        if data_type == "absolute_animation":
+            s_min = 0
+            s_max = np.max(np.abs([s_max, s_min]))
 
-        return r_min, r_max
+        if data_type == "non_absolute_animation":
+            max_value = np.max(np.abs([s_min, s_max]))
+            s_min = -max_value
+            s_max = max_value
+
+        return s_min, s_max
+
 
     def compute_structural_response_field(
         self,
@@ -104,6 +229,7 @@ class StructuralPostprocessing:
         phase_rad: float,
         data_type: DataTypes,
         n_diff: int = 0,
+        unit_factor: float = 1.0,
         is_modal: bool = False,
     ):
         if not isinstance(self.solution, ModalSolution | HarmonicSolution):
@@ -112,16 +238,21 @@ class StructuralPostprocessing:
         if isinstance(self.solution, LazyHarmonicSolution) and not self.solution.is_valid():
             return
 
-        data_complex = self.solution.get_nodal_displacement_at_column(column)
-        if self.model.analysis_id == AnalysisID.STRUCTURAL_HARMONIC:
+        if is_modal:
+            modal_shapes = self.solution.structural_modal_shapes
+            data_complex = modal_shapes[self.solution.displacement_dof, column].copy()
+        else:
+            nodal_solution = self.solution.structural_solution
+            data_complex = nodal_solution[self.solution.displacement_dof, column].copy()
+
+        if unit_factor != 1.0:
+            data_complex *= unit_factor
+
+        if self.model.analysis_id.is_harmonic():
             freq = self.model.frequencies[column]
             data_complex *= (1j * 2 * np.pi * freq)**n_diff
 
-        amplitudes = np.abs(data_complex)
-        phases = np.angle(data_complex)
-        delta = -phases[np.argmax(amplitudes)]
-
-        phase_shifted_data = amplitudes * np.cos(phases + phase_rad + delta)
+        phase_shifted_data  = compute_shifted_values(data_complex, phase_rad)
         current_solution = phase_shifted_data.reshape(-1, 3).copy()
 
         if data_type in ["u_sum", "v_sum", "a_sum"]:
@@ -140,19 +271,91 @@ class StructuralPostprocessing:
             color_scalars = current_solution[:, 2]
             phase_shifted_data = current_solution * np.array([0.0, 0.0, 1.0])
 
-        min_value, max_value = self.get_max_min_values_of_selected_data(tuple(data_complex), data_type)
+        min_value, max_value = self.get_max_min_values_for_displacements_data(column, n_diff, round(unit_factor, 10), data_type, is_modal)
 
-        return phase_shifted_data, color_scalars, min_value, max_value, np.imag(phase_shifted_data).any()
+        return phase_shifted_data, color_scalars, min_value, max_value, np.imag(data_complex).any()
 
-    def get_structural_stresses(
+
+    def compute_structural_response_field_for_stress_plot(
+        self,
+        column: int,
+        phase_rad: float,
+        data_type: DataTypes,
+        n_diff: int = 0,
+        unit_factor: float = 1.0,
+        is_modal: bool = False,
+    ):
+        if not isinstance(self.solution, ModalSolution | HarmonicSolution):
+            return
+
+        if isinstance(self.solution, LazyHarmonicSolution) and not self.solution.is_valid():
+            return
+
+        if is_modal:
+            modal_shapes = self.solution.structural_modal_shapes
+            data_complex = modal_shapes[self.solution.displacement_dof, column].copy()
+        else:
+            nodal_solution = self.solution.structural_solution
+            data_complex = nodal_solution[self.solution.displacement_dof, column].copy()
+
+        if unit_factor != 1.0:
+            data_complex *= unit_factor
+
+        if self.model.analysis_id.is_harmonic():
+            freq = self.model.frequencies[column]
+            data_complex *= (1j * 2 * np.pi * freq)**n_diff
+
+        phase_shifted_data  = compute_shifted_values(data_complex, phase_rad)
+        current_solution = phase_shifted_data.reshape(-1, 3).copy()
+
+        _, max_value = self.get_max_min_values_for_displacements_data(column, 0, unit_factor, data_type, False)
+
+        return current_solution, max_value
+
+
+    def map_material_to_elements(self, element_ids: list[int]) -> dict[int, list[int]]:
+        """
+        This method maps the materials to the elements.
+
+        Parameter
+        ---------
+        element_ids: list
+            The list of elements to map the materials.
+        
+        Return
+        ------
+        material_to_elements: dict
+            The material-to-elements mapping dictionary.
+        """
+        material_to_volumes = defaultdict(list)
+
+        for vol_id in self.model.domains_processor.volumes_of_domain.get("structural", []):
+            material = self.model.properties._get_property("material", volume=vol_id)
+            if isinstance(material, Material):
+                material_to_volumes[material.identifier].append(vol_id)
+
+        material_to_elements = defaultdict(list)
+
+        for mat_id, volume_ids in material_to_volumes.items():
+
+            mask = np.isin(self.mesh.solids_connectivity[:, 1], volume_ids)
+            elements_from_volumes = self.mesh.solids_connectivity[mask, 0]
+
+            valid_element_ids = np.intersect1d(element_ids, elements_from_volumes)
+            material_to_elements[mat_id] = np.unique(valid_element_ids)
+
+        return material_to_elements
+
+
+    @cache
+    def recover_nodal_averaged_structural_stresses(
             self,
             node_ids : int | list[int] | None = None,
             surface_ids: int | list[int] | None = None,
             volume_ids: list[int] | None = None,
-            ):
+            ) -> np.ndarray:
         """
-        This method computes the nodal averaged stresses and the nodal stresses 
-        for each element.
+        This method computes the nodal averaged.
 
         Parameters
         ----------
@@ -167,29 +370,29 @@ class StructuralPostprocessing:
 
         Return
         ------
-        avg_nodal_stresses_data: dict
-            A dictionary whose keys are the node_ids and the values are the averaged
-            nodal stresses.
-
-        nodal_stresses_data: dict
-            A dictionary whose keys are the tuples in the form (element_id, node_id) 
-            and the values are the nodal stresses for each element.
+        avg_nodal_stresses: np.ndarray
+            A 3D array in which each plane stores the averaged nodal stresses, so that each row
+            contains a stress (Sx, Sy, Sz, Txy, Txz, Tyz) and the columns represent the frequencies.
 
         """
 
-        t0 = time()
+        logging.info("Recovering the structural stresses... (1/3)")
 
         element_3d = self.structural_element_3d
 
-        if element_3d.connectivity is None:
+        if element_3d.connectivities is None:
             element_3d.reorder_connect()
 
-        if isinstance(node_ids, int):
+        if all(item is None for item in (node_ids, surface_ids, volume_ids)):
+            node_ids = self.model.domains_processor.nodes_of_domain.get("structural", [])
+            element_ids = self.model.domains_processor.elements_of_domain.get("structural", [])
+
+        elif isinstance(node_ids, int):
             node_ids = [node_ids]
 
-        if not isinstance(node_ids, np.ndarray | list):
+        elif not isinstance(node_ids, np.ndarray | list):
 
-            node_ids = list()
+            node_ids = []
             if isinstance(surface_ids, int):
                 surface_ids = [surface_ids]
 
@@ -206,79 +409,64 @@ class StructuralPostprocessing:
                     volume_nodes = self.mesh.get_nodes_from_volume(volume_id)
                     node_ids.extend(volume_nodes)
 
-        if not node_ids:
-            print("Invalid node ids")
-            return dict(), dict()
+            logging.info("Recovering the structural stresses... (2/3)")
+            if isinstance(node_ids, np.ndarray | list):
+                node_ids = np.unique(node_ids)
+                element_ids = self.model.get_solid_elements_from_nodes(node_ids, "structural")
 
-        node_ids = np.unique(node_ids)
-        element_ids = self.mesh.get_solid_elements_from_nodes(node_ids)
+        # initialize variables
+        n_nodes = len(node_ids)
+        n_el = len(element_ids)
+        n_freq = len(self.model.frequencies)
 
-        dt = time() - t0
-        print(f"Time 1: {dt} s")
+        corner_indices = element_3d.corner_nodes_indices
+        midside_data = element_3d.midside_nodes_indices
+        is_quadratic = np.any(midside_data)
 
-        t0 = time()
+        if is_quadratic:
+            midside_indices = midside_data[:, 0]
+            ind_1 = midside_data[:, 1]
+            ind_2 = midside_data[:, 2]
 
-        # local_dofs = np.arange(element_3d.DOF_PER_NODE, dtype=int)
-        # dofs_indexes = element_nodes.reshape(-1, 1) * element_3d.DOF_PER_NODE + local_dofs
+        # initialize variables
+        last_progress = 0
+        avg_nodal_stresses = np.zeros((n_nodes, 6, n_freq), dtype=complex)
+        _, counts = np.unique(self.mesh.solids_connectivity[element_ids, 4:], return_counts=True)
 
-        # # Load all frequency solutions to optimize multiple load
-        # node_to_index = dict(zip(element_nodes, np.arange(element_nodes.size, dtype=int)))
-        # solution = self.solution.nodal_solution[dofs_indexes.flatten(), :]
+        # map all elements connectivities
+        _connect_flat = self.model.get_mapped_nodes(element_3d.connectivities[element_ids, :].ravel(), "structural")
+        _connectivities = _connect_flat.reshape(-1, element_3d.nodes_per_element)
 
-        nodal_stresses_data = dict()
+        for i, _connect in enumerate(_connectivities):
 
-        avg_den = defaultdict(int)
-        avg_nodal_stresses_data = defaultdict(float)
+            progress = int((100 * (i / n_el) // 5) * 5)
+            if progress != last_progress:
+                logging.info(f"Calculating the nodal stresses for each element... [{progress}/100]")
 
-        corner_indexes = element_3d.corner_nodes_indexes
-        midside_indexes_map = element_3d.midside_nodes_indexes_map
+            # process the extrapolated nodal stresses
+            enodal_stresses = element_3d.process_stresses_at_integration_points(element_ids[i], extrapolate=True)
 
-        for element_id in element_ids:
-            connect = element_3d.connectivity[element_id, 1:]
-            # indexes = np.array([node_to_index.get(node) for node in connect], dtype=int)
-            # dofs_indexes = indexes.reshape(-1, 1) * element_3d.DOF_PER_NODE + local_dofs
-            # dofs_indexes = dofs_indexes.flatten()
+            # sum the nodal stresses at the corner nodes
+            avg_nodal_stresses[_connect[corner_indices], :, :] += enodal_stresses
 
-            element_stresses = element_3d.process_stresses_at_integration_points(
-                element_id,
-                nodal_solution = None, #self.solution.nodal_solution[dofs_indexes, :]
-                solution = self.solution.nodal_solution,
-                )
+            # sum the nodal stresses at the midside nodes
+            if is_quadratic:
+                avg_nodal_stresses[_connect[midside_indices], :, :] += (enodal_stresses[ind_1, :, :] + enodal_stresses[ind_2, :, :]) / 2
 
-            enodal_stresses = element_3d.extrapolate_stresses_to_nodes(element_stresses)
+        # average the nodal stresses
+        avg_nodal_stresses /= counts.reshape(-1, 1, 1)
 
-            for i, e_node in enumerate(connect):
-                avg_den[e_node] += 1
+        return avg_nodal_stresses
 
-                if i in corner_indexes:
-                    avg_nodal_stresses_data[e_node] += enodal_stresses[:, i, :]
-                    nodal_stresses_data[(element_id, e_node)] = enodal_stresses[:, i, :]
 
-                else:
-
-                    (index_1, index_2) = midside_indexes_map.get(i)
-                    avg_stress = (enodal_stresses[:, index_1, :] + enodal_stresses[:, index_2, :]) / 2
-
-                    avg_nodal_stresses_data[e_node] += avg_stress
-                    nodal_stresses_data[(element_id, e_node)] = avg_stress
-
-        for _node_id, den in avg_den.items():
-            avg_nodal_stresses_data[_node_id] /= den
-
-        dt = time() - t0
-        print(f"Time 2: {dt} s")
-
-        return avg_nodal_stresses_data, nodal_stresses_data
-
-    def get_structural_stresses_ref(
+    def recover_element_structural_stresses(
             self,
             node_ids : int | list[int] | None = None,
             surface_ids: int | list[int] | None = None,
             volume_ids: list[int] | None = None,
-            ):
+            ) -> np.ndarray | None:
         """
-        This method computes the nodal averaged stresses and the nodal stresses 
-        for each element.
+        This method computes the nodal stresses for each element.
 
         Parameters
         ----------
@@ -293,37 +481,35 @@ class StructuralPostprocessing:
 
         Return
         ------
-        avg_nodal_stresses_data: dict
-            A dictionary whose keys are the node_ids and the values are the averaged
-            nodal stresses.
+        element_stress_data: dict
+            A dictionary whose keys are the element_id and the values are the nodal
+            stresses for each element (3D array with dimensions: n_nodes x 6 x Nf).
 
-        nodal_stresses_data: dict
-            A dictionary whose keys are the tuples in the form (element_id, node_id) 
-            and the values are the nodal stresses for each element.
         """
 
-        mesh = self.model.mesh
-        element_3d = self.model.structural_element_3d
+        logging.info("Recovering the structural stresses... (1/3)")
 
-        # if element_3d is None:
-        #     self.harmonic_solver.assembler.define_structural_elements()
-        #     element_3d = self.harmonic_solver.assembler.element_3d
+        element_3d = self.structural_element_3d
 
-        if element_3d.connectivity is None:
+        if element_3d.connectivities is None:
             element_3d.reorder_connect()
 
-        if isinstance(node_ids, int):
+        if all(item is None for item in (node_ids, surface_ids, volume_ids)):
+            node_ids = self.model.domains_processor.nodes_of_domain.get("structural", [])
+            element_ids = self.model.domains_processor.elements_of_domain.get("structural", [])
+
+        elif isinstance(node_ids, int):
             node_ids = [node_ids]
 
-        if not isinstance(node_ids, np.ndarray | list):
+        elif not isinstance(node_ids, np.ndarray | list):
 
-            node_ids = list()
+            node_ids = []
             if isinstance(surface_ids, int):
                 surface_ids = [surface_ids]
 
             if isinstance(surface_ids, list):
                 for surface_id in surface_ids:
-                    surface_nodes = mesh.get_nodes_from_surface(surface_id)
+                    surface_nodes = self.mesh.get_nodes_from_surface(surface_id)
                     node_ids.extend(surface_nodes)
 
             if isinstance(volume_ids, int):
@@ -331,79 +517,174 @@ class StructuralPostprocessing:
 
             if isinstance(volume_ids, list):
                 for volume_id in volume_ids:
-                    volume_nodes = mesh.get_nodes_from_volume(volume_id)
+                    volume_nodes = self.mesh.get_nodes_from_volume(volume_id)
                     node_ids.extend(volume_nodes)
-    
-        if not node_ids:
-            print("Invalid node ids")
-            return dict(), dict()
 
-        node_ids = np.unique(node_ids)
+            logging.info("Recovering the structural stresses... (2/3)")
+            if isinstance(node_ids, np.ndarray | list):
+                node_ids = np.unique(node_ids)
+                element_ids = self.model.get_solid_elements_from_nodes(node_ids, "structural")
 
-        map_elements_to_nodes, filtered_nodes = mesh.get_solid_elements_connected_to_nodes(
-            node_ids=node_ids, return_nodes=True)
+        # initialize variables
+        n_nodes = len(node_ids)
+        n_el = len(element_ids)
+        n_freq = len(self.model.frequencies)
 
-        local_dofs = np.arange(element_3d.DOF_PER_NODE, dtype=int)
-        dofs_indexes = filtered_nodes.reshape(-1, 1) * element_3d.DOF_PER_NODE + local_dofs
+        midside_data = element_3d.midside_nodes_indices
+        is_quadratic = np.any(midside_data)
 
-        # Load all frequency solutions to optimize multiple load on the `process_particle_velocity` method below.
-        node_to_index = dict(zip(filtered_nodes, np.arange(filtered_nodes.size, dtype=int)))
-        solution = self.solution.nodal_solution[dofs_indexes.flatten(), :]
+        if is_quadratic:
+            ind_1 = midside_data[:, 1]
+            ind_2 = midside_data[:, 2]
 
-        nodal_stresses_data = dict()
-        avg_nodal_stresses_data = defaultdict(float)
+        # initialize variables
+        last_progress = 0
+        element_stress_data = np.zeros((n_el, n_nodes, 6, n_freq), dtype=complex)
 
-        for node_id, solid_element_ids in map_elements_to_nodes.items():
+        for i, element_id in enumerate(element_ids):
 
-            n_el = len(solid_element_ids)
+            progress = int((100 * (i / n_el) // 5) * 5)
+            if progress != last_progress:
+                logging.info(f"Recovering the structural stresses... [{progress}/100]")
 
-            for element_id in solid_element_ids:
-                connect = element_3d.connectivity[element_id, 1:]
-                indexes = np.array([node_to_index.get(node) for node in connect], dtype=int)
+            # process the extrapolated nodal stresses
+            enodal_stresses = element_3d.process_stresses_at_integration_points(
+                element_id,
+                extrapolate=True,
+                )
 
-                dofs_indexes = indexes.reshape(-1, 1) * element_3d.DOF_PER_NODE + local_dofs
-                dofs_indexes = dofs_indexes.flatten()
-                
-                element_stresses = element_3d.process_stresses_at_integration_points(
-                    element_id,
-                    nodal_solution = solution[dofs_indexes, :]
-                    )
+            # map the node indexes
+            if is_quadratic:
+                midside_stresses = (enodal_stresses[ind_1, :, :] + enodal_stresses[ind_2, :, :]) / 2
+                element_stress_data[element_id] = np.append(enodal_stresses, midside_stresses, axis=0)
+            else:
+                element_stress_data[element_id] = enodal_stresses
 
-                nodal_stresses = element_3d.extrapolate_stresses_to_nodes(element_stresses)
-                for i, e_node in enumerate(connect):
-                    nodal_stresses_data[(element_id, e_node)] = nodal_stresses[:, i, :]
-
-                avg_nodal_stresses_data[node_id] += nodal_stresses_data[(element_id, node_id)] / n_el         
-
-        return avg_nodal_stresses_data, nodal_stresses_data
-
-
-    def nodal_stresses_post_process(self, input_stresses_data: dict):
-
-        nodal_stresses = NodalStresses()
-
-        for key in input_stresses_data.keys():
-            stresses = input_stresses_data.get(key)
-            if stresses is None:
-                continue
-
-            nodal_stresses.sigma_x[key] = stresses[0, :]
-            nodal_stresses.sigma_y[key] = stresses[1, :]
-            nodal_stresses.sigma_z[key] = stresses[2, :]
-            nodal_stresses.tau_xy[key] = stresses[3, :]
-            nodal_stresses.tau_xz[key] = stresses[4, :]
-            nodal_stresses.tau_yz[key] = stresses[5, :]
-
-        return nodal_stresses
+        return element_stress_data
 
 
-        ## Only for validation purposes
-        # output_data = np.zeros((len(ordered_nodes), 4), dtype=float)
-        # output_data[:, 0] = ordered_nodes
+    def compute_structural_stresses_field(
+        self,
+        column: int,
+        phase_rad: float,
+        stress_type: StressType,
+        data_type: StressPlotType,
+        unit_factor: float = 1.0,
+    ):
 
-        # for row, node_id in enumerate(ordered_nodes):
-        #     output_data[row, 1:] =  self.assembler.model.mesh.nodal_normals_data[node_id]
+        t0 = perf_counter()
+        avg_nodal_stresses = self.recover_nodal_averaged_structural_stresses()
+        if avg_nodal_stresses is None:
+            return
 
-        # fname = f"nodal_normals_data_surface_{surface_id}.dat"
-        # header = "Node index || x-axis component [m] || y-axis component [m] || z-axis component [m]"
-        # np.savetxt(fname, output_data, fmt=["%i", "%.16f", "%.16f", "%.16f"], delimiter=",", header=header)
+        dt = perf_counter() - t0
+        print(f"Time to compute nodal stresses: {dt} s")
+
+        # initialize the stress vector and convert to MPa
+        stress_vector = avg_nodal_stresses[:, stress_type, column].copy() * unit_factor
+
+        match data_type:
+            case StressPlotType.ABSOLUTE_VALUES:
+                stress_values = np.abs(stress_vector)
+            case StressPlotType.REAL_VALUES:
+                stress_values = np.real(stress_vector)
+            case StressPlotType.IMAG_VALUES:
+                stress_values = np.imag(stress_vector)
+            case StressPlotType.ABSOLUTE_ANIMATION:
+                stress_values = compute_shifted_values(stress_vector, phase_rad)
+                stress_values = np.abs(stress_values)
+            case StressPlotType.NON_ABSOLUTE_ANIMATION:
+                stress_values = compute_shifted_values(stress_vector, phase_rad)
+
+        min_value, max_value = self.get_max_min_values_for_stress_data(column, round(unit_factor, 10), stress_type, data_type)
+        symmetric_animation = not np.any(stress_vector.imag)
+
+        return stress_values, min_value, max_value, symmetric_animation
+
+
+    def compute_advanced_structural_stresses_field(
+        self,
+        column: int,
+        phase_rad: float,
+        stress_type: StressType,
+        data_type: StressPlotType,
+        unit_factor: float = 1.0,
+    ):
+
+        t0 = perf_counter()
+        avg_nodal_stresses = self.recover_nodal_averaged_structural_stresses()
+        if avg_nodal_stresses is None:
+            return
+
+        dt = perf_counter() - t0
+        print(f"Time to compute nodal stresses: {dt} s")
+
+        # evaluate the stresses in MPa at a specific time/phase (phase_rad = omega * t)
+        stresses = unit_factor * compute_phase_shifted_values(avg_nodal_stresses[:, :, column], phase_rad)
+ 
+        if stress_type == StressType.VON_MISES_STRESS:
+            stress_vector = np.sqrt((1/2) * (
+                (stresses[:, 0] - stresses[:, 1])**2 + 
+                (stresses[:, 1] - stresses[:, 2])**2 + 
+                (stresses[:, 2] - stresses[:, 0])**2 +
+                6 * (stresses[:, 3]**2 + stresses[:, 4]**2 + stresses[:, 5]**2)
+                ))
+
+        else:
+
+            """
+            stress_tensor = |sigma_x, tau_xy, tau_xz| 
+                            |tau_xy, sigma_y, tau_yz|
+                            |tau_xz, tau_yz, sigma_z|
+            """
+
+            # compute the stress tensor at a specific time/phase (phase_rad = omega * t)
+            stress_tensor = stresses[:, [0, 3, 4, 3, 1, 5, 4, 5, 2]].reshape(-1, 3, 3)
+
+            # compute the maximum principal stresses
+            eigen_values = np.linalg.eigvalsh(stress_tensor)
+
+            # order the maximum principal stresses
+            sigmas = np.sort(eigen_values, axis=1)
+
+            if stress_type == StressType.TRESCA_STRESS:
+                stress_vector = sigmas[:, 2] - sigmas[:, 0]  # sigma_1 - sigma_3
+
+            elif stress_type == StressType.MAXIMUM_PRINCIPAL_STRESS_1:
+                stress_vector = sigmas[:, 2] # sigma_1
+
+            elif stress_type == StressType.MAXIMUM_PRINCIPAL_STRESS_2:
+                stress_vector = sigmas[:, 1] # sigma_2
+            
+            else:
+                stress_vector = sigmas[:, 0] # sigma_3
+
+        match data_type:
+            case StressPlotType.ABSOLUTE_VALUES:
+                stress_values = np.abs(stress_vector)
+            case StressPlotType.REAL_VALUES:
+                stress_values = np.real(stress_vector)
+            case StressPlotType.IMAG_VALUES:
+                stress_values = np.imag(stress_vector)
+            case StressPlotType.ABSOLUTE_ANIMATION:
+                stress_values = np.abs(stress_vector.copy())
+            case StressPlotType.NON_ABSOLUTE_ANIMATION:
+                stress_values = stress_vector.copy()
+
+        min_value, max_value = self.get_max_min_values_for_advanced_stress_data(tuple(stress_vector), data_type)
+
+        # force the processing of all animation frames
+        symmetric_animation = False
+
+        return stress_values, min_value, max_value, symmetric_animation
+
+
+def compute_shifted_values(data: np.ndarray, phase_rad: float):
+    amplitudes = np.abs(data)
+    phases = np.angle(data)
+    delta = -phases[np.argmax(amplitudes)]
+    return amplitudes * np.cos(phases + phase_rad + delta)
+
+
+def compute_phase_shifted_values(values: np.ndarray, phase_rad: float) -> np.ndarray:
+    return values.real * np.cos(phase_rad) -  values.imag * np.sin(phase_rad)

@@ -7,10 +7,11 @@ from PySide6.QtGui import QCloseEvent
 from vibra import app
 from vibra.engine import AnalysisID
 from vibra.engine.properties.fluid import Fluid
+from vibra.interface.common.common_interface import update_entities_selection
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
-from vibra.interface.numeric_checks.unit_utilities import convert_length_unit, units_abreviations
+from vibra.interface.numeric_checks.unit_utilities import convert_length_unit, convert_pressure_unit, units_abreviations
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
 from vibra.interface.ui_generated.plots.acoustic.acoustic_pressure_frequency_response_inputs_ui import AcousticPressureFrequencyResponseInputs_UI
 
@@ -56,7 +57,7 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
 
     @property
     def nodal_solution(self):
-        return app().project.model.solution.nodal_solution
+        return app().project.model.solution.acoustic_solution
 
     def showEvent(self, event):
         super().showEvent(event)
@@ -72,11 +73,10 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
     def _initialize(self):
         self.exporter = None
         self.plotter = None
-        self.unit_label = "Pa"
+        self.model_results = {}
         self.selection_types = ["surfaces", "lines", "points", "nodes"]
 
     def _config_widgets(self):
-        #
         unit = units_abreviations.get(self.mesh.length_unit)
         self.label_unit_combo_box.setText(f"[{unit}]")
 
@@ -84,16 +84,17 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
         self.lineEdit_cutoff_frequency.setValidator(StrictDoubleValidator(0, 1e8, 6))
 
     def _create_connections(self):
-        #
+
+        # QComboBox connections
         self.comboBox_selector_filter.currentIndexChanged.connect(self.update_render_according_to_selector)
         self.comboBox_cutoff_frequency.currentIndexChanged.connect(self.compute_pipe_cutoff_frequency_callback)
         self.comboBox_cutoff_frequency_options.currentIndexChanged.connect(self.cutoff_frequency_options_callback)
-        #
+
+        # QPushButton connections
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
-        #
+
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
-        #
         self.update_cutoff_related_widgets_visibility()
 
     def geometry_selection_callback(self):
@@ -130,7 +131,7 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
 
         self.geometry_selection_callback()
 
-        if self.comboBox_selector_filter.currentIndex() == 3:
+        if self.comboBox_selector_filter.currentIndex() == SelectionType.NODES:
             app().main_window.show_mesh_render_widget()
         else:
             app().main_window.show_geometry_render_widget()
@@ -141,16 +142,20 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
         selection = self.selection_types[index]
 
         input_ids = self.lineEdit_selection_id.text()
-        self.selected_ids, error_data = self.mesh.check_selected_ids(
+        self.selected_ids, error_data = self.model.check_selected_ids(
             input_ids,
-            selection = selection,
-            single_id = False,
-            )
+            selection,
+            domain="acoustic",
+        )
 
         if error_data is not None:
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
             return True
+
+        app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
+        update_entities_selection(self.lineEdit_selection_id, selection, self.selected_ids)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
         if self.comboBox_cutoff_frequency_options.currentIndex() != CutoffFrequency.DISABLED:
             line_edit = self.lineEdit_cutoff_frequency
@@ -187,24 +192,27 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
         index = self.comboBox_selector_filter.currentIndex()
 
         if index == SelectionType.SURFACES:
-            rows = self.mesh.get_nodes_from_surface(selected_id)
+            nodes = self.mesh.get_nodes_from_surface(selected_id)
         elif index == SelectionType.LINES:
-            rows = self.mesh.get_nodes_from_line(selected_id)
+            nodes = self.mesh.get_nodes_from_line(selected_id)
         elif index == SelectionType.POINTS:
-            rows = self.mesh.nodes_from_points.get(selected_id)
+            nodes = self.mesh.nodes_from_points.get(selected_id)
         elif index == SelectionType.NODES:
-            rows = selected_id
+            nodes = selected_id
         else:
-            return None
+            return
+
+        # process the acoustic dofs of the selected entities
+        gdof = self.model.get_dof_indices_from_nodes(nodes, "acoustic")
+        rows = gdof[:, 0]
 
         if isinstance(rows, int):
-            response = self.nodal_solution[rows,:]
+            response = self.nodal_solution[rows, :]
         else:
-            response = np.average(self.nodal_solution[rows,:], axis=0)
+            response = np.average(self.nodal_solution[rows, :], axis=0)
 
         if complex(0) in response:
             response += 1e-12
-        #     response += np.ones(len(response), dtype=float)*(1e-12)
 
         return response
 
@@ -262,22 +270,22 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
 
     def compute_pipe_cutoff_frequency_callback(self):
         if self.comboBox_cutoff_frequency.currentText() == "":
-            return None
+            return
         
         if not self.map_curvatures_to_fluid:
-            return None
+            return
         
         key = float(self.comboBox_cutoff_frequency.currentText())
         data = self.map_curvatures_to_fluid.get(key)
         if data is None:
-            return None
+            return
 
         d_in, fluid = data
         if not isinstance(fluid, Fluid):
-            return None
+            return
 
         if d_in == 0:
-            return None
+            return
 
         # speed of sound in m/s
         Co = fluid.speed_of_sound
@@ -290,11 +298,13 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
 
     def join_model_data(self):
 
+        self.model_results.clear()
+
         index = self.comboBox_selector_filter.currentIndex()
         selection_type = self.selection_types[index][:-1]
 
-        self.model_results = dict()
         self.title = "Acoustic frequency response"
+        self.process_units_data()
 
         for i, selected_id in enumerate(self.selected_ids):
 
@@ -307,16 +317,20 @@ class AcousticPressureFrequencyResponseInputs(AcousticPressureFrequencyResponseI
 
             self.model_results[key] = { 
                 "x_data" : self.frequencies,
-                "y_data" : y_data,
+                "y_data" : self.unit_factor * y_data,
                 "x_label" : "Frequency [Hz]",
                 "y_label" : "Acoustic pressure",
                 "title" : self.title,
                 "data_type" : "acoustic pressure",
                 "legend" : legend_label,
-                "unit" : self.unit_label,
+                "unit" : self.pressure_units,
                 "color" : get_color(i),
                 "linestyle" : "-",
                 }
+
+    def process_units_data(self) -> str:
+        self.pressure_units = self.comboBox_pressure_units.currentText()
+        self.unit_factor = convert_pressure_unit(1, "Pa", self.pressure_units)
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:

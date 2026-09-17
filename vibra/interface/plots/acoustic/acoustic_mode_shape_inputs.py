@@ -10,7 +10,7 @@ from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.plots.general.animation_widget import AnimationWidget
 from vibra.interface.plots.general.results_display_widget import ResultsDisplayWidget
 from vibra.interface.ui_generated.plots.acoustic.acoustic_mode_shape_inputs_ui import AcousticModeShapeInputs_UI
-from vibra.interface.viewer_3d.plot_setup import FrequencyPressurePlotSetup, PressurePlotType
+from vibra.interface.viewer_3d.plot_setup import PressureFieldPlotSetupFrequency, PressurePlotType
 
 
 class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
@@ -120,7 +120,7 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
         else:
             self.results_display_widget.configure_validators(-1e14, 1e14)
 
-        plot_setup = FrequencyPressurePlotSetup(
+        plot_setup = PressureFieldPlotSetupFrequency(
             phase=self.animation_widget.phase_in_radians,
             index=self.mode_index,
             plot_type=self.get_plot_type(),
