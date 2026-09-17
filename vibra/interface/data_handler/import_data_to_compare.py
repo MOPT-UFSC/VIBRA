@@ -76,7 +76,7 @@ class ImportDataToCompare(ImportDataToCompare_UI):
             return
 
         self.imported_data = FileHandler.read(imported_files)
-        
+
         self.organize_imported_results_according_to_file_type(self.imported_data)
         self.update_treeWidget_info()
 
@@ -89,7 +89,7 @@ class ImportDataToCompare(ImportDataToCompare_UI):
                 
             elif isinstance(file, SpreadsheetData):
                 for sheet in file.sheets:
-                    self.imported_results[key] = {key: value for key, value in asdict(file) if key != "sheets"} | asdict(sheet)
+                    self.imported_results[key] = {key: value for key, value in asdict(file).items() if key != "sheets"} | asdict(sheet)
                     key = len(self.imported_results)
 
     def update_treeWidget_info(self):
