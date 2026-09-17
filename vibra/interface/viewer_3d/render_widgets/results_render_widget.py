@@ -1,13 +1,11 @@
 import logging
 from threading import Lock
-from time import perf_counter, time
-from typing import Optional
+from time import time
 
 import numpy as np
 from molde.render_widgets import AnimatedRenderWidget
 from PySide6.QtWidgets import QFileDialog
-from vtkmodules.vtkCommonCore import vtkPoints
-from vtkmodules.vtkCommonDataModel import vtkPointData
+from vtkmodules.util.numpy_support import vtk_to_numpy
 
 from vibra import LOGO_DIR, app
 from vibra.engine import AnalysisID
@@ -18,13 +16,13 @@ from vibra.interface.viewer_3d.plot_setup import (
     AcousticPlotSetups,
     AllowablePulsationForScrewCompressorsPlotSetup,
     DisplacementFieldPlotSetupFrequency,
-    PressureFieldPlotSetupFrequency,
     NoPlotSetup,
     PlotSetup,
+    PressureFieldPlotSetupFrequency,
+    PressureFieldPlotSetupTime,
     StressFieldPlotSetupFrequency,
     StressType,
     StructuralPlotSetups,
-    PressureFieldPlotSetupTime,
 )
 from vibra.interface.viewer_3d.render_tools import RenderTool, SelectionTool
 from vibra.utils.interface_utils import VisualizationFilter
@@ -41,6 +39,37 @@ from .model_info_text import (
     allowable_pulsation_for_screw_compressor_info_text,
     analysis_info_text,
 )
+
+
+class AnimationCache:
+    def __init__(self) -> None:
+        self.color_arrays: dict[int, np.ndarray] = {}
+        self.position_arrays: dict[int, np.ndarray | None] = {}
+        self.min_colors: float = 0
+        self.max_colors: float = 0
+        self.lock = Lock()
+
+    def add_frame(self, frame: int, colors: np.ndarray, positions: np.ndarray | None):
+        self.min_colors = min(self.min_colors, colors.min())
+        self.max_colors = max(self.max_colors, colors.max())
+        self.color_arrays[frame] = colors
+        if positions is not None:
+            self.position_arrays[frame] = positions
+
+    def get_frame(self, frame: int) -> tuple[np.ndarray | None, np.ndarray | None]:
+        return self.color_arrays.get(frame), self.position_arrays.get(frame)
+
+    def clear(self):
+        self.min_colors = 0
+        self.max_colors = 0
+        self.color_arrays.clear()
+        self.position_arrays.clear()
+
+    def __contains__(self, item: int) -> bool:
+        return item in self.color_arrays
+
+    def __bool__(self) -> bool:
+        return bool(self.color_arrays)
 
 
 class ResultsRenderWidget(AnimatedRenderWidget):
@@ -60,8 +89,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         # dont't remove, transparency depends on it
         self.renderer.SetUseDepthPeeling(True)
 
-        self._animation_cached_data = dict()
-        self._animation_cache_lock = Lock()
+        self._animation_cache = AnimationCache()
 
         self.min_value = 0
         self.max_value = 0
@@ -128,7 +156,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self,
         reset_camera: bool = True,
         *,
-        plot_setup: Optional[PlotSetup] = None,
+        plot_setup: PlotSetup | None = None,
     ):
 
         if plot_setup is None:
@@ -221,7 +249,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
     def update_color_and_deformation(
         self,
-        animation_frame: Optional[int] = None,
+        animation_frame: int | None = None,
         clear_cache: bool = True,
     ):
         if not self.actors_exists():
@@ -257,7 +285,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
     def _plot_pressure_field_frequency_domain(
         self,
-        animation_frame: Optional[int],
+        animation_frame: int | None,
         clear_cache: bool = True,
     ):
         assert isinstance(self.plot_setup, PressureFieldPlotSetupFrequency)
@@ -311,7 +339,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
     def _plot_displacement_field_frequency_domain(
         self,
-        animation_frame: Optional[int] = None,
+        animation_frame: int | None = None,
         clear_cache: bool = True,
     ):
         assert isinstance(self.plot_setup, DisplacementFieldPlotSetupFrequency | StressFieldPlotSetupFrequency)
@@ -375,7 +403,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
     def _plot_stress_field_frequency_domain(
         self,
-        animation_frame: Optional[int] = None,
+        animation_frame: int | None = None,
         clear_cache: bool = True,
     ):
         assert isinstance(self.plot_setup, StressFieldPlotSetupFrequency)
@@ -452,7 +480,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
     def _plot_pressure_field_time_domain(
         self,
-        animation_frame: Optional[int] = None,
+        animation_frame: int | None = None,
         clear_cache: bool = True,
     ):
 
@@ -564,10 +592,10 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
     def clear_cache(self):
         logging.info("Clearing animation cache")
-        with self._animation_cache_lock:
+        with self._animation_cache.lock:
             timestamp = time()
             self.timestamp = timestamp
-            self._animation_cached_data.clear()
+            self._animation_cache.clear()
             if not self.user_changed_pressure_values:
                 self.min_value = 0
                 self.max_value = 0
@@ -585,11 +613,11 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         for frame in range(self._animation_total_frames):
             logging.info(f"Caching animation frames [{frame}/{self._animation_total_frames}]")
 
-            with self._animation_cache_lock:
+            with self._animation_cache.lock:
                 if self.timestamp != timestamp:
                     break
 
-                if frame in self._animation_cached_data:
+                if frame in self._animation_cache:
                     continue
 
                 self.cache_frame(frame)
@@ -599,15 +627,18 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         with self.update_lock:
             self.update_color_and_deformation(animation_frame=frame, clear_cache=False)
 
-        point_data = vtkPointData()
-        point_position = vtkPoints()
-        point_data.DeepCopy(self.analysis_actor.data.GetPointData())
-        point_position.DeepCopy(self.analysis_actor.data.GetPoints())
-        self._animation_cached_data[frame] = (point_data, point_position)
+        assert self.analysis_actor is not None
+        assert self.analysis_actor.data is not None
 
+        pos = None
+        if isinstance(self.plot_setup, StructuralPlotSetups):
+            pos = vtk_to_numpy(self.analysis_actor.data.GetPoints().GetData()).copy()
+        colors = vtk_to_numpy(self.analysis_actor.data.GetPointData().GetScalars()).copy()
+            
+        self._animation_cache.add_frame(frame, colors, pos)
         if self.is_animation_symetric:
             mirrored_frame = self._animation_total_frames - frame - 1
-            self._animation_cached_data[mirrored_frame] = self._animation_cached_data[frame]
+            self._animation_cache.add_frame(mirrored_frame, colors, pos)
 
     def start_animation(self, *args, **kwargs):
         super().start_animation(*args, **kwargs)
@@ -627,23 +658,35 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.stop_animation()
             return
 
-        if self._animation_cache_lock.locked():
+        if self._animation_cache.lock.locked():
             return
 
-        if not self._animation_cached_data:
+        if self.analysis_actor is None:
+            return
+
+        if self.analysis_actor.data is None:
+            return
+
+        if not self._animation_cache:
             LoadingWindow(self.cache_animation_frames).run()
 
-        if frame in self._animation_cached_data:
-            logging.info(f"Rendering animation frame [{frame}/{self._animation_total_frames}]")
-            point_data, point_position = self._animation_cached_data[frame]
-            self.analysis_actor.data.GetPointData().DeepCopy(point_data)
-            self.analysis_actor.data.GetPoints().DeepCopy(point_position)
-            self.update()
-        else:
-            # It will only enter here if something wrong happened
-            # in the function that caches the frames
-            logging.warning(f"Cache miss on update_animation function for frame {frame}")
-            self.cache_frame(frame)
+        cached_color, cached_pos = self._animation_cache.get_frame(frame)
+
+        if cached_color is not None:
+            colors_array = vtk_to_numpy(self.analysis_actor.data.GetPointData().GetScalars())
+            colors_array[:] = cached_color
+            self.analysis_actor.data.GetPointData().Modified()
+            self.analysis_actor.color_table.SetTableRange(
+                self._animation_cache.min_colors if self.user_min_value is None else self.user_min_value,
+                self._animation_cache.max_colors if self.user_max_value is None else self.user_max_value,
+            )
+
+        if cached_pos is not None:
+            positions_array = vtk_to_numpy(self.analysis_actor.data.GetPoints().GetData())
+            positions_array[:] = cached_pos
+            self.analysis_actor.data.GetPoints().Modified()
+
+        self.update()
 
     def set_analysis_actors_transparency(self, transparency):
         if not self.actors_exists():
