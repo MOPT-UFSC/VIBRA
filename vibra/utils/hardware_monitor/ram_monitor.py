@@ -10,6 +10,7 @@ from vibra.utils.hardware_monitor.memory_metric import MemoryMetric, MemoryRecor
 
 class RamMonitor:
     _BYTES_PER_MIB = 1024**2
+    _BYTES_PER_GIB = 1024**3
 
     def __init__(self, label: str, *, max_hist_size: int = 10_000, rss_interval: float = 0.05, uss_interval: float = 0.5, record_history: bool = False) -> None:
         '''
@@ -74,32 +75,72 @@ class RamMonitor:
 
             return None
 
-    def _read_basic_memory_mib(self) -> MemorySample:
+    def _get_processes(self) -> list[psutil.Process] | None:
         try:
-            memory = self.process.memory_info()
-            return MemorySample(
-                rss=memory.rss / self._BYTES_PER_MIB,
-                vms=memory.vms / self._BYTES_PER_MIB,
-            )
-
-        except psutil.Error as error:
+            return [self.process, *self.process.children(recursive=True)]
+        except psutil.Error as err:
             if self.monitor_error is None:
-                self.monitor_error = error
+                self.monitor_error = err
+            return None
+
+    def _read_basic_memory_mib(self) -> MemorySample:
+        processes = self._get_processes()
+        if processes is None:
             return MemorySample()
 
-    def _read_full_memory_mib(self) -> MemorySample:
-        try:
-            memory = self.process.memory_full_info()
-            return MemorySample(
-                rss=memory.rss / self._BYTES_PER_MIB,
-                uss=memory.uss / self._BYTES_PER_MIB,
-                vms=memory.vms / self._BYTES_PER_MIB,
-            )
+        rss = vms = 0.0
+        for proc in processes:
+            try:
+                mem = proc.memory_info()
+            except psutil.NoSuchProcess:
+                continue
+            except psutil.Error as error:
+                if self.monitor_error is None:
+                    self.monitor_error = error
+                return MemorySample()
 
-        except psutil.Error as error:
-            if self.monitor_error is None:
-                self.monitor_error = error
-            return self._read_basic_memory_mib()
+            rss += mem.rss
+            vms += mem.vms
+
+        return MemorySample(
+            rss=rss / self._BYTES_PER_MIB,
+            vms=vms / self._BYTES_PER_MIB,
+        )
+
+    def _read_full_memory_mib(self) -> MemorySample:
+        processes = self._get_processes()
+        if processes is None:
+            return MemorySample()
+
+        rss = uss = vms = 0.0
+        uss_complete = True
+        for proc in processes:
+            try:
+                mem = proc.memory_full_info()
+                uss += mem.uss # exclusive from full_info
+            except psutil.NoSuchProcess:
+                continue
+            except psutil.Error as error:
+                if self.monitor_error is None:
+                    self.monitor_error = error
+
+                try:
+                    mem = proc.memory_info()
+                except psutil.NoSuchProcess:
+                    continue
+                except psutil.Error:
+                    return MemorySample()
+
+                uss_complete = False
+
+            rss += mem.rss
+            vms += mem.vms
+
+        return MemorySample(
+            rss=rss / self._BYTES_PER_MIB,
+            uss=uss / self._BYTES_PER_MIB if uss_complete else None,
+            vms=vms / self._BYTES_PER_MIB,
+        )
 
     def _record_sample(self, sample: MemorySample) -> None:
         if self._start_time is None:
@@ -253,8 +294,8 @@ class RamMonitor:
 
         available_memory = "N/A"
         if self.min_available_bytes is not None:
-            available_mib = self.min_available_bytes / self._BYTES_PER_MIB
-            available_memory = f"{available_mib:.2f} MiB"
+            available_gib = self.min_available_bytes / self._BYTES_PER_GIB
+            available_memory = f"{available_gib:.2f} GiB"
 
         available_percent = "N/A"
         if self.min_available_percent is not None:
@@ -263,14 +304,14 @@ class RamMonitor:
         ppid = self.get_ppid()
         return "\n".join(
             [
+                "",
                 f"RAM — {self.label or 'unnamed block'} | PID: {self.process.pid} | PPID: {ppid if ppid is not None else 'N/A'}",
                 "",
                 "Process — values in MiB",
                 *table,
                 "",
                 "System — observed minima",
-                f"Available RAM: {available_memory}",
-                f"Available / total: {available_percent}",
+                f"Available RAM: {available_memory} ({available_percent} of total)",
                 "",
                 "Δ peak and Δ final are relative to the initial value.",
                 "Peaks and minima are based on sampled measurements.",
