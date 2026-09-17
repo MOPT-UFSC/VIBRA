@@ -43,27 +43,29 @@ from .model_info_text import (
 
 class AnimationCache:
     def __init__(self) -> None:
-        self.color_arrays: dict[int, np.ndarray]
-        self.position_arrays: dict[int, np.ndarray]
-        self.min_color = 0
-        self.max_color = 0
+        self.color_arrays: dict[int, np.ndarray] = {}
+        self.position_arrays: dict[int, np.ndarray | None] = {}
         self.lock = Lock()
 
     def add_frame(self, frame: int, colors: np.ndarray, positions: np.ndarray | None):
-        self.min_color = min(colors.min(), self.min_color)
-        self.max_color = max(colors.max(), self.max_color)
         self.color_arrays[frame] = colors
         if positions is not None:
             self.position_arrays[frame] = positions
 
+    def get_frame(self, frame: int) -> tuple[np.ndarray, np.ndarray | None] | None:
+        if frame not in self.color_arrays:
+            return None
+        return self.color_arrays[frame], self.position_arrays.get(frame)
+
     def clear(self):
         self.color_arrays.clear()
         self.position_arrays.clear()
-        self.min_color = 0
-        self.max_color = 0
 
     def __contains__(self, item: int) -> bool:
         return item in self.color_arrays
+
+    def __bool__(self) -> bool:
+        return bool(self.color_arrays)
 
 
 class ResultsRenderWidget(AnimatedRenderWidget):
@@ -84,8 +86,6 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.renderer.SetUseDepthPeeling(True)
 
         self._animation_cache = AnimationCache()
-        self._animation_cached_data = dict()
-        self._animation_cache_lock = Lock()
 
         self.min_value = 0
         self.max_value = 0
@@ -588,10 +588,10 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
     def clear_cache(self):
         logging.info("Clearing animation cache")
-        with self._animation_cache_lock:
+        with self._animation_cache.lock:
             timestamp = time()
             self.timestamp = timestamp
-            self._animation_cached_data.clear()
+            self._animation_cache.clear()
             if not self.user_changed_pressure_values:
                 self.min_value = 0
                 self.max_value = 0
@@ -609,11 +609,11 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         for frame in range(self._animation_total_frames):
             logging.info(f"Caching animation frames [{frame}/{self._animation_total_frames}]")
 
-            with self._animation_cache_lock:
+            with self._animation_cache.lock:
                 if self.timestamp != timestamp:
                     break
 
-                if frame in self._animation_cached_data:
+                if frame in self._animation_cache:
                     continue
 
                 self.cache_frame(frame)
@@ -628,11 +628,11 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         pos = vtk_to_numpy(self.analysis_actor.data.GetPoints().GetData())
         colors = vtk_to_numpy(self.analysis_actor.data.GetPointData().GetScalars())
-        self._animation_cached_data[frame] = (colors.copy(), pos.copy())
+        self._animation_cache.add_frame(frame, colors.copy(), pos.copy())
 
         if self.is_animation_symetric:
             mirrored_frame = self._animation_total_frames - frame - 1
-            self._animation_cached_data[mirrored_frame] = self._animation_cached_data[frame]
+            self._animation_cache.add_frame(mirrored_frame, colors.copy(), pos.copy())
 
     def start_animation(self, *args, **kwargs):
         super().start_animation(*args, **kwargs)
@@ -652,17 +652,18 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.stop_animation()
             return
 
-        if self._animation_cache_lock.locked():
+        if self._animation_cache.lock.locked():
             return
 
-        if not self._animation_cached_data:
+        if not self._animation_cache:
             LoadingWindow(self.cache_animation_frames).run()
 
-        if frame in self._animation_cached_data:
+        cached_frame = self._animation_cache.get_frame(frame)
+        if cached_frame is not None and cached_frame[1] is not None:
             logging.info(f"Rendering animation frame [{frame}/{self._animation_total_frames}]")
             positions_array = vtk_to_numpy(self.analysis_actor.data.GetPoints().GetData())
             colors_array = vtk_to_numpy(self.analysis_actor.data.GetPointData().GetScalars())
-            colors_array[:], positions_array[:] = self._animation_cached_data[frame]
+            colors_array[:], positions_array[:] = cached_frame
             self.analysis_actor.data.GetPoints().Modified()
             self.analysis_actor.data.Modified()
             # self.analysis_actor.data.GetPointData().DeepCopy(point_data)
