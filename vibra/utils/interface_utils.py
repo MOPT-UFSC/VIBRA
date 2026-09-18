@@ -1,13 +1,16 @@
+from collections.abc import Generator
 from contextlib import contextmanager
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from enum import IntEnum, auto
 from functools import partial, wraps
-from typing import Generator, TypeVar
+from typing import TypeVar
 
 import numpy as np
 from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QWidget
 from vtkmodules.vtkRenderingCore import vtkCoordinate
+
+from vibra.interface.enums import Workspaces
 
 window_title = "Error"
 
@@ -31,17 +34,27 @@ class VisualizationFilter:
     element_normal_symbols: bool = False
     color_mode: GeometryColorMode = GeometryColorMode.COLORED
 
-    @classmethod
-    def all_false(cls):
-        # It is dumb, but it works
-        args = [False] * 8
-        return cls(*args)
+    def is_visible(self, workspace: Workspaces) -> bool:
+        if workspace == Workspaces.RESULTS:
+            return any([self.faces, self.lines])
+        
+        return any([self.points, self.lines, self.faces, self.solids])
+
+    def to_dict(self) -> dict:
+        return {key: value for key, value in asdict(self).items() if value != False}
 
     @classmethod
     def all_true(cls):
         # It is dumb, but it works
         args = [True] * 8
         return cls(*args)
+
+    @classmethod
+    def default(cls, workspace: Workspaces):
+        if workspace == Workspaces.RESULTS:
+            return cls(faces=True, solids=True)
+        
+        return cls(lines=True, faces=True, solids=True, symbols=True)
 
 
 T = TypeVar("T", bound=QWidget)

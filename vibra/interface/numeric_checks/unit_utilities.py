@@ -113,20 +113,22 @@ def convert_pressure_unit(value: float, input_unit: str, output_unit: str | None
     The pressure value.
 
     input_unit: str 
-    The input pressure unit. Allowable units are: K, °C and °F.
+    The input pressure units. Allowable units are: Pa, kPa, MPa, atm, bar, kgf/cm², psi, ksi and N/m².
 
     output_unit: str or None, optional
-    The output pressure unit. Allowable units are: K, °C and °F.
+    The output pressure units. Allowable units are: Pa, kPa, MPa, atm, bar, kgf/cm², psi, ksi and N/m².
     """
 
     unit_map = {
         "Pa" : "pascal",
         "kPa" : "kPa",
+        "MPa" : "MPa",
         "atm" : "atm",
         "bar" : "bar",
         "kgf/cm²" : "kgf/cm²",
         "psi" : "psi",
         "ksi" : "ksi",
+        "N/m²" : "N/m²",
         }
 
     _input_unit = input_unit
@@ -277,6 +279,42 @@ def convert_linear_mass_unit(value: float, input_unit: str, output_unit: str | N
 
     return temperature.to(unit_map.get(output_unit)).magnitude
 
+
+def convert_stress_unit(value: float, input_unit: str, output_unit: str | None=None):
+    """
+    This function converts the stress, scaled in 'input_unit',
+    to a pressure scaled in 'output_unit'.
+
+    Parameters
+    ----------
+    value: float
+    The stress value.
+
+    input_unit: str 
+    The input stress units. Allowable units are: Pa, kPa, MPa, psi, ksi and N/m².
+
+    output_unit: str or None, optional
+    The output stress units. Allowable units are: Pa, kPa, MPa, psi, ksi and N/m².
+    """
+
+    unit_map = {
+        "Pa" : "pascal",
+        "kPa" : "kPa",
+        "MPa" : "MPa",
+        "psi" : "psi",
+        "ksi" : "ksi",
+        "N/m²" : "N/m²",
+        }
+
+    stress = u_reg.Quantity(value, unit_map.get(input_unit))
+
+    if output_unit is None:
+        return stress.magnitude
+
+    if input_unit == output_unit:
+        return stress.magnitude
+    
+    return stress.to(unit_map.get(output_unit)).magnitude
 
 
 if __name__ == "__main__":

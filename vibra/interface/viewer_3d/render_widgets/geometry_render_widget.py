@@ -7,8 +7,8 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
 
 from vibra import LOGO_DIR, app
+from vibra.interface.enums import Workspaces
 from vibra.utils.image_functions import removes_image_background
-from vibra.utils.interface_utils import VisualizationFilter
 from vibra.utils.time_utils import warn_delays
 
 from ..actors.ghost_actor import GhostActor
@@ -73,12 +73,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.renderer.SetOcclusionRatio(0.9)
         self.render_interactor.GetRenderWindow().SetMultiSamples(0)
 
-        self.visualization_filter = VisualizationFilter(
-            lines=True,
-            faces=True,
-            solids=True,
-            symbols=True,
-        )
+        self.visualization_filter = app().config.get_visualization_filter(Workspaces.GEOMETRY)
 
         self.remove_all_actors()
         self.update_logo()
@@ -242,8 +237,8 @@ class GeometryRenderWidget(CommonRenderWidget):
         except Exception:
             physical_domain = app().project.get_physical_domain()
 
-        self.symbols_actor_structural.SetVisibility(visualization.symbols and (physical_domain == "Structural"))
-        self.symbols_actor_acoustic.SetVisibility(visualization.symbols and (physical_domain == "Acoustic"))
+        self.symbols_actor_structural.SetVisibility(visualization.symbols and (physical_domain in ["Structural", "Coupled"]))
+        self.symbols_actor_acoustic.SetVisibility(visualization.symbols and (physical_domain in ["Acoustic", "Coupled"]))
         self.points_actor.SetVisibility(visualization.points)
         self.lines_actor.SetVisibility(visualization.lines)
         self.multimaterial.SetVisibility(visualization.faces)
@@ -498,12 +493,12 @@ class GeometryRenderWidget(CommonRenderWidget):
         text += faces_info_text()
         text += volumes_info_text()
 
-        if physical_domain == "structural":
+        if physical_domain in ["structural", "coupled"]:
             text += material_info_text()
             text += structural_boundary_conditions_info_text()
             text += structural_additional_info_text()
 
-        elif physical_domain == "acoustic":
+        if physical_domain in ["acoustic", "coupled"]:
             text += fluid_info_text()
             text += proportional_damping_info_text()
             text += porous_material_info_text()

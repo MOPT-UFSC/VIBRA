@@ -18,17 +18,17 @@ class NodalParticleVelocities:
         self.nodal_normals.clear()
 
     def Vx_array(self) -> np.ndarray:
-        order_indexes = np.argsort(list(self.Vx.keys()))
-        return np.array(list(self.Vx.values()), dtype=complex)[order_indexes, :]
+        order_indices = np.argsort(list(self.Vx.keys()))
+        return np.array(list(self.Vx.values()), dtype=complex)[order_indices, :]
 
     def Vy_array(self) -> np.ndarray:
-        order_indexes = np.argsort(list(self.Vy.keys()))
-        return np.array(list(self.Vy.values()), dtype=complex)[order_indexes, :]
+        order_indices = np.argsort(list(self.Vy.keys()))
+        return np.array(list(self.Vy.values()), dtype=complex)[order_indices, :]
 
     def Vz_array(self) -> np.ndarray:
-        order_indexes = np.argsort(list(self.Vz.keys()))
-        return np.array(list(self.Vz.values()), dtype=complex)[order_indexes, :]
+        order_indices = np.argsort(list(self.Vz.keys()))
+        return np.array(list(self.Vz.values()), dtype=complex)[order_indices, :]
 
     def Vn_array(self) -> np.ndarray:
-        order_indexes = np.argsort(list(self.Vn.keys()))
-        return np.array(list(self.Vn.values()), dtype=complex)[order_indexes, :]
+        order_indices = np.argsort(list(self.Vn.keys()))
+        return np.array(list(self.Vn.values()), dtype=complex)[order_indices, :]
