@@ -45,9 +45,11 @@ class GeometryRenderWidget(CommonRenderWidget):
         super().__init__(parent)
 
         self.geometry_selection = GeometrySelection(self)
-        self.mouse_click = (0, 0)
+        self.current_click_position = (0, 0)
+        self.last_click_position = (0, 0)
         self.last_click_time: datetime | None = None
         self.is_double_click = False
+        self.double_click_tolerance = 10 # px
 
         self.left_clicked.connect(self.click_callback)
         self.left_released.connect(self.selection_callback)
@@ -298,15 +300,23 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.visualization_changed_callback()
         self.update()
 
-    def click_callback(self, x, y):
-        self.mouse_click = (x, y)
+    def click_callback(self, x0, y0):
+        self.current_click_position = (x0, y0)
+
 
         self.is_double_click = False
         current_click_time = datetime.now()
+
         if self.last_click_time is not None:
             time_since_last_click = (current_click_time - self.last_click_time).total_seconds()
-            self.is_double_click = time_since_last_click < 0.5
+
+            x1, y1 = self.last_click_position
+            mouse_moved = (abs(x0 - x1) > self.double_click_tolerance) or (abs(y0 - y1) > self.double_click_tolerance)
+
+            self.is_double_click = (time_since_last_click < 0.3) and not (mouse_moved)
+
         self.last_click_time = current_click_time
+        self.last_click_position = self.current_click_position
 
     @warn_delays(0.2)  # this is already too much and should be optimized
     def selection_callback(self, x, y):
@@ -329,8 +339,8 @@ class GeometryRenderWidget(CommonRenderWidget):
         else:
             self.geometry_selection.clear_section_plane()
 
-        x0, y0 = self.mouse_click
-        mouse_moved = (abs(x0 - x) > 10) or (abs(y0 - y) > 10)
+        x0, y0 = self.current_click_position
+        mouse_moved = (abs(x0 - x) > self.double_click_tolerance) or (abs(y0 - y) > self.double_click_tolerance)
 
         if mouse_moved:
             (
