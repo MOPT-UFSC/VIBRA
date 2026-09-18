@@ -6,6 +6,7 @@ import numpy as np
 from PySide6.QtWidgets import QFileDialog
 
 from vibra import app
+from vibra.interface.user_input.data_handler.file_handlers.file_handler import FileHandler
 
 
 class ExportModelResults(QFileDialog):
@@ -23,7 +24,6 @@ class ExportModelResults(QFileDialog):
             self.call_file_dialog_and_export_data(**kwargs)
 
     def export_data_in_text_format(self, export_path: str, delimiter: str = ","):
-
         for data in self.data.values():
 
             if not isinstance(data, dict):
@@ -46,12 +46,9 @@ class ExportModelResults(QFileDialog):
                 data_to_export = np.array([x_data, y_data]).T
 
             logging.info("Exporting data... (85%)")
-            np.savetxt(export_path, data_to_export, delimiter=delimiter, header=header)
+            FileHandler.save_text_file(export_path, data_to_export, delimiter=delimiter, header=header)
 
     def export_data_in_spreadsheet_format(self, export_path: str, **kwargs):
-
-        from openpyxl import load_workbook
-        from pandas import ExcelWriter
         from polars import DataFrame, read_excel
 
         logging.info("Exporting data... (75%)")
@@ -60,62 +57,60 @@ class ExportModelResults(QFileDialog):
         existing_path = kwargs.get("existing_path", "")
 
         if Path(existing_path).exists():
-            ext = existing_path.split(".")[-1]
-            if ext in ["xls", "xlsx"]:
-                wb = load_workbook(existing_path)
-                sheetnames = wb.sheetnames
-
-                for sheet_name in sheetnames:
-                    existing_data_frames[sheet_name] = read_excel(existing_path, sheet_name=sheet_name, columns=[0, 1, 2, 3], engine="openpyxl")
+            ext = Path(existing_path).suffix.lower()
+            if ext in [".xls", ".xlsx"]:
+                for sheet_name, df in read_excel(existing_path, sheet_id=0, engine="calamine").items():
+                    existing_data_frames[sheet_name] = df.select(df.columns[:4])
 
         logging.info("Exporting data... (85%)")
 
-        with ExcelWriter(export_path) as writer:
+        append = False
+        for key, existing_df in existing_data_frames.items():
+            existing_df: DataFrame
+            FileHandler.save_spreadsheet_file(export_path, key, existing_df, append=append)
+            append = True
 
-            for key, existing_df in existing_data_frames.items():
-                existing_df: DataFrame
-                existing_df.to_pandas().to_excel(writer, sheet_name=key, index=False)
+        count = 0
+        for key, data in self.data.items():
 
-            count = 0
-            for key, data in self.data.items():
+            if not isinstance(data, dict):
+                continue
 
-                if not isinstance(data, dict):
-                    continue
-
-                if len(key) == 2:
-                    if key[1] is None:
-                        sheet_name = f"{key[0]}"
-                    else:
-                        selection_type, selection_id = key
-                        sheet_name = f"{selection_type}_{selection_id}"
+            if len(key) == 2:
+                if key[1] is None:
+                    sheet_name = f"{key[0]}"
                 else:
-                    count += 1
-                    sheet_name = f"sheet_{count}"
+                    selection_type, selection_id = key
+                    sheet_name = f"{selection_type}_{selection_id}"
+            else:
+                count += 1
+                sheet_name = f"sheet_{count}"
 
-                unit = data.get("unit")
-                x_data = data.get("x_data")
-                y_data = data.get("y_data")
-                x_label = data.get("x_label")
-                y_label = data.get("y_label")
+            unit = data.get("unit")
+            x_data = data.get("x_data")
+            y_data = data.get("y_data")
+            x_label = data.get("x_label")
+            y_label = data.get("y_label")
 
-                if isinstance(y_data[0], complex):
-                    header = [x_label, f"{y_label} - real [{unit}]", f"{y_label} - imaginary [{unit}]", f"Absolute [{unit}]"]
-                    data_to_export = np.array([x_data, np.real(y_data), np.imag(y_data), np.abs(y_data)]).T
- 
-                else:
-                    data_type = data["data_type"]
-                    header = [x_label, f"{data_type.capitalize()} [{unit}]"]
-                    data_to_export = np.array([x_data, y_data]).T
+            if isinstance(y_data[0], complex):
+                header = [x_label, f"{y_label} - real [{unit}]", f"{y_label} - imaginary [{unit}]", f"Absolute [{unit}]"]
+                data_to_export = np.array([x_data, np.real(y_data), np.imag(y_data), np.abs(y_data)]).T
 
-                df = DataFrame(data_to_export, schema=header)
-                df.to_pandas().to_excel(writer, sheet_name=sheet_name, index=False)
+            else:
+                data_type = data["data_type"]
+                header = [x_label, f"{data_type.capitalize()} [{unit}]"]
+                data_to_export = np.array([x_data, y_data]).T
+
+            df = DataFrame(data_to_export, schema=header)
+            FileHandler.save_spreadsheet_file(export_path, sheet_name, df, append=append)
+            append = True
 
     def call_file_dialog_and_export_data(self, **kwargs):
 
         existing_path = kwargs.get("existing_path", "")
 
         if existing_path:
-            file_path = existing_path
+            file_path = Path(existing_path)
 
         else:
             caption = "Export the model results"
@@ -127,7 +122,7 @@ class ExportModelResults(QFileDialog):
                 directory_path = path
 
             if len(self.data) == 1:
-                _filter = "Spreadsheet (*.xlsx);; Spreadsheet (*.xls);; Text file (*.dat);; Text file (*.txt);; Text file (*.csv)"
+                _filter = "Spreadsheet (*.xlsx);; Text file (*.dat);; Text file (*.txt);; Text file (*.csv)"
             else:
                 _filter = "Spreadsheet (*.xlsx)"
 
