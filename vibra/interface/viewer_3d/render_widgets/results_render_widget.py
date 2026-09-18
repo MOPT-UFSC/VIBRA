@@ -11,6 +11,7 @@ from vibra.engine import AnalysisID
 from vibra.engine.analysis_info.analysis_enums import PhysicalDomain
 from vibra.engine.postprocessing import AcousticPostprocessing, StructuralPostprocessing
 from vibra.extensions import SUPPORTED_ANIMATION_EXTENSIONS, SUPPORTED_VIDEO_EXTENSIONS
+from vibra.interface.enums import Workspaces
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.user_input.data_handler.file_dialog_service import FileDialogService
 from vibra.interface.viewer_3d.plot_setup import (
@@ -26,7 +27,6 @@ from vibra.interface.viewer_3d.plot_setup import (
     StructuralPlotSetups,
 )
 from vibra.interface.viewer_3d.render_tools import RenderTool, SelectionTool
-from vibra.utils.interface_utils import VisualizationFilter
 from vibra.utils.time_utils import warn_delays
 
 from ..actors import (
@@ -83,10 +83,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         app().main_window.visualization_changed.connect(self.visualization_changed_callback)
 
         self.plot_setup: PlotSetup = NoPlotSetup()
-        self.visualization_filter = VisualizationFilter(
-            faces=True,
-            solids=True,
-        )
+        self.visualization_filter = app().config.get_visualization_filter(Workspaces.RESULTS)
         # dont't remove, transparency depends on it
         self.renderer.SetUseDepthPeeling(True)
 
@@ -159,7 +156,6 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         *,
         plot_setup: PlotSetup | None = None,
     ):
-
         if plot_setup is None:
             self.plot_setup = NoPlotSetup()
         else:
@@ -484,7 +480,6 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         animation_frame: int | None = None,
         clear_cache: bool = True,
     ):
-
         assert isinstance(self.plot_setup, PressureFieldPlotSetupTime)
 
         postprocessing = app().project.get_acoustic_postprocessing()
@@ -541,7 +536,6 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self,
         clear_cache: bool = True,
     ):
-
         assert isinstance(self.plot_setup, AllowablePulsationForScrewCompressorsPlotSetup)
 
         postprocessing = app().project.get_acoustic_postprocessing()
@@ -635,7 +629,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if isinstance(self.plot_setup, StructuralPlotSetups):
             pos = vtk_to_numpy(self.analysis_actor.data.GetPoints().GetData()).copy()
         colors = vtk_to_numpy(self.analysis_actor.data.GetPointData().GetScalars()).copy()
-            
+
         self._animation_cache.add_frame(frame, colors, pos)
         if self.is_animation_symetric:
             mirrored_frame = self._animation_total_frames - frame - 1
