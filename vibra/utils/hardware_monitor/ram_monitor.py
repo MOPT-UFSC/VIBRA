@@ -12,7 +12,7 @@ class RamMonitor:
     _BYTES_PER_MIB = 1024**2
     _BYTES_PER_GIB = 1024**3
 
-    def __init__(self, label: str, *, max_hist_size: int = 10_000, rss_interval: float = 0.05, uss_interval: float = 0.5, record_history: bool = False) -> None:
+    def __init__(self, label: str = "", *, max_hist_size: int = 10_000, rss_interval: float = 0.05, uss_interval: float = 0.5, record_history: bool = False) -> None:
         '''
         max_hist_size: set the amount of records it will hold
         '''
@@ -49,7 +49,7 @@ class RamMonitor:
         self.monitor_error: Exception | None = None
 
     def __call__(self, func: Callable) -> Callable:
-        label = self.label or func.__qualname__
+        label = func.__qualname__ if self.label == "" else self.label
         @wraps(func)
         def wrapper(*args, **kwargs):
             with self._new_session(label=label):
