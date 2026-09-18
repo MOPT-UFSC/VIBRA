@@ -170,9 +170,8 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.multimaterial = MultimaterialGeometryActor(mesh, visualization_filter=self.visualization_filter)
 
         self.selection_spheres_actor = SelectionSpheres()
-        self.symbols_actor_structural = SymbolsActorStructural(self.renderer)
-        self.symbols_actor_acoustic = SymbolsActorAcoustic(self.renderer)
-        self.symbols_actor_acoustic_fixed_size = SymbolsActorAcousticFixedSize(self.renderer)
+        self.symbols_actor_structural = SymbolsActorStructural(self.renderer.GetActiveCamera())
+        self.symbols_actor_acoustic = SymbolsActorAcoustic(self.renderer.GetActiveCamera())
 
         self.ghost_actor = GhostActor(mesh)
         self.ghost_actor.SetVisibility(app().main_window.has_hidden_part())
@@ -190,7 +189,6 @@ class GeometryRenderWidget(CommonRenderWidget):
             self.plane_actor,
             self.symbols_actor_structural,
             self.symbols_actor_acoustic,
-            self.symbols_actor_acoustic_fixed_size,
         )
 
         with self.update_lock:
@@ -243,8 +241,6 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         self.symbols_actor_structural.SetVisibility(visualization.symbols and (physical_domain in ["Structural", "Coupled"]))
         self.symbols_actor_acoustic.SetVisibility(visualization.symbols and (physical_domain in ["Acoustic", "Coupled"]))
-        self.symbols_actor_acoustic_fixed_size.SetVisibility(visualization.symbols and (physical_domain in ["Acoustic", "Coupled"]))
-
         self.points_actor.SetVisibility(visualization.points)
         self.lines_actor.SetVisibility(visualization.lines)
         self.multimaterial.SetVisibility(visualization.faces)
@@ -292,11 +288,10 @@ class GeometryRenderWidget(CommonRenderWidget):
         # self.symbols_actor.build() should be enough
         # but for some reason that I can't understand
         # it causes segmentation fault
-        self.remove_actors(self.symbols_actor_structural, self.symbols_actor_acoustic, self.symbols_actor_acoustic_fixed_size)
-        self.symbols_actor_structural = SymbolsActorStructural(self.renderer)
-        self.symbols_actor_acoustic = SymbolsActorAcoustic(self.renderer)
-        self.symbols_actor_acoustic_fixed_size = SymbolsActorAcousticFixedSize(self.renderer)
-        self.add_actors(self.symbols_actor_structural, self.symbols_actor_acoustic, self.symbols_actor_acoustic_fixed_size)
+        self.remove_actors(self.symbols_actor_structural, self.symbols_actor_acoustic)
+        self.symbols_actor_structural = SymbolsActorStructural(self.renderer.GetActiveCamera())
+        self.symbols_actor_acoustic = SymbolsActorAcoustic(self.renderer.GetActiveCamera())
+        self.add_actors(self.symbols_actor_structural, self.symbols_actor_acoustic)
         self.visualization_changed_callback()
         self.update()
 
@@ -478,7 +473,6 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.plane_actor = None
         self.symbols_actor_structural = None
         self.symbols_actor_acoustic = None
-        self.symbols_actor_acoustic_fixed_size = None
         self.nodes_actor = None
         self.ghost_actor = None
 
