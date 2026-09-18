@@ -131,37 +131,33 @@ class SymbolsActorStructural(SymbolsActor):
 
             for index, v in enumerate(U_R):
                 if index < 3 and v is not None:
-                    self.add_entity(
+                    self.add_marker(
                         sources.create_dof_cone_source,
                         coords,
                         (index == 0, index == 1, index == 2),
                         color=color_names.GREEN_2,
-                        scale=0.3,
                     )
                     axis_function = partial(sources.create_axis_source, shift=-0.8)
-                    self.add_entity(
+                    self.add_marker(
                         axis_function,
                         coords,
                         (index == 0, index == 1, index == 2),
                         color=colors[index],
-                        scale=0.3,
                     )
 
                 elif index >= 3 and v is not None:
-                    self.add_entity(
+                    self.add_marker(
                         sources.create_dof_cone_rotation_source,
                         coords,
                         (index == 3, index == 4, index == 5),
                         color=color_names.BLUE_6,
-                        scale=0.3,
                     )
                     axis_function = partial(sources.create_axis_source, shift=-1.2)
-                    self.add_entity(
+                    self.add_marker(
                         axis_function,
                         coords,
                         (index == 3, index == 4, index == 5),
                         color=colors[index - 3],
-                        scale=0.3,
                     )
 
     def _build_nodal_loads(self, property_name: str, surface_id: int = -1, line_id: int = -1, point_id: int = -1):
@@ -198,22 +194,20 @@ class SymbolsActorStructural(SymbolsActor):
 
             for index, v in enumerate(force_orientation):
                 if v != 0:
-                    self.add_entity(
+                    self.add_marker(
                         sources.create_nodal_loads_force_arrow_source,
                         coords,
                         (index == 0, index == 1, index == 2),
                         color=color_names.RED_2,
-                        scale=0.3,
                     )
 
             for index, v in enumerate(m_orientation):
                 if v != 0:
-                    self.add_entity(
+                    self.add_marker(
                         sources.create_nodal_loads_momentum_arrow_source,
                         coords,
                         (index == 0, index == 1, index == 2),
                         color=color_names.BLUE_5,
-                        scale=0.3,
                     )
 
     def _build_distributed_loads(self, property_name: str, surface_id: int = -1, line_id: int = -1, *args, **kwargs):
@@ -232,7 +226,7 @@ class SymbolsActorStructural(SymbolsActor):
             orientation = np.real((x, y, z))
             is_pointing = np.dot(normal, orientation) < 0
             shape = sources.create_quadruple_arrow_source if is_pointing else sources.create_outwards_triple_arrow_source
-            self.add_entity(shape, coords, orientation, color=color_names.RED_2, scale=0.3)
+            self.add_marker(shape, coords, orientation, color=color_names.RED_2)
 
         if line_id != -1:
             line_properties = app().project.model.properties.line_properties
@@ -247,9 +241,9 @@ class SymbolsActorStructural(SymbolsActor):
             z = z[0] if isinstance(z, np.ndarray) else z
 
             orientation = np.real((x, y, z))
-            self.add_entity(sources.create_arrow_source, coords[0], orientation, color=color_names.RED_2, scale=0.3)
-            self.add_entity(sources.create_arrow_source, coords[1], orientation, color=color_names.RED_2, scale=0.3)
-            self.add_entity(sources.create_arrow_source, coords[2], orientation, color=color_names.RED_2, scale=0.3)
+            self.add_marker(sources.create_arrow_source, coords[0], orientation, color=color_names.RED_2)
+            self.add_marker(sources.create_arrow_source, coords[1], orientation, color=color_names.RED_2)
+            self.add_marker(sources.create_arrow_source, coords[2], orientation, color=color_names.RED_2)
 
     def _build_normal_pressure_load(self, property_name: str, surface_id: int = -1, *args, **kwargs):
         if surface_id == -1:
@@ -265,4 +259,4 @@ class SymbolsActorStructural(SymbolsActor):
         x = x[0] if isinstance(x, np.ndarray) else x
 
         shape = sources.create_outwards_normal_pressure_load if np.real(x) > 0 else sources.create_normal_pressure_load
-        self.add_entity(shape, coords, normal, color=color_names.RED_2, scale=0.3)
+        self.add_marker(shape, coords, normal, color=color_names.RED_2)
