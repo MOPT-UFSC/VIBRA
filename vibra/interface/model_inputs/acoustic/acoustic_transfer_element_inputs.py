@@ -73,8 +73,8 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         self.analysis_setup = None
         self.frequencies = None
 
-        self.surface_ids = list()
-        self.element_transfer_data = dict()
+        self.surface_ids = []
+        self.element_transfer_data = {}
 
         self.highlight_style_sheet = """border-color: rgb(32, 207, 255); border-width: 2px;"""
 
@@ -179,6 +179,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
                 input_id,
                 "surfaces",
                 domain="acoustic",
+                single_id=True
             )
 
             if error_data is not None:
@@ -197,7 +198,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
             self.lineEdit_fstep,
         ]
 
-        freq_data = list()
+        freq_data = []
 
         for line_edit in line_edits:
             if line_edit.text() == "":
@@ -310,12 +311,12 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
 
         properties_to_remove = defaultdict(list)
         for property in model_excitations:
-            for key in self.properties.surface_properties.keys():
+            for key in self.properties.surface_properties:
                 if key[0] == property:
                     properties_to_remove[key[0]].append(key[1])
 
         for property in model_impedances:
-            for key in self.properties.surface_properties.keys():
+            for key in self.properties.surface_properties:
                 if key[0] == property and key[1] in self.surface_ids:
                     properties_to_remove[key[0]].append(key[1])
 
@@ -325,7 +326,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         if not properties_to_remove:
             return
 
-        table_names = list()
+        table_names = []
         for property_label, surface_ids in properties_to_remove.items():
             for table_name in self.properties.get_property_related_table_names(property_label, surface_ids, "surfaces"):
                 if table_name in table_names:
@@ -471,7 +472,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
                     data_to_export = np.array([x_data, np.real(y_data), np.imag(y_data), np.abs(y_data)]).T
 
                 else:
-                    data_type = data["data_type"]
+                    data_type: str = data.get("data_type")
                     header = [x_label, f"{data_type.capitalize()} [{unit}]"]
                     data_to_export = np.array([x_data, y_data]).T
 
@@ -479,9 +480,11 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
                 df.to_pandas().to_excel(writer, sheet_name=sheet_name, index=False)
 
     def export_data_callback(self):
-        if self.element_transfer_data:
-            path = self.lineEdit_spreadsheet_path.text()
-            self.export_data_in_spreadsheet_format(path)
+        if not self.element_transfer_data:
+            return
+
+        path = self.lineEdit_spreadsheet_path.text()
+        self.export_data_in_spreadsheet_format(path)
 
     def print_final_message(self):
 
