@@ -12,8 +12,6 @@ from vtkmodules.vtkCommonCore import vtkCommand, vtkDoubleArray, vtkIntArray, vt
 from vtkmodules.vtkCommonDataModel import vtkPolyData
 from vtkmodules.vtkRenderingCore import vtkActor, vtkCamera, vtkGlyph3DMapper
 
-from vibra.utils.time_utils import function_timer
-
 
 @dataclass
 class Entity:
@@ -149,7 +147,6 @@ class SymbolsActor(vtkActor):
 
         self.SetMapper(self.symbol_mapper)
 
-    @function_timer
     def build(self):
         self.symbol_points.Reset()
         self.symbol_rotation.Reset()
