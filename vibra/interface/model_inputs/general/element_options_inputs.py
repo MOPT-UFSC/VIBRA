@@ -3,9 +3,8 @@ from enum import IntEnum
 from PySide6.QtCore import Qt
 
 from vibra import app
-from vibra.engine.elements.element_options import HEX8_structural
-from vibra.engine.mesher.mesh_setup import HEXAHEDRON_8, HEXAHEDRON_20, TETRAHEDRON_4, TETRAHEDRON_10, ElementTopology
-from vibra.engine.mesher.mesh_setup import MeshSetup
+from vibra.engine.elements.common.element_options import HEX8_structural
+from vibra.engine.mesher.mesh_setup import ElementTopology, Hexahedron8, Hexahedron20, MeshSetup, Tetrahedron4, Tetrahedron10
 
 # from vibra.interface import error_title, warning_title
 # from vibra.interface.general.print_message_input import PrintMessageInput
@@ -95,16 +94,16 @@ class ElementOptionsInputs(ElementOptionsInput_UI):
         for i in range(4):
             self.tabWidget_main.setTabVisible(i, False)
 
-        if element_type == TETRAHEDRON_4:
+        if element_type == Tetrahedron4:
             self.tabWidget_main.setTabVisible(TabType.TET4, True)
 
-        elif element_type == TETRAHEDRON_10:
+        elif element_type == Tetrahedron10:
             self.tabWidget_main.setTabVisible(TabType.TET10, True)
 
-        elif element_type == HEXAHEDRON_8:
+        elif element_type == Hexahedron8:
             self.tabWidget_main.setTabVisible(TabType.HEX8, True)
 
-        elif element_type == HEXAHEDRON_20:
+        elif element_type == Hexahedron20:
             self.tabWidget_main.setTabVisible(TabType.HEX20, True)
 
         else:

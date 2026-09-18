@@ -1,14 +1,16 @@
 import logging
+from copy import deepcopy
 from enum import IntEnum
+from numbers import Number
 from pathlib import Path
 from typing import Literal
-from numbers import Number
 
 import numpy as np
-from PySide6.QtWidgets import QDialog, QFileDialog, QPushButton, QWidget
+from PySide6.QtWidgets import QDialog, QFileDialog, QLineEdit, QPushButton, QWidget
 
 from vibra import app
 from vibra.engine.analysis_info import AnalysisID, FrequencySpacing
+from vibra.engine.solution import ModalSolution
 from vibra.interface import error_title, warning_title
 from vibra.interface.data.data_manager import is_frequencies_vector_equally_distributed
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
@@ -59,6 +61,7 @@ def check_input_entries(input_left: str, input_right: str, label: str):
 
     return output
 
+
 def save_table_values(table_name: str, imported_values: np.ndarray, physical_domain: Literal["acoustic", "structural"]):
 
     # define the frequencies vector
@@ -88,6 +91,7 @@ def save_table_values(table_name: str, imported_values: np.ndarray, physical_dom
 
     return False
 
+
 def filter_outside_surfaces(surface_ids: list[int], bc_label: str) -> tuple[list[int], list[int]]:
 
     inside_surfaces = list()
@@ -108,6 +112,7 @@ def filter_outside_surfaces(surface_ids: list[int], bc_label: str) -> tuple[list
         PrintMessageInput([warning_title, title, message])
 
     return (outside_surfaces, inside_surfaces)
+
 
 def update_analysis_setup_in_file(frequencies: np.ndarray):
 
@@ -140,6 +145,7 @@ def update_analysis_setup_in_file(frequencies: np.ndarray):
 
     app().project.configure_analysis(analysis_setup)
 
+
 def check_acoustic_model_frequency_controls():
 
     properties = app().project.model.properties
@@ -168,11 +174,12 @@ def check_acoustic_model_frequency_controls():
             if property not in prop_labels:
                 continue
 
-            if "table_names" in data.keys():
+            if "table_names" in data:
                 return
 
     # No idea of what it does
     app().project.configure_analysis(app().project.model.analysis_setup)
+
 
 def check_structural_model_frequency_controls():
 
@@ -196,11 +203,12 @@ def check_structural_model_frequency_controls():
             if property not in prop_labels:
                 continue
 
-            if "table_names" in data.keys():
+            if "table_names" in data:
                 return
 
     # No idea of what it does
     app().project.configure_analysis(app().project.model.analysis_setup)
+
 
 def check_mesh_related_issues(run_analysis_button: QPushButton):
 
@@ -237,6 +245,7 @@ def check_mesh_related_issues(run_analysis_button: QPushButton):
     valid_analysis_setup = analysis_toolbar.is_analysis_setup_valid()
     analysis_toolbar.run_analysis_action.setEnabled(valid_analysis_setup)
 
+
 def mesher_interface_callback(parent: QDialog, close_after_generate: bool = False):
     parent.hide()
     obj = MesherSetupInputs(close_after_generate=close_after_generate)
@@ -245,6 +254,7 @@ def mesher_interface_callback(parent: QDialog, close_after_generate: bool = Fals
         return True
 
     app().main_window.update_plots()
+
 
 def generate_mesh_and_finalize() -> bool:
     """
@@ -328,7 +338,163 @@ def prompt_if_disconnected_nodes():
     app().main_window.input_ui.mesh_setup()
 
 
+def process_decoupling_actions():
+
+    def callback():
+        logging.info("Processing degress of freedom decoupling... [10/100]")
+        app().project.model.process_degrees_of_freedom_decoupling()
+
+        logging.info("Processing degress of freedom decoupling... [70/100]")
+        app().project.write_to_working_dir()
+
+        # the degrees of freedom modifies the surfaces properties
+        logging.info("Processing degress of freedom decoupling... [80/100]")
+        app().project.update_model_properties_file()
+
+        logging.info("Processing degress of freedom decoupling... [85/100]")
+        app().main_window.update_mesh_information()
+
+        logging.info("Processing degress of freedom decoupling... [90/100]")
+        app().main_window.update_geometry_information()
+
+        logging.info("Processing degress of freedom decoupling... [92/100]")
+        app().project.model.mesh.process_disconnected_nodes_criterion()
+
+        logging.info("Processing degress of freedom decoupling... [95/100]")
+        app().main_window.update_plots()
+
+    LoadingWindow(callback).run()
+
+
+def remove_all_properties_assigned_to_new_surfaces(new_surface_ids: list[int], remove_adjacencies: bool = True):
+    if not new_surface_ids:
+        return
+
+    model = app().project.model
+    surface_properties = deepcopy(model.properties.surface_properties)
+    line_properties = deepcopy(model.properties.line_properties)
+    point_properties = deepcopy(model.properties.point_properties)
+
+    for new_surface_id in new_surface_ids:
+        for (property, surf_id) in surface_properties:
+            if surf_id != new_surface_id:
+                continue
+
+            model.properties._remove_surface_property(property, surf_id)
+
+        if not remove_adjacencies:
+            continue
+
+        for line_from_surface in model.mesh.lines_from_surface.get(new_surface_id, []):
+            for (property, line_id) in line_properties:
+                if line_from_surface != line_id:
+                    continue
+
+                model.properties._remove_line_property(property, line_id)
+                for point_from_line in model.mesh.points_from_line.get(line_from_surface, []):
+                    for (property, point_id) in point_properties:
+                        if point_from_line != point_id:
+                            continue
+
+                        model.properties._remove_point_property(property, point_id)
+
+
+def restore_mesh_data_modified_by_decoupling():
+
+    mesh = app().project.model.mesh
+    if mesh.cache_nodal_coordinates is None:
+        return
+
+    mesh.restore_data_from_cache()
+    mesh.process_upwards_adjacencies_from_entities()
+
+    # if self.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
+    #     self.mesh.cache_mesh_information()
+
+    process_decoupling_actions()
+
+
+def check_conflicting_model_properties(volume_ids: list[int], domain: str):
+    """
+    Use this function to map and remove the model properties that will 
+    cause conflicts if the domain is changed.
+
+    Parameters
+    ----------
+    volume_ids: list
+        A list of volume IDs where the domain should be modified.
+
+    domain: str
+        The domain label (acoustic or structural)
+
+    """
+
+    model = app().project.model
+    if not model.domains_processor.is_there_a_property_assigned_to_a_domain(domain, volume_ids):
+        return False
+
+    is_acoustic = domain == "acoustic"
+    if is_acoustic:
+        text = ["material", "fluid"]
+    else:
+        text = ["fluid", "material"]
+
+    title = "Conflicting properties detected"
+    message = f"You're trying to assign a {text[0]} to a volume that already has a {text[1]} assigned. "
+    message += f"Would you like to proceed with {text[0]} assignment and remove all the "
+    message += f"{domain}-related properties?"
+
+    buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
+    obj = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
+
+    if obj._cancel:
+        return True
+
+    existing_properties = model.domains_processor.get_properties_assigned_to_a_domain(domain, volume_ids)
+    if not existing_properties:
+        return False
+
+    surfaces_with_decoupling = []
+    properties = app().project.model.properties
+
+    for (prop_name, entity_name, entity_id) in existing_properties:
+        if is_acoustic and prop_name in ["perforated_plate_model", "transfer_impedance"]:
+            surfaces_with_decoupling.append(entity_id)
+
+        match entity_name:
+            case "volume":
+                properties._remove_volume_property(prop_name, volume_id=entity_id)
+            case "surface":
+                properties._remove_surface_property(prop_name, surface_id=entity_id)
+            case "line":
+                properties._remove_line_property(prop_name, line_id=entity_id)
+            case "point":
+                properties._remove_point_property(prop_name, point_id=entity_id)
+            case "node":
+                properties._remove_nodal_property(prop_name, node_id=entity_id)
+
+    if not surfaces_with_decoupling:
+        return False
+
+    new_surface_ids = []
+    for surf_id in surfaces_with_decoupling:
+        data = properties._get_property("degrees_of_freedom_decoupling", surface=surf_id)
+        if isinstance(data, dict):
+            new_surface_id = data.get("new_surface_id")
+            if isinstance(new_surface_id, int):
+                new_surface_ids.append(new_surface_id)
+
+            properties._remove_surface_property("degrees_of_freedom_decoupling", surf_id)
+
+    remove_all_properties_assigned_to_new_surfaces(new_surface_ids)
+    restore_mesh_data_modified_by_decoupling()
+
+
 def export_modal_analysis_results(parent: QDialog | QWidget, modes_to_frequencies: dict, physical_domain: str):
+
+    solution = app().project.model.solution
+    if not isinstance(solution, ModalSolution):
+        return
 
     last_path = app().config.get_last_folder_for("exported_table_folder")
     if last_path is None:
@@ -349,12 +515,7 @@ def export_modal_analysis_results(parent: QDialog | QWidget, modes_to_frequencie
 
     app().config.write_last_folder_path_in_file("exported_table_folder", export_path)
 
-    if physical_domain == "acoustic":
-        complex_natural_frequencies = app().project.solver.complex_natural_frequencies
-    else:
-        complex_natural_frequencies = app().project.solver.complex_natural_frequencies
-
-    if complex_natural_frequencies.size:
+    if isinstance(solution.complex_natural_frequencies, np.ndarray):
         cols = 3
         fmt = "%i %.12e %.12e"
         header = "Mode, Damped frequency [Hz], Damping ratio [--]"
@@ -387,3 +548,39 @@ def export_modal_analysis_results(parent: QDialog | QWidget, modes_to_frequencie
             header = header.split(",")
             df = DataFrame(modal_data_to_export, schema=header)
             df.to_pandas().to_excel(writer, sheet_name="Exported modal results", index=False)
+
+
+def update_entities_selection(line_edit: QLineEdit, selection_label: str, selected_ids: list[int]):
+    input_ids = line_edit.text()
+    tokens = input_ids.replace(" ", "").split(",")
+    list_ids = [int(_id) for _id in tokens]
+
+    volumes = surfaces = lines = points = nodes = None
+
+    match selection_label:
+        case "volumes":
+            volumes = selected_ids
+        case "surfaces":
+            surfaces = selected_ids
+        case "lines":
+            lines = selected_ids
+        case "points":
+            points = selected_ids
+        case "nodes":
+            nodes = selected_ids
+
+    if len(list_ids) == len(selected_ids):
+        return
+
+    line_edit.setText(", ".join(map(str, selected_ids)))
+
+    if selection_label == "nodes":
+        app().main_window.selection.set_mesh_selection(nodes=nodes)
+
+    else:
+        app().main_window.selection.set_geometry_selection(
+            volumes=volumes,
+            surfaces=surfaces,
+            lines=lines,
+            points=points,
+            )

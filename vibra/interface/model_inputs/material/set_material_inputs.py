@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
 from vibra import app
 from vibra.engine.properties.material import Material
 from vibra.interface import error_title
+from vibra.interface.common.common_interface import check_conflicting_model_properties
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.material.material_widget import MaterialWidget
@@ -45,12 +46,16 @@ class MaterialInputs(SetMaterial_UI):
             self.exec()
 
     @property
-    def properties(self):
-        return app().project.model.properties
+    def model(self):
+        return app().project.model
 
     @property
     def mesh(self):
         return app().project.model.mesh
+
+    @property
+    def properties(self):
+        return app().project.model.properties
 
     def _initialize(self):
         self.keep_window_open = True
@@ -86,9 +91,11 @@ class MaterialInputs(SetMaterial_UI):
         self.lineEdit_selected_material_name.clear()
 
     def _create_connections(self):
-        #
+
+        # QComboBox connection
         self.comboBox_attribution_type.currentIndexChanged.connect(self.attribution_type_callback)
-        #
+
+        # QPushButton connections
         self.material_widget.modified.connect(self.load_model_info)
         self.material_widget.pushButton_apply.clicked.connect(self.apply_callback)
         self.material_widget.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
@@ -99,14 +106,14 @@ class MaterialInputs(SetMaterial_UI):
         self.material_widget.pushButton_import_library.clicked.connect(self.import_material_library_callback)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
-        #
+
+        # QTableWidget connections
         self.tableWidget_material_data.currentCellChanged.connect(self.current_cell_changed)
         self.tableWidget_model_materials.cellClicked.connect(self.cell_clicked_callback)
-        #
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
-        #
+
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
-        #
+
         self.attribution_type_callback()
         self.update_selection_combo_box_texts()
 
@@ -242,7 +249,7 @@ class MaterialInputs(SetMaterial_UI):
 
     def get_table_widget_model_materials_items_map(self) -> dict:
         num_of_rows = self.tableWidget_model_materials.rowCount()
-        map_id_to_row = dict()
+        map_id_to_row = {}
 
         for row in range(num_of_rows):
             selected_item = self.tableWidget_model_materials.item(row, 0)
@@ -325,13 +332,16 @@ class MaterialInputs(SetMaterial_UI):
 
         if "surfaces" in current_text:
             if "All" in current_text:
-                surface_ids = list()
-                if "surfaces" in self.mesh.geometry_information.keys():
+                surface_ids = []
+                if "surfaces" in self.mesh.geometry_information:
                     surface_ids = self.mesh.geometry_information["surfaces"]
 
             else:
                 input_ids = self.lineEdit_selection_id.text()
-                surface_ids, error_data = self.mesh.check_selected_ids(input_ids, selection="surfaces", single_id=False)
+                surface_ids, error_data = self.model.check_selected_ids(
+                    input_ids,
+                    "surfaces",
+                    )
 
                 if error_data is not None:
                     self.lineEdit_selection_id.setFocus()
@@ -343,20 +353,35 @@ class MaterialInputs(SetMaterial_UI):
 
         if "volumes" in current_text:
             if "All" in current_text:
-                volume_ids = list()
-                if "volumes" in self.mesh.geometry_information.keys():
+                volume_ids = []
+                if "volumes" in self.mesh.geometry_information:
                     volume_ids = self.mesh.geometry_information["volumes"]
 
             else:
                 input_ids = self.lineEdit_selection_id.text()
-                volume_ids, error_data = self.mesh.check_selected_ids(input_ids, selection="volumes", single_id=False)
+                volume_ids, error_data = self.model.check_selected_ids(
+                    input_ids,
+                    "volumes",
+                    )
 
                 if error_data is not None:
                     self.lineEdit_selection_id.setFocus()
                     PrintMessageInput(error_data)
                     return True
 
+            if check_conflicting_model_properties(volume_ids, "acoustic"):
+                return
+
             for volume_id in volume_ids:
+
+                # we cannot have two physical domains active on the same volume
+                self.properties._remove_volume_property("fluid", volume_id)
+                for surface_id in self.mesh.surfaces_from_volume.get(volume_id):
+                    if surface_id in app().project.model.domains_processor.fluid_structure_interfaces:
+                        continue
+
+                    self.properties._remove_surface_property("fluid", surface_id)
+
                 self.properties._set_property("material", selected_material, volume=volume_id)
 
         self.actions_to_finalize(close_window)
@@ -405,10 +430,12 @@ class MaterialInputs(SetMaterial_UI):
         self.pushButton_remove.setDisabled(True)
 
         self.load_model_info()
+
+        self.model.domains_processor.map_model_domains()
+        app().project.update_model_properties_file()
         app().main_window.update_info_text()
         app().main_window.selection.clear_selection()  # this also updates
         app().main_window.update_symbols()
-        app().project.update_model_properties_file()
 
         if close_window:
             self.close()
@@ -417,7 +444,7 @@ class MaterialInputs(SetMaterial_UI):
 
         properties = {"Surface": self.properties.surface_properties, "Volume": self.properties.volume_properties}
 
-        self.materials_from_model = dict()
+        self.materials_from_model = {}
 
         for selection, _property in properties.items():
             for key, data in _property.items():

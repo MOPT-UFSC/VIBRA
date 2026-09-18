@@ -1,4 +1,3 @@
-from vibra.utils.time_utils import warn_delays
 import logging
 
 from molde.colors import Color, color_names
@@ -7,8 +6,9 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
 
 from vibra import LOGO_DIR, app
+from vibra.interface.enums import Workspaces
 from vibra.interface.loading_window import LoadingWindow
-from vibra.utils.interface_utils import VisualizationFilter
+from vibra.utils.time_utils import warn_delays
 
 from ..actors.edges_actor import EdgesActor
 from ..actors.faces_actor import FacesActor
@@ -33,12 +33,7 @@ class MeshRenderWidget(CommonRenderWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.visualization_filter = VisualizationFilter(
-            lines=True,
-            faces=True,
-            solids=True,
-            symbols=True,
-        )
+        self.visualization_filter = app().config.get_visualization_filter(Workspaces.MESH)
 
         self.mesh_selection = MeshSelection(self)
         self.selection_color = (20, 106, 245)
@@ -208,7 +203,6 @@ class MeshRenderWidget(CommonRenderWidget):
         self.edges_actor.SetVisibility(visualization.lines and not distinguished_solids)
         self.faces_actor.SetVisibility(visualization.faces and not mesh_error)
         self.solids_actor.SetVisibility(visualization.solids and not mesh_error)
-        self.faces_actor.SetVisibility(visualization.faces and not mesh_error)
         self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
 
         if distinguished_solids:
