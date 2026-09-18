@@ -313,7 +313,7 @@ class GeometryRenderWidget(CommonRenderWidget):
             x1, y1 = self.last_click_position
             mouse_moved = (abs(x0 - x1) > self.double_click_tolerance) or (abs(y0 - y1) > self.double_click_tolerance)
 
-            self.is_double_click = (time_since_last_click < 0.5) and not (mouse_moved)
+            self.is_double_click = (time_since_last_click < 0.3) and not (mouse_moved)
 
         self.last_click_time = current_click_time
         self.last_click_position = self.current_click_position
