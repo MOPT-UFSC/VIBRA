@@ -240,10 +240,17 @@ class SymbolsActor(vtkActor):
 
         markers = type_view == int(SymbolType.MARKER)
         billboards = type_view == int(SymbolType.BILLBOARD)
+        screen_size_mask = markers | billboards
 
-        camera_position = self.camera.GetPosition()
-        diff = points_view[markers | billboards] - camera_position
-        scale_view[markers | billboards] = 0.015 * np.linalg.norm(diff, axis=1)
+        if self.camera.GetParallelProjection():
+            scale = 0.05 * self.camera.GetParallelScale()
+            scale_view[screen_size_mask] = scale
+        else:
+            camera_position = self.camera.GetPosition()
+            diff = points_view - camera_position
+            distances = 0.015 * np.linalg.norm(diff, axis=1)
+            scale_view[screen_size_mask] = distances[screen_size_mask]
+
         rotation = self._get_camera_facing_rotation()
         rotation_view[billboards] = rotation
 
