@@ -193,7 +193,7 @@ class SymbolsActor(vtkActor):
         position: Sequence[float],
         orientation: Sequence[float],
         color: Color,
-        scale: float,
+        scale: float = 1,
         group: set[str] | None = None,
     ):
         if group is None:

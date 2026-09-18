@@ -1,7 +1,6 @@
 from collections import defaultdict
 
 import numpy as np
-from molde.actors import CommonSymbolsActorVariableSize
 from molde.colors import color_names
 
 from vibra import app

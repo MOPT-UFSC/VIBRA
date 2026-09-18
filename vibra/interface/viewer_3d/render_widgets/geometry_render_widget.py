@@ -173,7 +173,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.multimaterial = MultimaterialGeometryActor(mesh, visualization_filter=self.visualization_filter)
 
         self.selection_spheres_actor = SelectionSpheres()
-        self.symbols_actor_structural = SymbolsActorStructural(self.renderer)
+        self.symbols_actor_structural = SymbolsActorStructural(self.renderer.GetActiveCamera())
         self.symbols_actor_acoustic = SymbolsActorAcoustic(self.renderer.GetActiveCamera())
 
         self.ghost_actor = GhostActor(mesh)
@@ -292,7 +292,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         # but for some reason that I can't understand
         # it causes segmentation fault
         self.remove_actors(self.symbols_actor_structural, self.symbols_actor_acoustic)
-        self.symbols_actor_structural = SymbolsActorStructural(self.renderer)
+        self.symbols_actor_structural = SymbolsActorStructural(self.renderer.GetActiveCamera())
         self.symbols_actor_acoustic = SymbolsActorAcoustic(self.renderer.GetActiveCamera())
         self.add_actors(self.symbols_actor_structural, self.symbols_actor_acoustic)
         self.visualization_changed_callback()
