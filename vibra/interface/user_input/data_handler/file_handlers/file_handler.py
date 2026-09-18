@@ -52,10 +52,10 @@ class FileHandler:
             return TextFileHandler.read(file_path)
         elif file_path.suffix in HDF5FileHandler.EXTENSIONS:
             return HDF5FileHandler.read(file_path)
-        elif file_path.suffix in SpreadsheetFileHandler.EXTENSIONS:
+        elif file_path.suffix in SpreadsheetFileHandler.READ_EXTENSIONS:
             return SpreadsheetFileHandler.read(file_path)
         else:
-            all_extensions = TextFileHandler.EXTENSIONS + HDF5FileHandler.EXTENSIONS + SpreadsheetFileHandler.EXTENSIONS
+            all_extensions = TextFileHandler.EXTENSIONS + HDF5FileHandler.EXTENSIONS + SpreadsheetFileHandler.READ_EXTENSIONS
             raise FileHandler.raise_extensions_error(file_path, all_extensions)
             
     @staticmethod
@@ -71,16 +71,16 @@ class FileHandler:
         TextFileHandler.save(file_path, data, delimiter=delimiter, header=header)
 
     @staticmethod
-    def save_spreadsheet_file(file_path: str, sheetname: str, data: PolarsDataFrame, index_rows: bool = False):
+    def save_spreadsheet_file(file_path: str | Path, sheetname: str, data: PolarsDataFrame, index_rows: bool = False, append=False):
         file_path = Path(file_path)
 
         if not file_path.parent.exists():
             raise FileNotFoundError(f"The path {file_path.parent} does not exist")
 
-        if file_path.suffix not in SpreadsheetFileHandler.EXTENSIONS:
-            raise FileHandler.raise_extensions_error(file_path, SpreadsheetFileHandler.EXTENSIONS)
+        if file_path.suffix not in SpreadsheetFileHandler.WRITE_EXTENSIONS:
+            raise FileHandler.raise_extensions_error(file_path, SpreadsheetFileHandler.WRITE_EXTENSIONS)
 
-        SpreadsheetFileHandler.save(file_path, sheetname, data, index_rows)
+        SpreadsheetFileHandler.save(file_path, sheetname, data, index_rows, append)
 
     @staticmethod
     def generate_extensions_string_for_error_message(extensions: list[str]) -> str:

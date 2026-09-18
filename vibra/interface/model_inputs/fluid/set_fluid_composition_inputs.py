@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QTableWidgetItem, 
 
 from vibra import app
 from vibra.engine.properties.fluid import Fluid
-from vibra.extensions import SUPPORTED_SPREADSHEET_EXTENSIONS
+from vibra.extensions import SUPPORTED_SPREADSHEET_WRITE_EXTENSIONS
 from vibra.interface import error_title, warning_title
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -1248,7 +1248,7 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
     def export_fluid_composition_callback(self):
         self.hide()
 
-        file_path = FileDialogService.save_file(file_extensions=SUPPORTED_SPREADSHEET_EXTENSIONS,
+        file_path = FileDialogService.save_file(file_extensions=SUPPORTED_SPREADSHEET_WRITE_EXTENSIONS,
                                     caption="Export the fluid composition data in spreadsheet file",
                                     last_folder="fluid_composition_folder")
 

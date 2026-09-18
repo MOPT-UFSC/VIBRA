@@ -10,7 +10,7 @@ from PySide6.QtWidgets import QAbstractItemView, QLabel, QLineEdit, QTreeWidgetI
 
 from vibra import app
 from vibra.engine.analysis_info import AnalysisID
-from vibra.extensions import SUPPORTED_SPREADSHEET_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
+from vibra.extensions import SUPPORTED_SPREADSHEET_READ_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
 from vibra.interface import error_title
 from vibra.interface.common.common_interface import save_table_values, update_entities_selection
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
@@ -623,7 +623,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                 imported_path = lineEdit.text()
 
             else:
-                extensions = SUPPORTED_SPREADSHEET_EXTENSIONS + SUPPORTED_TEXT_EXTENSIONS
+                extensions = SUPPORTED_SPREADSHEET_READ_EXTENSIONS + SUPPORTED_TEXT_EXTENSIONS
                 imported_path = FileDialogService.open_file(file_extensions=extensions,
                                                             caption=f"Choose a table to import the {dof_label} data",
                                                             last_folder="imported_table_folder")

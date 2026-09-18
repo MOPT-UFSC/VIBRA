@@ -5,7 +5,7 @@ from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
 
 from vibra import app
-from vibra.extensions import SUPPORTED_SPREADSHEET_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
+from vibra.extensions import SUPPORTED_SPREADSHEET_READ_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
 from vibra.interface import error_title
 from vibra.interface.common.common_interface import update_analysis_setup_in_file, update_entities_selection
 from vibra.interface.data.data_manager import get_spectral_data_from_array
@@ -157,7 +157,7 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
                 imported_path = lineEdit.text()
 
             else:
-                extensions = SUPPORTED_SPREADSHEET_EXTENSIONS + SUPPORTED_TEXT_EXTENSIONS
+                extensions = SUPPORTED_SPREADSHEET_READ_EXTENSIONS + SUPPORTED_TEXT_EXTENSIONS
                 caption = "Choose a table to import the compressor excitation spectrum data"
 
                 imported_path = FileDialogService.open_file(file_extensions=extensions,

@@ -6,7 +6,7 @@ from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QCheckBox, QHBoxLayout, QTreeWidgetItem, QWidget
 
 from vibra import app
-from vibra.extensions import SUPPORTED_SPREADSHEET_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
+from vibra.extensions import SUPPORTED_SPREADSHEET_READ_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
 from vibra.interface.ui_generated.data_handler.import_data_to_compare_ui import (
     ImportDataToCompare_UI,
 )
@@ -67,7 +67,7 @@ class ImportDataToCompare(ImportDataToCompare_UI):
             self.treeWidget_import_sheet_files.setColumnWidth(i, width)
 
     def import_results(self):
-        extensions = SUPPORTED_SPREADSHEET_EXTENSIONS + SUPPORTED_TEXT_EXTENSIONS
+        extensions = SUPPORTED_SPREADSHEET_READ_EXTENSIONS + SUPPORTED_TEXT_EXTENSIONS
 
         imported_files = FileDialogService.open_multiple_files(file_extensions=extensions,
                                               last_folder="imported_data_folder")

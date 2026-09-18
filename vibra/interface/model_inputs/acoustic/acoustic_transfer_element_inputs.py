@@ -9,7 +9,7 @@ from PySide6.QtWidgets import QLineEdit
 
 from vibra import app
 from vibra.engine.analysis_info import AnalysisID, FrequencySpacing, HarmonicAnalysisSetup
-from vibra.extensions import SUPPORTED_SPREADSHEET_EXTENSIONS
+from vibra.extensions import SUPPORTED_SPREADSHEET_WRITE_EXTENSIONS
 from vibra.interface import error_title
 from vibra.interface.common.common_interface import mesher_interface_callback
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -155,7 +155,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
     def search_callback(self):
         caption = "Set a file name to export the acoustic element transfer data"
 
-        path = FileDialogService.save_file(file_extensions=SUPPORTED_SPREADSHEET_EXTENSIONS,
+        path = FileDialogService.save_file(file_extensions=SUPPORTED_SPREADSHEET_WRITE_EXTENSIONS,
                                            caption=caption,
                                            last_folder="exported_data_folder")
 

@@ -9,7 +9,7 @@ from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QLineEdit, QTreeWidgetItem
 
 from vibra import app
-from vibra.extensions import SUPPORTED_SPREADSHEET_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
+from vibra.extensions import SUPPORTED_SPREADSHEET_READ_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
 from vibra.interface import error_title, warning_title
 from vibra.interface.common.common_interface import (
     process_decoupling_actions,
@@ -328,7 +328,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
                 imported_path = lineEdit.text()
 
             else:
-                extensions = SUPPORTED_SPREADSHEET_EXTENSIONS + SUPPORTED_TEXT_EXTENSIONS
+                extensions = SUPPORTED_SPREADSHEET_READ_EXTENSIONS + SUPPORTED_TEXT_EXTENSIONS
                 imported_path = FileDialogService.open_file(file_extensions=extensions,
                                                             caption="Choose a table to import the transfer impedance",
                                                             last_folder="imported_table_folder")

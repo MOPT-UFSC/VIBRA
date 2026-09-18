@@ -14,7 +14,7 @@ from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QLineEdit, QTableW
 from vibra import app
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.transfer_impedances.perforated_plate_models import PerforatedPlateModels
-from vibra.extensions import SUPPORTED_SPREADSHEET_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
+from vibra.extensions import SUPPORTED_SPREADSHEET_READ_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
 from vibra.interface import error_title, warning_title
 from vibra.interface.common.common_interface import (
     process_decoupling_actions,
@@ -600,7 +600,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                 imported_path = lineEdit.text()
 
             else:
-                extensions = SUPPORTED_SPREADSHEET_EXTENSIONS + SUPPORTED_TEXT_EXTENSIONS
+                extensions = SUPPORTED_SPREADSHEET_READ_EXTENSIONS + SUPPORTED_TEXT_EXTENSIONS
                 imported_path = FileDialogService.open_file(file_extensions=extensions,
                                                             caption="Choose a table to import the user-defined transfer impedance",
                                                             last_folder="imported_table_folder")

@@ -3,7 +3,7 @@ import os
 from PySide6.QtCore import Qt
 
 from vibra import app
-from vibra.extensions import SUPPORTED_SPREADSHEET_EXTENSIONS
+from vibra.extensions import SUPPORTED_SPREADSHEET_READ_EXTENSIONS
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.ui_generated.model.fluid.load_fluid_composition_ui import LoadFluidComposition_UI
 from vibra.interface.user_input.data_handler.file_dialog_service import FileDialogService
@@ -54,7 +54,7 @@ class LoadFluidCompositionInputs(LoadFluidComposition_UI):
             self.load_composition_data_from_file()
 
     def search_button_callback(self):
-        file_path = FileDialogService.open_file(file_extensions=SUPPORTED_SPREADSHEET_EXTENSIONS,
+        file_path = FileDialogService.open_file(file_extensions=SUPPORTED_SPREADSHEET_READ_EXTENSIONS,
                                                 caption="Open file",
                                                 last_folder="fluid_composition_folder")
 

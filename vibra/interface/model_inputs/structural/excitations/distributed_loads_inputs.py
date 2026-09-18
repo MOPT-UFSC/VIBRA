@@ -9,7 +9,7 @@ from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QAbstractItemView, QLineEdit, QTreeWidgetItem
 
 from vibra import app
-from vibra.extensions import SUPPORTED_SPREADSHEET_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
+from vibra.extensions import SUPPORTED_SPREADSHEET_READ_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
 from vibra.interface import error_title
 from vibra.interface.common.common_interface import InputDataType, check_input_entries, update_analysis_setup_in_file, update_entities_selection
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
@@ -354,7 +354,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
                 imported_path = lineEdit.text()
 
             else:
-                extensions = SUPPORTED_SPREADSHEET_EXTENSIONS + SUPPORTED_TEXT_EXTENSIONS
+                extensions = SUPPORTED_SPREADSHEET_READ_EXTENSIONS + SUPPORTED_TEXT_EXTENSIONS
                 imported_path = FileDialogService.open_file(file_extensions=extensions,
                                                             caption=f"Choose a table to import the {load_label} data",
                                                             last_folder="imported_table_folder")

@@ -1362,7 +1362,6 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         plotter.show()
 
     def export_path_callback(self):
-
         path = app().config.get_last_folder_for("exported_data_folder")
         if path is None:
             directory_path = USER_PATH
@@ -1370,7 +1369,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             directory_path = path
 
         caption = "Enter a filename to export the reciprocating compressor excitation data"
-        ext_filter = "Text file (*.dat);; Text file (*.txt);; Text file (*.csv);; Spreadsheet (*.xls);; Spreadsheet (*.xlsx)"
+        ext_filter = "Text file (*.dat);; Text file (*.txt);; Text file (*.csv);; Spreadsheet (*.xlsx)"
 
         if self.exporter is None:
             self.exporter = ExportModelResults()

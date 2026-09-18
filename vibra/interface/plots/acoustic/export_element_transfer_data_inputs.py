@@ -6,7 +6,7 @@ from PySide6.QtGui import QCloseEvent
 
 from vibra import app
 from vibra.engine import AnalysisID
-from vibra.extensions import SUPPORTED_SPREADSHEET_EXTENSIONS
+from vibra.extensions import SUPPORTED_SPREADSHEET_READ_EXTENSIONS
 from vibra.interface import error_title
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -138,7 +138,7 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
         self.current_lineEdit = self.lineEdit_output_selected_id
 
     def search_callback(self):
-        path = FileDialogService.open_file(file_extensions=SUPPORTED_SPREADSHEET_EXTENSIONS,
+        path = FileDialogService.open_file(file_extensions=SUPPORTED_SPREADSHEET_READ_EXTENSIONS,
                                            caption="Choose a file to import element transfer data",
                                            last_folder="imported_table_folder")
 
