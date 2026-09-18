@@ -83,14 +83,15 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         self.tabWidget_main.setTabVisible(1, False)
 
     def _create_connections(self):
-        #
+
+        # QPushButton connections
         self.pushButton_exit.clicked.connect(self.close)
         self.pushButton_process_data.clicked.connect(self.process_data_callback)
         self.pushButton_invert_selection.clicked.connect(self.invert_selection_callback)
         self.pushButton_search.clicked.connect(self.search_callback)
-        #
+
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
-        #
+
         self.clickable(self.lineEdit_input_selected_id).connect(self.lineEdit_1_clicked)
         self.clickable(self.lineEdit_output_selected_id).connect(self.lineEdit_2_clicked)
 
@@ -287,7 +288,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         self.remove_model_excitations_and_impedances()
 
         # reset model solution data
-        app().main_window.analysis_toolbar.reset_solution(True)
+        app().main_window.analysis_toolbar.reset_solution()
 
         app().main_window.results_viewer_widget.results_viewer_items.update_items()
         self.print_final_message()
