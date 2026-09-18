@@ -44,6 +44,11 @@ class PickedMesh:
     picked_faces: set[int] = field(default_factory=set)
     picked_solids: set[int] = field(default_factory=set)
 
+    def clear(self):
+        self.picked_nodes.clear()
+        self.picked_faces.clear()
+        self.picked_solids.clear()
+
 
 class MeshActor(vtkPropAssembly):
     def __init__(self, model: Model | None):

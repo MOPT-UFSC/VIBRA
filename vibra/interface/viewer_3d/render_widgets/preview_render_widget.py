@@ -96,6 +96,7 @@ class PreviewRenderWidget(CommonRenderWidget):
         self.update_visualization()
 
         if reset_camera:
+            self.picked_mesh.clear()
             self.renderer.ResetCamera()
 
         with context_timer("render"):
