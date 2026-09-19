@@ -8,7 +8,7 @@ from vibra.engine.properties.material import Material
 from vibra.engine.solution import HarmonicSolution
 from vibra.engine.solvers.harmonic_solver import HarmonicSolver
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
-from vibra.interface.data_handler.data_importer import DataImporter
+from vibra.interface.user_input.data_handler.file_handlers.file_handler import FileHandler
 
 if TYPE_CHECKING:
     from vibra.engine.model import Model
@@ -198,7 +198,7 @@ def load_external_mesh_and_solve():
 
     ## load external results data
     results_path = "validation_files/data/WB/structural/shell/L_pipe/results/results_for_L_pipe.xlsx"
-    imported_results = DataImporter.load_spreadsheet_data_for_validation(results_path)
+    imported_results = FileHandler.read(results_path).to_dict()
 
     output_face_ux_lin = imported_results["output_face_ux_lin"]
     output_face_ux_quad = imported_results["output_face_ux_quad"]

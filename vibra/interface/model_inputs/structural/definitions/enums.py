@@ -1,5 +1,6 @@
 from enum import IntEnum
 
+
 class StandardTabType(IntEnum):
     CONSTANT_DATA = 0
     TABULAR_DATA = 1

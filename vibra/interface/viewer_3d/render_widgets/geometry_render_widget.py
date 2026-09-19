@@ -7,8 +7,8 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
 
 from vibra import LOGO_DIR, app
+from vibra.interface.enums import Workspaces
 from vibra.utils.image_functions import removes_image_background
-from vibra.utils.interface_utils import VisualizationFilter
 from vibra.utils.time_utils import warn_delays
 
 from ..actors.ghost_actor import GhostActor
@@ -45,9 +45,11 @@ class GeometryRenderWidget(CommonRenderWidget):
         super().__init__(parent)
 
         self.geometry_selection = GeometrySelection(self)
-        self.mouse_click = (0, 0)
+        self.current_click_position = (0, 0)
+        self.last_click_position = (0, 0)
         self.last_click_time: datetime | None = None
         self.is_double_click = False
+        self.double_click_tolerance = 10 # px
 
         self.left_clicked.connect(self.click_callback)
         self.left_released.connect(self.selection_callback)
@@ -73,12 +75,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.renderer.SetOcclusionRatio(0.9)
         self.render_interactor.GetRenderWindow().SetMultiSamples(0)
 
-        self.visualization_filter = VisualizationFilter(
-            lines=True,
-            faces=True,
-            solids=True,
-            symbols=True,
-        )
+        self.visualization_filter = app().config.get_visualization_filter(Workspaces.GEOMETRY)
 
         self.remove_all_actors()
         self.update_logo()
@@ -173,9 +170,8 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.multimaterial = MultimaterialGeometryActor(mesh, visualization_filter=self.visualization_filter)
 
         self.selection_spheres_actor = SelectionSpheres()
-        self.symbols_actor_structural = SymbolsActorStructural(self.renderer)
-        self.symbols_actor_acoustic = SymbolsActorAcoustic(self.renderer)
-        self.symbols_actor_acoustic_fixed_size = SymbolsActorAcousticFixedSize(self.renderer)
+        self.symbols_actor_structural = SymbolsActorStructural(self.renderer.GetActiveCamera())
+        self.symbols_actor_acoustic = SymbolsActorAcoustic(self.renderer.GetActiveCamera())
 
         self.ghost_actor = GhostActor(mesh)
         self.ghost_actor.SetVisibility(app().main_window.has_hidden_part())
@@ -193,7 +189,6 @@ class GeometryRenderWidget(CommonRenderWidget):
             self.plane_actor,
             self.symbols_actor_structural,
             self.symbols_actor_acoustic,
-            self.symbols_actor_acoustic_fixed_size,
         )
 
         with self.update_lock:
@@ -246,8 +241,6 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         self.symbols_actor_structural.SetVisibility(visualization.symbols and (physical_domain in ["Structural", "Coupled"]))
         self.symbols_actor_acoustic.SetVisibility(visualization.symbols and (physical_domain in ["Acoustic", "Coupled"]))
-        self.symbols_actor_acoustic_fixed_size.SetVisibility(visualization.symbols and (physical_domain in ["Acoustic", "Coupled"]))
-
         self.points_actor.SetVisibility(visualization.points)
         self.lines_actor.SetVisibility(visualization.lines)
         self.multimaterial.SetVisibility(visualization.faces)
@@ -295,23 +288,30 @@ class GeometryRenderWidget(CommonRenderWidget):
         # self.symbols_actor.build() should be enough
         # but for some reason that I can't understand
         # it causes segmentation fault
-        self.remove_actors(self.symbols_actor_structural, self.symbols_actor_acoustic, self.symbols_actor_acoustic_fixed_size)
-        self.symbols_actor_structural = SymbolsActorStructural(self.renderer)
-        self.symbols_actor_acoustic = SymbolsActorAcoustic(self.renderer)
-        self.symbols_actor_acoustic_fixed_size = SymbolsActorAcousticFixedSize(self.renderer)
-        self.add_actors(self.symbols_actor_structural, self.symbols_actor_acoustic, self.symbols_actor_acoustic_fixed_size)
+        self.remove_actors(self.symbols_actor_structural, self.symbols_actor_acoustic)
+        self.symbols_actor_structural = SymbolsActorStructural(self.renderer.GetActiveCamera())
+        self.symbols_actor_acoustic = SymbolsActorAcoustic(self.renderer.GetActiveCamera())
+        self.add_actors(self.symbols_actor_structural, self.symbols_actor_acoustic)
         self.visualization_changed_callback()
         self.update()
 
-    def click_callback(self, x, y):
-        self.mouse_click = (x, y)
+    def click_callback(self, x0, y0):
+        self.current_click_position = (x0, y0)
+
 
         self.is_double_click = False
         current_click_time = datetime.now()
+
         if self.last_click_time is not None:
             time_since_last_click = (current_click_time - self.last_click_time).total_seconds()
-            self.is_double_click = time_since_last_click < 0.5
+
+            x1, y1 = self.last_click_position
+            mouse_moved = (abs(x0 - x1) > self.double_click_tolerance) or (abs(y0 - y1) > self.double_click_tolerance)
+
+            self.is_double_click = (time_since_last_click < 0.3) and not (mouse_moved)
+
         self.last_click_time = current_click_time
+        self.last_click_position = self.current_click_position
 
     @warn_delays(0.2)  # this is already too much and should be optimized
     def selection_callback(self, x, y):
@@ -334,8 +334,8 @@ class GeometryRenderWidget(CommonRenderWidget):
         else:
             self.geometry_selection.clear_section_plane()
 
-        x0, y0 = self.mouse_click
-        mouse_moved = (abs(x0 - x) > 10) or (abs(y0 - y) > 10)
+        x0, y0 = self.current_click_position
+        mouse_moved = (abs(x0 - x) > self.double_click_tolerance) or (abs(y0 - y) > self.double_click_tolerance)
 
         if mouse_moved:
             (
@@ -473,7 +473,6 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.plane_actor = None
         self.symbols_actor_structural = None
         self.symbols_actor_acoustic = None
-        self.symbols_actor_acoustic_fixed_size = None
         self.nodes_actor = None
         self.ghost_actor = None
 
