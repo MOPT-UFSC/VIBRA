@@ -30,7 +30,7 @@ class HollowSolidsActor(FacesActor):
         points.SetData(numpy_to_vtk(coordinates))
 
     def clear_colors(self):
-        color = app().config.user_preferences.faces_color
+        color = app().config.user_preferences.volumes_color
         self.set_color(color)
 
     def paint_solids(self, color: tuple[3], volumes: tuple[int]):
