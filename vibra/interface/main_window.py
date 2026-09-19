@@ -39,7 +39,7 @@ from vibra.interface.toolbars.view_toolbar import ViewToolbar
 from vibra.interface.ui_generated.main_window_ui import MainWindow_UI
 from vibra.interface.user_input.about_vibra import AboutVibraInput
 from vibra.interface.user_input.input_ui import InputUi
-from vibra.interface.user_input.render_user_preferences import RendererUserPreferencesInput
+from vibra.interface.user_input.user_preferences_window import UserPreferencesInput
 from vibra.interface.viewer_3d.render_widgets import GeometryRenderWidget, MeshRenderWidget, ResultsRenderWidget
 from vibra.interface.welcome_widget import WelcomeWidget
 from vibra.utils.interface_utils import GeometryColorMode, VisualizationFilter, block_signals, qt_extensions
@@ -369,7 +369,7 @@ class MainWindow(MainWindow_UI):
 
     def action_user_preferences_callback(self):
         self.close_dialogs()
-        self.render_user_preferences = RendererUserPreferencesInput()
+        self.user_preferences_dialog = UserPreferencesInput()
 
     def action_points_callback(self):
         self.selection.select_all_points()
