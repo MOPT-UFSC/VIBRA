@@ -7,19 +7,16 @@ import xxhash
 from molde import Color
 from vtkmodules.util.numpy_support import numpy_to_vtk, numpy_to_vtkIdTypeArray, vtk_to_numpy
 from vtkmodules.vtkCommonCore import vtkDataArray, vtkIntArray, vtkPoints, vtkUnsignedCharArray
-from vtkmodules.vtkCommonDataModel import (
-    vtkCellArray,
-    vtkPlane,
-    vtkPolyData,
-)
+from vtkmodules.vtkCommonDataModel import vtkCellArray, vtkPolyData
 from vtkmodules.vtkRenderingCore import vtkActor, vtkAreaPicker, vtkHardwarePicker, vtkPolyDataMapper, vtkPropAssembly, vtkRenderer
 
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.engine.properties.model_properties import ModelProperties
+from vibra.interface.viewer_3d.coloring.color_table import ColorTable
 from vibra.utils.interface_utils import SectionPlane
 from vibra.utils.math_functions import inside_plane
-from vibra.utils.time_utils import context_timer, function_timer
+from vibra.utils.time_utils import function_timer
 
 
 @dataclass
@@ -90,6 +87,7 @@ class ResultsActor(vtkPropAssembly):
 
     def clear_data(self):
         self.cached_info = CachedInfo()
+        self.result_colors.SetNumberOfTuples(0)
 
         self.node_data.SetVerts(vtkCellArray())
         self.node_colors.SetNumberOfTuples(0)
@@ -112,6 +110,7 @@ class ResultsActor(vtkPropAssembly):
         self.hardware_picker.SnapToMeshPointOff()
         self.area_picker = vtkAreaPicker()
         self.area_picker.PickFromListOn()
+        self.result_colors = vtkUnsignedCharArray()
 
         self.points = vtkPoints()
         self._masked_nodes = np.array([], dtype=int)
@@ -140,12 +139,15 @@ class ResultsActor(vtkPropAssembly):
         self.volume_actor = vtkActor()
 
     def _configure_actors_parameters(self):
+        self.result_colors.SetName("result_color")
+        self.result_colors.SetNumberOfComponents(4)
+
         self.node_colors.SetName("color")
         self.node_colors.SetNumberOfComponents(3)
-
         self.node_ids.SetName("ids")
         self.node_data.SetPoints(self.points)
-        self.node_data.GetPointData().SetScalars(self.node_colors)
+        self.node_data.GetPointData().SetScalars(self.result_colors)
+        self.node_data.GetCellData().SetScalars(self.node_colors)
         self.node_data.GetCellData().AddArray(self.node_ids)
         self.node_mapper.SetScalarModeToUsePointData()
         self.node_mapper.SetInputData(self.node_data)
@@ -155,10 +157,8 @@ class ResultsActor(vtkPropAssembly):
         self.node_actor.GetProperty().LightingOff()
         self.AddPart(self.node_actor)
 
-        self.node_mapper.ScalarVisibilityOff()
-
         self.edge_data.SetPoints(self.points)
-        self.edge_data.GetPointData().SetScalars(self.node_colors)
+        self.edge_data.GetPointData().SetScalars(self.result_colors)
         self.node_mapper.SetScalarModeToUsePointData()
         self.edge_mapper.SetInputData(self.edge_data)
         self.edge_actor.SetMapper(self.edge_mapper)
@@ -168,45 +168,31 @@ class ResultsActor(vtkPropAssembly):
         self.edge_actor.PickableOff()
         self.AddPart(self.edge_actor)
 
+        self.surface_colors.SetName("color")
+        self.surface_colors.SetNumberOfComponents(4)
         self.surface_ids.SetName("ids")
         self.surface_data.SetPoints(self.points)
-        self.surface_data.GetPointData().SetScalars(self.node_colors)
+        self.surface_data.GetPointData().SetScalars(self.result_colors)
+        self.surface_data.GetCellData().SetScalars(self.surface_colors)
         self.surface_data.GetCellData().AddArray(self.surface_ids)
         self.surface_mapper.SetScalarModeToUsePointData()
         self.surface_mapper.SetInputData(self.surface_data)
-        # self.surface_actor.GetShaderProperty().AddFragmentShaderReplacement(
-        #     "//VTK::Light::Impl",
-        #     True,
-        #     "if (opacity < 0.1) { discard; }\n//VTK::Light::Impl",
-        #     False,
-        # )
         self.surface_actor.SetForceOpaque(True)
         self.surface_actor.SetMapper(self.surface_mapper)
         self.AddPart(self.surface_actor)
 
+        self.volume_colors.SetName("color")
+        self.volume_colors.SetNumberOfComponents(4)
         self.volume_ids.SetName("ids")
         self.volume_data.SetPoints(self.points)
-        self.volume_data.GetPointData().SetScalars(self.node_colors)
+        self.volume_data.GetPointData().SetScalars(self.result_colors)
+        self.volume_data.GetCellData().SetScalars(self.volume_colors)
         self.volume_data.GetCellData().AddArray(self.volume_ids)
+        self.volume_mapper.SetScalarModeToUsePointData()
         self.volume_mapper.SetInputData(self.volume_data)
-        # self.volume_actor.GetShaderProperty().AddFragmentShaderReplacement(
-        #     "//VTK::Light::Impl",
-        #     True,
-        #     "if (opacity < 0.1) { discard; }\n//VTK::Light::Impl",
-        #     False,
-        # )
         self.volume_actor.SetForceOpaque(True)
         self.volume_actor.SetMapper(self.volume_mapper)
         self.AddPart(self.volume_actor)
-
-
-
-        # TODO: Remove
-        self.surface_colors.SetName("color")
-        self.surface_colors.SetNumberOfComponents(4)
-        self.volume_colors.SetName("color")
-        self.volume_colors.SetNumberOfComponents(4)
-
 
     def build_mesh_without_section_plane(self):
         assert self.mesh is not None
@@ -279,7 +265,7 @@ class ResultsActor(vtkPropAssembly):
         vtk_to_numpy(self.node_ids)[:] = node_indexes
 
         edges_linearized = np.vstack((
-            self._linearize_2d_cells(faces_before_plane), 
+            self._linearize_2d_cells(faces_before_plane),
             self._linearize_3d_cells(solids_in_middle),
         ))  # fmt: skip
         cells = self._create_cells(edges_linearized[:, 4:])
@@ -396,6 +382,17 @@ class ResultsActor(vtkPropAssembly):
             self.node_colors.FillComponent(i, rgb[i])
             self.surface_colors.FillComponent(i, rgb[i])
             self.volume_colors.FillComponent(i, rgb[i])
+            self.result_colors.FillComponent(i, rgb[i])
+
+    @function_timer
+    def set_result_values(self, values: np.ndarray, min_value=None, max_value=None, colormap="viridis"):
+        color_table = ColorTable(values, min_value, max_value, colormap)
+        color_table.SetAlphaRange(1.0, 1.0)
+        color_table.Build()
+
+        scalars = numpy_to_vtk(values, deep=True)
+        mapped = color_table.MapScalars(scalars, 0, -1)
+        self.result_colors.DeepCopy(mapped)
 
     def set_node_color(self, color: Color):
         rgb = color.to_rgb()
@@ -646,7 +643,7 @@ class ResultsActor(vtkPropAssembly):
             case 10:
                 reorderings = [
                     [0, 4], [4, 1], [1, 5], [5, 2], [0, 6], [6, 2],
-                    [0, 7], [7, 3], [2, 8], [8, 3], [1, 9], [9, 3], 
+                    [0, 7], [7, 3], [2, 8], [8, 3], [1, 9], [9, 3],
                 ]  # fmt: skip
             case 20:
                 reorderings = [
