@@ -106,7 +106,6 @@ class UserPreferencesInput(UserPreferencesWindow_UI):
 
         self._add_color_row(layout, "Points color", "nodes_points_color")
         self._add_color_row(layout, "Lines color", "lines_color")
-        self._add_color_row(layout, "Faces color", "faces_color")
 
         self._add_color_row(layout, "Selection lines color", "selection_lines_color")
         self._add_color_row(layout, "Selection points color", "selection_nodes_points_color")
@@ -122,7 +121,6 @@ class UserPreferencesInput(UserPreferencesWindow_UI):
 
         self._add_color_row(layout, "Nodes color", "nodes_points_color")
         self._add_color_row(layout, "Edges color", "edges_color")
-        self._add_color_row(layout, "Faces color", "faces_color")
         self._add_color_row(layout, "Volumes color", "volumes_color")
 
         self._add_color_row(layout, "Selection nodes color", "selection_nodes_points_color")
