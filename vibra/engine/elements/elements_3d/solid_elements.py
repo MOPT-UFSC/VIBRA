@@ -313,3 +313,27 @@ class Element3D:
                 ], dtype=float)
             
         return num_int_data
+
+    def integration_points_data_for_pyramid(self, integration_points: int):
+        """ 
+        This method defines the integration points and their respective
+        weights for numerical integration.
+        """
+
+        if integration_points == 5:
+            a = 1 / np.sqrt(3)
+            b = 1/2
+            c = 1.0
+
+            w1 = 8 / 27
+            w2 = 4 / 27
+
+            num_int_data = np.array([
+                [-a, -a, -b, w1],
+                [ a, -a, -b, w1],
+                [ a,  a, -b, w1],
+                [-a,  a, -b, w1],
+                [ 0,  0, c, w2],
+                ], dtype=float)
+
+        return num_int_data
