@@ -22,6 +22,7 @@ from vibra.utils.time_utils import function_timer
 @dataclass
 class CachedInfo:
     mesh_id: int = 0
+    result_colors_hash: str = ""
     node_colors_hash: str = ""
     surface_colors_hash: str = ""
     section_colors_hash: str = ""
@@ -290,6 +291,11 @@ class ResultsActor(vtkPropAssembly):
         vtk_to_numpy(self.volume_ids)[:] = solids_triangulated[:, 0]
 
     def update_caches(self):
+        result_colors_hash = CachedInfo.array_hash(self.result_colors)
+        if result_colors_hash != self.cached_info.result_colors_hash:
+            self.cached_info.result_colors_hash = result_colors_hash
+            self.result_colors.Modified()
+
         node_colors_hash = CachedInfo.array_hash(self.node_colors)
         if node_colors_hash != self.cached_info.node_colors_hash:
             self.cached_info.node_colors_hash = node_colors_hash
@@ -385,14 +391,25 @@ class ResultsActor(vtkPropAssembly):
             self.result_colors.FillComponent(i, rgb[i])
 
     @function_timer
-    def set_result_values(self, values: np.ndarray, min_value=None, max_value=None, colormap="viridis"):
+    def set_result_values(
+        self,
+        values: np.ndarray,
+        min_value=None,
+        max_value=None,
+        hide_out_of_range=False,
+        colormap="viridis",
+    ):
         color_table = ColorTable(values, min_value, max_value, colormap)
-        color_table.SetAlphaRange(1.0, 1.0)
+        if hide_out_of_range:
+            color_table.SetBelowRangeColor(0, 0, 0, 0)
+            color_table.SetAboveRangeColor(0, 0, 0, 0)
+            color_table.UseBelowRangeColorOn()
+            color_table.UseAboveRangeColorOn()
         color_table.Build()
 
-        scalars = numpy_to_vtk(values, deep=True)
-        mapped = color_table.MapScalars(scalars, 0, -1)
-        self.result_colors.DeepCopy(mapped)
+        mapped = color_table.MapScalars(numpy_to_vtk(values), 0, -1)
+        self.result_colors.SetNumberOfTuples(len(values))
+        vtk_to_numpy(self.result_colors)[:] = vtk_to_numpy(mapped)
 
     def set_node_color(self, color: Color):
         rgb = color.to_rgb()
