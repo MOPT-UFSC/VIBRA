@@ -410,7 +410,9 @@ class ResultsActor(vtkPropAssembly):
             self.volume_colors.FillComponent(i, rgb[i])
             self.result_colors.FillComponent(i, rgb[i])
 
-    @function_timer
+    def set_coordinates(self, nodal_coordinates: np.ndarray):
+        self.points.SetData(numpy_to_vtk(nodal_coordinates))
+
     def set_result_values(
         self,
         values: np.ndarray,
