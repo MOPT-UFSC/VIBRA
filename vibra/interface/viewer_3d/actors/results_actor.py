@@ -1,5 +1,6 @@
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
+from enum import Enum, auto
 from itertools import chain, combinations, pairwise
 
 import numpy as np
@@ -34,6 +35,11 @@ class CachedInfo:
         hasher = xxhash.xxh128()
         hasher.update(ndarray)
         return hasher.hexdigest()
+
+
+class VisualizationMode(Enum):
+    SHOW_RESULTS = auto()
+    SHOW_ENTITIES = auto()
 
 
 @dataclass
@@ -106,6 +112,8 @@ class ResultsActor(vtkPropAssembly):
         self.volume_colors.Modified()
 
     def _create_variables(self):
+        self.visualization_mode = VisualizationMode.SHOW_RESULTS
+
         self.hardware_picker = vtkHardwarePicker()
         self.hardware_picker.SetPixelTolerance(0)
         self.hardware_picker.SnapToMeshPointOff()
@@ -381,6 +389,18 @@ class ResultsActor(vtkPropAssembly):
             picked_faces=set(self.mesh.faces_connectivity[faces_mask, 0]),
             picked_solids=set(self.mesh.solids_connectivity[solids_mask, 0]),
         )
+
+    def show_results_mode(self):
+        self.visualization_mode = VisualizationMode.SHOW_RESULTS
+        self.node_mapper.SetScalarModeToUsePointData()
+        self.surface_mapper.SetScalarModeToUsePointData()
+        self.volume_mapper.SetScalarModeToUsePointData()
+
+    def show_entities_mode(self):
+        self.visualization_mode = VisualizationMode.SHOW_ENTITIES
+        self.node_mapper.SetScalarModeToUseCellData()
+        self.surface_mapper.SetScalarModeToUseCellData()
+        self.volume_mapper.SetScalarModeToUseCellData()
 
     def set_color(self, color: Color):
         rgb = color.to_rgb()
