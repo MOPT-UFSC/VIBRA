@@ -11,7 +11,7 @@ class UserPreferences:
     lines_color: Color = color_names.BLACK
     edges_color: Color = color_names.BLACK
     faces_color: Color = color_names.WHITE
-    volumes_color: Color = Color("#FFFFFF")
+    volumes_color: Color = color_names.WHITE
     selection_color: Color = Color("#146AF5")
     selection_faces_color: Color = Color("#146AF5")
     selection_nodes_points_color: Color = Color("#F52A14")
@@ -37,7 +37,7 @@ class UserPreferences:
         self.lines_color = color_names.BLACK
         self.edges_color = color_names.BLACK
         self.faces_color = color_names.WHITE
-        self.volumes_color = Color("#FFFFFF")
+        self.volumes_color = color_names.WHITE
         self.selection_faces_color = Color("#146AF5")
         self.selection_nodes_points_color = Color("#F52A14")
         self.selection_lines_color = Color("#F52A14")
@@ -51,7 +51,7 @@ class UserPreferences:
         self.lines_color = color_names.BLACK
         self.edges_color = color_names.BLACK
         self.faces_color = color_names.WHITE
-        self.volumes_color = Color("#FFFFFF")
+        self.volumes_color = color_names.WHITE
         self.selection_faces_color: Color = Color("#146AF5")
         self.selection_nodes_points_color: Color = Color("#F52A14")
         self.selection_lines_color = Color("#F52A14")
