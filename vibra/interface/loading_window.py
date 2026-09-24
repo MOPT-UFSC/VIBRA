@@ -1,6 +1,5 @@
 import logging
 import re
-from time import sleep
 from typing import Callable, Generic, ParamSpec, TypeVar
 
 from PySide6.QtCore import Qt, QTimer
@@ -101,9 +100,6 @@ class LoadingWindow(LoadingWindow_UI, Generic[P, T]):
         delay_timer.timeout.connect(self.show)
         delay_timer.start(300)
 
-        # Changes the cursor to wait
-        QApplication.setOverrideCursor(Qt.WaitCursor)
-
         # Creates a handler to update progress_bar and progress_label
         # every time a logging containing [n/N] appears
         progress_handler = ProgressBarLogUpdater(logging.DEBUG, loading_window=self)
@@ -122,9 +118,6 @@ class LoadingWindow(LoadingWindow_UI, Generic[P, T]):
             things related to the loading window.
             """
             delay_timer.stop()
-
-            # Restores the previous cursor
-            QApplication.restoreOverrideCursor()
 
             # Removes the ProgressBarLogUpdater
             logging.getLogger().removeHandler(progress_handler)
