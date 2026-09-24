@@ -226,6 +226,8 @@ class ResultsActor(vtkPropAssembly):
 
         self.points.SetData(numpy_to_vtk(self.mesh.nodal_coordinates[:, 1:]))
         self.points.Modified()
+        self.result_colors.SetNumberOfTuples(len(self.mesh.nodal_coordinates))
+        self.result_colors.Fill(255)
 
         node_indexes = np.unique(self.mesh.faces_connectivity[:, 4:])
         node_cells = self._create_cells(node_indexes)
@@ -266,6 +268,8 @@ class ResultsActor(vtkPropAssembly):
 
         self.points.SetData(numpy_to_vtk(self.mesh.nodal_coordinates[:, 1:]))
         self.points.Modified()
+        self.result_colors.SetNumberOfTuples(len(self.mesh.nodal_coordinates))
+        self.result_colors.Fill(255)
 
         faces_connectivity = self.mesh.faces_connectivity[:, 4:]
         solids_connectivity = self.mesh.solids_connectivity[:, 4:]
@@ -441,20 +445,13 @@ class ResultsActor(vtkPropAssembly):
         values: np.ndarray,
         min_value=None,
         max_value=None,
-        hide_out_of_range=False,
         colormap="viridis",
     ):
         color_table = ColorTable(values, min_value, max_value, colormap)
-        if hide_out_of_range:
-            color_table.SetBelowRangeColor(0, 0, 0, 0)
-            color_table.SetAboveRangeColor(0, 0, 0, 0)
-            color_table.UseBelowRangeColorOn()
-            color_table.UseAboveRangeColorOn()
         color_table.Build()
 
         mapped = color_table.MapScalars(numpy_to_vtk(values), 0, -1)
-        self.result_colors.SetNumberOfTuples(len(values))
-        vtk_to_numpy(self.result_colors)[:] = vtk_to_numpy(mapped)
+        vtk_to_numpy(self.result_colors)[:, :3] = vtk_to_numpy(mapped)[:, :3]
 
     def reset_color_scalars(self):
         self.result_colors.Fill(255)
