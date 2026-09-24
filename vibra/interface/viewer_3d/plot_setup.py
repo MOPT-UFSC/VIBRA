@@ -109,6 +109,18 @@ class DisplacementFieldPlotSetupFrequency:
 
 
 @dataclass(slots=True)
+class DisplacementFieldPlotSetupTime:
+    phase: float
+    index: int
+    magnification_factor: float
+    plot_type: DisplacementPlotType
+    unit: str = "--"
+    n_diff: int = 0
+    unit_factor: float = 1.0
+    reduced_loop_time: float | None = None
+
+
+@dataclass(slots=True)
 class StressFieldPlotSetupFrequency:
     phase: float
     index: int
@@ -149,6 +161,7 @@ class AllowablePulsationForScrewCompressorsPlotSetup:
 PlotSetup = Union[
     NoPlotSetup,
     DisplacementFieldPlotSetupFrequency,
+    DisplacementFieldPlotSetupTime,
     StressFieldPlotSetupFrequency,
     PressureFieldPlotSetupFrequency,
     PressureFieldPlotSetupTime,
@@ -163,5 +176,6 @@ AcousticPlotSetups = Union[
 
 StructuralPlotSetups = Union[
     DisplacementFieldPlotSetupFrequency,
+    DisplacementFieldPlotSetupTime,
     StressFieldPlotSetupFrequency,
 ]

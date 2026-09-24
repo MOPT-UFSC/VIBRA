@@ -11,7 +11,8 @@ import numpy as np
 from vibra.engine.model import Model
 from vibra.engine.properties.material import Material
 from vibra.engine.solution import HarmonicSolution, LazyHarmonicSolution, ModalSolution
-from vibra.interface.viewer_3d.plot_setup import StressPlotType, StressType
+from vibra.interface.viewer_3d.plot_setup import DisplacementFieldPlotSetupTime, DisplacementPlotType, StressPlotType, StressType
+from vibra.utils.signal_processing import process_multiple_iffts_from_one_sided_spectrum_signals
 
 DataTypes = Literal["u_sum", "u_x", "u_y", "u_z", "v_svm", "v_x", "v_y", "v_z", "a_sum", "a_x", "a_y", "a_z"]
 
@@ -221,6 +222,81 @@ class StructuralPostprocessing:
             s_max = max_value
 
         return s_min, s_max
+
+
+    @cache
+    def get_minimum_and_maximum_values_for_displacements(self, N: float, unit_factor: float, data_type: str):
+        _waveforms = unit_factor * self.waveforms[:, :N]
+
+        ux_dof = self.solution.displacement_dof[0::3]
+        uy_dof = self.solution.displacement_dof[1::3]
+        uz_dof = self.solution.displacement_dof[2::3]
+
+        if data_type in ["u_x", "v_x", "a_x"]:
+            u_xyz = _waveforms[ux_dof, :]
+        elif data_type in ["u_y", "v_y", "a_y"]:
+            u_xyz = _waveforms[uy_dof, :]
+        elif data_type in ["u_z", "v_z", "a_z"]:
+            u_xyz = _waveforms[uz_dof, :]
+        else:
+            u_xyz = np.sqrt(_waveforms[ux_dof, :]**2 + _waveforms[uy_dof, :]**2 + _waveforms[uz_dof, :]**2)
+
+        u_xyz: np.ndarray
+
+        return (u_xyz.min(), u_xyz.max())
+
+
+    @cache
+    def compute_multiple_ifft(self) -> tuple[np.ndarray, np.ndarray]:
+        assert isinstance(self.solution, HarmonicSolution)
+        assert self.solution.structural_solution is not None
+        assert self.solution.analysis_id.is_structural() or self.solution.analysis_id.is_coupled()
+
+        # t0 = perf_counter()
+        logging.info("Computing multiple iffts... [25/100]")
+        time_vector, waveforms = process_multiple_iffts_from_one_sided_spectrum_signals(
+            self.solution.frequencies,
+            self.solution.structural_solution,
+            dc_included=False,
+        )
+
+        logging.info("Computing multiple iffts... [100/100]")
+
+        # dt = perf_counter() - t0
+        # print(f"Elapsed time to process ifft: {dt: .6f} s")
+
+        return time_vector, waveforms
+
+
+    def compute_transient_displacements_field(
+        self,
+        time_index: int,
+        plot_type: DisplacementFieldPlotSetupTime,
+        unit_factor: float = 1.0,
+        reduced_loop_time: float | None = None,
+    ):
+
+        time_vector, self.waveforms = self.compute_multiple_ifft()
+
+        if reduced_loop_time is None:
+            n = time_vector.size
+        else:
+            n = np.sum(time_vector <= reduced_loop_time)
+
+        # cache the minimum and maximum values of the nodal pressure waveforms
+        min_max_values = self.get_minimum_and_maximum_values_for_displacements(int(n), round(unit_factor, 10))
+        acoustic_pressures = unit_factor * self.waveforms[:, time_index].flatten()
+
+        match plot_type:
+            case DisplacementPlotType.U_SUM:
+                acoustic_pressures = np.abs(acoustic_pressures)
+                min_value = 0
+                max_value = np.max(np.abs(min_max_values))
+
+            case _:
+                min_value, max_value = min_max_values
+
+        return time_vector[:n], acoustic_pressures, min_value, max_value
 
 
     def compute_structural_response_field(

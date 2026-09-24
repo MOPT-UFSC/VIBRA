@@ -18,6 +18,7 @@ from vibra.interface.viewer_3d.plot_setup import (
     AcousticPlotSetups,
     AllowablePulsationForScrewCompressorsPlotSetup,
     DisplacementFieldPlotSetupFrequency,
+    DisplacementFieldPlotSetupTime,
     NoPlotSetup,
     PlotSetup,
     PressureFieldPlotSetupFrequency,
@@ -265,6 +266,9 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             case DisplacementFieldPlotSetupFrequency():
                 self._plot_displacement_field_frequency_domain(animation_frame, clear_cache)
 
+            case DisplacementFieldPlotSetupTime():
+                self._plot_displacement_field_frequency_domain(animation_frame, clear_cache)
+
             case StressFieldPlotSetupFrequency():
                 self._plot_stress_field_frequency_domain(animation_frame, clear_cache)
 
@@ -474,6 +478,76 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.analysis_actor.plot_color_bar(_color_scalars, min_value, max_value, colormap)
         self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.update()
+
+    def _plot_displacement_field_time_domain(
+        self,
+        animation_frame: int | None = None,
+        clear_cache: bool = True,
+    ):
+        assert isinstance(self.plot_setup, DisplacementFieldPlotSetupTime)
+
+        postprocessing = app().project.get_structural_postprocessing()
+        assert isinstance(postprocessing, StructuralPostprocessing)
+
+        analysis_id = app().project.model.analysis_id
+        assert analysis_id.is_structural() or analysis_id.is_coupled()
+
+        if animation_frame is None:
+            time_index = self.plot_setup.time_index
+        else:
+            time_index = animation_frame
+
+        data = postprocessing.compute_acoustic_transient_pressure_field(
+            time_index,
+            self.plot_setup.plot_type,
+            unit_factor=self.plot_setup.unit_factor,
+            reduced_loop_time=self.plot_setup.reduced_loop_time,
+        )
+
+        if data is None:
+            return
+
+        time_vector, color_scalars, self.min_value, self.max_value = data
+
+        min_value = self.min_value
+        max_value = self.max_value
+
+        if self.user_min_value is not None:
+            min_value = self.user_min_value
+
+        if self.user_max_value is not None:
+            max_value = self.user_max_value
+
+        animation_widget = app().main_window.results_viewer_widget.get_animation_widget()
+
+        if animation_widget is not None:
+            sampling_time = time_vector[-1] - time_vector[0]
+            animation_widget.update_animation_parameters(sampling_time, time_vector.size)
+
+        self.is_animation_symetric = False
+
+        max_value = max_value if max_value != 0 else 1.0
+        magnification_factor = self.plot_setup.magnification_factor
+
+        # filter structural nodes
+        model = postprocessing.model
+        structural_nodes = model.domains_processor.nodes_of_domain.get("structural")
+
+        deformed_coords = model.mesh.nodal_coordinates[:, 1:].copy()
+        deformed_coords[structural_nodes, :] += (magnification_factor / (10 * max_value)) * displacements
+
+        _color_scalars = np.zeros(len(model.mesh.nodal_coordinates), dtype=float)
+        _color_scalars[structural_nodes] = color_scalars
+
+        colormap = app().config.user_preferences.color_map
+
+        self.analysis_actor.apply_deformation(deformed_coords)
+        self.edges_actor.extract_data(self.analysis_actor.data)
+
+        self.analysis_actor.plot_color_bar(_color_scalars, min_value, max_value, colormap)
+        self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
+        self.update()
+
 
     def _plot_pressure_field_time_domain(
         self,
