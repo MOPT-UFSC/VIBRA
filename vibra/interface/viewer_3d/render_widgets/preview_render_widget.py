@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import datetime
 from typing import override
 
 import numpy as np
@@ -37,14 +38,13 @@ class PreviewRenderWidget(CommonRenderWidget):
         self.picker.SnapToMeshPointOff()
 
         self.mouse_click = (0, 0)
+        self.last_click_time = None
+        self.click_sequence = 0
         self.left_clicked.connect(self.click_start)
         self.left_released.connect(self.click)
 
         self.postprocessed_data_3d: PostprocessedData3D | None = None
-        self.hide_out_of_range: bool = False
         self.colormap: str = "viridis"
-        self.user_min_color: float | None = None
-        self.user_max_color: float | None = None
         self.plot_setup = plot_setup.NoPlotSetup()
 
         self.model: Model | None = None
@@ -203,35 +203,58 @@ class PreviewRenderWidget(CommonRenderWidget):
         self.results_actor.set_edges_visibility(visible=self.visualization_filter.lines)
         self.results_actor.set_surfaces_visibility(visible=self.visualization_filter.faces)
         self.results_actor.set_solids_visibility(visible=self.visualization_filter.faces)
+        if self.postprocessed_data_3d is None:
+            self._update_mesh_visualization()
+        else:
+            self._update_postprocessed_visualization()
+        self.results_actor.update_caches()
+
+    def _update_mesh_visualization(self):
+        self.results_actor.show_entities_mode()
         self.results_actor.paint_nodes(self.mesh_config.selected_nodes_color, self.picked_mesh.picked_nodes)
         self.results_actor.paint_face_elements(self.mesh_config.selected_surfaces_color, self.picked_mesh.picked_faces)
         self.results_actor.paint_solid_elements(self.mesh_config.selected_volumes_color, self.picked_mesh.picked_solids)
 
+    def _update_postprocessed_visualization(self):
+        assert self.postprocessed_data_3d is not None
+        assert self.model is not None
+        assert self.model.mesh is not None
+
+        all_nodes = self.model.mesh.all_node_ids()
         pp = self.postprocessed_data_3d
 
-        if (pp is not None) and (pp.deformed_coordinates is not None):
-            self.results_actor.set_coordinates(pp.deformed_coordinates)
-        else:
-            self.results_actor.reset_coordinates()
+        self.results_actor.show_results_mode()
+        self.results_actor.show_results()
 
-        if (pp is not None) and (pp.color_scalars is not None):
+        if pp.deformed_coordinates is None:
+            self.results_actor.reset_coordinates()
+        else:
+            self.results_actor.set_coordinates(pp.deformed_coordinates)
+
+        if pp.color_scalars is None:
+            self.results_actor.reset_color_scalars()
+        else:
+            min_color = pp.min_color
+            max_color = pp.max_color
+
+            picked_nodes = self.picked_mesh.picked_nodes
+            unpicked_nodes = all_nodes - picked_nodes
+
+            if picked_nodes:
+                min_color = np.min(pp.color_scalars[list(picked_nodes)])
+                max_color = np.max(pp.color_scalars[list(picked_nodes)])
+                self.results_actor.hide_results(list(unpicked_nodes))
+
             self.results_actor.set_color_scalars(
                 pp.color_scalars,
-                pp.min_color if (self.user_min_color is None) else self.user_min_color,
-                pp.max_color if (self.user_min_color is None) else self.user_min_color,
-                hide_out_of_range=self.hide_out_of_range,
+                min_color,
+                max_color,
                 colormap=self.colormap,
             )
-        else:
-            self.results_actor.reset_color_scalars()
 
-        if (pp is not None) and (pp.domain_nodes is not None):
-            self.results_actor.hide_results()
-            self.results_actor.show_results(pp.domain_nodes)  # pyright: ignore[reportArgumentType]
-        else:
-            self.results_actor.show_results()
-
-        self.results_actor.update_caches()
+        if pp.domain_nodes is not None:
+            non_domain_nodes = all_nodes - set(pp.domain_nodes)
+            self.results_actor.hide_results(list(non_domain_nodes))
 
     @override
     def resizeEvent(self, event: QResizeEvent):
@@ -239,7 +262,20 @@ class PreviewRenderWidget(CommonRenderWidget):
         self.renderer.ResetCamera()
 
     def click_start(self, x: int, y: int):
+        click_time = datetime.now()
+        multi_click_tolerance = 10
+
+        x0, y0 = self.mouse_click
+        mouse_moved = (abs(x - x0) > multi_click_tolerance) or (abs(y - y0) > multi_click_tolerance)
+        recent_click = (self.last_click_time is not None) and (click_time - self.last_click_time).total_seconds() < 0.3
+
+        if not mouse_moved and recent_click:
+            self.click_sequence += 1
+        else:
+            self.click_sequence = 1
+
         self.mouse_click = (x, y)
+        self.last_click_time = click_time
 
     @function_timer
     def click(self, x1: int, y1: int):
