@@ -99,7 +99,7 @@ class LoadingWindow(LoadingWindow_UI, Generic[P, T]):
         delay_timer = QTimer()
         delay_timer.setSingleShot(True)
         delay_timer.timeout.connect(self.show)
-        delay_timer.start(200)
+        delay_timer.start(300)
 
         # Changes the cursor to wait
         QApplication.setOverrideCursor(Qt.WaitCursor)
