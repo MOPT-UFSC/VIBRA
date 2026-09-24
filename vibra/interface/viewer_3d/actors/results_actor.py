@@ -413,7 +413,17 @@ class ResultsActor(vtkPropAssembly):
     def set_coordinates(self, nodal_coordinates: np.ndarray):
         self.points.SetData(numpy_to_vtk(nodal_coordinates))
 
-    def set_result_values(
+    def reset_coordinates(self):
+        if self.mesh is None:
+            return
+
+        if self.mesh.nodal_coordinates is None:
+            return
+
+        nodal_coordinates = self.mesh.nodal_coordinates[:, 1:]
+        self.points.SetData(numpy_to_vtk(nodal_coordinates))
+
+    def set_color_scalars(
         self,
         values: np.ndarray,
         min_value=None,
@@ -432,6 +442,9 @@ class ResultsActor(vtkPropAssembly):
         mapped = color_table.MapScalars(numpy_to_vtk(values), 0, -1)
         self.result_colors.SetNumberOfTuples(len(values))
         vtk_to_numpy(self.result_colors)[:] = vtk_to_numpy(mapped)
+
+    def reset_color_scalars(self):
+        self.result_colors.Fill(0)
 
     def set_node_color(self, color: Color):
         rgb = color.to_rgb()

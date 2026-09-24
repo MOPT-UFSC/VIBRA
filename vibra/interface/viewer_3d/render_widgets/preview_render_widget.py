@@ -1,19 +1,25 @@
+from dataclasses import dataclass
 from typing import override
 
 import numpy as np
-from molde.colors import color_names
 from molde.interactor_styles import BoxSelectionInteractorStyle
 from molde.render_widgets import CommonRenderWidget
 from PySide6.QtGui import QResizeEvent
 from vtkmodules.vtkRenderingCore import vtkHardwarePicker
 
 from vibra.engine.model import Model
-from vibra.interface.viewer_3d import sources
 from vibra.interface.viewer_3d.actors.mesh_actor import MeshActor, PickedMesh
 from vibra.interface.viewer_3d.actors.results_actor import ResultsActor
-from vibra.interface.viewer_3d.actors.symbols_actor import SymbolsActor
 from vibra.utils.interface_utils import MeshRendererConfig, SectionPlane, VisualizationFilter
 from vibra.utils.time_utils import context_timer, function_timer
+
+
+@dataclass(kw_only=True, frozen=True)
+class PostprocessedData3D:
+    deformed_coordinates: np.ndarray | None = None
+    color_scalars: np.ndarray | None = None
+    min_color: float = 0
+    max_color: float = 0
 
 
 class PreviewRenderWidget(CommonRenderWidget):
@@ -30,8 +36,14 @@ class PreviewRenderWidget(CommonRenderWidget):
         self.left_clicked.connect(self.click_start)
         self.left_released.connect(self.click)
 
-        self.model = None
-        self.section_plane = None
+        self.postprocessed_data_3d: PostprocessedData3D | None = None
+        self.hide_out_of_range: bool = False
+        self.colormap: str = "viridis"
+        self.user_min_color: float | None = None
+        self.user_max_color: float | None = None
+
+        self.model: Model | None = None
+        self.section_plane: SectionPlane | None = None
         self.mesh_config = MeshRendererConfig()
         self.visualization_filter = VisualizationFilter().all_true()
         self.picked_mesh = PickedMesh()
@@ -69,6 +81,16 @@ class PreviewRenderWidget(CommonRenderWidget):
     def update_plot(self, reset_camera: bool = False):
         self.mesh_actor.update()
         self.results_actor.update()
+
+        if (self.model is not None) and (self.model.mesh is not None) and (self.model.mesh.nodal_coordinates is not None):
+            coord = self.model.mesh.nodal_coordinates[:, 1:]
+            delta = np.random.rand(*coord.shape)
+            self.postprocessed_data_3d = PostprocessedData3D(
+                deformed_coordinates=coord + delta * 0.01,
+                color_scalars=delta,
+                min_color=np.min(delta),
+                max_color=np.max(delta),
+            )
 
         self.update_visualization()
 
@@ -114,6 +136,24 @@ class PreviewRenderWidget(CommonRenderWidget):
         self.results_actor.paint_solid_elements(self.mesh_config.selected_volumes_color, self.picked_mesh.picked_solids)
         self.results_actor.update_caches()
 
+        pp = self.postprocessed_data_3d
+
+        if (pp is not None) and (pp.deformed_coordinates is not None):
+            self.results_actor.set_coordinates(pp.deformed_coordinates)
+        else:
+            self.results_actor.reset_coordinates()
+
+        if (pp is not None) and (pp.color_scalars is not None):
+            self.results_actor.set_color_scalars(
+                pp.color_scalars,
+                pp.min_color if (self.user_min_color is None) else self.user_min_color,
+                pp.max_color if (self.user_min_color is None) else self.user_min_color,
+                hide_out_of_range=self.hide_out_of_range,
+                colormap=self.colormap,
+            )
+        else:
+            self.results_actor.reset_color_scalars()
+
     @override
     def resizeEvent(self, event: QResizeEvent):
         super().resizeEvent(event)
@@ -128,8 +168,8 @@ class PreviewRenderWidget(CommonRenderWidget):
         dist = np.sqrt((x1 - x0) ** 2 + (y1 - y0) ** 2)
 
         if dist > 10:
-            self.picked_mesh = self.mesh_actor.area_pick(x0, y0, x1, y1, self.renderer)
+            self.picked_mesh = self.results_actor.area_pick(x0, y0, x1, y1, self.renderer)
         else:
-            self.picked_mesh = self.mesh_actor.pick(x1, y1, self.renderer)
+            self.picked_mesh = self.results_actor.pick(x1, y1, self.renderer)
 
         self.update_visualization()
