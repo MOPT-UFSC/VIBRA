@@ -186,6 +186,12 @@ class ResultsActor(vtkPropAssembly):
         self.surface_data.GetCellData().AddArray(self.surface_ids)
         self.surface_mapper.SetScalarModeToUsePointData()
         self.surface_mapper.SetInputData(self.surface_data)
+        self.surface_actor.GetShaderProperty().AddFragmentShaderReplacement(
+            "//VTK::Light::Impl",
+            True,
+            "if (opacity < 1) { discard; }\n//VTK::Light::Impl",
+            False,
+        )
         self.surface_actor.SetForceOpaque(True)
         self.surface_actor.SetMapper(self.surface_mapper)
         self.AddPart(self.surface_actor)
@@ -199,6 +205,12 @@ class ResultsActor(vtkPropAssembly):
         self.volume_data.GetCellData().AddArray(self.volume_ids)
         self.volume_mapper.SetScalarModeToUsePointData()
         self.volume_mapper.SetInputData(self.volume_data)
+        self.volume_actor.GetShaderProperty().AddFragmentShaderReplacement(
+            "//VTK::Light::Impl",
+            True,
+            "if (opacity < 1) { discard; }\n//VTK::Light::Impl",
+            False,
+        )
         self.volume_actor.SetForceOpaque(True)
         self.volume_actor.SetMapper(self.volume_mapper)
         self.AddPart(self.volume_actor)
@@ -347,6 +359,7 @@ class ResultsActor(vtkPropAssembly):
                 ids = vtk_to_numpy(self.node_ids)
                 if 0 < cell_id < len(ids):
                     return PickedMesh(picked_nodes={ids[cell_id]})
+
             case _:
                 ...
 
@@ -444,7 +457,7 @@ class ResultsActor(vtkPropAssembly):
         vtk_to_numpy(self.result_colors)[:] = vtk_to_numpy(mapped)
 
     def reset_color_scalars(self):
-        self.result_colors.Fill(0)
+        self.result_colors.Fill(255)
 
     def set_node_color(self, color: Color):
         rgb = color.to_rgb()
@@ -564,6 +577,18 @@ class ResultsActor(vtkPropAssembly):
     def set_solids_visibility(self, visible: bool):
         self.volume_actor.SetVisibility(visible)
 
+    def hide_results(self, nodes: Sequence[int] | None = None):
+        if nodes is None:
+            vtk_to_numpy(self.result_colors)[:, 3] = 0
+        else:
+            self._set_results_nodes_visibility(nodes, visible=False)
+
+    def show_results(self, nodes: Sequence[int] | None = None):
+        if nodes is None:
+            vtk_to_numpy(self.result_colors)[:, 3] = 255
+        else:
+            self._set_results_nodes_visibility(nodes, visible=True)
+
     def hide_nodes(self, nodes: Sequence[int] | None = None):
         if nodes is None:
             vtk_to_numpy(self.node_colors)[:, 3] = 0
@@ -599,6 +624,14 @@ class ResultsActor(vtkPropAssembly):
             vtk_to_numpy(self.volume_colors)[:, 3] = 255
         else:
             self._set_volume_cells_visibility(volumes, visible=True)
+
+    def _set_results_nodes_visibility(self, nodes: Sequence[int], *, visible: bool):
+        if self.mesh is None:
+            return
+
+        result_colors = vtk_to_numpy(self.result_colors)
+        alpha = 255 if visible else 0
+        result_colors[nodes, 3] = alpha
 
     def _set_node_cells_visibility(self, nodes: Sequence[int], *, visible: bool):
         if self.mesh is None:

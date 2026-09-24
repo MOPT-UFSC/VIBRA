@@ -8,6 +8,9 @@ from PySide6.QtGui import QResizeEvent
 from vtkmodules.vtkRenderingCore import vtkHardwarePicker
 
 from vibra.engine.model import Model
+from vibra.engine.postprocessing.acoustic_postprocessing import AcousticPostprocessing
+from vibra.engine.postprocessing.structural_postprocessing import StructuralPostprocessing
+from vibra.interface.viewer_3d import plot_setup
 from vibra.interface.viewer_3d.actors.mesh_actor import MeshActor, PickedMesh
 from vibra.interface.viewer_3d.actors.results_actor import ResultsActor
 from vibra.utils.interface_utils import MeshRendererConfig, SectionPlane, VisualizationFilter
@@ -18,6 +21,7 @@ from vibra.utils.time_utils import context_timer, function_timer
 class PostprocessedData3D:
     deformed_coordinates: np.ndarray | None = None
     color_scalars: np.ndarray | None = None
+    domain_nodes: np.ndarray | None = None
     min_color: float = 0
     max_color: float = 0
 
@@ -41,6 +45,7 @@ class PreviewRenderWidget(CommonRenderWidget):
         self.colormap: str = "viridis"
         self.user_min_color: float | None = None
         self.user_max_color: float | None = None
+        self.plot_setup = plot_setup.NoPlotSetup()
 
         self.model: Model | None = None
         self.section_plane: SectionPlane | None = None
@@ -76,21 +81,88 @@ class PreviewRenderWidget(CommonRenderWidget):
             config = MeshRendererConfig()
         self.mesh_config = config
 
+    def set_plot_setup(self, setup: plot_setup.PlotSetup | None):
+        if self.model is None:
+            self.postprocessed_data_3d = None
+            return
+
+        if setup == self.plot_setup:
+            return
+
+        self.plot_setup = setup
+        analysis_id = self.model.analysis_id
+
+        match self.plot_setup:
+            case plot_setup.NoPlotSetup():
+                self.postprocessed_data_3d = None
+
+            case plot_setup.PressureFieldPlotSetupFrequency():
+                assert self.model.mesh is not None
+                assert self.model.mesh.nodal_coordinates is not None
+
+                postprocessor = AcousticPostprocessing(self.model)
+                data = postprocessor.compute_acoustic_pressure_field(
+                    self.plot_setup.index,
+                    self.plot_setup.phase,
+                    self.plot_setup.plot_type,
+                    unit_factor=self.plot_setup.unit_factor,
+                    is_modal=analysis_id.is_modal(),
+                )
+
+                if data is None:
+                    return
+
+                color_scalars, min_value, max_value, complex_result = data
+                acoustic_nodes = self.model.domains_processor.nodes_of_domain.get("acoustic")
+
+                _color_scalars = np.zeros(len(self.model.mesh.nodal_coordinates), dtype=float)
+                _color_scalars[acoustic_nodes] = color_scalars
+                self.postprocessed_data_3d = PostprocessedData3D(
+                    color_scalars=_color_scalars,
+                    domain_nodes=acoustic_nodes,
+                    min_color=min_value,
+                    max_color=max_value,
+                )
+
+            case plot_setup.DisplacementFieldPlotSetupFrequency():
+                assert self.model.mesh is not None
+                assert self.model.mesh.nodal_coordinates is not None
+
+                postprocessor = StructuralPostprocessing(self.model)
+                data = postprocessor.compute_structural_response_field(
+                    self.plot_setup.index,
+                    self.plot_setup.phase,
+                    self.plot_setup.plot_type,
+                    n_diff=self.plot_setup.n_diff,
+                    unit_factor=self.plot_setup.unit_factor,
+                    is_modal=analysis_id.is_modal(),
+                )
+
+                if data is None:
+                    return
+
+                displacements, color_scalars, min_value, max_value, complex_result = data
+                structural_nodes = self.model.domains_processor.nodes_of_domain.get("structural")
+                deformed_coords = self.model.mesh.nodal_coordinates[:, 1:].copy()
+                deformed_coords[structural_nodes, :] += (self.plot_setup.magnification_factor / (10 * max_value)) * displacements
+                _color_scalars = np.zeros(len(self.model.mesh.nodal_coordinates), dtype=float)
+                _color_scalars[structural_nodes] = color_scalars
+                self.postprocessed_data_3d = PostprocessedData3D(
+                    deformed_coordinates=deformed_coords,
+                    color_scalars=_color_scalars,
+                    domain_nodes=structural_nodes,
+                    min_color=min_value,
+                    max_color=max_value,
+                )
+
+            case _:
+                raise NotImplementedError(f'Plot setup "{self.plot_setup}" not implemented.')
+
     @function_timer
     @override
     def update_plot(self, reset_camera: bool = False):
         self.mesh_actor.update()
         self.results_actor.update()
-
-        if (self.model is not None) and (self.model.mesh is not None) and (self.model.mesh.nodal_coordinates is not None):
-            coord = self.model.mesh.nodal_coordinates[:, 1:]
-            delta = np.random.rand(*coord.shape)
-            self.postprocessed_data_3d = PostprocessedData3D(
-                deformed_coordinates=coord + delta * 0.01,
-                color_scalars=delta,
-                min_color=np.min(delta),
-                max_color=np.max(delta),
-            )
 
         self.update_visualization()
 
@@ -134,7 +206,6 @@ class PreviewRenderWidget(CommonRenderWidget):
         self.results_actor.paint_nodes(self.mesh_config.selected_nodes_color, self.picked_mesh.picked_nodes)
         self.results_actor.paint_face_elements(self.mesh_config.selected_surfaces_color, self.picked_mesh.picked_faces)
         self.results_actor.paint_solid_elements(self.mesh_config.selected_volumes_color, self.picked_mesh.picked_solids)
-        self.results_actor.update_caches()
 
         pp = self.postprocessed_data_3d
 
@@ -153,6 +224,14 @@ class PreviewRenderWidget(CommonRenderWidget):
             )
         else:
             self.results_actor.reset_color_scalars()
+
+        if (pp is not None) and (pp.domain_nodes is not None):
+            self.results_actor.hide_results()
+            self.results_actor.show_results(pp.domain_nodes)  # pyright: ignore[reportArgumentType]
+        else:
+            self.results_actor.show_results()
+
+        self.results_actor.update_caches()
 
     @override
     def resizeEvent(self, event: QResizeEvent):

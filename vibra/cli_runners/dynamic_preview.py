@@ -11,6 +11,7 @@ from PySide6.QtCore import QThread, QTimer, Signal
 from PySide6.QtWidgets import QApplication, QMainWindow
 
 from vibra.engine.project import Project
+from vibra.interface.viewer_3d.plot_setup import NoPlotSetup, PlotSetup
 from vibra.interface.viewer_3d.render_widgets.preview_render_widget import PreviewRenderWidget
 from vibra.utils.interface_utils import MeshRendererConfig, SectionPlane, VisualizationFilter
 
@@ -79,10 +80,15 @@ class MainWindow(QMainWindow):
         self.render_widget.set_visualization_filter(None)
         self.render_widget.set_mesh_render_config(None)
         reset_camera = True
+        setup = NoPlotSetup()
 
         for name, var in script_variables.items():
             if name.startswith("_"):
                 continue
+
+            if isinstance(var, PlotSetup):
+                # WHYYYYY I CANT USE UNION TYPE INSIDE THE MATCH????
+                setup = var
 
             match var:
                 case Project() as project:
@@ -103,6 +109,7 @@ class MainWindow(QMainWindow):
                 case _:
                     pass
 
+        self.render_widget.set_plot_setup(setup)
         self.render_widget.update_plot(reset_camera=reset_camera)
 
     def _modification_time(self, path: Path) -> float:
