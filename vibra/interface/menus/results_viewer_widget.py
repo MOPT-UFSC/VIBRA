@@ -64,19 +64,20 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
 
         # Structural
         self.results_viewer_items.item_child_structural_mode_shapes.clicked.connect(self.add_structural_modal_widget)
-        self.results_viewer_items.item_child_structural_frequency_response.clicked.connect(self.add_structural_frequency_response_widget)
-        self.results_viewer_items.item_child_displacement_field.clicked.connect(self.add_structural_harmonic_widget)
-        self.results_viewer_items.item_child_stress_field.clicked.connect(self.add_stress_field_for_harmonic_widget)
+        self.results_viewer_items.item_child_nodal_solution_frequency_2d_plot.clicked.connect(self.add_structural_frequency_response_widget)
+        self.results_viewer_items.item_child_nodal_solution_frequency_3d_plot.clicked.connect(self.add_structural_harmonic_widget)
+        self.results_viewer_items.item_child_displacement_field_time.clicked.connect(self.add_displacements_time_domain_3d_plot_widget)
+        self.results_viewer_items.item_child_stress_field_frequency.clicked.connect(self.add_stress_field_for_harmonic_widget)
         self.results_viewer_items.item_child_stress_frequency_response.clicked.connect(self.add_stress_frequency_response_for_harmonic_widget)
 
         # Acoustic
         self.results_viewer_items.item_child_acoustic_pressure_field.clicked.connect(self.add_acoustic_harmonic_widget)
-        self.results_viewer_items.item_child_acoustic_pressure_frequency_response.clicked.connect(self.add_acoustic_pressure_frequency_response_widget)
+        self.results_viewer_items.item_child_acoustic_pressure_frequency.clicked.connect(self.add_acoustic_pressure_frequency_response_widget)
         self.results_viewer_items.item_child_acoustic_pressure_frf.clicked.connect(self.add_acoustic_pressure_frequency_response_function_widget)
         self.results_viewer_items.item_child_acoustic_shaking_forces.clicked.connect(self.add_acoustic_shaking_forces_widget)
         self.results_viewer_items.item_child_decompose_acoustic_waves.clicked.connect(self.add_decompose_acoustic_pressure_waves_widget)
-        self.results_viewer_items.item_child_acoustic_pressure_waveform_2d_plot.clicked.connect(self.add_acoustic_pressure_waveform_2d_plot_widget)
-        self.results_viewer_items.item_child_acoustic_pressure_waveform_3d_plot.clicked.connect(self.add_acoustic_pressure_waveform_3d_plot_widget)
+        self.results_viewer_items.item_child_acoustic_pressure_time_2d_plot.clicked.connect(self.add_acoustic_pressure_waveform_2d_plot_widget)
+        self.results_viewer_items.item_child_acoustic_pressure_time_3d_plot.clicked.connect(self.add_acoustic_pressure_waveform_3d_plot_widget)
         self.results_viewer_items.item_child_allowable_pulsations_screw_compressor_2d_plot.clicked.connect(self.add_allowable_pulsations_2d_for_screw_compressor_widget)
         self.results_viewer_items.item_child_allowable_pulsations_screw_compressor_3d_plot.clicked.connect(self.add_allowable_pulsations_3d_for_screw_compressor_widget)
         self.results_viewer_items.item_child_allowable_pulsations_for_reciprocating_compressor.clicked.connect(self.add_allowable_pulsations_for_reciprocating_compressor_widget)
@@ -114,6 +115,14 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.plot_structural_harmonic.configure_results_display_widget()
 
         self.add_widget(self.plot_structural_harmonic)
+
+    def add_displacements_time_domain_3d_plot_widget(self):
+        self.current_widget = app().main_window.input_ui.plot_displacements_time_domain_3d()
+
+        if app().main_window.results_widget.playing_animation:
+            app().main_window.results_widget.stop_animation()
+
+        self.add_widget(self.current_widget)
 
     def add_stress_field_for_harmonic_widget(self):
         self.current_widget = app().main_window.input_ui.plot_stress_field()
@@ -202,9 +211,6 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
             app().main_window.results_widget.stop_animation()
 
         self.add_widget(self.current_widget)
-
-    def add_acoustic_pressure_waveform_widget(self):
-        self.current_widget = app().main_window.input_ui.plot_acoustic_pressure_waveform()
 
     def add_acoustic_pressure_waveform_2d_plot_widget(self):
         self.current_widget = app().main_window.input_ui.plot_acoustic_pressure_waveform_2d()

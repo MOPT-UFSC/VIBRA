@@ -5,7 +5,6 @@ from vibra import app
 from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
 from vibra.interface.ui_generated.plots.general.results_display_widget_ui import ResultsDisplayWidget_UI
 from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
-from vibra.utils.interface_utils import block_signals
 
 
 class ResultsDisplayWidget(ResultsDisplayWidget_UI):

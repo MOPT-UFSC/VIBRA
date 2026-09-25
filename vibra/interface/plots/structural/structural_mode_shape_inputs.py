@@ -10,7 +10,7 @@ from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.plots.general.animation_widget import AnimationWidget
 from vibra.interface.plots.general.results_display_widget import ResultsDisplayWidget
 from vibra.interface.ui_generated.plots.structural.structural_mode_shape_inputs_ui import StructuralModeShapeInputs_UI
-from vibra.interface.viewer_3d.plot_setup import DisplacementPlotType, DisplacementFieldPlotSetupFrequency
+from vibra.interface.viewer_3d.plot_setup import DisplacementDataType, DisplacementFieldPlotSetupFrequency
 
 
 class PlotStructuralModeShapeInputs(StructuralModeShapeInputs_UI):
@@ -122,7 +122,7 @@ class PlotStructuralModeShapeInputs(StructuralModeShapeInputs_UI):
     def update_displacements(self):
         pass
 
-    def get_plot_type(self) -> DisplacementPlotType:
+    def get_plot_type(self) -> DisplacementDataType:
         plot_types = [
             "u_sum",
             "u_x",
@@ -130,7 +130,7 @@ class PlotStructuralModeShapeInputs(StructuralModeShapeInputs_UI):
             "u_z",
         ]
         index = self.comboBox_plot_type.currentIndex()
-        return DisplacementPlotType(plot_types[index])
+        return DisplacementDataType(plot_types[index])
 
     def configure_results_display_widget(self):
         self.results_display_widget.configure_widget()

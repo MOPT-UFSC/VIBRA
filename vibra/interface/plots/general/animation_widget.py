@@ -16,10 +16,11 @@ from vibra.interface.user_input.data_handler.file_dialog_service import FileDial
 from vibra.interface.viewer_3d.plot_setup import (
     AllowablePulsationForScrewCompressorsPlotSetup,
     DisplacementFieldPlotSetupFrequency,
-    PressureFieldPlotSetupFrequency,
+    DisplacementFieldPlotSetupTime,
     PlotSetup,
-    StressFieldPlotSetupFrequency,
+    PressureFieldPlotSetupFrequency,
     PressureFieldPlotSetupTime,
+    StressFieldPlotSetupFrequency,
 )
 
 
@@ -221,6 +222,9 @@ class AnimationWidget(AnimationWidget_UI):
             case DisplacementFieldPlotSetupFrequency() | StressFieldPlotSetupFrequency():
                 plot_setup.phase = self.phase_in_radians
                 plot_setup.magnification_factor = self.magnification_factor
+            case DisplacementFieldPlotSetupTime():
+                plot_setup.time_index = self.time_index
+                plot_setup.magnification_factor = self.magnification_factor
             case PressureFieldPlotSetupTime():
                 plot_setup.time_index = self.time_index
             case AllowablePulsationForScrewCompressorsPlotSetup():
@@ -238,7 +242,7 @@ class AnimationWidget(AnimationWidget_UI):
         self.phase_slider.setValue(0)
 
         # update labels
-        if isinstance(plot_setup, PressureFieldPlotSetupTime):
+        if isinstance(plot_setup, PressureFieldPlotSetupTime | DisplacementFieldPlotSetupTime):
             self.update_time_frame_label()
         else:
             self.update_degree_label()

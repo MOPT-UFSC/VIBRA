@@ -260,17 +260,17 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             case NoPlotSetup():
                 self._plot_empty()
 
-            case PressureFieldPlotSetupFrequency():
-                self._plot_pressure_field_frequency_domain(animation_frame, clear_cache)
-
             case DisplacementFieldPlotSetupFrequency():
                 self._plot_displacement_field_frequency_domain(animation_frame, clear_cache)
 
             case DisplacementFieldPlotSetupTime():
-                self._plot_displacement_field_frequency_domain(animation_frame, clear_cache)
+                self._plot_displacement_field_time_domain(animation_frame, clear_cache)
 
             case StressFieldPlotSetupFrequency():
                 self._plot_stress_field_frequency_domain(animation_frame, clear_cache)
+
+            case PressureFieldPlotSetupFrequency():
+                self._plot_pressure_field_frequency_domain(animation_frame, clear_cache)
 
             case PressureFieldPlotSetupTime():
                 self._plot_pressure_field_time_domain(animation_frame, clear_cache)
@@ -497,17 +497,18 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         else:
             time_index = animation_frame
 
-        data = postprocessing.compute_acoustic_transient_pressure_field(
+        data = postprocessing.compute_transient_displacements_field(
             time_index,
             self.plot_setup.plot_type,
             unit_factor=self.plot_setup.unit_factor,
+            n_diff=self.plot_setup.n_diff,
             reduced_loop_time=self.plot_setup.reduced_loop_time,
         )
 
         if data is None:
             return
 
-        time_vector, color_scalars, self.min_value, self.max_value = data
+        time_vector, displacements, color_scalars, self.min_value, self.max_value = data
 
         min_value = self.min_value
         max_value = self.max_value

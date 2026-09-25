@@ -9,11 +9,10 @@ from vibra import app
 from vibra.engine import AnalysisID
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
-from vibra.interface.numeric_checks.unit_utilities import convert_pressure_unit
 from vibra.interface.plots.general.animation_widget import AnimationWidget
 from vibra.interface.plots.general.results_display_widget import ResultsDisplayWidget
-from vibra.interface.ui_generated.plots.acoustic.acoustic_pressure_waveform_3d_plot_inputs_ui import AcousticPressureWaveform3dPlotInputs_UI
-from vibra.interface.viewer_3d.plot_setup import DisplacementFieldPlotSetupTime, DisplacementPlotType
+from vibra.interface.ui_generated.plots.structural.displacements_time_domain_3d_plot_inputs_ui import DisplacementsTimeDomain3dPlotInputs_UI
+from vibra.interface.viewer_3d.plot_setup import DisplacementDataType, DisplacementFieldPlotSetupTime
 
 
 class ReduceLoopType(IntEnum):
@@ -22,7 +21,7 @@ class ReduceLoopType(IntEnum):
     ROTATIONAL_SPEED = 2
 
 
-class DisplacementsTimeDomain3DPlotInputs(AcousticPressureWaveform3dPlotInputs_UI):
+class DisplacementsTimeDomain3dPlotInputs(DisplacementsTimeDomain3dPlotInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -48,7 +47,20 @@ class DisplacementsTimeDomain3DPlotInputs(AcousticPressureWaveform3dPlotInputs_U
     def properties(self):
         return app().project.model.properties
 
+    @property
+    def structural_post(self):
+        return app().project.get_structural_postprocessing()
+
+    @property
+    def is_data_cached(self):
+        cache_info = self.structural_post.compute_multiple_ifft_for_structural_nodal_solution.cache_info()
+        return cache_info.currsize != 0
+
     def show_results_render(self):
+        self.pushButton_plot_data.setDisabled(self.is_data_cached)
+        if not self.is_data_cached:
+            return
+
         curent_render_widget = app().main_window.get_current_render_widget()
         results_render_widget = app().main_window.results_widget
 
@@ -65,9 +77,12 @@ class DisplacementsTimeDomain3DPlotInputs(AcousticPressureWaveform3dPlotInputs_U
         if self.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
             self.analysis_method = "Direct method"
 
-        self.frequencies = self.model.frequencies
-
         self.update_slider_configuration()
+
+        if self.is_data_cached:
+            self.plot_data_callback()
+        else:
+            self.show_results_render()
 
     def _reset_variables(self):
         self.time_vector = None
@@ -77,7 +92,7 @@ class DisplacementsTimeDomain3DPlotInputs(AcousticPressureWaveform3dPlotInputs_U
 
         # QComboBox connections
         self.comboBox_plot_type.currentIndexChanged.connect(self.plot_data_callback)
-        self.comboBox_pressure_units.currentIndexChanged.connect(self.plot_data_callback)
+        self.comboBox_plotting_results.currentIndexChanged.connect(self.plot_data_callback)
         self.comboBox_reduced_time.currentIndexChanged.connect(lambda: self.reduced_loop_time_type_callback(True))
 
         # QLineEdit connections
@@ -114,9 +129,10 @@ class DisplacementsTimeDomain3DPlotInputs(AcousticPressureWaveform3dPlotInputs_U
         self.frame_color.adjustSize()
 
     def update_slider_configuration(self):
-        if isinstance(self.frequencies, np.ndarray):
-            N_steps = 2 * len(self.frequencies)
-            df = self.frequencies[1] - self.frequencies[0]
+        frequencies = self.model.frequencies
+        if isinstance(frequencies, np.ndarray):
+            N_steps = 2 * len(frequencies)
+            df = frequencies[1] - frequencies[0]
             T = 1 / df
 
         self.animation_widget.configure_animation_widget_for_transient_plot(T, N_steps)
@@ -166,14 +182,13 @@ class DisplacementsTimeDomain3DPlotInputs(AcousticPressureWaveform3dPlotInputs_U
 
     def plot_data_callback(self):
 
-        pressure_units = self.comboBox_pressure_units.currentText()
-        unit_factor = convert_pressure_unit(1, "Pa", pressure_units)
-
         plot_setup = DisplacementFieldPlotSetupTime(
             time_index=0,
+            magnification_factor=self.animation_widget.magnification_factor,
             plot_type=self.get_plot_type(),
-            unit=pressure_units,
-            unit_factor=unit_factor,
+            unit=self.get_plot_units(),
+            unit_factor=self.get_unit_factor(),
+            n_diff=self.get_number_of_differentiations(),
             reduced_loop_time=self.get_reduced_loop_time(),
         )
 
@@ -193,12 +208,25 @@ class DisplacementsTimeDomain3DPlotInputs(AcousticPressureWaveform3dPlotInputs_U
 
         self.show_results_render()
 
-    def get_plot_type(self) -> DisplacementPlotType:
-        plot_types = [
-            "u_sum",
-        ]
-        index = self.comboBox_plot_type.currentIndex()
-        return DisplacementPlotType(plot_types[index])
+    def get_number_of_differentiations(self):
+        return self.comboBox_plotting_results.currentIndex() % 3
+
+    def get_plot_type(self) -> DisplacementDataType:
+        prefixes = ["u", "v", "a"]
+        suffixes = ["sum", "x", "y", "z"]
+
+        ind_dformat = self.get_number_of_differentiations()
+        ind_ptype = self.comboBox_plot_type.currentIndex()
+
+        return DisplacementDataType(f"{prefixes[ind_dformat]}_{suffixes[ind_ptype]}")
+
+    def get_plot_units(self) -> str:
+        units = ["m", "m/s", "m/s²", "mm", "mm/s", "mm/s²", "um", "um/s", "um/s²"]
+        return units[self.comboBox_plotting_results.currentIndex()]
+
+    def get_unit_factor(self) -> float:
+        unit_factors = [1.0, 1e3, 1e6]
+        return unit_factors[self.comboBox_plotting_results.currentIndex() // 3]
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:

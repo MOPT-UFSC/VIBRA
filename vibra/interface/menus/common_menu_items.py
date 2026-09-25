@@ -22,6 +22,7 @@ class CommonMenuItems(QTreeWidget):
         super().__init__()
 
         self._last_top_level = None
+        self._last_child_item = None
         self._callback_list = dict()
         self._last_item = None
         self._selectable = selectable
@@ -42,6 +43,21 @@ class CommonMenuItems(QTreeWidget):
 
         item = ChildTreeWidgetItem(name)
         self._last_top_level.addChild(item)
+        item.setFont(0, self.font_item)
+
+        if callable(callback):
+            item.clicked.connect(callback)
+
+        self._last_child_item = item
+
+        return item
+
+    def add_sub_item(self, name, callback=None):
+        if self._last_child_item is None:
+            self.add_item("")
+
+        item = ChildTreeWidgetItem(name)
+        self._last_child_item.addChild(item)
         item.setFont(0, self.font_item)
 
         if callable(callback):

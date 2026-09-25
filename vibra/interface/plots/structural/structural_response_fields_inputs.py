@@ -7,7 +7,7 @@ from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.plots.general.animation_widget import AnimationWidget
 from vibra.interface.plots.general.results_display_widget import ResultsDisplayWidget
 from vibra.interface.ui_generated.plots.structural.structural_response_fields_inputs_ui import StructuralResponseFieldsInputs_UI
-from vibra.interface.viewer_3d.plot_setup import DisplacementPlotType, DisplacementFieldPlotSetupFrequency
+from vibra.interface.viewer_3d.plot_setup import DisplacementDataType, DisplacementFieldPlotSetupFrequency
 
 
 class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
@@ -96,14 +96,14 @@ class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
         else:
             self.animation_widget.setDisabled(False)
 
-    def get_plot_type(self) -> DisplacementPlotType:
+    def get_plot_type(self) -> DisplacementDataType:
         prefixes = ["u", "v", "a"]
         suffixes = ["sum", "x", "y", "z"]
 
         ind_dformat = self.get_number_of_differentiations()
         ind_ptype = self.comboBox_plot_type.currentIndex()
 
-        return DisplacementPlotType(f"{prefixes[ind_dformat]}_{suffixes[ind_ptype]}")
+        return DisplacementDataType(f"{prefixes[ind_dformat]}_{suffixes[ind_ptype]}")
 
     def get_plot_units(self) -> str:
         units = ["m", "m/s", "m/s²", "mm", "mm/s", "mm/s²", "um", "um/s", "um/s²"]

@@ -4,17 +4,14 @@ import logging
 from collections import defaultdict
 from functools import cache
 from time import perf_counter
-from typing import Literal
 
 import numpy as np
 
 from vibra.engine.model import Model
 from vibra.engine.properties.material import Material
 from vibra.engine.solution import HarmonicSolution, LazyHarmonicSolution, ModalSolution
-from vibra.interface.viewer_3d.plot_setup import DisplacementFieldPlotSetupTime, DisplacementPlotType, StressPlotType, StressType
+from vibra.interface.viewer_3d.plot_setup import DisplacementDataType, StressDataType, StressType
 from vibra.utils.signal_processing import process_multiple_iffts_from_one_sided_spectrum_signals
-
-DataTypes = Literal["u_sum", "u_x", "u_y", "u_z", "v_svm", "v_x", "v_y", "v_z", "a_sum", "a_x", "a_y", "a_z"]
 
 
 class StructuralPostprocessing:
@@ -50,7 +47,14 @@ class StructuralPostprocessing:
 
 
     @cache
-    def get_max_min_values_for_displacements_data(self, column: int, n_diff: int, unit_factor: float, data_type: str, is_modal: bool) -> list[float, float]:
+    def get_max_min_values_for_displacements_data(
+        self,
+        column: int,
+        n_diff: int,
+        unit_factor: float,
+        data_type: DisplacementDataType,
+        is_modal: bool,
+        ) -> list[float, float]:
         """
         This method returns the minimum and maximum values of selected frequency for animation purposes.
 
@@ -66,7 +70,7 @@ class StructuralPostprocessing:
             The unit conversion factor.
 
         data_type: str 
-            A string of type DataTypes that represents the data to be processed.
+            A string that represents the displacement data type to be processed.
 
         Return
         ------
@@ -115,7 +119,13 @@ class StructuralPostprocessing:
 
 
     @cache
-    def get_max_min_values_for_stress_data(self, column: int, unit_factor: float, stress_index: int, data_type: str) -> list[float, float]:
+    def get_max_min_values_for_stress_data(
+        self,
+        column: int,
+        unit_factor: float,
+        stress_index: int,
+        data_type: StressDataType,
+        ) -> list[float, float]:
         """
         This method returns the minimum and maximum values of selected frequency for animation purposes.
 
@@ -128,7 +138,7 @@ class StructuralPostprocessing:
             The unit conversion factor.
 
         data_type: str 
-            A string of type DataTypes that represents the data to be processed.
+            A string that represents the stress data type to be processed.
 
         Return
         ------
@@ -176,7 +186,11 @@ class StructuralPostprocessing:
 
 
     @cache
-    def get_max_min_values_for_advanced_stress_data(self, data_complex: tuple, data_type: str) -> list[float, float]:
+    def get_max_min_values_for_advanced_stress_data(
+        self,
+        data_complex: tuple,
+        data_type: StressDataType,
+        ) -> list[float, float]:
         """
         This method returns the minimum and maximum values of selected frequency for animation purposes.
 
@@ -184,7 +198,7 @@ class StructuralPostprocessing:
         ----------
         data_complex: a tuple of complex values in which the phase sweep will be applied.
 
-        data_type: a string of type DataTypes that represents the data to be processed.
+        data_type: a string that represents the stress data type to be processed.
 
         Return
         ------
@@ -247,16 +261,23 @@ class StructuralPostprocessing:
 
 
     @cache
-    def compute_multiple_ifft(self) -> tuple[np.ndarray, np.ndarray]:
+    def compute_multiple_ifft_for_structural_nodal_solution(self, n_diff: int = 0) -> tuple[np.ndarray, np.ndarray]:
         assert isinstance(self.solution, HarmonicSolution)
         assert self.solution.structural_solution is not None
         assert self.solution.analysis_id.is_structural() or self.solution.analysis_id.is_coupled()
+
+        nodal_solution = self.solution.structural_solution.copy()
+
+        # differentiate the nodal solution
+        if n_diff:
+            freqs = self.model.frequencies
+            nodal_solution *= (1j * 2 * np.pi * freqs)**n_diff
 
         # t0 = perf_counter()
         logging.info("Computing multiple iffts... [25/100]")
         time_vector, waveforms = process_multiple_iffts_from_one_sided_spectrum_signals(
             self.solution.frequencies,
-            self.solution.structural_solution,
+            nodal_solution,
             dc_included=False,
         )
 
@@ -271,39 +292,49 @@ class StructuralPostprocessing:
     def compute_transient_displacements_field(
         self,
         time_index: int,
-        plot_type: DisplacementFieldPlotSetupTime,
+        plot_type: DisplacementDataType,
         unit_factor: float = 1.0,
+        n_diff: int = 0,
         reduced_loop_time: float | None = None,
     ):
 
-        time_vector, self.waveforms = self.compute_multiple_ifft()
+        time_vector, self.waveforms = self.compute_multiple_ifft_for_structural_nodal_solution(n_diff=n_diff)
 
         if reduced_loop_time is None:
             n = time_vector.size
         else:
             n = np.sum(time_vector <= reduced_loop_time)
 
-        # cache the minimum and maximum values of the nodal pressure waveforms
-        min_max_values = self.get_minimum_and_maximum_values_for_displacements(int(n), round(unit_factor, 10))
-        acoustic_pressures = unit_factor * self.waveforms[:, time_index].flatten()
+        # cache the minimum and maximum values of the nodal displacements
+        min_max_values = self.get_minimum_and_maximum_values_for_displacements(int(n), round(unit_factor, 10), plot_type)
+        displacements = unit_factor * self.waveforms[self.solution.displacement_dof, time_index].reshape(-1, 3).copy()
 
-        match plot_type:
-            case DisplacementPlotType.U_SUM:
-                acoustic_pressures = np.abs(acoustic_pressures)
-                min_value = 0
-                max_value = np.max(np.abs(min_max_values))
+        if plot_type in ["u_sum", "v_sum", "a_sum"] :
+            # displacements = np.abs(displacements)
+            min_value = 0
+            max_value = np.max(np.abs(min_max_values))
+            scalars = np.linalg.norm(displacements, axis=1)
 
-            case _:
-                min_value, max_value = min_max_values
+        else:
+            min_value, max_value = min_max_values
+            if plot_type in ["u_x", "v_x", "a_x"]:
+                scalars = displacements[:, 0]
+                displacements = displacements * np.array([1, 0, 0], dtype=float)
+            elif plot_type in ["u_y", "v_y", "a_y"]:
+                scalars = displacements[:, 1]
+                displacements = displacements * np.array([0, 1, 0], dtype=float)
+            elif plot_type in ["u_z", "v_z", "a_z"]:
+                scalars = displacements[:, 2]
+                displacements = displacements * np.array([0, 0, 1], dtype=float)
 
-        return time_vector[:n], acoustic_pressures, min_value, max_value
+        return time_vector[:n], displacements, scalars, min_value, max_value
 
 
     def compute_structural_response_field(
         self,
         column: int,
         phase_rad: float,
-        data_type: DataTypes,
+        data_type: DisplacementDataType,
         n_diff: int = 0,
         unit_factor: float = 1.0,
         is_modal: bool = False,
@@ -356,7 +387,7 @@ class StructuralPostprocessing:
         self,
         column: int,
         phase_rad: float,
-        data_type: DataTypes,
+        data_type: DisplacementDataType,
         n_diff: int = 0,
         unit_factor: float = 1.0,
         is_modal: bool = False,
@@ -644,7 +675,7 @@ class StructuralPostprocessing:
         column: int,
         phase_rad: float,
         stress_type: StressType,
-        data_type: StressPlotType,
+        data_type: StressDataType,
         unit_factor: float = 1.0,
     ):
 
@@ -660,16 +691,16 @@ class StructuralPostprocessing:
         stress_vector = avg_nodal_stresses[:, stress_type, column].copy() * unit_factor
 
         match data_type:
-            case StressPlotType.ABSOLUTE_VALUES:
+            case StressDataType.ABSOLUTE_VALUES:
                 stress_values = np.abs(stress_vector)
-            case StressPlotType.REAL_VALUES:
+            case StressDataType.REAL_VALUES:
                 stress_values = np.real(stress_vector)
-            case StressPlotType.IMAG_VALUES:
+            case StressDataType.IMAG_VALUES:
                 stress_values = np.imag(stress_vector)
-            case StressPlotType.ABSOLUTE_ANIMATION:
+            case StressDataType.ABSOLUTE_ANIMATION:
                 stress_values = compute_shifted_values(stress_vector, phase_rad)
                 stress_values = np.abs(stress_values)
-            case StressPlotType.NON_ABSOLUTE_ANIMATION:
+            case StressDataType.NON_ABSOLUTE_ANIMATION:
                 stress_values = compute_shifted_values(stress_vector, phase_rad)
 
         min_value, max_value = self.get_max_min_values_for_stress_data(column, round(unit_factor, 10), stress_type, data_type)
@@ -683,7 +714,7 @@ class StructuralPostprocessing:
         column: int,
         phase_rad: float,
         stress_type: StressType,
-        data_type: StressPlotType,
+        data_type: StressDataType,
         unit_factor: float = 1.0,
     ):
 
@@ -736,15 +767,15 @@ class StructuralPostprocessing:
                 stress_vector = sigmas[:, 0] # sigma_3
 
         match data_type:
-            case StressPlotType.ABSOLUTE_VALUES:
+            case StressDataType.ABSOLUTE_VALUES:
                 stress_values = np.abs(stress_vector)
-            case StressPlotType.REAL_VALUES:
+            case StressDataType.REAL_VALUES:
                 stress_values = np.real(stress_vector)
-            case StressPlotType.IMAG_VALUES:
+            case StressDataType.IMAG_VALUES:
                 stress_values = np.imag(stress_vector)
-            case StressPlotType.ABSOLUTE_ANIMATION:
+            case StressDataType.ABSOLUTE_ANIMATION:
                 stress_values = np.abs(stress_vector.copy())
-            case StressPlotType.NON_ABSOLUTE_ANIMATION:
+            case StressDataType.NON_ABSOLUTE_ANIMATION:
                 stress_values = stress_vector.copy()
 
         min_value, max_value = self.get_max_min_values_for_advanced_stress_data(tuple(stress_vector), data_type)

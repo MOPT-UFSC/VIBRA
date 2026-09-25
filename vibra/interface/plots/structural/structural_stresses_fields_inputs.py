@@ -10,7 +10,7 @@ from vibra.interface.numeric_checks.unit_utilities import convert_stress_unit
 from vibra.interface.plots.general.animation_widget import AnimationWidget
 from vibra.interface.plots.general.results_display_widget import ResultsDisplayWidget
 from vibra.interface.ui_generated.plots.structural.structural_stresses_field_inputs_ui import StructuralStressesFieldInputs_UI
-from vibra.interface.viewer_3d.plot_setup import StressFieldPlotSetupFrequency, StressPlotType
+from vibra.interface.viewer_3d.plot_setup import StressDataType, StressFieldPlotSetupFrequency
 
 
 class StructuralStressesFieldsInputs(StructuralStressesFieldInputs_UI):
@@ -149,7 +149,7 @@ class StructuralStressesFieldsInputs(StructuralStressesFieldInputs_UI):
         stress_index = self.comboBox_plotting_results.currentIndex()
         plot_type = self.get_plot_type()
 
-        if stress_index == 6 and plot_type == StressPlotType.NON_ABSOLUTE_ANIMATION:
+        if stress_index == 6 and plot_type == StressDataType.NON_ABSOLUTE_ANIMATION:
             with QSignalBlocker(self.comboBox_plot_type):
                 self.comboBox_plot_type.setCurrentIndex(1)
                 plot_type = self.get_plot_type()
@@ -167,7 +167,7 @@ class StructuralStressesFieldsInputs(StructuralStressesFieldInputs_UI):
         if self.selected_frequency_index is None:
             return
 
-        if self.get_plot_type() in [StressPlotType.ABSOLUTE_ANIMATION, StressPlotType.ABSOLUTE_VALUES]:
+        if self.get_plot_type() in [StressDataType.ABSOLUTE_ANIMATION, StressDataType.ABSOLUTE_VALUES]:
             self.results_display_widget.configure_validators(0, 1e14)
         else:
             self.results_display_widget.configure_validators(-1e14, 1e14)
@@ -194,7 +194,7 @@ class StructuralStressesFieldsInputs(StructuralStressesFieldInputs_UI):
         # update the results render
         self.show_results_render()
 
-    def get_plot_type(self) -> StressPlotType:
+    def get_plot_type(self) -> StressDataType:
         plot_types = [
             "non_absolute_animation",
             "absolute_animation",
@@ -203,7 +203,7 @@ class StructuralStressesFieldsInputs(StructuralStressesFieldInputs_UI):
             "imag_values",
         ]
         index = self.comboBox_plot_type.currentIndex()
-        return StressPlotType(plot_types[index])
+        return StressDataType(plot_types[index])
 
     def load_frequencies(self):
         if isinstance(app().project.model.frequencies, np.ndarray):

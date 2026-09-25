@@ -43,6 +43,7 @@ from vibra.interface.plots.acoustic.allowable_pulsations_for_reciprocating_compr
 from vibra.interface.plots.acoustic.particle_velocity_inputs import ParticleVelocityInputs
 from vibra.interface.plots.acoustic.surface_absorption_coefficient_inputs import SurfaceAbsorptionCoefficientInputs
 from vibra.interface.plots.acoustic.transmission_loss_inputs import TransmissionLossInputs
+from vibra.interface.plots.structural.displacements_time_domain_3d_plot_inputs import DisplacementsTimeDomain3dPlotInputs
 from vibra.interface.plots.structural.structural_frequency_response_inputs import PlotStructuralFrequencyResponseInputs
 from vibra.interface.plots.structural.structural_stresses_fields_inputs import StructuralStressesFieldsInputs
 from vibra.interface.plots.structural.structural_stresses_frequency_response_inputs import StructuralStressesFrequencyResponseInputs
@@ -157,6 +158,9 @@ class InputUi:
 
     def set_acoustic_transfer_element_setup(self):
         self.process_input(AcousticTransferElementInputs)
+
+    def plot_displacements_time_domain_3d(self):
+        return self.process_input(DisplacementsTimeDomain3dPlotInputs)
 
     def plot_structural_frequency_response(self):
         return self.process_input(PlotStructuralFrequencyResponseInputs)
