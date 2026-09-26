@@ -6,7 +6,6 @@ from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QGridLayout
 
 from vibra import app
-from vibra.engine import AnalysisID
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
 from vibra.interface.plots.general.animation_widget import AnimationWidget
@@ -27,13 +26,11 @@ class DisplacementsTimeDomain3dPlotInputs(DisplacementsTimeDomain3dPlotInputs_UI
 
         app().main_window.show_geometry_render_widget()
 
-        self._reset_variables()
-        self.add_animation_widget()
-        self.add_color_widget()
-        self._create_connections()
+        self._add_animation_widget()
+        self._add_color_widget()
+        self._initialize()
         self._configure_validators()
-
-        self._load_analysis_setup_and_solution()
+        self._create_connections()
 
     @property
     def model(self):
@@ -56,57 +53,7 @@ class DisplacementsTimeDomain3dPlotInputs(DisplacementsTimeDomain3dPlotInputs_UI
         cache_info = self.structural_post.compute_multiple_ifft_for_structural_nodal_solution.cache_info()
         return cache_info.currsize != 0
 
-    def show_results_render(self):
-        self.pushButton_plot_data.setDisabled(self.is_data_cached)
-        if not self.is_data_cached:
-            return
-
-        curent_render_widget = app().main_window.get_current_render_widget()
-        results_render_widget = app().main_window.results_widget
-
-        if curent_render_widget != results_render_widget:
-            app().main_window.render_widgets_stack.setCurrentWidget(results_render_widget)
-            app().main_window.render_widget_changed.emit()
-            app().main_window.view_toolbar.disable_selection_tool()
-
-    def _configure_validators(self):
-        self.lineEdit_animation_time.setValidator(StrictDoubleValidator(1e-5, 1e8, 8))
-
-    def _load_analysis_setup_and_solution(self):
-        self.analysis_method = ""
-        if self.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
-            self.analysis_method = "Direct method"
-
-        self.update_slider_configuration()
-
-        if self.is_data_cached:
-            self.plot_data_callback()
-        else:
-            self.show_results_render()
-
-    def _reset_variables(self):
-        self.time_vector = None
-        self.plot_setup = None
-
-    def _create_connections(self):
-
-        # QComboBox connections
-        self.comboBox_plot_type.currentIndexChanged.connect(self.plot_data_callback)
-        self.comboBox_plotting_results.currentIndexChanged.connect(self.plot_data_callback)
-        self.comboBox_reduced_time.currentIndexChanged.connect(lambda: self.reduced_loop_time_type_callback(True))
-
-        # QLineEdit connections
-        self.lineEdit_animation_time.editingFinished.connect(self.plot_data_callback)
-
-        # QPushButton connections
-        self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
-
-        self.results_display_widget.colormap_changed.connect(self.animation_widget.update_color_and_deformation)
-        self.results_display_widget.pressure_value_changed.connect(self.animation_widget.update_color_and_deformation)
-
-        self.reduced_loop_time_type_callback()
-
-    def add_animation_widget(self):
+    def _add_animation_widget(self):
 
         self.grid_layout = QGridLayout()
         self.grid_layout.setContentsMargins(0, 0, 0, 0)
@@ -119,7 +66,9 @@ class DisplacementsTimeDomain3dPlotInputs(DisplacementsTimeDomain3dPlotInputs_UI
         self.animation_widget.label_animation_phase.setText("Time step:")
         self.animation_widget.label_phase_angle.setText(f"{0: .4e}s")
 
-    def add_color_widget(self):
+        self.update_slider_configuration()
+
+    def _add_color_widget(self):
         grid_layout = QGridLayout()
         grid_layout.setContentsMargins(0, 0, 0, 0)
         self.frame_color.setLayout(grid_layout)
@@ -127,6 +76,57 @@ class DisplacementsTimeDomain3dPlotInputs(DisplacementsTimeDomain3dPlotInputs_UI
         self.results_display_widget = ResultsDisplayWidget()
         grid_layout.addWidget(self.results_display_widget)
         self.frame_color.adjustSize()
+
+    def _initialize(self):
+        self.time_vector = None
+        self.plot_setup = None
+
+        # update the widgets accessibility
+        if self.is_data_cached:
+            self.plot_data_callback()
+        else:
+            self.set_frames_disabled(True)
+            self.show_results_render()
+
+    def _configure_validators(self):
+        self.lineEdit_animation_time.setValidator(StrictDoubleValidator(1e-5, 1e8, 8))
+
+    def _create_connections(self):
+
+        # QComboBox connections
+        self.comboBox_plot_type.currentIndexChanged.connect(self.plot_data_callback)
+        self.comboBox_plotting_results.currentIndexChanged.connect(self.plot_data_callback)
+        self.comboBox_reduced_time.currentIndexChanged.connect(lambda: self.reduced_loop_time_type_callback(True))
+
+        # QLineEdit connections
+        self.lineEdit_animation_time.editingFinished.connect(self.plot_data_callback)
+
+        # QPushButton connections
+        self.pushButton_process_nodal_solution_iffts.clicked.connect(self.plot_data_callback)
+
+        self.results_display_widget.colormap_changed.connect(self.animation_widget.update_color_and_deformation)
+        self.results_display_widget.pressure_value_changed.connect(self.animation_widget.update_color_and_deformation)
+
+        self.reduced_loop_time_type_callback()
+
+    def set_frames_disabled(self, disabled: bool):
+        self.frame_animation.setDisabled(disabled)
+        self.frame_color.setDisabled(disabled)
+        self.frame_plot_controls.setDisabled(disabled)
+        self.pushButton_process_nodal_solution_iffts.setEnabled(disabled)
+
+    def show_results_render(self):
+        self.pushButton_process_nodal_solution_iffts.setDisabled(self.is_data_cached)
+        if not self.is_data_cached:
+            return
+
+        curent_render_widget = app().main_window.get_current_render_widget()
+        results_render_widget = app().main_window.results_widget
+
+        if curent_render_widget != results_render_widget:
+            app().main_window.render_widgets_stack.setCurrentWidget(results_render_widget)
+            app().main_window.render_widget_changed.emit()
+            app().main_window.view_toolbar.disable_selection_tool()
 
     def update_slider_configuration(self):
         frequencies = self.model.frequencies
@@ -206,6 +206,7 @@ class DisplacementsTimeDomain3dPlotInputs(DisplacementsTimeDomain3dPlotInputs_UI
 
         LoadingWindow(plot_callback).run()
 
+        self.set_frames_disabled(False)
         self.show_results_render()
 
     def get_number_of_differentiations(self):
