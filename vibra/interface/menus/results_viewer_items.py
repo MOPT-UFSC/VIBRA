@@ -30,18 +30,18 @@ class ResultsViewerItems(CommonMenuItems):
 
     def _create_items(self):
 
-        ## Acoustic results items - 2D plots
+        ## Acoustic results items - 3D plots
         self.item_top_results_viewer_acoustic = self.add_top_item("Acoustic Results Viewer")
         self.item_child_3d_plots_acoustic = self.add_item("3D Plots")
         self.item_child_acoustic_mode_shapes = self.add_sub_item("Acoustic Mode Shapes")
-        self.item_child_acoustic_pressure_field = self.add_sub_item("Acoustic Pressure Field (Frequency)")
-        self.item_child_acoustic_pressure_time_3d_plot = self.add_sub_item("Acoustic Pressure Field (Time)")
+        self.item_child_acoustic_pressure_2d_plot_frequency = self.add_sub_item("Acoustic Pressure Field (Frequency)")
+        self.item_child_acoustic_pressure_3d_plot_time = self.add_sub_item("Acoustic Pressure Field (Time)")
         self.item_child_allowable_pulsations_screw_compressor_3d_plot = self.add_sub_item("Allowable Pulsations (Screw Compressor)")
 
-        ## Acoustic results items - 3D plots
+        ## Acoustic results items - 2D plots
         self.item_child_2d_plots_acoustic = self.add_item("2D Plots")
-        self.item_child_acoustic_pressure_frequency = self.add_sub_item("Acoustic Pressure (Frequency)")
-        self.item_child_acoustic_pressure_time_2d_plot = self.add_sub_item("Acoustic Pressure (Time)")
+        self.item_child_acoustic_pressure_3d_plot_frequency = self.add_sub_item("Acoustic Pressure (Frequency)")
+        self.item_child_acoustic_pressure_2d_plot_time = self.add_sub_item("Acoustic Pressure (Time)")
         self.item_child_acoustic_pressure_frf = self.add_sub_item("Acoustic Presssure FRF")
         self.item_child_acoustic_shaking_forces = self.add_sub_item("Acoustic Shaking Forces")
         self.item_child_allowable_pulsations_screw_compressor_2d_plot = self.add_sub_item("Allowable Pulsations (Screw Compressor)")
@@ -56,14 +56,17 @@ class ResultsViewerItems(CommonMenuItems):
         self.item_top_structural_results_viewer = self.add_top_item("Structural Results Viewer")
         self.item_child_3d_plots_structural = self.add_item("3D Plots")
         self.item_child_structural_mode_shapes = self.add_sub_item("Structural Mode Shapes")
-        self.item_child_nodal_solution_frequency_3d_plot = self.add_sub_item("Displacements Field (Frequency)")
-        self.item_child_stress_field_frequency = self.add_sub_item("Stresses Field (Frequency)")
-        self.item_child_displacement_field_time = self.add_sub_item("Displacements Field (Time)")
+        self.item_child_displacements_3d_plot_frequency = self.add_sub_item("Displacements Field (Frequency)")
+        self.item_child_displacements_3d_plot_time = self.add_sub_item("Displacements Field (Time)")
+        self.item_child_stresses_3d_plot_frequency = self.add_sub_item("Stresses Field (Frequency)")
+        self.item_child_stresses_3d_plot_time = self.add_sub_item("Stresses Field (Time)")
 
         ## Structural results items - 2D plots
         self.item_child_2d_plots_structural = self.add_item("2D Plots")
-        self.item_child_nodal_solution_frequency_2d_plot = self.add_sub_item("Nodal Solution (Frequency)")
-        self.item_child_stress_frequency_response = self.add_sub_item("Stress (Frequency)")
+        self.item_child_structural_nodal_solution_2d_plot_frequency = self.add_sub_item("Nodal Solution (Frequency)")
+        self.item_child_structural_nodal_solution_2d_plot_time = self.add_sub_item("Nodal Solution (Time)")
+        self.item_child_stresses_2d_plot_frequency = self.add_sub_item("Stress (Frequency)")
+        self.item_child_stresses_2d_plot_time = self.add_sub_item("Stress (Time)")
         # self.item_child_reaction_frequency_response = self.add_sub_item("Plot Reactions (Frequency)")
 
         self.top_level_items = [
@@ -102,43 +105,28 @@ class ResultsViewerItems(CommonMenuItems):
             if attr_value == qtree_widet_item:
                 return attr_name
 
-    def modify_acoustic_results_viewer_items(self, key: bool):
-        self.item_top_results_viewer_acoustic.setHidden(key)
-        self.item_child_acoustic_mode_shapes.setDisabled(key)
-        self.item_child_acoustic_pressure_field.setDisabled(key)
-        self.item_child_acoustic_pressure_frequency.setDisabled(key)
-        self.item_child_acoustic_pressure_frf.setDisabled(key)
-        self.item_child_acoustic_shaking_forces.setDisabled(key)
-        self.item_child_decompose_acoustic_waves.setDisabled(key)
-        self.item_child_allowable_pulsations_for_reciprocating_compressor.setDisabled(key)
-        self.item_child_allowable_pulsations_screw_compressor_2d_plot.setDisabled(key)
-        self.item_child_allowable_pulsations_screw_compressor_3d_plot.setDisabled(key)
-        self.item_child_TL_NR.setDisabled(key)
-        self.item_child_particle_velocity.setDisabled(key)
-        self.item_child_acoustic_impedance.setDisabled(key)
-        self.item_child_absorption_coefficient.setDisabled(key)
+    def modify_advanced_results_items_accessibility(self):
 
-        if AnalysisID(self.analysis_id).is_modal():
-            self.item_child_acoustic_pressure_time_2d_plot.setHidden(True)
-            self.item_child_acoustic_pressure_time_3d_plot.setHidden(True)
+        def hide_advanced_items(hide: bool):
+            self.item_child_acoustic_pressure_2d_plot_time.setHidden(hide)
+            self.item_child_acoustic_pressure_3d_plot_time.setHidden(hide)
+            self.item_child_allowable_pulsations_screw_compressor_2d_plot.setHidden(hide)
+            self.item_child_allowable_pulsations_screw_compressor_3d_plot.setHidden(hide)
+            self.item_child_displacements_3d_plot_time.setHidden(hide)
+            self.item_child_structural_nodal_solution_2d_plot_time.setHidden(hide)
+            self.item_child_stresses_3d_plot_time.setHidden(hide)
+            self.item_child_stresses_2d_plot_time.setHidden(hide)
 
-        elif self.analysis_id in [AnalysisID.ACOUSTIC_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
-            # only allow waveform plots for equally distributed solution steps
-            # with a compressor as the main excitation source
-            cond_A = self.project.model.has_spectral_content_been_modified()
-            cond_B = not self.project.model.is_there_a_compressor_excitation_in_model()
-            self.item_child_acoustic_pressure_time_2d_plot.setHidden(cond_A or cond_B)
-            self.item_child_acoustic_pressure_time_3d_plot.setHidden(cond_A or cond_B)
+        valid_analysis = self.analysis_id in [AnalysisID.ACOUSTIC_HARMONIC, AnalysisID.COUPLED_HARMONIC]
+        if not valid_analysis:
+            hide_advanced_items(True)
+            return
 
-    def modify_structural_results_viewer_items(self, key: bool):
-        self.item_top_structural_results_viewer.setHidden(key)
-        self.item_child_structural_mode_shapes.setDisabled(key)
-        self.item_child_nodal_solution_frequency_3d_plot.setDisabled(key)
-        self.item_child_displacement_field_time.setDisabled(key)
-        self.item_child_nodal_solution_frequency_2d_plot.setDisabled(key)
-        self.item_child_stress_field_frequency.setDisabled(key)
-        self.item_child_stress_frequency_response.setDisabled(key)
-        # self.item_child_reaction_frequency_response.setDisabled(key)
+        # only allow time domain plots for equally distributed solution steps
+        # with a compressor as the main excitation source
+        cond_A = self.project.model.has_spectral_content_been_modified()
+        cond_B = not self.project.model.is_there_a_compressor_excitation_in_model()
+        hide_advanced_items(cond_A or cond_B)
 
     def update_structural_analysis_visibility_items(self):
         self.item_top_structural_results_viewer.setHidden(False)
@@ -156,8 +144,6 @@ class ResultsViewerItems(CommonMenuItems):
         """
         Enables and disables the Child Items on the menu after the solution is done.
         """
-        # self.modify_acoustic_results_viewer_items(True)
-        # self.modify_structural_results_viewer_items(True)
 
         analysis_id = self.analysis_id
         if analysis_id == AnalysisID.NO_ANALYSIS:
@@ -172,14 +158,15 @@ class ResultsViewerItems(CommonMenuItems):
         elif analysis_id.is_harmonic_coupled():
             self.update_coupled_analysis_visibility_items()
 
+        self.modify_advanced_results_items_accessibility()
+
         if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
             self.item_top_structural_results_viewer.setHidden(False)
             self.item_child_structural_mode_shapes.setHidden(True)
-            self.item_child_nodal_solution_frequency_2d_plot.setHidden(False)
-            self.item_child_nodal_solution_frequency_3d_plot.setHidden(False)
-            self.item_child_displacement_field_time.setHidden(False)
-            self.item_child_stress_field_frequency.setHidden(False)
-            self.item_child_stress_frequency_response.setHidden(False)
+            self.item_child_displacements_3d_plot_frequency.setHidden(False)
+            self.item_child_structural_nodal_solution_2d_plot_frequency.setHidden(False)
+            self.item_child_stresses_3d_plot_frequency.setHidden(False)
+            self.item_child_stresses_2d_plot_frequency.setHidden(False)
             # self.item_child_reaction_frequency_response.setHidden(False)
 
         if analysis_id == AnalysisID.STRUCTURAL_MODAL:
@@ -191,16 +178,11 @@ class ResultsViewerItems(CommonMenuItems):
 
         if analysis_id in [AnalysisID.ACOUSTIC_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
             self.item_child_acoustic_mode_shapes.setHidden(True)
-            self.item_child_acoustic_pressure_field.setHidden(False)
-            self.item_child_acoustic_pressure_frequency.setHidden(False)
+            self.item_child_acoustic_pressure_3d_plot_frequency.setHidden(False)
+            self.item_child_acoustic_pressure_2d_plot_frequency.setHidden(False)
             self.item_child_acoustic_pressure_frf.setHidden(False)
             self.item_child_acoustic_shaking_forces.setHidden(False)
             self.item_child_decompose_acoustic_waves.setHidden(False)
-            self.item_child_allowable_pulsations_for_reciprocating_compressor.setHidden(False)
-            self.item_child_allowable_pulsations_screw_compressor_2d_plot.setHidden(False)
-            self.item_child_allowable_pulsations_screw_compressor_3d_plot.setHidden(False)
-            self.item_child_acoustic_pressure_time_2d_plot.setHidden(False)
-            self.item_child_acoustic_pressure_time_3d_plot.setHidden(False)
             self.item_child_TL_NR.setHidden(False)
             self.item_child_particle_velocity.setHidden(False)
             self.item_child_acoustic_impedance.setHidden(False)
