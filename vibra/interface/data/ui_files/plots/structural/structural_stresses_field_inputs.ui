@@ -158,7 +158,7 @@
              <enum>QFrame::Shadow::Raised</enum>
             </property>
             <property name="text">
-             <string>Plot the stress field</string>
+             <string>Stress Field Plot (frequency domain)</string>
             </property>
             <property name="textFormat">
              <enum>Qt::TextFormat::AutoText</enum>

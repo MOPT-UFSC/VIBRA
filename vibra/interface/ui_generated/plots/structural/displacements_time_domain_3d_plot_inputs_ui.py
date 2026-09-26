@@ -62,20 +62,20 @@ class Ui_Form(object):
         self.gridLayout_5.setSpacing(4)
         self.gridLayout_5.setObjectName(u"gridLayout_5")
         self.gridLayout_5.setContentsMargins(4, 4, 4, 4)
-        self.frame_4 = QFrame(self.frame_main)
-        self.frame_4.setObjectName(u"frame_4")
-        self.frame_4.setMinimumSize(QSize(0, 120))
-        self.frame_4.setMaximumSize(QSize(16777215, 300))
-        self.frame_4.setFrameShape(QFrame.Shape.NoFrame)
-        self.frame_4.setFrameShadow(QFrame.Shadow.Raised)
-        self.gridLayout_13 = QGridLayout(self.frame_4)
+        self.frame_plot_controls = QFrame(self.frame_main)
+        self.frame_plot_controls.setObjectName(u"frame_plot_controls")
+        self.frame_plot_controls.setMinimumSize(QSize(0, 120))
+        self.frame_plot_controls.setMaximumSize(QSize(16777215, 300))
+        self.frame_plot_controls.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_plot_controls.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_13 = QGridLayout(self.frame_plot_controls)
         self.gridLayout_13.setObjectName(u"gridLayout_13")
         self.gridLayout_13.setContentsMargins(0, 6, 0, 0)
         self.horizontalSpacer_14 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.gridLayout_13.addItem(self.horizontalSpacer_14, 3, 0, 1, 1)
 
-        self.label_7 = QLabel(self.frame_4)
+        self.label_7 = QLabel(self.frame_plot_controls)
         self.label_7.setObjectName(u"label_7")
         self.label_7.setMinimumSize(QSize(0, 28))
         self.label_7.setMaximumSize(QSize(16777215, 28))
@@ -88,7 +88,7 @@ class Ui_Form(object):
 
         self.gridLayout_13.addWidget(self.label_7, 0, 1, 1, 1)
 
-        self.label_color_scalling = QLabel(self.frame_4)
+        self.label_color_scalling = QLabel(self.frame_plot_controls)
         self.label_color_scalling.setObjectName(u"label_color_scalling")
         self.label_color_scalling.setMinimumSize(QSize(110, 26))
         self.label_color_scalling.setMaximumSize(QSize(110, 26))
@@ -99,7 +99,7 @@ class Ui_Form(object):
 
         self.gridLayout_13.addWidget(self.label_color_scalling, 1, 1, 1, 1)
 
-        self.comboBox_plotting_results = QComboBox(self.frame_4)
+        self.comboBox_plotting_results = QComboBox(self.frame_plot_controls)
         self.comboBox_plotting_results.addItem("")
         self.comboBox_plotting_results.addItem("")
         self.comboBox_plotting_results.addItem("")
@@ -117,7 +117,7 @@ class Ui_Form(object):
 
         self.gridLayout_13.addWidget(self.comboBox_plotting_results, 0, 3, 1, 1)
 
-        self.label_animation_time_unit = QLabel(self.frame_4)
+        self.label_animation_time_unit = QLabel(self.frame_plot_controls)
         self.label_animation_time_unit.setObjectName(u"label_animation_time_unit")
         self.label_animation_time_unit.setMinimumSize(QSize(40, 0))
         self.label_animation_time_unit.setMaximumSize(QSize(40, 16777215))
@@ -125,7 +125,7 @@ class Ui_Form(object):
 
         self.gridLayout_13.addWidget(self.label_animation_time_unit, 3, 4, 1, 1)
 
-        self.comboBox_reduced_time = QComboBox(self.frame_4)
+        self.comboBox_reduced_time = QComboBox(self.frame_plot_controls)
         self.comboBox_reduced_time.addItem("")
         self.comboBox_reduced_time.addItem("")
         self.comboBox_reduced_time.addItem("")
@@ -136,7 +136,7 @@ class Ui_Form(object):
 
         self.gridLayout_13.addWidget(self.comboBox_reduced_time, 2, 3, 1, 1)
 
-        self.label_animation_time = QLabel(self.frame_4)
+        self.label_animation_time = QLabel(self.frame_plot_controls)
         self.label_animation_time.setObjectName(u"label_animation_time")
         self.label_animation_time.setMinimumSize(QSize(110, 26))
         self.label_animation_time.setMaximumSize(QSize(110, 26))
@@ -145,7 +145,7 @@ class Ui_Form(object):
 
         self.gridLayout_13.addWidget(self.label_animation_time, 3, 1, 1, 1)
 
-        self.label_reduced_time = QLabel(self.frame_4)
+        self.label_reduced_time = QLabel(self.frame_plot_controls)
         self.label_reduced_time.setObjectName(u"label_reduced_time")
         self.label_reduced_time.setMinimumSize(QSize(110, 26))
         self.label_reduced_time.setMaximumSize(QSize(110, 26))
@@ -158,7 +158,7 @@ class Ui_Form(object):
 
         self.gridLayout_13.addItem(self.horizontalSpacer, 3, 5, 1, 1)
 
-        self.lineEdit_animation_time = QLineEdit(self.frame_4)
+        self.lineEdit_animation_time = QLineEdit(self.frame_plot_controls)
         self.lineEdit_animation_time.setObjectName(u"lineEdit_animation_time")
         self.lineEdit_animation_time.setMinimumSize(QSize(0, 26))
         self.lineEdit_animation_time.setMaximumSize(QSize(16777215, 26))
@@ -166,7 +166,7 @@ class Ui_Form(object):
 
         self.gridLayout_13.addWidget(self.lineEdit_animation_time, 3, 3, 1, 1)
 
-        self.comboBox_plot_type = QComboBox(self.frame_4)
+        self.comboBox_plot_type = QComboBox(self.frame_plot_controls)
         self.comboBox_plot_type.addItem("")
         self.comboBox_plot_type.addItem("")
         self.comboBox_plot_type.addItem("")
@@ -179,7 +179,7 @@ class Ui_Form(object):
         self.gridLayout_13.addWidget(self.comboBox_plot_type, 1, 3, 1, 1)
 
 
-        self.gridLayout_5.addWidget(self.frame_4, 0, 0, 1, 1)
+        self.gridLayout_5.addWidget(self.frame_plot_controls, 1, 0, 1, 1)
 
         self.frame_3 = QFrame(self.frame_main)
         self.frame_3.setObjectName(u"frame_3")
@@ -191,18 +191,18 @@ class Ui_Form(object):
         self.gridLayout_47.setSpacing(2)
         self.gridLayout_47.setObjectName(u"gridLayout_47")
         self.gridLayout_47.setContentsMargins(2, 2, 2, 2)
-        self.pushButton_plot_data = QPushButton(self.frame_3)
-        self.pushButton_plot_data.setObjectName(u"pushButton_plot_data")
-        self.pushButton_plot_data.setMinimumSize(QSize(100, 32))
-        self.pushButton_plot_data.setMaximumSize(QSize(100, 32))
-        self.pushButton_plot_data.setFont(font1)
-        self.pushButton_plot_data.setStyleSheet(u"")
-        self.pushButton_plot_data.setFlat(False)
+        self.pushButton_process_nodal_solution_iffts = QPushButton(self.frame_3)
+        self.pushButton_process_nodal_solution_iffts.setObjectName(u"pushButton_process_nodal_solution_iffts")
+        self.pushButton_process_nodal_solution_iffts.setMinimumSize(QSize(200, 32))
+        self.pushButton_process_nodal_solution_iffts.setMaximumSize(QSize(220, 32))
+        self.pushButton_process_nodal_solution_iffts.setFont(font1)
+        self.pushButton_process_nodal_solution_iffts.setStyleSheet(u"")
+        self.pushButton_process_nodal_solution_iffts.setFlat(False)
 
-        self.gridLayout_47.addWidget(self.pushButton_plot_data, 0, 0, 1, 1)
+        self.gridLayout_47.addWidget(self.pushButton_process_nodal_solution_iffts, 0, 0, 1, 1)
 
 
-        self.gridLayout_5.addWidget(self.frame_3, 1, 0, 1, 1)
+        self.gridLayout_5.addWidget(self.frame_3, 0, 0, 1, 1)
 
 
         self.gridLayout_6.addWidget(self.frame_main, 1, 0, 1, 1)
@@ -282,8 +282,8 @@ class Ui_Form(object):
         self.comboBox_plot_type.setItemText(2, QCoreApplication.translate("Form", u"Real Uy", None))
         self.comboBox_plot_type.setItemText(3, QCoreApplication.translate("Form", u"Real Uz", None))
 
-        self.pushButton_plot_data.setText(QCoreApplication.translate("Form", u"Plot data", None))
-        self.label.setText(QCoreApplication.translate("Form", u"Displacements field plot (time domain)", None))
+        self.pushButton_process_nodal_solution_iffts.setText(QCoreApplication.translate("Form", u"Process nodal solution (IFFTs)", None))
+        self.label.setText(QCoreApplication.translate("Form", u"Displacements Field Plot (time domain)", None))
     # retranslateUi
 
 
@@ -299,7 +299,7 @@ class DisplacementsTimeDomain3dPlotInputs_UI(QWidget, Ui_Form):
                                 - frame_color: QFrame
                                 - frame_main: QFrame
                                     - (Layout): QGridLayout
-                                            - frame_4: QFrame
+                                            - frame_plot_controls: QFrame
                                                 - (Layout): QGridLayout
                                                         - label_7: QLabel
                                                         - label_color_scalling: QLabel
@@ -312,7 +312,7 @@ class DisplacementsTimeDomain3dPlotInputs_UI(QWidget, Ui_Form):
                                                         - comboBox_plot_type: QComboBox
                                             - frame_3: QFrame
                                                 - (Layout): QGridLayout
-                                                        - pushButton_plot_data: QPushButton
+                                                        - pushButton_process_nodal_solution_iffts: QPushButton
                                 - frame: QFrame
                                     - (Layout): QGridLayout
                                             - label: QLabel

@@ -141,8 +141,8 @@
           <property name="spacing">
            <number>4</number>
           </property>
-          <item row="0" column="0">
-           <widget class="QFrame" name="frame_4">
+          <item row="1" column="0">
+           <widget class="QFrame" name="frame_plot_controls">
             <property name="minimumSize">
              <size>
               <width>0</width>
@@ -507,7 +507,7 @@
             </layout>
            </widget>
           </item>
-          <item row="1" column="0">
+          <item row="0" column="0">
            <widget class="QFrame" name="frame_3">
             <property name="minimumSize">
              <size>
@@ -544,16 +544,16 @@
               <number>2</number>
              </property>
              <item row="0" column="0">
-              <widget class="QPushButton" name="pushButton_plot_data">
+              <widget class="QPushButton" name="pushButton_process_nodal_solution_iffts">
                <property name="minimumSize">
                 <size>
-                 <width>100</width>
+                 <width>200</width>
                  <height>32</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
-                 <width>100</width>
+                 <width>220</width>
                  <height>32</height>
                 </size>
                </property>
@@ -566,7 +566,7 @@
                 <string notr="true"/>
                </property>
                <property name="text">
-                <string>Plot data</string>
+                <string>Process nodal solution (IFFTs)</string>
                </property>
                <property name="flat">
                 <bool>false</bool>
@@ -644,7 +644,7 @@
              <enum>QFrame::Shadow::Raised</enum>
             </property>
             <property name="text">
-             <string>Displacements field plot (time domain)</string>
+             <string>Displacements Field Plot (time domain)</string>
             </property>
             <property name="textFormat">
              <enum>Qt::TextFormat::AutoText</enum>

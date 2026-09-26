@@ -335,7 +335,7 @@ class Ui_Form(object):
 
     def retranslateUi(self, Form):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Plot stress field", None))
-        self.label_title.setText(QCoreApplication.translate("Form", u"Plot the stress field", None))
+        self.label_title.setText(QCoreApplication.translate("Form", u"Stress Field Plot (frequency domain)", None))
         self.label.setText(QCoreApplication.translate("Form", u"Plot type:", None))
         self.comboBox_plot_type.setItemText(0, QCoreApplication.translate("Form", u"Non-absolute (animation)", None))
         self.comboBox_plot_type.setItemText(1, QCoreApplication.translate("Form", u"Absolute (animation)", None))
