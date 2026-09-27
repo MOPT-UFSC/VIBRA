@@ -116,6 +116,7 @@ class Structural3DElement(Element3D):
     def process_stresses_at_integration_points(
         self,
         element_id : int,
+        solution: np.ndarray | None = None,
         element_averaged: bool = False,
         extrapolate: bool = False,
         ):
@@ -124,7 +125,10 @@ class Structural3DElement(Element3D):
         indices = self.model.get_dof_indices_from_nodes(node_ids, "structural")
 
         # define the element's solution matrix
-        Ue = self.model.solution.structural_solution[indices.flatten(), :]
+        if solution is None:
+            Ue = self.model.solution.structural_solution[indices.flatten(), :]
+        else:
+            Ue = solution[indices.flatten(), :]
 
         # get the material ID of the element
         material = self.get_material(self.model.mesh.solids_connectivity[element_id, 1])

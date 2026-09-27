@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from vibra.engine.model import Model
 
 
-class StructuralHexahedron4(Structural3DElement, Hexahedron8):
+class StructuralHexahedron8(Structural3DElement, Hexahedron8):
 
     def __init__(self, model: "Model", dof_per_node: int = 3, nodes_per_element: int = 8):
         super().__init__(model, dof_per_node, nodes_per_element)
@@ -624,6 +624,7 @@ class StructuralHexahedron4(Structural3DElement, Hexahedron8):
     def process_stresses_at_integration_points(
         self,
         element_id : int,
+        solution: np.ndarray | None = None,
         element_averaged: bool = False,
         extrapolate: bool = False,
         ):
@@ -632,7 +633,10 @@ class StructuralHexahedron4(Structural3DElement, Hexahedron8):
         indices = self.model.get_dof_indices_from_nodes(node_ids, "structural")
 
         # define the element's solution matrix
-        Ue = self.model.solution.structural_solution[indices.flatten(), :]
+        if solution is None:
+            Ue = self.model.solution.structural_solution[indices.flatten(), :]
+        else:
+            Ue = solution[indices.flatten(), :]
 
         # get the material ID of the element
         material = self.get_material(self.model.mesh.solids_connectivity[element_id, 1])
