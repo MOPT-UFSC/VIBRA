@@ -53,14 +53,12 @@ class StructuralStress3dPlotTimeInputs(StructuralStress3dPlotTimeInputs_UI):
         return app().project.get_structural_postprocessing()
 
     @property
-    def is_nodal_solution_iffts_data_cached(self):
-        cache_info = self.structural_post.compute_multiple_ifft_for_structural_nodal_solution.cache_info()
-        return cache_info.currsize != 0
+    def is_nodal_solution_iffts_computed(self):
+        return isinstance(self.structural_post.nodal_solution_time, np.ndarray)
 
     @property
-    def is_stress_data_cached(self):
-        cache_info = self.structural_post.recover_nodal_averaged_structural_stresses.cache_info()
-        return cache_info.currsize != 0
+    def is_stress_data_computed(self):
+        return isinstance(self.structural_post.avg_nodal_stresses_time, np.ndarray)
 
     def _add_animation_widget(self):
 
@@ -91,7 +89,7 @@ class StructuralStress3dPlotTimeInputs(StructuralStress3dPlotTimeInputs_UI):
         self.plot_setup = None
 
         # update the widgets accessibility
-        if self.is_stress_data_cached:
+        if self.is_stress_data_computed:
             self.plot_data_callback()
         else:
             self.set_frames_disabled(True)
@@ -107,8 +105,8 @@ class StructuralStress3dPlotTimeInputs(StructuralStress3dPlotTimeInputs_UI):
         self.pushButton_process_nodal_stresses.setEnabled(disabled)
 
     def show_results_render(self):
-        self.pushButton_process_nodal_stresses.setDisabled(self.is_stress_data_cached)
-        if not self.is_stress_data_cached:
+        self.pushButton_process_nodal_stresses.setDisabled(self.is_stress_data_computed)
+        if not self.is_stress_data_computed:
             return
 
         curent_render_widget = app().main_window.get_current_render_widget()
@@ -145,7 +143,7 @@ class StructuralStress3dPlotTimeInputs(StructuralStress3dPlotTimeInputs_UI):
     # def process_stress_field(self):
 
     #     # recover the averaged structural stresses
-    #     if not self.is_stress_data_cached:    
+    #     if not self.is_stress_data_computed:    
     #         def recover_stresses():
     #             t0 = perf_counter()
     #             self.structural_post.recover_nodal_averaged_structural_stresses()

@@ -45,14 +45,8 @@ class StructuralStress3dPlotFrequencyInputs(StructuralStress3dPlotFrequencyInput
         return app().project.get_structural_postprocessing()
 
     @property
-    def is_nodal_solution_iffts_data_cached(self):
-        cache_info = self.structural_post.compute_multiple_ifft_for_structural_nodal_solution.cache_info()
-        return cache_info.currsize != 0
-
-    @property
-    def is_stress_data_cached(self):
-        cache_info = self.structural_post.recover_nodal_averaged_structural_stresses.cache_info()
-        return cache_info.currsize != 0
+    def is_stress_data_computed(self):
+        return isinstance(self.structural_post.avg_nodal_stresses_frequency, np.ndarray)
 
     def _initialize(self):
         self.selected_frequency_index = None
@@ -67,7 +61,7 @@ class StructuralStress3dPlotFrequencyInputs(StructuralStress3dPlotFrequencyInput
             self.treeWidget_frequencies.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
         # update the widgets accessibility
-        if self.is_stress_data_cached:
+        if self.is_stress_data_computed:
             self.process_stress_field()
         else:
             self.set_frames_disabled(True)
@@ -137,7 +131,7 @@ class StructuralStress3dPlotFrequencyInputs(StructuralStress3dPlotFrequencyInput
     def process_stress_field(self):
 
         # recover the averaged structural stresses
-        if not self.is_stress_data_cached:    
+        if not self.is_stress_data_computed:    
             def recover_stresses():
                 t0 = perf_counter()
                 self.structural_post.recover_nodal_averaged_structural_stresses()

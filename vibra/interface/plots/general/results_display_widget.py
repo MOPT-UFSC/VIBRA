@@ -113,4 +113,4 @@ class ResultsDisplayWidget(ResultsDisplayWidget_UI):
         render_widget.set_min_value(min_value)
         render_widget.set_max_value(max_value)
 
-        self.value_changed.emit()
+        self.min_max_value_changed.emit()

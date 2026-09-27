@@ -128,6 +128,7 @@ class Project:
         # clears the structural domain-related caches
         structural_postprocessing = self.get_structural_postprocessing()
         if isinstance(structural_postprocessing, StructuralPostprocessing):
+            structural_postprocessing.reset_attributes()
             structural_postprocessing.get_max_min_values_for_advanced_stress_data.cache_clear()
             structural_postprocessing.get_max_min_values_for_stress_data.cache_clear()
             structural_postprocessing.get_max_min_values_for_displacements_data.cache_clear()

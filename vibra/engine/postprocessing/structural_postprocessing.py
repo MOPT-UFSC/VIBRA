@@ -21,6 +21,8 @@ class StructuralPostprocessing:
 
         self.model = model
 
+        self.reset_attributes()
+
 
     @property
     def mesh(self):
@@ -44,6 +46,12 @@ class StructuralPostprocessing:
         if self.model.structural_element_3d is None:
             self.model.set_structural_elements()
         return self.model.structural_element_3d
+
+
+    def reset_attributes(self):
+        self.avg_nodal_stresses_frequency = None
+        self.avg_nodal_stresses_time = None
+        self.nodal_solution_time = None
 
 
     @cache
@@ -150,7 +158,7 @@ class StructuralPostprocessing:
         if avg_nodal_stresses is None:
             return (0, 0)
 
-        # initialize the stress vector and convert to MPa
+        # initialize the stress vector
         data_complex = unit_factor * avg_nodal_stresses[:, stress_index, column].copy()
 
         if data_type == "absolute_values":
@@ -271,7 +279,7 @@ class StructuralPostprocessing:
         ):
 
         # initialize the stress vector and convert to MPa
-        nodal_stresses = unit_factor * self.avg_nodal_stresses[:, stress_index, :N].copy()
+        nodal_stresses = unit_factor * self.avg_nodal_stresses_time[:, stress_index, :N].copy()
 
         if data_type == "absolute_animation":
             nodal_stresses = np.abs(nodal_stresses)
@@ -755,15 +763,15 @@ class StructuralPostprocessing:
     ):
 
         t0 = perf_counter()
-        self.avg_nodal_stresses = self.recover_nodal_averaged_structural_stresses(time_domain=True)
-        if self.avg_nodal_stresses is None:
+        self.avg_nodal_stresses_time = self.recover_nodal_averaged_structural_stresses(time_domain=True)
+        if self.avg_nodal_stresses_time is None:
             return
 
         dt = perf_counter() - t0
         print(f"Time to compute nodal stresses: {dt} s")
 
         # initialize the stress vector and convert to MPa
-        stress_vector = self.avg_nodal_stresses[:, stress_type, time_index].copy() * unit_factor
+        stress_vector = self.avg_nodal_stresses_time[:, stress_type, time_index].copy() * unit_factor
 
         match data_type:
             case StressDataType.ABSOLUTE_ANIMATION:
@@ -793,15 +801,15 @@ class StructuralPostprocessing:
     ):
 
         t0 = perf_counter()
-        avg_nodal_stresses = self.recover_nodal_averaged_structural_stresses()
-        if avg_nodal_stresses is None:
+        self.avg_nodal_stresses_frequency = self.recover_nodal_averaged_structural_stresses()
+        if self.avg_nodal_stresses_frequency is None:
             return
 
         dt = perf_counter() - t0
         print(f"Time to compute nodal stresses: {dt} s")
 
         # evaluate the stresses in MPa at a specific time/phase (phase_rad = omega * t)
-        stresses = unit_factor * compute_phase_shifted_values(avg_nodal_stresses[:, :, column], phase_rad)
+        stresses = unit_factor * compute_phase_shifted_values(self.avg_nodal_stresses_frequency[:, :, column], phase_rad)
  
         if stress_type == StressType.VON_MISES_STRESS:
             stress_vector = np.sqrt((1/2) * (
@@ -869,15 +877,15 @@ class StructuralPostprocessing:
     ):
 
         t0 = perf_counter()
-        self.avg_nodal_stresses = self.recover_nodal_averaged_structural_stresses(time_domain=True)
-        if self.avg_nodal_stresses is None:
+        self.avg_nodal_stresses_time = self.recover_nodal_averaged_structural_stresses(time_domain=True)
+        if self.avg_nodal_stresses_time is None:
             return
 
         dt = perf_counter() - t0
         print(f"Time to compute nodal stresses: {dt} s")
 
         # evaluate the stresses at a specific time
-        stresses = unit_factor * self.avg_nodal_stresses[:, :, time_index]
+        stresses = unit_factor * self.avg_nodal_stresses_time[:, :, time_index]
  
         if stress_type == StressType.VON_MISES_STRESS:
             stress_vector = np.sqrt((1/2) * (
