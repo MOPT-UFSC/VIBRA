@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'displacements_time_domain_3d_plot_inputs.ui'
+## Form generated from reading UI file 'structural_nodal_solution_3d_plot_time_inputs.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.9.2
 ##
@@ -23,7 +23,7 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(401, 756)
+        Form.resize(401, 855)
         Form.setMaximumSize(QSize(16777215, 1000))
         self.gridLayout_2 = QGridLayout(Form)
         self.gridLayout_2.setSpacing(2)
@@ -35,7 +35,7 @@ class Ui_Form(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents_2 = QWidget()
         self.scrollAreaWidgetContents_2.setObjectName(u"scrollAreaWidgetContents_2")
-        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, 0, 397, 752))
+        self.scrollAreaWidgetContents_2.setGeometry(QRect(0, 0, 397, 851))
         self.gridLayout_6 = QGridLayout(self.scrollAreaWidgetContents_2)
         self.gridLayout_6.setObjectName(u"gridLayout_6")
         self.gridLayout_6.setHorizontalSpacing(2)
@@ -53,7 +53,7 @@ class Ui_Form(object):
         self.frame_main = QFrame(self.scrollAreaWidgetContents_2)
         self.frame_main.setObjectName(u"frame_main")
         self.frame_main.setMinimumSize(QSize(0, 180))
-        self.frame_main.setMaximumSize(QSize(16777215, 220))
+        self.frame_main.setMaximumSize(QSize(16777215, 240))
         self.frame_main.setSizeIncrement(QSize(0, 0))
         self.frame_main.setBaseSize(QSize(0, 0))
         self.frame_main.setFrameShape(QFrame.Shape.Box)
@@ -288,7 +288,7 @@ class Ui_Form(object):
 
 
 
-class DisplacementsTimeDomain3dPlotInputs_UI(QWidget, Ui_Form):
+class StructuralNodalSolution3dPlotTimeInputs_UI(QWidget, Ui_Form):
     """
     Component Hierarchy:
     - Form: QWidget

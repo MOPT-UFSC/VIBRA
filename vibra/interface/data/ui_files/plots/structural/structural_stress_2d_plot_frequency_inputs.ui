@@ -103,7 +103,7 @@
          </font>
         </property>
         <property name="text">
-         <string>Plot stress frequency response</string>
+         <string>Stress plot (frequency domain)</string>
         </property>
         <property name="textFormat">
          <enum>Qt::TextFormat::AutoText</enum>
