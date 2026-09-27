@@ -9,7 +9,7 @@ from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
 
 class ResultsDisplayWidget(ResultsDisplayWidget_UI):
     colormap_changed = Signal()
-    pressure_value_changed = Signal()
+    min_max_value_changed = Signal()
 
     def __init__(self):
         super().__init__()
@@ -113,4 +113,4 @@ class ResultsDisplayWidget(ResultsDisplayWidget_UI):
         render_widget.set_min_value(min_value)
         render_widget.set_max_value(max_value)
 
-        self.pressure_value_changed.emit()
+        self.value_changed.emit()

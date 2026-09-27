@@ -87,7 +87,7 @@ class AcousticPressureWaveform3DPlotInputs(AcousticPressureWaveform3dPlotInputs_
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
 
         self.results_display_widget.colormap_changed.connect(self.animation_widget.update_color_and_deformation)
-        self.results_display_widget.pressure_value_changed.connect(self.animation_widget.update_color_and_deformation)
+        self.results_display_widget.min_max_value_changed.connect(self.animation_widget.update_color_and_deformation)
 
         self.reduced_loop_time_type_callback()
 

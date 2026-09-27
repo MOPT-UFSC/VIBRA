@@ -56,7 +56,7 @@ class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
         self.treeWidget_frequencies.itemDoubleClicked.connect(self.on_click_item)
 
         self.results_display_widget.colormap_changed.connect(self.animation_widget.update_color_and_deformation)
-        self.results_display_widget.pressure_value_changed.connect(self.animation_widget.update_color_and_deformation)
+        self.results_display_widget.min_max_value_changed.connect(self.animation_widget.update_color_and_deformation)
 
     def add_animation_widget(self):
         self.grid_layout = QGridLayout()
