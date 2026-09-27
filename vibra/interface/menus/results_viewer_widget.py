@@ -2,13 +2,29 @@ from PySide6.QtWidgets import QFrame, QGridLayout, QWidget
 
 from vibra import app
 from vibra.interface.menus.results_viewer_items import ResultsViewerItems
+from vibra.interface.plots.acoustic.acoustic_impedance_inputs import AcousticImpedanceInputs
 from vibra.interface.plots.acoustic.acoustic_mode_shape_inputs import AcousticModeShapeInputs
 from vibra.interface.plots.acoustic.acoustic_pressure_field_inputs import AcousticPressureFieldInputs
+from vibra.interface.plots.acoustic.acoustic_pressure_frequency_response_inputs import AcousticPressureFrequencyResponseInputs
+from vibra.interface.plots.acoustic.acoustic_pressure_frf_inputs import AcousticPressureFRFInputs
+from vibra.interface.plots.acoustic.acoustic_pressure_waveform_2d_plot_inputs import AcousticPressureWaveform2DPlotInputs
 from vibra.interface.plots.acoustic.acoustic_pressure_waveform_3d_plot_inputs import AcousticPressureWaveform3DPlotInputs
+from vibra.interface.plots.acoustic.acoustic_shaking_forces_inputs import AcousticShakingForcesInputs
+from vibra.interface.plots.acoustic.acoustic_waves_decomposition_inputs import AcousticWavesDecompositionInputs
+from vibra.interface.plots.acoustic.allowable_pulsation_3d_plot_for_screw_compressor_inputs import AllowablePulsations3DPlotForScrewCompressorInputs
+from vibra.interface.plots.acoustic.allowable_pulsations_2d_plot_for_screw_compressor_inputs import AllowablePulsations2DPlotForScrewCompressorInputs
+from vibra.interface.plots.acoustic.allowable_pulsations_for_reciprocating_compressor import AllowablePulsationsForReciprocatingCompressorInputs
+from vibra.interface.plots.acoustic.particle_velocity_inputs import ParticleVelocityInputs
+from vibra.interface.plots.acoustic.surface_absorption_coefficient_inputs import SurfaceAbsorptionCoefficientInputs
+from vibra.interface.plots.acoustic.transmission_loss_inputs import TransmissionLossInputs
 from vibra.interface.plots.general.animation_widget import AnimationWidget
+from vibra.interface.plots.structural.displacements_time_domain_3d_plot_inputs import DisplacementsTimeDomain3dPlotInputs
 from vibra.interface.plots.structural.structural_mode_shape_inputs import PlotStructuralModeShapeInputs
+from vibra.interface.plots.structural.structural_nodal_solution_2d_plot_frequency_inputs import StructuralNodalSolution2dPlotFrequencytInputs
+from vibra.interface.plots.structural.structural_nodal_solution_2d_plot_time_inputs import StructuralNodalSolution2dPlotTimeInputs
 from vibra.interface.plots.structural.structural_response_fields_inputs import StructuralResponseFieldsInputs
 from vibra.interface.plots.structural.structural_stresses_fields_inputs import StructuralStressesFieldsInputs
+from vibra.interface.plots.structural.structural_stresses_frequency_response_inputs import StructuralStressesFrequencyResponseInputs
 from vibra.interface.ui_generated.menu.left_menu_widget_ui import LeftMenuWidget_UI
 
 
@@ -29,6 +45,11 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
 
     def _reset(self):
         self.current_widget = None
+
+    def process_input(self, working_class, *args, **kwargs):
+        app().main_window.close_dialogs()
+        read = working_class(*args, **kwargs)
+        return read
 
     def hide_bottom_widget(self):
         self.bottom_widget.hide()
@@ -64,7 +85,8 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
 
         # Structural
         self.results_viewer_items.item_child_structural_mode_shapes.clicked.connect(self.add_structural_modal_widget)
-        self.results_viewer_items.item_child_structural_nodal_solution_2d_plot_frequency.clicked.connect(self.add_structural_frequency_response_widget)
+        self.results_viewer_items.item_child_structural_nodal_solution_2d_plot_frequency.clicked.connect(self.add_structural_nodal_solution_2d_plot_frequency_widget)
+        self.results_viewer_items.item_child_structural_nodal_solution_2d_plot_time.clicked.connect(self.add_structural_nodal_solution_2d_plot_time_widget)
         self.results_viewer_items.item_child_displacements_3d_plot_frequency.clicked.connect(self.add_structural_harmonic_widget)
         self.results_viewer_items.item_child_displacements_3d_plot_time.clicked.connect(self.add_displacements_time_domain_3d_plot_widget)
         self.results_viewer_items.item_child_stresses_3d_plot_frequency.clicked.connect(self.add_stress_field_for_harmonic_widget)
@@ -117,7 +139,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.add_widget(self.plot_structural_harmonic)
 
     def add_displacements_time_domain_3d_plot_widget(self):
-        self.current_widget = app().main_window.input_ui.plot_displacements_time_domain_3d()
+        self.current_widget = self.process_input(DisplacementsTimeDomain3dPlotInputs)
 
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
@@ -125,7 +147,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.add_widget(self.current_widget)
 
     def add_stress_field_for_harmonic_widget(self):
-        self.current_widget = app().main_window.input_ui.plot_stress_field()
+        self.current_widget = self.process_input(StructuralStressesFieldsInputs)
 
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
@@ -133,7 +155,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.add_widget(self.current_widget)
 
     def add_stress_frequency_response_for_harmonic_widget(self):
-        self.current_widget = app().main_window.input_ui.plot_stress_frequency_response()
+        self.current_widget = self.process_input(StructuralStressesFrequencyResponseInputs)
 
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
@@ -156,8 +178,16 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
 
         self.add_widget(self.plot_acoustic_harmonic)
 
-    def add_structural_frequency_response_widget(self):
-        self.current_widget = app().main_window.input_ui.plot_structural_frequency_response()
+    def add_structural_nodal_solution_2d_plot_frequency_widget(self):
+        self.current_widget = self.process_input(StructuralNodalSolution2dPlotFrequencytInputs)
+
+        if app().main_window.results_widget.playing_animation:
+            app().main_window.results_widget.stop_animation()
+
+        self.add_widget(self.current_widget)
+
+    def add_structural_nodal_solution_2d_plot_time_widget(self):
+        self.current_widget = self.process_input(StructuralNodalSolution2dPlotTimeInputs)
 
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
@@ -165,7 +195,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.add_widget(self.current_widget)
 
     def add_acoustic_pressure_frequency_response_widget(self):
-        self.current_widget = app().main_window.input_ui.plot_acoustic_pressure_frequency_response()
+        self.current_widget = self.process_input(AcousticPressureFrequencyResponseInputs)
 
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
@@ -173,7 +203,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.add_widget(self.current_widget)
 
     def add_acoustic_pressure_frequency_response_function_widget(self):
-        self.current_widget = app().main_window.input_ui.plot_acoustic_pressure_frequency_response_function()
+        self.current_widget = self.process_input(AcousticPressureFRFInputs)
 
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
@@ -181,7 +211,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.add_widget(self.current_widget)
 
     def add_acoustic_shaking_forces_widget(self):
-        self.current_widget = app().main_window.input_ui.plot_acoustic_shaking_forces()
+        self.current_widget = self.process_input(AcousticShakingForcesInputs)
 
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
@@ -189,7 +219,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.add_widget(self.current_widget)
 
     def add_decompose_acoustic_pressure_waves_widget(self):
-        self.current_widget = app().main_window.input_ui.decompose_acoustic_pressure_waves()
+        self.current_widget = self.process_input(AcousticWavesDecompositionInputs)
 
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
@@ -197,7 +227,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.add_widget(self.current_widget)
 
     def add_allowable_pulsations_for_reciprocating_compressor_widget(self):
-        self.current_widget = app().main_window.input_ui.plot_allowable_pulsation_criteria_for_reciprocating_compressor()
+        self.current_widget = self.process_input(AllowablePulsationsForReciprocatingCompressorInputs)
 
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
@@ -213,7 +243,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.add_widget(self.current_widget)
 
     def add_acoustic_pressure_waveform_2d_plot_widget(self):
-        self.current_widget = app().main_window.input_ui.plot_acoustic_pressure_waveform_2d()
+        self.current_widget = self.process_input(AcousticPressureWaveform2DPlotInputs)
 
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
@@ -221,7 +251,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.add_widget(self.current_widget)
 
     def add_acoustic_pressure_waveform_3d_plot_widget(self):
-        self.current_widget = app().main_window.input_ui.plot_acoustic_pressure_waveform_3d()
+        self.current_widget = self.process_input(AcousticPressureWaveform3DPlotInputs)
 
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
@@ -229,7 +259,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.add_widget(self.current_widget)
 
     def add_allowable_pulsations_2d_for_screw_compressor_widget(self):
-        self.current_widget = app().main_window.input_ui.plot_allowable_pulsation_2d_for_screw_compressor()
+        self.current_widget = self.process_input(AllowablePulsations2DPlotForScrewCompressorInputs)
 
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
@@ -237,7 +267,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.add_widget(self.current_widget)
 
     def add_allowable_pulsations_3d_for_screw_compressor_widget(self):
-        self.current_widget = app().main_window.input_ui.plot_allowable_pulsation_3d_for_screw_compressor()
+        self.current_widget = self.process_input(AllowablePulsations3DPlotForScrewCompressorInputs)
 
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
@@ -245,7 +275,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.add_widget(self.current_widget)
 
     def add_TL_NR_widget(self):
-        self.current_widget = app().main_window.input_ui.plot_TL_NR()
+        self.current_widget = self.process_input(TransmissionLossInputs)
 
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
@@ -253,7 +283,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.add_widget(self.current_widget)
 
     def add_particle_velocity_plot_widget(self):
-        self.current_widget = app().main_window.input_ui.plot_particle_velocity()
+        self.current_widget = self.process_input(ParticleVelocityInputs)
 
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
@@ -261,7 +291,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.add_widget(self.current_widget)
 
     def add_acoustic_impedance_plot_widget(self):
-        self.current_widget = app().main_window.input_ui.plot_acoustic_impedance()
+        self.current_widget = self.process_input(AcousticImpedanceInputs)
 
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
@@ -269,7 +299,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.add_widget(self.current_widget)
 
     def add_absorption_coefficient_plot_widget(self):
-        self.current_widget = app().main_window.input_ui.plot_absorption_coefficient_from_surface()
+        self.current_widget = self.process_input(SurfaceAbsorptionCoefficientInputs)
 
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()

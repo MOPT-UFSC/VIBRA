@@ -5,12 +5,14 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
-from vibra.engine.analysis_info import HarmonicAnalysisSetup
 from vibra.interface.common.common_interface import update_entities_selection
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
-from vibra.interface.ui_generated.plots.structural.structural_frequency_response_inputs_ui import StructuralFrequencyResponseInputs_UI
+from vibra.interface.numeric_checks.int_list_validator import IntListValidator
+from vibra.interface.numeric_checks.unit_utilities import convert_angle_unit, convert_length_unit
+from vibra.interface.plots.general.frequency_response_plotter import DataFormat, FrequencyResponsePlotter
+from vibra.interface.ui_generated.plots.structural.structural_nodal_solution_2d_plot_time_inputs_ui import StructuralNodalSolution2dPlotTimeInputs_UI
+from vibra.utils.signal_processing import process_ifft_from_one_sided_spectrum_signal
 
 
 class SelectionType(IntEnum):
@@ -20,18 +22,16 @@ class SelectionType(IntEnum):
     NODES = 3
 
 
-class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI):
+class StructuralNodalSolution2dPlotTimeInputs(StructuralNodalSolution2dPlotTimeInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         app().main_window.show_geometry_render_widget()
 
-        self._config_window()
         self._initialize()
+        self._configure_validator()
         self._create_connections()
-
-        self._load_analysis_setup_and_solution()
-        self.geometry_selection_callback()
+        self.update_render_according_to_selector()
 
     @property
     def model(self):
@@ -46,30 +46,35 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
         return app().project.model.properties
 
     @property
+    def frequencies(self):
+        return app().project.model.frequencies
+
+    @property
     def nodal_solution(self):
         return app().project.model.solution.structural_solution
 
-    def showEvent(self, event):
-        super().showEvent(event)
-        self.selection_type_callback()
-
-    def _config_window(self):
-        self.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.setWindowModality(Qt.WindowModal)
-        self.setWindowIcon(app().main_window.vibra_icon)
-
     def _initialize(self):
-        self.plotter = None
         self.exporter = None
+        self.plotter = None
         self.model_results = {}
-        self.selection_types = ["surfaces", "lines", "points", "nodes"]
+        self.selection_types = [
+            "surfaces",
+            "lines",
+            "points",
+            "nodes",
+            ]
+
+    def _configure_validator(self):
+        validator = IntListValidator()
+        self.lineEdit_selection_id.setValidator(validator)
 
     def _create_connections(self):
 
         # QComboBox connection
-        self.comboBox_selector_filter.currentIndexChanged.connect(self.selection_type_callback)
+        self.comboBox_selector_filter.currentIndexChanged.connect(self.update_render_according_to_selector)
+        self.comboBox_structural_results.currentIndexChanged.connect(self.update_units_combo_box_items)
 
-        # QPushButton connection
+        # QPushButton conenctions
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
 
@@ -96,56 +101,70 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
                 # self.comboBox_structural_results.setItemText(dof_index, f"{_dof_label}")
                 self.comboBox_structural_results.addItem(f"{results_label} {_dof_label}")
 
-    def selection_type_callback(self):
+    def update_units_combo_box_items(self):
+
+        self.comboBox_output_units.clear()
+        index = self.get_structure_data_index()
+
+        suffixes = ["", "/s", "/s²"]
+        unit_den = suffixes[index]
+
+        if index <= 2:
+            for label in ["m", "mm", "um", "in", "ft"]:
+                self.comboBox_output_units.addItem(f"{label}{unit_den}")
+        else:
+            for label in ["rad", "deg"]:
+                self.comboBox_output_units.addItem(f"{label}{unit_den}")
+
+        if index == 2:
+            self.comboBox_output_units.addItem("g")
+
+    def geometry_selection_callback(self):
+
+        if not app().main_window.action_results_workspace.isChecked():
+            return
+
+        surfaces = app().main_window.selection.geometry_surfaces
+        lines = app().main_window.selection.geometry_lines
+        points = app().main_window.selection.geometry_points
+        nodes = app().main_window.selection.mesh_nodes
+
+        index = self.comboBox_selector_filter.currentIndex()
+        if surfaces and index == 0:
+            text = ", ".join([str(i) for i in surfaces])
+            self.lineEdit_selection_id.setText(text)
+
+        elif lines and index == 1:
+            text = ", ".join([str(i) for i in lines])
+            self.lineEdit_selection_id.setText(text)
+
+        elif points and index == 2:
+            text = ", ".join([str(i) for i in points])
+            self.lineEdit_selection_id.setText(text)
+
+        elif nodes and index == 3:
+            text = ", ".join([str(i) for i in nodes])
+            self.lineEdit_selection_id.setText(text)
+
+        elif not any([nodes, points, lines, surfaces]):
+            self.lineEdit_selection_id.setText("")
+
+    def update_render_according_to_selector(self):
+
+        self.geometry_selection_callback()
+
         if self.comboBox_selector_filter.currentIndex() == SelectionType.NODES:
             app().main_window.show_mesh_render_widget()
         else:
             app().main_window.show_geometry_render_widget()
 
-    def geometry_selection_callback(self):
-
-        faces = app().main_window.selection.geometry_surfaces
-        lines = app().main_window.selection.geometry_lines
-        points = app().main_window.selection.geometry_points
-        nodes = app().main_window.selection.mesh_nodes
-
-        if faces:
-            text = ", ".join([str(i) for i in faces])
-            self.lineEdit_selection_id.setText(text)
-            self.comboBox_selector_filter.setCurrentIndex(0)
-
-        elif lines:
-            text = ", ".join([str(i) for i in lines])
-            self.lineEdit_selection_id.setText(text)
-            self.comboBox_selector_filter.setCurrentIndex(1)
-
-        elif points:
-            text = ", ".join([str(i) for i in points])
-            self.lineEdit_selection_id.setText(text)
-            self.comboBox_selector_filter.setCurrentIndex(2)
-
-        elif nodes:
-            text = ", ".join([str(i) for i in nodes])
-            self.lineEdit_selection_id.setText(text)
-            self.comboBox_selector_filter.setCurrentIndex(3)
-
-    def _load_analysis_setup_and_solution(self):
-        analysis_setup = self.model.analysis_setup
-
-        self.analysis_method = ""
-        if isinstance(analysis_setup, HarmonicAnalysisSetup):
-            analysis_method = analysis_setup.analysis_method.capitalize().replace("_", " ")
-            self.analysis_method = f"{analysis_method} method"
-
-        self.frequencies = self.model.frequencies
-
-    def check_inputs(self):
+    def check_selected_ids(self):
 
         index = self.comboBox_selector_filter.currentIndex()
         selection = self.selection_types[index]
 
         input_ids = self.lineEdit_selection_id.text()
-        self.selected_ids, error_data = self.model.check_selected_ids(  
+        self.selected_ids, error_data = self.model.check_selected_ids(
             input_ids,
             selection,
             domain="structural",
@@ -160,63 +179,41 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
         update_entities_selection(self.lineEdit_selection_id, selection, self.selected_ids)
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
-        return False
-
     def plot_data_callback(self):
 
-        if self.check_inputs():
+        if self.check_selected_ids():
             return
 
         self.join_model_data()
         self.plotter = FrequencyResponsePlotter(close_dialogs=True)
+        self.plotter.comboBox_data_format.setCurrentIndex(DataFormat.REAL)
+        self.plotter.data_format_changed_callback()
+        self.plotter.frame_hlines_main.setDisabled(True)
         self.plotter._set_model_results_data_to_plot(self.model_results)
 
     def export_data_callback(self):
         
-        if self.check_inputs():
+        if self.check_selected_ids():
             return
 
         self.join_model_data()
         self.exporter = ExportModelResults()
         self.exporter._set_data_to_export(self.model_results)
 
-    def get_response(self, selection_type: str, selected_id: int, dof_index: int):
+    def get_response(self, selected_id: int, dof_index: int):
 
-        surface_ids = []
+        index = self.comboBox_selector_filter.currentIndex()
 
-        if selection_type == "surface":
-            surface_ids = [selected_id]
+        if index == SelectionType.SURFACES:
             nodes = self.mesh.get_nodes_from_surface(selected_id)
-
-        elif selection_type == "line":           
-            surface_ids = self.mesh.surfaces_from_line[selected_id]
+        elif index == SelectionType.LINES:
             nodes = self.mesh.get_nodes_from_line(selected_id)
-
-        elif selection_type == "point":
-            node_id = selected_id - 1
-            nodes = np.array([node_id], dtype=int)
-
+        elif index == SelectionType.POINTS:
+            nodes = self.mesh.nodes_from_points.get(selected_id)
         else:
-            nodes = np.array([selected_id], dtype=int)
-        
-        if selection_type in ["point", "node"]:   
-            mask = np.sum(np.isin(self.mesh.faces_connectivity[:, 4:], nodes), axis=1) == 1
-            surface_ids = [int(surf_id) for surf_id in np.unique(self.mesh.faces_connectivity[:, 1][mask])]
+            nodes = selected_id
 
-        for surf_id in surface_ids:
-
-            surf_data = self.properties._get_property("surface_thickness", surface=surf_id)
-            if isinstance(surf_data, dict):
-                if self.model.structural_element_2d is None:
-                    self.model.set_structural_elements()
-                # dof_per_node = self.model.structural_element_2d.dof_per_node
-
-            else:
-                if self.model.structural_element_3d is None:
-                    self.model.set_structural_elements()
-                # dof_per_node = self.model.structural_element_3d.dof_per_node
-
-        # process the structural dofs of the selected entities
+        # process the acoustic dofs of the selected entities
         gdof = self.model.get_dof_indices_from_nodes(nodes, "structural")
         rows = gdof[:, dof_index]
 
@@ -225,8 +222,8 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
         else:
             response = np.average(self.nodal_solution[rows,:], axis=0)
 
+        # differentiate the structural nodal solution (if required)
         n_int = self.get_structure_data_index()
-
         if n_int:
             response *= (1j * 2 * np.pi * self.frequencies)**n_int
 
@@ -240,19 +237,27 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
         selection_type = self.selection_types[index][:-1]
 
         self.y_label = self.get_ylabel()
-        self.unit = self.get_unit()
-        self.title = f"Structural frequency response - {self.analysis_method}"
+        self.unit = self.comboBox_output_units.currentText()
+        self.title = "Structural response (time domain)"
+
+        unit_factor = self.get_unit_factor()
 
         for i, selected_id in enumerate(self.selected_ids):
 
             key = (selection_type, (selected_id))
             legend_label = f"Structural response {self.y_label.lower()} at {selection_type} [{selected_id}]"
-            y_data = self.get_response(selection_type, selected_id, dof_index)
+
+            Xf = self.get_response(selected_id, dof_index)
+            x_data, y_data = process_ifft_from_one_sided_spectrum_signal(
+                self.frequencies, 
+                Xf,
+                dc_included = False,
+                )
 
             self.model_results[key] = {
-                "x_data": self.frequencies,
-                "y_data": y_data,
-                "x_label": "Frequency [Hz]",
+                "x_data": x_data,
+                "y_data": unit_factor * y_data,
+                "x_label": "Time [s]",
                 "y_label": self.y_label,
                 "title": self.title,
                 "data_type": self.y_label,
@@ -281,16 +286,6 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
         index = self.comboBox_structural_results.currentIndex()
         return index % n_dofs
 
-    def get_unit(self) -> str:
-        index = self.get_structure_data_index()
-        dof_index = self.get_dof_index()
-
-        suffixes = ["", "/s", "/s²"]
-        unit_den = suffixes[index]
-        unit_num = "m" if dof_index < 3 else "rad"
-
-        return f"{unit_num}{unit_den}"
-
     def get_ylabel(self) -> str:
         dof_index = self.get_dof_index()
         index = self.get_structure_data_index()
@@ -306,6 +301,21 @@ class PlotStructuralFrequencyResponseInputs(StructuralFrequencyResponseInputs_UI
             return f"Angular {results_label.lower()} {text}"
 
         return f"{results_label} {text}"
+
+    def get_unit_factor(self):
+
+        index = self.get_structure_data_index()
+        unit_label = self.comboBox_output_units.currentText().split("/")[0]
+
+        if index <= 2:
+            if unit_label == "g":
+                unit_factor = 1 / 9.80665
+            else:
+                unit_factor = convert_length_unit(1, "m", unit_label)
+        else:
+            unit_factor = convert_angle_unit(1, "rad", unit_label)
+
+        return unit_factor
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
