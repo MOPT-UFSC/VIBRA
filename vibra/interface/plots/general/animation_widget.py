@@ -21,6 +21,7 @@ from vibra.interface.viewer_3d.plot_setup import (
     PressureFieldPlotSetupFrequency,
     PressureFieldPlotSetupTime,
     StressFieldPlotSetupFrequency,
+    StressFieldPlotSetupTime,
 )
 
 
@@ -222,7 +223,7 @@ class AnimationWidget(AnimationWidget_UI):
             case DisplacementFieldPlotSetupFrequency() | StressFieldPlotSetupFrequency():
                 plot_setup.phase = self.phase_in_radians
                 plot_setup.magnification_factor = self.magnification_factor
-            case DisplacementFieldPlotSetupTime():
+            case DisplacementFieldPlotSetupTime() | StressFieldPlotSetupTime():
                 plot_setup.time_index = self.time_index
                 plot_setup.magnification_factor = self.magnification_factor
             case PressureFieldPlotSetupTime():

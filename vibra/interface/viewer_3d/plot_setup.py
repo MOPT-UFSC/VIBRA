@@ -132,6 +132,18 @@ class StressFieldPlotSetupFrequency:
 
 
 @dataclass(slots=True)
+class StressFieldPlotSetupTime:
+    time_index: int
+    magnification_factor: float
+    stress_type: StressType
+    plot_type: StressDataType
+    unit: str = "--"
+    n_diff: int = 0
+    unit_factor: float = 1.0
+    reduced_loop_time: float | None = None
+
+
+@dataclass(slots=True)
 class PressureFieldPlotSetupFrequency:
     phase: float
     index: int
@@ -162,6 +174,7 @@ PlotSetup = Union[
     DisplacementFieldPlotSetupFrequency,
     DisplacementFieldPlotSetupTime,
     StressFieldPlotSetupFrequency,
+    StressFieldPlotSetupTime,
     PressureFieldPlotSetupFrequency,
     PressureFieldPlotSetupTime,
     AllowablePulsationForScrewCompressorsPlotSetup,
@@ -177,4 +190,5 @@ StructuralPlotSetups = Union[
     DisplacementFieldPlotSetupFrequency,
     DisplacementFieldPlotSetupTime,
     StressFieldPlotSetupFrequency,
+    StressFieldPlotSetupTime,
 ]

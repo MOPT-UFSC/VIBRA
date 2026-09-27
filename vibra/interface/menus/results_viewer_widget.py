@@ -18,13 +18,14 @@ from vibra.interface.plots.acoustic.particle_velocity_inputs import ParticleVelo
 from vibra.interface.plots.acoustic.surface_absorption_coefficient_inputs import SurfaceAbsorptionCoefficientInputs
 from vibra.interface.plots.acoustic.transmission_loss_inputs import TransmissionLossInputs
 from vibra.interface.plots.general.animation_widget import AnimationWidget
-from vibra.interface.plots.structural.displacements_time_domain_3d_plot_inputs import DisplacementsTimeDomain3dPlotInputs
 from vibra.interface.plots.structural.structural_mode_shape_inputs import PlotStructuralModeShapeInputs
 from vibra.interface.plots.structural.structural_nodal_solution_2d_plot_frequency_inputs import StructuralNodalSolution2dPlotFrequencytInputs
 from vibra.interface.plots.structural.structural_nodal_solution_2d_plot_time_inputs import StructuralNodalSolution2dPlotTimeInputs
-from vibra.interface.plots.structural.structural_response_fields_inputs import StructuralResponseFieldsInputs
-from vibra.interface.plots.structural.structural_stresses_fields_inputs import StructuralStressesFieldsInputs
-from vibra.interface.plots.structural.structural_stresses_frequency_response_inputs import StructuralStressesFrequencyResponseInputs
+from vibra.interface.plots.structural.structural_nodal_solution_3d_plot_frequency_inputs import StructuralNodalSolution3dPlotFrequencyInputs
+from vibra.interface.plots.structural.structural_nodal_solution_3d_plot_time_inputs import StructuralNodalSolution3dPlotTimeInputs
+from vibra.interface.plots.structural.structural_stress_2d_plot_frequency_inputs import StructuralStress2dPlotFrequencyInputs
+from vibra.interface.plots.structural.structural_stress_3d_plot_frequency_inputs import StructuralStress3dPlotFrequencyInputs
+from vibra.interface.plots.structural.structural_stress_3d_plot_time_inputs import StructuralStress3dPlotTimeInputs
 from vibra.interface.ui_generated.menu.left_menu_widget_ui import LeftMenuWidget_UI
 
 
@@ -33,8 +34,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         super().__init__()
 
         self.plot_structural_modal = PlotStructuralModeShapeInputs()
-        self.plot_structural_harmonic = StructuralResponseFieldsInputs()
-        self.plot_structural_harmonic = StructuralResponseFieldsInputs()
+        self.plot_structural_harmonic = StructuralNodalSolution3dPlotFrequencyInputs()
 
         self.plot_acoustic_modal = AcousticModeShapeInputs()
         self.plot_acoustic_harmonic = AcousticPressureFieldInputs()
@@ -57,8 +57,9 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
     def current_widget_is_animatable(self) -> bool:
         return isinstance(self.current_widget, (
             PlotStructuralModeShapeInputs,
-            StructuralResponseFieldsInputs,
-            StructuralStressesFieldsInputs,
+            StructuralNodalSolution3dPlotFrequencyInputs,
+            StructuralStress3dPlotFrequencyInputs,
+            StructuralStress3dPlotTimeInputs,
             AcousticModeShapeInputs,
             AcousticPressureFieldInputs,
             AcousticPressureWaveform3DPlotInputs,
@@ -89,7 +90,8 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.results_viewer_items.item_child_structural_nodal_solution_2d_plot_time.clicked.connect(self.add_structural_nodal_solution_2d_plot_time_widget)
         self.results_viewer_items.item_child_displacements_3d_plot_frequency.clicked.connect(self.add_structural_harmonic_widget)
         self.results_viewer_items.item_child_displacements_3d_plot_time.clicked.connect(self.add_displacements_time_domain_3d_plot_widget)
-        self.results_viewer_items.item_child_stresses_3d_plot_frequency.clicked.connect(self.add_stress_field_for_harmonic_widget)
+        self.results_viewer_items.item_child_stresses_3d_plot_frequency.clicked.connect(self.add_stresses_frequency_domain_3d_plot_widget)
+        self.results_viewer_items.item_child_stresses_3d_plot_time.clicked.connect(self.add_stresses_time_domain_3d_plot_widget)
         self.results_viewer_items.item_child_stresses_2d_plot_frequency.clicked.connect(self.add_stress_frequency_response_for_harmonic_widget)
 
         # Acoustic
@@ -139,15 +141,23 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.add_widget(self.plot_structural_harmonic)
 
     def add_displacements_time_domain_3d_plot_widget(self):
-        self.current_widget = self.process_input(DisplacementsTimeDomain3dPlotInputs)
+        self.current_widget = self.process_input(StructuralNodalSolution3dPlotTimeInputs)
 
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
 
         self.add_widget(self.current_widget)
 
-    def add_stress_field_for_harmonic_widget(self):
-        self.current_widget = self.process_input(StructuralStressesFieldsInputs)
+    def add_stresses_frequency_domain_3d_plot_widget(self):
+        self.current_widget = self.process_input(StructuralStress3dPlotFrequencyInputs)
+
+        if app().main_window.results_widget.playing_animation:
+            app().main_window.results_widget.stop_animation()
+
+        self.add_widget(self.current_widget)
+
+    def add_stresses_time_domain_3d_plot_widget(self):
+        self.current_widget = self.process_input(StructuralStress3dPlotTimeInputs)
 
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
@@ -155,7 +165,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.add_widget(self.current_widget)
 
     def add_stress_frequency_response_for_harmonic_widget(self):
-        self.current_widget = self.process_input(StructuralStressesFrequencyResponseInputs)
+        self.current_widget = self.process_input(StructuralStress2dPlotFrequencyInputs)
 
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()

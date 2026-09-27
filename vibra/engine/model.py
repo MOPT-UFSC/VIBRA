@@ -47,7 +47,7 @@ from vibra.engine.elements.elements_3d import (
     AcousticHexahedron20,
     AcousticTetrahedron4,
     AcousticTetrahedron10,
-    StructuralHexahedron4,
+    StructuralHexahedron8,
     StructuralHexahedron20,
     StructuralTetrahedron4,
     StructuralTetrahedron10,
@@ -56,7 +56,7 @@ from vibra.engine.geometry.geometry import LengthUnits
 from vibra.engine.mesher.degrees_of_freedom_decoupling_new import DegreesOfFreedomDecoupling
 from vibra.engine.mesher.element_setup import GMSH_VISUAL_MESH
 from vibra.engine.mesher.mesh import Mesh
-from vibra.engine.mesher.mesh_setup import Hexahedron8, Hexahedron20, Tetrahedron4, Tetrahedron10, ElementTopology, MeshSetup
+from vibra.engine.mesher.mesh_setup import ElementTopology, Hexahedron8, Hexahedron20, MeshSetup, Tetrahedron4, Tetrahedron10
 from vibra.engine.model_domains_processor import ModelDomainsProcessor
 from vibra.engine.model_selection_tools import ModelSelectionTools
 from vibra.engine.properties.fluid import Fluid
@@ -674,7 +674,7 @@ class Model:
             return StructuralTetrahedron10(self), StructuralTriangle6(self), StructuralLine3(self)
 
         elif element_type == Hexahedron8:
-            return StructuralHexahedron4(self), StructuralQuadrangle4(self), StructuralLine2(self)
+            return StructuralHexahedron8(self), StructuralQuadrangle4(self), StructuralLine2(self)
 
         elif element_type == Hexahedron20:
             return StructuralHexahedron20(self), StructuralQuadrangle8(self), StructuralLine3(self)
