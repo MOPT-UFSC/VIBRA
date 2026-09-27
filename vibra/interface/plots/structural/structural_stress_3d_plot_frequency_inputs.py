@@ -9,11 +9,11 @@ from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.numeric_checks.unit_utilities import convert_stress_unit
 from vibra.interface.plots.general.animation_widget import AnimationWidget
 from vibra.interface.plots.general.results_display_widget import ResultsDisplayWidget
-from vibra.interface.ui_generated.plots.structural.structural_stresses_field_inputs_ui import StructuralStressesFieldInputs_UI
+from vibra.interface.ui_generated.plots.structural.structural_stress_3d_plot_frequency_inputs_ui import StructuralStress3dPlotFrequencyInputs_UI
 from vibra.interface.viewer_3d.plot_setup import StressDataType, StressFieldPlotSetupFrequency
 
 
-class StructuralStressesFieldsInputs(StructuralStressesFieldInputs_UI):
+class StructuralStress3dPlotFrequencyInputs(StructuralStress3dPlotFrequencyInputs_UI):
 
     value_changed = Signal()
 
@@ -43,6 +43,11 @@ class StructuralStressesFieldsInputs(StructuralStressesFieldInputs_UI):
     @property
     def structural_post(self):
         return app().project.get_structural_postprocessing()
+
+    @property
+    def is_nodal_solution_iffts_data_cached(self):
+        cache_info = self.structural_post.compute_multiple_ifft_for_structural_nodal_solution.cache_info()
+        return cache_info.currsize != 0
 
     @property
     def is_stress_data_cached(self):
@@ -90,7 +95,7 @@ class StructuralStressesFieldsInputs(StructuralStressesFieldInputs_UI):
         self.treeWidget_frequencies.itemDoubleClicked.connect(self.on_click_item)
 
         self.results_display_widget.colormap_changed.connect(self.animation_widget.update_color_and_deformation)
-        self.results_display_widget.pressure_value_changed.connect(self.animation_widget.update_color_and_deformation)
+        self.results_display_widget.min_max_value_changed.connect(self.animation_widget.update_color_and_deformation)
 
     def _add_animation_widget(self):
         self.grid_layout = QGridLayout()

@@ -13,8 +13,8 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.numeric_checks.unit_utilities import convert_stress_unit
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
-from vibra.interface.ui_generated.plots.structural.structural_stresses_frequency_response_inputs_ui import (
-    StructuralStressesFrequencyResponseInputs_UI,
+from vibra.interface.ui_generated.plots.structural.structural_stress_2d_plot_frequency_inputs_ui import (
+    StructuralStress2dPlotFrequencyInputs_UI,
 )
 
 
@@ -25,7 +25,7 @@ class SelectionType(IntEnum):
     NODES = 3
 
 
-class StructuralStressesFrequencyResponseInputs(StructuralStressesFrequencyResponseInputs_UI):
+class StructuralStress2dPlotFrequencyInputs(StructuralStress2dPlotFrequencyInputs_UI):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

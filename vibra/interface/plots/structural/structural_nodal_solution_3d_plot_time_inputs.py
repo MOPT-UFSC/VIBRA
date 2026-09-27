@@ -10,7 +10,7 @@ from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
 from vibra.interface.plots.general.animation_widget import AnimationWidget
 from vibra.interface.plots.general.results_display_widget import ResultsDisplayWidget
-from vibra.interface.ui_generated.plots.structural.displacements_time_domain_3d_plot_inputs_ui import DisplacementsTimeDomain3dPlotInputs_UI
+from vibra.interface.ui_generated.plots.structural.structural_nodal_solution_3d_plot_time_inputs_ui import StructuralNodalSolution3dPlotTimeInputs_UI
 from vibra.interface.viewer_3d.plot_setup import DisplacementDataType, DisplacementFieldPlotSetupTime
 
 
@@ -20,7 +20,7 @@ class ReduceLoopType(IntEnum):
     ROTATIONAL_SPEED = 2
 
 
-class DisplacementsTimeDomain3dPlotInputs(DisplacementsTimeDomain3dPlotInputs_UI):
+class StructuralNodalSolution3dPlotTimeInputs(StructuralNodalSolution3dPlotTimeInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -105,7 +105,7 @@ class DisplacementsTimeDomain3dPlotInputs(DisplacementsTimeDomain3dPlotInputs_UI
         self.pushButton_process_nodal_solution_iffts.clicked.connect(self.plot_data_callback)
 
         self.results_display_widget.colormap_changed.connect(self.animation_widget.update_color_and_deformation)
-        self.results_display_widget.pressure_value_changed.connect(self.animation_widget.update_color_and_deformation)
+        self.results_display_widget.min_max_value_changed.connect(self.animation_widget.update_color_and_deformation)
 
         self.reduced_loop_time_type_callback()
 

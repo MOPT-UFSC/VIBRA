@@ -6,11 +6,13 @@ from vibra import app
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.plots.general.animation_widget import AnimationWidget
 from vibra.interface.plots.general.results_display_widget import ResultsDisplayWidget
-from vibra.interface.ui_generated.plots.structural.structural_response_fields_inputs_ui import StructuralResponseFieldsInputs_UI
+from vibra.interface.ui_generated.plots.structural.structural_nodal_solution_3d_plot_frequency_inputs_ui import (
+    StructuralNodalSolution3dPlotFrequencyInputs_UI,
+)
 from vibra.interface.viewer_3d.plot_setup import DisplacementDataType, DisplacementFieldPlotSetupFrequency
 
 
-class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
+class StructuralNodalSolution3dPlotFrequencyInputs(StructuralNodalSolution3dPlotFrequencyInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -53,7 +55,7 @@ class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
         self.treeWidget_frequencies.itemDoubleClicked.connect(self.on_click_item)
 
         self.results_display_widget.colormap_changed.connect(self.animation_widget.update_color_and_deformation)
-        self.results_display_widget.pressure_value_changed.connect(self.animation_widget.update_color_and_deformation)
+        self.results_display_widget.min_max_value_changed.connect(self.animation_widget.update_color_and_deformation)
         self.update_animation_widget_visibility()
 
     def add_animation_widget(self):
