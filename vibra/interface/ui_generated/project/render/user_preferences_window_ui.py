@@ -1,3 +1,13 @@
+# -*- coding: utf-8 -*-
+
+################################################################################
+## Form generated from reading UI file 'user_preferences_window.ui'
+##
+## Created by: Qt User Interface Compiler version 6.9.2
+##
+## WARNING! All changes made in this file will be lost when recompiling UI file!
+################################################################################
+
 from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
     QMetaObject, QObject, QPoint, QRect,
     QSize, QTime, QUrl, Qt)
@@ -11,12 +21,9 @@ from PySide6.QtWidgets import (QApplication, QDialog, QFrame, QGridLayout,
     QVBoxLayout, QWidget)
 
 class Ui_Dialog(object):
-
     def setupUi(self, Dialog):
         if not Dialog.objectName():
-
             Dialog.setObjectName(u"Dialog")
-
         Dialog.resize(580, 420)
         Dialog.setMinimumSize(QSize(570, 400))
         self.verticalLayout_main = QVBoxLayout(Dialog)
@@ -26,10 +33,8 @@ class Ui_Dialog(object):
         self.lineEdit_search = QLineEdit(Dialog)
         self.lineEdit_search.setObjectName(u"lineEdit_search")
         self.lineEdit_search.setMinimumSize(QSize(0, 30))
-
         font = QFont()
         font.setPointSize(10)
-
         self.lineEdit_search.setFont(font)
 
         self.verticalLayout_main.addWidget(self.lineEdit_search)
@@ -106,20 +111,19 @@ class Ui_Dialog(object):
 
 
         QMetaObject.connectSlotsByName(Dialog)
-
+    # setupUi
 
     def retranslateUi(self, Dialog):
         Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"User Preferences", None))
-
         self.lineEdit_search.setPlaceholderText(QCoreApplication.translate("Dialog", u"Search settings", None))
         self.pushButton_reset_to_default.setText(QCoreApplication.translate("Dialog", u"Reset", None))
         self.pushButton_apply_settings.setText(QCoreApplication.translate("Dialog", u"Apply", None))
         self.pushButton_update_settings.setText(QCoreApplication.translate("Dialog", u"Ok", None))
+    # retranslateUi
 
 
 
 class UserPreferencesWindow_UI(QDialog, Ui_Dialog):
-
     """
     Component Hierarchy:
     - Dialog: QDialog

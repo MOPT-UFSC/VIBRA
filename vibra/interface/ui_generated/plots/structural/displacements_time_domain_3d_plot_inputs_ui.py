@@ -53,7 +53,7 @@ class Ui_Form(object):
         self.frame_main = QFrame(self.scrollAreaWidgetContents_2)
         self.frame_main.setObjectName(u"frame_main")
         self.frame_main.setMinimumSize(QSize(0, 180))
-        self.frame_main.setMaximumSize(QSize(16777215, 260))
+        self.frame_main.setMaximumSize(QSize(16777215, 220))
         self.frame_main.setSizeIncrement(QSize(0, 0))
         self.frame_main.setBaseSize(QSize(0, 0))
         self.frame_main.setFrameShape(QFrame.Shape.Box)
@@ -61,7 +61,7 @@ class Ui_Form(object):
         self.gridLayout_5 = QGridLayout(self.frame_main)
         self.gridLayout_5.setSpacing(4)
         self.gridLayout_5.setObjectName(u"gridLayout_5")
-        self.gridLayout_5.setContentsMargins(4, 4, 4, 4)
+        self.gridLayout_5.setContentsMargins(4, 4, 4, 14)
         self.frame_plot_controls = QFrame(self.frame_main)
         self.frame_plot_controls.setObjectName(u"frame_plot_controls")
         self.frame_plot_controls.setMinimumSize(QSize(0, 120))
@@ -283,7 +283,7 @@ class Ui_Form(object):
         self.comboBox_plot_type.setItemText(3, QCoreApplication.translate("Form", u"Real Uz", None))
 
         self.pushButton_process_nodal_solution_iffts.setText(QCoreApplication.translate("Form", u"Process nodal solution (IFFTs)", None))
-        self.label.setText(QCoreApplication.translate("Form", u"Displacements Field Plot (time domain)", None))
+        self.label.setText(QCoreApplication.translate("Form", u"Displacements field plot (time domain)", None))
     # retranslateUi
 
 
