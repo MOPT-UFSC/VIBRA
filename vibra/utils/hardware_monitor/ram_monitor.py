@@ -1,11 +1,13 @@
-from functools import wraps
-from collections import deque
-from pathlib import Path
-from typing import Callable
 import csv
-import psutil
 import threading
 import time
+from collections import deque
+from collections.abc import Callable
+from functools import wraps
+from pathlib import Path
+from typing import Self
+
+import psutil
 
 from vibra.utils.hardware_monitor.memory_metric import MemoryMetric, MemoryRecord, MemorySample
 
@@ -14,15 +16,24 @@ class RamMonitor:
     _BYTES_PER_MIB = 1024**2
     _BYTES_PER_GIB = 1024**3
 
-    def __init__(self, label: str = "", *, output_path: str | Path = "", term_print: bool = True, max_hist_size: int = 10_000, rss_interval: float = 0.05, uss_interval: float = 0.5, record_history: bool = False) -> None:
-        '''
+    def __init__(
+        self,
+        label: str = "",
+        *,
+        output_path: str | Path = "",
+        term_print: bool = True,
+        max_hist_size: int = 10_000,
+        rss_interval: float = 0.05,
+        uss_interval: float = 0.5,
+    ) -> None:
+        """
         max_hist_size: set the amount of records it will hold
         output_path: text report destination; empty disables report output.
         History is appended to <report>_history.csv when leaving the context or decorated call.
 
         Diff peak and Diff final are relative to the initial value.
         Peaks and minima are based on sampled measurements.
-        '''
+        """
         if max_hist_size <= 0:
             raise ValueError("max_hist_size must be greater than 0")
 
@@ -44,7 +55,6 @@ class RamMonitor:
         self.label = label
         self.output_path = Path(output_path).expanduser().resolve() if output_path else None
         self.term_print = term_print
-        self.record_history = record_history
 
         self.rss = MemoryMetric()
         self.uss = MemoryMetric()
@@ -59,6 +69,7 @@ class RamMonitor:
 
     def __call__(self, func: Callable) -> Callable:
         label = func.__qualname__ if self.label == "" else self.label
+
         @wraps(func)
         def wrapper(*args, **kwargs):
             with self._new_session(label=label):
@@ -66,7 +77,7 @@ class RamMonitor:
 
         return wrapper
 
-    def _new_session(self, label: str) -> "RamMonitor":
+    def _new_session(self, label: str) -> Self:
         return type(self)(
             label=label,
             output_path=self.output_path or "",
@@ -74,7 +85,6 @@ class RamMonitor:
             max_hist_size=self.max_hist_size,
             rss_interval=self.__rss_interval,
             uss_interval=self.__uss_interval,
-            record_history=self.record_history,
         )
 
     def get_ppid(self) -> int | None:
@@ -126,7 +136,7 @@ class RamMonitor:
         for proc in processes:
             try:
                 mem = proc.memory_full_info()
-                uss += mem.uss # exclusive from full_info
+                uss += mem.uss  # exclusive from full_info
             except psutil.NoSuchProcess:
                 continue
             except psutil.Error as error:
@@ -169,7 +179,7 @@ class RamMonitor:
             memory = psutil.virtual_memory()
 
             if memory.total <= 0:
-                raise ValueError(f'Could not get memory from psutil: {memory.total}')
+                raise ValueError(f"Could not get memory from psutil: {memory.total}")
 
             available_bytes = memory.available
             available_percent = 100 * memory.available / memory.total
@@ -206,14 +216,14 @@ class RamMonitor:
             else:
                 sample = self._read_basic_memory_mib()
 
-            if self.record_history:
+            if self.output_path is not None:
                 self._record_sample(sample)
 
             self._update_peak(self.rss, sample.rss)
             self._update_peak(self.uss, sample.uss)
             self._update_available_memory()
 
-    def start(self) -> "RamMonitor":
+    def start(self) -> Self:
         if self.monitor_thread is not None and self.monitor_thread.is_alive():
             raise RuntimeError("RAM monitor is already running")
 
@@ -229,7 +239,7 @@ class RamMonitor:
         self.monitor_error = None
 
         sample = self._read_full_memory_mib()
-        if self.record_history:
+        if self.output_path is not None:
             self._record_sample(sample)
 
         self._update_peak(self.rss, sample.rss)
@@ -253,7 +263,7 @@ class RamMonitor:
         self.monitor_thread = None
 
         sample = self._read_full_memory_mib()
-        if self.record_history:
+        if self.output_path is not None:
             self._record_sample(sample)
 
         self._update_peak(self.rss, sample.rss)
@@ -262,7 +272,7 @@ class RamMonitor:
         self.uss.final = sample.uss
         self._update_available_memory()
 
-    def __enter__(self) -> "RamMonitor":
+    def __enter__(self) -> Self:
         self.start()
         return self
 
@@ -278,7 +288,6 @@ class RamMonitor:
         if self.output_path:
             try:
                 self.output_path.parent.mkdir(parents=True, exist_ok=True)
-                self._write_report()
                 if self.ram_record:
                     self._write_history()
             except OSError as error:
@@ -287,16 +296,11 @@ class RamMonitor:
 
         return False
 
-    def _write_report(self):
-        if self.output_path:
-            with open(self.output_path, "a", encoding="utf-8") as file:
-                file.write(f"{self}\n\n")
-
     def _write_history(self) -> None:
         if self.output_path is None:
             return
 
-        history_path = self.output_path.with_name(f"{self.output_path.stem}_history.csv")
+        history_path = self.output_path.with_suffix(".csv")
         with open(history_path, "a", newline="", encoding="utf-8") as file:
             writer = csv.writer(file)
             if file.tell() == 0:
@@ -305,12 +309,14 @@ class RamMonitor:
                 writer.writerow(["# SESSION", "", "", ""])
 
             for record in self.ram_record:
-                writer.writerow([
-                    self.process.pid,
-                    record.elapsed,
-                    record.rss,
-                    record.uss,
-                ])
+                writer.writerow(
+                    [
+                        self.process.pid,
+                        record.elapsed,
+                        record.rss,
+                        record.uss,
+                    ]
+                )
 
     def __str__(self) -> str:
         def _format_number(value: float | None, *, signed: bool = False) -> str:
