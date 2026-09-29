@@ -140,12 +140,6 @@ class AcousticPostprocessing:
         # selected nodal solution
         _nodal_solution = unit_factor * nodal_solution[:, index].copy()
 
-        amplitudes = np.abs(_nodal_solution)
-        phases = np.angle(_nodal_solution)
-        delta = -phases[np.argmax(amplitudes)]
-
-        acoustic_pressures = amplitudes * np.cos(phases + phase_rad + delta)
-
         match plot_type:
             case PressurePlotType.ABSOLUTE_VALUES:
                 acoustic_pressures = np.abs(_nodal_solution)
@@ -154,7 +148,9 @@ class AcousticPostprocessing:
             case PressurePlotType.IMAG_VALUES:
                 acoustic_pressures = np.imag(_nodal_solution)
             case PressurePlotType.ABSOLUTE_ANIMATION:
-                acoustic_pressures = np.abs(acoustic_pressures)
+                acoustic_pressures = compute_phase_shifted_values(_nodal_solution, phase_rad, absolute=True)
+            case PressurePlotType.NON_ABSOLUTE_ANIMATION:
+                acoustic_pressures = compute_phase_shifted_values(_nodal_solution, phase_rad)
 
         min_value, max_value = self.get_min_max_values_of_pressures(index, round(unit_factor, 10), plot_type, is_modal)
 
@@ -746,3 +742,18 @@ class AcousticPostprocessing:
         print(f"Elapsed time to compute all surfaces: {dt} s")
 
         return acoustic_loads
+
+
+def compute_shifted_values(data: np.ndarray, phase_rad: float):
+    amplitudes = np.abs(data)
+    phases = np.angle(data)
+    delta = -phases[np.argmax(amplitudes)]
+    return amplitudes * np.cos(phases + phase_rad + delta)
+
+
+def compute_phase_shifted_values(values: np.ndarray, phase_rad: float, absolute: bool = False) -> np.ndarray:
+    shifted_values = values.real * np.cos(phase_rad) -  values.imag * np.sin(phase_rad)
+    if absolute:
+        return np.absolute(shifted_values)
+
+    return shifted_values
