@@ -129,12 +129,12 @@ class Project:
         structural_postprocessing = self.get_structural_postprocessing()
         if isinstance(structural_postprocessing, StructuralPostprocessing):
             structural_postprocessing.reset_attributes()
-            structural_postprocessing.get_max_min_values_for_advanced_stress_data.cache_clear()
-            structural_postprocessing.get_max_min_values_for_stress_data.cache_clear()
-            structural_postprocessing.get_max_min_values_for_displacements_data.cache_clear()
+            structural_postprocessing.get_minimum_and_maximum_values_for_advanced_stress_frequency.cache_clear()
+            structural_postprocessing.get_minimum_and_maximum_values_for_stress_frequency.cache_clear()
+            structural_postprocessing.get_minimum_and_maximum_values_for_displacement_frequency.cache_clear()
+            structural_postprocessing.get_minimum_and_maximum_values_for_displacement_time.cache_clear()
             structural_postprocessing.recover_nodal_averaged_structural_stresses.cache_clear()
-            structural_postprocessing.get_minimum_and_maximum_values_for_displacements()
-            structural_postprocessing.compute_multiple_ifft_for_structural_nodal_solution()
+            structural_postprocessing.compute_multiple_ifft_for_structural_nodal_solution.cache_clear()
 
     def run_analysis(self, is_resume: bool = False, print_log: bool = False):
         """
