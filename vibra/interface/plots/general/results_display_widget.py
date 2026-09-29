@@ -19,8 +19,11 @@ class ResultsDisplayWidget(ResultsDisplayWidget_UI):
         self.load_user_preference_colormap()
 
     def configure_widget(self, bottom: float = -1e14, top: float = 1e14, decimals: int = 14):
+        print("HEY")
         self.min_color_check_box.setChecked(False)
         self.max_color_check_box.setChecked(False)
+        self.update_min_enabled(False)
+        self.update_max_enabled(False)
         self.configure_validators(bottom, top, decimals)
 
     def configure_validators(self, bottom: float = -1e14, top: float = 1e14, decimals: int = 14):
