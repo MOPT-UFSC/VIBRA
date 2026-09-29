@@ -212,13 +212,13 @@
            <property name="minimumSize">
             <size>
              <width>40</width>
-             <height>30</height>
+             <height>28</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
              <width>40</width>
-             <height>30</height>
+             <height>28</height>
             </size>
            </property>
            <property name="font">
@@ -257,14 +257,14 @@
           <widget class="QLineEdit" name="lineEdit_selection_id">
            <property name="minimumSize">
             <size>
-             <width>160</width>
-             <height>30</height>
+             <width>180</width>
+             <height>28</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>160</width>
-             <height>30</height>
+             <width>180</width>
+             <height>28</height>
             </size>
            </property>
            <property name="font">
@@ -314,14 +314,14 @@
           <widget class="QComboBox" name="comboBox_selector_filter">
            <property name="minimumSize">
             <size>
-             <width>160</width>
-             <height>30</height>
+             <width>180</width>
+             <height>28</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>160</width>
-             <height>30</height>
+             <width>180</width>
+             <height>28</height>
             </size>
            </property>
            <property name="font">
@@ -353,63 +353,6 @@
            <item>
             <property name="text">
              <string>Nodes</string>
-            </property>
-           </item>
-          </widget>
-         </item>
-         <item row="2" column="2">
-          <widget class="QComboBox" name="comboBox_structural_stresses">
-           <property name="minimumSize">
-            <size>
-             <width>160</width>
-             <height>30</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>160</width>
-             <height>30</height>
-            </size>
-           </property>
-           <property name="font">
-            <font>
-             <pointsize>10</pointsize>
-            </font>
-           </property>
-           <property name="styleSheet">
-            <string notr="true"/>
-           </property>
-           <property name="currentIndex">
-            <number>0</number>
-           </property>
-           <item>
-            <property name="text">
-             <string>Normal stress x</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Normal stress y</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Normal stress z</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Shear stress xy</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Shear stress xz</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Shear stress yz</string>
             </property>
            </item>
           </widget>
@@ -465,7 +408,7 @@
             </font>
            </property>
            <property name="text">
-            <string>Structural results:</string>
+            <string>Plotting results:</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
@@ -517,14 +460,14 @@
           <widget class="QComboBox" name="comboBox_stress_units">
            <property name="minimumSize">
             <size>
-             <width>160</width>
-             <height>30</height>
+             <width>180</width>
+             <height>28</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>160</width>
-             <height>30</height>
+             <width>180</width>
+             <height>28</height>
             </size>
            </property>
            <property name="font">
@@ -566,6 +509,88 @@
            <item>
             <property name="text">
              <string>N/m²</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item row="2" column="2">
+          <widget class="QComboBox" name="comboBox_plotting_results">
+           <property name="minimumSize">
+            <size>
+             <width>180</width>
+             <height>28</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>180</width>
+             <height>28</height>
+            </size>
+           </property>
+           <property name="sizeIncrement">
+            <size>
+             <width>0</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
+           <item>
+            <property name="text">
+             <string>Normal stress x</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Normal stress y</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Normal stress z</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Shear stress xy</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Shear stress xz</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Shear stress yz</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>von Mises stress</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Tresca stress</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Max. principal stress 1</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Max. principal stress 2</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Max. principal stress 3</string>
             </property>
            </item>
           </widget>

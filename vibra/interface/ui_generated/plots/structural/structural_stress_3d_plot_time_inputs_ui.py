@@ -67,7 +67,7 @@ class Ui_Form(object):
         self.label_title.setMaximumSize(QSize(16777215, 32))
         font = QFont()
         font.setFamilies([u"MS Shell Dlg 2"])
-        font.setPointSize(10)
+        font.setPointSize(11)
         font.setBold(False)
         font.setItalic(False)
         self.label_title.setFont(font)

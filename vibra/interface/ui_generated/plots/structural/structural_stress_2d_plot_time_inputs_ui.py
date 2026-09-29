@@ -89,8 +89,8 @@ class Ui_Form(object):
 
         self.pushButton_export_data = QPushButton(self.frame_selection_controls)
         self.pushButton_export_data.setObjectName(u"pushButton_export_data")
-        self.pushButton_export_data.setMinimumSize(QSize(40, 30))
-        self.pushButton_export_data.setMaximumSize(QSize(40, 30))
+        self.pushButton_export_data.setMinimumSize(QSize(40, 28))
+        self.pushButton_export_data.setMaximumSize(QSize(40, 28))
         font1 = QFont()
         font1.setFamilies([u"MS Shell Dlg 2"])
         font1.setPointSize(11)
@@ -107,8 +107,8 @@ class Ui_Form(object):
 
         self.lineEdit_selection_id = QLineEdit(self.frame_selection_controls)
         self.lineEdit_selection_id.setObjectName(u"lineEdit_selection_id")
-        self.lineEdit_selection_id.setMinimumSize(QSize(160, 30))
-        self.lineEdit_selection_id.setMaximumSize(QSize(160, 30))
+        self.lineEdit_selection_id.setMinimumSize(QSize(180, 28))
+        self.lineEdit_selection_id.setMaximumSize(QSize(180, 28))
         font2 = QFont()
         font2.setPointSize(10)
         self.lineEdit_selection_id.setFont(font2)
@@ -132,27 +132,12 @@ class Ui_Form(object):
         self.comboBox_selector_filter.addItem("")
         self.comboBox_selector_filter.addItem("")
         self.comboBox_selector_filter.setObjectName(u"comboBox_selector_filter")
-        self.comboBox_selector_filter.setMinimumSize(QSize(160, 30))
-        self.comboBox_selector_filter.setMaximumSize(QSize(160, 30))
+        self.comboBox_selector_filter.setMinimumSize(QSize(180, 28))
+        self.comboBox_selector_filter.setMaximumSize(QSize(180, 28))
         self.comboBox_selector_filter.setFont(font2)
         self.comboBox_selector_filter.setStyleSheet(u"")
 
         self.gridLayout.addWidget(self.comboBox_selector_filter, 1, 2, 1, 1)
-
-        self.comboBox_structural_stresses = QComboBox(self.frame_selection_controls)
-        self.comboBox_structural_stresses.addItem("")
-        self.comboBox_structural_stresses.addItem("")
-        self.comboBox_structural_stresses.addItem("")
-        self.comboBox_structural_stresses.addItem("")
-        self.comboBox_structural_stresses.addItem("")
-        self.comboBox_structural_stresses.addItem("")
-        self.comboBox_structural_stresses.setObjectName(u"comboBox_structural_stresses")
-        self.comboBox_structural_stresses.setMinimumSize(QSize(160, 30))
-        self.comboBox_structural_stresses.setMaximumSize(QSize(160, 30))
-        self.comboBox_structural_stresses.setFont(font2)
-        self.comboBox_structural_stresses.setStyleSheet(u"")
-
-        self.gridLayout.addWidget(self.comboBox_structural_stresses, 2, 2, 1, 1)
 
         self.label_10 = QLabel(self.frame_selection_controls)
         self.label_10.setObjectName(u"label_10")
@@ -201,12 +186,32 @@ class Ui_Form(object):
         self.comboBox_stress_units.addItem("")
         self.comboBox_stress_units.addItem("")
         self.comboBox_stress_units.setObjectName(u"comboBox_stress_units")
-        self.comboBox_stress_units.setMinimumSize(QSize(160, 30))
-        self.comboBox_stress_units.setMaximumSize(QSize(160, 30))
+        self.comboBox_stress_units.setMinimumSize(QSize(180, 28))
+        self.comboBox_stress_units.setMaximumSize(QSize(180, 28))
         self.comboBox_stress_units.setFont(font2)
         self.comboBox_stress_units.setStyleSheet(u"")
 
         self.gridLayout.addWidget(self.comboBox_stress_units, 3, 2, 1, 1)
+
+        self.comboBox_plotting_results = QComboBox(self.frame_selection_controls)
+        self.comboBox_plotting_results.addItem("")
+        self.comboBox_plotting_results.addItem("")
+        self.comboBox_plotting_results.addItem("")
+        self.comboBox_plotting_results.addItem("")
+        self.comboBox_plotting_results.addItem("")
+        self.comboBox_plotting_results.addItem("")
+        self.comboBox_plotting_results.addItem("")
+        self.comboBox_plotting_results.addItem("")
+        self.comboBox_plotting_results.addItem("")
+        self.comboBox_plotting_results.addItem("")
+        self.comboBox_plotting_results.addItem("")
+        self.comboBox_plotting_results.setObjectName(u"comboBox_plotting_results")
+        self.comboBox_plotting_results.setMinimumSize(QSize(180, 28))
+        self.comboBox_plotting_results.setMaximumSize(QSize(180, 28))
+        self.comboBox_plotting_results.setSizeIncrement(QSize(0, 0))
+        self.comboBox_plotting_results.setFont(font2)
+
+        self.gridLayout.addWidget(self.comboBox_plotting_results, 2, 2, 1, 1)
 
 
         self.gridLayout_3.addWidget(self.frame_selection_controls, 1, 0, 1, 1)
@@ -264,7 +269,6 @@ class Ui_Form(object):
         self.retranslateUi(Form)
 
         self.comboBox_selector_filter.setCurrentIndex(0)
-        self.comboBox_structural_stresses.setCurrentIndex(0)
         self.comboBox_stress_units.setCurrentIndex(0)
 
 
@@ -285,15 +289,8 @@ class Ui_Form(object):
         self.comboBox_selector_filter.setItemText(2, QCoreApplication.translate("Form", u"Points", None))
         self.comboBox_selector_filter.setItemText(3, QCoreApplication.translate("Form", u"Nodes", None))
 
-        self.comboBox_structural_stresses.setItemText(0, QCoreApplication.translate("Form", u"Normal stress x", None))
-        self.comboBox_structural_stresses.setItemText(1, QCoreApplication.translate("Form", u"Normal stress y", None))
-        self.comboBox_structural_stresses.setItemText(2, QCoreApplication.translate("Form", u"Normal stress z", None))
-        self.comboBox_structural_stresses.setItemText(3, QCoreApplication.translate("Form", u"Shear stress xy", None))
-        self.comboBox_structural_stresses.setItemText(4, QCoreApplication.translate("Form", u"Shear stress xz", None))
-        self.comboBox_structural_stresses.setItemText(5, QCoreApplication.translate("Form", u"Shear stress yz", None))
-
         self.label_10.setText(QCoreApplication.translate("Form", u"Selected ID: ", None))
-        self.label_linear.setText(QCoreApplication.translate("Form", u"Structural results:", None))
+        self.label_linear.setText(QCoreApplication.translate("Form", u"Plotting results:", None))
         self.label_linear_2.setText(QCoreApplication.translate("Form", u"Stress units:", None))
         self.comboBox_stress_units.setItemText(0, QCoreApplication.translate("Form", u"MPa", None))
         self.comboBox_stress_units.setItemText(1, QCoreApplication.translate("Form", u"kPa", None))
@@ -301,6 +298,18 @@ class Ui_Form(object):
         self.comboBox_stress_units.setItemText(3, QCoreApplication.translate("Form", u"ksi", None))
         self.comboBox_stress_units.setItemText(4, QCoreApplication.translate("Form", u"psi", None))
         self.comboBox_stress_units.setItemText(5, QCoreApplication.translate("Form", u"N/m\u00b2", None))
+
+        self.comboBox_plotting_results.setItemText(0, QCoreApplication.translate("Form", u"Normal stress x", None))
+        self.comboBox_plotting_results.setItemText(1, QCoreApplication.translate("Form", u"Normal stress y", None))
+        self.comboBox_plotting_results.setItemText(2, QCoreApplication.translate("Form", u"Normal stress z", None))
+        self.comboBox_plotting_results.setItemText(3, QCoreApplication.translate("Form", u"Shear stress xy", None))
+        self.comboBox_plotting_results.setItemText(4, QCoreApplication.translate("Form", u"Shear stress xz", None))
+        self.comboBox_plotting_results.setItemText(5, QCoreApplication.translate("Form", u"Shear stress yz", None))
+        self.comboBox_plotting_results.setItemText(6, QCoreApplication.translate("Form", u"von Mises stress", None))
+        self.comboBox_plotting_results.setItemText(7, QCoreApplication.translate("Form", u"Tresca stress", None))
+        self.comboBox_plotting_results.setItemText(8, QCoreApplication.translate("Form", u"Max. principal stress 1", None))
+        self.comboBox_plotting_results.setItemText(9, QCoreApplication.translate("Form", u"Max. principal stress 2", None))
+        self.comboBox_plotting_results.setItemText(10, QCoreApplication.translate("Form", u"Max. principal stress 3", None))
 
         self.pushButton_plot_data.setText(QCoreApplication.translate("Form", u"Plot data", None))
         self.pushButton_process_nodal_stresses.setText(QCoreApplication.translate("Form", u"Process nodal stresses", None))
@@ -324,11 +333,11 @@ class StructuralStress2dPlotTimeInputs_UI(QWidget, Ui_Form):
                                         - lineEdit_selection_id: QLineEdit
                                         - label_2: QLabel
                                         - comboBox_selector_filter: QComboBox
-                                        - comboBox_structural_stresses: QComboBox
                                         - label_10: QLabel
                                         - label_linear: QLabel
                                         - label_linear_2: QLabel
                                         - comboBox_stress_units: QComboBox
+                                        - comboBox_plotting_results: QComboBox
                             - frame_plot: QFrame
                                 - (Layout): QGridLayout
                                         - pushButton_plot_data: QPushButton

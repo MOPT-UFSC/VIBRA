@@ -49,7 +49,7 @@ class Ui_Form(object):
         self.label.setMaximumSize(QSize(452, 30))
         font = QFont()
         font.setFamilies([u"Segoe UI"])
-        font.setPointSize(10)
+        font.setPointSize(11)
         font.setBold(False)
         font.setItalic(False)
         self.label.setFont(font)
