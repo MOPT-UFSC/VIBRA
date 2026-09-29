@@ -224,7 +224,7 @@ class AnimationWidget(AnimationWidget_UI):
             case PressureFieldPlotSetupTime():
                 plot_setup.time_index = self.time_index
             case AllowablePulsationForScrewCompressorsPlotSetup():
-                pass    
+                pass
             case _:
                 return
 
@@ -299,8 +299,10 @@ class AnimationWidget(AnimationWidget_UI):
 
     def save_animation(self):
         extensions = SUPPORTED_VIDEO_EXTENSIONS + SUPPORTED_ANIMATION_EXTENSIONS
-        file_path = FileDialogService.save_file(file_extensions=extensions,
-                                                caption="Save As")
+        file_path = FileDialogService.save_file(
+            file_extensions=extensions,
+            caption="Save As",
+        )
 
         if file_path is None:
             return
