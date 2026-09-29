@@ -167,6 +167,7 @@ class ResultsViewerItems(CommonMenuItems):
             self.item_child_structural_nodal_solution_2d_plot_frequency.setHidden(False)
             self.item_child_stresses_3d_plot_frequency.setHidden(False)
             self.item_child_stresses_2d_plot_frequency.setHidden(False)
+            self.item_child_stresses_2d_plot_time.setHidden(False)
             # self.item_child_reaction_frequency_response.setHidden(False)
 
         if analysis_id == AnalysisID.STRUCTURAL_MODAL:

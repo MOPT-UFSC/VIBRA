@@ -58,7 +58,7 @@ class StructuralStress3dPlotTimeInputs(StructuralStress3dPlotTimeInputs_UI):
 
     @property
     def is_stress_data_computed(self):
-        return isinstance(self.structural_post.avg_nodal_stresses_time, np.ndarray)
+        return isinstance(self.structural_post.nodal_averaged_stresses_time, np.ndarray)
 
     def _add_animation_widget(self):
 

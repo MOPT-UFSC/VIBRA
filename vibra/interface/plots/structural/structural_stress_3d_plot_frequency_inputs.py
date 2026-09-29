@@ -46,7 +46,7 @@ class StructuralStress3dPlotFrequencyInputs(StructuralStress3dPlotFrequencyInput
 
     @property
     def is_stress_data_computed(self):
-        return isinstance(self.structural_post.avg_nodal_stresses_frequency, np.ndarray)
+        return isinstance(self.structural_post.nodal_averaged_stresses_frequency, np.ndarray)
 
     def _initialize(self):
         self.selected_frequency_index = None

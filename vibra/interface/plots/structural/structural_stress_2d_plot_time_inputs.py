@@ -6,16 +6,15 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
-from vibra.engine.analysis_info import HarmonicAnalysisSetup
 from vibra.interface.common.common_interface import update_entities_selection
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
+from vibra.interface.numeric_checks.int_list_validator import IntListValidator
 from vibra.interface.numeric_checks.unit_utilities import convert_stress_unit
-from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
-from vibra.interface.ui_generated.plots.structural.structural_stress_2d_plot_frequency_inputs_ui import (
-    StructuralStress2dPlotFrequencyInputs_UI,
-)
+from vibra.interface.plots.general.frequency_response_plotter import DataFormat, FrequencyResponsePlotter
+from vibra.interface.ui_generated.plots.structural.structural_stress_2d_plot_time_inputs_ui import StructuralStress2dPlotTimeInputs_UI
+from vibra.utils.signal_processing import process_ifft_from_one_sided_spectrum_signal
 
 
 class SelectionType(IntEnum):
@@ -25,10 +24,10 @@ class SelectionType(IntEnum):
     NODES = 3
 
 
-class StructuralStress2dPlotFrequencyInputs(StructuralStress2dPlotFrequencyInputs_UI):
-
+class StructuralStress2dPlotTimeInputs(StructuralStress2dPlotTimeInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
 
         app().main_window.show_geometry_render_widget()
 
@@ -36,7 +35,6 @@ class StructuralStress2dPlotFrequencyInputs(StructuralStress2dPlotFrequencyInput
         self._initialize()
         self._create_connections()
 
-        self._load_analysis_setup_and_solution()
         self.geometry_selection_callback()
 
     @property
@@ -52,12 +50,17 @@ class StructuralStress2dPlotFrequencyInputs(StructuralStress2dPlotFrequencyInput
         return app().project.model.properties
 
     @property
-    def nodal_averaged_stresses(self):
-        t0 = perf_counter()
-        nodal_averaged_stresses = self.structural_post.recover_nodal_averaged_structural_stresses()
-        dt = perf_counter() - t0
-        print(f"Time to compute all nodal stresses: {dt} s")
-        return nodal_averaged_stresses
+    def nodal_averaged_stresses_frequency(self):
+        if not isinstance(self.structural_post.nodal_averaged_stresses_frequency, np.ndarray):
+            self.structural_post.compute_structural_stresses_frequency()
+        return self.structural_post.nodal_averaged_stresses_frequency
+
+    @property
+    def nodal_averaged_stresses_time(self):
+        if not isinstance(self.structural_post.nodal_averaged_stresses_time, np.ndarray):
+            self.structural_post.compute_structural_stresses_time()
+
+        return self.structural_post.nodal_averaged_stresses_time
 
     @property
     def structural_post(self):
@@ -101,7 +104,6 @@ class StructuralStress2dPlotFrequencyInputs(StructuralStress2dPlotFrequencyInput
 
         # QComboBox connection
         self.comboBox_selector_filter.currentIndexChanged.connect(self.selection_type_callback)
-        self.comboBox_stress_units.currentIndexChanged.connect(self.process_units_data)
 
         # QPushButton connection
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
@@ -143,16 +145,6 @@ class StructuralStress2dPlotFrequencyInputs(StructuralStress2dPlotFrequencyInput
             self.lineEdit_selection_id.setText(text)
             self.comboBox_selector_filter.setCurrentIndex(3)
 
-    def _load_analysis_setup_and_solution(self):
-        analysis_setup = self.model.analysis_setup
-
-        self.analysis_method = ""
-        if isinstance(analysis_setup, HarmonicAnalysisSetup):
-            analysis_method = analysis_setup.analysis_method.capitalize().replace("_", " ")
-            self.analysis_method = f"{analysis_method} method"
-
-        self.frequencies = self.model.frequencies
-
     def process_stress_field(self):
 
         # recover the averaged structural stresses
@@ -162,6 +154,8 @@ class StructuralStress2dPlotFrequencyInputs(StructuralStress2dPlotFrequencyInput
                 self.structural_post.recover_nodal_averaged_structural_stresses()
                 dt = perf_counter() - t0
                 print(f"Time to compute all nodal stresses: {dt} s")
+
+                self.structural_post.compute_structural_stresses_time()
 
             LoadingWindow(recover_stresses).run()
 
@@ -197,6 +191,9 @@ class StructuralStress2dPlotFrequencyInputs(StructuralStress2dPlotFrequencyInput
 
         self.join_model_data()
         self.plotter = FrequencyResponsePlotter(close_dialogs=True)
+        self.plotter.comboBox_data_format.setCurrentIndex(DataFormat.REAL)
+        self.plotter.data_format_changed_callback()
+        self.plotter.frame_hlines_main.setDisabled(True)
         self.plotter._set_model_results_data_to_plot(self.model_results)
 
     def export_data_callback(self):
@@ -246,11 +243,13 @@ class StructuralStress2dPlotFrequencyInputs(StructuralStress2dPlotFrequencyInput
         _node_ids = self.model.get_mapped_nodes(nodes, "structural")
 
         if isinstance(_node_ids, int):
-            response = self.nodal_averaged_stresses[_node_ids, stress_type_index, :]
+            response = self.nodal_averaged_stresses_frequency[_node_ids, stress_type_index, :]
+            response_ifft = self.structural_post.nodal_averaged_stresses_time[_node_ids, stress_type_index, :]
         else:
-            response = np.average(self.nodal_averaged_stresses[_node_ids, stress_type_index, :], axis=0)
+            response = np.average(self.nodal_averaged_stresses_frequency[_node_ids, stress_type_index, :], axis=0)
+            response_ifft = np.average(self.structural_post.nodal_averaged_stresses_time[_node_ids, stress_type_index, :], axis=0)
 
-        return response
+        return response, response_ifft
 
     def join_model_data(self):
 
@@ -260,32 +259,51 @@ class StructuralStress2dPlotFrequencyInputs(StructuralStress2dPlotFrequencyInput
         index = self.comboBox_selector_filter.currentIndex()
         selection_type = self.selection_types[index][:-1]
 
-        self.title = f"Structural frequency response - {self.analysis_method}"
+        self.title = "Structural stress (time domain)"
         self.y_label = self.get_ylabel()
-        self.process_units_data()
+
+        stress_units = self.comboBox_stress_units.currentText()
+        unit_factor = convert_stress_unit(1, "Pa", stress_units)
 
         for i, selected_id in enumerate(self.selected_ids):
 
             key = (selection_type, (selected_id))
-            legend_label = f"{self.y_label} at {selection_type} [{selected_id}]"
-            y_data = self.get_response(selection_type, selected_id, stress_index)
+            legend_label = f"Structural stress {self.y_label.lower()} at {selection_type} [{selected_id}]"
+
+            Xf, x_ifft = self.get_response(selection_type, selected_id, stress_index)
+            x_data, y_data = process_ifft_from_one_sided_spectrum_signal(
+                self.model.frequencies, 
+                Xf,
+                dc_included = False,
+                )
 
             self.model_results[key] = {
-                "x_data": self.frequencies,
-                "y_data": self.unit_factor * y_data,
-                "x_label": "Frequency [Hz]",
+                "x_data": x_data,
+                "y_data": unit_factor * y_data,
+                "x_label": "Time [s]",
                 "y_label": self.y_label,
                 "title": self.title,
                 "data_type": self.y_label,
                 "legend": legend_label,
-                "unit": self.stress_units,
+                "unit": stress_units,
                 "color": get_color(i),
                 "linestyle": "-",
             }
 
-    def process_units_data(self) -> str:
-        self.stress_units = self.comboBox_stress_units.currentText()
-        self.unit_factor = convert_stress_unit(1, "Pa", self.stress_units)
+            _key = (f"{selection_type}_xt", (selected_id))
+
+            self.model_results[_key] = {
+                "x_data": x_data,
+                "y_data": unit_factor * x_ifft,
+                "x_label": "Time [s]",
+                "y_label": self.y_label,
+                "title": self.title,
+                "data_type": self.y_label,
+                "legend": legend_label,
+                "unit": stress_units,
+                "color": get_color(i+20),
+                "linestyle": "-",
+            }
 
     def get_ylabel(self) -> str:
 
