@@ -68,13 +68,6 @@ class MeshActor(vtkPropAssembly):
 
         return self.model.mesh
 
-    @property
-    def properties(self) -> ModelProperties | None:
-        if self.model is None:
-            return
-
-        return self.model.properties
-
     @function_timer
     def update(self):
         if self.mesh is None:
@@ -144,8 +137,8 @@ class MeshActor(vtkPropAssembly):
         self.node_colors.SetNumberOfComponents(3)
         self.node_ids.SetName("ids")
         self.node_data.SetPoints(self.points)
-        _ = self.node_data.GetCellData().SetScalars(self.node_colors)
-        _ = self.node_data.GetCellData().AddArray(self.node_ids)
+        self.node_data.GetCellData().SetScalars(self.node_colors)
+        self.node_data.GetCellData().AddArray(self.node_ids)
         self.node_mapper.SetInputData(self.node_data)
         self.node_actor.SetMapper(self.node_mapper)
         self.node_actor.GetProperty().SetPointSize(10)
@@ -166,13 +159,13 @@ class MeshActor(vtkPropAssembly):
         self.surface_colors.SetNumberOfComponents(4)
         self.surface_ids.SetName("ids")
         self.surface_data.SetPoints(self.points)
-        _ = self.surface_data.GetCellData().SetScalars(self.surface_colors)
-        _ = self.surface_data.GetCellData().AddArray(self.surface_ids)
+        self.surface_data.GetCellData().SetScalars(self.surface_colors)
+        self.surface_data.GetCellData().AddArray(self.surface_ids)
         self.surface_mapper.SetInputData(self.surface_data)
         self.surface_actor.GetShaderProperty().AddFragmentShaderReplacement(
             "//VTK::Light::Impl",
             True,
-            "if (opacity < 0.1) { discard; }\n//VTK::Light::Impl",
+            "if (opacity < 1) { discard; }\n//VTK::Light::Impl",
             False,
         )
         self.surface_actor.SetForceOpaque(True)
@@ -189,7 +182,7 @@ class MeshActor(vtkPropAssembly):
         self.volume_actor.GetShaderProperty().AddFragmentShaderReplacement(
             "//VTK::Light::Impl",
             True,
-            "if (opacity < 0.1) { discard; }\n//VTK::Light::Impl",
+            "if (opacity < 1) { discard; }\n//VTK::Light::Impl",
             False,
         )
         self.volume_actor.SetForceOpaque(True)
@@ -267,7 +260,7 @@ class MeshActor(vtkPropAssembly):
         vtk_to_numpy(self.node_ids)[:] = node_indexes
 
         edges_linearized = np.vstack((
-            self._linearize_2d_cells(faces_before_plane), 
+            self._linearize_2d_cells(faces_before_plane),
             self._linearize_3d_cells(solids_in_middle),
         ))  # fmt: skip
         cells = self._create_cells(edges_linearized[:, 4:])
@@ -634,7 +627,7 @@ class MeshActor(vtkPropAssembly):
             case 10:
                 reorderings = [
                     [0, 4], [4, 1], [1, 5], [5, 2], [0, 6], [6, 2],
-                    [0, 7], [7, 3], [2, 8], [8, 3], [1, 9], [9, 3], 
+                    [0, 7], [7, 3], [2, 8], [8, 3], [1, 9], [9, 3],
                 ]  # fmt: skip
             case 20:
                 reorderings = [

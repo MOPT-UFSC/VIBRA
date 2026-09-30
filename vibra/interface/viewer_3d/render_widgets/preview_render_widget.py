@@ -96,9 +96,6 @@ class PreviewRenderWidget(CommonRenderWidget):
             self.postprocessed_data_3d = None
             return
 
-        if setup == self.plot_setup:
-            return
-
         self.plot_setup = setup
         analysis_id = self.model.analysis_id
 
