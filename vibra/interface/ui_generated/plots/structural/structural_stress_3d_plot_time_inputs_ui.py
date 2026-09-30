@@ -66,8 +66,8 @@ class Ui_Form(object):
         self.label_title.setMinimumSize(QSize(0, 0))
         self.label_title.setMaximumSize(QSize(16777215, 32))
         font = QFont()
-        font.setFamilies([u"MS Shell Dlg 2"])
-        font.setPointSize(11)
+        font.setFamilies([u"Segoe UI"])
+        font.setPointSize(10)
         font.setBold(False)
         font.setItalic(False)
         self.label_title.setFont(font)
@@ -289,7 +289,7 @@ class Ui_Form(object):
 
     def retranslateUi(self, Form):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Plot stress field", None))
-        self.label_title.setText(QCoreApplication.translate("Form", u"Stress field plot (frequency domain)", None))
+        self.label_title.setText(QCoreApplication.translate("Form", u"Stress field plot (time domain)", None))
         self.comboBox_reduced_time.setItemText(0, QCoreApplication.translate("Form", u"Disabled", None))
         self.comboBox_reduced_time.setItemText(1, QCoreApplication.translate("Form", u"User-defined", None))
         self.comboBox_reduced_time.setItemText(2, QCoreApplication.translate("Form", u"Rotational speed", None))

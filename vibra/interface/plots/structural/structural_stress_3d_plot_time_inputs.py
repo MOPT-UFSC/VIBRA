@@ -140,21 +140,6 @@ class StructuralStress3dPlotTimeInputs(StructuralStress3dPlotTimeInputs_UI):
         else:
             self.animation_widget.setDisabled(False)
 
-    # def process_stress_field(self):
-
-    #     # recover the averaged structural stresses
-    #     if not self.is_stress_data_computed:    
-    #         def recover_stresses():
-    #             t0 = perf_counter()
-    #             self.structural_post.recover_nodal_averaged_structural_stresses()
-    #             dt = perf_counter() - t0
-    #             print(f"Time to compute all nodal stresses: {dt} s")
-
-    #         LoadingWindow(recover_stresses).run()
-
-    #     self.set_frames_disabled(False)
-    #     self.load_frequencies()
-
     def plot_data_callback(self):
 
         stress_index = self.comboBox_plotting_results.currentIndex()
