@@ -89,23 +89,23 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.results_viewer_items.item_child_structural_mode_shapes.clicked.connect(self.add_structural_modal_widget)
         self.results_viewer_items.item_child_structural_nodal_solution_2d_plot_frequency.clicked.connect(self.add_structural_nodal_solution_2d_plot_frequency_widget)
         self.results_viewer_items.item_child_structural_nodal_solution_2d_plot_time.clicked.connect(self.add_structural_nodal_solution_2d_plot_time_widget)
-        self.results_viewer_items.item_child_displacements_3d_plot_frequency.clicked.connect(self.add_structural_harmonic_widget)
-        self.results_viewer_items.item_child_displacements_3d_plot_time.clicked.connect(self.add_displacements_time_domain_3d_plot_widget)
+        self.results_viewer_items.item_child_structural_nodal_solution_3d_plot_frequency.clicked.connect(self.add_structural_nodal_solution_3d_plot_frequency_widget)
+        self.results_viewer_items.item_child_structural_nodal_solution_3d_plot_time.clicked.connect(self.add_structural_nodal_solution_3d_plot_time_widget)
         self.results_viewer_items.item_child_stresses_3d_plot_frequency.clicked.connect(self.add_stresses_frequency_domain_3d_plot_widget)
         self.results_viewer_items.item_child_stresses_3d_plot_time.clicked.connect(self.add_stresses_time_domain_3d_plot_widget)
         self.results_viewer_items.item_child_stresses_2d_plot_frequency.clicked.connect(self.add_stresses_frequency_domain_2d_plot_widget)
         self.results_viewer_items.item_child_stresses_2d_plot_time.clicked.connect(self.add_stresses_time_domain_2d_plot_widget)
 
         # Acoustic
-        self.results_viewer_items.item_child_acoustic_pressure_2d_plot_frequency.clicked.connect(self.add_acoustic_harmonic_widget)
-        self.results_viewer_items.item_child_acoustic_pressure_3d_plot_frequency.clicked.connect(self.add_acoustic_pressure_frequency_response_widget)
-        self.results_viewer_items.item_child_acoustic_pressure_frf.clicked.connect(self.add_acoustic_pressure_frequency_response_function_widget)
+        self.results_viewer_items.item_child_acoustic_nodal_solution_2d_plot_frequency.clicked.connect(self.add_acoustic_nodal_solution_2d_plot_frequency_widget)
+        self.results_viewer_items.item_child_acoustic_nodal_solution_3d_plot_frequency.clicked.connect(self.add_acoustic_nodal_solution_3d_plot_frequency_widget)
+        self.results_viewer_items.item_child_acoustic_nodal_solution_frf.clicked.connect(self.add_acoustic_nodal_solution_frf_widget)
         self.results_viewer_items.item_child_acoustic_shaking_forces.clicked.connect(self.add_acoustic_shaking_forces_widget)
         self.results_viewer_items.item_child_decompose_acoustic_waves.clicked.connect(self.add_decompose_acoustic_pressure_waves_widget)
-        self.results_viewer_items.item_child_acoustic_pressure_2d_plot_time.clicked.connect(self.add_acoustic_pressure_waveform_2d_plot_widget)
-        self.results_viewer_items.item_child_acoustic_pressure_3d_plot_time.clicked.connect(self.add_acoustic_pressure_waveform_3d_plot_widget)
-        self.results_viewer_items.item_child_allowable_pulsations_screw_compressor_2d_plot.clicked.connect(self.add_allowable_pulsations_2d_for_screw_compressor_widget)
-        self.results_viewer_items.item_child_allowable_pulsations_screw_compressor_3d_plot.clicked.connect(self.add_allowable_pulsations_3d_for_screw_compressor_widget)
+        self.results_viewer_items.item_child_acoustic_nodal_solution_2d_plot_time.clicked.connect(self.add_acoustic_nodal_solution_2d_plot_time_widget)
+        self.results_viewer_items.item_child_acoustic_nodal_solution_3d_plot_time.clicked.connect(self.add_acoustic_nodal_solution_3d_plot_time_widget)
+        self.results_viewer_items.item_child_allowable_pulsations_screw_compressor_2d_plot.clicked.connect(self.add_allowable_pulsations_for_screw_compressor_2d_plot_widget)
+        self.results_viewer_items.item_child_allowable_pulsations_screw_compressor_3d_plot.clicked.connect(self.add_allowable_pulsations_for_screw_compressor_3d_plot_widget)
         self.results_viewer_items.item_child_allowable_pulsations_for_reciprocating_compressor.clicked.connect(self.add_allowable_pulsations_for_reciprocating_compressor_widget)
         self.results_viewer_items.item_child_TL_NR.clicked.connect(self.add_TL_NR_widget)
         self.results_viewer_items.item_child_acoustic_mode_shapes.clicked.connect(self.add_acoustic_modal_widget)
@@ -134,7 +134,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
 
         self.add_widget(self.plot_structural_modal)
 
-    def add_structural_harmonic_widget(self):
+    def add_structural_nodal_solution_3d_plot_frequency_widget(self):
         self.top_widget.setFixedHeight(120)
         self.current_widget = self.plot_structural_harmonic
         self.plot_structural_harmonic.load_frequencies()
@@ -142,7 +142,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
 
         self.add_widget(self.plot_structural_harmonic)
 
-    def add_displacements_time_domain_3d_plot_widget(self):
+    def add_structural_nodal_solution_3d_plot_time_widget(self):
         self.current_widget = self.process_input(StructuralNodalSolution3dPlotTimeInputs)
 
         if app().main_window.results_widget.playing_animation:
@@ -190,7 +190,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
 
         self.add_widget(self.plot_acoustic_modal)
 
-    def add_acoustic_harmonic_widget(self):
+    def add_acoustic_nodal_solution_3d_plot_frequency_widget(self):
         self.top_widget.setFixedHeight(220)
         self.current_widget = self.plot_acoustic_harmonic
         self.plot_acoustic_harmonic.load_frequencies()
@@ -214,7 +214,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
 
         self.add_widget(self.current_widget)
 
-    def add_acoustic_pressure_frequency_response_widget(self):
+    def add_acoustic_nodal_solution_2d_plot_frequency_widget(self):
         self.current_widget = self.process_input(AcousticNodalSolution2dPlotFrequencyInputs)
 
         if app().main_window.results_widget.playing_animation:
@@ -222,7 +222,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
 
         self.add_widget(self.current_widget)
 
-    def add_acoustic_pressure_frequency_response_function_widget(self):
+    def add_acoustic_nodal_solution_frf_widget(self):
         self.current_widget = self.process_input(AcousticPressureFRFInputs)
 
         if app().main_window.results_widget.playing_animation:
@@ -262,7 +262,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
 
         self.add_widget(self.current_widget)
 
-    def add_acoustic_pressure_waveform_2d_plot_widget(self):
+    def add_acoustic_nodal_solution_2d_plot_time_widget(self):
         self.current_widget = self.process_input(AcousticNodalSolution2dPlotTimeInputs)
 
         if app().main_window.results_widget.playing_animation:
@@ -270,7 +270,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
 
         self.add_widget(self.current_widget)
 
-    def add_acoustic_pressure_waveform_3d_plot_widget(self):
+    def add_acoustic_nodal_solution_3d_plot_time_widget(self):
         self.current_widget = self.process_input(AcousticNodalSolution3dPlotTimeInputs)
 
         if app().main_window.results_widget.playing_animation:
@@ -278,7 +278,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
 
         self.add_widget(self.current_widget)
 
-    def add_allowable_pulsations_2d_for_screw_compressor_widget(self):
+    def add_allowable_pulsations_for_screw_compressor_2d_plot_widget(self):
         self.current_widget = self.process_input(AllowablePulsations2DPlotForScrewCompressorInputs)
 
         if app().main_window.results_widget.playing_animation:
@@ -286,7 +286,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
 
         self.add_widget(self.current_widget)
 
-    def add_allowable_pulsations_3d_for_screw_compressor_widget(self):
+    def add_allowable_pulsations_for_screw_compressor_3d_plot_widget(self):
         self.current_widget = self.process_input(AllowablePulsations3DPlotForScrewCompressorInputs)
 
         if app().main_window.results_widget.playing_animation:

@@ -34,15 +34,15 @@ class ResultsViewerItems(CommonMenuItems):
         self.item_top_results_viewer_acoustic = self.add_top_item("Acoustic Results Viewer")
         self.item_child_3d_plots_acoustic = self.add_item("3D Plots")
         self.item_child_acoustic_mode_shapes = self.add_sub_item("Acoustic Mode Shapes")
-        self.item_child_acoustic_pressure_2d_plot_frequency = self.add_sub_item("Acoustic Pressure Field (Frequency)")
-        self.item_child_acoustic_pressure_3d_plot_time = self.add_sub_item("Acoustic Pressure Field (Time)")
+        self.item_child_acoustic_nodal_solution_3d_plot_frequency = self.add_sub_item("Acoustic Pressure Field (Frequency)")
+        self.item_child_acoustic_nodal_solution_3d_plot_time = self.add_sub_item("Acoustic Pressure Field (Time)")
         self.item_child_allowable_pulsations_screw_compressor_3d_plot = self.add_sub_item("Allowable Pulsations (Screw Compressor)")
 
         ## Acoustic results items - 2D plots
         self.item_child_2d_plots_acoustic = self.add_item("2D Plots")
-        self.item_child_acoustic_pressure_3d_plot_frequency = self.add_sub_item("Acoustic Pressure (Frequency)")
-        self.item_child_acoustic_pressure_2d_plot_time = self.add_sub_item("Acoustic Pressure (Time)")
-        self.item_child_acoustic_pressure_frf = self.add_sub_item("Acoustic Presssure FRF")
+        self.item_child_acoustic_nodal_solution_2d_plot_frequency = self.add_sub_item("Acoustic Pressure (Frequency)")
+        self.item_child_acoustic_nodal_solution_2d_plot_time = self.add_sub_item("Acoustic Pressure (Time)")
+        self.item_child_acoustic_nodal_solution_frf = self.add_sub_item("Acoustic Presssure FRF")
         self.item_child_acoustic_shaking_forces = self.add_sub_item("Acoustic Shaking Forces")
         self.item_child_allowable_pulsations_screw_compressor_2d_plot = self.add_sub_item("Allowable Pulsations (Screw Compressor)")
         self.item_child_allowable_pulsations_for_reciprocating_compressor = self.add_sub_item("Allowable Pulsations (Recip. Compressor)")
@@ -56,8 +56,8 @@ class ResultsViewerItems(CommonMenuItems):
         self.item_top_structural_results_viewer = self.add_top_item("Structural Results Viewer")
         self.item_child_3d_plots_structural = self.add_item("3D Plots")
         self.item_child_structural_mode_shapes = self.add_sub_item("Structural Mode Shapes")
-        self.item_child_displacements_3d_plot_frequency = self.add_sub_item("Displacements Field (Frequency)")
-        self.item_child_displacements_3d_plot_time = self.add_sub_item("Displacements Field (Time)")
+        self.item_child_structural_nodal_solution_3d_plot_frequency = self.add_sub_item("Displacements Field (Frequency)")
+        self.item_child_structural_nodal_solution_3d_plot_time = self.add_sub_item("Displacements Field (Time)")
         self.item_child_stresses_3d_plot_frequency = self.add_sub_item("Stresses Field (Frequency)")
         self.item_child_stresses_3d_plot_time = self.add_sub_item("Stresses Field (Time)")
 
@@ -108,12 +108,12 @@ class ResultsViewerItems(CommonMenuItems):
     def modify_advanced_results_items_accessibility(self):
 
         def hide_advanced_items(hide: bool):
-            self.item_child_acoustic_pressure_2d_plot_time.setHidden(hide)
-            self.item_child_acoustic_pressure_3d_plot_time.setHidden(hide)
+            self.item_child_acoustic_nodal_solution_2d_plot_time.setHidden(hide)
+            self.item_child_acoustic_nodal_solution_3d_plot_time.setHidden(hide)
             self.item_child_allowable_pulsations_screw_compressor_2d_plot.setHidden(hide)
             self.item_child_allowable_pulsations_screw_compressor_3d_plot.setHidden(hide)
-            self.item_child_displacements_3d_plot_time.setHidden(hide)
             self.item_child_structural_nodal_solution_2d_plot_time.setHidden(hide)
+            self.item_child_structural_nodal_solution_3d_plot_time.setHidden(hide)
             self.item_child_stresses_2d_plot_time.setHidden(hide)
             self.item_child_stresses_3d_plot_time.setHidden(hide)
 
@@ -163,7 +163,7 @@ class ResultsViewerItems(CommonMenuItems):
         if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
             self.item_top_structural_results_viewer.setHidden(False)
             self.item_child_structural_mode_shapes.setHidden(True)
-            self.item_child_displacements_3d_plot_frequency.setHidden(False)
+            self.item_child_structural_nodal_solution_3d_plot_frequency.setHidden(False)
             self.item_child_structural_nodal_solution_2d_plot_frequency.setHidden(False)
             self.item_child_stresses_3d_plot_frequency.setHidden(False)
             self.item_child_stresses_2d_plot_frequency.setHidden(False)
@@ -178,9 +178,9 @@ class ResultsViewerItems(CommonMenuItems):
 
         if analysis_id in [AnalysisID.ACOUSTIC_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
             self.item_child_acoustic_mode_shapes.setHidden(True)
-            self.item_child_acoustic_pressure_3d_plot_frequency.setHidden(False)
-            self.item_child_acoustic_pressure_2d_plot_frequency.setHidden(False)
-            self.item_child_acoustic_pressure_frf.setHidden(False)
+            self.item_child_acoustic_nodal_solution_3d_plot_frequency.setHidden(False)
+            self.item_child_acoustic_nodal_solution_2d_plot_frequency.setHidden(False)
+            self.item_child_acoustic_nodal_solution_frf.setHidden(False)
             self.item_child_acoustic_shaking_forces.setHidden(False)
             self.item_child_decompose_acoustic_waves.setHidden(False)
             self.item_child_TL_NR.setHidden(False)

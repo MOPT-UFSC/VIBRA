@@ -294,7 +294,7 @@ class StructuralStress2dPlotTimeInputs(StructuralStress2dPlotTimeInputs_UI):
         for i, selected_id in enumerate(self.selected_ids):
 
             key = (selection_type, (selected_id))
-            legend_label = f"Structural stress {self.y_label.lower()} at {selection_type} [{selected_id}]"
+            legend_label = f"Structural {self.y_label.lower()} at {selection_type} [{selected_id}]"
 
             time_vector, stress_vector, stress_vector_ifft = self.get_response(selection_type, selected_id, stress_index)
 
