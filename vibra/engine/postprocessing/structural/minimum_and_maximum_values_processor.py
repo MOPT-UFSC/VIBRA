@@ -9,7 +9,7 @@ import numpy as np
 if TYPE_CHECKING:
     from vibra.engine.postprocessing import StructuralPostprocessing
 
-from vibra.interface.viewer_3d.plot_setup import DisplacementDataType, StressDataType, StressType
+from vibra.interface.viewer_3d.plot_setup import DisplacementDataType, StressDataType
 
 
 class MinimumAndMaximumValuesProcessor:
