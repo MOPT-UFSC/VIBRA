@@ -17,7 +17,7 @@ from vibra.interface.viewer_3d.actors.results_actor import ResultsActor
 from vibra.interface.viewer_3d.actors.symbols_actor_acoustic import SymbolsActorAcoustic
 from vibra.interface.viewer_3d.actors.symbols_actor_structural import SymbolsActorStructural
 from vibra.utils.interface_utils import MeshRendererConfig, SectionPlane, VisualizationFilter
-from vibra.utils.time_utils import context_timer, function_timer
+from vibra.utils.time_utils import context_timer
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -165,7 +165,6 @@ class PreviewRenderWidget(CommonRenderWidget):
             case _:
                 raise NotImplementedError(f'Plot setup "{self.plot_setup}" not implemented.')
 
-    @function_timer
     @override
     def update_plot(self, reset_camera: bool = False):
         self.mesh_actor.update()
@@ -179,10 +178,8 @@ class PreviewRenderWidget(CommonRenderWidget):
             self.picked_mesh.clear()
             self.renderer.ResetCamera()
 
-        with context_timer("render"):
-            self.update()
+        self.update()
 
-    @function_timer
     def update_visualization(self):
         self.renderer.SetBackground(self.mesh_config.background_bottom.to_rgb_f())
         self.renderer.SetBackground2(self.mesh_config.background_top.to_rgb_f())
@@ -287,7 +284,6 @@ class PreviewRenderWidget(CommonRenderWidget):
         self.mouse_click = (x, y)
         self.last_click_time = click_time
 
-    @function_timer
     def click(self, x1: int, y1: int):
         x0, y0 = self.mouse_click
         dist = np.sqrt((x1 - x0) ** 2 + (y1 - y0) ** 2)

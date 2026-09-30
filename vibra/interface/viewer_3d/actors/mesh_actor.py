@@ -9,17 +9,14 @@ from vtkmodules.util.numpy_support import numpy_to_vtk, numpy_to_vtkIdTypeArray,
 from vtkmodules.vtkCommonCore import vtkDataArray, vtkIntArray, vtkPoints, vtkUnsignedCharArray
 from vtkmodules.vtkCommonDataModel import (
     vtkCellArray,
-    vtkPlane,
     vtkPolyData,
 )
 from vtkmodules.vtkRenderingCore import vtkActor, vtkAreaPicker, vtkHardwarePicker, vtkPolyDataMapper, vtkPropAssembly, vtkRenderer
 
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
-from vibra.engine.properties.model_properties import ModelProperties
 from vibra.utils.interface_utils import SectionPlane
 from vibra.utils.math_functions import inside_plane
-from vibra.utils.time_utils import context_timer, function_timer
 
 
 @dataclass
@@ -68,7 +65,6 @@ class MeshActor(vtkPropAssembly):
 
         return self.model.mesh
 
-    @function_timer
     def update(self):
         if self.mesh is None:
             self.clear_data()
