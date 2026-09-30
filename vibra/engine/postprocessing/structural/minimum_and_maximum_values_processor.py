@@ -44,7 +44,7 @@ class MinimumAndMaximumValuesProcessor:
 
 
     @cache
-    def get_minimum_and_maximum_values_for_displacement_frequency(
+    def get_values_for_displacement_frequency(
         self,
         column: int,
         n_diff: int,
@@ -116,7 +116,7 @@ class MinimumAndMaximumValuesProcessor:
 
 
     @cache
-    def get_minimum_and_maximum_values_for_displacement_time(
+    def get_values_for_displacement_time(
         self,
         N: float,
         unit_factor: float,
@@ -144,7 +144,7 @@ class MinimumAndMaximumValuesProcessor:
 
 
     @cache
-    def get_minimum_and_maximum_values_for_stress_frequency(
+    def get_values_for_stress_frequency(
         self,
         column: int,
         unit_factor: float,
@@ -207,7 +207,7 @@ class MinimumAndMaximumValuesProcessor:
 
 
     @cache
-    def get_minimum_and_maximum_values_for_advanced_stress_frequency(
+    def get_values_for_advanced_stress_frequency(
         self,
         data_complex: tuple,
         data_type: StressDataType,
@@ -260,7 +260,7 @@ class MinimumAndMaximumValuesProcessor:
 
 
     @cache
-    def get_minimum_and_maximum_values_for_stresses_time(
+    def get_values_for_stresses_time(
         self,
         N: float, 
         unit_factor: float,

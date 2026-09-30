@@ -481,7 +481,7 @@ class StructuralPostprocessing:
         current_solution = phase_shifted_data.reshape(-1, 3).copy()
 
         if stress_plot:
-            _, max_value = self.min_max_processor.get_minimum_and_maximum_values_for_displacement_frequency(column, 0, unit_factor, data_type, False)
+            _, max_value = self.min_max_processor.get_values_for_displacement_frequency(column, 0, unit_factor, data_type, False)
             return current_solution, max_value
 
         if data_type in ["u_sum", "v_sum", "a_sum"]:
@@ -500,7 +500,7 @@ class StructuralPostprocessing:
             color_scalars = current_solution[:, 2]
             phase_shifted_data = current_solution * np.array([0.0, 0.0, 1.0])
 
-        min_value, max_value = self.min_max_processor.get_minimum_and_maximum_values_for_displacement_frequency(column, n_diff, round(unit_factor, 10), data_type, is_modal)
+        min_value, max_value = self.min_max_processor.get_values_for_displacement_frequency(column, n_diff, round(unit_factor, 10), data_type, is_modal)
 
         return phase_shifted_data, color_scalars, min_value, max_value, np.imag(data_complex).any()
 
@@ -524,7 +524,7 @@ class StructuralPostprocessing:
             n = np.sum(self.time_vector <= reduced_loop_time)
 
         # cache the minimum and maximum nodal displacements values 
-        min_max_values = self.min_max_processor.get_minimum_and_maximum_values_for_displacement_time(int(n), round(unit_factor, 10), plot_type)
+        min_max_values = self.min_max_processor.get_values_for_displacement_time(int(n), round(unit_factor, 10), plot_type)
 
         if stress_plot:
             (_, max_value) = min_max_values
@@ -583,7 +583,7 @@ class StructuralPostprocessing:
                 stress_values = compute_phase_shifted_values(stress_vector, phase_rad)
 
         # cache the minimum and maximum nodal stresses values
-        min_value, max_value = self.min_max_processor.get_minimum_and_maximum_values_for_stress_frequency(column, round(unit_factor, 10), stress_type, data_type)
+        min_value, max_value = self.min_max_processor.get_values_for_stress_frequency(column, round(unit_factor, 10), stress_type, data_type)
         symmetric_animation = not np.any(stress_vector.imag)
 
         return stress_values, min_value, max_value, symmetric_animation
@@ -613,7 +613,7 @@ class StructuralPostprocessing:
                 stress_values = stress_vector
 
         # cache the minimum and maximum nodal stresses values
-        min_value, max_value = self.min_max_processor.get_minimum_and_maximum_values_for_stresses_time(
+        min_value, max_value = self.min_max_processor.get_values_for_stresses_time(
             time_vector.size,
             round(unit_factor, 10),
             stress_type,
@@ -693,7 +693,7 @@ class StructuralPostprocessing:
                 stress_values = stress_vector.copy()
 
         # cache the minimum and maximum nodal stresses values
-        min_value, max_value = self.min_max_processor.get_minimum_and_maximum_values_for_advanced_stress_frequency(
+        min_value, max_value = self.min_max_processor.get_values_for_advanced_stress_frequency(
             tuple(stress_vector),
             data_type,
             )
@@ -726,7 +726,7 @@ class StructuralPostprocessing:
             case StressDataType.NON_ABSOLUTE_ANIMATION:
                 stress_values = stress_vector.copy()
 
-        min_value, max_value = self.min_max_processor.get_minimum_and_maximum_values_for_advanced_stress_frequency(
+        min_value, max_value = self.min_max_processor.get_values_for_advanced_stress_frequency(
             tuple(stress_vector),
             data_type,
             )
