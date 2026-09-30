@@ -14,7 +14,7 @@ Triple = tuple[float, float, float]
 
 
 class SymbolsActorStructural(SymbolsActor):
-    def __init__(self, model: Model, camera: vtkCamera):
+    def __init__(self, model: Model | None, camera: vtkCamera):
         super().__init__(camera)
         self.model = model
         self._build_dict_property_name_to_build_function()
@@ -42,6 +42,8 @@ class SymbolsActorStructural(SymbolsActor):
 
     def build(self):
         self.clear_symbols()
+        if self.model is None:
+            return
 
         point_properties = self.model.properties.point_properties
         for property_name, point_id in point_properties.keys():

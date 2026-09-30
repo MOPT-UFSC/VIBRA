@@ -13,7 +13,7 @@ from .symbols_actor import SymbolsActor
 
 
 class SymbolsActorAcoustic(SymbolsActor):
-    def __init__(self, model: Model, camera: vtkCamera):
+    def __init__(self, model: Model | None, camera: vtkCamera):
         super().__init__(camera)
 
         self.model = model
@@ -59,8 +59,11 @@ class SymbolsActorAcoustic(SymbolsActor):
 
     def build(self):
         self.clear_symbols()
-        self._build_nodal_normals()
-        self._build_element_normals()
+        if self.model is None:
+            return
+
+        # self._build_nodal_normals()
+        # self._build_element_normals()
 
         point_properties = self.model.properties.point_properties
         for property_name, point_id in point_properties.keys():

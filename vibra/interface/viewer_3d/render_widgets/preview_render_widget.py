@@ -14,6 +14,8 @@ from vibra.engine.postprocessing.structural_postprocessing import StructuralPost
 from vibra.interface.viewer_3d import plot_setup
 from vibra.interface.viewer_3d.actors.mesh_actor import MeshActor, PickedMesh
 from vibra.interface.viewer_3d.actors.results_actor import ResultsActor
+from vibra.interface.viewer_3d.actors.symbols_actor_acoustic import SymbolsActorAcoustic
+from vibra.interface.viewer_3d.actors.symbols_actor_structural import SymbolsActorStructural
 from vibra.utils.interface_utils import MeshRendererConfig, SectionPlane, VisualizationFilter
 from vibra.utils.time_utils import context_timer, function_timer
 
@@ -58,6 +60,12 @@ class PreviewRenderWidget(CommonRenderWidget):
         self.mesh_actor = MeshActor(self.model)
         # self.add_actors(self.mesh_actor)
 
+        self.acoustic_symbols_actor = SymbolsActorAcoustic(self.model, self.renderer.GetActiveCamera())
+        self.add_actors(self.acoustic_symbols_actor)
+
+        self.structural_symbols_actor = SymbolsActorStructural(self.model, self.renderer.GetActiveCamera())
+        self.add_actors(self.structural_symbols_actor)
+
         self.results_actor = ResultsActor(self.model)
         self.add_actors(self.results_actor)
 
@@ -65,6 +73,8 @@ class PreviewRenderWidget(CommonRenderWidget):
         self.model = model
         self.mesh_actor.model = model
         self.results_actor.model = model
+        self.acoustic_symbols_actor.model = model
+        self.structural_symbols_actor.model = model
 
     def set_section_plane(self, section_plane: SectionPlane | None):
         self.section_plane = section_plane
@@ -163,6 +173,8 @@ class PreviewRenderWidget(CommonRenderWidget):
     def update_plot(self, reset_camera: bool = False):
         self.mesh_actor.update()
         self.results_actor.update()
+        self.acoustic_symbols_actor.build()
+        self.structural_symbols_actor.build()
 
         self.update_visualization()
 
@@ -211,6 +223,7 @@ class PreviewRenderWidget(CommonRenderWidget):
 
     def _update_mesh_visualization(self):
         self.results_actor.show_entities_mode()
+        self.results_actor.reset_coordinates()
         self.results_actor.paint_nodes(self.mesh_config.selected_nodes_color, self.picked_mesh.picked_nodes)
         self.results_actor.paint_face_elements(self.mesh_config.selected_surfaces_color, self.picked_mesh.picked_faces)
         self.results_actor.paint_solid_elements(self.mesh_config.selected_volumes_color, self.picked_mesh.picked_solids)
