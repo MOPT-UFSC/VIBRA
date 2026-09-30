@@ -1,10 +1,12 @@
-from matplotlib.backends.backend_qtagg import NavigationToolbar2QT
-from PySide6.QtWidgets import QApplication
-from PySide6.QtGui import QImage, QAction, QColor
-
 import io
-from vibra.interface.formatters.icons import change_icon_color_for_widgets, Icon
-from vibra import app
+
+from matplotlib.backends.backend_qtagg import NavigationToolbar2QT
+from PySide6.QtGui import QAction, QImage
+from PySide6.QtWidgets import QApplication
+
+from vibra import DARK_ICON_COLOR, LIGHT_ICON_COLOR, app
+from vibra.interface.formatters.icons import Icon, change_icon_color_for_widgets
+
 
 class CustomNavigationToolbar(NavigationToolbar2QT):
 
@@ -32,12 +34,11 @@ class CustomNavigationToolbar(NavigationToolbar2QT):
         self.insertAction(self.action_copy_graph, action_save_figure)
     
     def _paint_toolbar_icons(self):
-
         theme = app().config.user_preferences.interface_theme
         if theme == "dark":
-            color = QColor("#5f9af4")
+            color = DARK_ICON_COLOR.to_qt()
         else:
-            color = QColor("#1a73e8")
+            color = LIGHT_ICON_COLOR.to_qt()
 
         change_icon_color_for_widgets(self.actions(), color)
 
