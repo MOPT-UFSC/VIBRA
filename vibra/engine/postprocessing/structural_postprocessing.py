@@ -322,7 +322,7 @@ class StructuralPostprocessing:
             freqs = self.model.frequencies
             nodal_solution *= (1j * 2 * np.pi * freqs)**n_diff
 
-        # t0 = perf_counter()
+        t0 = perf_counter()
         logging.info("Computing the iffts for structural nodal solution... [25/100]")
         self.time_vector, self.nodal_solution_time = process_multiple_iffts_from_one_sided_spectrum_signals(
             self.solution.frequencies,
@@ -332,8 +332,9 @@ class StructuralPostprocessing:
 
         logging.info("Computing the iffts for structural nodal solution... [100/100]")
 
-        # dt = perf_counter() - t0
-        # print(f"Elapsed time to process ifft: {dt: .6f} s")
+        dt = perf_counter() - t0
+        if dt > 0.5:
+            print(f"Elapsed time to process the iffts for structural nodal solution: {dt: .6f} s")
 
 
     @cache
@@ -342,7 +343,7 @@ class StructuralPostprocessing:
         assert self.solution.structural_solution is not None
         assert self.solution.analysis_id.is_structural() or self.solution.analysis_id.is_coupled()
 
-        # t0 = perf_counter()
+        t0 = perf_counter()
         logging.info("Computing the iffts for nodal stresses... [25/100]")
         n_nodes, n_stress, n_freq = self.nodal_averaged_stresses_frequency.shape
 
@@ -354,8 +355,9 @@ class StructuralPostprocessing:
 
         logging.info("Computing the iffts for nodal stresses... [100/100]")
 
-        # dt = perf_counter() - t0
-        # print(f"Elapsed time to process ifft: {dt: .6f} s")
+        dt = perf_counter() - t0
+        if dt > 0.5:
+            print(f"Elapsed time to process the iffts for stresses: {dt: .6f} s")
 
         return time_vector, waveforms.reshape(n_nodes, n_stress, waveforms.shape[1])
 
@@ -367,7 +369,8 @@ class StructuralPostprocessing:
             return
 
         dt = perf_counter() - t0
-        print(f"Time to compute nodal stresses (frequency): {dt} s")
+        if dt > 0.5:
+            print(f"Time to compute nodal stresses (frequency): {dt} s")
 
 
     def compute_structural_stresses_time(self, stress_iffts: bool = True):
@@ -385,7 +388,8 @@ class StructuralPostprocessing:
             self.nodal_averaged_stresses_time = self.recover_nodal_averaged_structural_stresses(time_domain=True)
 
         dt = perf_counter() - t0
-        print(f"Time to compute nodal stresses (time): {dt} s")
+        if dt > 0.5:
+            print(f"Time to compute nodal stresses (time): {dt} s")
 
 
     def compute_advanced_structural_stresses(self, stresses: np.ndarray, stress_type: StressType):

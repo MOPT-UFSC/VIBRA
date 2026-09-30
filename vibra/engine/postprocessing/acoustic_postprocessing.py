@@ -3,8 +3,7 @@ from __future__ import annotations
 import logging
 from collections import defaultdict
 from functools import cache
-
-# from time import perf_counter
+from time import perf_counter
 from typing import Optional
 
 import numpy as np
@@ -255,7 +254,7 @@ class AcousticPostprocessing:
         assert self.solution.acoustic_solution is not None
         assert self.solution.analysis_id.is_acoustic() or self.solution.analysis_id.is_coupled()
 
-        # t0 = perf_counter()
+        t0 = perf_counter()
         logging.info("Computing the iffts for acoustic nodal solution... [25/100]")
         self.time_vector, self.nodal_solution_time = process_multiple_iffts_from_one_sided_spectrum_signals(
             self.solution.frequencies,
@@ -265,8 +264,9 @@ class AcousticPostprocessing:
 
         logging.info("Computing the iffts for acoustic nodal solution... [100/100]")
 
-        # dt = perf_counter() - t0
-        # print(f"Elapsed time to process ifft: {dt: .6f} s")
+        dt = perf_counter() - t0
+        if dt > 0.5:
+            print(f"Elapsed time to process the iffts for acoustic nodal solution: {dt: .6f} s")
 
 
     @cache
