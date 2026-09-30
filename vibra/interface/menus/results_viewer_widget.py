@@ -130,7 +130,6 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.top_widget.setFixedHeight(120)
         self.current_widget = self.plot_structural_modal
         self.plot_structural_modal.load_natural_frequencies()
-        self.plot_structural_modal.configure_results_display_widget()
 
         self.add_widget(self.plot_structural_modal)
 
@@ -138,7 +137,6 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.top_widget.setFixedHeight(120)
         self.current_widget = self.plot_structural_harmonic
         self.plot_structural_harmonic.load_frequencies()
-        self.plot_structural_harmonic.configure_results_display_widget()
 
         self.add_widget(self.plot_structural_harmonic)
 
@@ -186,7 +184,6 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.top_widget.setFixedHeight(220)
         self.current_widget = self.plot_acoustic_modal
         self.plot_acoustic_modal.load_natural_frequencies()
-        self.plot_acoustic_modal.configure_results_display_widget()
 
         self.add_widget(self.plot_acoustic_modal)
 
@@ -194,7 +191,6 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.top_widget.setFixedHeight(220)
         self.current_widget = self.plot_acoustic_harmonic
         self.plot_acoustic_harmonic.load_frequencies()
-        self.plot_acoustic_harmonic.configure_results_display_widget()
 
         self.add_widget(self.plot_acoustic_harmonic)
 
@@ -332,9 +328,12 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         if isinstance(self.bottom_widget, QWidget):
             self.bottom_widget.hide()
 
+        configure_results_display_widget = getattr(widget, "configure_results_display_widget", None)
+        if configure_results_display_widget is not None:
+            configure_results_display_widget()
+
         self.layout().replaceWidget(self.bottom_widget, widget)
         self.bottom_widget = widget
 
         self.adjustSize()
         widget.show()
-        

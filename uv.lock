@@ -491,7 +491,7 @@ wheels = [
 
 [[package]]
 name = "molde"
-version = "0.1.18"
+version = "0.1.20"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "moviepy" },
@@ -499,9 +499,9 @@ dependencies = [
     { name = "qtpy" },
     { name = "vtk" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/23/d8/21a0e3127b33744b4054950273775bacb801b9a9dec0361f51bfb2687616/molde-0.1.18.tar.gz", hash = "sha256:ca348943d64ee53530d01d8b5095ecce83e7cc190ff8d09c24d0abae433ce65c", size = 165074, upload-time = "2025-11-21T19:12:18.436Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/72/36/35ab9285965cdca9f2fce82bf4940154691b50fa5f86e8223fc37e64f17a/molde-0.1.20.tar.gz", hash = "sha256:a0a85b8141e21bb6b051f3a5a00e39d5040a05105ec649866306a24e2f08ac13", size = 5427179, upload-time = "2026-09-29T22:18:36.122Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e9/4f/4bc81837d623df7a7f59cebc41a109ced79d4d181b0a6bcaeb0d54a3271e/molde-0.1.18-py3-none-any.whl", hash = "sha256:f50fd11920a8decb93e8761bff3b2209732855b5a20770b939203c469b869205", size = 181577, upload-time = "2025-11-21T19:12:16.466Z" },
+    { url = "https://files.pythonhosted.org/packages/6b/3e/54159bbc93da9202ce02ed02959cfb8895dddd920cc9690c6413ffbbe0e3/molde-0.1.20-py3-none-any.whl", hash = "sha256:99e29c9d9ae331ead64be168db5a436e0310420388a096d0d14f70a80b7389c8", size = 181976, upload-time = "2026-09-29T22:18:38.052Z" },
 ]
 
 [[package]]

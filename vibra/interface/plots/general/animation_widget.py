@@ -229,7 +229,7 @@ class AnimationWidget(AnimationWidget_UI):
             case PressureFieldPlotSetupTime():
                 plot_setup.time_index = self.time_index
             case AllowablePulsationForScrewCompressorsPlotSetup():
-                pass    
+                pass
             case _:
                 return
 
@@ -304,17 +304,23 @@ class AnimationWidget(AnimationWidget_UI):
 
     def save_animation(self):
         extensions = SUPPORTED_VIDEO_EXTENSIONS + SUPPORTED_ANIMATION_EXTENSIONS
-        file_path = FileDialogService.save_file(file_extensions=extensions,
-                                                caption="Save As")
+        file_path = FileDialogService.save_file(
+            file_extensions=extensions,
+            caption="Save As",
+        )
 
         if file_path is None:
             return
+
+        self.update_animation_settings()
+        self.current_render_widget._animation_total_frames = self.frames
 
         try:
             if file_path.suffix.lower()[1:] in SUPPORTED_ANIMATION_EXTENSIONS:
                 LoadingWindow(self.current_render_widget.save_animation).run(file_path)
             else:
-                LoadingWindow(self.current_render_widget.save_video).run(file_path)
+                cycles = self.cycles if self.cycles != 0 else 20
+                LoadingWindow(self.current_render_widget.save_video).run(file_path, cycles)
 
         except Exception as error_log:
             title = "Error while exporting animation"
