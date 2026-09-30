@@ -30,7 +30,7 @@ def generate_table_of_constant_values(filename: str, value: float | complex, f_s
     data = np.array([freq, np.real(values), np.imag(values)]).T
     # data = np.round(data, 8)
 
-    path = f"examples/tables/{filename}"
+    path = f"examples/table_files/{filename}"
     np.savetxt(path, data, delimiter=",")
 
 if __name__ == "__main__":
