@@ -4,11 +4,11 @@ from vibra import app
 from vibra.interface.menus.results_viewer_items import ResultsViewerItems
 from vibra.interface.plots.acoustic.acoustic_impedance_inputs import AcousticImpedanceInputs
 from vibra.interface.plots.acoustic.acoustic_mode_shape_inputs import AcousticModeShapeInputs
-from vibra.interface.plots.acoustic.acoustic_pressure_field_inputs import AcousticPressureFieldInputs
-from vibra.interface.plots.acoustic.acoustic_pressure_frequency_response_inputs import AcousticPressureFrequencyResponseInputs
+from vibra.interface.plots.acoustic.acoustic_nodal_solution_2d_plot_frequency_inputs import AcousticNodalSolution2dPlotFrequencyInputs
+from vibra.interface.plots.acoustic.acoustic_nodal_solution_2d_plot_time_inputs import AcousticNodalSolution2dPlotTimeInputs
+from vibra.interface.plots.acoustic.acoustic_nodal_solution_3d_plot_frequency_inputs import AcousticNodalSolution3dPlotFrequencyInputs
+from vibra.interface.plots.acoustic.acoustic_nodal_solution_3d_plot_time_inputs import AcousticNodalSolution3dPlotTimeInputs
 from vibra.interface.plots.acoustic.acoustic_pressure_frf_inputs import AcousticPressureFRFInputs
-from vibra.interface.plots.acoustic.acoustic_pressure_waveform_2d_plot_inputs import AcousticPressureWaveform2DPlotInputs
-from vibra.interface.plots.acoustic.acoustic_pressure_waveform_3d_plot_inputs import AcousticPressureWaveform3DPlotInputs
 from vibra.interface.plots.acoustic.acoustic_shaking_forces_inputs import AcousticShakingForcesInputs
 from vibra.interface.plots.acoustic.acoustic_waves_decomposition_inputs import AcousticWavesDecompositionInputs
 from vibra.interface.plots.acoustic.allowable_pulsation_3d_plot_for_screw_compressor_inputs import AllowablePulsations3DPlotForScrewCompressorInputs
@@ -38,7 +38,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.plot_structural_harmonic = StructuralNodalSolution3dPlotFrequencyInputs()
 
         self.plot_acoustic_modal = AcousticModeShapeInputs()
-        self.plot_acoustic_harmonic = AcousticPressureFieldInputs()
+        self.plot_acoustic_harmonic = AcousticNodalSolution3dPlotFrequencyInputs()
 
         self._reset()
         self._define_qt_variables()
@@ -62,8 +62,8 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
             StructuralStress3dPlotFrequencyInputs,
             StructuralStress3dPlotTimeInputs,
             AcousticModeShapeInputs,
-            AcousticPressureFieldInputs,
-            AcousticPressureWaveform3DPlotInputs,
+            AcousticNodalSolution3dPlotFrequencyInputs,
+            AcousticNodalSolution3dPlotTimeInputs,
         ))
 
     def clear_treeWidgets_of_frequencies(self):
@@ -215,7 +215,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.add_widget(self.current_widget)
 
     def add_acoustic_pressure_frequency_response_widget(self):
-        self.current_widget = self.process_input(AcousticPressureFrequencyResponseInputs)
+        self.current_widget = self.process_input(AcousticNodalSolution2dPlotFrequencyInputs)
 
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
@@ -263,7 +263,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.add_widget(self.current_widget)
 
     def add_acoustic_pressure_waveform_2d_plot_widget(self):
-        self.current_widget = self.process_input(AcousticPressureWaveform2DPlotInputs)
+        self.current_widget = self.process_input(AcousticNodalSolution2dPlotTimeInputs)
 
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
@@ -271,7 +271,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.add_widget(self.current_widget)
 
     def add_acoustic_pressure_waveform_3d_plot_widget(self):
-        self.current_widget = self.process_input(AcousticPressureWaveform3DPlotInputs)
+        self.current_widget = self.process_input(AcousticNodalSolution3dPlotTimeInputs)
 
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()

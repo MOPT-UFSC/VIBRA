@@ -7,11 +7,13 @@ from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.numeric_checks.unit_utilities import convert_pressure_unit
 from vibra.interface.plots.general.animation_widget import AnimationWidget
 from vibra.interface.plots.general.results_display_widget import ResultsDisplayWidget
-from vibra.interface.ui_generated.plots.acoustic.acoustic_pressure_field_inputs_ui import AcousticPressureFieldInputs_UI
+from vibra.interface.ui_generated.plots.acoustic.acoustic_nodal_solution_3d_plot_frequency_inputs_ui import (
+    AcousticNodalSolution3dPlotFrequencyInputs_UI,
+)
 from vibra.interface.viewer_3d.plot_setup import PressureFieldPlotSetupFrequency, PressurePlotType
 
 
-class AcousticPressureFieldInputs(AcousticPressureFieldInputs_UI):
+class AcousticNodalSolution3dPlotFrequencyInputs(AcousticNodalSolution3dPlotFrequencyInputs_UI):
     value_changed = Signal()
 
     def __init__(self, *args, **kwargs):

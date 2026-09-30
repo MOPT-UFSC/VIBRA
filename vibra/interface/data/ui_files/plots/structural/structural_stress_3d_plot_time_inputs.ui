@@ -145,8 +145,8 @@
             </property>
             <property name="font">
              <font>
-              <family>MS Shell Dlg 2</family>
-              <pointsize>11</pointsize>
+              <family>Segoe UI</family>
+              <pointsize>10</pointsize>
               <italic>false</italic>
               <bold>false</bold>
              </font>
@@ -158,7 +158,7 @@
              <enum>QFrame::Shadow::Raised</enum>
             </property>
             <property name="text">
-             <string>Stress field plot (frequency domain)</string>
+             <string>Stress field plot (time domain)</string>
             </property>
             <property name="textFormat">
              <enum>Qt::TextFormat::AutoText</enum>

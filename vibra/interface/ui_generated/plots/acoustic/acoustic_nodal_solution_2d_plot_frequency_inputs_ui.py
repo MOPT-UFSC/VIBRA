@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'acoustic_pressure_frequency_response_inputs.ui'
+## Form generated from reading UI file 'acoustic_nodal_solution_2d_plot_frequency_inputs.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.9.2
 ##
@@ -305,7 +305,7 @@ class Ui_Form(object):
 
     def retranslateUi(self, Form):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Form", None))
-        self.label.setText(QCoreApplication.translate("Form", u"Plot acoustic pressure frequency response", None))
+        self.label.setText(QCoreApplication.translate("Form", u"Plot the acoustic pressure (frequency domain)", None))
 #if QT_CONFIG(tooltip)
         self.pushButton_export_data.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p><span style=\" font-size:10pt; font-weight:400;\">Press to export the current response function</span></p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
@@ -346,7 +346,7 @@ class Ui_Form(object):
 
 
 
-class AcousticPressureFrequencyResponseInputs_UI(QWidget, Ui_Form):
+class AcousticNodalSolution2dPlotFrequencyInputs_UI(QWidget, Ui_Form):
     """
     Component Hierarchy:
     - Form: QWidget

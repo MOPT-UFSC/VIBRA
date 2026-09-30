@@ -306,7 +306,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         else:
             phase = self._interpolate_phase(animation_frame)
 
-        data = postprocessing.compute_acoustic_pressure_field(
+        data = postprocessing.compute_acoustic_pressures_for_3d_plot_frequency(
             self.plot_setup.index,
             phase,
             self.plot_setup.plot_type,
@@ -513,7 +513,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         )
 
         if StressType(self.plot_setup.stress_type).is_normal_or_shear_stress():
-            stress_data = postprocessing.compute_structural_stress_for_3d_plot_time(
+            stress_data = postprocessing.compute_structural_stresses_for_3d_plot_time(
                 time_index,
                 time_vector,
                 self.plot_setup.stress_type,
@@ -522,7 +522,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             )
 
         else:
-            stress_data = postprocessing.compute_advanced_structural_stress_for_3d_plot_time(
+            stress_data = postprocessing.compute_advanced_structural_stresses_for_3d_plot_time(
                 time_index,
                 self.plot_setup.stress_type,
                 self.plot_setup.plot_type,
@@ -649,7 +649,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         else:
             time_index = animation_frame
 
-        data = postprocessing.compute_acoustic_transient_pressure_field(
+        data = postprocessing.compute_acoustic_pressures_for_3d_plot_time(
             time_index,
             self.plot_setup.plot_type,
             unit_factor=self.plot_setup.unit_factor,

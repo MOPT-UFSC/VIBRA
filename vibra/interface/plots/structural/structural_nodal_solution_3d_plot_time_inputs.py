@@ -24,8 +24,6 @@ class StructuralNodalSolution3dPlotTimeInputs(StructuralNodalSolution3dPlotTimeI
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        app().main_window.show_geometry_render_widget()
-
         self._add_animation_widget()
         self._add_color_widget()
         self._initialize()
@@ -86,7 +84,8 @@ class StructuralNodalSolution3dPlotTimeInputs(StructuralNodalSolution3dPlotTimeI
             self.plot_data_callback()
         else:
             self.set_frames_disabled(True)
-            self.show_results_render()
+            app().main_window.show_geometry_render_widget()
+            self.pushButton_process_nodal_solution_iffts.setDisabled(False)
 
     def _configure_validators(self):
         self.lineEdit_animation_time.setValidator(StrictDoubleValidator(1e-5, 1e8, 8))
@@ -116,9 +115,6 @@ class StructuralNodalSolution3dPlotTimeInputs(StructuralNodalSolution3dPlotTimeI
         self.pushButton_process_nodal_solution_iffts.setEnabled(disabled)
 
     def show_results_render(self):
-        self.pushButton_process_nodal_solution_iffts.setDisabled(self.is_data_cached)
-        if not self.is_data_cached:
-            return
 
         curent_render_widget = app().main_window.get_current_render_widget()
         results_render_widget = app().main_window.results_widget
