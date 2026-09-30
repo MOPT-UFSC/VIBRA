@@ -172,6 +172,13 @@ def qt_extensions(extensions: list[str]) -> str:
 
 
 def preview_cache[T: Callable[..., Any]](func: T) -> T:
+    """
+    Caches the result of a function based on its source code and arguments.
+
+    It is meant to be used with the cli preview functionality to avoid recomputing
+    the same results across executions of the same script.
+    """
+
     source_code = inspect.getsource(func)
     func_hash = hashlib.md5(source_code.encode("utf-8")).hexdigest()
 
