@@ -2,8 +2,10 @@ from collections import defaultdict
 
 import numpy as np
 from molde.colors import color_names
+from vtkmodules.vtkRenderingCore import vtkCamera
 
 from vibra import app
+from vibra.engine.model import Model
 from vibra.interface.viewer_3d import sources
 from vibra.interface.viewer_3d.actors.symbols_positioner import SymbolsPositioner
 
@@ -11,9 +13,10 @@ from .symbols_actor import SymbolsActor
 
 
 class SymbolsActorAcoustic(SymbolsActor):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, model: Model, camera: vtkCamera):
+        super().__init__(camera)
 
+        self.model = model
         self._surface_symbols_positioner: SymbolsPositioner | None = None
 
         self._build_dict_property_name_to_build_function()
@@ -59,24 +62,24 @@ class SymbolsActorAcoustic(SymbolsActor):
         self._build_nodal_normals()
         self._build_element_normals()
 
-        point_properties = app().project.model.properties.point_properties
+        point_properties = self.model.properties.point_properties
         for property_name, point_id in point_properties.keys():
             if property_name in self.prop_name_to_build_func.keys():
                 self._call_build_functions(property_name, point_id=point_id)
 
-        line_properties = app().project.model.properties.line_properties
+        line_properties = self.model.properties.line_properties
         for property_name, line_id in line_properties.keys():
             if property_name in self.prop_name_to_build_func.keys():
                 self._call_build_functions(property_name, line_id=line_id)
 
-        nodal_properties = app().project.model.properties.nodal_properties
+        nodal_properties = self.model.properties.nodal_properties
         for property_name, node_id in nodal_properties.keys():
             if property_name in self.prop_name_to_build_func.keys():
                 self._call_build_functions(property_name, node_id=node_id)
 
-        surface_properties = app().project.model.properties.surface_properties
+        surface_properties = self.model.properties.surface_properties
         dict_surface_id_total_symbols = self._count_symbols_foreach_surface(surface_properties)
-        self._surface_symbols_positioner = SymbolsPositioner(app().project.model.mesh)
+        self._surface_symbols_positioner = SymbolsPositioner(self.model.mesh)
         self._surface_symbols_positioner.reset_count(dict_surface_id_total_symbols)
 
         for property_name, surface_id in surface_properties.keys():
@@ -101,7 +104,7 @@ class SymbolsActorAcoustic(SymbolsActor):
         return surface_symbol_totals
 
     def _get_symbol_coords_and_normal(self, surface_id: int) -> tuple[np.ndarray, np.ndarray]:
-        mesh = app().project.model.mesh
+        mesh = self.model.mesh
 
         surface_nodes = mesh.get_nodes_from_surface(surface_id)
         surface_coordinates = mesh.nodal_coordinates[surface_nodes, 1:]
@@ -135,7 +138,7 @@ class SymbolsActorAcoustic(SymbolsActor):
         return target_coords, avg_normal
 
     def _get_center_coords_from_line(self, line_id: int) -> tuple[np.ndarray, np.ndarray]:
-        mesh = app().project.model.mesh
+        mesh = self.model.mesh
         nodes = mesh.get_nodes_from_line(line_id)
         line_coordinates = mesh.nodal_coordinates[nodes, 1:]
         center_coords = np.average(line_coordinates, axis=0)
@@ -146,14 +149,14 @@ class SymbolsActorAcoustic(SymbolsActor):
         return (line_coordinates[index - 1, :], line_coordinates[index, :], line_coordinates[index + 1, :])
 
     def _get_coords_from_point(self, point_id: int) -> tuple[np.ndarray, np.ndarray]:
-        mesh = app().project.model.mesh
+        mesh = self.model.mesh
         point_nodes = mesh.nodes_from_points.get(point_id)
         points_coordinates = mesh.nodal_coordinates[point_nodes, 1:]
 
         return points_coordinates
 
     def _get_coords_from_node(self, node_id: int):
-        mesh = app().project.model.mesh
+        mesh = self.model.mesh
         node = mesh.nodal_coordinates[node_id]
         return node
 
@@ -161,7 +164,7 @@ class SymbolsActorAcoustic(SymbolsActor):
         if not app().main_window.results_widget.visualization_filter.nodal_normal_symbols:
             return
 
-        mesh = app().project.model.mesh
+        mesh = self.model.mesh
         for (_, node_id), normal_vector in mesh.nodal_normals_data.items():
             coords = mesh.nodal_coordinates[node_id, 1:]
             self.add_marker(sources.create_outwards_arrow_source, coords, normal_vector, color=color_names.GRAY)
@@ -170,7 +173,7 @@ class SymbolsActorAcoustic(SymbolsActor):
         if not app().main_window.results_widget.visualization_filter.element_normal_symbols:
             return
 
-        mesh = app().project.model.mesh
+        mesh = self.model.mesh
         for normal, center in mesh.element_normals_data.values():
             self.add_marker(
                 sources.create_outwards_arrow_source,
@@ -191,7 +194,7 @@ class SymbolsActorAcoustic(SymbolsActor):
         if surface_id == -1:
             return
 
-        surface_properties = app().project.model.properties.surface_properties
+        surface_properties = self.model.properties.surface_properties
         property = surface_properties[property_name, surface_id]
 
         coords, _ = self._get_symbol_coords_and_normal(surface_id)
@@ -223,7 +226,7 @@ class SymbolsActorAcoustic(SymbolsActor):
         if surface_id == -1:
             return
 
-        surface_properties = app().project.model.properties.surface_properties
+        surface_properties = self.model.properties.surface_properties
         if ("perforated_plate_model", surface_id) in surface_properties.keys():
             return
         if ("transfer_impedance", surface_id) in surface_properties.keys():
@@ -271,7 +274,7 @@ class SymbolsActorAcoustic(SymbolsActor):
         if surface_id == -1:
             return
 
-        prop_data = app().project.model.properties._get_property(property_name, surface=surface_id)
+        prop_data = self.model.properties._get_property(property_name, surface=surface_id)
         if not isinstance(prop_data, dict):
             return
 
@@ -309,12 +312,12 @@ class SymbolsActorAcoustic(SymbolsActor):
         if surface_id == -1:
             return
 
-        property_data = app().project.model.properties._get_property(property_name, surface=surface_id)
+        property_data = self.model.properties._get_property(property_name, surface=surface_id)
         if not isinstance(property_data, dict):
             return
 
         coords, normal = self._get_symbol_coords_and_normal(surface_id)
-        area = app().project.model.mesh.area_from_surfaces.get(surface_id)
+        area = self.model.mesh.area_from_surfaces.get(surface_id)
         if area is None:
             scale = 1
         else:
