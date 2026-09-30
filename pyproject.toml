@@ -20,7 +20,7 @@ dependencies = [
     "fileboxes (>=0.1.4,<0.2.0)",
     "pyside6 (==6.9.2)",
     "sounddevice (>=0.5.3,<0.6.0)",
-    "molde (>=0.1.18,<0.2.0)",
+    "molde>=0.1.18,<0.2.0",
     "polars>=1.37.1",
     "pyarrow>=22.0.0",
     "fastexcel>=0.18.0",
