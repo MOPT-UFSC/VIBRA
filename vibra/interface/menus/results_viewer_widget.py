@@ -117,6 +117,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
 
     def add_stress_field_for_harmonic_widget(self):
         self.current_widget = app().main_window.input_ui.plot_stress_field()
+        self.current_widget.configure_results_display_widget()
 
         if app().main_window.results_widget.playing_animation:
             app().main_window.results_widget.stop_animation()
@@ -281,4 +282,3 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
 
         self.adjustSize()
         widget.show()
-        
