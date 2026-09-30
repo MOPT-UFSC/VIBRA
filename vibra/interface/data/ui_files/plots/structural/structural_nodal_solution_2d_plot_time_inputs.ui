@@ -97,7 +97,7 @@
         <property name="font">
          <font>
           <family>Segoe UI</family>
-          <pointsize>11</pointsize>
+          <pointsize>10</pointsize>
           <italic>false</italic>
           <bold>false</bold>
          </font>
