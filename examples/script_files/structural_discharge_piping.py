@@ -5,7 +5,7 @@ from vibra.utils.interface_utils import SectionPlane, VisualizationFilter, previ
 
 @preview_cache
 def setup() -> Project:
-    project = Project().load_project("vibra/interface/data/examples/vibra_files/structural_discharge_system.vibra")
+    project = Project().load_project("examples/vibra_files/structural_discharge_system.vibra")
     return project
 
 

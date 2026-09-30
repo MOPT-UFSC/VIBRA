@@ -1,22 +1,12 @@
-from pathlib import Path
-
-from molde.colors import color_names
-
 from vibra import PROJECT_DIR
 from vibra.engine.analysis_info import AnalysisID, FrequencySpacing
 from vibra.engine.mesher.mesh_setup import MeshSetup
 from vibra.engine.project import Project
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
-from vibra.interface.viewer_3d.plot_setup import (
-    DisplacementFieldPlotSetupFrequency,
-    DisplacementPlotType,
-    PressureFieldPlotSetupFrequency,
-    PressurePlotType,
-)
-from vibra.utils.interface_utils import MeshRendererConfig, SectionPlane, VisualizationFilter, preview_cache
+from vibra.utils.interface_utils import SectionPlane, VisualizationFilter, preview_cache
 
-GEOMETRY_PATH = Path(PROJECT_DIR) / "data/examples/geometry_files/curved_fluid_and_pipe_fsi_example.STEP"
+GEOMETRY_PATH = PROJECT_DIR / "examples/geometry_files/curved_fluid_and_pipe_fsi_example.STEP"
 
 
 @preview_cache

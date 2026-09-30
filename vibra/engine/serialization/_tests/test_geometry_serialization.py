@@ -7,7 +7,7 @@ from vibra.engine.project import Project
 
 
 def test_write_and_read_acoustic_project(fluid, datadir: Path):
-    geometry_path = PROJECT_DIR / "data/examples/geometry_files/cylinder.step"
+    geometry_path = PROJECT_DIR / "examples/geometry_files/cylinder.step"
     project_path = datadir / "project.vibra"
 
     mesh_setup = MeshSetup(
@@ -53,7 +53,7 @@ def test_write_and_read_acoustic_project(fluid, datadir: Path):
 
 
 def test_write_and_read_structural_project(material, datadir: Path):
-    geometry_path = PROJECT_DIR / "data/examples/geometry_files/cylinder.step"
+    geometry_path = PROJECT_DIR / "examples/geometry_files/cylinder.step"
     project_path = datadir / "project.vibra"
 
     mesh_setup = MeshSetup(

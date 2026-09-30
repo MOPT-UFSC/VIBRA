@@ -1,5 +1,3 @@
-from pathlib import Path
-
 from vibra import PROJECT_DIR
 from vibra.engine.analysis_info import AnalysisID, FrequencySpacing
 from vibra.engine.mesher.mesh_setup import MeshSetup
@@ -11,7 +9,7 @@ from vibra.utils.interface_utils import SectionPlane, preview_cache
 
 @preview_cache
 def setup() -> Project:
-    geometry_path = Path(PROJECT_DIR) / "data/examples/geometry_files/rectangular_expansion_chamber.STEP"
+    geometry_path = PROJECT_DIR / "examples/geometry_files/rectangular_expansion_chamber.STEP"
 
     mesh_setup = MeshSetup(
         minimum_element_size=80,
@@ -71,7 +69,6 @@ def setup() -> Project:
 
     project.configure_analysis(analysis_setup)
     project.run_analysis()
-
 
     return project
 
