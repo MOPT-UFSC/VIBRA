@@ -190,7 +190,7 @@ class SymbolsActor(vtkActor):
         position: Sequence[float],
         orientation: Sequence[float],
         color: Color,
-        scale: float,
+        scale: float = 1,
         group: set[str] | None = None,
     ):
         if group is None:
@@ -226,6 +226,9 @@ class SymbolsActor(vtkActor):
         billboard = Billboard(shape_function, position, color, group)
         self.symbols.append(billboard)
 
+    def clear_symbols(self):
+        self.symbols.clear()
+
     def update_camera_callback(self, *_args: Any, **_kwargs: Any):
         points_view = vtk_to_numpy(self.symbol_points.GetData())
         scale_view = vtk_to_numpy(self.symbol_scales)
@@ -234,10 +237,17 @@ class SymbolsActor(vtkActor):
 
         markers = type_view == int(SymbolType.MARKER)
         billboards = type_view == int(SymbolType.BILLBOARD)
+        screen_size_mask = markers | billboards
 
-        camera_position = self.camera.GetPosition()
-        diff = points_view[markers | billboards] - camera_position
-        scale_view[markers | billboards] = 0.015 * np.linalg.norm(diff, axis=1)
+        if self.camera.GetParallelProjection():
+            scale = 0.05 * self.camera.GetParallelScale()
+            scale_view[screen_size_mask] = scale
+        else:
+            camera_position = self.camera.GetPosition()
+            diff = points_view - camera_position
+            distances = 0.015 * np.linalg.norm(diff, axis=1)
+            scale_view[screen_size_mask] = distances[screen_size_mask]
+
         rotation = self._get_camera_facing_rotation()
         rotation_view[billboards] = rotation
 
@@ -278,3 +288,15 @@ class SymbolsActor(vtkActor):
 
         quaternion = Rotation.align_vectors(target.reshape(1, 3), reference.reshape(1, 3))[0].as_quat()
         return (quaternion[3], quaternion[0], quaternion[1], quaternion[2])
+
+    def set_zbuffer_offsets(self, factor: float, units: float):
+        """
+        This functions is usefull to make a object appear in front of the others.
+        If the object should never be hidden, the parameters should be set to
+        factor = 1 and offset = -66000.
+        """
+        self.mapper.SetResolveCoincidentTopologyToPolygonOffset()
+        self.mapper.SetRelativeCoincidentTopologyLineOffsetParameters(factor, units)
+        self.mapper.SetRelativeCoincidentTopologyPolygonOffsetParameters(factor, units)
+        self.mapper.SetRelativeCoincidentTopologyPointOffsetParameter(units)
+        self.mapper.Update()

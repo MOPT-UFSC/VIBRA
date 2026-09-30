@@ -154,7 +154,7 @@ class SolidsActor(vtkActor):
         if self.has_distinguished_cells:
             color = Color(255, 0, 0)
         else:
-            color = Color(255, 255, 255)
+            color = app().config.user_preferences.volumes_color
 
         self.set_color(color)
 

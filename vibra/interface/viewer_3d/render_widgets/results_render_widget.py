@@ -4,15 +4,16 @@ from time import time
 
 import numpy as np
 from molde.render_widgets import AnimatedRenderWidget
-from PySide6.QtWidgets import QFileDialog
 from vtkmodules.util.numpy_support import vtk_to_numpy
 
 from vibra import LOGO_DIR, app
 from vibra.engine import AnalysisID
 from vibra.engine.analysis_info.analysis_enums import PhysicalDomain
 from vibra.engine.postprocessing import AcousticPostprocessing, StructuralPostprocessing
+from vibra.extensions import SUPPORTED_ANIMATION_EXTENSIONS, SUPPORTED_VIDEO_EXTENSIONS
 from vibra.interface.enums import Workspaces
 from vibra.interface.loading_window import LoadingWindow
+from vibra.interface.user_input.data_handler.file_dialog_service import FileDialogService
 from vibra.interface.viewer_3d.plot_setup import (
     AcousticPlotSetups,
     AllowablePulsationForScrewCompressorsPlotSetup,
@@ -705,13 +706,11 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.update()
 
     def export_animation_to_file(self):
-        file_path, check = QFileDialog.getSaveFileName(
-            self,
-            "Save As",
-            filter="All Files ();; Video (*.mp4);; GIF (*.gif);;",
-        )
+        extensions = SUPPORTED_VIDEO_EXTENSIONS + SUPPORTED_ANIMATION_EXTENSIONS
+        file_path = FileDialogService.save_file(file_extensions=extensions,
+                                                caption="Save As")
 
-        if not check:
+        if file_path is None:
             return
 
         self.save_video(file_path)

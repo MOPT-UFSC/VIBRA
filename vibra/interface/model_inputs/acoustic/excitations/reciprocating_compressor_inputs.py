@@ -8,8 +8,9 @@ from PySide6.QtCore import QItemSelectionModel, QPoint, Qt
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QLineEdit, QTreeWidgetItem
 
-from vibra import SUPPORTED_OUTPUT_DATA_EXTENSIONS, USER_PATH, app
+from vibra import USER_PATH, app
 from vibra.engine.properties.fluid import Fluid
+from vibra.extensions import SUPPORTED_OUTPUT_DATA_EXTENSIONS
 from vibra.interface import error_title
 from vibra.interface.common.common_interface import mesher_interface_callback, update_analysis_setup_in_file, update_entities_selection
 from vibra.interface.data_handler.export_model_results import ExportModelResults
@@ -1361,7 +1362,6 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         plotter.show()
 
     def export_path_callback(self):
-
         path = app().config.get_last_folder_for("exported_data_folder")
         if path is None:
             directory_path = USER_PATH
@@ -1369,7 +1369,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             directory_path = path
 
         caption = "Enter a filename to export the reciprocating compressor excitation data"
-        ext_filter = "Text file (*.dat);; Text file (*.txt);; Text file (*.csv);; Spreadsheet (*.xls);; Spreadsheet (*.xlsx)"
+        ext_filter = "Text file (*.dat);; Text file (*.txt);; Text file (*.csv);; Spreadsheet (*.xlsx)"
 
         if self.exporter is None:
             self.exporter = ExportModelResults()

@@ -1,15 +1,15 @@
 import logging
 from collections import defaultdict
-from pathlib import Path
 from time import sleep
 
 import numpy as np
 from PySide6.QtCore import QEvent, QObject, Qt, Signal
 from PySide6.QtGui import QCloseEvent
-from PySide6.QtWidgets import QFileDialog, QLineEdit
+from PySide6.QtWidgets import QLineEdit
 
 from vibra import app
 from vibra.engine.analysis_info import AnalysisID, FrequencySpacing, HarmonicAnalysisSetup
+from vibra.extensions import SUPPORTED_SPREADSHEET_WRITE_EXTENSIONS
 from vibra.interface import error_title
 from vibra.interface.common.common_interface import mesher_interface_callback
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -17,6 +17,7 @@ from vibra.interface.general.utils import clear_style_sheet
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
 from vibra.interface.ui_generated.model.acoustic.element_transfer.acoustic_transfer_element_inputs_ui import AcousticTransferElementInputs_UI
+from vibra.interface.user_input.data_handler.file_dialog_service import FileDialogService
 
 
 class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
@@ -72,8 +73,8 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         self.analysis_setup = None
         self.frequencies = None
 
-        self.surface_ids = list()
-        self.element_transfer_data = dict()
+        self.surface_ids = []
+        self.element_transfer_data = {}
 
         self.highlight_style_sheet = """border-color: rgb(32, 207, 255); border-width: 2px;"""
 
@@ -82,14 +83,15 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         self.tabWidget_main.setTabVisible(1, False)
 
     def _create_connections(self):
-        #
+
+        # QPushButton connections
         self.pushButton_exit.clicked.connect(self.close)
         self.pushButton_process_data.clicked.connect(self.process_data_callback)
         self.pushButton_invert_selection.clicked.connect(self.invert_selection_callback)
         self.pushButton_search.clicked.connect(self.search_callback)
-        #
+
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
-        #
+
         self.clickable(self.lineEdit_input_selected_id).connect(self.lineEdit_1_clicked)
         self.clickable(self.lineEdit_output_selected_id).connect(self.lineEdit_2_clicked)
 
@@ -152,31 +154,17 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         self.lineEdit_fstep.setText(str(analysis_setup.f_step))
 
     def search_callback(self):
-
         caption = "Set a file name to export the acoustic element transfer data"
 
-        last_path = app().config.get_last_folder_for(
-            "exported_data_folder",
-            default=Path().home(),
-        )
+        path = FileDialogService.save_file(file_extensions=SUPPORTED_SPREADSHEET_WRITE_EXTENSIONS,
+                                           caption=caption,
+                                           last_folder="exported_data_folder")
 
-        _filter = "Spreadsheet (*.xlsx);; Spreadsheet (*.xls)"
-
-        path, check = QFileDialog.getSaveFileName(self, caption, str(last_path), filter=_filter)
-
-        if not check:
+        if path is None:
             return True
 
-        file_extension = self.get_file_extension_from_string(check)
-
-        if file_extension not in path:
-            path += f".{file_extension}"
-
-        self.lineEdit_spreadsheet_path.setText(path)
+        self.lineEdit_spreadsheet_path.setText(str(path))
         app().config.write_last_folder_path_in_file("exported_data_folder", path)
-
-    def get_file_extension_from_string(self, string: str) -> str:
-        return string.split(".")[1][:-1]
 
     def check_typed_ids(self):
 
@@ -192,6 +180,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
                 input_id,
                 "surfaces",
                 domain="acoustic",
+                single_id=True
             )
 
             if error_data is not None:
@@ -210,7 +199,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
             self.lineEdit_fstep,
         ]
 
-        freq_data = list()
+        freq_data = []
 
         for line_edit in line_edits:
             if line_edit.text() == "":
@@ -299,7 +288,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         self.remove_model_excitations_and_impedances()
 
         # reset model solution data
-        app().main_window.analysis_toolbar.reset_solution(True)
+        app().main_window.analysis_toolbar.reset_solution()
 
         app().main_window.results_viewer_widget.results_viewer_items.update_items()
         self.print_final_message()
@@ -323,12 +312,12 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
 
         properties_to_remove = defaultdict(list)
         for property in model_excitations:
-            for key in self.properties.surface_properties.keys():
+            for key in self.properties.surface_properties:
                 if key[0] == property:
                     properties_to_remove[key[0]].append(key[1])
 
         for property in model_impedances:
-            for key in self.properties.surface_properties.keys():
+            for key in self.properties.surface_properties:
                 if key[0] == property and key[1] in self.surface_ids:
                     properties_to_remove[key[0]].append(key[1])
 
@@ -338,7 +327,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
         if not properties_to_remove:
             return
 
-        table_names = list()
+        table_names = []
         for property_label, surface_ids in properties_to_remove.items():
             for table_name in self.properties.get_property_related_table_names(property_label, surface_ids, "surfaces"):
                 if table_name in table_names:
@@ -484,7 +473,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
                     data_to_export = np.array([x_data, np.real(y_data), np.imag(y_data), np.abs(y_data)]).T
 
                 else:
-                    data_type = data["data_type"]
+                    data_type: str = data.get("data_type")
                     header = [x_label, f"{data_type.capitalize()} [{unit}]"]
                     data_to_export = np.array([x_data, y_data]).T
 
@@ -492,9 +481,11 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
                 df.to_pandas().to_excel(writer, sheet_name=sheet_name, index=False)
 
     def export_data_callback(self):
-        if self.element_transfer_data:
-            path = self.lineEdit_spreadsheet_path.text()
-            self.export_data_in_spreadsheet_format(path)
+        if not self.element_transfer_data:
+            return
+
+        path = self.lineEdit_spreadsheet_path.text()
+        self.export_data_in_spreadsheet_format(path)
 
     def print_final_message(self):
 

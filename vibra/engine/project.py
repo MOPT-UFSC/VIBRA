@@ -136,9 +136,9 @@ class Project:
     def run_analysis(self, is_resume: bool = False, print_log: bool = False):
         """
         It performs the solution of the currently configured model.
-        It might raise errors if the analysis is not propperly configured.
+        It might raise errors if the analysis is not properly configured.
         """
-        print("run_analysis")
+
         self.clear_caches()
 
         match self.model.analysis_id:
@@ -359,6 +359,7 @@ class Project:
 
         if print_log:
             print(f"Elapsed time to solve structural modal analysis: {dt: .6f} [s]")
+
         logging.info(f"Elapsed time to solve structural modal analysis: {dt: .6f} [s]")
 
         return self.model.solution
@@ -403,6 +404,7 @@ class Project:
 
         if print_log:
             print(f"Elapsed time to solve structural harmonic analysis: {dt: .6f} [s]")
+
         logging.info(f"Elapsed time to solve structural harmonic analysis: {dt: .6f} [s]")
 
         return self.model.solution
@@ -470,6 +472,7 @@ class Project:
 
         if print_log:
             print(f"Elapsed time to solve acoustic harmonic analysis: {dt: .6f} [s]")
+
         logging.info(f"Elapsed time to solve acoustic harmonic analysis: {dt: .6f} [s]")
 
         return self.model.solution

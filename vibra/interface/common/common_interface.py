@@ -2,14 +2,16 @@ import logging
 from copy import deepcopy
 from enum import IntEnum
 from numbers import Number
-from pathlib import Path
 from typing import Literal
 
 import numpy as np
-from PySide6.QtWidgets import QDialog, QFileDialog, QLineEdit, QPushButton, QWidget
+from PySide6.QtWidgets import QDialog, QLineEdit, QPushButton, QWidget
 
 from vibra import app
 from vibra.engine.analysis_info import AnalysisID, FrequencySpacing
+from vibra.extensions import SUPPORTED_OUTPUT_DATA_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
+from pathlib import Path
+
 from vibra.engine.solution import ModalSolution
 from vibra.interface import error_title, warning_title
 from vibra.interface.data.data_manager import is_frequencies_vector_equally_distributed
@@ -17,6 +19,7 @@ from vibra.interface.general.get_user_confirmation_input import GetUserConfirmat
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
+from vibra.interface.user_input.data_handler.file_dialog_service import FileDialogService
 from vibra.utils.subprocess.subprocess_handler import SubProcessHandler, SubProcessStatus
 
 
@@ -491,7 +494,6 @@ def check_conflicting_model_properties(volume_ids: list[int], domain: str):
 
 
 def export_modal_analysis_results(parent: QDialog | QWidget, modes_to_frequencies: dict, physical_domain: str):
-
     solution = app().project.model.solution
     if not isinstance(solution, ModalSolution):
         return
@@ -501,16 +503,11 @@ def export_modal_analysis_results(parent: QDialog | QWidget, modes_to_frequencie
         last_path = str(Path().home())
 
     caption = "Export the modal analysis results"
-    _filter = "Spreadsheet (*.xlsx);; Spreadsheet (*.xls);; Text file (*.dat);; Text file (*.txt);; Text file (*.csv)"
+    export_path = FileDialogService.save_file(file_extensions=SUPPORTED_OUTPUT_DATA_EXTENSIONS,
+                                              caption=caption,
+                                              last_folder="exported_table_folder")
 
-    export_path, extension = QFileDialog.getSaveFileName(
-        parent,
-        caption,
-        str(last_path),
-        filter=_filter,
-    )
-
-    if not extension:
+    if export_path is None:
         return
 
     app().config.write_last_folder_path_in_file("exported_table_folder", export_path)
@@ -537,7 +534,7 @@ def export_modal_analysis_results(parent: QDialog | QWidget, modes_to_frequencie
         else:
             modal_data_to_export[i, :] = [mode, value]
 
-    if "Text file" in extension:
+    if export_path.suffix[1:] in SUPPORTED_TEXT_EXTENSIONS:
         np.savetxt(export_path, modal_data_to_export, fmt=fmt, delimiter=",", header=header)
 
     else:

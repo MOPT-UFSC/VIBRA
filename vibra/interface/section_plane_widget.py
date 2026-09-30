@@ -52,9 +52,12 @@ class SectionPlaneWidget(SectionPlaneInputs_UI):
         self.check_mesh_field_results.clicked.connect(self.check_mesh_field_results_callback)
         #
         for slider in self._sliders():
-            slider.valueChanged.connect(self.value_change_callback)
+            slider.valueChanged.connect(self.slider_changed_callback)
             slider.sliderReleased.connect(self.slider_release_callback)
             slider.sliderPressed.connect(self.slider_pressed_callback)
+
+        for spinbox in self._spinboxes():
+            spinbox.valueChanged.connect(self.spinbox_changed_callback)
 
     def get_position(self, get_from: str = "spinboxes"):
         if get_from == "sliders":
@@ -81,7 +84,24 @@ class SectionPlaneWidget(SectionPlaneInputs_UI):
     def get_inverted(self):
         return self.invert_value
 
-    def value_change_callback(self):
+    def spinbox_changed_callback(self):
+        self.block_signals(self._sliders(), True)
+
+        Px, Py, Pz = self.get_position("spinboxes")
+        self.relative_plane_position_x_slider.setValue(Px)
+        self.relative_plane_position_y_slider.setValue(Py)
+        self.relative_plane_position_z_slider.setValue(Pz)
+
+        Rx, Ry, Rz = self.get_rotation("spinboxes")
+        self.plane_rotation_x_slider.setValue(Rx)
+        self.plane_rotation_y_slider.setValue(Ry)
+        self.plane_rotation_z_slider.setValue(Rz)
+
+        self.block_signals(self._sliders(), False)
+        self.editing = False
+        self.value_changed.emit()
+
+    def slider_changed_callback(self):
         self.block_signals(self._spinboxes(), True)
 
         Px, Py, Pz = self.get_position("sliders")
@@ -159,22 +179,10 @@ class SectionPlaneWidget(SectionPlaneInputs_UI):
     def _sliders(self):
         return (
             self.relative_plane_position_x_slider,
-            self.relative_plane_position_x_slider,
-            self.relative_plane_position_x_slider,
-            self.relative_plane_position_y_slider,
-            self.relative_plane_position_y_slider,
             self.relative_plane_position_y_slider,
             self.relative_plane_position_z_slider,
-            self.relative_plane_position_z_slider,
-            self.relative_plane_position_z_slider,
-            self.plane_rotation_x_slider,
-            self.plane_rotation_x_slider,
             self.plane_rotation_x_slider,
             self.plane_rotation_y_slider,
-            self.plane_rotation_y_slider,
-            self.plane_rotation_y_slider,
-            self.plane_rotation_z_slider,
-            self.plane_rotation_z_slider,
             self.plane_rotation_z_slider,
         )
 
