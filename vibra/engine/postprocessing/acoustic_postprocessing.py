@@ -266,7 +266,7 @@ class AcousticPostprocessing:
 
         dt = perf_counter() - t0
         if dt > 0.5:
-            print(f"Elapsed time to process the iffts for acoustic nodal solution: {dt: .6f} s")
+            print(f"Time to process the iffts for acoustic nodal solution: {dt: .6f} s")
 
 
     @cache
