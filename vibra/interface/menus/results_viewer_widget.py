@@ -18,7 +18,7 @@ from vibra.interface.plots.acoustic.particle_velocity_inputs import ParticleVelo
 from vibra.interface.plots.acoustic.surface_absorption_coefficient_inputs import SurfaceAbsorptionCoefficientInputs
 from vibra.interface.plots.acoustic.transmission_loss_inputs import TransmissionLossInputs
 from vibra.interface.plots.general.animation_widget import AnimationWidget
-from vibra.interface.plots.structural.structural_mode_shape_inputs import PlotStructuralModeShapeInputs
+from vibra.interface.plots.structural.structural_mode_shape_inputs import StructuralModeShapeInputs
 from vibra.interface.plots.structural.structural_nodal_solution_2d_plot_frequency_inputs import StructuralNodalSolution2dPlotFrequencytInputs
 from vibra.interface.plots.structural.structural_nodal_solution_2d_plot_time_inputs import StructuralNodalSolution2dPlotTimeInputs
 from vibra.interface.plots.structural.structural_nodal_solution_3d_plot_frequency_inputs import StructuralNodalSolution3dPlotFrequencyInputs
@@ -34,7 +34,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
     def __init__(self):
         super().__init__()
 
-        self.plot_structural_modal = PlotStructuralModeShapeInputs()
+        self.plot_structural_modal = StructuralModeShapeInputs()
         self.plot_structural_harmonic = StructuralNodalSolution3dPlotFrequencyInputs()
 
         self.plot_acoustic_modal = AcousticModeShapeInputs()
@@ -57,8 +57,9 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
 
     def current_widget_is_animatable(self) -> bool:
         return isinstance(self.current_widget, (
-            PlotStructuralModeShapeInputs,
+            StructuralModeShapeInputs,
             StructuralNodalSolution3dPlotFrequencyInputs,
+            StructuralNodalSolution3dPlotTimeInputs,
             StructuralStress3dPlotFrequencyInputs,
             StructuralStress3dPlotTimeInputs,
             AcousticModeShapeInputs,

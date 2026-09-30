@@ -13,7 +13,7 @@ from vibra.interface.ui_generated.plots.structural.structural_mode_shape_inputs_
 from vibra.interface.viewer_3d.plot_setup import DisplacementDataType, DisplacementFieldPlotSetupFrequency
 
 
-class PlotStructuralModeShapeInputs(StructuralModeShapeInputs_UI):
+class StructuralModeShapeInputs(StructuralModeShapeInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 

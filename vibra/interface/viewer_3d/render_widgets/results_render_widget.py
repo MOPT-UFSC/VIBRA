@@ -540,6 +540,12 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if self.user_max_value is not None:
             max_value = self.user_max_value
 
+        animation_widget = app().main_window.results_viewer_widget.get_animation_widget()
+
+        if animation_widget is not None:
+            sampling_time = time_vector[-1] - time_vector[0]
+            animation_widget.update_animation_parameters(sampling_time, time_vector.size)
+
         max_value = max_value if max_value != 0 else 1.0
         magnification_factor = self.plot_setup.magnification_factor
 

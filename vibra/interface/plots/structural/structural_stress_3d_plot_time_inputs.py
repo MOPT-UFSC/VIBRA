@@ -1,5 +1,4 @@
 from enum import IntEnum
-from time import perf_counter
 
 import numpy as np
 from PySide6.QtCore import QSignalBlocker, Qt, Signal
@@ -123,6 +122,9 @@ class StructuralStress3dPlotTimeInputs(StructuralStress3dPlotTimeInputs_UI):
         self.comboBox_plot_type.currentIndexChanged.connect(self.plot_data_callback)
         self.comboBox_plotting_results.currentIndexChanged.connect(self.plot_data_callback)
         self.comboBox_stress_units.currentIndexChanged.connect(self.plot_data_callback)
+
+        # QLineEdit connections
+        self.lineEdit_animation_time.editingFinished.connect(self.plot_data_callback)
 
         # QPushButton connection
         self.pushButton_process_nodal_stresses.clicked.connect(self.plot_data_callback)
