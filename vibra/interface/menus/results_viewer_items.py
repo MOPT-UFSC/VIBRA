@@ -114,8 +114,8 @@ class ResultsViewerItems(CommonMenuItems):
             self.item_child_allowable_pulsations_screw_compressor_3d_plot.setHidden(hide)
             self.item_child_displacements_3d_plot_time.setHidden(hide)
             self.item_child_structural_nodal_solution_2d_plot_time.setHidden(hide)
-            self.item_child_stresses_3d_plot_time.setHidden(hide)
             self.item_child_stresses_2d_plot_time.setHidden(hide)
+            self.item_child_stresses_3d_plot_time.setHidden(hide)
 
         valid_analysis = self.analysis_id in [AnalysisID.ACOUSTIC_HARMONIC, AnalysisID.COUPLED_HARMONIC]
         if not valid_analysis:
@@ -167,7 +167,6 @@ class ResultsViewerItems(CommonMenuItems):
             self.item_child_structural_nodal_solution_2d_plot_frequency.setHidden(False)
             self.item_child_stresses_3d_plot_frequency.setHidden(False)
             self.item_child_stresses_2d_plot_frequency.setHidden(False)
-            self.item_child_stresses_2d_plot_time.setHidden(False)
             # self.item_child_reaction_frequency_response.setHidden(False)
 
         if analysis_id == AnalysisID.STRUCTURAL_MODAL:

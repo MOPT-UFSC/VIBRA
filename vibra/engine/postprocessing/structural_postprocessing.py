@@ -391,7 +391,7 @@ class StructuralPostprocessing:
     def compute_advanced_structural_stresses(self, stresses: np.ndarray, stress_type: StressType):
         """
         Use this method to compute the following advanced nodal stresses: 
-        Von Mises, Tresca, and Maximum Principal stresses.
+        Von Mises, Tresca, Maximum Principal 1, 2 and 3.
 
         Parameters
         ----------
@@ -604,7 +604,7 @@ class StructuralPostprocessing:
             return
 
         # initialize the stress vector
-        stress_vector = self.nodal_averaged_stresses_time[:, stress_type, time_index].copy() * unit_factor
+        stress_vector = unit_factor * self.nodal_averaged_stresses_time[:, stress_type, time_index].copy()
 
         match data_type:
             case StressDataType.ABSOLUTE_ANIMATION:
@@ -615,8 +615,9 @@ class StructuralPostprocessing:
         # cache the minimum and maximum nodal stresses values
         min_value, max_value = self.min_max_processor.get_minimum_and_maximum_values_for_stresses_time(
             time_vector.size,
-            round(unit_factor, 10), 
-            stress_type, data_type,
+            round(unit_factor, 10),
+            stress_type,
+            data_type,
             )
 
         # force the processing of all animation frames
