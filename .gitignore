@@ -143,4 +143,4 @@ dmypy.json
 .pyre/
 
 # files do not ignore
-!examples/tables/*.dat
+!examples/table_files/*.dat
