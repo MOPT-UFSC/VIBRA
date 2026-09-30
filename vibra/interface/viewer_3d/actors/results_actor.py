@@ -410,12 +410,14 @@ class ResultsActor(vtkPropAssembly):
     def show_results_mode(self):
         self.visualization_mode = VisualizationMode.SHOW_RESULTS
         self.node_mapper.SetScalarModeToUsePointData()
+        self.edge_mapper.ScalarVisibilityOn()
         self.surface_mapper.SetScalarModeToUsePointData()
         self.volume_mapper.SetScalarModeToUsePointData()
 
     def show_entities_mode(self):
         self.visualization_mode = VisualizationMode.SHOW_ENTITIES
         self.node_mapper.SetScalarModeToUseCellData()
+        self.edge_mapper.ScalarVisibilityOff()
         self.surface_mapper.SetScalarModeToUseCellData()
         self.volume_mapper.SetScalarModeToUseCellData()
 
