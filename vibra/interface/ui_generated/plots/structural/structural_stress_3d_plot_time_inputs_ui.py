@@ -103,102 +103,32 @@ class Ui_Form(object):
         self.gridLayout_4.setSpacing(6)
         self.gridLayout_4.setObjectName(u"gridLayout_4")
         self.gridLayout_4.setContentsMargins(0, 6, 0, 6)
-        self.comboBox_reduced_time = QComboBox(self.frame_plot_controls)
-        self.comboBox_reduced_time.addItem("")
-        self.comboBox_reduced_time.addItem("")
-        self.comboBox_reduced_time.addItem("")
-        self.comboBox_reduced_time.setObjectName(u"comboBox_reduced_time")
-        self.comboBox_reduced_time.setMinimumSize(QSize(176, 28))
-        self.comboBox_reduced_time.setMaximumSize(QSize(200, 28))
+        self.label_linear_2 = QLabel(self.frame_plot_controls)
+        self.label_linear_2.setObjectName(u"label_linear_2")
+        self.label_linear_2.setMinimumSize(QSize(100, 28))
+        self.label_linear_2.setMaximumSize(QSize(110, 28))
         font1 = QFont()
         font1.setPointSize(10)
-        self.comboBox_reduced_time.setFont(font1)
+        font1.setBold(False)
+        self.label_linear_2.setFont(font1)
+        self.label_linear_2.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
-        self.gridLayout_4.addWidget(self.comboBox_reduced_time, 2, 2, 1, 1)
+        self.gridLayout_4.addWidget(self.label_linear_2, 1, 1, 1, 1)
 
-        self.comboBox_stress_units = QComboBox(self.frame_plot_controls)
-        self.comboBox_stress_units.addItem("")
-        self.comboBox_stress_units.addItem("")
-        self.comboBox_stress_units.addItem("")
-        self.comboBox_stress_units.addItem("")
-        self.comboBox_stress_units.addItem("")
-        self.comboBox_stress_units.addItem("")
-        self.comboBox_stress_units.setObjectName(u"comboBox_stress_units")
-        self.comboBox_stress_units.setMinimumSize(QSize(180, 28))
-        self.comboBox_stress_units.setMaximumSize(QSize(180, 28))
-        self.comboBox_stress_units.setFont(font1)
-        self.comboBox_stress_units.setStyleSheet(u"")
+        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gridLayout_4.addWidget(self.comboBox_stress_units, 1, 2, 1, 1)
+        self.gridLayout_4.addItem(self.horizontalSpacer_2, 5, 0, 1, 1)
 
         self.label_reduced_time = QLabel(self.frame_plot_controls)
         self.label_reduced_time.setObjectName(u"label_reduced_time")
         self.label_reduced_time.setMinimumSize(QSize(100, 26))
         self.label_reduced_time.setMaximumSize(QSize(110, 26))
-        self.label_reduced_time.setFont(font1)
-        self.label_reduced_time.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
-
-        self.gridLayout_4.addWidget(self.label_reduced_time, 2, 1, 1, 1)
-
-        self.label_animation_time = QLabel(self.frame_plot_controls)
-        self.label_animation_time.setObjectName(u"label_animation_time")
-        self.label_animation_time.setMinimumSize(QSize(100, 26))
-        self.label_animation_time.setMaximumSize(QSize(110, 26))
-        self.label_animation_time.setFont(font1)
-        self.label_animation_time.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
-
-        self.gridLayout_4.addWidget(self.label_animation_time, 3, 1, 1, 1)
-
-        self.lineEdit_animation_time = QLineEdit(self.frame_plot_controls)
-        self.lineEdit_animation_time.setObjectName(u"lineEdit_animation_time")
-        self.lineEdit_animation_time.setMinimumSize(QSize(0, 28))
-        self.lineEdit_animation_time.setMaximumSize(QSize(16777215, 28))
-        self.lineEdit_animation_time.setFont(font1)
-
-        self.gridLayout_4.addWidget(self.lineEdit_animation_time, 3, 2, 1, 1)
-
-        self.comboBox_plot_type = QComboBox(self.frame_plot_controls)
-        self.comboBox_plot_type.addItem("")
-        self.comboBox_plot_type.addItem("")
-        self.comboBox_plot_type.setObjectName(u"comboBox_plot_type")
-        self.comboBox_plot_type.setMinimumSize(QSize(176, 28))
-        self.comboBox_plot_type.setMaximumSize(QSize(200, 28))
-        self.comboBox_plot_type.setFont(font1)
-
-        self.gridLayout_4.addWidget(self.comboBox_plot_type, 4, 2, 1, 1)
-
-        self.label_linear_2 = QLabel(self.frame_plot_controls)
-        self.label_linear_2.setObjectName(u"label_linear_2")
-        self.label_linear_2.setMinimumSize(QSize(100, 28))
-        self.label_linear_2.setMaximumSize(QSize(110, 28))
         font2 = QFont()
         font2.setPointSize(10)
-        font2.setBold(False)
-        self.label_linear_2.setFont(font2)
-        self.label_linear_2.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+        self.label_reduced_time.setFont(font2)
+        self.label_reduced_time.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
-        self.gridLayout_4.addWidget(self.label_linear_2, 1, 1, 1, 1)
-
-        self.label_animation_time_unit = QLabel(self.frame_plot_controls)
-        self.label_animation_time_unit.setObjectName(u"label_animation_time_unit")
-        self.label_animation_time_unit.setMinimumSize(QSize(0, 0))
-        self.label_animation_time_unit.setMaximumSize(QSize(28, 16777215))
-        self.label_animation_time_unit.setFont(font1)
-
-        self.gridLayout_4.addWidget(self.label_animation_time_unit, 3, 3, 1, 1)
-
-        self.label_7 = QLabel(self.frame_plot_controls)
-        self.label_7.setObjectName(u"label_7")
-        self.label_7.setMinimumSize(QSize(100, 28))
-        self.label_7.setMaximumSize(QSize(110, 28))
-        font3 = QFont()
-        font3.setFamilies([u"MS Shell Dlg 2"])
-        font3.setPointSize(10)
-        font3.setBold(False)
-        self.label_7.setFont(font3)
-        self.label_7.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
-
-        self.gridLayout_4.addWidget(self.label_7, 0, 1, 1, 1)
+        self.gridLayout_4.addWidget(self.label_reduced_time, 3, 1, 1, 1)
 
         self.comboBox_plotting_results = QComboBox(self.frame_plot_controls)
         self.comboBox_plotting_results.addItem("")
@@ -216,26 +146,96 @@ class Ui_Form(object):
         self.comboBox_plotting_results.setMinimumSize(QSize(180, 28))
         self.comboBox_plotting_results.setMaximumSize(QSize(180, 28))
         self.comboBox_plotting_results.setSizeIncrement(QSize(0, 0))
-        self.comboBox_plotting_results.setFont(font1)
+        self.comboBox_plotting_results.setFont(font2)
 
         self.gridLayout_4.addWidget(self.comboBox_plotting_results, 0, 2, 1, 1)
+
+        self.label_animation_time = QLabel(self.frame_plot_controls)
+        self.label_animation_time.setObjectName(u"label_animation_time")
+        self.label_animation_time.setMinimumSize(QSize(100, 26))
+        self.label_animation_time.setMaximumSize(QSize(110, 26))
+        self.label_animation_time.setFont(font2)
+        self.label_animation_time.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+
+        self.gridLayout_4.addWidget(self.label_animation_time, 5, 1, 1, 1)
+
+        self.lineEdit_animation_time = QLineEdit(self.frame_plot_controls)
+        self.lineEdit_animation_time.setObjectName(u"lineEdit_animation_time")
+        self.lineEdit_animation_time.setMinimumSize(QSize(0, 28))
+        self.lineEdit_animation_time.setMaximumSize(QSize(16777215, 28))
+        self.lineEdit_animation_time.setFont(font2)
+
+        self.gridLayout_4.addWidget(self.lineEdit_animation_time, 5, 2, 1, 1)
+
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_4.addItem(self.horizontalSpacer, 5, 4, 1, 1)
+
+        self.comboBox_reduced_time = QComboBox(self.frame_plot_controls)
+        self.comboBox_reduced_time.addItem("")
+        self.comboBox_reduced_time.addItem("")
+        self.comboBox_reduced_time.addItem("")
+        self.comboBox_reduced_time.setObjectName(u"comboBox_reduced_time")
+        self.comboBox_reduced_time.setMinimumSize(QSize(176, 28))
+        self.comboBox_reduced_time.setMaximumSize(QSize(200, 28))
+        self.comboBox_reduced_time.setFont(font2)
+
+        self.gridLayout_4.addWidget(self.comboBox_reduced_time, 3, 2, 1, 1)
+
+        self.label_7 = QLabel(self.frame_plot_controls)
+        self.label_7.setObjectName(u"label_7")
+        self.label_7.setMinimumSize(QSize(100, 28))
+        self.label_7.setMaximumSize(QSize(110, 28))
+        font3 = QFont()
+        font3.setFamilies([u"MS Shell Dlg 2"])
+        font3.setPointSize(10)
+        font3.setBold(False)
+        self.label_7.setFont(font3)
+        self.label_7.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+
+        self.gridLayout_4.addWidget(self.label_7, 0, 1, 1, 1)
+
+        self.label_animation_time_unit = QLabel(self.frame_plot_controls)
+        self.label_animation_time_unit.setObjectName(u"label_animation_time_unit")
+        self.label_animation_time_unit.setMinimumSize(QSize(0, 0))
+        self.label_animation_time_unit.setMaximumSize(QSize(28, 16777215))
+        self.label_animation_time_unit.setFont(font2)
+
+        self.gridLayout_4.addWidget(self.label_animation_time_unit, 5, 3, 1, 1)
+
+        self.comboBox_stress_units = QComboBox(self.frame_plot_controls)
+        self.comboBox_stress_units.addItem("")
+        self.comboBox_stress_units.addItem("")
+        self.comboBox_stress_units.addItem("")
+        self.comboBox_stress_units.addItem("")
+        self.comboBox_stress_units.addItem("")
+        self.comboBox_stress_units.addItem("")
+        self.comboBox_stress_units.setObjectName(u"comboBox_stress_units")
+        self.comboBox_stress_units.setMinimumSize(QSize(180, 28))
+        self.comboBox_stress_units.setMaximumSize(QSize(180, 28))
+        self.comboBox_stress_units.setFont(font2)
+        self.comboBox_stress_units.setStyleSheet(u"")
+
+        self.gridLayout_4.addWidget(self.comboBox_stress_units, 1, 2, 1, 1)
 
         self.label = QLabel(self.frame_plot_controls)
         self.label.setObjectName(u"label")
         self.label.setMinimumSize(QSize(100, 28))
         self.label.setMaximumSize(QSize(110, 28))
-        self.label.setFont(font1)
+        self.label.setFont(font2)
         self.label.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
-        self.gridLayout_4.addWidget(self.label, 4, 1, 1, 1)
+        self.gridLayout_4.addWidget(self.label, 2, 1, 1, 1)
 
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        self.comboBox_plot_type = QComboBox(self.frame_plot_controls)
+        self.comboBox_plot_type.addItem("")
+        self.comboBox_plot_type.addItem("")
+        self.comboBox_plot_type.setObjectName(u"comboBox_plot_type")
+        self.comboBox_plot_type.setMinimumSize(QSize(176, 28))
+        self.comboBox_plot_type.setMaximumSize(QSize(200, 28))
+        self.comboBox_plot_type.setFont(font2)
 
-        self.gridLayout_4.addItem(self.horizontalSpacer, 3, 4, 1, 1)
-
-        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_4.addItem(self.horizontalSpacer_2, 3, 0, 1, 1)
+        self.gridLayout_4.addWidget(self.comboBox_plot_type, 2, 2, 1, 1)
 
 
         self.gridLayout_5.addWidget(self.frame_plot_controls, 1, 0, 1, 1)
@@ -254,7 +254,7 @@ class Ui_Form(object):
         self.pushButton_process_nodal_stresses.setObjectName(u"pushButton_process_nodal_stresses")
         self.pushButton_process_nodal_stresses.setMinimumSize(QSize(160, 32))
         self.pushButton_process_nodal_stresses.setMaximumSize(QSize(180, 32))
-        self.pushButton_process_nodal_stresses.setFont(font1)
+        self.pushButton_process_nodal_stresses.setFont(font2)
         self.pushButton_process_nodal_stresses.setStyleSheet(u"")
         self.pushButton_process_nodal_stresses.setFlat(False)
 
@@ -290,25 +290,8 @@ class Ui_Form(object):
     def retranslateUi(self, Form):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Plot stress field", None))
         self.label_title.setText(QCoreApplication.translate("Form", u"Stress field plot (time domain)", None))
-        self.comboBox_reduced_time.setItemText(0, QCoreApplication.translate("Form", u"Disabled", None))
-        self.comboBox_reduced_time.setItemText(1, QCoreApplication.translate("Form", u"User-defined", None))
-        self.comboBox_reduced_time.setItemText(2, QCoreApplication.translate("Form", u"Rotational speed", None))
-
-        self.comboBox_stress_units.setItemText(0, QCoreApplication.translate("Form", u"MPa", None))
-        self.comboBox_stress_units.setItemText(1, QCoreApplication.translate("Form", u"kPa", None))
-        self.comboBox_stress_units.setItemText(2, QCoreApplication.translate("Form", u"Pa", None))
-        self.comboBox_stress_units.setItemText(3, QCoreApplication.translate("Form", u"ksi", None))
-        self.comboBox_stress_units.setItemText(4, QCoreApplication.translate("Form", u"psi", None))
-        self.comboBox_stress_units.setItemText(5, QCoreApplication.translate("Form", u"N/m\u00b2", None))
-
-        self.label_reduced_time.setText(QCoreApplication.translate("Form", u"Reduced time:", None))
-        self.label_animation_time.setText(QCoreApplication.translate("Form", u"Animation time:", None))
-        self.comboBox_plot_type.setItemText(0, QCoreApplication.translate("Form", u"Non-absolute (animation)", None))
-        self.comboBox_plot_type.setItemText(1, QCoreApplication.translate("Form", u"Absolute (animation)", None))
-
         self.label_linear_2.setText(QCoreApplication.translate("Form", u"Stress units:", None))
-        self.label_animation_time_unit.setText(QCoreApplication.translate("Form", u"[s]", None))
-        self.label_7.setText(QCoreApplication.translate("Form", u"Plotting results:", None))
+        self.label_reduced_time.setText(QCoreApplication.translate("Form", u"Reduced time:", None))
         self.comboBox_plotting_results.setItemText(0, QCoreApplication.translate("Form", u"Normal stress x", None))
         self.comboBox_plotting_results.setItemText(1, QCoreApplication.translate("Form", u"Normal stress y", None))
         self.comboBox_plotting_results.setItemText(2, QCoreApplication.translate("Form", u"Normal stress z", None))
@@ -321,7 +304,24 @@ class Ui_Form(object):
         self.comboBox_plotting_results.setItemText(9, QCoreApplication.translate("Form", u"Max. principal stress 2", None))
         self.comboBox_plotting_results.setItemText(10, QCoreApplication.translate("Form", u"Max. principal stress 3", None))
 
+        self.label_animation_time.setText(QCoreApplication.translate("Form", u"Animation time:", None))
+        self.comboBox_reduced_time.setItemText(0, QCoreApplication.translate("Form", u"Disabled", None))
+        self.comboBox_reduced_time.setItemText(1, QCoreApplication.translate("Form", u"User-defined", None))
+        self.comboBox_reduced_time.setItemText(2, QCoreApplication.translate("Form", u"Rotational speed", None))
+
+        self.label_7.setText(QCoreApplication.translate("Form", u"Plotting results:", None))
+        self.label_animation_time_unit.setText(QCoreApplication.translate("Form", u"[s]", None))
+        self.comboBox_stress_units.setItemText(0, QCoreApplication.translate("Form", u"MPa", None))
+        self.comboBox_stress_units.setItemText(1, QCoreApplication.translate("Form", u"kPa", None))
+        self.comboBox_stress_units.setItemText(2, QCoreApplication.translate("Form", u"Pa", None))
+        self.comboBox_stress_units.setItemText(3, QCoreApplication.translate("Form", u"ksi", None))
+        self.comboBox_stress_units.setItemText(4, QCoreApplication.translate("Form", u"psi", None))
+        self.comboBox_stress_units.setItemText(5, QCoreApplication.translate("Form", u"N/m\u00b2", None))
+
         self.label.setText(QCoreApplication.translate("Form", u"Plot type:", None))
+        self.comboBox_plot_type.setItemText(0, QCoreApplication.translate("Form", u"Non-absolute (animation)", None))
+        self.comboBox_plot_type.setItemText(1, QCoreApplication.translate("Form", u"Absolute (animation)", None))
+
         self.pushButton_process_nodal_stresses.setText(QCoreApplication.translate("Form", u"Process nodal stresses", None))
     # retranslateUi
 
@@ -343,17 +343,17 @@ class StructuralStress3dPlotTimeInputs_UI(QWidget, Ui_Form):
                                     - (Layout): QGridLayout
                                             - frame_plot_controls: QFrame
                                                 - (Layout): QGridLayout
-                                                        - comboBox_reduced_time: QComboBox
-                                                        - comboBox_stress_units: QComboBox
+                                                        - label_linear_2: QLabel
                                                         - label_reduced_time: QLabel
+                                                        - comboBox_plotting_results: QComboBox
                                                         - label_animation_time: QLabel
                                                         - lineEdit_animation_time: QLineEdit
-                                                        - comboBox_plot_type: QComboBox
-                                                        - label_linear_2: QLabel
-                                                        - label_animation_time_unit: QLabel
+                                                        - comboBox_reduced_time: QComboBox
                                                         - label_7: QLabel
-                                                        - comboBox_plotting_results: QComboBox
+                                                        - label_animation_time_unit: QLabel
+                                                        - comboBox_stress_units: QComboBox
                                                         - label: QLabel
+                                                        - comboBox_plot_type: QComboBox
                                             - frame_3: QFrame
                                                 - (Layout): QGridLayout
                                                         - pushButton_process_nodal_stresses: QPushButton

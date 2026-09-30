@@ -25,9 +25,9 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(402, 320)
+        Form.resize(402, 340)
         Form.setMinimumSize(QSize(0, 280))
-        Form.setMaximumSize(QSize(16777215, 320))
+        Form.setMaximumSize(QSize(16777215, 340))
         self.gridLayout_4 = QGridLayout(Form)
         self.gridLayout_4.setSpacing(4)
         self.gridLayout_4.setObjectName(u"gridLayout_4")
@@ -293,7 +293,7 @@ class Ui_Form(object):
         self.comboBox_structural_stresses.setItemText(5, QCoreApplication.translate("Form", u"Shear stress yz", None))
 
         self.label_10.setText(QCoreApplication.translate("Form", u"Selected ID: ", None))
-        self.label_linear.setText(QCoreApplication.translate("Form", u"Structural results:", None))
+        self.label_linear.setText(QCoreApplication.translate("Form", u"Plotting results:", None))
         self.label_linear_2.setText(QCoreApplication.translate("Form", u"Stress units:", None))
         self.comboBox_stress_units.setItemText(0, QCoreApplication.translate("Form", u"MPa", None))
         self.comboBox_stress_units.setItemText(1, QCoreApplication.translate("Form", u"kPa", None))

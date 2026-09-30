@@ -38,7 +38,7 @@
    <property name="bottomMargin">
     <number>4</number>
    </property>
-   <property name="verticalSpacing">
+   <property name="spacing">
     <number>4</number>
    </property>
    <item row="0" column="0">
@@ -160,7 +160,7 @@
         <property name="minimumSize">
          <size>
           <width>0</width>
-          <height>52</height>
+          <height>48</height>
          </size>
         </property>
         <property name="maximumSize">

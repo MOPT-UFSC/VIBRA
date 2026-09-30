@@ -90,8 +90,8 @@ class Ui_Form(object):
 
         self.label_color_scalling = QLabel(self.frame_plot_controls)
         self.label_color_scalling.setObjectName(u"label_color_scalling")
-        self.label_color_scalling.setMinimumSize(QSize(110, 26))
-        self.label_color_scalling.setMaximumSize(QSize(110, 26))
+        self.label_color_scalling.setMinimumSize(QSize(110, 28))
+        self.label_color_scalling.setMaximumSize(QSize(110, 28))
         font1 = QFont()
         font1.setPointSize(10)
         self.label_color_scalling.setFont(font1)
@@ -130,16 +130,16 @@ class Ui_Form(object):
         self.comboBox_reduced_time.addItem("")
         self.comboBox_reduced_time.addItem("")
         self.comboBox_reduced_time.setObjectName(u"comboBox_reduced_time")
-        self.comboBox_reduced_time.setMinimumSize(QSize(176, 26))
-        self.comboBox_reduced_time.setMaximumSize(QSize(200, 26))
+        self.comboBox_reduced_time.setMinimumSize(QSize(176, 28))
+        self.comboBox_reduced_time.setMaximumSize(QSize(200, 28))
         self.comboBox_reduced_time.setFont(font1)
 
         self.gridLayout_13.addWidget(self.comboBox_reduced_time, 2, 3, 1, 1)
 
         self.label_animation_time = QLabel(self.frame_plot_controls)
         self.label_animation_time.setObjectName(u"label_animation_time")
-        self.label_animation_time.setMinimumSize(QSize(110, 26))
-        self.label_animation_time.setMaximumSize(QSize(110, 26))
+        self.label_animation_time.setMinimumSize(QSize(110, 28))
+        self.label_animation_time.setMaximumSize(QSize(110, 28))
         self.label_animation_time.setFont(font1)
         self.label_animation_time.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
@@ -147,8 +147,8 @@ class Ui_Form(object):
 
         self.label_reduced_time = QLabel(self.frame_plot_controls)
         self.label_reduced_time.setObjectName(u"label_reduced_time")
-        self.label_reduced_time.setMinimumSize(QSize(110, 26))
-        self.label_reduced_time.setMaximumSize(QSize(110, 26))
+        self.label_reduced_time.setMinimumSize(QSize(110, 28))
+        self.label_reduced_time.setMaximumSize(QSize(110, 28))
         self.label_reduced_time.setFont(font1)
         self.label_reduced_time.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
@@ -160,8 +160,8 @@ class Ui_Form(object):
 
         self.lineEdit_animation_time = QLineEdit(self.frame_plot_controls)
         self.lineEdit_animation_time.setObjectName(u"lineEdit_animation_time")
-        self.lineEdit_animation_time.setMinimumSize(QSize(0, 26))
-        self.lineEdit_animation_time.setMaximumSize(QSize(16777215, 26))
+        self.lineEdit_animation_time.setMinimumSize(QSize(0, 28))
+        self.lineEdit_animation_time.setMaximumSize(QSize(16777215, 28))
         self.lineEdit_animation_time.setFont(font1)
 
         self.gridLayout_13.addWidget(self.lineEdit_animation_time, 3, 3, 1, 1)
@@ -172,8 +172,8 @@ class Ui_Form(object):
         self.comboBox_plot_type.addItem("")
         self.comboBox_plot_type.addItem("")
         self.comboBox_plot_type.setObjectName(u"comboBox_plot_type")
-        self.comboBox_plot_type.setMinimumSize(QSize(176, 26))
-        self.comboBox_plot_type.setMaximumSize(QSize(200, 26))
+        self.comboBox_plot_type.setMinimumSize(QSize(176, 28))
+        self.comboBox_plot_type.setMaximumSize(QSize(200, 28))
         self.comboBox_plot_type.setFont(font1)
 
         self.gridLayout_13.addWidget(self.comboBox_plot_type, 1, 3, 1, 1)
