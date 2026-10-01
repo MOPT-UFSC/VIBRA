@@ -254,7 +254,6 @@ class AnalysisToolbar(QToolBar):
             app().main_window.action_model_workspace_callback()
 
         app().main_window.action_results_workspace.setDisabled(True)
-        app().main_window.results_viewer_widget.clear_treeWidgets_of_frequencies()
 
         self.update_analysis_combo_boxes()
 
@@ -282,7 +281,6 @@ class AnalysisToolbar(QToolBar):
             app().main_window.action_model_workspace_callback()
 
         app().main_window.action_results_workspace.setDisabled(True)
-        app().main_window.results_viewer_widget.clear_treeWidgets_of_frequencies()
 
         checker = AnalysisChecker(self.model)
         checker.check_analysis_requirements()

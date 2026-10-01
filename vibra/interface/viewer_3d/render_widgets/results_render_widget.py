@@ -484,7 +484,6 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.update()
 
-
     def _plot_stress_field_time_domain(
         self,
         animation_frame: int | None = None,
@@ -503,7 +502,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         else:
             time_index = animation_frame
 
-        time_vector, displacements, max_disp = postprocessing.compute_displacements_for_3d_plot_time(
+        data = postprocessing.compute_displacements_for_3d_plot_time(
             time_index,
             self.plot_setup.plot_type,
             unit_factor=self.plot_setup.unit_factor,
@@ -511,6 +510,14 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             reduced_loop_time=self.plot_setup.reduced_loop_time,
             stress_plot=True,
         )
+
+        if data is None:
+            return
+
+        time_vector, displacements, max_disp = data
+
+        # update the animation parameters based on the time vector
+        self.update_animation_parameters(time_vector)
 
         if StressType(self.plot_setup.stress_type).is_normal_or_shear_stress():
             stress_data = postprocessing.compute_structural_stresses_for_3d_plot_time(
@@ -540,12 +547,6 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if self.user_max_value is not None:
             max_value = self.user_max_value
 
-        animation_widget = app().main_window.results_viewer_widget.get_animation_widget()
-
-        if animation_widget is not None:
-            sampling_time = time_vector[-1] - time_vector[0]
-            animation_widget.update_animation_parameters(sampling_time, time_vector.size)
-
         max_value = max_value if max_value != 0 else 1.0
         magnification_factor = self.plot_setup.magnification_factor
 
@@ -567,7 +568,6 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.analysis_actor.plot_color_bar(_color_scalars, min_value, max_value, colormap)
         self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.update()
-
 
     def _plot_displacement_field_time_domain(
         self,
@@ -600,6 +600,9 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         time_vector, displacements, color_scalars, self.min_value, self.max_value = data
 
+        # update the animation parameters based on the time vector
+        self.update_animation_parameters(time_vector)
+
         min_value = self.min_value
         max_value = self.max_value
 
@@ -608,12 +611,6 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         if self.user_max_value is not None:
             max_value = self.user_max_value
-
-        animation_widget = app().main_window.results_viewer_widget.get_animation_widget()
-
-        if animation_widget is not None:
-            sampling_time = time_vector[-1] - time_vector[0]
-            animation_widget.update_animation_parameters(sampling_time, time_vector.size)
 
         self.is_animation_symetric = False
 
@@ -667,6 +664,9 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         time_vector, color_scalars, self.min_value, self.max_value = data
 
+        # update the animation parameters based on the time vector
+        self.update_animation_parameters(time_vector)
+
         min_value = self.min_value
         max_value = self.max_value
 
@@ -675,12 +675,6 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         if self.user_max_value is not None:
             max_value = self.user_max_value
-
-        animation_widget = app().main_window.results_viewer_widget.get_animation_widget()
-
-        if animation_widget is not None:
-            sampling_time = time_vector[-1] - time_vector[0]
-            animation_widget.update_animation_parameters(sampling_time, time_vector.size)
 
         self.is_animation_symetric = False
 
@@ -740,6 +734,15 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.analysis_actor.plot_color_bar(_color_scalars, min_value, max_value, colormap)
         self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.update()
+
+    def update_animation_parameters(self, time_vector: np.ndarray):
+    
+        animation_widget = app().main_window.results_viewer_widget.animation_widget
+        if animation_widget is None:
+            return
+
+        sampling_time = time_vector[-1] - time_vector[0]
+        animation_widget.update_animation_parameters(sampling_time, time_vector.size)
 
     def enable_scale_bar(self):
         self.scale_bar_actor.VisibilityOn()
@@ -804,7 +807,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         super().start_animation(*args, **kwargs)
 
     def stop_animation(self, *args, **kwargs):
-        animation_widget = app().main_window.results_viewer_widget.get_animation_widget()
+        animation_widget = app().main_window.results_viewer_widget.animation_widget
         if animation_widget is not None:
             animation_widget.pushButton_animate.setChecked(False)
             animation_widget.update_animate_button_icons(False)

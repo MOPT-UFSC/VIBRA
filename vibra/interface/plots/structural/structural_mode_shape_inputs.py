@@ -18,9 +18,10 @@ class StructuralModeShapeInputs(StructuralModeShapeInputs_UI):
         super().__init__(*args, **kwargs)
 
         self._initialize()
-        self.add_animation_widget()
-        self.add_color_widget()
+        self._add_animation_widget()
+        self._add_color_widget()
         self._create_connections()
+        self.load_natural_frequencies()
 
     def showEvent(self, event):
         super().showEvent(event)
@@ -48,7 +49,7 @@ class StructuralModeShapeInputs(StructuralModeShapeInputs_UI):
         self.results_display_widget.colormap_changed.connect(self.animation_widget.update_color_and_deformation)
         self.results_display_widget.min_max_value_changed.connect(self.animation_widget.update_color_and_deformation)
 
-    def add_animation_widget(self):
+    def _add_animation_widget(self):
         self.grid_layout = QGridLayout()
         self.grid_layout.setContentsMargins(0, 0, 0, 0)
         self.frame_animation.setLayout(self.grid_layout)
@@ -57,7 +58,7 @@ class StructuralModeShapeInputs(StructuralModeShapeInputs_UI):
         self.grid_layout.addWidget(self.animation_widget)
         self.frame_animation.adjustSize()
 
-    def add_color_widget(self):
+    def _add_color_widget(self):
         grid_layout = QGridLayout()
         grid_layout.setContentsMargins(0, 0, 0, 0)
         self.frame_color.setLayout(grid_layout)

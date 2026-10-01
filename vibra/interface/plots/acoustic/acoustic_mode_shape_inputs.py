@@ -21,6 +21,7 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
         self.add_animation_widget()
         self.add_color_widget()
         self._create_connections()
+        self.load_natural_frequencies()
 
     def showEvent(self, event):
         super().showEvent(event)

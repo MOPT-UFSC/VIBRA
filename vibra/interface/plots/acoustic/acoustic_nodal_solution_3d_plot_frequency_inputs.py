@@ -24,7 +24,6 @@ class AcousticNodalSolution3dPlotFrequencyInputs(AcousticNodalSolution3dPlotFreq
         self.add_animation_widget()
         self.add_color_widget()
         self._create_connections()
-
         self.load_frequencies()
 
     def showEvent(self, event):

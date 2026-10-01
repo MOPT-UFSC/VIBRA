@@ -37,6 +37,23 @@ class AnimationWidget(AnimationWidget_UI):
 
         self.setWindowTitle("Animation toolbar")
 
+    @property
+    def phase_in_radians(self):
+        return np.radians(self.phase_slider.value())
+
+    @property
+    def time(self):
+        value = self.phase_slider.value()
+        return (self.sampling_time / self.frames_number) * value
+
+    @property
+    def time_index(self):
+        return min(self.phase_slider.value(), self.frames_number - 1)
+
+    @property
+    def magnification_factor(self):
+        return self.magnification_factor_slider.value() / 16
+
     def _initialize(self):
         self.animating = False
         self.frames_number = 1
@@ -86,21 +103,22 @@ class AnimationWidget(AnimationWidget_UI):
         self.magnification_factor_slider.setSingleStep(1)
 
         # QSpinBox
+        self.spinBox_cycles.setFixedSize(60, 30)
+        self.spinBox_cycles.setAlignment(Qt.AlignHCenter)
+        self.spinBox_cycles.setCursor(Qt.PointingHandCursor)
         self.spinBox_cycles.setMinimum(1)
         self.spinBox_cycles.setMaximum(10)
         self.spinBox_cycles.setSingleStep(1)
         self.spinBox_cycles.setValue(3)
-        self.spinBox_cycles.setFixedSize(60, 30)
-        self.spinBox_cycles.setAlignment(Qt.AlignHCenter)
-        self.spinBox_cycles.setCursor(Qt.PointingHandCursor)
 
+        self.spinBox_frames.setFixedSize(60, 30)
+        self.spinBox_frames.setAlignment(Qt.AlignHCenter)
+        self.spinBox_frames.setCursor(Qt.PointingHandCursor)
         self.spinBox_frames.setMinimum(20)
         self.spinBox_frames.setMaximum(60)
         self.spinBox_frames.setSingleStep(10)
         self.spinBox_frames.setValue(40)
-        self.spinBox_frames.setFixedSize(60, 30)
-        self.spinBox_frames.setAlignment(Qt.AlignHCenter)
-        self.spinBox_frames.setCursor(Qt.PointingHandCursor)
+
         self.update_phase_slider_steps()
 
     def _create_connections(self):
@@ -167,23 +185,6 @@ class AnimationWidget(AnimationWidget_UI):
         self.update_phase_slider_steps()
         app().main_window.results_widget.stop_animation()
         app().main_window.results_widget.clear_cache()
-
-    @property
-    def phase_in_radians(self):
-        return np.radians(self.phase_slider.value())
-
-    @property
-    def time(self):
-        value = self.phase_slider.value()
-        return (self.sampling_time / self.frames_number) * value
-
-    @property
-    def time_index(self):
-        return min(self.phase_slider.value(), self.frames_number - 1)
-
-    @property
-    def magnification_factor(self):
-        return self.magnification_factor_slider.value() / 16
 
     def phase_slider_callback(self, value: int):
         self.update_degree_label()

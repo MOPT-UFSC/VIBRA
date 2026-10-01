@@ -34,18 +34,13 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
     def __init__(self):
         super().__init__()
 
-        self.plot_structural_modal = StructuralModeShapeInputs()
-        self.plot_structural_harmonic = StructuralNodalSolution3dPlotFrequencyInputs()
-
-        self.plot_acoustic_modal = AcousticModeShapeInputs()
-        self.plot_acoustic_harmonic = AcousticNodalSolution3dPlotFrequencyInputs()
-
         self._reset()
         self._define_qt_variables()
         self._create_connections()
 
     def _reset(self):
         self.current_widget = None
+        self.animation_widget: AnimationWidget | None = None
 
     def process_input(self, working_class, *args, **kwargs):
         app().main_window.close_dialogs()
@@ -66,12 +61,6 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
             AcousticNodalSolution3dPlotFrequencyInputs,
             AcousticNodalSolution3dPlotTimeInputs,
         ))
-
-    def clear_treeWidgets_of_frequencies(self):
-        self.plot_structural_modal.treeWidget_frequencies.clear()
-        self.plot_structural_harmonic.treeWidget_frequencies.clear()
-        self.plot_acoustic_modal.treeWidget_frequencies.clear()
-        self.plot_acoustic_harmonic.treeWidget_frequencies.clear()
 
     def _define_qt_variables(self):
         self.main_frame = QFrame()
@@ -121,25 +110,23 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.results_viewer_items._update_items()
         self.results_viewer_items.update_tree_visibility_after_solution()
 
-    def get_animation_widget(self) -> AnimationWidget | None:
-        if self.current_widget_is_animatable():
-            return self.current_widget.animation_widget
-
-        return None
-
     def add_structural_modal_widget(self):
         self.top_widget.setFixedHeight(120)
-        self.current_widget = self.plot_structural_modal
-        self.plot_structural_modal.load_natural_frequencies()
+        self.current_widget = self.process_input(StructuralModeShapeInputs)
 
-        self.add_widget(self.plot_structural_modal)
+        if app().main_window.results_widget.playing_animation:
+            app().main_window.results_widget.stop_animation()
+
+        self.add_widget(self.current_widget)
 
     def add_structural_nodal_solution_3d_plot_frequency_widget(self):
         self.top_widget.setFixedHeight(120)
-        self.current_widget = self.plot_structural_harmonic
-        self.plot_structural_harmonic.load_frequencies()
+        self.current_widget = self.process_input(StructuralNodalSolution3dPlotFrequencyInputs)
 
-        self.add_widget(self.plot_structural_harmonic)
+        if app().main_window.results_widget.playing_animation:
+            app().main_window.results_widget.stop_animation()
+
+        self.add_widget(self.current_widget)
 
     def add_structural_nodal_solution_3d_plot_time_widget(self):
         self.current_widget = self.process_input(StructuralNodalSolution3dPlotTimeInputs)
@@ -183,17 +170,21 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
 
     def add_acoustic_modal_widget(self):
         self.top_widget.setFixedHeight(220)
-        self.current_widget = self.plot_acoustic_modal
-        self.plot_acoustic_modal.load_natural_frequencies()
+        self.current_widget = self.process_input(AcousticModeShapeInputs)
 
-        self.add_widget(self.plot_acoustic_modal)
+        if app().main_window.results_widget.playing_animation:
+            app().main_window.results_widget.stop_animation()
+
+        self.add_widget(self.current_widget)
 
     def add_acoustic_nodal_solution_3d_plot_frequency_widget(self):
         self.top_widget.setFixedHeight(220)
-        self.current_widget = self.plot_acoustic_harmonic
-        self.plot_acoustic_harmonic.load_frequencies()
+        self.current_widget = self.process_input(AcousticNodalSolution3dPlotFrequencyInputs)
 
-        self.add_widget(self.plot_acoustic_harmonic)
+        if app().main_window.results_widget.playing_animation:
+            app().main_window.results_widget.stop_animation()
+
+        self.add_widget(self.current_widget)
 
     def add_structural_nodal_solution_2d_plot_frequency_widget(self):
         self.current_widget = self.process_input(StructuralNodalSolution2dPlotFrequencytInputs)
@@ -324,6 +315,11 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.add_widget(self.current_widget)
 
     def add_widget(self, widget: QWidget):
+
+        # update the animation widget attribute
+        self.animation_widget = None
+        if self.current_widget_is_animatable():
+            self.animation_widget = self.current_widget.animation_widget
 
         # TODO: please, remove the hide after all it shouldn't be needed
         if isinstance(self.bottom_widget, QWidget):
