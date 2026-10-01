@@ -192,8 +192,6 @@ class StructuralNodalSolution3dPlotTimeInputs(StructuralNodalSolution3dPlotTimeI
 
         self.plot_setup = plot_setup
 
-        print(plot_setup)
-
         def plot_callback():
             self.animation_widget.reset_sliders(plot_setup=plot_setup)
             app().main_window.results_widget.update_plot(
