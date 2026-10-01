@@ -691,12 +691,6 @@ class FluidWidget(FluidWidget_UI):
         if not isinstance(window, QDialog):
             return
 
-        surface_id = self.state_properties.get("surface_id", None)
-        if not isinstance(surface_id, int):
-            return
-
-        app().main_window.selection.set_geometry_selection(surfaces=[surface_id])
-
         connection_type = self.state_properties.get('connection_type')
         if source == "reciprocating_pump":
             title = f"Set a fluid for the reciprocating pump ({connection_type})"
