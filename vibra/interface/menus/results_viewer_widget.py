@@ -111,7 +111,6 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.results_viewer_items.update_tree_visibility_after_solution()
 
     def add_structural_modal_widget(self):
-        self.top_widget.setFixedHeight(120)
         self.current_widget = self.process_input(StructuralModeShapeInputs)
 
         if app().main_window.results_widget.playing_animation:
@@ -120,7 +119,6 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.add_widget(self.current_widget)
 
     def add_structural_nodal_solution_3d_plot_frequency_widget(self):
-        self.top_widget.setFixedHeight(120)
         self.current_widget = self.process_input(StructuralNodalSolution3dPlotFrequencyInputs)
 
         if app().main_window.results_widget.playing_animation:
@@ -169,7 +167,6 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.add_widget(self.current_widget)
 
     def add_acoustic_modal_widget(self):
-        self.top_widget.setFixedHeight(220)
         self.current_widget = self.process_input(AcousticModeShapeInputs)
 
         if app().main_window.results_widget.playing_animation:
@@ -178,7 +175,6 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.add_widget(self.current_widget)
 
     def add_acoustic_nodal_solution_3d_plot_frequency_widget(self):
-        self.top_widget.setFixedHeight(220)
         self.current_widget = self.process_input(AcousticNodalSolution3dPlotFrequencyInputs)
 
         if app().main_window.results_widget.playing_animation:
