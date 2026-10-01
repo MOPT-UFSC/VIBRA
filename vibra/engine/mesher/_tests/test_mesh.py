@@ -6,20 +6,21 @@ import numpy as np
 
 from vibra import PROJECT_DIR
 from vibra.engine.mesher.element_setup import GMSH_HEX8, GMSH_HEX20, GMSH_TET4, GMSH_TET10
+from vibra.engine.mesher.gmsh_mesher import GmshMesher
 from vibra.engine.mesher.mesh import Mesh
-from vibra.engine.mesher.mesh_setup import ElementTopology, LocalMeshSizeControlSetup, MeshSetup
+from vibra.engine.mesher.mesh_setup import ElementTopology, LocalMeshSizeControlSetup
 
 
 def test_tetrahedron_4_mesh():
     geometry_path = str(PROJECT_DIR / "examples/geometry_files/cylinder.step")
     mesh_test_path = str(PROJECT_DIR / "validation_files/data/mesh_info/cilinder_tet4/")
 
-    mesh_setup = MeshSetup(
-        minimum_element_size=30,
-        maximum_element_size=80,
-        custom_element_setup=GMSH_TET4,
-    )
-    mesh = Mesh().load_cad(geometry_path, mesh_setup, threads=1)
+    mesher = GmshMesher(geometry_path)
+    mesher.setup.minimum_element_size = 30
+    mesher.setup.maximum_element_size = 80
+    mesher.setup.custom_element_setup = GMSH_TET4
+
+    mesh = mesher.generate(threads=1)
     assert mesh.element_topology == ElementTopology("tetrahedral", "linear")
 
     _compare_mesh(
@@ -32,12 +33,12 @@ def test_tetrahedron_10_mesh():
     geometry_path = str(PROJECT_DIR / "examples/geometry_files/tetrahedron.step")
     mesh_test_path = str(PROJECT_DIR / "validation_files/data/mesh_info/tetrahedron_tet10/")
 
-    mesh_setup = MeshSetup(
-        minimum_element_size=30,
-        maximum_element_size=80,
-        custom_element_setup=GMSH_TET10,
-    )
-    mesh = Mesh().load_cad(geometry_path, mesh_setup, threads=1)
+    mesher = GmshMesher(geometry_path)
+    mesher.setup.minimum_element_size = 30
+    mesher.setup.maximum_element_size = 80
+    mesher.setup.custom_element_setup = GMSH_TET10
+
+    mesh = mesher.generate(threads=1)
     assert mesh.element_topology == ElementTopology("tetrahedral", "quadratic")
 
     _compare_mesh(
@@ -49,37 +50,37 @@ def test_tetrahedron_10_mesh():
 def test_hexahedron_8_mesh():
     geometry_path = str(PROJECT_DIR / "examples/geometry_files/cylinder.step")
 
-    mesh_setup = MeshSetup(
-        minimum_element_size=30,
-        maximum_element_size=80,
-        custom_element_setup=GMSH_HEX8,
-    )
-    mesh = Mesh().load_cad(geometry_path, mesh_setup, threads=1)
+    mesher = GmshMesher(geometry_path)
+    mesher.setup.minimum_element_size = 30
+    mesher.setup.maximum_element_size = 80
+    mesher.setup.custom_element_setup = GMSH_HEX8
+
+    mesh = mesher.generate(threads=1)
     assert mesh.element_topology == ElementTopology("hexahedral", "linear")
 
 
 def test_hexahedron_20_mesh():
     geometry_path = str(PROJECT_DIR / "examples/geometry_files/parallelepiped.step")
 
-    mesh_setup = MeshSetup(
-        minimum_element_size=300,
-        maximum_element_size=300,
-        custom_element_setup=GMSH_HEX20,
-    )
-    mesh = Mesh().load_cad(geometry_path, mesh_setup, threads=1)
+    mesher = GmshMesher(geometry_path)
+    mesher.setup.minimum_element_size = 300
+    mesher.setup.maximum_element_size = 300
+    mesher.setup.custom_element_setup = GMSH_HEX20
+
+    mesh = mesher.generate(threads=1)
     assert mesh.element_topology == ElementTopology("hexahedral", "quadratic")
 
 
 def test_local_mesh_size_control_coarsening():
     geometry_path = str(PROJECT_DIR / "examples/geometry_files/tetrahedron_double_volume.step")
 
-    mesh_setup = MeshSetup(
-        maximum_element_size=20,
-        merge_connected_volumes=False,
-        local_mesh_size_control_parameters=[LocalMeshSizeControlSetup("volumes", 40, [1])],
-        custom_element_setup=GMSH_TET4,
-    )
-    mesh = Mesh().load_cad(geometry_path, mesh_setup, threads=1)
+    mesher = GmshMesher(geometry_path)
+    mesher.setup.maximum_element_size = 20
+    mesher.setup.merge_connected_volumes = False
+    mesher.setup.local_mesh_size_control_parameters = [LocalMeshSizeControlSetup("volumes", 40, [1])]
+    mesher.setup.custom_element_setup = GMSH_TET4
+
+    mesh = mesher.generate(threads=1)
 
     mean_edges = _mean_edge_length_per_volume(mesh)
     assert mean_edges[1] > mean_edges[2] * 1.2
@@ -89,12 +90,12 @@ def test_local_mesh_size_control_coarsening():
 def test_local_mesh_size_control_coarsening_connected():
     geometry_path = str(PROJECT_DIR / "examples/geometry_files/tetrahedron_double_volume.step")
 
-    mesh_setup = MeshSetup(
-        maximum_element_size=20,
-        local_mesh_size_control_parameters=[LocalMeshSizeControlSetup("volumes", 40, [1])],
-        custom_element_setup=GMSH_TET4,
-    )
-    mesh = Mesh().load_cad(geometry_path, mesh_setup, threads=1)
+    mesher = GmshMesher(geometry_path)
+    mesher.setup.maximum_element_size = 20
+    mesher.setup.local_mesh_size_control_parameters = [LocalMeshSizeControlSetup("volumes", 40, [1])]
+    mesher.setup.custom_element_setup = GMSH_TET4
+
+    mesh = mesher.generate(threads=1)
 
     mean_edges = _mean_edge_length_per_volume(mesh)
     assert mean_edges[1] > mean_edges[2] * 1.2
@@ -104,13 +105,13 @@ def test_local_mesh_size_control_coarsening_connected():
 def test_local_mesh_size_control_refines():
     geometry_path = str(PROJECT_DIR / "examples/geometry_files/tetrahedron_double_volume.step")
 
-    mesh_setup = MeshSetup(
-        maximum_element_size=20,
-        merge_connected_volumes=False,
-        local_mesh_size_control_parameters=[LocalMeshSizeControlSetup("volumes", 5, [2])],
-        custom_element_setup=GMSH_TET4,
-    )
-    mesh = Mesh().load_cad(geometry_path, mesh_setup, threads=1)
+    mesher = GmshMesher(geometry_path)
+    mesher.setup.maximum_element_size = 20
+    mesher.setup.merge_connected_volumes = False
+    mesher.setup.local_mesh_size_control_parameters = [LocalMeshSizeControlSetup("volumes", 5, [2])]
+    mesher.setup.custom_element_setup = GMSH_TET4
+
+    mesh = mesher.generate(threads=1)
 
     mean_edges = _mean_edge_length_per_volume(mesh)
     assert mean_edges[2] < mean_edges[1] * 0.9
