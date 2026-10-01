@@ -759,9 +759,9 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             timestamp = time()
             self.timestamp = timestamp
             self._animation_cache.clear()
-            if not self.user_changed_pressure_values:
-                self.min_value = 0
-                self.max_value = 0
+            # if not self.user_changed_pressure_values:
+            #     self.min_value = 0
+            #     self.max_value = 0
         return timestamp
 
     def cache_animation_frames(self):

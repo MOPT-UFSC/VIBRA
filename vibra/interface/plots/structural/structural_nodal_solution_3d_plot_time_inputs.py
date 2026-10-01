@@ -76,7 +76,6 @@ class StructuralNodalSolution3dPlotTimeInputs(StructuralNodalSolution3dPlotTimeI
         self.frame_color.adjustSize()
 
     def _initialize(self):
-        self.time_vector = None
         self.plot_setup = None
 
         # update the widgets accessibility
@@ -192,6 +191,8 @@ class StructuralNodalSolution3dPlotTimeInputs(StructuralNodalSolution3dPlotTimeI
             return
 
         self.plot_setup = plot_setup
+
+        print(plot_setup)
 
         def plot_callback():
             self.animation_widget.reset_sliders(plot_setup=plot_setup)

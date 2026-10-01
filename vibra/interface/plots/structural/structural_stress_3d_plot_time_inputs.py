@@ -84,7 +84,6 @@ class StructuralStress3dPlotTimeInputs(StructuralStress3dPlotTimeInputs_UI):
         self.frame_color.adjustSize()
 
     def _initialize(self):
-        self.time_vector = None
         self.plot_setup = None
 
         # update the widgets accessibility

@@ -53,7 +53,6 @@ class StructuralPostprocessing:
 
 
     def reset_attributes(self):
-        self.time_vector = None
         self.nodal_solution_time = None
         self.nodal_averaged_stresses_frequency = None
         self.nodal_averaged_stresses_time = None
@@ -324,7 +323,7 @@ class StructuralPostprocessing:
 
         t0 = perf_counter()
         logging.info("Computing the iffts for structural nodal solution... [25/100]")
-        self.time_vector, self.nodal_solution_time = process_multiple_iffts_from_one_sided_spectrum_signals(
+        time_vector, nodal_solution_time = process_multiple_iffts_from_one_sided_spectrum_signals(
             self.solution.frequencies,
             nodal_solution,
             dc_included=False,
@@ -335,6 +334,8 @@ class StructuralPostprocessing:
         dt = perf_counter() - t0
         if dt > 0.5:
             print(f"Time to process the iffts for structural nodal solution: {dt: .6f} s")
+
+        return time_vector, nodal_solution_time
 
 
     @cache
@@ -383,7 +384,7 @@ class StructuralPostprocessing:
 
         else:
             if self.nodal_solution_time is None:
-                self.compute_multiple_ifft_for_structural_nodal_solution()
+                _, self.nodal_solution_time = self.compute_multiple_ifft_for_structural_nodal_solution()
 
             self.nodal_averaged_stresses_time = self.recover_nodal_averaged_structural_stresses(time_domain=True)
 
@@ -520,12 +521,12 @@ class StructuralPostprocessing:
     ):
 
         # compute the structural nodal solution iffts
-        self.compute_multiple_ifft_for_structural_nodal_solution(n_diff=n_diff)
+        time_vector, self.nodal_solution_time = self.compute_multiple_ifft_for_structural_nodal_solution(n_diff=n_diff)
 
         if reduced_loop_time is None:
-            n = self.time_vector.size
+            n = time_vector.size
         else:
-            n = np.sum(self.time_vector <= reduced_loop_time)
+            n = np.sum(time_vector <= reduced_loop_time)
 
         # cache the minimum and maximum nodal displacements values 
         min_max_values = self.min_max_processor.get_values_for_displacement_time(int(n), round(unit_factor, 10), plot_type)
@@ -533,7 +534,7 @@ class StructuralPostprocessing:
         if stress_plot:
             (_, max_value) = min_max_values
             displacements = unit_factor * self.nodal_solution_time[self.solution.displacement_dof, time_index].reshape(-1, 3).copy()
-            return self.time_vector[:n], displacements, max_value
+            return time_vector[:n], displacements, max_value
 
         displacements = unit_factor * self.nodal_solution_time[self.solution.displacement_dof, time_index].reshape(-1, 3).copy()
 
@@ -554,7 +555,7 @@ class StructuralPostprocessing:
                 scalars = displacements[:, 2]
                 displacements = displacements * np.array([0, 0, 1], dtype=float)
 
-        return self.time_vector[:n], displacements, scalars, min_value, max_value
+        return time_vector[:n], displacements, scalars, min_value, max_value
 
 
     def compute_structural_stresses_for_3d_plot_frequency(

@@ -55,7 +55,6 @@ class AcousticPostprocessing:
 
 
     def reset_attributes(self):
-        self.time_vector = None
         self.nodal_solution_time = None
 
 
@@ -176,12 +175,12 @@ class AcousticPostprocessing:
     ):
 
         # compute the iffts for acoustic nodal solution
-        self.compute_multiple_ifft_for_acoustic_nodal_solution()
+        time_vector, self.nodal_solution_time = self.compute_multiple_ifft_for_acoustic_nodal_solution()
 
         if reduced_loop_time is None:
-            n = self.time_vector.size
+            n = time_vector.size
         else:
-            n = np.sum(self.time_vector <= reduced_loop_time)
+            n = np.sum(time_vector <= reduced_loop_time)
 
         # cache the minimum and maximum values of the nodal pressure waveforms
         min_max_values = self.get_acoustic_waveforms_minimum_and_maximum_values(int(n), round(unit_factor, 10))
@@ -196,14 +195,14 @@ class AcousticPostprocessing:
             case _:
                 min_value, max_value = min_max_values
 
-        return self.time_vector[:n], acoustic_pressures, min_value, max_value
+        return time_vector[:n], acoustic_pressures, min_value, max_value
 
 
     @cache
     def compute_allowable_pulsation_field_for_screw_compressor(self):
 
         # compute the iffts for acoustic nodal solution
-        self.compute_multiple_ifft_for_acoustic_nodal_solution()
+        _, self.nodal_solution_time = self.compute_multiple_ifft_for_acoustic_nodal_solution()
 
         delta_pressure = np.max(self.nodal_solution_time, axis=1) - np.min(self.nodal_solution_time, axis=1)
 
@@ -256,7 +255,7 @@ class AcousticPostprocessing:
 
         t0 = perf_counter()
         logging.info("Computing the iffts for acoustic nodal solution... [25/100]")
-        self.time_vector, self.nodal_solution_time = process_multiple_iffts_from_one_sided_spectrum_signals(
+        time_vector, nodal_solution_time = process_multiple_iffts_from_one_sided_spectrum_signals(
             self.solution.frequencies,
             self.solution.acoustic_solution,
             dc_included=False,
@@ -267,6 +266,8 @@ class AcousticPostprocessing:
         dt = perf_counter() - t0
         if dt > 0.5:
             print(f"Time to process the iffts for acoustic nodal solution: {dt: .6f} s")
+
+        return time_vector, nodal_solution_time
 
 
     @cache

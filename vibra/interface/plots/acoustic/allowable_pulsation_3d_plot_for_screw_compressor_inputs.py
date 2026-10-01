@@ -62,7 +62,6 @@ class AllowablePulsations3DPlotForScrewCompressorInputs(AllowablePulsations3dPlo
 
     def _reset_variables(self):
         self.unit_label = "kPa"
-        self.time_vector = None
         self.plot_setup = None
 
     def _add_penalization_values_to_combo_box(self):
