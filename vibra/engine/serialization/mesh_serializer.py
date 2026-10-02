@@ -6,7 +6,7 @@ from vibra.engine.mesher.mesh import Mesh
 class MeshSerializer:
     """Reads and writes meshes from and to disk.
 
-    Supports the native ``.vmsh`` format and all formats handled by gmsh
+    Supports the native ``.vmesh`` format and all formats handled by gmsh
     (e.g. ``.msh``, ``.nas``, ``.stl``). The format is selected by extension.
     """
 
@@ -14,7 +14,7 @@ class MeshSerializer:
     def read(path: Path | str) -> Mesh:
         """Reads a mesh from disk.
 
-        The reader is selected by extension: ``.vmsh`` uses the native format;
+        The reader is selected by extension: ``.vmesh`` uses the native format;
         other gmsh-supported extensions load through gmsh.
 
         Args:
@@ -27,8 +27,8 @@ class MeshSerializer:
         path = Path(path)
 
         match path.suffix:
-            case ".vmsh":
-                return MeshSerializer._read_vmsh_meshes(path)
+            case ".vmesh":
+                return MeshSerializer._read_vmesh_meshes(path)
             case ".msh":
                 return MeshSerializer._read_gmsh_meshes(path)
 
@@ -46,11 +46,11 @@ class MeshSerializer:
         """
 
     @staticmethod
-    def _read_vmsh_meshes(file_path: Path) -> Mesh:
-        """Reads a mesh in the native vibra ``.vmsh`` format.
+    def _read_vmesh_meshes(file_path: Path) -> Mesh:
+        """Reads a mesh in the native vibra ``.vmesh`` format.
 
         Args:
-            file_path: Path of the ``.vmsh`` file to load.
+            file_path: Path of the ``.vmesh`` file to load.
 
         Returns:
             The mesh read from ``file_path``.
@@ -71,11 +71,11 @@ class MeshSerializer:
 
     @staticmethod
     def _write_vmsh_meshes(mesh: Mesh, file_path: Path | str):
-        """Writes a mesh to the native vibra ``.vmsh`` format.
+        """Writes a mesh to the native vibra ``.vmesh`` format.
 
         Args:
             mesh: The mesh to serialize.
-            file_path: Destination ``.vmsh`` file path.
+            file_path: Destination ``.vmesh`` file path.
         """
 
     @staticmethod
