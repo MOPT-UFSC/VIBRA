@@ -30,22 +30,6 @@ from vibra.interface.model_inputs.structural.excitations.dof_prescription_inputs
 from vibra.interface.model_inputs.structural.excitations.nodal_loads_inputs import NodalLoadsInputs
 from vibra.interface.model_inputs.structural.excitations.normal_pressure_load_inputs import NormalPressureLoadInputs
 from vibra.interface.model_inputs.structural.surface_thickness_inputs import SurfaceThicknessInputs
-from vibra.interface.plots.acoustic.acoustic_impedance_inputs import AcousticImpedanceInputs
-from vibra.interface.plots.acoustic.acoustic_pressure_frequency_response_inputs import AcousticPressureFrequencyResponseInputs
-from vibra.interface.plots.acoustic.acoustic_pressure_frf_inputs import AcousticPressureFRFInputs
-from vibra.interface.plots.acoustic.acoustic_pressure_waveform_2d_plot_inputs import AcousticPressureWaveform2DPlotInputs
-from vibra.interface.plots.acoustic.acoustic_pressure_waveform_3d_plot_inputs import AcousticPressureWaveform3DPlotInputs
-from vibra.interface.plots.acoustic.acoustic_shaking_forces_inputs import AcousticShakingForcesInputs
-from vibra.interface.plots.acoustic.acoustic_waves_decomposition_inputs import AcousticWavesDecompositionInputs
-from vibra.interface.plots.acoustic.allowable_pulsation_3d_plot_for_screw_compressor_inputs import AllowablePulsations3DPlotForScrewCompressorInputs
-from vibra.interface.plots.acoustic.allowable_pulsations_2d_plot_for_screw_compressor_inputs import AllowablePulsations2DPlotForScrewCompressorInputs
-from vibra.interface.plots.acoustic.allowable_pulsations_for_reciprocating_compressor import AllowablePulsationsForReciprocatingCompressorInputs
-from vibra.interface.plots.acoustic.particle_velocity_inputs import ParticleVelocityInputs
-from vibra.interface.plots.acoustic.surface_absorption_coefficient_inputs import SurfaceAbsorptionCoefficientInputs
-from vibra.interface.plots.acoustic.transmission_loss_inputs import TransmissionLossInputs
-from vibra.interface.plots.structural.structural_frequency_response_inputs import PlotStructuralFrequencyResponseInputs
-from vibra.interface.plots.structural.structural_stresses_fields_inputs import StructuralStressesFieldsInputs
-from vibra.interface.plots.structural.structural_stresses_frequency_response_inputs import StructuralStressesFrequencyResponseInputs
 
 
 class InputUi:
@@ -157,57 +141,6 @@ class InputUi:
 
     def set_acoustic_transfer_element_setup(self):
         self.process_input(AcousticTransferElementInputs)
-
-    def plot_structural_frequency_response(self):
-        return self.process_input(PlotStructuralFrequencyResponseInputs)
-
-    def plot_stress_field(self):
-        return self.process_input(StructuralStressesFieldsInputs)
-
-    def plot_stress_frequency_response(self):
-        return self.process_input(StructuralStressesFrequencyResponseInputs)
-
-    # def plot_reaction_frequency_response(self):
-    #     app().main_window.show_geometry_render_widget()
-
-    def plot_acoustic_pressure_frequency_response(self):
-        return self.process_input(AcousticPressureFrequencyResponseInputs)
-
-    def plot_acoustic_pressure_frequency_response_function(self):
-        return self.process_input(AcousticPressureFRFInputs)
-
-    def plot_acoustic_shaking_forces(self):
-        return self.process_input(AcousticShakingForcesInputs)
-
-    def plot_acoustic_pressure_waveform_2d(self):
-        return self.process_input(AcousticPressureWaveform2DPlotInputs)
-
-    def plot_acoustic_pressure_waveform_3d(self):
-        return self.process_input(AcousticPressureWaveform3DPlotInputs)
-
-    def plot_allowable_pulsation_criteria_for_reciprocating_compressor(self):
-        return self.process_input(AllowablePulsationsForReciprocatingCompressorInputs)
-
-    def plot_allowable_pulsation_2d_for_screw_compressor(self):
-        return self.process_input(AllowablePulsations2DPlotForScrewCompressorInputs)
-
-    def plot_allowable_pulsation_3d_for_screw_compressor(self):
-        return self.process_input(AllowablePulsations3DPlotForScrewCompressorInputs)
-
-    def plot_TL_NR(self):
-        return self.process_input(TransmissionLossInputs)
-
-    def plot_particle_velocity(self):
-        return self.process_input(ParticleVelocityInputs)
-
-    def plot_acoustic_impedance(self):
-        return self.process_input(AcousticImpedanceInputs)
-
-    def plot_absorption_coefficient_from_surface(self):
-        return self.process_input(SurfaceAbsorptionCoefficientInputs)
-
-    def decompose_acoustic_pressure_waves(self):
-        return self.process_input(AcousticWavesDecompositionInputs)
 
     def empty_project_action_message(self):
         title = "EMPTY PROJECT"

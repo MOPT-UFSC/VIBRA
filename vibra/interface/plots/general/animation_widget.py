@@ -16,10 +16,12 @@ from vibra.interface.user_input.data_handler.file_dialog_service import FileDial
 from vibra.interface.viewer_3d.plot_setup import (
     AllowablePulsationForScrewCompressorsPlotSetup,
     DisplacementFieldPlotSetupFrequency,
-    PressureFieldPlotSetupFrequency,
+    DisplacementFieldPlotSetupTime,
     PlotSetup,
-    StressFieldPlotSetupFrequency,
+    PressureFieldPlotSetupFrequency,
     PressureFieldPlotSetupTime,
+    StressFieldPlotSetupFrequency,
+    StressFieldPlotSetupTime,
 )
 
 
@@ -34,6 +36,23 @@ class AnimationWidget(AnimationWidget_UI):
         self._configure_appearance()
 
         self.setWindowTitle("Animation toolbar")
+
+    @property
+    def phase_in_radians(self):
+        return np.radians(self.phase_slider.value())
+
+    @property
+    def time(self):
+        value = self.phase_slider.value()
+        return (self.sampling_time / self.frames_number) * value
+
+    @property
+    def time_index(self):
+        return min(self.phase_slider.value(), self.frames_number - 1)
+
+    @property
+    def magnification_factor(self):
+        return self.magnification_factor_slider.value() / 16
 
     def _initialize(self):
         self.animating = False
@@ -84,21 +103,22 @@ class AnimationWidget(AnimationWidget_UI):
         self.magnification_factor_slider.setSingleStep(1)
 
         # QSpinBox
+        self.spinBox_cycles.setFixedSize(60, 30)
+        self.spinBox_cycles.setAlignment(Qt.AlignHCenter)
+        self.spinBox_cycles.setCursor(Qt.PointingHandCursor)
         self.spinBox_cycles.setMinimum(1)
         self.spinBox_cycles.setMaximum(10)
         self.spinBox_cycles.setSingleStep(1)
         self.spinBox_cycles.setValue(3)
-        self.spinBox_cycles.setFixedSize(60, 30)
-        self.spinBox_cycles.setAlignment(Qt.AlignHCenter)
-        self.spinBox_cycles.setCursor(Qt.PointingHandCursor)
 
+        self.spinBox_frames.setFixedSize(60, 30)
+        self.spinBox_frames.setAlignment(Qt.AlignHCenter)
+        self.spinBox_frames.setCursor(Qt.PointingHandCursor)
         self.spinBox_frames.setMinimum(20)
         self.spinBox_frames.setMaximum(60)
         self.spinBox_frames.setSingleStep(10)
         self.spinBox_frames.setValue(40)
-        self.spinBox_frames.setFixedSize(60, 30)
-        self.spinBox_frames.setAlignment(Qt.AlignHCenter)
-        self.spinBox_frames.setCursor(Qt.PointingHandCursor)
+
         self.update_phase_slider_steps()
 
     def _create_connections(self):
@@ -166,23 +186,6 @@ class AnimationWidget(AnimationWidget_UI):
         app().main_window.results_widget.stop_animation()
         app().main_window.results_widget.clear_cache()
 
-    @property
-    def phase_in_radians(self):
-        return np.radians(self.phase_slider.value())
-
-    @property
-    def time(self):
-        value = self.phase_slider.value()
-        return (self.sampling_time / self.frames_number) * value
-
-    @property
-    def time_index(self):
-        return min(self.phase_slider.value(), self.frames_number - 1)
-
-    @property
-    def magnification_factor(self):
-        return self.magnification_factor_slider.value() / 16
-
     def phase_slider_callback(self, value: int):
         self.update_degree_label()
         self.update_color_and_deformation(clear_cache=False)
@@ -201,9 +204,9 @@ class AnimationWidget(AnimationWidget_UI):
         self.frames_number = frames_number
 
         self.phase_slider.setMaximum(frames_number)
+        self.spinBox_frames.setEnabled(False)
         self.spinBox_frames.setMaximum(frames_number)
         self.spinBox_frames.setValue(frames_number)
-        self.spinBox_frames.setEnabled(False)
 
     def magnification_factor_slider_callback(self, value: int):
         self.update_factor_label()
@@ -220,6 +223,9 @@ class AnimationWidget(AnimationWidget_UI):
                 plot_setup.phase = self.phase_in_radians
             case DisplacementFieldPlotSetupFrequency() | StressFieldPlotSetupFrequency():
                 plot_setup.phase = self.phase_in_radians
+                plot_setup.magnification_factor = self.magnification_factor
+            case DisplacementFieldPlotSetupTime() | StressFieldPlotSetupTime():
+                plot_setup.time_index = self.time_index
                 plot_setup.magnification_factor = self.magnification_factor
             case PressureFieldPlotSetupTime():
                 plot_setup.time_index = self.time_index
@@ -238,7 +244,7 @@ class AnimationWidget(AnimationWidget_UI):
         self.phase_slider.setValue(0)
 
         # update labels
-        if isinstance(plot_setup, PressureFieldPlotSetupTime):
+        if isinstance(plot_setup, PressureFieldPlotSetupTime | DisplacementFieldPlotSetupTime | StressFieldPlotSetupTime):
             self.update_time_frame_label()
         else:
             self.update_degree_label()

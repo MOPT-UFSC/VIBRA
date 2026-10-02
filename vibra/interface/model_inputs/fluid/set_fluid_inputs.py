@@ -29,7 +29,7 @@ class SetFluidInputs(SetFluidInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__()
 
-        self.state_properties = kwargs.get("state_properties", {})
+        self.state_properties: dict = kwargs.get("state_properties", {})
 
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
@@ -41,9 +41,7 @@ class SetFluidInputs(SetFluidInputs_UI):
         self._add_fluid_widget()
         self._create_connections()
 
-        if self.state_properties:
-            self.fluid_widget.load_state_properties_info()
-
+        self.load_state_properties()
         self.load_model_info()
 
         while self.keep_window_open:
@@ -118,6 +116,18 @@ class SetFluidInputs(SetFluidInputs_UI):
 
         self.attribution_type_callback()
         self.geometry_selection_callback()
+
+    def load_state_properties(self):
+        if not self.state_properties:
+            return
+
+        self.fluid_widget.load_state_properties_info()
+
+        volume_id = self.state_properties.get("volume_id")
+        if not isinstance(volume_id, int):
+            return
+
+        app().main_window.selection.set_geometry_selection(volumes=[volume_id])
 
     def current_cell_changed(self, current_row, current_col, previous_row, previous_col):
         self.update_fluid_selection(current_col)

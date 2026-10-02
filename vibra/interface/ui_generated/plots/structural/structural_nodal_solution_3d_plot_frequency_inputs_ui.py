@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'structural_response_fields_inputs.ui'
+## Form generated from reading UI file 'structural_nodal_solution_3d_plot_frequency_inputs.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.9.2
 ##
@@ -61,14 +61,14 @@ class Ui_Form(object):
         self.gridLayout = QGridLayout(self.frame_title)
         self.gridLayout.setSpacing(0)
         self.gridLayout.setObjectName(u"gridLayout")
-        self.gridLayout.setContentsMargins(10, 0, -1, 0)
+        self.gridLayout.setContentsMargins(4, 0, 4, 0)
         self.label_title = QLabel(self.frame_title)
         self.label_title.setObjectName(u"label_title")
         self.label_title.setMinimumSize(QSize(0, 0))
         self.label_title.setMaximumSize(QSize(16777215, 32))
         font = QFont()
         font.setFamilies([u"MS Shell Dlg 2"])
-        font.setPointSize(11)
+        font.setPointSize(10)
         font.setBold(False)
         font.setItalic(False)
         self.label_title.setFont(font)
@@ -142,22 +142,17 @@ class Ui_Form(object):
         font2 = QFont()
         font2.setFamilies([u"MS Shell Dlg 2"])
         font2.setPointSize(10)
-        font3 = QFont()
-        font3.setFamilies([u"MS Shell Dlg 2"])
-        font3.setPointSize(10)
-        font3.setBold(False)
-        font3.setItalic(False)
         __qtreewidgetitem = QTreeWidgetItem()
         __qtreewidgetitem.setText(1, u"Frequency [Hz]");
         __qtreewidgetitem.setTextAlignment(1, Qt.AlignCenter);
-        __qtreewidgetitem.setFont(1, font3);
+        __qtreewidgetitem.setFont(1, font);
         __qtreewidgetitem.setTextAlignment(0, Qt.AlignCenter);
         __qtreewidgetitem.setFont(0, font2);
         self.treeWidget_frequencies.setHeaderItem(__qtreewidgetitem)
         self.treeWidget_frequencies.setObjectName(u"treeWidget_frequencies")
         self.treeWidget_frequencies.setMinimumSize(QSize(260, 160))
         self.treeWidget_frequencies.setMaximumSize(QSize(260, 240))
-        self.treeWidget_frequencies.setFont(font3)
+        self.treeWidget_frequencies.setFont(font)
         self.treeWidget_frequencies.setAlternatingRowColors(True)
         self.treeWidget_frequencies.setIndentation(0)
 
@@ -181,7 +176,7 @@ class Ui_Form(object):
         self.lineEdit_selected_frequency.setEnabled(False)
         self.lineEdit_selected_frequency.setMinimumSize(QSize(160, 28))
         self.lineEdit_selected_frequency.setMaximumSize(QSize(180, 28))
-        self.lineEdit_selected_frequency.setFont(font3)
+        self.lineEdit_selected_frequency.setFont(font)
         self.lineEdit_selected_frequency.setStyleSheet(u"")
         self.lineEdit_selected_frequency.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
@@ -199,11 +194,11 @@ class Ui_Form(object):
         self.label_4.setObjectName(u"label_4")
         self.label_4.setMinimumSize(QSize(0, 28))
         self.label_4.setMaximumSize(QSize(16777215, 28))
-        font4 = QFont()
-        font4.setFamilies([u"MS Shell Dlg 2"])
-        font4.setPointSize(10)
-        font4.setBold(False)
-        self.label_4.setFont(font4)
+        font3 = QFont()
+        font3.setFamilies([u"MS Shell Dlg 2"])
+        font3.setPointSize(10)
+        font3.setBold(False)
+        self.label_4.setFont(font3)
         self.label_4.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_4.addWidget(self.label_4, 1, 1, 1, 1)
@@ -212,7 +207,7 @@ class Ui_Form(object):
         self.label_5.setObjectName(u"label_5")
         self.label_5.setMinimumSize(QSize(0, 28))
         self.label_5.setMaximumSize(QSize(16777215, 28))
-        self.label_5.setFont(font4)
+        self.label_5.setFont(font3)
         self.label_5.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout_4.addWidget(self.label_5, 1, 3, 1, 1)
@@ -221,7 +216,7 @@ class Ui_Form(object):
         self.label_7.setObjectName(u"label_7")
         self.label_7.setMinimumSize(QSize(0, 28))
         self.label_7.setMaximumSize(QSize(16777215, 28))
-        self.label_7.setFont(font4)
+        self.label_7.setFont(font3)
         self.label_7.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout_4.addWidget(self.label_7, 0, 1, 1, 1)
@@ -271,7 +266,7 @@ class Ui_Form(object):
 
     def retranslateUi(self, Form):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Plot displacement field", None))
-        self.label_title.setText(QCoreApplication.translate("Form", u"Plot structural response fields", None))
+        self.label_title.setText(QCoreApplication.translate("Form", u"Structural nodal solution plot (frequency domain)", None))
         self.label.setText(QCoreApplication.translate("Form", u"Plot type:", None))
         self.comboBox_plot_type.setItemText(0, QCoreApplication.translate("Form", u" Sum", None))
         self.comboBox_plot_type.setItemText(1, QCoreApplication.translate("Form", u" Real Ux", None))
@@ -301,7 +296,7 @@ class Ui_Form(object):
 
 
 
-class StructuralResponseFieldsInputs_UI(QWidget, Ui_Form):
+class StructuralNodalSolution3dPlotFrequencyInputs_UI(QWidget, Ui_Form):
     """
     Component Hierarchy:
     - Form: QWidget

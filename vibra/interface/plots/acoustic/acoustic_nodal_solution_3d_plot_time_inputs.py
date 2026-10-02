@@ -12,7 +12,9 @@ from vibra.interface.numeric_checks.double_validator import StrictDoubleValidato
 from vibra.interface.numeric_checks.unit_utilities import convert_pressure_unit
 from vibra.interface.plots.general.animation_widget import AnimationWidget
 from vibra.interface.plots.general.results_display_widget import ResultsDisplayWidget
-from vibra.interface.ui_generated.plots.acoustic.acoustic_pressure_waveform_3d_plot_inputs_ui import AcousticPressureWaveform3dPlotInputs_UI
+from vibra.interface.ui_generated.plots.acoustic.acoustic_nodal_solution_3d_plot_time_inputs_ui import (
+    AcousticNodalSolution3dPlotTimeInputs_UI,
+)
 from vibra.interface.viewer_3d.plot_setup import PressureFieldPlotSetupTime, PressurePlotType
 
 
@@ -22,19 +24,15 @@ class ReduceLoopType(IntEnum):
     ROTATIONAL_SPEED = 2
 
 
-class AcousticPressureWaveform3DPlotInputs(AcousticPressureWaveform3dPlotInputs_UI):
+class AcousticNodalSolution3dPlotTimeInputs(AcousticNodalSolution3dPlotTimeInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        app().main_window.show_geometry_render_widget()
-
-        self._reset_variables()
-        self.add_animation_widget()
-        self.add_color_widget()
+        self._add_animation_widget()
+        self._add_color_widget()
+        self._initialize()
         self._create_connections()
         self._configure_validators()
-
-        self._load_analysis_setup_and_solution()
 
     @property
     def model(self):
@@ -48,6 +46,15 @@ class AcousticPressureWaveform3DPlotInputs(AcousticPressureWaveform3dPlotInputs_
     def properties(self):
         return app().project.model.properties
 
+    @property
+    def acoustic_post(self):
+        return app().project.get_acoustic_postprocessing()
+
+    @property
+    def is_data_cached(self):
+        cache_info = self.acoustic_post.compute_multiple_ifft_for_acoustic_nodal_solution.cache_info()
+        return cache_info.currsize != 0
+
     def show_results_render(self):
         curent_render_widget = app().main_window.get_current_render_widget()
         results_render_widget = app().main_window.results_widget
@@ -60,18 +67,21 @@ class AcousticPressureWaveform3DPlotInputs(AcousticPressureWaveform3dPlotInputs_
     def _configure_validators(self):
         self.lineEdit_animation_time.setValidator(StrictDoubleValidator(1e-5, 1e8, 8))
 
-    def _load_analysis_setup_and_solution(self):
-        self.analysis_method = ""
-        if self.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
-            self.analysis_method = "Direct method"
-
-        self.frequencies = self.model.frequencies
-
-        self.update_slider_configuration()
-
-    def _reset_variables(self):
-        self.time_vector = None
+    def _initialize(self):
         self.plot_setup = None
+
+        # update the widgets accessibility
+        if self.is_data_cached:
+            self.plot_data_callback()
+        else:
+            self.set_frames_disabled(True)
+            app().main_window.show_geometry_render_widget()
+
+    def set_frames_disabled(self, disabled: bool):
+        self.frame_animation.setDisabled(disabled)
+        self.frame_color.setDisabled(disabled)
+        self.frame_plot_controls.setDisabled(disabled)
+        self.pushButton_process_nodal_solution_iffts.setEnabled(disabled)
 
     def _create_connections(self):
 
@@ -84,14 +94,14 @@ class AcousticPressureWaveform3DPlotInputs(AcousticPressureWaveform3dPlotInputs_
         self.lineEdit_animation_time.editingFinished.connect(self.plot_data_callback)
 
         # QPushButton connections
-        self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
+        self.pushButton_process_nodal_solution_iffts.clicked.connect(self.plot_data_callback)
 
         self.results_display_widget.colormap_changed.connect(self.animation_widget.update_color_and_deformation)
-        self.results_display_widget.pressure_value_changed.connect(self.animation_widget.update_color_and_deformation)
+        self.results_display_widget.min_max_value_changed.connect(self.animation_widget.update_color_and_deformation)
 
         self.reduced_loop_time_type_callback()
 
-    def add_animation_widget(self):
+    def _add_animation_widget(self):
 
         self.grid_layout = QGridLayout()
         self.grid_layout.setContentsMargins(0, 0, 0, 0)
@@ -104,7 +114,9 @@ class AcousticPressureWaveform3DPlotInputs(AcousticPressureWaveform3dPlotInputs_
         self.animation_widget.label_animation_phase.setText("Time step:")
         self.animation_widget.label_phase_angle.setText(f"{0: .4e}s")
 
-    def add_color_widget(self):
+        self.update_slider_configuration()
+
+    def _add_color_widget(self):
         grid_layout = QGridLayout()
         grid_layout.setContentsMargins(0, 0, 0, 0)
         self.frame_color.setLayout(grid_layout)
@@ -114,10 +126,13 @@ class AcousticPressureWaveform3DPlotInputs(AcousticPressureWaveform3dPlotInputs_
         self.frame_color.adjustSize()
 
     def update_slider_configuration(self):
-        if isinstance(self.frequencies, np.ndarray):
-            N_steps = 2 * len(self.frequencies)
-            df = self.frequencies[1] - self.frequencies[0]
-            T = 1 / df
+        frequencies = self.model.frequencies
+        if not isinstance(frequencies, np.ndarray):
+            return
+
+        N_steps = 2 * len(frequencies)
+        df = frequencies[1] - frequencies[0]
+        T = 1 / df
 
         self.animation_widget.configure_animation_widget_for_transient_plot(T, N_steps)
 
@@ -191,6 +206,7 @@ class AcousticPressureWaveform3DPlotInputs(AcousticPressureWaveform3dPlotInputs_
 
         LoadingWindow(plot_callback).run()
 
+        self.set_frames_disabled(False)
         self.show_results_render()
 
     def get_plot_type(self) -> PressurePlotType:

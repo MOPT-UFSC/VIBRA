@@ -62,7 +62,6 @@ class AllowablePulsations3DPlotForScrewCompressorInputs(AllowablePulsations3dPlo
 
     def _reset_variables(self):
         self.unit_label = "kPa"
-        self.time_vector = None
         self.plot_setup = None
 
     def _add_penalization_values_to_combo_box(self):
@@ -104,7 +103,7 @@ class AllowablePulsations3DPlotForScrewCompressorInputs(AllowablePulsations3dPlo
         self.comboBox_penalization_factor.currentIndexChanged.connect(self.penalize_allowable_pulsation_callback)
 
         self.results_display_widget.colormap_changed.connect(self.animation_widget.update_color_and_deformation)
-        self.results_display_widget.pressure_value_changed.connect(self.animation_widget.update_color_and_deformation)
+        self.results_display_widget.min_max_value_changed.connect(self.animation_widget.update_color_and_deformation)
 
     def penalize_allowable_pulsation_callback(self):
         curent_render_widget = app().main_window.get_current_render_widget()

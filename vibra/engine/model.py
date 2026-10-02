@@ -47,7 +47,7 @@ from vibra.engine.elements.elements_3d import (
     AcousticHexahedron20,
     AcousticTetrahedron4,
     AcousticTetrahedron10,
-    StructuralHexahedron4,
+    StructuralHexahedron8,
     StructuralHexahedron20,
     StructuralTetrahedron4,
     StructuralTetrahedron10,
@@ -650,7 +650,7 @@ class Model:
             return StructuralTetrahedron10(self), StructuralTriangle6(self), StructuralLine3(self)
 
         elif element_type == Hexahedron8:
-            return StructuralHexahedron4(self), StructuralQuadrangle4(self), StructuralLine2(self)
+            return StructuralHexahedron8(self), StructuralQuadrangle4(self), StructuralLine2(self)
 
         elif element_type == Hexahedron20:
             return StructuralHexahedron20(self), StructuralQuadrangle8(self), StructuralLine3(self)

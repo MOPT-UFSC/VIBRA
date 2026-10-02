@@ -11,7 +11,7 @@ class PressurePlotType(StrEnum):
     IMAG_VALUES = auto()
 
 
-class DisplacementPlotType(StrEnum):
+class DisplacementDataType(StrEnum):
     U_SUM = auto()
     U_X = auto()
     U_Y = auto()
@@ -26,7 +26,7 @@ class DisplacementPlotType(StrEnum):
     A_Z = auto()
 
 
-class StressPlotType(StrEnum):
+class StressDataType(StrEnum):
     ABSOLUTE_ANIMATION = auto()
     NON_ABSOLUTE_ANIMATION = auto()
     ABSOLUTE_VALUES = auto()
@@ -102,10 +102,21 @@ class DisplacementFieldPlotSetupFrequency:
     phase: float
     index: int
     magnification_factor: float
-    plot_type: DisplacementPlotType
+    plot_type: DisplacementDataType
     unit: str = "--"
     n_diff: int = 0
     unit_factor: float = 1.0
+
+
+@dataclass(slots=True)
+class DisplacementFieldPlotSetupTime:
+    time_index: int
+    magnification_factor: float
+    plot_type: DisplacementDataType
+    unit: str = "--"
+    unit_factor: float = 1.0
+    n_diff: int = 0
+    reduced_loop_time: float | None = None
 
 
 @dataclass(slots=True)
@@ -114,10 +125,22 @@ class StressFieldPlotSetupFrequency:
     index: int
     magnification_factor: float
     stress_type: StressType
-    plot_type: StressPlotType
+    plot_type: StressDataType
     unit: str = "--"
     n_diff: int = 0
     unit_factor: float = 1.0
+
+
+@dataclass(slots=True)
+class StressFieldPlotSetupTime:
+    time_index: int
+    magnification_factor: float
+    stress_type: StressType
+    plot_type: StressDataType
+    unit: str = "--"
+    n_diff: int = 0
+    unit_factor: float = 1.0
+    reduced_loop_time: float | None = None
 
 
 @dataclass(slots=True)
@@ -149,7 +172,9 @@ class AllowablePulsationForScrewCompressorsPlotSetup:
 PlotSetup = Union[
     NoPlotSetup,
     DisplacementFieldPlotSetupFrequency,
+    DisplacementFieldPlotSetupTime,
     StressFieldPlotSetupFrequency,
+    StressFieldPlotSetupTime,
     PressureFieldPlotSetupFrequency,
     PressureFieldPlotSetupTime,
     AllowablePulsationForScrewCompressorsPlotSetup,
@@ -163,5 +188,7 @@ AcousticPlotSetups = Union[
 
 StructuralPlotSetups = Union[
     DisplacementFieldPlotSetupFrequency,
+    DisplacementFieldPlotSetupTime,
     StressFieldPlotSetupFrequency,
+    StressFieldPlotSetupTime,
 ]

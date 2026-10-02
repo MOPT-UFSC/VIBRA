@@ -240,11 +240,43 @@ def convert_length_unit(value: float, input_unit: str, output_unit: str | None=N
     if input_unit == output_unit:
         return value
 
-    temperature = u_reg.Quantity(value, unit_map.get(input_unit))
+    lenght = u_reg.Quantity(value, unit_map.get(input_unit))
     if output_unit is None:
-        return temperature.magnitude
+        return lenght.magnitude
 
-    return temperature.to(unit_map.get(output_unit)).magnitude
+    return lenght.to(unit_map.get(output_unit)).magnitude
+
+
+def convert_angle_unit(value: float, input_unit: str, output_unit: str | None=None) -> float:
+    """
+    This function converts the angle, scaled in 'input_unit',
+    to a angle scaled in 'output_unit'.
+
+    Parameters
+    ----------
+    value: float
+    The angle value.
+
+    input_unit: str 
+    The input angle unit. Allowable units: rad, deg.
+
+    output_unit: str or None, optional
+    The output angle unit. Allowable units: same as input.
+    """
+
+    unit_map = {
+        "deg" : "deg",
+        "rad" : "rad",
+        }
+
+    if input_unit == output_unit:
+        return value
+
+    angle = u_reg.Quantity(value, unit_map.get(input_unit))
+    if output_unit is None:
+        return angle.magnitude
+
+    return angle.to(unit_map.get(output_unit)).magnitude
 
 
 def convert_linear_mass_unit(value: float, input_unit: str, output_unit: str | None=None) -> float:

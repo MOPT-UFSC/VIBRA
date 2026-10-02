@@ -12,8 +12,10 @@ from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.numeric_checks.unit_utilities import convert_pressure_unit
 from vibra.interface.plots.general.frequency_response_plotter import DataFormat, FrequencyResponsePlotter
-from vibra.interface.ui_generated.plots.acoustic.acoustic_pressure_waveform_2d_plot_inputs_ui import AcousticPressureWaveform2dPlotInputs_UI
-from vibra.utils.signal_processing import process_ifft_from_one_sided_spectrum_signal, process_multiple_iffts_from_one_sided_spectrum_signals
+from vibra.interface.ui_generated.plots.acoustic.acoustic_nodal_solution_2d_plot_time_inputs_ui import (
+    AcousticNodalSolution2dPlotTimeInputs_UI,
+)
+from vibra.utils.signal_processing import process_ifft_from_one_sided_spectrum_signal
 
 
 class SelectionType(IntEnum):
@@ -23,7 +25,7 @@ class SelectionType(IntEnum):
     NODES = 3
 
 
-class AcousticPressureWaveform2DPlotInputs(AcousticPressureWaveform2dPlotInputs_UI):
+class AcousticNodalSolution2dPlotTimeInputs(AcousticNodalSolution2dPlotTimeInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -187,18 +189,6 @@ class AcousticPressureWaveform2DPlotInputs(AcousticPressureWaveform2dPlotInputs_
         #     response += np.ones(len(response), dtype=float)*(1e-12)
 
         return response
-
-    def compute_multiple_ifft(self):
-
-        logging.info("Computing multiple iffts... [10/100]")
-        solution = self.nodal_solution[:, :]
-
-        logging.info("Computing multiple iffts... [25/100]")
-        _time_vector, acoustic_pressure_waveform_vectors = process_multiple_iffts_from_one_sided_spectrum_signals(                
-            self.frequencies, 
-            solution,
-            dc_included = False,
-            )
 
     def join_model_data(self):
 

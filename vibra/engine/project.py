@@ -123,15 +123,19 @@ class Project:
             acoustic_postprocessing.get_acoustic_waveforms_minimum_and_maximum_values.cache_clear()
             acoustic_postprocessing.get_min_max_values_of_pressures.cache_clear()
             acoustic_postprocessing.compute_allowable_pulsation_field_for_screw_compressor.cache_clear()
-            acoustic_postprocessing.compute_multiple_ifft.cache_clear()
+            acoustic_postprocessing.compute_multiple_ifft_for_acoustic_nodal_solution.cache_clear()
 
         # clears the structural domain-related caches
         structural_postprocessing = self.get_structural_postprocessing()
         if isinstance(structural_postprocessing, StructuralPostprocessing):
-            structural_postprocessing.get_max_min_values_for_advanced_stress_data.cache_clear()
-            structural_postprocessing.get_max_min_values_for_stress_data.cache_clear()
-            structural_postprocessing.get_max_min_values_for_displacements_data.cache_clear()
+            structural_postprocessing.reset_attributes()
             structural_postprocessing.recover_nodal_averaged_structural_stresses.cache_clear()
+            structural_postprocessing.compute_multiple_ifft_for_structural_nodal_solution.cache_clear()
+            structural_postprocessing.compute_multiple_ifft_for_structural_stresses.cache_clear()
+            structural_postprocessing.min_max_processor.get_values_for_advanced_stress_frequency.cache_clear()
+            structural_postprocessing.min_max_processor.get_values_for_stress_frequency.cache_clear()
+            structural_postprocessing.min_max_processor.get_values_for_displacement_frequency.cache_clear()
+            structural_postprocessing.min_max_processor.get_values_for_displacement_time.cache_clear()
 
     def run_analysis(self, is_resume: bool = False, print_log: bool = False):
         """
