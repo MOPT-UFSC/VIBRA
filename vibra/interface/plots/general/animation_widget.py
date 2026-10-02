@@ -204,9 +204,9 @@ class AnimationWidget(AnimationWidget_UI):
         self.frames_number = frames_number
 
         self.phase_slider.setMaximum(frames_number)
+        self.spinBox_frames.setEnabled(False)
         self.spinBox_frames.setMaximum(frames_number)
         self.spinBox_frames.setValue(frames_number)
-        self.spinBox_frames.setEnabled(False)
 
     def magnification_factor_slider_callback(self, value: int):
         self.update_factor_label()

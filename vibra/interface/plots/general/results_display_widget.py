@@ -112,7 +112,14 @@ class ResultsDisplayWidget(ResultsDisplayWidget_UI):
         max_value = self.max_color_value()
 
         render_widget = app().main_window.results_widget
-        render_widget.set_min_value(min_value)
-        render_widget.set_max_value(max_value)
+        min_value_changed = min_value != render_widget.user_min_value
+        max_value_changed = max_value != render_widget.user_max_value
+        
+        if min_value_changed:
+            render_widget.set_min_value(min_value)
 
-        self.min_max_value_changed.emit()
+        if max_value_changed:
+            render_widget.set_max_value(max_value)
+
+        if min_value_changed or max_value_changed:
+            self.min_max_value_changed.emit()
