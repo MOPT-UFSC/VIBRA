@@ -233,7 +233,7 @@ class Project:
         """
         mesh = Mesh().load_mesh(path)
         self.model.mesh = mesh
-        self.model.geometry_path = path  # keeping previous file organization
+        self.model.set_geometry_path(path)
         self.write_to_working_dir()
         return mesh
 
@@ -247,8 +247,7 @@ class Project:
             - *.iges
         """
         path = Path(path)
-        # self.model.geometry = Geometry(path)
-        self.model.geometry_path = path
+        self.model.set_geometry_path(path)
         self.write_to_working_dir()
 
     def configure_mesh(self, mesh_setup: MeshSetup):
@@ -310,7 +309,7 @@ class Project:
         if self.model.geometry_path is None:
             raise errors.InvalidMeshSetupError("The geometry has not been loaded yet.")
 
-        self.model.process_visual_geometry_mesh(self.model.geometry_path)
+        self.model.process_visual_geometry_mesh()
         self.project_writer.write_mesh(self.model.mesh)
         return self.model.mesh
 
@@ -365,9 +364,9 @@ class Project:
         return self.model.solution
 
     def solve_structural_harmonic_analysis(
-            self, 
-            is_resume: bool = False, 
-            print_log: bool = False, 
+            self,
+            is_resume: bool = False,
+            print_log: bool = False,
             update_domain_mappings: bool = True,
             ) -> HarmonicSolution:
 

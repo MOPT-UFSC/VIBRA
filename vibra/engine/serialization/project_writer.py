@@ -61,7 +61,7 @@ class ProjectWriter:
         if model.geometry_path is not None:
             # Copy geometry file to the working dir and
             # update the path to point to the new location.
-            model.geometry_path = self.write_geometry(model.geometry_path)
+            model.set_geometry_path(self.write_geometry(model.geometry_path))
 
         if model.mesh is not None:
             self.write_mesh(model.mesh)

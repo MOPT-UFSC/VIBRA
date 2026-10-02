@@ -387,8 +387,7 @@ class Model:
     def initialize_mesh(self):
         self.mesh = Mesh(length_unit=self.length_unit, geometry_qf=self.geometry_qf)
 
-    def process_visual_geometry_mesh(self, path: str):
-        self.fem_mesher.set_path(path)
+    def process_visual_geometry_mesh(self):
         self.mesh, mesh_setup = self.fem_mesher.generate_visual_mesh()
         self.initial_element_size = mesh_setup.maximum_element_size
 

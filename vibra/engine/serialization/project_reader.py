@@ -65,7 +65,9 @@ class ProjectReader:
 
         model.reset_variables()
         model.thumbnail = self.read_thumbnail()
-        model.geometry_path = self.read_geometry_path()
+
+        if (path := self.read_geometry_path()) is not None:
+            model.set_geometry_path(path)
 
         analysis_setup = self.read_analysis_setup()
 
