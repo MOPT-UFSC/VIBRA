@@ -262,7 +262,10 @@ class AnalysisToolbar(QToolBar):
         else:
             interrupt_function = None
 
-        LoadingWindow(app().project.run_analysis, interrupt_function).run(is_resume)
+        # load the user preferences for printing the solution log
+        print_log = app().config.user_preferences.print_solution_log
+
+        LoadingWindow(app().project.run_analysis, interrupt_function).run(is_resume, print_log=print_log)
 
         self.solve_analysis = False
 
