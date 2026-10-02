@@ -111,6 +111,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.results_viewer_items.update_tree_visibility_after_solution()
 
     def add_structural_modal_widget(self):
+        app().main_window.results_widget.reset_plot_setup()
         self.current_widget = self.process_input(StructuralModeShapeInputs)
 
         if app().main_window.results_widget.playing_animation:
@@ -119,6 +120,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.add_widget(self.current_widget)
 
     def add_structural_nodal_solution_3d_plot_frequency_widget(self):
+        app().main_window.results_widget.reset_plot_setup()
         self.current_widget = self.process_input(StructuralNodalSolution3dPlotFrequencyInputs)
 
         if app().main_window.results_widget.playing_animation:
@@ -127,6 +129,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.add_widget(self.current_widget)
 
     def add_structural_nodal_solution_3d_plot_time_widget(self):
+        app().main_window.results_widget.reset_plot_setup()
         self.current_widget = self.process_input(StructuralNodalSolution3dPlotTimeInputs)
 
         if app().main_window.results_widget.playing_animation:
@@ -135,6 +138,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.add_widget(self.current_widget)
 
     def add_stresses_frequency_domain_3d_plot_widget(self):
+        app().main_window.results_widget.reset_plot_setup()
         self.current_widget = self.process_input(StructuralStress3dPlotFrequencyInputs)
 
         if app().main_window.results_widget.playing_animation:
@@ -143,6 +147,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.add_widget(self.current_widget)
 
     def add_stresses_time_domain_3d_plot_widget(self):
+        app().main_window.results_widget.reset_plot_setup()
         self.current_widget = self.process_input(StructuralStress3dPlotTimeInputs)
 
         if app().main_window.results_widget.playing_animation:
@@ -167,6 +172,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.add_widget(self.current_widget)
 
     def add_acoustic_modal_widget(self):
+        app().main_window.results_widget.reset_plot_setup()
         self.current_widget = self.process_input(AcousticModeShapeInputs)
 
         if app().main_window.results_widget.playing_animation:
@@ -175,6 +181,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.add_widget(self.current_widget)
 
     def add_acoustic_nodal_solution_3d_plot_frequency_widget(self):
+        app().main_window.results_widget.reset_plot_setup()
         self.current_widget = self.process_input(AcousticNodalSolution3dPlotFrequencyInputs)
 
         if app().main_window.results_widget.playing_animation:
@@ -238,14 +245,6 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
 
         self.add_widget(self.current_widget)
 
-    def add_allowable_pulsations_for_screw_compressor_widget(self):
-        self.current_widget = app().main_window.input_ui.plot_allowable_pulsation_criteria_for_screw_compressor()
-
-        if app().main_window.results_widget.playing_animation:
-            app().main_window.results_widget.stop_animation()
-
-        self.add_widget(self.current_widget)
-
     def add_acoustic_nodal_solution_2d_plot_time_widget(self):
         self.current_widget = self.process_input(AcousticNodalSolution2dPlotTimeInputs)
 
@@ -255,6 +254,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.add_widget(self.current_widget)
 
     def add_acoustic_nodal_solution_3d_plot_time_widget(self):
+        app().main_window.results_widget.reset_plot_setup()
         self.current_widget = self.process_input(AcousticNodalSolution3dPlotTimeInputs)
 
         if app().main_window.results_widget.playing_animation:
@@ -271,6 +271,7 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         self.add_widget(self.current_widget)
 
     def add_allowable_pulsations_for_screw_compressor_3d_plot_widget(self):
+        app().main_window.results_widget.reset_plot_setup()
         self.current_widget = self.process_input(AllowablePulsations3DPlotForScrewCompressorInputs)
 
         if app().main_window.results_widget.playing_animation:

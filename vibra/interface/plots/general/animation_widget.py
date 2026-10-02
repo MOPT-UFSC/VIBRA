@@ -244,7 +244,7 @@ class AnimationWidget(AnimationWidget_UI):
         self.phase_slider.setValue(0)
 
         # update labels
-        if isinstance(plot_setup, PressureFieldPlotSetupTime | DisplacementFieldPlotSetupTime):
+        if isinstance(plot_setup, PressureFieldPlotSetupTime | DisplacementFieldPlotSetupTime | StressFieldPlotSetupTime):
             self.update_time_frame_label()
         else:
             self.update_degree_label()

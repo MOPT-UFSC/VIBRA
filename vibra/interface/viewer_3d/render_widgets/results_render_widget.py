@@ -158,8 +158,9 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         *,
         plot_setup: PlotSetup | None = None,
     ):
+        
         if plot_setup is None:
-            self.plot_setup = NoPlotSetup()
+            self.reset_plot_setup()
         else:
             self.configure_plot(plot_setup)
 
@@ -227,6 +228,9 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             return PhysicalDomain.ACOUSTIC
         else:
             return None
+
+    def reset_plot_setup(self):
+        self.plot_setup = NoPlotSetup()
 
     def configure_plot(self, plot_setup: PlotSetup):
         assert isinstance(plot_setup, PlotSetup)
@@ -411,6 +415,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         animation_frame: int | None = None,
         clear_cache: bool = True,
     ):
+
         assert isinstance(self.plot_setup, StressFieldPlotSetupFrequency)
 
         postprocessing = app().project.get_structural_postprocessing()
@@ -735,8 +740,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.update()
 
-    def update_animation_parameters(self, time_vector: np.ndarray):
-    
+    def update_animation_parameters(self, time_vector: np.ndarray):   
         animation_widget = app().main_window.results_viewer_widget.animation_widget
         if animation_widget is None:
             return
