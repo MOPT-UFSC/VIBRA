@@ -55,8 +55,9 @@ from vibra.engine.elements.elements_3d import (
 from vibra.engine.geometry.geometry import LengthUnits
 from vibra.engine.mesher.degrees_of_freedom_decoupling_new import DegreesOfFreedomDecoupling
 from vibra.engine.mesher.element_setup import GMSH_VISUAL_MESH
+from vibra.engine.mesher.gmsh_mesher import GmshMesher
 from vibra.engine.mesher.mesh import Mesh
-from vibra.engine.mesher.mesh_setup import Hexahedron8, Hexahedron20, Tetrahedron4, Tetrahedron10, ElementTopology, MeshSetup
+from vibra.engine.mesher.mesh_setup import ElementTopology, Hexahedron8, Hexahedron20, MeshSetup, Tetrahedron4, Tetrahedron10
 from vibra.engine.model_domains_processor import ModelDomainsProcessor
 from vibra.engine.model_selection_tools import ModelSelectionTools
 from vibra.engine.properties.fluid import Fluid
@@ -89,7 +90,8 @@ class Model:
 
     def reset_variables(self):
         self.name: str = "Model"
-        self.thumbnail: Optional[Image] = None
+        self.thumbnail: Image | None = None
+        self.fem_mesher = GmshMesher()
 
         self.length_unit: LengthUnits = "millimeter"
         self.mesh_setup: Optional[MeshSetup] = None
@@ -285,7 +287,6 @@ class Model:
 
         # correct the connectivities order
         for i, elem2d_id in enumerate(interface_connectivities[:, 0]):
-
             progress = int((100 * (i / n_el) // 5) * 5)
             if progress != last_progress:
                 logging.info(f"Processing the 2D elements connectivities... [{progress}/100]")
@@ -300,9 +301,11 @@ class Model:
                 vol_id = self.mesh.solids_connectivity[elem3d_id, 1]
                 face_coords = self.mesh.nodal_coordinates[self.structural_element_2d.connectivities[i, :], 1:]
                 solid_coords = self.mesh.nodal_coordinates[self.mesh.solids_connectivity[elem3d_id, 4:], 1:]
-                
+
                 if vol_id in structural_domains:
-                    is_inverted = self.mesh.is_element_normal_vector_inverted(elem2d_id, face_coords, solid_coords, plot_element_normals=plot_element_normals)
+                    is_inverted = self.mesh.is_element_normal_vector_inverted(
+                        elem2d_id, face_coords, solid_coords, plot_element_normals=plot_element_normals
+                    )
                     if not is_inverted:
                         continue
 
@@ -361,6 +364,7 @@ class Model:
 
     def set_geometry_path(self, path: Path | str):
         self.geometry_path = path
+        self.fem_mesher.set_path(path)
 
     def check_path_for_geometry_file(self, path: Path | str):
         """
@@ -384,36 +388,9 @@ class Model:
         self.mesh = Mesh(length_unit=self.length_unit, geometry_qf=self.geometry_qf)
 
     def process_visual_geometry_mesh(self, path: str):
-        self.mesh = Mesh(length_unit=self.length_unit, geometry_qf=self.geometry_qf)
-
-        try:
-            try:
-                element_size = self.mesh.compute_initial_mesh_size(path)
-                mesh_setup = MeshSetup(
-                    minimum_element_size=element_size * 0.4,
-                    maximum_element_size=element_size,
-                    custom_element_setup=GMSH_VISUAL_MESH,
-                )
-                self.mesh.load_cad(path, mesh_setup)
-
-            except Exception:
-                element_size = 10
-                mesh_setup = MeshSetup(
-                    minimum_element_size=element_size * 0.5,
-                    maximum_element_size=element_size,
-                    custom_element_setup=GMSH_VISUAL_MESH,
-                )
-
-            self.initial_element_size = element_size
-
-        except Exception as error_log:
-            from traceback import print_exception
-
-            print_exception(error_log)
-            title = "Error while processing geometry"
-            message = str(error_log)
-            PrintMessageInput([error_title, title, message])
-            return -1
+        self.fem_mesher.set_path(path)
+        self.mesh, mesh_setup = self.fem_mesher.generate_visual_mesh()
+        self.initial_element_size = mesh_setup.maximum_element_size
 
     def process_mesh_data(self, path: str):
         self.initialize_mesh()
@@ -770,7 +747,7 @@ class Model:
                     avg_value = values
 
                 if n_int and isinstance(self.frequencies, np.ndarray):
-                    output_data[gdof] = avg_value / ((1j * 2 * np.pi * self.frequencies)**n_int)
+                    output_data[gdof] = avg_value / ((1j * 2 * np.pi * self.frequencies) ** n_int)
                 else:
                     output_data[gdof] = avg_value
 
