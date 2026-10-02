@@ -103,7 +103,7 @@
          </font>
         </property>
         <property name="text">
-         <string>Plot acoustic pressure frequency response</string>
+         <string>Plot the acoustic pressure (frequency domain)</string>
         </property>
         <property name="textFormat">
          <enum>Qt::TextFormat::AutoText</enum>

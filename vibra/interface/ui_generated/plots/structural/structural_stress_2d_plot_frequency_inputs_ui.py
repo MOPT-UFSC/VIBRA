@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'structural_stresses_frequency_response_inputs.ui'
+## Form generated from reading UI file 'structural_stress_2d_plot_frequency_inputs.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.9.2
 ##
@@ -25,9 +25,9 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(402, 320)
+        Form.resize(402, 340)
         Form.setMinimumSize(QSize(0, 280))
-        Form.setMaximumSize(QSize(16777215, 320))
+        Form.setMaximumSize(QSize(16777215, 340))
         self.gridLayout_4 = QGridLayout(Form)
         self.gridLayout_4.setSpacing(4)
         self.gridLayout_4.setObjectName(u"gridLayout_4")
@@ -48,8 +48,8 @@ class Ui_Form(object):
         self.label.setMinimumSize(QSize(0, 30))
         self.label.setMaximumSize(QSize(452, 30))
         font = QFont()
-        font.setFamilies([u"MS Shell Dlg 2"])
-        font.setPointSize(11)
+        font.setFamilies([u"Segoe UI"])
+        font.setPointSize(10)
         font.setBold(False)
         font.setItalic(False)
         self.label.setFont(font)
@@ -89,8 +89,8 @@ class Ui_Form(object):
 
         self.pushButton_export_data = QPushButton(self.frame_selection_controls)
         self.pushButton_export_data.setObjectName(u"pushButton_export_data")
-        self.pushButton_export_data.setMinimumSize(QSize(40, 30))
-        self.pushButton_export_data.setMaximumSize(QSize(40, 30))
+        self.pushButton_export_data.setMinimumSize(QSize(40, 28))
+        self.pushButton_export_data.setMaximumSize(QSize(40, 28))
         font1 = QFont()
         font1.setFamilies([u"MS Shell Dlg 2"])
         font1.setPointSize(11)
@@ -107,8 +107,8 @@ class Ui_Form(object):
 
         self.lineEdit_selection_id = QLineEdit(self.frame_selection_controls)
         self.lineEdit_selection_id.setObjectName(u"lineEdit_selection_id")
-        self.lineEdit_selection_id.setMinimumSize(QSize(160, 30))
-        self.lineEdit_selection_id.setMaximumSize(QSize(160, 30))
+        self.lineEdit_selection_id.setMinimumSize(QSize(180, 28))
+        self.lineEdit_selection_id.setMaximumSize(QSize(180, 28))
         font2 = QFont()
         font2.setPointSize(10)
         self.lineEdit_selection_id.setFont(font2)
@@ -132,8 +132,8 @@ class Ui_Form(object):
         self.comboBox_selector_filter.addItem("")
         self.comboBox_selector_filter.addItem("")
         self.comboBox_selector_filter.setObjectName(u"comboBox_selector_filter")
-        self.comboBox_selector_filter.setMinimumSize(QSize(160, 30))
-        self.comboBox_selector_filter.setMaximumSize(QSize(160, 30))
+        self.comboBox_selector_filter.setMinimumSize(QSize(180, 28))
+        self.comboBox_selector_filter.setMaximumSize(QSize(180, 28))
         self.comboBox_selector_filter.setFont(font2)
         self.comboBox_selector_filter.setStyleSheet(u"")
 
@@ -147,8 +147,8 @@ class Ui_Form(object):
         self.comboBox_structural_stresses.addItem("")
         self.comboBox_structural_stresses.addItem("")
         self.comboBox_structural_stresses.setObjectName(u"comboBox_structural_stresses")
-        self.comboBox_structural_stresses.setMinimumSize(QSize(160, 30))
-        self.comboBox_structural_stresses.setMaximumSize(QSize(160, 30))
+        self.comboBox_structural_stresses.setMinimumSize(QSize(180, 28))
+        self.comboBox_structural_stresses.setMaximumSize(QSize(180, 28))
         self.comboBox_structural_stresses.setFont(font2)
         self.comboBox_structural_stresses.setStyleSheet(u"")
 
@@ -201,8 +201,8 @@ class Ui_Form(object):
         self.comboBox_stress_units.addItem("")
         self.comboBox_stress_units.addItem("")
         self.comboBox_stress_units.setObjectName(u"comboBox_stress_units")
-        self.comboBox_stress_units.setMinimumSize(QSize(160, 30))
-        self.comboBox_stress_units.setMaximumSize(QSize(160, 30))
+        self.comboBox_stress_units.setMinimumSize(QSize(180, 28))
+        self.comboBox_stress_units.setMaximumSize(QSize(180, 28))
         self.comboBox_stress_units.setFont(font2)
         self.comboBox_stress_units.setStyleSheet(u"")
 
@@ -273,7 +273,7 @@ class Ui_Form(object):
 
     def retranslateUi(self, Form):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Form", None))
-        self.label.setText(QCoreApplication.translate("Form", u"Plot stress frequency response", None))
+        self.label.setText(QCoreApplication.translate("Form", u"Stress plot (frequency domain)", None))
 #if QT_CONFIG(tooltip)
         self.pushButton_export_data.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p><span style=\" font-size:10pt; font-weight:400;\">Press to export the current response function</span></p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
@@ -293,7 +293,7 @@ class Ui_Form(object):
         self.comboBox_structural_stresses.setItemText(5, QCoreApplication.translate("Form", u"Shear stress yz", None))
 
         self.label_10.setText(QCoreApplication.translate("Form", u"Selected ID: ", None))
-        self.label_linear.setText(QCoreApplication.translate("Form", u"Structural results:", None))
+        self.label_linear.setText(QCoreApplication.translate("Form", u"Plotting results:", None))
         self.label_linear_2.setText(QCoreApplication.translate("Form", u"Stress units:", None))
         self.comboBox_stress_units.setItemText(0, QCoreApplication.translate("Form", u"MPa", None))
         self.comboBox_stress_units.setItemText(1, QCoreApplication.translate("Form", u"kPa", None))
@@ -308,7 +308,7 @@ class Ui_Form(object):
 
 
 
-class StructuralStressesFrequencyResponseInputs_UI(QWidget, Ui_Form):
+class StructuralStress2dPlotFrequencyInputs_UI(QWidget, Ui_Form):
     """
     Component Hierarchy:
     - Form: QWidget

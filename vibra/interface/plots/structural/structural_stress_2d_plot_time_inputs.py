@@ -1,21 +1,20 @@
 from enum import IntEnum
-from time import perf_counter
 
 import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 
 from vibra import app
-from vibra.engine.analysis_info import HarmonicAnalysisSetup
 from vibra.interface.common.common_interface import update_entities_selection
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
+from vibra.interface.numeric_checks.int_list_validator import IntListValidator
 from vibra.interface.numeric_checks.unit_utilities import convert_stress_unit
-from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
-from vibra.interface.ui_generated.plots.structural.structural_stresses_frequency_response_inputs_ui import (
-    StructuralStressesFrequencyResponseInputs_UI,
-)
+from vibra.interface.plots.general.frequency_response_plotter import DataFormat, FrequencyResponsePlotter
+from vibra.interface.ui_generated.plots.structural.structural_stress_2d_plot_time_inputs_ui import StructuralStress2dPlotTimeInputs_UI
+from vibra.interface.viewer_3d.plot_setup import StressType
+from vibra.utils.signal_processing import process_ifft_from_one_sided_spectrum_signal, process_multiple_iffts_from_one_sided_spectrum_signals
 
 
 class SelectionType(IntEnum):
@@ -25,19 +24,16 @@ class SelectionType(IntEnum):
     NODES = 3
 
 
-class StructuralStressesFrequencyResponseInputs(StructuralStressesFrequencyResponseInputs_UI):
-
+class StructuralStress2dPlotTimeInputs(StructuralStress2dPlotTimeInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         app().main_window.show_geometry_render_widget()
 
-        self._config_window()
         self._initialize()
+        self._configure_validator()
         self._create_connections()
-
-        self._load_analysis_setup_and_solution()
-        self.geometry_selection_callback()
+        self.update_render_according_to_selector()
 
     @property
     def model(self):
@@ -52,16 +48,17 @@ class StructuralStressesFrequencyResponseInputs(StructuralStressesFrequencyRespo
         return app().project.model.properties
 
     @property
-    def nodal_solution(self):
-        return app().project.model.solution.structural_solution
+    def nodal_averaged_stresses_frequency(self):
+        if not isinstance(self.structural_post.nodal_averaged_stresses_frequency, np.ndarray):
+            self.structural_post.compute_structural_stresses_frequency()
+        return self.structural_post.nodal_averaged_stresses_frequency
 
     @property
-    def nodal_averaged_stresses(self):
-        t0 = perf_counter()
-        nodal_averaged_stresses = self.structural_post.recover_nodal_averaged_structural_stresses()
-        dt = perf_counter() - t0
-        print(f"Time to compute all nodal stresses: {dt} s")
-        return nodal_averaged_stresses
+    def nodal_averaged_stresses_time(self):
+        if not isinstance(self.structural_post.nodal_averaged_stresses_time, np.ndarray):
+            self.structural_post.compute_structural_stresses_time()
+
+        return self.structural_post.nodal_averaged_stresses_time
 
     @property
     def structural_post(self):
@@ -72,28 +69,22 @@ class StructuralStressesFrequencyResponseInputs(StructuralStressesFrequencyRespo
         cache_info = self.structural_post.recover_nodal_averaged_structural_stresses.cache_info()
         return cache_info.currsize != 0
 
-    def _initialize(self):
-        self.selected_frequency_index = None
-
     def set_frames_disabled(self, disabled: bool):
         self.frame_selection_controls.setDisabled(disabled)
         self.frame_plot.setDisabled(disabled)
         self.pushButton_process_nodal_stresses.setEnabled(disabled)
 
-    def showEvent(self, event):
-        super().showEvent(event)
-        self.selection_type_callback()
-
-    def _config_window(self):
-        self.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.setWindowModality(Qt.WindowModal)
-        self.setWindowIcon(app().main_window.vibra_icon)
-
     def _initialize(self):
-        self.plotter = None
+        self.validation_mode = True 
         self.exporter = None
+        self.plotter = None
         self.model_results = {}
-        self.selection_types = ["surfaces", "lines", "points", "nodes"]
+        self.selection_types = [
+            "surfaces",
+            "lines",
+            "points",
+            "nodes",
+            ]
 
         # update the widgets accessibility
         if self.is_stress_data_cached:
@@ -101,11 +92,14 @@ class StructuralStressesFrequencyResponseInputs(StructuralStressesFrequencyRespo
         else:
             self.set_frames_disabled(True)
 
+    def _configure_validator(self):
+        validator = IntListValidator()
+        self.lineEdit_selection_id.setValidator(validator)
+
     def _create_connections(self):
 
         # QComboBox connection
-        self.comboBox_selector_filter.currentIndexChanged.connect(self.selection_type_callback)
-        self.comboBox_stress_units.currentIndexChanged.connect(self.process_units_data)
+        self.comboBox_selector_filter.currentIndexChanged.connect(self.update_render_according_to_selector)
 
         # QPushButton connection
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
@@ -113,12 +107,6 @@ class StructuralStressesFrequencyResponseInputs(StructuralStressesFrequencyRespo
         self.pushButton_process_nodal_stresses.clicked.connect(self.process_stress_field)
 
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
-
-    def selection_type_callback(self):
-        if self.comboBox_selector_filter.currentIndex() == SelectionType.NODES:
-            app().main_window.show_mesh_render_widget()
-        else:
-            app().main_window.show_geometry_render_widget()
 
     def geometry_selection_callback(self):
 
@@ -147,25 +135,22 @@ class StructuralStressesFrequencyResponseInputs(StructuralStressesFrequencyRespo
             self.lineEdit_selection_id.setText(text)
             self.comboBox_selector_filter.setCurrentIndex(3)
 
-    def _load_analysis_setup_and_solution(self):
-        analysis_setup = self.model.analysis_setup
+    def update_render_according_to_selector(self):
 
-        self.analysis_method = ""
-        if isinstance(analysis_setup, HarmonicAnalysisSetup):
-            analysis_method = analysis_setup.analysis_method.capitalize().replace("_", " ")
-            self.analysis_method = f"{analysis_method} method"
+        self.geometry_selection_callback()
 
-        self.frequencies = self.model.frequencies
+        if self.comboBox_selector_filter.currentIndex() == SelectionType.NODES:
+            app().main_window.show_mesh_render_widget()
+        else:
+            app().main_window.show_geometry_render_widget()
 
     def process_stress_field(self):
 
         # recover the averaged structural stresses
         if not self.is_stress_data_cached:
             def recover_stresses():
-                t0 = perf_counter()
-                self.structural_post.recover_nodal_averaged_structural_stresses()
-                dt = perf_counter() - t0
-                print(f"Time to compute all nodal stresses: {dt} s")
+                self.structural_post.compute_structural_stresses_frequency()
+                self.structural_post.compute_structural_stresses_time()
 
             LoadingWindow(recover_stresses).run()
 
@@ -201,6 +186,9 @@ class StructuralStressesFrequencyResponseInputs(StructuralStressesFrequencyRespo
 
         self.join_model_data()
         self.plotter = FrequencyResponsePlotter(close_dialogs=True)
+        self.plotter.comboBox_data_format.setCurrentIndex(DataFormat.REAL)
+        self.plotter.data_format_changed_callback()
+        self.plotter.frame_hlines_main.setDisabled(True)
         self.plotter._set_model_results_data_to_plot(self.model_results)
 
     def export_data_callback(self):
@@ -249,66 +237,136 @@ class StructuralStressesFrequencyResponseInputs(StructuralStressesFrequencyRespo
         # process the structural dofs of the selected entities
         _node_ids = self.model.get_mapped_nodes(nodes, "structural")
 
-        if isinstance(_node_ids, int):
-            response = self.nodal_averaged_stresses[_node_ids, stress_type_index, :]
-        else:
-            response = np.average(self.nodal_averaged_stresses[_node_ids, stress_type_index, :], axis=0)
+        stress_vector_ifft = None
 
-        return response
+        if StressType(stress_type_index).is_normal_or_shear_stress():
+            if isinstance(_node_ids, int):
+                stress_freq = self.nodal_averaged_stresses_frequency[_node_ids, stress_type_index, :]
+                if self.validation_mode:
+                    stress_vector_ifft = self.structural_post.nodal_averaged_stresses_time[_node_ids, stress_type_index, :]
+            else:
+                stress_freq = np.average(self.nodal_averaged_stresses_frequency[_node_ids, stress_type_index, :], axis=0)
+                if self.validation_mode:
+                    stress_vector_ifft = np.average(self.structural_post.nodal_averaged_stresses_time[_node_ids, stress_type_index, :], axis=0)
+
+            time_vector, stress_vector = process_ifft_from_one_sided_spectrum_signal(
+            self.model.frequencies, 
+            stress_freq,
+            dc_included = False,
+            )
+
+        else:
+            if isinstance(_node_ids, int):
+                stresses_freq = self.nodal_averaged_stresses_frequency[_node_ids, :, :]
+                if self.validation_mode:
+                    stresses_ifft = self.structural_post.nodal_averaged_stresses_time[_node_ids, :, :]
+            else:
+                stresses_freq = np.average(self.nodal_averaged_stresses_frequency[_node_ids, :, :], axis=0)
+                if self.validation_mode:
+                    stresses_ifft = np.average(self.structural_post.nodal_averaged_stresses_time[_node_ids, :, :], axis=0)
+
+            time_vector, stresses_time = process_multiple_iffts_from_one_sided_spectrum_signals(
+            self.model.frequencies, 
+            stresses_freq,
+            dc_included = False,
+            )
+
+            stress_vector = self.structural_post.compute_advanced_structural_stresses(stresses_time.T, stress_type_index)
+            if self.validation_mode:
+                stress_vector_ifft = self.structural_post.compute_advanced_structural_stresses(stresses_ifft.T, stress_type_index)
+
+        return time_vector, stress_vector, stress_vector_ifft
 
     def join_model_data(self):
 
         self.model_results.clear()
-        stress_index = self.comboBox_structural_stresses.currentIndex()
+        stress_index = self.comboBox_plotting_results.currentIndex()
 
         index = self.comboBox_selector_filter.currentIndex()
         selection_type = self.selection_types[index][:-1]
 
-        self.title = f"Structural frequency response - {self.analysis_method}"
+        self.title = "Structural stress (time domain)"
         self.y_label = self.get_ylabel()
-        self.process_units_data()
+
+        stress_units = self.comboBox_stress_units.currentText()
+        unit_factor = convert_stress_unit(1, "Pa", stress_units)
 
         for i, selected_id in enumerate(self.selected_ids):
 
             key = (selection_type, (selected_id))
-            legend_label = f"{self.y_label} at {selection_type} [{selected_id}]"
-            y_data = self.get_response(selection_type, selected_id, stress_index)
+            legend_label = f"Structural {self.y_label.lower()} at {selection_type} [{selected_id}]"
+
+            time_vector, stress_vector, stress_vector_ifft = self.get_response(selection_type, selected_id, stress_index)
 
             self.model_results[key] = {
-                "x_data": self.frequencies,
-                "y_data": self.unit_factor * y_data,
-                "x_label": "Frequency [Hz]",
+                "x_data": time_vector,
+                "y_data": unit_factor * stress_vector,
+                "x_label": "Time [s]",
                 "y_label": self.y_label,
                 "title": self.title,
                 "data_type": self.y_label,
                 "legend": legend_label,
-                "unit": self.stress_units,
+                "unit": stress_units,
                 "color": get_color(i),
                 "linestyle": "-",
             }
 
-    def process_units_data(self) -> str:
-        self.stress_units = self.comboBox_stress_units.currentText()
-        self.unit_factor = convert_stress_unit(1, "Pa", self.stress_units)
+            if not self.validation_mode:
+                continue
+
+            _key = (f"{selection_type}_xt", (selected_id))
+
+            self.model_results[_key] = {
+                "x_data": time_vector,
+                "y_data": unit_factor * stress_vector_ifft,
+                "x_label": "Time [s]",
+                "y_label": self.y_label,
+                "title": self.title,
+                "data_type": self.y_label,
+                "legend": legend_label,
+                "unit": stress_units,
+                "color": get_color(i+20),
+                "linestyle": "-",
+            }
 
     def get_ylabel(self) -> str:
 
         # stress index
-        index = self.comboBox_structural_stresses.currentIndex()
+        stress_index = self.comboBox_plotting_results.currentIndex()
 
-        # stress subscript
-        subscript = ["x", "y", "z", "xy", "xz", "yz"]
+        if StressType(stress_index).is_normal_or_shear_stress():
 
-        # stress Greek letter
-        stress_letter = "\u03c3" if index < 3 else "\u03c4"
+            # stress subscript
+            subscript = ["x", "y", "z", "xy", "xz", "yz"]
 
-        # stress label
-        stress_label = f"${stress_letter}" + r"_{" + subscript[index] + r"}$"
+            # stress Greek letter
+            stress_letter = "\u03c3" if stress_index < 3 else "\u03c4"
 
-        if index >= 3:
-            return f"Shear stress {stress_label}"
+            # stress label
+            stress_label = f"${stress_letter}" + r"_{" + subscript[stress_index] + r"}$"
 
-        return f"Normal stress {stress_label}"
+            if stress_index >= 3:
+                return f"Shear stress {stress_label}"
+
+            return f"Normal stress {stress_label}"
+
+        else:
+
+            match stress_index:
+                case StressType.VON_MISES_STRESS:
+                    return "Von Mises stress"
+
+                case StressType.TRESCA_STRESS:
+                    return "Tresca stress"
+
+                case StressType.MAXIMUM_PRINCIPAL_STRESS_1:
+                    return "Max. principal stress 1"
+
+                case StressType.MAXIMUM_PRINCIPAL_STRESS_2:
+                    return "Max. principal stress 2"
+
+                case StressType.MAXIMUM_PRINCIPAL_STRESS_3:
+                    return "Max. principal stress 3"
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:

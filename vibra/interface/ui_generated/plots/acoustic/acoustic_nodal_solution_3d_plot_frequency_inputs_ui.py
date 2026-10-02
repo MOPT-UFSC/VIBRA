@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'acoustic_pressure_field_inputs.ui'
+## Form generated from reading UI file 'acoustic_nodal_solution_3d_plot_frequency_inputs.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.9.2
 ##
@@ -307,12 +307,12 @@ class Ui_Form(object):
 
         ___qtreewidgetitem = self.treeWidget_frequencies.headerItem()
         ___qtreewidgetitem.setText(0, QCoreApplication.translate("Form", u"Index", None));
-        self.label.setText(QCoreApplication.translate("Form", u"Select the frequency to be plotted", None))
+        self.label.setText(QCoreApplication.translate("Form", u"Plot the acoustic pressure field (frequency domain)", None))
     # retranslateUi
 
 
 
-class AcousticPressureFieldInputs_UI(QWidget, Ui_Form):
+class AcousticNodalSolution3dPlotFrequencyInputs_UI(QWidget, Ui_Form):
     """
     Component Hierarchy:
     - Form: QWidget

@@ -1,16 +1,21 @@
 import numpy as np
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import QGridLayout, QTreeWidgetItem
 
 from vibra import app
 from vibra.interface.loading_window import LoadingWindow
+from vibra.interface.numeric_checks.unit_utilities import convert_pressure_unit
 from vibra.interface.plots.general.animation_widget import AnimationWidget
 from vibra.interface.plots.general.results_display_widget import ResultsDisplayWidget
-from vibra.interface.ui_generated.plots.structural.structural_response_fields_inputs_ui import StructuralResponseFieldsInputs_UI
-from vibra.interface.viewer_3d.plot_setup import DisplacementPlotType, DisplacementFieldPlotSetupFrequency
+from vibra.interface.ui_generated.plots.acoustic.acoustic_nodal_solution_3d_plot_frequency_inputs_ui import (
+    AcousticNodalSolution3dPlotFrequencyInputs_UI,
+)
+from vibra.interface.viewer_3d.plot_setup import PressureFieldPlotSetupFrequency, PressurePlotType
 
 
-class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
+class AcousticNodalSolution3dPlotFrequencyInputs(AcousticNodalSolution3dPlotFrequencyInputs_UI):
+    value_changed = Signal()
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -19,7 +24,6 @@ class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
         self.add_animation_widget()
         self.add_color_widget()
         self._create_connections()
-
         self.load_frequencies()
 
     def showEvent(self, event):
@@ -44,17 +48,16 @@ class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
 
     def _create_connections(self):
 
-        # QComboBox connections
+        # QComboBox connection
         self.comboBox_plot_type.currentIndexChanged.connect(self.update_plot)
-        self.comboBox_plotting_results.currentIndexChanged.connect(self.update_plotting_results_combo_box_items)
+        self.comboBox_pressure_units.currentIndexChanged.connect(self.update_plot)
 
-        # QTreeWidget connections
+        # QTreeWidget connection
         self.treeWidget_frequencies.itemClicked.connect(self.on_click_item)
         self.treeWidget_frequencies.itemDoubleClicked.connect(self.on_click_item)
 
         self.results_display_widget.colormap_changed.connect(self.animation_widget.update_color_and_deformation)
-        self.results_display_widget.pressure_value_changed.connect(self.animation_widget.update_color_and_deformation)
-        self.update_animation_widget_visibility()
+        self.results_display_widget.min_max_value_changed.connect(self.animation_widget.update_color_and_deformation)
 
     def add_animation_widget(self):
         self.grid_layout = QGridLayout()
@@ -74,44 +77,19 @@ class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
         grid_layout.addWidget(self.results_display_widget)
         self.frame_color.adjustSize()
 
-    def update_plotting_results_combo_box_items(self):
-        prefixes = ["u", "v", "a"]
-        ind = self.get_number_of_differentiations()
-        prefix = prefixes[ind]
-
-        self.comboBox_plot_type.blockSignals(True)
-        self.comboBox_plot_type.clear()
-
-        for suffix in ["sum", "x", "y", "z"]:
-            self.comboBox_plot_type.addItem(f"{prefix}_{suffix}")
-
-        self.comboBox_plot_type.blockSignals(False)
-        self.update_plot()
+    def configure_results_display_widget(self):
+        self.results_display_widget.configure_widget()
 
     def update_animation_widget_visibility(self):
-        return
         index = self.comboBox_plot_type.currentIndex()
-        if index >= 4:
+        if index >= 2:
             self.animation_widget.setDisabled(True)
         else:
             self.animation_widget.setDisabled(False)
 
-    def get_plot_type(self) -> DisplacementPlotType:
-        prefixes = ["u", "v", "a"]
-        suffixes = ["sum", "x", "y", "z"]
-
-        ind_dformat = self.get_number_of_differentiations()
-        ind_ptype = self.comboBox_plot_type.currentIndex()
-
-        return DisplacementPlotType(f"{prefixes[ind_dformat]}_{suffixes[ind_ptype]}")
-
-    def get_plot_units(self) -> str:
-        units = ["m", "m/s", "m/s²", "mm", "mm/s", "mm/s²", "um", "um/s", "um/s²"]
-        return units[self.comboBox_plotting_results.currentIndex()]
-
-    def get_unit_factor(self) -> float:
-        unit_factors = [1.0, 1e3, 1e6]
-        return unit_factors[self.comboBox_plotting_results.currentIndex() // 3]
+    def update_transparency_callback(self):
+        transparency = self.slider_transparency.value() / 100
+        app().main_window.results_widget.set_analysis_actors_transparency(transparency)
 
     def update_plot(self):
         self.update_animation_widget_visibility()
@@ -127,42 +105,45 @@ class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
         if self.selected_frequency_index is None:
             return
 
-        self.animation_widget.reset_sliders()
-        self.results_display_widget.configure_validators(-1e14, 1e14)
+        if self.get_plot_type() in [PressurePlotType.ABSOLUTE_ANIMATION, PressurePlotType.ABSOLUTE_VALUES]:
+            self.results_display_widget.configure_validators(0, 1e14)
+        else:
+            self.results_display_widget.configure_validators(-1e14, 1e14)
 
-        plot_setup = DisplacementFieldPlotSetupFrequency(
+        pressure_units = self.comboBox_pressure_units.currentText()
+        unit_factor = convert_pressure_unit(1, "Pa", pressure_units)
+
+        plot_setup = PressureFieldPlotSetupFrequency(
             phase=self.animation_widget.phase_in_radians,
-            magnification_factor=self.animation_widget.magnification_factor,
             index=self.selected_frequency_index,
             plot_type=self.get_plot_type(),
-            unit=self.get_plot_units(),
-            n_diff=self.get_number_of_differentiations(),
-            unit_factor=self.get_unit_factor()
+            unit=pressure_units,
+            unit_factor=unit_factor
         )
 
+        self.animation_widget.reset_sliders()
         LoadingWindow(app().main_window.results_widget.update_plot).run(
             reset_camera=False,
             plot_setup=plot_setup,
         )
 
-    def get_selected_frequency_index(self):
-        if self.selected_frequency_index is not None:
-            return self.selected_frequency_index
-
-        return 0
-
-    def get_number_of_differentiations(self):
-        return self.comboBox_plotting_results.currentIndex() % 3
-
-    def configure_results_display_widget(self):
-        self.results_display_widget.configure_widget()
+    def get_plot_type(self) -> PressurePlotType:
+        plot_types = [
+            "non_absolute_animation",
+            "absolute_animation",
+            "absolute_values",
+            "real_values",
+            "imag_values",
+        ]
+        index = self.comboBox_plot_type.currentIndex()
+        return PressurePlotType(plot_types[index])
 
     def load_frequencies(self):
-        self.treeWidget_frequencies.setDisabled(False)
-        if not isinstance(app().project.model.frequencies, np.ndarray):
+        if isinstance(app().project.model.frequencies, np.ndarray):
+            self.frequencies = app().project.model.frequencies
+        else:
             return
 
-        self.frequencies = app().project.model.frequencies
         self.indices = np.arange(len(self.frequencies), dtype=int)
 
         self.treeWidget_frequencies.clear()
@@ -179,6 +160,12 @@ class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
         first_item.setSelected(True)
         self.treeWidget_frequencies.itemClicked.emit(first_item, 0)
 
+    def get_selected_frequency_index(self):
+        if self.selected_frequency_index is None:
+            return 0
+
+        return self.selected_frequency_index
+
     def on_click_item(self, item: QTreeWidgetItem):
         self.lineEdit_selected_frequency.setText(item.text(1))
         self.update_plot()
@@ -186,5 +173,3 @@ class StructuralResponseFieldsInputs(StructuralResponseFieldsInputs_UI):
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
             self.update_plot()
-        elif event.key() == Qt.Key_Escape:
-            self.close()

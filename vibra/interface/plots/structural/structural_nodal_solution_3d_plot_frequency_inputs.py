@@ -1,27 +1,28 @@
 import numpy as np
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QGridLayout, QTreeWidgetItem
 
 from vibra import app
-from vibra.engine.solution import ModalSolution
-from vibra.interface.common.common_interface import export_modal_analysis_results
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.plots.general.animation_widget import AnimationWidget
 from vibra.interface.plots.general.results_display_widget import ResultsDisplayWidget
-from vibra.interface.ui_generated.plots.structural.structural_mode_shape_inputs_ui import StructuralModeShapeInputs_UI
+from vibra.interface.ui_generated.plots.structural.structural_nodal_solution_3d_plot_frequency_inputs_ui import (
+    StructuralNodalSolution3dPlotFrequencyInputs_UI,
+)
 from vibra.interface.viewer_3d.plot_setup import DisplacementDataType, DisplacementFieldPlotSetupFrequency
 
 
-class StructuralModeShapeInputs(StructuralModeShapeInputs_UI):
+class StructuralNodalSolution3dPlotFrequencyInputs(StructuralNodalSolution3dPlotFrequencyInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self._initialize()
+        self._configure_widgets()
         self._add_animation_widget()
         self._add_color_widget()
         self._create_connections()
-        self.load_natural_frequencies()
+
+        self.load_frequencies()
 
     def showEvent(self, event):
         super().showEvent(event)
@@ -32,15 +33,22 @@ class StructuralModeShapeInputs(StructuralModeShapeInputs_UI):
         app().main_window.view_toolbar.disable_selection_tool()
 
     def _initialize(self):
-        self.mode_index = -1
+        self.selected_frequency_index = None
+
+    def _configure_widgets(self):
+
+        self.lineEdit_selected_frequency.setDisabled(True)
+        self.lineEdit_selected_frequency.setProperty("status", "information")
+
+        for i, width in enumerate([80, 140]):
+            self.treeWidget_frequencies.setColumnWidth(i, width)
+            self.treeWidget_frequencies.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def _create_connections(self):
 
         # QComboBox connections
         self.comboBox_plot_type.currentIndexChanged.connect(self.update_plot)
-
-        # QPushButton connections
-        self.pushButton_export_results.clicked.connect(self.export_results_callback)
+        self.comboBox_plotting_results.currentIndexChanged.connect(self.update_plotting_results_combo_box_items)
 
         # QTreeWidget connections
         self.treeWidget_frequencies.itemClicked.connect(self.on_click_item)
@@ -48,6 +56,7 @@ class StructuralModeShapeInputs(StructuralModeShapeInputs_UI):
 
         self.results_display_widget.colormap_changed.connect(self.animation_widget.update_color_and_deformation)
         self.results_display_widget.min_max_value_changed.connect(self.animation_widget.update_color_and_deformation)
+        self.update_animation_widget_visibility()
 
     def _add_animation_widget(self):
         self.grid_layout = QGridLayout()
@@ -67,30 +76,19 @@ class StructuralModeShapeInputs(StructuralModeShapeInputs_UI):
         grid_layout.addWidget(self.results_display_widget)
         self.frame_color.adjustSize()
 
-    def _configure_qt_variables(self):
-        self.lineEdit_natural_frequency.setDisabled(True)
-        self.lineEdit_natural_frequency.setProperty("status", "information")
-        #
-        if app().project.solver.complex_natural_frequencies.size:
-            widths = [60, 170]
-            headers = ["Mode", "Damped frequency [Hz]", "Damping ratio [--]"]
+    def update_plotting_results_combo_box_items(self):
+        prefixes = ["u", "v", "a"]
+        ind = self.get_number_of_differentiations()
+        prefix = prefixes[ind]
 
-        else:
-            widths = [120, 160]
-            headers = ["Mode", "Frequency [Hz]"]
+        self.comboBox_plot_type.blockSignals(True)
+        self.comboBox_plot_type.clear()
 
-        font = QFont()
-        font.setPointSize(9)
+        for suffix in ["sum", "x", "y", "z"]:
+            self.comboBox_plot_type.addItem(f"{prefix}_{suffix}")
 
-        self.treeWidget_frequencies.setColumnCount(len(headers))
-
-        for i, header in enumerate(headers):
-            self.treeWidget_frequencies.headerItem().setFont(i, font)
-            self.treeWidget_frequencies.headerItem().setText(i, header)
-            if i < 2:
-                self.treeWidget_frequencies.setColumnWidth(i, widths[i])
-
-            self.treeWidget_frequencies.headerItem().setTextAlignment(i, Qt.AlignCenter)
+        self.comboBox_plot_type.blockSignals(False)
+        self.update_plot()
 
     def update_animation_widget_visibility(self):
         return
@@ -100,76 +98,92 @@ class StructuralModeShapeInputs(StructuralModeShapeInputs_UI):
         else:
             self.animation_widget.setDisabled(False)
 
-    def export_results_callback(self):
-        export_modal_analysis_results(self, self.modes_to_frequencies, "structural")
+    def get_plot_type(self) -> DisplacementDataType:
+        prefixes = ["u", "v", "a"]
+        suffixes = ["sum", "x", "y", "z"]
+
+        ind_dformat = self.get_number_of_differentiations()
+        ind_ptype = self.comboBox_plot_type.currentIndex()
+
+        return DisplacementDataType(f"{prefixes[ind_dformat]}_{suffixes[ind_ptype]}")
+
+    def get_plot_units(self) -> str:
+        units = ["m", "m/s", "m/s²", "mm", "mm/s", "mm/s²", "um", "um/s", "um/s²"]
+        return units[self.comboBox_plotting_results.currentIndex()]
+
+    def get_unit_factor(self) -> float:
+        unit_factors = [1.0, 1e3, 1e6]
+        return unit_factors[self.comboBox_plotting_results.currentIndex() // 3]
 
     def update_plot(self):
         self.update_animation_widget_visibility()
-        if self.lineEdit_natural_frequency.text() == "":
+        if self.lineEdit_selected_frequency.text() == "":
             return
 
-        self.mode_index = self.natural_frequencies.index(self.selected_natural_frequency)
+        frequency_selected = float(self.lineEdit_selected_frequency.text())
+        selector_mask = np.abs(self.frequencies - frequency_selected) < 1e-6
+
+        if selector_mask.any():
+            self.selected_frequency_index = self.indices[selector_mask][0]
+
+        if self.selected_frequency_index is None:
+            return
+
         self.animation_widget.reset_sliders()
         self.results_display_widget.configure_validators(-1e14, 1e14)
 
         plot_setup = DisplacementFieldPlotSetupFrequency(
             phase=self.animation_widget.phase_in_radians,
             magnification_factor=self.animation_widget.magnification_factor,
-            index=self.mode_index,
+            index=self.selected_frequency_index,
             plot_type=self.get_plot_type(),
+            unit=self.get_plot_units(),
+            n_diff=self.get_number_of_differentiations(),
+            unit_factor=self.get_unit_factor()
         )
+
         LoadingWindow(app().main_window.results_widget.update_plot).run(
             reset_camera=False,
             plot_setup=plot_setup,
         )
 
-    def update_displacements(self):
-        pass
+    def get_selected_frequency_index(self):
+        if self.selected_frequency_index is not None:
+            return self.selected_frequency_index
 
-    def get_plot_type(self) -> DisplacementDataType:
-        plot_types = [
-            "u_sum",
-            "u_x",
-            "u_y",
-            "u_z",
-        ]
-        index = self.comboBox_plot_type.currentIndex()
-        return DisplacementDataType(plot_types[index])
+        return 0
+
+    def get_number_of_differentiations(self):
+        return self.comboBox_plotting_results.currentIndex() % 3
 
     def configure_results_display_widget(self):
         self.results_display_widget.configure_widget()
 
-    def load_natural_frequencies(self):
-        solution = app().project.model.solution
-        if not isinstance(solution, ModalSolution):
+    def load_frequencies(self):
+        self.treeWidget_frequencies.setDisabled(False)
+        if not isinstance(app().project.model.frequencies, np.ndarray):
             return
 
-        self._configure_qt_variables()
-
-        self.natural_frequencies = list(solution.natural_frequencies)
-        modes = np.arange(1, len(self.natural_frequencies) + 1, 1)
-        self.modes_to_frequencies = dict(zip(modes, self.natural_frequencies))
+        self.frequencies = app().project.model.frequencies
+        self.indices = np.arange(len(self.frequencies), dtype=int)
 
         self.treeWidget_frequencies.clear()
-        for mode, natural_frequency in self.modes_to_frequencies.items():
-            new = QTreeWidgetItem([str(mode), str(round(natural_frequency, 4))])
-            new.setTextAlignment(0, Qt.AlignCenter)
-            new.setTextAlignment(1, Qt.AlignCenter)
-            self.treeWidget_frequencies.addTopLevelItem(new)
+        for index, frequency in enumerate(self.frequencies):
+            round_freq = round(frequency, 12)
+            item = QTreeWidgetItem([str(index + 1), f"{round_freq}"])
+
+            for i in range(2):
+                item.setTextAlignment(i, Qt.AlignCenter)
+
+            self.treeWidget_frequencies.addTopLevelItem(item)
 
         first_item = self.treeWidget_frequencies.topLevelItem(0)
         first_item.setSelected(True)
         self.treeWidget_frequencies.itemClicked.emit(first_item, 0)
 
     def on_click_item(self, item: QTreeWidgetItem):
-        self.selected_natural_frequency = self.modes_to_frequencies[int(item.text(0))]
-        self.lineEdit_natural_frequency.setText(str(round(self.selected_natural_frequency, 4)))
+        self.lineEdit_selected_frequency.setText(item.text(1))
         self.update_plot()
-
-    def current_mode_index(self):
-        if self.mode_index is not None:
-            return self.mode_index
-        return 0
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
