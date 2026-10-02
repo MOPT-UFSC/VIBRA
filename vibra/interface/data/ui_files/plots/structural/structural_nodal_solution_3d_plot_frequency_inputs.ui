@@ -118,10 +118,13 @@
          </property>
          <layout class="QGridLayout" name="gridLayout">
           <property name="leftMargin">
-           <number>10</number>
+           <number>4</number>
           </property>
           <property name="topMargin">
            <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>4</number>
           </property>
           <property name="bottomMargin">
            <number>0</number>
@@ -146,7 +149,7 @@
             <property name="font">
              <font>
               <family>MS Shell Dlg 2</family>
-              <pointsize>11</pointsize>
+              <pointsize>10</pointsize>
               <italic>false</italic>
               <bold>false</bold>
              </font>
@@ -158,7 +161,7 @@
              <enum>QFrame::Shadow::Raised</enum>
             </property>
             <property name="text">
-             <string>Plot structural response fields</string>
+             <string>Structural nodal solution plot (frequency domain)</string>
             </property>
             <property name="textFormat">
              <enum>Qt::TextFormat::AutoText</enum>
