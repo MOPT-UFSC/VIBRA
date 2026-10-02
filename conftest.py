@@ -43,7 +43,6 @@ def material() -> Material:
 @pytest.fixture(scope="module")
 def acoustic_model(fluid: Fluid) -> Model:
     path = str(PROJECT_DIR / "examples/geometry_files/cylinder.step")
-    mesh_setup = MeshSetup(minimum_element_size=50, maximum_element_size=50)
 
     model = Model()
     model.properties._set_property("fluid", fluid, volume=1)
@@ -55,12 +54,10 @@ def acoustic_model(fluid: Fluid) -> Model:
     }
     model.properties._set_property("fluid", fluid, surface=4)
     model.properties._set_property("surface_velocity", data_Vn, surface=4)
-    model.set_geometry_path(path)
-    model.set_length_unit()
-    model.set_geometry_quality_factor()
-    model.initialize_mesh()
-    model.set_mesh_setup(mesh_setup)
-    model.process_mesh()
+    model.fem_mesher.set_path(path)
+    model.fem_mesher.setup.minimum_element_size = 50
+    model.fem_mesher.setup.maximum_element_size = 50
+    model.mesh = model.fem_mesher.generate()
 
     return model
 
@@ -103,7 +100,6 @@ def material() -> Material:
 @pytest.fixture(scope="module")
 def structural_model(material: Material) -> Model:
     path = path = str(PROJECT_DIR / "examples/geometry_files/curve_L_3D.step")
-    mesh_setup = MeshSetup(minimum_element_size=50, maximum_element_size=50)
 
     model = Model()
     model.properties._set_property("material", material, volume=1)
@@ -126,12 +122,10 @@ def structural_model(material: Material) -> Model:
 
     model.properties._set_property("material", material, surface=7)
     model.properties._set_property("nodal_loads", data_load, surface=7)
-    model.set_geometry_path(path)
-    model.set_length_unit()
-    model.set_geometry_quality_factor()
-    model.initialize_mesh()
-    model.set_mesh_setup(mesh_setup)
-    model.process_mesh()
+    model.fem_mesher.set_path(path)
+    model.fem_mesher.setup.minimum_element_size = 50
+    model.fem_mesher.setup.maximum_element_size = 50
+    model.mesh = model.fem_mesher.generate()
 
     return model
 

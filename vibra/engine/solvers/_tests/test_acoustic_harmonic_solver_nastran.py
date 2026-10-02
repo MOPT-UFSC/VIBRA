@@ -21,7 +21,6 @@ def _acoustic_model_nastran(path: str, fluid: Fluid) -> Model:
     model.set_geometry_path(path)
     model.set_length_unit()
     model.set_geometry_quality_factor()
-    model.initialize_mesh()
     # model.set_mesh_setup(mesh_setup)
     model.process_mesh_data(path)
 

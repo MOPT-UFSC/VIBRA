@@ -91,21 +91,23 @@ class Model:
     def reset_variables(self):
         self.name: str = "Model"
         self.thumbnail: Image | None = None
-        self.fem_mesher = GmshMesher()
+        self.fem_mesher = GmshMesher()  # I think this must be moved to Project
 
         self.length_unit: LengthUnits = "millimeter"
-        self.mesh_setup: Optional[MeshSetup] = None
-        self.analysis_setup: Optional[AnalysisSetup] = None
+        self.mesh_setup: MeshSetup | None = None
+        self.analysis_setup: AnalysisSetup | None = None
 
-        self.solution: Optional[Solution] = None
-        self.acoustic_solution: Optional[Solution] = None
-        self.structural_solution: Optional[Solution] = None
+        self.solution: Solution | None = None
+        self.acoustic_solution: Solution | None = None
+        self.structural_solution: Solution | None = None
+
+        self.mesh: Mesh | None = None
+        self.visual_mesh: Mesh | None = None
 
         # TODO: review these variables
-        self.mesh: Optional[Mesh] = None
         self.stop_processing = False
         self.geometry_path: Optional[Path | str] = None
-        self.initial_element_size = None
+        self.initial_element_size: float | None = None
         self.geometry_qf = 1.0
 
         self.coupling_type = CouplingType.WEAK
@@ -366,33 +368,11 @@ class Model:
         self.geometry_path = path
         self.fem_mesher.set_path(path)
 
-    def check_path_for_geometry_file(self, path: Path | str):
-        """
-        This method returns True if a CAD extension file is detected
-        in the input path, otherwise, it returns False.
-        """
-
-        if isinstance(path, Path):
-            path = str(path)
-
-        ext = path.split(".")[-1].lower()
-        return ext in SUPPORTED_GEOMETRY_EXTENSIONS
-
     def set_properties(self, properties):
         self.properties = properties
 
-    def set_mesh_setup(self, mesh_setup: MeshSetup | None):
-        self.mesh_setup = mesh_setup
-
-    def initialize_mesh(self):
-        self.mesh = Mesh(length_unit=self.length_unit, geometry_qf=self.geometry_qf)
-
-    def process_visual_geometry_mesh(self):
-        self.mesh, mesh_setup = self.fem_mesher.generate_visual_mesh()
-        self.initial_element_size = mesh_setup.maximum_element_size
-
     def process_mesh_data(self, path: str):
-        self.initialize_mesh()
+        self.mesh = Mesh(length_unit=self.length_unit, geometry_qf=self.geometry_qf)
 
         try:
             logging.info("Processing mesh... [15/100]")
@@ -408,29 +388,6 @@ class Model:
             message = str(error_log)
             PrintMessageInput([error_title, title, message])
             return -1
-
-    def process_mesh(self):
-        if self.geometry_path is None:
-            message = "Geometry not defined"
-            context = (
-                "The geometry file has not been defined yet."
-                "You should to import a supported CAD file format to proceed."
-                "\n\n"
-                "Suported file formats: *.iges and *.step"
-            )
-            raise IncompleteSetupError(message, context=context)
-
-        if self.mesh_setup is None:
-            message = "Mesh setup not defined"
-            context = "The mesh setup has not been defined yet.You should to configure the mesher to proceed."
-            raise IncompleteSetupError(message, context=context)
-
-        logging.info("Processing mesh [80/100]")
-        self.mesh = Mesh(length_unit=self.length_unit, geometry_qf=self.geometry_qf)
-        self.mesh.load_cad(self.geometry_path, self.mesh_setup)
-
-        if self.disable_resume_callback is not None:
-            self.disable_resume_callback()
 
     def set_analysis_setup(self, analysis_setup: Optional[AnalysisSetup]):
         if not isinstance(analysis_setup, AnalysisSetup | None):

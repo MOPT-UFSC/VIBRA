@@ -26,7 +26,7 @@ def main(working_dir: Path):
     if geometry_path is None or not geometry_path.is_file():
         raise FileNotFoundError(f"No geometry file found from {project.project_paths.project_setup_filepath}")
 
-    project.model.set_mesh_setup(mesh_setup)
+    project.model.mesh_setup = mesh_setup
     project.model.set_geometry_path(geometry_path)
     project.model.set_properties(properties)
 

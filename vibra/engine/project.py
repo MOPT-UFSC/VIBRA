@@ -259,7 +259,7 @@ class Project:
         Configures how to create a mesh from a geometry.
         This method might be called before or after loading a geometry.
         """
-        self.model.set_mesh_setup(mesh_setup)
+        self.model.mesh_setup = mesh_setup
         self.update_project_setup_file()
 
     def generate_mesh(self, mesh_setup: MeshSetup) -> Mesh:
@@ -279,9 +279,9 @@ class Project:
         mesh = Mesh().load_cad(self.model.geometry_path, mesh_setup)
 
         if mesh.collapsed_elements_data:
-            collapsed_1d_elements = mesh.collapsed_elements_data.get("collpased_1d_elements")
-            collapsed_2d_elements = mesh.collapsed_elements_data.get("collpased_2d_elements")
-            collapsed_3d_elements = mesh.collapsed_elements_data.get("collpased_3d_elements")
+            collapsed_1d_elements: list = mesh.collapsed_elements_data.get("collpased_1d_elements", [])
+            collapsed_2d_elements: list = mesh.collapsed_elements_data.get("collpased_2d_elements", [])
+            collapsed_3d_elements: list = mesh.collapsed_elements_data.get("collpased_3d_elements", [])
 
             message = "The generated mesh contains collapsed elements."
             message += "Please check the mesh setup and try again.\n"
@@ -313,9 +313,11 @@ class Project:
         if self.model.geometry_path is None:
             raise errors.InvalidMeshSetupError("The geometry has not been loaded yet.")
 
-        self.model.process_visual_geometry_mesh()
-        self.project_writer.write_mesh(self.model.mesh)
-        return self.model.mesh
+        mesh, mesh_setup = self.model.fem_mesher.generate_visual_mesh()
+        self.model.mesh = mesh
+        self.model.initial_element_size = mesh_setup.maximum_element_size
+        self.project_writer.write_mesh(mesh)
+        return mesh
 
     def generate_mesh_from_geometry(
         self,
@@ -368,11 +370,11 @@ class Project:
         return self.model.solution
 
     def solve_structural_harmonic_analysis(
-            self,
-            is_resume: bool = False,
-            print_log: bool = False,
-            update_domain_mappings: bool = True,
-            ) -> HarmonicSolution:
+        self,
+        is_resume: bool = False,
+        print_log: bool = False,
+        update_domain_mappings: bool = True,
+    ) -> HarmonicSolution:
 
         self.update_project_setup_file()
 
@@ -490,7 +492,7 @@ class Project:
             is_resume=is_resume,
             print_log=print_log,
             update_domain_mappings=False,
-            )
+        )
 
         return HarmonicSolution(
             analysis_id=self.model.analysis_id,
