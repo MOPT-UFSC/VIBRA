@@ -151,8 +151,8 @@ class AnalysisToolbar(QToolBar):
     def update_analysis_combo_boxes(self, block_signals: bool = False):
 
         if block_signals:
-            self.combo_box_analysis_type.blockSignals(block_signals)
-            self.combo_box_physical_domain.blockSignals(block_signals)
+            self.combo_box_analysis_type.blockSignals(True)
+            self.combo_box_physical_domain.blockSignals(True)
 
         analysis_type = app().project.get_analysis_type()
         physical_domain = app().project.get_physical_domain()
@@ -219,9 +219,10 @@ class AnalysisToolbar(QToolBar):
         self.update_fsi_normals_plot_accessibility()
 
         # hide the coupled item of the physical domains combo box if modal analysis was selected
-        is_modal = new_analysis_id.is_modal()
-        self.combo_box_physical_domain.view().setRowHidden(2, is_modal)
-        if is_modal:
+        is_coupled = self.combo_box_physical_domain.currentText() == "Coupled"
+        self.combo_box_physical_domain.view().setRowHidden(2, new_analysis_id.is_modal())
+
+        if is_coupled and new_analysis_id.is_modal():
             self.combo_box_physical_domain.setCurrentIndex(0)
 
     def check_analysis_setup_callback(self):
