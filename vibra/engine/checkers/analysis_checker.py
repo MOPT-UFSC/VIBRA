@@ -143,10 +143,17 @@ class AnalysisChecker:
             raise errors.InvalidMeshSetupError(text)
 
     def check_materials_volumes(self):
-        volumes_without_material = self._entities_without_property(
+        volumes_with_material, volumes_without_material = self._entities_without_property(
             "material",
             "volumes",
         )
+
+        if not volumes_with_material:
+            raise errors.InvalidModelSetupError(
+                f"You should assign one material for volumes {volumes_without_material} "
+                "to proceed with the analysis solution.",
+                volumes=volumes_without_material,
+            )  # fmt: skip
 
         if not volumes_without_material:
             return
@@ -164,7 +171,7 @@ class AnalysisChecker:
                 )  # fmt: skip
 
     def check_materials_surfaces(self):
-        surfaces_without_material = self._entities_without_property(
+        _, surfaces_without_material = self._entities_without_property(
             "material",
             "surfaces",
         )
@@ -177,10 +184,17 @@ class AnalysisChecker:
             )  # fmt: skip
 
     def check_fluids_volumes(self):
-        volumes_without_fluid = self._entities_without_property(
+        volumes_with_fluid, volumes_without_fluid = self._entities_without_property(
             "fluid",
             "volumes",
         )
+
+        if not volumes_with_fluid:
+            raise errors.InvalidModelSetupError(
+                f"You should assign one fluid for volumes {volumes_without_fluid} "
+                "to proceed with the analysis solution.",
+                volumes=volumes_without_fluid,
+            )  # fmt: skip
 
         if not volumes_without_fluid:
             return
@@ -198,7 +212,7 @@ class AnalysisChecker:
                 )  # fmt: skip
 
     def check_fluids_surfaces(self):
-        surfaces_without_fluid = self._entities_without_property(
+        _, surfaces_without_fluid = self._entities_without_property(
             "fluid",
             "surfaces",
         )
@@ -211,7 +225,7 @@ class AnalysisChecker:
             )  # fmt: skip
 
     def check_surface_thickness(self):
-        surfaces_without_thickness = self._entities_without_property(
+        _, surfaces_without_thickness = self._entities_without_property(
             "surface_thickness",
             "surfaces",
         )
@@ -316,13 +330,13 @@ class AnalysisChecker:
     def _entities_without_property(self, property_name: str, entity_name: str):
         properties = self.model.properties
         geometry_information = self.model.mesh.geometry_information
-        entities = geometry_information.get(entity_name, list())
+        entities = geometry_information.get(entity_name, [])
 
         kwargs = {
             entity_name: entities,
         }
 
-        return properties.get_entities_without_property(
+        return properties.get_entities_with_and_without_property(
             property_name,
             **kwargs,
         )
