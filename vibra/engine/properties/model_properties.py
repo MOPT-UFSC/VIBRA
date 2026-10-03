@@ -557,9 +557,11 @@ class ModelProperties:
 
         return False
     
-    def get_entities_without_property(self, property: str, **kwargs):
+    def get_entities_with_and_without_property(self, property: str, **kwargs):
 
+        entities_with_property = []
         entities_without_property = []
+
         volume_ids = kwargs.get("volumes", [])
         surface_ids = kwargs.get("surfaces", [])
 
@@ -568,16 +570,21 @@ class ModelProperties:
                 data = self._get_property(property, volume=volume_id)
                 if data is None:
                     entities_without_property.append(volume_id)
+                else:
+                    entities_with_property.append(volume_id)
 
         elif surface_ids:
             for surface_id in kwargs.get("surfaces", []):
                 data = self._get_property(property, surface=surface_id)
                 if data is None:
                     entities_without_property.append(surface_id)
+                else:
+                    entities_with_property.append(surface_id)
 
         entities_without_property.sort()
+        entities_with_property.sort()
     
-        return entities_without_property
+        return entities_with_property, entities_without_property
     
     def iterate_properties(self):
         property_dicts = {

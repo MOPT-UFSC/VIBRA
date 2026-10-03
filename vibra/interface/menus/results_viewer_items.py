@@ -140,6 +140,25 @@ class ResultsViewerItems(CommonMenuItems):
         self.item_top_structural_results_viewer.setHidden(False)
         self.item_top_results_viewer_acoustic.setHidden(False)
 
+    def hide_acoustic_harmonic_items(self, hide: bool):
+        self.item_child_2d_plots_acoustic.setHidden(hide)
+        self.item_child_acoustic_nodal_solution_3d_plot_frequency.setHidden(hide)
+
+        if hide:
+            self.item_child_3d_plots_acoustic.setExpanded(True)
+
+        app().main_window.results_viewer_widget.top_widget.setFixedHeight(120 if hide else 240)
+
+    def hide_structural_harmonic_items(self, hide: bool):
+        self.item_child_2d_plots_structural.setHidden(hide)
+        self.item_child_structural_nodal_solution_3d_plot_frequency.setHidden(hide)
+        self.item_child_stresses_3d_plot_frequency.setHidden(hide)
+
+        if hide:
+            self.item_child_3d_plots_structural.setExpanded(True)
+
+        app().main_window.results_viewer_widget.top_widget.setFixedHeight(120 if hide else 240)
+
     def update_items(self):
         """
         Enables and disables the Child Items on the menu after the solution is done.
@@ -161,32 +180,20 @@ class ResultsViewerItems(CommonMenuItems):
         self.modify_advanced_results_items_accessibility()
 
         if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
-            self.item_top_structural_results_viewer.setHidden(False)
             self.item_child_structural_mode_shapes.setHidden(True)
-            self.item_child_structural_nodal_solution_3d_plot_frequency.setHidden(False)
-            self.item_child_structural_nodal_solution_2d_plot_frequency.setHidden(False)
-            self.item_child_stresses_3d_plot_frequency.setHidden(False)
-            self.item_child_stresses_2d_plot_frequency.setHidden(False)
-            # self.item_child_reaction_frequency_response.setHidden(False)
+            self.hide_structural_harmonic_items(False)
 
         if analysis_id == AnalysisID.STRUCTURAL_MODAL:
-            self.item_top_structural_results_viewer.setHidden(True)
             self.item_child_structural_mode_shapes.setHidden(False)
+            self.hide_structural_harmonic_items(True)
 
         if analysis_id == AnalysisID.ACOUSTIC_MODAL:
             self.item_child_acoustic_mode_shapes.setHidden(False)
+            self.hide_acoustic_harmonic_items(True)
 
         if analysis_id in [AnalysisID.ACOUSTIC_HARMONIC, AnalysisID.COUPLED_HARMONIC]:
             self.item_child_acoustic_mode_shapes.setHidden(True)
-            self.item_child_acoustic_nodal_solution_3d_plot_frequency.setHidden(False)
-            self.item_child_acoustic_nodal_solution_2d_plot_frequency.setHidden(False)
-            self.item_child_acoustic_nodal_solution_frf.setHidden(False)
-            self.item_child_acoustic_shaking_forces.setHidden(False)
-            self.item_child_decompose_acoustic_waves.setHidden(False)
-            self.item_child_TL_NR.setHidden(False)
-            self.item_child_particle_velocity.setHidden(False)
-            self.item_child_acoustic_impedance.setHidden(False)
-            self.item_child_absorption_coefficient.setHidden(False)
+            self.hide_acoustic_harmonic_items(False)
 
         self.update_allowable_pulsation_criteria_visibility_for_reciprocating_compressor(analysis_id)
         self.update_allowable_pulsation_criteria_visibility_screw_compressor(analysis_id)
