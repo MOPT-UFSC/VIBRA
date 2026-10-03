@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 import subprocess
 import sys
 from enum import Enum, auto
@@ -23,7 +24,7 @@ class SubProcessHandler:
     Run a separate process and deals with its outputs.
     """
 
-    def __init__(self, command: str):
+    def __init__(self, command: list[str]):
         self.command = command
 
     def run(self) -> SubProcessStatus:
@@ -32,9 +33,15 @@ class SubProcessHandler:
         return LoadingWindow(self._run_subprocess, self._interrupt_subprocess).run()
 
     @classmethod
-    def get_executable(cls) -> list[str]:
+    def get_executable(cls, is_freethreaded: bool = False) -> list[str]:
         if getattr(sys, "frozen", False):
             return [sys.executable]
+
+        elif is_freethreaded:
+            root = Path(__file__).resolve().parents[3]
+            python_ft = root / ".venv-freethreaded-314" / "bin" / "python"
+            return [str(python_ft), "-m", sys.argv[0]]
+
         else:
             return [sys.executable, sys.argv[0]]
 

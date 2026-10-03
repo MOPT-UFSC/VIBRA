@@ -10,8 +10,6 @@ if TYPE_CHECKING:
 
 from pathlib import Path
 
-from molde import Color
-from PySide6.QtWidgets import QApplication
 
 __version__ = "0.6.1"
 __release_date__ = "Aug 2026"
@@ -35,9 +33,27 @@ EXAMPLES_DIR = VIBRA_DIR / "interface/data/examples/"
 USER_PATH = Path().home()
 TEMP_PROJECT_DIR = USER_PATH / "temp_vibra"
 
-LIGHT_ICON_COLOR = Color("#0051A2")
-DARK_ICON_COLOR = Color("#84AAFF")
 
+def __getattr__(name: str):
+    if name == "Color":
+        from molde import Color
+
+        globals()[name] = Color
+        return Color
+
+    colors = {
+        "LIGHT_ICON_COLOR": "#0051A2",
+        "DARK_ICON_COLOR": "#84AAFF",
+    }
+    if name in colors:
+        from molde import Color
+
+        value = Color(colors[name])
+        globals()[name] = value
+        return value
+
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 def app() -> "Application":
+    from PySide6.QtWidgets import QApplication
     return QApplication.instance()

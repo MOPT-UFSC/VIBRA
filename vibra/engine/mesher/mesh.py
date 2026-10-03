@@ -10,12 +10,9 @@ from typing import Literal, Optional, Self
 import gmsh
 import numpy as np
 from scipy.linalg import svd
-from vtkmodules.vtkCommonCore import vtkPoints
-from vtkmodules.vtkCommonDataModel import VTK_HEXAHEDRON, VTK_QUADRATIC_HEXAHEDRON, VTK_QUADRATIC_TETRA, VTK_TETRA, vtkUnstructuredGrid
-from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridWriter
 
 from vibra.engine.mesher.mesh_setup import Hexahedron8, Hexahedron20, Tetrahedron4, Tetrahedron10, ElementTopology, LocalMeshSizeControlSetup, MeshSetup
-from vibra.errors import InvalidMeshSetupError, MeshingAlgorithmError
+from vibra.errors import MeshingAlgorithmError
 from vibra.interface.numeric_checks.unit_utilities import convert_length_unit
 
 MeshQualityParams = Literal["gamma", "volume", "minSJ", "aspectRatio"]
@@ -931,6 +928,11 @@ class Mesh:
 
     def export_vtu_file(self, filename):
         """This methods exports vtu file."""
+
+        from vtkmodules.vtkCommonCore import vtkPoints
+        from vtkmodules.vtkCommonDataModel import VTK_HEXAHEDRON, VTK_QUADRATIC_HEXAHEDRON, VTK_QUADRATIC_TETRA, VTK_TETRA, vtkUnstructuredGrid
+        from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridWriter
+
         points = vtkPoints()
         vtk_dataset = vtkUnstructuredGrid()
         for id, coords in enumerate(self.nodal_coordinates[:, 1:]):

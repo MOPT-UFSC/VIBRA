@@ -1,6 +1,5 @@
 
 
-import matplotlib.pyplot as plt
 import numpy as np
 from scipy import signal
 
@@ -151,6 +150,7 @@ def check_if_signal_energy_is_conserved(x_data: np.ndarray, Xf_data: np.ndarray)
 
 
 def plot(x, y, x_label, y_label, title, label="", absolute=False):
+    import matplotlib.pyplot as plt
 
     fig = plt.figure(figsize=[8, 6])
     ax = fig.add_subplot(1,1,1)
@@ -169,6 +169,8 @@ def plot(x, y, x_label, y_label, title, label="", absolute=False):
 
 
 def plot_original_and_windowed_spectrums(freq: np.ndarray, Xf: np.ndarray, Xf_w: np.ndarray):
+    import matplotlib.pyplot as plt
+
     fig = plt.figure(figsize=[8, 6])
     ax = fig.add_subplot(1,1,1)
 

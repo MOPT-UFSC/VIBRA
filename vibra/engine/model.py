@@ -9,7 +9,6 @@ from typing import Optional
 import numpy as np
 from PIL.Image import Image
 
-from vibra import errors
 from vibra.engine.analysis_info import (
     AnalysisID,
     AnalysisMethod,
@@ -60,16 +59,12 @@ from vibra.engine.mesher.mesh_setup import ElementTopology, Hexahedron8, Hexahed
 from vibra.engine.model_domains_processor import ModelDomainsProcessor
 from vibra.engine.model_selection_tools import ModelSelectionTools
 from vibra.engine.properties.fluid import Fluid
-from vibra.engine.properties.material import Material
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.engine.solution import HarmonicSolution, Solution
 from vibra.engine.transfer_impedances.perforated_plate_models import (
     PerforatedPlateModels,
 )
-from vibra.errors import IncompleteSetupError
 from vibra.extensions import SUPPORTED_GEOMETRY_EXTENSIONS
-from vibra.interface import error_title
-from vibra.interface.general.print_message_input import PrintMessageInput
 
 
 class CouplingType(IntEnum):
@@ -408,6 +403,8 @@ class Model:
 
         except Exception as error_log:
             from traceback import print_exception
+            from vibra.interface import error_title
+            from vibra.interface.general.print_message_input import PrintMessageInput
 
             print_exception(error_log)
             title = "Error while processing geometry"
@@ -426,6 +423,8 @@ class Model:
 
         except Exception as error_log:
             from traceback import print_exception
+            from vibra.interface import error_title
+            from vibra.interface.general.print_message_input import PrintMessageInput
 
             print_exception(error_log)
             title = "Error while processing geometry"
@@ -434,6 +433,8 @@ class Model:
             return -1
 
     def process_mesh(self):
+        from vibra.errors import IncompleteSetupError
+
         if self.geometry_path is None:
             message = "Geometry not defined"
             context = (
@@ -798,6 +799,7 @@ class Model:
         # while solving acoustic modal analysis
         is_harmonic = self.analysis_id == AnalysisID.ACOUSTIC_HARMONIC
         if self.analysis_id == AnalysisID.NO_ANALYSIS:
+            from vibra import errors
             raise errors.InvalidModelSetupError("An AnalysisID should be provided.")
 
         for vol_id in self.mesh.elements_from_volume:
