@@ -1,5 +1,5 @@
+from collections.abc import Iterable
 from numbers import Number
-
 import numpy as np
 
 from vibra import errors
@@ -142,46 +142,29 @@ class AnalysisChecker:
             text += "issues have been addressed."
             raise errors.InvalidMeshSetupError(text)
 
-    def check_materials_volumes(self):
-        volumes_with_material, volumes_without_material = self._entities_without_property(
-            "material",
-            "volumes",
-        )
-
-        if not volumes_with_material:
-            raise errors.InvalidModelSetupError(
-                f"You should assign one material for volumes {volumes_without_material} "
-                "to proceed with the analysis solution.",
-                volumes=volumes_without_material,
-            )  # fmt: skip
-
-        if not volumes_without_material:
+    def invalid_model_setup_for_fluids(self, surfaces: list[int] | None = None, volumes: list[int] | None = None):
+        if isinstance(surfaces, Iterable):
+            message = f"You should assign one fluid for surfaces {surfaces} "           
+        elif isinstance(volumes, Iterable):
+            message = f"You should assign one fluid for volumes {volumes} "
+        else:
             return
 
-        acoustic_domain_volumes = self.model.volumes_of_domain.get("acoustic", [])
-        if len(acoustic_domain_volumes) != len(volumes_without_material):
-            for vol_id in volumes_without_material:
-                if vol_id in acoustic_domain_volumes:
-                    continue
+        message += "to proceed with the analysis solution."
 
-                raise errors.InvalidModelSetupError(
-                    f"You should assign one material for volumes {volumes_without_material} "
-                    "to proceed with the analysis solution.",
-                    volumes=volumes_without_material,
-                )  # fmt: skip
+        raise errors.InvalidModelSetupError(message, surfaces=surfaces, volumes=volumes)
 
-    def check_materials_surfaces(self):
-        _, surfaces_without_material = self._entities_without_property(
-            "material",
-            "surfaces",
-        )
+    def invalid_model_setup_for_materials(self, surfaces: list[int] | None = None, volumes: list[int] | None = None):
+        if isinstance(surfaces, Iterable):
+            message = f"You should assign one material for surfaces {surfaces} "           
+        elif isinstance(volumes, Iterable):
+            message = f"You should assign one material for volumes {volumes} "
+        else:
+            return
 
-        if surfaces_without_material:
-            raise errors.InvalidModelSetupError(
-                f"You should assign one material for surfaces {surfaces_without_material} "
-                "to proceed with the analysis solution.",
-                surfaces=surfaces_without_material,
-            )  # fmt: skip
+        message += "to proceed with the analysis solution."
+
+        raise errors.InvalidModelSetupError(message, surfaces=surfaces, volumes=volumes)
 
     def check_fluids_volumes(self):
         volumes_with_fluid, volumes_without_fluid = self._entities_without_property(
@@ -190,11 +173,7 @@ class AnalysisChecker:
         )
 
         if not volumes_with_fluid:
-            raise errors.InvalidModelSetupError(
-                f"You should assign one fluid for volumes {volumes_without_fluid} "
-                "to proceed with the analysis solution.",
-                volumes=volumes_without_fluid,
-            )  # fmt: skip
+            self.invalid_model_setup_for_fluids(volumes=volumes_without_fluid)
 
         if not volumes_without_fluid:
             return
@@ -205,11 +184,7 @@ class AnalysisChecker:
                 if vol_id in structural_domain_volumes:
                     continue
     
-                raise errors.InvalidModelSetupError(
-                    f"You should assign one fluid for volumes {volumes_without_fluid} "
-                    "to proceed with the analysis solution.",
-                    volumes=volumes_without_fluid,
-                )  # fmt: skip
+                self.invalid_model_setup_for_fluids(volumes=volumes_without_fluid)
 
     def check_fluids_surfaces(self):
         _, surfaces_without_fluid = self._entities_without_property(
@@ -218,11 +193,36 @@ class AnalysisChecker:
         )
 
         if surfaces_without_fluid:
-            raise errors.InvalidModelSetupError(
-                f"You should assign one fluid for surfaces {surfaces_without_fluid} "
-                "to proceed with the analysis solution.",
-                surfaces=surfaces_without_fluid,
-            )  # fmt: skip
+            self.invalid_model_setup_for_fluids(surfaces=surfaces_without_fluid)
+
+    def check_materials_volumes(self):
+        volumes_with_material, volumes_without_material = self._entities_without_property(
+            "material",
+            "volumes",
+        )
+
+        if not volumes_with_material:
+            self.invalid_model_setup_for_materials(volumes=volumes_without_material)
+
+        if not volumes_without_material:
+            return
+
+        acoustic_domain_volumes = self.model.volumes_of_domain.get("acoustic", [])
+        if len(acoustic_domain_volumes) != len(volumes_without_material):
+            for vol_id in volumes_without_material:
+                if vol_id in acoustic_domain_volumes:
+                    continue
+
+                self.invalid_model_setup_for_materials(volumes=volumes_without_material)
+
+    def check_materials_surfaces(self):
+        _, surfaces_without_material = self._entities_without_property(
+            "material",
+            "surfaces",
+        )
+
+        if surfaces_without_material:
+            self.invalid_model_setup_for_materials(surfaces=surfaces_without_material)
 
     def check_surface_thickness(self):
         _, surfaces_without_thickness = self._entities_without_property(
