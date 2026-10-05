@@ -327,7 +327,7 @@ class AnalysisChecker:
 
         return False
 
-    def _entities_without_property(self, property_name: str, entity_name: str):
+    def _entities_with_and_without_property(self, property_name: str, entity_name: str):
         properties = self.model.properties
         geometry_information = self.model.mesh.geometry_information
         entities = geometry_information.get(entity_name, [])
