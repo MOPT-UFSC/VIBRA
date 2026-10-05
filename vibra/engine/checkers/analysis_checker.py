@@ -1,5 +1,6 @@
 from collections.abc import Iterable
 from numbers import Number
+
 import numpy as np
 
 from vibra import errors
@@ -15,6 +16,10 @@ from vibra.engine.model import Model
 class AnalysisChecker:
     def __init__(self, model: Model):
         self.model = model
+
+    @property
+    def mesh(self):
+        return self.model.mesh
 
     def check_analysis_requirements(self, is_resume: bool = False, update_domain_mappings: bool = True):
 
@@ -67,7 +72,7 @@ class AnalysisChecker:
         self.check_can_resume(is_resume)
         self.check_mesh()
 
-        if self.model.mesh.are_there_volumes_in_geometry():
+        if self.mesh.are_there_volumes_in_geometry():
             self.check_materials_volumes()
         else:
             self.check_materials_surfaces()
@@ -112,7 +117,7 @@ class AnalysisChecker:
         self.check_can_resume(is_resume)
         self.check_mesh()
 
-        if self.model.mesh.are_there_volumes_in_geometry():
+        if self.mesh.are_there_volumes_in_geometry():
             self.check_materials_volumes()
         else:
             self.check_materials_surfaces()
@@ -123,20 +128,20 @@ class AnalysisChecker:
             raise errors.InvalidAnalysisSetupError("Analysis can not be resumed.")
 
     def check_mesh(self):
-        mesh = self.model.mesh
-        if mesh is None:
+
+        if self.mesh is None:
             raise errors.InvalidMeshSetupError("There is no mesh available")
 
         if not self.model.is_there_a_valid_mesh():
             raise errors.InvalidMeshSetupError("No mesh was provided")
 
-        if mesh.disconnected_nodes:
+        if self.mesh.disconnected_nodes:
             text = "Disconnected nodes have been detected during the mesh post-processing. \n"
             text += "The model solution will stay deactivated until the meshing-related issues \n"
             text += "have been addressed."
             raise errors.InvalidMeshSetupError(text)
 
-        if mesh.collapsed_elements_data:
+        if self.mesh.collapsed_elements_data:
             text = "Collapsed elements have been detected during the mesh post-processing. \n"
             text += "The model solution will stay deactivated until the collapsed-related \n"
             text += "issues have been addressed."
@@ -167,7 +172,7 @@ class AnalysisChecker:
         raise errors.InvalidModelSetupError(message, surfaces=surfaces, volumes=volumes)
 
     def check_fluids_volumes(self):
-        volumes_with_fluid, volumes_without_fluid = self._entities_without_property(
+        volumes_with_fluid, volumes_without_fluid = self._entities_with_and_without_property(
             "fluid",
             "volumes",
         )
@@ -187,7 +192,7 @@ class AnalysisChecker:
                 self.invalid_model_setup_for_fluids(volumes=volumes_without_fluid)
 
     def check_fluids_surfaces(self):
-        _, surfaces_without_fluid = self._entities_without_property(
+        _, surfaces_without_fluid = self._entities_with_and_without_property(
             "fluid",
             "surfaces",
         )
@@ -196,7 +201,7 @@ class AnalysisChecker:
             self.invalid_model_setup_for_fluids(surfaces=surfaces_without_fluid)
 
     def check_materials_volumes(self):
-        volumes_with_material, volumes_without_material = self._entities_without_property(
+        volumes_with_material, volumes_without_material = self._entities_with_and_without_property(
             "material",
             "volumes",
         )
@@ -216,7 +221,7 @@ class AnalysisChecker:
                 self.invalid_model_setup_for_materials(volumes=volumes_without_material)
 
     def check_materials_surfaces(self):
-        _, surfaces_without_material = self._entities_without_property(
+        _, surfaces_without_material = self._entities_with_and_without_property(
             "material",
             "surfaces",
         )
@@ -225,7 +230,7 @@ class AnalysisChecker:
             self.invalid_model_setup_for_materials(surfaces=surfaces_without_material)
 
     def check_surface_thickness(self):
-        _, surfaces_without_thickness = self._entities_without_property(
+        _, surfaces_without_thickness = self._entities_with_and_without_property(
             "surface_thickness",
             "surfaces",
         )
@@ -238,10 +243,8 @@ class AnalysisChecker:
             )  # fmt: skip
 
     def check_contains_volumes(self):
-        return
-        mesh = self.model.mesh
 
-        if not mesh.are_there_volumes_in_geometry():
+        if not self.mesh.are_there_volumes_in_geometry():
             raise errors.InvalidGeometryError(
                 "The selected geometry does not contain volumes, "
                 "therefore, it is invalid for the current analysis."
@@ -329,7 +332,7 @@ class AnalysisChecker:
 
     def _entities_with_and_without_property(self, property_name: str, entity_name: str):
         properties = self.model.properties
-        geometry_information = self.model.mesh.geometry_information
+        geometry_information = self.mesh.geometry_information
         entities = geometry_information.get(entity_name, [])
 
         kwargs = {
