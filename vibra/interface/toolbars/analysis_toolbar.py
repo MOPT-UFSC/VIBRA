@@ -218,11 +218,13 @@ class AnalysisToolbar(QToolBar):
         self.check_analysis_setup_callback()
         self.update_fsi_normals_plot_accessibility()
 
-        # hide the coupled item of the physical domains combo box if modal analysis was selected
-        is_coupled = self.combo_box_physical_domain.currentText() == "Coupled"
-        self.combo_box_physical_domain.view().setRowHidden(2, new_analysis_id.is_modal())
+        is_analysis_modal = new_analysis_id.is_modal()
+        is_domain_coupled = self.combo_box_physical_domain.currentText() == "Coupled"
 
-        if is_coupled and new_analysis_id.is_modal():
+        # hide the coupled item of the physical domains combo box if modal analysis was selected
+        self.combo_box_physical_domain.view().setRowHidden(2, is_analysis_modal)
+
+        if is_domain_coupled and is_analysis_modal:
             self.combo_box_physical_domain.setCurrentIndex(0)
 
     def check_analysis_setup_callback(self):
