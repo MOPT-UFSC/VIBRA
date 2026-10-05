@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import h5py
+
 from vibra.engine.mesher.mesh import Mesh
 
 
@@ -35,56 +37,78 @@ class MeshSerializer:
         return Mesh()
 
     @staticmethod
-    def write(mesh: Mesh, file_path: Path | str):
+    def write(mesh: Mesh, path: Path | str):
         """Writes a mesh to disk.
 
         The format is selected by extension.
 
         Args:
             mesh: The mesh to serialize.
-            file_path: Destination file path.
+            path: Destination file path.
         """
+        path = Path(path)
+
+        match path.suffix:
+            case ".vmesh":
+                MeshSerializer._write_vmsh_meshes(mesh, path)
+            case ".msh":
+                MeshSerializer._write_gmsh_meshes(mesh, path)
 
     @staticmethod
-    def _read_vmesh_meshes(file_path: Path) -> Mesh:
+    def _read_vmesh_meshes(path: Path) -> Mesh:
         """Reads a mesh in the native vibra ``.vmesh`` format.
 
         Args:
-            file_path: Path of the ``.vmesh`` file to load.
+            path: Path of the ``.vmesh`` file to load.
 
         Returns:
-            The mesh read from ``file_path``.
+            The mesh read from ``path``.
         """
-        return Mesh()
+
+        mesh = Mesh()
+
+        with h5py.File(path, "r") as file:
+            pass
+
+        return mesh
 
     @staticmethod
-    def _read_gmsh_meshes(file_path: Path) -> Mesh:
+    def _read_gmsh_meshes(path: Path) -> Mesh:
         """Reads a mesh in any format supported by gmsh.
 
         Args:
-            file_path: Path of the mesh file to load.
+            path: Path of the mesh file to load.
 
         Returns:
-            The mesh read from ``file_path``.
+            The mesh read from ``path``.
         """
         return Mesh()
 
     @staticmethod
-    def _write_vmsh_meshes(mesh: Mesh, file_path: Path | str):
+    def _write_vmsh_meshes(mesh: Mesh, path: Path | str):
         """Writes a mesh to the native vibra ``.vmesh`` format.
 
         Args:
             mesh: The mesh to serialize.
-            file_path: Destination ``.vmesh`` file path.
+            path: Destination ``.vmesh`` file path.
         """
 
+        with h5py.File(path, "w") as file:
+            file["nodal_coordinates"] 
+            file["connectivity/points"]
+            file["connectivity/lines"]
+            file["connectivity/faces"]
+            file["connectivity/solids"]
+            
+            
+
     @staticmethod
-    def _write_gmsh_meshes(mesh: Mesh, file_path: Path | str):
+    def _write_gmsh_meshes(mesh: Mesh, path: Path | str):
         """Writes a mesh to a format supported by gmsh.
 
         The format is selected by extension.
 
         Args:
             mesh: The mesh to serialize.
-            file_path: Destination file path.
+            path: Destination file path.
         """
