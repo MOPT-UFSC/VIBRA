@@ -1,3 +1,4 @@
+from concurrent.futures import ThreadPoolExecutor
 import logging
 import sys
 from collections import defaultdict
@@ -488,7 +489,9 @@ class StructuralAssembler:
         """
         Calculates global matrices.
         """
+        from time import perf_counter
 
+        ti = perf_counter()
         self.active_2d_element_dof = []
         self.dof = self.element_3d.dof_per_element
 
@@ -511,8 +514,29 @@ class StructuralAssembler:
         # ) as progress_bar:
 
         # loop for 3d elements
-        for index, element_id in enumerate(self.model.domains_processor.elements_of_domain.get("structural", [])):
+        # element_ids = self.model.domains_processor.elements_of_domain.get("structural", [])
+        # num_workers = 10
+        #
+        # if not len(element_ids):
+        #     return
+        #
+        # chunk_size = (len(element_ids) + num_workers - 1) // num_workers
+        #
+        # with ThreadPoolExecutor(max_workers=num_workers) as executor:
+        #     futures = []
+        #
+        #     for start in range(0, len(element_ids), chunk_size):
+        #         future = executor.submit(
+        #             self.compute_data_partially,
+        #             element_ids[start:start + chunk_size],
+        #             start,
+        #         )
+        #         futures.append(future)
+        #
+        #     for future in futures:
+        #         future.result()
 
+        for index, element_id in enumerate(self.model.domains_processor.elements_of_domain.get("structural", [])):
             if self.model.stop_processing:
                 return True
 
@@ -534,7 +558,26 @@ class StructuralAssembler:
             Ke, Me = self.element_3d.elementary_matrices(element_id, material)
             self.data_K[index, :, :] = Ke
             self.data_M[index, :, :] = Me
+        tf = perf_counter() - ti
+        print(tf)
 
+    def compute_data_partially(self, element_ids: list, index_offset):
+        for index, element_id in enumerate(element_ids):
+            if self.model.stop_processing:
+                return True
+
+            # get the volume of the 3D element
+            vol_id = self.model.mesh.solids_connectivity[element_id, 1]
+
+            # material from volume
+            material = self.material_from_volume.get(vol_id)
+            if material is None:
+                print(f"-> Element without material: {element_id}")
+                continue
+
+            Ke, Me = self.element_3d.elementary_matrices(element_id, material)
+            self.data_K[index + index_offset, :, :] = Ke
+            self.data_M[index + index_offset, :, :] = Me
 
     def compute_data_to_process_global_matrices(self, reorder: bool = True, print_log: bool = False):
         """
