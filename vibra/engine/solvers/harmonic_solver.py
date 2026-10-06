@@ -121,7 +121,7 @@ class HarmonicSolver:
             frequencies,
             desc="Computing frequency sweep",
             unit="frequency",
-            file=sys.stdout,
+            file=sys.stderr,
             disable=not print_log,
         ) as progress_bar:
             for i, freq in enumerate(progress_bar):
@@ -257,7 +257,7 @@ class HarmonicSolver:
             frequencies,
             desc="Compute proportionally damped frequency sweep",
             unit="frequency",
-            file=sys.stdout,
+            file=sys.stderr,
             disable=not print_log,
         ) as progress_bar:
             for i, freq in enumerate(progress_bar):

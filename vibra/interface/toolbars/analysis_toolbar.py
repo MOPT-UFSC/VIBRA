@@ -242,6 +242,7 @@ class AnalysisToolbar(QToolBar):
 
     def run_analysis_callback(self, is_resume: bool = False):
         app().project.mark_solution_as_outdated(reset=True)
+
         if app().config.user_preferences.run_analysis_in_subprocess:
             self.run_analysis_in_subprocess(is_resume)
         else:
@@ -293,8 +294,12 @@ class AnalysisToolbar(QToolBar):
 
         app().project.write_to_working_dir()
 
+        command = SubProcessHandler.get_executable()
+        if app().config.user_preferences.print_solution_log:
+            command += ["--print_log"]
+
         flag = "--continue-analysis" if is_resume else "--run-analysis"
-        command = SubProcessHandler.get_executable() + [flag, str(app().project.working_directory)]
+        command += [flag, str(app().project.working_directory)]
         subprocess_status = SubProcessHandler(command).run()
 
         if subprocess_status != SubProcessStatus.SUCCESS:
