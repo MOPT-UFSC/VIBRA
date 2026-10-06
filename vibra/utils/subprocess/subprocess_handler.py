@@ -115,8 +115,7 @@ class SubProcessHandler:
             if line.startswith("VIBRA_EXCEPTION|"):
                 import json
                 text = line.split("|", 1)[1]
-                payload = json.loads(text)
-                self._child_traceback = payload["traceback"]
+                self._child_traceback = json.loads(text)["traceback"]
             elif line.startswith("VIBRA_LOG|"):
                 _, level, message = line.split("|", 2)
                 logging.log(getattr(logging, level, logging.INFO), message)
