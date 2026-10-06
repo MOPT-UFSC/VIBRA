@@ -888,6 +888,9 @@ class MainWindow(MainWindow_UI):
             self.set_toolbars_visible(True)
             self.view_toolbar.set_front_view()
 
+            self.results_viewer_widget.hide_bottom_widget()
+            self.results_viewer_widget.update_visibility_items()
+
         LoadingWindow(open_callback, delayed=False).run()
 
         if app().project.model.can_resume_solution:

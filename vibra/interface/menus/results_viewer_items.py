@@ -224,6 +224,8 @@ class ResultsViewerItems(CommonMenuItems):
         """Expands and collapses the Top Level Items on
         the menu after the solution is done.
         """
+
+        self.collapseAll()
         analysis_id = self.analysis_id
 
         if analysis_id in [AnalysisID.STRUCTURAL_HARMONIC, AnalysisID.STRUCTURAL_MODAL]:
