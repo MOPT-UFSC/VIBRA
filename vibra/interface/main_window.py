@@ -3,6 +3,7 @@ import sys
 from functools import partial
 from pathlib import Path
 from shutil import rmtree
+from time import sleep
 
 import gmsh
 from molde import stylesheets
@@ -845,39 +846,49 @@ class MainWindow(MainWindow_UI):
         the file to a temporary folder and then load it.
         """
 
-        self.entity_visibility.unhide_all()
-        self.selection.clear_selection()
+        def open_callback():
 
-        # Actual loading
-        project = app().project
-        config = app().config
-        project_recovery = project_path is None
+            sleep(0.35)
 
-        if project_recovery:
-            LoadingWindow(project.read_from_working_dir).run()
-            project.model.name = "Recover project"
-        else:
-            LoadingWindow(project.load_project).run(project_path)
-            config.add_recent_file(project_path)
-            config.write_last_folder_path_in_file("project_folder", project_path)
+            project_name = Path(project_path).stem
+            logging.info(f"Opening the project {project_name}... [1/4]")
 
-        # Interface update
-        self.update_recents_menu()
-        self.setWindowTitle(project.model.name)
-        self.view_toolbar.set_front_view()
+            sleep(1)
 
-        self.status_bar.update_geometry_information()
-        self.status_bar.update_mesh_information()
+            self.entity_visibility.unhide_all()
+            self.selection.clear_selection()
 
-        self.model_setup_widget.model_setup_items.expand_menu_items()
+            # Actual loading
+            project = app().project
+            config = app().config
+            project_recovery = project_path is None
 
-        self.set_toolbars_enabled(True)
-        self.update_toolbar_and_menu_items_after_load_project()
-        self.analysis_toolbar.check_analysis_setup_callback()
-        self.analysis_toolbar.update_reset_solution_button_accessibility()
+            if project_recovery:
+                project.read_from_working_dir()
+                project.model.name = "Recover project"
+            else:
+                project.load_project(project_path)
+                config.add_recent_file(project_path)
+                config.write_last_folder_path_in_file("project_folder", project_path)
 
-        LoadingWindow(self.geometry_widget.update_plot).run()
-        LoadingWindow(self.mesh_widget.update_plot).run()
+            # Interface update
+            self.update_recents_menu()
+            self.setWindowTitle(project.model.name)
+            self.view_toolbar.set_front_view()
+
+            self.status_bar.update_geometry_information()
+            self.status_bar.update_mesh_information()
+
+            self.model_setup_widget.model_setup_items.expand_menu_items()
+
+            self.set_toolbars_enabled(True)
+            self.update_toolbar_and_menu_items_after_load_project()
+            self.analysis_toolbar.check_analysis_setup_callback()
+            self.analysis_toolbar.update_reset_solution_button_accessibility()
+
+            self.update_plots()
+
+        LoadingWindow(open_callback).run()
 
         self.action_model_workspace_callback()
 
