@@ -847,7 +847,11 @@ class MainWindow(MainWindow_UI):
 
         def open_callback():
 
-            project_name = Path(project_path).stem
+            if isinstance(project_path, str | Path):
+                project_name = Path(project_path).stem
+            else:
+                project_name = "Recover project"
+
             logging.info(f"Opening the project {project_name}... [1/4]")
 
             self.entity_visibility.unhide_all()
