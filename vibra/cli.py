@@ -1,9 +1,11 @@
 def run_interface(project_path: str | None = None, open_last: bool = False):
     from vibra import launch
+    from vibra.utils.subprocess.subprocess_env import ensure_freethreaded_env
 
     if open_last:
         print('Sorry, "--last" does not work yet =(')
 
+    ensure_freethreaded_env()
     launch.main()
 
 def run_analysis(working_dir: str):

@@ -1,5 +1,4 @@
 import logging
-from pathlib import Path
 import subprocess
 import sys
 from enum import Enum, auto
@@ -12,6 +11,7 @@ from PySide6.QtWidgets import QApplication
 
 from vibra.errors import SolverSubprocessError
 from vibra.interface.loading_window import LoadingWindow
+from vibra.utils.subprocess.subprocess_env import freethreaded_python
 
 
 class SubProcessStatus(Enum):
@@ -38,9 +38,7 @@ class SubProcessHandler:
             return [sys.executable]
 
         elif is_freethreaded:
-            root = Path(__file__).resolve().parents[3]
-            python_ft = root / ".venv-freethreaded-314" / "bin" / "python"
-            return [str(python_ft), "-m", sys.argv[0]]
+            return [str(freethreaded_python()), "-m", sys.argv[0]]
 
         else:
             return [sys.executable, sys.argv[0]]

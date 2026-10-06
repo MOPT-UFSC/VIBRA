@@ -3,7 +3,7 @@ name = "vibra"
 version = "0.6.1"
 description = ""
 authors = [{ name = "Your Name", email = "you@example.com" }]
-requires-python = ">=3.12,<3.14"
+requires-python = ">=3.12,<3.15"
 readme = "README.md"
 dependencies = [
     "numpy (>=2.2.6,<3.0.0)",
@@ -46,7 +46,7 @@ build-backend = "hatchling.build"
 
 [tool.pytest.ini_options]
 markers = [
-    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+"slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "serial",
 ]
 
