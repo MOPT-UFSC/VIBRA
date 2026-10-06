@@ -670,8 +670,8 @@ class MainWindow(MainWindow_UI):
 
         extensions = SUPPORTED_GEOMETRY_EXTENSIONS + SUPPORTED_MESH_EXTENSIONS
 
-        imported_path = FileDialogService.open_file(file_extensions=extensions, 
-                                    caption="Select a geometry or mesh file to start your project.", 
+        imported_path = FileDialogService.open_file(file_extensions=extensions,
+                                    caption="Select a geometry or mesh file to start your project.",
                                     last_folder="geometry_mesh_folder")
 
         if imported_path is None:
@@ -792,9 +792,9 @@ class MainWindow(MainWindow_UI):
 
     def open_project_dialog(self):
         project_path = FileDialogService.open_file(file_extensions=["vibra", "vibra.zip"],
-                                    caption="Open Project", 
+                                    caption="Open Project",
                                     last_folder="project_folder")
-        
+
         if project_path is None:
             return
 
@@ -876,9 +876,7 @@ class MainWindow(MainWindow_UI):
         self.analysis_toolbar.check_analysis_setup_callback()
         self.analysis_toolbar.update_reset_solution_button_accessibility()
 
-        LoadingWindow(self.geometry_widget.update_plot).run()
-        LoadingWindow(self.mesh_widget.update_plot).run()
-
+        LoadingWindow(self.update_plots).run()
         self.action_model_workspace_callback()
 
         self.set_toolbars_visible(True)
