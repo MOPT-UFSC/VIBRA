@@ -783,7 +783,7 @@ class MainWindow(MainWindow_UI):
             self.setWindowTitle(project.model.name)
             logging.info("The project data has been saved. [100/100]")
 
-        LoadingWindow(save_data).run(path)
+        LoadingWindow(save_data, delayed=False).run(path)
 
         from datetime import datetime
 
@@ -845,44 +845,57 @@ class MainWindow(MainWindow_UI):
         the file to a temporary folder and then load it.
         """
 
-        self.entity_visibility.unhide_all()
-        self.selection.clear_selection()
+        def open_callback():
 
-        # Actual loading
-        project = app().project
-        config = app().config
-        project_recovery = project_path is None
+            if isinstance(project_path, str | Path):
+                project_name = Path(project_path).stem
+            else:
+                project_name = "Recover project"
 
-        if project_recovery:
-            LoadingWindow(project.read_from_working_dir).run()
-            project.model.name = "Recover project"
-        else:
-            LoadingWindow(project.load_project).run(project_path)
-            config.add_recent_file(project_path)
-            config.write_last_folder_path_in_file("project_folder", project_path)
+            logging.info(f"Opening the project {project_name}... [1/4]")
 
-        # Interface update
-        self.update_recents_menu()
-        self.setWindowTitle(project.model.name)
-        self.view_toolbar.set_front_view()
+            self.entity_visibility.unhide_all()
+            self.selection.clear_selection()
 
-        self.status_bar.update_geometry_information()
-        self.status_bar.update_mesh_information()
+            # Actual loading
+            project = app().project
+            config = app().config
+            project_recovery = project_path is None
 
-        self.model_setup_widget.model_setup_items.expand_menu_items()
+            if project_recovery:
+                project.read_from_working_dir()
+                project.model.name = "Recover project"
+            else:
+                project.load_project(project_path)
+                config.add_recent_file(project_path)
+                config.write_last_folder_path_in_file("project_folder", project_path)
 
-        self.set_toolbars_enabled(True)
-        self.update_toolbar_and_menu_items_after_load_project()
-        self.analysis_toolbar.check_analysis_setup_callback()
-        self.analysis_toolbar.update_reset_solution_button_accessibility()
+            # Interface update
+            self.update_recents_menu()
+            self.setWindowTitle(project.model.name)
+            self.view_toolbar.set_front_view()
 
-        LoadingWindow(self.geometry_widget.update_plot).run()
-        LoadingWindow(self.mesh_widget.update_plot).run()
+            self.status_bar.update_geometry_information()
+            self.status_bar.update_mesh_information()
 
-        self.action_model_workspace_callback()
+            self.model_setup_widget.model_setup_items.expand_menu_items()
 
-        self.set_toolbars_visible(True)
-        self.view_toolbar.set_front_view()
+            self.set_toolbars_enabled(True)
+            self.update_toolbar_and_menu_items_after_load_project()
+            self.analysis_toolbar.check_analysis_setup_callback()
+            self.analysis_toolbar.update_reset_solution_button_accessibility()
+
+            self.update_plots()
+
+            self.action_model_workspace_callback()
+
+            self.set_toolbars_visible(True)
+            self.view_toolbar.set_front_view()
+
+            self.results_viewer_widget.hide_bottom_widget()
+            self.results_viewer_widget.update_visibility_items()
+
+        LoadingWindow(open_callback, delayed=False).run()
 
         if app().project.model.can_resume_solution:
             window_title = "Acoustic Harmonic results"
