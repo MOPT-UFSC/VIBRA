@@ -3,7 +3,6 @@ import sys
 from functools import partial
 from pathlib import Path
 from shutil import rmtree
-from time import sleep
 
 import gmsh
 from molde import stylesheets
@@ -784,7 +783,7 @@ class MainWindow(MainWindow_UI):
             self.setWindowTitle(project.model.name)
             logging.info("The project data has been saved. [100/100]")
 
-        LoadingWindow(save_data).run(path)
+        LoadingWindow(save_data, delayed=False).run(path)
 
         from datetime import datetime
 
@@ -848,12 +847,8 @@ class MainWindow(MainWindow_UI):
 
         def open_callback():
 
-            sleep(0.35)
-
             project_name = Path(project_path).stem
             logging.info(f"Opening the project {project_name}... [1/4]")
-
-            sleep(1)
 
             self.entity_visibility.unhide_all()
             self.selection.clear_selection()
@@ -888,12 +883,12 @@ class MainWindow(MainWindow_UI):
 
             self.update_plots()
 
-        LoadingWindow(open_callback).run()
+            self.action_model_workspace_callback()
 
-        self.action_model_workspace_callback()
+            self.set_toolbars_visible(True)
+            self.view_toolbar.set_front_view()
 
-        self.set_toolbars_visible(True)
-        self.view_toolbar.set_front_view()
+        LoadingWindow(open_callback, delayed=False).run()
 
         if app().project.model.can_resume_solution:
             window_title = "Acoustic Harmonic results"

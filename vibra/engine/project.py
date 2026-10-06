@@ -170,6 +170,7 @@ class Project:
         """
         logging.info("Loading the project data... [25%]")
         path = Path(path)
+        self.reset_project()
         self.reset_solution()
         self.project_reader.unpack_into_working_directory(path)
         self.model = self.project_reader.read_model(self.model)
