@@ -66,6 +66,10 @@ class ProjectWriter:
         if model.mesh is not None:
             self.write_mesh(model.mesh)
 
+        if model.visual_mesh is not None:
+            print("ORA ORA ORA")
+            self.write_visual_mesh(model.visual_mesh)
+
         if model.solution is not None:
             self.write_solution(model.solution)
 
@@ -134,7 +138,7 @@ class ProjectWriter:
         current_hash = ProjectHasher.hash_mesh(mesh)
         previous_hash = self._read_hash(HashEnum.MESH)
         required_paths = [
-            self.project_paths.mesh_data_filepath,
+            self.project_paths.fem_mesh_filepath,
             self.project_paths.mesh_quality_data_filepath,
             self.project_paths.hashes_filepath,
             self.project_paths.geometry_data_filepath,
@@ -145,7 +149,7 @@ class ProjectWriter:
             logger.info("Mesh was not written since it did not changed.")
             return
 
-        with h5py.File(self.project_paths.mesh_data_filepath, "w") as file:
+        with h5py.File(self.project_paths.fem_mesh_filepath, "w") as file:
             file["connectivity/lines_connectivity"] = mesh.lines_connectivity
             file["connectivity/faces_connectivity"] = mesh.faces_connectivity
             file["connectivity/solids_connectivity"] = mesh.solids_connectivity
@@ -170,6 +174,14 @@ class ProjectWriter:
         self.write_geometry_related_mesh_parameters(mesh)
         self.write_mesh_quality_data_in_file(mesh)
         previous_hash = self._write_hash(HashEnum.MESH, current_hash)
+
+    def write_visual_mesh(self, mesh: Mesh):
+        logger.info("Writing Mesh.")
+
+        with h5py.File(self.project_paths.visual_mesh_filepath, "w") as file:
+            file["connectivity/lines_connectivity"] = mesh.lines_connectivity
+            file["connectivity/faces_connectivity"] = mesh.faces_connectivity
+            file["nodal_data/nodal_coordinates"] = mesh.nodal_coordinates
 
     def write_geometry_related_mesh_parameters(self, mesh: Mesh):
         with h5py.File(self.project_paths.geometry_data_filepath, "w") as file:
@@ -361,7 +373,7 @@ class ProjectWriter:
 
     def delete_mesh_data(self):
         logger.info("Deleting mesh data")
-        self.project_paths.mesh_data_filepath.unlink(missing_ok=True)
+        self.project_paths.fem_mesh_filepath.unlink(missing_ok=True)
         self._remove_hash(HashEnum.MESH)
 
     def _read_hash(self, name: HashEnum) -> str | None:

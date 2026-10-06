@@ -74,8 +74,11 @@ class ProjectReader:
         if analysis_setup is not None:
             model.set_analysis_setup(analysis_setup)
 
-        if self.project_paths.mesh_data_filepath.exists():
+        if self.project_paths.fem_mesh_filepath.exists():
             model.mesh = self.read_mesh()
+
+        if self.project_paths.visual_mesh_filepath.exists() or self.project_paths.fem_mesh_filepath.exists():
+            model.visual_mesh = self.read_mesh()
 
         model.mesh_setup = self.read_mesh_setup()
         model.properties = self.read_model_properties()
@@ -187,7 +190,7 @@ class ProjectReader:
         self,
         mesh: Optional[Mesh] = None,
     ) -> Mesh:
-        mesh_data_path = self.project_paths.mesh_data_filepath
+        mesh_data_path = self.project_paths.fem_mesh_filepath
         if not mesh_data_path.exists():
             raise FileNotFoundError("The mesh file is missing.")
 
@@ -303,6 +306,29 @@ class ProjectReader:
             mesh_quality_data[key] = tmp_dict
 
         return mesh_quality_data
+
+    def read_visual_mesh(
+        self,
+        mesh: Mesh | None = None,
+    ) -> Mesh:
+
+        if self.project_paths.visual_mesh_filepath.exists():
+            mesh_data_path = self.project_paths.visual_mesh_filepath
+        elif self.project_paths.fem_mesh_filepath.exists():
+            mesh_data_path = self.project_paths.fem_mesh_filepath
+        else:
+            raise FileNotFoundError("The mesh file is missing.")
+
+        if mesh is None:
+            mesh = Mesh()
+
+        logger.info("Reading visual sMesh")
+        with h5py.File(mesh_data_path, "r") as file:
+            mesh.nodal_coordinates = np.array(file["nodal_data/nodal_coordinates"])
+            mesh.lines_connectivity = np.array(file["connectivity/lines_connectivity"])
+            mesh.faces_connectivity = np.array(file["connectivity/faces_connectivity"])
+
+        return mesh
 
     def read_model_properties(self, model_properties: Optional[ModelProperties] = None) -> ModelProperties:
         if model_properties is None:
