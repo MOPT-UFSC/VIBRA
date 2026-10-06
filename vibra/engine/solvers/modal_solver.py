@@ -48,8 +48,8 @@ class ModalSolver:
             total=100,
             desc="Solving eigenproblem",
             unit="%",
-            file=sys.stdout,
-            disable=not print_log or not sys.stdout.isatty(),
+            file=sys.stderr,
+            disable=not print_log,
         )
         def update_progress(percentage: int):
             if (increment := percentage - progress_bar.n) > 0:

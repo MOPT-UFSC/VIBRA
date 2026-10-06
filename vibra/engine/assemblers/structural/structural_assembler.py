@@ -459,8 +459,8 @@ class StructuralAssembler:
             self.model.mesh.faces_connectivity,
             desc="Processing the elementary matrices data for face elements",
             unit="element",
-            file=sys.stdout,
-            disable=not print_log or not sys.stdout.isatty(),
+            file=sys.stderr,
+            disable=not print_log,
         ) as progress_bar:
             for element_id, surf_id, _, _, *connect_nodes in progress_bar:
                 if self.model.stop_processing:
@@ -506,7 +506,7 @@ class StructuralAssembler:
         #     self.model.mesh.solids_connectivity,
         #     desc="Processing the elementary matrices data for solid elements",
         #     unit="element",
-        #     file=sys.stdout,
+        #     file=sys.stderr,
         #     disable=not print_log,
         # ) as progress_bar:
 

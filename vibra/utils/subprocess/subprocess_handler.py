@@ -51,22 +51,23 @@ class SubProcessHandler:
             self._subprocess.kill()
 
     def _run_subprocess(self) -> SubProcessStatus:
+        self._child_traceback = ""
+
         logging.info("Launching subprocess... (15%)")
 
         try:
             self._subprocess = subprocess.Popen(
                 self.command,
                 stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
                 text=True,
                 bufsize=1,
             )
         except OSError as error:
             raise OSError("Could not launch subprocess.") from error
 
-        if self._subprocess.stdout is None or self._subprocess.stderr is None:
+        if self._subprocess.stdout is None:
             self._interrupt_subprocess(by_user=False)
-            raise OSError("Subprocess stdout or stderr PIPE was not created.")
+            raise OSError("Subprocess stdout PIPE was not created.")
 
         stdout_queue = Queue()
         stdout_reader = Thread(
@@ -89,11 +90,10 @@ class SubProcessHandler:
                 logging.info("Subprocess was interrupted.")
                 return SubProcessStatus.INTERRUPTED
 
-            stderr = self._subprocess.stderr.read()
             logging.error(f"Subprocess exited with code {self._subprocess.returncode}")
             raise SolverSubprocessError(
                 returncode=self._subprocess.returncode,
-                stderr=stderr,
+                stderr=self._child_traceback,
             )
 
         return SubProcessStatus.SUCCESS
@@ -112,7 +112,12 @@ class SubProcessHandler:
             except Empty:
                 break
 
-            if line.startswith("VIBRA_LOG|"):
+            if line.startswith("VIBRA_EXCEPTION|"):
+                import json
+                text = line.split("|", 1)[1]
+                payload = json.loads(text)
+                self._child_traceback = payload["traceback"]
+            elif line.startswith("VIBRA_LOG|"):
                 _, level, message = line.split("|", 2)
                 logging.log(getattr(logging, level, logging.INFO), message)
             else:

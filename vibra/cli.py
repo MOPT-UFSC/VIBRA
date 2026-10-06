@@ -9,17 +9,53 @@ def run_interface(project_path: str | None = None, open_last: bool = False):
 def run_analysis(working_dir: str, print_log: bool):
     from vibra.utils.subprocess import analysis_subprocess
 
-    analysis_subprocess.main(is_resume=False, working_dir=working_dir, print_log=print_log)
+    try:
+        analysis_subprocess.main(is_resume=False, working_dir=working_dir, print_log=print_log)
+    except Exception:
+        import sys
+        import traceback
+        import json
+
+        text = traceback.format_exc()
+        print(
+            "VIBRA_EXCEPTION|" + json.dumps({"traceback": text}),
+            flush=True,
+        )
+        sys.exit(1)
 
 def continue_analysis(working_dir: str, print_log: bool):
     from vibra.utils.subprocess import analysis_subprocess
 
-    analysis_subprocess.main(is_resume=True, working_dir=working_dir, print_log=print_log)
+    try:
+        analysis_subprocess.main(is_resume=True, working_dir=working_dir, print_log=print_log)
+    except Exception:
+        import sys
+        import traceback
+        import json
+
+        text = traceback.format_exc()
+        print(
+            "VIBRA_EXCEPTION|" + json.dumps({"traceback": text}),
+            flush=True,
+        )
+        sys.exit(1)
 
 def generate_mesh(working_dir: str):
     from vibra.utils.subprocess import generate_mesh_subprocess
 
-    generate_mesh_subprocess.main(working_dir)
+    try:
+        generate_mesh_subprocess.main(working_dir)
+    except Exception:
+        import sys
+        import traceback
+        import json
+
+        text = traceback.format_exc()
+        print(
+            "VIBRA_EXCEPTION|" + json.dumps({"traceback": text}),
+            flush=True,
+        )
+        sys.exit(1)
 
 
 def main():
