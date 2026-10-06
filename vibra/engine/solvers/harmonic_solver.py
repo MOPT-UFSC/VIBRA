@@ -122,7 +122,7 @@ class HarmonicSolver:
             desc="Computing frequency sweep",
             unit="frequency",
             file=sys.stdout,
-            disable=not print_log,
+            disable=not print_log or not sys.stdout.isatty(),
         ) as progress_bar:
             for i, freq in enumerate(progress_bar):
                 if self.assembler.model.stop_processing:
@@ -258,7 +258,7 @@ class HarmonicSolver:
             desc="Compute proportionally damped frequency sweep",
             unit="frequency",
             file=sys.stdout,
-            disable=not print_log,
+            disable=not print_log or not sys.stdout.isatty(),
         ) as progress_bar:
             for i, freq in enumerate(progress_bar):
                 if is_resume and i != 0 and isinstance(self._file_writer, LazyHDF5MatrixWriter) and self._file_writer.has_column(i):

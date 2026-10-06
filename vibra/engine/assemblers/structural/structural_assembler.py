@@ -460,7 +460,7 @@ class StructuralAssembler:
             desc="Processing the elementary matrices data for face elements",
             unit="element",
             file=sys.stdout,
-            disable=not print_log,
+            disable=not print_log or not sys.stdout.isatty(),
         ) as progress_bar:
             for element_id, surf_id, _, _, *connect_nodes in progress_bar:
                 if self.model.stop_processing:

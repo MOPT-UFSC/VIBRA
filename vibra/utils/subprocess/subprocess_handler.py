@@ -23,7 +23,7 @@ class SubProcessHandler:
     Run a separate process and deals with its outputs.
     """
 
-    def __init__(self, command: str):
+    def __init__(self, command: list[str]):
         self.command = command
 
     def run(self) -> SubProcessStatus:
