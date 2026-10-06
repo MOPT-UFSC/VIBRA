@@ -31,5 +31,9 @@ def ensure_freethreaded_env() -> Path:
     generate_freethreaded_env()
 
 def generate_freethreaded_env():
-    subprocess.run(["uv", "venv", "--python", f"{PYTHON_VERSION}", f"{VENV_NAME}"], check=False)
-    subprocess.run(["uv", "pip", "install", "--python", f"{freethreaded_python_without_root()!s}", "-r", f"{get_requirements_file()!s}"], check=False)
+    python_path = freethreaded_python_without_root()
+
+    if not python_path.is_file():
+        subprocess.run(["uv", "venv", "--python", PYTHON_VERSION, str(VENV_NAME)], check=False)
+
+    subprocess.run(["uv", "pip", "install", "--python", str(python_path), "-r", str(get_requirements_file()) ], check=False)
