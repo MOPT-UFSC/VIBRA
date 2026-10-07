@@ -127,11 +127,9 @@ class GmshMesher:
                     maximum_element_size=_max,
                     custom_element_setup=GMSH_VISUAL_MESH,
                 )
-                mesh.load_cad(self.path, self.setup)
+                return self.generate(), self.setup
             except Exception as error:
                 exception = error
-            else:
-                return mesh, self.setup
 
         raise exception
 

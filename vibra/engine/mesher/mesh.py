@@ -4,7 +4,7 @@ from collections import defaultdict
 from copy import deepcopy
 from itertools import permutations
 from pathlib import Path
-from typing import Literal, Optional, Self
+from typing import Literal
 
 # from time import perf_counter
 import gmsh
@@ -14,8 +14,13 @@ from vtkmodules.vtkCommonCore import vtkPoints
 from vtkmodules.vtkCommonDataModel import VTK_HEXAHEDRON, VTK_QUADRATIC_HEXAHEDRON, VTK_QUADRATIC_TETRA, VTK_TETRA, vtkUnstructuredGrid
 from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridWriter
 
-from vibra.engine.mesher.mesh_setup import Hexahedron8, Hexahedron20, Tetrahedron4, Tetrahedron10, ElementTopology, LocalMeshSizeControlSetup, MeshSetup
-from vibra.errors import InvalidMeshSetupError, MeshingAlgorithmError
+from vibra.engine.mesher.mesh_setup import (
+    ElementTopology,
+    Hexahedron8,
+    Hexahedron20,
+    Tetrahedron4,
+    Tetrahedron10,
+)
 from vibra.interface.numeric_checks.unit_utilities import convert_length_unit
 
 MeshQualityParams = Literal["gamma", "volume", "minSJ", "aspectRatio"]
@@ -31,7 +36,7 @@ class Mesh:
         self.reset_variables()
 
     def reset_variables(self):
-        self.element_topology: Optional[ElementTopology] = None
+        self.element_topology: ElementTopology | None = None
 
         ## geometry-related attributes
 
@@ -273,114 +278,114 @@ class Mesh:
         }
         self.points_from_nodes = {node_id: tag for tag, node_id in self.nodes_from_points.items()}
 
-    def load_cad(self, path: str | Path, mesh_setup: MeshSetup, threads: int = 0) -> Self:
-        if not gmsh.is_initialized():
-            gmsh.initialize("", False, interruptible=False)
-            gmsh.option.set_number("General.Terminal", 0)
-            gmsh.option.set_number("General.Verbosity", 0)
-            gmsh.option.set_number("Geometry.Tolerance", mesh_setup.geometry_tolerance)
+    # def load_cad(self, path: str | Path, mesh_setup: MeshSetup, threads: int = 0) -> Self:
+    #     if not gmsh.is_initialized():
+    #         gmsh.initialize("", False, interruptible=False)
+    #         gmsh.option.set_number("General.Terminal", 0)
+    #         gmsh.option.set_number("General.Verbosity", 0)
+    #         gmsh.option.set_number("Geometry.Tolerance", mesh_setup.geometry_tolerance)
 
-            gmsh.option.set_number("General.NumThreads", threads)
-            gmsh.option.set_number("Mesh.MaxNumThreads1D", threads)
-            gmsh.option.set_number("Mesh.MaxNumThreads2D", threads)
-            gmsh.option.set_number("Mesh.MaxNumThreads3D", threads)
+    #         gmsh.option.set_number("General.NumThreads", threads)
+    #         gmsh.option.set_number("Mesh.MaxNumThreads1D", threads)
+    #         gmsh.option.set_number("Mesh.MaxNumThreads2D", threads)
+    #         gmsh.option.set_number("Mesh.MaxNumThreads3D", threads)
 
-            logging.info("Loading geometry... [10/100]")
-            gmsh.open(str(path))
+    #         logging.info("Loading geometry... [10/100]")
+    #         gmsh.open(str(path))
 
-        if mesh_setup.suppressed_volume_ids:
-            dim_tags = [(3, vid) for vid in mesh_setup.suppressed_volume_ids]
-            self.suppress(dim_tags)
+    #     if mesh_setup.suppressed_volume_ids:
+    #         dim_tags = [(3, vid) for vid in mesh_setup.suppressed_volume_ids]
+    #         self.suppress(dim_tags)
 
-        if mesh_setup.merge_connected_volumes:
-            self._merge_nodes_from_adjacent_volumes(mesh_setup.suppressed_volume_ids)
+    #     if mesh_setup.merge_connected_volumes:
+    #         self._merge_nodes_from_adjacent_volumes(mesh_setup.suppressed_volume_ids)
 
-        logging.info("Configuring mesh... [20/100]")
-        self._configure_mesh(mesh_setup)
+    #     logging.info("Configuring mesh... [20/100]")
+    #     self._configure_mesh(mesh_setup)
 
-        logging.info("Processing geometry data... [25/100]")
+    #     logging.info("Processing geometry data... [25/100]")
 
-        logging.info("Processing geometry data... [30/100]")
-        self.process_geometry_information()
+    #     logging.info("Processing geometry data... [30/100]")
+    #     self.process_geometry_information()
 
-        logging.info("Processing geometry data... [35/100]")
-        self.process_downwards_adjacencies_from_entities()
-        self.process_upwards_adjacencies_from_entities()
+    #     logging.info("Processing geometry data... [35/100]")
+    #     self.process_downwards_adjacencies_from_entities()
+    #     self.process_upwards_adjacencies_from_entities()
 
-        try:
-            dimension = mesh_setup.element_setup.dimensions
-            gmsh.model.mesh.generate(dimension)
-        except Exception as e:
-            gmsh.finalize()
+    #     try:
+    #         dimension = mesh_setup.element_setup.dimensions
+    #         gmsh.model.mesh.generate(dimension)
+    #     except Exception as e:
+    #         gmsh.finalize()
 
-            exception = MeshingAlgorithmError(
-                "A problem occurred while generating the mesh.\n"
-                "Reducing the size of the elements and/or changing the 3D meshing "
-                "algorithm may help resolve the issue.\n"
-                "If neither of these options works, we suggest reviewing the CAD geometry "
-                "to eliminate any potential underlying geometric issues."
-            )
-            logging.error(str(exception))
-            raise exception from e
+    #         exception = MeshingAlgorithmError(
+    #             "A problem occurred while generating the mesh.\n"
+    #             "Reducing the size of the elements and/or changing the 3D meshing "
+    #             "algorithm may help resolve the issue.\n"
+    #             "If neither of these options works, we suggest reviewing the CAD geometry "
+    #             "to eliminate any potential underlying geometric issues."
+    #         )
+    #         logging.error(str(exception))
+    #         raise exception from e
 
-        logging.info("Post-processing mesh... [60/100]")
-        self.suppressed_volumes = set(mesh_setup.suppressed_volume_ids)
-        self.post_process_mesh_data()
+    #     logging.info("Post-processing mesh... [60/100]")
+    #     self.suppressed_volumes = set(mesh_setup.suppressed_volume_ids)
+    #     self.post_process_mesh_data()
 
-        self.update_element_topology_based_on_connectivity()
+    #     self.update_element_topology_based_on_connectivity()
 
-        logging.info("Post-processing mesh... [95/100]")
-        if mesh_setup.compute_quality_metrics:
-            self.compute_mesh_quality_parameters()
+    #     logging.info("Post-processing mesh... [95/100]")
+    #     if mesh_setup.compute_quality_metrics:
+    #         self.compute_mesh_quality_parameters()
 
-        gmsh.finalize()
+    #     gmsh.finalize()
 
-        logging.info(
-            f"Mesh generated with {len(self.nodal_coordinates)} nodes"
-            f", {len(self.lines_connectivity)} dim 1"
-            f", {len(self.faces_connectivity)} dim 2"
-            f"and {len(self.solids_connectivity)} dim 3 elements"
-        )
+    #     logging.info(
+    #         f"Mesh generated with {len(self.nodal_coordinates)} nodes"
+    #         f", {len(self.lines_connectivity)} dim 1"
+    #         f", {len(self.faces_connectivity)} dim 2"
+    #         f"and {len(self.solids_connectivity)} dim 3 elements"
+    #     )
 
-        return self
+    #     return self
 
-    def _configure_mesh(self, mesh_setup: MeshSetup):
-        if mesh_setup.local_mesh_size_control_parameters:
-            self._apply_local_mesh_size_control(
-                mesh_setup.maximum_element_size,
-                mesh_setup.local_mesh_size_control_parameters,
-            )
-        else:
-            gmsh.option.setNumber("Mesh.MeshSizeMin", mesh_setup.minimum_element_size)
-            gmsh.option.setNumber("Mesh.MeshSizeMax", mesh_setup.maximum_element_size)
+    # def _configure_mesh(self, mesh_setup: MeshSetup):
+    #     if mesh_setup.local_mesh_size_control_parameters:
+    #         self._apply_local_mesh_size_control(
+    #             mesh_setup.maximum_element_size,
+    #             mesh_setup.local_mesh_size_control_parameters,
+    #         )
+    #     else:
+    #         gmsh.option.setNumber("Mesh.MeshSizeMin", mesh_setup.minimum_element_size)
+    #         gmsh.option.setNumber("Mesh.MeshSizeMax", mesh_setup.maximum_element_size)
 
-        gmsh.option.setNumber("Mesh.RandomSeed", mesh_setup.random_seed)
-        gmsh.option.setNumber("Mesh.MeshSizeFactor", mesh_setup.size_factor)
-        gmsh.option.setNumber("Mesh.Algorithm", mesh_setup.element_setup.algorithm_2d)
-        gmsh.option.setNumber("Mesh.Algorithm3D", mesh_setup.element_setup.algorithm_3d)
-        gmsh.option.setNumber("Mesh.RecombinationAlgorithm", mesh_setup.element_setup.recombination_algorithm)
-        gmsh.option.setNumber("Mesh.SubdivisionAlgorithm", mesh_setup.element_setup.subdivision_algorithm)
-        gmsh.option.setNumber("Mesh.RecombineAll", mesh_setup.element_setup.recombine_all)
-        gmsh.option.setNumber("Mesh.ElementOrder", mesh_setup.element_setup.element_order)
-        gmsh.option.setNumber("Mesh.SecondOrderIncomplete", mesh_setup.element_setup.second_order_incomplete)
-        gmsh.option.setNumber("Mesh.MeshOnlyVisible", 1)
+    #     gmsh.option.setNumber("Mesh.RandomSeed", mesh_setup.random_seed)
+    #     gmsh.option.setNumber("Mesh.MeshSizeFactor", mesh_setup.size_factor)
+    #     gmsh.option.setNumber("Mesh.Algorithm", mesh_setup.element_setup.algorithm_2d)
+    #     gmsh.option.setNumber("Mesh.Algorithm3D", mesh_setup.element_setup.algorithm_3d)
+    #     gmsh.option.setNumber("Mesh.RecombinationAlgorithm", mesh_setup.element_setup.recombination_algorithm)
+    #     gmsh.option.setNumber("Mesh.SubdivisionAlgorithm", mesh_setup.element_setup.subdivision_algorithm)
+    #     gmsh.option.setNumber("Mesh.RecombineAll", mesh_setup.element_setup.recombine_all)
+    #     gmsh.option.setNumber("Mesh.ElementOrder", mesh_setup.element_setup.element_order)
+    #     gmsh.option.setNumber("Mesh.SecondOrderIncomplete", mesh_setup.element_setup.second_order_incomplete)
+    #     gmsh.option.setNumber("Mesh.MeshOnlyVisible", 1)
 
-        gmsh.model.mesh.clear()
-        gmsh.model.occ.synchronize()
+    #     gmsh.model.mesh.clear()
+    #     gmsh.model.occ.synchronize()
 
-    def _merge_nodes_from_adjacent_volumes(self, suppressed_volume_ids: list[int] | None = None):
-        """This method merges all nodes from adjacent volumes."""
-        gmsh.model.occ.synchronize()
-        volumes_list = gmsh.model.getEntities(3)
+    # def _merge_nodes_from_adjacent_volumes(self, suppressed_volume_ids: list[int] | None = None):
+    #     """This method merges all nodes from adjacent volumes."""
+    #     gmsh.model.occ.synchronize()
+    #     volumes_list = gmsh.model.getEntities(3)
 
-        if suppressed_volume_ids:
-            volumes_list = [v for v in volumes_list if v[1] not in suppressed_volume_ids]
+    #     if suppressed_volume_ids:
+    #         volumes_list = [v for v in volumes_list if v[1] not in suppressed_volume_ids]
 
-        if len(volumes_list) < 2:
-            return
+    #     if len(volumes_list) < 2:
+    #         return
 
-        gmsh.model.occ.fragment(volumes_list, volumes_list)
-        gmsh.model.occ.synchronize()
+    #     gmsh.model.occ.fragment(volumes_list, volumes_list)
+    #     gmsh.model.occ.synchronize()
 
     def suppress(self, dim_tags):
         gmsh.model.setVisibility(dim_tags, 0, recursive=True)
@@ -936,7 +941,6 @@ class Mesh:
         for id, coords in enumerate(self.nodal_coordinates[:, 1:]):
             points.InsertPoint(id, list(coords))
             vtk_dataset.SetPoints(points)
-        #
         nodes_per_element = len(self.solids_connectivity[0, 4:])
         if nodes_per_element == 4:
             vtk_cell = VTK_TETRA
@@ -973,137 +977,137 @@ class Mesh:
         writer.SetInputData(vtk_dataset)
         writer.Write()
 
-    def _apply_local_mesh_size_control(self, global_size: float, size_control_setups: list[LocalMeshSizeControlSetup]):
-        setup_sizes = [setup.element_size for setup in size_control_setups]
-        max_size = max([global_size, *setup_sizes])
+    # def _apply_local_mesh_size_control(self, global_size: float, size_control_setups: list[LocalMeshSizeControlSetup]):
+    #     setup_sizes = [setup.element_size for setup in size_control_setups]
+    #     max_size = max([global_size, *setup_sizes])
 
-        fields_list = []
+    #     fields_list = []
 
-        for setup in size_control_setups:
-            match setup.entity_type:
-                case "surfaces":
-                    entity_type = "SurfacesList"
-                case "volumes":
-                    entity_type = "VolumesList"
-                case _:
-                    continue
+    #     for setup in size_control_setups:
+    #         match setup.entity_type:
+    #             case "surfaces":
+    #                 entity_type = "SurfacesList"
+    #             case "volumes":
+    #                 entity_type = "VolumesList"
+    #             case _:
+    #                 continue
 
-            # this is the actual size control part
-            setup_size_control_field = gmsh.model.mesh.field.add("Constant")
-            gmsh.model.mesh.field.setNumbers(setup_size_control_field, entity_type, setup.entity_ids)
-            gmsh.model.mesh.field.setNumber(setup_size_control_field, "VIn", setup.element_size)
-            fields_list.append(setup_size_control_field)
+    #         # this is the actual size control part
+    #         setup_size_control_field = gmsh.model.mesh.field.add("Constant")
+    #         gmsh.model.mesh.field.setNumbers(setup_size_control_field, entity_type, setup.entity_ids)
+    #         gmsh.model.mesh.field.setNumber(setup_size_control_field, "VIn", setup.element_size)
+    #         fields_list.append(setup_size_control_field)
 
-        # this is the complementary set of entities size control part
-        if max_size > global_size:
-            # Coarsening: the global size is applied as a refinement of every
-            # region that is not explicitly coarsened.
+    #     # this is the complementary set of entities size control part
+    #     if max_size > global_size:
+    #         # Coarsening: the global size is applied as a refinement of every
+    #         # region that is not explicitly coarsened.
 
-            gmsh.option.setNumber("Mesh.MeshSizeFromPoints", 0)  # Necessary call for the fields to override this setting
+    #         gmsh.option.setNumber("Mesh.MeshSizeFromPoints", 0)  # Necessary call for the fields to override this setting
 
-            all_volumes = {tag for dim, tag in gmsh.model.getEntities(3)}
-            all_faces = {tag for dim, tag in gmsh.model.getEntities(2)}
+    #         all_volumes = {tag for dim, tag in gmsh.model.getEntities(3)}
+    #         all_faces = {tag for dim, tag in gmsh.model.getEntities(2)}
 
-            # Pin (i.e. spefifically defining the global size for NOT coarsened entities) the complement:
-            # every entity that is not to be coarsened is forced to the global size
-            targeted_volumes, targeted_faces = self._get_coarsened_entities(size_control_setups, global_size)
-            coarsened_volumes = targeted_volumes
-            pinned_volumes = all_volumes - coarsened_volumes
+    #         # Pin (i.e. spefifically defining the global size for NOT coarsened entities) the complement:
+    #         # every entity that is not to be coarsened is forced to the global size
+    #         targeted_volumes, targeted_faces = self._get_coarsened_entities(size_control_setups, global_size)
+    #         coarsened_volumes = targeted_volumes
+    #         pinned_volumes = all_volumes - coarsened_volumes
 
-            coarsened_faces = self._get_faces_to_coarsen(
-                targeted_faces, targeted_volumes
-            )  # needed beacause faces of targeted volumes would be pinned otherwise
-            pinned_faces = all_faces - coarsened_faces
+    #         coarsened_faces = self._get_faces_to_coarsen(
+    #             targeted_faces, targeted_volumes
+    #         )  # needed beacause faces of targeted volumes would be pinned otherwise
+    #         pinned_faces = all_faces - coarsened_faces
 
-            pinned_curves, pinned_points = self._get_pinned_boundary_entities(all_faces, pinned_faces, coarsened_faces)
+    #         pinned_curves, pinned_points = self._get_pinned_boundary_entities(all_faces, pinned_faces, coarsened_faces)
 
-            global_size_control_field = gmsh.model.mesh.field.add("Constant")
-            gmsh.model.mesh.field.setNumbers(global_size_control_field, "VolumesList", sorted(pinned_volumes))
-            gmsh.model.mesh.field.setNumbers(global_size_control_field, "SurfacesList", sorted(pinned_faces))
-            gmsh.model.mesh.field.setNumbers(global_size_control_field, "CurvesList", sorted(pinned_curves))
-            gmsh.model.mesh.field.setNumbers(global_size_control_field, "PointsList", sorted(pinned_points))
-            gmsh.model.mesh.field.setNumber(global_size_control_field, "VIn", global_size)
-            gmsh.model.mesh.field.setNumber(global_size_control_field, "VOut", max_size)
-            gmsh.model.mesh.field.setNumber(global_size_control_field, "IncludeBoundary", 0)
-            gmsh.model.mesh.field.setNumber(global_size_control_field, "IncludeEmbedded", 0)
-            fields_list.append(global_size_control_field)
-        else:
-            # Refining only: a constant upper bound, the per-setup fields
-            # refine their targets below it.
-            max_size_control_field = gmsh.model.mesh.field.add("Constant")
-            gmsh.model.mesh.field.setNumbers(max_size_control_field, "SurfacesList", [])
-            gmsh.model.mesh.field.setNumbers(max_size_control_field, "VolumesList", [])
-            gmsh.model.mesh.field.setNumber(max_size_control_field, "VOut", global_size)
-            fields_list.append(max_size_control_field)
+    #         global_size_control_field = gmsh.model.mesh.field.add("Constant")
+    #         gmsh.model.mesh.field.setNumbers(global_size_control_field, "VolumesList", sorted(pinned_volumes))
+    #         gmsh.model.mesh.field.setNumbers(global_size_control_field, "SurfacesList", sorted(pinned_faces))
+    #         gmsh.model.mesh.field.setNumbers(global_size_control_field, "CurvesList", sorted(pinned_curves))
+    #         gmsh.model.mesh.field.setNumbers(global_size_control_field, "PointsList", sorted(pinned_points))
+    #         gmsh.model.mesh.field.setNumber(global_size_control_field, "VIn", global_size)
+    #         gmsh.model.mesh.field.setNumber(global_size_control_field, "VOut", max_size)
+    #         gmsh.model.mesh.field.setNumber(global_size_control_field, "IncludeBoundary", 0)
+    #         gmsh.model.mesh.field.setNumber(global_size_control_field, "IncludeEmbedded", 0)
+    #         fields_list.append(global_size_control_field)
+    #     else:
+    #         # Refining only: a constant upper bound, the per-setup fields
+    #         # refine their targets below it.
+    #         max_size_control_field = gmsh.model.mesh.field.add("Constant")
+    #         gmsh.model.mesh.field.setNumbers(max_size_control_field, "SurfacesList", [])
+    #         gmsh.model.mesh.field.setNumbers(max_size_control_field, "VolumesList", [])
+    #         gmsh.model.mesh.field.setNumber(max_size_control_field, "VOut", global_size)
+    #         fields_list.append(max_size_control_field)
 
-        minimum_field = gmsh.model.mesh.field.add("Min")
-        gmsh.model.mesh.field.setNumbers(minimum_field, "FieldsList", fields_list)
-        gmsh.model.mesh.field.setAsBackgroundMesh(minimum_field)
+    #     minimum_field = gmsh.model.mesh.field.add("Min")
+    #     gmsh.model.mesh.field.setNumbers(minimum_field, "FieldsList", fields_list)
+    #     gmsh.model.mesh.field.setAsBackgroundMesh(minimum_field)
 
-    def _get_coarsened_entities(
-        self,
-        size_control_setups: list[LocalMeshSizeControlSetup],
-        global_size: float,
-    ) -> tuple[set[int], set[int]]:
-        """Returns the volumes and surfaces explicitly targeted by a coarsening setup."""
-        targeted_volumes: set[int] = set()
-        targeted_faces: set[int] = set()
-        for setup in size_control_setups:
-            if setup.element_size <= global_size:
-                continue
-            if setup.entity_type == "volumes":
-                targeted_volumes.update(setup.entity_ids)
-            elif setup.entity_type == "surfaces":
-                targeted_faces.update(setup.entity_ids)
-        return targeted_volumes, targeted_faces
+    # def _get_coarsened_entities(
+    #     self,
+    #     size_control_setups: list[LocalMeshSizeControlSetup],
+    #     global_size: float,
+    # ) -> tuple[set[int], set[int]]:
+    #     """Returns the volumes and surfaces explicitly targeted by a coarsening setup."""
+    #     targeted_volumes: set[int] = set()
+    #     targeted_faces: set[int] = set()
+    #     for setup in size_control_setups:
+    #         if setup.element_size <= global_size:
+    #             continue
+    #         if setup.entity_type == "volumes":
+    #             targeted_volumes.update(setup.entity_ids)
+    #         elif setup.entity_type == "surfaces":
+    #             targeted_faces.update(setup.entity_ids)
+    #     return targeted_volumes, targeted_faces
 
-    def _get_faces_to_coarsen(
-        self,
-        targeted_faces: set[int],
-        targeted_volumes: set[int],
-    ) -> set[int]:
-        """Faces left at the coarsest size.
+    # def _get_faces_to_coarsen(
+    #     self,
+    #     targeted_faces: set[int],
+    #     targeted_volumes: set[int],
+    # ) -> set[int]:
+    #     """Faces left at the coarsest size.
 
-        The explicitly targeted faces and every boundary face of the volumes
-        directly targeted by a coarsening setup stay coarse; every other face
-        is pinned to the global size. A face shared with a volume that is not
-        coarsened is left coarse as well: it is meshed once, and the coarse
-        size carries over to the neighbouring volume, which grades back down to
-        the global size.
-        """
-        faces_to_coarsen = set(targeted_faces)
-        for volume in targeted_volumes:
-            for dim, face in gmsh.model.getBoundary([(3, volume)], recursive=False, oriented=False):
-                faces_to_coarsen.add(face)
-        return faces_to_coarsen
+    #     The explicitly targeted faces and every boundary face of the volumes
+    #     directly targeted by a coarsening setup stay coarse; every other face
+    #     is pinned to the global size. A face shared with a volume that is not
+    #     coarsened is left coarse as well: it is meshed once, and the coarse
+    #     size carries over to the neighbouring volume, which grades back down to
+    #     the global size.
+    #     """
+    #     faces_to_coarsen = set(targeted_faces)
+    #     for volume in targeted_volumes:
+    #         for dim, face in gmsh.model.getBoundary([(3, volume)], recursive=False, oriented=False):
+    #             faces_to_coarsen.add(face)
+    #     return faces_to_coarsen
 
-    def _get_pinned_boundary_entities(
-        self,
-        all_faces: set[int],
-        pinned_faces: set[int],
-        coarsened_faces: set[int],
-    ) -> tuple[set[int], set[int]]:
-        """Curves and points that must be pinned to the global size.
+    # def _get_pinned_boundary_entities(
+    #     self,
+    #     all_faces: set[int],
+    #     pinned_faces: set[int],
+    #     coarsened_faces: set[int],
+    # ) -> tuple[set[int], set[int]]:
+    #     """Curves and points that must be pinned to the global size.
 
-        The boundary of a pinned face must be pinned as well, otherwise it
-        would stay at the coarse size and constrain the finer mesh on the
-        pinned face. A curve shared between a pinned and a coarse face is kept
-        coarse instead, so that the coarse size carries over onto the coarse
-        face through its boundary.
-        """
-        faces_per_curve: dict[int, set[int]] = {}
-        faces_per_point: dict[int, set[int]] = {}
-        for face in all_faces:
-            for dim, tag in gmsh.model.getBoundary([(2, face)], recursive=False, oriented=False):
-                if dim == 1:
-                    faces_per_curve.setdefault(tag, set()).add(face)
-            for dim, tag in gmsh.model.getBoundary([(2, face)], recursive=True, oriented=False):
-                if dim == 0:
-                    faces_per_point.setdefault(tag, set()).add(face)
+    #     The boundary of a pinned face must be pinned as well, otherwise it
+    #     would stay at the coarse size and constrain the finer mesh on the
+    #     pinned face. A curve shared between a pinned and a coarse face is kept
+    #     coarse instead, so that the coarse size carries over onto the coarse
+    #     face through its boundary.
+    #     """
+    #     faces_per_curve: dict[int, set[int]] = {}
+    #     faces_per_point: dict[int, set[int]] = {}
+    #     for face in all_faces:
+    #         for dim, tag in gmsh.model.getBoundary([(2, face)], recursive=False, oriented=False):
+    #             if dim == 1:
+    #                 faces_per_curve.setdefault(tag, set()).add(face)
+    #         for dim, tag in gmsh.model.getBoundary([(2, face)], recursive=True, oriented=False):
+    #             if dim == 0:
+    #                 faces_per_point.setdefault(tag, set()).add(face)
 
-        pinned_curves = {curve for curve, faces in faces_per_curve.items() if (faces & pinned_faces) and not (faces & coarsened_faces)}
-        pinned_points = {point for point, faces in faces_per_point.items() if (faces & pinned_faces) and not (faces & coarsened_faces)}
-        return pinned_curves, pinned_points
+    #     pinned_curves = {curve for curve, faces in faces_per_curve.items() if (faces & pinned_faces) and not (faces & coarsened_faces)}
+    #     pinned_points = {point for point, faces in faces_per_point.items() if (faces & pinned_faces) and not (faces & coarsened_faces)}
+    #     return pinned_curves, pinned_points
 
     def clear_mesh_data(self):
         self.nodal_coordinates = np.zeros((0, 4), dtype=float)
@@ -2520,8 +2524,7 @@ class Mesh:
                 if "indices" in data_1:
                     n_list.append(len(data_1["indices"]))
                     array_nodes = data_1["array_element_nodes"]
-                    if max_cols < array_nodes.shape[1]:
-                        max_cols = array_nodes.shape[1]
+                    max_cols = max(max_cols, array_nodes.shape[1])
 
         n = int(np.sum(n_list))
         output_data = np.zeros((n, max_cols + 4), dtype=int)
@@ -2716,7 +2719,9 @@ class Mesh:
 
         return cross
 
-    def is_element_normal_vector_inverted(self, elem2d_id: int, face_coords: np.ndarray, solid_coords: np.ndarray, plot_element_normals: bool = False):
+    def is_element_normal_vector_inverted(
+        self, elem2d_id: int, face_coords: np.ndarray, solid_coords: np.ndarray, plot_element_normals: bool = False
+    ):
 
         P1 = face_coords[0, :]
         P2 = face_coords[1, :]
@@ -2739,7 +2744,7 @@ class Mesh:
                 e_normal *= -1
 
             surf_id = self.faces_connectivity[elem2d_id, 1]
-            element_normals_data = {int(elem2d_id) : (face_element_center, e_normal)}
+            element_normals_data = {int(elem2d_id): (face_element_center, e_normal)}
             self.set_elements_normals_data(surf_id, element_normals_data)
 
         return np.dot(cross, vector) > 0
@@ -2895,9 +2900,3 @@ class Mesh:
         selected_elements = np.array([*set(_selected_elements)], dtype=int)
 
         return nodes_inside_sphere, list(selected_elements)
-
-    def set_error_data(self, title: str, message: str):
-        self.error_data = {"title": title, "message": message}
-
-    def reset_error_data(self):
-        self.error_data.clear()
