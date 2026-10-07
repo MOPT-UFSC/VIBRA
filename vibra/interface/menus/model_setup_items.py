@@ -201,41 +201,50 @@ class ModelSetupItems(CommonMenuItems):
             if mesh.are_there_volumes_in_geometry():
                 volume_ids = mesh.geometry_information.get("volumes")
                 volume_ids.sort()
-                volumes_without_material = properties.get_entities_without_property("material", volumes=volume_ids)
-                if volumes_without_material:
-                    acoustic_volumes = model.volumes_of_domain.get("acoustic", [])
-                    if volumes_without_material == volume_ids:
+                volumes_with_material, volumes_without_material = properties.get_entities_with_and_without_property("material", volumes=volume_ids)
+
+                if not volumes_with_material:
+                    return False
+
+                if not volumes_without_material:
+                    return True
+                
+                if volumes_without_material == volume_ids:
+                    return False
+
+                acoustic_volumes = model.volumes_of_domain.get("acoustic", [])
+                for vol_id in volumes_without_material:
+                    if vol_id not in acoustic_volumes:
                         return False
-
-                    for vol_id in volumes_without_material:
-                        if vol_id not in acoustic_volumes:
-                            return False
-
-                return True
 
             else:
                 surface_ids = mesh.geometry_information.get("surfaces")
-                surfaces_without_material = properties.get_entities_without_property("material", surfaces=surface_ids)
+                _, surfaces_without_material = properties.get_entities_with_and_without_property("material", surfaces=surface_ids)
                 return not bool(len(surfaces_without_material))
 
         if property_name == "fluid":
             if mesh.are_there_volumes_in_geometry():
                 volume_ids = mesh.geometry_information.get("volumes")
                 volume_ids.sort()
-                volumes_without_fluid = properties.get_entities_without_property("fluid", volumes=volume_ids)
-                if volumes_without_fluid:
-                    structural_volumes = model.volumes_of_domain.get("structural", [])
-                    if volumes_without_fluid == volume_ids:
+                volumes_with_fluid, volumes_without_fluid = properties.get_entities_with_and_without_property("fluid", volumes=volume_ids)
+                if not volumes_with_fluid:
+                    return False
+
+                if not volumes_without_fluid:
+                    return True
+
+                structural_volumes = model.volumes_of_domain.get("structural", [])
+                if volumes_without_fluid == volume_ids:
+                    return False
+
+                for vol_id in volumes_without_fluid:
+                    if vol_id not in structural_volumes:
                         return False
 
-                    for vol_id in volumes_without_fluid:
-                        if vol_id not in structural_volumes:
-                            return False
-
-                return True
-            # else:
+            else:
+                pass
             #     surface_ids = mesh.geometry_information.get("surfaces")
-            #     surfaces_without_fluid = properties.get_entities_without_property("fluid", surfaces=surface_ids)
+            #     _, surfaces_without_fluid = properties.get_entities_with_and_without_property("fluid", surfaces=surface_ids)
             #     return not bool(len(surfaces_without_fluid))
 
         # test for mesh. Not ideal, but it works. Since the mesh config is not part of the properties, the necessary check is performed here

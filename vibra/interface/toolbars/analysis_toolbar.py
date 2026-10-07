@@ -151,8 +151,8 @@ class AnalysisToolbar(QToolBar):
     def update_analysis_combo_boxes(self, block_signals: bool = False):
 
         if block_signals:
-            self.combo_box_analysis_type.blockSignals(block_signals)
-            self.combo_box_physical_domain.blockSignals(block_signals)
+            self.combo_box_analysis_type.blockSignals(True)
+            self.combo_box_physical_domain.blockSignals(True)
 
         analysis_type = app().project.get_analysis_type()
         physical_domain = app().project.get_physical_domain()
@@ -218,10 +218,13 @@ class AnalysisToolbar(QToolBar):
         self.check_analysis_setup_callback()
         self.update_fsi_normals_plot_accessibility()
 
+        is_analysis_modal = new_analysis_id.is_modal()
+        is_domain_coupled = self.combo_box_physical_domain.currentText() == "Coupled"
+
         # hide the coupled item of the physical domains combo box if modal analysis was selected
-        is_modal = new_analysis_id.is_modal()
-        self.combo_box_physical_domain.view().setRowHidden(2, is_modal)
-        if is_modal:
+        self.combo_box_physical_domain.view().setRowHidden(2, is_analysis_modal)
+
+        if is_domain_coupled and is_analysis_modal:
             self.combo_box_physical_domain.setCurrentIndex(0)
 
     def check_analysis_setup_callback(self):
@@ -239,6 +242,7 @@ class AnalysisToolbar(QToolBar):
 
     def run_analysis_callback(self, is_resume: bool = False):
         app().project.mark_solution_as_outdated(reset=True)
+
         if app().config.user_preferences.run_analysis_in_subprocess:
             self.run_analysis_in_subprocess(is_resume)
         else:
@@ -290,8 +294,12 @@ class AnalysisToolbar(QToolBar):
 
         app().project.write_to_working_dir()
 
+        command = SubProcessHandler.get_executable()
+        if app().config.user_preferences.print_solution_log:
+            command += ["--print_log"]
+
         flag = "--continue-analysis" if is_resume else "--run-analysis"
-        command = SubProcessHandler.get_executable(is_freethreaded=True) + [flag, str(app().project.working_directory)]
+        command += [flag, str(app().project.working_directory)]
         subprocess_status = SubProcessHandler(command).run()
 
         if subprocess_status != SubProcessStatus.SUCCESS:

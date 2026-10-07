@@ -1246,7 +1246,7 @@ class Model:
             return None
 
         surface_ids = self.mesh.geometry_information.get("surfaces")
-        surface_without_thickness = self.properties.get_entities_without_property("surface_thickness", surfaces=surface_ids)
+        _, surface_without_thickness = self.properties.get_entities_with_and_without_property("surface_thickness", surfaces=surface_ids)
 
         return surface_without_thickness
 
