@@ -276,7 +276,8 @@ class Project:
         if not isinstance(mesh_setup, MeshSetup):
             raise errors.InvalidMeshSetupError("The mesh setup has not been configured yet.")
 
-        mesh = Mesh().load_cad(self.model.geometry_path, mesh_setup)
+        self.model.fem_mesher.set_mesh_setup(mesh_setup)
+        mesh = self.model.fem_mesher.generate()
 
         if mesh.collapsed_elements_data:
             collapsed_1d_elements: list = mesh.collapsed_elements_data.get("collpased_1d_elements", [])
