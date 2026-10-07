@@ -382,55 +382,33 @@ class Model:
         self.mesh = Mesh(length_unit=self.length_unit, geometry_qf=self.geometry_qf)
 
         try:
-            try:
-                element_size = self.mesh.compute_initial_mesh_size(path)
-                mesh_setup = MeshSetup(
-                    minimum_element_size=element_size * 0.4,
-                    maximum_element_size=element_size,
-                    custom_element_setup=GMSH_VISUAL_MESH,
-                )
-                self.mesh.load_cad(path, mesh_setup)
+            element_size = self.mesh.compute_initial_mesh_size(path)
+            mesh_setup = MeshSetup(
+                minimum_element_size=element_size * 0.4,
+                maximum_element_size=element_size,
+                custom_element_setup=GMSH_VISUAL_MESH,
+            )
+            self.mesh.load_cad(path, mesh_setup)
 
-            except Exception:
-                element_size = 10
-                mesh_setup = MeshSetup(
-                    minimum_element_size=element_size * 0.5,
-                    maximum_element_size=element_size,
-                    custom_element_setup=GMSH_VISUAL_MESH,
-                )
+        except Exception:
+            element_size = 10
+            mesh_setup = MeshSetup(
+                minimum_element_size=element_size * 0.5,
+                maximum_element_size=element_size,
+                custom_element_setup=GMSH_VISUAL_MESH,
+            )
 
-            self.initial_element_size = element_size
+        self.initial_element_size = element_size
 
-        except Exception as error_log:
-            from traceback import print_exception
-            from vibra.interface import error_title
-            from vibra.interface.general.print_message_input import PrintMessageInput
-
-            print_exception(error_log)
-            title = "Error while processing geometry"
-            message = str(error_log)
-            PrintMessageInput([error_title, title, message])
-            return -1
 
     def process_mesh_data(self, path: str):
         self.initialize_mesh()
 
-        try:
-            logging.info("Processing mesh... [15/100]")
+        logging.info("Processing mesh... [15/100]")
 
-            self.mesh.geometry_imported = False
-            self.mesh.load_mesh(path)
+        self.mesh.geometry_imported = False
+        self.mesh.load_mesh(path)
 
-        except Exception as error_log:
-            from traceback import print_exception
-            from vibra.interface import error_title
-            from vibra.interface.general.print_message_input import PrintMessageInput
-
-            print_exception(error_log)
-            title = "Error while processing geometry"
-            message = str(error_log)
-            PrintMessageInput([error_title, title, message])
-            return -1
 
     def process_mesh(self):
         from vibra.errors import IncompleteSetupError
