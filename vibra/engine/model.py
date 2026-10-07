@@ -209,6 +209,11 @@ class Model:
         except Exception:
             return False
 
+    def get_mesh(self) -> Mesh | None:
+        if self.mesh is not None:
+            return self.mesh
+        return self.visual_mesh
+
     def get_mapped_nodes(self, node_ids: list[int] | np.ndarray, domain: str) -> np.ndarray:
         """
         This method returns the mapped nodes indices according to the domain.

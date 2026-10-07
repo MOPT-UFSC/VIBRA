@@ -600,7 +600,8 @@ class MainWindow(MainWindow_UI):
         self.selection.clear_selection()
 
     def has_hidden_part(self) -> bool:
-        mesh = app().project.model.mesh
+        mesh = app().project.model.get_mesh()
+
         assert mesh is not None
         return any(
             [

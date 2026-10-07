@@ -314,7 +314,7 @@ class Project:
             raise errors.InvalidMeshSetupError("The geometry has not been loaded yet.")
 
         mesh, mesh_setup = self.model.fem_mesher.generate_visual_mesh()
-        self.model.mesh = mesh
+        self.model.visual_mesh = mesh
         self.model.initial_element_size = mesh_setup.maximum_element_size
         self.project_writer.write_mesh(mesh)
         return mesh

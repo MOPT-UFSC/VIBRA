@@ -158,7 +158,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         scale_bar_label_property.SetFontSize(font_size_px)
 
     def update_plot(self, reset_camera=True):
-        mesh = app().project.model.mesh
+        mesh = app().project.model.visual_mesh
         if mesh is None:
             return
 
@@ -263,7 +263,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         if model is None:
             return
 
-        mesh = model.mesh
+        mesh = model.visual_mesh
         if mesh is None:
             return
 

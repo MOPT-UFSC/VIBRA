@@ -34,7 +34,7 @@ class GeometrySelection:
         surface_ids, surface_distance = self._pick_surface(x, y)
 
         volume_ids = set()
-        mesh = app().project.model.mesh
+        mesh = app().project.model.get_mesh()
         for surface in surface_ids:
             surface_volumes = mesh.volumes_from_surface.get(surface, [])
             volume_ids.update(surface_volumes)

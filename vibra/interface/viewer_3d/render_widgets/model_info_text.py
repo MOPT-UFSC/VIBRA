@@ -20,7 +20,7 @@ from vibra.utils.utils import are_there_values_different_from_zero
 # GEOMETRY RENDER WIDGET INFO TEXTS
 def points_info_text():
 
-    mesh = app().project.model.mesh
+    mesh = app().project.model.get_mesh()
 
     selected_points = app().main_window.selection.geometry_points
     node_ids = [mesh.nodes_from_points.get(point_id) for point_id in selected_points]
@@ -56,7 +56,7 @@ def points_info_text():
             sequence = sequence[:20 - 4] + " ..."
 
         text += f"{len(point_ids)} POINTS IN SELECTION: {sequence}\n\n"
-    
+
     return text
 
 
@@ -65,8 +65,8 @@ def lines_info_text():
 
     if len(line_ids) == 0:
         return ""
-    
-    length_from_lines = app().project.model.mesh.length_from_lines
+
+    length_from_lines = app().project.model.get_mesh().length_from_lines
 
     text = ""
     length = 0
@@ -94,13 +94,13 @@ def faces_info_text():
 
     if len(volumes) != 0:
         return ""
-    
+
     surface_ids = list(app().main_window.selection.geometry_surfaces)
 
     if len(surface_ids) == 0:
         return ""
 
-    area_from_surfaces = app().project.model.mesh.area_from_surfaces
+    area_from_surfaces = app().project.model.get_mesh().area_from_surfaces
 
     text = ""
     area = 0
@@ -116,7 +116,7 @@ def faces_info_text():
             tree.add_item("Thickness", surface_data["surface_thickness"], "m")
             tree.add_item("Offset", surface_data["thickness_offset"])
 
-        diameter = app().project.model.mesh.cylindrical_surfaces_data.get(surface_ids[0])
+        diameter = app().project.model.get_mesh().cylindrical_surfaces_data.get(surface_ids[0])
         if isinstance(diameter, float):
             tree.add_item("Diameter", f"{diameter : .6e}", "m")
 
@@ -168,7 +168,7 @@ def process_volumes_and_masses(volume_ids: list):
     material_mass = 0.
     volume_compound = 0.
 
-    volume_from_bodies = app().project.model.mesh.volume_from_bodies
+    volume_from_bodies = app().project.model.get_mesh().volume_from_bodies
 
     for volume_id in volume_ids:
         volume = volume_from_bodies.get(volume_id, 0)
@@ -183,7 +183,7 @@ def process_volumes_and_masses(volume_ids: list):
         if isinstance(material, Material):
             material_density = material.material_density
             material_mass += volume * material_density
-    
+
     return volume_compound, fluid_mass, material_mass
 
 
@@ -366,7 +366,7 @@ def acoustic_boundary_conditions_info_text():
 
     if len(selected_faces) != 1:
         return text
-    
+
     surface_id = selected_faces[0]
     properties = app().project.model.properties
 
@@ -485,7 +485,7 @@ def get_reciprocating_compressor_text(rc_data: dict):
         elif isinstance(value, str):
             acting_label = value
             break
-    
+
     acting_label = acting_label.replace("_", " ")
     pressure_unit = rc_parameters.get("pressure_unit", "")
     temperature_unit = rc_parameters.get("temperature_unit", "")
@@ -529,7 +529,7 @@ def get_reciprocating_compressor_text(rc_data: dict):
     suction_pressure = ""
     for key in ["suction_pressure", "pressure_at_suction"]:
         suction_pressure = rc_parameters.get(key)
-    
+
     suction_temperature = ""
     for key in ["suction_temperature", "temperature_at_suction"]:
         suction_temperature = rc_parameters.get(key)
@@ -670,7 +670,7 @@ def structural_boundary_conditions_info_text():
         dtypes = (prefix_dtype, f"{prefixes_dtype}r")
 
         unit_suffixes = ["", "/s", "/s²"]
-        suffix_unit = unit_suffixes[n_int]        
+        suffix_unit = unit_suffixes[n_int]
         units = (f"m{suffix_unit}", f"rad{suffix_unit}")
 
         text += structural_format(property_label, values, dtypes, units, loaded_table)
@@ -765,15 +765,15 @@ def nodes_info_text():
         return ""
 
     elif len(node_ids) == 1:
-        coords = app().project.model.mesh.nodal_coordinates[node_ids[0], 1:].round(6)
+        coords = app().project.model.get_mesh().nodal_coordinates[node_ids[0], 1:].round(6)
 
         tree = TreeInfo(f"NODE {node_ids[0]}")
         tree.add_item("Position", "({:.6f}, {:.6f}, {:.6f})".format(*coords), "m")
         text += str(tree)
 
     elif len(node_ids) == 2:
-        coord_A = app().project.model.mesh.nodal_coordinates[node_ids[0], 1:]
-        coord_B = app().project.model.mesh.nodal_coordinates[node_ids[1], 1:]
+        coord_A = app().project.model.get_mesh().nodal_coordinates[node_ids[0], 1:]
+        coord_B = app().project.model.get_mesh().nodal_coordinates[node_ids[1], 1:]
         dx, dy, dz = np.round(np.abs(coord_A - coord_B), 6)
         distance = np.linalg.norm(coord_A - coord_B)
 
@@ -813,7 +813,7 @@ def mesh_solids_info_text():
 
     elif len(solids_elem_ids) == 1:
         element_id = solids_elem_ids[0]
-        connect = app().project.model.mesh.solids_connectivity[element_id, 4:]
+        connect = app().project.model.get_mesh().solids_connectivity[element_id, 4:]
 
         tree = TreeInfo(f"SOLID ELEMENT {element_id}")
         tree.add_item("Connectivity", f"{connect}")
@@ -830,7 +830,7 @@ def mesh_material_info_text():
         elements = list(app().main_window.selection.mesh_solids)
 
     if len(elements) == 1:
-        current_solid = app().project.model.mesh.get_volume_from_element(elements[0])
+        current_solid = app().project.model.get_mesh().get_volume_from_element(elements[0])
         material = app().project.model.properties._get_property("material", volume=current_solid)
         if not isinstance(material, Material):
             return text
@@ -858,7 +858,7 @@ def mesh_fluid_info_text():
         elements = list(app().main_window.selection.mesh_solids)
 
     if len(elements) == 1:
-        current_solid = app().project.model.mesh.get_volume_from_element(elements[0])
+        current_solid = app().project.model.get_mesh().get_volume_from_element(elements[0])
         fluid = app().project.model.properties._get_property("fluid", volume=current_solid)
         if not isinstance(fluid, Fluid):
             return text
@@ -910,7 +910,7 @@ def mesh_structural_boundary_conditions_info_text():
         dtypes = (prefix_dtype, f"{prefixes_dtype}r")
 
         unit_suffixes = ["", "/s", "/s²"]
-        suffix_unit = unit_suffixes[n_int]        
+        suffix_unit = unit_suffixes[n_int]
         units = (f"m{suffix_unit}", f"rad{suffix_unit}")
 
         text += structural_format(property_label, values, dtypes, units, loaded_table)
@@ -970,7 +970,7 @@ def mesh_structural_format(property_name, values, labels, units, has_table):
 
 def problematic_nodes_info_text(self):
     ...
-    
+
 # RESULTS RENDER WIDGET INFO TEXTS
 
 def analysis_info_text(plot_setup: PlotSetup):
@@ -1131,5 +1131,3 @@ def structural_format(property_name, values, labels, units, has_table):
 
 def all_none(sequence) -> bool:
     return all(i is None for i in sequence)
-
-

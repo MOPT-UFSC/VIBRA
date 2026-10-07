@@ -72,7 +72,6 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         self.clear_colors()
 
     def clear_colors(self):
-        mesh = app().project.model.mesh
         properties = app().project.model.properties
         color_mode = self.visualization_filter.color_mode
 
@@ -83,10 +82,10 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         color_to_surfaces = defaultdict(list)
         self.reload_composition()
         surfaces_with_perforated_plates = self._surfaces_with_perforated_plate()
-        surfaces = mesh.lines_from_surface.keys()  # We don't have just "surfaces" yet
+        surfaces = self.mesh.all_surface_ids()  # We don't have just "surfaces" yet
 
         for surface in surfaces:
-            volumes = mesh.volumes_from_surface.get(surface, ())
+            volumes = self.mesh.volumes_from_surface.get(surface, ())
             volume = get_first_visible_volume(volumes)
 
             fluid = properties._get_property("fluid", surface=surface, volume=volume)
@@ -114,10 +113,9 @@ class MultimaterialGeometryActor(vtkPropAssembly):
             self.paint_surfaces(color, surfaces)
 
     def reload_composition(self):
-        mesh = app().project.model.mesh
         properties = app().project.model.properties
         color_mode = self.visualization_filter.color_mode
-        surfaces = mesh.lines_from_surface.keys()  # We don't have just "surfaces" yet
+        surfaces = self.mesh.lines_from_surface.keys()  # We don't have just "surfaces" yet
         visible_surfaces = app().main_window.entity_visibility.get_visible_surfaces()
 
         if color_mode == GeometryColorMode.EMPTY:
@@ -129,9 +127,10 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         self.default_actor.VisibilityOff()
         composition_to_surfaces = defaultdict(list)
         surfaces_with_perforated_plates = self._surfaces_with_perforated_plate()
+        print(visible_surfaces)
 
         for surface in surfaces:
-            volumes = mesh.volumes_from_surface.get(surface, ())
+            volumes = self.mesh.volumes_from_surface.get(surface, ())
             volume = get_first_visible_volume(volumes)
 
             if surface in visible_surfaces:
@@ -256,7 +255,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
             add_tcoords = vtkTextureMapToPlane()
             add_tcoords.AutomaticPlaneGenerationOff()
 
-            # This should have been calculated by the mesher
+            # This should have been calculated by the self.mesher
             # or even better: by a geometry class
             surface_normals = self.mesh.normals_surface.get(surface)
             if surface_normals is None:
@@ -421,11 +420,10 @@ class MultimaterialGeometryActor(vtkPropAssembly):
 
     def _surfaces_with_perforated_plate(self):
         # Find both surfaces of a perforated plate
-        mesh = app().project.model.mesh
         properties = app().project.model.properties
 
         surfaces_with_perforated_plates = set()
-        for surface, _ in mesh.volumes_from_surface.items():
+        for surface, _ in self.mesh.volumes_from_surface.items():
             perforated = properties._get_property("perforated_plate_model", surface=surface)
             decoupling = properties._get_property("degrees_of_freedom_decoupling", surface=surface)
             if (perforated is not None) and (decoupling is not None):
