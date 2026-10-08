@@ -88,7 +88,6 @@ class Mesh:
         self.solid_to_face_elements = defaultdict(list)
 
         self.face_element_thickness = {}
-        self.surface_from_solid_element = defaultdict(list)
 
         self.external_nodes_from_lines = {}
         self.external_nodes_from_surfaces = {}
