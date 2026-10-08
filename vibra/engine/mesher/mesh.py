@@ -668,23 +668,6 @@ class Mesh:
 
         self.geometry_information["points"] = list(self.nodes_from_points.keys())
 
-    def import_nodes_coordinates(self, filename):
-        header = "Node index || Coordinate x [m] || Coordinate y [m] || Coordinate z [m]"
-        return np.loadtxt(
-            filename,
-            delimiter=";",
-            header=header,
-            fmt=["%i", "%.16f", "%.16f", "%.16f"],
-        )
-
-    def import_faces_connectivity(self, filename):
-        header = "Index || Element ID || Face ID || Element type ID || Connected Node IDs"
-        return np.loadtxt(filename, delimiter=";", header=header, fmt="%i")
-
-    def import_solids_connectivity(self, filename):
-        header = "Index || Solid ID || Element type ID || Element ID || Connected Node IDs"
-        return np.loadtxt(filename, delimiter=";", header=header, fmt="%i")
-
     def import_external_nodal_coordinates(self, data, index_zero=True):
         """ """
         if isinstance(data, list):
