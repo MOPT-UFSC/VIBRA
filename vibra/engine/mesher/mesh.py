@@ -1187,16 +1187,6 @@ class Mesh:
             rows = self.faces_connectivity[:, 1] == surface_id
             return self.faces_connectivity[rows, 4:]
 
-    def get_connectivity_from_volume(self, volume_id: int, from_cache: bool = False) -> np.ndarray:
-
-        if from_cache:
-            rows = self.cache_solids_connectivity[:, 1] == volume_id
-            return self.cache_solids_connectivity[rows, 4:]
-
-        else:
-            rows = self.solids_connectivity[:, 1] == volume_id
-            return self.solids_connectivity[rows, 4:]
-
     def get_surfaces_from_node(self, node_id: int):
 
         mask = np.sum(np.isin(self.faces_connectivity[:, 4:], node_id), axis=1) == 1
@@ -1389,13 +1379,6 @@ class Mesh:
             volume_id = int(self.solids_connectivity[row, 1])
 
         return volume_id
-
-    def get_elements_from_lines(self, line_ids: list[int]):
-        element_ids = []
-        for line_id in line_ids:
-            rows = np.where(self.lines_connectivity[:, 1] == line_id)[0]
-            element_ids.extend(self.lines_connectivity[rows, 0])
-        return element_ids
 
     def process_face_elements_connected_to_nodes(self, selected_ids: int | list):
 
