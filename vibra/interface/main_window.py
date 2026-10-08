@@ -511,7 +511,6 @@ class MainWindow(MainWindow_UI):
         self.action_results_workspace.setChecked(False)
 
         self.view_toolbar.enable_selection_tool()
-        print("UEPA", app().project.model.is_the_mesh_setup_defined())
 
         if app().project.model.is_the_mesh_setup_defined():
             obj = MesherSetupInputs(close_after_generate=True)
