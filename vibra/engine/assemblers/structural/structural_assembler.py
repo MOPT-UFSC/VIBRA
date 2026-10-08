@@ -3,6 +3,7 @@ import sys
 from collections import defaultdict
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
+from multiprocessing import cpu_count
 from time import time
 
 import numpy as np
@@ -500,9 +501,6 @@ class StructuralAssembler:
         self.data_K = np.zeros((self.number_3d_elements, self.dof, self.dof), dtype=complex)
         self.data_M = np.zeros((self.number_3d_elements, self.dof, self.dof), dtype=complex)
 
-        # initialize variable
-        last_progress = 0
-
         # with tqdm(
         #     self.model.mesh.solids_connectivity,
         #     desc="Processing the elementary matrices data for solid elements",
@@ -513,7 +511,7 @@ class StructuralAssembler:
 
         # loop for 3d elements
         element_ids = self.model.domains_processor.elements_of_domain.get("structural", [])
-        num_workers = 10
+        num_workers = cpu_count()
         
         if not len(element_ids):
             return
