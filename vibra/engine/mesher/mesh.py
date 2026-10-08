@@ -30,8 +30,6 @@ class Mesh:
     def __init__(self, **kwargs):
         self.length_unit = kwargs.get("length_unit", "millimeter")
         self.geometry_qf = kwargs.get("geometry_qf", 1.0)
-
-        self.geometry_setup = None
         self.geometry_imported = True
         self.reset_variables()
 
@@ -57,7 +55,6 @@ class Mesh:
         self.volume_from_bodies = {}
 
         ## mesh-related attributes
-
         self.nodal_coordinates = np.zeros((0, 4), dtype=float)
         self.nodes_from_volumes = np.zeros((0, 4), dtype=float)
         self.nodes_from_surfaces = np.zeros((0, 4), dtype=float)
@@ -68,7 +65,6 @@ class Mesh:
         self.solids_connectivity = np.zeros((0, 4), dtype=int)
 
         self.geometry_information = defaultdict(list)
-
         self.quality_bins = {
             "gamma": (0.7, 0.15),
             "volume": (1e-3, 0),
@@ -87,10 +83,6 @@ class Mesh:
 
         self.nodes_from_points = {}
         self.points_from_nodes = {}
-
-        self.map_solid_elements = {}
-        self.map_face_elements = {}
-        self.map_line_elements = {}
 
         self.elements_from_line = {}
         self.elements_from_surface = {}
@@ -120,8 +112,6 @@ class Mesh:
 
         self.nodal_area = defaultdict(list)
 
-        self.nodes_collapsed_elements = []
-
         self.cache_nodal_coordinates = None
         self.cache_lines_connectivity = None
         self.cache_faces_connectivity = None
@@ -130,8 +120,6 @@ class Mesh:
         self.cache_surfaces_from_volume = {}
         self.cache_lines_from_surface = {}
         self.cache_points_from_line = {}
-
-        self.error_data = {}
 
     def has_decoupling(self) -> bool:
         return all(
@@ -1008,11 +996,6 @@ class Mesh:
 
         self.nodes_from_points.clear()
         self.points_from_nodes.clear()
-
-        self.map_solid_elements.clear()
-        self.map_face_elements.clear()
-        self.map_line_elements.clear()
-
         self.mesh_quality_data.clear()
 
         self.solid_elements_center.clear()
@@ -1241,9 +1224,9 @@ class Mesh:
         logging.info("Post-processing mesh... [65/100]")
         self.process_cylindrical_surfaces()
 
-        self.lines_connectivity, self.map_line_elements = self._get_connectivity_array(connectivity_dim1)
-        self.faces_connectivity, self.map_face_elements = self._get_connectivity_array(connectivity_dim2)
-        self.solids_connectivity, self.map_solid_elements = self._get_connectivity_array(connectivity_dim3)
+        self.lines_connectivity, _ = self._get_connectivity_array(connectivity_dim1)
+        self.faces_connectivity, _ = self._get_connectivity_array(connectivity_dim2)
+        self.solids_connectivity, _ = self._get_connectivity_array(connectivity_dim3)
 
         if self.suppressed_volumes:
             self.remove_disconnected_nodes()
