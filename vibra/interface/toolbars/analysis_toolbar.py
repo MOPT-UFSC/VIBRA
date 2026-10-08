@@ -294,7 +294,7 @@ class AnalysisToolbar(QToolBar):
 
         app().project.write_to_working_dir()
 
-        command = SubProcessHandler.get_executable()
+        command = SubProcessHandler.get_executable(True)
         if app().config.user_preferences.print_solution_log:
             command += ["--print_log"]
 
