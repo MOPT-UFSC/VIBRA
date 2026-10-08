@@ -278,124 +278,6 @@ class Mesh:
         }
         self.points_from_nodes = {node_id: tag for tag, node_id in self.nodes_from_points.items()}
 
-    # def load_cad(self, path: str | Path, mesh_setup: MeshSetup, threads: int = 0) -> Self:
-    #     if not gmsh.is_initialized():
-    #         gmsh.initialize("", False, interruptible=False)
-    #         gmsh.option.set_number("General.Terminal", 0)
-    #         gmsh.option.set_number("General.Verbosity", 0)
-    #         gmsh.option.set_number("Geometry.Tolerance", mesh_setup.geometry_tolerance)
-
-    #         gmsh.option.set_number("General.NumThreads", threads)
-    #         gmsh.option.set_number("Mesh.MaxNumThreads1D", threads)
-    #         gmsh.option.set_number("Mesh.MaxNumThreads2D", threads)
-    #         gmsh.option.set_number("Mesh.MaxNumThreads3D", threads)
-
-    #         logging.info("Loading geometry... [10/100]")
-    #         gmsh.open(str(path))
-
-    #     if mesh_setup.suppressed_volume_ids:
-    #         dim_tags = [(3, vid) for vid in mesh_setup.suppressed_volume_ids]
-    #         self.suppress(dim_tags)
-
-    #     if mesh_setup.merge_connected_volumes:
-    #         self._merge_nodes_from_adjacent_volumes(mesh_setup.suppressed_volume_ids)
-
-    #     logging.info("Configuring mesh... [20/100]")
-    #     self._configure_mesh(mesh_setup)
-
-    #     logging.info("Processing geometry data... [25/100]")
-
-    #     logging.info("Processing geometry data... [30/100]")
-    #     self.process_geometry_information()
-
-    #     logging.info("Processing geometry data... [35/100]")
-    #     self.process_downwards_adjacencies_from_entities()
-    #     self.process_upwards_adjacencies_from_entities()
-
-    #     try:
-    #         dimension = mesh_setup.element_setup.dimensions
-    #         gmsh.model.mesh.generate(dimension)
-    #     except Exception as e:
-    #         gmsh.finalize()
-
-    #         exception = MeshingAlgorithmError(
-    #             "A problem occurred while generating the mesh.\n"
-    #             "Reducing the size of the elements and/or changing the 3D meshing "
-    #             "algorithm may help resolve the issue.\n"
-    #             "If neither of these options works, we suggest reviewing the CAD geometry "
-    #             "to eliminate any potential underlying geometric issues."
-    #         )
-    #         logging.error(str(exception))
-    #         raise exception from e
-
-    #     logging.info("Post-processing mesh... [60/100]")
-    #     self.suppressed_volumes = set(mesh_setup.suppressed_volume_ids)
-    #     self.post_process_mesh_data()
-
-    #     self.update_element_topology_based_on_connectivity()
-
-    #     logging.info("Post-processing mesh... [95/100]")
-    #     if mesh_setup.compute_quality_metrics:
-    #         self.compute_mesh_quality_parameters()
-
-    #     gmsh.finalize()
-
-    #     logging.info(
-    #         f"Mesh generated with {len(self.nodal_coordinates)} nodes"
-    #         f", {len(self.lines_connectivity)} dim 1"
-    #         f", {len(self.faces_connectivity)} dim 2"
-    #         f"and {len(self.solids_connectivity)} dim 3 elements"
-    #     )
-
-    #     return self
-
-    # def _configure_mesh(self, mesh_setup: MeshSetup):
-    #     if mesh_setup.local_mesh_size_control_parameters:
-    #         self._apply_local_mesh_size_control(
-    #             mesh_setup.maximum_element_size,
-    #             mesh_setup.local_mesh_size_control_parameters,
-    #         )
-    #     else:
-    #         gmsh.option.setNumber("Mesh.MeshSizeMin", mesh_setup.minimum_element_size)
-    #         gmsh.option.setNumber("Mesh.MeshSizeMax", mesh_setup.maximum_element_size)
-
-    #     gmsh.option.setNumber("Mesh.RandomSeed", mesh_setup.random_seed)
-    #     gmsh.option.setNumber("Mesh.MeshSizeFactor", mesh_setup.size_factor)
-    #     gmsh.option.setNumber("Mesh.Algorithm", mesh_setup.element_setup.algorithm_2d)
-    #     gmsh.option.setNumber("Mesh.Algorithm3D", mesh_setup.element_setup.algorithm_3d)
-    #     gmsh.option.setNumber("Mesh.RecombinationAlgorithm", mesh_setup.element_setup.recombination_algorithm)
-    #     gmsh.option.setNumber("Mesh.SubdivisionAlgorithm", mesh_setup.element_setup.subdivision_algorithm)
-    #     gmsh.option.setNumber("Mesh.RecombineAll", mesh_setup.element_setup.recombine_all)
-    #     gmsh.option.setNumber("Mesh.ElementOrder", mesh_setup.element_setup.element_order)
-    #     gmsh.option.setNumber("Mesh.SecondOrderIncomplete", mesh_setup.element_setup.second_order_incomplete)
-    #     gmsh.option.setNumber("Mesh.MeshOnlyVisible", 1)
-
-    #     gmsh.model.mesh.clear()
-    #     gmsh.model.occ.synchronize()
-
-    # def _merge_nodes_from_adjacent_volumes(self, suppressed_volume_ids: list[int] | None = None):
-    #     """This method merges all nodes from adjacent volumes."""
-    #     gmsh.model.occ.synchronize()
-    #     volumes_list = gmsh.model.getEntities(3)
-
-    #     if suppressed_volume_ids:
-    #         volumes_list = [v for v in volumes_list if v[1] not in suppressed_volume_ids]
-
-    #     if len(volumes_list) < 2:
-    #         return
-
-    #     gmsh.model.occ.fragment(volumes_list, volumes_list)
-    #     gmsh.model.occ.synchronize()
-
-    def suppress(self, dim_tags):
-        gmsh.model.setVisibility(dim_tags, 0, recursive=True)
-
-    def unsuppress(self, dim_tags):
-        gmsh.model.setVisibility(dim_tags, 1, recursive=True)
-
-    def is_suppressed(self, dim, tag):
-        return gmsh.model.getVisibility(dim, tag) == 0
-
     def load_mesh(self, path: Path | str, **kwargs):
         geometry_tolerance = kwargs.get("geometry_tolerance", 1e-8)
         threads = kwargs.get("threads", 0)
@@ -1554,10 +1436,14 @@ class Mesh:
         return volumes_from_surfaces
 
     def restore_data_from_cache(self):
-        self.nodal_coordinates = deepcopy(self.cache_nodal_coordinates)
-        self.lines_connectivity = deepcopy(self.cache_lines_connectivity)
-        self.faces_connectivity = deepcopy(self.cache_faces_connectivity)
-        self.solids_connectivity = deepcopy(self.cache_solids_connectivity)
+        if self.cache_nodal_coordinates is not None:
+            self.nodal_coordinates = self.cache_nodal_coordinates.copy()
+        if self.cache_lines_connectivity is not None:
+            self.lines_connectivity = self.cache_lines_connectivity.copy()
+        if self.cache_faces_connectivity is not None:
+            self.faces_connectivity = self.cache_faces_connectivity.copy()
+        if self.cache_solids_connectivity is not None:
+            self.solids_connectivity = self.cache_solids_connectivity.copy()
 
         self.surfaces_from_volume = deepcopy(self.cache_surfaces_from_volume)
         self.lines_from_surface = deepcopy(self.cache_lines_from_surface)
@@ -1610,20 +1496,6 @@ class Mesh:
 
         self.points_from_nodes.clear()
         self.points_from_nodes = {v: k for k, v in self.nodes_from_points.items()}
-
-    def process_solid_elements_from_surfaces(self):
-        self.surface_from_solid_element.clear()
-        for surface_id in self.geometry_information.get("surfaces"):
-            surface_nodes = self.get_nodes_from_surface(surface_id)
-            if surface_nodes is None:
-                continue
-
-            mask = np.sum(np.isin(self.solids_connectivity[:, 4:], surface_nodes), axis=1) >= 1
-            if not mask.any():
-                continue
-
-            for el_index in self.solids_connectivity[mask, 0]:
-                self.surface_from_solid_element[el_index].append(surface_id)
 
     def process_mesh_related_mappings(self, label: str = "Loading"):
 
@@ -1717,6 +1589,7 @@ class Mesh:
         return np.unique(self.solids_connectivity[rows, 4:]).astype(int)
 
     def map_face_elements_to_solid_elements_reference(self):
+        # TODO: Remove
         self.face_to_solid_element = {}
         self.solid_to_face_elements = defaultdict(list)
 
@@ -2006,10 +1879,8 @@ class Mesh:
 
         return solid_elements_connected_to_nodes
 
-    def get_global_dofs(self, node_ids: list[int] | np.ndarray, dofs_per_node: int):
-        pass
-
     def get_surface_nodal_normals_reference(self, surface_id: int) -> dict:
+        # TODO: Remove
         """
         This method processes the average normals in the surface nodes considering the element faces
         normals connected to same node.
@@ -2399,25 +2270,6 @@ class Mesh:
         finally:
             pass
 
-    def compute_bounding_box_sizes(self, geo_entities):
-        xmin = ymin = zmin = xmax = ymax = zmax = 0
-        volume = 0
-        for dim, tag in geo_entities:
-            # This mass is considering a density of 1, so it is equal the solid volume
-            volume += gmsh.model.occ.getMass(dim, tag)
-            xmin2, ymin2, zmin2, xmax2, ymax2, zmax2 = gmsh.model.getBoundingBox(dim, tag)
-            xmin = min(xmin, xmin2)
-            ymin = min(ymin, ymin2)
-            zmin = min(zmin, zmin2)
-
-            xmax = max(xmax, xmax2)
-            ymax = max(ymax, ymax2)
-            zmax = max(zmax, zmax2)
-
-        bb_sides = sorted([(xmax - xmin), (ymax - ymin), (zmax - zmin)], reverse=True)
-
-        return bb_sides, volume
-
     def process_geometry_information(self):
         self.clear_geometry_data()
 
@@ -2556,25 +2408,6 @@ class Mesh:
         map_elements = dict(zip(gmsh_elements, internal_indices))
 
         return output_data, map_elements
-
-    def get_array_based_elements_mapping(self, entity: str = "lines"):
-        """ """
-        if entity == "lines":
-            keys = list(self.map_line_elements.keys())
-            values = list(self.map_line_elements.values())
-
-        elif entity == "faces":
-            keys = list(self.map_face_elements.keys())
-            values = list(self.map_face_elements.values())
-
-        elif entity == "solids":
-            keys = list(self.map_solid_elements.keys())
-            values = list(self.map_solid_elements.values())
-
-        else:
-            return None
-
-        return np.array([keys, values], dtype=int).T
 
     def process_element_average_coordinates(self, element_ids: list[int]) -> dict:
         """
@@ -2761,17 +2594,6 @@ class Mesh:
     def set_elements_normals_data(self, surface_id: int, normals_data: dict):
         for element_id, (element_center, e_normal) in normals_data.items():
             self.element_normals_data[surface_id, element_id] = (e_normal, element_center)
-
-    def get_principal_diagonal_structure_parallelepiped(self):
-        """
-        This method updates the principal structure diagonal parallelepiped attribute.
-
-        """
-        nodal_coordinates = self.nodal_coordinates.copy()
-        x_min, y_min, z_min = np.min(nodal_coordinates[:, 1:], axis=0)
-        x_max, y_max, z_max = np.max(nodal_coordinates[:, 1:], axis=0)
-        principal_diagonal = np.sqrt((x_max - x_min) ** 2 + (y_max - y_min) ** 2 + (z_max - z_min) ** 2)
-        return principal_diagonal
 
     def get_nearest_node_from_coordinate(self, point_coords: np.ndarray):
         """
