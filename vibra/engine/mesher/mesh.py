@@ -56,10 +56,6 @@ class Mesh:
 
         ## mesh-related attributes
         self.nodal_coordinates = np.zeros((0, 4), dtype=float)
-        self.nodes_from_volumes = np.zeros((0, 4), dtype=float)
-        self.nodes_from_surfaces = np.zeros((0, 4), dtype=float)
-        self.nodes_from_lines = np.zeros((0, 4), dtype=float)
-
         self.lines_connectivity = np.zeros((0, 4), dtype=int)
         self.faces_connectivity = np.zeros((0, 4), dtype=int)
         self.solids_connectivity = np.zeros((0, 4), dtype=int)
@@ -229,31 +225,6 @@ class Mesh:
         self.lines_connectivity[:, 4:] -= np.searchsorted(
             disconnected_nodes,
             self.lines_connectivity[:, 4:],
-            side="right",
-        )
-
-        # Filter out the removed nodes and shift left the remaining ones
-        mask_valid_nodes = ~np.isin(self.nodes_from_volumes, disconnected_nodes)
-        self.nodes_from_volumes = self.nodes_from_volumes[mask_valid_nodes].astype(int)
-        self.nodes_from_volumes -= np.searchsorted(
-            disconnected_nodes,
-            self.nodes_from_volumes,
-            side="right",
-        )
-
-        mask_valid_nodes = ~np.isin(self.nodes_from_surfaces, disconnected_nodes)
-        self.nodes_from_surfaces = self.nodes_from_surfaces[mask_valid_nodes].astype(int)
-        self.nodes_from_surfaces -= np.searchsorted(
-            disconnected_nodes,
-            self.nodes_from_surfaces,
-            side="right",
-        )
-
-        mask_valid_nodes = ~np.isin(self.nodes_from_lines, disconnected_nodes)
-        self.nodes_from_lines = self.nodes_from_lines[mask_valid_nodes].astype(int)
-        self.nodes_from_lines -= np.searchsorted(
-            disconnected_nodes,
-            self.nodes_from_lines,
             side="right",
         )
 
@@ -818,10 +789,6 @@ class Mesh:
 
     def clear_mesh_data(self):
         self.nodal_coordinates = np.zeros((0, 4), dtype=float)
-        self.nodes_from_volumes = np.zeros((0, 4), dtype=float)
-        self.nodes_from_surfaces = np.zeros((0, 4), dtype=float)
-        self.nodes_from_lines = np.zeros((0, 4), dtype=float)
-
         self.lines_connectivity = np.zeros((0, 4), dtype=int)
         self.faces_connectivity = np.zeros((0, 4), dtype=int)
         self.solids_connectivity = np.zeros((0, 4), dtype=int)
@@ -989,19 +956,6 @@ class Mesh:
         self.nodal_coordinates = np.zeros((total_nodes, 4))
         self.nodal_coordinates[indices - 1, 1:] = coords.reshape(-1, 3) * unit_length_factor
         self.nodal_coordinates[indices - 1, :1] = indices.reshape(-1, 1) - 1
-
-        nodes_from_volumes = gmsh.model.mesh.getNodes(dim=3, includeBoundary=True)[0]
-        nodes_from_surfaces = gmsh.model.mesh.getNodes(dim=2, includeBoundary=True)[0]
-        nodes_from_lines = gmsh.model.mesh.getNodes(dim=1, includeBoundary=True)[0]
-
-        if isinstance(nodes_from_volumes, np.ndarray):
-            self.nodes_from_volumes = np.unique(nodes_from_volumes) - 1
-
-        if isinstance(nodes_from_surfaces, np.ndarray):
-            self.nodes_from_surfaces = np.unique(nodes_from_surfaces) - 1
-
-        if isinstance(nodes_from_lines, np.ndarray):
-            self.nodes_from_lines = np.unique(nodes_from_lines) - 1
 
         connectivity_dim1 = {}
         connectivity_dim2 = {}
