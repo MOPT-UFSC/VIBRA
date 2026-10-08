@@ -804,6 +804,35 @@ class Mesh:
         header = "Index || Solid ID || Element type ID || Element ID || Connected Node IDs"
         np.savetxt(filename, self.solids_connectivity, delimiter=",", header=header, fmt="%i")
 
+    def export_vtu_file(self, filename):
+        """This methods exports vtu file."""
+        points = vtkPoints()
+        vtk_dataset = vtkUnstructuredGrid()
+        for id, coords in enumerate(self.nodal_coordinates[:, 1:]):
+            points.InsertPoint(id, list(coords))
+            vtk_dataset.SetPoints(points)
+        nodes_per_element = len(self.solids_connectivity[0, 4:])
+        if nodes_per_element == 4:
+            vtk_cell = VTK_TETRA
+        elif nodes_per_element == 10:
+            vtk_cell = VTK_QUADRATIC_TETRA
+        elif nodes_per_element == 8:
+            vtk_cell = VTK_HEXAHEDRON
+        elif nodes_per_element == 20:
+            vtk_cell = VTK_QUADRATIC_HEXAHEDRON
+        else:
+            raise TypeError("Unsupported element type.")
+
+        n_nodes, nf_elem, ns_elem = self.get_mesh_info()
+        vtk_dataset.Allocate(ns_elem)
+        for id, connect in enumerate(self.solids_connectivity[:, 4:]):
+            vtk_dataset.InsertNextCell(vtk_cell, nodes_per_element, list(connect))
+
+        writer = vtkXMLUnstructuredGridWriter()
+        writer.SetFileName(filename)
+        writer.SetInputData(vtk_dataset)
+        writer.Write()
+
     def clear_mesh_data(self):
         self.nodal_coordinates = np.zeros((0, 4), dtype=float)
         self.nodes_from_volumes = np.zeros((0, 4), dtype=float)
