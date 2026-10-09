@@ -67,9 +67,7 @@ class HarmonicSolver:
         logging.info("Solving harmonic analysis (direct method)... [10/100]")
 
         nodal_solution_buffer = self._get_nodal_solution_buffer(is_resume)
-        self._initialize_file_writer(is_resume)
         self.compute_frequency_sweep(nodal_solution_buffer, print_log, is_resume)
-        self._close_file_writer()
 
         logging.info("Solving harmonic analysis (direct method)... [99/100]")
 
@@ -169,9 +167,6 @@ class HarmonicSolver:
 
                 logging.info(f"Solution step {i + 1} and frequency {freq} Hz [{i + 1}/{len(frequencies)}]")
 
-                if self._file_writer is not None:
-                    self._file_writer[:, i] = solution_freq
-
 
     def solve_mode_superposition(
         self,
@@ -214,8 +209,6 @@ class HarmonicSolver:
                 print_log,
                 is_resume,
             )
-
-        # self._close_file_writer()
 
         if isinstance(self.assembler, StructuralAssembler):
 
