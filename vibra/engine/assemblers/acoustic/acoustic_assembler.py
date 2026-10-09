@@ -499,7 +499,36 @@ class AcousticAssembler:
         self.mass_flow_vector = self.excitations_assembler.assemble_model_excitations()
 
 
-    def build_harmonic_system(self, freq: float, i: int):
+    def compute_load_vector(self, freq: float, i: int) -> np.ndarray:
+
+        # create the frequency vector
+        omega = 2 * np.pi * freq
+
+        if self.frequency_dependent:
+
+            # reassemble the mass source matrices
+            self.excitations_assembler.assemble_mass_source_matrices_from_surfaces(index=i)
+            self.excitations_assembler.assemble_mass_source_matrices_from_volumes(index=i)
+
+        # update the prescribed dof-related load vector for each frequency step
+        f_eq = self.excitations_assembler.get_prescribed_pressure_model_excitation(index=i)
+
+        # mass source-related load vector
+        f_ms = self.excitations_assembler.compute_mass_source_load_vector(omega, index=i)
+
+        # viscous damping-related load vector
+        f_visc = self.damping_matrices_3d.visc_load_matrix @ self.mass_flow_vector[:, i]
+
+        # mass flow-related load vector
+        f_mf = 1j * omega * self.mass_flow_vector[:, i]
+
+        # compute the load vector {f}
+        f = f_ms + f_visc - f_mf - f_eq
+
+        return f
+
+
+    def compute_dynamic_stiffness_matrix(self, freq: float, i: int) -> csr_matrix:
 
         # mass and stiffness matrices
         M = self.mass_matrix
@@ -524,32 +553,10 @@ class AcousticAssembler:
             M = self.mass_matrix
             K = self.stiffness_matrix
 
-            # reassemble the mass source matrices
-            self.excitations_assembler.assemble_mass_source_matrices_from_surfaces(index=i)
-            self.excitations_assembler.assemble_mass_source_matrices_from_volumes(index=i)
+        # compute the dynamic stiffness matrix Kd
+        Kd = K - (omega ** 2) * M + 1j * omega * C
 
-        # update the prescribed dof-related load vector for each frequency step
-        f_eq = self.excitations_assembler.get_prescribed_pressure_model_excitation(index=i)
-
-        # mass source-related load vector
-        f_ms = self.excitations_assembler.compute_mass_source_load_vector(omega, index=i)
-
-        # viscous damping-related load vector
-        f_visc = self.damping_matrices_3d.visc_load_matrix @ self.mass_flow_vector[:, i]
-
-        # mass flow-related load vector
-        f_mf = 1j * omega * self.mass_flow_vector[:, i]
-
-        # define the linear system equation terms [A]{x} = {f}
-        A = K - (omega ** 2) * M + 1j * omega * C
-        f = f_ms + f_visc - f_mf - f_eq
-
-        is_complex = np.any(np.iscomplex(A.data)) or np.any(np.iscomplex(f))
-        if not is_complex:
-            A.data = np.real(A.data)
-            f = np.real(f)
-
-        return A, f
+        return Kd
 
 
     def build_eigenproblem_system(self):
