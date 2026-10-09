@@ -3,6 +3,7 @@ from pathlib import Path
 
 import gmsh
 
+from vibra.engine.geometry.geometry import GeometryInfo
 from vibra.engine.mesher.element_setup import GMSH_VISUAL_MESH
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.mesh_setup import LocalMeshSizeControlSetup, MeshSetup
@@ -131,6 +132,18 @@ class GmshMesher:
                 exception = error
 
         raise exception
+
+    def generate_geometry_info(self) -> GeometryInfo:
+        if self.path is None:
+            context = (
+                "Geometry not defined\n\n"
+                "The geometry file has not been defined yet.\n"
+                "Import a supported CAD file format to proceed.\n\n"
+                "Suported file formats: *.iges and *.step"
+            )
+            raise InvalidGeometryError(context)
+
+        return GeometryInfo().read_file(self.path)
 
     def _merge_nodes_from_adjacent_volumes(self, suppressed_volume_ids: list[int] | None = None):
         """This method merges all nodes from adjacent volumes."""
