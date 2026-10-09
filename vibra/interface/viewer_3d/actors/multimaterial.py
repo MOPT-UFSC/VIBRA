@@ -127,7 +127,6 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         self.default_actor.VisibilityOff()
         composition_to_surfaces = defaultdict(list)
         surfaces_with_perforated_plates = self._surfaces_with_perforated_plate()
-        print(visible_surfaces)
 
         for surface in surfaces:
             volumes = self.mesh.volumes_from_surface.get(surface, ())
