@@ -83,11 +83,11 @@ class StructuralExcitationsAssembler:
         omega = 2 * np.pi * frequencies[index]
         values = self.assembler.array_prescribed_values[:, index]
 
-        self.Kr = self.assembler.stiffness_matrix_r
-        self.Mr = self.assembler.mass_matrix_r
+        Kr = self.assembler.stiffness_matrix_r
+        Mr = self.assembler.mass_matrix_r
 
-        Kr_add = self.Kr @ values
-        Mr_add = self.Mr @ values
+        Kr_add = Kr @ values
+        Mr_add = Mr @ values
 
         f_eq = (1 + 1j*(eta + omega * beta)) * Kr_add + (-(omega**2) + 1j*(omega * alpha)) * Mr_add
 

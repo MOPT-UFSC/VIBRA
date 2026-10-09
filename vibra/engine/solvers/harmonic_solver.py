@@ -1,3 +1,4 @@
+from concurrent.futures import ThreadPoolExecutor
 import logging
 import sys
 from time import time
@@ -15,6 +16,7 @@ from vibra.engine.serialization.project_paths import ProjectPaths
 from vibra.engine.solution import HarmonicSolution
 from vibra.engine.solvers import ModalSolver
 from vibra.engine.solvers.linear_solver import LinearSolver, SolverType, initialize_solver
+from vibra.utils.time_utils import context_timer
 
 
 class HarmonicSolver:
@@ -68,8 +70,14 @@ class HarmonicSolver:
 
         nodal_solution_buffer = self._get_nodal_solution_buffer(is_resume)
         self._initialize_file_writer(is_resume)
-        self.compute_frequency_sweep(nodal_solution_buffer, print_log, is_resume)
-        self._close_file_writer()
+
+        try:
+            if isinstance(self.assembler, StructuralAssembler):
+                self.compute_structural_frequency_sweep(nodal_solution_buffer, is_resume)
+            else:
+                self.compute_frequency_sweep(nodal_solution_buffer, print_log, is_resume)
+        finally:
+            self._close_file_writer()
 
         logging.info("Solving harmonic analysis (direct method)... [99/100]")
 
@@ -152,6 +160,74 @@ class HarmonicSolver:
                 if self._file_writer is not None:
                     self._file_writer[:, i] = solution_freq
 
+                # clear the memory and delete some variables to reduce the memory usage
+                linear_solver.clear_memory()
+                del A, f
+
+    def compute_structural_frequency_sweep(
+        self,
+        nodal_solution_buffer: np.ndarray,
+        is_resume: bool,
+    ):
+        # frequencies vector [in hertz]
+        frequencies = self.frequencies
+        num_workers = 10
+        chunk_size = (len(frequencies) + num_workers - 1) // num_workers
+        with ThreadPoolExecutor(max_workers=num_workers) as executor:
+            futures = []
+
+            for start in range(0, len(frequencies), chunk_size):
+                logger = start >= len(frequencies) - chunk_size
+                future = executor.submit(
+                    self.structural_frequency_sweep_worker,
+                    frequencies[start:start+chunk_size],
+                    start,
+                    nodal_solution_buffer,
+                    is_resume,
+                    logger,
+                )
+                futures.append(future)
+
+            for fut in futures:
+                fut.result()
+
+    def structural_frequency_sweep_worker(
+        self,
+        frequencies: np.ndarray,
+        start,
+        nodal_solution_buffer: np.ndarray,
+        is_resume: bool,
+        logger: bool = False,
+    ):
+        worker_solver = initialize_solver(SolverType.PARDISO, is_symmetric=True)
+
+        for i, freq in enumerate(frequencies, start=start):
+            if self.assembler.model.stop_processing:
+                return
+
+            if is_resume and (i != 0) and isinstance(self._file_writer, LazyHDF5MatrixWriter) and self._file_writer.has_column(i):
+                continue
+
+            A, f = self.assembler.build_harmonic_system(freq, i)
+
+            if freq == 0:
+                # In case of freq=0, the matrix may differ from the non-zero frequencies,
+                # so we solve it with a particular linear solver
+                linear_solver = initialize_solver(SolverType.PARDISO, is_symmetric=True)
+            else:
+                linear_solver = worker_solver
+
+            try:
+                solution_freq = linear_solver.solve(A, f)
+                solution_freq = self.assembler.reinsert_the_prescribed_dof_into_solution_freq(solution_freq, i)
+                nodal_solution_buffer[:, i] = solution_freq
+
+                if logger:
+                    logging.info(f"Completed frequencies [{9*(i - start + 1)}/{len(self.frequencies)}]")
+
+                if self._file_writer is not None:
+                    self._file_writer[:, i] = solution_freq
+            finally:
                 # clear the memory and delete some variables to reduce the memory usage
                 linear_solver.clear_memory()
                 del A, f

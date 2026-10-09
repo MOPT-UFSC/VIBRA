@@ -512,15 +512,15 @@ class StructuralAssembler:
         # loop for 3d elements
         element_ids = self.model.domains_processor.elements_of_domain.get("structural", [])
         num_workers = cpu_count()
-        
+
         if not len(element_ids):
             return
-        
+
         chunk_size = (len(element_ids) + num_workers - 1) // num_workers
-        
+
         with ThreadPoolExecutor(max_workers=num_workers) as executor:
             futures = []
-        
+
             for start in range(0, len(element_ids), chunk_size):
                 logger = start >= (len(element_ids) - chunk_size)
 
@@ -531,12 +531,12 @@ class StructuralAssembler:
                     logger=logger
                 )
                 futures.append(future)
-        
+
             for future in futures:
                 future.result()
-        
+
     def compute_data_partially(self, element_ids: list, index_offset, logger: bool = False):
-        last_progress = 0 
+        last_progress = 0
 
         for index, element_id in enumerate(element_ids):
             if self.model.stop_processing:

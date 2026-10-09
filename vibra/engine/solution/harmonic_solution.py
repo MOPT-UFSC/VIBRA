@@ -1,4 +1,3 @@
-from collections.abc import Generator, Iterator
 from copy import deepcopy
 from functools import cached_property
 from typing import override
