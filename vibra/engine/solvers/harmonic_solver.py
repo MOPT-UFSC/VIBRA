@@ -156,11 +156,13 @@ class HarmonicSolver:
 
                     # delete some variables and clear the memory to reduce the memory usage
                     linear_solver.clear_memory()
-                    del Kd, f
+                    del Kd
 
                 else:
                     # We will have the trivial solution whenever there is zero excitation
                     solution_freq = np.zeros_like(f, dtype=complex)
+
+                del f
 
                 solution_freq = self.assembler.reinsert_the_prescribed_dof_into_solution_freq(solution_freq, i)
                 nodal_solution_buffer[:, i] = solution_freq
