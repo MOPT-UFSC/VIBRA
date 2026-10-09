@@ -3,6 +3,8 @@ from __future__ import annotations
 import logging
 import sys
 from typing import TYPE_CHECKING
+from threading import RLock
+from tqdm import tqdm
 
 from vibra.engine.project import Project
 
@@ -18,6 +20,9 @@ logging.basicConfig(
 
 
 def main(is_resume: bool, working_dir: Path, print_log : bool = False):
+    # set a thread lock to suppress semaphore warnings: all tqdm bars run in this subprocess
+    tqdm.set_lock(RLock())
+
     project = Project(working_dir)
     project.read_from_working_dir()
     project.run_analysis(is_resume, print_log)
