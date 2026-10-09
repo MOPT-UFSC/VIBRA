@@ -236,49 +236,6 @@ class Mesh:
         }
         self.points_from_nodes = {node_id: tag for tag, node_id in self.nodes_from_points.items()}
 
-    def load_mesh(self, path: Path | str, **kwargs):
-        geometry_tolerance = kwargs.get("geometry_tolerance", 1e-8)
-        threads = kwargs.get("threads", 0)
-        gmsh_gui = kwargs.get("gmsh_gui", False)
-        self.geometry_imported = False
-
-        gmsh.initialize("", False)
-        gmsh.option.setNumber("General.Terminal", 0)
-        gmsh.option.setNumber("General.Verbosity", 0)
-        gmsh.option.setNumber("General.NumThreads", threads)
-        gmsh.option.setNumber("Geometry.Tolerance", geometry_tolerance)
-
-        logging.info("Loading mesh data... [25/100]")
-        gmsh.open(str(path))
-
-        logging.info("Loading mesh data... [90/100]")
-        gmsh.model.occ.synchronize()
-
-        logging.info("Post-processing mesh... [50/100]")
-        self.post_process_mesh_data()
-        self.update_element_topology_based_on_connectivity()
-
-        logging.info("Post-processing mesh... [80/100]")
-        self.process_downwards_adjacencies_from_mesh_data()
-
-        logging.info("Post-processing mesh... [90/100]")
-        self.process_upwards_adjacencies_from_entities()
-
-        if gmsh_gui:
-            if "-nopopup" not in sys.argv:
-                gmsh.fltk.run()
-
-        gmsh.finalize()
-
-        logging.info(
-            f"The mesh file contains {len(self.nodal_coordinates)} nodes"
-            f", {len(self.lines_connectivity)} dim 1"
-            f", {len(self.faces_connectivity)} dim 2"
-            f"and {len(self.solids_connectivity)} dim 3 elements"
-        )
-
-        return self
-
     def update_element_topology_based_on_connectivity(self):
         """
         This method updates the element type based on the connectivity information.

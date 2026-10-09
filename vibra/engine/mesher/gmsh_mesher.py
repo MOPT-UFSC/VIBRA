@@ -37,19 +37,14 @@ class GmshMesher:
             )
             raise IncompleteSetupError(message, context=context)
 
-        if not gmsh.is_initialized():
-            gmsh.initialize("", False, interruptible=False)
-            gmsh.option.set_number("General.Terminal", 0)
-            gmsh.option.set_number("General.Verbosity", 0)
-            gmsh.option.set_number("Geometry.Tolerance", self.setup.geometry_tolerance)
+        gmsh.initialize("", False, interruptible=False)
+        gmsh.option.set_number("General.Terminal", 0)
+        gmsh.option.set_number("General.Verbosity", 0)
+        gmsh.option.set_number("General.NumThreads", threads)
+        gmsh.option.set_number("Geometry.Tolerance", self.setup.geometry_tolerance)
 
-            gmsh.option.set_number("General.NumThreads", threads)
-            gmsh.option.set_number("Mesh.MaxNumThreads1D", threads)
-            gmsh.option.set_number("Mesh.MaxNumThreads2D", threads)
-            gmsh.option.set_number("Mesh.MaxNumThreads3D", threads)
-
-            logger.info("Loading geometry... [10/100]")
-            gmsh.open(str(self.path))
+        logger.info("Loading geometry... [10/100]")
+        gmsh.open(str(self.path))
 
         if self.setup.suppressed_volume_ids:
             dim_tags = [(3, vid) for vid in self.setup.suppressed_volume_ids]
