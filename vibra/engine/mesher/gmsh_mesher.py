@@ -2,12 +2,14 @@ import logging
 from pathlib import Path
 
 import gmsh
+import numpy as np
 
 from vibra.engine.geometry.geometry import GeometryInfo
 from vibra.engine.mesher.element_setup import GMSH_VISUAL_MESH
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.mesh_setup import LocalMeshSizeControlSetup, MeshSetup
 from vibra.errors import IncompleteSetupError, InvalidGeometryError, MeshingAlgorithmError
+from vibra.utils.time_utils import context_timer, function_timer
 
 logger = logging.getLogger(__name__)
 
@@ -60,7 +62,8 @@ class GmshMesher:
 
         try:
             dimension = self.setup.element_setup.dimensions
-            gmsh.model.mesh.generate(dimension)
+            with context_timer("generation"):
+                gmsh.model.mesh.generate(dimension)
         except Exception as e:
             gmsh.finalize()
 
@@ -82,7 +85,11 @@ class GmshMesher:
 
         logger.info("Post-processing mesh... [60/100]")
         mesh.suppressed_volumes = set(self.setup.suppressed_volume_ids)
-        mesh.post_process_mesh_data()
+        # mesh.post_process_mesh_data()
+        with context_timer("foo"):
+            mesh.post_process_mesh_data()
+
+        self.bla()
 
         mesh.update_element_topology_based_on_connectivity()
 
@@ -100,6 +107,26 @@ class GmshMesher:
         )
 
         return mesh
+
+    @function_timer
+    def bla(self):
+        indices, coords, _parametric_coords = gmsh.model.mesh.get_nodes(includeBoundary=True)
+        indices = np.array(indices) - 1
+        coords = np.array(coords)
+
+        nodal_coordinates = np.zeros((np.max(indices) + 1, 4))
+        nodal_coordinates[indices, 1:] = coords.reshape(-1, 3)
+        nodal_coordinates[indices, :1] = indices.reshape(-1, 1)
+
+        for el_type, el_indices, el_nodes in zip(*gmsh.model.mesh.get_elements()):
+            _name, dim, _order, nodes_per_element, _, _ = gmsh.model.mesh.get_element_properties(el_type)
+
+            el_indices = np.array(el_indices).reshape(-1, 1)
+            el_nodes = np.array(el_nodes).reshape(-1, nodes_per_element)
+            el_types = np.full(el_indices.size, el_type)
+            el_sizes = np.full(el_indices.size, nodes_per_element)
+
+            print(dim)
 
     def generate_visual_mesh(self) -> tuple[Mesh, MeshSetup]:
         if self.path is None:
