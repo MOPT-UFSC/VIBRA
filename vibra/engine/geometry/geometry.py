@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Self
 
 import gmsh
 import numpy as np
@@ -9,12 +9,8 @@ from vibra.utils.bidict import bidict
 LengthUnits = Literal["millimeter", "inch"]
 
 
-class Geometry:
-    def __init__(
-        self,
-        path: str | Path | None = None,
-        length_unit: LengthUnits = "millimeter",
-    ):
+class GeometryInfo:
+    def __init__(self, length_unit: LengthUnits = "millimeter"):
         self._solids_to_surfaces = bidict()
         self._surfaces_to_curves = bidict()
         self._curves_to_points = bidict()
@@ -44,11 +40,7 @@ class Geometry:
         self.length_unit = length_unit
         self.length_unit_factor = self._get_length_unit_factor(length_unit)
 
-        self.set_length_unit(length_unit)
-        if path is not None:
-            self.read_file(path)
-
-    def read_file(self, file_path: str):
+    def read_file(self, file_path: Path | str) -> Self:
         # allowed to run in a secondary thread
         gmsh.initialize("", False, interruptible=False)
 
@@ -56,7 +48,7 @@ class Geometry:
         gmsh.option.setNumber("General.Verbosity", 0)
         gmsh.option.setNumber("General.NumThreads", 0)  # all available threads
 
-        gmsh.open(file_path)
+        gmsh.open(str(file_path))
 
         gmsh.model.occ.synchronize()
 
@@ -65,6 +57,7 @@ class Geometry:
         self._process_points_normals()
 
         gmsh.finalize()
+        return self
 
     def clear(self):
         self._solids_to_surfaces.clear()
@@ -274,7 +267,7 @@ class Geometry:
                 self._solids_to_surfaces[tag] = tuple(downwards)
                 self.solids.append(tag)
 
-                center, _ = self.process_center_element(dim, tag)
+                center, _ = self.process_center_entity(dim, tag)
                 self._solids_centers[tag] = center
 
             elif dim == 2:
@@ -282,7 +275,7 @@ class Geometry:
                 self._surfaces_to_curves[tag] = tuple(downwards)
                 self.surfaces.append(tag)
 
-                center, uv_mid = self.process_center_element(dim, tag)
+                center, uv_mid = self.process_center_entity(dim, tag)
                 self._surfaces_centers[tag] = center
 
                 normal = gmsh.model.getNormal(tag, uv_mid)
@@ -298,10 +291,8 @@ class Geometry:
                 self._curves_to_points[tag] = tuple(downwards)
                 self.curves.append(tag)
 
-                center, uv_mid = self.process_center_element(dim, tag)
-                center = (
-                    gmsh.model.get_value(dim, tag, uv_mid) * self.length_unit_factor
-                )
+                center, uv_mid = self.process_center_entity(dim, tag)
+                center = np.array(gmsh.model.get_value(dim, tag, uv_mid)) * self.length_unit_factor
                 curvature = gmsh.model.getCurvature(dim, tag, uv_mid)
 
                 self._curves_centers[tag] = center
@@ -310,10 +301,8 @@ class Geometry:
 
             elif dim == 0:
                 self.points.append(tag)
-                center, uv_mid = self.process_center_element(dim, tag)
-                center = (
-                    gmsh.model.get_value(dim, tag, uv_mid) * self.length_unit_factor
-                )
+                center, uv_mid = self.process_center_entity(dim, tag)
+                center = np.array(gmsh.model.get_value(dim, tag, uv_mid)) * self.length_unit_factor
                 self._points_centers[tag] = center
 
     def _process_curves_normals(self):
@@ -340,17 +329,17 @@ class Geometry:
 
             self._points_normals[point] = normals_sum / np.linalg.norm(normals_sum)
 
-    def process_center_element(self, dim: int, tag: int) -> np.ndarray:
+    def process_center_entity(self, dim: int, tag: int) -> tuple[np.ndarray, np.ndarray | None]:
         """Process the center of an element based on its dimension."""
         if dim != 3:
             uv_min, uv_max = gmsh.model.get_parametrization_bounds(dim, tag)
-            uv_mid = (uv_min + uv_max) / 2
-            center = gmsh.model.get_value(dim, tag, uv_mid) * self.length_unit_factor
-            
+            uv_mid = (np.array(uv_min) + np.array(uv_max)) / 2
+            center = np.array(gmsh.model.get_value(dim, tag, uv_mid)) * self.length_unit_factor
+
         else:
             center = np.asarray(gmsh.model.occ.getCenterOfMass(dim, tag)) * self.length_unit_factor
             uv_mid = None
-        
+
         return center, uv_mid
 
     def _get_length_unit_factor(self, length_unit: LengthUnits) -> float:
