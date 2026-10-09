@@ -11,6 +11,7 @@ class UserPreferences:
     lines_color: Color = color_names.BLACK
     edges_color: Color = color_names.BLACK
     faces_color: Color = color_names.WHITE
+    volumes_color: Color = color_names.WHITE
     selection_color: Color = Color("#146AF5")
     selection_faces_color: Color = Color("#146AF5")
     selection_nodes_points_color: Color = Color("#F52A14")
@@ -25,6 +26,7 @@ class UserPreferences:
     compatibility_mode: bool = False
     run_analysis_in_subprocess: bool = True
     generate_mesh_in_subprocess: bool = True
+    print_solution_log: bool = False
     color_map: str = "jet"
 
     def set_light_theme(self):
@@ -36,6 +38,7 @@ class UserPreferences:
         self.lines_color = color_names.BLACK
         self.edges_color = color_names.BLACK
         self.faces_color = color_names.WHITE
+        self.volumes_color = color_names.WHITE
         self.selection_faces_color = Color("#146AF5")
         self.selection_nodes_points_color = Color("#F52A14")
         self.selection_lines_color = Color("#F52A14")
@@ -49,6 +52,7 @@ class UserPreferences:
         self.lines_color = color_names.BLACK
         self.edges_color = color_names.BLACK
         self.faces_color = color_names.WHITE
+        self.volumes_color = color_names.WHITE
         self.selection_faces_color: Color = Color("#146AF5")
         self.selection_nodes_points_color: Color = Color("#F52A14")
         self.selection_lines_color = Color("#F52A14")

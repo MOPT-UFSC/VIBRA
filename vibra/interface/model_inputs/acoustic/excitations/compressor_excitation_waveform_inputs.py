@@ -1,6 +1,5 @@
 from copy import deepcopy
 from enum import IntEnum
-from pathlib import Path
 
 import numpy as np
 from PySide6.QtCore import Qt
@@ -11,15 +10,17 @@ from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
 from scipy.signal.windows import hann
 
 from vibra import app
+from vibra.extensions import SUPPORTED_SIMULATION_DATA, SUPPORTED_SPREADSHEET_READ_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
 from vibra.interface import error_title
-from vibra.interface.common.common_interface import update_analysis_setup_in_file
+from vibra.interface.common.common_interface import update_analysis_setup_in_file, update_entities_selection
 from vibra.interface.data.data_manager import get_spectral_data_from_array
-from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.general.utils import clear_style_sheet
 from vibra.interface.plots.general.frequency_response_plotter import DataFormat, FrequencyResponsePlotter
 from vibra.interface.ui_generated.model.acoustic.excitations.compressor_excitation_waveform_inputs_ui import CompressorExcitationWaveformInputs_UI
+from vibra.interface.user_input.data_handler.file_dialog_service import FileDialogService
+from vibra.interface.user_input.data_handler.file_handlers.file_handler import FileHandler
 from vibra.utils.signal_processing import extend_signal, get_window_and_correction_factor, process_one_sided_spectrum
 
 
@@ -201,7 +202,6 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
             message += str(error_log)
 
         if message != "":
-            self.hide()
             title = "Invalid input to the analysis setup"
             PrintMessageInput([error_title, title, message])
             line_edit.setStyleSheet("""border-color: rgb(240, 10, 10); border-width: 2px;""")
@@ -235,18 +235,18 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         df = spectrum_data[0, 0]
         self.lineEdit_frequency_resolution.setText(f"{df}")
 
-    def load_cfd_data(self, table_path: str|None = None):
+    def load_cfd_data(self, table_path: str | None = None):
         if table_path is None:
             table_path = self.load_hdf_file()
 
         if table_path is None:
             return
 
-        if not Path(table_path).exists():
+        if not table_path.exists():
             return
 
-        self.lineEdit_table_path.setText(table_path)
-        self.imported_values = DataImporter.load_cfd_simulation_data_from_hdf_file(table_path)
+        self.lineEdit_table_path.setText(str(table_path))
+        self.imported_values = FileHandler.read(table_path).to_dict()
 
         angular_resolution = self.imported_values.get("delta_theta")
         if angular_resolution is None:
@@ -286,13 +286,12 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
             min_coords = np.min(coords, axis=0)
             max_coords = np.max(coords, axis=0)
             range_coords = np.abs(max_coords - min_coords)
-            indexes = np.argsort(range_coords)
-            if round(range_coords[indexes[0]], 4) == 0:
+            indices = np.argsort(range_coords)
+            if round(range_coords[indices[0]], 4) == 0:
                 axis_labels = ["x-axis (+)", "y-axis (+)", "z-axis (+)"]
-                self.comboBox_normal_velocity_axis.setCurrentText(axis_labels[indexes[0]])
+                self.comboBox_normal_velocity_axis.setCurrentText(axis_labels[indices[0]])
 
     def compute_compressor_excitation_spectrum(self):
-
         self.mass_flow_sdata = None
         self.normal_surface_velocity_sdata = None
         self.pressure_sdata = None
@@ -342,12 +341,12 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         return keys_map_cfd.get(direction), invert_signal
 
     def process_signal_spectrum_for_cfd_data(self, data_label: str, invert_signal: bool=False):
-
         if not isinstance(self.imported_values, dict):
             return None
 
         time_vector = self.imported_values.get("time_seconds")
         x_data_nodal = self.imported_values.get(data_label)
+
         if invert_signal:
             x_data_nodal *= -1
 
@@ -512,40 +511,43 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         self.lineEdit_selection_id.setText(text)
 
     def load_hdf_file(self):
-
-        extensions = ["h5", "hd5", "hdf5"]
         caption = "Choose the HDF file to import the external compressor excitation data"
 
-        imported_path, file_extension = DataImporter.get_file_paths(caption, "imported_table_folder", extensions)
-        if not file_extension:
-            return
+        imported_path = FileDialogService.open_file(file_extensions=SUPPORTED_SIMULATION_DATA, 
+                                    caption=caption,
+                                    last_folder="imported_table_folder")
+
+        if imported_path is None:
+            return None
 
         return imported_path
     
     def load_table(self, line_edit : QLineEdit, direct_load: bool=False):
-
-        imported_values = None
         title = "Error reached while loading 'surface velocity' table"
 
         try:
-
             if direct_load:
-                imported_table_path = line_edit.text()
-                imported_values = DataImporter.read_data_in_file(imported_table_path)[0].data
+                imported_path = line_edit.text()
 
             else:
-                extensions = ["csv", "dat", "txt", "xlsx", "xls"]
+                extensions = SUPPORTED_SPREADSHEET_READ_EXTENSIONS + SUPPORTED_TEXT_EXTENSIONS
                 caption = "Choose a table to import the compressor excitation waveform data"
-                imported_data = DataImporter.import_single_file("imported_table_folder", extensions, caption)
 
-                if not imported_data:
-                    return
+                imported_path = FileDialogService.open_file(file_extensions=extensions,
+                                                            caption=caption,
+                                                            last_folder="imported_table_folder")
 
-                imported_values = imported_data.data
-                line_edit.setText(imported_data.path)
+            imported_data = FileHandler.read(imported_path)
+
+            if imported_data is None:
+                return
+
+            if not direct_load:
+                line_edit.setText(str(imported_data.path))
+
+            imported_values = imported_data.data 
 
             if imported_values.shape[1] < 2:
-                self.hide()
                 message = "The imported table has insufficient number of columns. The mass flow data signal "
                 message += "must have two columns in the form: time, and mass flow values."
                 PrintMessageInput([error_title, title, message])
@@ -554,7 +556,6 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
             return imported_values
 
         except Exception as log_error:
-            self.hide()
             message = str(log_error)
             PrintMessageInput([error_title, title, message])
             line_edit.setFocus()
@@ -565,7 +566,6 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         _frequencies = imported_values[:, 0]
 
         if app().project.model.change_analysis_frequency_setup(list(_frequencies)):
-            self.hide()
             title = "Project frequency setup cannot be modified"
             message = "The following imported table of values has a frequency setup "
             message += "different from the others already imported ones. The current "
@@ -589,22 +589,24 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
             return
 
         input_ids = self.lineEdit_selection_id.text()
-        surface_ids, error_data = self.mesh.check_selected_ids(
+        surface_ids, error_data = self.model.check_selected_ids(
             input_ids,
-            selection="surfaces",
-            single_id=False,
+            "surfaces",
+            domain="acoustic",
         )
 
         if error_data is not None:
-            self.hide()
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
             return
 
+        app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
+        update_entities_selection(self.lineEdit_selection_id, "surfaces", surface_ids)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
+
         self.remove_conflicting_excitations(surface_ids)
 
         if self.lineEdit_table_path.text() == "":
-            self.hide()
             title = "Additional inputs required"
             message = "You must select the external compressor excitation "
             message += "table path to proceed with the assignment."
@@ -675,19 +677,12 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
                 "table_names" : [table_name],
                 "table_paths" : [table_path],
                 "values" : [complex_values],
-                "averaged" : False,
-                "nodal_attribution" : False,
+                "element_integration": True,
                 }
 
             self.properties._set_property("compressor_excitation_waveform", data, surface=surface_id)
 
         self.actions_to_finalize(close_window)
-
-    def process_table_file_removal(self, table_names: list):
-        for table_name in table_names:
-            self.properties.remove_imported_tables("acoustic", table_name)
-        if table_names:
-            app().project.update_model_properties_file()
 
     def remove_conflicting_excitations(self, surface_ids: int | list):
 
@@ -706,13 +701,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
 
         for surface_id in surface_ids:
             for label in labels:
-                table_names = self.properties.get_property_related_table_names(label, surface_id, "surfaces")
                 self.properties._remove_surface_property(label, surface_id)
-                self.process_table_file_removal(table_names)
-
-    def remove_table_files_from_surfaces(self, surface_id : int | list):
-        table_names = self.properties.get_property_related_table_names("compressor_excitation_waveform", surface_id, "surfaces")
-        self.process_table_file_removal(table_names)
 
     def remove_callback(self):
 
@@ -720,16 +709,13 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
             return
 
         surface_id = int(self.lineEdit_selection_id.text())
-        self.remove_table_files_from_surfaces(surface_id)
 
         self.properties._remove_surface_property("compressor_excitation_waveform", surface_id)
         self.actions_to_finalize()
 
     def reset_callback(self):
 
-        self.hide()
-
-        title = "External comrpressor excitation resetting"
+        title = "External comrpressor excitation reset"
         message = "Would you like to remove the all external compressor excitations from model?"
 
         buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
@@ -739,15 +725,6 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
             return
 
         if read._continue:
-
-            surface_ids = list()
-            for (property, *args) in self.properties.surface_properties.keys():
-                if property == "compressor_excitation_waveform":
-                    surface_id = args[0]
-                    surface_ids.append(surface_id)
-
-            self.remove_table_files_from_surfaces(surface_ids)
-
             self.properties._reset_property("compressor_excitation_waveform")
             self.actions_to_finalize()
 
@@ -762,7 +739,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
 
     def update_tabs_visibility(self):
 
-        for key in self.properties.surface_properties.keys():
+        for key in self.properties.surface_properties:
             property, *args = key
             if property != "compressor_excitation_waveform":
                 continue

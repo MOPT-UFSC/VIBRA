@@ -304,12 +304,12 @@
            </property>
            <item>
             <property name="text">
-             <string> Face element</string>
+             <string>Face element</string>
             </property>
            </item>
            <item>
             <property name="text">
-             <string> Solid element</string>
+             <string>Solid element</string>
             </property>
            </item>
           </widget>
@@ -357,7 +357,7 @@
           </spacer>
          </item>
          <item row="0" column="3">
-          <widget class="QComboBox" name="comboBox_attribution_type">
+          <widget class="QComboBox" name="comboBox_assignment_type">
            <property name="minimumSize">
             <size>
              <width>0</width>
@@ -420,17 +420,17 @@
            </property>
            <item>
             <property name="text">
-             <string> Displacement</string>
+             <string>Displacement</string>
             </property>
            </item>
            <item>
             <property name="text">
-             <string> Velocity</string>
+             <string>Velocity</string>
             </property>
            </item>
            <item>
             <property name="text">
-             <string> Acceleration</string>
+             <string>Acceleration</string>
             </property>
            </item>
           </widget>
@@ -1588,7 +1588,7 @@
                    <string/>
                   </property>
                   <property name="icon">
-                   <iconset resource="../../../../icons/resources.qrc">
+                   <iconset resource="../../../../icons/dark_theme/resources.qrc">
                     <normaloff>:/icons/document_search_blue.png</normaloff>:/icons/document_search_blue.png</iconset>
                   </property>
                   <property name="iconSize">
@@ -1669,7 +1669,7 @@
                    <string/>
                   </property>
                   <property name="icon">
-                   <iconset resource="../../../../icons/resources.qrc">
+                   <iconset resource="../../../../icons/dark_theme/resources.qrc">
                     <normaloff>:/icons/document_search_blue.png</normaloff>:/icons/document_search_blue.png</iconset>
                   </property>
                   <property name="iconSize">
@@ -1744,7 +1744,7 @@
                    <string/>
                   </property>
                   <property name="icon">
-                   <iconset resource="../../../../icons/resources.qrc">
+                   <iconset resource="../../../../icons/dark_theme/resources.qrc">
                     <normaloff>:/icons/document_search_blue.png</normaloff>:/icons/document_search_blue.png</iconset>
                   </property>
                   <property name="iconSize">
@@ -1853,7 +1853,7 @@
                    <string/>
                   </property>
                   <property name="icon">
-                   <iconset resource="../../../../icons/resources.qrc">
+                   <iconset resource="../../../../icons/dark_theme/resources.qrc">
                     <normaloff>:/icons/document_search_blue.png</normaloff>:/icons/document_search_blue.png</iconset>
                   </property>
                   <property name="iconSize">
@@ -1990,7 +1990,7 @@
                    <string/>
                   </property>
                   <property name="icon">
-                   <iconset resource="../../../../icons/resources.qrc">
+                   <iconset resource="../../../../icons/dark_theme/resources.qrc">
                     <normaloff>:/icons/document_search_blue.png</normaloff>:/icons/document_search_blue.png</iconset>
                   </property>
                   <property name="iconSize">
@@ -2040,7 +2040,7 @@
                    <string/>
                   </property>
                   <property name="icon">
-                   <iconset resource="../../../../icons/resources.qrc">
+                   <iconset resource="../../../../icons/dark_theme/resources.qrc">
                     <normaloff>:/icons/document_search_blue.png</normaloff>:/icons/document_search_blue.png</iconset>
                   </property>
                   <property name="iconSize">
@@ -2213,7 +2213,7 @@
                   </property>
                   <property name="maximumSize">
                    <size>
-                    <width>380</width>
+                    <width>16777215</width>
                     <height>200</height>
                    </size>
                   </property>
@@ -2245,7 +2245,7 @@
                   </attribute>
                   <column>
                    <property name="text">
-                    <string>Selection-ID</string>
+                    <string>ID</string>
                    </property>
                    <property name="textAlignment">
                     <set>AlignCenter</set>
@@ -2253,7 +2253,7 @@
                   </column>
                   <column>
                    <property name="text">
-                    <string>Prescribed DOF</string>
+                    <string>Entity</string>
                    </property>
                    <property name="textAlignment">
                     <set>AlignCenter</set>
@@ -2262,6 +2262,14 @@
                   <column>
                    <property name="text">
                     <string>Element type</string>
+                   </property>
+                   <property name="textAlignment">
+                    <set>AlignCenter</set>
+                   </property>
+                  </column>
+                  <column>
+                   <property name="text">
+                    <string>Prescribed DOF</string>
                    </property>
                    <property name="textAlignment">
                     <set>AlignCenter</set>
@@ -2556,7 +2564,7 @@
   </layout>
  </widget>
  <resources>
-  <include location="../../../../icons/resources.qrc"/>
+  <include location="../../../../icons/dark_theme/resources.qrc"/>
  </resources>
  <connections/>
 </ui>

@@ -1,10 +1,11 @@
+from time import sleep, time
+
 from PySide6.QtCore import Qt, QTimer
 
 from vibra import app
-from vibra.interface.ui_generated.messages.print_message_ui import PrintMessage_UI
 from vibra.interface.formatters.icons import get_error_icon, get_warning_icon
+from vibra.interface.ui_generated.messages.print_message_ui import PrintMessage_UI
 
-from time import sleep, time 
 
 class PrintMessageInput(PrintMessage_UI):
     def __init__(self, text_info, *args, **kwargs):
@@ -22,7 +23,9 @@ class PrintMessageInput(PrintMessage_UI):
         self._adjust_size(kwargs)
 
         if kwargs.get("exec", True):
+            app().main_window.hide_dialogs()
             self.exec()
+            app().main_window.restore_open_dialogs()
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)

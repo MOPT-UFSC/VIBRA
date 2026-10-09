@@ -8,10 +8,11 @@ from PySide6.QtCore import QItemSelectionModel, QPoint, Qt
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QLineEdit, QTreeWidgetItem
 
-from vibra import SUPPORTED_OUTPUT_DATA_EXTENSIONS, USER_PATH, app
+from vibra import USER_PATH, app
 from vibra.engine.properties.fluid import Fluid
+from vibra.extensions import SUPPORTED_OUTPUT_DATA_EXTENSIONS
 from vibra.interface import error_title
-from vibra.interface.common.common_interface import mesher_interface_callback, update_analysis_setup_in_file
+from vibra.interface.common.common_interface import mesher_interface_callback, update_analysis_setup_in_file, update_entities_selection
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -203,19 +204,23 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.lineEdit_isentropic_exponent.setValidator(StrictDoubleValidator(1e-8, 10, 6))
 
     def _create_connections(self):
-        #
+
+        # QCheckBox connection
         self.checkBox_export_data.stateChanged.connect(self.export_data_checkbox_callback)
-        #
+
+        # QComboBox connection
         self.comboBox_cylinder_acting.currentIndexChanged.connect(self.update_compressing_cylinders_setup)
         self.comboBox_frequency_resolution.currentIndexChanged.connect(self.comboBox_event_frequency_resolution)
         self.comboBox_pressure_units.currentIndexChanged.connect(self.pressure_unit_callback)
         self.comboBox_temperature_units.currentIndexChanged.connect(self.temperature_unit_callback)
-        #
+
+        # QLineEdit connection
         self.lineEdit_isentropic_exponent.textChanged.connect(self.update_state_properties_at_discharge)
         self.lineEdit_suction_pressure.textChanged.connect(self.update_state_properties_at_discharge)
         self.lineEdit_pressure_ratio.textChanged.connect(self.update_state_properties_at_discharge)
         self.lineEdit_suction_temperature.textChanged.connect(self.update_state_properties_at_discharge)
-        #
+
+        # QPushButton connection
         self.pushButton_plot_PV_diagram_head_end.clicked.connect(self.plot_PV_diagram_head_end)
         self.pushButton_plot_PV_diagram_crank_end.clicked.connect(self.plot_PV_diagram_crank_end)
         self.pushButton_plot_PV_diagram_both_ends.clicked.connect(self.plot_PV_diagram_both_ends)
@@ -232,7 +237,6 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.pushButton_plot_volume_crank_end_angle.clicked.connect(self.plot_volume_crank_end_angle)
         self.pushButton_process_aquisition_parameters.clicked.connect(self.process_aquisition_parameters)
         self.pushButton_export_path.clicked.connect(self.export_path_callback)
-        #
         self.pushButton_apply.clicked.connect(self.apply_callback)
         self.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
         self.pushButton_cancel.clicked.connect(self.close)
@@ -240,15 +244,17 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
         self.pushButton_reset_entries.clicked.connect(self.reset_entries)
-        #
+
+        # QSpinBox connection
         self.spinBox_number_of_points.valueChanged.connect(self.spinBox_event_number_of_points)        
         self.spinBox_max_frequency.valueChanged.connect(self.spinBox_event_max_frequency)
-        #
+
+        # QTabWidget connection
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
         self.treeWidget_compressor_excitation.itemClicked.connect(self.on_click_item)
-        #
+
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
-        #
+
         self.export_data_checkbox_callback()
         self.update_compressing_cylinders_setup()
         self.update_state_properties_at_discharge()
@@ -267,25 +273,18 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             return
 
         selected_surfaces = app().main_window.selection.geometry_surfaces
+        if not selected_surfaces:
+            return
 
-        if selected_surfaces:
+        self.lineEdit_selection_id.setText(" ,".join([str(_id) for _id in selected_surfaces]))    
+        if len(selected_surfaces) != 1:
+            return
 
-            surface_ids = [str(i) for i in selected_surfaces]
-            self.lineEdit_selection_id.setText(surface_ids[0])
+        surface_id = next(iter(selected_surfaces))
+        data = self.properties._get_property("reciprocating_compressor_excitation", surface=surface_id)
 
-            input_ids = self.lineEdit_selection_id.text()
-            surface_id, error_data = self.mesh.check_selected_ids(input_ids, selection="surfaces", single_id=True)
-
-            if error_data is not None:
-                self.hide()
-                self.lineEdit_selection_id.setFocus()
-                PrintMessageInput(error_data)
-                return True
-
-            data = self.properties._get_property("reciprocating_compressor_excitation", surface=surface_id)
-
-            if isinstance(data, dict):
-                self.update_compressor_inputs(data)
+        if isinstance(data, dict):
+            self.update_compressor_inputs(data)
     
     def verify_if_selected_surfaces_are_in_tree_widget_compressor_excitation(self):
         if self.tree_item_clicked:
@@ -594,10 +593,14 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
     def check_input_surfaces(self):
 
         input_ids = self.lineEdit_selection_id.text()
-        surface_id, error_data = self.model.mesh.check_selected_ids(input_ids, selection="surfaces", single_id=True)
+        surface_id, error_data = self.model.check_selected_ids(
+            input_ids,
+            "surfaces",
+            domain="acoustic",
+            single_id=True
+        )
 
         if error_data is not None:
-            self.hide()
             self.lineEdit_selection_id.setFocus()
             self.lineEdit_selection_id.selectAll()
             PrintMessageInput(error_data)
@@ -605,7 +608,6 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
         volumes_from_surface = self.model.mesh.volumes_from_surface.get(surface_id)
         if len(volumes_from_surface) != 1:
-            self.hide()
             title = "Invalid surface selected"
             message = "The selected surface does not correspond to the piping endings. "
             message += "It is necessary to change the selection to proceed with the "
@@ -741,7 +743,6 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
     def save_table_values(self, table_name: str, frequencies: np.ndarray, complex_values: np.ndarray):
 
         if app().project.model.change_analysis_frequency_setup(list(frequencies)):
-            self.hide()
             title = "Project frequency setup cannot be modified"
             message = "The following imported table of values has a frequency setup "
             message += "different from the others already imported ones. The current "
@@ -885,8 +886,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             "table_names": [table_name],
             "parameters": self.parameters,
             "values": [surface_velocity],
-            "nodal_attribution": False,
-            "averaged": False,
+            "element_integration": True,
         }
 
         self.remove_conflicting_excitations(surface_id)
@@ -918,12 +918,6 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         if close_window:
             self.close()
 
-    def process_table_file_removal(self, table_names: list):
-        for table_name in table_names:
-            self.properties.remove_imported_tables("acoustic", table_name)
-        if table_names:
-            app().project.update_model_properties_file()
-
     def remove_conflicting_excitations(self, surface_id: int):
 
         labels = [
@@ -937,13 +931,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             ]
 
         for label in labels:
-            table_names = self.properties.get_property_related_table_names(label, surface_id, "surfaces")
             self.properties._remove_surface_property(label, surface_id)
-            self.process_table_file_removal(table_names)
-
-    def remove_table_files_from_surfaces(self, surface_id : list):
-        table_names = self.properties.get_property_related_table_names("reciprocating_compressor_excitation", surface_id, "surfaces")
-        self.process_table_file_removal(table_names)
 
     def remove_callback(self):
         surface_ids = [int(selected_item.text(0)) for selected_item in self.treeWidget_compressor_excitation.selectedItems()]
@@ -952,7 +940,6 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             return
         
         for surface_id in surface_ids:
-            self.remove_table_files_from_surfaces(surface_id)
             self.properties._remove_surface_property("reciprocating_compressor_excitation", surface_id)
         
         self.clear_line_edit_selection_id()
@@ -964,8 +951,6 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
 
     def reset_callback(self):
 
-        self.hide()
-
         title = "Resetting of compressor excitations"
         message = "Would you like to remove all compressor excitations from the acoustic model?"
 
@@ -976,16 +961,6 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             return
 
         if read._continue:
-
-            surface_ids = list()
-            for (property, *args) in self.properties.surface_properties.keys():
-                if property == "reciprocating_compressor_excitation":
-
-                    surface_id = args[0]
-                    surface_ids.append(surface_id)
-
-            self.remove_table_files_from_surfaces(surface_ids)
-
             self.properties._reset_property("reciprocating_compressor_excitation")
             self.actions_to_finalize()
 
@@ -1068,10 +1043,12 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         self.lineEdit_connection_type.clear()
         self.pushButton_remove.setDisabled(True)
 
-        for (property, *_) in self.properties.surface_properties.keys():
-            if property == "reciprocating_compressor_excitation":
-                self.tabWidget_main.setTabVisible(TabIndex.LIST, True)
-                return
+        for (property, *_) in self.properties.surface_properties:
+            if property != "reciprocating_compressor_excitation":
+                continue
+
+            self.tabWidget_main.setTabVisible(TabIndex.LIST, True)
+            return
 
         self.tabWidget_main.setTabVisible(TabIndex.LIST, False)
         self.tabWidget_main.setCurrentIndex(TabIndex.SETUP)
@@ -1385,7 +1362,6 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         plotter.show()
 
     def export_path_callback(self):
-
         path = app().config.get_last_folder_for("exported_data_folder")
         if path is None:
             directory_path = USER_PATH
@@ -1393,7 +1369,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             directory_path = path
 
         caption = "Enter a filename to export the reciprocating compressor excitation data"
-        ext_filter = "Text file (*.dat);; Text file (*.txt);; Text file (*.csv);; Spreadsheet (*.xls);; Spreadsheet (*.xlsx)"
+        ext_filter = "Text file (*.dat);; Text file (*.txt);; Text file (*.csv);; Spreadsheet (*.xlsx)"
 
         if self.exporter is None:
             self.exporter = ExportModelResults()

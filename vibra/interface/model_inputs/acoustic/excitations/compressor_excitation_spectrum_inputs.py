@@ -5,14 +5,16 @@ from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
 
 from vibra import app
+from vibra.extensions import SUPPORTED_SPREADSHEET_READ_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
 from vibra.interface import error_title
-from vibra.interface.common.common_interface import update_analysis_setup_in_file
+from vibra.interface.common.common_interface import update_analysis_setup_in_file, update_entities_selection
 from vibra.interface.data.data_manager import get_spectral_data_from_array
-from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.acoustic.definitions.enums import SetupTabType
 from vibra.interface.ui_generated.model.acoustic.excitations.compressor_excitation_spectrum_inputs_ui import CompressorExcitationSpectrumInputs_UI
+from vibra.interface.user_input.data_handler.file_dialog_service import FileDialogService
+from vibra.interface.user_input.data_handler.file_handlers.file_handler import FileHandler
 
 
 class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
@@ -129,43 +131,48 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
         self.treeWidget_compressor_excitation_spectrum.clear()
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key
-            if property == "compressor_excitation_spectrum":
+            if property != "compressor_excitation_spectrum":
+                continue
 
-                if "table_names" in data.keys():
-                    str_value = "Table of values"
-                else:
-                    real_values = np.array(data["real_values"])
-                    imag_values = np.array(data["imag_values"])
-                    complex_values = real_values + 1j * imag_values
-                    str_value = str(complex_values)
+            if "table_names" in data:
+                str_value = "Table"
+            else:
+                real_values = np.array(data["real_values"])
+                imag_values = np.array(data["imag_values"])
+                complex_values = real_values + 1j * imag_values
+                str_value = str(complex_values)
 
-                new = QTreeWidgetItem([str(surface_id), str_value])
-                new.setTextAlignment(0, Qt.AlignCenter)
-                new.setTextAlignment(1, Qt.AlignCenter)
-                self.treeWidget_compressor_excitation_spectrum.addTopLevelItem(new)
+            new = QTreeWidgetItem([str(surface_id), str_value])
+            new.setTextAlignment(0, Qt.AlignCenter)
+            new.setTextAlignment(1, Qt.AlignCenter)
+            self.treeWidget_compressor_excitation_spectrum.addTopLevelItem(new)
 
         self.update_tabs_visibility()
 
     def load_table(self, lineEdit : QLineEdit, direct_load=False):
-
         title = "Error reached while loading compressor excitation data"
-        imported_values = None
 
         try:
             if direct_load:
-                imported_table_path = lineEdit.text()
-                imported_values = np.loadtxt(imported_table_path, delimiter=",")
+                imported_path = lineEdit.text()
 
             else:
-                extensions = ["csv", "dat", "txt", "xlsx", "xls"]
+                extensions = SUPPORTED_SPREADSHEET_READ_EXTENSIONS + SUPPORTED_TEXT_EXTENSIONS
                 caption = "Choose a table to import the compressor excitation spectrum data"
-                imported_data = DataImporter.import_single_file("imported_table_folder", extensions, caption)
 
-                if not imported_data:
-                    return None
+                imported_path = FileDialogService.open_file(file_extensions=extensions,
+                                            caption=caption,
+                                            last_folder="imported_table_folder")
 
-                imported_values = imported_data.data
-                lineEdit.setText(imported_data.path)
+            imported_data = FileHandler.read(imported_path)
+
+            if imported_data is None:
+                return None
+
+            if not direct_load:
+                lineEdit.setText(str(imported_data.path))
+                
+            imported_values = imported_data.data
 
             if imported_values.shape[1] < 3:
                 message = "The imported table has insufficient number of columns. The spectrum"
@@ -191,7 +198,6 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
         frequencies = imported_values[:, 0]
 
         if app().project.model.change_analysis_frequency_setup(list(frequencies)):
-            self.hide()
             title = "Project frequency setup cannot be modified"
             message = "The following imported table of values has a frequency setup "
             message += "different from the others already imported ones. The current "
@@ -222,18 +228,24 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
             return
 
         input_ids = self.lineEdit_selection_id.text()
-        surface_ids, error_data = self.mesh.check_selected_ids(input_ids, selection = "surfaces")
+        surface_ids, error_data = self.model.check_selected_ids(
+            input_ids,
+            "surfaces",
+            domain="acoustic",
+        )
 
         if error_data is not None:
-            self.hide()
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
             return
 
+        app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
+        update_entities_selection(self.lineEdit_selection_id, "surfaces", surface_ids)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
+
         self.remove_conflicting_excitations(surface_ids)
 
         if self.lineEdit_table_path.text() == "":
-            self.hide()
             title = "Additional inputs required"
             message = "You must select the external compressor excitation "
             message += "table path to proceed with the assignment"
@@ -278,20 +290,12 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
                 "table_paths" : [table_path],
                 "table_names" : [table_name],
                 "values" : [complex_values],
-                "nodal_attribution": False,
-                "averaged": False,
+                "element_integration": True,
                 }
 
             self.properties._set_property("compressor_excitation_spectrum", data, surface=surface_id)
 
         self.actions_to_finalize(close_window)
-
-    def process_table_file_removal(self, table_names: list):
-        for table_name in table_names:
-            self.properties.remove_imported_tables("acoustic", table_name)
-
-        if table_names:
-            app().project.update_model_properties_file()
 
     def remove_conflicting_excitations(self, surface_ids: int | list):
 
@@ -310,27 +314,16 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
 
         for surface_id in surface_ids:
             for label in labels:
-                table_names = self.properties.get_property_related_table_names(label, surface_id, "surfaces")
                 self.properties._remove_surface_property(label, surface_id)
-                self.process_table_file_removal(table_names)
-
-    def remove_table_files_from_surfaces(self, surface_id : list):
-        table_names = self.properties.get_property_related_table_names("compressor_excitation_spectrum", surface_id, "surfaces")
-        self.process_table_file_removal(table_names)
 
     def remove_callback(self):
 
         if self.lineEdit_selection_id.text() != "":
-
             surface_id = int(self.lineEdit_selection_id.text())
-            self.remove_table_files_from_surfaces(surface_id)
-
             self.properties._remove_surface_property("compressor_excitation_spectrum", surface_id)
             self.actions_to_finalize()
 
     def reset_callback(self):
-
-        self.hide()
 
         title = "Compressor excitation reseting"
         message = "Would you like to remove the all compressor excitations in frequency domain from model?"
@@ -342,15 +335,6 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
             return
 
         if read._continue:
-
-            surface_ids = list()
-            for (property, *args), data in self.properties.surface_properties.items():
-                if property == "compressor_excitation_spectrum":
-                    surface_id = args[0]
-                    surface_ids.append(surface_id)
-
-            self.remove_table_files_from_surfaces(surface_ids)
-
             self.properties._reset_property("compressor_excitation_spectrum")
             self.actions_to_finalize()
 
@@ -365,7 +349,7 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
 
     def update_tabs_visibility(self):
 
-        for key in self.properties.surface_properties.keys():
+        for key in self.properties.surface_properties:
             property, *args = key
             if property != "compressor_excitation_spectrum":
                 continue

@@ -1,0 +1,259 @@
+import logging
+from enum import IntEnum
+
+import numpy as np
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QCloseEvent
+
+from vibra import app
+from vibra.engine import AnalysisID
+from vibra.interface.common.common_interface import update_entities_selection
+from vibra.interface.data_handler.export_model_results import ExportModelResults
+from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.numeric_checks.unit_utilities import convert_pressure_unit
+from vibra.interface.plots.general.frequency_response_plotter import DataFormat, FrequencyResponsePlotter
+from vibra.interface.ui_generated.plots.acoustic.acoustic_nodal_solution_2d_plot_time_inputs_ui import (
+    AcousticNodalSolution2dPlotTimeInputs_UI,
+)
+from vibra.utils.signal_processing import process_ifft_from_one_sided_spectrum_signal
+
+
+class SelectionType(IntEnum):
+    SURFACES = 0
+    LINES = 1
+    POINTS = 2
+    NODES = 3
+
+
+class AcousticNodalSolution2dPlotTimeInputs(AcousticNodalSolution2dPlotTimeInputs_UI):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        app().main_window.show_geometry_render_widget()
+
+        self._reset_variables()
+        self._create_connections()
+
+        self._load_analysis_setup_and_solution()
+        self.geometry_selection_callback()
+    
+    @property
+    def model(self):
+        return app().project.model
+
+    @property
+    def mesh(self):
+        return app().project.model.mesh
+
+    @property
+    def properties(self):
+        return app().project.model.properties
+
+    @property
+    def nodal_solution(self):
+        return app().project.model.solution.acoustic_solution
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        self.update_render_according_to_selector()
+
+    def _load_analysis_setup_and_solution(self):
+        self.analysis_method = ""
+        if self.model.analysis_id == AnalysisID.ACOUSTIC_HARMONIC:
+            self.analysis_method = "Direct method"
+
+        self.frequencies = self.model.frequencies
+
+    def _reset_variables(self):
+        self.exporter = None
+        self.plotter = None
+        self.model_results = {}
+        self.selection_types = ["surfaces", "lines", "points", "nodes"]
+
+    def _create_connections(self):
+
+        # QComboBox connection
+        self.comboBox_selector_filter.currentIndexChanged.connect(self.update_render_according_to_selector)
+
+        # QPushButton conenctions
+        self.pushButton_export_data.clicked.connect(self.export_data_callback)
+        self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
+
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
+    
+    def geometry_selection_callback(self):
+
+        if not app().main_window.action_results_workspace.isChecked():
+            return
+
+        surfaces = app().main_window.selection.geometry_surfaces
+        lines = app().main_window.selection.geometry_lines
+        points = app().main_window.selection.geometry_points
+        nodes = app().main_window.selection.mesh_nodes
+
+        index = self.comboBox_selector_filter.currentIndex()
+        if surfaces and index == 0:
+            text = ", ".join([str(i) for i in surfaces])
+            self.lineEdit_selection_id.setText(text)
+
+        elif lines and index == 1:
+            text = ", ".join([str(i) for i in lines])
+            self.lineEdit_selection_id.setText(text)
+
+        elif points and index == 2:
+            text = ", ".join([str(i) for i in points])
+            self.lineEdit_selection_id.setText(text)
+
+        elif nodes and index == 3:
+            text = ", ".join([str(i) for i in nodes])
+            self.lineEdit_selection_id.setText(text)
+
+        elif not any([nodes, points, lines, surfaces]):
+            self.lineEdit_selection_id.setText("")
+
+    def update_render_according_to_selector(self):
+
+        self.geometry_selection_callback()
+
+        if self.comboBox_selector_filter.currentIndex() == SelectionType.NODES:
+            app().main_window.show_mesh_render_widget()
+        else:
+            app().main_window.show_geometry_render_widget()
+
+    def check_selected_ids(self):
+
+        index = self.comboBox_selector_filter.currentIndex()
+        selection = self.selection_types[index]
+
+        input_ids = self.lineEdit_selection_id.text()
+        self.selected_ids, error_data = self.model.check_selected_ids(
+            input_ids,
+            selection,
+            domain="acoustic",
+        )
+
+        if error_data is not None:
+            self.lineEdit_selection_id.setFocus()
+            PrintMessageInput(error_data)
+            return True
+
+        app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
+        update_entities_selection(self.lineEdit_selection_id, selection, self.selected_ids)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
+
+    def plot_data_callback(self):
+
+        if self.check_selected_ids():
+            return
+
+        self.join_model_data()
+        self.plotter = FrequencyResponsePlotter(close_dialogs=True)
+        self.plotter.comboBox_data_format.setCurrentIndex(DataFormat.REAL)
+        self.plotter.data_format_changed_callback()
+        self.plotter.frame_hlines_main.setDisabled(True)
+        self.plotter._set_model_results_data_to_plot(self.model_results)
+
+    def export_data_callback(self):
+        
+        if self.check_selected_ids():
+            return
+
+        self.join_model_data()
+        self.exporter = ExportModelResults()
+        self.exporter._set_data_to_export(self.model_results)
+
+    def get_response(self, selected_id: int):
+
+        index = self.comboBox_selector_filter.currentIndex()
+
+        if index == SelectionType.SURFACES:
+            nodes = self.mesh.get_nodes_from_surface(selected_id)
+        elif index == SelectionType.LINES:
+            nodes = self.mesh.get_nodes_from_line(selected_id)
+        elif index == SelectionType.POINTS:
+            nodes = self.mesh.nodes_from_points.get(selected_id)
+        else:
+            nodes = selected_id
+
+        # process the acoustic dofs of the selected entities
+        gdof = self.model.get_dof_indices_from_nodes(nodes, "acoustic")
+        rows = gdof[:, 0]
+
+        if isinstance(rows, int):
+            response = self.nodal_solution[rows,:]
+        else:
+            response = np.average(self.nodal_solution[rows,:], axis=0)
+
+        if complex(0) in response:
+            response += 1e-12
+        #     response += np.ones(len(response), dtype=float)*(1e-12)
+
+        return response
+
+    def join_model_data(self):
+
+        current_text = self.comboBox_selector_filter.currentText()
+        selection_type = current_text.lower()[:-1]
+
+        self.title = "Acoustic pressure waveform"
+        self.process_units_data()
+
+        for i, selected_id in enumerate(self.selected_ids):
+
+            key = (selection_type, (selected_id))
+            legend_label = f"Acoustic pressure at {selection_type} [{selected_id}]"
+
+            Xf = self.get_response(selected_id)
+            time_vector, acoustic_pressure = process_ifft_from_one_sided_spectrum_signal(
+                self.frequencies, 
+                Xf,
+                dc_included = False,
+                )
+
+            self.model_results[key] = { 
+                "x_data" : time_vector,
+                "y_data" : self.unit_factor * acoustic_pressure,
+                "x_label" : "Time [s]",
+                "y_label" : "Acoustic pressure",
+                "title" : self.title,
+                "data_type" : "acoustic pressure",
+                "legend" : legend_label,
+                "unit" : self.pressure_units,
+                "color" : self.get_color(i),
+                "linestyle" : "-"  
+            }
+
+    def process_units_data(self) -> str:
+        self.pressure_units = self.comboBox_pressure_units.currentText()
+        self.unit_factor = convert_pressure_unit(1, "Pa", self.pressure_units)
+
+    def get_color(self, index):
+
+        colors = [
+            (0, 0, 1),
+            (0, 0, 0),
+            (1, 0, 0),
+            (0, 1, 1),
+            (1, 0, 1),
+            (1, 1, 0),
+            (0.25, 0.25, 0.25),
+        ]
+
+        if index <= 6:
+            return colors[index]
+        else:
+            return tuple(np.random.randint(0, 255, size=3) / 255)
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
+            self.plot_data_callback()
+
+    def closeEvent(self, a0: QCloseEvent | None) -> None:
+
+        if self.exporter is not None:
+            self.exporter.close()
+
+        if self.plotter is not None:
+            self.plotter.close()
+
+        return super().closeEvent(a0)

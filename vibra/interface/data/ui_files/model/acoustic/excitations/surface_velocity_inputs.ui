@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>420</width>
-    <height>400</height>
+    <width>480</width>
+    <height>480</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -21,14 +21,14 @@
   </property>
   <property name="minimumSize">
    <size>
-    <width>420</width>
+    <width>480</width>
     <height>400</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>420</width>
-    <height>400</height>
+    <width>480</width>
+    <height>480</height>
    </size>
   </property>
   <property name="font">
@@ -72,7 +72,7 @@
      </property>
      <property name="maximumSize">
       <size>
-       <width>420</width>
+       <width>16777215</width>
        <height>480</height>
       </size>
      </property>
@@ -83,18 +83,24 @@
       <enum>QFrame::Shadow::Raised</enum>
      </property>
      <layout class="QGridLayout" name="gridLayout_4">
+      <property name="leftMargin">
+       <number>8</number>
+      </property>
+      <property name="rightMargin">
+       <number>8</number>
+      </property>
       <item row="0" column="0">
        <widget class="QFrame" name="frame_4">
         <property name="minimumSize">
          <size>
           <width>360</width>
-          <height>40</height>
+          <height>80</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>380</width>
-          <height>40</height>
+          <width>16777215</width>
+          <height>80</height>
          </size>
         </property>
         <property name="frameShape">
@@ -122,17 +128,43 @@
          <property name="verticalSpacing">
           <number>2</number>
          </property>
+         <item row="0" column="0">
+          <spacer name="horizontalSpacer">
+           <property name="orientation">
+            <enum>Qt::Orientation::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="0" column="3">
+          <spacer name="horizontalSpacer_2">
+           <property name="orientation">
+            <enum>Qt::Orientation::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
          <item row="0" column="2">
           <widget class="QLineEdit" name="lineEdit_selection_id">
            <property name="minimumSize">
             <size>
-             <width>120</width>
+             <width>150</width>
              <height>28</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>120</width>
+             <width>150</width>
              <height>28</height>
             </size>
            </property>
@@ -155,30 +187,17 @@
            </property>
           </widget>
          </item>
-         <item row="0" column="0">
-          <spacer name="horizontalSpacer">
-           <property name="orientation">
-            <enum>Qt::Orientation::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
          <item row="0" column="1">
           <widget class="QLabel" name="label_2">
            <property name="minimumSize">
             <size>
-             <width>100</width>
+             <width>120</width>
              <height>28</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>100</width>
+             <width>120</width>
              <height>28</height>
             </size>
            </property>
@@ -198,18 +217,67 @@
            </property>
           </widget>
          </item>
-         <item row="0" column="3">
-          <spacer name="horizontalSpacer_2">
-           <property name="orientation">
-            <enum>Qt::Orientation::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
+         <item row="1" column="1">
+          <widget class="QLabel" name="label_4">
+           <property name="minimumSize">
             <size>
-             <width>40</width>
-             <height>20</height>
+             <width>120</width>
+             <height>28</height>
             </size>
            </property>
-          </spacer>
+           <property name="maximumSize">
+            <size>
+             <width>120</width>
+             <height>28</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <family>MS Shell Dlg 2</family>
+             <pointsize>10</pointsize>
+             <italic>false</italic>
+             <bold>false</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Data type:</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="2">
+          <widget class="QComboBox" name="comboBox_data_type">
+           <property name="minimumSize">
+            <size>
+             <width>150</width>
+             <height>28</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>150</width>
+             <height>28</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+             <bold>false</bold>
+            </font>
+           </property>
+           <item>
+            <property name="text">
+             <string>Real and imaginary</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Magnitude and phase</string>
+            </property>
+           </item>
+          </widget>
          </item>
         </layout>
        </widget>
@@ -224,7 +292,7 @@
         </property>
         <property name="maximumSize">
          <size>
-          <width>380</width>
+          <width>16777215</width>
           <height>16777215</height>
          </size>
         </property>
@@ -254,238 +322,73 @@
           <property name="bottomMargin">
            <number>6</number>
           </property>
-          <property name="spacing">
+          <property name="horizontalSpacing">
+           <number>6</number>
+          </property>
+          <property name="verticalSpacing">
            <number>2</number>
           </property>
-          <item row="0" column="0">
-           <widget class="QFrame" name="frame_8">
+          <item row="1" column="2">
+           <widget class="QLabel" name="label_dtype_right">
             <property name="minimumSize">
              <size>
-              <width>340</width>
-              <height>80</height>
+              <width>80</width>
+              <height>26</height>
              </size>
             </property>
             <property name="maximumSize">
              <size>
-              <width>400</width>
-              <height>160</height>
+              <width>16777215</width>
+              <height>26</height>
              </size>
             </property>
             <property name="font">
              <font>
-              <pointsize>11</pointsize>
+              <family>MS Shell Dlg 2</family>
+              <pointsize>10</pointsize>
+              <italic>false</italic>
               <bold>false</bold>
              </font>
             </property>
-            <property name="frameShape">
-             <enum>QFrame::Shape::NoFrame</enum>
+            <property name="text">
+             <string>Imaginary</string>
             </property>
-            <property name="frameShadow">
-             <enum>QFrame::Shadow::Raised</enum>
+            <property name="alignment">
+             <set>Qt::AlignmentFlag::AlignCenter</set>
             </property>
-            <layout class="QGridLayout" name="gridLayout">
-             <property name="leftMargin">
-              <number>0</number>
-             </property>
-             <property name="topMargin">
-              <number>0</number>
-             </property>
-             <property name="rightMargin">
-              <number>0</number>
-             </property>
-             <property name="bottomMargin">
-              <number>0</number>
-             </property>
-             <property name="horizontalSpacing">
-              <number>0</number>
-             </property>
-             <property name="verticalSpacing">
-              <number>2</number>
-             </property>
-             <item row="1" column="2">
-              <widget class="QLineEdit" name="lineEdit_imag_value">
-               <property name="minimumSize">
-                <size>
-                 <width>80</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>80</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <family>MS Shell Dlg 2</family>
-                 <pointsize>10</pointsize>
-                 <italic>false</italic>
-                 <bold>false</bold>
-                </font>
-               </property>
-               <property name="styleSheet">
-                <string notr="true"/>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignmentFlag::AlignCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="3">
-              <widget class="QLabel" name="label_21">
-               <property name="minimumSize">
-                <size>
-                 <width>60</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>60</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <family>MS Shell Dlg 2</family>
-                 <pointsize>10</pointsize>
-                 <italic>false</italic>
-                 <bold>false</bold>
-                </font>
-               </property>
-               <property name="text">
-                <string>[m/s]</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="0">
-              <widget class="QLabel" name="label_18">
-               <property name="minimumSize">
-                <size>
-                 <width>120</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>120</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <family>MS Shell Dlg 2</family>
-                 <pointsize>10</pointsize>
-                 <italic>false</italic>
-                 <bold>false</bold>
-                </font>
-               </property>
-               <property name="text">
-                <string>Surface velocity:</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QLabel" name="label_4">
-               <property name="minimumSize">
-                <size>
-                 <width>80</width>
-                 <height>26</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>80</width>
-                 <height>26</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <family>MS Shell Dlg 2</family>
-                 <pointsize>10</pointsize>
-                 <italic>false</italic>
-                 <bold>false</bold>
-                </font>
-               </property>
-               <property name="text">
-                <string>Real</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignmentFlag::AlignCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="2">
-              <widget class="QLabel" name="label_20">
-               <property name="minimumSize">
-                <size>
-                 <width>80</width>
-                 <height>26</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>80</width>
-                 <height>26</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <family>MS Shell Dlg 2</family>
-                 <pointsize>10</pointsize>
-                 <italic>false</italic>
-                 <bold>false</bold>
-                </font>
-               </property>
-               <property name="text">
-                <string>Imaginary</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignmentFlag::AlignCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item row="1" column="1">
-              <widget class="QLineEdit" name="lineEdit_real_value">
-               <property name="minimumSize">
-                <size>
-                 <width>80</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>80</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <family>MS Shell Dlg 2</family>
-                 <pointsize>10</pointsize>
-                 <italic>false</italic>
-                 <bold>false</bold>
-                </font>
-               </property>
-               <property name="styleSheet">
-                <string notr="true"/>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignmentFlag::AlignCenter</set>
-               </property>
-              </widget>
-             </item>
-            </layout>
            </widget>
           </item>
-          <item row="2" column="0">
+          <item row="2" column="2">
+           <widget class="QLineEdit" name="lineEdit_right_value">
+            <property name="minimumSize">
+             <size>
+              <width>100</width>
+              <height>28</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>100</width>
+              <height>28</height>
+             </size>
+            </property>
+            <property name="font">
+             <font>
+              <family>MS Shell Dlg 2</family>
+              <pointsize>10</pointsize>
+              <italic>false</italic>
+              <bold>false</bold>
+             </font>
+            </property>
+            <property name="styleSheet">
+             <string notr="true"/>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignmentFlag::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="1">
            <widget class="QFrame" name="frame_20">
             <property name="frameShape">
              <enum>QFrame::Shape::NoFrame</enum>
@@ -509,151 +412,153 @@
              <property name="spacing">
               <number>0</number>
              </property>
-             <item row="0" column="0">
-              <widget class="QCheckBox" name="checkBox_averaged_constant_values">
-               <property name="minimumSize">
-                <size>
-                 <width>0</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>220</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <pointsize>10</pointsize>
-                 <bold>false</bold>
-                </font>
-               </property>
-               <property name="text">
-                <string>Averaged value over all nodes</string>
-               </property>
-               <property name="checked">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
             </layout>
            </widget>
           </item>
-          <item row="1" column="0">
-           <widget class="QFrame" name="frame_24">
-            <property name="frameShape">
-             <enum>QFrame::Shape::NoFrame</enum>
+          <item row="1" column="1">
+           <widget class="QLabel" name="label_dtype_left">
+            <property name="minimumSize">
+             <size>
+              <width>80</width>
+              <height>26</height>
+             </size>
             </property>
-            <property name="frameShadow">
-             <enum>QFrame::Shadow::Raised</enum>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>26</height>
+             </size>
             </property>
-            <layout class="QGridLayout" name="gridLayout_16">
-             <property name="leftMargin">
-              <number>0</number>
-             </property>
-             <property name="topMargin">
-              <number>0</number>
-             </property>
-             <property name="rightMargin">
-              <number>0</number>
-             </property>
-             <property name="bottomMargin">
-              <number>0</number>
-             </property>
-             <item row="0" column="0">
-              <spacer name="horizontalSpacer_3">
-               <property name="orientation">
-                <enum>Qt::Orientation::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item row="0" column="2">
-              <spacer name="horizontalSpacer_4">
-               <property name="orientation">
-                <enum>Qt::Orientation::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item row="0" column="1">
-              <widget class="QRadioButton" name="radioButton_nodal_attribution_constant">
-               <property name="minimumSize">
-                <size>
-                 <width>0</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>16777215</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <pointsize>10</pointsize>
-                 <bold>false</bold>
-                </font>
-               </property>
-               <property name="text">
-                <string>Nodal attribution</string>
-               </property>
-               <property name="checked">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="3">
-              <widget class="QRadioButton" name="radioButton_element_integration_constant">
-               <property name="minimumSize">
-                <size>
-                 <width>0</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>16777215</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <pointsize>10</pointsize>
-                 <bold>false</bold>
-                </font>
-               </property>
-               <property name="text">
-                <string>Element integration</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="4">
-              <spacer name="horizontalSpacer_5">
-               <property name="orientation">
-                <enum>Qt::Orientation::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-            </layout>
+            <property name="font">
+             <font>
+              <family>MS Shell Dlg 2</family>
+              <pointsize>10</pointsize>
+              <italic>false</italic>
+              <bold>false</bold>
+             </font>
+            </property>
+            <property name="text">
+             <string>Real</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignmentFlag::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="1">
+           <spacer name="verticalSpacer_3">
+            <property name="orientation">
+             <enum>Qt::Orientation::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item row="0" column="1">
+           <spacer name="verticalSpacer">
+            <property name="orientation">
+             <enum>Qt::Orientation::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="label_18">
+            <property name="minimumSize">
+             <size>
+              <width>120</width>
+              <height>28</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>120</width>
+              <height>28</height>
+             </size>
+            </property>
+            <property name="font">
+             <font>
+              <family>MS Shell Dlg 2</family>
+              <pointsize>10</pointsize>
+              <italic>false</italic>
+              <bold>false</bold>
+             </font>
+            </property>
+            <property name="text">
+             <string>Surface velocity:</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QLineEdit" name="lineEdit_left_value">
+            <property name="minimumSize">
+             <size>
+              <width>100</width>
+              <height>28</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>100</width>
+              <height>28</height>
+             </size>
+            </property>
+            <property name="font">
+             <font>
+              <family>MS Shell Dlg 2</family>
+              <pointsize>10</pointsize>
+              <italic>false</italic>
+              <bold>false</bold>
+             </font>
+            </property>
+            <property name="styleSheet">
+             <string notr="true"/>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignmentFlag::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="3">
+           <widget class="QLabel" name="label_unit">
+            <property name="minimumSize">
+             <size>
+              <width>80</width>
+              <height>28</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>80</width>
+              <height>28</height>
+             </size>
+            </property>
+            <property name="font">
+             <font>
+              <family>MS Shell Dlg 2</family>
+              <pointsize>10</pointsize>
+              <italic>false</italic>
+              <bold>false</bold>
+             </font>
+            </property>
+            <property name="text">
+             <string>[m/s]</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
+            </property>
            </widget>
           </item>
          </layout>
@@ -678,62 +583,33 @@
           <property name="spacing">
            <number>2</number>
           </property>
-          <item row="2" column="0">
-           <widget class="QFrame" name="frame_21">
-            <property name="frameShape">
-             <enum>QFrame::Shape::NoFrame</enum>
-            </property>
-            <property name="frameShadow">
-             <enum>QFrame::Shadow::Raised</enum>
-            </property>
-            <layout class="QGridLayout" name="gridLayout_17">
-             <property name="leftMargin">
-              <number>0</number>
-             </property>
-             <property name="topMargin">
-              <number>0</number>
-             </property>
-             <property name="rightMargin">
-              <number>0</number>
-             </property>
-             <property name="bottomMargin">
-              <number>0</number>
-             </property>
-             <property name="spacing">
-              <number>0</number>
-             </property>
-             <item row="0" column="0">
-              <widget class="QCheckBox" name="checkBox_averaged_table_values">
-               <property name="minimumSize">
-                <size>
-                 <width>0</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>220</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <pointsize>10</pointsize>
-                 <bold>false</bold>
-                </font>
-               </property>
-               <property name="text">
-                <string>Average value over all nodes</string>
-               </property>
-               <property name="checked">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </item>
           <item row="0" column="0">
+           <spacer name="verticalSpacer_4">
+            <property name="orientation">
+             <enum>Qt::Orientation::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item row="2" column="0">
+           <spacer name="verticalSpacer_6">
+            <property name="orientation">
+             <enum>Qt::Orientation::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item row="1" column="0">
            <widget class="QFrame" name="frame_9">
             <property name="minimumSize">
              <size>
@@ -743,7 +619,7 @@
             </property>
             <property name="maximumSize">
              <size>
-              <width>400</width>
+              <width>16777215</width>
               <height>200</height>
              </size>
             </property>
@@ -772,6 +648,37 @@
              <property name="verticalSpacing">
               <number>2</number>
              </property>
+             <item row="1" column="1">
+              <widget class="QLineEdit" name="lineEdit_table_path">
+               <property name="enabled">
+                <bool>true</bool>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>320</width>
+                 <height>28</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>320</width>
+                 <height>28</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <pointsize>9</pointsize>
+                 <bold>false</bold>
+                </font>
+               </property>
+               <property name="styleSheet">
+                <string notr="true"/>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignmentFlag::AlignCenter</set>
+               </property>
+              </widget>
+             </item>
              <item row="1" column="0">
               <spacer name="horizontalSpacer_11">
                <property name="orientation">
@@ -797,6 +704,28 @@
                 </size>
                </property>
               </spacer>
+             </item>
+             <item row="0" column="1">
+              <widget class="QLabel" name="label_3">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>28</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>16777215</width>
+                 <height>28</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>Choose a table file to import the data</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignmentFlag::AlignCenter</set>
+               </property>
+              </widget>
              </item>
              <item row="1" column="2">
               <widget class="QPushButton" name="pushButton_load_table">
@@ -836,7 +765,7 @@
                 <string/>
                </property>
                <property name="icon">
-                <iconset resource="../../../icons/resources.qrc">
+                <iconset resource="../../../../icons/dark_theme/resources.qrc">
                  <normaloff>:/icons/document_search_blue.png</normaloff>:/icons/document_search_blue.png</iconset>
                </property>
                <property name="iconSize">
@@ -850,71 +779,18 @@
                </property>
               </widget>
              </item>
-             <item row="1" column="1">
-              <widget class="QLineEdit" name="lineEdit_table_path">
-               <property name="enabled">
-                <bool>true</bool>
-               </property>
-               <property name="minimumSize">
-                <size>
-                 <width>280</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>280</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <pointsize>9</pointsize>
-                 <bold>false</bold>
-                </font>
-               </property>
-               <property name="styleSheet">
-                <string notr="true"/>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignmentFlag::AlignCenter</set>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="1">
-              <widget class="QLabel" name="label_3">
-               <property name="minimumSize">
-                <size>
-                 <width>0</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>16777215</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="text">
-                <string>Choose a table file to import the data</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignmentFlag::AlignCenter</set>
-               </property>
-              </widget>
-             </item>
             </layout>
            </widget>
           </item>
-          <item row="1" column="0">
-           <widget class="QFrame" name="frame_16">
+          <item row="3" column="0">
+           <widget class="QFrame" name="frame_21">
             <property name="frameShape">
              <enum>QFrame::Shape::NoFrame</enum>
             </property>
             <property name="frameShadow">
              <enum>QFrame::Shadow::Raised</enum>
             </property>
-            <layout class="QGridLayout" name="gridLayout_15">
+            <layout class="QGridLayout" name="gridLayout_17">
              <property name="leftMargin">
               <number>0</number>
              </property>
@@ -927,98 +803,9 @@
              <property name="bottomMargin">
               <number>0</number>
              </property>
-             <item row="0" column="2">
-              <spacer name="horizontalSpacer_9">
-               <property name="orientation">
-                <enum>Qt::Orientation::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item row="0" column="0">
-              <spacer name="horizontalSpacer_8">
-               <property name="orientation">
-                <enum>Qt::Orientation::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item row="0" column="1">
-              <widget class="QRadioButton" name="radioButton_nodal_attribution_table">
-               <property name="minimumSize">
-                <size>
-                 <width>0</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>16777215</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <pointsize>10</pointsize>
-                 <bold>false</bold>
-                </font>
-               </property>
-               <property name="text">
-                <string>Nodal attribution</string>
-               </property>
-               <property name="checked">
-                <bool>true</bool>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="3">
-              <widget class="QRadioButton" name="radioButton_element_integration_table">
-               <property name="minimumSize">
-                <size>
-                 <width>0</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>16777215</width>
-                 <height>28</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <pointsize>10</pointsize>
-                 <bold>false</bold>
-                </font>
-               </property>
-               <property name="text">
-                <string>Element integration</string>
-               </property>
-              </widget>
-             </item>
-             <item row="0" column="4">
-              <spacer name="horizontalSpacer_10">
-               <property name="orientation">
-                <enum>Qt::Orientation::Horizontal</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>40</width>
-                 <height>20</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
+             <property name="spacing">
+              <number>0</number>
+             </property>
             </layout>
            </widget>
           </item>
@@ -1030,13 +817,13 @@
          </attribute>
          <layout class="QGridLayout" name="gridLayout_9">
           <property name="leftMargin">
-           <number>2</number>
+           <number>10</number>
           </property>
           <property name="topMargin">
            <number>8</number>
           </property>
           <property name="rightMargin">
-           <number>2</number>
+           <number>10</number>
           </property>
           <property name="bottomMargin">
            <number>2</number>
@@ -1054,7 +841,7 @@
             </property>
             <property name="maximumSize">
              <size>
-              <width>320</width>
+              <width>16777215</width>
               <height>40</height>
              </size>
             </property>
@@ -1159,7 +946,7 @@
             </property>
             <property name="maximumSize">
              <size>
-              <width>320</width>
+              <width>16777215</width>
               <height>200</height>
              </size>
             </property>
@@ -1191,7 +978,7 @@
             </attribute>
             <column>
              <property name="text">
-              <string>Surfaces</string>
+              <string>ID</string>
              </property>
              <property name="textAlignment">
               <set>AlignCenter</set>
@@ -1199,7 +986,15 @@
             </column>
             <column>
              <property name="text">
-              <string>Values</string>
+              <string>Entity</string>
+             </property>
+             <property name="textAlignment">
+              <set>AlignCenter</set>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>Values (m/s)</string>
              </property>
              <property name="textAlignment">
               <set>AlignCenter</set>
@@ -1224,7 +1019,7 @@
      </property>
      <property name="maximumSize">
       <size>
-       <width>420</width>
+       <width>16777215</width>
        <height>48</height>
       </size>
      </property>
@@ -1431,7 +1226,7 @@
   </layout>
  </widget>
  <resources>
-  <include location="../../../icons/resources.qrc"/>
+  <include location="../../../../icons/dark_theme/resources.qrc"/>
  </resources>
  <connections/>
 </ui>

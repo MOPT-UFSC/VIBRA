@@ -65,15 +65,17 @@ class AnalysisToolbar(QToolBar):
         self.resume_solution_action = QAction(self.resume_solution_icon, "Resume Solution", self)
 
     def _create_connections(self):
-        #
+
+        # QComboBox connections
         self.combo_box_physical_domain.currentTextChanged.connect(self.check_analysis_setup_callback)
         self.combo_box_analysis_type.currentTextChanged.connect(self.analysis_type_callback)
-        #
+
+        # QAction connections
         self.run_analysis_action.triggered.connect(self.run_analysis_callback)
         self.resume_solution_action.triggered.connect(lambda: self.run_analysis_callback(True))
         self.configure_analysis_action.triggered.connect(self.configure_analysis_callback)
         self.reset_solution_action.triggered.connect(self.reset_solution_callback)
-        #
+
         self.enable_pushbutons.connect(self.check_analysis_setup_callback)
         self.enable_pushbutons.connect(self.update_reset_solution_button_accessibility)
 
@@ -139,7 +141,7 @@ class AnalysisToolbar(QToolBar):
         for analysis_type in ["Harmonic", "Modal"]:
             self.combo_box_analysis_type.addItem(analysis_type)
 
-        for physical_domain in ["Structural", "Acoustic"]:
+        for physical_domain in ["Structural", "Acoustic", "Coupled"]:
             self.combo_box_physical_domain.addItem(physical_domain)
 
         # default setup
@@ -149,8 +151,8 @@ class AnalysisToolbar(QToolBar):
     def update_analysis_combo_boxes(self, block_signals: bool = False):
 
         if block_signals:
-            self.combo_box_analysis_type.blockSignals(block_signals)
-            self.combo_box_physical_domain.blockSignals(block_signals)
+            self.combo_box_analysis_type.blockSignals(True)
+            self.combo_box_physical_domain.blockSignals(True)
 
         analysis_type = app().project.get_analysis_type()
         physical_domain = app().project.get_physical_domain()
@@ -189,10 +191,12 @@ class AnalysisToolbar(QToolBar):
         physical_domain = self.combo_box_physical_domain.currentText()
 
         if analysis_type == "Harmonic":
-            if physical_domain == "Structural":
+            if physical_domain == "Acoustic":
+                return AnalysisID.ACOUSTIC_HARMONIC
+            elif physical_domain == "Structural":
                 return AnalysisID.STRUCTURAL_HARMONIC
             else:
-                return AnalysisID.ACOUSTIC_HARMONIC
+                return AnalysisID.COUPLED_HARMONIC
 
         elif analysis_type == "Modal":
             if physical_domain == "Structural":
@@ -212,6 +216,16 @@ class AnalysisToolbar(QToolBar):
         self.run_analysis_action.setEnabled(analysis_id == new_analysis_id)
         self.combo_box_physical_domain.blockSignals(False)
         self.check_analysis_setup_callback()
+        self.update_fsi_normals_plot_accessibility()
+
+        is_analysis_modal = new_analysis_id.is_modal()
+        is_domain_coupled = self.combo_box_physical_domain.currentText() == "Coupled"
+
+        # hide the coupled item of the physical domains combo box if modal analysis was selected
+        self.combo_box_physical_domain.view().setRowHidden(2, is_analysis_modal)
+
+        if is_domain_coupled and is_analysis_modal:
+            self.combo_box_physical_domain.setCurrentIndex(0)
 
     def check_analysis_setup_callback(self):
         app().main_window.update_symbols()
@@ -219,9 +233,16 @@ class AnalysisToolbar(QToolBar):
         valid_analysis_setup = self.is_analysis_setup_valid()
         self.run_analysis_action.setEnabled(valid_analysis_setup)
         # self.domain_changed.emit()
+        self.update_fsi_normals_plot_accessibility()
+
+    def update_fsi_normals_plot_accessibility(self):
+        new_analysis_id = self.get_current_analysis_id()
+        enable_normals_plot = new_analysis_id.is_coupled() and len(self.model.domains_processor.fluid_structure_interfaces)
+        app().main_window.action_show_fluid_structure_interface_normals.setEnabled(enable_normals_plot)
 
     def run_analysis_callback(self, is_resume: bool = False):
         app().project.mark_solution_as_outdated(reset=True)
+
         if app().config.user_preferences.run_analysis_in_subprocess:
             self.run_analysis_in_subprocess(is_resume)
         else:
@@ -237,7 +258,6 @@ class AnalysisToolbar(QToolBar):
             app().main_window.action_model_workspace_callback()
 
         app().main_window.action_results_workspace.setDisabled(True)
-        app().main_window.results_viewer_widget.clear_treeWidgets_of_frequencies()
 
         self.update_analysis_combo_boxes()
 
@@ -246,7 +266,10 @@ class AnalysisToolbar(QToolBar):
         else:
             interrupt_function = None
 
-        LoadingWindow(app().project.run_analysis, interrupt_function).run(is_resume)
+        # load the user preferences for printing the solution log
+        print_log = app().config.user_preferences.print_solution_log
+
+        LoadingWindow(app().project.run_analysis, interrupt_function).run(is_resume, print_log=print_log)
 
         self.solve_analysis = False
 
@@ -265,15 +288,18 @@ class AnalysisToolbar(QToolBar):
             app().main_window.action_model_workspace_callback()
 
         app().main_window.action_results_workspace.setDisabled(True)
-        app().main_window.results_viewer_widget.clear_treeWidgets_of_frequencies()
 
         checker = AnalysisChecker(self.model)
         checker.check_analysis_requirements()
 
         app().project.write_to_working_dir()
 
+        command = SubProcessHandler.get_executable()
+        if app().config.user_preferences.print_solution_log:
+            command += ["--print_log"]
+
         flag = "--continue-analysis" if is_resume else "--run-analysis"
-        command = f"{SubProcessHandler.get_executable()} {flag} {str(app().project.working_directory)}"
+        command += [flag, str(app().project.working_directory)]
         subprocess_status = SubProcessHandler(command).run()
 
         if subprocess_status != SubProcessStatus.SUCCESS:
@@ -332,6 +358,8 @@ class AnalysisToolbar(QToolBar):
                 self.harmonic_analysis_setup_callback(AnalysisID.STRUCTURAL_HARMONIC)
             case AnalysisID.ACOUSTIC_HARMONIC:
                 self.harmonic_analysis_setup_callback(AnalysisID.ACOUSTIC_HARMONIC)
+            case AnalysisID.COUPLED_HARMONIC:
+                self.harmonic_analysis_setup_callback(AnalysisID.COUPLED_HARMONIC)
             case AnalysisID.STRUCTURAL_MODAL:
                 self.modal_analysis_setup_callback(AnalysisID.STRUCTURAL_MODAL)
             case AnalysisID.ACOUSTIC_MODAL:

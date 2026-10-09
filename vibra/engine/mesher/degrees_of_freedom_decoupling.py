@@ -170,7 +170,7 @@ class DegreesOfFreedomDecoupling:
 
 
     def update_nodal_coordinates(self):
-        """ This method processes the indexes and nodal coordinates relative to
+        """ This method processes the indices and nodal coordinates relative to
             the new nodes, modifying the nodal_coordinates, nodes_from_surface, 
             and nodes_from_volume attributes.
         """
@@ -200,7 +200,7 @@ class DegreesOfFreedomDecoupling:
 
         nodes_from_surfaces = list(nodes_from_surfaces)
 
-        # create the twin nodes indexes
+        # create the twin nodes indices
         twin_nodes = np.arange(0, len(nodes_from_surfaces), dtype=int) + int(shift_value)
 
         # process the nodes mapping

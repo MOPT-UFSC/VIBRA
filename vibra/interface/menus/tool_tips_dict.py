@@ -15,6 +15,12 @@ tool_tips["mesh_setup"] = (
     "using solid, surface, and line elements."
 )
 
+tool_tips["volume_suppression"] = (
+    "Exclude the selected volumes from the mesh generation. Suppressed volumes "
+    "are not discretized, and the mesh must be regenerated for the changes "
+    "to take effect."
+)
+
 tool_tips["degrees_of_freedom_decoupling"] = (
     "This feature disconnects nodes from connected volumes and modifies the "
     "connectivity of all geometric entities. As a consequence, both structural "

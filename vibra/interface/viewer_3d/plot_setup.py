@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from enum import StrEnum, auto
+from enum import IntEnum, StrEnum, auto
 from typing import Union
 
 
@@ -11,7 +11,7 @@ class PressurePlotType(StrEnum):
     IMAG_VALUES = auto()
 
 
-class DisplacementPlotType(StrEnum):
+class DisplacementDataType(StrEnum):
     U_SUM = auto()
     U_X = auto()
     U_Y = auto()
@@ -26,33 +26,138 @@ class DisplacementPlotType(StrEnum):
     A_Z = auto()
 
 
+class StressDataType(StrEnum):
+    ABSOLUTE_ANIMATION = auto()
+    NON_ABSOLUTE_ANIMATION = auto()
+    ABSOLUTE_VALUES = auto()
+    REAL_VALUES = auto()
+    IMAG_VALUES = auto()
+
+
+class StressType(IntEnum):
+    NORMAL_STRESS_X = 0
+    NORMAL_STRESS_Y = 1
+    NORMAL_STRESS_Z = 2
+    SHEAR_STRESS_XY = 3
+    SHEAR_STRESS_XZ = 4
+    SHEAR_STRESS_YZ = 5
+    VON_MISES_STRESS = 6
+    TRESCA_STRESS = 7
+    MAXIMUM_PRINCIPAL_STRESS_1 = 8
+    MAXIMUM_PRINCIPAL_STRESS_2 = 9
+    MAXIMUM_PRINCIPAL_STRESS_3 = 10
+
+    def get_stress_label(self):
+        match self:
+            case self.NORMAL_STRESS_X:
+                return "Normal stress x"
+            case self.NORMAL_STRESS_Y:
+                return "Normal stress y"
+            case self.NORMAL_STRESS_Z:
+                return "Normal stress z"
+            case self.SHEAR_STRESS_XY:
+                return "Shear stress xy"
+            case self.SHEAR_STRESS_XZ:
+                return "Shear stress xz"
+            case self.SHEAR_STRESS_YZ:
+                return "Shear stress yz"
+            case self.VON_MISES_STRESS:
+                return "von Mises stress"
+            case self.TRESCA_STRESS:
+                return "Tresca stress"
+            case self.MAXIMUM_PRINCIPAL_STRESS_1:
+                return "Max. principal stress 1"
+            case self.MAXIMUM_PRINCIPAL_STRESS_2:
+                return "Max. principal stress 2"
+            case self.MAXIMUM_PRINCIPAL_STRESS_3:
+                return "Max. principal stress 3"
+
+    def is_normal_or_shear_stress(self):
+        return self in [
+            StressType.NORMAL_STRESS_X,
+            StressType.NORMAL_STRESS_Y,
+            StressType.NORMAL_STRESS_Z,
+            StressType.SHEAR_STRESS_XY,
+            StressType.SHEAR_STRESS_XZ,
+            StressType.SHEAR_STRESS_YZ,
+        ]
+
+    def is_post_processed_stress(self):
+        return self in [
+            StressType.VON_MISES_STRESS,
+            StressType.TRESCA_STRESS,
+            StressType.MAXIMUM_PRINCIPAL_STRESS_1,
+            StressType.MAXIMUM_PRINCIPAL_STRESS_2,
+            StressType.MAXIMUM_PRINCIPAL_STRESS_3,
+        ]
+
+
 @dataclass(slots=True)
 class NoPlotSetup:
     unit: str = "--"
 
 
 @dataclass(slots=True)
-class FrequencyDisplacementPlotSetup:
+class DisplacementFieldPlotSetupFrequency:
     phase: float
     index: int
     magnification_factor: float
-    plot_type: PressurePlotType
+    plot_type: DisplacementDataType
     unit: str = "--"
+    n_diff: int = 0
+    unit_factor: float = 1.0
 
 
 @dataclass(slots=True)
-class FrequencyPressurePlotSetup:
+class DisplacementFieldPlotSetupTime:
+    time_index: int
+    magnification_factor: float
+    plot_type: DisplacementDataType
+    unit: str = "--"
+    unit_factor: float = 1.0
+    n_diff: int = 0
+    reduced_loop_time: float | None = None
+
+
+@dataclass(slots=True)
+class StressFieldPlotSetupFrequency:
     phase: float
     index: int
-    plot_type: DisplacementPlotType
+    magnification_factor: float
+    stress_type: StressType
+    plot_type: StressDataType
     unit: str = "--"
+    n_diff: int = 0
+    unit_factor: float = 1.0
 
 
 @dataclass(slots=True)
-class TransientPressurePlotSetup:
+class StressFieldPlotSetupTime:
+    time_index: int
+    magnification_factor: float
+    stress_type: StressType
+    plot_type: StressDataType
+    unit: str = "--"
+    n_diff: int = 0
+    unit_factor: float = 1.0
+    reduced_loop_time: float | None = None
+
+
+@dataclass(slots=True)
+class PressureFieldPlotSetupFrequency:
+    phase: float
+    index: int
+    plot_type: PressurePlotType
+    unit: str = "--"
+    unit_factor: float = 1.0
+
+
+@dataclass(slots=True)
+class PressureFieldPlotSetupTime:
     time_index: int
     plot_type: PressurePlotType
     unit: str = "--"
+    unit_factor: float = 1.0
     reduced_loop_time: float | None = None
 
 
@@ -66,8 +171,24 @@ class AllowablePulsationForScrewCompressorsPlotSetup:
 # Do not forget to add the type here
 PlotSetup = Union[
     NoPlotSetup,
-    FrequencyDisplacementPlotSetup,
-    FrequencyPressurePlotSetup,
-    TransientPressurePlotSetup,
+    DisplacementFieldPlotSetupFrequency,
+    DisplacementFieldPlotSetupTime,
+    StressFieldPlotSetupFrequency,
+    StressFieldPlotSetupTime,
+    PressureFieldPlotSetupFrequency,
+    PressureFieldPlotSetupTime,
     AllowablePulsationForScrewCompressorsPlotSetup,
+]
+
+AcousticPlotSetups = Union[
+    PressureFieldPlotSetupFrequency,
+    PressureFieldPlotSetupTime,
+    AllowablePulsationForScrewCompressorsPlotSetup,
+]
+
+StructuralPlotSetups = Union[
+    DisplacementFieldPlotSetupFrequency,
+    DisplacementFieldPlotSetupTime,
+    StressFieldPlotSetupFrequency,
+    StressFieldPlotSetupTime,
 ]

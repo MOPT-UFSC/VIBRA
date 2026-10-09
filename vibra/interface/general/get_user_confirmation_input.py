@@ -24,6 +24,8 @@ class GetUserConfirmationInput(GetUserConfirmation_UI):
 
         self._configure_labels()
         self._configure_buttons()
+
+        app().main_window.hide_dialogs()
         self.exec()
 
     def _config_window(self):
@@ -48,6 +50,7 @@ class GetUserConfirmationInput(GetUserConfirmation_UI):
             self.pushButton_leftButton.setText(self.buttons_config["left_button_label"])
         if "right_button_label" in self.buttons_config:
             self.pushButton_rightButton.setText(self.buttons_config["right_button_label"])
+            self.pushButton_rightButton.setAutoDefault(True)
         if "left_toolTip" in self.buttons_config:
             self.pushButton_leftButton.setToolTip(self.buttons_config["left_toolTip"])
         if "right_toolTip" in self.buttons_config:

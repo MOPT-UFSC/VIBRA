@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 from validation_files.data.WB.load_external_data import LoadExternalData
 from vibra.engine.analysis_info import AnalysisID, FrequencySpacing
-from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
+from vibra.engine.assemblers.acoustic.acoustic_assembler import AcousticAssembler
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.engine.postprocessing import AcousticPostprocessing
@@ -10,7 +10,7 @@ from vibra.engine.properties.fluid import Fluid
 from vibra.engine.solution import HarmonicSolution
 from vibra.engine.solvers.harmonic_solver import HarmonicSolver
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
-from vibra.interface.data_handler.data_importer import DataImporter
+from vibra.interface.user_input.data_handler.file_handlers.file_handler import FileHandler
 
 if TYPE_CHECKING:
     from vibra.engine.model import Model
@@ -117,8 +117,7 @@ def load_external_mesh_and_solve():
     data_Vn = {
         "real_values": [1],
         "imag_values": [0],
-        "nodal_attribution": False,
-        "averaged": False,
+        "element_integration": True,
     }
 
     # Impedance data - constant value
@@ -130,7 +129,7 @@ def load_external_mesh_and_solve():
     ## Impedance data - table of values
 
     # fluid_data_path = f"validation_files/data/WB/porous_material_models/results/silencer/complex_fluid_properties_DB_model.xlsx"
-    # complex_fluid_data = DataImporter.load_spreadsheet_data_for_validation(fluid_data_path)
+    # complex_fluid_data = FileHandler.read(fluid_data_path).to_dict()
     # impedance_data = complex_fluid_data["complex_impedance"]
 
     # data_Z = {"values" : [impedance_data[:, 1] + 1j * impedance_data[:, 2]]}
@@ -166,7 +165,7 @@ def load_external_mesh_and_solve():
     assembler = AcousticAssembler(model)
 
     # Set the analysis frequency setup
-    assembler.assemble_global_matrices_and_excitations()
+    assembler.assemble_global_matrices_and_excitations(print_log=True)
 
     # Define the analysis type and load setup
     harmonic_solver = HarmonicSolver(assembler)
@@ -206,7 +205,7 @@ def load_external_mesh_and_solve():
     # results_path = f"validation_files/data/WB/transmission_loss/results/WB_results_silencer_only_fluid_Vn1_Z1_Z2_complex.xlsx"
     results_path = "validation_files/data/WB/transmission_loss/results/WB_results_silencer_only_fluid_Vn1_Z1_Z2_real.xlsx"
 
-    imported_results = DataImporter.load_spreadsheet_data_for_validation(results_path)
+    imported_results = FileHandler.read(results_path).to_dict()
 
     TL_data = imported_results["transmission_loss"]  # ports enabled
 
@@ -240,7 +239,7 @@ def load_external_mesh_and_solve():
     output_rows = mesh.external_nodes_from_surfaces[2]
 
     # load model results
-    nodal_solution = model.solution.nodal_solution
+    nodal_solution = model.solution.acoustic_solution
 
     input_pressure = np.average(nodal_solution[input_rows, :], axis=0).flatten()
     output_pressure = np.average(nodal_solution[output_rows, :], axis=0).flatten()

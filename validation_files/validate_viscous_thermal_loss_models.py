@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from vibra.engine.analysis_info import AnalysisID, FrequencySpacing
-from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
+from vibra.engine.assemblers.acoustic.acoustic_assembler import AcousticAssembler
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.engine.postprocessing import AcousticPostprocessing
@@ -13,7 +13,7 @@ from vibra.engine.properties.fluid import Fluid
 from vibra.engine.solution import HarmonicSolution
 from vibra.engine.solvers.harmonic_solver import HarmonicSolver
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
-from vibra.interface.data_handler.data_importer import DataImporter
+from vibra.interface.user_input.data_handler.file_handlers.file_handler import FileHandler
 
 
 def load_external_mesh_and_solve():
@@ -93,8 +93,7 @@ def load_external_mesh_and_solve():
     data_Vn = {
         "real_values": [1],
         "imag_values": [0],
-        "nodal_attribution": False,
-        "averaged": False,
+        "element_integration": True,
     }
 
     # Impedance data
@@ -142,7 +141,7 @@ def load_external_mesh_and_solve():
     assembler = AcousticAssembler(model)
 
     # Set the analysis frequency setup
-    assembler.assemble_global_matrices_and_excitations()
+    assembler.assemble_global_matrices_and_excitations(print_log=True)
 
     # Define the analysis type and load setup
     harmonic_solver = HarmonicSolver(assembler)
@@ -180,7 +179,7 @@ def load_external_mesh_and_solve():
     # results_path = f"validation_files/data/WB/viscous_thermal_loss/results/circular_ducts_results.xlsx"
     # results_path = f"validation_files/data/WB/viscous_thermal_loss/results/only_fluid_results.xlsx"
 
-    imported_results = DataImporter.load_spreadsheet_data_for_validation(results_path)
+    imported_results = FileHandler.read(results_path).to_dict()
 
     pressure_at_input_face = imported_results["input_pressure"]
     pressure_at_output_face = imported_results["output_pressure"]
@@ -204,7 +203,7 @@ def load_external_mesh_and_solve():
         freq_ref = pressure_at_output_face[:, 0]
         results_ref = pressure_at_output_face[:, 1] + 1j * pressure_at_output_face[:, 2]
 
-    nodal_solution = model.solution.nodal_solution
+    nodal_solution = model.solution.acoustic_solution
     nodal_solution_face = np.average(nodal_solution[rows, :], axis=0).flatten()
 
     title = f"Harmonic response at {output_ns}"

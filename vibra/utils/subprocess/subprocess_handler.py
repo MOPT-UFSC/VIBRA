@@ -2,7 +2,6 @@ import logging
 import subprocess
 import sys
 from enum import Enum, auto
-from pathlib import Path
 from queue import Empty, Queue
 from threading import Thread
 from time import sleep
@@ -10,7 +9,6 @@ from typing import IO
 
 from PySide6.QtWidgets import QApplication
 
-from vibra import VIBRA_DIR
 from vibra.errors import SolverSubprocessError
 from vibra.interface.loading_window import LoadingWindow
 
@@ -25,7 +23,7 @@ class SubProcessHandler:
     Run a separate process and deals with its outputs.
     """
 
-    def __init__(self, command: str):
+    def __init__(self, command: list[str]):
         self.command = command
 
     def run(self) -> SubProcessStatus:
@@ -34,11 +32,11 @@ class SubProcessHandler:
         return LoadingWindow(self._run_subprocess, self._interrupt_subprocess).run()
 
     @classmethod
-    def get_executable(cls) -> str:
+    def get_executable(cls) -> list[str]:
         if getattr(sys, "frozen", False):
-            return sys.executable
+            return [sys.executable]
         else:
-            return f"{sys.executable} {sys.argv[0]}"
+            return [sys.executable, sys.argv[0]]
 
     def _interrupt_subprocess(self, by_user=True):
         if self._subprocess is None or self._subprocess.poll() is not None:
@@ -53,23 +51,23 @@ class SubProcessHandler:
             self._subprocess.kill()
 
     def _run_subprocess(self) -> SubProcessStatus:
+        self._child_traceback = ""
+
         logging.info("Launching subprocess... (15%)")
 
         try:
-            commands = self.command.split()
             self._subprocess = subprocess.Popen(
-                commands,
+                self.command,
                 stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
                 text=True,
                 bufsize=1,
             )
         except OSError as error:
             raise OSError("Could not launch subprocess.") from error
 
-        if self._subprocess.stdout is None or self._subprocess.stderr is None:
+        if self._subprocess.stdout is None:
             self._interrupt_subprocess(by_user=False)
-            raise OSError("Subprocess stdout or stderr PIPE was not created.")
+            raise OSError("Subprocess stdout PIPE was not created.")
 
         stdout_queue = Queue()
         stdout_reader = Thread(
@@ -92,11 +90,10 @@ class SubProcessHandler:
                 logging.info("Subprocess was interrupted.")
                 return SubProcessStatus.INTERRUPTED
 
-            stderr = self._subprocess.stderr.read()
             logging.error(f"Subprocess exited with code {self._subprocess.returncode}")
             raise SolverSubprocessError(
                 returncode=self._subprocess.returncode,
-                stderr=stderr,
+                stderr=self._child_traceback,
             )
 
         return SubProcessStatus.SUCCESS
@@ -115,7 +112,11 @@ class SubProcessHandler:
             except Empty:
                 break
 
-            if line.startswith("VIBRA_LOG|"):
+            if line.startswith("VIBRA_EXCEPTION|"):
+                import json
+                text = line.split("|", 1)[1]
+                self._child_traceback = json.loads(text)["traceback"]
+            elif line.startswith("VIBRA_LOG|"):
                 _, level, message = line.split("|", 2)
                 logging.log(getattr(logging, level, logging.INFO), message)
             else:

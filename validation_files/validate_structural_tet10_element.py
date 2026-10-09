@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from vibra import PROJECT_DIR
-from vibra.engine.assemblers.structural_assembler import StructuralAssembler
+from vibra.engine.assemblers.structural.structural_assembler import StructuralAssembler
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.engine.properties.material import Material
@@ -104,7 +104,7 @@ def load_external_mesh_and_solve():
     assembler = StructuralAssembler(model)
 
     # Set the analysis frequency setup
-    assembler.assemble_global_matrices_and_excitations(reorder=False)
+    assembler.assemble_global_matrices_and_excitations(reorder=False, print_log=True)
 
     Ke = assembler.data_K[0, :, :]
     Me = assembler.data_M[0, :, :]

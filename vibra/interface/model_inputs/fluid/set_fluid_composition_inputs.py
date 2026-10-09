@@ -1,13 +1,12 @@
 import logging
-import platform
-from pathlib import Path
 
 import numpy as np
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QAbstractItemView, QFileDialog, QHeaderView, QTableWidgetItem, QTreeWidgetItem
+from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QTableWidgetItem, QTreeWidgetItem
 
 from vibra import app
 from vibra.engine.properties.fluid import Fluid
+from vibra.extensions import SUPPORTED_SPREADSHEET_WRITE_EXTENSIONS
 from vibra.interface import error_title, warning_title
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -24,6 +23,7 @@ from vibra.interface.numeric_checks.unit_utilities import (
     temperature_units_labels,
 )
 from vibra.interface.ui_generated.model.fluid.set_fluid_composition_input_ui import SetFluidCompositionInput_UI
+from vibra.interface.user_input.data_handler.file_dialog_service import FileDialogService
 from vibra.model.machines.reciprocating_compressor_model import ConnectionType
 
 
@@ -75,9 +75,6 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         return molar_fractions
 
     def _initialize(self):
-
-        self.user_path = Path().home()
-
         self.fluid_to_row = {}
         self.fluid_to_composition = {}
 
@@ -486,7 +483,6 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
 
     def reset_fluid(self):
 
-        self.hide()
 
         title = "Fluid composition reset"
         message = "Would you like to reset the current fluid composition?"
@@ -623,7 +619,6 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
 
         message = ""
         if round(self.remaining_molar_fraction, 6):
-            self.hide()
             remaining_molar_fraction = round(self.remaining_molar_fraction, 6)
             title = "Fluid composition not invalid"
             message += "The sum of all molar fractions must be equal to the unity. It is recommended "
@@ -637,7 +632,6 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
     def check_fluid_name(self):
 
         if self.lineEdit_fluid_name.text() == "":
-            self.hide()
             title = "Additional input required"
             message = "Define a fluid name at specific input field to proceed."
             self.lineEdit_fluid_name.setFocus()
@@ -889,7 +883,6 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             [T_end, P_end] = values
 
             if round(T_start - T_end, 6) == 0 and round(P_start - P_end, 6) == 0:
-                self.hide()
                 title = "Invalid thermodynamic states"
                 message = "The initial and final thermodynamic states are identical. "
                 message += "You must to specify different states to obtain valid "
@@ -938,8 +931,6 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
     def check_ideal_gas_criterion(self):
         if not (self.ideal_gas_warning and self.check_ideal_gas):
             return
-
-        self.hide()
 
         Z = self.compressibility_factor
         title = "Deviation from ideal gas behavior"
@@ -1010,8 +1001,6 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
     def process_refprop_warning_and_errors(self):
         if not (self.errors or self.warnings):
             return
-
-        self.hide()
 
         if self.errors:
             further_details = ""
@@ -1198,7 +1187,6 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
             message += "The value should be a positive value less or equals to 100."
 
         if message != "":
-            self.hide()
             window_title = "Error"
             title = "Invalid molar fraction"
             PrintMessageInput([window_title, title, message])
@@ -1258,36 +1246,20 @@ class SetFluidCompositionInputs(SetFluidCompositionInput_UI):
         app().main_window.set_input_widget(self)
 
     def export_fluid_composition_callback(self):
-
         self.hide()
-        last_path = app().config.get_last_folder_for("fluid_composition_folder", default=self.user_path)
 
-        ext_filter = (
-            "Spreasheet file (*.xlsx)"
-            ";;Spreasheet file (*.xls)"
-            ";;All Files (*)"
-        )
+        file_path = FileDialogService.save_file(file_extensions=SUPPORTED_SPREADSHEET_WRITE_EXTENSIONS,
+                                    caption="Export the fluid composition data in spreadsheet file",
+                                    last_folder="fluid_composition_folder")
 
-        kwargs = {}
-        if platform.system() == "Linux":
-            kwargs["options"] = QFileDialog.Option.DontUseNativeDialog
-
-        file_path, check = QFileDialog.getSaveFileName(
-            self,
-            "Export the fluid composition data in spreadsheet file",
-            str(last_path),
-            filter=ext_filter,
-            **kwargs,
-        )
-
-        if not check:
+        if file_path is None:
             return True
 
         app().config.write_last_folder_path_in_file("fluid_composition_folder", file_path)
 
         data_to_export = self.get_fluid_composition_data_to_export()
 
-        self.export_data_in_spreadsheet_format(data_to_export, file_path)
+        self.export_data_in_spreadsheet_format(data_to_export, str(file_path))
 
     def get_fluid_composition_data_to_export(self):
 

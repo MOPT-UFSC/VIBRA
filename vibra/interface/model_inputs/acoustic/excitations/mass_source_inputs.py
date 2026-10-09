@@ -1,22 +1,23 @@
-from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem, QAbstractItemView
-from PySide6.QtCore import Qt, QPoint, QItemSelectionModel
-from PySide6.QtGui import QCloseEvent
-
-from vibra import app
-from vibra.interface import error_title
-from vibra.interface.common.common_interface import update_analysis_setup_in_file
-from vibra.interface.data.data_manager import get_spectral_data_from_array
-from vibra.interface.data_handler.data_importer import DataImporter
-from vibra.interface.ui_generated.model.acoustic.excitations.mass_source_inputs_ui import MassSourceInputs_UI
-from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
-from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.model_inputs.acoustic.definitions.enums import StandardTabType
-
-import numpy as np
-
 from collections import defaultdict
 from enum import IntEnum
 from traceback import print_exception
+
+import numpy as np
+from PySide6.QtCore import QItemSelectionModel, QPoint, Qt
+from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import QAbstractItemView, QLineEdit, QTreeWidgetItem
+
+from vibra import app
+from vibra.extensions import SUPPORTED_SPREADSHEET_READ_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
+from vibra.interface import error_title
+from vibra.interface.common.common_interface import update_analysis_setup_in_file, update_entities_selection
+from vibra.interface.data.data_manager import get_spectral_data_from_array
+from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
+from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.model_inputs.acoustic.definitions.enums import StandardTabType
+from vibra.interface.ui_generated.model.acoustic.excitations.mass_source_inputs_ui import MassSourceInputs_UI
+from vibra.interface.user_input.data_handler.file_dialog_service import FileDialogService
+from vibra.interface.user_input.data_handler.file_handlers.file_handler import FileHandler
 
 
 class AssignmentType(IntEnum):
@@ -145,23 +146,23 @@ class MassSourceInputs(MassSourceInputs_UI):
             self.comboBox_attribution_type.setCurrentIndex(AssignmentType.NODES)
 
         if len(nodes) == 1:
-            node_id = list(nodes)[0]
+            node_id = next(iter(nodes))
             self.load_property_data(node_id, "nodes")
 
         elif len(points) == 1:
-            point_id = list(points)[0]
+            point_id = next(iter(points))
             self.load_property_data(point_id, "points")
 
         elif len(lines) == 1:
-            line_id = list(lines)[0]
+            line_id = next(iter(lines))
             self.load_property_data(line_id, "lines")
 
         elif len(surfaces) == 1:
-            surface_id = list(surfaces)[0]
+            surface_id = next(iter(surfaces))
             self.load_property_data(surface_id, "surfaces")
 
         elif len(volumes) == 1:
-            volume_id = list(volumes)[0]
+            volume_id = next(iter(volumes))
             self.load_property_data(volume_id, "volumes")
 
         if len(volumes):
@@ -338,7 +339,6 @@ class MassSourceInputs(MassSourceInputs_UI):
             app().main_window.selection.clear_selection()
 
             if print_message:
-                self.hide()
                 title = "Invalid selection detected"
                 message = "The current selection resulted in improper mapping between selected "
                 message += "between selected entities and the volumes. To univocally assign fluids "
@@ -378,34 +378,35 @@ class MassSourceInputs(MassSourceInputs_UI):
         return False
 
     def check_fluid_inheritance(
-                                self, 
-                                selection_ids: list | None = None, 
-                                selection_type: str | None = None, 
-                                print_message: bool = False
-                                ):
+        self,
+        selection: str | None = None,
+        selection_ids: list | None = None,
+        print_message: bool = False,
+    ):
 
-        if selection_type is None:
+        if selection is None:
             selection_data = self.check_selection_data()
             if selection_data is None:
                 return
 
-            selection_ids, selection_type = selection_data
+            selection, selection_ids = selection_data
 
-        if selection_type == "points":
-            volumes_from_points = self.mesh.get_volumes_from_selected_points(selection_ids)
-            return self.update_inheritance_combo_box_data(volumes_from_points, print_message)
+        match selection:
+            case "points":
+                volumes_from_points = self.mesh.get_volumes_from_selected_points(selection_ids)
+                return self.update_inheritance_combo_box_data(volumes_from_points, print_message)
 
-        elif selection_type == "nodes":
-            volumes_from_nodes = self.mesh.get_volumes_from_selected_nodes(selection_ids)
-            return self.update_inheritance_combo_box_data(volumes_from_nodes, print_message)
+            case "nodes":
+                volumes_from_nodes = self.mesh.get_volumes_from_selected_nodes(selection_ids)
+                return self.update_inheritance_combo_box_data(volumes_from_nodes, print_message)
 
-        elif selection_type == "lines":
-            volumes_from_lines = self.mesh.get_volumes_from_selected_lines(selection_ids)
-            return self.update_inheritance_combo_box_data(volumes_from_lines, print_message)
+            case "lines":
+                volumes_from_lines = self.mesh.get_volumes_from_selected_lines(selection_ids)
+                return self.update_inheritance_combo_box_data(volumes_from_lines, print_message)
 
-        elif selection_type == "surfaces":
-            volumes_from_surfaces = self.mesh.get_volumes_from_selected_surfaces(selection_ids)
-            return self.update_inheritance_combo_box_data(volumes_from_surfaces, print_message)
+            case "surfaces":
+                volumes_from_surfaces = self.mesh.get_volumes_from_selected_surfaces(selection_ids)
+                return self.update_inheritance_combo_box_data(volumes_from_surfaces, print_message)
 
         return False
 
@@ -451,12 +452,11 @@ class MassSourceInputs(MassSourceInputs_UI):
             message = f"Insert some value at the {label} input field."
 
         if message != "":
-            self.hide()
             lineEdit.setFocus()
             PrintMessageInput([error_title, title, message])
             return None
-        else:
-            return out
+
+        return out
 
     def compute_nearest_node_from_coordinate(self):
 
@@ -520,18 +520,18 @@ class MassSourceInputs(MassSourceInputs_UI):
         if selection_data is None:
             return
 
-        selection_ids, selection_type = selection_data
-        if self.check_fluid_inheritance(selection_ids, selection_type, True):
+        selection, selection_ids = selection_data
+        if self.check_fluid_inheritance(selection, selection_ids, True):
             return
 
-        self.remove_conflicting_excitations(selection_ids, selection_type)
+        self.remove_conflicting_excitations(selection, selection_ids)
 
         if tab_index == TabIndex.CONSTANT_DATA:
-            if self.constant_data_assignment(selection_type, selection_ids):
+            if self.constant_data_assignment(selection, selection_ids):
                 return
 
-        elif tab_index == TabIndex.TABULAR_DATA:
-            if self.tabular_data_assignment(selection_type, selection_ids):
+        if tab_index == TabIndex.TABULAR_DATA:
+            if self.tabular_data_assignment(selection, selection_ids):
                 return
 
         self.actions_to_finalize(close_window)
@@ -539,22 +539,26 @@ class MassSourceInputs(MassSourceInputs_UI):
     def check_selection_data(self, print_message: bool = True):
 
         attribution_type = self.comboBox_attribution_type.currentIndex()
-        selection_type = self.selection_type.get(attribution_type)
+        selection = self.selection_type.get(attribution_type)
 
         input_ids = self.lineEdit_selection_id.text()
-        selection_ids, error_data = self.mesh.check_selected_ids(
-                                                                 input_ids, 
-                                                                 selection = selection_type
-                                                                 )
+        selection_ids, error_data = self.model.check_selected_ids(
+            input_ids,
+            selection,
+            domain="acoustic",
+            )
 
         if error_data is not None:
             if print_message:
-                self.hide()
                 self.lineEdit_selection_id.setFocus()
                 PrintMessageInput(error_data)
             return None
 
-        return (selection_ids, selection_type)
+        app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
+        update_entities_selection(self.lineEdit_selection_id, selection, selection_ids)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
+
+        return (selection, selection_ids)
 
     def check_complex_entries(self, lineEdit_real, lineEdit_imag):
         self.stop = False
@@ -588,12 +592,11 @@ class MassSourceInputs(MassSourceInputs_UI):
         else:
             return real_F + 1j * imag_F
 
-    def constant_data_assignment(self, selection_type: str, selection_ids: list[int]):
+    def constant_data_assignment(self, selection: str, selection_ids: list[int]):
         
         mass_source = self.check_complex_entries(self.lineEdit_real_value, self.lineEdit_imag_value)
 
         if mass_source is None:
-            self.hide()
             title = "Additional inputs required"
             message = "You must enter a non-zero value to the mass source input fields to proceed with the assignment."
             PrintMessageInput([error_title, title, message])
@@ -603,7 +606,7 @@ class MassSourceInputs(MassSourceInputs_UI):
         real_values = [np.real(mass_source)]
         imag_values = [np.imag(mass_source)]
         
-        if selection_type in ["points", "nodes", "lines", "surfaces"]:
+        if selection in ["points", "nodes", "lines", "surfaces"]:
             current_text = self.comboBox_inherit_fluid_from.currentText()
             vol_id = int(current_text.split(" - ")[1])
             data = {"real_values": real_values, "imag_values": imag_values, "volume_id": vol_id}
@@ -615,36 +618,40 @@ class MassSourceInputs(MassSourceInputs_UI):
             }
 
         for selection_id in selection_ids:
-            if selection_type == "points":
-                self.properties._set_property("mass_source", data, point=selection_id)
-            elif selection_type == "nodes":
-                self.properties._set_property("mass_source", data, node=selection_id)
-            elif selection_type == "lines":
-                self.properties._set_property("mass_source", data, line=selection_id)
-            elif selection_type == "surfaces":
-                self.properties._set_property("mass_source", data, surface=selection_id)
-            else:
-                self.properties._set_property("mass_source", data, volume=selection_id)
+            match selection:
+                case "volumes":
+                    self.properties._set_property("mass_source", data, volume=selection_id)
+                case "surfaces":
+                    self.properties._set_property("mass_source", data, surface=selection_id)
+                case "lines":
+                    self.properties._set_property("mass_source", data, line=selection_id)
+                case "points":
+                    self.properties._set_property("mass_source", data, point=selection_id)
+                case "nodes":
+                    self.properties._set_property("mass_source", data, node=selection_id)
 
     def load_table(self, lineEdit : QLineEdit, direct_load=False):
-
         title = "Error reached while loading 'mass source' table"
-        imported_values = None
 
         try:
             if direct_load:
-                imported_table_path = lineEdit.text()
-                imported_values = DataImporter.read_data_in_file(imported_table_path)[0].data
+                imported_path = lineEdit.text()
 
             else:
-                imported_data = DataImporter.import_single_file("imported_table_folder",
-                    ["csv", "dat", "txt", "xlsx", "xls"], "Choose a table to import the mass source")
+                extensions = SUPPORTED_SPREADSHEET_READ_EXTENSIONS + SUPPORTED_TEXT_EXTENSIONS
+                imported_path = FileDialogService.open_file(file_extensions=extensions,
+                                                            caption="Choose a table to import the mass source",
+                                                            last_folder="imported_table_folder")
 
-                if not imported_data:
-                    return
+            imported_data = FileHandler.read(imported_path)
 
-                imported_values = imported_data.data
-                lineEdit.setText(imported_data.path)
+            if imported_data is None:
+                return
+
+            if not direct_load:
+                lineEdit.setText(str(imported_data.path))
+
+            imported_values = imported_data.data
 
             if imported_values.shape[1] < 3:
                 message = "The imported table has insufficient number of columns. The spectrum data must "
@@ -670,7 +677,6 @@ class MassSourceInputs(MassSourceInputs_UI):
         _frequencies = imported_values[:, 0]
 
         if app().project.model.change_analysis_frequency_setup(list(_frequencies)):
-            self.hide()
             title = "Project frequency setup cannot be modified"
             message = "The following imported table of values has a frequency setup "
             message += "different from the others already imported ones. The current "
@@ -695,10 +701,9 @@ class MassSourceInputs(MassSourceInputs_UI):
     def load_mass_source_table(self):
         self.imported_values = self.load_table(self.lineEdit_table_path)
 
-    def tabular_data_assignment(self, selection_type: str, selection_ids: list[int]):
+    def tabular_data_assignment(self, selection: str, selection_ids: list[int]):
 
         if self.lineEdit_table_path.text() == "":
-            self.hide()
             title = "Additional inputs required"
             message = "You must enter the mass source table path to proceed with the assignment."
             PrintMessageInput([error_title, title, message])
@@ -711,7 +716,7 @@ class MassSourceInputs(MassSourceInputs_UI):
         for selection_id in selection_ids:
             if isinstance(self.imported_values, np.ndarray):
                 if self.imported_values.shape[1] >= 3:
-                    table_name = f"mass_source_at_{selection_type}_{selection_id}"
+                    table_name = f"mass_source_at_{selection}_{selection_id}"
                     if self.save_table_values(table_name, self.imported_values):
                         self.lineEdit_table_path.setFocus()
                         self.imported_values = None
@@ -729,7 +734,7 @@ class MassSourceInputs(MassSourceInputs_UI):
             # table path from imported tabular data
             table_path = self.lineEdit_table_path.text()
 
-            if selection_type in ["points", "nodes", "lines", "surfaces"]:
+            if selection in ["points", "nodes", "lines", "surfaces"]:
                 current_text = self.comboBox_inherit_fluid_from.currentText()
                 vol_id = int(current_text.split(" - ")[1])
                 data = {"table_names": [table_name], "table_paths": [table_path], "values": [complex_values], "volume_id": vol_id}
@@ -741,22 +746,17 @@ class MassSourceInputs(MassSourceInputs_UI):
                     "values": [complex_values],
                 }
 
-            if selection_type == "points":
-                self.properties._set_property("mass_source", data, point=selection_id)
-            elif selection_type == "nodes":
-                self.properties._set_property("mass_source", data, node=selection_id)
-            elif selection_type == "lines":
-                self.properties._set_property("mass_source", data, line=selection_id)
-            elif selection_type == "surfaces":
-                self.properties._set_property("mass_source", data, surface=selection_id)
-            else:
-                self.properties._set_property("mass_source", data, volume=selection_id)
-
-    def process_table_file_removal(self, table_names: list):
-        for table_name in table_names:
-            self.properties.remove_imported_tables("acoustic", table_name)
-        if table_names:
-            app().project.update_model_properties_file()
+            match selection:
+                case "volumes":
+                    self.properties._set_property("mass_source", data, volume=selection_id)
+                case "surfaces":
+                    self.properties._set_property("mass_source", data, surface=selection_id)
+                case "lines":
+                    self.properties._set_property("mass_source", data, line=selection_id)
+                case "points":
+                    self.properties._set_property("mass_source", data, point=selection_id)
+                case "nodes":
+                    self.properties._set_property("mass_source", data, node=selection_id)
 
     def remove_conflicting_excitations(self, selection_ids: int | list, selection_type: str):
 
@@ -775,7 +775,6 @@ class MassSourceInputs(MassSourceInputs_UI):
 
         for label in labels:
             for selection_id in selection_ids:
-                table_names = self.properties.get_property_related_table_names(label, selection_id, selection_type)
                 if selection_type == "nodes":
                     self.properties._remove_nodal_property(label, selection_id)
                 elif selection_type == "points":
@@ -787,12 +786,6 @@ class MassSourceInputs(MassSourceInputs_UI):
                 elif selection_type == "volumes":
                     self.properties._remove_volume_property(label, selection_id)
 
-                self.process_table_file_removal(table_names)
-
-    def remove_table_files_from_selection(self, selection_id : list, selection_type: str):
-        table_names = self.properties.get_property_related_table_names("mass_source", selection_id, selection_type)
-        self.process_table_file_removal(table_names)
-
     def remove_callback(self):
         selected_items = self.get_selected_items_from_tree_widget_mass_source()
 
@@ -800,7 +793,6 @@ class MassSourceInputs(MassSourceInputs_UI):
             return
 
         for selected_type, selected_ids in selected_items.items():
-            self.remove_table_files_from_selection(selected_ids, selected_type)
 
             for selected_id in selected_ids:
                 if selected_type == "nodes":
@@ -824,9 +816,7 @@ class MassSourceInputs(MassSourceInputs_UI):
 
     def reset_callback(self):
 
-        self.hide()
-
-        title = "Mass source resetting"
+        title = "Mass source reset"
         message = "Would you like to remove the all applied mass sources from model?"
 
         buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
@@ -836,27 +826,6 @@ class MassSourceInputs(MassSourceInputs_UI):
             return
 
         if read._continue:
-
-            properties_to_reset = { 
-                                   "nodes" : self.properties.nodal_properties,
-                                   "points" : self.properties.point_properties,
-                                   "lines" : self.properties.line_properties,
-                                   "surfaces" : self.properties.surface_properties,
-                                   "volumes" : self.properties.volume_properties,
-                                   }
-
-            for selection_type, _properties in properties_to_reset.items():
-
-                selection_ids = list()
-                for (property, *args) in _properties.keys():
-                    if property != "mass_source":
-                        continue
-    
-                    selection_ids.append(args[0])
-
-                for selection_id in selection_ids:
-                    self.remove_table_files_from_selection(selection_id, selection_type)
-
             self.properties._reset_property("mass_source")
             self.actions_to_finalize()
 
@@ -971,8 +940,8 @@ class MassSourceInputs(MassSourceInputs_UI):
                 if property != "mass_source":
                     continue
 
-                if "table_names" in data.keys():
-                    str_value = "Table of values"
+                if "table_names" in data:
+                    str_value = "Table"
                 else:
                     real_values = np.array(data["real_values"])
                     imag_values = np.array(data["imag_values"])
