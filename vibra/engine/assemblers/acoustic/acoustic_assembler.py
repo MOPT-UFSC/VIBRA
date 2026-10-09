@@ -494,8 +494,16 @@ class AcousticAssembler:
         self.mass_flow_vector = self.excitations_assembler.assemble_model_excitations()
 
 
-    def reassemble_global_matrices_for_specific_frequency(self, index: int = 0):
+    def reassemble_global_matrices_for_solution_step(self, index: int):
+        """
+        Use this method to reassemble the global matrices for a specific solution step.
 
+        Parameter
+        ---------
+        index: int
+            The solution step index of interest.
+
+        """
         # process the global matrices factors
         factor_K, factor_M, _, _ = self.compute_global_matrices_factors(index=index)
 
@@ -542,7 +550,7 @@ class AcousticAssembler:
 
             # assemble the global matrices if there are non-zero prescribed_dofs
             if self.exists_a_non_zero_prescribed_value(index):
-                self.reassemble_global_matrices_for_specific_frequency(index=index)
+                self.reassemble_global_matrices_for_solution_step(index)
 
             # reassemble the mass source matrices
             self.excitations_assembler.assemble_mass_source_matrices_from_surfaces(index=index)
@@ -603,7 +611,7 @@ class AcousticAssembler:
 
             # if there are prescribed_dofs, the global matrices have already been assembled 
             if not self.exists_a_non_zero_prescribed_value(index):
-                self.reassemble_global_matrices_for_specific_frequency(index=index)
+                self.reassemble_global_matrices_for_solution_step(index)
 
             M = self.mass_matrix
             K = self.stiffness_matrix
