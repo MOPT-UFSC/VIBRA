@@ -366,33 +366,12 @@ class Model:
     def set_length_unit(self, length_unit: str = "millimeter"):
         self.length_unit = length_unit
 
-    def set_geometry_quality_factor(self, geometry_qf: float = 1.0):
-        self.geometry_qf = geometry_qf
-
     def set_geometry_path(self, path: Path | str):
         self.geometry_path = path
         self.fem_mesher.set_path(path)
 
     def set_properties(self, properties):
         self.properties = properties
-
-    def process_mesh_data(self, path: str):
-        self.mesh = Mesh(length_unit=self.length_unit, geometry_qf=self.geometry_qf)
-
-        try:
-            logging.info("Processing mesh... [15/100]")
-
-            self.mesh.geometry_imported = False
-            self.mesh.load_mesh(path)
-
-        except Exception as error_log:
-            from traceback import print_exception
-
-            print_exception(error_log)
-            title = "Error while processing geometry"
-            message = str(error_log)
-            PrintMessageInput([error_title, title, message])
-            return -1
 
     def set_analysis_setup(self, analysis_setup: Optional[AnalysisSetup]):
         if not isinstance(analysis_setup, AnalysisSetup | None):

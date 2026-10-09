@@ -17,6 +17,7 @@ from vibra.engine.mesher.mesh_setup import MeshSetup
 from vibra.engine.model import Model
 from vibra.engine.postprocessing import AcousticPostprocessing, StructuralPostprocessing
 from vibra.engine.properties import FluidLibrary, MaterialLibrary
+from vibra.engine.serialization.mesh_reader import MeshReader
 from vibra.engine.serialization.project_paths import ProjectPaths
 from vibra.engine.serialization.project_reader import ProjectReader
 from vibra.engine.serialization.project_writer import ProjectWriter
@@ -235,7 +236,8 @@ class Project:
             - *.nas
             - *.msh
         """
-        mesh = Mesh().load_mesh(path)
+
+        mesh = MeshReader().read_mesh(path)
         self.model.mesh = mesh
         self.model.set_geometry_path(path)
         self.write_to_working_dir()
@@ -260,9 +262,10 @@ class Project:
         This method might be called before or after loading a geometry.
         """
         self.model.mesh_setup = mesh_setup
+        self.model.fem_mesher.setup = mesh_setup
         self.update_project_setup_file()
 
-    def generate_mesh(self, mesh_setup: MeshSetup) -> Mesh:
+    def generate_mesh(self, mesh_setup: MeshSetup | None = None) -> Mesh:
         """
         Generates a mesh from the loaded geometry and the
         parameters set using the configure_mesh method.
@@ -273,10 +276,9 @@ class Project:
         if self.model.geometry_path is None:
             raise errors.InvalidMeshSetupError("The geometry has not been loaded yet.")
 
-        if not isinstance(mesh_setup, MeshSetup):
-            raise errors.InvalidMeshSetupError("The mesh setup has not been configured yet.")
+        if mesh_setup is not None:
+            self.configure_mesh(mesh_setup)
 
-        self.model.fem_mesher.set_mesh_setup(mesh_setup)
         mesh = self.model.fem_mesher.generate()
 
         if mesh.collapsed_elements_data:

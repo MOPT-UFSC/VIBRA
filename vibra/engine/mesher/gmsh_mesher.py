@@ -1,5 +1,4 @@
 import logging
-from copy import deepcopy
 from pathlib import Path
 
 import gmsh
