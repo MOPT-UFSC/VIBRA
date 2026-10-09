@@ -89,9 +89,8 @@ class AcousticExcitationsAssembler:
             The equivalent acoustic load vector of complex numbers in which
             each column corresponds to a frequency step of analysis.
         """
-        _, prescribed_values = self.assembler.get_prescribed_dof_values()
 
-        if prescribed_values.size == 0:
+        if self.assembler.prescribed_values.size == 0:
             return 0.
 
         analysis_setup = self.model.analysis_setup
@@ -100,7 +99,7 @@ class AcousticExcitationsAssembler:
         frequencies = analysis_setup.get_frequencies()
         omega = 2 * np.pi * frequencies[index]
 
-        values = prescribed_values[:, index]
+        values = self.assembler.prescribed_values[:, index]
 
         Kr = self.assembler.stiffness_matrix_r
         Mr = self.assembler.mass_matrix_r

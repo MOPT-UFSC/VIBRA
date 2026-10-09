@@ -67,9 +67,7 @@ class HarmonicSolver:
         logging.info("Solving harmonic analysis (direct method)... [10/100]")
 
         nodal_solution_buffer = self._get_nodal_solution_buffer(is_resume)
-        self._initialize_file_writer(is_resume)
         self.compute_frequency_sweep(nodal_solution_buffer, print_log, is_resume)
-        self._close_file_writer()
 
         logging.info("Solving harmonic analysis (direct method)... [99/100]")
 
@@ -131,30 +129,44 @@ class HarmonicSolver:
                 if is_resume and (i != 0) and isinstance(self._file_writer, LazyHDF5MatrixWriter) and self._file_writer.has_column(i):
                     continue
 
-                # if print_log:
-                #     print(f"Solution step {i} -> frequency {freq} Hz")
+                # compute the load vector
+                f = self.assembler.compute_load_vector(freq, i)
 
-                A, f = self.assembler.build_harmonic_system(freq, i)
+                if np.any(f):
 
-                if freq == 0:
-                    # In case of freq=0, the matrix may differ from the non-zero frequencies,
-                    # so we solve it with a particular linear solver
-                    linear_solver = self._get_linear_solver(eigenvectors, new_instance=True)
+                    if freq == 0:
+                        # In case of freq=0, the matrix may differ from the non-zero frequencies,
+                        # so we solve it with a particular linear solver
+                        linear_solver = self._get_linear_solver(eigenvectors, new_instance=True)
+                    else:
+                        linear_solver = self._get_linear_solver(eigenvectors)
+
+                    # compute the dynamic stiffness matrix
+                    Kd = self.assembler.compute_dynamic_stiffness_matrix(freq, i)
+
+                    is_complex = np.any(np.iscomplex(Kd.data)) or np.any(np.iscomplex(f))
+                    if not is_complex:
+                        Kd.data = np.real(Kd.data)
+                        f = np.real(f)
+
+                    # solve the linear system
+                    solution_freq = linear_solver.solve(Kd, f)
+
+                    # delete some variables and clear the memory to reduce the memory usage
+                    linear_solver.clear_memory()
+                    del Kd
+
                 else:
-                    linear_solver = self._get_linear_solver(eigenvectors)
+                    # We will have the trivial solution whenever there is zero excitation
+                    solution_freq = np.zeros_like(f, dtype=complex)
 
-                solution_freq = linear_solver.solve(A, f)
+                del f
+
                 solution_freq = self.assembler.reinsert_the_prescribed_dof_into_solution_freq(solution_freq, i)
                 nodal_solution_buffer[:, i] = solution_freq
 
                 logging.info(f"Solution step {i + 1} and frequency {freq} Hz [{i + 1}/{len(frequencies)}]")
 
-                if self._file_writer is not None:
-                    self._file_writer[:, i] = solution_freq
-
-                # clear the memory and delete some variables to reduce the memory usage
-                linear_solver.clear_memory()
-                del A, f
 
     def solve_mode_superposition(
         self,
@@ -197,8 +209,6 @@ class HarmonicSolver:
                 print_log,
                 is_resume,
             )
-
-        # self._close_file_writer()
 
         if isinstance(self.assembler, StructuralAssembler):
 
