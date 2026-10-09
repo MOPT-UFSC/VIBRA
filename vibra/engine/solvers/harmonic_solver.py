@@ -200,6 +200,7 @@ class HarmonicSolver:
         logger: bool = False,
     ):
         worker_solver = initialize_solver(SolverType.PARDISO, is_symmetric=True)
+        freq_total = len(self.frequencies)
 
         for i, freq in enumerate(frequencies, start=start):
             if self.assembler.model.stop_processing:
@@ -223,7 +224,7 @@ class HarmonicSolver:
                 nodal_solution_buffer[:, i] = solution_freq
 
                 if logger:
-                    logging.info(f"Completed frequencies [{9*(i - start + 1)}/{len(self.frequencies)}]")
+                    logging.info(f"Completed frequencies [{min(10*(i - start + 1), freq_total)}/{freq_total}]")
 
                 if self._file_writer is not None:
                     self._file_writer[:, i] = solution_freq
