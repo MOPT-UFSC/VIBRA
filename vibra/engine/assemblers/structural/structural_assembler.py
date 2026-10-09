@@ -674,7 +674,23 @@ class StructuralAssembler:
 
 
     def compute_load_vector(self, freq: float, index: int) -> np.ndarray:
+        """
+        Use this method to compute the structural load vector.
 
+        Parameters
+        ----------
+        freq: float
+            The frequency value in Hz.
+        
+        index: int
+            The column index.
+
+        Return
+        ------
+        load_vector: np.ndarray
+            The structural load vector
+
+        """
         # compute the load vector {f}
         f = self.excitations_assembler.get_combined_nodal_loads_vector(index=index)
 
@@ -682,6 +698,24 @@ class StructuralAssembler:
 
 
     def compute_dynamic_stiffness_matrix(self, freq: float, index: int) -> csr_matrix:
+        """
+        Use this method to compute the global structural dynamic stiffness matrix.
+
+        Parameters
+        ----------
+        freq: float
+            The frequency value in Hz.
+
+        index: int
+            The column index.
+
+        Return
+        ------
+        Kd: csr_matrix
+            The global structural dynamic stiffness matrix.
+
+        """
+
         omega = 2 * np.pi * freq
 
         analysis_setup = self.model.analysis_setup
@@ -693,7 +727,7 @@ class StructuralAssembler:
         K = self.stiffness_matrix
 
         # compute the dynamic stiffness matrix Kd
-        Kd = (-(omega**2) + 1j*(omega * alpha)) * M + (1 + 1j*(eta + omega * beta)) * K
+        Kd = (-(omega**2) + 1j * (omega * alpha)) * M + (1 + 1j * (eta + omega * beta)) * K
 
         return Kd
 
@@ -701,7 +735,7 @@ class StructuralAssembler:
     def build_eigenproblem_system(self):
         K = self.stiffness_matrix
         M = self.mass_matrix
-        
+
         is_complex = np.any(np.iscomplex(K.data)) or np.any(np.iscomplex(M.data))
         if not is_complex:
             K.data = np.real(K.data)

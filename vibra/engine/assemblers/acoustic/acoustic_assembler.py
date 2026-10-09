@@ -40,7 +40,7 @@ class AcousticAssembler:
         self.frequency_dependent = False
 
         self.number_frequencies = 1
-        self.prescribed_values = []
+        self.prescribed_values = np.array([])
         self.prescribed_dof_indices = None
         self.unprescribed_dof_indices = None
         self.fluid_properties_from_volume = {}
@@ -81,7 +81,7 @@ class AcousticAssembler:
         return (self.stiffness_matrix is not None) and (self.mass_matrix is not None)
 
 
-    def get_prescribed_dof_values(self):
+    def process_prescribed_dof_values(self):
         """
         This method returns all the values of the acoustic degrees of freedom with prescribed pressure boundary conditions.
 
@@ -97,8 +97,7 @@ class AcousticAssembler:
         process_unprescribed_indices : Indexes of the acoustic free degrees of freedom.
         """
 
-        global_prescribed = []
-        list_prescribed_dof = []
+        prescribed_dof_values = []
 
         aux_ones = np.ones(self.number_frequencies, dtype=complex)
 
@@ -126,28 +125,23 @@ class AcousticAssembler:
                     else:
                         _values = _complex_values
 
-                    global_prescribed.append(_values)
+                    prescribed_dof_values.append(_values)
 
         # TODO: implement same structure for lines
         # TODO: refactor this method
 
-        try:
+        prescribed_dof = []
 
-            for value in global_prescribed:
-                if isinstance(value, complex):
-                    list_prescribed_dof.append(aux_ones * value)
-                elif isinstance(value, np.ndarray):
-                    if len(value) == 1:
-                       list_prescribed_dof.append(aux_ones * value)
-                    else: 
-                        list_prescribed_dof.append(value[0:self.number_frequencies])
+        for value in prescribed_dof_values:
+            if isinstance(value, complex):
+                prescribed_dof.append(aux_ones * value)
+            elif isinstance(value, np.ndarray):
+                if len(value) == 1:
+                    prescribed_dof.append(aux_ones * value)
+                else: 
+                    prescribed_dof.append(value[0:self.number_frequencies])
 
-            array_prescribed_values = np.array(list_prescribed_dof)
-
-        except Exception as _error_log:
-            print(str(_error_log))
-
-        return global_prescribed, array_prescribed_values
+        self.prescribed_values = np.array(prescribed_dof)
 
 
     def process_prescribed_indices(self):
@@ -181,6 +175,7 @@ class AcousticAssembler:
     def process_dofs_indices(self):
         self.process_prescribed_indices()
         self.process_unprescribed_indices()
+        self.process_prescribed_dof_values()
 
 
     def get_fluid_properties_from_surface(self, surface_id: int):
@@ -499,28 +494,71 @@ class AcousticAssembler:
         self.mass_flow_vector = self.excitations_assembler.assemble_model_excitations()
 
 
-    def compute_load_vector(self, freq: float, i: int) -> np.ndarray:
+    def reassemble_global_matrices_for_specific_frequency(self, index: int = 0):
+
+        # process the global matrices factors
+        factor_K, factor_M, _, _ = self.compute_global_matrices_factors(index=index)
+
+        # assemble the global mass matrix
+        self.assemble_global_mass_matrix(factor_M)
+
+        # assemble the global stiffness matrix
+        self.assemble_global_stiffness_matrix(factor_K)
+
+
+    def exists_a_non_zero_prescribed_value(self, index: int):
+        """
+        This method checks if there is a non-zero prescribed dof value.
+        """
+        if self.prescribed_values.size == 0:
+            return False
+
+        return np.any(self.prescribed_values[:, index])
+
+
+    def compute_load_vector(self, freq: float, index: int) -> np.ndarray:
+        """
+        Use this method to compute the acoustic load vector.
+
+        Parameters
+        ----------
+        freq: float
+            The frequency value in Hz.
+        
+        index: int
+            The column index.
+
+        Return
+        ------
+        load_vector: np.ndarray
+            The acoustic load vector
+
+        """
 
         # create the frequency vector
         omega = 2 * np.pi * freq
 
         if self.frequency_dependent:
 
+            # assemble the global matrices if there are non-zero prescribed_dofs
+            if self.exists_a_non_zero_prescribed_value(index):
+                self.reassemble_global_matrices_for_specific_frequency(index=index)
+
             # reassemble the mass source matrices
-            self.excitations_assembler.assemble_mass_source_matrices_from_surfaces(index=i)
-            self.excitations_assembler.assemble_mass_source_matrices_from_volumes(index=i)
+            self.excitations_assembler.assemble_mass_source_matrices_from_surfaces(index=index)
+            self.excitations_assembler.assemble_mass_source_matrices_from_volumes(index=index)
 
         # update the prescribed dof-related load vector for each frequency step
-        f_eq = self.excitations_assembler.get_prescribed_pressure_model_excitation(index=i)
+        f_eq = self.excitations_assembler.get_prescribed_pressure_model_excitation(index=index)
 
         # mass source-related load vector
-        f_ms = self.excitations_assembler.compute_mass_source_load_vector(omega, index=i)
+        f_ms = self.excitations_assembler.compute_mass_source_load_vector(omega, index=index)
 
         # viscous damping-related load vector
-        f_visc = self.damping_matrices_3d.visc_load_matrix @ self.mass_flow_vector[:, i]
+        f_visc = self.damping_matrices_3d.visc_load_matrix @ self.mass_flow_vector[:, index]
 
         # mass flow-related load vector
-        f_mf = 1j * omega * self.mass_flow_vector[:, i]
+        f_mf = 1j * omega * self.mass_flow_vector[:, index]
 
         # compute the load vector {f}
         f = f_ms + f_visc - f_mf - f_eq
@@ -528,7 +566,24 @@ class AcousticAssembler:
         return f
 
 
-    def compute_dynamic_stiffness_matrix(self, freq: float, i: int) -> csr_matrix:
+    def compute_dynamic_stiffness_matrix(self, freq: float, index: int) -> csr_matrix:
+        """
+        Use this method to compute the global acoustic dynamic stiffness matrix.
+
+        Parameters
+        ----------
+        freq: float
+            The frequency value in Hz.
+
+        index: int
+            The column index.
+
+        Return
+        ------
+        Kd: csr_matrix
+            The global acoustic dynamic stiffness matrix.
+
+        """
 
         # mass and stiffness matrices
         M = self.mass_matrix
@@ -538,17 +593,17 @@ class AcousticAssembler:
         omega = 2 * np.pi * freq
 
         # update the damping matrix [C]
-        if i > 0:
-            self.damping_matrices_2d = self.impedances_assembler.assemble_global_damping_matrix_2d_elements(index=i)
+        if index > 0:
+            self.damping_matrices_2d = self.impedances_assembler.assemble_global_damping_matrix_2d_elements(index=index)
 
         # sum damping matrices
         C = self.damping_matrices_2d.damping_matrix + self.damping_matrices_3d.visc_damping_matrix
 
         if self.frequency_dependent:
-            # reassemble the global mass and stiffness matrices
-            factor_K, factor_M, _, _ = self.compute_global_matrices_factors(index=i)
-            self.assemble_global_mass_matrix(factor_M)
-            self.assemble_global_stiffness_matrix(factor_K)
+
+            # if there are prescribed_dofs, the global matrices have already been assembled 
+            if not self.exists_a_non_zero_prescribed_value(index):
+                self.reassemble_global_matrices_for_specific_frequency(index=index)
 
             M = self.mass_matrix
             K = self.stiffness_matrix
@@ -595,8 +650,6 @@ class AcousticAssembler:
             An array that contains the solution of all the degrees of freedom.
         """
 
-        prescribed_values, array_prescribed_values = self.get_prescribed_dof_values()
-
         rows = len(solution) + len(self.prescribed_dof_indices)
         cols = solution.shape[1]
 
@@ -605,9 +658,9 @@ class AcousticAssembler:
 
         if len(self.prescribed_dof_indices):
             if modal_analysis:
-                full_solution[self.prescribed_dof_indices, :] = np.zeros((len(prescribed_values), cols))
+                full_solution[self.prescribed_dof_indices, :] = np.zeros((len(self.prescribed_values), cols))
             else:
-                full_solution[self.prescribed_dof_indices, :] = array_prescribed_values[:, 0:cols]
+                full_solution[self.prescribed_dof_indices, :] = self.prescribed_values[:, 0:cols]
 
         return full_solution
 
@@ -629,14 +682,12 @@ class AcousticAssembler:
             An array that contains the solution of all the degrees of freedom.
         """
 
-        _, array_prescribed_values = self.get_prescribed_dof_values()
-
         rows = len(solution) + len(self.prescribed_dof_indices)
 
         full_solution = np.zeros(rows, dtype=complex)
         full_solution[self.unprescribed_dof_indices] = solution
 
         if len(self.prescribed_dof_indices):
-            full_solution[self.prescribed_dof_indices] = array_prescribed_values[:, freq_index]
+            full_solution[self.prescribed_dof_indices] = self.prescribed_values[:, freq_index]
 
         return full_solution
