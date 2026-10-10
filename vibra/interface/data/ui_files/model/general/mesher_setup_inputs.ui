@@ -428,13 +428,13 @@
              <string>Enabled</string>
             </property>
            </item>
-           </widget>
-          </item>
-         </layout>
-        </widget>
-       </item>
-       <item row="1" column="0">
-        <widget class="QFrame" name="frame_tab_widgets">
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QFrame" name="frame_tab_widgets">
         <property name="minimumSize">
          <size>
           <width>0</width>
@@ -1987,17 +1987,33 @@
  <tabstops>
   <tabstop>comboBox_element_geometry</tabstop>
   <tabstop>comboBox_element_order</tabstop>
+  <tabstop>comboBox_mesh_quality_metrics</tabstop>
+  <tabstop>comboBox_volumes_interface_behavior</tabstop>
   <tabstop>comboBox_volumes_interface_behavior</tabstop>
   <tabstop>tabWidget_main</tabstop>
+  <tabstop>doubleSpinBox_maximum_element_size</tabstop>
+  <tabstop>doubleSpinBox_minimum_element_size</tabstop>
+  <tabstop>doubleSpinBox_size_factor</tabstop>
+  <tabstop>lineEdit_geometry_tolerance</tabstop>
+  <tabstop>pushButton_syncrhonize</tabstop>
+  <tabstop>pushButton_apply_and_close</tabstop>
+  <tabstop>pushButton_apply</tabstop>
+  <tabstop>pushButton_cancel</tabstop>
   <tabstop>lineEdit_selected_ids</tabstop>
   <tabstop>doubleSpinBox_local_mesh_size_control_element_size</tabstop>
-  <tabstop>tableWidget_local_mesh_size_control_data</tabstop>
-  <tabstop>pushButton_delete</tabstop>
   <tabstop>pushButton_add</tabstop>
+  <tabstop>pushButton_delete</tabstop>
+  <tabstop>tableWidget_local_mesh_size_control_data</tabstop>
+  <tabstop>comboBox_local_mesh_size_control_entity_type</tabstop>
+  <tabstop>comboBox_2d_algorithm</tabstop>
+  <tabstop>comboBox_3d_algorithm</tabstop>
+  <tabstop>comboBox_recombination_algorithm</tabstop>
+  <tabstop>comboBox_subdivision_algorithm</tabstop>
+  <tabstop>comboBox_recombine_all</tabstop>
+  <tabstop>comboBox_second_order_incomplete</tabstop>
   <tabstop>tableWidget_mesh_quality</tabstop>
   <tabstop>pushButton_plot_histogram</tabstop>
   <tabstop>pushButton_show_bad_elements</tabstop>
-  <tabstop>comboBox_volumes_interface_behavior</tabstop>
  </tabstops>
  <resources/>
  <connections/>

@@ -57,12 +57,7 @@ class StructuralNodalSolution2dPlotTimeInputs(StructuralNodalSolution2dPlotTimeI
         self.exporter = None
         self.plotter = None
         self.model_results = {}
-        self.selection_types = [
-            "surfaces",
-            "lines",
-            "points",
-            "nodes",
-            ]
+        self.selection_types = ["surfaces", "lines", "points", "nodes"]
 
     def _configure_validator(self):
         validator = IntListValidator()
