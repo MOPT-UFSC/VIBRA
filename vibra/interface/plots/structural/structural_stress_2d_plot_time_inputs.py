@@ -79,12 +79,7 @@ class StructuralStress2dPlotTimeInputs(StructuralStress2dPlotTimeInputs_UI):
         self.exporter = None
         self.plotter = None
         self.model_results = {}
-        self.selection_types = [
-            "surfaces",
-            "lines",
-            "points",
-            "nodes",
-            ]
+        self.selection_types = ["surfaces", "lines", "points", "nodes"]
 
         # update the widgets accessibility
         if self.is_stress_data_cached:
@@ -279,9 +274,7 @@ class StructuralStress2dPlotTimeInputs(StructuralStress2dPlotTimeInputs_UI):
 
     def join_model_data(self):
 
-        self.model_results.clear()
         stress_index = self.comboBox_plotting_results.currentIndex()
-
         index = self.comboBox_selector_filter.currentIndex()
         selection_type = self.selection_types[index][:-1]
 
@@ -290,6 +283,8 @@ class StructuralStress2dPlotTimeInputs(StructuralStress2dPlotTimeInputs_UI):
 
         stress_units = self.comboBox_stress_units.currentText()
         unit_factor = convert_stress_unit(1, "Pa", stress_units)
+
+        self.model_results.clear()
 
         for i, selected_id in enumerate(self.selected_ids):
 

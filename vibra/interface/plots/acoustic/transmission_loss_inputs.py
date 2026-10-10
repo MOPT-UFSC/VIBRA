@@ -69,6 +69,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
         self.plotter = None
         self.input_surface_id = None
         self.output_surface_id = None
+        self.model_results = {}
 
     def _config_widgets(self):
         self.current_lineEdit = self.lineEdit_output_surface_id
@@ -406,7 +407,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
 
     def join_model_data(self):
 
-        self.model_results = {}
+        self.model_results.clear()
 
         if self.comboBox_processing_selector.currentIndex() == DataType.TRANSMISSION_LOSS:
 
