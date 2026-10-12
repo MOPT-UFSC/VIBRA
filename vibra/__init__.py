@@ -11,8 +11,8 @@ if TYPE_CHECKING:
 from pathlib import Path
 
 
-__version__ = "0.6.1"
-__release_date__ = "Aug 2026"
+__version__ = "0.7.0"
+__release_date__ = "Oct 2026"
 
 VERSION = __version__
 RELEASE_DATE = __release_date__
