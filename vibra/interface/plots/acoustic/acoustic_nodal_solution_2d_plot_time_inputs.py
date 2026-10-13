@@ -198,6 +198,8 @@ class AcousticNodalSolution2dPlotTimeInputs(AcousticNodalSolution2dPlotTimeInput
         self.title = "Acoustic pressure waveform"
         self.process_units_data()
 
+        self.model_results.clear()
+
         for i, selected_id in enumerate(self.selected_ids):
 
             key = (selection_type, (selected_id))

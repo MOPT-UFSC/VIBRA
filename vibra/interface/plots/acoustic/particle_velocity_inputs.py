@@ -50,7 +50,6 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
         self.keep_window_open = True
         self.exporter = None
         self.plotter = None
-
         self.model_results = {}
 
     def _config_window(self):
