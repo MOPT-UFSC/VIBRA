@@ -16,6 +16,7 @@ from vibra.engine.serialization.project_paths import ProjectPaths
 from vibra.engine.solution import HarmonicSolution
 from vibra.engine.solvers import ModalSolver
 from vibra.engine.solvers.linear_solver import LinearSolver, SolverType, initialize_solver
+from vibra.utils.time_utils import context_timer
 
 
 class HarmonicSolver:
@@ -68,15 +69,12 @@ class HarmonicSolver:
         logging.info("Solving harmonic analysis (direct method)... [10/100]")
 
         nodal_solution_buffer = self._get_nodal_solution_buffer(is_resume)
-        self._initialize_file_writer(is_resume)
 
-        try:
+        with context_timer("freq comp"):
             if isinstance(self.assembler, StructuralAssembler):
                 self.compute_structural_frequency_sweep(nodal_solution_buffer, is_resume)
             else:
                 self.compute_frequency_sweep(nodal_solution_buffer, print_log, is_resume)
-        finally:
-            self._close_file_writer()
 
         logging.info("Solving harmonic analysis (direct method)... [99/100]")
 
@@ -184,7 +182,7 @@ class HarmonicSolver:
     ):
         # frequencies vector [in hertz]
         frequencies = self.frequencies
-        num_workers = 10
+        num_workers = 16
         chunk_size = (len(frequencies) + num_workers - 1) // num_workers
         with ThreadPoolExecutor(max_workers=num_workers) as executor:
             futures = []
@@ -222,29 +220,39 @@ class HarmonicSolver:
             if is_resume and (i != 0) and isinstance(self._file_writer, LazyHDF5MatrixWriter) and self._file_writer.has_column(i):
                 continue
 
-            A, f = self.assembler.build_harmonic_system(freq, i)
+            f = self.assembler.compute_load_vector(freq, i)
 
-            if freq == 0:
-                # In case of freq=0, the matrix may differ from the non-zero frequencies,
-                # so we solve it with a particular linear solver
-                linear_solver = initialize_solver(SolverType.PARDISO, is_symmetric=True)
+            if np.any(f):
+                if freq == 0:
+                    # In case of freq=0, the matrix may differ from the non-zero frequencies,
+                    # so we solve it with a particular linear solver
+                    linear_solver = initialize_solver(SolverType.PARDISO, is_symmetric=True)
+                else:
+                    linear_solver = worker_solver
+
+                Kd = self.assembler.compute_dynamic_stiffness_matrix(freq, i)
+
+                is_complex = np.any(np.iscomplex(Kd.data)) or np.any(np.iscomplex(f))
+                if not is_complex:
+                    Kd.data = np.real(Kd.data)
+                    f = np.real(f)
+
+                try:
+                    solution_freq = linear_solver.solve(Kd, f)
+                finally:
+                    linear_solver.clear_memory()
+                    del Kd
             else:
-                linear_solver = worker_solver
+                # We will have the trivial solution whenever there is zero excitation
+                solution_freq = np.zeros_like(f, dtype=complex)
 
-            try:
-                solution_freq = linear_solver.solve(A, f)
-                solution_freq = self.assembler.reinsert_the_prescribed_dof_into_solution_freq(solution_freq, i)
-                nodal_solution_buffer[:, i] = solution_freq
+            del f
 
-                if logger:
-                    logging.info(f"Completed frequencies [{min(10*(i - start + 1), freq_total)}/{freq_total}]")
+            solution_freq = self.assembler.reinsert_the_prescribed_dof_into_solution_freq(solution_freq, i)
+            nodal_solution_buffer[:, i] = solution_freq
 
-                if self._file_writer is not None:
-                    self._file_writer[:, i] = solution_freq
-            finally:
-                # clear the memory and delete some variables to reduce the memory usage
-                linear_solver.clear_memory()
-                del A, f
+            if logger:
+                logging.info(f"Completed frequencies [{min(10*(i - start + 1), freq_total)}/{freq_total}]")
 
     def solve_mode_superposition(
         self,

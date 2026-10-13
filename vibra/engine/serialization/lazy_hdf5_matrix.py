@@ -69,7 +69,7 @@ class LazyHDF5MatrixWriter:
         if not overwrite and self.status[index]:
             return
 
-        if not np.any(column):
+        if np.any(column):
             self.solution[:, index] = column
 
         self.status[index] = True
