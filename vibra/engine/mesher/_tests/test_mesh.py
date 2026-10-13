@@ -135,12 +135,12 @@ def _mean_edge_length_per_volume(mesh: Mesh) -> dict[int, float]:
 
 def _compare_mesh(mesh: Mesh, mesh_path: Path | str):
     mesh_path = Path(mesh_path)
-    mappings = dict(
-        face_to_solid_element=mesh.face_to_solid_element.items(),
-        line_from_element=mesh.elements_from_line.items(),
-        surface_from_element=mesh.elements_from_surface.items(),
-        volume_from_element=mesh.elements_from_volume.items(),
-    )
+    mappings = {
+        "face_to_solid_element": mesh.face_to_solid_element.items(),
+        "line_from_element": mesh.elements_from_line.items(),
+        "surface_from_element": mesh.elements_from_surface.items(),
+        "volume_from_element": mesh.elements_from_volume.items(),
+    }
 
     if not mesh_path.exists():
         mesh_path.mkdir(parents=True)

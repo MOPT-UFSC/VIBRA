@@ -153,7 +153,8 @@ class GmshMesher:
             except Exception as error:
                 exception = error
 
-        raise exception
+        if exception is not None:
+            raise exception
 
     def generate_geometry_info(self) -> GeometryInfo:
         if self.path is None:

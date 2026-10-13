@@ -19,7 +19,7 @@ def _acoustic_model_nastran(path: str, fluid: Fluid) -> Model:
     # mesh_setup = dict(minimum_element_size=50, maximum_element_size=50)
 
     model = Model()
-    model.mesh = MeshReader().read_mesh(path)
+    model.mesh = MeshReader(path).read_mesh()
 
     for vol_id in [1, 2]:
         model.properties._set_property("fluid", fluid, volume=vol_id)
