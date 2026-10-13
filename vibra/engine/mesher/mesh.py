@@ -115,6 +115,18 @@ class Mesh:
         self.cache_lines_from_surface = {}
         self.cache_points_from_line = {}
 
+    def set_mesh_data(
+        self,
+        nodal_coordinates: np.ndarray,
+        lines_connectivity: np.ndarray,
+        faces_connectivity: np.ndarray,
+        solids_connectivity: np.ndarray,
+    ):
+        self.nodal_coordinates = nodal_coordinates
+        self.lines_connectivity = lines_connectivity
+        self.faces_connectivity = faces_connectivity
+        self.solids_connectivity = solids_connectivity
+
     def has_decoupling(self) -> bool:
         return all(
             [
