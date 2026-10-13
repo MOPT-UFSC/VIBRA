@@ -1,6 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor
 import logging
 import sys
+import ctypes
 from time import time
 from typing import Optional
 
@@ -232,6 +233,11 @@ class HarmonicSolver:
 
                 Kd = self.assembler.compute_dynamic_stiffness_matrix(freq, i)
 
+                set_threads = linear_solver.get_solver_instance(Kd, f).libmkl.MKL_Set_Num_Threads_Local
+                set_threads.argtypes = [ctypes.c_int]
+                set_threads.restype = ctypes.c_int
+                previous_limit = set_threads(1)
+
                 is_complex = np.any(np.iscomplex(Kd.data)) or np.any(np.iscomplex(f))
                 if not is_complex:
                     Kd.data = np.real(Kd.data)
@@ -240,6 +246,7 @@ class HarmonicSolver:
                 try:
                     solution_freq = linear_solver.solve(Kd, f)
                 finally:
+                    set_threads(previous_limit)
                     linear_solver.clear_memory()
                     del Kd
             else:
