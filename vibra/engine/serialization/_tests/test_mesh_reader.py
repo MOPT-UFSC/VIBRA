@@ -68,6 +68,18 @@ def _compare_mesh(mesh: Mesh, mesh_path: Path | str):
         "surface_from_element": mesh.elements_from_surface.items(),
         "volume_from_element": mesh.elements_from_volume.items(),
     }
+    geometry = {
+        "surfaces_from_volume": mesh.surfaces_from_volume.items(),
+        "lines_from_surface": mesh.lines_from_surface.items(),
+        "points_from_line": mesh.points_from_line.items(),
+        "volumes_from_surface": mesh.volumes_from_surface.items(),
+        "surfaces_from_line": mesh.surfaces_from_line.items(),
+        "lines_from_point": mesh.lines_from_point.items(),
+        "face_elements_connected_to_nodes": mesh.face_elements_connected_to_nodes.items(),
+        "length_from_lines": mesh.length_from_lines.items(),
+        "area_from_surfaces": mesh.area_from_surfaces.items(),
+        "volume_from_bodies": mesh.volume_from_bodies.items(),
+    }
 
     if not mesh_path.exists():
         mesh_path.mkdir(parents=True)
@@ -76,6 +88,7 @@ def _compare_mesh(mesh: Mesh, mesh_path: Path | str):
         mesh.export_face_elements_connectivity(mesh_path / "faces_connectivity.dat")
         mesh.export_solid_elements_connectivity(mesh_path / "solids_connectivity.dat")
         (mesh_path / "mappings.dat").write_text(str(mappings))  # saving the str of the dict
+        (mesh_path / "geometry.dat").write_text(str(geometry))  # saving the str of the dict
         assert False
 
     expected_nodal_coordinates = np.loadtxt(
@@ -99,6 +112,7 @@ def _compare_mesh(mesh: Mesh, mesh_path: Path | str):
         skiprows=1,
     )
     expected_mappings = (mesh_path / "mappings.dat").read_text()
+    expected_geometry = (mesh_path / "geometry.dat").read_text()
 
     if gmsh.isInitialized():
         gmsh.finalize()
@@ -108,6 +122,7 @@ def _compare_mesh(mesh: Mesh, mesh_path: Path | str):
     assert np.allclose(expected_faces_connectivity, mesh.faces_connectivity)
     assert np.allclose(expected_solids_connectivity, mesh.solids_connectivity)
     assert expected_mappings == str(mappings)
+    assert expected_geometry == str(geometry)
 
     if (expected_solids_connectivity.size != 0) and (mesh.solids_connectivity.size != 0):
         assert np.allclose(expected_solids_connectivity, mesh.solids_connectivity)
