@@ -1,9 +1,8 @@
 import logging
-import sys
 from collections import defaultdict
 from copy import deepcopy
+from enum import IntEnum
 from itertools import permutations
-from pathlib import Path
 from typing import Literal
 
 # from time import perf_counter
@@ -22,11 +21,18 @@ from vibra.engine.mesher.mesh_setup import (
     Tetrahedron10,
 )
 from vibra.interface.numeric_checks.unit_utilities import convert_length_unit
+from vibra.utils.utils import group_by
 
 MeshQualityParams = Literal["gamma", "volume", "minSJ", "aspectRatio"]
 
 
 class Mesh:
+    class ColumnEnum(IntEnum):
+        ELEMENT_INDEX = 0
+        ENTITY_INDEX = 1
+        ELEMENT_TYPE = 2
+        NODES_PER_ELEMENT = 3
+
     def __init__(self, **kwargs):
         self.length_unit = kwargs.get("length_unit", "millimeter")
         self.geometry_qf = kwargs.get("geometry_qf", 1.0)
@@ -126,6 +132,9 @@ class Mesh:
         self.lines_connectivity = lines_connectivity
         self.faces_connectivity = faces_connectivity
         self.solids_connectivity = solids_connectivity
+
+        self.update_element_topology_based_on_connectivity()
+        self.process_mesh_related_mappings()
 
     def has_decoupling(self) -> bool:
         return all(
@@ -513,7 +522,10 @@ class Mesh:
             first_index = last_index
 
         if self.external_nodes_from_lines:
-            self.map_elements_from_lines()
+            self.elements_from_line = group_by(
+                self.lines_connectivity[:, Mesh.ColumnEnum.ENTITY_INDEX],
+                self.lines_connectivity[:, Mesh.ColumnEnum.ELEMENT_INDEX],
+            )
             self.geometry_information["lines"] = list(self.external_nodes_from_lines.keys())
             # np.savetxt("lines_connectivity.dat", self.lines_connectivity, delimiter=",", fmt="%i")
 
@@ -1228,36 +1240,26 @@ class Mesh:
         self.points_from_nodes = {v: k for k, v in self.nodes_from_points.items()}
 
     def process_mesh_related_mappings(self, label: str = "Loading"):
-
         logging.info(f"{label} mesh... [70/100]")
-        self.map_elements_from_volumes()
+        self.elements_from_line = group_by(
+            self.lines_connectivity[:, Mesh.ColumnEnum.ENTITY_INDEX],
+            self.lines_connectivity[:, Mesh.ColumnEnum.ELEMENT_INDEX],
+        )
 
         logging.info(f"{label} mesh... [75/100]")
-        self.map_elements_from_surfaces()
+        self.elements_from_surface = group_by(
+            self.faces_connectivity[:, Mesh.ColumnEnum.ENTITY_INDEX],
+            self.faces_connectivity[:, Mesh.ColumnEnum.ELEMENT_INDEX],
+        )
 
         logging.info(f"{label} mesh... [80/100]")
-        self.map_elements_from_lines()
+        self.elements_from_volume = group_by(
+            self.solids_connectivity[:, Mesh.ColumnEnum.ENTITY_INDEX],
+            self.solids_connectivity[:, Mesh.ColumnEnum.ELEMENT_INDEX],
+        )
 
         logging.info(f"{label} mesh... [85/100]")
         self.map_face_elements_to_solid_elements()
-
-    def map_elements_from_lines(self):
-        self.elements_from_line.clear()
-        for line_id in np.unique(self.lines_connectivity[:, 1]).astype(int):
-            rows = np.where(self.lines_connectivity[:, 1] == line_id)[0]
-            self.elements_from_line[line_id] = self.lines_connectivity[rows, 0]
-
-    def map_elements_from_surfaces(self):
-        self.elements_from_surface.clear()
-        for surface_id in np.unique(self.faces_connectivity[:, 1]).astype(int):
-            rows = np.where(self.faces_connectivity[:, 1] == surface_id)[0]
-            self.elements_from_surface[surface_id] = self.faces_connectivity[rows, 0]
-
-    def map_elements_from_volumes(self):
-        self.elements_from_volume.clear()
-        for volume_id in np.unique(self.solids_connectivity[:, 1]).astype(int):
-            rows = np.where(self.solids_connectivity[:, 1] == volume_id)[0]
-            self.elements_from_volume[volume_id] = self.solids_connectivity[rows, 0]
 
     def get_line_from_element(self, element_id: int) -> int | None:
         line_id = None

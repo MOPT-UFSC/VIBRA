@@ -6,6 +6,7 @@ import numpy as np
 
 from vibra.engine.mesher.mesh import Mesh
 from vibra.utils.time_utils import context_timer, function_timer
+from vibra.utils.utils import group_by
 
 logger = logging.getLogger(__name__)
 
@@ -32,14 +33,13 @@ class MeshReader:
         logger.info("Loading mesh data... [90/100]")
         gmsh.model.occ.synchronize()
 
-        mesh = Mesh()
+        mesh = self.create_mesh_from_gmsh_state()
         mesh.geometry_imported = False
 
-        logger.info("Post-processing mesh... [50/100]")
-        with context_timer("foo"):
-            mesh.post_process_mesh_data()
-            
-        self.bla(mesh)
+        # logger.info("Post-processing mesh... [50/100]")
+        # with context_timer("foo"):
+            # mesh.post_process_mesh_data()
+
         mesh.update_element_topology_based_on_connectivity()
 
         logger.info("Post-processing mesh... [80/100]")
@@ -60,7 +60,9 @@ class MeshReader:
         return mesh
 
     @function_timer
-    def bla(self, mesh: Mesh):
+    def create_mesh_from_gmsh_state(self) -> Mesh:
+        mesh = Mesh()
+
         indices, coords, _parametric_coords = gmsh.model.mesh.get_nodes(includeBoundary=True)
         indices = np.array(indices) - 1
         coords = np.array(coords)
@@ -97,11 +99,24 @@ class MeshReader:
             ).astype(int)
             dim_to_data[dim] = data
 
-
-        print("VAI TOMAR NO CU")
         mesh.set_mesh_data(
             nodal_coordinates=nodal_coordinates,
             lines_connectivity=dim_to_data.get(1, np.zeros((0, 4), dtype=int)),
             faces_connectivity=dim_to_data.get(2, np.zeros((0, 4), dtype=int)),
             solids_connectivity=dim_to_data.get(3, np.zeros((0, 4), dtype=int)),
         )
+
+        if mesh.suppressed_volumes:
+            self.remove_disconnected_nodes()
+
+        # logging.info("Post-processing mesh... [68/100]")
+        mesh.process_mesh_related_mappings("Post-processing")
+        # mesh.map_face_elements_to_solid_elements()
+
+        logging.info("Post-processing mesh... [80/100]")
+        mesh.process_disconnected_nodes_criterion()
+
+        logging.info("Post-processing mesh... [90/100]")
+        mesh.process_collapsed_elements_data_criterion()
+
+        return mesh
