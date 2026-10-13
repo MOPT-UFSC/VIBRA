@@ -137,9 +137,9 @@ def _compare_mesh(mesh: Mesh, mesh_path: Path | str):
     mesh_path = Path(mesh_path)
     mappings = dict(
         face_to_solid_element=mesh.face_to_solid_element.items(),
-        # line_from_element=mesh.line_from_element.items(),
-        # surface_from_element=mesh.surface_from_element.items(),
-        # volume_from_element=mesh.volume_from_element.items(),
+        line_from_element=mesh.elements_from_line.items(),
+        surface_from_element=mesh.elements_from_surface.items(),
+        volume_from_element=mesh.elements_from_volume.items(),
     )
 
     if not mesh_path.exists():
