@@ -100,7 +100,6 @@ class Mesh:
         self.nodal_normals_data = {}
         self.element_normals_data = {}
 
-        self.solid_elements_center = {}
         self.surfaces_centers = {}
         self.surface_area_from_element_integration = {}
         self.cylindrical_surfaces_data = {}
@@ -758,7 +757,6 @@ class Mesh:
         self.points_from_nodes.clear()
         self.mesh_quality_data.clear()
 
-        self.solid_elements_center.clear()
         self.external_nodes_from_lines.clear()
         self.external_nodes_from_surfaces.clear()
         self.external_nodes_from_volumes.clear()
