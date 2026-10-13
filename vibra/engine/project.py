@@ -137,7 +137,7 @@ class Project:
             structural_postprocessing.min_max_processor.get_values_for_displacement_frequency.cache_clear()
             structural_postprocessing.min_max_processor.get_values_for_displacement_time.cache_clear()
 
-    def run_analysis(self, is_resume: bool = False, print_log: bool = False):
+    def run_analysis(self, is_resume: bool = False, print_log: bool = False, use_multithreading: bool = True):
         """
         It performs the solution of the currently configured model.
         It might raise errors if the analysis is not properly configured.
@@ -147,7 +147,7 @@ class Project:
 
         match self.model.analysis_id:
             case AnalysisID.STRUCTURAL_MODAL:
-                return self.solve_structural_modal_analysis(is_resume=is_resume, print_log=print_log)
+                return self.solve_structural_modal_analysis(is_resume=is_resume, print_log=print_log, use_multithreading=use_multithreading)
             case AnalysisID.STRUCTURAL_HARMONIC:
                 return self.solve_structural_harmonic_analysis(is_resume=is_resume, print_log=print_log)
             case AnalysisID.ACOUSTIC_MODAL:
@@ -343,7 +343,7 @@ class Project:
         self.model.set_analysis_setup(analysis_setup)
         self.update_project_setup_file()
 
-    def solve_structural_modal_analysis(self, is_resume: bool = False, print_log: bool = False) -> ModalSolution:
+    def solve_structural_modal_analysis(self, is_resume: bool = False, print_log: bool = False, use_multithreading: bool = True) -> ModalSolution:
 
         self.update_project_setup_file()
 
@@ -354,7 +354,7 @@ class Project:
         self.solver = ModalSolver(self.assembler)
         self.structural_postprocessing = StructuralPostprocessing(self.model)
 
-        self.assembler.assemble_global_matrices(print_log=print_log)
+        self.assembler.assemble_global_matrices(print_log=print_log, use_multithreading=use_multithreading)
 
         t0 = perf_counter()
         self.model.solution = self.solver.solve(print_log=print_log)

@@ -487,7 +487,7 @@ class StructuralAssembler:
                 self.data_M[element_id, :, :] = Me
 
     @function_timer
-    def compute_data_to_process_global_matrices_for_solid_elements(self, reorder: bool = True, print_log: bool = False):
+    def compute_data_to_process_global_matrices_for_solid_elements(self, reorder: bool = True, print_log: bool = False, use_multithreading: bool = True):
         """
         Calculates global matrices.
         """
@@ -511,11 +511,15 @@ class StructuralAssembler:
 
         # loop for 3d elements
         element_ids = self.model.domains_processor.elements_of_domain.get("structural", [])
-        num_workers = cpu_count()
 
         if not len(element_ids):
             return
 
+        if not use_multithreading:
+            self.compute_data_partially(element_ids, index_offset=0, logger=True)
+            return
+
+        num_workers = cpu_count()
         chunk_size = (len(element_ids) + num_workers - 1) // num_workers
 
         with ThreadPoolExecutor(max_workers=num_workers) as executor:
@@ -562,13 +566,13 @@ class StructuralAssembler:
             self.data_K[index + index_offset, :, :] = Ke
             self.data_M[index + index_offset, :, :] = Me
 
-    def compute_data_to_process_global_matrices(self, reorder: bool = True, print_log: bool = False):
+    def compute_data_to_process_global_matrices(self, reorder: bool = True, print_log: bool = False, use_multithreading: bool = True):
         """
         This method preprocesses all the required data to assemble the global matrices.
         """
         if self.model.mesh.solids_connectivity.size:
             self.process_material_from_volumes()
-            self.compute_data_to_process_global_matrices_for_solid_elements(reorder=reorder, print_log=print_log)
+            self.compute_data_to_process_global_matrices_for_solid_elements(reorder=reorder, print_log=print_log, use_multithreading=use_multithreading)
 
         else:
             self.process_surface_data_for_shell_elements()
@@ -652,7 +656,7 @@ class StructuralAssembler:
             self.stiffness_matrix = self.stiffness_matrix[self.unprescribed_dof_indices, :][:, self.unprescribed_dof_indices]
 
 
-    def assemble_global_matrices(self, reorder: bool = True, print_log: bool = False):
+    def assemble_global_matrices(self, reorder: bool = True, print_log: bool = False, use_multithreading: bool = True):
         """
         This method assembles the global matrices of the structural model.
         """
@@ -667,7 +671,7 @@ class StructuralAssembler:
 
         logging.info("Gathering data to assemble global matrices... [20/100]")
         t0 = time()
-        if self.compute_data_to_process_global_matrices(reorder=reorder, print_log=print_log):
+        if self.compute_data_to_process_global_matrices(reorder=reorder, print_log=print_log, use_multithreading=use_multithreading):
             return
         dt = time() - t0
         if print_log:
