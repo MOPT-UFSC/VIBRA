@@ -516,7 +516,7 @@ class StructuralAssembler:
             return
 
         if not use_multithreading:
-            self.compute_data_partially(element_ids, index_offset=0, logger=True)
+            self.process_global_matrices_for_solid_elements_on_range(element_ids, index_offset=0, logger=True)
             return
 
         num_workers = cpu_count()
@@ -529,7 +529,7 @@ class StructuralAssembler:
                 logger = start >= (len(element_ids) - chunk_size)
 
                 future = executor.submit(
-                    self.compute_data_partially,
+                    self.process_global_matrices_for_solid_elements_on_range,
                     element_ids[start:start + chunk_size],
                     start,
                     logger=logger
@@ -539,7 +539,7 @@ class StructuralAssembler:
             for future in futures:
                 future.result()
 
-    def compute_data_partially(self, element_ids: list, index_offset, logger: bool = False):
+    def process_global_matrices_for_solid_elements_on_range(self, element_ids: list, index_offset, logger: bool = False):
         last_progress = 0
 
         for index, element_id in enumerate(element_ids):
