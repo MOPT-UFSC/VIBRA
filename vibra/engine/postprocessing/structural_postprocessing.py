@@ -6,10 +6,10 @@ from concurrent.futures import ThreadPoolExecutor
 from functools import cache
 from multiprocessing import cpu_count
 from time import perf_counter
-from typing import TYPE_CHECKING
 
 import numpy as np
 
+from vibra.engine.elements.elements_3d.structural.structural_3d_element import Structural3DElement
 from vibra.engine.model import Model
 from vibra.engine.postprocessing.structural.minimum_and_maximum_values_processor import MinimumAndMaximumValuesProcessor
 from vibra.engine.properties.material import Material
@@ -17,9 +17,6 @@ from vibra.engine.solution import HarmonicSolution, LazyHarmonicSolution, ModalS
 from vibra.interface.viewer_3d.plot_setup import DisplacementDataType, StressDataType, StressType
 from vibra.utils.signal_processing import process_multiple_iffts_from_one_sided_spectrum_signals
 from vibra.utils.utils import is_gil_enabled
-
-if TYPE_CHECKING:
-    from vibra.engine.elements.elements_3d.structural.structural_3d_element import Structural3DElement
 
 
 class StructuralPostprocessing:
