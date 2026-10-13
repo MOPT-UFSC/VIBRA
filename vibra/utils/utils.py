@@ -1,5 +1,14 @@
+import sys
 from pathlib import Path
 from numpy import ndarray
+
+def is_gil_enabled() -> bool:
+    """
+    Returns False only when running on a free-threaded Python build with the GIL disabled.
+    sys._is_gil_enabled is only available from Python 3.13 onwards.
+    """
+    _is_gil_enabled = getattr(sys, "_is_gil_enabled", None)
+    return _is_gil_enabled is None or _is_gil_enabled()
 
 def get_list_of_values_from_string(input_string, int_values=True):
     """ 

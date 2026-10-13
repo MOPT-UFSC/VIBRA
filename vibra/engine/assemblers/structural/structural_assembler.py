@@ -15,6 +15,7 @@ from vibra.engine.assemblers.structural.structural_excitations_assembler import 
 from vibra.engine.model import Model
 from vibra.engine.properties.material import Material
 from vibra.utils.time_utils import function_timer
+from vibra.utils.utils import is_gil_enabled
 
 
 @dataclass
@@ -487,7 +488,7 @@ class StructuralAssembler:
                 self.data_M[element_id, :, :] = Me
 
     @function_timer
-    def compute_data_to_process_global_matrices_for_solid_elements(self, reorder: bool = True, print_log: bool = False, use_multithreading: bool = True):
+    def compute_data_to_process_global_matrices_for_solid_elements(self, reorder: bool = True, print_log: bool = False):
         """
         Calculates global matrices.
         """
@@ -515,7 +516,7 @@ class StructuralAssembler:
         if not len(element_ids):
             return
 
-        if not use_multithreading:
+        if is_gil_enabled():
             self.process_global_matrices_for_solid_elements_on_range(element_ids, index_offset=0, logger=True)
             return
 
@@ -539,7 +540,7 @@ class StructuralAssembler:
             for future in futures:
                 future.result()
 
-    def process_global_matrices_for_solid_elements_on_range(self, element_ids: list, index_offset, logger: bool = False):
+    def process_global_matrices_for_solid_elements_on_range(self, element_ids: list, index_offset: int, logger: bool = False):
         last_progress = 0
 
         for index, element_id in enumerate(element_ids):
@@ -566,13 +567,13 @@ class StructuralAssembler:
             self.data_K[index + index_offset, :, :] = Ke
             self.data_M[index + index_offset, :, :] = Me
 
-    def compute_data_to_process_global_matrices(self, reorder: bool = True, print_log: bool = False, use_multithreading: bool = True):
+    def compute_data_to_process_global_matrices(self, reorder: bool = True, print_log: bool = False):
         """
         This method preprocesses all the required data to assemble the global matrices.
         """
         if self.model.mesh.solids_connectivity.size:
             self.process_material_from_volumes()
-            self.compute_data_to_process_global_matrices_for_solid_elements(reorder=reorder, print_log=print_log, use_multithreading=use_multithreading)
+            self.compute_data_to_process_global_matrices_for_solid_elements(reorder=reorder, print_log=print_log)
 
         else:
             self.process_surface_data_for_shell_elements()
@@ -656,7 +657,7 @@ class StructuralAssembler:
             self.stiffness_matrix = self.stiffness_matrix[self.unprescribed_dof_indices, :][:, self.unprescribed_dof_indices]
 
 
-    def assemble_global_matrices(self, reorder: bool = True, print_log: bool = False, use_multithreading: bool = True):
+    def assemble_global_matrices(self, reorder: bool = True, print_log: bool = False):
         """
         This method assembles the global matrices of the structural model.
         """
@@ -671,7 +672,7 @@ class StructuralAssembler:
 
         logging.info("Gathering data to assemble global matrices... [20/100]")
         t0 = time()
-        if self.compute_data_to_process_global_matrices(reorder=reorder, print_log=print_log, use_multithreading=use_multithreading):
+        if self.compute_data_to_process_global_matrices(reorder=reorder, print_log=print_log):
             return
         dt = time() - t0
         if print_log:
