@@ -2,8 +2,11 @@ from __future__ import annotations
 
 import logging
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor
 from functools import cache
+from multiprocessing import cpu_count
 from time import perf_counter
+from typing import TYPE_CHECKING
 
 import numpy as np
 
@@ -13,6 +16,10 @@ from vibra.engine.properties.material import Material
 from vibra.engine.solution import HarmonicSolution, LazyHarmonicSolution, ModalSolution
 from vibra.interface.viewer_3d.plot_setup import DisplacementDataType, StressDataType, StressType
 from vibra.utils.signal_processing import process_multiple_iffts_from_one_sided_spectrum_signals
+from vibra.utils.utils import is_gil_enabled
+
+if TYPE_CHECKING:
+    from vibra.engine.elements.elements_3d.structural.structural_3d_element import Structural3DElement
 
 
 class StructuralPostprocessing:
@@ -142,7 +149,103 @@ class StructuralPostprocessing:
 
         # initialize variables
         n_nodes = len(node_ids)
-        n_el = len(element_ids)
+        shape = (n_nodes, 6, n_steps)
+        _, counts = np.unique(self.mesh.solids_connectivity[element_ids, 4:], return_counts=True)
+
+        # map all elements connectivities
+        _connect_flat = self.model.get_mapped_nodes(element_3d.connectivities[element_ids, :].ravel(), "structural")
+        _connectivities = _connect_flat.reshape(-1, element_3d.nodes_per_element)
+
+        if is_gil_enabled():
+            print("not using multithreading")
+            avg_nodal_stresses = self.process_nodal_averaged_structural_stresses(
+                element_3d,
+                element_ids,
+                _connectivities,
+                solution,
+                shape,
+                data_type,
+                logger=True,
+            )
+
+        else:
+            num_workers = cpu_count()
+            chunk_size = (len(_connectivities) + num_workers - 1) // num_workers
+
+            print("not using multithreading")
+
+            avg_nodal_stresses = np.zeros(shape, dtype=data_type)
+
+            with ThreadPoolExecutor(max_workers=num_workers) as executor:
+                futures = []
+
+                for start in range(0, len(_connectivities), chunk_size):
+                    end = start + chunk_size
+                    logger = start >= (len(_connectivities) - chunk_size)
+
+                    future = executor.submit(
+                        self.process_nodal_averaged_structural_stresses,
+                        element_3d,
+                        element_ids[start:end],
+                        _connectivities[start:end],
+                        solution,
+                        shape,
+                        data_type,
+                        logger=logger,
+                    )
+                    futures.append(future)
+
+                for future in futures:
+                    avg_nodal_stresses += future.result()
+
+        # average the nodal stresses
+        avg_nodal_stresses /= counts.reshape(-1, 1, 1)
+
+        return avg_nodal_stresses
+
+    def process_nodal_averaged_structural_stresses(
+        self,
+        element_3d: Structural3DElement,
+        element_ids: list[int] | np.ndarray,
+        connectivities: np.ndarray,
+        solution: np.ndarray | None,
+        shape: tuple[int, int, int],
+        dtype: type[float | complex],
+        logger: bool = False,
+        ) -> np.ndarray:
+
+        """
+        This method sums the extrapolated nodal stresses of a range of solid elements.
+
+        Parameters
+        ----------
+        element_3d: Structural3DElement
+            The structural 3D element used to compute the stresses.
+
+        element_ids: list[int], np.ndarray
+            The IDs of the elements of the range.
+
+        connectivities: np.ndarray
+            The mapped connectivities of the elements of the range, aligned with element_ids.
+
+        solution: np.ndarray, None
+            The nodal solution in time domain or None to use the frequency domain solution.
+
+        shape: tuple[int, int, int]
+            The shape of the output array (n_nodes, 6, n_steps).
+
+        dtype: type
+            The data type of the output array (float in time domain and complex otherwise).
+
+        logger: bool, optional (default is False)
+            Set this argument to True to log the progress of this range.
+
+        Return
+        ------
+        nodal_stresses_sum: np.ndarray
+            The sum (not yet averaged) of the nodal stresses of the elements of the range.
+
+        """
 
         corner_indices = element_3d.corner_nodes_indices
         midside_data = element_3d.midside_nodes_indices
@@ -153,20 +256,15 @@ class StructuralPostprocessing:
             ind_1 = midside_data[:, 1]
             ind_2 = midside_data[:, 2]
 
-        # initialize variables
         last_progress = 0
-        avg_nodal_stresses = np.zeros((n_nodes, 6, n_steps), dtype=data_type)
-        _, counts = np.unique(self.mesh.solids_connectivity[element_ids, 4:], return_counts=True)
+        local_avg_nodal_stresses = np.zeros(shape, dtype=dtype)
 
-        # map all elements connectivities
-        _connect_flat = self.model.get_mapped_nodes(element_3d.connectivities[element_ids, :].ravel(), "structural")
-        _connectivities = _connect_flat.reshape(-1, element_3d.nodes_per_element)
-
-        for i, _connect in enumerate(_connectivities):
-
-            progress = int((100 * (i / n_el) // 5) * 5)
-            if progress != last_progress:
-                logging.info(f"Calculating the nodal stresses for each element... [{progress}/100]")
+        for i, _connect in enumerate(connectivities):
+            if logger:
+                progress = int((100 * (i / len(connectivities)) // 5) * 5)
+                if progress != last_progress:
+                    logging.info(f"Calculating the nodal stresses for each element... [{progress}/100]")
+                last_progress = progress
 
             # process the extrapolated nodal stresses
             enodal_stresses = element_3d.process_stresses_at_integration_points(
@@ -176,18 +274,14 @@ class StructuralPostprocessing:
                 )
 
             # sum the nodal stresses at the corner nodes
-            avg_nodal_stresses[_connect[corner_indices], :, :] += enodal_stresses
+            local_avg_nodal_stresses[_connect[corner_indices], :, :] += enodal_stresses
 
             # sum the nodal stresses at the midside nodes
             if is_quadratic:
-                avg_nodal_stresses[_connect[midside_indices], :, :] += (enodal_stresses[ind_1, :, :] + enodal_stresses[ind_2, :, :]) / 2
+                local_avg_nodal_stresses[_connect[midside_indices], :, :] += (enodal_stresses[ind_1, :, :] + enodal_stresses[ind_2, :, :]) / 2
 
-        # average the nodal stresses
-        avg_nodal_stresses /= counts.reshape(-1, 1, 1)
-
-        return avg_nodal_stresses
-
-
+        return local_avg_nodal_stresses
+        
     @cache
     def recover_element_structural_stresses(
         self,
