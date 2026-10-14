@@ -319,6 +319,9 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         if self.current_widget_is_animatable():
             self.animation_widget = self.current_widget.animation_widget
 
+        if isinstance(self.bottom_widget, QWidget):
+            self.bottom_widget.hide()
+
         results_widget = app().main_window.results_widget
         results_widget.user_min_value = None
         results_widget.user_max_value = None
