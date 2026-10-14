@@ -77,6 +77,7 @@ class AcousticShakingForcesInputs(AcousticShakingForcesInputs_UI):
         self.exporter = None
         self.plotter = None
         self.unit_label = "N"
+        self.model_results = {}
 
     def _config_widgets(self):
         #
@@ -324,7 +325,7 @@ class AcousticShakingForcesInputs(AcousticShakingForcesInputs_UI):
     def join_model_data(self):
 
         ind = 0
-        self.model_results = {}
+        self.model_results.clear()
         self.title = "Acoustic shaking forces"
 
         acoustic_loads = self.process_acoustic_loads()

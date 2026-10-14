@@ -67,7 +67,6 @@ class ProjectWriter:
             self.write_mesh(model.mesh)
 
         if model.visual_mesh is not None:
-            print("ORA ORA ORA")
             self.write_visual_mesh(model.visual_mesh)
 
         if model.solution is not None:

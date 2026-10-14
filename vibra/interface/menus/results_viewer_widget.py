@@ -34,11 +34,11 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
     def __init__(self):
         super().__init__()
 
-        self._reset()
+        self.reset()
         self._define_qt_variables()
         self._create_connections()
 
-    def _reset(self):
+    def reset(self):
         self.current_widget = None
         self.animation_widget: AnimationWidget | None = None
 
@@ -107,7 +107,8 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         return self.results_viewer_items
 
     def update_visibility_items(self):
-        self.results_viewer_items._update_items()
+        self.results_viewer_items.clear_last_item()
+        self.results_viewer_items.update_items()
         self.results_viewer_items.update_tree_visibility_after_solution()
 
     def add_structural_modal_widget(self):

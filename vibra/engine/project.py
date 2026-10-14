@@ -171,6 +171,7 @@ class Project:
         """
         logging.info("Loading the project data... [25%]")
         path = Path(path).expanduser()
+        self.reset_project()
         self.reset_solution()
         self.project_reader.unpack_into_working_directory(path)
         self.model = self.project_reader.read_model(self.model)
@@ -472,8 +473,7 @@ class Project:
         else:
             raise ValueError(f"Unsupported analysis method: {analysis_method}")
 
-        if self.solver.project_paths is None:
-            self.project_writer.write_harmonic_solution(self.model.solution)
+        self.project_writer.write_harmonic_solution(self.model.solution)
 
         self.mark_project_as_modified()
         dt = perf_counter() - t0
@@ -486,7 +486,7 @@ class Project:
         return self.model.solution
 
     def solve_coupled_harmonic_analysis(self, is_resume: bool = False, print_log: bool = False) -> HarmonicSolution:
-        print_log = True
+
         logging.info("Building the acoustic harmonic problem...")
         self.model.acoustic_solution = self.solve_acoustic_harmonic_analysis(is_resume=is_resume, print_log=print_log)
 

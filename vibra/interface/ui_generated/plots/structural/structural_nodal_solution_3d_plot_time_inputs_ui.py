@@ -52,8 +52,8 @@ class Ui_Form(object):
 
         self.frame_main = QFrame(self.scrollAreaWidgetContents_2)
         self.frame_main.setObjectName(u"frame_main")
-        self.frame_main.setMinimumSize(QSize(0, 180))
-        self.frame_main.setMaximumSize(QSize(16777215, 240))
+        self.frame_main.setMinimumSize(QSize(0, 220))
+        self.frame_main.setMaximumSize(QSize(16777215, 220))
         self.frame_main.setSizeIncrement(QSize(0, 0))
         self.frame_main.setBaseSize(QSize(0, 0))
         self.frame_main.setFrameShape(QFrame.Shape.Box)

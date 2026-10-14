@@ -332,6 +332,7 @@ class AllowablePulsations2DPlotForScrewCompressorInputs(AllowablePulsations2dFor
         title += "side of the inlet and discharge silencers"
 
         self.model_results.clear()
+
         for i, selected_id in enumerate(self.selected_ids):
 
             key = ("pressure", (selected_id))

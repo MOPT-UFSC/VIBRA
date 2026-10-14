@@ -41,7 +41,7 @@ class GeometrySelection:
 
         # Cheating a bit to prioritize selection of points and lines
         point_distance *= 0.98
-        line_distance *= 0.99
+        # line_distance *= 0.99
         closest = min(point_distance, line_distance, surface_distance)
 
         if closest == point_distance:
