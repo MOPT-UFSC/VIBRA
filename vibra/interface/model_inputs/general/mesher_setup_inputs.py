@@ -18,7 +18,7 @@ from vibra.engine.mesher.element_setup import (
     GMSH_HEX20,
     GMSH_TET4,
     GMSH_TET10,
-    ElementSetup,
+    GmshElementSetup,
     MeshAlgorithms2D,
     MeshAlgorithms3D,
     SubdivisionAlgorithms,
@@ -360,7 +360,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.tmp_local_mesh_size_control_parameters.pop(current_row)
         self.update_local_mesh_size_control_table()
 
-    def update_interface_controls(self, element_setup: ElementSetup):
+    def update_interface_controls(self, element_setup: GmshElementSetup):
 
         match element_setup.element_order:
             case 1:
@@ -608,7 +608,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             local_mesh_size_control_parameters=self._get_local_mesh_size_control_parameters(),
         )
 
-    def _get_custom_element_setup(self) -> ElementSetup:
+    def _get_custom_element_setup(self) -> GmshElementSetup:
         element_geometry = self.comboBox_element_geometry.currentText().lower()  # not great
         assert element_geometry in ("tetrahedral", "hexahedral")
 
@@ -669,7 +669,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         app().main_window.action_export_element_transfer_data.setDisabled(True)
 
 
-    def get_element_setup(self) -> ElementSetup | None:
+    def get_element_setup(self) -> GmshElementSetup | None:
         element_geometry = self.comboBox_element_geometry.currentText().lower()
         element_order = self.comboBox_element_order.currentText().lower()
 

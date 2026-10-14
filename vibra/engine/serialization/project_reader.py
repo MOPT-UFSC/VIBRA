@@ -12,7 +12,7 @@ from PIL.Image import Image
 
 from vibra.engine.analysis_info import AnalysisID, AnalysisSetup, HarmonicAnalysisSetup, ModalAnalysisSetup
 from vibra.engine.assemblers import AcousticAssembler, StructuralAssembler
-from vibra.engine.mesher.element_setup import ElementSetup
+from vibra.engine.mesher.element_setup import GmshElementSetup
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.mesh_setup import LocalMeshSizeControlSetup, MeshSetup
 from vibra.engine.model import Model
@@ -144,7 +144,7 @@ class ProjectReader:
 
         custom_element = mesh_setup_dict.get("custom_element_setup")
         if custom_element is not None:
-            custom_element = ElementSetup(**custom_element)
+            custom_element = GmshElementSetup(**custom_element)
 
         if "element_type" in mesh_setup_dict.keys():
             element_geometry = mesh_setup_dict.get("element_type")

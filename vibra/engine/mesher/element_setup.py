@@ -11,7 +11,7 @@ from vibra.engine.mesher.gmsh_constants import (
 
 
 @dataclass
-class ElementSetup:
+class GmshElementSetup:
     algorithm_2d: MeshAlgorithms2D
     algorithm_3d: MeshAlgorithms3D
     subdivision_algorithm: SubdivisionAlgorithms
@@ -21,11 +21,11 @@ class ElementSetup:
     element_order: int
     dimensions: int
 
-    def copy(self) -> ElementSetup:
-        return ElementSetup(**self.__dict__)
+    def copy(self) -> GmshElementSetup:
+        return GmshElementSetup(**self.__dict__)
 
 
-GMSH_TET4 = ElementSetup(
+GMSH_TET4 = GmshElementSetup(
     algorithm_2d=MeshAlgorithms2D.DELAUNAY_2D,
     algorithm_3d=MeshAlgorithms3D.HXT_3D,
     subdivision_algorithm=SubdivisionAlgorithms.NO_SUBDIVISION,
@@ -36,7 +36,7 @@ GMSH_TET4 = ElementSetup(
     dimensions=3,
 )
 
-GMSH_TET10 = ElementSetup(
+GMSH_TET10 = GmshElementSetup(
     algorithm_2d=MeshAlgorithms2D.DELAUNAY_2D,
     algorithm_3d=MeshAlgorithms3D.HXT_3D,
     subdivision_algorithm=SubdivisionAlgorithms.NO_SUBDIVISION,
@@ -47,7 +47,7 @@ GMSH_TET10 = ElementSetup(
     dimensions=3,
 )
 
-GMSH_HEX8 = ElementSetup(
+GMSH_HEX8 = GmshElementSetup(
     algorithm_2d=MeshAlgorithms2D.QUASI_STRUCTURED_QUADS_2D,
     algorithm_3d=MeshAlgorithms3D.DELAUNAY_3D,
     subdivision_algorithm=SubdivisionAlgorithms.ALL_HEXAHEDRA_SUBDIVISION,
@@ -58,7 +58,7 @@ GMSH_HEX8 = ElementSetup(
     dimensions=3,
 )
 
-GMSH_HEX20 = ElementSetup(
+GMSH_HEX20 = GmshElementSetup(
     algorithm_2d=MeshAlgorithms2D.QUASI_STRUCTURED_QUADS_2D,
     algorithm_3d=MeshAlgorithms3D.DELAUNAY_3D,
     subdivision_algorithm=SubdivisionAlgorithms.ALL_HEXAHEDRA_SUBDIVISION,
@@ -69,7 +69,7 @@ GMSH_HEX20 = ElementSetup(
     dimensions=3,
 )
 
-GMSH_VISUAL_MESH = ElementSetup(
+GMSH_VISUAL_MESH = GmshElementSetup(
     algorithm_2d=MeshAlgorithms2D.DELAUNAY_2D,
     algorithm_3d=MeshAlgorithms3D.HXT_3D,
     subdivision_algorithm=SubdivisionAlgorithms.NO_SUBDIVISION,
