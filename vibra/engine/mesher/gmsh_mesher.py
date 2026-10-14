@@ -4,8 +4,8 @@ from pathlib import Path
 import gmsh
 
 from vibra.engine.geometry.geometry import GeometryInfo
-from vibra.engine.mesher.element_setup import GMSH_VISUAL_MESH
 from vibra.engine.mesher.gmsh_common import GmshCommon
+from vibra.engine.mesher.gmsh_constants import GMSH_VISUAL_MESH
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.mesh_setup import LocalMeshSizeControlSetup, MeshSetup
 from vibra.errors import IncompleteSetupError, InvalidGeometryError, MeshingAlgorithmError

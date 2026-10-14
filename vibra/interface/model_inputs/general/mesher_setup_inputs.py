@@ -12,8 +12,7 @@ from PySide6.QtGui import QColor, QKeyEvent
 from PySide6.QtWidgets import QDoubleSpinBox, QTableWidgetItem, QVBoxLayout
 
 from vibra import app
-from vibra.engine.mesher import gmsh_constants
-from vibra.engine.mesher.element_setup import (
+from vibra.engine.mesher.gmsh_constants import (
     GMSH_HEX8,
     GMSH_HEX20,
     GMSH_TET4,
@@ -139,7 +138,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
         # QTableWidget connection
         # self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
-        
+
         # QTableWidget connections
         self.tableWidget_local_mesh_size_control_data.itemClicked.connect(self.local_mesh_size_control_item_clicked_callback)
         self.tableWidget_mesh_quality.itemClicked.connect(self.mesh_quality_item_clicked_callback)
@@ -205,7 +204,6 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.lineEdit_geometry_tolerance.setText(str(mesh_setup.geometry_tolerance))
         self.comboBox_volumes_interface_behavior.setCurrentIndex(int(mesh_setup.merge_connected_volumes))
         self.comboBox_mesh_quality_metrics.setCurrentIndex(int(mesh_setup.compute_quality_metrics))
-
 
         self.update_local_mesh_size_control_table()
         self.update_mesh_quality_table()
@@ -326,7 +324,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         _, error_data = self.model.check_selected_ids(
             selected_ids,
             selected_type,
-            )
+        )
 
         if error_data is not None:
             PrintMessageInput(error_data)
@@ -629,11 +627,11 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         assert custom_element_setup is not None
         match self.comboBox_3d_algorithm.currentIndex():
             case GMSHAlgorithms_3D.DELAUNAY_3D:
-                custom_element_setup.algorithm_3d = gmsh_constants.DELAUNAY_3D
+                custom_element_setup.algorithm_3d = MeshAlgorithms3D.DELAUNAY_3D
             case GMSHAlgorithms_3D.FRONTAL_3D:
-                custom_element_setup.algorithm_3d = gmsh_constants.FRONTAL_3D
+                custom_element_setup.algorithm_3d = MeshAlgorithms3D.FRONTAL_3D
             case GMSHAlgorithms_3D.HXT_3D:
-                custom_element_setup.algorithm_3d = gmsh_constants.HXT_3D
+                custom_element_setup.algorithm_3d = MeshAlgorithms3D.HXT_3D
 
         return custom_element_setup
 
@@ -667,7 +665,6 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         app().main_window.analysis_toolbar.reset_solution_action.setDisabled(True)
         app().main_window.analysis_toolbar.check_analysis_setup_callback()
         app().main_window.action_export_element_transfer_data.setDisabled(True)
-
 
     def get_element_setup(self) -> GmshElementSetup | None:
         element_geometry = self.comboBox_element_geometry.currentText().lower()

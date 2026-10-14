@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from typing import Literal, Optional
 
 from vibra import errors
-from vibra.engine.mesher.element_setup import GMSH_HEX8, GMSH_HEX20, GMSH_TET4, GMSH_TET10, GmshElementSetup
+from vibra.engine.mesher.gmsh_constants import GMSH_HEX8, GMSH_HEX20, GMSH_TET4, GMSH_TET10, GmshElementSetup
 
 
 @dataclass
@@ -30,7 +30,7 @@ class MeshSetup:
 
     # Advanced stuff
     local_mesh_size_control_parameters: list[LocalMeshSizeControlSetup] = field(default_factory=list)
-    custom_element_setup: Optional[GmshElementSetup] = None
+    custom_element_setup: GmshElementSetup | None = None
     random_seed: int = 1234
 
     def __post_init__(self):
@@ -72,11 +72,11 @@ class LocalMeshSizeControlSetup:
             "element_size": self.element_size,
             "entity_ids": self.entity_ids,
         }
-    
+
     def remove_ids(self, ids: list[int], entity_type: str):
         if entity_type == self.entity_type:
             self.entity_ids = list(set(self.entity_ids) - set(ids))
-    
+
     def is_empty(self) -> bool:
         return len(self.entity_ids) == 0
 

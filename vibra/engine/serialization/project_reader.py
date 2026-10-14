@@ -12,7 +12,7 @@ from PIL.Image import Image
 
 from vibra.engine.analysis_info import AnalysisID, AnalysisSetup, HarmonicAnalysisSetup, ModalAnalysisSetup
 from vibra.engine.assemblers import AcousticAssembler, StructuralAssembler
-from vibra.engine.mesher.element_setup import GmshElementSetup
+from vibra.engine.mesher.gmsh_constants import GmshElementSetup
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.mesh_setup import LocalMeshSizeControlSetup, MeshSetup
 from vibra.engine.model import Model

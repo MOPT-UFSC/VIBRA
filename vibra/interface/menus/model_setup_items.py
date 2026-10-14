@@ -1,4 +1,3 @@
-
 from molde import Color
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon, QPen
@@ -26,23 +25,23 @@ class ModelSetupItems(CommonMenuItems):
 
     def _create_items(self):
         """Creates all TreeWidgetItems."""
-        self.item_top_general_settings = self.add_top_item('General Settings')
+        self.item_top_general_settings = self.add_top_item("General Settings")
         self.item_child_material = self.add_item("Material")
-        self.item_child_fluid = self.add_item('Fluid')
+        self.item_child_fluid = self.add_item("Fluid")
         self.item_child_mesh_setup = self.add_item("Mesh Setup")
         self.item_child_element_options = self.add_item("Element Options")
         self.item_child_degrees_of_freedom_decoupling = self.add_item("DOF Decoupling")
         self.item_child_volume_suppression = self.add_item("Volumes Suppression")
 
-        self.item_top_structural_model_setup = self.add_top_item('Structural Model Setup (Beta)')
+        self.item_top_structural_model_setup = self.add_top_item("Structural Model Setup (Beta)")
 
-        tooltip_html = '''
+        tooltip_html = """
                         <p><b>Structural Properties</b></p>
                         <p><span style="color:red;">
                         <b>Note:</b> The calculations for these structural properties are currently undergoing refinement.</span>
                         While we are actively working to ensure complete accuracy, please be aware that simulation results may
                         exhibit minor variations. We appreciate your understanding as we continue to improve the precision of our models.</p>
-                        '''
+                        """
         self.item_top_structural_model_setup.setToolTip(0, tooltip_html)
         path_image = str(ICON_DIR / "model_setup_items/structural_help.png")
         self.item_top_structural_model_setup.setIcon(0, QIcon(path_image))
@@ -53,10 +52,10 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_distributed_loads = self.add_item("Distributed Loads")
         self.item_child_normal_pressure_load = self.add_item("Normal Pressure Load")
         self.item_child_distributed_mass = self.add_item("Distributed Mass")
-        self.item_top_acoustic_model_setup = self.add_top_item('Acoustic Model Setup')
+        self.item_top_acoustic_model_setup = self.add_top_item("Acoustic Model Setup")
 
         # acoustic model excitations
-        self.item_child_acoustic_pressure = self.add_item('Acoustic Pressure')
+        self.item_child_acoustic_pressure = self.add_item("Acoustic Pressure")
         self.item_child_mass_source = self.add_item("Mass Source")
         self.item_child_surface_velocity = self.add_item("Surface Velocity")
         self.item_child_incident_plane_wave = self.add_item("Incident Plane Wave")
@@ -208,7 +207,7 @@ class ModelSetupItems(CommonMenuItems):
 
                 if not volumes_without_material:
                     return True
-                
+
                 if volumes_without_material == volume_ids:
                     return False
 
@@ -420,7 +419,6 @@ class ModelSetupItems(CommonMenuItems):
             return
 
         for top_level_items in self.top_level_items:
-
             for index in range(top_level_items.childCount()):
                 item_child: ChildTreeWidgetItem = top_level_items.child(index)
                 item_child_name = self._find_qtree_widget_item_name(item_child)
@@ -512,7 +510,7 @@ class ModelSetupItems(CommonMenuItems):
         app().main_window.input_ui.prescribe_structural_dof()
 
     def item_child_nodal_loads_callback(self):
-       app().main_window.input_ui.set_nodal_loads()
+        app().main_window.input_ui.set_nodal_loads()
 
     def item_child_distributed_loads_callback(self):
         app().main_window.input_ui.set_distributed_loads()
