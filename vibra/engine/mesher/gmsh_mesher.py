@@ -2,25 +2,27 @@ import logging
 from pathlib import Path
 
 import gmsh
-import numpy as np
 
 from vibra.engine.geometry.geometry import GeometryInfo
 from vibra.engine.mesher.element_setup import GMSH_VISUAL_MESH
+from vibra.engine.mesher.gmsh_common import GmshCommon
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.mesh_setup import LocalMeshSizeControlSetup, MeshSetup
 from vibra.errors import IncompleteSetupError, InvalidGeometryError, MeshingAlgorithmError
-from vibra.utils.time_utils import context_timer, function_timer
+from vibra.utils.time_utils import context_timer
 
 logger = logging.getLogger(__name__)
 
 
-class GmshMesher:
+class GmshMesher(GmshCommon):
     def __init__(self, path: str | Path | None = None):
-        self.setup = MeshSetup()
-        self.path: Path | None = None
-
+        self.reset()
         if path is not None:
             self.set_path(path)
+
+    def reset(self):
+        self.setup = MeshSetup()
+        self.path: Path | None = None
 
     def set_path(self, path: str | Path):
         self.path = Path(path).expanduser()
@@ -77,21 +79,15 @@ class GmshMesher:
             logger.error(str(exception))
             raise exception from e
 
-        mesh = Mesh()
+        logger.info("Post-processing mesh... [30/100]")
+        mesh = self._create_mesh_from_gmsh_state()
 
+        logger.info("Post-processing mesh... [60/100]")
         mesh.process_geometry_information()
         mesh.process_downwards_adjacencies_from_entities()
         mesh.process_upwards_adjacencies_from_entities()
 
-        logger.info("Post-processing mesh... [60/100]")
         mesh.suppressed_volumes = set(self.setup.suppressed_volume_ids)
-        # mesh.post_process_mesh_data()
-        with context_timer("foo"):
-            mesh.post_process_mesh_data()
-
-        self.bla()
-
-        mesh.update_element_topology_based_on_connectivity()
 
         logger.info("Post-processing mesh... [95/100]")
         if self.setup.compute_quality_metrics:
@@ -107,26 +103,6 @@ class GmshMesher:
         )
 
         return mesh
-
-    @function_timer
-    def bla(self):
-        indices, coords, _parametric_coords = gmsh.model.mesh.get_nodes(includeBoundary=True)
-        indices = np.array(indices) - 1
-        coords = np.array(coords)
-
-        nodal_coordinates = np.zeros((np.max(indices) + 1, 4))
-        nodal_coordinates[indices, 1:] = coords.reshape(-1, 3)
-        nodal_coordinates[indices, :1] = indices.reshape(-1, 1)
-
-        for el_type, el_indices, el_nodes in zip(*gmsh.model.mesh.get_elements()):
-            _name, dim, _order, nodes_per_element, _, _ = gmsh.model.mesh.get_element_properties(el_type)
-
-            el_indices = np.array(el_indices).reshape(-1, 1)
-            el_nodes = np.array(el_nodes).reshape(-1, nodes_per_element)
-            el_types = np.full(el_indices.size, el_type)
-            el_sizes = np.full(el_indices.size, nodes_per_element)
-
-            print(dim)
 
     def generate_visual_mesh(self) -> tuple[Mesh, MeshSetup]:
         if self.path is None:
@@ -239,15 +215,9 @@ class GmshMesher:
 
             # Pin (i.e. spefifically defining the global size for NOT coarsened entities) the complement:
             # every entity that is not to be coarsened is forced to the global size
-            targeted_volumes, targeted_faces = self._get_coarsened_entities(size_control_setups, global_size)
-            coarsened_volumes = targeted_volumes
+            coarsened_volumes, coarsened_faces = self._get_coarsened_entities(size_control_setups, global_size)
             pinned_volumes = all_volumes - coarsened_volumes
-
-            coarsened_faces = self._get_faces_to_coarsen(
-                targeted_faces, targeted_volumes
-            )  # needed beacause faces of targeted volumes would be pinned otherwise
             pinned_faces = all_faces - coarsened_faces
-
             pinned_curves, pinned_points = self._get_pinned_boundary_entities(all_faces, pinned_faces, coarsened_faces)
 
             global_size_control_field = gmsh.model.mesh.field.add("Constant")
@@ -288,27 +258,13 @@ class GmshMesher:
                 targeted_volumes.update(setup.entity_ids)
             elif setup.entity_type == "surfaces":
                 targeted_faces.update(setup.entity_ids)
-        return targeted_volumes, targeted_faces
 
-    def _get_faces_to_coarsen(
-        self,
-        targeted_faces: set[int],
-        targeted_volumes: set[int],
-    ) -> set[int]:
-        """Faces left at the coarsest size.
-
-        The explicitly targeted faces and every boundary face of the volumes
-        directly targeted by a coarsening setup stay coarse; every other face
-        is pinned to the global size. A face shared with a volume that is not
-        coarsened is left coarse as well: it is meshed once, and the coarse
-        size carries over to the neighbouring volume, which grades back down to
-        the global size.
-        """
-        faces_to_coarsen = set(targeted_faces)
+        # Include the faces connected to the coarsened volumes
         for volume in targeted_volumes:
             for dim, face in gmsh.model.getBoundary([(3, volume)], recursive=False, oriented=False):
-                faces_to_coarsen.add(face)
-        return faces_to_coarsen
+                targeted_faces.add(face)
+
+        return targeted_volumes, targeted_faces
 
     def _get_pinned_boundary_entities(
         self,
