@@ -23,6 +23,8 @@ from vibra.engine.mesher.mesh_setup import (
 from vibra.interface.numeric_checks.unit_utilities import convert_length_unit
 from vibra.utils.utils import group_by
 
+logger = logging.getLogger(__name__)
+
 MeshQualityParams = Literal["gamma", "volume", "minSJ", "aspectRatio"]
 
 
@@ -76,7 +78,7 @@ class Mesh:
 
         self.mesh_quality_data = {}
 
-        self.collapsed_elements_data = dict()
+        self.collapsed_elements_data = {}
 
         self.suppressed_volumes: set[int] = set()
 
@@ -248,7 +250,7 @@ class Mesh:
         )
 
         # Update the node-point mappings for the new numbering
-        removed_nodes = set(int(node_id) for node_id in disconnected_nodes)
+        removed_nodes = {int(node_id) for node_id in disconnected_nodes}
         self.nodes_from_points = {
             tag: int(node_id) - int(np.searchsorted(disconnected_nodes, node_id, side="right"))
             for tag, node_id in self.nodes_from_points.items()
@@ -619,7 +621,6 @@ class Mesh:
         self.geometry_information["points"] = list(self.nodes_from_points.keys())
 
     def import_external_nodal_coordinates(self, data, index_zero=True):
-        """ """
         if isinstance(data, list):
             data = np.array(data)
 
@@ -634,7 +635,6 @@ class Mesh:
         self.nodal_coordinates[:, 1:] = data[:, 1:]
 
     def import_external_solids_connectivity(self, connectivity: dict, index_zero: bool = True, etype_tag: float = 1):
-        """ """
         self.elements_from_volume.clear()
 
         aux = []
@@ -673,7 +673,6 @@ class Mesh:
         self.geometry_information["volumes"] = [int(_id) for _id in np.unique(volumes)]
 
     def import_external_faces_connectivity(self, connectivity: dict, index_zero: bool = True, etype_tag: float = 1):
-        """ """
         self.elements_from_surface.clear()
 
         aux = []
@@ -756,7 +755,7 @@ class Mesh:
         else:
             raise TypeError("Unsupported element type.")
 
-        n_nodes, nf_elem, ns_elem = self.get_mesh_info()
+        _n_nodes, _nf_elem, ns_elem = self.get_mesh_info()
         vtk_dataset.Allocate(ns_elem)
         for id, connect in enumerate(self.solids_connectivity[:, 4:]):
             vtk_dataset.InsertNextCell(vtk_cell, nodes_per_element, list(connect))
@@ -960,9 +959,8 @@ class Mesh:
             if dim == 1 and valid_lines and tag not in valid_lines:
                 continue
 
-            if dim == 2:
-                if self.geometry_imported:
-                    self.process_surface_normals_and_curvatures(tag)
+            if dim == 2 and self.geometry_imported:
+                self.process_surface_normals_and_curvatures(tag)
 
             for i, element_type in enumerate(element_types):
                 _, _, _, nodes_per_element, _, _ = gmsh.model.mesh.getElementProperties(element_type)
@@ -990,7 +988,7 @@ class Mesh:
             elif dim == 3:  # Solids
                 connectivity_dim3[dim, tag] = elements_data
 
-        logging.info("Post-processing mesh... [65/100]")
+        logger.info("Post-processing mesh... [65/100]")
         self.process_cylindrical_surfaces()
 
         self.lines_connectivity, _ = self._get_connectivity_array(connectivity_dim1)
@@ -1000,13 +998,13 @@ class Mesh:
         if self.suppressed_volumes:
             self.remove_disconnected_nodes()
 
-        logging.info("Post-processing mesh... [68/100]")
+        logger.info("Post-processing mesh... [68/100]")
         self.process_mesh_related_mappings("Post-processing")
 
-        logging.info("Post-processing mesh... [80/100]")
+        logger.info("Post-processing mesh... [80/100]")
         self.process_disconnected_nodes_criterion()
 
-        logging.info("Post-processing mesh... [90/100]")
+        logger.info("Post-processing mesh... [90/100]")
         self.process_collapsed_elements_data_criterion()
 
     def cache_mesh_information(self):
@@ -1240,25 +1238,25 @@ class Mesh:
         self.points_from_nodes = {v: k for k, v in self.nodes_from_points.items()}
 
     def process_mesh_related_mappings(self, label: str = "Loading"):
-        logging.info(f"{label} mesh... [70/100]")
+        logger.info(f"{label} mesh... [70/100]")
         self.elements_from_line = group_by(
             self.lines_connectivity[:, Mesh.ColumnEnum.ENTITY_INDEX],
             self.lines_connectivity[:, Mesh.ColumnEnum.ELEMENT_INDEX],
         )
 
-        logging.info(f"{label} mesh... [75/100]")
+        logger.info(f"{label} mesh... [75/100]")
         self.elements_from_surface = group_by(
             self.faces_connectivity[:, Mesh.ColumnEnum.ENTITY_INDEX],
             self.faces_connectivity[:, Mesh.ColumnEnum.ELEMENT_INDEX],
         )
 
-        logging.info(f"{label} mesh... [80/100]")
+        logger.info(f"{label} mesh... [80/100]")
         self.elements_from_volume = group_by(
             self.solids_connectivity[:, Mesh.ColumnEnum.ENTITY_INDEX],
             self.solids_connectivity[:, Mesh.ColumnEnum.ELEMENT_INDEX],
         )
 
-        logging.info(f"{label} mesh... [85/100]")
+        logger.info(f"{label} mesh... [85/100]")
         self.map_face_elements_to_solid_elements()
 
     def get_line_from_element(self, element_id: int) -> int | None:
@@ -1313,38 +1311,6 @@ class Mesh:
         (rows,) = np.where(self.solids_connectivity[:, 1] == node_id)
         return np.unique(self.solids_connectivity[rows, 4:]).astype(int)
 
-    def map_face_elements_to_solid_elements_reference(self):
-        # TODO: Remove
-        self.face_to_solid_element = {}
-        self.solid_to_face_elements = defaultdict(list)
-
-        if len(self.solids_connectivity) == 0:
-            return
-
-        nodes_per_face_element = len(self.faces_connectivity[0, 4:])
-        node_ids = np.array([*set(self.faces_connectivity[:, 4:].flatten())], dtype=int)
-
-        mask_0 = np.sum(np.isin(self.solids_connectivity[:, 4:], node_ids), axis=1) >= nodes_per_face_element
-        filtered_data = self.solids_connectivity[mask_0, :]
-
-        self.nodes_to_highlight.clear()
-        self.efaces_to_highlight.clear()
-
-        for e2d_id, surf_id, _, _, *face_nodes in self.faces_connectivity:
-            mask_1 = np.sum(np.isin(filtered_data[:, 4:], face_nodes), axis=1) == nodes_per_face_element
-
-            if np.sum(mask_1) == 0:
-                # TODO: remove these attributes when we are sure that no more errors
-                # occur after processing the degrees of freedom decoupling.
-                # The problematic nodes and face elements are highlighted after closing the section plane UI.
-                self.nodes_to_highlight.append(face_nodes)
-                self.efaces_to_highlight.append(e2d_id)
-                continue
-
-            e3d_id = filtered_data[mask_1, 0][0]
-            self.face_to_solid_element[e2d_id] = e3d_id
-            self.solid_to_face_elements[e3d_id].append(e2d_id)
-
     def map_face_elements_to_solid_elements(self):
         """
         This method implements a faster algorithm when compared with
@@ -1353,6 +1319,11 @@ class Mesh:
         If something goes wrong with this mapping compare the output of this
         with the reference version.
         """
+        # TODO: This may be further optimized using the "np.searchsorted" method.
+        # We can "explode" the solids connectivity arrays to its at most 6 composing faces,
+        # than sort the faces and solids both in horizontal and vertical axes.
+        # Finally, the surfaces can be searched inside the exploded solids at once.
+        # I guess it is about O(s*log(s)), better than the current O(s * n + f * (n + s))
 
         # Get the set of nodes that are part of a face
         all_face_nodes = np.unique(self.faces_connectivity[:, 4:])
@@ -1409,17 +1380,17 @@ class Mesh:
 
     def get_collapsed_elements(self):
 
-        logging.info("Checking collapsed 3D elements... [90/100]")
+        logger.info("Checking collapsed 3D elements... [90/100]")
         mask = self._repeated_mask(self.solids_connectivity[:, 4:])
         collapsed_solids = self.solids_connectivity[mask]
         solids_set = set(collapsed_solids[:, 0].tolist()) if collapsed_solids.size else set()
 
-        logging.info("Checking collapsed 2D elements... [95/100]")
+        logger.info("Checking collapsed 2D elements... [95/100]")
         mask = self._repeated_mask(self.faces_connectivity[:, 4:])
         collapsed_faces = self.faces_connectivity[mask]
         faces_set = set(collapsed_faces[:, 0].tolist()) if collapsed_faces.size else set()
 
-        logging.info("Checking collapsed 1D elements... [98/100]")
+        logger.info("Checking collapsed 1D elements... [98/100]")
         mask = self._repeated_mask(self.lines_connectivity[:, 4:])
         collapsed_lines = self.lines_connectivity[mask]
         lines_set = set(collapsed_lines[:, 0].tolist()) if collapsed_lines.size else set()
@@ -1457,7 +1428,7 @@ class Mesh:
         if n_nodes > 10:
             message += ", ..."
 
-        logging.warning(message)
+        logger.warning(message)
 
     def get_list_of_nodes_from_collapsed_elements(self):
         """
@@ -1546,7 +1517,7 @@ class Mesh:
             current_progress = int(100 * i / nodes_number)
             if current_progress % 5 and progress != current_progress:
                 progress = current_progress
-                logging.info(f"Obtaining face elements connected to nodes... [{progress}/100]\nSurface [{surface_id}]")
+                logger.info(f"Obtaining face elements connected to nodes... [{progress}/100]\nSurface [{surface_id}]")
 
         # dt = time() - t0
         # print(f"Loop time: {dt} s")
@@ -1591,7 +1562,7 @@ class Mesh:
             # current_progress = int(100*(i + 1) / number_nodes)
             # if current_progress % 5 and progress != current_progress:
             #     progress = current_progress
-            #     logging.info(
+            #     logger.info(
             #         f"Obtaining solid elements connected to nodes... [{int(100 * i / number_nodes)}/100]"
             #     )
 
@@ -1894,7 +1865,7 @@ class Mesh:
             "aspectRatio",
         ]
 
-        logging.info("Computing mesh quality metrics... [10/100]")
+        logger.info("Computing mesh quality metrics... [10/100]")
         _, element_tags, _ = gmsh.model.mesh.get_elements(3, -1)
         if not element_tags:
             return
@@ -1905,18 +1876,18 @@ class Mesh:
         N_param = len(quality_parameters)
         quality_table = np.zeros((N_elem, N_param), dtype=float)
 
-        logging.info("Computing mesh quality metrics... [25/100]")
+        logger.info("Computing mesh quality metrics... [25/100]")
         min_edge_quals = gmsh.model.mesh.getElementQualities(elements, "minEdge")
         max_edge_quals = gmsh.model.mesh.getElementQualities(elements, "maxEdge")
 
-        logging.info("Computing mesh quality metrics... [40/100]")
+        logger.info("Computing mesh quality metrics... [40/100]")
         quality_table[:, 0] = gmsh.model.mesh.get_element_qualities(elements, "gamma")
         quality_table[:, 1] = gmsh.model.mesh.get_element_qualities(elements, "volume")
         quality_table[:, 2] = gmsh.model.mesh.get_element_qualities(elements, "minSJ")
         quality_table[:, 3] = max_edge_quals / min_edge_quals  # aspect ratio
 
         # compute the mesh quality statistics
-        logging.info("Computing mesh quality metrics... [70/100]")
+        logger.info("Computing mesh quality metrics... [70/100]")
         quality_statistics: dict[MeshQualityParams, list[float]] = {}
         for i, parameter in enumerate(quality_parameters):
             column = quality_table[:, i]
@@ -1924,7 +1895,7 @@ class Mesh:
             quality_statistics[parameter] = [worst, np.mean(column), np.std(column)]
 
         # compute the bad elements
-        logging.info("Computing mesh quality metrics... [85/100]")
+        logger.info("Computing mesh quality metrics... [85/100]")
         bad_elements: dict[MeshQualityParams, np.ndarray] = {}
         for j, parameter in enumerate(quality_parameters):
             limit = self.quality_bins.get(parameter)
@@ -1934,7 +1905,7 @@ class Mesh:
                 bad_elements[parameter] = np.where(quality_table[:, j] < limit[1])[0]
 
         # compute the histogram data
-        logging.info("Computing mesh quality metrics... [95/100]")
+        logger.info("Computing mesh quality metrics... [95/100]")
         histograms_data: dict[MeshQualityParams, dict] = {}
         for i, parameter in enumerate(quality_parameters):
             column = quality_table[:, i]
@@ -2168,8 +2139,7 @@ class Mesh:
                 continue
 
             if averaged:
-                for row in nodes:
-                    rows.append(row)
+                rows.extend(nodes)
             else:
                 rows.append(list(nodes))
 
@@ -2402,7 +2372,7 @@ class Mesh:
                 if sum(mask_nodes):
                     nodes_inside_sphere = node_indices[mask_nodes]
                     selection_data = self.get_solid_elements_connected_to_nodes(node_ids=nodes_inside_sphere)
-                    for _node, element_ids in selection_data.items():
+                    for element_ids in selection_data.values():
                         for element_id in element_ids:
                             if element_id not in selected_elements:
                                 selected_elements.append(element_id)
@@ -2441,7 +2411,7 @@ class Mesh:
         selection_data = self.get_solid_elements_connected_to_nodes(node_ids=nodes_inside_sphere)
 
         _selected_elements = []
-        for _node, element_ids in selection_data.items():
+        for element_ids in selection_data.values():
             _selected_elements.extend(element_ids)
 
         selected_elements = np.array([*set(_selected_elements)], dtype=int)

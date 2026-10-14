@@ -474,7 +474,7 @@ def check_conflicting_model_properties(volume_ids: list[int], domain: str):
             case "point":
                 properties._remove_point_property(prop_name, point_id=entity_id)
             case "node":
-                properties._remove_nodal_property(prop_name, node_id=entity_id)
+                properties._remove_nodal_property(prop_name, nodal_id=entity_id)
 
     if not surfaces_with_decoupling:
         return False

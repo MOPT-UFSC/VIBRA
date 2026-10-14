@@ -5,8 +5,7 @@ import gmsh
 import numpy as np
 
 from vibra.engine.mesher.mesh import Mesh
-from vibra.utils.time_utils import context_timer, function_timer
-from vibra.utils.utils import group_by
+from vibra.utils.time_utils import function_timer
 
 logger = logging.getLogger(__name__)
 
@@ -113,10 +112,10 @@ class MeshReader:
         mesh.process_mesh_related_mappings("Post-processing")
         # mesh.map_face_elements_to_solid_elements()
 
-        logging.info("Post-processing mesh... [80/100]")
+        logger.info("Post-processing mesh... [80/100]")
         mesh.process_disconnected_nodes_criterion()
 
-        logging.info("Post-processing mesh... [90/100]")
+        logger.info("Post-processing mesh... [90/100]")
         mesh.process_collapsed_elements_data_criterion()
 
         return mesh

@@ -56,7 +56,7 @@ exclude = ["__pycache__", "vibra/interface/ui_generated"]
 line-length = 150
 
 [tool.ruff.lint]
-ignore = ["BLE001"]
+ignore = ["BLE001", "SIM102"]
 
 [tool.ruff.lint.per-file-ignores]
 "vibra/__init__.py" = ["E402"] # Ignore import violations
