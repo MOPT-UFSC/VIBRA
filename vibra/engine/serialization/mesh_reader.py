@@ -35,12 +35,6 @@ class MeshReader:
         mesh = self.create_mesh_from_gmsh_state()
         mesh.geometry_imported = False
 
-        # logger.info("Post-processing mesh... [50/100]")
-        # with context_timer("foo"):
-            # mesh.post_process_mesh_data()
-
-        mesh.update_element_topology_based_on_connectivity()
-
         logger.info("Post-processing mesh... [80/100]")
         mesh.process_downwards_adjacencies_from_mesh_data()
 
