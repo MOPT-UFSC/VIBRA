@@ -272,41 +272,6 @@ class Mesh:
         elif nodes_per_element == 20:
             self.element_topology = Hexahedron20
 
-    def process_downwards_adjacencies_from_mesh_data(self):
-        """
-        This method processes the downwards adjacencies from entities
-        from the solids, faces and lines connectivities matrices.
-        """
-
-        e_nodes_2d = self.faces_connectivity[0, 4:].size
-        for vol_id in self.geometry_information.get("volumes"):
-            nodes_from_volume = self.get_nodes_from_volume(vol_id)
-            if nodes_from_volume is None:
-                continue
-
-            mask = np.sum(np.isin(self.faces_connectivity[:, 4:], nodes_from_volume), axis=1) == e_nodes_2d
-            self.surfaces_from_volume[vol_id] = [int(tag) for tag in set(self.faces_connectivity[mask, 1])]
-
-        if self.lines_connectivity.size:
-            e_nodes_1d = self.lines_connectivity[0, 4:].size
-            for surf_id in self.geometry_information.get("surfaces"):
-                nodes_from_surface = self.get_nodes_from_surface(surf_id)
-                if nodes_from_surface is None:
-                    continue
-
-                mask = (
-                    np.sum(
-                        np.isin(self.lines_connectivity[:, 4:], nodes_from_surface),
-                        axis=1,
-                    )
-                    == e_nodes_1d
-                )
-                self.lines_from_surface[surf_id] = [int(tag) for tag in set(self.lines_connectivity[mask, 1])]
-
-        self.process_lines_from_mesh_data()
-        self.process_lines_connectivitiy_from_mesh_data()
-        self.process_points_from_mesh_data()
-
     def process_lines_from_mesh_data(self):
         """
         This method processes the nodes from lines and the lines
