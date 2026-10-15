@@ -85,8 +85,7 @@ class GmshMesher(GmshCommon):
 
         logger.info("Post-processing mesh... [60/100]")
         self._process_geometry_information(mesh)
-        mesh.process_downwards_adjacencies_from_entities()
-        mesh.process_upwards_adjacencies()
+        self._process_adjacencies(mesh)
 
         mesh.suppressed_volumes = set(self.setup.suppressed_volume_ids)
 
@@ -316,3 +315,31 @@ class GmshMesher(GmshCommon):
 
         except Exception:
             return 0.5
+
+    def _process_adjacencies(self, mesh: Mesh):
+        """
+        This method processes the downwards adjacencies
+        from the geometric entities.
+        """
+
+        mesh.surfaces_from_volume.clear()
+        mesh.lines_from_surface.clear()
+        mesh.points_from_line.clear()
+
+        for dim, tag in gmsh.model.getEntities():
+            if gmsh.model.getVisibility(dim, tag) == 0:
+                continue
+
+            _, downwards = gmsh.model.getAdjacencies(dim, tag)
+            downwards = [int(_id) for _id in downwards]
+
+            if dim == 3:
+                mesh.surfaces_from_volume[tag] = downwards
+
+            elif dim == 2:
+                mesh.lines_from_surface[tag] = downwards
+
+            elif dim == 1:
+                mesh.points_from_line[tag] = downwards
+
+        mesh.process_upwards_adjacencies()

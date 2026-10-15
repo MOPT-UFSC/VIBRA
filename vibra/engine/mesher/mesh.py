@@ -1735,32 +1735,6 @@ class Mesh:
         n_solid_elements = self.solids_connectivity.shape[0]
         return n_nodes, n_face_elements, n_solid_elements
 
-    def process_downwards_adjacencies_from_entities(self):
-        """
-        This method processes the downwards adjacencies
-        from the geometric entities.
-        """
-
-        self.surfaces_from_volume.clear()
-        self.lines_from_surface.clear()
-        self.points_from_line.clear()
-
-        for dim, tag in gmsh.model.getEntities():
-            if gmsh.model.getVisibility(dim, tag) == 0:
-                continue
-
-            _, downwards = gmsh.model.getAdjacencies(dim, tag)
-            downwards = [int(_id) for _id in downwards]
-
-            if dim == 3:
-                self.surfaces_from_volume[tag] = downwards
-
-            elif dim == 2:
-                self.lines_from_surface[tag] = downwards
-
-            elif dim == 1:
-                self.points_from_line[tag] = downwards
-
     def process_upwards_adjacencies(self):
         """
         This method processes the upwards adjacencies
