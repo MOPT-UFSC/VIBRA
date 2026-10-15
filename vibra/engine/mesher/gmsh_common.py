@@ -58,7 +58,7 @@ class GmshCommon:
         )
 
         if mesh.suppressed_volumes:
-            self.remove_disconnected_nodes()
+            mesh.remove_disconnected_nodes()
 
         # logging.info("Post-processing mesh... [68/100]")
         mesh.process_mesh_related_mappings("Post-processing")
