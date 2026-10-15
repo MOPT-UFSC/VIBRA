@@ -3,9 +3,7 @@ from collections import defaultdict
 from copy import deepcopy
 from enum import IntEnum
 from itertools import permutations
-from typing import Literal
 
-# from time import perf_counter
 import gmsh
 import numpy as np
 from scipy.linalg import svd
@@ -24,8 +22,6 @@ from vibra.interface.numeric_checks.unit_utilities import convert_length_unit
 from vibra.utils.utils import group_by
 
 logger = logging.getLogger(__name__)
-
-MeshQualityParams = Literal["gamma", "volume", "minSJ", "aspectRatio"]
 
 
 class Mesh:
@@ -1766,75 +1762,6 @@ class Mesh:
         n_face_elements = self.faces_connectivity.shape[0]
         n_solid_elements = self.solids_connectivity.shape[0]
         return n_nodes, n_face_elements, n_solid_elements
-
-    def compute_mesh_quality_parameters(self) -> dict | None:
-
-        quality_parameters = [
-            "gamma",
-            "volume",
-            "minSJ",
-            "aspectRatio",
-        ]
-
-        logger.info("Computing mesh quality metrics... [10/100]")
-        _, element_tags, _ = gmsh.model.mesh.get_elements(3, -1)
-        if not element_tags:
-            return
-
-        # process the mesh quality metrics
-        elements = element_tags[0]
-        N_elem = len(elements)
-        N_param = len(quality_parameters)
-        quality_table = np.zeros((N_elem, N_param), dtype=float)
-
-        logger.info("Computing mesh quality metrics... [25/100]")
-        min_edge_quals = gmsh.model.mesh.getElementQualities(elements, "minEdge")
-        max_edge_quals = gmsh.model.mesh.getElementQualities(elements, "maxEdge")
-
-        logger.info("Computing mesh quality metrics... [40/100]")
-        quality_table[:, 0] = gmsh.model.mesh.get_element_qualities(elements, "gamma")
-        quality_table[:, 1] = gmsh.model.mesh.get_element_qualities(elements, "volume")
-        quality_table[:, 2] = gmsh.model.mesh.get_element_qualities(elements, "minSJ")
-        quality_table[:, 3] = max_edge_quals / min_edge_quals  # aspect ratio
-
-        # compute the mesh quality statistics
-        logger.info("Computing mesh quality metrics... [70/100]")
-        quality_statistics: dict[MeshQualityParams, list[float]] = {}
-        for i, parameter in enumerate(quality_parameters):
-            column = quality_table[:, i]
-            worst = np.max(column) if (parameter == "aspectRatio") else np.min(column)
-            quality_statistics[parameter] = [worst, np.mean(column), np.std(column)]
-
-        # compute the bad elements
-        logger.info("Computing mesh quality metrics... [85/100]")
-        bad_elements: dict[MeshQualityParams, np.ndarray] = {}
-        for j, parameter in enumerate(quality_parameters):
-            limit = self.quality_bins.get(parameter)
-            if parameter == "aspectRatio":
-                bad_elements[parameter] = np.where(quality_table[:, j] > limit[0])[0]
-            else:
-                bad_elements[parameter] = np.where(quality_table[:, j] < limit[1])[0]
-
-        # compute the histogram data
-        logger.info("Computing mesh quality metrics... [95/100]")
-        histograms_data: dict[MeshQualityParams, dict] = {}
-        for i, parameter in enumerate(quality_parameters):
-            column = quality_table[:, i]
-            bins = np.linspace(np.min(column), np.max(column), 30)
-            hist, bin_edges = np.histogram(column, bins=bins)
-
-            histograms_data[parameter] = [
-                hist,
-                bin_edges,
-                np.percentile(column, 5),
-                np.percentile(column, 95),
-            ]
-
-        self.mesh_quality_data = {
-            "statistics": quality_statistics,
-            "bad_elements": bad_elements,
-            "histograms_data": histograms_data,
-        }
 
     def process_geometry_information(self):
         self.clear_geometry_data()

@@ -1,5 +1,4 @@
 import logging
-from collections import defaultdict
 from pathlib import Path
 
 import gmsh
@@ -93,7 +92,7 @@ class GmshMesher(GmshCommon):
 
         logger.info("Post-processing mesh... [95/100]")
         if self.setup.compute_quality_metrics:
-            mesh.compute_mesh_quality_parameters()
+            mesh.mesh_quality_data = self.compute_gmsh_quality_parameters()
 
         gmsh.finalize()
 
@@ -301,7 +300,7 @@ class GmshMesher(GmshCommon):
         gmsh.option.setNumber("General.Verbosity", 0)
         gmsh.option.setNumber("Geometry.Tolerance", geometry_tolerance)
 
-        gmsh.open(self.path)
+        gmsh.open(str(self.path))
 
         try:
             total_area = 0

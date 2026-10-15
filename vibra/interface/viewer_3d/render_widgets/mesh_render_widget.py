@@ -375,7 +375,7 @@ class MeshRenderWidget(CommonRenderWidget):
     def _distinguished_cells(self, distinguished_solids):
         cells = []
         for i in distinguished_solids:
-            visible_index = self.solids_actor.visible_indexes.get(i, -1)
+            visible_index = self.solids_actor.visible_indices.get(i, -1)
             if visible_index >= 0:
                 cells.append(visible_index)
         return cells
