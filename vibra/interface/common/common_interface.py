@@ -60,7 +60,7 @@ def check_input_entries(input_left: str, input_right: str, label: str):
     if value_right is None and isinstance(value_left, Number):
         value_right = 0.0
 
-    output = [value_left, value_right] 
+    output = [value_left, value_right]
 
     return output
 
@@ -409,7 +409,7 @@ def restore_mesh_data_modified_by_decoupling():
         return
 
     mesh.restore_data_from_cache()
-    mesh.process_upwards_adjacencies_from_entities()
+    mesh.process_upwards_adjacencies()
 
     # if self.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
     #     self.mesh.cache_mesh_information()
@@ -419,7 +419,7 @@ def restore_mesh_data_modified_by_decoupling():
 
 def check_conflicting_model_properties(volume_ids: list[int], domain: str):
     """
-    Use this function to map and remove the model properties that will 
+    Use this function to map and remove the model properties that will
     cause conflicts if the domain is changed.
 
     Parameters

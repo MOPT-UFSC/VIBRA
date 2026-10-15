@@ -86,7 +86,7 @@ class GmshMesher(GmshCommon):
         logger.info("Post-processing mesh... [60/100]")
         mesh.process_geometry_information()
         mesh.process_downwards_adjacencies_from_entities()
-        mesh.process_upwards_adjacencies_from_entities()
+        mesh.process_upwards_adjacencies()
 
         mesh.suppressed_volumes = set(self.setup.suppressed_volume_ids)
 

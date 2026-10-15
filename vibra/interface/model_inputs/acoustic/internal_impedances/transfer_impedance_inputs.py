@@ -88,14 +88,14 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         #
         self.geometry_selection_callback()
-    
+
     def geometry_selection_callback(self):
         current_tab = self.tabWidget_main.currentIndex()
 
         if current_tab == StandardTabType.LIST:
             self.verify_if_selected_surfaces_are_in_tree_widget_transfer_impedance()
             return
-        
+
         if current_tab != StandardTabType.CONSTANT_DATA:
             return
 
@@ -118,10 +118,10 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
         if self.tabWidget_main.currentIndex() == StandardTabType.LIST:
             return
-        
+
         if not isinstance(pp_data, dict):
             return
-        
+
         if "table_paths" in pp_data.keys():
             self.tabWidget_main.setCurrentIndex(StandardTabType.TABULAR_DATA)
             self.lineEdit_table_path.setText(pp_data["table_paths"][0])
@@ -129,7 +129,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
             self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)
             self.lineEdit_real_value.setText(str(pp_data["real_values"][0]))
             self.lineEdit_imag_value.setText(str(pp_data["imag_values"][0]))
-        
+
     def verify_if_selected_surfaces_are_in_tree_widget_transfer_impedance(self):
         if self.tree_item_clicked:
             return
@@ -149,9 +149,9 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
         if not selected_surfaces_in_tree_widget:
             return
-        
+
         self.pushButton_remove.setEnabled(True)
-        
+
         model_selector = self.treeWidget_transfer_impedance.selectionModel()
 
         for surface_id in selected_surfaces_in_tree_widget:
@@ -180,7 +180,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
                 self.decoupling_map[surface_id] = new_surface_id
 
             index = self.treeWidget_transfer_impedance.indexBelow(index)
-        
+
         return map_id_to_model_index
 
     def check_selected_surfaces(self):
@@ -223,7 +223,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
                 message += "with two volumes to proceed with dofs decoupling."
 
             elif len(volumes_from_surface) == 1:
-                message = "The selected surface is connected to one volume, this means that an external " 
+                message = "The selected surface is connected to one volume, this means that an external "
                 message += "surface has been selected. You must select an internal surface connected "
                 message += "with two volumes to proceed with dofs decoupling."
 
@@ -284,7 +284,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         self.actions_to_finalize(close_window)
 
     def constant_data_assignment(self, surface_ids: int | tuple[int]):
-        
+
         real_value = self.check_inputs(self.lineEdit_real_value, "Real part of transfer impedance", only_positive=False)
         imag_value = self.check_inputs(self.lineEdit_imag_value, "Imaginary part of transfer impedance", only_positive=False)
 
@@ -475,9 +475,9 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         selected_items = self.treeWidget_transfer_impedance.selectedItems()
         if not selected_items:
             return []
-        
+
         return [int(item.text(0)) for item in selected_items]
-    
+
     def set_selection_text(self, selected_surfaces: list | set):
         selected_surfaces_decoupled = []
 
@@ -489,7 +489,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
             else:
                 decouple_pair = [selected_surface, decouple_surface]
                 decouple_pair.sort()
-                       
+
             decouple_pair = tuple(decouple_pair)
             selected_surfaces_decoupled.append(str(decouple_pair))
 
@@ -497,11 +497,11 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
         self.lineEdit_selection_id.setText(selection_text)
         self.lineEdit_selection_id.setToolTip(selection_text)
-    
+
     def clear_line_edit_selection_id(self):
         self.lineEdit_selection_id.clear()
         self.lineEdit_selection_id.setToolTip("")
-                
+
     def clear_all_inputs(self):
         self.lineEdit_real_value.clear()
         self.lineEdit_imag_value.clear()
@@ -588,7 +588,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
             surface_ids = [surface_ids]
 
         labels = [
-            "perforated_plate_model", 
+            "perforated_plate_model",
             "interior_impedance",
             ]
 
@@ -620,7 +620,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
             if isinstance(data, dict):
 
                 new_surface_id = data.get("new_surface_id")
-                if isinstance(new_surface_id, int):   
+                if isinstance(new_surface_id, int):
                     remove_all_properties_assigned_to_new_surfaces([new_surface_id])
 
                 self.properties._remove_surface_property("degrees_of_freedom_decoupling", surface_id)
@@ -707,7 +707,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
         title = "Invalid value typed"
         message = ""
-        
+
         input_str = line_edit.text()
 
         if input_str == "":
@@ -754,7 +754,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
         else:
             self.mesh.restore_data_from_cache()
-            self.mesh.process_upwards_adjacencies_from_entities()
+            self.mesh.process_upwards_adjacencies()
             # self.mesh.cache_mesh_information()
 
         process_decoupling_actions()
@@ -772,7 +772,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
             self.treeWidget_transfer_impedance.setSelectionMode(QAbstractItemView.MultiSelection)
         elif event.key() == Qt.Key_Shift:
             self.treeWidget_transfer_impedance.setSelectionMode(QAbstractItemView.ContiguousSelection)
-    
+
     def keyReleaseEvent(self, event):
         if event.key() == Qt.Key_Control:
             self.treeWidget_transfer_impedance.setSelectionMode(QAbstractItemView.SingleSelection)

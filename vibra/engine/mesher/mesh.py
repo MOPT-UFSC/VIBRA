@@ -1825,7 +1825,7 @@ class Mesh:
             elif dim == 1:
                 self.points_from_line[tag] = downwards
 
-    def process_upwards_adjacencies_from_entities(self):
+    def process_upwards_adjacencies(self):
         """
         This method processes the upwards adjacencies
         from the geometric entities.

@@ -273,7 +273,7 @@ class ProjectReader:
                 elif key.startswith("cache_surfaces_from_volume"):
                     mesh.cache_surfaces_from_volume[tag] = value
 
-        mesh.process_upwards_adjacencies_from_entities()
+        mesh.process_upwards_adjacencies()
         mesh.process_mesh_related_mappings()
         mesh.update_element_topology_based_on_connectivity()
         mesh.process_disconnected_nodes_criterion()

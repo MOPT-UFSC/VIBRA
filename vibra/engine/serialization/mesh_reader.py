@@ -38,7 +38,7 @@ class MeshReader(GmshCommon):
         mesh.process_downwards_adjacencies_from_mesh_data()
 
         logger.info("Post-processing mesh... [90/100]")
-        mesh.process_upwards_adjacencies_from_entities()
+        mesh.process_upwards_adjacencies()
 
         gmsh.finalize()
 
