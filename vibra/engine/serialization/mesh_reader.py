@@ -35,6 +35,7 @@ class MeshReader(GmshCommon):
         mesh.geometry_imported = False
 
         logger.info("Post-processing mesh... [80/100]")
+        self._process_geometry_information(mesh)
         mesh.process_downwards_adjacencies_from_mesh_data()
 
         logger.info("Post-processing mesh... [90/100]")

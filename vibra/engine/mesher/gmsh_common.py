@@ -73,7 +73,7 @@ class GmshCommon:
 
         return mesh
 
-    def compute_gmsh_quality_parameters(self):
+    def _compute_gmsh_quality_parameters(self):
         quality_bins = {
             "gamma": (0.7, 0.15),
             "volume": (1e-3, 0),
@@ -142,3 +142,39 @@ class GmshCommon:
             "bad_elements": bad_elements,
             "histograms_data": histograms_data,
         }
+
+    def _process_geometry_information(self, mesh: Mesh):
+        mesh.clear_geometry_data()
+
+        unit_factor = mesh.get_length_unit_factor()
+        labels = ["points", "lines", "surfaces", "volumes"]
+
+        for dim, tag in gmsh.model.getEntities():
+            if gmsh.model.getVisibility(dim, tag) == 0:
+                continue
+
+            label = labels[dim]
+            mesh.geometry_information[label].append(tag)
+
+            if dim == 0:
+                continue
+
+            value = 0.0
+            if mesh.geometry_imported:
+                value = gmsh.model.occ.getMass(dim, tag)
+
+            if dim == 3:
+                mesh.volume_from_bodies[tag] = value * (unit_factor**3)
+
+            elif dim == 2:
+                mesh.area_from_surfaces[tag] = value * (unit_factor**2)
+                if mesh.area_from_surfaces[tag] == 0:
+                    continue
+
+                uv_min, uv_max = gmsh.model.getParametrizationBounds(dim, tag)
+                uv_mid = (uv_min + uv_max) / 2
+                center = gmsh.model.getValue(dim, tag, uv_mid) * unit_factor
+                mesh.surfaces_centers[tag] = center
+
+            elif dim == 1:
+                mesh.length_from_lines[tag] = value * (unit_factor**1)

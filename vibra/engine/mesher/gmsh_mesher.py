@@ -84,7 +84,7 @@ class GmshMesher(GmshCommon):
         mesh = self._create_mesh_from_gmsh_state()
 
         logger.info("Post-processing mesh... [60/100]")
-        mesh.process_geometry_information()
+        self._process_geometry_information(mesh)
         mesh.process_downwards_adjacencies_from_entities()
         mesh.process_upwards_adjacencies()
 
@@ -92,7 +92,7 @@ class GmshMesher(GmshCommon):
 
         logger.info("Post-processing mesh... [95/100]")
         if self.setup.compute_quality_metrics:
-            mesh.mesh_quality_data = self.compute_gmsh_quality_parameters()
+            mesh.mesh_quality_data = self._compute_gmsh_quality_parameters()
 
         gmsh.finalize()
 

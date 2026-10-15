@@ -283,8 +283,6 @@ class Mesh:
         from the solids, faces and lines connectivities matrices.
         """
 
-        self.process_geometry_information()
-
         e_nodes_2d = self.faces_connectivity[0, 4:].size
         for vol_id in self.geometry_information.get("volumes"):
             nodes_from_volume = self.get_nodes_from_volume(vol_id)
