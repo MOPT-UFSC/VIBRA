@@ -1,7 +1,9 @@
 import logging
+from collections import defaultdict
 from pathlib import Path
 
 import gmsh
+import numpy as np
 
 from vibra.engine.geometry.geometry import GeometryInfo
 from vibra.engine.mesher.gmsh_common import GmshCommon
@@ -114,9 +116,8 @@ class GmshMesher(GmshCommon):
             )
             raise InvalidGeometryError(context)
 
-        mesh = Mesh()
-        element_size = mesh.compute_initial_mesh_size(str(self.path))
         exception = None
+        element_size = self._compute_initial_mesh_size()
 
         for _min, _max in [(element_size * 0.4, element_size), (5, 10)]:
             try:
@@ -129,8 +130,8 @@ class GmshMesher(GmshCommon):
             except Exception as error:
                 exception = error
 
-        if exception is not None:
-            raise exception
+        assert exception is not None
+        raise exception
 
     def generate_geometry_info(self) -> GeometryInfo:
         if self.path is None:
@@ -293,3 +294,26 @@ class GmshMesher(GmshCommon):
         pinned_curves = {curve for curve, faces in faces_per_curve.items() if (faces & pinned_faces) and not (faces & coarsened_faces)}
         pinned_points = {point for point, faces in faces_per_point.items() if (faces & pinned_faces) and not (faces & coarsened_faces)}
         return pinned_curves, pinned_points
+
+    def _compute_initial_mesh_size(self, geometry_tolerance: float = 1e-10) -> float:
+        gmsh.initialize("", False, interruptible=False)
+        gmsh.option.setNumber("General.Terminal", 0)
+        gmsh.option.setNumber("General.Verbosity", 0)
+        gmsh.option.setNumber("Geometry.Tolerance", geometry_tolerance)
+
+        gmsh.open(self.path)
+
+        try:
+            total_area = 0
+            for dim, tag in gmsh.model.getEntities(dim=2):
+                total_area += gmsh.model.occ.getMass(dim, tag)
+
+            number_of_elements = 4e4 if (total_area <= 5e7) else 1e5
+            area_elem = total_area / number_of_elements
+
+            # the length side of equilateral triangle
+            length = np.ceil(np.sqrt(2 * area_elem))
+            return length
+
+        except Exception:
+            return 0.5
