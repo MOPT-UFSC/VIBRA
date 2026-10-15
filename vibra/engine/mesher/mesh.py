@@ -1735,42 +1735,6 @@ class Mesh:
         n_solid_elements = self.solids_connectivity.shape[0]
         return n_nodes, n_face_elements, n_solid_elements
 
-    def process_geometry_information(self):
-        self.clear_geometry_data()
-
-        unit_factor = self.get_length_unit_factor()
-        labels = ["points", "lines", "surfaces", "volumes"]
-
-        for dim, tag in gmsh.model.getEntities():
-            if gmsh.model.getVisibility(dim, tag) == 0:
-                continue
-
-            label = labels[dim]
-            self.geometry_information[label].append(tag)
-
-            if dim == 0:
-                continue
-
-            value = 0.0
-            if self.geometry_imported:
-                value = gmsh.model.occ.getMass(dim, tag)
-
-            if dim == 3:
-                self.volume_from_bodies[tag] = value * (unit_factor**3)
-
-            elif dim == 2:
-                self.area_from_surfaces[tag] = value * (unit_factor**2)
-                if self.area_from_surfaces[tag] == 0:
-                    continue
-
-                uv_min, uv_max = gmsh.model.getParametrizationBounds(dim, tag)
-                uv_mid = (uv_min + uv_max) / 2
-                center = gmsh.model.getValue(dim, tag, uv_mid) * unit_factor
-                self.surfaces_centers[tag] = center
-
-            elif dim == 1:
-                self.length_from_lines[tag] = value * (unit_factor**1)
-
     def process_downwards_adjacencies_from_entities(self):
         """
         This method processes the downwards adjacencies
