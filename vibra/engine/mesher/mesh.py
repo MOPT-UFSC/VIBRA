@@ -859,30 +859,7 @@ class Mesh:
 
         return point_ids, line_ids
 
-    def process_surface_normals_and_curvatures(self, tag: int):
-        """This method processes the surface curvatures and normal
-        at surface nodes.
-
-        Parameters
-        ----------
-        tag : int
-            It represents the gmsh surface's tag.
-        """
-        node_tags, _, param = gmsh.model.mesh.getNodes(2, tag, True)
-        normals_surface = gmsh.model.getNormal(tag, param).reshape(-1, 3)
-        curvatures_surface = gmsh.model.getCurvature(2, tag, param)
-        sorted_indices = np.argsort(node_tags)
-        self.normals_surface[tag] = normals_surface[sorted_indices, :]
-
-        # processs the unit length factor to curvatures
-        conv_factor = convert_length_unit(1.0, self.length_unit, "meter")
-
-        # convert the curvature unit to 1/m
-        self.curvatures_surface[tag] = curvatures_surface[sorted_indices] / conv_factor
-
     def process_cylindrical_surfaces(self):
-
-        # t0 = perf_counter()
         self.cylindrical_surfaces_data.clear()
         for surface_id, curvatures in self.curvatures_surface.items():
             avg_curvature = np.average(curvatures)
@@ -908,9 +885,6 @@ class Mesh:
             if np.all(dot_products < 1e-3):
                 # print(f"The surface {surface_id} is cylindrical.")
                 self.cylindrical_surfaces_data[surface_id] = 2 / avg_curvature
-
-        # dt = perf_counter() - t0
-        # print(f"Time to process cylindrical surfaces: {dt} [s]")
 
     def cache_mesh_information(self):
         self.cache_nodal_coordinates = deepcopy(self.nodal_coordinates)

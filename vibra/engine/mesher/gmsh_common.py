@@ -7,6 +7,7 @@ import gmsh
 import numpy as np
 
 from vibra.engine.mesher.mesh import Mesh
+from vibra.interface.numeric_checks.unit_utilities import convert_length_unit
 
 logger = logging.getLogger(__name__)
 
@@ -57,6 +58,21 @@ class GmshCommon:
             faces_connectivity=dim_to_data.get(2, np.zeros((0, 4), dtype=int)),
             solids_connectivity=dim_to_data.get(3, np.zeros((0, 4), dtype=int)),
         )
+
+        for dim, tag in gmsh.model.get_entities(2):
+            node_tags, _, param = gmsh.model.mesh.getNodes(2, tag, True)
+            sorted_indices = np.argsort(node_tags)
+
+            normals_surface = gmsh.model.getNormal(tag, param).reshape(-1, 3)
+            if normals_surface.size == sorted_indices.size:
+                mesh.normals_surface[tag] = normals_surface[sorted_indices, :]
+
+            curvatures_surface = gmsh.model.getCurvature(2, tag, param)
+            if curvatures_surface.size == sorted_indices.size:
+                conv_factor = convert_length_unit(1.0, mesh.length_unit, "meter")
+                mesh.curvatures_surface[tag] = curvatures_surface[sorted_indices] / conv_factor
+
+        mesh.process_cylindrical_surfaces()
 
         if mesh.suppressed_volumes:
             mesh.remove_disconnected_nodes()
