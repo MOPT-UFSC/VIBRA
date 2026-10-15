@@ -553,9 +553,6 @@ class ProjectReader:
                     complex_natural_frequencies=file.get("complex_natural_frequencies"),
                 )
 
-    def read_structural_stresses() -> np.ndarray | None:
-        ...
-
     def read_assembler_and_solver(self, model: Model) -> tuple[AcousticAssembler | StructuralAssembler | None, HarmonicSolver | ModalSolver | None]:
 
         # TODO: create Solution classes, so we don't need to create pointless Assemblers and Solvers here

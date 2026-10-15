@@ -341,9 +341,6 @@ class ProjectWriter:
             if isinstance(solution.complex_natural_frequencies, np.ndarray):
                 file["complex_natural_frequencies"] = solution.complex_natural_frequencies
 
-    def write_structural_stresses(self, stresses: np.ndarray):
-        ...
-
     def get_solution_writer(self, num_rows, columns, dtype, is_resume):
         return LazyHDF5MatrixWriter(
             self.project_paths.harmonic_solution_filepath,
