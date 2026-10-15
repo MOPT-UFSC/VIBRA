@@ -14,9 +14,9 @@ def run_analysis(working_dir: str, print_log: bool):
     try:
         analysis_subprocess.main(is_resume=False, working_dir=working_dir, print_log=print_log)
     except Exception:
+        import json
         import sys
         import traceback
-        import json
 
         text = traceback.format_exc()
         print(
@@ -31,9 +31,9 @@ def continue_analysis(working_dir: str, print_log: bool):
     try:
         analysis_subprocess.main(is_resume=True, working_dir=working_dir, print_log=print_log)
     except Exception:
+        import json
         import sys
         import traceback
-        import json
 
         text = traceback.format_exc()
         print(
@@ -48,9 +48,26 @@ def generate_mesh(working_dir: str):
     try:
         generate_mesh_subprocess.main(working_dir)
     except Exception:
+        import json
         import sys
         import traceback
+
+        text = traceback.format_exc()
+        print(
+            "VIBRA_EXCEPTION|" + json.dumps({"traceback": text}),
+            flush=True,
+        )
+        sys.exit(1)
+
+def recover_nodal_averaged_structural_stresses(working_dir: str):
+    from vibra.utils.subprocess import structural_stresses_subprocess
+
+    try:
+        structural_stresses_subprocess.main(working_dir)
+    except Exception:
         import json
+        import sys
+        import traceback
 
         text = traceback.format_exc()
         print(
@@ -91,6 +108,11 @@ def main():
         action="store_true",
         help="Print logs in terminal.",
     )
+    parser.add_argument(
+        "--recover-structural-stresses",
+        metavar="WORKING_DIR",
+        help="Computes the nodal averaged structural stresses without opening the interface."
+    )
 
     args = parser.parse_args()
 
@@ -100,6 +122,8 @@ def main():
         continue_analysis(args.continue_analysis, print_log=args.print_log)
     elif args.generate_mesh is not None:
         generate_mesh(args.generate_mesh)
+    elif args.recover_structural_stresses is not None:
+        recover_nodal_averaged_structural_stresses(args.recover_structural_stresses)
     else:
         run_interface(args.path, open_last=args.last)
 
