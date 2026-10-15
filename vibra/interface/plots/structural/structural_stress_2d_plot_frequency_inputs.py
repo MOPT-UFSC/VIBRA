@@ -16,6 +16,7 @@ from vibra.interface.plots.general.frequency_response_plotter import FrequencyRe
 from vibra.interface.ui_generated.plots.structural.structural_stress_2d_plot_frequency_inputs_ui import (
     StructuralStress2dPlotFrequencyInputs_UI,
 )
+from vibra.utils.subprocess.structural_stresses_handler import recover_structural_stresses_in_subprocess
 
 
 class SelectionType(IntEnum):
@@ -53,6 +54,10 @@ class StructuralStress2dPlotFrequencyInputs(StructuralStress2dPlotFrequencyInput
 
     @property
     def nodal_averaged_stresses(self):
+        stresses = self.structural_post.nodal_averaged_stresses_frequency
+        if isinstance(stresses, np.ndarray):
+            return stresses
+        
         t0 = perf_counter()
         nodal_averaged_stresses = self.structural_post.recover_nodal_averaged_structural_stresses()
         dt = perf_counter() - t0
@@ -65,11 +70,11 @@ class StructuralStress2dPlotFrequencyInputs(StructuralStress2dPlotFrequencyInput
 
     @property
     def is_stress_data_cached(self):
+        if isinstance(self.structural_post.nodal_averaged_stresses_frequency, np.ndarray):
+            return True
+        
         cache_info = self.structural_post.recover_nodal_averaged_structural_stresses.cache_info()
         return cache_info.currsize != 0
-
-    def _initialize(self):
-        self.selected_frequency_index = None
 
     def set_frames_disabled(self, disabled: bool):
         self.frame_selection_controls.setDisabled(disabled)
@@ -154,16 +159,21 @@ class StructuralStress2dPlotFrequencyInputs(StructuralStress2dPlotFrequencyInput
         self.frequencies = self.model.frequencies
 
     def process_stress_field(self):
-
         # recover the averaged structural stresses
         if not self.is_stress_data_cached:
-            def recover_stresses():
-                t0 = perf_counter()
-                self.structural_post.recover_nodal_averaged_structural_stresses()
-                dt = perf_counter() - t0
-                print(f"Time to compute all nodal stresses: {dt} s")
+            if app().config.user_preferences.run_analysis_in_subprocess:
+                post = self.structural_post
+                stresses = recover_structural_stresses_in_subprocess(
+                    app().project.working_directory,
+                    post.get_nodal_stresses_frequency_shape(),
+                )
+                if stresses is None:
+                    return
 
-            LoadingWindow(recover_stresses).run()
+                post.nodal_averaged_stresses_frequency = stresses
+
+            else:
+                LoadingWindow(self.structural_post.recover_nodal_averaged_structural_stresses).run()
 
         self.set_frames_disabled(False)
 

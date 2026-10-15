@@ -59,11 +59,11 @@ def generate_mesh(working_dir: str):
         )
         sys.exit(1)
 
-def recover_nodal_averaged_structural_stresses(working_dir: str):
+def recover_nodal_averaged_structural_stresses(working_dir: str, shm_name: str):
     from vibra.utils.subprocess import structural_stresses_subprocess
 
     try:
-        structural_stresses_subprocess.main(working_dir)
+        structural_stresses_subprocess.main(working_dir, shm_name)
     except Exception:
         import json
         import sys
@@ -114,7 +114,15 @@ def main():
         help="Computes the nodal averaged structural stresses without opening the interface."
     )
 
+    parser.add_argument(
+        "--shm-name",
+        help="The shared memory label"
+    )
+
     args = parser.parse_args()
+
+    if args.recover_structural_stresses is not None and args.shm_name is None:
+        parser.error("--recover-structural-stresses requires --shm-name")
 
     if args.run_analysis is not None:
         run_analysis(args.run_analysis, print_log=args.print_log)
@@ -123,7 +131,7 @@ def main():
     elif args.generate_mesh is not None:
         generate_mesh(args.generate_mesh)
     elif args.recover_structural_stresses is not None:
-        recover_nodal_averaged_structural_stresses(args.recover_structural_stresses)
+        recover_nodal_averaged_structural_stresses(args.recover_structural_stresses, args.shm_name)
     else:
         run_interface(args.path, open_last=args.last)
 

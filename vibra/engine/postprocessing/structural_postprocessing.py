@@ -16,6 +16,7 @@ from vibra.engine.properties.material import Material
 from vibra.engine.solution import HarmonicSolution, LazyHarmonicSolution, ModalSolution
 from vibra.interface.viewer_3d.plot_setup import DisplacementDataType, StressDataType, StressType
 from vibra.utils.signal_processing import process_multiple_iffts_from_one_sided_spectrum_signals
+from vibra.utils.time_utils import function_timer
 from vibra.utils.utils import is_gil_enabled
 
 
@@ -63,6 +64,7 @@ class StructuralPostprocessing:
 
 
     @cache
+    @function_timer
     def recover_nodal_averaged_structural_stresses(
         self,
         time_domain: bool = False,
@@ -154,7 +156,7 @@ class StructuralPostprocessing:
         _connectivities = _connect_flat.reshape(-1, element_3d.nodes_per_element)
 
         if is_gil_enabled():
-            print("not using multithreading")
+            print("Not using multithreading")
             avg_nodal_stresses = self.process_nodal_averaged_structural_stresses(
                 element_3d,
                 element_ids,
@@ -169,7 +171,7 @@ class StructuralPostprocessing:
             num_workers = cpu_count()
             chunk_size = (len(_connectivities) + num_workers - 1) // num_workers
 
-            print("not using multithreading")
+            print("Using multithreading")
 
             avg_nodal_stresses = np.zeros(shape, dtype=data_type)
 
@@ -278,6 +280,10 @@ class StructuralPostprocessing:
                 local_avg_nodal_stresses[_connect[midside_indices], :, :] += (enodal_stresses[ind_1, :, :] + enodal_stresses[ind_2, :, :]) / 2
 
         return local_avg_nodal_stresses
+
+    def get_nodal_stresses_frequency_shape(self) -> tuple[int, int, int]:
+        n_nodes = len(self.model.domains_processor.nodes_of_domain.get("structural", []))
+        return (n_nodes, 6, len(self.model.frequencies))
         
     @cache
     def recover_element_structural_stresses(
@@ -455,6 +461,9 @@ class StructuralPostprocessing:
 
 
     def compute_structural_stresses_frequency(self):
+        if isinstance(self.nodal_averaged_stresses_frequency, np.ndarray):
+            return 
+        
         t0 = perf_counter()
         self.nodal_averaged_stresses_frequency = self.recover_nodal_averaged_structural_stresses()
         if self.nodal_averaged_stresses_frequency is None:
