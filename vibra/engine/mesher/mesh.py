@@ -272,73 +272,6 @@ class Mesh:
         elif nodes_per_element == 20:
             self.element_topology = Hexahedron20
 
-    def process_lines_from_mesh_data(self):
-        """
-        This method processes the nodes from lines and the lines
-        from surfaces based on the surfaces connectivity.
-        """
-
-        if self.lines_connectivity.size:
-            return
-
-        index = 0
-        line_id = 0
-
-        self.external_nodes_from_lines.clear()
-        surface_ids = self.geometry_information.get("surfaces")
-
-        while index < len(surface_ids):
-            fixed_tag = surface_ids[index]
-            nodes_fixed = self.get_nodes_from_surface(fixed_tag)
-
-            for sweep_tag in surface_ids[index + 1 :]:
-                nodes_sweep = self.get_nodes_from_surface(sweep_tag)
-                intersect_nodes = np.intersect1d(nodes_fixed, nodes_sweep)
-                if intersect_nodes.size <= 1:
-                    continue
-
-                check_overlap_1 = False
-                check_overlap_2 = False
-
-                line_nodes = list(set(intersect_nodes))
-
-                for _line_nodes in self.separate_nodes_from_disconnected_lines(line_nodes).values():
-                    _line_nodes.sort()
-                    if _line_nodes in self.external_nodes_from_lines.values():
-                        continue
-
-                    for _line_id, nodes_from_line in self.external_nodes_from_lines.items():
-                        check_overlap_1 = np.isin(nodes_from_line, _line_nodes).all()
-                        if check_overlap_1:
-                            break
-
-                        check_overlap_2 = np.isin(_line_nodes, nodes_from_line).all()
-                        if check_overlap_2:
-                            break
-
-                    if check_overlap_1:
-                        continue
-
-                    if check_overlap_2:
-                        self.external_nodes_from_lines[_line_id] = _line_nodes
-                        continue
-
-                    line_id += 1
-                    self.external_nodes_from_lines[line_id] = _line_nodes
-
-            index += 1
-
-        self.lines_from_surface.clear()
-        for line_id, line_nodes in self.external_nodes_from_lines.items():
-            self.length_from_lines[line_id] = 0.0
-            for surf_id in self.geometry_information.get("surfaces"):
-                surface_nodes = self.get_nodes_from_surface(surf_id)
-                if surface_nodes is None:
-                    continue
-
-                if np.isin(line_nodes, surface_nodes).all():
-                    self.lines_from_surface[surf_id].append(line_id)
-
     def separate_nodes_from_disconnected_lines(self, node_ids: list) -> dict:
         """
         This method group nodes from each line using a
@@ -419,72 +352,6 @@ class Mesh:
 
         return group_of_connected_nodes
 
-    def process_lines_connectivitiy_from_mesh_data(self):
-        """
-        This method processes the lines connectivity
-        based on the surfaces connectivity.
-        """
-
-        if self.lines_connectivity.size:
-            return
-
-        connect_data = self.faces_connectivity[:, 4:]
-        n_nodes_2d = self.faces_connectivity[0, 4:].size
-
-        if n_nodes_2d in [3, 4]:
-            n_nodes_1d = 2
-            e_type = 2
-
-        elif n_nodes_2d in [6, 8]:
-            n_nodes_1d = 3
-            e_type = 3
-
-        last_index = 0
-        first_index = 0
-        self.lines_connectivity = np.empty((0, 4 + n_nodes_1d), dtype=int)
-
-        for line_id, node_ids in self.external_nodes_from_lines.items():
-            connectivity_from_line = []
-            filt_rows = np.sum(np.isin(connect_data, node_ids), axis=1) == n_nodes_1d
-
-            for _connect in connect_data[filt_rows, :]:
-                edge_connect = [node_id for node_id in _connect if node_id in node_ids]
-                edge_connect = self.reorder_connectivity_based_on_distances(edge_connect)
-
-                if edge_connect in connectivity_from_line:
-                    continue
-
-                connectivity_from_line.append(edge_connect)
-
-            if not connectivity_from_line:
-                continue
-
-            connectivity_array = np.array(connectivity_from_line, dtype=int)
-
-            rows = connectivity_array.shape[0]
-            aux_ones = np.ones(rows, dtype=int)
-
-            last_index += rows
-            indices = np.arange(first_index, last_index, dtype=int)
-
-            connectivity = np.zeros((rows, 4 + n_nodes_1d), dtype=int)
-            connectivity[:, 0] = indices
-            connectivity[:, 1] = aux_ones * line_id
-            connectivity[:, 2] = aux_ones * e_type
-            connectivity[:, 3] = aux_ones * n_nodes_1d
-            connectivity[:, 4:] = connectivity_array
-
-            self.lines_connectivity = np.append(self.lines_connectivity, connectivity, axis=0)
-            first_index = last_index
-
-        if self.external_nodes_from_lines:
-            self.elements_from_line = group_by(
-                self.lines_connectivity[:, Mesh.ColumnEnum.ENTITY_INDEX],
-                self.lines_connectivity[:, Mesh.ColumnEnum.ELEMENT_INDEX],
-            )
-            self.geometry_information["lines"] = list(self.external_nodes_from_lines.keys())
-            # np.savetxt("lines_connectivity.dat", self.lines_connectivity, delimiter=",", fmt="%i")
-
     def reorder_connectivity_based_on_distances(self, el_connect: list[int]):
         """
         This method reorders the line element connectivity based on
@@ -516,63 +383,6 @@ class Mesh:
             reordered_connect = np.append(reordered_connect, middle_node, axis=0)
 
         return list(reordered_connect)
-
-    def process_points_from_mesh_data(self):
-        """
-        This method processes the corner nodes and the
-        points based on lines_connectivity attribute.
-
-        """
-
-        if not self.lines_connectivity.size:
-            return
-
-        def get_non_repeated_values(line_connectivities: np.ndarray):
-            """
-            This function returns the non-repeated values
-            from a given input list of values.
-
-            Parameters
-            ----------
-            values: np.ndarray
-                An array containing the connectivities
-                of the 1D elements of a line.
-
-            Returns
-            -------
-            non_repeated_values: list
-                The output list of non-repeated values.
-
-            """
-            values = line_connectivities[:, [0, 1]].flatten()
-            _, indices, count = np.unique(values, return_index=True, return_counts=True)
-            non_repeated_values = list(values[indices[count == 1]])
-            return non_repeated_values
-
-        point_id = 0
-        self.points_from_line.clear()
-
-        for line_id in self.geometry_information.get("lines"):
-            line_connect = self.get_connectivity_from_line(line_id)
-            corner_nodes = get_non_repeated_values(line_connect)
-
-            points_from_line = []
-
-            for _node_id in corner_nodes:
-                node_id = int(_node_id)
-                if node_id in self.points_from_nodes:
-                    points_from_nodes = self.points_from_nodes.get(node_id)
-                    points_from_line.append(points_from_nodes)
-                    continue
-
-                point_id += 1
-                points_from_line.append(point_id)
-                self.nodes_from_points[point_id] = node_id
-                self.points_from_nodes[node_id] = point_id
-
-            self.points_from_line[line_id] = points_from_line
-
-        self.geometry_information["points"] = list(self.nodes_from_points.keys())
 
     def import_external_nodal_coordinates(self, data, index_zero=True):
         if isinstance(data, list):
@@ -663,15 +473,6 @@ class Mesh:
             self.external_nodes_from_surfaces[key] = np.unique(values).astype(int)
 
         self.geometry_information["surfaces"] = [int(_id) for _id in np.unique(surfaces)]
-
-    def map_surfaces_to_volumes(self, surfaces_from_volume: dict[int, list[int]]):
-        self.volumes_from_surface.clear()
-        self.surfaces_from_volume.clear()
-        for vol_id, surf_ids in surfaces_from_volume.items():
-            for surf_id in surf_ids:
-                self.volumes_from_surface[surf_id] = [vol_id]
-
-            self.surfaces_from_volume[vol_id] = surf_ids
 
     def export_nodal_coordinates(self, filename):
         fmt = ["%i", "%.16f", "%.16f", "%.16f"]
@@ -914,9 +715,7 @@ class Mesh:
             return None
 
         rows = np.where(connect_data[:, 1] == volume_id)[0]
-        nodes = np.unique(connect_data[rows, 4:]).astype(int)
-
-        return np.sort(nodes)
+        return np.unique(connect_data[rows, 4:], sorted=True).astype(int)
 
     def get_connectivity_from_line(self, line_id: int, from_cache: bool = False) -> np.ndarray:
 
@@ -1155,14 +954,16 @@ class Mesh:
         (rows,) = np.where(self.solids_connectivity[:, 1] == node_id)
         return np.unique(self.solids_connectivity[rows, 4:]).astype(int)
 
-    def map_face_elements_to_solid_elements(self):
-        """
-        This method implements a faster algorithm when compared with
-        the one implemented in map_face_elements_to_solid_elements_reference.
+    def map_surfaces_to_volumes(self, surfaces_from_volume: dict[int, list[int]]):
+        self.volumes_from_surface.clear()
+        self.surfaces_from_volume.clear()
+        for vol_id, surf_ids in surfaces_from_volume.items():
+            for surf_id in surf_ids:
+                self.volumes_from_surface[surf_id] = [vol_id]
 
-        If something goes wrong with this mapping compare the output of this
-        with the reference version.
-        """
+            self.surfaces_from_volume[vol_id] = surf_ids
+
+    def map_face_elements_to_solid_elements(self):
         # TODO: This may be further optimized using the "np.searchsorted" method.
         # We can "explode" the solids connectivity arrays to its at most 6 composing faces,
         # than sort the faces and solids both in horizontal and vertical axes.
@@ -1223,25 +1024,24 @@ class Mesh:
             # np.savetxt("non_mapped_2d_elements.dat", self.faces_connectivity[rows, :], delimiter=",", fmt="%i")
 
     def get_collapsed_elements(self):
-
         logger.info("Checking collapsed 3D elements... [90/100]")
-        mask = self._repeated_mask(self.solids_connectivity[:, 4:])
+        mask = self._collapsed_mask(self.solids_connectivity[:, 4:])
         collapsed_solids = self.solids_connectivity[mask]
         solids_set = set(collapsed_solids[:, 0].tolist()) if collapsed_solids.size else set()
 
         logger.info("Checking collapsed 2D elements... [95/100]")
-        mask = self._repeated_mask(self.faces_connectivity[:, 4:])
+        mask = self._collapsed_mask(self.faces_connectivity[:, 4:])
         collapsed_faces = self.faces_connectivity[mask]
         faces_set = set(collapsed_faces[:, 0].tolist()) if collapsed_faces.size else set()
 
         logger.info("Checking collapsed 1D elements... [98/100]")
-        mask = self._repeated_mask(self.lines_connectivity[:, 4:])
+        mask = self._collapsed_mask(self.lines_connectivity[:, 4:])
         collapsed_lines = self.lines_connectivity[mask]
         lines_set = set(collapsed_lines[:, 0].tolist()) if collapsed_lines.size else set()
 
         return solids_set, faces_set, lines_set
 
-    def _repeated_mask(self, data: np.ndarray[int]) -> np.ndarray[bool]:
+    def _collapsed_mask(self, data: np.ndarray[int]) -> np.ndarray[bool]:
         sorted_data = data.copy()
         sorted_data.sort(axis=1)
         mask = np.any(
