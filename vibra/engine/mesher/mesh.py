@@ -33,10 +33,7 @@ class Mesh:
         self.reset_variables()
 
     def reset_variables(self):
-        self.element_topology: ElementTopology | None = None
-
         ## geometry-related attributes
-
         self.nodes_to_highlight = []
         self.efaces_to_highlight = []
 
@@ -54,19 +51,13 @@ class Mesh:
         self.volume_from_bodies = {}
 
         ## mesh-related attributes
+        self.element_topology: ElementTopology | None = None
         self.nodal_coordinates = np.zeros((0, 4), dtype=float)
         self.lines_connectivity = np.zeros((0, 4), dtype=int)
         self.faces_connectivity = np.zeros((0, 4), dtype=int)
         self.solids_connectivity = np.zeros((0, 4), dtype=int)
 
         self.geometry_information = defaultdict(list)
-        self.quality_bins = {
-            "gamma": (0.7, 0.15),
-            "volume": (1e-3, 0),
-            "minSJ": (0.3, 0.1),
-            "aspectRatio": (4, 1.5),
-        }
-
         self.mesh_quality_data = {}
 
         self.collapsed_elements_data = {}
