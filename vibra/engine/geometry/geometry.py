@@ -1,32 +1,48 @@
+from collections import defaultdict
+from copy import deepcopy
 from pathlib import Path
-from typing import Literal, Self
+from typing import Iterator, Literal
 
 import gmsh
 import numpy as np
 
-from vibra.utils.bidict import bidict
-
 LengthUnits = Literal["millimeter", "inch"]
 
 
-class GeometryInfo:
-    def __init__(self, length_unit: LengthUnits = "millimeter"):
-        self._solids_to_surfaces = bidict()
-        self._surfaces_to_curves = bidict()
-        self._curves_to_points = bidict()
+class Geometry:
+    def __init__(
+        self,
+        path: str | Path | None = None,
+        length_unit: LengthUnits = "millimeter",
+    ):
+        self._solids_to_surfaces = defaultdict()
+        self._surfaces_to_curves = defaultdict()
+        self._curves_to_points = defaultdict()
 
-        self._solids_centers = dict()
-        self._surfaces_centers = dict()
-        self._curves_centers = dict()
-        self._points_centers = dict()
+        self._surfaces_to_solids = defaultdict()
+        self._curves_to_surfaces = defaultdict()
+        self._points_to_curves = defaultdict()
 
-        self._surfaces_normals = dict()
-        self._curves_normals = dict()
-        self._points_normals = dict()
+        self._cache_solids_to_surfaces = defaultdict()
+        self._cache_surfaces_to_curves = defaultdict()
+        self._cache_curves_to_points = defaultdict()
 
-        self._surfaces_areas = dict()
-        self._curves_lengths = dict()
-        self._solids_volumes = dict()
+        self._solids_centers = defaultdict()
+        self._surfaces_centers = defaultdict()
+        self._curves_centers = defaultdict()
+        self._points_centers = defaultdict()
+
+        self._surfaces_normals = defaultdict()
+        self._curves_normals = defaultdict()
+        self._points_normals = defaultdict()
+
+        self._surfaces_areas = defaultdict()
+        self._curves_lengths = defaultdict()
+        self._solids_volumes = defaultdict()
+
+        self._bounding_lines = defaultdict()
+        self._bounding_surfaces = defaultdict()
+        self._bounding_solids = defaultdict()
 
         self._straight_curves = set()
         self._straight_surfaces = set()
@@ -40,29 +56,41 @@ class GeometryInfo:
         self.length_unit = length_unit
         self.length_unit_factor = self._get_length_unit_factor(length_unit)
 
-    def read_file(self, file_path: Path | str) -> Self:
+        self.set_length_unit(length_unit)
+        if path is not None:
+            self.read_file(path)
+
+    def read_file(self, file_path: str):
         # allowed to run in a secondary thread
         gmsh.initialize("", False, interruptible=False)
-
         gmsh.option.setNumber("General.Terminal", 0)
         gmsh.option.setNumber("General.Verbosity", 0)
         gmsh.option.setNumber("General.NumThreads", 0)  # all available threads
 
-        gmsh.open(str(file_path))
+        gmsh.open(file_path)
+        gmsh.model.occ.synchronize()
 
+        volumes_list = gmsh.model.getEntities(3)
+        gmsh.model.occ.fragment(volumes_list, volumes_list)
         gmsh.model.occ.synchronize()
 
         self._process_geometry_information()
         self._process_curves_normals()
         self._process_points_normals()
-
         gmsh.finalize()
-        return self
 
     def clear(self):
         self._solids_to_surfaces.clear()
         self._surfaces_to_curves.clear()
         self._curves_to_points.clear()
+
+        self._surfaces_to_solids.clear()
+        self._curves_to_surfaces.clear()
+        self._points_to_curves.clear()
+
+        self._cache_solids_to_surfaces.clear()
+        self._cache_surfaces_to_curves.clear()
+        self._cache_curves_to_points.clear()
 
         self._solids_centers.clear()
         self._surfaces_centers.clear()
@@ -75,11 +103,19 @@ class GeometryInfo:
 
         self._surfaces_areas.clear()
         self._curves_lengths.clear()
-
         self._solids_volumes.clear()
+
+        self._bounding_lines.clear()
+        self._bounding_surfaces.clear()
+        self._bounding_solids.clear()
 
         self._straight_curves.clear()
         self._straight_surfaces.clear()
+
+        self.points.clear()
+        self.curves.clear()
+        self.surfaces.clear()
+        self.solids.clear()
 
     def set_length_unit(self, length_unit: LengthUnits):
         old_factor = self.length_unit_factor
@@ -117,103 +153,72 @@ class GeometryInfo:
         """Get all curves connected to the given points."""
         curves_set = set()
         for point_id in point_ids:
-            for points_tuple, curve_id in self._curves_to_points.inverse.items():
-                if point_id in points_tuple:
-                    curves_set.add(curve_id[0])
+            curves_set.update(self._points_to_curves.get(point_id, []))
         return curves_set
 
     def points_to_surfaces(self, *point_ids: int) -> set[int]:
         """Get all surfaces connected to the given points."""
-        surfaces_set = set()
-        for curve_id in self.points_to_curves(*point_ids):
-            for curves_tuple, surface_id in self._surfaces_to_curves.inverse.items():
-                if curve_id in curves_tuple:
-                    surfaces_set.add(surface_id[0])
-        return surfaces_set
+        connected_curves = self.points_to_curves(*point_ids)
+        return self.curves_to_surfaces(*connected_curves)
 
     def points_to_solids(self, *point_ids: int) -> set[int]:
         """Get all solids connected to the given points."""
-        solids_set = set()
-        for surface_id in self.points_to_surfaces(*point_ids):
-            for surfaces_tuple, solid_id in self._solids_to_surfaces.inverse.items():
-                if surface_id in surfaces_tuple:
-                    solids_set.add(solid_id[0])
-        return solids_set
+        connected_surfaces = self.points_to_surfaces(*point_ids)
+        return self.surfaces_to_solids(*connected_surfaces)
 
     def curves_to_points(self, *curve_ids: int) -> set[int]:
         """Get all points connected to the given curves."""
         points_set = set()
         for curve_id in curve_ids:
-            for point_id in self._curves_to_points.get(curve_id, []):
-                points_set.add(point_id)
+            points_set.update(self._curves_to_points.get(curve_id, []))
         return points_set
 
     def curves_to_surfaces(self, *curve_ids: int) -> set[int]:
         """Get all surfaces connected to the given curves."""
         surfaces_set = set()
         for curve_id in curve_ids:
-            for curves_tuple, surface_id in self._surfaces_to_curves.inverse.items():
-                if curve_id in curves_tuple:
-                    surfaces_set.add(surface_id[0])
+            surfaces_set.update(self._curves_to_surfaces.get(curve_id, []))
         return surfaces_set
 
     def curves_to_solids(self, *curve_ids: int) -> set[int]:
         """Get all solids connected to the given curves."""
-        solids_set = set()
-        for surface_id in self.curves_to_surfaces(*curve_ids):
-            for surfaces_tuple, solid_id in self._solids_to_surfaces.inverse.items():
-                if surface_id in surfaces_tuple:
-                    solids_set.add(solid_id[0])
-        return solids_set
+        connected_surfaces = self.curves_to_surfaces(*curve_ids)
+        return self.surfaces_to_solids(*connected_surfaces)
 
     def surfaces_to_curves(self, *surface_ids: int) -> set[int]:
         """Get all curves connected to the given surfaces."""
         curves_set = set()
         for surface_id in surface_ids:
-            for curve_id in self._surfaces_to_curves.get(surface_id, []):
-                curves_set.add(curve_id)
+            curves_set.update(self._surfaces_to_curves.get(surface_id, []))
         return curves_set
 
     def surfaces_to_points(self, *surface_ids: int) -> set[int]:
         """Get all points connected to the given surfaces."""
-        points_set = set()
-        for curve_id in self.surfaces_to_curves(*surface_ids):
-            for point_id in self._curves_to_points.get(curve_id, []):
-                points_set.add(point_id)
-        return points_set
+        connected_curves = self.surfaces_to_curves(*surface_ids)
+        return self.curves_to_points(*connected_curves)
 
     def surfaces_to_solids(self, *surface_ids: int) -> set[int]:
         """Get all solids connected to the given surfaces."""
         solids_set = set()
         for surface_id in surface_ids:
-            for surfaces_tuple, solid_id in self._solids_to_surfaces.inverse.items():
-                if surface_id in surfaces_tuple:
-                    solids_set.add(solid_id[0])
+            solids_set.update(self._surfaces_to_solids.get(surface_id, []))
         return solids_set
 
     def solids_to_points(self, *volume_ids: int) -> set[int]:
         """Get all points connected to the given solids."""
-        points_set = set()
-        for surface_id in self.solids_to_surfaces(*volume_ids):
-            for curve_id in self._surfaces_to_curves.get(surface_id, []):
-                for point_id in self._curves_to_points.get(curve_id, []):
-                    points_set.add(point_id)
-        return points_set
+        connected_curves = self.solids_to_curves(*volume_ids)
+        return self.curves_to_points(*connected_curves)
 
     def solids_to_curves(self, *volume_ids: int) -> set[int]:
         """Get all curves connected to the given solids."""
-        curves_set = set()
-        for surface_id in self.solids_to_surfaces(*volume_ids):
-            for curve_id in self._surfaces_to_curves.get(surface_id, []):
-                curves_set.add(curve_id)
-        return curves_set
+        connected_surfaces = self.solids_to_surfaces(*volume_ids)
+        return self.surfaces_to_curves(*connected_surfaces)
 
     def solids_to_surfaces(self, *volume_ids: int) -> set[int]:
         """Get all surfaces connected to the given solids."""
         surfaces_set = set()
         for volume_id in volume_ids:
-            for surface_id in self._solids_to_surfaces.get(volume_id, []):
-                surfaces_set.add(surface_id)
+            surfaces_set.update(self._solids_to_surfaces.get(volume_id, []))
         return surfaces_set
 
     def is_curve_straight(self, curve_id: int) -> bool:
@@ -221,6 +226,9 @@ class GeometryInfo:
 
     def is_surface_straight(self, surface_id: int) -> bool:
         return surface_id in self._straight_surfaces
+
+    def contains_volumes(self) -> bool:
+        return bool(self.solids)
 
     def solid_center(self, solid_id: int) -> np.ndarray | None:
         return self._solids_centers.get(solid_id)
@@ -252,8 +260,17 @@ class GeometryInfo:
     def volume(self, *volume_ids: int) -> float:
         return sum(self._solids_volumes[volume_id] for volume_id in volume_ids)
 
+    def line_bounding_box(self, line_id: int) -> np.ndarray | None:
+        return self._bounding_lines.get(line_id)
+
+    def surface_bounding_box(self, surface_id: int) -> np.ndarray | None:
+        return self._bounding_surfaces.get(surface_id)
+
+    def solid_bounding_box(self, solid_id: int) -> np.ndarray | None:
+        return self._bounding_solids.get(solid_id)
+
     def _process_geometry_information(self):
-        """Process and store geometry information (length, areas, volumes, centers, etc.) from the Gmsh model."""
+        """Process and store geometry information (lenghts, areas, volumes, centers, etc.) from the Gmsh model."""
         self.clear()
 
         for dim, tag in gmsh.model.getEntities():
@@ -267,23 +284,28 @@ class GeometryInfo:
                 self._solids_to_surfaces[tag] = tuple(downwards)
                 self.solids.append(tag)
 
-                center, _ = self.process_center_entity(dim, tag)
+                center, _ = self.process_center_element(dim, tag)
                 self._solids_centers[tag] = center
+
+                bounding_solids_coords = np.asarray(gmsh.model.getBoundingBox(dim, tag)) * self.length_unit_factor
+                self._bounding_solids[tag] = bounding_solids_coords
 
             elif dim == 2:
                 self._surfaces_areas[tag] = mass * (self.length_unit_factor**2)
                 self._surfaces_to_curves[tag] = tuple(downwards)
                 self.surfaces.append(tag)
 
-                center, uv_mid = self.process_center_entity(dim, tag)
+                center, uv_mid = self.process_center_element(dim, tag)
                 self._surfaces_centers[tag] = center
 
                 normal = gmsh.model.getNormal(tag, uv_mid)
                 curvature = gmsh.model.getCurvature(dim, tag, uv_mid)
-
                 self._surfaces_normals[tag] = normal
 
-                if np.any(np.isclose(curvature, 0, atol=1e-8)):
+                bounding_surf_coords = np.asarray(gmsh.model.getBoundingBox(dim, tag)) * self.length_unit_factor
+                self._bounding_surfaces[tag] = bounding_surf_coords
+
+                if np.allclose(curvature, 0):
                     self._straight_surfaces.add(tag)
 
             elif dim == 1:
@@ -291,56 +313,130 @@ class GeometryInfo:
                 self._curves_to_points[tag] = tuple(downwards)
                 self.curves.append(tag)
 
-                center, uv_mid = self.process_center_entity(dim, tag)
-                center = np.array(gmsh.model.get_value(dim, tag, uv_mid)) * self.length_unit_factor
+                center, uv_mid = self.process_center_element(dim, tag)
                 curvature = gmsh.model.getCurvature(dim, tag, uv_mid)
-
                 self._curves_centers[tag] = center
-                if np.any(np.isclose(curvature, 0, atol=1e-8)):
+
+                bounding_lines_coords = np.asarray(gmsh.model.getBoundingBox(dim, tag)) * self.length_unit_factor
+                self._bounding_lines[tag] = bounding_lines_coords
+
+                if np.allclose(curvature, 0):
                     self._straight_curves.add(tag)
 
             elif dim == 0:
                 self.points.append(tag)
-                center, uv_mid = self.process_center_entity(dim, tag)
-                center = np.array(gmsh.model.get_value(dim, tag, uv_mid)) * self.length_unit_factor
+                center, uv_mid = self.process_center_element(dim, tag)
                 self._points_centers[tag] = center
 
+        self._create_inverse_maps()
+
     def _process_curves_normals(self):
+        """
+        This is not a mathematically rigorous concept.
+
+        It is just a quick and dirty way to find a vector pointing
+        outwards of a geometry in the location of the curve center.
+
+        It may be used for many purposes, such as positioning symbols, for example.
+        """
+
         for curve in self.curves:
-            center_coord = self._curves_centers[curve]
-            adjacent_surfaces = set(self.curves_to_surfaces(curve))
+            adjacent_surfaces = self.curves_to_surfaces(curve)
+
+            if not adjacent_surfaces:
+                continue
 
             normals_sum = np.zeros(3)
-            for surface in adjacent_surfaces:
-                center_uv = gmsh.model.get_parametrization(2, surface, center_coord)
-                normals_sum += gmsh.model.get_normal(surface, center_uv)
 
-            self._curves_normals[curve] = normals_sum / np.linalg.norm(normals_sum)
+            # First try to get normals from the surfaces
+            for surf_id in adjacent_surfaces:
+                normals_sum += self._surfaces_normals[surf_id]
+
+            if np.allclose(normals_sum, 0):
+                # If the sum of the surface normals is zero, estimate the "curve normal"
+                # by summing the vectors that point to each adjacent surface center.
+                curve_center = self.curve_center(curve)
+                for surf_id in adjacent_surfaces:
+                    surf_center = self.surface_center(surf_id)
+                    vector = curve_center - surf_center
+                    normals_sum += vector / np.linalg.norm(vector)
+
+            # normalize the sum
+            norm = np.linalg.norm(normals_sum)
+            if norm > 1e-9:
+                normals_sum /= norm
+
+            self._curves_normals[curve] = normals_sum
 
     def _process_points_normals(self):
+        """
+        This is not a mathematically rigorous concept.
+
+        It is just a quick and dirty way to find a vector pointing
+        outwards of a geometry in the location of the point center.
+
+        It may be used for many purposes, such as positioning symbols, for example.
+        """
+
         for point in self.points:
-            center_coord = self._points_centers[point]
-            adjacent_surfaces = set(self.points_to_surfaces(point))
+            adjacent_curves = self.points_to_curves(point)
+
+            if not adjacent_curves:
+                continue
 
             normals_sum = np.zeros(3)
-            for surface in adjacent_surfaces:
-                center_uv = gmsh.model.get_parametrization(2, surface, center_coord)
-                normals_sum += gmsh.model.get_normal(surface, center_uv)
 
-            self._points_normals[point] = normals_sum / np.linalg.norm(normals_sum)
+            for curve_id in adjacent_curves:
+                normals_sum += self._curves_normals[curve_id]
 
-    def process_center_entity(self, dim: int, tag: int) -> tuple[np.ndarray, np.ndarray | None]:
+            if np.allclose(normals_sum, 0):
+                # If the sum of the curve normals is zero, estimate the "point normal"
+                # by summing the vectors that point to each adjacent curve center.
+                point_center = self.point_center(point)
+                for curve_id in adjacent_curves:
+                    curve_center = self.curve_center(curve_id)
+                    vector = point_center - curve_center
+                    normals_sum += vector / np.linalg.norm(vector)
+
+            # normalize the sum
+            norm = np.linalg.norm(normals_sum)
+            if norm > 1e-9:
+                normals_sum /= norm
+
+            self._points_normals[point] = normals_sum
+
+    def process_center_element(self, dim: int, tag: int) -> np.ndarray:
         """Process the center of an element based on its dimension."""
         if dim != 3:
             uv_min, uv_max = gmsh.model.get_parametrization_bounds(dim, tag)
-            uv_mid = (np.array(uv_min) + np.array(uv_max)) / 2
-            center = np.array(gmsh.model.get_value(dim, tag, uv_mid)) * self.length_unit_factor
+            uv_mid = (uv_min + uv_max) / 2
+            center = gmsh.model.get_value(dim, tag, uv_mid) * self.length_unit_factor
 
         else:
             center = np.asarray(gmsh.model.occ.getCenterOfMass(dim, tag)) * self.length_unit_factor
             uv_mid = None
 
         return center, uv_mid
+
+    def _create_inverse_maps(self):
+        surfaces_to_solids = defaultdict(list)
+
+        for solid, surfaces in self._solids_to_surfaces.items():
+            for surface in surfaces:
+                surfaces_to_solids[surface].append(solid)
+        self._surfaces_to_solids = {surf: tuple(sol) for surf, sol in surfaces_to_solids.items()}
+
+        curves_to_surfaces = defaultdict(list)
+        for surface, curves in self._surfaces_to_curves.items():
+            for curve in curves:
+                curves_to_surfaces[curve].append(surface)
+        self._curves_to_surfaces = {curv: tuple(surf) for curv, surf in curves_to_surfaces.items()}
+
+        points_to_curves = defaultdict(list)
+        for curve, points in self._curves_to_points.items():
+            for point in points:
+                points_to_curves[point].append(curve)
+        self._points_to_curves = {point: tuple(curv) for point, curv in points_to_curves.items()}
 
     def _get_length_unit_factor(self, length_unit: LengthUnits) -> float:
         if length_unit == "millimeter":
@@ -349,3 +445,146 @@ class GeometryInfo:
             return 0.0254
         else:
             raise ValueError(f'Invalid length unit "{length_unit}"')
+
+    def cache_geometry_information(self):
+        """Caches the complete geometry state before modification."""
+
+        self._cache_points = deepcopy(self.points)
+        self._cache_curves = deepcopy(self.curves)
+        self._cache_surfaces = deepcopy(self.surfaces)
+        self._cache_solids = deepcopy(self.solids)
+
+        self._cache_solids_to_surfaces = deepcopy(self._solids_to_surfaces)
+        self._cache_surfaces_to_curves = deepcopy(self._surfaces_to_curves)
+        self._cache_curves_to_points = deepcopy(self._curves_to_points)
+
+        self._cache_surfaces_to_solids = deepcopy(self._surfaces_to_solids)
+        self._cache_curves_to_surfaces = deepcopy(self._curves_to_surfaces)
+        self._cache_points_to_curves = deepcopy(self._points_to_curves)
+
+        self._cache_solids_centers = deepcopy(self._solids_centers)
+        self._cache_surfaces_centers = deepcopy(self._surfaces_centers)
+        self._cache_curves_centers = deepcopy(self._curves_centers)
+        self._cache_points_centers = deepcopy(self._points_centers)
+
+        self._cache_surfaces_normals = deepcopy(self._surfaces_normals)
+        self._cache_curves_normals = deepcopy(self._curves_normals)
+        self._cache_points_normals = deepcopy(self._points_normals)
+
+        self._cache_surfaces_areas = deepcopy(self._surfaces_areas)
+        self._cache_curves_lengths = deepcopy(self._curves_lengths)
+        self._cache_solids_volumes = deepcopy(self._solids_volumes)
+
+        self._cache_straight_curves = deepcopy(self._straight_curves)
+        self._cache_straight_surfaces = deepcopy(self._straight_surfaces)
+
+    def restore_data_from_cache(self):
+        """Restores the complete geometry state from the cache."""
+
+        self.points = deepcopy(self._cache_points)
+        self.curves = deepcopy(self._cache_curves)
+        self.surfaces = deepcopy(self._cache_surfaces)
+        self.solids = deepcopy(self._cache_solids)
+
+        self._solids_to_surfaces = deepcopy(self._cache_solids_to_surfaces)
+        self._surfaces_to_curves = deepcopy(self._cache_surfaces_to_curves)
+        self._curves_to_points = deepcopy(self._cache_curves_to_points)
+        self._surfaces_to_solids = deepcopy(self._cache_surfaces_to_solids)
+        self._curves_to_surfaces = deepcopy(self._cache_curves_to_surfaces)
+        self._points_to_curves = deepcopy(self._cache_points_to_curves)
+
+        self._solids_centers = deepcopy(self._cache_solids_centers)
+        self._surfaces_centers = deepcopy(self._cache_surfaces_centers)
+        self._curves_centers = deepcopy(self._cache_curves_centers)
+        self._points_centers = deepcopy(self._cache_points_centers)
+
+        self._surfaces_normals = deepcopy(self._cache_surfaces_normals)
+        self._curves_normals = deepcopy(self._cache_curves_normals)
+        self._points_normals = deepcopy(self._cache_points_normals)
+
+        self._surfaces_areas = deepcopy(self._cache_surfaces_areas)
+        self._curves_lengths = deepcopy(self._cache_curves_lengths)
+        self._solids_volumes = deepcopy(self._cache_solids_volumes)
+
+        self._straight_curves = deepcopy(self._cache_straight_curves)
+        self._straight_surfaces = deepcopy(self._cache_straight_surfaces)
+
+        self._cache_points.clear()
+        self._cache_curves.clear()
+
+    def add_point(self, point_id: int, center: np.ndarray, normal: np.ndarray = None):
+        """Adds a new point to the geometry."""
+
+        if point_id not in self.points:
+            self.points.append(point_id)
+            self._points_centers[point_id] = center
+            if normal is not None:
+                self._points_normals[point_id] = normal
+
+    def add_curve(
+        self,
+        curve_id: int,
+        point_ids: tuple[int, ...],
+        center: np.ndarray,
+        length: float,
+        normal: np.ndarray = None,
+        is_straight: bool = False,
+        bouding_box: np.ndarray = None,
+    ):
+        """Adds a new curve to the geometry."""
+        if curve_id not in self.curves:
+            self.curves.append(curve_id)
+            self._curves_to_points[curve_id] = point_ids
+            self._curves_centers[curve_id] = center
+            self._curves_lengths[curve_id] = length
+
+            if normal is not None:
+                self._curves_normals[curve_id] = normal
+
+            if is_straight:
+                self._straight_curves.add(curve_id)
+
+            if bouding_box is not None:
+                self._bounding_lines[curve_id] = bouding_box
+
+    def add_surface(
+        self,
+        surface_id: int,
+        curve_ids: tuple[int, ...],
+        center: np.ndarray,
+        normal: np.ndarray,
+        area: float,
+        is_straight: bool = False,
+        bounding_box: np.ndarray = None,
+    ):
+        """Adds a new surface to the geometry."""
+
+        if surface_id not in self.surfaces:
+            self.surfaces.append(surface_id)
+            self._surfaces_to_curves[surface_id] = curve_ids
+            self._surfaces_centers[surface_id] = center
+            self._surfaces_normals[surface_id] = normal
+            self._surfaces_areas[surface_id] = area
+
+            if is_straight:
+                self._straight_surfaces.add(surface_id)
+
+            if bounding_box is not None:
+                self._bounding_surfaces[surface_id] = bounding_box
+
+    def update_solid_adjacencies(self, solid_id: int, new_surface_id: int, old_surface_id: int):
+        """
+        Updates the adjacencies of a solid, replacing an old surface with a new one.
+        """
+        solid_surfaces = list(self._solids_to_surfaces.get(solid_id, []))
+        if old_surface_id in solid_surfaces:
+            solid_surfaces.remove(old_surface_id)
+
+        if new_surface_id not in solid_surfaces:
+            solid_surfaces.append(new_surface_id)
+
+        self._solids_to_surfaces[solid_id] = tuple(solid_surfaces)
+
+    def rebuild_inverse_maps(self):
+        """Rebuilds the inverse maps for the geometry."""
+        self._create_inverse_maps()
