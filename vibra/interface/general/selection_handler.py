@@ -136,7 +136,7 @@ class SelectionHandler(QObject):
             if self.geometry_surfaces:
                 new_geometry_selection["surfaces"] = mesh.all_surface_ids() - self.geometry_surfaces
             if self.geometry_volumes:
-                new_geometry_selection["volumes"] = mesh.all_solid_ids() - self.geometry_volumes
+                new_geometry_selection["volumes"] = mesh.all_volume_ids() - self.geometry_volumes
             if new_geometry_selection:
                 self.set_geometry_selection(**new_geometry_selection)
 
@@ -177,7 +177,7 @@ class SelectionHandler(QObject):
         if mesh is None:
             return
 
-        self.set_geometry_selection(volumes=mesh.all_solid_ids())
+        self.set_geometry_selection(volumes=mesh.all_volume_ids())
 
     def select_all_geometry(self):
         mesh = self.project.model.mesh
@@ -188,7 +188,7 @@ class SelectionHandler(QObject):
             points=mesh.all_point_ids(),
             lines=mesh.all_line_ids(),
             surfaces=mesh.all_surface_ids(),
-            volumes=mesh.all_solid_ids(),
+            volumes=mesh.all_volume_ids(),
         )
 
     def select_all_nodes(self):

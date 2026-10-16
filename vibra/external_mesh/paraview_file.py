@@ -11,13 +11,13 @@ class ParaviewFile:
         self.folder_name = "exported_vtu_files"
         self.element_type = "solid285_tet4"
         self.nodal_coordinates = None
-        self.connectivity = None       
+        self.connectivities = None       
 
     def set_nodal_coordinates(self, nodal_coordinates):
         self.nodal_coordinates = nodal_coordinates
 
     def set_connectivity(self, connectivity):
-        self.connectivity = connectivity
+        self.connectivities = connectivity
 
     def set_element_type(self, element_type):
         self.element_type = element_type
@@ -45,8 +45,8 @@ class ParaviewFile:
             order = [0, 1, 2, 3, 4, 5, 6, 7, 8, 11, 13, 9, 16, 18, 19, 17, 10, 12, 14, 15]
         else:
             return
-        _data = self.connectivity[:, 1:]
-        self.connectivity[:, 1:] = _data[:, order]
+        _data = self.connectivities[:, 1:]
+        self.connectivities[:, 1:] = _data[:, order]
 
     def create_output_data_folder(self):
         if not os.path.exists(self.folder_name):
@@ -54,7 +54,7 @@ class ParaviewFile:
 
     def process_mesh_and_generate_vtu_file(self):
              
-        for i, key, connect in enumerate(self.connectivity.items()):
+        for i, key, connect in enumerate(self.connectivities.items()):
             #conectivity = [185_TETRA, 185_HEXA, 186_TETRA, 186_HEXA, 187_TETRA] 
             self.generate_vtu(connect, i)
             
@@ -67,7 +67,7 @@ class ParaviewFile:
 
         # Pega a quantidade de nos e de elementos
         nnode = len(self.nodal_coordinates)
-        nel = len(self.connectivity)
+        nel = len(self.connectivities)
 
         print(f"Número de nós: {nnode} \nNúmero de elementos: {nel}")
         
@@ -107,7 +107,7 @@ class ParaviewFile:
 
         # Criando as células
         self.VTK_type = self.get_vtk_cell()
-        for node_ids in self.connectivity[:, 1:]:
+        for node_ids in self.connectivities[:, 1:]:
             k = len(node_ids)
             my_vtk_dataset.InsertNextCell(self.VTK_type, k, node_ids)
 

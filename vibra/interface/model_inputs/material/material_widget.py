@@ -1,5 +1,7 @@
+import platform
 from copy import deepcopy
 from enum import IntEnum
+from pathlib import Path
 from random import randint
 from typing import Optional
 
@@ -7,14 +9,16 @@ from molde import Color
 from molde.colors import color_names
 from PySide6.QtCore import QSize, Qt, Signal
 from PySide6.QtGui import QKeyEvent
-from PySide6.QtWidgets import QAbstractItemDelegate, QAbstractItemView, QHeaderView, QTableWidgetItem, QWidget
+from PySide6.QtWidgets import QAbstractItemDelegate, QAbstractItemView, QFileDialog, QHeaderView, QTableWidgetItem, QWidget
 
 from vibra import app
 from vibra.engine.properties import MaterialLibrary
 from vibra.engine.properties.material import Material
 from vibra.errors import InvalidMaterialError
+from vibra.interface import error_title
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.pick_color_input import PickColorInput
+from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.ui_generated.model.material.material_widget_ui import MaterialWidget_UI
 from vibra.utils.interface_utils import block_signals, qt_run_delayed
 
@@ -40,6 +44,8 @@ class MaterialWidget(MaterialWidget_UI):
         self._create_connections()
         self._config_widgets()
         self.reload_table_of_materials()
+
+        self.desktop_path = Path.home() / "Desktop"
 
     @ property
     def properties(self):
@@ -489,3 +495,79 @@ class MaterialWidget(MaterialWidget_UI):
             self.properties._remove_surface_property("material", surface_id=surf_id)
 
         app().project.update_model_properties_file()
+
+    def export_library_callback(self):
+        """
+        Call this method if you're interested in exporting material library data.
+        """
+
+        last_path = app().config.get_last_folder_for("exported_material_library_folder", default=self.desktop_path)
+        ext_filter = ("Material library file (*.json)")
+
+        kwargs = {}
+        if platform.system() == "Linux":
+            kwargs["options"] = QFileDialog.Option.DontUseNativeDialog
+
+        file_path, check = QFileDialog.getSaveFileName(
+            self,
+            "Export the material library data",
+            str(last_path),
+            filter=ext_filter,
+            **kwargs,
+        )
+
+        if not check:
+            return False
+
+        app().config.write_last_folder_path_in_file("exported_material_library_folder", file_path)
+        app().project.project_writer.write_material_library(self.properties.material_library, export_path=Path(file_path))
+
+        return True
+
+    def import_library_callback(self):
+        """
+        Call this method if you're interested in importing material library data.
+        """
+
+        last_path = app().config.get_last_folder_for("imported_material_library_folder", default=self.desktop_path)
+        ext_filter = ("Material library file (*.json)")
+
+        kwargs = {}
+        if platform.system() == "Linux":
+            kwargs["options"] = QFileDialog.Option.DontUseNativeDialog
+
+        file_path, check = QFileDialog.getOpenFileName(
+            self,
+            "Import the material library file",
+            str(last_path),
+            filter=ext_filter,
+            **kwargs,
+        )
+
+        if not check:
+            return False
+
+        app().config.write_last_folder_path_in_file("imported_material_library_folder", file_path)
+
+        try:
+            material_library = app().project.project_reader.read_material_library(import_path=Path(file_path))
+            if not isinstance(material_library, MaterialLibrary):
+                return False
+
+            materials_to_remove = list(self.properties.material_library.values())
+            for material in materials_to_remove:
+                self.properties.remove_material(material)
+
+            self.update_properties_after_material_removal(materials_to_remove)
+            self.properties.material_library = material_library
+
+        except Exception:
+            title = "Error when importing the material library"
+            message = "An error has been detected while importing the material library file. The import "
+            message += "action was interrupted, and the current material library will not be modified."
+            PrintMessageInput([error_title, title, message])
+            return False
+
+        self.reload_table_of_materials()
+
+        return True

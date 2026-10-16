@@ -1,13 +1,15 @@
 import logging
+from collections.abc import Callable, Iterable
 from copy import deepcopy
+from enum import IntEnum
 from numbers import Number
 from pathlib import Path
-from typing import Callable, Optional
+from typing import Optional
 
 import numpy as np
 from PIL.Image import Image
 
-from vibra import SUPPORTED_GEOMETRY_EXTENSIONS, errors
+from vibra import errors
 from vibra.engine.analysis_info import (
     AnalysisID,
     AnalysisMethod,
@@ -19,49 +21,71 @@ from vibra.engine.analysis_info import (
 from vibra.engine.dissipation_models.porous_materials_models import PorousMaterialModels
 from vibra.engine.dissipation_models.viscous_thermal_loss_models import ViscousThermalLossModels
 
-# 1d elements - acoustic
-from vibra.engine.elements.elements_1d import ACT_LINE_2, ACT_LINE_3
-from vibra.engine.elements.elements_2d import (
-    ACT_QUADRANGLE_4,
-    ACT_QUADRANGLE_8,
-    # 2d elements - acoustic
-    ACT_TRIANGLE_3,
-    ACT_TRIANGLE_6,
-    # 2D elements - structural
-    STRUCT_TRIANGLE_3,
+# 1d elements
+from vibra.engine.elements.elements_1d import (
+    AcousticLine2,
+    AcousticLine3,
+    StructuralLine2,
+    StructuralLine3,
 )
+
+# 2d elements
+from vibra.engine.elements.elements_2d import (
+    AcousticQuadrangle4,
+    AcousticQuadrangle8,
+    AcousticTriangle3,
+    AcousticTriangle6,
+    StructuralQuadrangle4,
+    StructuralQuadrangle8,
+    StructuralTriangle3,
+    StructuralTriangle6,
+)
+
+# 3d elements
 from vibra.engine.elements.elements_3d import (
-    # 3d elements - acoustic
-    ACT_HEXAHEDRON_8C,
-    ACT_HEXAHEDRON_20C,
-    ACT_TETRAHEDRON_4C,
-    ACT_TETRAHEDRON_10C,
-    # 3d elements - structural
-    STRUCT_HEXAHEDRON_8,
-    STRUCT_HEXAHEDRON_20,
-    STRUCT_TETRAHEDRON_4S,
-    STRUCT_TETRAHEDRON_10S,
+    AcousticHexahedron8,
+    AcousticHexahedron20,
+    AcousticTetrahedron4,
+    AcousticTetrahedron10,
+    StructuralHexahedron8,
+    StructuralHexahedron20,
+    StructuralTetrahedron4,
+    StructuralTetrahedron10,
 )
 from vibra.engine.geometry.geometry import LengthUnits
 from vibra.engine.mesher.degrees_of_freedom_decoupling_new import DegreesOfFreedomDecoupling
 from vibra.engine.mesher.element_setup import GMSH_VISUAL_MESH
 from vibra.engine.mesher.mesh import Mesh
-from vibra.engine.mesher.mesh_setup import HEXAHEDRON_8, HEXAHEDRON_20, TETRAHEDRON_4, TETRAHEDRON_10, ElementTopology, MeshSetup
+from vibra.engine.mesher.mesh_setup import ElementTopology, Hexahedron8, Hexahedron20, MeshSetup, Tetrahedron4, Tetrahedron10
+from vibra.engine.model_domains_processor import ModelDomainsProcessor
+from vibra.engine.model_selection_tools import ModelSelectionTools
 from vibra.engine.properties.fluid import Fluid
+from vibra.engine.properties.material import Material
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.engine.solution import HarmonicSolution, Solution
 from vibra.engine.transfer_impedances.perforated_plate_models import (
     PerforatedPlateModels,
 )
 from vibra.errors import IncompleteSetupError
+from vibra.extensions import SUPPORTED_GEOMETRY_EXTENSIONS
 from vibra.interface import error_title
 from vibra.interface.general.print_message_input import PrintMessageInput
 
 
+class CouplingType(IntEnum):
+    DISABLED = 0
+    WEAK = 1
+    STRONG = 2
+
+
 class Model:
     def __init__(self, disable_resume_callback: Optional[Callable] = None):
+
         self.disable_resume_callback = disable_resume_callback
         self.reset_variables()
+
+        self.domains_processor = ModelDomainsProcessor(self)
+        self.model_selection_tools = ModelSelectionTools(self)
 
     def reset_variables(self):
         self.name: str = "Model"
@@ -70,7 +94,10 @@ class Model:
         self.length_unit: LengthUnits = "millimeter"
         self.mesh_setup: Optional[MeshSetup] = None
         self.analysis_setup: Optional[AnalysisSetup] = None
+
         self.solution: Optional[Solution] = None
+        self.acoustic_solution: Optional[Solution] = None
+        self.structural_solution: Optional[Solution] = None
 
         # TODO: review these variables
         self.mesh: Optional[Mesh] = None
@@ -79,13 +106,12 @@ class Model:
         self.initial_element_size = None
         self.geometry_qf = 1.0
 
-        self.list_frequencies = list()
+        self.coupling_type = CouplingType.WEAK
 
-        self.decouple_info = dict()
-        self.nodes_mapping = dict()
+        self.current_frequencies = []
 
-        self.solid_acoustic_element = None
-        self.surface_acoustic_element = None
+        self.decouple_info = {}
+        self.nodes_mapping = {}
 
         self.acoustic_element_1d = None
         self.acoustic_element_2d = None
@@ -98,6 +124,25 @@ class Model:
         self.properties = ModelProperties(self.disable_resume_callback)
 
         self.reset_dissipation_model_properties()
+
+    @property
+    def volumes_of_domain(self):
+        return self.domains_processor.volumes_of_domain
+
+    @property
+    def drop_domain(self):
+        if self.coupling_type != CouplingType.STRONG:
+            return len(self.volumes_of_domain) != 1
+
+        return False
+
+    @property
+    def total_dofs(self):
+        return self.domains_processor.total_dof
+
+    @property
+    def gm_shape(self):
+        return (self.total_dofs, self.total_dofs)
 
     @property
     def element_topology(self) -> ElementTopology | None:
@@ -131,7 +176,7 @@ class Model:
         if isinstance(self.analysis_setup, HarmonicAnalysisSetup):
             return self.analysis_setup.solution_steps_mask
 
-        return list()
+        return []
 
     @property
     def global_damping(self) -> Optional[np.ndarray]:
@@ -160,6 +205,141 @@ class Model:
         except Exception:
             return False
 
+    def get_mapped_nodes(self, node_ids: list[int] | np.ndarray, domain: str) -> np.ndarray:
+        """
+        This method returns the mapped nodes indices according to the domain.
+
+        Parameters
+        ----------
+        nodes: list or np.ndarray
+            A list or an array with the nodes be mapped.
+
+        domain: str
+            The domain label (acoustic or structural).
+
+        Return
+        ------
+        mapped_nodes: np.ndarray
+            An array with the mapped nodes indices.
+        """
+
+        # process the dofs of selected nodes
+        if domain == "acoustic":
+            mapped_nodes = self.domains_processor.acoustic_nodes_mapping[node_ids]
+        else:
+            mapped_nodes = self.domains_processor.structural_nodes_mapping[node_ids]
+
+        return mapped_nodes
+
+    def get_dof_indices_from_nodes(self, nodes: list[int] | np.ndarray, domain: str) -> np.ndarray:
+        """
+        This method returns the global DOFs indices associated with a set of nodes.
+
+        Parameters
+        ----------
+        nodes: list or np.ndarray
+            A list or an array with the nodes in which the global DOFs
+            indices must be evaluated.
+
+        domain: str
+            The domain label (acoustic or structural).
+
+        Return
+        ------
+        global_dof_indices: np.ndarray
+            An array with the global DOFs indices.
+        """
+
+        # process the dofs of selected nodes
+        if domain == "acoustic":
+            dof_per_node = self.acoustic_element_3d.dof_per_node
+        else:
+            dof_per_node = self.structural_element_3d.dof_per_node
+
+        _nodes = self.get_mapped_nodes(nodes, domain)
+        global_dof_indices = dof_per_node * _nodes.reshape(-1, 1) + np.arange(dof_per_node, dtype=int)
+
+        return global_dof_indices
+
+    def process_connectivities_at_fluid_structure_interfaces(self, plot_element_normals: bool = False):
+
+        logging.info("Processing the fluid-structure interfaces connectivities... [1/3]")
+
+        structural_domains = self.volumes_of_domain.get("structural", [])
+        surface_ids = list(self.domains_processor.fluid_structure_interfaces.keys())
+
+        mask = np.isin(self.mesh.faces_connectivity[:, 1], surface_ids)
+        interface_connectivities = self.mesh.faces_connectivity[mask, :]
+
+        # reorder the connectivities
+        self.structural_element_2d.reorder_connect(interface_connectivities[:, 4:].copy())
+
+        # clears the element normals data attribute
+        self.mesh.element_normals_data.clear()
+
+        logging.info("Processing the fluid-structure interfaces connectivities... [2/3]")
+
+        # initialize logging variables
+        last_progress = 0
+        n_el = len(self.structural_element_2d.connectivities)
+
+        # correct the connectivities order
+        for i, elem2d_id in enumerate(interface_connectivities[:, 0]):
+
+            progress = int((100 * (i / n_el) // 5) * 5)
+            if progress != last_progress:
+                logging.info(f"Processing the 2D elements connectivities... [{progress}/100]")
+
+            elem3d_ids = self.mesh.face_to_solid_element.get(elem2d_id, [])
+
+            if len(elem3d_ids) != 2:
+                print(f"The element 2D {elem2d_id} touches the solid elements: {[int(elem_id) for elem_id in elem3d_ids]}")
+                continue
+
+            for elem3d_id in self.mesh.face_to_solid_element.get(elem2d_id, []):
+                vol_id = self.mesh.solids_connectivity[elem3d_id, 1]
+                face_coords = self.mesh.nodal_coordinates[self.structural_element_2d.connectivities[i, :], 1:]
+                solid_coords = self.mesh.nodal_coordinates[self.mesh.solids_connectivity[elem3d_id, 4:], 1:]
+                
+                if vol_id in structural_domains:
+                    is_inverted = self.mesh.is_element_normal_vector_inverted(elem2d_id, face_coords, solid_coords, plot_element_normals=plot_element_normals)
+                    if not is_inverted:
+                        continue
+
+                    self.structural_element_2d.invert_element_connectivity(i)
+                    break
+
+    def get_solid_elements_from_nodes(self, node_ids: list[int] | np.ndarray, domain: str):
+        """
+        This method processes the solid elements whose connectivities contain at least one
+        element of the "node_ids" list or array.
+
+        Parameters
+        ----------
+        node_ids: list or np.ndarray
+            A list or an array of the node indices.
+
+        domain: str
+            The domain label (acoustic or structural)
+
+        Return
+        ------
+        valid_element_ids: np.ndarray
+            An array with the valid element IDs according to the selected domain.
+
+        """
+
+        mask = np.sum(np.isin(self.mesh.solids_connectivity[:, 4:], node_ids), axis=1) >= 1
+        element_ids = self.mesh.solids_connectivity[mask, 0]
+
+        element_ids_domain = self.domains_processor.elements_of_domain.get(domain, [])
+        valid_element_ids = np.intersect1d(element_ids, element_ids_domain)
+
+        return valid_element_ids
+
+    def check_selected_ids(self, input_ids: str | int | Iterable, selection_label: str, domain: str = "both", single_id: bool = False):
+        return self.model_selection_tools.check_selected_ids(input_ids, selection_label, domain=domain, single_id=single_id)
+
     def reset_current_solution(self):
         self.solution = None
 
@@ -169,9 +349,9 @@ class Model:
         return analysis_setup
 
     def reset_dissipation_model_properties(self):
-        self.perforated_plate_impedance_data = dict()
-        self.porous_material_properties = dict()
-        self.viscous_thermal_model_properties = dict()
+        self.perforated_plate_impedance_data = {}
+        self.porous_material_properties = {}
+        self.viscous_thermal_model_properties = {}
 
     def set_length_unit(self, length_unit: str = "millimeter"):
         self.length_unit = length_unit
@@ -192,10 +372,7 @@ class Model:
             path = str(path)
 
         ext = path.split(".")[-1].lower()
-        if ext in SUPPORTED_GEOMETRY_EXTENSIONS:
-            return True
-
-        return False
+        return ext in SUPPORTED_GEOMETRY_EXTENSIONS
 
     def set_properties(self, properties):
         self.properties = properties
@@ -291,7 +468,7 @@ class Model:
             frequencies = deepcopy(self.frequencies)
 
         if frequencies is None:
-            return list()
+            return []
 
         all_true = [True for _ in range(len(frequencies))]
         table_frequencies = self.properties.process_all_tables_frequencies_vectors()
@@ -302,7 +479,7 @@ class Model:
         if len(table_frequencies) != 1:
             return all_true
 
-        solution_steps_mask = list()
+        solution_steps_mask = []
         _table_frequencies = np.array(table_frequencies[0], dtype=float)
 
         for freq in _table_frequencies:
@@ -312,19 +489,21 @@ class Model:
         return solution_steps_mask
 
     def has_spectral_content_been_modified(self):
-        if isinstance(self.analysis_setup, ModalAnalysisSetup):
+
+        if isinstance(self.analysis_setup, ModalAnalysisSetup | None):
             return False
 
         cond_A = self.analysis_setup.frequency_spacing == FrequencySpacing.USER_DEFINED
         cond_B = len(self.solution_steps_mask) != int(sum(self.solution_steps_mask))
+
         return cond_A or cond_B
 
     def modify_analysis_setup_to_filter_zero_frequency(self, analysis_setup: AnalysisSetup) -> AnalysisSetup:
 
         if not isinstance(analysis_setup, HarmonicAnalysisSetup):
             return analysis_setup
-        
-        if not analysis_setup.analysis_id == AnalysisID.STRUCTURAL_HARMONIC:
+
+        if not AnalysisID.is_harmonic(analysis_setup.analysis_id):
             return analysis_setup
 
         table_exists = self.properties.check_if_there_are_tables_at_the_model()
@@ -354,7 +533,7 @@ class Model:
         else:
             analysis_setup.frequencies = _frequencies[_frequencies != 0]
 
-        new_mask = list()
+        new_mask = []
         for j, freq in enumerate(_frequencies):
             if freq == 0:
                 if table_exists:
@@ -375,29 +554,24 @@ class Model:
         return False
 
     def is_there_a_valid_mesh(self):
-
         if isinstance(self.geometry_path, str | Path):
             if self.is_there_a_geometry_imported():
                 if not isinstance(self.mesh_setup, MeshSetup):
                     return False
 
-        disconnected_nodes = bool(self.mesh.disconnected_nodes_data)
+        assert self.mesh is not None
+
+        disconnected_nodes = bool(self.mesh.disconnected_nodes)
         collapsed_elements = bool(self.mesh.collapsed_elements_data)
 
         if disconnected_nodes or collapsed_elements:
             return False
 
         if self.mesh.surfaces_from_volume:
-            if self.mesh.solids_connectivity.any():
-                return True
-            else:
-                return False
+            return self.mesh.solids_connectivity.any()
 
         if self.mesh.lines_from_surface:
-            if self.mesh.faces_connectivity.any():
-                return True
-            else:
-                return False
+            return self.mesh.faces_connectivity.any()
 
         return False
 
@@ -466,15 +640,14 @@ class Model:
         if isinstance(frequencies, np.ndarray):
             frequencies = list(frequencies)
 
-        condition_1 = self.list_frequencies == list()
-        condition_2 = not self.properties.check_if_there_are_tables_at_the_model()
+        empty_list = self.current_frequencies == []
+        table_exists = self.properties.check_if_there_are_tables_at_the_model()
 
-        if condition_1 or condition_2:
-            self.list_frequencies = frequencies
+        if empty_list or not table_exists:
+            self.current_frequencies = frequencies
             return False
 
-        if self.list_frequencies != frequencies:
-            return True
+        return not np.allclose(self.current_frequencies, frequencies, atol=1e-12)
 
     def get_tabular_frequency_setup(self) -> None | tuple:
         """
@@ -494,17 +667,17 @@ class Model:
     def get_structural_elements(self):
         element_type = self.element_topology
 
-        if element_type == TETRAHEDRON_4:
-            return STRUCT_TETRAHEDRON_4S(self), STRUCT_TRIANGLE_3(self), None
+        if element_type == Tetrahedron4:
+            return StructuralTetrahedron4(self), StructuralTriangle3(self), StructuralLine2(self)
 
-        elif element_type == TETRAHEDRON_10:
-            return STRUCT_TETRAHEDRON_10S(self), None, None
+        elif element_type == Tetrahedron10:
+            return StructuralTetrahedron10(self), StructuralTriangle6(self), StructuralLine3(self)
 
-        elif element_type == HEXAHEDRON_8:
-            return STRUCT_HEXAHEDRON_8(self), None, None
+        elif element_type == Hexahedron8:
+            return StructuralHexahedron8(self), StructuralQuadrangle4(self), StructuralLine2(self)
 
-        elif element_type == HEXAHEDRON_20:
-            return STRUCT_HEXAHEDRON_20(self), None, None
+        elif element_type == Hexahedron20:
+            return StructuralHexahedron20(self), StructuralQuadrangle8(self), StructuralLine3(self)
 
         else:
             raise NotImplementedError(f'Element type "{element_type}" is not supported yet.')
@@ -512,17 +685,17 @@ class Model:
     def get_acoustic_elements(self):
         element_type = self.element_topology
 
-        if element_type == TETRAHEDRON_4:
-            return ACT_TETRAHEDRON_4C(self), ACT_TRIANGLE_3(self), ACT_LINE_2(self)
+        if element_type == Tetrahedron4:
+            return AcousticTetrahedron4(self), AcousticTriangle3(self), AcousticLine2(self)
 
-        elif element_type == TETRAHEDRON_10:
-            return ACT_TETRAHEDRON_10C(self), ACT_TRIANGLE_6(self), ACT_LINE_3(self)
+        elif element_type == Tetrahedron10:
+            return AcousticTetrahedron10(self), AcousticTriangle6(self), AcousticLine3(self)
 
-        elif element_type == HEXAHEDRON_8:
-            return ACT_HEXAHEDRON_8C(self), ACT_QUADRANGLE_4(self), ACT_LINE_2(self)
+        elif element_type == Hexahedron8:
+            return AcousticHexahedron8(self), AcousticQuadrangle4(self), AcousticLine2(self)
 
-        elif element_type == HEXAHEDRON_20:
-            return ACT_HEXAHEDRON_20C(self), ACT_QUADRANGLE_8(self), ACT_LINE_3(self)
+        elif element_type == Hexahedron20:
+            return AcousticHexahedron20(self), AcousticQuadrangle8(self), AcousticLine3(self)
 
         else:
             raise NotImplementedError(f'Element type "{element_type}" is not supported yet.')
@@ -546,7 +719,7 @@ class Model:
         Parameter
         ---------
         node_ids: np.ndarray
-            The vector with the node indexes.
+            The vector with the node indices.
 
         Return
         ------
@@ -554,53 +727,36 @@ class Model:
             An array containing the global dof from input nodes.
         """
         _nodes = node_ids.reshape(-1, 1)
-        _dof_per_node = self.acoustic_element_3d.DOF_PER_NODE
+        _dof_per_node = self.acoustic_element_3d.dof_per_node
 
-        global_dof = _dof_per_node * _nodes + np.arange(_dof_per_node)
-        global_dof = np.array(global_dof.flatten(), dtype=int)
+        global_dofs = _dof_per_node * _nodes + np.arange(_dof_per_node)
+        global_dofs = np.array(global_dofs.flatten(), dtype=int)
 
-        return global_dof
+        return [int(g_dof) for g_dof in global_dofs]
 
     def get_structural_property_data_from_nodes(self, nodes: np.ndarray, data: dict, selection: str):
-        output_data = dict()
         if data["element_type"] == "2d_element":
             element_2d = self.structural_element_2d
             if element_2d is None:
-                return output_data
+                return {}
 
-            dof_per_node = element_2d.DOF_PER_NODE
+            dof_per_node = element_2d.dof_per_node
 
         else:
             element_3d = self.structural_element_3d
             if element_3d is None:
-                return output_data
+                return {}
 
-            dof_per_node = element_3d.DOF_PER_NODE
+            dof_per_node = element_3d.dof_per_node
 
         local_dof = np.arange(dof_per_node, dtype=int)
         global_dof = dof_per_node * nodes.reshape(-1, 1) + local_dof
 
-        den = 1
-        if "nodal_attribution" in data.keys():
-            nodal_attribution = data["nodal_attribution"]
-            averaged = data["averaged"]
-            if nodal_attribution and averaged:
-                den = len(nodes)
-
-            elif not nodal_attribution:
-                # TODO: process element integration
-                den = 1
-
-                if selection == "surfaces":
-                    pass
-                elif selection == "lines":
-                    pass
-                else:
-                    pass
-
         n_int = 0
-        if "integrate" in data.keys():
+        if "integrate" in data:
             n_int = data.get("integrate", 0)
+
+        output_data = {}
 
         for node_gdof in global_dof:
             for j, gdof in enumerate(node_gdof):
@@ -609,9 +765,9 @@ class Model:
                     continue
 
                 if isinstance(values, np.ndarray):
-                    avg_value = values[self.solution_steps_mask] / den
+                    avg_value = values[self.solution_steps_mask]
                 else:
-                    avg_value = values / den
+                    avg_value = values
 
                 if n_int and isinstance(self.frequencies, np.ndarray):
                     output_data[gdof] = avg_value / ((1j * 2 * np.pi * self.frequencies)**n_int)
@@ -627,14 +783,14 @@ class Model:
         """
 
         frequency_dependent = False
-        fluid_properties_from_volume = dict()
+        fluid_properties_from_volume = {}
 
         if self.frequencies is None:
             number_frequencies = 1
         elif isinstance(self.frequencies, np.ndarray):
             number_frequencies = self.frequencies.size
         else:
-            return dict(), False
+            return {}, False
 
         aux_ones = np.ones(number_frequencies, dtype=float)
 
@@ -734,7 +890,7 @@ class Model:
             fluid = self.properties._get_property("fluid", surface=surface_id)
 
         elif len(volumes_from_surface) > 1:
-            fluids = list()
+            fluids = []
             for volume_id in volumes_from_surface:
                 fluid = self.properties._get_property("fluid", volume=volume_id)
                 if not isinstance(fluid, Fluid):
@@ -861,16 +1017,16 @@ class Model:
             impedance = density * speed_of_sound
 
         elif isinstance(si_data, dict):
-            if "real_values" in si_data.keys():
+            if "real_values" in si_data:
                 real_values = np.array(si_data["real_values"])
                 imag_values = np.array(si_data["imag_values"])
                 impedance = real_values + 1j * imag_values
 
-            elif "anechoic_termination" in si_data.keys():
+            elif "anechoic_termination" in si_data:
                 density, speed_of_sound = self.get_surface_density_and_speed_of_sound(surface_id)
                 impedance = density * speed_of_sound
 
-            elif "values" in si_data.keys():
+            elif "values" in si_data:
                 impedance = si_data["values"][0]
 
         return impedance
@@ -890,7 +1046,7 @@ class Model:
 
     def is_element2d_triangular(self):
         _, acoustic_element_2d, _ = self.get_acoustic_elements()
-        return isinstance(acoustic_element_2d, ACT_TRIANGLE_3 | ACT_TRIANGLE_6)
+        return isinstance(acoustic_element_2d, AcousticTriangle3 | AcousticTriangle6)
 
     def get_downstream_pressure_and_particle_velocity(self, surface_id: int):
         """
@@ -939,12 +1095,12 @@ class Model:
             V_downstream = -P_downstream / Zo_in
 
         if isinstance(sv_data, dict):
-            if "real_values" in sv_data.keys():
+            if "real_values" in sv_data:
                 real_values = np.array(sv_data["real_values"])
                 imag_values = np.array(sv_data["imag_values"])
                 V_in = real_values + 1j * imag_values
 
-            elif "values" in sv_data.keys():
+            elif "values" in sv_data:
                 V_in = sv_data["values"][0]
                 V_in = V_in[self.solution_steps_mask]
 
@@ -983,12 +1139,12 @@ class Model:
         rho_eff = None
         C_eff = None
 
-        for key in self.properties.volume_properties.keys():
+        for key in self.properties.volume_properties:
             prop, volume_id = key
             if prop != "porous_material_model":
                 continue
 
-            if volume_id not in self.mesh.surfaces_from_volume.keys():
+            if volume_id not in self.mesh.surfaces_from_volume:
                 continue
 
             if surface_id in self.mesh.surfaces_from_volume.get(volume_id):
@@ -1035,12 +1191,12 @@ class Model:
         rho_eff = None
         C_eff = None
 
-        for key in self.properties.volume_properties.keys():
+        for key in self.properties.volume_properties:
             prop, volume_id = key
             if prop != "viscous_thermal_model":
                 continue
 
-            if volume_id not in self.mesh.surfaces_from_volume.keys():
+            if volume_id not in self.mesh.surfaces_from_volume:
                 continue
 
             if surface_id in self.mesh.surfaces_from_volume.get(volume_id):
@@ -1088,7 +1244,7 @@ class Model:
             return None
 
         surface_ids = self.mesh.geometry_information.get("surfaces")
-        surface_without_thickness = self.properties.get_entities_without_property("surface_thickness", surfaces=surface_ids)
+        _, surface_without_thickness = self.properties.get_entities_with_and_without_property("surface_thickness", surfaces=surface_ids)
 
         return surface_without_thickness
 
@@ -1104,12 +1260,12 @@ class Model:
 
         if attribution_filter is None:
             for _property in properties.values():
-                for property_label, *args in _property.keys():
+                for property_label, *args in _property:
                     if property_label == property_to_check:
                         return True
 
-        _property = properties.get(attribution_filter, dict())
-        for property_label, *args in _property.keys():
+        _property = properties.get(attribution_filter, {})
+        for property_label, *args in _property:
             if property_label == property_to_check:
                 return True
 

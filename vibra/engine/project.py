@@ -41,12 +41,14 @@ class Project:
         # Except if it is used to cache a few matrices somehow.
         self.assembler: Optional[AcousticAssembler | StructuralAssembler] = None
         self.solver: Optional[HarmonicSolver | ModalSolver] = None
-        self.postprocessing: Optional[AcousticPostprocessing | StructuralPostprocessing] = None
+        self.acoustic_postprocessing: Optional[AcousticPostprocessing] = None
+        self.structural_postprocessing: Optional[StructuralPostprocessing] = None
 
     def reset_solution(self):
         self.assembler = None
         self.solver = None
-        self.postprocessing = None
+        self.acoustic_postprocessing = None
+        self.structural_postprocessing = None
         self.project_writer.delete_results_data()
         self.model.reset_current_solution()
         self.needs_saving = True
@@ -113,20 +115,47 @@ class Project:
         self.project_paths.clear_data()
         self.mark_project_as_modified()
 
-    def run_analysis(self, is_resume: bool = False):
+    def clear_caches(self):
+
+        # clears the acoustic domain-related caches
+        acoustic_postprocessing = self.get_acoustic_postprocessing()
+        if isinstance(acoustic_postprocessing, AcousticPostprocessing):
+            acoustic_postprocessing.get_acoustic_waveforms_minimum_and_maximum_values.cache_clear()
+            acoustic_postprocessing.get_min_max_values_of_pressures.cache_clear()
+            acoustic_postprocessing.compute_allowable_pulsation_field_for_screw_compressor.cache_clear()
+            acoustic_postprocessing.compute_multiple_ifft_for_acoustic_nodal_solution.cache_clear()
+
+        # clears the structural domain-related caches
+        structural_postprocessing = self.get_structural_postprocessing()
+        if isinstance(structural_postprocessing, StructuralPostprocessing):
+            structural_postprocessing.reset_attributes()
+            structural_postprocessing.recover_nodal_averaged_structural_stresses.cache_clear()
+            structural_postprocessing.compute_multiple_ifft_for_structural_nodal_solution.cache_clear()
+            structural_postprocessing.compute_multiple_ifft_for_structural_stresses.cache_clear()
+            structural_postprocessing.min_max_processor.get_values_for_advanced_stress_frequency.cache_clear()
+            structural_postprocessing.min_max_processor.get_values_for_stress_frequency.cache_clear()
+            structural_postprocessing.min_max_processor.get_values_for_displacement_frequency.cache_clear()
+            structural_postprocessing.min_max_processor.get_values_for_displacement_time.cache_clear()
+
+    def run_analysis(self, is_resume: bool = False, print_log: bool = False):
         """
         It performs the solution of the currently configured model.
-        It might raise errors if the analysis is not propperly configured.
+        It might raise errors if the analysis is not properly configured.
         """
+
+        self.clear_caches()
+
         match self.model.analysis_id:
             case AnalysisID.STRUCTURAL_MODAL:
-                return self.solve_structural_modal_analysis(is_resume)
+                return self.solve_structural_modal_analysis(is_resume=is_resume, print_log=print_log)
             case AnalysisID.STRUCTURAL_HARMONIC:
-                return self.solve_structural_harmonic_analysis(is_resume)
+                return self.solve_structural_harmonic_analysis(is_resume=is_resume, print_log=print_log)
             case AnalysisID.ACOUSTIC_MODAL:
-                return self.solve_acoustic_modal_analysis(is_resume)
+                return self.solve_acoustic_modal_analysis(is_resume=is_resume, print_log=print_log)
             case AnalysisID.ACOUSTIC_HARMONIC:
-                return self.solve_acoustic_harmonic_analysis(is_resume)
+                return self.solve_acoustic_harmonic_analysis(is_resume=is_resume, print_log=print_log)
+            case AnalysisID.COUPLED_HARMONIC:
+                return self.solve_coupled_harmonic_analysis(is_resume=is_resume, print_log=print_log)
             case AnalysisID.NO_ANALYSIS:
                 raise errors.IncompleteSetupError("No AnalysisID was provided.")
             case _:
@@ -141,6 +170,7 @@ class Project:
         """
         logging.info("Loading the project data... [25%]")
         path = Path(path)
+        self.reset_project()
         self.reset_solution()
         self.project_reader.unpack_into_working_directory(path)
         self.model = self.project_reader.read_model(self.model)
@@ -313,7 +343,7 @@ class Project:
         self.model.set_analysis_setup(analysis_setup)
         self.update_project_setup_file()
 
-    def solve_structural_modal_analysis(self, is_resume: bool = False) -> ModalSolution:
+    def solve_structural_modal_analysis(self, is_resume: bool = False, print_log: bool = False) -> ModalSolution:
 
         self.update_project_setup_file()
 
@@ -322,44 +352,54 @@ class Project:
 
         self.assembler = StructuralAssembler(self.model)
         self.solver = ModalSolver(self.assembler)
-        self.postprocessing = StructuralPostprocessing(self.model)
+        self.structural_postprocessing = StructuralPostprocessing(self.model)
 
-        self.assembler.assemble_global_matrices()
+        self.assembler.assemble_global_matrices(print_log=print_log)
 
         t0 = perf_counter()
-        self.model.solution = self.solver.solve()
+        self.model.solution = self.solver.solve(print_log=print_log)
         self.project_writer.write_modal_solution(self.model.solution)
         self.mark_project_as_modified()
         dt = perf_counter() - t0
 
-        print(f"Elapsed time to solve structural modal analysis: {dt: .6f} [s]")
+        if print_log:
+            print(f"Elapsed time to solve structural modal analysis: {dt: .6f} [s]")
+
         logging.info(f"Elapsed time to solve structural modal analysis: {dt: .6f} [s]")
 
         return self.model.solution
 
-    def solve_structural_harmonic_analysis(self, is_resume: bool = False) -> HarmonicSolution:
+    def solve_structural_harmonic_analysis(
+            self, 
+            is_resume: bool = False, 
+            print_log: bool = False, 
+            update_domain_mappings: bool = True,
+            ) -> HarmonicSolution:
 
         self.update_project_setup_file()
 
         checker = AnalysisChecker(self.model)
-        checker.check_analysis_requirements()
+        checker.check_analysis_requirements(update_domain_mappings=update_domain_mappings)
 
         self.assembler = StructuralAssembler(self.model)
         self.solver = HarmonicSolver(self.assembler, self.project_paths)
-        self.postprocessing = StructuralPostprocessing(self.model)
+        self.structural_postprocessing = StructuralPostprocessing(self.model)
 
-        self.assembler.assemble_global_matrices_and_excitations()
+        self.assembler.assemble_global_matrices_and_excitations(print_log=print_log)
 
         t0 = perf_counter()
 
         analysis_method = self.model.analysis_setup.analysis_method
         if analysis_method == "direct":
-            self.model.solution = self.solver.solve_direct(is_resume=is_resume)
+            self.model.solution = self.solver.solve_direct(print_log=print_log, is_resume=is_resume)
+
         elif analysis_method == "mode_superposition":
             self.model.solution = self.solver.solve_mode_superposition(
                 is_proportionally_damped=True,
                 is_resume=is_resume,
+                print_log=print_log,
             )
+
         else:
             raise ValueError(f"Unsupported analysis method: {analysis_method}")
 
@@ -367,12 +407,14 @@ class Project:
         self.mark_project_as_modified()
         dt = perf_counter() - t0
 
-        print(f"Elapsed time to solve structural harmonic analysis: {dt: .6f} [s]")
+        if print_log:
+            print(f"Elapsed time to solve structural harmonic analysis: {dt: .6f} [s]")
+
         logging.info(f"Elapsed time to solve structural harmonic analysis: {dt: .6f} [s]")
 
         return self.model.solution
 
-    def solve_acoustic_modal_analysis(self, is_resume: bool = False) -> ModalSolution:
+    def solve_acoustic_modal_analysis(self, is_resume: bool = False, print_log: bool = False) -> ModalSolution:
 
         self.update_project_setup_file()
 
@@ -381,22 +423,24 @@ class Project:
 
         self.assembler = AcousticAssembler(self.model)
         self.solver = ModalSolver(self.assembler)
-        self.postprocessing = AcousticPostprocessing(self.model)
+        self.acoustic_postprocessing = AcousticPostprocessing(self.model)
 
-        self.assembler.assemble_global_matrices()
+        self.assembler.assemble_global_matrices(print_log=print_log)
 
         t0 = perf_counter()
-        self.model.solution = self.solver.solve()
+        self.model.solution = self.solver.solve(print_log=print_log)
         self.project_writer.write_modal_solution(self.model.solution)
         self.mark_project_as_modified()
         dt = perf_counter() - t0
 
-        print(f"Elapsed time to solve acoustic modal analysis: {dt: .6f} [s]")
+        if print_log:
+            print(f"Elapsed time to solve acoustic modal analysis: {dt: .6f} [s]")
+
         logging.info(f"Elapsed time to solve acoustic modal analysis: {dt: .6f} [s]")
 
         return self.model.solution
 
-    def solve_acoustic_harmonic_analysis(self, is_resume: bool = False) -> HarmonicSolution:
+    def solve_acoustic_harmonic_analysis(self, is_resume: bool = False, print_log: bool = False) -> HarmonicSolution:
 
         self.update_project_setup_file()
 
@@ -405,51 +449,77 @@ class Project:
 
         self.assembler = AcousticAssembler(self.model)
         self.solver = HarmonicSolver(self.assembler, self.project_paths)
-        self.postprocessing = AcousticPostprocessing(self.model)
+        self.acoustic_postprocessing = AcousticPostprocessing(self.model)
 
         self.model.reset_dissipation_model_properties()
         self.model.process_porous_material_properties()
         self.model.process_viscous_thermal_model_properties()
         self.model.process_perforated_plate_impedance()
-        self.assembler.assemble_global_matrices_and_excitations()
+        self.assembler.assemble_global_matrices_and_excitations(print_log=print_log)
 
         t0 = perf_counter()
 
         analysis_method = self.model.analysis_setup.analysis_method
         if analysis_method == "direct":
-            self.model.solution = self.solver.solve_direct(is_resume=is_resume)
+            self.model.solution = self.solver.solve_direct(print_log=print_log, is_resume=is_resume)
+
         elif analysis_method == "mode_superposition":
-            self.model.solution = self.solver.solve_mode_superposition(is_resume=is_resume)
+            self.model.solution = self.solver.solve_mode_superposition(print_log=print_log, is_resume=is_resume)
+
         else:
             raise ValueError(f"Unsupported analysis method: {analysis_method}")
 
-        if self.solver.project_paths is None:
-            self.project_writer.write_harmonic_solution(self.model.solution)
+        self.project_writer.write_harmonic_solution(self.model.solution)
 
         self.mark_project_as_modified()
         dt = perf_counter() - t0
 
-        print(f"Elapsed time to solve acoustic harmonic analysis: {dt: .6f} [s]")
+        if print_log:
+            print(f"Elapsed time to solve acoustic harmonic analysis: {dt: .6f} [s]")
+
         logging.info(f"Elapsed time to solve acoustic harmonic analysis: {dt: .6f} [s]")
 
         return self.model.solution
 
+    def solve_coupled_harmonic_analysis(self, is_resume: bool = False, print_log: bool = False) -> HarmonicSolution:
+
+        logging.info("Building the acoustic harmonic problem...")
+        self.model.acoustic_solution = self.solve_acoustic_harmonic_analysis(is_resume=is_resume, print_log=print_log)
+
+        logging.info("Building the structural harmonic problem...")
+        self.model.structural_solution = self.solve_structural_harmonic_analysis(
+            is_resume=is_resume,
+            print_log=print_log,
+            update_domain_mappings=False,
+            )
+
+        return HarmonicSolution(
+            analysis_id=self.model.analysis_id,
+            frequencies=self.model.acoustic_solution.frequencies,
+            structural_solution=self.model.structural_solution.structural_solution,
+            acoustic_solution=self.model.acoustic_solution.acoustic_solution,
+        )
+
     def update_post_processing(self):
-        self.postprocessing = None
+        self.acoustic_postprocessing = None
+        self.structural_postprocessing = None
         if AnalysisID(self.model.analysis_id).is_acoustic():
-            self.postprocessing = AcousticPostprocessing(self.model)
+            self.acoustic_postprocessing = AcousticPostprocessing(self.model)
         elif AnalysisID(self.model.analysis_id).is_structural():
-            self.postprocessing = StructuralPostprocessing(self.model)
+            self.structural_postprocessing = StructuralPostprocessing(self.model)
+        elif AnalysisID(self.model.analysis_id).is_harmonic_coupled():
+            self.acoustic_postprocessing = AcousticPostprocessing(self.model)
+            self.structural_postprocessing = StructuralPostprocessing(self.model)
 
     def get_acoustic_postprocessing(self) -> AcousticPostprocessing:
-        if not isinstance(self.postprocessing, AcousticPostprocessing):
+        if not isinstance(self.acoustic_postprocessing, AcousticPostprocessing):
             self.update_post_processing()
-        return self.postprocessing
+        return self.acoustic_postprocessing
 
     def get_structural_postprocessing(self) -> StructuralPostprocessing:
-        if not isinstance(self.postprocessing, StructuralPostprocessing):
+        if not isinstance(self.structural_postprocessing, StructuralPostprocessing):
             self.update_post_processing()
-        return self.postprocessing
+        return self.structural_postprocessing
 
     def is_mesh_configured(self) -> bool:
         """
@@ -529,7 +599,7 @@ class Project:
             return PhysicalDomain.ACOUSTIC
         elif self.model.analysis_id.is_structural():
             return PhysicalDomain.STRUCTURAL
-        elif self.model.analysis_id.is_coupled():
+        elif self.model.analysis_id.is_harmonic_coupled():
             return PhysicalDomain.COUPLED
         else:
             return PhysicalDomain.NO_PHYSICAL_DOMAIN

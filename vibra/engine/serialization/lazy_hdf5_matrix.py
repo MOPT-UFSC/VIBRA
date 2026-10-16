@@ -68,7 +68,10 @@ class LazyHDF5MatrixWriter:
     def save(self, column, index: int, overwrite=False):
         if not overwrite and self.status[index]:
             return
-        self.solution[:, index] = column
+
+        if not np.any(column):
+            self.solution[:, index] = column
+
         self.status[index] = True
         self.file.flush()
 

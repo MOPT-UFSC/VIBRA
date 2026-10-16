@@ -5,12 +5,12 @@ import numpy as np
 import pytest
 
 from vibra import PROJECT_DIR
-from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
+from vibra.engine.assemblers.acoustic.acoustic_assembler import AcousticAssembler
 from vibra.engine.model import Model
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.serialization.project_paths import ProjectPaths
 from vibra.engine.solvers import HarmonicSolver
-from vibra.interface.data_handler.data_importer import DataImporter
+from vibra.interface.user_input.data_handler.file_handlers.file_handler import FileHandler
 
 
 def _acoustic_model_nastran(path: str, fluid: Fluid) -> Model:
@@ -34,8 +34,7 @@ def _acoustic_model_nastran(path: str, fluid: Fluid) -> Model:
     # data_Vn = {
     #     "real_values": [1],
     #     "imag_values": [0],
-    #     "nodal_attribution": False,
-    #     "averaged": False,
+    #     "element_integration": True,
     # }
 
     ## normal surface velocity data
@@ -87,13 +86,13 @@ def _solve_harmonic_problem(datadir, model: "Model", path: str):
 
     # Solve and store solutions into hdf5 files
     model.solution = harmonic_solver.solve_direct(print_log=True)
-    nodal_solution = model.solution.nodal_solution
+    nodal_solution = model.solution.acoustic_solution
 
     output_surface_nodes = model.mesh.get_nodes_from_surface(11)
     average_solution = np.average(nodal_solution[output_surface_nodes, :], axis=0)
 
     results_path = dirname(path) + "/acoustic_pressures_reference.xlsx"
-    external_data = DataImporter.load_spreadsheet_data_for_validation(results_path)
+    external_data = FileHandler.read(results_path).to_dict()
 
     output_pressures = external_data.get("output_surface")
     reference_solution = output_pressures[:, 1] + 1j * output_pressures[:, 2]

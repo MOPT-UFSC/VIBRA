@@ -5,12 +5,11 @@ from vibra import app
 from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
 from vibra.interface.ui_generated.plots.general.results_display_widget_ui import ResultsDisplayWidget_UI
 from vibra.interface.viewer_3d.coloring.color_palettes import COLORMAP_NAMES
-from vibra.utils.interface_utils import block_signals
 
 
 class ResultsDisplayWidget(ResultsDisplayWidget_UI):
     colormap_changed = Signal()
-    pressure_value_changed = Signal()
+    min_max_value_changed = Signal()
 
     def __init__(self):
         super().__init__()
@@ -21,6 +20,8 @@ class ResultsDisplayWidget(ResultsDisplayWidget_UI):
     def configure_widget(self, bottom: float = -1e14, top: float = 1e14, decimals: int = 14):
         self.min_color_check_box.setChecked(False)
         self.max_color_check_box.setChecked(False)
+        self.update_min_enabled(False)
+        self.update_max_enabled(False)
         self.configure_validators(bottom, top, decimals)
 
     def configure_validators(self, bottom: float = -1e14, top: float = 1e14, decimals: int = 14):
@@ -111,7 +112,14 @@ class ResultsDisplayWidget(ResultsDisplayWidget_UI):
         max_value = self.max_color_value()
 
         render_widget = app().main_window.results_widget
-        render_widget.set_min_value(min_value)
-        render_widget.set_max_value(max_value)
+        min_value_changed = min_value != render_widget.user_min_value
+        max_value_changed = max_value != render_widget.user_max_value
+        
+        if min_value_changed:
+            render_widget.set_min_value(min_value)
 
-        self.pressure_value_changed.emit()
+        if max_value_changed:
+            render_widget.set_max_value(max_value)
+
+        if min_value_changed or max_value_changed:
+            self.min_max_value_changed.emit()

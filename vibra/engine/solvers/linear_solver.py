@@ -1,5 +1,6 @@
 from enum import Enum, auto
 import logging
+from typing import Callable
 from pypardiso.pardiso_wrapper import PyPardisoSolver, Matrix_type
 from scipy.sparse.linalg import LinearOperator
 from scipy.sparse import triu, issparse
@@ -24,13 +25,14 @@ class MumpsLinearOperator(LinearOperator):
 
 
 class PardisoLinearOperator(LinearOperator):
-    def __init__(self, ps, A, is_symmetric: bool, est_operations: int | None = None):
+    def __init__(self, ps, A, is_symmetric: bool, est_operations: int | None = None, progress_callback: Callable[[int], None] | None = None):
         if is_symmetric:
             A = triu(A, format='csr')
 
         self.calc_counter = 0
         self.last_percentage = -1
         self.estimated_operations = est_operations
+        self.progress_callback = progress_callback
 
         ps.factorize(A)
         self.factorized_A = ps.factorized_A
@@ -45,6 +47,9 @@ class PardisoLinearOperator(LinearOperator):
             if percentage != self.last_percentage:
                 logging.info(f"Solving the eigenproblem... [{percentage}/100]")
                 self.last_percentage = percentage
+
+                if self.progress_callback is not None:
+                    self.progress_callback(percentage)
 
         return self.solve(self.factorized_A, x.astype(self.dtype))
 
@@ -111,7 +116,7 @@ class PardisoLinearSolver(LinearSolver):
                     self.mtype = Matrix_type.CNS
                 else:
                     self.mtype = Matrix_type.RNS
-        print(f"Instantiating Pardiso Solver with matrix flags: is_symmetric: {self.is_symmetric}, is_complex: {is_complex}, mtype: {self.mtype}")
+        logging.info(f"Instantiating Pardiso Solver with matrix flags: is_symmetric: {self.is_symmetric}, is_complex: {is_complex}, mtype: {self.mtype}")
         self._solver = PyPardisoSolver(self.mtype, self.phase, self.size_limit_storage)
         return self._solver
 
@@ -136,7 +141,7 @@ class MumpsLinearSolver(LinearSolver):
         from mumps import Context
         self.is_symmetric = check_symmetry(A)
         is_complex = check_complex(A, f)
-        print(f"Instantiating MUMPS Solver with matrix flags: is_symmetric: {self.is_symmetric}, is_complex: {is_complex}")
+        logging.info(f"Instantiating MUMPS Solver with matrix flags: is_symmetric: {self.is_symmetric}, is_complex: {is_complex}")
         self._solver = Context(self.verbose)
         return self._solver
     

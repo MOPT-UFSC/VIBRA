@@ -13,8 +13,8 @@ from pathlib import Path
 from molde import Color
 from PySide6.QtWidgets import QApplication
 
-__version__ = "0.6.1"
-__release_date__ = "Aug 2026"
+__version__ = "0.7.0"
+__release_date__ = "Oct 2026"
 
 VERSION = __version__
 RELEASE_DATE = __release_date__
@@ -34,27 +34,6 @@ EXAMPLES_DIR = VIBRA_DIR / "interface/data/examples/"
 
 USER_PATH = Path().home()
 TEMP_PROJECT_DIR = USER_PATH / "temp_vibra"
-
-SUPPORTED_GEOMETRY_EXTENSIONS = [
-    "iges",
-    "igs",
-    "step",
-    "stp",
-]
-
-SUPPORTED_MESH_EXTENSIONS = [
-    "msh",
-    "bdf",
-    "nas",
-]
-
-SUPPORTED_OUTPUT_DATA_EXTENSIONS = [
-    "dat",
-    "txt",
-    "csv",
-    "xls",
-    "xlsx",
-]
 
 LIGHT_ICON_COLOR = Color("#0051A2")
 DARK_ICON_COLOR = Color("#84AAFF")

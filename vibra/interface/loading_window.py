@@ -1,9 +1,8 @@
 import logging
 import re
-from time import sleep
 from typing import Callable, Generic, ParamSpec, TypeVar
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QTimer
 from PySide6.QtWidgets import QApplication
 
 from vibra import app
@@ -61,11 +60,12 @@ class LoadingWindow(LoadingWindow_UI, Generic[P, T]):
     update the progress bar and progress label.
     """
 
-    def __init__(self, _function: Callable[P, T], _interrupt=None):
+    def __init__(self, _function: Callable[P, T], _interrupt=None, delayed: bool = True):
         super().__init__()
 
         self._function = _function
         self._interrupt = _interrupt
+        self._delayed = delayed
 
         self._config_window()
         self._create_connections()
@@ -96,19 +96,16 @@ class LoadingWindow(LoadingWindow_UI, Generic[P, T]):
         self.setGeometry(pos_x, pos_y, self.width(), self.height())
 
     def run(self, *args: P.args, **kwargs: P.kwargs) -> T:
-        self.show()
 
-        # Changes the cursor to wait
-        QApplication.setOverrideCursor(Qt.WaitCursor)
+        delay_timer = QTimer()
+        delay_timer.setSingleShot(True)
+        delay_timer.timeout.connect(self.show)
+        delay_timer.start(300 if self._delayed else 0)
 
         # Creates a handler to update progress_bar and progress_label
         # every time a logging containing [n/N] appears
         progress_handler = ProgressBarLogUpdater(logging.DEBUG, loading_window=self)
         logging.getLogger().addHandler(progress_handler)
-
-        # Waits for the loading bar to appear and updates pyqt
-        sleep(0.1)
-        QApplication.processEvents()
 
         try:
             # Calls the actual function
@@ -122,9 +119,7 @@ class LoadingWindow(LoadingWindow_UI, Generic[P, T]):
             The error should be threated there, here we are just mitigating
             things related to the loading window.
             """
-
-            # Restores the previous cursor
-            QApplication.restoreOverrideCursor()
+            delay_timer.stop()
 
             # Removes the ProgressBarLogUpdater
             logging.getLogger().removeHandler(progress_handler)

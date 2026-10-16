@@ -1,15 +1,17 @@
+from functools import partial
+
 import numpy as np
 from molde.colors import color_names
-from molde.actors import CommonSymbolsActorVariableSize
-from functools import partial
 
 from vibra import Color, app
 from vibra.interface.viewer_3d import sources
 
+from .symbols_actor import SymbolsActor
+
 Triple = tuple[float, float, float]
 
 
-class SymbolsActorStructural(CommonSymbolsActorVariableSize):
+class SymbolsActorStructural(SymbolsActor):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._build_dict_property_name_to_build_function()
@@ -33,9 +35,7 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
 
     def _call_build_functions(self, property_name: str, surface_id: int = -1, line_id: int = -1, point_id: int = -1):
         if property_name in self.prop_name_to_build_func.keys():
-            self.prop_name_to_build_func[property_name](
-                property_name=property_name, surface_id=surface_id, line_id=line_id, point_id=point_id
-            )
+            self.prop_name_to_build_func[property_name](property_name=property_name, surface_id=surface_id, line_id=line_id, point_id=point_id)
 
     def build(self):
         self.clear_symbols()
@@ -128,18 +128,38 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
                 Color(0, 255, 0),
                 Color(0, 0, 255),
             )
-            
+
             for index, v in enumerate(U_R):
                 if index < 3 and v is not None:
-                    self.add_symbol(sources.create_dof_cone_source, coords, (index==0, index==1, index==2), color=color_names.GREEN_2)
+                    self.add_marker(
+                        sources.create_dof_cone_source,
+                        coords,
+                        (index == 0, index == 1, index == 2),
+                        color=color_names.GREEN_2,
+                    )
                     axis_function = partial(sources.create_axis_source, shift=-0.8)
-                    self.add_symbol(axis_function, coords, (index==0, index==1, index==2), color=colors[index])
+                    self.add_marker(
+                        axis_function,
+                        coords,
+                        (index == 0, index == 1, index == 2),
+                        color=colors[index],
+                    )
 
                 elif index >= 3 and v is not None:
-                    self.add_symbol(sources.create_dof_cone_rotation_source, coords, (index==3, index==4, index==5), color=color_names.BLUE_6)
+                    self.add_marker(
+                        sources.create_dof_cone_rotation_source,
+                        coords,
+                        (index == 3, index == 4, index == 5),
+                        color=color_names.BLUE_6,
+                    )
                     axis_function = partial(sources.create_axis_source, shift=-1.2)
-                    self.add_symbol(axis_function, coords, (index==3, index==4, index==5), color=colors[index - 3])
-                    
+                    self.add_marker(
+                        axis_function,
+                        coords,
+                        (index == 3, index == 4, index == 5),
+                        color=colors[index - 3],
+                    )
+
     def _build_nodal_loads(self, property_name: str, surface_id: int = -1, line_id: int = -1, point_id: int = -1):
         if surface_id != -1:
             coords, _ = self._get_center_coords_and_normals(surface_id)
@@ -157,7 +177,6 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
             property = point_properties[property_name, point_id]
 
         if property is not None and coords is not None:
-
             F_M = [(i if i is not None else 0) for i in property["values"]]
 
             # handle table attributed values
@@ -169,17 +188,27 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
                 Mx, My, Mz = 0, 0, 0
             else:
                 Fx, Fy, Fz, Mx, My, Mz = F_M
-            
+
             force_orientation = np.real((Fx, Fy, Fz))
             m_orientation = np.real((Mx, My, Mz))
-            
+
             for index, v in enumerate(force_orientation):
                 if v != 0:
-                    self.add_symbol(sources.create_nodal_loads_force_arrow_source, coords, (index==0, index==1, index==2), color=color_names.RED_2)
-                    
+                    self.add_marker(
+                        sources.create_nodal_loads_force_arrow_source,
+                        coords,
+                        (index == 0, index == 1, index == 2),
+                        color=color_names.RED_2,
+                    )
+
             for index, v in enumerate(m_orientation):
-                if v != 0: 
-                    self.add_symbol(sources.create_nodal_loads_momentum_arrow_source, coords, (index==0, index==1, index==2), color=color_names.BLUE_5)
+                if v != 0:
+                    self.add_marker(
+                        sources.create_nodal_loads_momentum_arrow_source,
+                        coords,
+                        (index == 0, index == 1, index == 2),
+                        color=color_names.BLUE_5,
+                    )
 
     def _build_distributed_loads(self, property_name: str, surface_id: int = -1, line_id: int = -1, *args, **kwargs):
         if surface_id != -1:
@@ -196,10 +225,8 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
 
             orientation = np.real((x, y, z))
             is_pointing = np.dot(normal, orientation) < 0
-            shape = (
-                sources.create_quadruple_arrow_source if is_pointing else sources.create_outwards_triple_arrow_source
-            )
-            self.add_symbol(shape, coords, orientation, color=color_names.RED_2)
+            shape = sources.create_quadruple_arrow_source if is_pointing else sources.create_outwards_triple_arrow_source
+            self.add_marker(shape, coords, orientation, color=color_names.RED_2)
 
         if line_id != -1:
             line_properties = app().project.model.properties.line_properties
@@ -214,14 +241,14 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
             z = z[0] if isinstance(z, np.ndarray) else z
 
             orientation = np.real((x, y, z))
-            self.add_symbol(sources.create_arrow_source, coords[0], orientation, color=color_names.RED_2)
-            self.add_symbol(sources.create_arrow_source, coords[1], orientation, color=color_names.RED_2)
-            self.add_symbol(sources.create_arrow_source, coords[2], orientation, color=color_names.RED_2)
+            self.add_marker(sources.create_arrow_source, coords[0], orientation, color=color_names.RED_2)
+            self.add_marker(sources.create_arrow_source, coords[1], orientation, color=color_names.RED_2)
+            self.add_marker(sources.create_arrow_source, coords[2], orientation, color=color_names.RED_2)
 
     def _build_normal_pressure_load(self, property_name: str, surface_id: int = -1, *args, **kwargs):
         if surface_id == -1:
             return
-        
+
         surface_properties = app().project.model.properties.surface_properties
         property = surface_properties[property_name, surface_id]
 
@@ -232,4 +259,4 @@ class SymbolsActorStructural(CommonSymbolsActorVariableSize):
         x = x[0] if isinstance(x, np.ndarray) else x
 
         shape = sources.create_outwards_normal_pressure_load if np.real(x) > 0 else sources.create_normal_pressure_load
-        self.add_symbol(shape, coords, normal, color=color_names.RED_2)
+        self.add_marker(shape, coords, normal, color=color_names.RED_2)

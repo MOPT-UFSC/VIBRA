@@ -1,15 +1,16 @@
 from collections import defaultdict
 
 import numpy as np
-from molde.actors import CommonSymbolsActorVariableSize
 from molde.colors import color_names
 
 from vibra import app
 from vibra.interface.viewer_3d import sources
 from vibra.interface.viewer_3d.actors.symbols_positioner import SymbolsPositioner
 
+from .symbols_actor import SymbolsActor
 
-class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
+
+class SymbolsActorAcoustic(SymbolsActor):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -38,6 +39,9 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
             "acoustic_transfer_element_data": self._build_acoustic_transfer_element_data,
             "incident_plane_wave": self._build_incident_plane_wave,
             "mass_source": self._build_mass_source,
+            "compressor_excitation_spectrum": self._build_compressor_excitation_symbol,
+            "compressor_excitation_waveform": self._build_compressor_excitation_symbol,
+            "reciprocating_compressor_excitation": self._build_compressor_excitation_symbol,
         }
 
     def _call_build_functions(self, property_name: str, surface_id: int = -1, line_id: int = -1, point_id: int = -1, node_id: int = -1):
@@ -160,7 +164,7 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
         mesh = app().project.model.mesh
         for (_, node_id), normal_vector in mesh.nodal_normals_data.items():
             coords = mesh.nodal_coordinates[node_id, 1:]
-            self.add_symbol(sources.create_outwards_arrow_source, coords, normal_vector, color=color_names.GRAY)
+            self.add_marker(sources.create_outwards_arrow_source, coords, normal_vector, color=color_names.GRAY)
 
     def _build_element_normals(self):
         if not app().main_window.results_widget.visualization_filter.element_normal_symbols:
@@ -168,7 +172,7 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
 
         mesh = app().project.model.mesh
         for normal, center in mesh.element_normals_data.values():
-            self.add_symbol(
+            self.add_marker(
                 sources.create_outwards_arrow_source,
                 center,
                 normal,
@@ -181,7 +185,7 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
             return
 
         coords, normal = self._get_symbol_coords_and_normal(surface_id)
-        self.add_symbol(sources.create_surface_velocity_source, coords, normal, color=color_names.RED_6)
+        self.add_marker(sources.create_surface_velocity_source, coords, normal, color=color_names.RED_6)
 
     def _build_specific_impedance(self, property_name: str, surface_id: int = -1, *args, **kwargs):
         if surface_id == -1:
@@ -190,30 +194,30 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
         surface_properties = app().project.model.properties.surface_properties
         property = surface_properties[property_name, surface_id]
 
-        coords, normal = self._get_symbol_coords_and_normal(surface_id)
+        coords, _ = self._get_symbol_coords_and_normal(surface_id)
         shape = sources.create_anechoic_termination_source if "anechoic_termination" in property.keys() else sources.create_impedance_source
-        self.add_symbol(shape, coords, normal, color=color_names.PURPLE_2)
+        self.add_billboard(shape, coords, color=color_names.PURPLE_2)
 
     def _build_transfer_impedance(self, surface_id: int = -1, *args, **kwargs):
         if surface_id == -1:
             return
 
-        coords, normal = self._get_symbol_coords_and_normal(surface_id)
-        self.add_symbol(sources.create_transfer_impedance_source, coords, normal, color=color_names.PURPLE_2)
+        coords, _ = self._get_symbol_coords_and_normal(surface_id)
+        self.add_billboard(sources.create_transfer_impedance_source, coords, color=color_names.PURPLE_2)
 
     def _build_perforated_plate_model(self, surface_id: int = -1, *args, **kwargs):
         if surface_id == -1:
             return
 
         coords, normal = self._get_symbol_coords_and_normal(surface_id)
-        self.add_symbol(sources.create_perforated_plate_source, coords, normal, color=color_names.RED)
+        self.add_marker(sources.create_perforated_plate_source, coords, normal, color=color_names.RED)
 
     def _build_mass_flow_rate(self, surface_id: int = -1, *args, **kwargs):
         if surface_id == -1:
             return
 
         coords, normal = self._get_symbol_coords_and_normal(surface_id)
-        self.add_symbol(sources.create_mass_flow_rate_source, coords, normal, color=color_names.PINK)
+        self.add_marker(sources.create_mass_flow_rate_source, coords, normal, color=color_names.PINK)
 
     def _build_dof_decoupling(self, surface_id: int = -1, *args, **kwargs):
         if surface_id == -1:
@@ -226,42 +230,42 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
             return
 
         coords, normal = self._get_symbol_coords_and_normal(surface_id)
-        self.add_symbol(sources.create_degrees_of_freedom_decoupling_source, coords, normal, color=color_names.GREEN)
+        self.add_marker(sources.create_degrees_of_freedom_decoupling_source, coords, normal, color=color_names.GREEN)
 
     def _build_absorption_surface(self, surface_id: int = -1, *args, **kwargs):
         if surface_id == -1:
             return
 
-        coords, normal = self._get_symbol_coords_and_normal(surface_id)
-        self.add_symbol(sources.create_absorption_surface_source, coords, normal, color=color_names.GREEN)
+        coords, _ = self._get_symbol_coords_and_normal(surface_id)
+        self.add_billboard(sources.create_absorption_surface_source, coords, color=color_names.GREEN)
 
     def _build_acoustic_pressure(self, surface_id: int = -1, *args, **kwargs):
         if surface_id == -1:
             return
 
-        coords, normal = self._get_symbol_coords_and_normal(surface_id)
-        self.add_symbol(sources.create_acoustic_pressure_source, coords, normal, color=color_names.RED_2)
+        coords, _ = self._get_symbol_coords_and_normal(surface_id)
+        self.add_billboard(sources.create_acoustic_pressure_source, coords, color=color_names.RED_2)
 
     def _build_proportional_damping(self, surface_id: int = -1, *args, **kwargs):
         if surface_id == -1:
             return
 
         coords, normal = self._get_symbol_coords_and_normal(surface_id)
-        self.add_symbol(sources.create_dissipation_model_source, coords, normal, color=color_names.BLUE)
+        self.add_marker(sources.create_dissipation_model_source, coords, normal, color=color_names.BLUE)
 
     def _build_viscous_thermal_loss_model(self, surface_id: int = -1, *args, **kwargs):
         if surface_id == -1:
             return
 
         coords, normal = self._get_symbol_coords_and_normal(surface_id)
-        self.add_symbol(sources.create_dissipation_model_source, coords, normal, color=color_names.ORANGE)
+        self.add_marker(sources.create_dissipation_model_source, coords, normal, color=color_names.ORANGE)
 
     def _build_acoustic_transfer_element_data(self, surface_id: int = -1):
         if surface_id == -1:
             return
 
         coords, normal = self._get_symbol_coords_and_normal(surface_id)
-        self.add_symbol(sources.create_acoustic_transfer_element_data_source, coords, normal, color=color_names.TURQUOISE)
+        self.add_marker(sources.create_acoustic_transfer_element_data_source, coords, normal, color=color_names.TURQUOISE)
 
     def _build_incident_plane_wave(self, property_name: str, surface_id: int = -1, *args, **kwargs):
         if surface_id == -1:
@@ -274,11 +278,9 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
         ipw_vector = prop_data.get("ipw_vector")
         coords, _ = self._get_symbol_coords_and_normal(surface_id)
 
-        self.add_symbol(sources.create_incident_plane_wave_source, coords, ipw_vector, color=color_names.BLUE)
+        self.add_marker(sources.create_incident_plane_wave_source, coords, ipw_vector, color=color_names.BLUE)
 
     def _build_mass_source(self, surface_id: int = -1, line_id: int = -1, point_id: int = -1, node_id: int = -1, *args, **kwargs):
-        orientation = (0, 0, 0)
-
         if surface_id != -1:
             coords, _ = self._get_symbol_coords_and_normal(surface_id)
 
@@ -292,13 +294,47 @@ class SymbolsActorAcoustic(CommonSymbolsActorVariableSize):
             coords = self._get_coords_from_node(node_id)[1:]
 
         color_fir_sphere = color_names.RED.copy()
-        self.add_symbol(sources.create_mass_load_first_layer_source, coords, orientation, color=color_fir_sphere)
+        self.add_billboard(sources.create_mass_load_first_layer_source, coords, color=color_fir_sphere)
 
         color_sec_sphere = color_names.YELLOW.with_rgba(a=150)
-        self.add_symbol(sources.create_mass_load_second_layer_source, coords, orientation, color=color_sec_sphere)
+        self.add_billboard(sources.create_mass_load_second_layer_source, coords, color=color_sec_sphere)
 
         color_third_sphere = color_names.GREEN.with_rgba(a=100)
-        self.add_symbol(sources.create_mass_load_third_layer_source, coords, orientation, color=color_third_sphere)
+        self.add_billboard(sources.create_mass_load_third_layer_source, coords, color=color_third_sphere)
 
         color_fourth_sphere = color_names.BLUE.with_rgba(a=50)
-        self.add_symbol(sources.create_mass_load_fourth_layer_source, coords, orientation, color=color_fourth_sphere)
+        self.add_billboard(sources.create_mass_load_fourth_layer_source, coords, color=color_fourth_sphere)
+
+    def _build_compressor_excitation_symbol(self, property_name: str, surface_id: int = -1, *args, **kwargs):
+        if surface_id == -1:
+            return
+
+        property_data = app().project.model.properties._get_property(property_name, surface=surface_id)
+        if not isinstance(property_data, dict):
+            return
+
+        coords, normal = self._get_symbol_coords_and_normal(surface_id)
+        area = app().project.model.mesh.area_from_surfaces.get(surface_id)
+        if area is None:
+            scale = 1
+        else:
+            scale = np.sqrt(4 * area / np.pi)
+
+        compressor_type_shape = None
+        compressor_type = property_data.get("compressor_type", "reciprocating")
+
+        if property_data["connection_type"] == "discharge":
+            color = color_names.RED_3
+            if compressor_type == "screw":
+                compressor_type_shape = sources.create_discharge_screw_compressor_source
+            else:
+                compressor_type_shape = sources.create_discharge_reciprocating_compressor_source
+
+        else:
+            color = color_names.BLUE_3
+            if compressor_type == "screw":
+                compressor_type_shape = sources.create_suction_screw_compressor_source
+            else:
+                compressor_type_shape = sources.create_suction_reciprocating_compressor_source
+
+        self.add_entity(compressor_type_shape, coords, normal, color=color, scale=scale)

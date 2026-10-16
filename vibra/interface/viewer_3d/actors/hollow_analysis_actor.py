@@ -2,18 +2,40 @@ import numpy as np
 from vtkmodules.util.numpy_support import vtk_to_numpy
 from vtkmodules.vtkCommonCore import vtkFloatArray
 
+from vibra import app
+from vibra.engine.analysis_info.analysis_enums import PhysicalDomain
+
 from ..coloring.color_table import ColorTable
 from .hollow_solids_actor import HollowSolidsActor
 
 
 class HollowAnalysisActor(HollowSolidsActor):
-    def apply_deformation(self, displacements: np.ndarray, magnification_factor: float, max_abs: float):
-        if max_abs == 0:
-            max_abs = 1
+    def __init__(self, *args, physical_domain: PhysicalDomain | None = None, **kwargs):
+        self.physial_domain = physical_domain
+        super().__init__(*args, **kwargs)
 
-        deltas = (magnification_factor / (10 * max_abs)) * displacements
-        deformed_coordinates = deltas + self.mesh.nodal_coordinates[:, 1:]
+    def get_hidden_surfaces(self) -> set:
+        mesh = app().project.mesh
+        if mesh is None:
+            return set()
 
+        match self.physial_domain:
+            case PhysicalDomain.ACOUSTIC:
+                domain_specific_volumes = app().project.model.volumes_of_domain.get("acoustic", set())
+            case PhysicalDomain.STRUCTURAL:
+                domain_specific_volumes = app().project.model.volumes_of_domain.get("structural", set())
+            case _:
+                domain_specific_volumes = mesh.all_volume_ids()
+
+        visible_surfaces = set()
+        for volume in domain_specific_volumes:
+            surfaces = mesh.surfaces_from_volume.get(volume, [])
+            visible_surfaces |= set(surfaces)
+
+        visible_surfaces &= app().main_window.entity_visibility.get_visible_surfaces()
+        return mesh.all_surface_ids() - visible_surfaces
+
+    def apply_deformation(self, deformed_coordinates: np.ndarray):
         self.update_coordinates(deformed_coordinates)
 
     def plot_color_bar(self, values, min_value, max_value, colormap="jet"):

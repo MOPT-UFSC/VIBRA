@@ -1,14 +1,14 @@
 from typing import TYPE_CHECKING
 
 from vibra.engine.analysis_info import AnalysisID, FrequencySpacing
-from vibra.engine.assemblers.structural_assembler import StructuralAssembler
+from vibra.engine.assemblers.structural.structural_assembler import StructuralAssembler
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.engine.properties.material import Material
 from vibra.engine.solution import HarmonicSolution
 from vibra.engine.solvers.harmonic_solver import HarmonicSolver
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
-from vibra.interface.data_handler.data_importer import DataImporter
+from vibra.interface.user_input.data_handler.file_handlers.file_handler import FileHandler
 
 if TYPE_CHECKING:
     from vibra.engine.model import Model
@@ -69,7 +69,7 @@ def load_external_mesh_and_solve():
             continue
 
         tag = named_selecion_to_tag[named_selection]
-        mesh.elements_from_surface[tag] = surf_data["element2d_indexes"] - 1
+        mesh.elements_from_surface[tag] = surf_data["element2d_indices"] - 1
         mesh.external_connectivity_from_surfaces[tag] = surf_data["connectivity"] - 1
         ns_nodes = external_mesh.nodes_from_named_selection[named_selection]
         mesh.external_nodes_from_surfaces[tag] = np.array(ns_nodes, dtype=int) - 1
@@ -143,7 +143,7 @@ def load_external_mesh_and_solve():
 
     # Define and process the assemble
     assembler = StructuralAssembler(model)
-    assembler.assemble_global_matrices_and_excitations()
+    assembler.assemble_global_matrices_and_excitations(print_log=True)
 
     # Initialize the solver
     # modal_solver = ModalSolver(assembler)
@@ -182,13 +182,13 @@ def load_external_mesh_and_solve():
     if element_2d is None:
         return
 
-    dof_per_node = element_2d.DOF_PER_NODE
+    dof_per_node = element_2d.dof_per_node
     gdof = dof_per_node * selected_nodes.reshape(-1, 1) + np.arange(dof_per_node, dtype=int)
 
     ux_rows = gdof[:, dof_index["ux"]]
     uy_rows = gdof[:, dof_index["uy"]]
 
-    nodal_solution = model.solution.nodal_solution
+    nodal_solution = model.solution.structural_solution
 
     response_ux = np.average(nodal_solution[ux_rows, :], axis=0).flatten()
     response_uy = np.average(nodal_solution[uy_rows, :], axis=0).flatten()
@@ -198,7 +198,7 @@ def load_external_mesh_and_solve():
 
     ## load external results data
     results_path = "validation_files/data/WB/structural/shell/L_pipe/results/results_for_L_pipe.xlsx"
-    imported_results = DataImporter.load_spreadsheet_data_for_validation(results_path)
+    imported_results = FileHandler.read(results_path).to_dict()
 
     output_face_ux_lin = imported_results["output_face_ux_lin"]
     output_face_ux_quad = imported_results["output_face_ux_quad"]

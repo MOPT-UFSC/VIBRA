@@ -61,8 +61,8 @@ def get_connectivity_array(input_dict):
     n_list = list()
     for data_0 in input_dict.values():
         for data_1 in data_0.values():
-            if "indexes" in data_1.keys():
-                n_list.append(len(data_1["indexes"]))
+            if "indices" in data_1.keys():
+                n_list.append(len(data_1["indices"]))
                 array_nodes = data_1["array_element_nodes"]
                 if max_cols < array_nodes.shape[1]:
                     max_cols = array_nodes.shape[1]
@@ -71,17 +71,17 @@ def get_connectivity_array(input_dict):
     output_data = np.zeros((n, max_cols + 4), dtype=int)
     gmsh_elements = np.zeros(n, dtype=int)
 
-    internal_indexes = np.arange(n, dtype=int)
-    output_data[:, 0] = internal_indexes
+    internal_indices = np.arange(n, dtype=int)
+    output_data[:, 0] = internal_indices
 
     start, end, ind = 0, 0, 0
     for (entity_dim, entity_tag), e_data in input_dict.items():
         for etype_tag, data in e_data.items():
             end += n_list[ind]
-            indexes = data["indexes"]
+            indices = data["indices"]
             connectivity = data["array_element_nodes"]
 
-            rows = len(indexes)
+            rows = len(indices)
             cols = connectivity.shape[1]
             aux = np.ones(rows, dtype=int)
 
@@ -89,25 +89,25 @@ def get_connectivity_array(input_dict):
             output_data[start:end, 2] = aux * etype_tag
             output_data[start:end, 3] = aux * cols
             output_data[start:end, 4 : 4 + cols] = connectivity
-            gmsh_elements[start:end] = indexes
+            gmsh_elements[start:end] = indices
 
             start = end
             ind += 1
 
-    map_elements = dict(zip(gmsh_elements, internal_indexes))
+    map_elements = dict(zip(gmsh_elements, internal_indices))
 
     return output_data, map_elements
 
 
 def post_process_mesh():
 
-    indexes, coords, _ = gmsh.model.mesh.getNodes(includeBoundary=True)
-    total_nodes = int(np.max(indexes))
+    indices, coords, _ = gmsh.model.mesh.getNodes(includeBoundary=True)
+    total_nodes = int(np.max(indices))
 
     unit_length_factor = 1e-3
     nodal_coordinates = np.zeros((total_nodes, 4))
-    nodal_coordinates[indexes - 1, 1:] = coords.reshape(-1, 3) * unit_length_factor
-    nodal_coordinates[indexes - 1, :1] = indexes.reshape(-1, 1) - 1
+    nodal_coordinates[indices - 1, 1:] = coords.reshape(-1, 3) * unit_length_factor
+    nodal_coordinates[indices - 1, :1] = indices.reshape(-1, 1) - 1
 
     connectivity_dim1 = dict()
     connectivity_dim2 = dict()
@@ -115,9 +115,9 @@ def post_process_mesh():
 
     for dim, tag in gmsh.model.getEntities():
         elements_data = dict()
-        element_types, element_indexes, element_nodes = gmsh.model.mesh.getElements(dim, tag)
+        element_types, element_indices, element_nodes = gmsh.model.mesh.getElements(dim, tag)
 
-        if not element_indexes:
+        if not element_indices:
             continue
 
         for i, element_type in enumerate(element_types):
@@ -131,7 +131,7 @@ def post_process_mesh():
             # array_element_nodes -= 1
 
             elements_data[element_type] = {
-                "indexes": element_indexes[i],
+                "indices": element_indices[i],
                 "array_element_nodes": array_element_nodes,
             }
 
@@ -154,10 +154,10 @@ def post_process_mesh():
     print(faces_connectivity)
     print(solids_connectivity)
 
-    # indexes = np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 11, 13, 9, 10, 12, 14, 15, 16, 18, 19, 17], dtype=int)
-    indexes = np.array([4, 5, 6, 7, 8, 9, 10, 11, 12, 15, 17, 13, 20, 22, 23, 21, 14, 16, 18, 19], dtype=int)
+    # indices = np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 11, 13, 9, 10, 12, 14, 15, 16, 18, 19, 17], dtype=int)
+    indices = np.array([4, 5, 6, 7, 8, 9, 10, 11, 12, 15, 17, 13, 20, 22, 23, 21, 14, 16, 18, 19], dtype=int)
 
-    print(solids_connectivity[:, indexes])
+    print(solids_connectivity[:, indices])
 
 
 if __name__ == "__main__":
