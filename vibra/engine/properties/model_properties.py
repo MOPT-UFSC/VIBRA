@@ -156,7 +156,7 @@ class ModelProperties:
                         if b is None:
                             values_list.append(a)
                         else:
-                            values_list.append(a + 1j*b)
+                            values_list.append(a + 1j * b)
 
             elif "amplitude_values" in data_keys and "phase_values" in data_keys:
                 for i, amp in enumerate(data.get("amplitude_values")):

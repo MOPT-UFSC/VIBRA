@@ -130,7 +130,7 @@ class HarmonicSolver:
                     continue
 
                 # compute the load vector
-                f = self.assembler.compute_load_vector(freq, i)
+                f = self.assembler.compute_load_vector(i)
 
                 if np.any(f):
 

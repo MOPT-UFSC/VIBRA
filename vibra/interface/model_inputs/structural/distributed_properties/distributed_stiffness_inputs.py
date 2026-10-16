@@ -1,6 +1,7 @@
 
 from collections import defaultdict
 from enum import IntEnum
+from os.path import basename
 
 import numpy as np
 from PySide6.QtCore import Qt
@@ -8,17 +9,21 @@ from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QAbstractItemView, QLineEdit, QTreeWidgetItem
 
 from vibra import app
+from vibra.extensions import SUPPORTED_SPREADSHEET_READ_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
 from vibra.interface import error_title
-from vibra.interface.common.common_interface import update_entities_selection
+from vibra.interface.common.common_interface import InputDataType, check_input_entries, update_analysis_setup_in_file, update_entities_selection
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.model_inputs.structural.definitions.enums import StandardTabType
 from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
 from vibra.interface.ui_generated.model.structural.distributed_properties.distributed_stiffness_inputs_ui import DistributedStiffnessInputs_UI
+from vibra.interface.user_input.data_handler.file_dialog_service import FileDialogService
+from vibra.interface.user_input.data_handler.file_handlers.file_handler import FileHandler
 
 
-class TabType(IntEnum):
-    CONSTANT_DATA = 0
-    LIST = 1
+class ElementFormulation(IntEnum):
+    ELEMENT_2D = 0
+    ELEMENT_3D = 1
 
 
 class AssignmentType(IntEnum):
@@ -34,29 +39,21 @@ class DistributedStiffnessInputs(DistributedStiffnessInputs_UI):
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
 
+        self.model = app().project.model
+        self.mesh = app().project.model.mesh
+        self.properties = app().project.model.properties
+
         self._config_window()
         self._initialize()
+        self._create_list_line_edits()
         self._configure_validators()
         self._create_connections()
 
         self._config_widgets()
-        self.geometry_selection_callback()
         self.load_model_info()
 
         while self.keep_window_open:
             self.exec()
-
-    @property
-    def model(self):
-        return app().project.model
-
-    @property
-    def mesh(self):
-        return app().project.model.mesh
-
-    @property
-    def properties(self):
-        return app().project.model.properties
 
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
@@ -67,29 +64,78 @@ class DistributedStiffnessInputs(DistributedStiffnessInputs_UI):
     def _initialize(self):
         self.keep_window_open = True
         self.element_types = ["2d_element", "3d_element"]
+        self.assignment_types = {
+            0 : "surfaces",
+            1 : "lines",
+        }
+        self.reset_table_variables()
 
     def _configure_validators(self):
-        self.lineEdit_constant_value.setValidator(StrictDoubleValidator(1e-16, 1e16, 8))
+        for line_edit_real, line_edit_imag in self.constant_values_line_edits:
+            line_edit_real.setValidator(StrictDoubleValidator(-1e16, 1e16, 8))
+            line_edit_imag.setValidator(StrictDoubleValidator(-1e16, 1e16, 8))
+
+    def reset_table_variables(self):
+
+        self.Kx_table_values = None
+        self.Ky_table_values = None
+        self.Kz_table_values = None
+
+        self.Kx_array = None
+        self.Ky_array = None
+        self.Kz_array = None
+
+        self.Kx_table_path = None
+        self.Ky_table_path = None
+        self.Kz_table_path = None
+
+        self.Kx_table_name = None
+        self.Ky_table_name = None
+        self.Kz_table_name = None
+
+    def _create_list_line_edits(self):
+        self.constant_values_line_edits = [
+            [self.lineEdit_left_Kx, self.lineEdit_right_Kx],
+            [self.lineEdit_left_Ky, self.lineEdit_right_Ky],
+            [self.lineEdit_left_Kz, self.lineEdit_right_Kz],
+        ]
+
+        self.table_line_edits = {
+            "Kx": self.lineEdit_path_table_Kx,
+            "Ky": self.lineEdit_path_table_Ky,
+            "Kz": self.lineEdit_path_table_Kz,
+        }
+
+        self.unit_labels = {
+            "Kx": self.label_unit_Kx,
+            "Ky": self.label_unit_Ky,
+            "Kz": self.label_unit_Kz,
+        }
 
     def _config_widgets(self):
 
         self.comboBox_element_type.setEnabled(False)
         self.treeWidget_distributed_stiffness.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
 
-        for i, w in enumerate([80, 120, 100]):
+        for i, w in enumerate([80, 100, 120, 120]):
             self.treeWidget_distributed_stiffness.setColumnWidth(i, w)
             self.treeWidget_distributed_stiffness.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def _create_connections(self):
 
         # QComboBox connections
+        self.comboBox_assignment_type.currentIndexChanged.connect(self.attribution_type_callback)
+        self.comboBox_data_type.currentIndexChanged.connect(self.data_type_callback)
         self.comboBox_element_type.currentIndexChanged.connect(self.element_type_callback)
 
-        # QPushButtons connetions
+        # QPushButton connections
         self.pushButton_apply.clicked.connect(self.apply_callback)
         self.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
         self.pushButton_cancel.clicked.connect(self.close)
         self.pushButton_remove.clicked.connect(self.remove_callback)
+        self.pushButton_load_Kx_table.clicked.connect(self.load_Kx_table)
+        self.pushButton_load_Ky_table.clicked.connect(self.load_Ky_table)
+        self.pushButton_load_Kz_table.clicked.connect(self.load_Kz_table)
         self.pushButton_reset.clicked.connect(self.reset_callback)
 
         # QTabWidget connections
@@ -101,28 +147,29 @@ class DistributedStiffnessInputs(DistributedStiffnessInputs_UI):
         self.treeWidget_distributed_stiffness.itemSelectionChanged.connect(self.item_selection_clicked_callback)
 
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
+
         self.update_element_type_based_on_geometry_information()
+        self.geometry_selection_callback()
 
     def geometry_selection_callback(self):
 
-        lines = app().main_window.selection.geometry_lines
         surfaces = app().main_window.selection.geometry_surfaces
+        lines = app().main_window.selection.geometry_lines
 
-        if self.tabWidget_main.currentIndex() == TabType.LIST and (lines and surfaces):
+        if self.tabWidget_main.currentIndex() == StandardTabType.LIST and (lines and surfaces):
             self.lineEdit_selection_id.setText("mult. entities")
-            self.comboBox_assignment_type.setEnabled(False)
             self.comboBox_assignment_type.setCurrentIndex(AssignmentType.MULTIPLE)
             view = self.comboBox_assignment_type.view()
             view.setRowHidden(2, False)
             return
 
-        self.comboBox_assignment_type.setEnabled(True)
-
         if surfaces:
-
             text = ", ".join([str(i) for i in surfaces])
             self.lineEdit_selection_id.setText(text)
-            self.comboBox_assignment_type.setCurrentIndex(0)
+            self.comboBox_assignment_type.setCurrentIndex(AssignmentType.SURFACES)
+
+            if self.tabWidget_main.currentIndex() == StandardTabType.LIST:
+                return
 
             if len(surfaces) == 1:
                 surface_id = next(iter(surfaces))
@@ -132,10 +179,12 @@ class DistributedStiffnessInputs(DistributedStiffnessInputs_UI):
                     self.update_formulation_callback(surface_id=surface_id)
 
         elif lines:
-
             text = ", ".join([str(i) for i in lines])
             self.lineEdit_selection_id.setText(text)
-            self.comboBox_assignment_type.setCurrentIndex(1)
+            self.comboBox_assignment_type.setCurrentIndex(AssignmentType.LINES)
+
+            if self.tabWidget_main.currentIndex() == StandardTabType.LIST:
+                return
 
             if len(lines) == 1:
                 line_id = next(iter(lines))
@@ -152,56 +201,320 @@ class DistributedStiffnessInputs(DistributedStiffnessInputs_UI):
         self.reset_input_fields()
 
         element_type = data.get("element_type")
-        self.comboBox_element_type.setCurrentIndex(self.element_types.index(element_type))
+        if element_type == "2d_element":
+            self.comboBox_element_type.setCurrentIndex(ElementFormulation.ELEMENT_2D)
+        else:
+            self.comboBox_element_type.setCurrentIndex(ElementFormulation.ELEMENT_3D)
 
-        stiffness = np.real(data.get("values"))
-        self.lineEdit_constant_value.setText(f"{round(float(stiffness), 8)}")
+        values = data.get("values", None)
+        if "table_paths" in data:
+            table_paths = data["table_paths"]
+            for index, lineEdit_table in enumerate(self.table_line_edits.values()):
+                table_path = table_paths[index]
+                if table_path is not None:                   
+                    lineEdit_table.setText(table_path)
 
-    def update_formulation_callback(self, line_id: int | None = None, surface_id: int | None = None):
+            self.tabWidget_main.setCurrentIndex(StandardTabType.TABULAR_DATA)
+
+        else:
+
+            if "real_values" in data:
+                left_values = data.get("real_values")
+                right_values = data.get("imag_values")
+                self.comboBox_data_type.setCurrentIndex(InputDataType.REAL_IMAGINARY)
+
+            else:
+                left_values = data.get("amplitude_values")
+                right_values = data.get("phase_values")
+                self.comboBox_data_type.setCurrentIndex(InputDataType.MAGNITUDE_PHASE)
+
+            for index, [line_edit_left, line_edit_right] in enumerate(self.constant_values_line_edits):
+
+                if element_type == "3d_element" and index >= 3:
+                    continue
+
+                elif index <= 5 and values[index] is not None:
+                    line_edit_left.setText(str(left_values[index]))
+                    line_edit_right.setText(str(right_values[index]))
+
+            self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)
+
+    def update_formulation_callback(self, **kwargs):
+
+        surface_id = kwargs.get("surface_id", None)
+        line_id = kwargs.get("line_id", None)
 
         if isinstance(surface_id, int):
             data = self.properties._get_property("surface_thickness", surface=surface_id)
             if isinstance(data, dict):
                 self.comboBox_element_type.setCurrentIndex(0)
                 return
-
+            
         if isinstance(line_id, int):
             for node_id in self.mesh.get_nodes_from_line(line_id):
-                for _surface_id in self.mesh.get_surfaces_from_node(node_id):
-                    data = self.properties._get_property("surface_thickness", surface=_surface_id)
+                for surface_id in self.mesh.get_surfaces_from_node(node_id):
+                    data = self.properties._get_property("surface_thickness", surface=surface_id)
                     if isinstance(data, dict):
                         self.comboBox_element_type.setCurrentIndex(0)
                         return
 
+    def attribution_type_callback(self):
+
+        surface_assignment = self.comboBox_assignment_type.currentIndex() == AssignmentType.SURFACES
+        load_label = "F{} / area:".format if surface_assignment else "F{} / length:".format
+
+        self.label_constant_Kx.setText(load_label("x"))
+        self.label_constant_Ky.setText(load_label("y"))
+        self.label_constant_Kz.setText(load_label("z"))
+
+        self.label_table_Kx.setText(load_label("x"))
+        self.label_table_Ky.setText(load_label("y"))
+        self.label_table_Kz.setText(load_label("z"))
+
+        self.data_type_callback()
+
     def element_type_callback(self):
         return
+
+    def data_type_callback(self):
+        real_imaginary = self.comboBox_data_type.currentIndex() == InputDataType.REAL_IMAGINARY
+        self.label_dtype_left.setText("Real" if real_imaginary else "Magnitude")
+        self.label_dtype_right.setText("Imaginary" if real_imaginary else "Phase")
+
+        unit = "N/m²" if self.comboBox_assignment_type.currentIndex() == AssignmentType.SURFACES else "N/m"
+
+        for widget in self.unit_labels.values():
+            label_text = f"[{unit}]" if real_imaginary else f"[{unit}, deg]"
+            widget.setText(label_text)
 
     def update_element_type_based_on_geometry_information(self):
         volume_exists = self.mesh.are_there_volumes_in_geometry()
         self.comboBox_element_type.setCurrentIndex(int(volume_exists))
 
-    def check_input_value(self, str_value: str):
+    def constant_values_attribution(self, selection: str, selected_ids: list[int]):
 
-        if str_value == "":
-            return None
-    
-        try:
-            str_value = str_value.replace(",", ".")
-            return float(str_value)
+        element_type = self.element_types[self.comboBox_element_type.currentIndex()]
+        real_imag_input = self.comboBox_data_type.currentIndex() == InputDataType.REAL_IMAGINARY
 
-        except Exception:
-            title = "Invalid value detected"
-            message = "An invalid value has been detected at the 'stiffness' input field. "
-            message += "Enter a positive value to proceed with the assignment."
+        Kx = check_input_entries(self.lineEdit_left_Kx.text(), self.lineEdit_right_Kx.text(), "Kx")
+        if Kx is None:
+            return True
+
+        Ky = check_input_entries(self.lineEdit_left_Ky.text(), self.lineEdit_right_Ky.text(), "Ky")
+        if Ky is None:
+            return True
+
+        Kz = check_input_entries(self.lineEdit_left_Kz.text(), self.lineEdit_right_Kz.text(), "Kz")
+        if Kz is None:
+            return True
+
+        distributed_stiffness = [Kx, Ky, Kz]
+
+        all_values = []
+        for values in distributed_stiffness:
+            all_values.extend(values)
+
+        condition_1 = element_type == "2d_element" and all_values.count(None) == 6
+        condition_2 = element_type == "3d_element" and all_values.count(None) == 3
+
+        if condition_1 or condition_2:
+            title = "Additional inputs required"
+            message = "You must to enter at least one distributed load value before confirming the assignment."
             PrintMessageInput([error_title, title, message])
-            return None
+            return True
 
-    def constant_values_attribution(self):
+        left_values = [value_a for (value_a, _) in distributed_stiffness]
+        right_values = [value_b for (_, value_b) in distributed_stiffness]
+
+        for selected_id in selected_ids:
+
+            data = {
+                "element_type": element_type,
+                "real_values" if real_imag_input else "amplitude_values": left_values,
+                "imag_values" if real_imag_input else "phase_values": right_values,
+                "unit" : "N/m",
+            }
+
+            match selection:
+                case "surfaces":
+                    self.properties._set_property("distributed_stiffness", data, surface=selected_id)
+
+                case "lines":
+                    self.properties._set_property("distributed_stiffness", data, line=selected_id)
+
+    def load_table(self, lineEdit : QLineEdit, load_label: str, direct_load = False):
+        title = "Error while loading table"
+
+        try:
+            if direct_load:
+                imported_path = lineEdit.text()
+
+            else:
+                extensions = SUPPORTED_SPREADSHEET_READ_EXTENSIONS + SUPPORTED_TEXT_EXTENSIONS
+                imported_path = FileDialogService.open_file(file_extensions=extensions,
+                                                            caption=f"Choose a table to import the {load_label} data",
+                                                            last_folder="imported_table_folder")
+
+            imported_data = FileHandler.read(imported_path)
+
+            if imported_data is None:
+                return None, None
+
+            if not direct_load:
+                lineEdit.setText(str(imported_data.path))
+
+            imported_values = imported_data.data
+            imported_table_path = str(imported_data.path)
+
+            if imported_values.shape[1] < 3:
+                message = "The imported table has insufficient number of columns. The spectrum "
+                message += "data must have frequencies, real and imaginary columns."
+                PrintMessageInput([error_title, title, message])
+                lineEdit.setFocus()
+                return None, None
+
+            return imported_values, imported_table_path
+
+        except Exception as log_error:
+            message = str(log_error)
+            PrintMessageInput([error_title, title, message])
+            lineEdit.setFocus()
+            return None, None
+
+    def lineEdit_reset(self, lineEdit: QLineEdit):
+        lineEdit.setText("")
+        lineEdit.setFocus()
+
+    def load_Kx_table(self):
+        self.Kx_table_values, self.Kx_table_path = self.load_table(self.lineEdit_path_table_Kx, "Kx")
+        if  self.Kx_table_path is None:
+            self.lineEdit_reset(self.lineEdit_path_table_Kx)
+
+    def load_Ky_table(self):
+        self.Ky_table_values, self.Ky_table_path = self.load_table(self.lineEdit_path_table_Ky, "Ky")
+        if self.Ky_table_path is None:
+            self.lineEdit_reset(self.lineEdit_path_table_Ky)
+            
+    def load_Kz_table(self):
+        self.Kz_table_values, self.Kz_table_path = self.load_table(self.lineEdit_path_table_Kz, "Kz")
+        if self.Kz_table_path is None:
+            self.lineEdit_reset(self.lineEdit_path_table_Kz)
+
+    def save_table_files(self, load_label: str, selected_id: int, selection: str, imported_values: np.ndarray):
+
+        frequencies = imported_values[:, 0]
+
+        if frequencies[0] == 0:
+            frequencies[0] = 1e-6
+
+        if frequencies[0] == 1e-6:
+            frequencies[0] = 0
+
+        if self.model.change_analysis_frequency_setup(list(frequencies)):
+
+            lineEdit = self.table_line_edits[load_label]
+            imported_filename = basename(lineEdit.text())
+            self.lineEdit_reset(lineEdit)
+
+            title = "Project frequency setup cannot be modified"
+            message = "The following imported table of values has a frequency setup"
+            message += "different from the others already imported ones. The current "
+            message += "project frequency setup is not going to be modified."
+            message += f"\n\nFile name: {imported_filename}"
+            PrintMessageInput([error_title, title, message])
+
+            return None, None
+
+        table_name = f"distributed_stiffness_{load_label}_from_{selection[:-1]}_{selected_id}"
+
+        if self.comboBox_data_type.currentIndex() == InputDataType.REAL_IMAGINARY:
+            complex_values = imported_values[:, 1] + 1j * imported_values[:, 2]
+        else:
+            complex_values = imported_values[:, 1] * np.exp(1j * imported_values[:, 2] * np.pi / 180)
+
+        # real values vector
+        real_values = np.real(complex_values)
+
+        # imaginary values vector
+        imag_values = np.imag(complex_values)
+
+        data = np.array([frequencies, real_values, imag_values], dtype=float).T
+
+        update_analysis_setup_in_file(frequencies)
+
+        self.properties.add_imported_tables("structural", table_name, data)
+
+        return table_name, data
+
+    def table_values_attribution(self, selection: str, selected_ids: list[int]):
+
+        index = self.comboBox_element_type.currentIndex()
+        element_type = self.element_types[index]
+
+        if self.Kx_table_path is None:
+            self.Kx_table_values, self.Kx_table_path = self.load_table(self.lineEdit_path_table_Kx, "Kx", direct_load = True)
+
+        if self.Ky_table_path is None:
+            self.Ky_table_values, self.Ky_table_path = self.load_table(self.lineEdit_path_table_Ky, "Ky", direct_load = True)
+
+        if self.Kz_table_path is None:
+            self.Kz_table_values, self.Kz_table_path = self.load_table(self.lineEdit_path_table_Kz, "Kz", direct_load = True)
+
+        for selected_id in selected_ids:
+            
+            if self.Kx_table_values is not None:
+                self.Kx_table_name, self.Kx_array = self.save_table_files("Kx", selected_id, selection, self.Kx_table_values)
+                if self.Kx_array is None:
+                    return True
+
+            if self.Ky_table_values is not None:
+                self.Ky_table_name, self.Ky_array = self.save_table_files("Ky", selected_id, selection, self.Ky_table_values)
+                if self.Ky_array is None:
+                    return True
+
+            if self.Kz_table_values is not None:
+                self.Kz_table_name, self.Kz_array = self.save_table_files("Kz", selected_id, selection, self.Kz_table_values)
+                if self.Kz_array is None:
+                    return True
+
+            table_names = [self.Kx_table_name, self.Ky_table_name, self.Kz_table_name]
+            table_paths = [self.Kx_table_path, self.Ky_table_path, self.Kz_table_path]
+
+            condition_1 = element_type == "2d_element" and table_names.count(None) == 6
+            condition_2 = element_type == "3d_element" and table_names.count(None) == 3
+
+            if condition_1 or condition_2:
+                title = "Additional inputs required"
+                message = "You must to enter at leat one distributed load table path before confirming the assignment."
+                PrintMessageInput([error_title, title, message]) 
+                return True
+
+            data = {
+                "element_type" : element_type,
+                "table_names" : table_names,
+                "table_paths" : table_paths,
+                "unit" : "N/m",
+            }
+
+            match selection:
+                case "surfaces":
+                    self.properties._set_property("distributed_stiffness", data, surface=selected_id)
+
+                case "lines":
+                    self.properties._set_property("distributed_stiffness", data, line=selected_id)
+
+        self.reset_table_variables()
+
+    def apply_callback(self, close_window: bool=False):
+
+        tab_index = self.tabWidget_main.currentIndex()
+        if tab_index == StandardTabType.LIST:
+            return
 
         input_ids = self.lineEdit_selection_id.text()
-        surface_assignment = self.comboBox_assignment_type.currentIndex() == AssignmentType.SURFACES
+        assignment_type = self.comboBox_assignment_type.currentIndex()
+        selection = self.assignment_types.get(assignment_type)
 
-        selection = "surfaces" if surface_assignment else "lines"
         selected_ids, error_data = self.model.check_selected_ids(
             input_ids,
             selection,
@@ -215,70 +528,31 @@ class DistributedStiffnessInputs(DistributedStiffnessInputs_UI):
 
         app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
         update_entities_selection(self.lineEdit_selection_id, selection, selected_ids)
-        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)       
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
-        self.remove_duplicated_attributions(selected_ids, selection)
-        self.remove_conflicting_excitations(selected_ids, selection)
+        if tab_index == StandardTabType.CONSTANT_DATA:
+            if self.constant_values_attribution(selection, selected_ids):
+                return
 
-        etype_index = self.comboBox_element_type.currentIndex()
-        element_type = self.element_types[etype_index]
-
-        stiffness = self.check_input_value(self.lineEdit_constant_value.text())
-        if stiffness is None:
-            title = "Additional inputs required"
-            message = "You must to enter at least one distributed load value before confirming the assignment."
-            PrintMessageInput([error_title, title, message])
-            return True
-
-        distributed_stiffness = [stiffness]
-
-        real_values = [value if value is None else np.real(value) for value in distributed_stiffness]
-        imag_values = [value if value is None else np.imag(value) for value in distributed_stiffness]
-
-        for selected_id in selected_ids:
-
-            data = {
-                "element_type": element_type,
-                "real_values": real_values,
-                "imag_values": imag_values,
-                "unit": "kg",
-            }
-
-            if surface_assignment:
-                self.properties._set_property("distributed_stiffness", data, surface=selected_id)
-
-            else:
-                self.properties._set_property("distributed_stiffness", data, line=selected_id)
-
-    def lineEdit_reset(self, lineEdit: QLineEdit):
-        lineEdit.setText("")
-        lineEdit.setFocus()
-
-    def remove_duplicated_attributions(self, selected_ids: list, selection: str):
-
-        for selected_id in selected_ids:
-
-            if selection == "surfaces":
-                for line_id in self.mesh.lines_from_surface[selected_id]:
-                    data = self.properties._get_property("distributed_stiffness", line=line_id)
-                    if isinstance(data, dict):
-                        self.properties._remove_line_property("distributed_stiffness", line_id)
-
-            elif selection == "lines":
-                for surface_id in self.mesh.surfaces_from_line[selected_id]:
-                    data = self.properties._get_property("distributed_stiffness", surface=surface_id)
-                    if isinstance(data, dict):
-                        self.properties._remove_surface_property("distributed_stiffness", surface_id)
-
-    def apply_callback(self, close_window: bool=False):
-
-        if self.tabWidget_main.currentIndex() == TabType.LIST:
-            return
-
-        if self.constant_values_attribution():
-            return
+        if tab_index == StandardTabType.TABULAR_DATA:
+            if self.table_values_attribution(selection, selected_ids):
+                return
 
         self.actions_to_finalize(close_window)
+
+    def text_label(self, mask):
+
+        load_labels = np.array(['Kx','Ky','Kz'])
+        labels = load_labels[mask]
+
+        if list(mask).count(True) == 3:
+            return "[{}, {}, {}]".format(*labels)
+
+        if list(mask).count(True) == 2:
+            return "[{}, {}]".format(*labels)
+
+        if list(mask).count(True) == 1:
+            return "[{}]".format(*labels)
 
     def load_model_info(self):
 
@@ -294,13 +568,17 @@ class DistributedStiffnessInputs(DistributedStiffnessInputs_UI):
 
                 if prop_label != "distributed_stiffness":
                     continue
-            
-                value = np.real(data["values"])[0]
-                str_value = f"{value}"
 
-                new = QTreeWidgetItem([f"{args[0]}", key, str_value])
+                if not isinstance(data, dict):
+                    continue
 
-                for i in range(3):
+                values = data.get("values", [])
+                element_type = data.get("element_type")
+                dof_labels = self.text_label([isinstance(value, np.ndarray | complex) for value in values])
+
+                new = QTreeWidgetItem([f"{args[0]}", key, element_type, dof_labels])
+
+                for i in range(5):
                     new.setTextAlignment(i, Qt.AlignCenter)
 
                 self.treeWidget_distributed_stiffness.addTopLevelItem(new)
@@ -312,6 +590,8 @@ class DistributedStiffnessInputs(DistributedStiffnessInputs_UI):
         properties_to_check = [
             self.properties.surface_properties,
             self.properties.line_properties,
+            self.properties.point_properties,
+            self.properties.nodal_properties,
         ]
 
         for current_property in properties_to_check:
@@ -319,18 +599,17 @@ class DistributedStiffnessInputs(DistributedStiffnessInputs_UI):
                 if property != "distributed_stiffness":
                     continue
 
-                self.tabWidget_main.setTabVisible(TabType.LIST, True)
+                self.tabWidget_main.setTabVisible(StandardTabType.LIST, True)
                 return
 
-        self.tabWidget_main.setTabVisible(TabType.LIST, False)
-        self.tabWidget_main.setCurrentIndex(TabType.CONSTANT_DATA)
-        self.lineEdit_constant_value.setFocus()
-
-        app().main_window.selection.set_geometry_selection()
+        self.tabWidget_main.setTabVisible(StandardTabType.LIST, False)
+        self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)
+        self.lineEdit_left_Kx.setFocus()
 
     def tab_event_callback(self):
-        list_tab = self.tabWidget_main.currentIndex() == TabType.LIST
+        list_tab = self.tabWidget_main.currentIndex() == StandardTabType.LIST
         self.comboBox_assignment_type.setDisabled(list_tab)
+        self.comboBox_data_type.setDisabled(list_tab)
         self.lineEdit_selection_id.setDisabled(list_tab)
         self.pushButton_apply.setDisabled(list_tab)
         self.pushButton_apply_and_close.setDisabled(list_tab)
@@ -340,7 +619,7 @@ class DistributedStiffnessInputs(DistributedStiffnessInputs_UI):
             app().main_window.selection.set_geometry_selection()
             self.lineEdit_selection_id.setText("")
         else:
-            view = self.comboBox_assignment_type.view() 
+            view = self.comboBox_assignment_type.view()
             view.setRowHidden(2, True)
             self.comboBox_assignment_type.setCurrentIndex(AssignmentType.SURFACES)
             self.treeWidget_distributed_stiffness.clearSelection()
@@ -374,20 +653,6 @@ class DistributedStiffnessInputs(DistributedStiffnessInputs_UI):
     def item_double_clicked_callback(self, item):
         self.item_clicked_callback(item)
 
-    def remove_conflicting_excitations(self, selected_ids: int | list, selection: str):
-
-        if isinstance(selected_ids, int):
-            selected_ids = [selected_ids]
-
-        if selection == "surfaces":
-            remove_function = self.properties._remove_surface_property
-
-        elif selection == "lines":
-            remove_function = self.properties._remove_line_property
-
-        for selected_id in selected_ids:
-            remove_function("distributed_stiffness", selected_id)
-
     def remove_callback(self):
 
         selected_items = self.treeWidget_distributed_stiffness.selectedItems()
@@ -411,8 +676,8 @@ class DistributedStiffnessInputs(DistributedStiffnessInputs_UI):
 
     def reset_callback(self):
 
-        title = "Distributed stiffnesses reset"
-        message = "Would you like to remove the all distributed stiffnesses from model?"
+        title = "Distributed stiffness reset"
+        message = "Would you like to remove the all distributed stiffness from model?"
 
         buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
         obj = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
@@ -437,12 +702,17 @@ class DistributedStiffnessInputs(DistributedStiffnessInputs_UI):
         if close_window:
             self.close()
 
-    def reset_input_fields(self, reset_all: bool = False):
+    def reset_input_fields(self, reset_all=False):
 
         if reset_all:
-            self.lineEdit_selection_id.clear()
+            self.lineEdit_selection_id.setText("")
 
-        self.lineEdit_constant_value.clear()
+        for lineEdit_left, lineEdit_right in self.constant_values_line_edits:
+            lineEdit_left.setText("")
+            lineEdit_right.setText("")
+
+        for lineEdit_table in self.table_line_edits.values():
+            lineEdit_table.setText("")
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:

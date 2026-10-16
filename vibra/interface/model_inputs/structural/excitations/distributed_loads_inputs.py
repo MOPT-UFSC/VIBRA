@@ -318,8 +318,8 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         for values in distributed_loads:
             all_values.extend(values)
 
-        condition_1 = element_type == "2d_element" and all_values.count(None) == 12
-        condition_2 = element_type == "3d_element" and all_values.count(None) == 6
+        condition_1 = element_type == "2d_element" and all_values.count(None) == 6
+        condition_2 = element_type == "3d_element" and all_values.count(None) == 3
 
         if condition_1 or condition_2:
             title = "Additional inputs required"

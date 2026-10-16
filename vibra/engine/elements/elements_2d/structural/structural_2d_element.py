@@ -195,7 +195,7 @@ class Structural2DElement(Element2D):
         return Me
 
 
-    def integrate_distributed_stiffness(self, el_index: int, k_found: float) -> np.ndarray:
+    def integrate_distributed_stiffness(self, el_index: int, k_density: float = 1.0) -> np.ndarray:
         """ 
         This method computes the elementary stiffness matrix caused by a foundation stiffness.
 
@@ -204,7 +204,7 @@ class Structural2DElement(Element2D):
         el_index: int
             The element index.
 
-        k_found: float
+        k_density: float
             The mass density in kg/m².
 
         Returns
@@ -222,6 +222,9 @@ class Structural2DElement(Element2D):
         # initialize the variable Fe
         Ke = 0.
 
+        # identity matrix
+        I = np.eye(self.dof_per_element, dtype=float)
+
         # integration loop
         for i in range(self.nint):
 
@@ -231,7 +234,7 @@ class Structural2DElement(Element2D):
             # matrix of shape functions for all DOF
             N = self.N_matrix[i, :, :]
 
-            Ke += (N.T @ N) * k_found * (det_jac * self.wps[i])
+            Ke += (N.T @ (N @ (k_density * I))) * (det_jac * self.wps[i])
 
         return Ke
 
