@@ -15,7 +15,7 @@ from vibra.engine.properties.material import Material
 
 
 @dataclass
-class DistributedMassData:
+class DistributedPropertyData:
     element_ids: np.ndarray
     connectivities: np.ndarray
     pdata_values: np.ndarray | dict
@@ -309,10 +309,55 @@ class StructuralAssembler:
                 self.material_from_volume[vol_id] = material
 
 
-    def get_distributed_mass_data_for_2d_element_integration(self) -> DistributedMassData | None:
+    def get_distributed_mass_data_for_1d_element_integration(self) -> DistributedPropertyData | None:
         """ 
-        This method processes the excitation property data for element face
-        integration.
+        This method processes the distributed mass data for element integration.
+
+        Returns
+        -------
+        integration_data: dict
+            A dictionary containing the connectivities and the data of each
+            processed 2d elements.
+        """
+
+        pdata_values = {}
+        connectivities = {}
+        integration_data = {}
+
+        for key, data in self.properties.line_properties.items():
+
+            prop, line_id = key
+            if prop != "distributed_mass":
+                continue
+
+            data: dict
+            mass = np.real(data.get("values"))
+
+            line_elements = list(self.model.mesh.elements_from_line.get(line_id))
+            line_connect = self.model.mesh.get_connectivity_from_line(line_id)
+            line_length = self.element_1d.integrate_length(line_connect)
+
+            # calculate the line density
+            line_density = mass / line_length
+
+            for i, el in enumerate(line_elements):
+                connectivities[el] = line_connect[i]
+                pdata_values[el] = line_density
+
+        if connectivities:
+
+            integration_data = {
+                "element_ids" : np.array(list(connectivities.keys()), dtype=int),
+                "connectivities" : np.array(list(connectivities.values()), dtype=int),
+                "pdata_values" : np.array(list(pdata_values.values()), dtype=float),
+                }
+
+            return DistributedPropertyData(**integration_data)
+
+
+    def get_distributed_mass_data_for_2d_element_integration(self) -> DistributedPropertyData | None:
+        """ 
+        This method processes the distributed mass data for element integration.
 
         Returns
         -------
@@ -361,13 +406,12 @@ class StructuralAssembler:
                 "pdata_values" : np.array(list(pdata_values.values()), dtype=float),
                 }
 
-            return DistributedMassData(**integration_data)
+            return DistributedPropertyData(**integration_data)
 
 
-    def get_distributed_mass_data_for_1d_element_integration(self) -> DistributedMassData | None:
+    def get_distributed_stiffness_data_for_1d_element_integration(self) -> DistributedPropertyData | None:
         """ 
-        This method processes the excitation property data for element face
-        integration.
+        This method processes the foundation stiffness data for element integration.
 
         Returns
         -------
@@ -383,22 +427,22 @@ class StructuralAssembler:
         for key, data in self.properties.line_properties.items():
 
             prop, line_id = key
-            if prop != "distributed_mass":
+            if prop != "distributed_stiffness":
                 continue
 
             data: dict
-            mass = np.real(data.get("values"))
+            k_found = np.real(data.get("values"))
 
             line_elements = list(self.model.mesh.elements_from_line.get(line_id))
             line_connect = self.model.mesh.get_connectivity_from_line(line_id)
             line_length = self.element_1d.integrate_length(line_connect)
 
-            # calculate the line density
-            line_density = mass / line_length
+            # calculate the foundation stiffness density
+            k_found_density = k_found / line_length
 
             for i, el in enumerate(line_elements):
                 connectivities[el] = line_connect[i]
-                pdata_values[el] = line_density
+                pdata_values[el] = k_found_density
 
         if connectivities:
 
@@ -408,7 +452,53 @@ class StructuralAssembler:
                 "pdata_values" : np.array(list(pdata_values.values()), dtype=float),
                 }
 
-            return DistributedMassData(**integration_data)
+            return DistributedPropertyData(**integration_data)
+
+
+    def get_distributed_stiffness_data_for_2d_element_integration(self) -> DistributedPropertyData | None:
+        """ 
+        This method processes the foundation stiffness data for element integration.
+
+        Returns
+        -------
+        integration_data: dict
+            A dictionary containing the connectivities and the data of each
+            processed 2d elements.
+        """
+
+        pdata_values = {}
+        connectivities = {}
+        integration_data = {}
+
+        for key, data in self.properties.surface_properties.items():
+
+            prop, surface_id = key
+            if prop != "distributed_stiffness":
+                continue
+
+            data: dict
+            k_found = np.real(data.get("values"))
+
+            surf_elements = list(self.model.mesh.elements_from_surface.get(surface_id))
+            surf_connect = self.model.mesh.get_connectivity_from_surface(surface_id)
+            surface_area = self.element_2d.integrate_area(surf_connect)
+
+            # calculate the foundation stiffness density
+            k_found_density = k_found / surface_area
+
+            for i, el in enumerate(surf_elements):
+                connectivities[el] = surf_connect[i]
+                pdata_values[el] = k_found_density
+
+        if connectivities:
+
+            integration_data = {
+                "element_ids" : np.array(list(connectivities.keys()), dtype=int),
+                "connectivities" : np.array(list(connectivities.values()), dtype=int),
+                "pdata_values" : np.array(list(pdata_values.values()), dtype=float),
+                }
+
+            return DistributedPropertyData(**integration_data)
 
 
     def process_surface_data_for_shell_elements(self):
@@ -593,6 +683,48 @@ class StructuralAssembler:
         self.mass_matrix += csr_matrix((data_Mdist.flatten(), (ind_rows, ind_cols)), shape=self.model.gm_shape)
 
 
+    def assemble_distributed_stiffness_matrix_for_lines(self):
+
+        integration_data_1d = self.get_distributed_stiffness_data_for_1d_element_integration()
+        if integration_data_1d is None:
+            return
+
+        connectivities = integration_data_1d.connectivities
+        pdata_values = integration_data_1d.pdata_values
+
+        n_el = len(connectivities)
+        e_dofs = self.element_1d.dof_per_element
+        data_Kfound = np.zeros((n_el, e_dofs, e_dofs), dtype=float)
+
+        ind_rows, ind_cols = self.element_1d.get_rows_and_cols_indices_2D(connectivities)
+
+        for i, k_found_density in enumerate(pdata_values):
+            data_Kfound[i, :, :] = self.element_1d.integrate_distributed_stiffness(i, k_found_density)
+
+        self.stiffness_matrix += csr_matrix((data_Kfound.flatten(), (ind_rows, ind_cols)), shape=self.model.gm_shape)
+
+
+    def assemble_distributed_stiffness_matrix_for_surfaces(self):
+
+        integration_data_2d = self.get_distributed_stiffness_data_for_2d_element_integration()
+        if integration_data_2d is None:
+            return
+
+        connectivities = integration_data_2d.connectivities
+        pdata_values = integration_data_2d.pdata_values
+
+        n_el = len(connectivities)
+        e_dofs = self.element_2d.dof_per_element
+        data_Kfound = np.zeros((n_el, e_dofs, e_dofs), dtype=float)
+
+        ind_rows, ind_cols = self.element_2d.get_rows_and_cols_indices_2D(connectivities)
+
+        for i, k_found_density in enumerate(pdata_values):
+            data_Kfound[i, :, :] = self.element_2d.integrate_distributed_stiffness(i, k_found_density)
+
+        self.stiffness_matrix += csr_matrix((data_Kfound.flatten(), (ind_rows, ind_cols)), shape=self.model.gm_shape)
+
+
     def assemble_global_mass_matrix(self):
         """
         This method assembles the global mass matrix.
@@ -611,11 +743,14 @@ class StructuralAssembler:
             self.mass_matrix = self.mass_matrix[self.unprescribed_dof_indices, :][:, self.unprescribed_dof_indices]
 
 
-    def assemble_global_stiffness_matrix(self, print_log: bool=False):
+    def assemble_global_stiffness_matrix(self):
         """
         This method assembles the global stiffness matrix.
         """
         self.stiffness_matrix = csr_matrix((self.data_K.flatten(), (self.ind_rows, self.ind_cols)), shape=self.model.gm_shape)
+
+        self.assemble_distributed_stiffness_matrix_for_lines()
+        self.assemble_distributed_stiffness_matrix_for_surfaces()
 
         if self.model.drop_domain:
             self.stiffness_matrix = self.stiffness_matrix[self.structural_dofs_indices, :][:, self.structural_dofs_indices]

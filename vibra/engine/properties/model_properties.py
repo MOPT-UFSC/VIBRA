@@ -99,6 +99,7 @@ class ModelProperties:
             "nodal_loads",
             "distributed_loads",
             "distributed_mass",
+            "distributed_stiffness",
             "normal_pressure_load",
         ]
 

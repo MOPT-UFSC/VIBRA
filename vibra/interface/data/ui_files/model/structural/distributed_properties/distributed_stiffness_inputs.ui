@@ -461,7 +461,7 @@
                  <number>6</number>
                 </property>
                 <item row="2" column="2">
-                 <widget class="QLineEdit" name="lineEdit_mass_to_distribute">
+                 <widget class="QLineEdit" name="lineEdit_constant_value">
                   <property name="minimumSize">
                    <size>
                     <width>100</width>
@@ -529,7 +529,7 @@
                    </font>
                   </property>
                   <property name="text">
-                   <string>Mass to distribute:</string>
+                   <string>Stiffness to distribute:</string>
                   </property>
                   <property name="alignment">
                    <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
@@ -559,7 +559,7 @@
                    </font>
                   </property>
                   <property name="text">
-                   <string>[kg]</string>
+                   <string>[N/m]</string>
                   </property>
                   <property name="alignment">
                    <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
@@ -614,7 +614,7 @@
                </property>
                <layout class="QGridLayout" name="gridLayout_2">
                 <item row="0" column="0">
-                 <widget class="QTreeWidget" name="treeWidget_distributed_mass">
+                 <widget class="QTreeWidget" name="treeWidget_distributed_stiffness">
                   <property name="minimumSize">
                    <size>
                     <width>320</width>
@@ -832,7 +832,7 @@
          </font>
         </property>
         <property name="text">
-         <string>Set distributed masses</string>
+         <string>Set distributed stiffness</string>
         </property>
         <property name="textFormat">
          <enum>Qt::TextFormat::AutoText</enum>

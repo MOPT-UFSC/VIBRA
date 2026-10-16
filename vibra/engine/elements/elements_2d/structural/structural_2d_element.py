@@ -195,6 +195,47 @@ class Structural2DElement(Element2D):
         return Me
 
 
+    def integrate_distributed_stiffness(self, el_index: int, k_found: float) -> np.ndarray:
+        """ 
+        This method computes the elementary stiffness matrix caused by a foundation stiffness.
+
+        Parameters
+        ----------
+        el_index: int
+            The element index.
+
+        k_found: float
+            The mass density in kg/m².
+
+        Returns
+        -------
+        Ke: np.ndarray
+            The two-dimensional elementary consistent mass matrix.
+        """
+
+        # element nodes
+        e_nodes = self.connectivities[el_index, :]
+
+        # element nodal coordinates
+        coords = self.model.mesh.nodal_coordinates[e_nodes, 1:]
+
+        # initialize the variable Fe
+        Ke = 0.
+
+        # integration loop
+        for i in range(self.nint):
+
+            # determinant of Jacobian for the i-th integration point
+            det_jac = self.get_jacobian_determinant_2d(self.dphi[i, :, :], coords)
+
+            # matrix of shape functions for all DOF
+            N = self.N_matrix[i, :, :]
+
+            Ke += (N.T @ N) * k_found * (det_jac * self.wps[i])
+
+        return Ke
+
+
     def get_rows_and_cols_indices_1D(self, index: int):
         """
         This method returns, for a selected element, the row 

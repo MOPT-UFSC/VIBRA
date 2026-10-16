@@ -701,32 +701,25 @@ def structural_boundary_conditions_info_text():
 
 
 def structural_additional_info_text():
+
     text = ""
     distributed_mass_1d = None
     distributed_mass_2d = None
+    distributed_stiffness_1d = None
+    distributed_stiffness_2d = None
 
     selected_faces = list(app().main_window.selection.geometry_surfaces)
     selected_lines = list(app().main_window.selection.geometry_lines)
 
     if len(selected_faces) == 1:
-        distributed_mass_2d = app().project.model.properties._get_property(
-            "distributed_mass", surface=selected_faces[0]
-        )
+        distributed_mass_2d = app().project.model.properties._get_property("distributed_mass", surface=selected_faces[0])
+        distributed_stiffness_2d = app().project.model.properties._get_property("distributed_stiffness", surface=selected_faces[0])
 
     elif len(selected_lines) == 1:
-        distributed_mass_1d = app().project.model.properties._get_property(
-            "distributed_mass", line=selected_lines[0]
-        )
+        distributed_mass_1d = app().project.model.properties._get_property("distributed_mass", line=selected_lines[0])
+        distributed_stiffness_1d = app().project.model.properties._get_property("distributed_stiffness", line=selected_lines[0])
 
     else:
-        return text
-
-    properties = [
-        distributed_mass_2d,
-        distributed_mass_1d,
-    ]
-
-    if all(prop_data is None for prop_data in properties):
         return text
 
     if isinstance(distributed_mass_2d, dict):
@@ -738,6 +731,16 @@ def structural_additional_info_text():
         real_value = [value.real for value in distributed_mass_1d.get("values")]
         loaded_table = "table_names" in distributed_mass_1d
         text += structural_format("Distributed mass (line)", real_value, ["M"], ["kg"], loaded_table)
+
+    if isinstance(distributed_stiffness_2d, dict):
+        real_value = [value.real for value in distributed_stiffness_2d.get("values")]
+        loaded_table = "table_names" in distributed_stiffness_2d
+        text += structural_format("Distributed stiffness (area)", real_value, ["K"], ["N/m"], loaded_table)
+
+    if isinstance(distributed_stiffness_1d, dict):
+        real_value = [value.real for value in distributed_stiffness_1d.get("values")]
+        loaded_table = "table_names" in distributed_stiffness_1d
+        text += structural_format("Distributed stiffness (line)", real_value, ["K"], ["N/m"], loaded_table)
 
     return text
 

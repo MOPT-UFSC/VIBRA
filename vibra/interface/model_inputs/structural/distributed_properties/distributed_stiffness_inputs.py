@@ -13,7 +13,7 @@ from vibra.interface.common.common_interface import update_entities_selection
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
-from vibra.interface.ui_generated.model.structural.excitations.distributed_mass_inputs_ui import DistributedMassInputs_UI
+from vibra.interface.ui_generated.model.structural.distributed_properties.distributed_stiffness_inputs_ui import DistributedStiffnessInputs_UI
 
 
 class TabType(IntEnum):
@@ -27,16 +27,12 @@ class AssignmentType(IntEnum):
     MULTIPLE = 2
 
 
-class DistributedMassInputs(DistributedMassInputs_UI):
+class DistributedStiffnessInputs(DistributedStiffnessInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
-
-        self.model = app().project.model
-        self.mesh = app().project.model.mesh
-        self.properties = app().project.model.properties
 
         self._config_window()
         self._initialize()
@@ -50,6 +46,18 @@ class DistributedMassInputs(DistributedMassInputs_UI):
         while self.keep_window_open:
             self.exec()
 
+    @property
+    def model(self):
+        return app().project.model
+
+    @property
+    def mesh(self):
+        return app().project.model.mesh
+
+    @property
+    def properties(self):
+        return app().project.model.properties
+
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
@@ -61,16 +69,16 @@ class DistributedMassInputs(DistributedMassInputs_UI):
         self.element_types = ["2d_element", "3d_element"]
 
     def _configure_validators(self):
-        self.lineEdit_mass_to_distribute.setValidator(StrictDoubleValidator(1e-16, 1e16, 8))
+        self.lineEdit_constant_value.setValidator(StrictDoubleValidator(1e-16, 1e16, 8))
 
     def _config_widgets(self):
 
         self.comboBox_element_type.setEnabled(False)
-        self.treeWidget_distributed_mass.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+        self.treeWidget_distributed_stiffness.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
 
         for i, w in enumerate([80, 120, 100]):
-            self.treeWidget_distributed_mass.setColumnWidth(i, w)
-            self.treeWidget_distributed_mass.headerItem().setTextAlignment(i, Qt.AlignCenter)
+            self.treeWidget_distributed_stiffness.setColumnWidth(i, w)
+            self.treeWidget_distributed_stiffness.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def _create_connections(self):
 
@@ -88,9 +96,9 @@ class DistributedMassInputs(DistributedMassInputs_UI):
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
 
         # QTreeWidget connections
-        self.treeWidget_distributed_mass.itemClicked.connect(self.item_clicked_callback)
-        self.treeWidget_distributed_mass.itemDoubleClicked.connect(self.item_double_clicked_callback)
-        self.treeWidget_distributed_mass.itemSelectionChanged.connect(self.item_selection_clicked_callback)
+        self.treeWidget_distributed_stiffness.itemClicked.connect(self.item_clicked_callback)
+        self.treeWidget_distributed_stiffness.itemDoubleClicked.connect(self.item_double_clicked_callback)
+        self.treeWidget_distributed_stiffness.itemSelectionChanged.connect(self.item_selection_clicked_callback)
 
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         self.update_element_type_based_on_geometry_information()
@@ -118,7 +126,7 @@ class DistributedMassInputs(DistributedMassInputs_UI):
 
             if len(surfaces) == 1:
                 surface_id = next(iter(surfaces))
-                data = self.properties._get_property("distributed_mass", surface=surface_id)
+                data = self.properties._get_property("distributed_stiffness", surface=surface_id)
                 self.update_input_fields(data)
                 if data is None:
                     self.update_formulation_callback(surface_id=surface_id)
@@ -131,7 +139,7 @@ class DistributedMassInputs(DistributedMassInputs_UI):
 
             if len(lines) == 1:
                 line_id = next(iter(lines))
-                data = self.properties._get_property("distributed_mass", line=line_id)
+                data = self.properties._get_property("distributed_stiffness", line=line_id)
                 self.update_input_fields(data)
                 if data is None:
                     self.update_formulation_callback(line_id=line_id)
@@ -146,8 +154,8 @@ class DistributedMassInputs(DistributedMassInputs_UI):
         element_type = data.get("element_type")
         self.comboBox_element_type.setCurrentIndex(self.element_types.index(element_type))
 
-        mass = np.real(data.get("values"))
-        self.lineEdit_mass_to_distribute.setText(f"{round(float(mass), 8)}")
+        stiffness = np.real(data.get("values"))
+        self.lineEdit_constant_value.setText(f"{round(float(stiffness), 8)}")
 
     def update_formulation_callback(self, line_id: int | None = None, surface_id: int | None = None):
 
@@ -183,7 +191,7 @@ class DistributedMassInputs(DistributedMassInputs_UI):
 
         except Exception:
             title = "Invalid value detected"
-            message = "An invalid value has been detected at the 'mass' input field. "
+            message = "An invalid value has been detected at the 'stiffness' input field. "
             message += "Enter a positive value to proceed with the assignment."
             PrintMessageInput([error_title, title, message])
             return None
@@ -215,17 +223,17 @@ class DistributedMassInputs(DistributedMassInputs_UI):
         etype_index = self.comboBox_element_type.currentIndex()
         element_type = self.element_types[etype_index]
 
-        mass = self.check_input_value(self.lineEdit_mass_to_distribute.text())
-        if mass is None:
+        stiffness = self.check_input_value(self.lineEdit_constant_value.text())
+        if stiffness is None:
             title = "Additional inputs required"
             message = "You must to enter at least one distributed load value before confirming the assignment."
             PrintMessageInput([error_title, title, message])
             return True
 
-        distributed_mass = [mass]
+        distributed_stiffness = [stiffness]
 
-        real_values = [value if value is None else np.real(value) for value in distributed_mass]
-        imag_values = [value if value is None else np.imag(value) for value in distributed_mass]
+        real_values = [value if value is None else np.real(value) for value in distributed_stiffness]
+        imag_values = [value if value is None else np.imag(value) for value in distributed_stiffness]
 
         for selected_id in selected_ids:
 
@@ -237,10 +245,10 @@ class DistributedMassInputs(DistributedMassInputs_UI):
             }
 
             if surface_assignment:
-                self.properties._set_property("distributed_mass", data, surface=selected_id)
+                self.properties._set_property("distributed_stiffness", data, surface=selected_id)
 
             else:
-                self.properties._set_property("distributed_mass", data, line=selected_id)
+                self.properties._set_property("distributed_stiffness", data, line=selected_id)
 
     def lineEdit_reset(self, lineEdit: QLineEdit):
         lineEdit.setText("")
@@ -252,15 +260,15 @@ class DistributedMassInputs(DistributedMassInputs_UI):
 
             if selection == "surfaces":
                 for line_id in self.mesh.lines_from_surface[selected_id]:
-                    data = self.properties._get_property("distributed_mass", line=line_id)
+                    data = self.properties._get_property("distributed_stiffness", line=line_id)
                     if isinstance(data, dict):
-                        self.properties._remove_line_property("distributed_mass", line_id)
+                        self.properties._remove_line_property("distributed_stiffness", line_id)
 
             elif selection == "lines":
                 for surface_id in self.mesh.surfaces_from_line[selected_id]:
-                    data = self.properties._get_property("distributed_mass", surface=surface_id)
+                    data = self.properties._get_property("distributed_stiffness", surface=surface_id)
                     if isinstance(data, dict):
-                        self.properties._remove_surface_property("distributed_mass", surface_id)
+                        self.properties._remove_surface_property("distributed_stiffness", surface_id)
 
     def apply_callback(self, close_window: bool=False):
 
@@ -279,12 +287,12 @@ class DistributedMassInputs(DistributedMassInputs_UI):
             "surface" : self.properties.surface_properties,
         }
 
-        self.treeWidget_distributed_mass.clear()
+        self.treeWidget_distributed_stiffness.clear()
 
         for key, property in properties.items():
             for (prop_label, *args), data in property.items():
 
-                if prop_label != "distributed_mass":
+                if prop_label != "distributed_stiffness":
                     continue
             
                 value = np.real(data["values"])[0]
@@ -295,7 +303,7 @@ class DistributedMassInputs(DistributedMassInputs_UI):
                 for i in range(3):
                     new.setTextAlignment(i, Qt.AlignCenter)
 
-                self.treeWidget_distributed_mass.addTopLevelItem(new)
+                self.treeWidget_distributed_stiffness.addTopLevelItem(new)
 
         self.update_tabs_visibility()
 
@@ -308,7 +316,7 @@ class DistributedMassInputs(DistributedMassInputs_UI):
 
         for current_property in properties_to_check:
             for (property, _) in current_property:
-                if property != "distributed_mass":
+                if property != "distributed_stiffness":
                     continue
 
                 self.tabWidget_main.setTabVisible(TabType.LIST, True)
@@ -316,7 +324,7 @@ class DistributedMassInputs(DistributedMassInputs_UI):
 
         self.tabWidget_main.setTabVisible(TabType.LIST, False)
         self.tabWidget_main.setCurrentIndex(TabType.CONSTANT_DATA)
-        self.lineEdit_mass_to_distribute.setFocus()
+        self.lineEdit_constant_value.setFocus()
 
         app().main_window.selection.set_geometry_selection()
 
@@ -335,7 +343,7 @@ class DistributedMassInputs(DistributedMassInputs_UI):
             view = self.comboBox_assignment_type.view() 
             view.setRowHidden(2, True)
             self.comboBox_assignment_type.setCurrentIndex(AssignmentType.SURFACES)
-            self.treeWidget_distributed_mass.clearSelection()
+            self.treeWidget_distributed_stiffness.clearSelection()
 
     def item_selection_clicked_callback(self):
         self.item_clicked_callback(None)
@@ -344,7 +352,7 @@ class DistributedMassInputs(DistributedMassInputs_UI):
 
         self.pushButton_remove.setDisabled(False)
 
-        selected_items = self.treeWidget_distributed_mass.selectedItems()
+        selected_items = self.treeWidget_distributed_stiffness.selectedItems()
         if not selected_items:
             self.lineEdit_selection_id.clear()
             self.pushButton_remove.setDisabled(True)
@@ -378,11 +386,11 @@ class DistributedMassInputs(DistributedMassInputs_UI):
             remove_function = self.properties._remove_line_property
 
         for selected_id in selected_ids:
-            remove_function("distributed_mass", selected_id)
+            remove_function("distributed_stiffness", selected_id)
 
     def remove_callback(self):
 
-        selected_items = self.treeWidget_distributed_mass.selectedItems()
+        selected_items = self.treeWidget_distributed_stiffness.selectedItems()
         if not selected_items:
             return
 
@@ -391,10 +399,10 @@ class DistributedMassInputs(DistributedMassInputs_UI):
             selection = item.text(1)
 
             if selection == "surface":
-                self.properties._remove_surface_property("distributed_mass", selected_id)
+                self.properties._remove_surface_property("distributed_stiffness", selected_id)
 
             elif selection == "line":
-                self.properties._remove_line_property("distributed_mass", selected_id)
+                self.properties._remove_line_property("distributed_stiffness", selected_id)
 
         self.actions_to_finalize()
 
@@ -403,8 +411,8 @@ class DistributedMassInputs(DistributedMassInputs_UI):
 
     def reset_callback(self):
 
-        title = "Distributed masses reset"
-        message = "Would you like to remove the all distributed masses from model?"
+        title = "Distributed stiffnesses reset"
+        message = "Would you like to remove the all distributed stiffnesses from model?"
 
         buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
         obj = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
@@ -413,7 +421,7 @@ class DistributedMassInputs(DistributedMassInputs_UI):
             return
 
         if obj._continue:
-            self.properties._reset_property("distributed_mass")
+            self.properties._reset_property("distributed_stiffness")
             self.actions_to_finalize()
 
             app().main_window.selection.set_geometry_selection()
@@ -434,7 +442,7 @@ class DistributedMassInputs(DistributedMassInputs_UI):
         if reset_all:
             self.lineEdit_selection_id.clear()
 
-        self.lineEdit_mass_to_distribute.clear()
+        self.lineEdit_constant_value.clear()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
