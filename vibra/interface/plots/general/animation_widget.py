@@ -1,25 +1,27 @@
-import platform
-from pathlib import Path
-
 import numpy as np
 from molde.render_widgets.animated_render_widget import AnimatedRenderWidget
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtGui import QFont
-from PySide6.QtWidgets import QFileDialog, QLabel, QPushButton, QSpinBox
+from PySide6.QtWidgets import QLabel, QPushButton, QSpinBox
 
 from vibra import app
 from vibra.engine.analysis_info import PhysicalDomain
+from vibra.extensions import SUPPORTED_ANIMATION_EXTENSIONS, SUPPORTED_VIDEO_EXTENSIONS
 from vibra.interface import error_title
 from vibra.interface.formatters.icons import Icon
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.ui_generated.plots.general.animation_widget_ui import AnimationWidget_UI
+from vibra.interface.user_input.data_handler.file_dialog_service import FileDialogService
 from vibra.interface.viewer_3d.plot_setup import (
     AllowablePulsationForScrewCompressorsPlotSetup,
-    FrequencyDisplacementPlotSetup,
-    FrequencyPressurePlotSetup,
+    DisplacementFieldPlotSetupFrequency,
+    DisplacementFieldPlotSetupTime,
     PlotSetup,
-    TransientPressurePlotSetup,
+    PressureFieldPlotSetupFrequency,
+    PressureFieldPlotSetupTime,
+    StressFieldPlotSetupFrequency,
+    StressFieldPlotSetupTime,
 )
 
 
@@ -34,6 +36,23 @@ class AnimationWidget(AnimationWidget_UI):
         self._configure_appearance()
 
         self.setWindowTitle("Animation toolbar")
+
+    @property
+    def phase_in_radians(self):
+        return np.radians(self.phase_slider.value())
+
+    @property
+    def time(self):
+        value = self.phase_slider.value()
+        return (self.sampling_time / self.frames_number) * value
+
+    @property
+    def time_index(self):
+        return min(self.phase_slider.value(), self.frames_number - 1)
+
+    @property
+    def magnification_factor(self):
+        return self.magnification_factor_slider.value() / 16
 
     def _initialize(self):
         self.animating = False
@@ -84,21 +103,22 @@ class AnimationWidget(AnimationWidget_UI):
         self.magnification_factor_slider.setSingleStep(1)
 
         # QSpinBox
+        self.spinBox_cycles.setFixedSize(60, 30)
+        self.spinBox_cycles.setAlignment(Qt.AlignHCenter)
+        self.spinBox_cycles.setCursor(Qt.PointingHandCursor)
         self.spinBox_cycles.setMinimum(1)
         self.spinBox_cycles.setMaximum(10)
         self.spinBox_cycles.setSingleStep(1)
         self.spinBox_cycles.setValue(3)
-        self.spinBox_cycles.setFixedSize(60, 30)
-        self.spinBox_cycles.setAlignment(Qt.AlignHCenter)
-        self.spinBox_cycles.setCursor(Qt.PointingHandCursor)
 
+        self.spinBox_frames.setFixedSize(60, 30)
+        self.spinBox_frames.setAlignment(Qt.AlignHCenter)
+        self.spinBox_frames.setCursor(Qt.PointingHandCursor)
         self.spinBox_frames.setMinimum(20)
         self.spinBox_frames.setMaximum(60)
         self.spinBox_frames.setSingleStep(10)
         self.spinBox_frames.setValue(40)
-        self.spinBox_frames.setFixedSize(60, 30)
-        self.spinBox_frames.setAlignment(Qt.AlignHCenter)
-        self.spinBox_frames.setCursor(Qt.PointingHandCursor)
+
         self.update_phase_slider_steps()
 
     def _create_connections(self):
@@ -118,7 +138,7 @@ class AnimationWidget(AnimationWidget_UI):
 
     def update_toolbar(self):
         current_domain = app().main_window.analysis_toolbar.combo_box_physical_domain.currentText()
-        structural_domain = current_domain.lower() == PhysicalDomain.STRUCTURAL
+        structural_domain = current_domain.lower() in [PhysicalDomain.STRUCTURAL, PhysicalDomain.COUPLED]
         self.magnification_factor_slider.setEnabled(structural_domain)
         self.label_magnification_factor.setEnabled(structural_domain)
         self.label_factor.setEnabled(structural_domain)
@@ -166,23 +186,6 @@ class AnimationWidget(AnimationWidget_UI):
         app().main_window.results_widget.stop_animation()
         app().main_window.results_widget.clear_cache()
 
-    @property
-    def phase_in_radians(self):
-        return np.radians(self.phase_slider.value())
-
-    @property
-    def time(self):
-        value = self.phase_slider.value()
-        return (self.sampling_time / self.frames_number) * value
-
-    @property
-    def time_index(self):
-        return min(self.phase_slider.value(), self.frames_number - 1)
-
-    @property
-    def magnification_factor(self):
-        return self.magnification_factor_slider.value() / 16
-
     def phase_slider_callback(self, value: int):
         self.update_degree_label()
         self.update_color_and_deformation(clear_cache=False)
@@ -201,9 +204,9 @@ class AnimationWidget(AnimationWidget_UI):
         self.frames_number = frames_number
 
         self.phase_slider.setMaximum(frames_number)
+        self.spinBox_frames.setEnabled(False)
         self.spinBox_frames.setMaximum(frames_number)
         self.spinBox_frames.setValue(frames_number)
-        self.spinBox_frames.setEnabled(False)
 
     def magnification_factor_slider_callback(self, value: int):
         self.update_factor_label()
@@ -216,15 +219,18 @@ class AnimationWidget(AnimationWidget_UI):
         plot_setup = app().main_window.results_widget.plot_setup
 
         match plot_setup:
-            case FrequencyPressurePlotSetup():
+            case PressureFieldPlotSetupFrequency():
                 plot_setup.phase = self.phase_in_radians
-            case FrequencyDisplacementPlotSetup():
+            case DisplacementFieldPlotSetupFrequency() | StressFieldPlotSetupFrequency():
                 plot_setup.phase = self.phase_in_radians
                 plot_setup.magnification_factor = self.magnification_factor
-            case TransientPressurePlotSetup():
+            case DisplacementFieldPlotSetupTime() | StressFieldPlotSetupTime():
+                plot_setup.time_index = self.time_index
+                plot_setup.magnification_factor = self.magnification_factor
+            case PressureFieldPlotSetupTime():
                 plot_setup.time_index = self.time_index
             case AllowablePulsationForScrewCompressorsPlotSetup():
-                pass    
+                pass
             case _:
                 return
 
@@ -238,7 +244,7 @@ class AnimationWidget(AnimationWidget_UI):
         self.phase_slider.setValue(0)
 
         # update labels
-        if isinstance(plot_setup, TransientPressurePlotSetup):
+        if isinstance(plot_setup, PressureFieldPlotSetupTime | DisplacementFieldPlotSetupTime | StressFieldPlotSetupTime):
             self.update_time_frame_label()
         else:
             self.update_degree_label()
@@ -298,36 +304,24 @@ class AnimationWidget(AnimationWidget_UI):
         self.phase_slider.setSingleStep(single_step)
 
     def save_animation(self):
-        kwargs = dict()
-        if platform.system() == "Linux":
-            kwargs["options"] = QFileDialog.Option.DontUseNativeDialog
-
-        file_path, extension = QFileDialog.getSaveFileName(
-            self, "Save As", filter="Video (*.mp4);;WEBP (*.webp);;GIF (*.gif);; All Files ();;", **kwargs
+        extensions = SUPPORTED_VIDEO_EXTENSIONS + SUPPORTED_ANIMATION_EXTENSIONS
+        file_path = FileDialogService.save_file(
+            file_extensions=extensions,
+            caption="Save As",
         )
 
-        if not extension:
+        if file_path is None:
             return
 
-        # Add default suffix if it does not have one
-        file_path = Path(file_path)
-        if extension == "Video (*.mp4)":
-            suffix = ".mp4"
-        elif extension == "WEBP (*.webp)":
-            suffix = ".webp"
-        elif extension == "GIF (*.gif)":
-            suffix = ".gif"
-        else:
-            suffix = ".mp4"
-
-        if not file_path.suffix:
-            file_path = file_path.parent / (file_path.name + suffix)
+        self.update_animation_settings()
+        self.current_render_widget._animation_total_frames = self.frames
 
         try:
-            if file_path.suffix.lower() in [".gif", ".webp"]:
+            if file_path.suffix.lower()[1:] in SUPPORTED_ANIMATION_EXTENSIONS:
                 LoadingWindow(self.current_render_widget.save_animation).run(file_path)
             else:
-                LoadingWindow(self.current_render_widget.save_video).run(file_path)
+                cycles = self.cycles if self.cycles != 0 else 20
+                LoadingWindow(self.current_render_widget.save_video).run(file_path, cycles)
 
         except Exception as error_log:
             title = "Error while exporting animation"

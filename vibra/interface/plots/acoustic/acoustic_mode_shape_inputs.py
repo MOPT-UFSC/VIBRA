@@ -10,7 +10,7 @@ from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.plots.general.animation_widget import AnimationWidget
 from vibra.interface.plots.general.results_display_widget import ResultsDisplayWidget
 from vibra.interface.ui_generated.plots.acoustic.acoustic_mode_shape_inputs_ui import AcousticModeShapeInputs_UI
-from vibra.interface.viewer_3d.plot_setup import FrequencyPressurePlotSetup, PressurePlotType
+from vibra.interface.viewer_3d.plot_setup import PressureFieldPlotSetupFrequency, PressurePlotType
 
 
 class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
@@ -21,6 +21,7 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
         self.add_animation_widget()
         self.add_color_widget()
         self._create_connections()
+        self.load_natural_frequencies()
 
     def showEvent(self, event):
         super().showEvent(event)
@@ -34,17 +35,19 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
         self.mode_index = None
 
     def _create_connections(self):
-        #
+
+        # QComboBox connections
         self.comboBox_plot_type.currentIndexChanged.connect(self.update_plot)
-        #
+
+        # QPushButton connections
         self.pushButton_export_results.clicked.connect(self.export_results_callback)
-        #
+
+        # QTreeWidget connections
         self.treeWidget_frequencies.itemClicked.connect(self.on_click_item)
         self.treeWidget_frequencies.itemDoubleClicked.connect(self.on_click_item)
-        #
-        self.results_display_widget.colormap_changed.connect(self.animation_widget.update_color_and_deformation)
-        self.results_display_widget.pressure_value_changed.connect(self.animation_widget.update_color_and_deformation)
 
+        self.results_display_widget.colormap_changed.connect(self.animation_widget.update_color_and_deformation)
+        self.results_display_widget.min_max_value_changed.connect(self.animation_widget.update_color_and_deformation)
 
     def add_animation_widget(self):
 
@@ -120,7 +123,7 @@ class AcousticModeShapeInputs(AcousticModeShapeInputs_UI):
         else:
             self.results_display_widget.configure_validators(-1e14, 1e14)
 
-        plot_setup = FrequencyPressurePlotSetup(
+        plot_setup = PressureFieldPlotSetupFrequency(
             phase=self.animation_widget.phase_in_radians,
             index=self.mode_index,
             plot_type=self.get_plot_type(),

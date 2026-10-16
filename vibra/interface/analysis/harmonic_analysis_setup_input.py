@@ -109,10 +109,12 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         self.lineEdit_constant_structural_coefficient.setValidator(StrictDoubleValidator(0, 1, 8))
 
     def _create_connections(self):
-        #
+
+        # QComboBox connections
         self.comboBox_frequency_spacing.currentIndexChanged.connect(self.frequency_spacing_callback)
         self.comboBox_method.currentIndexChanged.connect(self.analysis_method_callback)
-        #
+
+        # QPushButton connections
         self.pushButton_enter_setup.clicked.connect(self.enter_setup_callback)
         self.pushButton_exit.clicked.connect(self.close)
         self.pushButton_reset_frequency_settings.clicked.connect(self.reset_frequency_setup_based_on_tabular_data)
@@ -201,8 +203,6 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
 
         if self.setup_defined:
             return
-
-        self.hide()
 
         title = "Analysis setup not updated"
         message = "A set of solution steps has been configured, however, "
@@ -334,25 +334,21 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         
         f_min_tab, f_max_tab, *_ = self.tabular_frequency_setup
     
-        if f_min < f_min_tab:
-            if not np.isclose(f_min, f_min_tab, 1e-8):
-                self.hide()
-                title = "Invalid minimum frequency"
-                message = "The value entered for the minimum frequency is out of the allowable range."
-                PrintMessageInput([error_title, title, message])
-                self.lineEdit_fmin.setFocus()
-                self.lineEdit_fmin.setStyleSheet("border-color: rgb(255,0,0); border-width: 2px")
-                return True
+        if f_min < f_min_tab and not np.isclose(f_min, f_min_tab, 1e-8):
+            title = "Invalid minimum frequency"
+            message = "The value entered for the minimum frequency is out of the allowable range."
+            PrintMessageInput([error_title, title, message])
+            self.lineEdit_fmin.setFocus()
+            self.lineEdit_fmin.setStyleSheet("border-color: rgb(255,0,0); border-width: 2px")
+            return True
             
-        if f_max > f_max_tab:
-            if not np.isclose(f_max, f_max_tab, 1e-8):
-                self.hide()
-                title = "Invalid maximum frequency"
-                message = "The value entered for the maximum frequency is out of the allowable range."
-                PrintMessageInput([error_title, title, message])
-                self.lineEdit_fmax.setFocus()
-                self.lineEdit_fmax.setStyleSheet("border-color: rgb(255,0,0); border-width: 2px")
-                return True
+        if f_max > f_max_tab and not np.isclose(f_max, f_max_tab, 1e-8):
+            title = "Invalid maximum frequency"
+            message = "The value entered for the maximum frequency is out of the allowable range."
+            PrintMessageInput([error_title, title, message])
+            self.lineEdit_fmax.setFocus()
+            self.lineEdit_fmax.setStyleSheet("border-color: rgb(255,0,0); border-width: 2px")
+            return True
 
         clear_style_sheet([self.lineEdit_fmin, self.lineEdit_fmax])
 
@@ -398,7 +394,6 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
             condition_B = not f_max_tab >= f_max
 
         if condition_A and condition_B:
-            self.hide()
             title = "Invalid frequency setup"
             message = "The maximum frequency (fmax) must be greater than the sum of "
             message += "minimum frequency (fmin) and frequency resolution (df)."
@@ -461,7 +456,6 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
         if frequency_spacing == FrequencySpacing.USER_DEFINED:
             if len(self.user_defined_solution_steps) == 0:
                 if len(self.model.frequencies) == 0:
-                    self.hide()
                     title = "No solution steps found"
                     message = "Enter the solution steps before confirming the analysis "
                     message += "setup or trying to solve the harmonic analysis."
@@ -501,6 +495,8 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
 
                 analysis_setup_data.update(freq_data)
 
+        is_harmonic_acoustic = AnalysisID(analysis_id).is_harmonic_acoustic()
+        is_harmonic_coupled = AnalysisID(analysis_id).is_harmonic_coupled()
         is_harmonic_structural = AnalysisID(analysis_id).is_harmonic_structural()
         if is_harmonic_structural:
             analysis_setup_data["global_damping"] = self.check_damping_inputs()
@@ -512,6 +508,9 @@ class HarmonicAnalysisSetupInput(HarmonicAnalysisSetupInput_UI):
             #  structural harmonic analysis if there is a prescribed velocity or acceleration in the model
             if self.model.properties.is_there_a_prescribed_velocity_or_acceleration_in_the_model():
                 analysis_setup = self.model.modify_analysis_setup_to_filter_zero_frequency(analysis_setup)
+
+        elif is_harmonic_acoustic or is_harmonic_coupled:
+            analysis_setup = self.model.modify_analysis_setup_to_filter_zero_frequency(analysis_setup)
 
         app().project.configure_analysis(analysis_setup)
 

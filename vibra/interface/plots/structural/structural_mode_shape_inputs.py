@@ -10,17 +10,18 @@ from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.plots.general.animation_widget import AnimationWidget
 from vibra.interface.plots.general.results_display_widget import ResultsDisplayWidget
 from vibra.interface.ui_generated.plots.structural.structural_mode_shape_inputs_ui import StructuralModeShapeInputs_UI
-from vibra.interface.viewer_3d.plot_setup import DisplacementPlotType, FrequencyDisplacementPlotSetup
+from vibra.interface.viewer_3d.plot_setup import DisplacementDataType, DisplacementFieldPlotSetupFrequency
 
 
-class PlotStructuralModeShapeInputs(StructuralModeShapeInputs_UI):
+class StructuralModeShapeInputs(StructuralModeShapeInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         self._initialize()
-        self.add_animation_widget()
-        self.add_color_widget()
+        self._add_animation_widget()
+        self._add_color_widget()
         self._create_connections()
+        self.load_natural_frequencies()
 
     def showEvent(self, event):
         super().showEvent(event)
@@ -34,18 +35,21 @@ class PlotStructuralModeShapeInputs(StructuralModeShapeInputs_UI):
         self.mode_index = -1
 
     def _create_connections(self):
-        #
+
+        # QComboBox connections
         self.comboBox_plot_type.currentIndexChanged.connect(self.update_plot)
-        #
+
+        # QPushButton connections
         self.pushButton_export_results.clicked.connect(self.export_results_callback)
-        #
+
+        # QTreeWidget connections
         self.treeWidget_frequencies.itemClicked.connect(self.on_click_item)
         self.treeWidget_frequencies.itemDoubleClicked.connect(self.on_click_item)
-        #
-        self.results_display_widget.colormap_changed.connect(self.animation_widget.update_color_and_deformation)
-        self.results_display_widget.pressure_value_changed.connect(self.animation_widget.update_color_and_deformation)
 
-    def add_animation_widget(self):
+        self.results_display_widget.colormap_changed.connect(self.animation_widget.update_color_and_deformation)
+        self.results_display_widget.min_max_value_changed.connect(self.animation_widget.update_color_and_deformation)
+
+    def _add_animation_widget(self):
         self.grid_layout = QGridLayout()
         self.grid_layout.setContentsMargins(0, 0, 0, 0)
         self.frame_animation.setLayout(self.grid_layout)
@@ -54,7 +58,7 @@ class PlotStructuralModeShapeInputs(StructuralModeShapeInputs_UI):
         self.grid_layout.addWidget(self.animation_widget)
         self.frame_animation.adjustSize()
 
-    def add_color_widget(self):
+    def _add_color_widget(self):
         grid_layout = QGridLayout()
         grid_layout.setContentsMargins(0, 0, 0, 0)
         self.frame_color.setLayout(grid_layout)
@@ -108,7 +112,7 @@ class PlotStructuralModeShapeInputs(StructuralModeShapeInputs_UI):
         self.animation_widget.reset_sliders()
         self.results_display_widget.configure_validators(-1e14, 1e14)
 
-        plot_setup = FrequencyDisplacementPlotSetup(
+        plot_setup = DisplacementFieldPlotSetupFrequency(
             phase=self.animation_widget.phase_in_radians,
             magnification_factor=self.animation_widget.magnification_factor,
             index=self.mode_index,
@@ -122,7 +126,7 @@ class PlotStructuralModeShapeInputs(StructuralModeShapeInputs_UI):
     def update_displacements(self):
         pass
 
-    def get_plot_type(self) -> DisplacementPlotType:
+    def get_plot_type(self) -> DisplacementDataType:
         plot_types = [
             "u_sum",
             "u_x",
@@ -130,7 +134,7 @@ class PlotStructuralModeShapeInputs(StructuralModeShapeInputs_UI):
             "u_z",
         ]
         index = self.comboBox_plot_type.currentIndex()
-        return DisplacementPlotType(plot_types[index])
+        return DisplacementDataType(plot_types[index])
 
     def configure_results_display_widget(self):
         self.results_display_widget.configure_widget()

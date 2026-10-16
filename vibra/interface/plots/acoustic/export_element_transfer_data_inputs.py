@@ -1,13 +1,12 @@
 import logging
-from pathlib import Path
 
 import numpy as np
 from PySide6.QtCore import QEvent, QObject, Qt, Signal
 from PySide6.QtGui import QCloseEvent
-from PySide6.QtWidgets import QFileDialog
 
 from vibra import app
 from vibra.engine import AnalysisID
+from vibra.extensions import SUPPORTED_SPREADSHEET_READ_EXTENSIONS
 from vibra.interface import error_title
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.general.print_message_input import PrintMessageInput
@@ -15,6 +14,7 @@ from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.ui_generated.data_handler.export_element_transfer_data_inputs_ui import (
     ExportElementTransferDataInputs_UI,
 )
+from vibra.interface.user_input.data_handler.file_dialog_service import FileDialogService
 
 
 class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
@@ -49,7 +49,7 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
 
     @property
     def nodal_solution(self):
-        return app().project.model.solution.nodal_solution
+        return app().project.model.solution.acoustic_solution
 
     def _load_analysis_setup_and_solution(self):
         self.analysis_method = ""
@@ -67,8 +67,8 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
     def _reset_variables(self):
         self.exporter = None
         self.keep_window_open = True
-        self.particle_velocity = dict()
-        self.element_transfer_data = dict()
+        self.particle_velocity = {}
+        self.element_transfer_data = {}
 
     def _configure_qt_variables(self):
         self.current_lineEdit = self.lineEdit_output_selected_id
@@ -138,51 +138,41 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
         self.current_lineEdit = self.lineEdit_output_selected_id
 
     def search_callback(self):
+        path = FileDialogService.open_file(file_extensions=SUPPORTED_SPREADSHEET_READ_EXTENSIONS,
+                                           caption="Choose a file to import element transfer data",
+                                           last_folder="imported_table_folder")
 
-        last_path = app().config.get_last_folder_for(
-            "imported_table_folder",
-            default=Path().home(),
-        )
-
-        caption = "Choose a file to import element transfer data"
-        path, check = QFileDialog.getOpenFileName(
-            self,
-            caption,
-            str(last_path),
-            "Table File (*.xls; *.xlsx;)",
-        )
-
-        if not check:
+        if path is None:
             return True
 
-        self.lineEdit_spreadsheet_path.setText(path)
+        self.lineEdit_spreadsheet_path.setText(str(path))
         app().config.write_last_folder_path_in_file("imported_table_folder", path)
 
     def check_inputs(self):
  
         input_selected_id = self.lineEdit_input_selected_id.text()
-        self.input_selection_id, error_data = self.mesh.check_selected_ids(   
-                                                                           input_selected_id, 
-                                                                           selection = "surfaces", 
-                                                                           single_id = True
-                                                                           )
+        self.input_selection_id, error_data = self.model.check_selected_ids(   
+            input_selected_id,
+            "surfaces",
+            domain="acoustic",
+            single_id=True,
+        )
 
         if error_data is not None:
-            self.hide()
             self.lineEdit_input_selected_id.setFocus()
             self.lineEdit_input_selected_id.selectAll()
             PrintMessageInput(error_data)
             return True
 
         output_selected_id = self.lineEdit_output_selected_id.text()
-        self.output_selection_id, error_data = self.mesh.check_selected_ids(  
-                                                                            output_selected_id, 
-                                                                            selection = "surfaces", 
-                                                                            single_id = True
-                                                                            )
+        self.output_selection_id, error_data = self.model.check_selected_ids(  
+            output_selected_id,
+            "surfaces",
+            domain="acoustic",
+            single_id=True,
+        )
 
         if error_data is not None:
-            self.hide()
             self.lineEdit_output_selected_id.setFocus()
             self.lineEdit_output_selected_id.selectAll()
             PrintMessageInput(error_data)
@@ -224,7 +214,6 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
         area, surface_velocity = self.get_area_and_surface_velocity(excitation_id)
 
         if area is None:
-            self.hide()
             title = "Surface velocity not detected"
             message = f"The surface velocity associated to the surface #{surface_id} has not been found. "
             message += "It is recommended to check the acoustic model excitations and change the excitation "
@@ -236,9 +225,11 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
         # Note: the negative signal ensures the assembly consistency of acoustic transfer element
         volume_velocity = -surface_velocity * area
 
-        node_ids = np.sort(surface_nodes)
-        pressures = self.nodal_solution[node_ids, :]
-        avg_pressure = np.average(pressures, axis=0)
+        # process the acoustic dofs of the selected entities
+        gdof = self.model.get_dof_indices_from_nodes(np.sort(surface_nodes), "acoustic")
+        rows = gdof[:, 0]
+
+        avg_pressure = np.average(self.nodal_solution[rows, :], axis=0)
 
         return avg_pressure / volume_velocity
 
@@ -256,7 +247,7 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
 
         self.hide()
 
-        self.model_results = dict()
+        self.model_results = {}
         self.process_areas()
 
         for i, selected_id in enumerate([self.input_selection_id, self.output_selection_id]):

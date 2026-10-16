@@ -1,7 +1,7 @@
 from enum import IntEnum
 
 import numpy as np
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QSignalBlocker
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QDialog, QLineEdit, QVBoxLayout
 
@@ -92,27 +92,31 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
             ]
 
     def _create_connections(self):
-        #
+
+        # QCheckBox connections
         self.checkBox_grid.stateChanged.connect(self.plot_data_in_freq_domain)
         self.checkBox_legends.stateChanged.connect(self.plot_data_in_freq_domain)
         self.checkBox_cursor_legends.stateChanged.connect(self.plot_data_in_freq_domain)
-        #
+
+        # QComboBox connections
         self.comboBox_plot_type.currentIndexChanged.connect(self.plot_type_changed_callback)
         self.comboBox_differentiate_data.currentIndexChanged.connect(self.plot_data_in_freq_domain)
         self.comboBox_harmonic_lines_control.currentIndexChanged.connect(self.plot_harmonic_lines_callback)
         self.comboBox_data_format.currentIndexChanged.connect(self.data_format_changed_callback)
         self.comboBox_cursor_control.currentIndexChanged.connect(self.cursor_controls_changed_callback)
-        #
+        
+        # QLineEdit connections
         self.lineEdit_harmonic_lines_1st_freq.textChanged.connect(self.plot_harmonic_lines_callback)
         self.lineEdit_harmonic_lines_1st_freq.returnPressed.connect(self.plot_harmonic_lines_callback)
-        #
+        
+        # QPushButton connections
         self.pushButton_import_data.clicked.connect(self.import_file)
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
         self.pushButton_display_hfrequencies.clicked.connect(self.update_harmonic_lines_legend_icon)
-        #
+    
+        # QSpinBox connection
         self.spinBox_harmonic_lines_number.valueChanged.connect(self.plot_harmonic_lines_callback)
-        # 
-        #
+        
         self._initial_config()
         self.plot_harmonic_lines_callback()
 
@@ -148,9 +152,9 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
 
     def _initial_config(self):
         self.linear_plot = False
-        self.plot_type_index = self.comboBox_plot_type.currentIndex()
         self.checkBox_cursor_legends.setChecked(False)
         self.checkBox_cursor_legends.setDisabled(True)
+        self.plot_type_index = self.comboBox_plot_type.currentIndex()
         self.frame_vertical_lines.setDisabled(True)
 
     def data_format_changed_callback(self):
@@ -159,12 +163,9 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
         self.linear_plot = self.comboBox_data_format.currentIndex() != DataFormat.ABSOLUTE
         self.comboBox_plot_type.setDisabled(self.linear_plot)
 
-        if self.linear_plot:
-            self.comboBox_plot_type.setCurrentIndex(PlotType.LIN_LIN)
-        else:
-            self.comboBox_plot_type.setCurrentIndex(PlotType.LOG_Y)
+        plot_type = PlotType.LIN_LIN if self.linear_plot else PlotType.LOG_Y
+        self.comboBox_plot_type.setCurrentIndex(plot_type)
 
-        # if self.plot_type_index != self.cache_plot_type:
         self.plot_data_in_freq_domain()
 
     def plot_type_changed_callback(self):
@@ -263,7 +264,6 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
             message += str(error_log)
 
         if message != "":
-            self.hide()
             line_edit.setFocus()
             PrintMessageInput([error_title, title, message])
             return None
@@ -419,34 +419,30 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
 
                 self.load_data_to_plot(data)
 
-                if self.y_data is not None:
-                    self.mask_x = self.x_data <= 0
-                    self.mask_y = self.y_data <= 0
+                if self.y_data is None:
+                    continue
 
-                    if self.linear_plot or np.any(self.mask_x + self.mask_y):
-                        _plot = self.call_lin_lin_plot()
+                if self.linear_plot:
+                    _plot = self.call_lin_lin_plot()
 
-                    elif True in (self.mask_x + self.mask_y):
-                        _plot = self.get_plot_considering_invalid_log_values()
+                elif self.plot_type_index == PlotType.LOG_LOG:
+                    _plot = self.call_log_log_plot()
 
-                    elif self.plot_type_index == PlotType.LOG_LOG:
-                        _plot = self.call_log_log_plot()
+                elif self.plot_type_index == PlotType.LOG_Y:
+                    _plot = self.call_semilog_y_plot()
 
-                    elif self.plot_type_index == PlotType.LOG_Y:
-                        _plot = self.call_semilog_y_plot()
+                elif self.plot_type_index == PlotType.LOG_X:
+                    _plot = self.call_semilog_x_plot()
 
-                    elif self.plot_type_index == PlotType.LOG_X:
-                        _plot = self.call_semilog_x_plot()
+                else:
+                    _plot = self.call_lin_lin_plot()
 
-                    else:
-                        _plot = self.call_lin_lin_plot()
-
-                    if len(self.x_data) == 1:
-                        _plot.set_marker('o')
-                        _plot.set_markersize(8)
-                
-                    self.legends.append(self.legend)
-                    self.plots.append(_plot)
+                if len(self.x_data) == 1:
+                    _plot.set_marker('o')
+                    _plot.set_markersize(8)
+            
+                self.legends.append(self.legend)
+                self.plots.append(_plot)
 
         if not self.plots:
             return
@@ -476,74 +472,59 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
             self.plot_harmonic_lines_callback()
 
     def call_semilog_y_plot(self, first_index=0):
-        _plot, = self.ax.semilogy(  self.x_data[first_index:], 
-                                    self.y_data[first_index:], 
-                                    linewidth = 1,
-                                    color = self.color, 
-                                    linestyle = self.linestyle  )
+
+        _plot, = self.ax.semilogy(
+            self.x_data[first_index:], 
+            self.y_data[first_index:], 
+            linewidth = 1,
+            color = self.color,
+            linestyle = self.linestyle,
+            nonpositive="clip",
+            )
+
         return _plot
 
     def call_semilog_x_plot(self, first_index=0):
-        _plot, = self.ax.semilogx(  self.x_data[first_index:], 
-                                    self.y_data[first_index:], 
-                                    linewidth = 1,
-                                    color = self.color, 
-                                    linestyle = self.linestyle  )
+
+        _plot, = self.ax.semilogx( 
+            self.x_data[first_index:],
+            self.y_data[first_index:],
+            linewidth = 1,
+            color = self.color,
+            linestyle = self.linestyle,
+            nonpositive="clip",
+            )
+
         return _plot
 
     def call_lin_lin_plot(self):
 
         if self.comboBox_plot_type.currentIndex() != PlotType.LIN_LIN:
-            self.comboBox_plot_type.blockSignals(True)
-            self.comboBox_plot_type.setCurrentIndex(PlotType.LIN_LIN)
-            self.comboBox_plot_type.blockSignals(False)
+            with QSignalBlocker(self.comboBox_plot_type):
+                self.comboBox_plot_type.setCurrentIndex(PlotType.LIN_LIN)
 
-        _plot, = self.ax.plot(  self.x_data, 
-                                self.y_data, 
-                                linewidth = 1,
-                                color = self.color, 
-                                linestyle = self.linestyle  )
+            self.ax.set_yscale("linear")
+
+        _plot, = self.ax.plot(  
+            self.x_data,
+            self.y_data,
+            linewidth = 1,
+            color = self.color,
+            linestyle = self.linestyle,
+            )
+
         return _plot
 
     def call_log_log_plot(self, first_index=0):
-        _plot, = self.ax.loglog(self.x_data[first_index:], 
-                                self.y_data[first_index:], 
-                                linewidth = 1,
-                                color = self.color, 
-                                linestyle = self.linestyle  )
-        return _plot
-    
-    def get_plot_considering_invalid_log_values(self):
-
-        if self.plot_type_index == PlotType.LOG_LOG:
-            if True in self.mask_y[1:] or True in self.mask_x[1:]:
-                _plot = self.call_lin_lin_plot()
-            else:
-                if self.mask_x[0] or self.mask_y[0]:
-                    _plot = self.call_log_log_plot(first_index=1)
-                else:
-                    _plot = self.call_log_log_plot(first_index=0)
-
-        elif self.plot_type_index == PlotType.LOG_X:
-            if True in self.mask_x[1:]:
-                _plot = self.call_lin_lin_plot()
-            else:
-                if self.mask_x[0]:
-                    _plot = self.call_semilog_x_plot(first_index=1)
-                else:
-                    _plot = self.call_semilog_x_plot(first_index=0)
-
-        elif self.plot_type_index == PlotType.LOG_Y:
-            if True in self.mask_y[1:]:
-                _plot = self.call_lin_lin_plot()
-            else:
-                if self.mask_y[0]:
-                    _plot = self.call_semilog_y_plot(first_index=1)
-                else:
-                    _plot = self.call_semilog_y_plot(first_index=0)
-
-        else:
-            _plot = self.call_lin_lin_plot()
+   
+        _plot, = self.ax.loglog(
+            self.x_data[first_index:],
+            self.y_data[first_index:],
+            linewidth = 1,
+            color = self.color,
+            linestyle = self.linestyle,
+            nonpositive="clip",
+            )
 
         return _plot
 

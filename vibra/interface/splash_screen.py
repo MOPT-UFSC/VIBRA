@@ -13,9 +13,9 @@ class SplashScreen(Splash_UI):
 
     def _config_widget(self):
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)
-        self.progressBar.setStyleSheet("""  
+        self.progressBar.setStyleSheet("""
             QProgressBar{background-color : rgba(255, 255, 255, 0); border-radius: 6px; border-style: ridge; border-width: 0px;}
-            QProgressBar::chunk {background-color : rgb(45, 110, 190); border-radius: 6px; border-style: ridge; border-width: 0px;}
+            QProgressBar::chunk {background-color : #84AAFF; border-radius: 6px; border-style: ridge; border-width: 0px;}
             """)
 
     def update_position(self, app):

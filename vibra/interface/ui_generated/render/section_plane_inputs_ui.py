@@ -393,18 +393,6 @@ class Ui_Form(object):
         QWidget.setTabOrder(self.pushButton_cancel, self.pushButton_apply)
 
         self.retranslateUi(Form)
-        self.relative_plane_position_x_slider.sliderMoved.connect(self.relative_plane_position_x_spinbox.setValue)
-        self.relative_plane_position_x_spinbox.valueChanged.connect(self.relative_plane_position_x_slider.setValue)
-        self.relative_plane_position_y_slider.valueChanged.connect(self.relative_plane_position_y_spinbox.setValue)
-        self.relative_plane_position_y_spinbox.valueChanged.connect(self.relative_plane_position_y_slider.setValue)
-        self.relative_plane_position_z_slider.valueChanged.connect(self.relative_plane_position_z_spinbox.setValue)
-        self.relative_plane_position_z_spinbox.valueChanged.connect(self.relative_plane_position_z_slider.setValue)
-        self.plane_rotation_x_slider.valueChanged.connect(self.plane_rotation_x_spinbox.setValue)
-        self.plane_rotation_x_spinbox.valueChanged.connect(self.plane_rotation_x_slider.setValue)
-        self.plane_rotation_y_slider.valueChanged.connect(self.plane_rotation_y_spinbox.setValue)
-        self.plane_rotation_y_spinbox.valueChanged.connect(self.plane_rotation_y_slider.setValue)
-        self.plane_rotation_z_slider.valueChanged.connect(self.plane_rotation_z_spinbox.setValue)
-        self.plane_rotation_z_spinbox.valueChanged.connect(self.plane_rotation_z_slider.setValue)
 
         self.pushButton_apply.setDefault(True)
 

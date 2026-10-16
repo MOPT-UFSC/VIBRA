@@ -1,4 +1,3 @@
-from vibra.utils.time_utils import warn_delays
 import logging
 
 from molde.colors import Color, color_names
@@ -7,8 +6,9 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
 
 from vibra import LOGO_DIR, app
+from vibra.interface.enums import Workspaces
 from vibra.interface.loading_window import LoadingWindow
-from vibra.utils.interface_utils import VisualizationFilter
+from vibra.utils.time_utils import warn_delays
 
 from ..actors.edges_actor import EdgesActor
 from ..actors.faces_actor import FacesActor
@@ -33,12 +33,7 @@ class MeshRenderWidget(CommonRenderWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.visualization_filter = VisualizationFilter(
-            lines=True,
-            faces=True,
-            solids=True,
-            symbols=True,
-        )
+        self.visualization_filter = app().config.get_visualization_filter(Workspaces.MESH)
 
         self.mesh_selection = MeshSelection(self)
         self.selection_color = (20, 106, 245)
@@ -201,20 +196,21 @@ class MeshRenderWidget(CommonRenderWidget):
         self.nodes_actor.SetVisibility(True)
 
         mesh = app().project.model.mesh
-        mesh_error = mesh.collapsed_elements_data or mesh.disconnected_nodes_data
+        mesh_error = mesh.collapsed_elements_data or mesh.disconnected_nodes
         distinguished_solids = app().main_window.distinguished_solids
 
         visualization = self.visualization_filter
         self.edges_actor.SetVisibility(visualization.lines and not distinguished_solids)
         self.faces_actor.SetVisibility(visualization.faces and not mesh_error)
         self.solids_actor.SetVisibility(visualization.solids and not mesh_error)
-        self.faces_actor.SetVisibility(visualization.faces and not mesh_error)
         self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
 
         if distinguished_solids:
             self.switch_to_solids_actor()
             self.solids_actor.distinguish_solids(distinguished_solids)
             self.solids_actor.SetVisibility(True)
+            self.edges_actor.distinguish_cells(self._distinguished_cells(distinguished_solids))
+            self.edges_actor.SetVisibility(visualization.lines)
 
         self.update_selection()
         self.update()
@@ -294,7 +290,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.edges_actor.configure_appearance()
 
         mesh = app().project.model.mesh
-        mesh_error = mesh.collapsed_elements_data or mesh.disconnected_nodes_data
+        mesh_error = mesh.collapsed_elements_data or mesh.disconnected_nodes
         if mesh_error:
             self.add_problematic_mesh_legend()
 
@@ -375,6 +371,14 @@ class MeshRenderWidget(CommonRenderWidget):
         )
         self.add_actors(self.solids_actor, self.edges_actor)
         self.visualization_changed_callback()
+
+    def _distinguished_cells(self, distinguished_solids):
+        cells = []
+        for i in distinguished_solids:
+            visible_index = self.solids_actor.visible_indexes.get(i, -1)
+            if visible_index >= 0:
+                cells.append(visible_index)
+        return cells
 
     def update_section_plane(self):
         if not self.actors_exists():
@@ -459,7 +463,7 @@ class MeshRenderWidget(CommonRenderWidget):
     def add_problematic_mesh_legend(self):
         legend_actor = LegendActor()
 
-        if app().project.model.mesh.disconnected_nodes_data:
+        if app().project.model.mesh.disconnected_nodes:
             legend_actor.add_item("Disconnected nodes", color_names.GREEN)
 
         if app().project.model.mesh.collapsed_elements_data:

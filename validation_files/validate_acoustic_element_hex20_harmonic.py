@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from validation_files.data.WB.load_external_data import LoadExternalData
 from vibra import PROJECT_DIR
 from vibra.engine.analysis_info import AnalysisID, FrequencySpacing
-from vibra.engine.assemblers.acoustic_assembler import AcousticAssembler
+from vibra.engine.assemblers.acoustic.acoustic_assembler import AcousticAssembler
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.engine.postprocessing.acoustic_postprocessing import AcousticPostprocessing
@@ -117,8 +117,7 @@ def load_external_mesh_and_solve():
     data_Vn = {
         "real_values": [1],
         "imag_values": [0],
-        "nodal_attribution": False,
-        "averaged": False,
+        "element_integration": True,
     }
 
     model.properties._set_property("surface_velocity", data_Vn, surface=1)
@@ -159,7 +158,7 @@ def load_external_mesh_and_solve():
     assembler = AcousticAssembler(model)
 
     # Set the analysis frequency setup
-    assembler.assemble_global_matrices_and_excitations(reorder=False)
+    assembler.assemble_global_matrices_and_excitations(reorder=False, print_log=True)
 
     # Define the analysis type and load setup
     harmonic_solver = HarmonicSolver(assembler)
@@ -188,7 +187,7 @@ def load_external_mesh_and_solve():
     input_rows = mesh.external_nodes_from_surfaces[1]
     output_rows = mesh.external_nodes_from_surfaces[2]
 
-    nodal_solution = model.solution.nodal_solution
+    nodal_solution = model.solution.acoustic_solution
 
     input_pressure = np.average(nodal_solution[input_rows, :], axis=0).flatten()
     output_pressure = np.average(nodal_solution[output_rows, :], axis=0).flatten()

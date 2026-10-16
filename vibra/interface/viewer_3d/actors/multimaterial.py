@@ -93,11 +93,11 @@ class MultimaterialGeometryActor(vtkPropAssembly):
             material = properties._get_property("material", surface=surface, volume=volume)
             porous = properties._get_property("porous_material_model", surface=surface, volume=volume)
 
-            if porous is not None:
-                color = color_names.YELLOW_6
-
-            elif surface in surfaces_with_perforated_plates:
+            if surface in surfaces_with_perforated_plates:
                 color = color_names.WHITE
+
+            elif porous is not None:
+                color = color_names.YELLOW_6
 
             elif material is not None:
                 color = Color(*material.color)
@@ -220,7 +220,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         return list(super().GetParts())
 
     def _surfaces_to_cells(self, surfaces: Sequence[int]) -> np.ndarray:
-        vtk_array = self.data.GetCellData().GetArray("surface_indexes")
+        vtk_array = self.data.GetCellData().GetArray("surface_indices")
         if vtk_array is None:
             return np.array([])
 
@@ -278,9 +278,9 @@ class MultimaterialGeometryActor(vtkPropAssembly):
             add_tcoords.Update()
             data = add_tcoords.GetOutput()
 
-            fill_array(data, "surface_indexes", surface)
+            fill_array(data, "surface_indices", surface)
             if isinstance(volumes, np.ndarray | list) and (len(volumes) != 0):
-                fill_array(data, "volume_indexes", volumes[0])
+                fill_array(data, "volume_indices", volumes[0])
 
             combined_surfaces.AddInputData(data)
 
@@ -305,14 +305,14 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         connectivity: np.ndarray,
         mapping: np.ndarray | None = None,
     ) -> tuple[np.ndarray, np.ndarray]:
-        old_indexes = np.unique(connectivity)
-        new_indexes = np.arange(len(old_indexes))
+        old_indices = np.unique(connectivity)
+        new_indices = np.arange(len(old_indices))
 
         if mapping is None:
             mapping = np.zeros(np.max(connectivity) + 1, dtype=int)
-        mapping[old_indexes] = new_indexes
+        mapping[old_indices] = new_indices
 
-        return coords[old_indexes], mapping[connectivity]
+        return coords[old_indices], mapping[connectivity]
 
     def _create_cells(self, connectivity: np.ndarray) -> vtkCellArray:
         nodes_per_element = len(connectivity[0, :])

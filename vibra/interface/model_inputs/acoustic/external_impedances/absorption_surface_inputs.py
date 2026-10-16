@@ -4,14 +4,16 @@ from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QAbstractItemView, QLineEdit, QTreeWidgetItem
 
 from vibra import app
+from vibra.extensions import SUPPORTED_SPREADSHEET_READ_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
 from vibra.interface import error_title
-from vibra.interface.common.common_interface import update_analysis_setup_in_file
+from vibra.interface.common.common_interface import update_analysis_setup_in_file, update_entities_selection
 from vibra.interface.data.data_manager import get_spectral_data_from_array
-from vibra.interface.data_handler.data_importer import DataImporter
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.acoustic.definitions.enums import StandardTabType
 from vibra.interface.ui_generated.model.acoustic.external_impedances.absorption_surface_inputs_ui import AbsorptionSurfaceInputs_UI
+from vibra.interface.user_input.data_handler.file_dialog_service import FileDialogService
+from vibra.interface.user_input.data_handler.file_handlers.file_handler import FileHandler
 
 
 class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
@@ -205,18 +207,19 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
         self.treeWidget_absorption_surface.clear()
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key
-            if property == "absorption_surface":
+            if property != "absorption_surface":
+                continue
 
-                if "table_names" in data.keys():
-                    str_value = "Table of values"
-                else:
-                    absorption_coefficient = np.array(data["real_values"])
-                    str_value = str(absorption_coefficient)
+            if "table_names" in data:
+                str_value = "Table"
+            else:
+                absorption_coefficient = np.array(data["real_values"])
+                str_value = str(absorption_coefficient)
 
-                new = QTreeWidgetItem([str(surface_id), str_value])
-                new.setTextAlignment(0, Qt.AlignCenter)
-                new.setTextAlignment(1, Qt.AlignCenter)
-                self.treeWidget_absorption_surface.addTopLevelItem(new)
+            new = QTreeWidgetItem([str(surface_id), str_value])
+            new.setTextAlignment(0, Qt.AlignCenter)
+            new.setTextAlignment(1, Qt.AlignCenter)
+            self.treeWidget_absorption_surface.addTopLevelItem(new)
 
         self.update_tabs_visibility()
 
@@ -226,13 +229,20 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
             return
 
         input_ids = self.lineEdit_selection_id.text()
-        surface_ids, error_data = self.mesh.check_selected_ids(input_ids, selection="surfaces", single_id=False)
+        surface_ids, error_data = self.model.check_selected_ids(
+            input_ids, 
+            "surfaces",
+            domain="acoustic",
+        )
 
         if error_data is not None:
-            self.hide()
             self.lineEdit_selection_id.setFocus()
             PrintMessageInput(error_data)
             return True
+
+        app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
+        update_entities_selection(self.lineEdit_selection_id, "surfaces", surface_ids)
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
         self.remove_conflicting_excitations(surface_ids)
 
@@ -278,7 +288,6 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
             message = f"Insert some value at the {label} input field."
 
         if message != "":
-            self.hide()
             PrintMessageInput([error_title, title, message])
             return None
         else:
@@ -289,7 +298,6 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
         absorption_coefficient = self.check_inputs(self.lineEdit_real_value, "Absorption coefficient", zero_included=False,)
 
         if absorption_coefficient is None:
-            self.hide()
             title = "Additional inputs required"
             message = "You must enter an absorption surface value to proceed with the assignment."
             PrintMessageInput([error_title, title, message])
@@ -308,24 +316,27 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
             self.properties._set_property("absorption_surface", data, surface=surface_id)      
 
     def load_table(self, lineEdit : QLineEdit, direct_load=False):
-
         title = "Error reached while loading 'absorption surface' table"
-        imported_values = None
 
         try:
             if direct_load:
-                imported_table_path = lineEdit.text()
-                imported_values = DataImporter.read_data_in_file(imported_table_path)[0].data
+                imported_path = lineEdit.text()
 
             else:
-                imported_data = DataImporter.import_single_file("imported_table_folder",
-                    ["csv", "dat", "txt", "xlsx", "xls"], "Choose a table to import the absorption surface")
+                extensions = SUPPORTED_SPREADSHEET_READ_EXTENSIONS + SUPPORTED_TEXT_EXTENSIONS
+                imported_path = FileDialogService.open_file(file_extensions=extensions,
+                                            caption="Choose a table to import the absorption surface",
+                                            last_folder="imported_table_folder")
+            
+            imported_data = FileHandler.read(imported_path)
                 
-                if not imported_data:
-                    return None
+            if imported_data is None:
+                return None
 
-                imported_values = imported_data.data
-                lineEdit.setText(imported_data.path)
+            if not direct_load:
+                lineEdit.setText(str(imported_data.path))
+
+            imported_values = imported_data.data
 
             if imported_values.shape[1] < 2:
                 message = "The imported table has insufficient number of columns. The absorption coefficient"
@@ -351,7 +362,6 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
         _frequencies = imported_values[:, 0]
 
         if app().project.model.change_analysis_frequency_setup(list(_frequencies)):
-            self.hide()
             title = "Project frequency setup cannot be modified"
             message = "The following imported table of values has a frequency setup "
             message += "different from the others already imported ones. The current "
@@ -382,7 +392,6 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
     def tabular_data_assignment(self, surface_ids: list[int]):
 
         if self.lineEdit_table_path.text() == "":
-            self.hide()
             title = "Additional inputs required"
             message = "You must enter the absorption surface table path to proceed with the assignment."
             PrintMessageInput([error_title, title, message])
@@ -423,12 +432,6 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
 
             self.properties._set_property("absorption_surface", data, surface=surface_id)
 
-    def process_table_file_removal(self, table_names: list):
-        for table_name in table_names:
-            self.properties.remove_imported_tables("acoustic", table_name)
-        if table_names:
-            app().project.update_model_properties_file()
-
     def remove_conflicting_excitations(self, surface_ids: int | list):
 
         if isinstance(surface_ids, int):
@@ -442,13 +445,7 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
 
         for surface_id in surface_ids:
             for label in labels:
-                table_names = self.properties.get_property_related_table_names(label, surface_id, "surfaces")
                 self.properties._remove_surface_property(label, surface_id)
-                self.process_table_file_removal(table_names)
-
-    def remove_table_files_from_surfaces(self, surface_id : list):
-        table_names = self.properties.get_property_related_table_names("absorption_surface", surface_id, "surfaces")
-        self.process_table_file_removal(table_names)
 
     def remove_callback(self):
         selected_surfaces = self.get_selected_surfaces_from_tree_widget_absorption_surface()
@@ -457,7 +454,6 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
             return
         
         for surface_id in selected_surfaces:
-            self.remove_table_files_from_surfaces(surface_id)
             self.properties._remove_surface_property("absorption_surface", surface_id)
 
         self.clear_line_edit_selection_id()
@@ -468,16 +464,6 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
 
     def reset_callback(self):
 
-        surface_ids = list()
-        for (property, *args) in self.properties.surface_properties.keys():
-            if property == "absorption_surface":
-                surface_ids.append(args[0])
-
-        if not surface_ids:
-            return
-
-        self.hide()
-
         title = "Absorption surface reset"
         message = "Would you like to remove the all applied absorption surfaces from model?"
 
@@ -487,14 +473,9 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
         if read._cancel:
             return
 
-        if not read._continue:
-            return
-
-        self.remove_table_files_from_surfaces(surface_ids)
-        for surface_id in surface_ids:
-            self.properties._remove_surface_property("absorption_surface", surface_id)
-
-        self.actions_to_finalize()
+        if read._continue:
+            self.properties._reset_property("absorption_surface")
+            self.actions_to_finalize()
 
     def actions_to_finalize(self, close_window: bool = False):
         self.load_model_info()
@@ -511,7 +492,7 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
 
     def update_tabs_visibility(self):
 
-        for key in self.properties.surface_properties.keys():
+        for key in self.properties.surface_properties:
             property, *args = key
             if property != "absorption_surface":
                 continue
