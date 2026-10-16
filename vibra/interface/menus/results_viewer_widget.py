@@ -319,9 +319,12 @@ class ResultsViewerWidget(LeftMenuWidget_UI):
         if self.current_widget_is_animatable():
             self.animation_widget = self.current_widget.animation_widget
 
-        # TODO: please, remove the hide after all it shouldn't be needed
         if isinstance(self.bottom_widget, QWidget):
             self.bottom_widget.hide()
+
+        results_widget = app().main_window.results_widget
+        results_widget.user_min_value = None
+        results_widget.user_max_value = None
 
         configure_results_display_widget = getattr(widget, "configure_results_display_widget", None)
         if configure_results_display_widget is not None:
