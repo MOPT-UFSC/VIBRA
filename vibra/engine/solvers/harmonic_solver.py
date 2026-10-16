@@ -129,6 +129,8 @@ class HarmonicSolver:
                 if is_resume and (i != 0) and isinstance(self._file_writer, LazyHDF5MatrixWriter) and self._file_writer.has_column(i):
                     continue
 
+                logging.info(f"Solution step {i + 1} and frequency {freq} Hz [{i + 1}/{len(frequencies)}]")
+
                 # compute the load vector
                 f = self.assembler.compute_load_vector(i)
 
@@ -164,8 +166,6 @@ class HarmonicSolver:
 
                 solution_freq = self.assembler.reinsert_the_prescribed_dof_into_solution_freq(solution_freq, i)
                 nodal_solution_buffer[:, i] = solution_freq
-
-                logging.info(f"Solution step {i + 1} and frequency {freq} Hz [{i + 1}/{len(frequencies)}]")
 
 
     def solve_mode_superposition(
