@@ -759,14 +759,14 @@ def structural_additional_info_text():
     return text
 
 
-def acoustic_format(property_name, value, label, unit, additional_labels=[]):
+def acoustic_format(property_name, value, label, unit, additional_labels: list | tuple | None = None):
     tree = TreeInfo(property_name)
     if isinstance(value, Number | str | float | complex):
         tree.add_item(label, np.round(value, 4), unit)
     else:
         tree.add_item(label, "Table")
 
-    if len(additional_labels) == 2:
+    if isinstance(additional_labels, list | tuple) and len(additional_labels) == 2:
         tree.add_item(additional_labels[0], additional_labels[1])
 
     return str(tree)
