@@ -1,7 +1,7 @@
 from collections import defaultdict
 from copy import deepcopy
 from pathlib import Path
-from typing import Iterator, Literal
+from typing import Literal, Self
 
 import gmsh
 import numpy as np
@@ -9,7 +9,7 @@ import numpy as np
 LengthUnits = Literal["millimeter", "inch"]
 
 
-class Geometry:
+class GeometryInfo:
     def __init__(
         self,
         path: str | Path | None = None,
@@ -48,10 +48,10 @@ class Geometry:
         self._straight_surfaces = set()
 
         # About geometry information
-        self.points = list()
-        self.curves = list()
-        self.surfaces = list()
-        self.solids = list()
+        self.points = []
+        self.curves = []
+        self.surfaces = []
+        self.solids = []
 
         self.length_unit = length_unit
         self.length_unit_factor = self._get_length_unit_factor(length_unit)
@@ -60,14 +60,14 @@ class Geometry:
         if path is not None:
             self.read_file(path)
 
-    def read_file(self, file_path: str):
+    def read_file(self, file_path: Path | str) -> Self:
         # allowed to run in a secondary thread
         gmsh.initialize("", False, interruptible=False)
         gmsh.option.setNumber("General.Terminal", 0)
         gmsh.option.setNumber("General.Verbosity", 0)
         gmsh.option.setNumber("General.NumThreads", 0)  # all available threads
 
-        gmsh.open(file_path)
+        gmsh.open(str(file_path))
         gmsh.model.occ.synchronize()
 
         volumes_list = gmsh.model.getEntities(3)
@@ -78,6 +78,8 @@ class Geometry:
         self._process_curves_normals()
         self._process_points_normals()
         gmsh.finalize()
+
+        return self
 
     def clear(self):
         self._solids_to_surfaces.clear()
@@ -356,10 +358,11 @@ class Geometry:
                 # If the sum of the surface normals is zero, estimate the "curve normal"
                 # by summing the vectors that point to each adjacent surface center.
                 curve_center = self.curve_center(curve)
-                for surf_id in adjacent_surfaces:
-                    surf_center = self.surface_center(surf_id)
-                    vector = curve_center - surf_center
-                    normals_sum += vector / np.linalg.norm(vector)
+                if curve_center is not None:
+                    for surf_id in adjacent_surfaces:
+                        surf_center = self.surface_center(surf_id)
+                        vector = curve_center - surf_center
+                        normals_sum += vector / np.linalg.norm(vector)
 
             # normalize the sum
             norm = np.linalg.norm(normals_sum)
@@ -393,10 +396,11 @@ class Geometry:
                 # If the sum of the curve normals is zero, estimate the "point normal"
                 # by summing the vectors that point to each adjacent curve center.
                 point_center = self.point_center(point)
-                for curve_id in adjacent_curves:
-                    curve_center = self.curve_center(curve_id)
-                    vector = point_center - curve_center
-                    normals_sum += vector / np.linalg.norm(vector)
+                if point_center is not None:
+                    for curve_id in adjacent_curves:
+                        curve_center = self.curve_center(curve_id)
+                        vector = point_center - curve_center
+                        normals_sum += vector / np.linalg.norm(vector)
 
             # normalize the sum
             norm = np.linalg.norm(normals_sum)
@@ -405,12 +409,13 @@ class Geometry:
 
             self._points_normals[point] = normals_sum
 
-    def process_center_element(self, dim: int, tag: int) -> np.ndarray:
+    def process_center_element(self, dim: int, tag: int) -> tuple[np.ndarray, np.ndarray | None]:
         """Process the center of an element based on its dimension."""
         if dim != 3:
             uv_min, uv_max = gmsh.model.get_parametrization_bounds(dim, tag)
+            uv_min, uv_max = np.asarray(uv_min), np.asarray(uv_max)
             uv_mid = (uv_min + uv_max) / 2
-            center = gmsh.model.get_value(dim, tag, uv_mid) * self.length_unit_factor
+            center = np.asarray(gmsh.model.get_value(dim, tag, uv_mid)) * self.length_unit_factor
 
         else:
             center = np.asarray(gmsh.model.occ.getCenterOfMass(dim, tag)) * self.length_unit_factor
@@ -512,7 +517,7 @@ class Geometry:
         self._cache_points.clear()
         self._cache_curves.clear()
 
-    def add_point(self, point_id: int, center: np.ndarray, normal: np.ndarray = None):
+    def add_point(self, point_id: int, center: np.ndarray, normal: np.ndarray | None = None):
         """Adds a new point to the geometry."""
 
         if point_id not in self.points:
@@ -527,9 +532,9 @@ class Geometry:
         point_ids: tuple[int, ...],
         center: np.ndarray,
         length: float,
-        normal: np.ndarray = None,
+        normal: np.ndarray | None = None,
         is_straight: bool = False,
-        bouding_box: np.ndarray = None,
+        bouding_box: np.ndarray | None = None,
     ):
         """Adds a new curve to the geometry."""
         if curve_id not in self.curves:
@@ -555,7 +560,7 @@ class Geometry:
         normal: np.ndarray,
         area: float,
         is_straight: bool = False,
-        bounding_box: np.ndarray = None,
+        bounding_box: np.ndarray | None = None,
     ):
         """Adds a new surface to the geometry."""
 
