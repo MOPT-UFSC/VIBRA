@@ -121,7 +121,7 @@ class GmshMesher(GmshCommon):
             try:
                 self.setup = MeshSetup(
                     minimum_element_size=_min,
-                    maximum_element_size=_max,
+                        maximum_element_size=_max,
                     custom_element_setup=GMSH_VISUAL_MESH,
                 )
                 return self.generate(), self.setup

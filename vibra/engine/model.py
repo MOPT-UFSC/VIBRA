@@ -57,6 +57,7 @@ from vibra.engine.mesher.degrees_of_freedom_decoupling_new import DegreesOfFreed
 from vibra.engine.mesher.gmsh_mesher import GmshMesher
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.mesh_setup import ElementTopology, Hexahedron8, Hexahedron20, MeshSetup, Tetrahedron4, Tetrahedron10
+from vibra.engine.mesher.occ_mesher import OccMesher
 from vibra.engine.model_domains_processor import ModelDomainsProcessor
 from vibra.engine.model_selection_tools import ModelSelectionTools
 from vibra.engine.properties.fluid import Fluid
@@ -90,7 +91,10 @@ class Model:
     def reset_variables(self):
         self.name: str = "Model"
         self.thumbnail: Image | None = None
-        self.fem_mesher = GmshMesher()  # I think this must be moved to Project
+
+        # I think these must be moved to Project
+        self.fem_mesher = GmshMesher()
+        self.visual_mesher = OccMesher()
 
         self.length_unit: LengthUnits = "millimeter"
         self.mesh_setup: MeshSetup | None = None
@@ -368,6 +372,7 @@ class Model:
     def set_geometry_path(self, path: Path | str):
         self.geometry_path = path
         self.fem_mesher.set_path(path)
+        self.visual_mesher.set_path(path)
 
     def set_properties(self, properties):
         self.properties = properties

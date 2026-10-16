@@ -29,6 +29,8 @@ dependencies = [
     "pint>=0.24.4",
     "psutil>=7.2.2",
     "tqdm>=4.67.1",
+    "cadquery-ocp-novtk>=8.0.1.1.0",
+    "cadquery-ocp-stubs>=8.0.1.1.0",
 ]
 
 [dependency-groups]

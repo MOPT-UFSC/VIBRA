@@ -176,7 +176,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
             return
 
         # Ensure cell ids are valid, ignore otherwise
-        cells = np.array(cells)
+        cells = np.array(cells, dtype=int)
         cells = cells[(0 <= cells) & (cells < array.size)]
 
         array[cells] = color_fmt
@@ -401,10 +401,15 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         mapper.SetScalarModeToUseCellData()
         mapper.ScalarVisibilityOn()
 
-        self.data >> extractor >> mapper
+        extractor.SetInputData(self.data)
+        extractor.Update()
+        mapper.SetInputConnection(extractor.GetOutputPort())
 
-        self.actor = vtkActor(mapper=mapper)
+        self.actor = vtkActor()
+        self.actor.SetMapper(mapper)
         self.actor.PickableOff()
+
+        self.actor.GetProperty().EdgeVisibilityOn()
 
         self.AddPart(self.actor)
         return self.actor

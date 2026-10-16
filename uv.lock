@@ -12,6 +12,46 @@ wheels = [
 ]
 
 [[package]]
+name = "cadquery-ocp-novtk"
+version = "8.0.1.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "cadquery-ocp-proxy" },
+]
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/71/26/aaa584c0b1dd5d1dfc7e19d4327136884eccd59daa00aaae2ab991644a0c/cadquery_ocp_novtk-8.0.1.1.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:b76212dcda2ea19a501b26225f5d36ae1a5eed35e594c2af948a534e7f82a908", size = 63094149, upload-time = "2026-10-05T13:37:04.567Z" },
+    { url = "https://files.pythonhosted.org/packages/ec/dc/707127730a8cf2a8f2796bab33e6e3bc449732bcde36256b23f9d1b717ec/cadquery_ocp_novtk-8.0.1.1.0-cp312-cp312-macosx_11_0_x86_64.whl", hash = "sha256:a8fe4d9d67eebec876eb213a03ff2b267060f7fe0661736555e6e71874331c56", size = 67955219, upload-time = "2026-10-05T13:37:09.233Z" },
+    { url = "https://files.pythonhosted.org/packages/3a/d4/9b46e1ece73a735a5648d9ed20206c66c49038f084ae8e077dd190a7aea1/cadquery_ocp_novtk-8.0.1.1.0-cp312-cp312-manylinux_2_28_aarch64.whl", hash = "sha256:dd5e239d0ba0863e3a2ca8de71c563d3375f1c075e493eb7650609de22d85240", size = 61507700, upload-time = "2026-10-05T13:37:12.843Z" },
+    { url = "https://files.pythonhosted.org/packages/33/07/ab496c866d8b3c94c4fe0f8c38dc4773a6dcc7f4826c680ac1cd7dba88b4/cadquery_ocp_novtk-8.0.1.1.0-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:9df1e3700016bee819c0a8627880f37de47540eef63e8adb368f659a0fdeff78", size = 66825837, upload-time = "2026-10-05T16:19:19.245Z" },
+    { url = "https://files.pythonhosted.org/packages/29/ad/ffa8c0f9fc2128d77d24e3afdd778cc699365eed66a895ded249cfdca5ac/cadquery_ocp_novtk-8.0.1.1.0-cp312-cp312-win_amd64.whl", hash = "sha256:af3ecbeaf28ee4df17a07c8a3b88e3009bb820c7f4c7d7d1732745d064c96781", size = 47747323, upload-time = "2026-10-05T16:19:22.66Z" },
+    { url = "https://files.pythonhosted.org/packages/c0/b3/3b898e721d70d2781835a5e7721a0f01c60d7ac91684a5ffee6e1b8b210b/cadquery_ocp_novtk-8.0.1.1.0-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:78b9033a47d72049b290c18e2c4c80bffc56c055b52eb60f49aca76550a9ddc8", size = 63092379, upload-time = "2026-10-05T16:19:26.071Z" },
+    { url = "https://files.pythonhosted.org/packages/24/dc/cdb537c26b5eab1b4ae7ca7fc08072e112aa77c8c899d7f56491c2e9776c/cadquery_ocp_novtk-8.0.1.1.0-cp313-cp313-macosx_11_0_x86_64.whl", hash = "sha256:d0f3747b7e486f315793d4d4166daf5146ad6088beae8ddc950193d2513b1ca8", size = 67945939, upload-time = "2026-10-05T16:19:29.488Z" },
+    { url = "https://files.pythonhosted.org/packages/2d/8f/bcd627f307f4eb90861aeb536b687b9133f28e999827123178e1c6577020/cadquery_ocp_novtk-8.0.1.1.0-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:3f47080e5e4381f0ad8bed14cd19fd16f006550abec441db54f7ec417ebb1ac0", size = 61496158, upload-time = "2026-10-05T16:19:33.074Z" },
+    { url = "https://files.pythonhosted.org/packages/92/2a/2c6847d6a1e73c6aeea20271709ac1aae24092b898ff3cf23f3b1587ca83/cadquery_ocp_novtk-8.0.1.1.0-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:65c56795870b1249a0ad9ef0814a38844be64bcdc2b86beaab01f9416edcc14b", size = 66809073, upload-time = "2026-10-05T16:19:36.669Z" },
+    { url = "https://files.pythonhosted.org/packages/b7/e8/5ddcb4b0633eccd81bda22e9a30d5eaa668088fdcfa65bbd6bc9f501bb1f/cadquery_ocp_novtk-8.0.1.1.0-cp313-cp313-win_amd64.whl", hash = "sha256:7dec43cd08a4600d970ee60a358a4c4e0f88a64261ac38e5fe55a29704f18f81", size = 47750971, upload-time = "2026-10-05T16:19:39.861Z" },
+]
+
+[[package]]
+name = "cadquery-ocp-proxy"
+version = "8.0.1.1.0"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/13/5e/29c3d8c4b290dee82387468a33ac06c663518a167963cdb9ff48e6bbd8f9/cadquery_ocp_proxy-8.0.1.1.0-py3-none-any.whl", hash = "sha256:98c71bb60cfb651afe179b134ab88580fd75384fce0cc6d633f727002cd18abd", size = 3250, upload-time = "2026-10-05T16:23:45.717Z" },
+]
+
+[[package]]
+name = "cadquery-ocp-stubs"
+version = "8.0.1.1.0"
+source = { registry = "https://pypi.org/simple" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/49/ae/114c3f48e1456c294dfe93385c2ddfd60115a77422946fec7a5fe55e5c71/cadquery_ocp_stubs-8.0.1.1.0-py3-none-macosx_11_0_arm64.whl", hash = "sha256:fcb92e6e5118f1dfc7c85d4a0a1547c93d238546474e3bc0c7169e5d86e198d9", size = 2667836, upload-time = "2026-10-05T16:22:37.198Z" },
+    { url = "https://files.pythonhosted.org/packages/f8/e5/bcf3d4dcf8ca25634d309b40524c4c4372aaf9bc49b7949a5f9b9913ef4f/cadquery_ocp_stubs-8.0.1.1.0-py3-none-macosx_11_0_x86_64.whl", hash = "sha256:0366906c1303b1c19814b871a6aa3494a2df2aaf52af2742337cdd45e6a9ee66", size = 2667837, upload-time = "2026-10-05T16:22:38.747Z" },
+    { url = "https://files.pythonhosted.org/packages/f0/5c/eabe2cf433d70459c6fc3a37497482b35a1715d9f1747a65ec3c7d664c6c/cadquery_ocp_stubs-8.0.1.1.0-py3-none-manylinux_2_28_aarch64.whl", hash = "sha256:d1b83dd23193646f4c23ad08e8f86b4fa731d4354c7dab5a80d8b0fea75c205b", size = 2668105, upload-time = "2026-10-05T16:22:40.354Z" },
+    { url = "https://files.pythonhosted.org/packages/46/7f/b91cd251ad52e3540b24f5f4536681c51647376a1700fd82cbbcd6f32d02/cadquery_ocp_stubs-8.0.1.1.0-py3-none-manylinux_2_28_x86_64.whl", hash = "sha256:e04f54e6f286b38422c5ab9240e3de9e5a484fc76b400a399c19df5b670581ed", size = 2668105, upload-time = "2026-10-05T16:22:41.992Z" },
+    { url = "https://files.pythonhosted.org/packages/9f/31/1b34d57ad642477ea92ad750fe59d4b8444b02dce3296dc7a7e33f53f85a/cadquery_ocp_stubs-8.0.1.1.0-py3-none-win_amd64.whl", hash = "sha256:0b23659d9243b6b86313837e36f4d9623d341cdc9eec87ea94bf2028abf2040e", size = 2692972, upload-time = "2026-10-05T16:22:43.306Z" },
+]
+
+[[package]]
 name = "certifi"
 version = "2025.11.12"
 source = { registry = "https://pypi.org/simple" }
@@ -1222,6 +1262,8 @@ name = "vibra"
 version = "0.7.0"
 source = { editable = "." }
 dependencies = [
+    { name = "cadquery-ocp-novtk" },
+    { name = "cadquery-ocp-stubs" },
     { name = "ctrefprop" },
     { name = "fastexcel" },
     { name = "fileboxes" },
@@ -1259,6 +1301,8 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "cadquery-ocp-novtk", specifier = ">=8.0.1.1.0" },
+    { name = "cadquery-ocp-stubs", specifier = ">=8.0.1.1.0" },
     { name = "ctrefprop", specifier = ">=0.10.5,<0.11.0" },
     { name = "fastexcel", specifier = ">=0.18.0" },
     { name = "fileboxes", specifier = ">=0.1.4,<0.2.0" },

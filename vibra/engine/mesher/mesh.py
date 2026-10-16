@@ -3,6 +3,7 @@ from collections import defaultdict
 from copy import deepcopy
 from enum import IntEnum
 from itertools import permutations
+from typing import Self
 
 import numpy as np
 from scipy.linalg import svd
@@ -111,7 +112,7 @@ class Mesh:
         lines_connectivity: np.ndarray,
         faces_connectivity: np.ndarray,
         solids_connectivity: np.ndarray,
-    ):
+    ) -> Self:
         self.nodal_coordinates = nodal_coordinates
         self.lines_connectivity = lines_connectivity
         self.faces_connectivity = faces_connectivity
@@ -119,6 +120,7 @@ class Mesh:
 
         self.update_element_topology_based_on_connectivity()
         self.process_mesh_related_mappings()
+        return self
 
     def has_decoupling(self) -> bool:
         return all(
