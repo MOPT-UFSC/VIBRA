@@ -588,7 +588,7 @@ class StructuralAssembler:
 
     def compute_data_to_process_global_matrices_for_solid_elements(self, reorder: bool = True, print_log: bool = False):
         """
-        Calculates global matrices.
+        This method computes data to process the global matrices for solid elements.
         """
 
         self.active_2d_element_dof = []
@@ -658,7 +658,9 @@ class StructuralAssembler:
 
 
     def assemble_distributed_mass_matrix_for_lines(self):
-
+        """
+        This method incorporates the 1D distributed masses contribution in the global mass matrix.
+        """
         integration_data_1d = self.get_distributed_mass_data_for_1d_element_integration()
         if integration_data_1d is None:
             return
@@ -679,7 +681,9 @@ class StructuralAssembler:
 
 
     def assemble_distributed_mass_matrix_for_surfaces(self):
-
+        """
+        This method incorporates the 2D distributed masses contribution in the global mass matrix.
+        """
         integration_data_2d = self.get_distributed_mass_data_for_2d_element_integration()
         if integration_data_2d is None:
             return
@@ -700,7 +704,10 @@ class StructuralAssembler:
 
 
     def process_data_to_assemble_distributed_stiffness_matrix_1d(self):
-
+        """
+        This method processes the data to assemble the global stiffness matrix 
+        for distributed stiffness in 1D elements.
+        """
         self.integration_data_1d_for_Kdist = self.get_distributed_data_for_1d_element_integration("distributed_stiffness")
         if self.integration_data_1d_for_Kdist is None:
             return
@@ -724,7 +731,10 @@ class StructuralAssembler:
 
 
     def process_data_to_assemble_distributed_stiffness_matrix_2d(self):
-
+        """
+        This method processes the data to assemble the global stiffness matrix 
+        for distributed stiffness in 2D elements.
+        """
         self.integration_data_2d_for_Kdist = self.get_distributed_data_for_2d_element_integration("distributed_stiffness")
         if self.integration_data_2d_for_Kdist is None:
             return
@@ -748,7 +758,10 @@ class StructuralAssembler:
 
 
     def process_data_to_assemble_distributed_damping_matrix_1d(self):
-
+        """
+        This method processes the data to assemble the global damping matrix 
+        for distributed dampings in 1D elements.
+        """
         self.integration_data_1d_for_Cdist = self.get_distributed_data_for_1d_element_integration("distributed_dampings")
         if self.integration_data_1d_for_Cdist is None:
             return
@@ -772,7 +785,10 @@ class StructuralAssembler:
 
 
     def process_data_to_assemble_distributed_damping_matrix_2d(self):
-
+        """
+        This method processes the data to assemble the global damping matrix 
+        for distributed dampings in 2D elements.
+        """
         self.integration_data_2d_for_Cdist = self.get_distributed_data_for_2d_element_integration("distributed_dampings")
         if self.integration_data_2d_for_Cdist is None:
             return
@@ -797,7 +813,7 @@ class StructuralAssembler:
 
     def process_diagonal_lumped_matrix(self, shape: tuple[int, int, int], n_dofs: int, values: np.ndarray):
         """
-        Use method to returns the 3D diagonal matrix for distributed stiffness and dampings.
+        This method returns the 3D diagonal matrix for distributed stiffness and dampings.
 
         Parameters
         ----------
@@ -829,7 +845,16 @@ class StructuralAssembler:
 
 
     def assemble_distributed_stiffness_global_matrix(self, index: int = 0):
+        """
+        This method assembles the distributed stiffness global matrix by 
+        accounting for the contributions of 1D and 2D elements.
 
+        Parameter
+        ---------
+        index: int, optional
+            The frequency step index.
+
+        """
         self.distributed_stiffness_matrix = 0.
         self.distributed_stiffness_matrix_r = 0.
 
@@ -862,7 +887,16 @@ class StructuralAssembler:
 
 
     def assemble_distributed_damping_global_matrix(self, index: int = 0):
+        """
+        This method assembles the distributed damping global matrix by 
+        accounting for the contributions of 1D and 2D elements.
 
+        Parameter
+        ---------
+        index: int, optional
+            The frequency step index.
+
+        """
         self.distributed_damping_matrix = 0.
         self.distributed_damping_matrix_r = 0.
 
