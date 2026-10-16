@@ -12,6 +12,7 @@ from OCP.TopExp import TopExp, TopExp_Explorer
 from OCP.TopLoc import TopLoc_Location
 from OCP.TopoDS import TopoDS
 
+from vibra.engine.geometry.geometry import GeometryInfo
 from vibra.engine.mesher.mesh import Mesh
 from vibra.errors import IncompleteSetupError
 
@@ -56,12 +57,12 @@ class OccMesher:
 
         loc = TopLoc_Location()
 
-        coordinates = list()
-        edges_connectivity = list()
-        faces_connectivity = list()
+        coordinates = []
+        edges_connectivity = []
+        faces_connectivity = []
 
-        line_indices = list()
-        surface_indices = list()
+        line_indices = []
+        surface_indices = []
 
         visited_faces = set()
         visited_edges = set()
@@ -97,7 +98,9 @@ class OccMesher:
                     edges_connectivity.append((index_a, index_b))
                     line_indices.append(edge_index)
 
-        coordinates = np.array(coordinates)
+        mesh = Mesh()
+
+        coordinates = np.array(coordinates) * mesh.get_length_unit_factor()
         node_indices = np.arange(len(coordinates)).reshape(-1, 1)
         nodal_coordinates = np.concatenate(
             [node_indices, coordinates],
@@ -132,12 +135,26 @@ class OccMesher:
             axis=1,
         )
 
-        mesh = Mesh().set_mesh_data(
+        mesh.set_mesh_data(
             nodal_coordinates,
             lines_connectivity,
             faces_connectivity,
             solids_connectivity=np.zeros((0, 4)),
         )
+
+        # This is a temporary workaround.
+        # Since this information does not depend on a mesh we can store it in a separated class.
+        # But for now I am doing it the lazy way so I can get things to work.
+        gi = GeometryInfo().read_file(self.path)
+        mesh.surfaces_from_volume = gi._solids_to_surfaces
+        mesh.lines_from_surface = gi._surfaces_to_curves
+        mesh.points_from_line = gi._curves_to_points
+        mesh.volumes_from_surface = gi._surfaces_to_solids
+        mesh.surfaces_from_line = gi._curves_to_surfaces
+        mesh.lines_from_point = gi._points_to_curves
+        mesh.length_from_lines = gi._curves_lengths
+        mesh.area_from_surfaces = gi._surfaces_areas
+        mesh.volume_from_bodies = gi._solids_volumes
 
         return mesh
 
