@@ -337,7 +337,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             self.comboBox_normalize_flow_resistivity.setCurrentIndex(int(normalize_flow_resistivity))
 
             for key, value in pm_data.items():
-                if key in ["model", "normalize_flow_resistivity"]:
+                if key in ["model", "normalize_flow_resistivity", "values"]:
                     continue
 
                 elif key == "flow_resistivity":
@@ -483,7 +483,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
     def cell_changed_callback(self, row, column, model):        
         item = None
         model_id = None
-        parameter_position = row - 2
+        parameter_position = row - 1
 
         if model == "delany":
             item = self.tableWidget_DBM.item(row, column)
@@ -633,7 +633,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
                     if isinstance(model_input, str):
                         continue
 
-                    self.tableWidget_DBM.setItem(2+k, delany_counter, QTableWidgetItem(str(model_input)))
+                    self.tableWidget_DBM.setItem(k+1, delany_counter, QTableWidgetItem(str(model_input)))
 
                 delany_counter += 1
 
@@ -648,7 +648,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
                     if isinstance(model_input, str):
                         continue
 
-                    self.tableWidget_JCAL.setItem(2+k, jca_counter, QTableWidgetItem(str(model_input)))
+                    self.tableWidget_JCAL.setItem(k+1, jca_counter, QTableWidgetItem(str(model_input)))
 
                 jca_counter += 1
 
@@ -741,7 +741,10 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         elif model == "Jhonson-Champoux-Allard":
             return "JCA"
 
-        return "JCAL"
+        elif model == "Jhonson-Champoux-Allard-Lafarge":
+            return "JCAL"
+
+        return "DBM (user-defined)"
 
     def get_Delany_Bazley_Miki_model_data(self, material_model: str) -> DelanyBazleyMikiData:
         return DelanyBazleyMikiData(
