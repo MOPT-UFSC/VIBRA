@@ -188,7 +188,7 @@ class Ui_Dialog(object):
         self.gridLayout.setContentsMargins(4, 4, 4, 6)
         self.lineEdit_right_Cy = QLineEdit(self.frame_8)
         self.lineEdit_right_Cy.setObjectName(u"lineEdit_right_Cy")
-        self.lineEdit_right_Cy.setMinimumSize(QSize(100, 26))
+        self.lineEdit_right_Cy.setMinimumSize(QSize(120, 26))
         self.lineEdit_right_Cy.setMaximumSize(QSize(120, 26))
         self.lineEdit_right_Cy.setFont(font1)
         self.lineEdit_right_Cy.setStyleSheet(u"")
@@ -198,7 +198,7 @@ class Ui_Dialog(object):
 
         self.lineEdit_left_Cy = QLineEdit(self.frame_8)
         self.lineEdit_left_Cy.setObjectName(u"lineEdit_left_Cy")
-        self.lineEdit_left_Cy.setMinimumSize(QSize(100, 26))
+        self.lineEdit_left_Cy.setMinimumSize(QSize(120, 26))
         self.lineEdit_left_Cy.setMaximumSize(QSize(120, 26))
         self.lineEdit_left_Cy.setFont(font1)
         self.lineEdit_left_Cy.setStyleSheet(u"")
@@ -208,8 +208,8 @@ class Ui_Dialog(object):
 
         self.label_unit_Cx = QLabel(self.frame_8)
         self.label_unit_Cx.setObjectName(u"label_unit_Cx")
-        self.label_unit_Cx.setMinimumSize(QSize(70, 26))
-        self.label_unit_Cx.setMaximumSize(QSize(70, 26))
+        self.label_unit_Cx.setMinimumSize(QSize(60, 26))
+        self.label_unit_Cx.setMaximumSize(QSize(60, 26))
         self.label_unit_Cx.setFont(font1)
         self.label_unit_Cx.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
 
@@ -221,7 +221,7 @@ class Ui_Dialog(object):
 
         self.lineEdit_left_Cx = QLineEdit(self.frame_8)
         self.lineEdit_left_Cx.setObjectName(u"lineEdit_left_Cx")
-        self.lineEdit_left_Cx.setMinimumSize(QSize(100, 26))
+        self.lineEdit_left_Cx.setMinimumSize(QSize(120, 26))
         self.lineEdit_left_Cx.setMaximumSize(QSize(120, 26))
         self.lineEdit_left_Cx.setFont(font1)
         self.lineEdit_left_Cx.setStyleSheet(u"")
@@ -240,7 +240,7 @@ class Ui_Dialog(object):
 
         self.lineEdit_right_Cx = QLineEdit(self.frame_8)
         self.lineEdit_right_Cx.setObjectName(u"lineEdit_right_Cx")
-        self.lineEdit_right_Cx.setMinimumSize(QSize(100, 26))
+        self.lineEdit_right_Cx.setMinimumSize(QSize(120, 26))
         self.lineEdit_right_Cx.setMaximumSize(QSize(120, 26))
         self.lineEdit_right_Cx.setFont(font1)
         self.lineEdit_right_Cx.setStyleSheet(u"")
@@ -250,8 +250,8 @@ class Ui_Dialog(object):
 
         self.label_unit_Cz = QLabel(self.frame_8)
         self.label_unit_Cz.setObjectName(u"label_unit_Cz")
-        self.label_unit_Cz.setMinimumSize(QSize(70, 26))
-        self.label_unit_Cz.setMaximumSize(QSize(70, 26))
+        self.label_unit_Cz.setMinimumSize(QSize(60, 26))
+        self.label_unit_Cz.setMaximumSize(QSize(60, 26))
         self.label_unit_Cz.setFont(font1)
         self.label_unit_Cz.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
 
@@ -259,8 +259,8 @@ class Ui_Dialog(object):
 
         self.label_unit_Cy = QLabel(self.frame_8)
         self.label_unit_Cy.setObjectName(u"label_unit_Cy")
-        self.label_unit_Cy.setMinimumSize(QSize(70, 26))
-        self.label_unit_Cy.setMaximumSize(QSize(70, 26))
+        self.label_unit_Cy.setMinimumSize(QSize(60, 26))
+        self.label_unit_Cy.setMaximumSize(QSize(60, 26))
         self.label_unit_Cy.setFont(font1)
         self.label_unit_Cy.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
 
@@ -277,7 +277,7 @@ class Ui_Dialog(object):
 
         self.lineEdit_left_Cz = QLineEdit(self.frame_8)
         self.lineEdit_left_Cz.setObjectName(u"lineEdit_left_Cz")
-        self.lineEdit_left_Cz.setMinimumSize(QSize(100, 26))
+        self.lineEdit_left_Cz.setMinimumSize(QSize(120, 26))
         self.lineEdit_left_Cz.setMaximumSize(QSize(120, 26))
         self.lineEdit_left_Cz.setFont(font1)
         self.lineEdit_left_Cz.setStyleSheet(u"")
@@ -291,8 +291,8 @@ class Ui_Dialog(object):
 
         self.label_constant_Cy = QLabel(self.frame_8)
         self.label_constant_Cy.setObjectName(u"label_constant_Cy")
-        self.label_constant_Cy.setMinimumSize(QSize(70, 26))
-        self.label_constant_Cy.setMaximumSize(QSize(70, 26))
+        self.label_constant_Cy.setMinimumSize(QSize(60, 26))
+        self.label_constant_Cy.setMaximumSize(QSize(60, 26))
         self.label_constant_Cy.setFont(font1)
         self.label_constant_Cy.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
@@ -300,8 +300,8 @@ class Ui_Dialog(object):
 
         self.label_constant_Cz = QLabel(self.frame_8)
         self.label_constant_Cz.setObjectName(u"label_constant_Cz")
-        self.label_constant_Cz.setMinimumSize(QSize(70, 26))
-        self.label_constant_Cz.setMaximumSize(QSize(70, 26))
+        self.label_constant_Cz.setMinimumSize(QSize(60, 26))
+        self.label_constant_Cz.setMaximumSize(QSize(60, 26))
         self.label_constant_Cz.setFont(font1)
         self.label_constant_Cz.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
@@ -309,7 +309,7 @@ class Ui_Dialog(object):
 
         self.lineEdit_right_Cz = QLineEdit(self.frame_8)
         self.lineEdit_right_Cz.setObjectName(u"lineEdit_right_Cz")
-        self.lineEdit_right_Cz.setMinimumSize(QSize(100, 26))
+        self.lineEdit_right_Cz.setMinimumSize(QSize(120, 26))
         self.lineEdit_right_Cz.setMaximumSize(QSize(120, 26))
         self.lineEdit_right_Cz.setFont(font1)
         self.lineEdit_right_Cz.setStyleSheet(u"")
@@ -319,8 +319,8 @@ class Ui_Dialog(object):
 
         self.label_constant_Cx = QLabel(self.frame_8)
         self.label_constant_Cx.setObjectName(u"label_constant_Cx")
-        self.label_constant_Cx.setMinimumSize(QSize(70, 26))
-        self.label_constant_Cx.setMaximumSize(QSize(70, 26))
+        self.label_constant_Cx.setMinimumSize(QSize(60, 26))
+        self.label_constant_Cx.setMaximumSize(QSize(60, 26))
         self.label_constant_Cx.setFont(font1)
         self.label_constant_Cx.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 

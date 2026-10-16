@@ -513,7 +513,7 @@
                  <widget class="QLineEdit" name="lineEdit_right_Cy">
                   <property name="minimumSize">
                    <size>
-                    <width>100</width>
+                    <width>120</width>
                     <height>26</height>
                    </size>
                   </property>
@@ -543,7 +543,7 @@
                  <widget class="QLineEdit" name="lineEdit_left_Cy">
                   <property name="minimumSize">
                    <size>
-                    <width>100</width>
+                    <width>120</width>
                     <height>26</height>
                    </size>
                   </property>
@@ -573,13 +573,13 @@
                  <widget class="QLabel" name="label_unit_Cx">
                   <property name="minimumSize">
                    <size>
-                    <width>70</width>
+                    <width>60</width>
                     <height>26</height>
                    </size>
                   </property>
                   <property name="maximumSize">
                    <size>
-                    <width>70</width>
+                    <width>60</width>
                     <height>26</height>
                    </size>
                   </property>
@@ -616,7 +616,7 @@
                  <widget class="QLineEdit" name="lineEdit_left_Cx">
                   <property name="minimumSize">
                    <size>
-                    <width>100</width>
+                    <width>120</width>
                     <height>26</height>
                    </size>
                   </property>
@@ -679,7 +679,7 @@
                  <widget class="QLineEdit" name="lineEdit_right_Cx">
                   <property name="minimumSize">
                    <size>
-                    <width>100</width>
+                    <width>120</width>
                     <height>26</height>
                    </size>
                   </property>
@@ -709,13 +709,13 @@
                  <widget class="QLabel" name="label_unit_Cz">
                   <property name="minimumSize">
                    <size>
-                    <width>70</width>
+                    <width>60</width>
                     <height>26</height>
                    </size>
                   </property>
                   <property name="maximumSize">
                    <size>
-                    <width>70</width>
+                    <width>60</width>
                     <height>26</height>
                    </size>
                   </property>
@@ -739,13 +739,13 @@
                  <widget class="QLabel" name="label_unit_Cy">
                   <property name="minimumSize">
                    <size>
-                    <width>70</width>
+                    <width>60</width>
                     <height>26</height>
                    </size>
                   </property>
                   <property name="maximumSize">
                    <size>
-                    <width>70</width>
+                    <width>60</width>
                     <height>26</height>
                    </size>
                   </property>
@@ -799,7 +799,7 @@
                  <widget class="QLineEdit" name="lineEdit_left_Cz">
                   <property name="minimumSize">
                    <size>
-                    <width>100</width>
+                    <width>120</width>
                     <height>26</height>
                    </size>
                   </property>
@@ -842,13 +842,13 @@
                  <widget class="QLabel" name="label_constant_Cy">
                   <property name="minimumSize">
                    <size>
-                    <width>70</width>
+                    <width>60</width>
                     <height>26</height>
                    </size>
                   </property>
                   <property name="maximumSize">
                    <size>
-                    <width>70</width>
+                    <width>60</width>
                     <height>26</height>
                    </size>
                   </property>
@@ -872,13 +872,13 @@
                  <widget class="QLabel" name="label_constant_Cz">
                   <property name="minimumSize">
                    <size>
-                    <width>70</width>
+                    <width>60</width>
                     <height>26</height>
                    </size>
                   </property>
                   <property name="maximumSize">
                    <size>
-                    <width>70</width>
+                    <width>60</width>
                     <height>26</height>
                    </size>
                   </property>
@@ -902,7 +902,7 @@
                  <widget class="QLineEdit" name="lineEdit_right_Cz">
                   <property name="minimumSize">
                    <size>
-                    <width>100</width>
+                    <width>120</width>
                     <height>26</height>
                    </size>
                   </property>
@@ -932,13 +932,13 @@
                  <widget class="QLabel" name="label_constant_Cx">
                   <property name="minimumSize">
                    <size>
-                    <width>70</width>
+                    <width>60</width>
                     <height>26</height>
                    </size>
                   </property>
                   <property name="maximumSize">
                    <size>
-                    <width>70</width>
+                    <width>60</width>
                     <height>26</height>
                    </size>
                   </property>
