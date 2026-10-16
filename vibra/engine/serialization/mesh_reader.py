@@ -215,8 +215,8 @@ class MeshReader(GmshCommon):
 
         if mesh.external_nodes_from_lines:
             mesh.elements_from_line = group_by(
-                mesh.lines_connectivity[:, Mesh.ColumnEnum.ENTITY_INDEX],
-                mesh.lines_connectivity[:, Mesh.ColumnEnum.ELEMENT_INDEX],
+                keys=mesh.lines_connectivity[:, Mesh.ColumnEnum.ENTITY_INDEX],
+                values=mesh.lines_connectivity[:, Mesh.ColumnEnum.ELEMENT_INDEX],
             )
             mesh.geometry_information["lines"] = list(mesh.external_nodes_from_lines.keys())
 

@@ -883,48 +883,39 @@ class Mesh:
     def process_mesh_related_mappings(self, label: str = "Loading"):
         logger.info(f"{label} mesh... [70/100]")
         self.elements_from_line = group_by(
-            self.lines_connectivity[:, Mesh.ColumnEnum.ENTITY_INDEX],
-            self.lines_connectivity[:, Mesh.ColumnEnum.ELEMENT_INDEX],
+            keys=self.lines_connectivity[:, Mesh.ColumnEnum.ENTITY_INDEX],
+            values=self.lines_connectivity[:, Mesh.ColumnEnum.ELEMENT_INDEX],
         )
 
         logger.info(f"{label} mesh... [75/100]")
         self.elements_from_surface = group_by(
-            self.faces_connectivity[:, Mesh.ColumnEnum.ENTITY_INDEX],
-            self.faces_connectivity[:, Mesh.ColumnEnum.ELEMENT_INDEX],
+            keys=self.faces_connectivity[:, Mesh.ColumnEnum.ENTITY_INDEX],
+            values=self.faces_connectivity[:, Mesh.ColumnEnum.ELEMENT_INDEX],
         )
 
         logger.info(f"{label} mesh... [80/100]")
         self.elements_from_volume = group_by(
-            self.solids_connectivity[:, Mesh.ColumnEnum.ENTITY_INDEX],
-            self.solids_connectivity[:, Mesh.ColumnEnum.ELEMENT_INDEX],
+            keys=self.solids_connectivity[:, Mesh.ColumnEnum.ENTITY_INDEX],
+            values=self.solids_connectivity[:, Mesh.ColumnEnum.ELEMENT_INDEX],
         )
 
         logger.info(f"{label} mesh... [85/100]")
         self.map_face_elements_to_solid_elements()
 
     def get_line_from_element(self, element_id: int) -> int | None:
-        line_id = None
         row = np.where(self.lines_connectivity[:, 0] == element_id)[0]
         if row.size:
-            line_id = int(self.lines_connectivity[row, 1])
-
-        return line_id
+            return int(self.lines_connectivity[row, 1])
 
     def get_surface_from_element(self, element_id: int) -> int | None:
-        surface_id = None
         row = np.where(self.faces_connectivity[:, 0] == element_id)[0]
         if row.size:
-            surface_id = int(self.faces_connectivity[row, 1])
-
-        return surface_id
+            return int(self.faces_connectivity[row, 1])
 
     def get_volume_from_element(self, element_id: int) -> int | None:
-        volume_id = None
         row = np.where(self.solids_connectivity[:, 0] == element_id)[0]
         if row.size:
-            volume_id = int(self.solids_connectivity[row, 1])
-
-        return volume_id
+            return int(self.solids_connectivity[row, 1])
 
     def process_face_elements_connected_to_nodes(self, selected_ids: int | list):
 
