@@ -135,17 +135,17 @@ class Structural1DElement(Element1D):
         return Me
 
 
-    def integrate_distributed_stiffness(self, el_index: int, k_density: float = 1.0) -> np.ndarray:
+    def integrate_distributed_property(self, el_index: int, value: float = 1.0) -> np.ndarray:
         """ 
-        This method computes the elementary stiffness matrix caused by a foundation stiffness.
+        This method computes the elementary matrix for a distributed property.
 
         Parameters
         ----------
         el_index: int
             The element index.
 
-        k_density: float
-            The mass density in kg/m².
+        value: float
+            The property value.
 
         Returns
         -------
@@ -174,7 +174,7 @@ class Structural1DElement(Element1D):
             # matrix of shape functions for all DOF
             N = self.N_matrix[i, :, :]
 
-            Ke += (N.T @ (N @ (k_density * I))) * (det_jac * self.wps_M[i])
+            Ke += (N.T @ (N @ (value * I))) * (det_jac * self.wps_M[i])
 
         return Ke
 

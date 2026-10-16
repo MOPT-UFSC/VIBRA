@@ -97,10 +97,11 @@ class ModelProperties:
             "surface_thickness",
             "prescribed_dof",
             "nodal_loads",
+            "normal_pressure_load",
             "distributed_loads",
             "distributed_mass",
             "distributed_stiffness",
-            "normal_pressure_load",
+            "distributed_dampings",
         ]
 
         # self.global_properties["material", "global"] = DEFAULT_MATERIAL

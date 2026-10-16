@@ -59,6 +59,9 @@ class StructuralAssembler:
         self.integration_data_1d_for_Kdist = None
         self.integration_data_2d_for_Kdist = None
 
+        self.integration_data_1d_for_Cdist = None
+        self.integration_data_2d_for_Cdist = None
+
 
     @property
     def number_3d_elements(self):
@@ -418,7 +421,7 @@ class StructuralAssembler:
             return DistributedPropertyData(**integration_data)
 
 
-    def get_distributed_stiffness_data_for_1d_element_integration(self) -> DistributedPropertyData | None:
+    def get_distributed_data_for_1d_element_integration(self, property_label: str) -> DistributedPropertyData | None:
         """ 
         This method processes the foundation stiffness data for element integration.
 
@@ -436,7 +439,7 @@ class StructuralAssembler:
         for key, data in self.properties.line_properties.items():
 
             prop, line_id = key
-            if prop != "distributed_stiffness":
+            if prop != property_label:
                 continue
 
             data: dict
@@ -464,7 +467,7 @@ class StructuralAssembler:
             return DistributedPropertyData(**integration_data)
 
 
-    def get_distributed_stiffness_data_for_2d_element_integration(self) -> DistributedPropertyData | None:
+    def get_distributed_data_for_2d_element_integration(self, property_label: str) -> DistributedPropertyData | None:
         """ 
         This method processes the foundation stiffness data for element integration.
 
@@ -482,7 +485,7 @@ class StructuralAssembler:
         for key, data in self.properties.surface_properties.items():
 
             prop, surface_id = key
-            if prop != "distributed_stiffness":
+            if prop != property_label:
                 continue
 
             data: dict
@@ -644,6 +647,8 @@ class StructuralAssembler:
             self.compute_data_to_process_global_matrices_for_solid_elements(reorder=reorder, print_log=print_log)
             self.process_data_to_assemble_distributed_stiffness_matrix_1d()
             self.process_data_to_assemble_distributed_stiffness_matrix_2d()
+            self.process_data_to_assemble_distributed_damping_matrix_1d()
+            self.process_data_to_assemble_distributed_damping_matrix_2d()
 
         else:
             self.process_surface_data_for_shell_elements()
@@ -696,7 +701,7 @@ class StructuralAssembler:
 
     def process_data_to_assemble_distributed_stiffness_matrix_1d(self):
 
-        self.integration_data_1d_for_Kdist = self.get_distributed_stiffness_data_for_1d_element_integration()
+        self.integration_data_1d_for_Kdist = self.get_distributed_data_for_1d_element_integration("distributed_stiffness")
         if self.integration_data_1d_for_Kdist is None:
             return
 
@@ -715,12 +720,12 @@ class StructuralAssembler:
 
         for i, k_density in enumerate(pdata_values):
             self.Kdist_1d[i, :, :] = k_density
-            self.NtN_Kdist_1d[i, :, :] = self.element_1d.integrate_distributed_stiffness(i)
+            self.NtN_Kdist_1d[i, :, :] = self.element_1d.integrate_distributed_property(i)
 
 
     def process_data_to_assemble_distributed_stiffness_matrix_2d(self):
 
-        self.integration_data_2d_for_Kdist = self.get_distributed_stiffness_data_for_2d_element_integration()
+        self.integration_data_2d_for_Kdist = self.get_distributed_data_for_2d_element_integration("distributed_stiffness")
         if self.integration_data_2d_for_Kdist is None:
             return
 
@@ -739,7 +744,55 @@ class StructuralAssembler:
 
         for i, k_density in enumerate(pdata_values):
             self.Kdist_2d[i, :, :] = k_density
-            self.NtN_Kdist_2d[i, :, :] = self.element_2d.integrate_distributed_stiffness(i)
+            self.NtN_Kdist_2d[i, :, :] = self.element_2d.integrate_distributed_property(i)
+
+
+    def process_data_to_assemble_distributed_damping_matrix_1d(self):
+
+        self.integration_data_1d_for_Cdist = self.get_distributed_data_for_1d_element_integration("distributed_dampings")
+        if self.integration_data_1d_for_Cdist is None:
+            return
+
+        connectivities = self.integration_data_1d_for_Cdist.connectivities
+        pdata_values = self.integration_data_1d_for_Cdist.pdata_values
+
+        n_el = len(connectivities)
+        e_dofs = self.element_1d.dof_per_element
+        n_dofs = self.element_1d.dof_per_element
+        n_freq = self.number_frequencies
+
+        self.Cdist_1d = np.zeros((n_el, n_dofs, n_freq), dtype=complex)
+        self.NtN_Cdist_1d = np.zeros((n_el, e_dofs, e_dofs), dtype=float)
+
+        self.ind_rows_Cdist_1d, self.ind_cols_Cdist_1d = self.element_1d.get_rows_and_cols_indices_2D(connectivities)
+
+        for i, value in enumerate(pdata_values):
+            self.Cdist_1d[i, :, :] = value
+            self.NtN_Cdist_1d[i, :, :] = self.element_1d.integrate_distributed_property(i)
+
+
+    def process_data_to_assemble_distributed_damping_matrix_2d(self):
+
+        self.integration_data_2d_for_Cdist = self.get_distributed_data_for_2d_element_integration("distributed_dampings")
+        if self.integration_data_2d_for_Cdist is None:
+            return
+
+        connectivities = self.integration_data_2d_for_Cdist.connectivities
+        pdata_values = self.integration_data_2d_for_Cdist.pdata_values
+
+        n_el = len(connectivities)
+        e_dofs = self.element_2d.dof_per_element
+        n_dofs = self.element_2d.dof_per_node
+        n_freq = self.number_frequencies
+
+        self.Cdist_2d = np.zeros((n_el, n_dofs, n_freq), dtype=complex)
+        self.NtN_Cdist_2d = np.zeros((n_el, e_dofs, e_dofs), dtype=float)
+
+        self.ind_rows_Cdist_2d, self.ind_cols_Cdist_2d = self.element_2d.get_rows_and_cols_indices_2D(connectivities)
+
+        for i, value in enumerate(pdata_values):
+            self.Cdist_2d[i, :, :] = value
+            self.NtN_Cdist_2d[i, :, :] = self.element_2d.integrate_distributed_property(i)
 
 
     def process_diagonal_lumped_matrix(self, shape: tuple[int, int, int], n_dofs: int, values: np.ndarray):
@@ -775,7 +828,7 @@ class StructuralAssembler:
         return diag_3d_matrix
 
 
-    def assemble_global_distributed_stiffness(self, index: int = 0):
+    def assemble_distributed_stiffness_global_matrix(self, index: int = 0):
 
         self.distributed_stiffness_matrix = 0.
         self.distributed_stiffness_matrix_r = 0.
@@ -806,6 +859,39 @@ class StructuralAssembler:
 
         if self.prescribed_dof_indices:
             self.distributed_stiffness_matrix = self.distributed_stiffness_matrix[self.unprescribed_dof_indices, :][:, self.unprescribed_dof_indices]
+
+
+    def assemble_distributed_damping_global_matrix(self, index: int = 0):
+
+        self.distributed_damping_matrix = 0.
+        self.distributed_damping_matrix_r = 0.
+
+        if isinstance(self.integration_data_1d_for_Cdist, DistributedPropertyData):
+            shape = self.NtN_Cdist_1d.shape
+            n_dofs = self.element_1d.dof_per_node
+            diag_Cmatrix = self.process_diagonal_lumped_matrix(shape, n_dofs, self.Cdist_1d[:, :, index])
+            data_Cdist_1d = self.NtN_Cdist_1d @ diag_Cmatrix
+            rows, cols = self.ind_rows_Cdist_1d, self.ind_cols_Cdist_1d
+            self.distributed_damping_matrix += csr_matrix((data_Cdist_1d.flatten(), (rows, cols)), shape=self.model.gm_shape)
+
+        if isinstance(self.integration_data_2d_for_Cdist, DistributedPropertyData):
+            shape = self.NtN_Cdist_2d.shape
+            n_dofs = self.element_2d.dof_per_node
+            diag_Cmatrix = self.process_diagonal_lumped_matrix(shape, n_dofs, self.Cdist_2d[:, :, index])
+            data_Cdist_2d = self.NtN_Cdist_2d @ diag_Cmatrix
+            rows, cols = self.ind_rows_Cdist_2d, self.ind_cols_Cdist_2d
+            self.distributed_damping_matrix += csr_matrix((data_Cdist_2d.flatten(), (rows, cols)), shape=self.model.gm_shape)
+
+        if not isinstance(self.distributed_damping_matrix, csr_matrix):
+            return 0., 0.
+ 
+        if self.model.drop_domain:
+            self.distributed_damping_matrix = self.distributed_damping_matrix[self.structural_dofs_indices, :][:, self.structural_dofs_indices]
+
+        self.distributed_damping_matrix_r = self.distributed_damping_matrix[:, self.prescribed_dof_indices]
+
+        if self.prescribed_dof_indices:
+            self.distributed_damping_matrix = self.distributed_damping_matrix[self.unprescribed_dof_indices, :][:, self.unprescribed_dof_indices]
 
 
     def assemble_global_mass_matrix(self, index: int = 0):
@@ -868,7 +954,8 @@ class StructuralAssembler:
         logging.info("Assembling the global stiffness matrix... [50/100]")
         t0 = time()
         self.assemble_global_stiffness_matrix()
-        self.assemble_global_distributed_stiffness()
+        self.assemble_distributed_stiffness_global_matrix()
+        self.assemble_distributed_damping_global_matrix()
         dt = time() - t0
         if print_log:
             print(f"Elapsed time to assemble the global stiffness matrix: {dt : .6f} [s]")
@@ -936,13 +1023,15 @@ class StructuralAssembler:
 
         if index > 0:
             # reassemble the global distributed stiffness matrix
-            self.assemble_global_distributed_stiffness(index=index)
+            self.assemble_distributed_stiffness_global_matrix(index=index)
+            self.assemble_distributed_damping_global_matrix(index=index)
 
         M = self.mass_matrix
         K = self.stiffness_matrix + self.distributed_stiffness_matrix
+        C_dist = self.distributed_damping_matrix
 
         # compute the dynamic stiffness matrix Kd
-        Kd = (-(omega**2) + 1j * (omega * alpha)) * M + (1 + 1j * (eta + omega * beta)) * K
+        Kd = (-(omega**2) + 1j * (omega * alpha)) * M + (1 + 1j * (eta + omega * beta)) * K + (1j * omega) * C_dist
 
         return Kd
 
