@@ -57,8 +57,11 @@ class OccMesher:
         loc = TopLoc_Location()
 
         coordinates = list()
-        segments = list()
-        triangles = list()
+        edges_connectivity = list()
+        faces_connectivity = list()
+
+        line_indices = list()
+        surface_indices = list()
 
         visited_faces = set()
         visited_edges = set()
@@ -67,6 +70,7 @@ class OccMesher:
             face_index = face_mapper.FindIndex(face)
             if face_index in visited_faces:
                 continue
+
             visited_faces.add(face_index)
 
             triangulation = BRep_Tool.Triangulation_s(face, loc)
@@ -77,7 +81,8 @@ class OccMesher:
 
             for triangle in triangulation.Triangles():
                 triangle_indexes = np.array(triangle.Get())
-                triangles.append(triangle_indexes + coordinate_shift - 1)
+                faces_connectivity.append(triangle_indexes + coordinate_shift - 1)
+                surface_indices.append(face_index)
 
             for edge in self._iterate_edges(face):
                 edge_index = edge_mapper.FindIndex(edge)
@@ -89,45 +94,52 @@ class OccMesher:
                 for a, b in pairwise(range(polygon.Nodes().Length())):
                     index_a = polygon.Node(a + 1) + coordinate_shift - 1
                     index_b = polygon.Node(b + 1) + coordinate_shift - 1
-                    segments.append((index_a, index_b))
+                    edges_connectivity.append((index_a, index_b))
+                    line_indices.append(edge_index)
 
         coordinates = np.array(coordinates)
-        bla = np.arange(len(coordinates)).reshape(-1, 1)
+        node_indices = np.arange(len(coordinates)).reshape(-1, 1)
         nodal_coordinates = np.concatenate(
-            [bla, coordinates],
+            [node_indices, coordinates],
             axis=1,
         )
 
-        bla = np.arange(len(segments)).reshape(-1, 1)
+        edge_indices = np.arange(len(edges_connectivity)).reshape(-1, 1)
+        line_indices = np.array(line_indices).reshape(-1, 1)
+        whatever = np.zeros_like(line_indices)
         lines_connectivity = np.concatenate(
             [
-                bla,
-                bla,
-                bla,
-                bla,
-                segments,
+                edge_indices,
+                line_indices,
+                whatever,
+                whatever,
+                edges_connectivity,
             ],
             axis=1,
         )
 
-        bla = np.arange(len(triangles)).reshape(-1, 1)
+        face_indices = np.arange(len(faces_connectivity)).reshape(-1, 1)
+        surface_indices = np.array(surface_indices).reshape(-1, 1)
+        whatever = np.zeros_like(surface_indices)
         faces_connectivity = np.concatenate(
             [
-                bla,
-                bla,
-                bla,
-                bla,
-                triangles,
+                face_indices,
+                surface_indices,
+                whatever,
+                whatever,
+                faces_connectivity,
             ],
             axis=1,
         )
 
-        return Mesh().set_mesh_data(
+        mesh = Mesh().set_mesh_data(
             nodal_coordinates,
             lines_connectivity,
             faces_connectivity,
             solids_connectivity=np.zeros((0, 4)),
         )
+
+        return mesh
 
     def _iterate_entities(self, shape, entity_type):
         explorer = TopExp_Explorer(shape, entity_type)
