@@ -1,5 +1,5 @@
 from collections import defaultdict
-from typing import Optional, Sequence
+from collections.abc import Sequence
 
 import numpy as np
 from molde.colors import Color, color_names
@@ -40,14 +40,14 @@ class MultimaterialGeometryActor(vtkPropAssembly):
     def __init__(
         self,
         mesh: Mesh,
-        visualization_filter: Optional[VisualizationFilter] = None,
+        visualization_filter: VisualizationFilter | None = None,
     ):
         self.visualization_filter = visualization_filter
         if self.visualization_filter is None:
             self.visualization_filter = VisualizationFilter.all_true()
 
         self.mesh = mesh
-        self.extractors: dict[str, vtkExtractCells] = dict()
+        self.extractors: dict[str, vtkExtractCells] = {}
         self.create_geometry()
 
     def create_geometry(self):
@@ -409,7 +409,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         self.actor.SetMapper(mapper)
         self.actor.PickableOff()
 
-        self.actor.GetProperty().EdgeVisibilityOn()
+        # self.actor.GetProperty().EdgeVisibilityOn()
 
         self.AddPart(self.actor)
         return self.actor

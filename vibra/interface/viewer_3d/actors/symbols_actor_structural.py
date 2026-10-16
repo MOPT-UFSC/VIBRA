@@ -76,11 +76,14 @@ class SymbolsActorStructural(SymbolsActor):
         contains_curvature = (curvatures_surface is not None) and np.any(curvatures_surface)
         center_coords = np.average(surface_coordinates, axis=0)
 
-        if contains_curvature:
-            # Finds the node that is closest to the center coords
-            dist = np.linalg.norm(surface_coordinates - center_coords, axis=1)
-            index = np.argmin(dist)
-            return surface_coordinates[index, :], surface_normals[index, :]
+        try:
+            if contains_curvature:
+                # Finds the node that is closest to the center coords
+                dist = np.linalg.norm(surface_coordinates - center_coords, axis=1)
+                index = np.argmin(dist)
+                return surface_coordinates[index, :], surface_normals[index, :]
+        except Exception:
+            pass
 
         return center_coords, avg_normal
 

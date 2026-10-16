@@ -34,10 +34,10 @@ class Mesh:
         self.reset_variables()
 
     def reset_variables(self):
-        ## geometry-related attributes
         self.nodes_to_highlight = []
         self.efaces_to_highlight = []
 
+        ## geometry-related attributes
         self.surfaces_from_volume = {}
         self.lines_from_surface = defaultdict(list)
         self.points_from_line = {}
