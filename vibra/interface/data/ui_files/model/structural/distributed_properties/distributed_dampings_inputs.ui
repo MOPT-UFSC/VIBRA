@@ -1832,6 +1832,30 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>comboBox_assignment_type</tabstop>
+  <tabstop>comboBox_element_type</tabstop>
+  <tabstop>comboBox_data_type</tabstop>
+  <tabstop>tabWidget_main</tabstop>
+  <tabstop>lineEdit_left_Cx</tabstop>
+  <tabstop>lineEdit_left_Cy</tabstop>
+  <tabstop>lineEdit_left_Cz</tabstop>
+  <tabstop>lineEdit_right_Cx</tabstop>
+  <tabstop>lineEdit_right_Cy</tabstop>
+  <tabstop>lineEdit_right_Cz</tabstop>
+  <tabstop>pushButton_apply_and_close</tabstop>
+  <tabstop>pushButton_apply</tabstop>
+  <tabstop>pushButton_cancel</tabstop>
+  <tabstop>lineEdit_path_table_Cx</tabstop>
+  <tabstop>pushButton_load_Cx_table</tabstop>
+  <tabstop>lineEdit_path_table_Cy</tabstop>
+  <tabstop>pushButton_load_Cy_table</tabstop>
+  <tabstop>lineEdit_path_table_Cz</tabstop>
+  <tabstop>pushButton_load_Cz_table</tabstop>
+  <tabstop>treeWidget_distributed_dampings</tabstop>
+  <tabstop>pushButton_remove</tabstop>
+  <tabstop>pushButton_reset</tabstop>
+ </tabstops>
  <resources>
   <include location="../../../../icons/dark_theme/resources.qrc"/>
  </resources>

@@ -633,6 +633,27 @@ class Ui_Dialog(object):
 
         self.gridLayout_7.addWidget(self.frame_buttons, 2, 0, 1, 1)
 
+        QWidget.setTabOrder(self.comboBox_assignment_type, self.comboBox_element_type)
+        QWidget.setTabOrder(self.comboBox_element_type, self.comboBox_data_type)
+        QWidget.setTabOrder(self.comboBox_data_type, self.tabWidget_main)
+        QWidget.setTabOrder(self.tabWidget_main, self.lineEdit_left_Kx)
+        QWidget.setTabOrder(self.lineEdit_left_Kx, self.lineEdit_left_Ky)
+        QWidget.setTabOrder(self.lineEdit_left_Ky, self.lineEdit_left_Kz)
+        QWidget.setTabOrder(self.lineEdit_left_Kz, self.lineEdit_right_Kx)
+        QWidget.setTabOrder(self.lineEdit_right_Kx, self.lineEdit_right_Ky)
+        QWidget.setTabOrder(self.lineEdit_right_Ky, self.lineEdit_right_Kz)
+        QWidget.setTabOrder(self.lineEdit_right_Kz, self.pushButton_apply_and_close)
+        QWidget.setTabOrder(self.pushButton_apply_and_close, self.pushButton_apply)
+        QWidget.setTabOrder(self.pushButton_apply, self.pushButton_cancel)
+        QWidget.setTabOrder(self.pushButton_cancel, self.lineEdit_path_table_Kx)
+        QWidget.setTabOrder(self.lineEdit_path_table_Kx, self.pushButton_load_Kx_table)
+        QWidget.setTabOrder(self.pushButton_load_Kx_table, self.lineEdit_path_table_Ky)
+        QWidget.setTabOrder(self.lineEdit_path_table_Ky, self.pushButton_load_Ky_table)
+        QWidget.setTabOrder(self.pushButton_load_Ky_table, self.lineEdit_path_table_Kz)
+        QWidget.setTabOrder(self.lineEdit_path_table_Kz, self.pushButton_load_Kz_table)
+        QWidget.setTabOrder(self.pushButton_load_Kz_table, self.treeWidget_distributed_stiffness)
+        QWidget.setTabOrder(self.treeWidget_distributed_stiffness, self.pushButton_remove)
+        QWidget.setTabOrder(self.pushButton_remove, self.pushButton_reset)
 
         self.retranslateUi(Dialog)
 
