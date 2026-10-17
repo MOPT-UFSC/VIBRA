@@ -124,7 +124,7 @@ class DistributedDampingsInputs(DistributedDampingsInputs_UI):
     def _create_connections(self):
 
         # QComboBox connections
-        self.comboBox_assignment_type.currentIndexChanged.connect(self.attribution_type_callback)
+        self.comboBox_assignment_type.currentIndexChanged.connect(self.data_type_callback)
         self.comboBox_data_type.currentIndexChanged.connect(self.data_type_callback)
         self.comboBox_element_type.currentIndexChanged.connect(self.element_type_callback)
 
@@ -173,7 +173,7 @@ class DistributedDampingsInputs(DistributedDampingsInputs_UI):
 
             if len(surfaces) == 1:
                 surface_id = next(iter(surfaces))
-                data = self.properties._get_property("distributed_dampings", surface=surface_id)
+                data = self.properties._get_property("distributed_damping", surface=surface_id)
                 self.update_input_fields(data)
                 if data is None:
                     self.update_formulation_callback(surface_id=surface_id)
@@ -188,7 +188,7 @@ class DistributedDampingsInputs(DistributedDampingsInputs_UI):
 
             if len(lines) == 1:
                 line_id = next(iter(lines))
-                data = self.properties._get_property("distributed_dampings", line=line_id)
+                data = self.properties._get_property("distributed_damping", line=line_id)
                 self.update_input_fields(data)
                 if data is None:
                     self.update_formulation_callback(line_id=line_id)
@@ -258,21 +258,6 @@ class DistributedDampingsInputs(DistributedDampingsInputs_UI):
                         self.comboBox_element_type.setCurrentIndex(0)
                         return
 
-    def attribution_type_callback(self):
-
-        surface_assignment = self.comboBox_assignment_type.currentIndex() == AssignmentType.SURFACES
-        load_label = "F{} / area:".format if surface_assignment else "F{} / length:".format
-
-        self.label_constant_Cx.setText(load_label("x"))
-        self.label_constant_Cy.setText(load_label("y"))
-        self.label_constant_Cz.setText(load_label("z"))
-
-        self.label_table_Cx.setText(load_label("x"))
-        self.label_table_Cy.setText(load_label("y"))
-        self.label_table_Cz.setText(load_label("z"))
-
-        self.data_type_callback()
-
     def element_type_callback(self):
         return
 
@@ -281,10 +266,8 @@ class DistributedDampingsInputs(DistributedDampingsInputs_UI):
         self.label_dtype_left.setText("Real" if real_imaginary else "Magnitude")
         self.label_dtype_right.setText("Imaginary" if real_imaginary else "Phase")
 
-        unit = "N/m²" if self.comboBox_assignment_type.currentIndex() == AssignmentType.SURFACES else "N/m"
-
         for widget in self.unit_labels.values():
-            label_text = f"[{unit}]" if real_imaginary else f"[{unit}, deg]"
+            label_text = "[N.s/m]" if real_imaginary else "[N.s/m, deg]"
             widget.setText(label_text)
 
     def update_element_type_based_on_geometry_information(self):
@@ -332,15 +315,15 @@ class DistributedDampingsInputs(DistributedDampingsInputs_UI):
                 "element_type": element_type,
                 "real_values" if real_imag_input else "amplitude_values": left_values,
                 "imag_values" if real_imag_input else "phase_values": right_values,
-                "unit" : "N/m",
+                "unit" : "N.s/m",
             }
 
             match selection:
                 case "surfaces":
-                    self.properties._set_property("distributed_dampings", data, surface=selected_id)
+                    self.properties._set_property("distributed_damping", data, surface=selected_id)
 
                 case "lines":
-                    self.properties._set_property("distributed_dampings", data, line=selected_id)
+                    self.properties._set_property("distributed_damping", data, line=selected_id)
 
     def load_table(self, lineEdit : QLineEdit, load_label: str, direct_load = False):
         title = "Error while loading table"
@@ -493,15 +476,15 @@ class DistributedDampingsInputs(DistributedDampingsInputs_UI):
                 "element_type" : element_type,
                 "table_names" : table_names,
                 "table_paths" : table_paths,
-                "unit" : "N/m",
+                "unit" : "N.s/m",
             }
 
             match selection:
                 case "surfaces":
-                    self.properties._set_property("distributed_dampings", data, surface=selected_id)
+                    self.properties._set_property("distributed_damping", data, surface=selected_id)
 
                 case "lines":
-                    self.properties._set_property("distributed_dampings", data, line=selected_id)
+                    self.properties._set_property("distributed_damping", data, line=selected_id)
 
         self.reset_table_variables()
 
@@ -566,7 +549,7 @@ class DistributedDampingsInputs(DistributedDampingsInputs_UI):
         for key, property in properties.items():
             for (prop_label, *args), data in property.items():
 
-                if prop_label != "distributed_dampings":
+                if prop_label != "distributed_damping":
                     continue
 
                 if not isinstance(data, dict):
@@ -596,7 +579,7 @@ class DistributedDampingsInputs(DistributedDampingsInputs_UI):
 
         for current_property in properties_to_check:
             for (property, _) in current_property:
-                if property != "distributed_dampings":
+                if property != "distributed_damping":
                     continue
 
                 self.tabWidget_main.setTabVisible(StandardTabType.LIST, True)
@@ -664,10 +647,10 @@ class DistributedDampingsInputs(DistributedDampingsInputs_UI):
             selection = item.text(1)
 
             if selection == "surface":
-                self.properties._remove_surface_property("distributed_dampings", selected_id)
+                self.properties._remove_surface_property("distributed_damping", selected_id)
 
             elif selection == "line":
-                self.properties._remove_line_property("distributed_dampings", selected_id)
+                self.properties._remove_line_property("distributed_damping", selected_id)
 
         self.actions_to_finalize()
 
@@ -686,7 +669,7 @@ class DistributedDampingsInputs(DistributedDampingsInputs_UI):
             return
 
         if obj._continue:
-            self.properties._reset_property("distributed_dampings")
+            self.properties._reset_property("distributed_damping")
             self.actions_to_finalize()
 
             app().main_window.selection.set_geometry_selection()

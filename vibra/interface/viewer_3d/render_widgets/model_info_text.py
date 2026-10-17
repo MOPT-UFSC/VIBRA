@@ -716,12 +716,12 @@ def structural_additional_info_text():
     if len(selected_faces) == 1:
         distributed_mass_2d = app().project.model.properties._get_property("distributed_mass", surface=selected_faces[0])
         distributed_stiffness_2d = app().project.model.properties._get_property("distributed_stiffness", surface=selected_faces[0])
-        distributed_dampings_2d = app().project.model.properties._get_property("distributed_dampings", surface=selected_faces[0])
+        distributed_dampings_2d = app().project.model.properties._get_property("distributed_damping", surface=selected_faces[0])
 
     elif len(selected_lines) == 1:
         distributed_mass_1d = app().project.model.properties._get_property("distributed_mass", line=selected_lines[0])
         distributed_stiffness_1d = app().project.model.properties._get_property("distributed_stiffness", line=selected_lines[0])
-        distributed_dampings_1d = app().project.model.properties._get_property("distributed_dampings", line=selected_lines[0])
+        distributed_dampings_1d = app().project.model.properties._get_property("distributed_damping", line=selected_lines[0])
 
     else:
         return text

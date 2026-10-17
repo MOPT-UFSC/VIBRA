@@ -124,7 +124,7 @@ class DistributedStiffnessInputs(DistributedStiffnessInputs_UI):
     def _create_connections(self):
 
         # QComboBox connections
-        self.comboBox_assignment_type.currentIndexChanged.connect(self.attribution_type_callback)
+        self.comboBox_assignment_type.currentIndexChanged.connect(self.data_type_callback)
         self.comboBox_data_type.currentIndexChanged.connect(self.data_type_callback)
         self.comboBox_element_type.currentIndexChanged.connect(self.element_type_callback)
 
@@ -257,21 +257,6 @@ class DistributedStiffnessInputs(DistributedStiffnessInputs_UI):
                     if isinstance(data, dict):
                         self.comboBox_element_type.setCurrentIndex(0)
                         return
-
-    def attribution_type_callback(self):
-
-        surface_assignment = self.comboBox_assignment_type.currentIndex() == AssignmentType.SURFACES
-        load_label = "F{} / area:".format if surface_assignment else "F{} / length:".format
-
-        self.label_constant_Kx.setText(load_label("x"))
-        self.label_constant_Ky.setText(load_label("y"))
-        self.label_constant_Kz.setText(load_label("z"))
-
-        self.label_table_Kx.setText(load_label("x"))
-        self.label_table_Ky.setText(load_label("y"))
-        self.label_table_Kz.setText(load_label("z"))
-
-        self.data_type_callback()
 
     def element_type_callback(self):
         return

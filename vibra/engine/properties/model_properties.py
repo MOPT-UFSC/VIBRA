@@ -101,7 +101,7 @@ class ModelProperties:
             "distributed_loads",
             "distributed_mass",
             "distributed_stiffness",
-            "distributed_dampings",
+            "distributed_damping",
         ]
 
         # self.global_properties["material", "global"] = DEFAULT_MATERIAL

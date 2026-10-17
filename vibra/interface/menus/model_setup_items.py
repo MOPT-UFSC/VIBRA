@@ -109,7 +109,7 @@ class ModelSetupItems(CommonMenuItems):
             "item_child_normal_pressure_load": "normal_pressure_load",
             "item_child_distributed_mass": "distributed_mass",
             "item_child_distributed_stiffness": "distributed_stiffness",
-            "item_child_distributed_dampings": "distributed_dampings",
+            "item_child_distributed_dampings": "distributed_damping",
             "item_child_acoustic_pressure": "acoustic_pressure",
             "item_child_mass_source": "mass_source",
             "item_child_surface_velocity": "surface_velocity",
