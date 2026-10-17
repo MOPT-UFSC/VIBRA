@@ -195,7 +195,7 @@ class Structural2DElement(Element2D):
         return Me
 
 
-    def integrate_distributed_property(self, el_index: int, value: float = 1.0) -> np.ndarray:
+    def integrate_distributed_property(self, el_index: int, value: np.ndarray) -> np.ndarray:
         """ 
         This method computes the elementary matrix for a distributed property.
 
@@ -222,9 +222,6 @@ class Structural2DElement(Element2D):
         # initialize the variable Fe
         Ke = 0.
 
-        # identity matrix
-        I = np.eye(self.dof_per_element, dtype=float)
-
         # integration loop
         for i in range(self.nint):
 
@@ -234,7 +231,7 @@ class Structural2DElement(Element2D):
             # matrix of shape functions for all DOF
             N = self.N_matrix[i, :, :]
 
-            Ke += (N.T @ (N @ (value * I))) * (det_jac * self.wps[i])
+            Ke += (N.T @ value @ N) * (det_jac * self.wps[i])
 
         return Ke
 

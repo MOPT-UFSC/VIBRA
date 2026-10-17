@@ -85,18 +85,18 @@ class StructuralExcitationsAssembler:
         values = self.assembler.array_prescribed_values[:, index]
 
         Kr = self.assembler.stiffness_matrix_r + self.assembler.distributed_stiffness_matrix_r
-        Mr = self.assembler.mass_matrix_r
+        Mr = self.assembler.mass_matrix_r + self.assembler.distributed_mass_matrix_r
         Cr = self.assembler.distributed_damping_matrix_r
+
+        Kr_add = Kr @ values
+        Mr_add = Mr @ values
 
         if not isinstance(Cr, csr_matrix):
             Cr_add = Cr @ values
         else:
             Cr_add = 0.
 
-        Kr_add = Kr @ values
-        Mr_add = Mr @ values
-
-        f_eq = (1 + 1j*(eta + omega * beta)) * Kr_add + (-(omega**2) + 1j*(omega * alpha)) * Mr_add + 1j * omega * Cr_add
+        f_eq = (1 + 1j * (eta + omega * beta)) * Kr_add + (-(omega**2) + 1j * (omega * alpha)) * Mr_add + 1j * omega * Cr_add
 
         return f_eq[self.assembler.unprescribed_dof_indices]
 

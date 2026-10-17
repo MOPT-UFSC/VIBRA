@@ -2,7 +2,7 @@ import logging
 import sys
 from collections import defaultdict
 from dataclasses import dataclass
-from time import time
+from time import perf_counter
 
 import numpy as np
 from scipy.sparse import csr_matrix
@@ -10,6 +10,8 @@ from tqdm import tqdm
 
 from vibra.engine.analysis_info import HarmonicAnalysisSetup
 from vibra.engine.assemblers.structural.structural_excitations_assembler import StructuralExcitationsAssembler
+from vibra.engine.elements.elements_1d.structural.structural_1d_element import Structural1DElement
+from vibra.engine.elements.elements_2d.structural.structural_2d_element import Structural2DElement
 from vibra.engine.model import Model
 from vibra.engine.properties.material import Material
 
@@ -19,6 +21,13 @@ class DistributedPropertyData:
     element_ids: np.ndarray
     connectivities: np.ndarray
     pdata_values: np.ndarray | dict
+
+
+@dataclass
+class SparseMatrixData:
+    data: np.ndarray
+    rows: np.ndarray
+    cols: np.ndarray
 
 
 class StructuralAssembler:
@@ -55,12 +64,7 @@ class StructuralAssembler:
         self.distributed_stiffness_matrix_r = None
 
         self.structural_load = None
-
-        self.integration_data_1d_for_Kdist = None
-        self.integration_data_2d_for_Kdist = None
-
-        self.integration_data_1d_for_Cdist = None
-        self.integration_data_2d_for_Cdist = None
+        self.sparse_matrix_data: dict[str, SparseMatrixData] = {}
 
 
     @property
@@ -321,106 +325,6 @@ class StructuralAssembler:
                 self.material_from_volume[vol_id] = material
 
 
-    def get_distributed_mass_data_for_1d_element_integration(self) -> DistributedPropertyData | None:
-        """ 
-        This method processes the distributed mass data for element integration.
-
-        Returns
-        -------
-        integration_data: dict
-            A dictionary containing the connectivities and the data of each
-            processed 2d elements.
-        """
-
-        pdata_values = {}
-        connectivities = {}
-        integration_data = {}
-
-        for key, data in self.properties.line_properties.items():
-
-            prop, line_id = key
-            if prop != "distributed_mass":
-                continue
-
-            data: dict
-            mass = np.real(data.get("values"))
-
-            line_elements = list(self.model.mesh.elements_from_line.get(line_id))
-            line_connect = self.model.mesh.get_connectivity_from_line(line_id)
-            line_length = self.element_1d.integrate_length(line_connect)
-
-            # calculate the line density
-            line_density = mass / line_length
-
-            for i, el in enumerate(line_elements):
-                connectivities[el] = line_connect[i]
-                pdata_values[el] = line_density
-
-        if connectivities:
-
-            integration_data = {
-                "element_ids" : np.array(list(connectivities.keys()), dtype=int),
-                "connectivities" : np.array(list(connectivities.values()), dtype=int),
-                "pdata_values" : np.array(list(pdata_values.values()), dtype=float),
-                }
-
-            return DistributedPropertyData(**integration_data)
-
-
-    def get_distributed_mass_data_for_2d_element_integration(self) -> DistributedPropertyData | None:
-        """ 
-        This method processes the distributed mass data for element integration.
-
-        Returns
-        -------
-        integration_data: dict
-            A dictionary containing the connectivities and the data of each
-            processed 2d elements.
-        """
-
-        pdata_values = {}
-        connectivities = {}
-        integration_data = {}
-
-        for key, data in self.properties.surface_properties.items():
-
-            prop, surface_id = key
-            if prop != "distributed_mass":
-                continue
-
-            data: dict
-            mass = np.real(data.get("values"))
-
-            surf_elements = list(self.model.mesh.elements_from_surface.get(surface_id))
-            surf_connect = self.model.mesh.get_connectivity_from_surface(surface_id)
-            surface_area = self.element_2d.integrate_area(surf_connect)
-
-            # calculate the surface density
-            mass_density = mass / surface_area
-
-            # print()
-            # print(f"Area: {surface_area} m²")
-            # print(f"mass_density: {mass_density} kg/m²")
-            # print()
-
-            # mass_density = 1249.600004
-            # mass_density = 2060.641904
-
-            for i, el in enumerate(surf_elements):
-                connectivities[el] = surf_connect[i]
-                pdata_values[el] = mass_density
-
-        if connectivities:
-
-            integration_data = {
-                "element_ids" : np.array(list(connectivities.keys()), dtype=int),
-                "connectivities" : np.array(list(connectivities.values()), dtype=int),
-                "pdata_values" : np.array(list(pdata_values.values()), dtype=float),
-                }
-
-            return DistributedPropertyData(**integration_data)
-
-
     def get_distributed_data_for_1d_element_integration(self, property_label: str) -> DistributedPropertyData | None:
         """ 
         This method processes the foundation stiffness data for element integration.
@@ -497,6 +401,14 @@ class StructuralAssembler:
 
             # calculate the foundation stiffness density
             k_density = self.process_frequency_based_arrays(k_value / surface_area)
+
+            # print()
+            # print(f"Area: {surface_area} m²")
+            # print(f"mass_density: {mass_density} kg/m²")
+            # print()
+
+            # mass_density = 1249.600004
+            # mass_density = 2060.641904
 
             for i, el in enumerate(surf_elements):
                 connectivities[el] = surf_connect[i]
@@ -645,10 +557,7 @@ class StructuralAssembler:
         if self.model.mesh.solids_connectivity.size:
             self.process_material_from_volumes()
             self.compute_data_to_process_global_matrices_for_solid_elements(reorder=reorder, print_log=print_log)
-            self.process_data_to_assemble_distributed_stiffness_matrix_1d()
-            self.process_data_to_assemble_distributed_stiffness_matrix_2d()
-            self.process_data_to_assemble_distributed_damping_matrix_1d()
-            self.process_data_to_assemble_distributed_damping_matrix_2d()
+            self.process_data_to_assemble_distributed_global_matrices()
 
         else:
             self.process_surface_data_for_shell_elements()
@@ -657,285 +566,11 @@ class StructuralAssembler:
         self.process_dofs_indices()
 
 
-    def assemble_distributed_mass_matrix_for_lines(self):
-        """
-        This method incorporates the 1D distributed masses contribution in the global mass matrix.
-        """
-        integration_data_1d = self.get_distributed_mass_data_for_1d_element_integration()
-        if integration_data_1d is None:
-            return
-
-        connectivities = integration_data_1d.connectivities
-        pdata_values = integration_data_1d.pdata_values
-
-        n_el = len(connectivities)
-        e_dofs = self.element_1d.dof_per_element
-        data_Mdist = np.zeros((n_el, e_dofs, e_dofs), dtype=float)
-
-        ind_rows, ind_cols = self.element_1d.get_rows_and_cols_indices_2D(connectivities)
-
-        for i, surface_density in enumerate(pdata_values):
-            data_Mdist[i, :, :] = self.element_1d.integrate_distributed_mass(i, surface_density)
-
-        self.mass_matrix += csr_matrix((data_Mdist.flatten(), (ind_rows, ind_cols)), shape=self.model.gm_shape)
-
-
-    def assemble_distributed_mass_matrix_for_surfaces(self):
-        """
-        This method incorporates the 2D distributed masses contribution in the global mass matrix.
-        """
-        integration_data_2d = self.get_distributed_mass_data_for_2d_element_integration()
-        if integration_data_2d is None:
-            return
-
-        connectivities = integration_data_2d.connectivities
-        pdata_values = integration_data_2d.pdata_values
-
-        n_el = len(connectivities)
-        e_dofs = self.element_2d.dof_per_element
-        data_Mdist = np.zeros((n_el, e_dofs, e_dofs), dtype=float)
-
-        ind_rows, ind_cols = self.element_2d.get_rows_and_cols_indices_2D(connectivities)
-
-        for i, surface_density in enumerate(pdata_values):
-            data_Mdist[i, :, :] = self.element_2d.integrate_distributed_mass(i, surface_density)
-
-        self.mass_matrix += csr_matrix((data_Mdist.flatten(), (ind_rows, ind_cols)), shape=self.model.gm_shape)
-
-
-    def process_data_to_assemble_distributed_stiffness_matrix_1d(self):
-        """
-        This method processes the data to assemble the global stiffness matrix 
-        for distributed stiffness in 1D elements.
-        """
-        self.integration_data_1d_for_Kdist = self.get_distributed_data_for_1d_element_integration("distributed_stiffness")
-        if self.integration_data_1d_for_Kdist is None:
-            return
-
-        connectivities = self.integration_data_1d_for_Kdist.connectivities
-        pdata_values = self.integration_data_1d_for_Kdist.pdata_values
-
-        n_el = len(connectivities)
-        e_dofs = self.element_1d.dof_per_element
-        n_dofs = self.element_1d.dof_per_element
-        n_freq = self.number_frequencies
-
-        self.Kdist_1d = np.zeros((n_el, n_dofs, n_freq), dtype=complex)
-        self.NtN_Kdist_1d = np.zeros((n_el, e_dofs, e_dofs), dtype=float)
-
-        self.ind_rows_Kdist_1d, self.ind_cols_Kdist_1d = self.element_1d.get_rows_and_cols_indices_2D(connectivities)
-
-        for i, k_density in enumerate(pdata_values):
-            self.Kdist_1d[i, :, :] = k_density
-            self.NtN_Kdist_1d[i, :, :] = self.element_1d.integrate_distributed_property(i)
-
-
-    def process_data_to_assemble_distributed_stiffness_matrix_2d(self):
-        """
-        This method processes the data to assemble the global stiffness matrix 
-        for distributed stiffness in 2D elements.
-        """
-        self.integration_data_2d_for_Kdist = self.get_distributed_data_for_2d_element_integration("distributed_stiffness")
-        if self.integration_data_2d_for_Kdist is None:
-            return
-
-        connectivities = self.integration_data_2d_for_Kdist.connectivities
-        pdata_values = self.integration_data_2d_for_Kdist.pdata_values
-
-        n_el = len(connectivities)
-        e_dofs = self.element_2d.dof_per_element
-        n_dofs = self.element_2d.dof_per_node
-        n_freq = self.number_frequencies
-
-        self.Kdist_2d = np.zeros((n_el, n_dofs, n_freq), dtype=complex)
-        self.NtN_Kdist_2d = np.zeros((n_el, e_dofs, e_dofs), dtype=float)
-
-        self.ind_rows_Kdist_2d, self.ind_cols_Kdist_2d = self.element_2d.get_rows_and_cols_indices_2D(connectivities)
-
-        for i, k_density in enumerate(pdata_values):
-            self.Kdist_2d[i, :, :] = k_density
-            self.NtN_Kdist_2d[i, :, :] = self.element_2d.integrate_distributed_property(i)
-
-
-    def process_data_to_assemble_distributed_damping_matrix_1d(self):
-        """
-        This method processes the data to assemble the global damping matrix 
-        for distributed dampings in 1D elements.
-        """
-        self.integration_data_1d_for_Cdist = self.get_distributed_data_for_1d_element_integration("distributed_dampings")
-        if self.integration_data_1d_for_Cdist is None:
-            return
-
-        connectivities = self.integration_data_1d_for_Cdist.connectivities
-        pdata_values = self.integration_data_1d_for_Cdist.pdata_values
-
-        n_el = len(connectivities)
-        e_dofs = self.element_1d.dof_per_element
-        n_dofs = self.element_1d.dof_per_element
-        n_freq = self.number_frequencies
-
-        self.Cdist_1d = np.zeros((n_el, n_dofs, n_freq), dtype=complex)
-        self.NtN_Cdist_1d = np.zeros((n_el, e_dofs, e_dofs), dtype=float)
-
-        self.ind_rows_Cdist_1d, self.ind_cols_Cdist_1d = self.element_1d.get_rows_and_cols_indices_2D(connectivities)
-
-        for i, value in enumerate(pdata_values):
-            self.Cdist_1d[i, :, :] = value
-            self.NtN_Cdist_1d[i, :, :] = self.element_1d.integrate_distributed_property(i)
-
-
-    def process_data_to_assemble_distributed_damping_matrix_2d(self):
-        """
-        This method processes the data to assemble the global damping matrix 
-        for distributed dampings in 2D elements.
-        """
-        self.integration_data_2d_for_Cdist = self.get_distributed_data_for_2d_element_integration("distributed_dampings")
-        if self.integration_data_2d_for_Cdist is None:
-            return
-
-        connectivities = self.integration_data_2d_for_Cdist.connectivities
-        pdata_values = self.integration_data_2d_for_Cdist.pdata_values
-
-        n_el = len(connectivities)
-        e_dofs = self.element_2d.dof_per_element
-        n_dofs = self.element_2d.dof_per_node
-        n_freq = self.number_frequencies
-
-        self.Cdist_2d = np.zeros((n_el, n_dofs, n_freq), dtype=complex)
-        self.NtN_Cdist_2d = np.zeros((n_el, e_dofs, e_dofs), dtype=float)
-
-        self.ind_rows_Cdist_2d, self.ind_cols_Cdist_2d = self.element_2d.get_rows_and_cols_indices_2D(connectivities)
-
-        for i, value in enumerate(pdata_values):
-            self.Cdist_2d[i, :, :] = value
-            self.NtN_Cdist_2d[i, :, :] = self.element_2d.integrate_distributed_property(i)
-
-
-    def process_diagonal_lumped_matrix(self, shape: tuple[int, int, int], n_dofs: int, values: np.ndarray):
-        """
-        This method returns the 3D diagonal matrix for distributed stiffness and dampings.
-
-        Parameters
-        ----------
-        shape: tuple of integers
-            A tuple that represents the shape of 3D diagonal matrix.
-
-        n_dofs: int
-            The number of DOF per node.
-
-        values: np.ndarray
-            An array with distributed values.
-
-        Return
-        ------
-        diagonal_3d_matrix: np.ndarray
-            The 3D diagonal matrix with distributed values for each global DOF.
-
-        """
-        # initialize the diagona matrix
-        diag_3d_matrix = np.zeros(shape, dtype=complex)
-
-        # calculate the diagona indices
-        ind = np.arange(shape[1], dtype=int)
-
-        # populate data into diagonal matrix
-        diag_3d_matrix[:, ind, ind] = np.tile(values, n_dofs)
-
-        return diag_3d_matrix
-
-
-    def assemble_distributed_stiffness_global_matrix(self, index: int = 0):
-        """
-        This method assembles the distributed stiffness global matrix by 
-        accounting for the contributions of 1D and 2D elements.
-
-        Parameter
-        ---------
-        index: int, optional
-            The frequency step index.
-
-        """
-        self.distributed_stiffness_matrix = 0.
-        self.distributed_stiffness_matrix_r = 0.
-
-        if isinstance(self.integration_data_1d_for_Kdist, DistributedPropertyData):
-            shape = self.NtN_Kdist_1d.shape
-            n_dofs = self.element_1d.dof_per_node
-            diag_Kmatrix = self.process_diagonal_lumped_matrix(shape, n_dofs, self.Kdist_1d[:, :, index])
-            data_Kdist_1d = self.NtN_Kdist_1d @ diag_Kmatrix
-            rows, cols = self.ind_rows_Kdist_1d, self.ind_cols_Kdist_1d
-            self.distributed_stiffness_matrix += csr_matrix((data_Kdist_1d.flatten(), (rows, cols)), shape=self.model.gm_shape)
-
-        if isinstance(self.integration_data_2d_for_Kdist, DistributedPropertyData):
-            shape = self.NtN_Kdist_2d.shape
-            n_dofs = self.element_2d.dof_per_node
-            diag_Kmatrix = self.process_diagonal_lumped_matrix(shape, n_dofs, self.Kdist_2d[:, :, index])
-            data_Kdist_2d = self.NtN_Kdist_2d @ diag_Kmatrix
-            rows, cols = self.ind_rows_Kdist_2d, self.ind_cols_Kdist_2d
-            self.distributed_stiffness_matrix += csr_matrix((data_Kdist_2d.flatten(), (rows, cols)), shape=self.model.gm_shape)
-
-        if not isinstance(self.distributed_stiffness_matrix, csr_matrix):
-            return 0., 0.
- 
-        if self.model.drop_domain:
-            self.distributed_stiffness_matrix = self.distributed_stiffness_matrix[self.structural_dofs_indices, :][:, self.structural_dofs_indices]
-
-        self.distributed_stiffness_matrix_r = self.distributed_stiffness_matrix[:, self.prescribed_dof_indices]
-
-        if self.prescribed_dof_indices:
-            self.distributed_stiffness_matrix = self.distributed_stiffness_matrix[self.unprescribed_dof_indices, :][:, self.unprescribed_dof_indices]
-
-
-    def assemble_distributed_damping_global_matrix(self, index: int = 0):
-        """
-        This method assembles the distributed damping global matrix by 
-        accounting for the contributions of 1D and 2D elements.
-
-        Parameter
-        ---------
-        index: int, optional
-            The frequency step index.
-
-        """
-        self.distributed_damping_matrix = 0.
-        self.distributed_damping_matrix_r = 0.
-
-        if isinstance(self.integration_data_1d_for_Cdist, DistributedPropertyData):
-            shape = self.NtN_Cdist_1d.shape
-            n_dofs = self.element_1d.dof_per_node
-            diag_Cmatrix = self.process_diagonal_lumped_matrix(shape, n_dofs, self.Cdist_1d[:, :, index])
-            data_Cdist_1d = self.NtN_Cdist_1d @ diag_Cmatrix
-            rows, cols = self.ind_rows_Cdist_1d, self.ind_cols_Cdist_1d
-            self.distributed_damping_matrix += csr_matrix((data_Cdist_1d.flatten(), (rows, cols)), shape=self.model.gm_shape)
-
-        if isinstance(self.integration_data_2d_for_Cdist, DistributedPropertyData):
-            shape = self.NtN_Cdist_2d.shape
-            n_dofs = self.element_2d.dof_per_node
-            diag_Cmatrix = self.process_diagonal_lumped_matrix(shape, n_dofs, self.Cdist_2d[:, :, index])
-            data_Cdist_2d = self.NtN_Cdist_2d @ diag_Cmatrix
-            rows, cols = self.ind_rows_Cdist_2d, self.ind_cols_Cdist_2d
-            self.distributed_damping_matrix += csr_matrix((data_Cdist_2d.flatten(), (rows, cols)), shape=self.model.gm_shape)
-
-        if not isinstance(self.distributed_damping_matrix, csr_matrix):
-            return 0., 0.
- 
-        if self.model.drop_domain:
-            self.distributed_damping_matrix = self.distributed_damping_matrix[self.structural_dofs_indices, :][:, self.structural_dofs_indices]
-
-        self.distributed_damping_matrix_r = self.distributed_damping_matrix[:, self.prescribed_dof_indices]
-
-        if self.prescribed_dof_indices:
-            self.distributed_damping_matrix = self.distributed_damping_matrix[self.unprescribed_dof_indices, :][:, self.unprescribed_dof_indices]
-
-
     def assemble_global_mass_matrix(self, index: int = 0):
         """
         This method assembles the global mass matrix.
         """
         self.mass_matrix = csr_matrix((self.data_M.flatten(), (self.ind_rows, self.ind_cols)), shape=self.model.gm_shape)
-
-        self.assemble_distributed_mass_matrix_for_lines()
-        self.assemble_distributed_mass_matrix_for_surfaces()
 
         if self.model.drop_domain:
             self.mass_matrix = self.mass_matrix[self.structural_dofs_indices, :][:, self.structural_dofs_indices]
@@ -961,6 +596,214 @@ class StructuralAssembler:
             self.stiffness_matrix = self.stiffness_matrix[self.unprescribed_dof_indices, :][:, self.unprescribed_dof_indices]
 
 
+    def process_data_to_assemble_distributed_global_matrices(self):
+        """
+        This method processes the sparse matrix data to assemble all distributed-related
+        properties global matrices.
+        """
+
+        properties = [
+            "distributed_mass",
+            "distributed_stiffness",
+            "distributed_damping",
+        ]
+
+        self.sparse_matrix_data: dict[str, SparseMatrixData] = {}
+        all_integration_data: dict[str, DistributedPropertyData | None] = {}
+
+        for _property in properties:
+            all_integration_data[f"{_property}_1d"] = self.get_distributed_data_for_1d_element_integration(_property)
+            all_integration_data[f"{_property}_2d"] = self.get_distributed_data_for_2d_element_integration(_property)
+
+            if _property == "distributed_damping":
+                all_integration_data[f"{_property}_2d"]
+
+        for key, integration_data in all_integration_data.items():
+            if not isinstance(integration_data, DistributedPropertyData):
+                continue
+
+            element = self.element_1d if "_1d" in key else self.element_2d
+            is_vectorial = "_mass" not in key
+
+            self.sparse_matrix_data[key] = self.get_global_matrix_data_to_assemble_sparse_matrix(integration_data, element, is_vectorial)
+
+
+    def get_global_matrix_data_to_assemble_sparse_matrix(
+        self,
+        integration_data: DistributedPropertyData,
+        element: Structural1DElement | Structural2DElement,
+        is_vectorial: bool,
+    ):
+        """
+        For a distributed property, this method processes data from the global 
+        matrix in order to assemble the sparse matrix.
+
+        Parameters
+        ----------
+        integration_data: DistributedPropertyData
+            A data class with the preprocessed integration data.
+
+        element: Structural1DElement or Structural2DElement
+            The structural element type.
+
+        is_vectorial: bool, optional
+            This argument determines whether the distributed property is vectorial or not. 
+
+        Return
+        ------
+        sp_data: SparseMatrixData
+            The sparse matrix data to assemble the global matrix.
+        """
+
+        def get_3d_diagonal_matrix(matrix_2d: np.ndarray):
+            n_rows, n_cols = matrix_2d.shape
+            indices = np.arange(n_cols)
+
+            matrix_3d = np.zeros((n_rows, n_cols, n_cols), dtype=matrix_2d.dtype)
+            matrix_3d[:, indices, indices] = matrix_2d
+
+            return matrix_3d
+
+        connectivities = integration_data.connectivities
+        pdata_values = integration_data.pdata_values
+
+        n_el = len(connectivities)
+        n_freq = self.number_frequencies
+        e_dofs = element.dof_per_element
+
+        # intialize the 4D data array
+        data = np.zeros((n_freq, n_el, e_dofs, e_dofs), dtype=complex)
+
+        # process the rows and columns indices to assemble sparse matrices
+        rows, cols = element.get_rows_and_cols_indices_2D(connectivities)
+
+        for i, value in enumerate(pdata_values):
+            if is_vectorial:
+                x_density = get_3d_diagonal_matrix(value.T)
+            else:
+                x_density = np.eye(element.dof_per_node) * value.reshape(-1, 1, 1)
+
+            data[:, i, :, :] = element.integrate_distributed_property(i, x_density)
+
+        sp_data = SparseMatrixData(data, rows, cols)
+
+        return sp_data
+
+
+    def assemble_distributed_mass_global_matrix(self, index: int = 0):
+        """
+        This method assembles the distributed stiffness global matrix by 
+        accounting for the contributions of 1D and 2D elements.
+
+        Parameter
+        ---------
+        index: int, optional
+            The frequency step index.
+
+        """
+        self.distributed_mass_matrix = 0.
+        self.distributed_mass_matrix_r = 0.
+
+        if "distributed_mass_1d" in self.sparse_matrix_data:
+            sp_data = self.sparse_matrix_data.get("distributed_mass_1d")
+            self.distributed_mass_matrix += csr_matrix(
+                (sp_data.data[index, :, :, :].flatten(), (sp_data.rows, sp_data.cols)), shape=self.model.gm_shape
+            )
+
+        if "distributed_mass_2d" in self.sparse_matrix_data:
+            sp_data = self.sparse_matrix_data.get("distributed_mass_2d")
+            self.distributed_mass_matrix += csr_matrix(
+                (sp_data.data[index, :, :, :].flatten(), (sp_data.rows, sp_data.cols)), shape=self.model.gm_shape
+            )
+
+        if not isinstance(self.distributed_mass_matrix, csr_matrix):
+            return
+ 
+        if self.model.drop_domain:
+            self.distributed_mass_matrix = self.distributed_mass_matrix[self.structural_dofs_indices, :][:, self.structural_dofs_indices]
+
+        self.distributed_mass_matrix_r = self.distributed_mass_matrix[:, self.prescribed_dof_indices]
+
+        if self.prescribed_dof_indices:
+            self.distributed_mass_matrix = self.distributed_mass_matrix[self.unprescribed_dof_indices, :][:, self.unprescribed_dof_indices]
+
+
+    def assemble_distributed_stiffness_global_matrix(self, index: int = 0):
+        """
+        This method assembles the distributed stiffness global matrix by 
+        accounting for the contributions of 1D and 2D elements.
+
+        Parameter
+        ---------
+        index: int, optional
+            The frequency step index.
+
+        """
+        self.distributed_stiffness_matrix = 0.
+        self.distributed_stiffness_matrix_r = 0.
+
+        if "distributed_stiffness_1d" in self.sparse_matrix_data:
+            sp_data = self.sparse_matrix_data.get("distributed_stiffness_1d")
+            self.distributed_stiffness_matrix += csr_matrix(
+                (sp_data.data[index, :, :, :].flatten(), (sp_data.rows, sp_data.cols)), shape=self.model.gm_shape
+            )
+
+        if "distributed_stiffness_2d" in self.sparse_matrix_data:
+            sp_data = self.sparse_matrix_data.get("distributed_stiffness_2d")
+            self.distributed_stiffness_matrix += csr_matrix(
+                (sp_data.data[index, :, :, :].flatten(), (sp_data.rows, sp_data.cols)), shape=self.model.gm_shape
+            )
+
+        if not isinstance(self.distributed_stiffness_matrix, csr_matrix):
+            return
+
+        if self.model.drop_domain:
+            self.distributed_stiffness_matrix = self.distributed_stiffness_matrix[self.structural_dofs_indices, :][:, self.structural_dofs_indices]
+
+        self.distributed_stiffness_matrix_r = self.distributed_stiffness_matrix[:, self.prescribed_dof_indices]
+
+        if self.prescribed_dof_indices:
+            self.distributed_stiffness_matrix = self.distributed_stiffness_matrix[self.unprescribed_dof_indices, :][:, self.unprescribed_dof_indices]
+
+
+    def assemble_distributed_damping_global_matrix(self, index: int = 0):
+        """
+        This method assembles the distributed damping global matrix by 
+        accounting for the contributions of 1D and 2D elements.
+
+        Parameter
+        ---------
+        index: int, optional
+            The frequency step index.
+
+        """
+        self.distributed_damping_matrix = 0.
+        self.distributed_damping_matrix_r = 0.
+
+        if "distributed_damping_1d" in self.sparse_matrix_data:
+            sp_data = self.sparse_matrix_data.get("distributed_damping_1d")
+            self.distributed_damping_matrix += csr_matrix(
+                (sp_data.data[index, :, :, :].flatten(), (sp_data.rows, sp_data.cols)), shape=self.model.gm_shape
+            )
+
+        if "distributed_damping_2d" in self.sparse_matrix_data:
+            sp_data = self.sparse_matrix_data.get("distributed_damping_2d")
+            self.distributed_damping_matrix += csr_matrix(
+                (sp_data.data[index, :, :, :].flatten(), (sp_data.rows, sp_data.cols)), shape=self.model.gm_shape
+            )
+
+        if not isinstance(self.distributed_damping_matrix, csr_matrix):
+            return
+ 
+        if self.model.drop_domain:
+            self.distributed_damping_matrix = self.distributed_damping_matrix[self.structural_dofs_indices, :][:, self.structural_dofs_indices]
+
+        self.distributed_damping_matrix_r = self.distributed_damping_matrix[:, self.prescribed_dof_indices]
+
+        if self.prescribed_dof_indices:
+            self.distributed_damping_matrix = self.distributed_damping_matrix[self.unprescribed_dof_indices, :][:, self.unprescribed_dof_indices]
+
+
     def assemble_global_matrices(self, reorder: bool = True, print_log: bool = False):
         """
         This method assembles the global matrices of the structural model.
@@ -975,10 +818,10 @@ class StructuralAssembler:
         self.model.process_surface_thickness()
 
         logging.info("Gathering data to assemble global matrices... [20/100]")
-        t0 = time()
+        t0 = perf_counter()
         if self.compute_data_to_process_global_matrices(reorder=reorder, print_log=print_log):
             return
-        dt = time() - t0
+        dt = perf_counter() - t0
         if print_log:
             print(f"Elapsed time to process data to assemble global matrices: {dt : .6f} [s]")
 
@@ -986,18 +829,19 @@ class StructuralAssembler:
             return
 
         logging.info("Assembling the global stiffness matrix... [50/100]")
-        t0 = time()
+        t0 = perf_counter()
         self.assemble_global_stiffness_matrix()
         self.assemble_distributed_stiffness_global_matrix()
         self.assemble_distributed_damping_global_matrix()
-        dt = time() - t0
+        dt = perf_counter() - t0
         if print_log:
             print(f"Elapsed time to assemble the global stiffness matrix: {dt : .6f} [s]")
 
         logging.info("Assembling the global mass matrix... [60/100]")
-        t0 = time()
+        t0 = perf_counter()
         self.assemble_global_mass_matrix()
-        dt = time() - t0
+        self.assemble_distributed_mass_global_matrix()
+        dt = perf_counter() - t0
         if print_log:
             print(f"Elapsed time to assemble the global mass matrix: {dt : .6f} [s]")
 
@@ -1017,7 +861,7 @@ class StructuralAssembler:
         Parameters
         ----------       
         index: int
-            The column index.
+            The solution step index.
 
         Return
         ------
@@ -1039,7 +883,7 @@ class StructuralAssembler:
             The frequency value in Hz.
 
         index: int
-            The column index.
+            The solution step index.
 
         Return
         ------
@@ -1056,11 +900,11 @@ class StructuralAssembler:
         alpha, beta, eta = self.model.global_damping
 
         if index > 0:
-            # reassemble the global distributed stiffness matrix
+            # reassemble the global distributed matrices
             self.assemble_distributed_stiffness_global_matrix(index=index)
             self.assemble_distributed_damping_global_matrix(index=index)
 
-        M = self.mass_matrix
+        M = self.mass_matrix + self.distributed_mass_matrix
         K = self.stiffness_matrix + self.distributed_stiffness_matrix
         C_dist = self.distributed_damping_matrix
 
@@ -1071,8 +915,9 @@ class StructuralAssembler:
 
 
     def build_eigenproblem_system(self):
+
         K = self.stiffness_matrix + self.distributed_stiffness_matrix
-        M = self.mass_matrix
+        M = self.mass_matrix + self.distributed_mass_matrix
 
         is_complex = np.any(np.iscomplex(K.data)) or np.any(np.iscomplex(M.data))
         if not is_complex:
