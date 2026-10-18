@@ -421,7 +421,7 @@ def get_reference_nodal_response(
 if __name__ == "__main__":
 
     load_external_mesh_and_solve(
-        "fixed_support",
-        "distributed_loads",
+        "elastic_support",
+        "normal_pressure_load",
         distributed_mass=True,
         )

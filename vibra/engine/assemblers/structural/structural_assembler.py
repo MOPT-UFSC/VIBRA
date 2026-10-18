@@ -399,16 +399,19 @@ class StructuralAssembler:
             surf_connect = self.model.mesh.get_connectivity_from_surface(surface_id)
             surface_area = self.element_2d.integrate_area(surf_connect)
 
-            # calculate the foundation stiffness density
+            # calculate the property density
             k_density = self.process_frequency_based_arrays(k_value / surface_area)
+
+            # # # NOTE: uncomment the following lines if interested in validating the distributed properties
+            # if property_label == "distributed_mass":
+            #     k_density = 435.4350843
+            # else:
+            #     k_density = self.process_frequency_based_arrays(k_value / 1.0)
 
             # print()
             # print(f"Area: {surface_area} m²")
-            # print(f"mass_density: {mass_density} kg/m²")
+            # print(f"property_density: {k_density} {data.get("unit")}")
             # print()
-
-            # mass_density = 1249.600004
-            # mass_density = 2060.641904
 
             for i, el in enumerate(surf_elements):
                 connectivities[el] = surf_connect[i]
