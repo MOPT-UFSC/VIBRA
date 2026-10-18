@@ -1,4 +1,8 @@
-from typing import TYPE_CHECKING
+
+import os
+from time import time
+
+import numpy as np
 
 from vibra import PROJECT_DIR
 from vibra.engine.analysis_info import AnalysisID, ModalAnalysisSetup
@@ -9,21 +13,19 @@ from vibra.engine.properties.material import Material
 from vibra.engine.solvers.modal_solver import ModalSolver
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
 
-if TYPE_CHECKING:
-    from vibra.engine.model import Model
 
-import os
-from time import time
-
-import numpy as np
-
-
-def load_external_mesh_and_solve(distributed_mass: bool=False):
+def load_external_mesh_and_solve(support_type: str, distributed_mass: bool = False):
 
     # start decoding the Ansys script file (ds.dat file or input file)
-    mesh_path = PROJECT_DIR / "validation_files/data/WB/structural/elements_integration/hex20/mesh/twisted_rectangular_section_hex20.dat"
+    mesh_path = PROJECT_DIR / "validation_files/data/WB/structural/elements_integration/hex20/mesh/normal_rectangular_section_hex20.dat"
+    # mesh_path = PROJECT_DIR / "validation_files/data/WB/structural/elements_integration/hex20/mesh/twisted_rectangular_section_hex20.dat"
     if not os.path.exists(mesh_path):
         return
+
+    print()
+    print("SOLVING STRUCTURAL MODAL ANALYSIS FOR:")
+    print(f"Support type: {support_type}")
+    print(f"Distributed mass: {distributed_mass}")
 
     # define the known 'Named selections' from model
     named_selecion_to_tag = {
@@ -92,16 +94,29 @@ def load_external_mesh_and_solve(distributed_mass: bool=False):
     for _surf_id in [1, 2]:
         model.properties._set_property("material", material, surface=_surf_id)
 
-    ## boundary condition
+    ## process the support boundary condition
+    if support_type == "fixed_support":
 
-    # dof prescription data
-    prescribed_dof_data = {
-        "element_type": "3d_element",
-        "real_values": [0.0, 0.0, 0.0],
-        "imag_values": [0.0, 0.0, 0.0],
-        }
+        # dof prescription data
+        dof_prescription_data = {
+            "element_type": "3d_element",
+            "real_values": [0.0, 0.0, 0.0],
+            "imag_values": [0.0, 0.0, 0.0],
+            }
 
-    model.properties._set_property("prescribed_dof", prescribed_dof_data, surface=1)
+        model.properties._set_property("prescribed_dof", dof_prescription_data, surface=named_selecion_to_tag.get("input_face"))
+
+    else:
+
+        # elastic support data
+        elastic_support_data = {
+            "element_type": "3d_element",
+            "real_values": [1e12, 0, 0],
+            "imag_values": [0.0, 0.0, 0.0],
+            "unit": "N/m",
+            }
+
+        model.properties._set_property("distributed_stiffness", elastic_support_data, surface=named_selecion_to_tag.get("input_face"))
 
     if distributed_mass:
         mass_data = {
@@ -136,7 +151,7 @@ def load_external_mesh_and_solve(distributed_mass: bool=False):
     dt = time() - t0
     print(f"Elapsed time to solve modal analysis: {round(dt, 4)}s")
 
-    results_path = PROJECT_DIR / "validation_files/data/WB/structural/elements_integration/hex20/results/modal"
+    results_path = PROJECT_DIR / f"validation_files/data/WB/structural/elements_integration/hex20/results/{support_type}/modal"
     if distributed_mass:
         results_path = results_path / "distributed_mass"
 
@@ -146,7 +161,9 @@ def load_external_mesh_and_solve(distributed_mass: bool=False):
     # nat_freq_data = np.array([modes_indices, natural_frequencies]).T
     # np.savetxt("natural_frequencies_Vibra.dat", nat_freq_data, fmt = "%i %.12e", delimiter=',')
 
-    fnat_diff = 100 * (np.abs(natural_frequencies[1:] - natural_frequencies_ref[1:]) / natural_frequencies_ref[1:])
+    filter_mask = natural_frequencies_ref > 1e-1
+
+    fnat_diff = 100 * (np.abs(natural_frequencies[filter_mask] - natural_frequencies_ref[filter_mask]) / natural_frequencies_ref[filter_mask])
     assert np.max(fnat_diff) < 5e3
 
     print()
@@ -158,4 +175,7 @@ def load_external_mesh_and_solve(distributed_mass: bool=False):
 
 if __name__ == "__main__":
 
-    load_external_mesh_and_solve(distributed_mass=False)
+    load_external_mesh_and_solve(
+        "elastic_support",
+        # distributed_mass=True,
+        )
