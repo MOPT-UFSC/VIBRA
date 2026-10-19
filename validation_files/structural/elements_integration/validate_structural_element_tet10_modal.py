@@ -112,10 +112,11 @@ def load_external_mesh_and_solve(support_type: str, distributed_mass: bool = Fal
         # elastic support data
         elastic_support_data = {
             "element_type": "3d_element",
-            "real_values": [1e12, 0, 0],
+            "real_values": [1e12, 0.0, 0.0],
             "imag_values": [0.0, 0.0, 0.0],
             "unit": "N/m",
-            }
+            "normal": False,
+        }
 
         model.properties._set_property("distributed_stiffness", elastic_support_data, surface=named_selecion_to_tag.get("input_face"))
 
@@ -162,6 +163,7 @@ def load_external_mesh_and_solve(support_type: str, distributed_mass: bool = Fal
     # nat_freq_data = np.array([modes_indices, natural_frequencies]).T
     # np.savetxt("natural_frequencies_Vibra.dat", nat_freq_data, fmt = "%i %.12e", delimiter=',')
 
+    # create a filter mask for low-frequency modes
     filter_mask = natural_frequencies_ref > 1e-1
 
     fnat_diff = 100 * (np.abs(natural_frequencies[filter_mask] - natural_frequencies_ref[filter_mask]) / natural_frequencies_ref[filter_mask])
@@ -178,6 +180,6 @@ def load_external_mesh_and_solve(support_type: str, distributed_mass: bool = Fal
 if __name__ == "__main__":
 
     load_external_mesh_and_solve(
-        "fixed_support",
+        "elastic_support",
         # distributed_mass=True,
         )

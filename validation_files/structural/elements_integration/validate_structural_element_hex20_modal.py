@@ -161,6 +161,7 @@ def load_external_mesh_and_solve(support_type: str, distributed_mass: bool = Fal
     # nat_freq_data = np.array([modes_indices, natural_frequencies]).T
     # np.savetxt("natural_frequencies_Vibra.dat", nat_freq_data, fmt = "%i %.12e", delimiter=',')
 
+    # create a filter mask for low-frequency modes
     filter_mask = natural_frequencies_ref > 1e-1
 
     fnat_diff = 100 * (np.abs(natural_frequencies[filter_mask] - natural_frequencies_ref[filter_mask]) / natural_frequencies_ref[filter_mask])
