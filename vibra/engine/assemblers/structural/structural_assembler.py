@@ -20,7 +20,7 @@ from vibra.engine.properties.material import Material
 class DistributedPropertyData:
     element_ids: np.ndarray
     connectivities: np.ndarray
-    pdata_values: np.ndarray | dict
+    pdata_values: list[complex | np.ndarray]
     is_normal: np.ndarray
 
 
@@ -264,7 +264,7 @@ class StructuralAssembler:
         return displacement_dof
 
 
-    def process_frequency_based_arrays(self, values: list[np.ndarray | None]):
+    def process_frequency_based_arrays(self, values: list[complex | float | np.ndarray | None], denominator: float = 1.0):
         """
         For a given list of values, this method returns an output list of two-dimensional
         arrays whose columns have the same size as the frequencies vector.
@@ -273,6 +273,9 @@ class StructuralAssembler:
         ----------
         values: list
             The input values list to be converted.
+
+        denominator: float, optional
+            The denominator value used to compute the property density.
 
         Returns
         -------
@@ -294,7 +297,7 @@ class StructuralAssembler:
                 if value is None:
                     values_list.append(aux_zeros)
 
-                elif isinstance(value, complex):
+                elif isinstance(value, complex | float):
                     values_list.append(aux_ones * value)
 
                 elif isinstance(value, np.ndarray):
@@ -305,7 +308,7 @@ class StructuralAssembler:
             # TODO: check matrix dimensions for compatibility
             return aux_ones
 
-        array_of_values = np.array(values_list, dtype=complex)
+        array_of_values = np.array(values_list, dtype=complex) / denominator
 
         # filter values based on frequency mask
         if array_of_values.shape[1] - n_freq:
@@ -349,7 +352,7 @@ class StructuralAssembler:
                 continue
 
             data: dict
-            k_value = np.array(data.get("values"), dtype=complex)
+            values = data.get("values")
             normal = data.get("normal", False)
 
             line_elements = list(self.model.mesh.elements_from_line.get(line_id))
@@ -357,11 +360,11 @@ class StructuralAssembler:
             line_length = self.element_1d.integrate_length(line_connect)
 
             # calculate the foundation stiffness density
-            k_density = self.process_frequency_based_arrays(k_value / line_length)
+            k_densities = self.process_frequency_based_arrays(values, denominator=line_length)
 
             for i, el in enumerate(line_elements):
                 connectivities[el] = line_connect[i]
-                pdata_values[el] = k_density
+                pdata_values[el] = k_densities
                 is_normal[el] = normal
 
         if connectivities:
@@ -369,7 +372,7 @@ class StructuralAssembler:
             integration_data = {
                 "element_ids" : np.array(list(connectivities.keys()), dtype=int),
                 "connectivities" : np.array(list(connectivities.values()), dtype=int),
-                "pdata_values" : np.array(list(pdata_values.values()), dtype=complex),
+                "pdata_values" : list(pdata_values.values()),
                 "is_normal" : np.array(list(is_normal.values()), dtype=bool),
                 }
 
@@ -399,7 +402,7 @@ class StructuralAssembler:
                 continue
 
             data: dict
-            k_value = np.array(data.get("values"), dtype=complex)
+            values = data.get("values")
             normal = data.get("normal", False)
 
             surf_elements = list(self.model.mesh.elements_from_surface.get(surface_id))
@@ -407,22 +410,22 @@ class StructuralAssembler:
             surface_area = self.element_2d.integrate_area(surf_connect)
 
             # calculate the property density
-            k_density = self.process_frequency_based_arrays(k_value / surface_area)
+            k_densities = self.process_frequency_based_arrays(values, denominator=surface_area)
 
             # # # NOTE: uncomment the following lines if interested in validating the distributed properties
             # if property_label == "distributed_mass":
-            #     k_density = self.process_frequency_based_arrays(435.4350843)
+            #     k_densities = self.process_frequency_based_arrays([435.4350843])
             # else:
-            #     k_density = self.process_frequency_based_arrays(k_value)
+            #     k_densities = self.process_frequency_based_arrays(values)
 
             # print()
             # print(f"Area: {surface_area} m²")
-            # print(f"property_density: {k_density} {data.get("unit")}")
+            # print(f"property_density: {k_densities} {data.get("unit")}")
             # print()
 
             for i, el in enumerate(surf_elements):
                 connectivities[el] = surf_connect[i]
-                pdata_values[el] = k_density
+                pdata_values[el] = k_densities
                 is_normal[el] = normal
 
         if connectivities:
