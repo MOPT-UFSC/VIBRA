@@ -21,6 +21,7 @@ class DistributedPropertyData:
     element_ids: np.ndarray
     connectivities: np.ndarray
     pdata_values: np.ndarray | dict
+    is_normal: np.ndarray
 
 
 @dataclass
@@ -339,6 +340,7 @@ class StructuralAssembler:
         pdata_values = {}
         connectivities = {}
         integration_data = {}
+        is_normal = {}
 
         for key, data in self.properties.line_properties.items():
 
@@ -348,6 +350,7 @@ class StructuralAssembler:
 
             data: dict
             k_value = np.array(data.get("values"), dtype=complex)
+            normal = data.get("normal", False)
 
             line_elements = list(self.model.mesh.elements_from_line.get(line_id))
             line_connect = self.model.mesh.get_connectivity_from_line(line_id)
@@ -359,6 +362,7 @@ class StructuralAssembler:
             for i, el in enumerate(line_elements):
                 connectivities[el] = line_connect[i]
                 pdata_values[el] = k_density
+                is_normal[el] = normal
 
         if connectivities:
 
@@ -366,6 +370,7 @@ class StructuralAssembler:
                 "element_ids" : np.array(list(connectivities.keys()), dtype=int),
                 "connectivities" : np.array(list(connectivities.values()), dtype=int),
                 "pdata_values" : np.array(list(pdata_values.values()), dtype=complex),
+                "is_normal" : np.array(list(is_normal.values()), dtype=bool),
                 }
 
             return DistributedPropertyData(**integration_data)
@@ -385,6 +390,7 @@ class StructuralAssembler:
         pdata_values = {}
         connectivities = {}
         integration_data = {}
+        is_normal = {}
 
         for key, data in self.properties.surface_properties.items():
 
@@ -394,6 +400,7 @@ class StructuralAssembler:
 
             data: dict
             k_value = np.array(data.get("values"), dtype=complex)
+            normal = data.get("normal", False)
 
             surf_elements = list(self.model.mesh.elements_from_surface.get(surface_id))
             surf_connect = self.model.mesh.get_connectivity_from_surface(surface_id)
@@ -404,9 +411,9 @@ class StructuralAssembler:
 
             # # # NOTE: uncomment the following lines if interested in validating the distributed properties
             # if property_label == "distributed_mass":
-            #     k_density = 435.4350843
+            #     k_density = self.process_frequency_based_arrays(435.4350843)
             # else:
-            #     k_density = self.process_frequency_based_arrays(k_value / 1.0)
+            #     k_density = self.process_frequency_based_arrays(k_value)
 
             # print()
             # print(f"Area: {surface_area} m²")
@@ -416,13 +423,15 @@ class StructuralAssembler:
             for i, el in enumerate(surf_elements):
                 connectivities[el] = surf_connect[i]
                 pdata_values[el] = k_density
+                is_normal[el] = normal
 
         if connectivities:
 
             integration_data = {
                 "element_ids" : np.array(list(connectivities.keys()), dtype=int),
                 "connectivities" : np.array(list(connectivities.values()), dtype=int),
-                "pdata_values" : np.array(list(pdata_values.values()), dtype=complex),
+                "pdata_values" : list(pdata_values.values()),
+                "is_normal" : np.array(list(is_normal.values()), dtype=bool),
                 }
 
             return DistributedPropertyData(**integration_data)
@@ -618,24 +627,18 @@ class StructuralAssembler:
             all_integration_data[f"{_property}_1d"] = self.get_distributed_data_for_1d_element_integration(_property)
             all_integration_data[f"{_property}_2d"] = self.get_distributed_data_for_2d_element_integration(_property)
 
-            if _property == "distributed_damping":
-                all_integration_data[f"{_property}_2d"]
-
         for key, integration_data in all_integration_data.items():
             if not isinstance(integration_data, DistributedPropertyData):
                 continue
 
-            element = self.element_1d if "_1d" in key else self.element_2d
-            is_vectorial = "_mass" not in key
-
-            self.sparse_matrix_data[key] = self.get_global_matrix_data_to_assemble_sparse_matrix(integration_data, element, is_vectorial)
+            element = self.element_1d if "1d" in key else self.element_2d
+            self.sparse_matrix_data[key] = self.get_global_matrix_data_to_assemble_sparse_matrix(integration_data, element)
 
 
     def get_global_matrix_data_to_assemble_sparse_matrix(
         self,
         integration_data: DistributedPropertyData,
         element: Structural1DElement | Structural2DElement,
-        is_vectorial: bool,
     ):
         """
         For a distributed property, this method processes data from the global 
@@ -669,6 +672,7 @@ class StructuralAssembler:
 
         connectivities = integration_data.connectivities
         pdata_values = integration_data.pdata_values
+        is_normal = integration_data.is_normal
 
         n_el = len(connectivities)
         n_freq = self.number_frequencies
@@ -680,13 +684,18 @@ class StructuralAssembler:
         # process the rows and columns indices to assemble sparse matrices
         rows, cols = element.get_rows_and_cols_indices_2D(connectivities)
 
-        for i, value in enumerate(pdata_values):
-            if is_vectorial:
-                x_density = get_3d_diagonal_matrix(value.T)
-            else:
-                x_density = np.eye(element.dof_per_node) * value.reshape(-1, 1, 1)
+        for i, _normal in enumerate(is_normal):
+            value = pdata_values[i]
+            if len(value) == 1:
+                if _normal:
+                    x_density = value.reshape(-1, 1, 1)
+                else:
+                    x_density = np.eye(element.dof_per_node) * value.reshape(-1, 1, 1)
 
-            data[:, i, :, :] = element.integrate_distributed_property(i, x_density)
+            else:
+                x_density = get_3d_diagonal_matrix(value.T)
+            
+            data[:, i, :, :] = element.integrate_distributed_property(i, x_density, is_normal=_normal)
 
         sp_data = SparseMatrixData(data, rows, cols)
 
@@ -695,7 +704,7 @@ class StructuralAssembler:
 
     def assemble_distributed_mass_global_matrix(self, index: int = 0):
         """
-        This method assembles the distributed stiffness global matrix by 
+        This method assembles the distributed mass global matrix by 
         accounting for the contributions of 1D and 2D elements.
 
         Parameter

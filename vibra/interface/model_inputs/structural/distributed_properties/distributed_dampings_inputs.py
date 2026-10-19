@@ -32,6 +32,11 @@ class AssignmentType(IntEnum):
     MULTIPLE = 2
 
 
+class DirectionControl(IntEnum):
+    BY_COMPONENTS = 0
+    BY_NORMAL = 1
+
+
 class DistributedDampingsInputs(DistributedDampingsInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -126,6 +131,7 @@ class DistributedDampingsInputs(DistributedDampingsInputs_UI):
         # QComboBox connections
         self.comboBox_assignment_type.currentIndexChanged.connect(self.data_type_callback)
         self.comboBox_data_type.currentIndexChanged.connect(self.data_type_callback)
+        self.comboBox_direction_control.currentIndexChanged.connect(self.direction_control_callback)
         self.comboBox_element_type.currentIndexChanged.connect(self.element_type_callback)
 
         # QPushButton connections
@@ -156,13 +162,6 @@ class DistributedDampingsInputs(DistributedDampingsInputs_UI):
         surfaces = app().main_window.selection.geometry_surfaces
         lines = app().main_window.selection.geometry_lines
 
-        if self.tabWidget_main.currentIndex() == StandardTabType.LIST and (lines and surfaces):
-            self.lineEdit_selection_id.setText("mult. entities")
-            self.comboBox_assignment_type.setCurrentIndex(AssignmentType.MULTIPLE)
-            view = self.comboBox_assignment_type.view()
-            view.setRowHidden(2, False)
-            return
-
         if surfaces:
             text = ", ".join([str(i) for i in surfaces])
             self.lineEdit_selection_id.setText(text)
@@ -178,7 +177,9 @@ class DistributedDampingsInputs(DistributedDampingsInputs_UI):
                 if data is None:
                     self.update_formulation_callback(surface_id=surface_id)
 
-        elif lines:
+            return
+
+        if lines:
             text = ", ".join([str(i) for i in lines])
             self.lineEdit_selection_id.setText(text)
             self.comboBox_assignment_type.setCurrentIndex(AssignmentType.LINES)
@@ -206,13 +207,16 @@ class DistributedDampingsInputs(DistributedDampingsInputs_UI):
         else:
             self.comboBox_element_type.setCurrentIndex(ElementFormulation.ELEMENT_3D)
 
-        values = data.get("values", None)
+        by_normal = data.get("normal")
+        self.comboBox_direction_control.setCurrentIndex(DirectionControl.BY_NORMAL if by_normal else DirectionControl.BY_COMPONENTS)
+
         if "table_paths" in data:
             table_paths = data["table_paths"]
-            for index, lineEdit_table in enumerate(self.table_line_edits.values()):
-                table_path = table_paths[index]
+            table_path_line_edits = list(self.table_line_edits.values())
+            for index, table_path in enumerate(table_paths):
+                line_edit = table_path_line_edits[index]
                 if table_path is not None:                   
-                    lineEdit_table.setText(table_path)
+                    line_edit.setText(table_path)
 
             self.tabWidget_main.setCurrentIndex(StandardTabType.TABULAR_DATA)
 
@@ -228,14 +232,17 @@ class DistributedDampingsInputs(DistributedDampingsInputs_UI):
                 right_values = data.get("phase_values")
                 self.comboBox_data_type.setCurrentIndex(InputDataType.MAGNITUDE_PHASE)
 
-            for index, [line_edit_left, line_edit_right] in enumerate(self.constant_values_line_edits):
-
-                if element_type == "3d_element" and index >= 3:
+            for index, real_value in enumerate(left_values):
+                imag_value = right_values[index]
+                if element_type == "2d_element":
                     continue
 
-                elif index <= 5 and values[index] is not None:
-                    line_edit_left.setText(str(left_values[index]))
-                    line_edit_right.setText(str(right_values[index]))
+                line_edit_left, line_edit_right = self.constant_values_line_edits[index]
+                if isinstance(real_value, float):
+                    line_edit_left.setText(str(real_value))
+
+                if isinstance(imag_value, float):
+                    line_edit_right.setText(str(imag_value))
 
             self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)
 
@@ -258,17 +265,47 @@ class DistributedDampingsInputs(DistributedDampingsInputs_UI):
                         self.comboBox_element_type.setCurrentIndex(0)
                         return
 
-    def element_type_callback(self):
-        return
-
     def data_type_callback(self):
         real_imaginary = self.comboBox_data_type.currentIndex() == InputDataType.REAL_IMAGINARY
+        surfaces_assignment = self.comboBox_assignment_type.currentIndex() == AssignmentType.SURFACES
+        by_normal = self.comboBox_direction_control.currentIndex() == DirectionControl.BY_NORMAL
+
+        self.comboBox_direction_control.setDisabled(not surfaces_assignment)
+        if not surfaces_assignment and by_normal:
+            self.comboBox_direction_control.setCurrentIndex(DirectionControl.BY_COMPONENTS)
+
         self.label_dtype_left.setText("Real" if real_imaginary else "Magnitude")
         self.label_dtype_right.setText("Imaginary" if real_imaginary else "Phase")
 
+        label_text = "[N.s/m]" if real_imaginary else "[N.s/m, deg]"
         for widget in self.unit_labels.values():
-            label_text = "[N.s/m]" if real_imaginary else "[N.s/m, deg]"
             widget.setText(label_text)
+
+    def direction_control_callback(self):
+        by_components = self.comboBox_direction_control.currentIndex() == DirectionControl.BY_COMPONENTS
+        for i, (line_edit_real, line_edit_imag) in enumerate(self.constant_values_line_edits):
+            if i == 0:
+                continue
+
+            line_edit_real.setVisible(by_components)
+            line_edit_imag.setVisible(by_components)
+
+        self.label_constant_Cx.setText("Cx:" if by_components else "Cn:")
+        self.label_constant_Cy.setVisible(by_components)
+        self.label_constant_Cz.setVisible(by_components)
+        self.label_table_Cy.setVisible(by_components)
+        self.label_table_Cz.setVisible(by_components)
+        self.label_unit_Cy.setVisible(by_components)
+        self.label_unit_Cz.setVisible(by_components)
+
+        self.pushButton_load_Cy_table.setVisible(by_components)
+        self.pushButton_load_Cz_table.setVisible(by_components)
+
+        self.lineEdit_path_table_Cy.setVisible(by_components)
+        self.lineEdit_path_table_Cz.setVisible(by_components)
+
+    def element_type_callback(self):
+        return
 
     def update_element_type_based_on_geometry_information(self):
         volume_exists = self.mesh.are_there_volumes_in_geometry()
@@ -278,27 +315,29 @@ class DistributedDampingsInputs(DistributedDampingsInputs_UI):
 
         element_type = self.element_types[self.comboBox_element_type.currentIndex()]
         real_imag_input = self.comboBox_data_type.currentIndex() == InputDataType.REAL_IMAGINARY
+        by_components = self.comboBox_direction_control.currentIndex() == DirectionControl.BY_COMPONENTS
 
         Cx = check_input_entries(self.lineEdit_left_Cx.text(), self.lineEdit_right_Cx.text(), "Cx")
         if Cx is None:
             return True
 
-        Cy = check_input_entries(self.lineEdit_left_Cy.text(), self.lineEdit_right_Cy.text(), "Cy")
-        if Cy is None:
-            return True
+        if by_components:
+            Cy = check_input_entries(self.lineEdit_left_Cy.text(), self.lineEdit_right_Cy.text(), "Cy")
+            if Cy is None:
+                return True
 
-        Cz = check_input_entries(self.lineEdit_left_Cz.text(), self.lineEdit_right_Cz.text(), "Cz")
-        if Cz is None:
-            return True
+            Cz = check_input_entries(self.lineEdit_left_Cz.text(), self.lineEdit_right_Cz.text(), "Cz")
+            if Cz is None:
+                return True
 
-        distributed_dampings = [Cx, Cy, Cz]
+            distributed_dampings = [Cx, Cy, Cz]
+            condition_1 = element_type == "2d_element" and distributed_dampings.count(None) == 6
+            condition_2 = element_type == "3d_element" and distributed_dampings.count(None) == 3
 
-        all_values = []
-        for values in distributed_dampings:
-            all_values.extend(values)
-
-        condition_1 = element_type == "2d_element" and all_values.count(None) == 6
-        condition_2 = element_type == "3d_element" and all_values.count(None) == 3
+        else:
+            distributed_dampings = [Cx]
+            condition_1 = element_type == "2d_element"
+            condition_2 = element_type == "3d_element" and distributed_dampings.count(None) == 1
 
         if condition_1 or condition_2:
             title = "Additional inputs required"
@@ -315,6 +354,7 @@ class DistributedDampingsInputs(DistributedDampingsInputs_UI):
                 "element_type": element_type,
                 "real_values" if real_imag_input else "amplitude_values": left_values,
                 "imag_values" if real_imag_input else "phase_values": right_values,
+                "normal" : not by_components,
                 "unit" : "N.s/m",
             }
 
@@ -334,9 +374,11 @@ class DistributedDampingsInputs(DistributedDampingsInputs_UI):
 
             else:
                 extensions = SUPPORTED_SPREADSHEET_READ_EXTENSIONS + SUPPORTED_TEXT_EXTENSIONS
-                imported_path = FileDialogService.open_file(file_extensions=extensions,
-                                                            caption=f"Choose a table to import the {load_label} data",
-                                                            last_folder="imported_table_folder")
+                imported_path = FileDialogService.open_file(
+                    file_extensions=extensions,
+                    caption=f"Choose a table to import the {load_label} data",
+                    last_folder="imported_table_folder",
+                )
 
             imported_data = FileHandler.read(imported_path)
 
@@ -433,15 +475,17 @@ class DistributedDampingsInputs(DistributedDampingsInputs_UI):
 
         index = self.comboBox_element_type.currentIndex()
         element_type = self.element_types[index]
+        by_components = self.comboBox_direction_control.currentIndex() == DirectionControl.BY_COMPONENTS
 
         if self.Cx_table_path is None:
             self.Cx_table_values, self.Cx_table_path = self.load_table(self.lineEdit_path_table_Cx, "Cx", direct_load = True)
 
-        if self.Cy_table_path is None:
-            self.Cy_table_values, self.Cy_table_path = self.load_table(self.lineEdit_path_table_Cy, "Cy", direct_load = True)
+        if by_components:
+            if self.Cy_table_path is None:
+                self.Cy_table_values, self.Cy_table_path = self.load_table(self.lineEdit_path_table_Cy, "Cy", direct_load = True)
 
-        if self.Cz_table_path is None:
-            self.Cz_table_values, self.Cz_table_path = self.load_table(self.lineEdit_path_table_Cz, "Cz", direct_load = True)
+            if self.Cz_table_path is None:
+                self.Cz_table_values, self.Cz_table_path = self.load_table(self.lineEdit_path_table_Cz, "Cz", direct_load = True)
 
         for selected_id in selected_ids:
             
@@ -450,21 +494,30 @@ class DistributedDampingsInputs(DistributedDampingsInputs_UI):
                 if self.Cx_array is None:
                     return True
 
-            if self.Cy_table_values is not None:
-                self.Cy_table_name, self.Cy_array = self.save_table_files("Cy", selected_id, selection, self.Cy_table_values)
-                if self.Cy_array is None:
-                    return True
+            if by_components:
+                if self.Cy_table_values is not None:
+                    self.Cy_table_name, self.Cy_array = self.save_table_files("Cy", selected_id, selection, self.Cy_table_values)
+                    if self.Cy_array is None:
+                        return True
 
-            if self.Cz_table_values is not None:
-                self.Cz_table_name, self.Cz_array = self.save_table_files("Cz", selected_id, selection, self.Cz_table_values)
-                if self.Cz_array is None:
-                    return True
+                if self.Cz_table_values is not None:
+                    self.Cz_table_name, self.Cz_array = self.save_table_files("Cz", selected_id, selection, self.Cz_table_values)
+                    if self.Cz_array is None:
+                        return True
 
-            table_names = [self.Cx_table_name, self.Cy_table_name, self.Cz_table_name]
-            table_paths = [self.Cx_table_path, self.Cy_table_path, self.Cz_table_path]
 
-            condition_1 = element_type == "2d_element" and table_names.count(None) == 6
-            condition_2 = element_type == "3d_element" and table_names.count(None) == 3
+                table_names = [self.Cx_table_name, self.Cy_table_name, self.Cz_table_name]
+                table_paths = [self.Cx_table_path, self.Cy_table_path, self.Cz_table_path]
+
+                condition_1 = element_type == "2d_element" and table_names.count(None) == 6
+                condition_2 = element_type == "3d_element" and table_names.count(None) == 3
+
+            else:
+                table_names = [self.Cx_table_name]
+                table_paths = [self.Cx_table_path]
+
+                condition_1 = element_type == "2d_element"
+                condition_2 = element_type == "3d_element" and table_names.count(None) == 1
 
             if condition_1 or condition_2:
                 title = "Additional inputs required"
@@ -476,6 +529,7 @@ class DistributedDampingsInputs(DistributedDampingsInputs_UI):
                 "element_type" : element_type,
                 "table_names" : table_names,
                 "table_paths" : table_paths,
+                "normal" : not by_components,
                 "unit" : "N.s/m",
             }
 
@@ -523,9 +577,13 @@ class DistributedDampingsInputs(DistributedDampingsInputs_UI):
 
         self.actions_to_finalize(close_window)
 
-    def text_label(self, mask):
+    def text_label(self, mask: np.ndarray[bool]):
 
-        load_labels = np.array(['Cx','Cy','Cz'])
+        if len(mask) == 3:
+            load_labels = np.array(['Cx','Cy','Cz'])
+        else:
+            load_labels = np.array(['Cn'])
+
         labels = load_labels[mask]
 
         if list(mask).count(True) == 3:
