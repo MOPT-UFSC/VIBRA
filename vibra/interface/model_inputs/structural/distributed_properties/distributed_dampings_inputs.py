@@ -202,13 +202,15 @@ class DistributedDampingsInputs(DistributedDampingsInputs_UI):
         self.reset_input_fields()
 
         element_type = data.get("element_type")
-        if element_type == "2d_element":
-            self.comboBox_element_type.setCurrentIndex(ElementFormulation.ELEMENT_2D)
-        else:
+        if element_type == "3d_element":
             self.comboBox_element_type.setCurrentIndex(ElementFormulation.ELEMENT_3D)
+        else:
+            self.comboBox_element_type.setCurrentIndex(ElementFormulation.ELEMENT_2D)
 
-        by_normal = data.get("normal")
-        self.comboBox_direction_control.setCurrentIndex(DirectionControl.BY_NORMAL if by_normal else DirectionControl.BY_COMPONENTS)
+        if data.get("normal", False):
+            self.comboBox_direction_control.setCurrentIndex(DirectionControl.BY_NORMAL)
+        else:
+            self.comboBox_direction_control.setCurrentIndex(DirectionControl.BY_COMPONENTS)
 
         if "table_paths" in data:
             table_paths = data["table_paths"]

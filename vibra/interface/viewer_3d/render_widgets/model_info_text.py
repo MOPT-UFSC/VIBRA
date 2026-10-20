@@ -728,13 +728,13 @@ def structural_additional_info_text():
 
     if isinstance(distributed_mass_1d, dict):
         values = distributed_mass_1d.get("values")
-        units = distributed_mass_1d.get("units")
+        units = distributed_mass_1d.get("units", "kg")
         loaded_table = "table_names" in distributed_mass_1d
         text += structural_format("Distributed mass (line)", values, ["Mdist_"], [units], loaded_table)
 
     if isinstance(distributed_mass_2d, dict):
         values = distributed_mass_2d.get("values")
-        units = distributed_mass_2d.get("units")
+        units = distributed_mass_2d.get("units", "kg")
         loaded_table = "table_names" in distributed_mass_2d
         text += structural_format("Distributed mass (area)", values, ["Mdist_"], [units], loaded_table)
 

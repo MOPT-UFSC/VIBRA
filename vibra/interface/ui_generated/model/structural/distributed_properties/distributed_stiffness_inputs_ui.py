@@ -694,6 +694,7 @@ class Ui_Dialog(object):
 
         self.retranslateUi(Dialog)
 
+        self.comboBox_element_type.setCurrentIndex(1)
         self.tabWidget_main.setCurrentIndex(0)
         self.pushButton_apply_and_close.setDefault(False)
         self.pushButton_apply.setDefault(False)

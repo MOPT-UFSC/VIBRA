@@ -367,6 +367,9 @@
              <bold>false</bold>
             </font>
            </property>
+           <property name="currentIndex">
+            <number>1</number>
+           </property>
            <item>
             <property name="text">
              <string>Face element</string>

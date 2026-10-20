@@ -208,10 +208,10 @@ class DistributedStiffnessInputs(DistributedStiffnessInputs_UI):
         self.reset_input_fields()
 
         element_type = data.get("element_type")
-        if element_type:
-            self.comboBox_element_type.setCurrentIndex(ElementFormulation.ELEMENT_2D)
-        else:
+        if element_type == "3d_element":
             self.comboBox_element_type.setCurrentIndex(ElementFormulation.ELEMENT_3D)
+        else:
+            self.comboBox_element_type.setCurrentIndex(ElementFormulation.ELEMENT_2D)
 
         if data.get("direct_input", True):
             self.comboBox_stiffness_input.setCurrentIndex(StiffnessInput.DIRECT)
