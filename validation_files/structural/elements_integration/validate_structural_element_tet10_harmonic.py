@@ -41,7 +41,7 @@ def load_external_mesh_and_solve(support_type: str, load_type: str, distributed_
     print()
     print("SOLVING STRUCTURAL HARMONIC ANALYSIS FOR:")
     print(f"Support type: {support_type}")
-    print(f"load typ: {load_type}")
+    print(f"load type: {load_type}")
     print(f"Distributed mass: {distributed_mass}")
 
     # define the known 'Named selections' from model

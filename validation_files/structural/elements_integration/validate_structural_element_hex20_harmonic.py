@@ -44,7 +44,7 @@ def load_external_mesh_and_solve(support_type: str, load_type: str, distributed_
     print()
     print("SOLVING STRUCTURAL HARMONIC ANALYSIS FOR:")
     print(f"Support type: {support_type}")
-    print(f"load typ: {load_type}")
+    print(f"load type: {load_type}")
     print(f"Distributed mass: {distributed_mass}")
 
     # define the known 'Named selections' from model
@@ -129,7 +129,7 @@ def load_external_mesh_and_solve(support_type: str, load_type: str, distributed_
         # elastic support data
         elastic_support_data = {
             "element_type": "3d_element",
-            "real_values": [1e12, 0, 0],
+            "real_values": [1e12, 0.0, 0.0],
             "imag_values": [0.0, 0.0, 0.0],
             "normal": False,
             "direct_input" : False,
@@ -168,7 +168,6 @@ def load_external_mesh_and_solve(support_type: str, load_type: str, distributed_
             }
 
         model.properties._set_property("distributed_loads", load_data, surface=named_selecion_to_tag.get("output_face"))
-        print("aqui...")
 
     if distributed_mass:
         mass_data = {
@@ -425,7 +424,7 @@ def get_reference_nodal_response(
 if __name__ == "__main__":
 
     load_external_mesh_and_solve(
-        "elastic_support",
-        "nodal_loads",
-        # distributed_mass=True,
+        "fixed_support",
+        "normal_pressure_load",
+        distributed_mass=True,
         )
