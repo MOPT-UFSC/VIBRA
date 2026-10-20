@@ -354,13 +354,16 @@ class StructuralAssembler:
             data: dict
             values = data.get("values")
             normal = data.get("normal", False)
+            direct_input = data.get("direct_input", True)
 
             line_elements = list(self.model.mesh.elements_from_line.get(line_id))
             line_connect = self.model.mesh.get_connectivity_from_line(line_id)
-            line_length = self.element_1d.integrate_length(line_connect)
 
-            # calculate the foundation stiffness density
-            k_densities = self.process_frequency_based_arrays(values, denominator=line_length)
+            if direct_input:
+                line_length = self.element_1d.integrate_length(line_connect)
+                k_densities = self.process_frequency_based_arrays(values, denominator=line_length)
+            else:
+                k_densities = self.process_frequency_based_arrays(values)
 
             for i, el in enumerate(line_elements):
                 connectivities[el] = line_connect[i]
@@ -404,23 +407,24 @@ class StructuralAssembler:
             data: dict
             values = data.get("values")
             normal = data.get("normal", False)
+            direct_input = data.get("direct_input", True)
 
             surf_elements = list(self.model.mesh.elements_from_surface.get(surface_id))
             surf_connect = self.model.mesh.get_connectivity_from_surface(surface_id)
-            surface_area = self.element_2d.integrate_area(surf_connect)
 
-            # calculate the property density
-            k_densities = self.process_frequency_based_arrays(values, denominator=surface_area)
+            if direct_input:
+                surface_area = self.element_2d.integrate_area(surf_connect)
+                k_densities = self.process_frequency_based_arrays(values, denominator=surface_area)
+            else:
+                k_densities = self.process_frequency_based_arrays(values)
 
-            # # # NOTE: uncomment the following lines if interested in validating the distributed properties
+            # # # NOTE: uncomment the following lines if interested in validating the distributed mass property
             # if property_label == "distributed_mass":
             #     k_densities = self.process_frequency_based_arrays([435.4350843])
-            # else:
-            #     k_densities = self.process_frequency_based_arrays(values)
 
             # print()
             # print(f"Area: {surface_area} m²")
-            # print(f"property_density: {k_densities} {data.get("unit")}")
+            # print(f"property_density: {k_densities} {data.get("units")}")
             # print()
 
             for i, el in enumerate(surf_elements):

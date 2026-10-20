@@ -103,7 +103,7 @@
         <property name="minimumSize">
          <size>
           <width>360</width>
-          <height>140</height>
+          <height>160</height>
          </size>
         </property>
         <property name="maximumSize">
@@ -134,37 +134,36 @@
          <property name="spacing">
           <number>6</number>
          </property>
-         <item row="0" column="2">
-          <widget class="QLineEdit" name="lineEdit_selection_id">
+         <item row="3" column="2">
+          <widget class="QComboBox" name="comboBox_direction_control">
            <property name="minimumSize">
             <size>
-             <width>150</width>
+             <width>0</width>
              <height>28</height>
             </size>
            </property>
            <property name="maximumSize">
             <size>
-             <width>150</width>
+             <width>16777215</width>
              <height>28</height>
             </size>
            </property>
            <property name="font">
             <font>
-             <family>MS Shell Dlg 2</family>
              <pointsize>10</pointsize>
-             <italic>false</italic>
              <bold>false</bold>
             </font>
            </property>
-           <property name="focusPolicy">
-            <enum>Qt::FocusPolicy::ClickFocus</enum>
-           </property>
-           <property name="styleSheet">
-            <string notr="true"/>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignmentFlag::AlignCenter</set>
-           </property>
+           <item>
+            <property name="text">
+             <string>By components</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>By normal</string>
+            </property>
+           </item>
           </widget>
          </item>
          <item row="1" column="1">
@@ -197,53 +196,8 @@
            </property>
           </widget>
          </item>
-         <item row="1" column="2">
-          <widget class="QComboBox" name="comboBox_element_type">
-           <property name="minimumSize">
-            <size>
-             <width>150</width>
-             <height>28</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>150</width>
-             <height>28</height>
-            </size>
-           </property>
-           <property name="font">
-            <font>
-             <pointsize>10</pointsize>
-             <bold>false</bold>
-            </font>
-           </property>
-           <item>
-            <property name="text">
-             <string>Face element</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>Solid element</string>
-            </property>
-           </item>
-          </widget>
-         </item>
-         <item row="0" column="0">
-          <spacer name="horizontalSpacer_6">
-           <property name="orientation">
-            <enum>Qt::Orientation::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item row="0" column="1">
-          <widget class="QLabel" name="label_2">
+         <item row="2" column="1">
+          <widget class="QLabel" name="label_7">
            <property name="minimumSize">
             <size>
              <width>120</width>
@@ -265,7 +219,7 @@
             </font>
            </property>
            <property name="text">
-            <string>Selection ID:</string>
+            <string>Data type:</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
@@ -304,8 +258,8 @@
            </item>
           </widget>
          </item>
-         <item row="2" column="1">
-          <widget class="QLabel" name="label_7">
+         <item row="0" column="1">
+          <widget class="QLabel" name="label_2">
            <property name="minimumSize">
             <size>
              <width>120</width>
@@ -327,11 +281,132 @@
             </font>
            </property>
            <property name="text">
-            <string>Data type:</string>
+            <string>Selection ID:</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
            </property>
+          </widget>
+         </item>
+         <item row="0" column="2">
+          <widget class="QLineEdit" name="lineEdit_selection_id">
+           <property name="minimumSize">
+            <size>
+             <width>150</width>
+             <height>28</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>150</width>
+             <height>28</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <family>MS Shell Dlg 2</family>
+             <pointsize>10</pointsize>
+             <italic>false</italic>
+             <bold>false</bold>
+            </font>
+           </property>
+           <property name="focusPolicy">
+            <enum>Qt::FocusPolicy::ClickFocus</enum>
+           </property>
+           <property name="styleSheet">
+            <string notr="true"/>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignmentFlag::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="4">
+          <spacer name="horizontalSpacer_9">
+           <property name="orientation">
+            <enum>Qt::Orientation::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="3" column="1">
+          <widget class="QLabel" name="label_8">
+           <property name="minimumSize">
+            <size>
+             <width>120</width>
+             <height>28</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>120</width>
+             <height>28</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <family>MS Shell Dlg 2</family>
+             <pointsize>10</pointsize>
+             <italic>false</italic>
+             <bold>false</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Direction control:</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <spacer name="horizontalSpacer_6">
+           <property name="orientation">
+            <enum>Qt::Orientation::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="1" column="2">
+          <widget class="QComboBox" name="comboBox_element_type">
+           <property name="minimumSize">
+            <size>
+             <width>150</width>
+             <height>28</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>150</width>
+             <height>28</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+             <bold>false</bold>
+            </font>
+           </property>
+           <item>
+            <property name="text">
+             <string>Face element</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Solid element</string>
+            </property>
+           </item>
           </widget>
          </item>
          <item row="2" column="2">
@@ -366,53 +441,8 @@
            </item>
           </widget>
          </item>
-         <item row="0" column="4">
-          <spacer name="horizontalSpacer_9">
-           <property name="orientation">
-            <enum>Qt::Orientation::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
-         <item row="3" column="2">
-          <widget class="QComboBox" name="comboBox_direction_control">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>28</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>16777215</width>
-             <height>28</height>
-            </size>
-           </property>
-           <property name="font">
-            <font>
-             <pointsize>10</pointsize>
-             <bold>false</bold>
-            </font>
-           </property>
-           <item>
-            <property name="text">
-             <string>By components</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>By normal</string>
-            </property>
-           </item>
-          </widget>
-         </item>
-         <item row="3" column="1">
-          <widget class="QLabel" name="label_8">
+         <item row="4" column="1">
+          <widget class="QLabel" name="label_9">
            <property name="minimumSize">
             <size>
              <width>120</width>
@@ -434,11 +464,43 @@
             </font>
            </property>
            <property name="text">
-            <string>Direction control:</string>
+            <string>Stiffness input:</string>
            </property>
            <property name="alignment">
             <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
            </property>
+          </widget>
+         </item>
+         <item row="4" column="2">
+          <widget class="QComboBox" name="comboBox_stiffness_input">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>28</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>28</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+             <bold>false</bold>
+            </font>
+           </property>
+           <item>
+            <property name="text">
+             <string>Direct</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>Densities (K/A)</string>
+            </property>
+           </item>
           </widget>
          </item>
         </layout>

@@ -37,6 +37,11 @@ class DirectionControl(IntEnum):
     BY_NORMAL = 1
 
 
+class StiffnessInput(IntEnum):
+    DIRECT = 0
+    DENSITIES = 1
+
+
 class DistributedStiffnessInputs(DistributedStiffnessInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -133,6 +138,7 @@ class DistributedStiffnessInputs(DistributedStiffnessInputs_UI):
         self.comboBox_data_type.currentIndexChanged.connect(self.data_type_callback)
         self.comboBox_direction_control.currentIndexChanged.connect(self.direction_control_callback)
         self.comboBox_element_type.currentIndexChanged.connect(self.element_type_callback)
+        self.comboBox_stiffness_input.currentIndexChanged.connect(self.stiffness_input_callback)
 
         # QPushButton connections
         self.pushButton_apply.clicked.connect(self.apply_callback)
@@ -202,13 +208,20 @@ class DistributedStiffnessInputs(DistributedStiffnessInputs_UI):
         self.reset_input_fields()
 
         element_type = data.get("element_type")
-        if element_type == "2d_element":
+        if element_type:
             self.comboBox_element_type.setCurrentIndex(ElementFormulation.ELEMENT_2D)
         else:
             self.comboBox_element_type.setCurrentIndex(ElementFormulation.ELEMENT_3D)
 
-        by_normal = data.get("normal")
-        self.comboBox_direction_control.setCurrentIndex(DirectionControl.BY_NORMAL if by_normal else DirectionControl.BY_COMPONENTS)
+        if data.get("direct_input", True):
+            self.comboBox_stiffness_input.setCurrentIndex(StiffnessInput.DIRECT)
+        else:
+            self.comboBox_stiffness_input.setCurrentIndex(StiffnessInput.DENSITIES)
+
+        if data.get("normal", False):
+            self.comboBox_direction_control.setCurrentIndex(DirectionControl.BY_NORMAL)
+        else:
+            self.comboBox_direction_control.setCurrentIndex(DirectionControl.BY_COMPONENTS)
 
         if "table_paths" in data:
             table_paths = data["table_paths"]
@@ -277,7 +290,9 @@ class DistributedStiffnessInputs(DistributedStiffnessInputs_UI):
         self.label_dtype_left.setText("Real" if real_imaginary else "Magnitude")
         self.label_dtype_right.setText("Imaginary" if real_imaginary else "Phase")
 
-        label_text = "[N/m]" if real_imaginary else "[N/m, deg]"
+        k_units = self.get_stiffness_units()
+        label_text = f"[{k_units}]" if real_imaginary else f"[{k_units}, deg]"
+
         for widget in self.unit_labels.values():
             widget.setText(label_text)
 
@@ -307,15 +322,33 @@ class DistributedStiffnessInputs(DistributedStiffnessInputs_UI):
     def element_type_callback(self):
         return
 
+    def stiffness_input_callback(self):
+        self.data_type_callback()
+
+    def get_stiffness_units(self) -> str:
+
+        stiffness_values = self.comboBox_stiffness_input.currentIndex() == StiffnessInput.DIRECT
+        if stiffness_values:
+            return "N/m"
+
+        surface_selection = self.comboBox_assignment_type.currentIndex() == AssignmentType.SURFACES
+        if surface_selection:
+            return "N/m³"
+
+        return "N/m²"
+
     def update_element_type_based_on_geometry_information(self):
         volume_exists = self.mesh.are_there_volumes_in_geometry()
         self.comboBox_element_type.setCurrentIndex(int(volume_exists))
 
     def constant_values_attribution(self, selection: str, selected_ids: list[int]):
 
-        element_type = self.element_types[self.comboBox_element_type.currentIndex()]
+        index = self.comboBox_element_type.currentIndex()
+        element_type = self.element_types[index]
+
         real_imag_input = self.comboBox_data_type.currentIndex() == InputDataType.REAL_IMAGINARY
         by_components = self.comboBox_direction_control.currentIndex() == DirectionControl.BY_COMPONENTS
+        direct_input = self.comboBox_stiffness_input.currentIndex() == StiffnessInput.DIRECT
 
         Kx = check_input_entries(self.lineEdit_left_Kx.text(), self.lineEdit_right_Kx.text(), "Kx")
         if Kx is None:
@@ -349,13 +382,13 @@ class DistributedStiffnessInputs(DistributedStiffnessInputs_UI):
         right_values = [value_b for (_, value_b) in distributed_stiffness]
 
         for selected_id in selected_ids:
-
             data = {
                 "element_type": element_type,
                 "real_values" if real_imag_input else "amplitude_values": left_values,
                 "imag_values" if real_imag_input else "phase_values": right_values,
-                "normal" : not by_components,
-                "unit" : "N/m",
+                "normal": not by_components,
+                "direct_input": direct_input,
+                "units": self.get_stiffness_units(),
             }
 
             match selection:
@@ -473,9 +506,11 @@ class DistributedStiffnessInputs(DistributedStiffnessInputs_UI):
 
     def table_values_attribution(self, selection: str, selected_ids: list[int]):
 
-        by_components = self.comboBox_direction_control.currentIndex() == DirectionControl.BY_COMPONENTS
         index = self.comboBox_element_type.currentIndex()
         element_type = self.element_types[index]
+
+        by_components = self.comboBox_direction_control.currentIndex() == DirectionControl.BY_COMPONENTS
+        direct_input = self.comboBox_stiffness_input.currentIndex() == StiffnessInput.DIRECT
 
         if self.Kx_table_path is None:
             self.Kx_table_values, self.Kx_table_path = self.load_table(self.lineEdit_path_table_Kx, "Kx", direct_load = True)
@@ -525,11 +560,12 @@ class DistributedStiffnessInputs(DistributedStiffnessInputs_UI):
                 return True
 
             data = {
-                "element_type" : element_type,
-                "table_names" : table_names,
-                "table_paths" : table_paths,
-                "normal" : not by_components,
-                "unit" : "N/m",
+                "element_type": element_type,
+                "table_names": table_names,
+                "table_paths": table_paths,
+                "normal": not by_components,
+                "direct_input": direct_input,
+                "units": self.get_stiffness_units(),
             }
 
             match selection:
