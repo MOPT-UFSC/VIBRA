@@ -41,7 +41,7 @@ class DOFIndexesProcessor:
 
         dof_indices = dof * _elem_nodes.reshape(-1, 1) + self.local_dof + self.dofs_shift
 
-        return dof_indices.flatten()
+        return dof_indices.ravel()
 
 
     def get_rows_and_cols_indices_2D(
@@ -70,9 +70,9 @@ class DOFIndexesProcessor:
 
         ind_dof += self.dofs_shift
 
-        vect_indices = ind_dof.flatten()
-        ind_rows = ((np.tile(vect_indices, (edof, 1))).T).flatten()
-        ind_cols = (np.tile(ind_dof, edof)).flatten()
+        vect_indices = ind_dof.ravel()
+        ind_rows = ((np.tile(vect_indices, (edof, 1))).T).ravel()
+        ind_cols = (np.tile(ind_dof, edof)).ravel()
 
         return ind_rows, ind_cols
 
@@ -105,10 +105,10 @@ class DOFIndexesProcessor:
 
         ind_dof += self.dofs_shift
 
-        vect_indices = ind_dof.flatten()
+        vect_indices = ind_dof.ravel()
         ordered_dofs = np.unique(vect_indices)
 
-        ind_rows = ((np.tile(vect_indices, (edof, 1))).T).flatten()
-        ind_cols = (np.tile(ind_dof, edof)).flatten()
+        ind_rows = ((np.tile(vect_indices, (edof, 1))).T).ravel()
+        ind_cols = (np.tile(ind_dof, edof)).ravel()
 
         return ind_rows, ind_cols, ordered_dofs

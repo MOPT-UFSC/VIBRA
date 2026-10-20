@@ -252,14 +252,14 @@ class StructuralAssembler:
             return self.structural_dofs_indices
 
         else:
-            nodes_from_2d_elements = np.array([*set(self.model.mesh.faces_connectivity[:, 4:].flatten())], dtype=int)
+            nodes_from_2d_elements = np.array([*set(self.model.mesh.faces_connectivity[:, 4:].ravel())], dtype=int)
 
             dof = self.element_2d.dof_per_node
             local_dof_2d = np.arange(self.element_2d.dof_per_node, dtype=int)            
             displacement_ldof_2d = local_dof_2d[0 : int(self.element_2d.dof_per_node / 2)]
 
             displacement_dof_from_2d_elements = dof * nodes_from_2d_elements.reshape(-1, 1) + displacement_ldof_2d
-            displacement_dof = displacement_dof_from_2d_elements.flatten()
+            displacement_dof = displacement_dof_from_2d_elements.ravel()
 
         return displacement_dof
 
@@ -585,7 +585,7 @@ class StructuralAssembler:
         """
         This method assembles the global mass matrix.
         """
-        self.mass_matrix = csr_matrix((self.data_M.flatten(), (self.ind_rows, self.ind_cols)), shape=self.model.gm_shape)
+        self.mass_matrix = csr_matrix((self.data_M.ravel(), (self.ind_rows, self.ind_cols)), shape=self.model.gm_shape)
 
         if self.model.drop_domain:
             self.mass_matrix = self.mass_matrix[self.structural_dofs_indices, :][:, self.structural_dofs_indices]
@@ -600,7 +600,7 @@ class StructuralAssembler:
         """
         This method assembles the global stiffness matrix.
         """
-        self.stiffness_matrix = csr_matrix((self.data_K.flatten(), (self.ind_rows, self.ind_cols)), shape=self.model.gm_shape)
+        self.stiffness_matrix = csr_matrix((self.data_K.ravel(), (self.ind_rows, self.ind_cols)), shape=self.model.gm_shape)
 
         if self.model.drop_domain:
             self.stiffness_matrix = self.stiffness_matrix[self.structural_dofs_indices, :][:, self.structural_dofs_indices]
@@ -722,13 +722,13 @@ class StructuralAssembler:
         if "distributed_mass_1d" in self.sparse_matrix_data:
             sp_data = self.sparse_matrix_data.get("distributed_mass_1d")
             self.distributed_mass_matrix += csr_matrix(
-                (sp_data.data[index, :, :, :].flatten(), (sp_data.rows, sp_data.cols)), shape=self.model.gm_shape
+                (sp_data.data[index, :, :, :].ravel(), (sp_data.rows, sp_data.cols)), shape=self.model.gm_shape
             )
 
         if "distributed_mass_2d" in self.sparse_matrix_data:
             sp_data = self.sparse_matrix_data.get("distributed_mass_2d")
             self.distributed_mass_matrix += csr_matrix(
-                (sp_data.data[index, :, :, :].flatten(), (sp_data.rows, sp_data.cols)), shape=self.model.gm_shape
+                (sp_data.data[index, :, :, :].ravel(), (sp_data.rows, sp_data.cols)), shape=self.model.gm_shape
             )
 
         if not isinstance(self.distributed_mass_matrix, csr_matrix):
@@ -760,13 +760,13 @@ class StructuralAssembler:
         if "distributed_stiffness_1d" in self.sparse_matrix_data:
             sp_data = self.sparse_matrix_data.get("distributed_stiffness_1d")
             self.distributed_stiffness_matrix += csr_matrix(
-                (sp_data.data[index, :, :, :].flatten(), (sp_data.rows, sp_data.cols)), shape=self.model.gm_shape
+                (sp_data.data[index, :, :, :].ravel(), (sp_data.rows, sp_data.cols)), shape=self.model.gm_shape
             )
 
         if "distributed_stiffness_2d" in self.sparse_matrix_data:
             sp_data = self.sparse_matrix_data.get("distributed_stiffness_2d")
             self.distributed_stiffness_matrix += csr_matrix(
-                (sp_data.data[index, :, :, :].flatten(), (sp_data.rows, sp_data.cols)), shape=self.model.gm_shape
+                (sp_data.data[index, :, :, :].ravel(), (sp_data.rows, sp_data.cols)), shape=self.model.gm_shape
             )
 
         if not isinstance(self.distributed_stiffness_matrix, csr_matrix):
@@ -798,13 +798,13 @@ class StructuralAssembler:
         if "distributed_damping_1d" in self.sparse_matrix_data:
             sp_data = self.sparse_matrix_data.get("distributed_damping_1d")
             self.distributed_damping_matrix += csr_matrix(
-                (sp_data.data[index, :, :, :].flatten(), (sp_data.rows, sp_data.cols)), shape=self.model.gm_shape
+                (sp_data.data[index, :, :, :].ravel(), (sp_data.rows, sp_data.cols)), shape=self.model.gm_shape
             )
 
         if "distributed_damping_2d" in self.sparse_matrix_data:
             sp_data = self.sparse_matrix_data.get("distributed_damping_2d")
             self.distributed_damping_matrix += csr_matrix(
-                (sp_data.data[index, :, :, :].flatten(), (sp_data.rows, sp_data.cols)), shape=self.model.gm_shape
+                (sp_data.data[index, :, :, :].ravel(), (sp_data.rows, sp_data.cols)), shape=self.model.gm_shape
             )
 
         if not isinstance(self.distributed_damping_matrix, csr_matrix):

@@ -180,6 +180,6 @@ def load_external_mesh_and_solve(support_type: str, distributed_mass: bool = Fal
 if __name__ == "__main__":
 
     load_external_mesh_and_solve(
-        "elastic_support",
+        "fixed_support",
         # distributed_mass=True,
         )

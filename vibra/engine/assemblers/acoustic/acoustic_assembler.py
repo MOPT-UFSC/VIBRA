@@ -211,7 +211,7 @@ class AcousticAssembler:
     def get_value_in_array_form(
             self, 
             value: float | np.ndarray, 
-            flatten: bool = False, 
+            ravel: bool = False, 
             filter_frequencies: bool=True,
             ) -> np.ndarray:
         """
@@ -224,7 +224,7 @@ class AcousticAssembler:
             The input value to be converted in array with
             the same length as the frequencies vector.
         
-        flatten: bool, optional
+        ravel: bool, optional
             Controls whether the output vector will be flattened or not.
 
         Returns
@@ -255,7 +255,7 @@ class AcousticAssembler:
                 if self.model.solution_steps_mask:
                     output_vector = output_vector[:, self.model.solution_steps_mask]
 
-        return output_vector.flatten() if flatten else output_vector
+        return output_vector.ravel() if ravel else output_vector
 
 
     def compute_data_to_assemble_global_matrices(self, reorder: bool = True):
@@ -392,7 +392,7 @@ class AcousticAssembler:
             An array containing all elementary mass factors in stacked form.
         """
         data_M = self.int3d_NtN * factor_M
-        self.mass_matrix = csr_matrix((data_M.flatten(), (self.ind_rows, self.ind_cols)), shape=self.model.gm_shape)
+        self.mass_matrix = csr_matrix((data_M.ravel(), (self.ind_rows, self.ind_cols)), shape=self.model.gm_shape)
 
         if self.model.drop_domain:
             self.mass_matrix = self.mass_matrix[self.acoustic_dofs_indices, :][:, self.acoustic_dofs_indices]
@@ -413,7 +413,7 @@ class AcousticAssembler:
             An array containing all elementary stiffness factors in stacked form.
         """
         data_K = self.int3d_BtB * factor_K
-        self.stiffness_matrix = csr_matrix((data_K.flatten(), (self.ind_rows, self.ind_cols)), shape=self.model.gm_shape)
+        self.stiffness_matrix = csr_matrix((data_K.ravel(), (self.ind_rows, self.ind_cols)), shape=self.model.gm_shape)
 
         if self.model.drop_domain:
             self.stiffness_matrix = self.stiffness_matrix[self.acoustic_dofs_indices, :][:, self.acoustic_dofs_indices]
@@ -524,7 +524,7 @@ class AcousticAssembler:
         return np.any(self.prescribed_values[:, index])
 
 
-    def compute_load_vector(self, freq: float, index: int) -> np.ndarray:
+    def compute_load_vector(self, index: int) -> np.ndarray:
         """
         Use this method to compute the acoustic load vector.
 
@@ -544,6 +544,7 @@ class AcousticAssembler:
         """
 
         # create the frequency vector
+        freq = self.frequencies[index]
         omega = 2 * np.pi * freq
 
         if self.frequency_dependent:
