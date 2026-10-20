@@ -114,8 +114,9 @@ def load_external_mesh_and_solve(support_type: str, distributed_mass: bool = Fal
             "element_type": "3d_element",
             "real_values": [1e12, 0.0, 0.0],
             "imag_values": [0.0, 0.0, 0.0],
-            "unit": "N/m",
             "normal": False,
+            "direct_input" : False,
+            "unit": "N/m³",
         }
 
         model.properties._set_property("distributed_stiffness", elastic_support_data, surface=named_selecion_to_tag.get("input_face"))
@@ -180,6 +181,6 @@ def load_external_mesh_and_solve(support_type: str, distributed_mass: bool = Fal
 if __name__ == "__main__":
 
     load_external_mesh_and_solve(
-        "fixed_support",
+        "elastic_support",
         # distributed_mass=True,
         )
