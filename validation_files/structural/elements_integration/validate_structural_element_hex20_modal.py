@@ -111,7 +111,7 @@ def load_external_mesh_and_solve(support_type: str, distributed_mass: bool = Fal
         # elastic support data
         elastic_support_data = {
             "element_type": "3d_element",
-            "real_values": [1e12, 0, 0],
+            "real_values": [1e12, 0.0, 0.0],
             "imag_values": [0.0, 0.0, 0.0],
             "normal": False,
             "direct_input" : False,
