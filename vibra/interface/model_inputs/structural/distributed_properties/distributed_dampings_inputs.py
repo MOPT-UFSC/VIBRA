@@ -355,7 +355,7 @@ class DistributedDampingsInputs(DistributedDampingsInputs_UI):
                 "real_values" if real_imag_input else "amplitude_values": left_values,
                 "imag_values" if real_imag_input else "phase_values": right_values,
                 "normal" : not by_components,
-                "unit" : "N.s/m",
+                "units" : "N.s/m",
             }
 
             match selection:
@@ -530,7 +530,7 @@ class DistributedDampingsInputs(DistributedDampingsInputs_UI):
                 "table_names" : table_names,
                 "table_paths" : table_paths,
                 "normal" : not by_components,
-                "unit" : "N.s/m",
+                "units" : "N.s/m",
             }
 
             match selection:

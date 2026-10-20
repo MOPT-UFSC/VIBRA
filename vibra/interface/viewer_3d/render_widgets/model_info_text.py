@@ -728,35 +728,41 @@ def structural_additional_info_text():
 
     if isinstance(distributed_mass_1d, dict):
         values = distributed_mass_1d.get("values")
+        units = distributed_mass_1d.get("units")
         loaded_table = "table_names" in distributed_mass_1d
-        text += structural_format("Distributed mass (line)", values, ["Mdist_"], ["kg"], loaded_table)
+        text += structural_format("Distributed mass (line)", values, ["Mdist_"], [units], loaded_table)
 
     if isinstance(distributed_mass_2d, dict):
         values = distributed_mass_2d.get("values")
+        units = distributed_mass_2d.get("units")
         loaded_table = "table_names" in distributed_mass_2d
-        text += structural_format("Distributed mass (area)", values, ["Mdist_"], ["kg"], loaded_table)
+        text += structural_format("Distributed mass (area)", values, ["Mdist_"], [units], loaded_table)
 
     if isinstance(distributed_stiffness_1d, dict):
         values = distributed_stiffness_1d.get("values")
+        units = distributed_stiffness_1d.get("units")
         loaded_table = "table_names" in distributed_stiffness_1d
-        text += structural_format("Distributed stiffness (line)", values, ["Kdist_"], ["N/m"], loaded_table)
+        text += structural_format("Distributed stiffness (line)", values, ["Kdist_"], [units], loaded_table)
 
     if isinstance(distributed_stiffness_2d, dict):
         values = distributed_stiffness_2d.get("values")
+        units = distributed_stiffness_2d.get("units")
         loaded_table = "table_names" in distributed_stiffness_2d
         normal_suffix = distributed_stiffness_2d.get("normal", False)
-        text += structural_format("Distributed stiffness (area)", values, ["Kdist_"], ["N/m"], loaded_table, normal_suffix=normal_suffix)
+        text += structural_format("Distributed stiffness (area)", values, ["Kdist_"], [units], loaded_table, normal_suffix=normal_suffix)
 
     if isinstance(distributed_damping_1d, dict):
         values = distributed_damping_1d.get("values")
+        units = distributed_damping_1d.get("units")
         loaded_table = "table_names" in distributed_damping_1d
-        text += structural_format("Distributed dampings (line)", values, ["Cdist_"], ["N.s/m"], loaded_table)
+        text += structural_format("Distributed dampings (line)", values, ["Cdist_"], [units], loaded_table)
 
     if isinstance(distributed_damping_2d, dict):
         values = distributed_damping_2d.get("values")
+        units = distributed_damping_2d.get("units")
         loaded_table = "table_names" in distributed_damping_2d
         normal_suffix = distributed_damping_2d.get("normal", False)
-        text += structural_format("Distributed dampings (area)", values, ["Cdist_"], ["N.s/m"], loaded_table, normal_suffix=normal_suffix)
+        text += structural_format("Distributed dampings (area)", values, ["Cdist_"], [units], loaded_table, normal_suffix=normal_suffix)
 
     return text
 

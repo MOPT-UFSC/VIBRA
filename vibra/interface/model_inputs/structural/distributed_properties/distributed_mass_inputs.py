@@ -241,7 +241,7 @@ class DistributedMassInputs(DistributedMassInputs_UI):
                 "element_type": element_type,
                 "real_values": real_values,
                 "imag_values": imag_values,
-                "unit": "kg",
+                "units": "kg",
             }
 
             if surface_assignment:

@@ -325,7 +325,7 @@ class AcousticNodalSolution2dPlotFrequencyInputs(AcousticNodalSolution2dPlotFreq
                 "title" : self.title,
                 "data_type" : "acoustic pressure",
                 "legend" : legend_label,
-                "unit" : self.pressure_units,
+                "units" : self.pressure_units,
                 "color" : get_color(i),
                 "linestyle" : "-",
                 }

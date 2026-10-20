@@ -313,7 +313,7 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
 
         if data.get("type") != "imported_data":
             self.x_label = data.get("x_label")
-            self.unit = data.get("unit", "?")
+            self.unit = data.get("units", "?")
             self.y_label = self.get_y_axis_label(data.get("y_label"))
 
         self.x_data = data.get("x_data")
