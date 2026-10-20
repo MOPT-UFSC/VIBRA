@@ -1873,3 +1873,11 @@ class Mesh:
         selected_elements = np.array([*set(_selected_elements)], dtype=int)
 
         return nodes_inside_sphere, list(selected_elements)
+
+    def __str__(self) -> str:
+        name = self.__class__.__name__
+        nodes = len(self.nodal_coordinates)
+        elements_1d = len(self.lines_connectivity)
+        elements_2d = len(self.faces_connectivity)
+        elements_3d = len(self.solids_connectivity)
+        return f"{name}(nodes={nodes}, elements_1d={elements_1d}, elements_2d={elements_2d}, elements_3d={elements_3d})"
