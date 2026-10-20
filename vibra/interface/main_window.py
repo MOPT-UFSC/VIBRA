@@ -670,21 +670,29 @@ class MainWindow(MainWindow_UI):
 
         extensions = SUPPORTED_GEOMETRY_EXTENSIONS + SUPPORTED_MESH_EXTENSIONS
 
-        imported_path = FileDialogService.open_file(file_extensions=extensions, 
-                                    caption="Select a geometry or mesh file to start your project.", 
-                                    last_folder="geometry_mesh_folder")
+        imported_path = FileDialogService.open_file(
+            file_extensions=extensions,
+            caption="Select a geometry or mesh file to start your project.",
+            last_folder="geometry_mesh_folder",
+            )
 
         if imported_path is None:
             return True
 
-        app().config.write_last_folder_path_in_file(
-            "geometry_mesh_folder",
-            imported_path,
-        )
+        def import_callback():
+            app().config.write_last_folder_path_in_file("geometry_mesh_folder", imported_path)
 
-        self.setWindowTitle("New project")
-        self.reset_temporary_vibra_folder()
-        self._import_geometry_or_mesh(imported_path)
+            file_extension = Path(imported_path).suffix.strip(".").lower()
+            import_label = "geometry" if file_extension in SUPPORTED_GEOMETRY_EXTENSIONS else "mesh"
+            logging.info(f"Importing the {import_label} file... (10%)")
+
+            self.setWindowTitle("New project")
+            self.reset_temporary_vibra_folder()
+
+            logging.info(f"Importing the {import_label} file... (20%)")
+            self._import_geometry_or_mesh(imported_path)
+
+        LoadingWindow(import_callback, delayed=False).run()
 
     def _import_geometry_or_mesh(self, load_path: Path):
         self.entity_visibility.unhide_all()
@@ -702,9 +710,11 @@ class MainWindow(MainWindow_UI):
             raise ValueError(f"File extension {ext} not supported")
 
     def import_geometry_dialog(self):
-        imported_path = FileDialogService.open_file(file_extensions=SUPPORTED_GEOMETRY_EXTENSIONS,
-                                                    caption="Select a geometry file to import.",
-                                                    last_folder="geometry_mesh_folder")
+        imported_path = FileDialogService.open_file(
+            file_extensions=SUPPORTED_GEOMETRY_EXTENSIONS,
+            caption="Select a geometry file to import.",
+            last_folder="geometry_mesh_folder",
+            )
 
         if imported_path is None:
             return
@@ -716,12 +726,18 @@ class MainWindow(MainWindow_UI):
         app().project.model.properties.fluid_library = current_fluid_library
         app().project.model.properties.material_library = current_material_library
 
-        self.import_geometry(imported_path)
+        def import_callback():
+            logging.info("Importing the geometry file... (25%)")
+            self.import_geometry(imported_path)
+
+        LoadingWindow(import_callback, delayed=False).run()
 
     def import_mesh_dialog(self):
-        imported_path = FileDialogService.open_file(file_extensions=SUPPORTED_MESH_EXTENSIONS,
-                                    caption="Select a mesh file to import.",
-                                    last_folder="geometry_mesh_folder")
+        imported_path = FileDialogService.open_file(
+            file_extensions=SUPPORTED_MESH_EXTENSIONS,
+            caption="Select a mesh file to import.",
+            last_folder="geometry_mesh_folder",
+            )
 
         if imported_path is None:
             return
@@ -733,7 +749,11 @@ class MainWindow(MainWindow_UI):
         app().project.model.properties.fluid_library = current_fluid_library
         app().project.model.properties.material_library = current_material_library
 
-        self.import_mesh(imported_path)
+        def import_callback():
+            logging.info("Importing the mesh file... (25%)")
+            self.import_mesh(imported_path)
+
+        LoadingWindow(import_callback, delayed=False).run()
 
     def save_project_dialog(self):
         save_path = app().project.save_path
@@ -801,17 +821,14 @@ class MainWindow(MainWindow_UI):
         self.open_project(project_path)
 
     def import_geometry(self, path: Path | str):
-        app().config.write_last_folder_path_in_file(
-            "geometry_mesh_folder",
-            path,
-        )
+        app().config.write_last_folder_path_in_file("geometry_mesh_folder", path)
 
         path = Path(path)
-        LoadingWindow(app().project.import_geometry).run(path)
-        LoadingWindow(app().project.generate_visual_mesh).run()
+        app().project.import_geometry(path)
+        app().project.generate_visual_mesh()
 
         # Interface update
-        LoadingWindow(self.geometry_widget.update_plot).run()
+        self.geometry_widget.update_plot()
         self.update_geometry_information()
         self.update_toolbar_and_menu_items_after_load_project()
         self.set_toolbars_visible(True)
@@ -820,17 +837,14 @@ class MainWindow(MainWindow_UI):
         self.action_model_workspace_callback()
 
     def import_mesh(self, path: Path | str):
-        app().config.write_last_folder_path_in_file(
-            "geometry_mesh_folder",
-            path,
-        )
+        app().config.write_last_folder_path_in_file("geometry_mesh_folder", path)
 
         path = Path(path)
-        LoadingWindow(app().project.import_mesh).run(path)
+        app().project.import_mesh(path)
 
         # Interface update
-        LoadingWindow(self.geometry_widget.update_plot).run()
-        LoadingWindow(self.mesh_widget.update_plot).run()
+        self.geometry_widget.update_plot()
+        self.mesh_widget.update_plotn()
         self.update_geometry_information()
         self.update_toolbar_and_menu_items_after_load_project()
         self.set_toolbars_visible(True)
