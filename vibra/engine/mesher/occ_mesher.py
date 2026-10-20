@@ -6,7 +6,6 @@ from OCP.BRep import BRep_Tool
 from OCP.BRepMesh import BRepMesh_IncrementalMesh
 from OCP.collections import IndexedMap_TopoDS_Shape_TopTools_ShapeMapHasher as TopTools_IndexedMapOfShape
 from OCP.IFSelect import IFSelect_RetDone
-from OCP.STEPControl import STEPControl_Reader
 from OCP.TopAbs import TopAbs_EDGE, TopAbs_FACE
 from OCP.TopExp import TopExp, TopExp_Explorer
 from OCP.TopLoc import TopLoc_Location
@@ -41,7 +40,14 @@ class OccMesher:
             )
             raise IncompleteSetupError(message, context=context)
 
-        shape = self._read_step(self.path)
+        match self.path.suffix.lower():
+            case ".step" | ".stp":
+                shape = self._read_step(self.path)
+            case ".iges" | ".igs":
+                shape = self._read_iges(self.path)
+            case _:
+                message = f"Unsupported file format: '{self.path.suffix}'.\n Supported formats are: *.step, *.stp, *.iges, *.igs"
+                raise ValueError(message)
 
         edge_mapper = self._map_edges(shape)
         face_mapper = self._map_faces(shape)
@@ -170,7 +176,22 @@ class OccMesher:
         return indexed_map
 
     def _read_step(self, path: str | Path):
+        from OCP.STEPControl import STEPControl_Reader
+
         reader = STEPControl_Reader()
+        status = reader.ReadFile(str(path))
+
+        if status != IFSelect_RetDone:
+            raise ValueError("File could not be read")
+
+        reader.TransferRoots()
+        shape = reader.OneShape()
+        return shape
+
+    def _read_iges(self, path: str | Path):
+        from OCP.IGESControl import IGESControl_Reader
+
+        reader = IGESControl_Reader()
         status = reader.ReadFile(str(path))
 
         if status != IFSelect_RetDone:
