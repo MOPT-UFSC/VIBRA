@@ -38,9 +38,9 @@ class Mesh:
         self.efaces_to_highlight = []
 
         ## geometry-related attributes
-        self.surfaces_from_volume = {}
+        self.surfaces_from_volume = defaultdict(list)
         self.lines_from_surface = defaultdict(list)
-        self.points_from_line = {}
+        self.points_from_line = defaultdict(list)
 
         self.volumes_from_surface = defaultdict(list)
         self.surfaces_from_line = defaultdict(list)
