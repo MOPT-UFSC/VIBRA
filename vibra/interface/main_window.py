@@ -583,17 +583,6 @@ class MainWindow(MainWindow_UI):
         self.import_geometry_dialog()
 
     def action_hide_selection_callback(self):
-        mesh = app().project.model.mesh
-
-        if not mesh.are_there_volumes_in_geometry():
-            PrintMessageInput(
-                [
-                    "Warning",
-                    "No volumes were found in the geometry",
-                    "Since the current geometry does not contains volumes, the operation can not be performed.",
-                ]
-            )
-
         self.entity_visibility.hide_surfaces(self.selection.geometry_surfaces)
         self.entity_visibility.hide_volumes(self.selection.geometry_volumes)
         self.selection.clear_selection()
