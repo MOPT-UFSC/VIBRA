@@ -66,6 +66,7 @@ class OccMesher:
         line_indices = []
         surface_indices = []
 
+        visited_points = set()
         visited_faces = set()
         visited_edges = set()
         visited_solids = set()
@@ -115,6 +116,7 @@ class OccMesher:
 
                     for vertex in self._iterate_vertices(edge):
                         vertex_index = vertex_mapper.FindIndex(vertex)
+                        visited_points.add(vertex_index)
                         line_to_points[edge_index].add(vertex_index)
 
         mesh = Mesh()
@@ -158,6 +160,15 @@ class OccMesher:
             lines_connectivity,
             faces_connectivity,
             solids_connectivity=np.zeros((0, 4)),
+        )
+
+        mesh.geometry_information.update(
+            {
+                "points": list(visited_points),
+                "lines": list(visited_edges),
+                "surfaces": list(visited_faces),
+                "volumes": list(visited_solids),
+            }
         )
 
         mesh.surfaces_from_volume.update({i: list(j) for i, j in volume_to_surfaces.items()})
