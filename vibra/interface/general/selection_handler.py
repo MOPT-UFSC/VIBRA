@@ -20,7 +20,7 @@ class SelectionHandler(QObject):
 
     @property
     def surface_of_selected_volumes(self):
-        mesh = self.project.mesh
+        mesh = self.project.model.get_mesh()
         if mesh is None:
             return set()
 
