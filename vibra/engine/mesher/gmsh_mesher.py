@@ -4,7 +4,7 @@ from pathlib import Path
 import gmsh
 import numpy as np
 
-from vibra.engine.geometry.geometry import GeometryInfo
+from vibra.engine.mesher.geometry_info import GeometryInfo
 from vibra.engine.mesher.gmsh_common import GmshCommon
 from vibra.engine.mesher.gmsh_constants import GMSH_VISUAL_MESH
 from vibra.engine.mesher.mesh import Mesh

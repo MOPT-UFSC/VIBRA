@@ -3,7 +3,7 @@ import numpy.typing as npt
 import pytest
 
 from vibra import PROJECT_DIR
-from vibra.engine.geometry.geometry import GeometryInfo
+from vibra.engine.mesher.geometry_info import GeometryInfo
 
 
 @pytest.fixture(scope="module")

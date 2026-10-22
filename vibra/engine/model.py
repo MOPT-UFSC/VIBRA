@@ -52,8 +52,8 @@ from vibra.engine.elements.elements_3d import (
     StructuralTetrahedron4,
     StructuralTetrahedron10,
 )
-from vibra.engine.geometry.geometry import LengthUnits
 from vibra.engine.mesher.degrees_of_freedom_decoupling_new import DegreesOfFreedomDecoupling
+from vibra.engine.mesher.geometry_info import LengthUnits
 from vibra.engine.mesher.gmsh_mesher import GmshMesher
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.mesh_setup import ElementTopology, Hexahedron8, Hexahedron20, MeshSetup, Tetrahedron4, Tetrahedron10

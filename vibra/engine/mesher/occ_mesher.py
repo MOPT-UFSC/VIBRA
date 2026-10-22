@@ -12,7 +12,7 @@ from OCP.TopExp import TopExp, TopExp_Explorer
 from OCP.TopLoc import TopLoc_Location
 from OCP.TopoDS import TopoDS
 
-from vibra.engine.geometry.geometry import GeometryInfo
+from vibra.engine.mesher.geometry_info import GeometryInfo
 from vibra.engine.mesher.mesh import Mesh
 from vibra.errors import IncompleteSetupError
 
