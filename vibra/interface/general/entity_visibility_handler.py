@@ -1,4 +1,4 @@
-from typing import Sequence
+from collections.abc import Iterable
 
 from PySide6.QtCore import QObject, Signal
 
@@ -46,12 +46,12 @@ class EntityVisibilityHandler(QObject):
         all_volumes = mesh.all_volume_ids()
         return all_volumes - self.get_hidden_volumes()
 
-    def hide_surfaces(self, surfaces: Sequence[int]):
+    def hide_surfaces(self, surfaces: Iterable[int]):
         self._surfaces_to_hide |= set(surfaces)
         if surfaces:
             self.changed.emit()
 
-    def hide_volumes(self, volumes: Sequence[int]):
+    def hide_volumes(self, volumes: Iterable[int]):
         self._volumes_to_hide |= set(volumes)
         if volumes:
             self.changed.emit()
