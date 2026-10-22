@@ -817,6 +817,7 @@ class MainWindow(MainWindow_UI):
 
         path = Path(path)
         LoadingWindow(app().project.import_mesh).run(path)
+        LoadingWindow(app().project.extract_visual_mesh_from_fem_mesh).run()
 
         # Interface update
         LoadingWindow(self.geometry_widget.update_plot).run()

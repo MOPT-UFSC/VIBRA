@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from copy import deepcopy
 from pathlib import Path
 from time import perf_counter
 from typing import Optional
@@ -320,8 +321,20 @@ class Project:
         mesh = self.model.visual_mesher.generate()
         self.model.visual_mesh = mesh
         self.model.initial_element_size = 5
-        self.project_writer.write_mesh(mesh)
+        self.project_writer.write_visual_mesh(mesh)
         return mesh
+
+    def extract_visual_mesh_from_fem_mesh(self) -> Mesh | None:
+        """
+        Copy the external parts of a visual mesh.
+        """
+        if self.model.mesh is None:
+            return
+
+        self.model.visual_mesh = deepcopy(self.model.mesh)
+        self.model.visual_mesh.solids_connectivity = np.zeros((0, 4), dtype=int)
+        self.project_writer.write_visual_mesh(self.model.visual_mesh)
+        return self.model.visual_mesh
 
     def generate_mesh_from_geometry(
         self,
