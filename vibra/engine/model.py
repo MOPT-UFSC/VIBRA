@@ -4,7 +4,6 @@ from copy import deepcopy
 from enum import IntEnum
 from numbers import Number
 from pathlib import Path
-from typing import Optional
 
 import numpy as np
 from PIL.Image import Image
@@ -53,7 +52,7 @@ from vibra.engine.elements.elements_3d import (
     StructuralTetrahedron10,
 )
 from vibra.engine.mesher.degrees_of_freedom_decoupling_new import DegreesOfFreedomDecoupling
-from vibra.engine.mesher.geometry_info import LengthUnits
+from vibra.engine.mesher.geometry_info import GeometryInfo, LengthUnits
 from vibra.engine.mesher.gmsh_mesher import GmshMesher
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.mesh_setup import ElementTopology, Hexahedron8, Hexahedron20, MeshSetup, Tetrahedron4, Tetrahedron10
@@ -61,16 +60,12 @@ from vibra.engine.mesher.occ_mesher import OccMesher
 from vibra.engine.model_domains_processor import ModelDomainsProcessor
 from vibra.engine.model_selection_tools import ModelSelectionTools
 from vibra.engine.properties.fluid import Fluid
-from vibra.engine.properties.material import Material
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.engine.solution import HarmonicSolution, Solution
 from vibra.engine.transfer_impedances.perforated_plate_models import (
     PerforatedPlateModels,
 )
-from vibra.errors import IncompleteSetupError
 from vibra.extensions import SUPPORTED_GEOMETRY_EXTENSIONS
-from vibra.interface import error_title
-from vibra.interface.general.print_message_input import PrintMessageInput
 
 
 class CouplingType(IntEnum):
@@ -80,7 +75,7 @@ class CouplingType(IntEnum):
 
 
 class Model:
-    def __init__(self, disable_resume_callback: Optional[Callable] = None):
+    def __init__(self, disable_resume_callback: Callable | None = None):
 
         self.disable_resume_callback = disable_resume_callback
         self.reset_variables()
@@ -106,10 +101,11 @@ class Model:
 
         self.mesh: Mesh | None = None
         self.visual_mesh: Mesh | None = None
+        self.geometry_info: GeometryInfo | None = None
 
         # TODO: review these variables
         self.stop_processing = False
-        self.geometry_path: Optional[Path | str] = None
+        self.geometry_path: Path | str | None = None
         self.initial_element_size: float | None = None
         self.geometry_qf = 1.0
 
@@ -169,7 +165,7 @@ class Model:
         return AnalysisID.NO_ANALYSIS
 
     @property
-    def frequencies(self) -> Optional[np.ndarray]:
+    def frequencies(self) -> np.ndarray | None:
         """
         This property was created for retro compatibility.
         """
@@ -186,7 +182,7 @@ class Model:
         return []
 
     @property
-    def global_damping(self) -> Optional[np.ndarray]:
+    def global_damping(self) -> np.ndarray | None:
         """
         This property was created for retro compatibility.
         """
@@ -377,7 +373,7 @@ class Model:
     def set_properties(self, properties):
         self.properties = properties
 
-    def set_analysis_setup(self, analysis_setup: Optional[AnalysisSetup]):
+    def set_analysis_setup(self, analysis_setup: AnalysisSetup | None):
         if not isinstance(analysis_setup, AnalysisSetup | None):
             raise ValueError("Invalid analysis setup")
 

@@ -4,7 +4,6 @@ import logging
 from copy import deepcopy
 from pathlib import Path
 from time import perf_counter
-from typing import Optional
 
 import numpy as np
 from PIL.Image import Image
@@ -27,7 +26,7 @@ from vibra.engine.solvers import HarmonicSolver, ModalSolver
 
 
 class Project:
-    def __init__(self, working_directory: Optional[Path | str] = None):
+    def __init__(self, working_directory: Path | str | None = None):
         self.project_paths = ProjectPaths(working_directory)
         self.reset_variables()
 
@@ -36,15 +35,15 @@ class Project:
         self.project_reader = ProjectReader(self.project_paths)
         self.project_writer = ProjectWriter(self.project_paths)
 
-        self.save_path: Optional[Path] = None
+        self.save_path: Path | None = None
         self.needs_saving: bool = False
 
         # TODO: Store the Solution, not the solvers and assemblers.
         # Except if it is used to cache a few matrices somehow.
-        self.assembler: Optional[AcousticAssembler | StructuralAssembler] = None
-        self.solver: Optional[HarmonicSolver | ModalSolver] = None
-        self.acoustic_postprocessing: Optional[AcousticPostprocessing] = None
-        self.structural_postprocessing: Optional[StructuralPostprocessing] = None
+        self.assembler: AcousticAssembler | StructuralAssembler | None = None
+        self.solver: HarmonicSolver | ModalSolver | None = None
+        self.acoustic_postprocessing: AcousticPostprocessing | None = None
+        self.structural_postprocessing: StructuralPostprocessing | None = None
 
     def reset_solution(self):
         self.assembler = None
@@ -60,7 +59,7 @@ class Project:
         self.reset_variables()
 
     @property
-    def mesh(self) -> Optional[Mesh]:
+    def mesh(self) -> Mesh | None:
         return self.model.mesh
 
     @property
@@ -96,7 +95,7 @@ class Project:
         return self.project_paths.working_directory
 
     @working_directory.setter
-    def working_directory(self, path: Optional[Path | str]):
+    def working_directory(self, path: Path | str | None):
         if hasattr(self, "project_paths"):
             self.project_paths.set_working_directory(path)
         else:
@@ -281,7 +280,7 @@ class Project:
         if mesh_setup is not None:
             self.configure_mesh(mesh_setup)
 
-        mesh, _ = self.model.fem_mesher.generate()
+        mesh, geometry_info = self.model.fem_mesher.generate()
 
         if mesh.collapsed_elements_data:
             collapsed_1d_elements: list = mesh.collapsed_elements_data.get("collpased_1d_elements", [])
@@ -302,6 +301,8 @@ class Project:
             )
 
         self.model.mesh = mesh
+        self.model.geometry_info = geometry_info
+
         self.configure_mesh(mesh_setup)
         self.model.process_degrees_of_freedom_decoupling()
 
@@ -318,8 +319,10 @@ class Project:
         if self.model.geometry_path is None:
             raise errors.InvalidMeshSetupError("The geometry has not been loaded yet.")
 
-        mesh, _ = self.model.visual_mesher.generate()
+        mesh, geometry_info = self.model.visual_mesher.generate()
         self.model.visual_mesh = mesh
+        self.model.geometry_info = geometry_info
+
         self.model.initial_element_size = 5
         self.project_writer.write_visual_mesh(mesh)
         return mesh
@@ -350,7 +353,7 @@ class Project:
 
     def configure_analysis(
         self,
-        analysis_setup: Optional[AnalysisSetup],
+        analysis_setup: AnalysisSetup | None,
     ):
         """
         Defines the `AnalysisID` and the `AnalysisSetup` required to
