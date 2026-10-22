@@ -20,7 +20,7 @@ def test_tetrahedron_4_mesh():
     mesher.setup.maximum_element_size = 80
     mesher.setup.custom_element_setup = GMSH_TET4
 
-    mesh = mesher.generate(threads=1)
+    mesh, _ = mesher.generate(threads=1)
     assert mesh.element_topology == ElementTopology("tetrahedral", "linear")
 
     _compare_mesh(
@@ -38,7 +38,7 @@ def test_tetrahedron_10_mesh():
     mesher.setup.maximum_element_size = 80
     mesher.setup.custom_element_setup = GMSH_TET10
 
-    mesh = mesher.generate(threads=1)
+    mesh, _ = mesher.generate(threads=1)
     assert mesh.element_topology == ElementTopology("tetrahedral", "quadratic")
 
     _compare_mesh(
@@ -55,7 +55,7 @@ def test_hexahedron_8_mesh():
     mesher.setup.maximum_element_size = 80
     mesher.setup.custom_element_setup = GMSH_HEX8
 
-    mesh = mesher.generate(threads=1)
+    mesh, _ = mesher.generate(threads=1)
     assert mesh.element_topology == ElementTopology("hexahedral", "linear")
 
 
@@ -67,7 +67,7 @@ def test_hexahedron_20_mesh():
     mesher.setup.maximum_element_size = 300
     mesher.setup.custom_element_setup = GMSH_HEX20
 
-    mesh = mesher.generate(threads=1)
+    mesh, _ = mesher.generate(threads=1)
     assert mesh.element_topology == ElementTopology("hexahedral", "quadratic")
 
 
@@ -80,7 +80,7 @@ def test_local_mesh_size_control_coarsening():
     mesher.setup.local_mesh_size_control_parameters = [LocalMeshSizeControlSetup("volumes", 40, [1])]
     mesher.setup.custom_element_setup = GMSH_TET4
 
-    mesh = mesher.generate(threads=1)
+    mesh, _ = mesher.generate(threads=1)
 
     mean_edges = _mean_edge_length_per_volume(mesh)
     assert mean_edges[1] > mean_edges[2] * 1.2
@@ -95,7 +95,7 @@ def test_local_mesh_size_control_coarsening_connected():
     mesher.setup.local_mesh_size_control_parameters = [LocalMeshSizeControlSetup("volumes", 40, [1])]
     mesher.setup.custom_element_setup = GMSH_TET4
 
-    mesh = mesher.generate(threads=1)
+    mesh, _ = mesher.generate(threads=1)
 
     mean_edges = _mean_edge_length_per_volume(mesh)
     assert mean_edges[1] > mean_edges[2] * 1.2
@@ -111,7 +111,7 @@ def test_local_mesh_size_control_refines():
     mesher.setup.local_mesh_size_control_parameters = [LocalMeshSizeControlSetup("volumes", 5, [2])]
     mesher.setup.custom_element_setup = GMSH_TET4
 
-    mesh = mesher.generate(threads=1)
+    mesh, _ = mesher.generate(threads=1)
 
     mean_edges = _mean_edge_length_per_volume(mesh)
     assert mean_edges[2] < mean_edges[1] * 0.9

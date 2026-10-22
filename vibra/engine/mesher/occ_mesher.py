@@ -30,7 +30,7 @@ class OccMesher:
     def set_path(self, path: str | Path):
         self.path = Path(path).expanduser()
 
-    def generate(self, threads: int = 0) -> Mesh:
+    def generate(self, threads: int = 0) -> tuple[Mesh, GeometryInfo]:
         if self.path is None:
             message = "Geometry not defined"
             context = (
@@ -183,7 +183,7 @@ class OccMesher:
         mesh.area_from_surfaces = gi._surfaces_areas
         mesh.volume_from_bodies = gi._solids_volumes
 
-        return mesh
+        return mesh, gi
 
     def _iterate_entities(self, shape, entity_type):
         explorer = TopExp_Explorer(shape, entity_type)

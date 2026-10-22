@@ -281,7 +281,7 @@ class Project:
         if mesh_setup is not None:
             self.configure_mesh(mesh_setup)
 
-        mesh = self.model.fem_mesher.generate()
+        mesh, _ = self.model.fem_mesher.generate()
 
         if mesh.collapsed_elements_data:
             collapsed_1d_elements: list = mesh.collapsed_elements_data.get("collpased_1d_elements", [])
@@ -318,7 +318,7 @@ class Project:
         if self.model.geometry_path is None:
             raise errors.InvalidMeshSetupError("The geometry has not been loaded yet.")
 
-        mesh = self.model.visual_mesher.generate()
+        mesh, _ = self.model.visual_mesher.generate()
         self.model.visual_mesh = mesh
         self.model.initial_element_size = 5
         self.project_writer.write_visual_mesh(mesh)

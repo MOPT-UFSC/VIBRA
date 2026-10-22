@@ -31,7 +31,7 @@ class GmshMesher(GmshCommon):
     def set_mesh_setup(self, setup: MeshSetup):
         self.setup = setup
 
-    def generate(self, threads: int = 0) -> Mesh:
+    def generate(self, threads: int = 0) -> tuple[Mesh, GeometryInfo]:
         if self.path is None:
             message = "Geometry not defined"
             context = (
@@ -82,6 +82,7 @@ class GmshMesher(GmshCommon):
 
         logger.info("Post-processing mesh... [30/100]")
         mesh = self._create_mesh_from_gmsh_state()
+        geometry_info = GeometryInfo().update_from_gmsh_state()
 
         logger.info("Post-processing mesh... [60/100]")
         self._process_geometry_information(mesh)
@@ -102,7 +103,7 @@ class GmshMesher(GmshCommon):
             f"and {len(mesh.solids_connectivity)} dim 3 elements"
         )
 
-        return mesh
+        return mesh, geometry_info
 
     def generate_visual_mesh(self) -> tuple[Mesh, MeshSetup]:
         if self.path is None:
@@ -121,10 +122,11 @@ class GmshMesher(GmshCommon):
             try:
                 self.setup = MeshSetup(
                     minimum_element_size=_min,
-                        maximum_element_size=_max,
+                    maximum_element_size=_max,
                     custom_element_setup=GMSH_VISUAL_MESH,
                 )
-                return self.generate(), self.setup
+                mesh, _ = self.generate()
+                return mesh, self.setup
             except Exception as error:
                 exception = error
 
