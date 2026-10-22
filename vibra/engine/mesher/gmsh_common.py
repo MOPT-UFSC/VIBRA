@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Literal
+from enum import StrEnum
 
 import gmsh
 import numpy as np
@@ -10,6 +10,13 @@ from vibra.engine.mesher.mesh import Mesh
 from vibra.interface.numeric_checks.unit_utilities import convert_length_unit
 
 logger = logging.getLogger(__name__)
+
+
+class MeshQualityParams(StrEnum):
+    GAMMA = "gamma"
+    VOLUME = "volume"
+    MIN_SJ = "minSJ"
+    ASPECT_RATIO = "aspectRatio"
 
 
 class GmshCommon:
@@ -63,11 +70,11 @@ class GmshCommon:
             node_tags, _, param = gmsh.model.mesh.getNodes(2, tag, True)
             sorted_indices = np.argsort(node_tags)
 
-            normals_surface = gmsh.model.getNormal(tag, param).reshape(-1, 3)
+            normals_surface = np.reshape(gmsh.model.getNormal(tag, param), (-1, 3))
             if normals_surface.size == sorted_indices.size:
                 mesh.normals_surface[tag] = normals_surface[sorted_indices, :]
 
-            curvatures_surface = gmsh.model.getCurvature(2, tag, param)
+            curvatures_surface = np.asarray(gmsh.model.getCurvature(2, tag, param))
             if curvatures_surface.size == sorted_indices.size:
                 conv_factor = convert_length_unit(1.0, mesh.length_unit, "meter")
                 mesh.curvatures_surface[tag] = curvatures_surface[sorted_indices] / conv_factor
@@ -91,10 +98,10 @@ class GmshCommon:
 
     def _compute_gmsh_quality_parameters(self):
         quality_bins = {
-            "gamma": (0.7, 0.15),
-            "volume": (1e-3, 0),
-            "minSJ": (0.3, 0.1),
-            "aspectRatio": (4, 1.5),
+            MeshQualityParams.GAMMA: (0.7, 0.15),
+            MeshQualityParams.VOLUME: (1e-3, 0),
+            MeshQualityParams.MIN_SJ: (0.3, 0.1),
+            MeshQualityParams.ASPECT_RATIO: (4, 1.5),
         }
 
         logger.info("Computing mesh quality metrics... [10/100]")
@@ -105,7 +112,7 @@ class GmshCommon:
         # process the mesh quality metrics
         elements = element_tags[0]
         N_elem = len(elements)
-        N_param = len(quality_bins.keys())
+        N_param = len(MeshQualityParams)
         quality_table = np.zeros((N_elem, N_param), dtype=float)
 
         logger.info("Computing mesh quality metrics... [25/100]")
@@ -116,23 +123,29 @@ class GmshCommon:
         quality_table[:, 0] = gmsh.model.mesh.get_element_qualities(elements, "gamma")
         quality_table[:, 1] = gmsh.model.mesh.get_element_qualities(elements, "volume")
         quality_table[:, 2] = gmsh.model.mesh.get_element_qualities(elements, "minSJ")
-        quality_table[:, 3] = max_edge_quals / min_edge_quals  # aspect ratio
-
-        MeshQualityParams = Literal["gamma", "volume", "minSJ", "aspectRatio"]
+        quality_table[:, 3] = np.asarray(max_edge_quals) / min_edge_quals  # aspect ratio
 
         # compute the mesh quality statistics
         logger.info("Computing mesh quality metrics... [70/100]")
         quality_statistics: dict[MeshQualityParams, list[float]] = {}
-        for i, parameter in enumerate(quality_bins.keys()):
+        for i, parameter in enumerate(MeshQualityParams):
             column = quality_table[:, i]
             worst = np.max(column) if (parameter == "aspectRatio") else np.min(column)
-            quality_statistics[parameter] = [worst, np.mean(column), np.std(column)]
+            mean = np.mean(column)
+            std = np.std(column)
+            assert isinstance(worst, float)
+            assert isinstance(mean, float)
+            assert isinstance(std, float)
+            quality_statistics[parameter] = [worst, mean, std]
 
         # compute the bad elements
         logger.info("Computing mesh quality metrics... [85/100]")
         bad_elements: dict[MeshQualityParams, np.ndarray] = {}
-        for j, parameter in enumerate(quality_bins.keys()):
+        for j, parameter in enumerate(MeshQualityParams):
             limit = quality_bins.get(parameter)
+            if limit is None:
+                continue
+
             if parameter == "aspectRatio":
                 bad_elements[parameter] = np.where(quality_table[:, j] > limit[0])[0]
             else:
@@ -140,8 +153,8 @@ class GmshCommon:
 
         # compute the histogram data
         logger.info("Computing mesh quality metrics... [95/100]")
-        histograms_data: dict[MeshQualityParams, dict] = {}
-        for i, parameter in enumerate(quality_bins.keys()):
+        histograms_data: dict[MeshQualityParams, list] = {}
+        for i, parameter in enumerate(MeshQualityParams):
             column = quality_table[:, i]
             bins = np.linspace(np.min(column), np.max(column), 30)
             hist, bin_edges = np.histogram(column, bins=bins)
@@ -188,8 +201,8 @@ class GmshCommon:
                     continue
 
                 uv_min, uv_max = gmsh.model.getParametrizationBounds(dim, tag)
-                uv_mid = (uv_min + uv_max) / 2
-                center = gmsh.model.getValue(dim, tag, uv_mid) * unit_factor
+                uv_mid = (np.asarray(uv_min) + uv_max) / 2
+                center = unit_factor * np.asarray(gmsh.model.getValue(dim, tag, uv_mid))
                 mesh.surfaces_centers[tag] = center
 
             elif dim == 1:
