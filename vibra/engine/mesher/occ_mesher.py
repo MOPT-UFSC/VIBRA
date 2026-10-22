@@ -84,10 +84,10 @@ class OccMesher:
 
             for face in self._iterate_faces(solid):
                 face_index = face_mapper.FindIndex(face)
+                volume_to_surfaces[solid_index].add(face_index)
                 if face_index in visited_faces:
                     continue
                 visited_faces.add(face_index)
-                volume_to_surfaces[solid_index].add(face_index)
 
                 triangulation = BRep_Tool.Triangulation_s(face, loc)
                 coordinate_shift = len(coordinates)
@@ -102,10 +102,10 @@ class OccMesher:
 
                 for edge in self._iterate_edges(face):
                     edge_index = edge_mapper.FindIndex(edge)
+                    surface_to_lines[face_index].add(edge_index)
                     if edge_index in visited_edges:
                         continue
                     visited_edges.add(edge_index)
-                    surface_to_lines[face_index].add(edge_index)
 
                     polygon = BRep_Tool.PolygonOnTriangulation_s(edge, triangulation, loc)
                     for a, b in pairwise(range(polygon.Nodes().Length())):
