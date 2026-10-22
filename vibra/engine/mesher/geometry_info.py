@@ -19,9 +19,9 @@ class GeometryInfo:
         self._surfaces_to_curves = defaultdict()
         self._curves_to_points = defaultdict()
 
-        self._surfaces_to_solids = defaultdict()
-        self._curves_to_surfaces = defaultdict()
-        self._points_to_curves = defaultdict()
+        self._surfaces_to_solids = {}
+        self._curves_to_surfaces = {}
+        self._points_to_curves = {}
 
         self._cache_solids_to_surfaces = defaultdict()
         self._cache_surfaces_to_curves = defaultdict()
@@ -66,10 +66,15 @@ class GeometryInfo:
         gmsh.option.setNumber("General.Terminal", 0)
         gmsh.option.setNumber("General.Verbosity", 0)
         gmsh.option.setNumber("General.NumThreads", 0)  # all available threads
-
         gmsh.open(str(file_path))
-        gmsh.model.occ.synchronize()
 
+        self.update_from_gmsh_state()
+
+        gmsh.finalize()
+        return self
+
+    def update_from_gmsh_state(self) -> Self:
+        gmsh.model.occ.synchronize()
         volumes_list = gmsh.model.getEntities(3)
         gmsh.model.occ.fragment(volumes_list, volumes_list)
         gmsh.model.occ.synchronize()
@@ -77,8 +82,6 @@ class GeometryInfo:
         self._process_geometry_information()
         self._process_curves_normals()
         self._process_points_normals()
-        gmsh.finalize()
-
         return self
 
     def clear(self):
