@@ -195,7 +195,7 @@ class VolumeSuppressionInputs(VolumeSuppressionDialog_UI):
         if properties is None:
             return True
 
-        surfaces_from_volume = app().project.model.mesh.surfaces_from_volume
+        surfaces_from_volume = app().project.model.geometry_info._solids_to_surfaces
         affected_surfaces = set()
         for vol_id in self.suppressed_volume_ids:
             affected_surfaces |= set(surfaces_from_volume.get(vol_id, []))

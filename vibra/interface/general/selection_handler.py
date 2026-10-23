@@ -25,8 +25,9 @@ class SelectionHandler(QObject):
             return set()
 
         surfaces = set()
+        geometry_info = self.project.model.geometry_info
         for volume in self.geometry_volumes:
-            surfaces |= set(mesh.surfaces_from_volume.get(volume, []))
+            surfaces |= set(geometry_info._solids_to_surfaces.get(volume, []))
 
         return surfaces
 

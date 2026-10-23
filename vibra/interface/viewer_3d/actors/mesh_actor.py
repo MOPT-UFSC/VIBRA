@@ -65,6 +65,13 @@ class MeshActor(vtkPropAssembly):
 
         return self.model.mesh
 
+    @property
+    def geometry_info(self):
+        if self.model is None:
+            return
+
+        return self.model.geometry_info
+
     def update(self):
         if self.mesh is None:
             self.clear_data()
@@ -465,7 +472,7 @@ class MeshActor(vtkPropAssembly):
         if not volumes:
             return
 
-        surface_groups = [self.mesh.surfaces_from_volume[v] for v in volumes if (v in self.mesh.surfaces_from_volume)]
+        surface_groups = [self.geometry_info._solids_to_surfaces[v] for v in volumes if (v in self.geometry_info._solids_to_surfaces)]
         surfaces = list(chain.from_iterable(surface_groups))
         self.paint_surfaces(color, surfaces)
 
@@ -559,7 +566,7 @@ class MeshActor(vtkPropAssembly):
 
         assert self.mesh.solids_connectivity is not None
 
-        surface_groups = [self.mesh.surfaces_from_volume[v] for v in volumes if (v in self.mesh.surfaces_from_volume)]
+        surface_groups = [self.geometry_info._solids_to_surfaces[v] for v in volumes if (v in self.geometry_info._solids_to_surfaces)]
         surfaces = list(chain.from_iterable(surface_groups))
         self._set_surface_cells_visibility(surfaces, visible=visible)
 

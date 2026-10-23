@@ -19,11 +19,11 @@ def _acoustic_model_nastran(path: str, fluid: Fluid) -> Model:
     # mesh_setup = dict(minimum_element_size=50, maximum_element_size=50)
 
     model = Model()
-    model.mesh = MeshReader(path).read_mesh()
+    model.mesh, model.geometry_info = MeshReader(path).read_mesh_and_info()
 
     for vol_id in [1, 2]:
         model.properties._set_property("fluid", fluid, volume=vol_id)
-        for surf_id in model.mesh.surfaces_from_volume.get(vol_id):
+        for surf_id in model.geometry_info._solids_to_surfaces.get(vol_id, []):
             model.properties._set_property("fluid", fluid, surface=surf_id)
 
     # # Normal surface velocity data

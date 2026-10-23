@@ -29,7 +29,7 @@ class HollowAnalysisActor(HollowSolidsActor):
 
         visible_surfaces = set()
         for volume in domain_specific_volumes:
-            surfaces = mesh.surfaces_from_volume.get(volume, [])
+            surfaces = app().project.model.geometry_info._solids_to_surfaces.get(volume, [])
             visible_surfaces |= set(surfaces)
 
         visible_surfaces &= app().main_window.entity_visibility.get_visible_surfaces()

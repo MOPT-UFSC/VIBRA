@@ -79,15 +79,15 @@ class ModelDomainsProcessor:
             points_of_domain = set()
 
             for vol_id in self.volumes_of_domain.get(domain, []):
-                surface_ids = self.mesh.surfaces_from_volume.get(vol_id, [])
+                surface_ids = self.geometry_info._solids_to_surfaces.get(vol_id, [])
                 surfaces_of_domain |= set(surface_ids)
 
                 for surf_id in surface_ids:
-                    line_ids = self.mesh.lines_from_surface.get(surf_id, [])
+                    line_ids = self.geometry_info._surfaces_to_curves.get(surf_id, [])
                     lines_of_domain |= set(line_ids)
 
                     for line_id in line_ids:
-                        point_ids = self.mesh.points_from_line.get(line_id, [])
+                        point_ids = self.geometry_info._curves_to_points.get(line_id, [])
                         points_of_domain |= set(point_ids)
 
             self.surfaces_of_domain[domain] = sorted(surfaces_of_domain)
@@ -327,15 +327,15 @@ class ModelDomainsProcessor:
         aux_map["volume"].extend(volume_ids)
 
         for vol_id in volume_ids:
-            surfaces = self.mesh.surfaces_from_volume.get(vol_id)
+            surfaces = self.geometry_info._solids_to_surfaces.get(vol_id)
             aux_map["surface"].extend(surfaces)
 
             for surf_id in surfaces:
-                lines = self.mesh.lines_from_surface.get(surf_id)
+                lines = self.geometry_info._surfaces_to_curves.get(surf_id)
                 aux_map["line"].extend(lines)
 
                 for line_id in lines:
-                    points = self.mesh.points_from_line.get(line_id)
+                    points = self.geometry_info._curves_to_points.get(line_id)
                     aux_map["point"].extend(points)
 
         for key, values in aux_map.items():

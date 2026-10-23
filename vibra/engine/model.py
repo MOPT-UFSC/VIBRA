@@ -1037,10 +1037,10 @@ class Model:
             if prop != "porous_material_model":
                 continue
 
-            if volume_id not in self.mesh.surfaces_from_volume:
+            if volume_id not in self.geometry_info._solids_to_surfaces:
                 continue
 
-            if surface_id in self.mesh.surfaces_from_volume.get(volume_id):
+            if surface_id in self.geometry_info._solids_to_surfaces.get(volume_id):
                 if not self.porous_material_properties:
                     self.process_porous_material_properties()
 
@@ -1089,10 +1089,10 @@ class Model:
             if prop != "viscous_thermal_model":
                 continue
 
-            if volume_id not in self.mesh.surfaces_from_volume:
+            if volume_id not in self.geometry_info._solids_to_surfaces:
                 continue
 
-            if surface_id in self.mesh.surfaces_from_volume.get(volume_id):
+            if surface_id in self.geometry_info._solids_to_surfaces.get(volume_id):
                 if not self.viscous_thermal_model_properties:
                     self.process_viscous_thermal_model_properties()
 

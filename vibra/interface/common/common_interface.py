@@ -388,13 +388,13 @@ def remove_all_properties_assigned_to_new_surfaces(new_surface_ids: list[int], r
         if not remove_adjacencies:
             continue
 
-        for line_from_surface in model.mesh.lines_from_surface.get(new_surface_id, []):
+        for line_from_surface in model.geometry_info._surfaces_to_curves.get(new_surface_id, []):
             for (property, line_id) in line_properties:
                 if line_from_surface != line_id:
                     continue
 
                 model.properties._remove_line_property(property, line_id)
-                for point_from_line in model.mesh.points_from_line.get(line_from_surface, []):
+                for point_from_line in model.geometry_info._curves_to_points.get(line_from_surface, []):
                     for (property, point_id) in point_properties:
                         if point_from_line != point_id:
                             continue

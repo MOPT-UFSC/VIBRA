@@ -54,6 +54,10 @@ class MaterialInputs(SetMaterial_UI):
         return app().project.model.mesh
 
     @property
+    def geometry_info(self):
+        return app().project.model.geometry_info
+
+    @property
     def properties(self):
         return app().project.model.properties
 
@@ -376,7 +380,7 @@ class MaterialInputs(SetMaterial_UI):
 
                 # we cannot have two physical domains active on the same volume
                 self.properties._remove_volume_property("fluid", volume_id)
-                for surface_id in self.mesh.surfaces_from_volume.get(volume_id):
+                for surface_id in self.geometry_info._solids_to_surfaces.get(volume_id):
                     if surface_id in app().project.model.domains_processor.fluid_structure_interfaces:
                         continue
 

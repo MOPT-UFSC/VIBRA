@@ -36,6 +36,7 @@ class DistributedMassInputs(DistributedMassInputs_UI):
 
         self.model = app().project.model
         self.mesh = app().project.model.mesh
+        self.geometry_info = app().project.model.geometry_info
         self.properties = app().project.model.properties
 
         self._config_window()
@@ -251,13 +252,13 @@ class DistributedMassInputs(DistributedMassInputs_UI):
         for selected_id in selected_ids:
 
             if selection == "surfaces":
-                for line_id in self.mesh.lines_from_surface[selected_id]:
+                for line_id in self.geometry_info._surfaces_to_curves[selected_id]:
                     data = self.properties._get_property("distributed_mass", line=line_id)
                     if isinstance(data, dict):
                         self.properties._remove_line_property("distributed_mass", line_id)
 
             elif selection == "lines":
-                for surface_id in self.mesh.surfaces_from_line[selected_id]:
+                for surface_id in self.geometry_info._curves_to_surfaces[selected_id]:
                     data = self.properties._get_property("distributed_mass", surface=surface_id)
                     if isinstance(data, dict):
                         self.properties._remove_surface_property("distributed_mass", surface_id)

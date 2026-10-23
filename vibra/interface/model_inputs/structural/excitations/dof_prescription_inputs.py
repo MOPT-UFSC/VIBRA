@@ -76,6 +76,10 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         return app().project.model.mesh
 
     @property
+    def geometry_info(self):
+        return app().project.model.geometry_info
+
+    @property
     def properties(self):
         return app().project.model.properties
 
@@ -781,13 +785,13 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                         if node_id not in nodes_to_remove:
                             nodes_to_remove.append(node_id)
 
-                for line_id in self.mesh.lines_from_surface[selected_id]:
+                for line_id in self.geometry_info._surfaces_to_curves[selected_id]:
                     data = self.properties._get_property("prescribed_dof", line=line_id)
                     if isinstance(data, dict):
                         self.properties._remove_line_property("prescribed_dof", line_id)
                         table_names.extend(self.properties.get_property_related_table_names("prescribed_dof", line_id, "lines"))
 
-                    for point_id in self.mesh.points_from_line[line_id]:
+                    for point_id in self.geometry_info._curves_to_points[line_id]:
                         data = self.properties._get_property("prescribed_dof", point=point_id)
                         if isinstance(data, dict):
                             self.properties._remove_point_property("prescribed_dof", point_id)
@@ -801,13 +805,13 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                         if node_id not in nodes_to_remove:
                             nodes_to_remove.append(node_id)
 
-                for surface_id in self.mesh.surfaces_from_line[selected_id]:
+                for surface_id in self.geometry_info._curves_to_surfaces[selected_id]:
                     data = self.properties._get_property("prescribed_dof", surface=surface_id)
                     if isinstance(data, dict):
                         self.properties._remove_surface_property("prescribed_dof", surface_id)
                         table_names.extend(self.properties.get_property_related_table_names("prescribed_dof", surface_id, "surfaces"))
 
-                for point_id in self.mesh.points_from_line[selected_id]:
+                for point_id in self.geometry_info._curves_to_points[selected_id]:
                     data = self.properties._get_property("prescribed_dof", point=point_id)
                     if isinstance(data, dict):
                         self.properties._remove_point_property("prescribed_dof", point_id)
@@ -821,13 +825,13 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                         if node_id not in nodes_to_remove:
                             nodes_to_remove.append(node_id)
 
-                for line_id in self.mesh.lines_from_point[selected_id]:
+                for line_id in self.geometry_info._points_to_curves[selected_id]:
                     data = self.properties._get_property("prescribed_dof", line=line_id)
                     if isinstance(data, dict):
                         self.properties._remove_line_property("prescribed_dof", line_id)
                         table_names.extend(self.properties.get_property_related_table_names("prescribed_dof", line_id, "lines"))
 
-                    for surface_id in self.mesh.surfaces_from_line[line_id]:
+                    for surface_id in self.geometry_info._curves_to_surfaces[line_id]:
                         data = self.properties._get_property("prescribed_dof", surface=surface_id)
                         if isinstance(data, dict):
                             self.properties._remove_surface_property("prescribed_dof", surface_id)
@@ -841,13 +845,13 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                     self.properties._remove_point_property("prescribed_dof", point_id)
                     table_names.extend(self.properties.get_property_related_table_names("prescribed_dof", point_id, "points"))
 
-                for line_id in self.mesh.lines_from_point[point_id]:
+                for line_id in self.geometry_info._points_to_curves[point_id]:
                     data = self.properties._get_property("prescribed_dof", line=line_id)
                     if isinstance(data, dict):
                         self.properties._remove_line_property("prescribed_dof", line_id)
                         table_names.extend(self.properties.get_property_related_table_names("prescribed_dof", line_id, "lines"))
 
-                    for surface_id in self.mesh.surfaces_from_line[line_id]:
+                    for surface_id in self.geometry_info._curves_to_surfaces[line_id]:
                         data = self.properties._get_property("prescribed_dof", surface=surface_id)
                         if isinstance(data, dict):
                             self.properties._remove_surface_property("prescribed_dof", surface_id)

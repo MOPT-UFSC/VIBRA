@@ -18,9 +18,10 @@ class EntityVisibilityHandler(QObject):
 
     def get_visible_surfaces(self) -> set[int]:
         mesh = self.project.model.get_mesh()
+        geometry_info = self.project.model.geometry_info
 
         _visible_surfaces = set()
-        for volume, surfaces in mesh.surfaces_from_volume.items():
+        for volume, surfaces in geometry_info._solids_to_surfaces.items():
             if volume not in self._volumes_to_hide:
                 _visible_surfaces |= set(surfaces)
 
