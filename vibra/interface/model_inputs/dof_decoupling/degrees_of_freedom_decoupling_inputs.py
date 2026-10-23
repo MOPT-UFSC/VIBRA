@@ -31,6 +31,7 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
 
         self.model = app().project.model
         self.mesh = app().project.model.mesh
+        self.geometry_info = app().project.model.geometry_info
         self.properties = app().project.model.properties
 
         self._initialize()
@@ -108,7 +109,7 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
         self.treeWidget_selection_info.clear()
 
         for surface_id in surface_ids:
-            volumes_from_surface = self.model.mesh.volumes_from_surface[surface_id]
+            volumes_from_surface = self.geometry_info._surfaces_to_solids.get(surface_id, [])
             item = QTreeWidgetItem([str(surface_id), str(volumes_from_surface)])
             for i in range(2):
                 item.setTextAlignment(i, Qt.AlignCenter)
@@ -124,7 +125,7 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
         for surface_id in surface_ids:
 
             message = ""
-            volumes_from_surface = self.model.mesh.volumes_from_surface.get(surface_id)
+            volumes_from_surface = self.geometry_info._surfaces_to_solids.get(surface_id)
 
             if volumes_from_surface is None:
                 message = "The selected surface is not connected to any volume. "
@@ -156,7 +157,7 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
 
         # select volumes with reduced number of solid elements to decouple the DOF
         for _surface_id in surface_ids:
-            volumes_from_surface = self.model.mesh.volumes_from_surface.get(_surface_id)
+            volumes_from_surface = self.geometry_info._surfaces_to_solids.get(_surface_id)
             if len(volumes_from_surface) != 2:
                 continue
 

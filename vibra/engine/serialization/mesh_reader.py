@@ -1,3 +1,4 @@
+from vibra.engine.mesher.geometry_info import GeometryInfo
 import logging
 from pathlib import Path
 
@@ -19,6 +20,19 @@ class MeshReader(GmshCommon):
 
     def set_path(self, path: str | Path):
         self.path = Path(path).expanduser()
+
+    def read_mesh_and_info(self) -> tuple[Mesh, GeometryInfo]:
+        mesh = self.read_mesh()
+        geometry_info = GeometryInfo()
+
+        geometry_info._solids_to_surfaces = mesh.surfaces_from_volume
+        geometry_info._surfaces_to_curves = mesh.lines_from_surface
+        geometry_info._curves_to_points = mesh.points_from_line
+        geometry_info._surfaces_to_solids = mesh.volumes_from_surface
+        geometry_info._curves_to_surfaces = mesh.surfaces_from_line
+        geometry_info._points_to_curves = mesh.lines_from_point
+
+        return mesh, geometry_info
 
     def read_mesh(self) -> Mesh:
         gmsh.initialize("", False, interruptible=False)

@@ -100,7 +100,7 @@ def filter_outside_surfaces(surface_ids: list[int], bc_label: str) -> tuple[list
     inside_surfaces = list()
     outside_surfaces = list()
     for surf_id in surface_ids:
-        volume_ids = app().project.model.mesh.volumes_from_surface.get(surf_id)
+        volume_ids = app().project.model.geometry_info._surfaces_to_solids.get(surf_id)
         if len(volume_ids) == 1:
             outside_surfaces.append(surf_id)
         elif len(volume_ids) > 1:

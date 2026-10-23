@@ -54,6 +54,10 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
         return app().project.model.mesh
 
     @property
+    def geometry_info(self):
+        return app().project.model.geometry_info
+
+    @property
     def properties(self):
         return app().project.model.properties
 
@@ -126,7 +130,7 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
         if len(surfaces) == 1:
             surface_id = list(surfaces)[0]
 
-            volumes_from_surface = self.mesh.volumes_from_surface.get(surface_id)
+            volumes_from_surface = self.geometry_info._surfaces_to_solids.get(surface_id)
             if len(volumes_from_surface) == 1:
                 selected_fluid = self.properties._get_property("fluid", volume=volumes_from_surface[0])
                 self.get_selected_fluid(selected_fluid=selected_fluid)

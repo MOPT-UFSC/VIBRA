@@ -36,7 +36,7 @@ class GeometrySelection:
         volume_ids = set()
         mesh = app().project.model.visual_mesh
         for surface in surface_ids:
-            surface_volumes = mesh.volumes_from_surface.get(surface, [])
+            surface_volumes = app().project.model.geometry_info._surfaces_to_solids.get(surface, [])
             volume_ids.update(surface_volumes)
 
         # Cheating a bit to prioritize selection of points and lines
@@ -75,7 +75,7 @@ class GeometrySelection:
         if (mesh is not None) and ((mesh.solids_connectivity is None) or (mesh.solids_connectivity.size == 0)):
             volumes = set()
             for surface in surfaces:
-                vols = mesh.volumes_from_surface.get(surface, [])
+                vols = app().project.model.geometry_info._surfaces_to_solids.get(surface, [])
                 volumes.update(vols)
 
         return points, lines, surfaces, volumes

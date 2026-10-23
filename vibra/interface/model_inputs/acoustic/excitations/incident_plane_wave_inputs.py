@@ -35,6 +35,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
        
         self.model = app().project.model
         self.mesh = app().project.model.mesh
+        self.geometry_info = app().project.model.geometry_info
         self.properties = app().project.model.properties
 
         self._config_window()
@@ -321,7 +322,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
     def check_for_inside_surfaces(self, surface_ids: list[int]):
 
         for surface_id in surface_ids:
-            volumes_from_surface = self.mesh.volumes_from_surface.get(surface_id)
+            volumes_from_surface = self.geometry_info._surfaces_to_solids.get(surface_id)
             if len(volumes_from_surface) != 1:
                 return True
 

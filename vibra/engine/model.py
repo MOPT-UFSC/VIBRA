@@ -776,7 +776,7 @@ class Model:
 
         """
         fluid = None
-        volumes_from_surface = self.mesh.volumes_from_surface[surface_id]
+        volumes_from_surface = self.geometry_info._surfaces_to_solids.get(surface_id, [])
 
         if len(volumes_from_surface) == 1:
             for key in self.properties.volume_properties:
@@ -954,7 +954,7 @@ class Model:
         frequency-dependent, returning True if positive and False otherwise.
         """
         properties = ["porous_material_model", "viscous_thermal_model", "proportional_damping"]
-        for volume_id in self.mesh.volumes_from_surface.get(surface_id):
+        for volume_id in self.geometry_info._surfaces_to_solids.get(surface_id):
             for _property in properties:
                 prop_data = self.properties._get_property(_property, volume=volume_id)
                 if isinstance(prop_data, dict):

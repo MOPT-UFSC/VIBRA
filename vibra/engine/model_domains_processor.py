@@ -46,6 +46,10 @@ class ModelDomainsProcessor:
         return self.model.mesh
 
     @property
+    def geometry_info(self):
+        return self.model.geometry_info
+
+    @property
     def properties(self):
         return self.model.properties
 
@@ -95,7 +99,7 @@ class ModelDomainsProcessor:
         This method maps the fluid-structure interfaces.
         """
         self.fluid_structure_interfaces.clear()
-        for surface_id, vol_ids in self.mesh.volumes_from_surface.items():
+        for surface_id, vol_ids in self.geometry_info._surfaces_to_solids.items():
             if len(vol_ids) == 1:
                 continue
 

@@ -180,7 +180,7 @@ class AcousticAssembler:
 
     def get_fluid_properties_from_surface(self, surface_id: int):
 
-        volumes_from_surface = self.model.mesh.volumes_from_surface[surface_id]
+        volumes_from_surface = self.model.geometry_info._surfaces_to_solids.get(surface_id, [])
         if len(volumes_from_surface) != 1:
             return None, None
         

@@ -34,6 +34,10 @@ class AcousticPostprocessing:
     def mesh(self) -> Optional[Mesh]:
         return self.model.mesh
 
+    @property
+    def geometry_info(self):
+        return self.model.geometry_info
+
 
     @property
     def solution(self) -> Optional[Solution]:
@@ -548,18 +552,18 @@ class AcousticPostprocessing:
             # Aeff_in = np.ones((nodes_input.size, 1), dtype=float) * (A_in / nodes_input.size)
             # Aeff_out = np.ones((nodes_output.size, 1), dtype=float) * (A_out / nodes_output.size)
 
-            volumes_in = self.mesh.volumes_from_surface.get(input_surface_id)
+            volumes_in = self.geometry_info._surfaces_to_solids.get(input_surface_id)
             if volumes_in is None:
                 return None, None
 
-            volumes_out = self.mesh.volumes_from_surface.get(output_surface_id)
+            volumes_out = self.geometry_info._surfaces_to_solids.get(output_surface_id)
             if volumes_out is None:
                 return None, None
 
             # if isinstance(volumes_in, list) and len(volumes_in) == 1:
             #     volume_in = volumes_in[0]
 
-            if isinstance(volumes_out, list) and len(volumes_out) == 1:
+            if isinstance(volumes_out, (list, tuple)) and len(volumes_out) == 1:
                 volume_out = volumes_out[0]
 
             # logging.info("Processing the transmission loss... [50/100]")
@@ -745,7 +749,7 @@ class AcousticPostprocessing:
         t0 = perf_counter()
 
         for surface_id in surface_ids:
-            if len(self.model.mesh.volumes_from_surface.get(surface_id)) != 1:
+            if len(self.model.geometry_info._surfaces_to_solids.get(surface_id)) != 1:
                 continue
 
             rows = self.model.mesh.faces_connectivity[:, 1] == surface_id

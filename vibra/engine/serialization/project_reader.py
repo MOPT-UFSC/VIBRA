@@ -12,6 +12,7 @@ from PIL.Image import Image
 
 from vibra.engine.analysis_info import AnalysisID, AnalysisSetup, HarmonicAnalysisSetup, ModalAnalysisSetup
 from vibra.engine.assemblers import AcousticAssembler, StructuralAssembler
+from vibra.engine.mesher.geometry_info import GeometryInfo
 from vibra.engine.mesher.gmsh_constants import GmshElementSetup
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.mesh_setup import LocalMeshSizeControlSetup, MeshSetup
@@ -76,6 +77,8 @@ class ProjectReader:
 
         if self.project_paths.fem_mesh_filepath.exists():
             model.mesh = self.read_mesh()
+            model.geometry_info = self.read_geometry_info()
+            print(model.geometry_info)
 
         if self.project_paths.visual_mesh_filepath.exists() or self.project_paths.fem_mesh_filepath.exists():
             model.visual_mesh = self.read_mesh()
@@ -329,6 +332,50 @@ class ProjectReader:
             mesh.faces_connectivity = np.array(file["connectivity/faces_connectivity"])
 
         return mesh
+
+    def read_geometry_info(self) -> GeometryInfo:
+        geometry_info = GeometryInfo()
+
+        geometry_data_path = self.project_paths.geometry_data_filepath
+        if not geometry_data_path.exists():
+            raise FileNotFoundError("The geometry file is missing.")
+
+        with h5py.File(geometry_data_path, "r") as file:
+            # for key, value in file.get("entities", dict()).items():
+            #     mesh.geometry_information[key] = [int(val) for val in value]
+
+            # if "properties" in file:
+            #     properties = file["properties"]
+            #     mesh.length_from_lines = {int(k): v for k, v in properties.get("length_from_lines", default=dict())}
+            #     mesh.area_from_surfaces = {int(k): v for k, v in properties.get("area_from_surfaces", default=dict())}
+            #     mesh.volume_from_bodies = {int(k): v for k, v in properties.get("volume_from_bodies", default=dict())}
+
+            for key, value in file.get("adjacencies", dict()).items():
+                key: str
+                tag = int(key.split("_")[-1])
+                value = [int(i) for i in value]
+
+                # This "startswith" is very sad
+                if key.startswith("points_from_line"):
+                    geometry_info._curves_to_points[tag] = value
+
+                elif key.startswith("lines_from_surface"):
+                    geometry_info._surfaces_to_curves[tag] = value
+
+                elif key.startswith("surfaces_from_volume"):
+                    geometry_info._solids_to_surfaces[tag] = value
+
+                elif key.startswith("cache_points_from_line"):
+                    geometry_info._cache_curves_to_points[tag] = value
+
+                elif key.startswith("cache_lines_from_surface"):
+                    geometry_info._cache_surfaces_to_curves[tag] = value
+
+                elif key.startswith("cache_surfaces_from_volume"):
+                    geometry_info._cache_solids_to_surfaces[tag] = value
+
+        geometry_info._create_inverse_maps()
+        return geometry_info
 
     def read_model_properties(self, model_properties: Optional[ModelProperties] = None) -> ModelProperties:
         if model_properties is None:

@@ -84,6 +84,10 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         return app().project.model.mesh
 
     @property
+    def geometry_info(self):
+        return app().project.model.geometry_info
+
+    @property
     def properties(self):
         return app().project.model.properties
 
@@ -395,7 +399,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         title = "Invalid selection detected"
 
         for surface_id in surface_ids:
-            if len(self.mesh.volumes_from_surface[surface_id]) != 2:
+            if len(self.geometry_info._surfaces_to_solids.get(surface_id, [])) != 2:
                 message = f"The selected surface ID #{surface_id} does not correspond to an inside surface "
                 message += "(surfaces that connect two neighboohrs volumes). The perforated plate "
                 message += "assignment will be ignored until all requirements are met."
@@ -765,7 +769,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
         for surface_id in surface_ids:
 
             message = ""
-            volumes_from_surface = self.model.mesh.volumes_from_surface.get(surface_id)
+            volumes_from_surface = self.geometry_info._surfaces_to_solids.get(surface_id)
 
             if volumes_from_surface is None:
                 message = "The selected surface is not connected to any volume. "
@@ -797,7 +801,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
 
         # select volumes with reduced number of solid elements to decouple the DOF
         for _surface_id in surface_ids:
-            volumes_from_surface = self.model.mesh.volumes_from_surface.get(_surface_id)
+            volumes_from_surface = self.geometry_info._surfaces_to_solids.get(_surface_id, [])
             if len(volumes_from_surface) != 2:
                 continue
 

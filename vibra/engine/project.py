@@ -238,8 +238,9 @@ class Project:
             - *.msh
         """
 
-        mesh = MeshReader(path).read_mesh()
+        mesh, info = MeshReader(path).read_mesh_and_info()
         self.model.mesh = mesh
+        self.model.geometry_info = info
         self.model.set_geometry_path(path)
         self.write_to_working_dir()
         return mesh
