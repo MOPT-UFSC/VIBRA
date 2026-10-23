@@ -844,7 +844,7 @@ class MainWindow(MainWindow_UI):
 
         # Interface update
         self.geometry_widget.update_plot()
-        self.mesh_widget.update_plotn()
+        self.mesh_widget.update_plot()
         self.update_geometry_information()
         self.update_toolbar_and_menu_items_after_load_project()
         self.set_toolbars_visible(True)
