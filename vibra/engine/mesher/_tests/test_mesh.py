@@ -5,11 +5,12 @@ import gmsh
 import numpy as np
 
 from vibra import PROJECT_DIR
+from vibra.engine.mesher.geometry_info import GeometryInfo
 from vibra.engine.mesher.gmsh_constants import GMSH_HEX8, GMSH_HEX20, GMSH_TET4, GMSH_TET10
 from vibra.engine.mesher.gmsh_mesher import GmshMesher
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.mesh_setup import ElementTopology, LocalMeshSizeControlSetup
-from vibra.engine.serialization.file_helpers import NumpyCompatibleEncoder, read_json, write_json
+from vibra.engine.serialization.file_helpers import read_json, write_json
 
 
 def test_tetrahedron_4_mesh():
@@ -21,11 +22,12 @@ def test_tetrahedron_4_mesh():
     mesher.setup.maximum_element_size = 80
     mesher.setup.custom_element_setup = GMSH_TET4
 
-    mesh, _ = mesher.generate(threads=1)
+    mesh, geometry_info = mesher.generate(threads=1)
     assert mesh.element_topology == ElementTopology("tetrahedral", "linear")
 
     _compare_mesh(
         mesh,
+        geometry_info,
         mesh_test_path,
     )
 
@@ -39,11 +41,12 @@ def test_tetrahedron_10_mesh():
     mesher.setup.maximum_element_size = 80
     mesher.setup.custom_element_setup = GMSH_TET10
 
-    mesh, _ = mesher.generate(threads=1)
+    mesh, geometry_info = mesher.generate(threads=1)
     assert mesh.element_topology == ElementTopology("tetrahedral", "quadratic")
 
     _compare_mesh(
         mesh,
+        geometry_info,
         mesh_test_path,
     )
 
@@ -134,7 +137,7 @@ def _mean_edge_length_per_volume(mesh: Mesh) -> dict[int, float]:
     return mean_edges
 
 
-def _compare_mesh(mesh: Mesh, mesh_path: Path | str):
+def _compare_mesh(mesh: Mesh, geometry_info: GeometryInfo, mesh_path: Path | str):
     mesh_path = Path(mesh_path)
     mappings = {
         "face_to_solid_element": dict(mesh.face_to_solid_element),
