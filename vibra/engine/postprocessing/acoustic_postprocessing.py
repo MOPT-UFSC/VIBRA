@@ -336,7 +336,12 @@ class AcousticPostprocessing:
 
         else:
             pressures = self.solution.acoustic_solution[nodes, :]
-            surface_impedance = pressures / particle_velocities_data.Vn_array()
+            normal_pvelocity = particle_velocities_data.Vn_array()
+            mask = pressures != 0
+
+            surface_impedance = np.zeros_like(pressures, dtype=complex)
+            surface_impedance[mask] = pressures[mask] / normal_pvelocity[mask]
+
             return np.average(surface_impedance, axis=0)
 
 
