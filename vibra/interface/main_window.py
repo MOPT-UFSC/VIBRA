@@ -512,7 +512,7 @@ class MainWindow(MainWindow_UI):
 
         self.view_toolbar.enable_selection_tool()
 
-        if app().project.model.is_the_mesh_setup_defined():
+        if not app().project.model.is_there_a_valid_mesh():
             obj = MesherSetupInputs(close_after_generate=True)
             if not obj.complete:
                 self.action_model_workspace_callback()

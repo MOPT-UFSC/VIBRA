@@ -3,8 +3,8 @@ from __future__ import annotations
 import logging
 import typing
 import zipfile
+from copy import copy
 from pathlib import Path
-from typing import Optional
 
 import h5py
 import numpy as np
@@ -58,7 +58,7 @@ class ProjectReader:
         with zipfile.ZipFile(vibra_path, "r") as file:
             file.extractall(path=self.project_paths.working_directory)
 
-    def read_model(self, model: Optional[Model] = None) -> Model:
+    def read_model(self, model: Model | None = None) -> Model:
         if model is None:
             model = Model()
 
@@ -80,8 +80,12 @@ class ProjectReader:
             model.geometry_info = self.read_geometry_info()
             print(model.geometry_info)
 
-        if self.project_paths.visual_mesh_filepath.exists() or self.project_paths.fem_mesh_filepath.exists():
-            model.visual_mesh = self.read_mesh()
+        if self.project_paths.visual_mesh_filepath.exists():
+            model.visual_mesh = self.read_visual_mesh()
+        else:
+            model.visual_mesh = copy(model.mesh)
+            if model.visual_mesh is not None:
+                model.visual_mesh.solids_connectivity = np.zeros((0, 4), dtype=int)
 
         model.mesh_setup = self.read_mesh_setup()
         model.properties = self.read_model_properties()
@@ -105,7 +109,7 @@ class ProjectReader:
         analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
         return AnalysisID(analysis_id)
 
-    def read_analysis_setup(self) -> Optional[AnalysisSetup]:
+    def read_analysis_setup(self) -> AnalysisSetup | None:
         logger.info("Reading AnalysisSetup")
 
         project_setup = read_json(self.project_paths.project_setup_filepath)
@@ -128,7 +132,7 @@ class ProjectReader:
         else:
             return None
 
-    def read_mesh_setup(self) -> Optional[MeshSetup]:
+    def read_mesh_setup(self) -> MeshSetup | None:
         logger.info("Reading MeshSetup.")
 
         project_setup = read_json(self.project_paths.project_setup_filepath)
@@ -149,12 +153,12 @@ class ProjectReader:
         if custom_element is not None:
             custom_element = GmshElementSetup(**custom_element)
 
-        if "element_type" in mesh_setup_dict.keys():
+        if "element_type" in mesh_setup_dict:
             element_geometry = mesh_setup_dict.get("element_type")
         else:
             element_geometry = mesh_setup_dict.get("element_geometry", "tetrahedral")
 
-        if "shape_function" in mesh_setup_dict.keys():
+        if "shape_function" in mesh_setup_dict:
             element_order = mesh_setup_dict.get("shape_function")
         else:
             element_order = mesh_setup_dict.get("element_order", "linear")
@@ -176,7 +180,7 @@ class ProjectReader:
 
         return mesh_setup
 
-    def read_geometry_path(self) -> Optional[Path]:
+    def read_geometry_path(self) -> Path | None:
         logger.info("Reading geometry path.")
 
         project_setup = read_json(self.project_paths.project_setup_filepath)
@@ -191,7 +195,7 @@ class ProjectReader:
 
     def read_mesh(
         self,
-        mesh: Optional[Mesh] = None,
+        mesh: Mesh | None = None,
     ) -> Mesh:
         mesh_data_path = self.project_paths.fem_mesh_filepath
         if not mesh_data_path.exists():
@@ -377,7 +381,7 @@ class ProjectReader:
         geometry_info._create_inverse_maps()
         return geometry_info
 
-    def read_model_properties(self, model_properties: Optional[ModelProperties] = None) -> ModelProperties:
+    def read_model_properties(self, model_properties: ModelProperties | None = None) -> ModelProperties:
         if model_properties is None:
             model_properties = ModelProperties()
         model_properties._reset_variables()
@@ -493,7 +497,7 @@ class ProjectReader:
 
         return tables
 
-    def read_thumbnail(self) -> Optional[Image]:
+    def read_thumbnail(self) -> Image | None:
         if not self.project_paths.thumbnail_filepath.exists():
             return None
 
@@ -501,7 +505,7 @@ class ProjectReader:
 
         return read_image(self.project_paths.thumbnail_filepath)
 
-    def read_solution(self, model: Model) -> Optional[Solution]:
+    def read_solution(self, model: Model) -> Solution | None:
         if model.analysis_id.is_harmonic():
             return self.read_harmonic_solution(model)
         elif model.analysis_id.is_modal():
@@ -509,7 +513,7 @@ class ProjectReader:
         else:
             return None
 
-    def read_harmonic_solution(self, model: Model) -> Optional[HarmonicSolution]:
+    def read_harmonic_solution(self, model: Model) -> HarmonicSolution | None:
         if not self.project_paths.harmonic_solution_filepath.exists():
             return None
 
@@ -573,7 +577,7 @@ class ProjectReader:
                     displacement_dof=displacement_dof,
                 )
 
-    def read_modal_solution(self, model: Model) -> Optional[ModalSolution]:
+    def read_modal_solution(self, model: Model) -> ModalSolution | None:
         if not self.project_paths.modal_solution_filepath.exists():
             return None
 

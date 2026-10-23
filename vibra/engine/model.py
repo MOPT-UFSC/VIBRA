@@ -462,37 +462,13 @@ class Model:
 
         return analysis_setup
 
-    def is_the_mesh_setup_defined(self):
-        if isinstance(self.geometry_path, str | Path):
-            if self.is_there_a_geometry_imported():
-                if not isinstance(self.mesh_setup, MeshSetup):
-                    return True
-
-        return False
-
     def is_there_a_valid_mesh(self):
-        if isinstance(self.geometry_path, str | Path):
-            if self.is_there_a_geometry_imported():
-                if not isinstance(self.mesh_setup, MeshSetup):
-                    return False
-
-        assert self.mesh is not None
-
-        disconnected_nodes = bool(self.mesh.disconnected_nodes)
-        collapsed_elements = bool(self.mesh.collapsed_elements_data)
-
-        if disconnected_nodes or collapsed_elements:
-            return False
-
-        if self.mesh.surfaces_from_volume:
-            return self.mesh.solids_connectivity.any()
-
-        if self.mesh.lines_from_surface:
-            return self.mesh.faces_connectivity.any()
-
-        return False
+        return self.mesh is not None
 
     def is_there_a_geometry_imported(self):
+        if self.geometry_path is None:
+            return False
+
         suffix = Path(self.geometry_path).suffix.strip(".").lower()
         return suffix in SUPPORTED_GEOMETRY_EXTENSIONS
 

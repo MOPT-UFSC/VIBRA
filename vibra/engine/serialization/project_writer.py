@@ -66,7 +66,7 @@ class ProjectWriter:
         if model.mesh is not None:
             self.write_mesh(model.mesh)
 
-        if model.visual_mesh is not None:
+        if (model.visual_mesh is not None) and model.is_there_a_geometry_imported():
             self.write_visual_mesh(model.visual_mesh)
 
         if model.solution is not None:
