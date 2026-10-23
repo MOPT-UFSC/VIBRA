@@ -147,12 +147,12 @@ def _compare_mesh(mesh: Mesh, geometry_info: GeometryInfo, mesh_path: Path | str
         "face_elements_connected_to_nodes": dict(mesh.face_elements_connected_to_nodes),
     }
     geometry = {
-        "surfaces_from_volume": dict(mesh.surfaces_from_volume),
-        "lines_from_surface": dict(mesh.lines_from_surface),
-        "points_from_line": dict(mesh.points_from_line),
-        "volumes_from_surface": dict(mesh.volumes_from_surface),
-        "surfaces_from_line": dict(mesh.surfaces_from_line),
-        "lines_from_point": dict(mesh.lines_from_point),
+        "surfaces_from_volume": dict(geometry_info._solids_to_surfaces),
+        "lines_from_surface": dict(geometry_info._surfaces_to_curves),
+        "points_from_line": dict(geometry_info._curves_to_points),
+        "volumes_from_surface": dict(geometry_info._surfaces_to_solids),
+        "surfaces_from_line": dict(geometry_info._curves_to_surfaces),
+        "lines_from_point": dict(geometry_info._points_to_curves),
         "length_from_lines": dict(mesh.length_from_lines),
         "area_from_surfaces": dict(mesh.area_from_surfaces),
         "volume_from_bodies": dict(mesh.volume_from_bodies),

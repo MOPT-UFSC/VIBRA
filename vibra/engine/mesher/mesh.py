@@ -45,7 +45,6 @@ class Mesh:
         self.volumes_from_surface = defaultdict(list)
         self.surfaces_from_line = defaultdict(list)
         self.lines_from_point = defaultdict(list)
-        self.face_elements_connected_to_nodes = defaultdict(list)
 
         self.length_from_lines = {}
         self.area_from_surfaces = {}
@@ -77,6 +76,7 @@ class Mesh:
 
         self.face_to_solid_element = {}
         self.solid_to_face_elements = defaultdict(list)
+        self.face_elements_connected_to_nodes = defaultdict(list)
 
         self.face_element_thickness = {}
 
