@@ -353,7 +353,7 @@ class AllowablePulsations2DPlotForScrewCompressorInputs(AllowablePulsations2dFor
                 "title" : title,
                 "data_information" : legend_label,
                 "legend" : legend_label,
-                "unit" : "kPa (a)",
+                "units" : "kPa (a)",
                 "color" : self.get_color(i),
                 "linestyle" : "-" 
                 }
@@ -391,7 +391,7 @@ class AllowablePulsations2DPlotForScrewCompressorInputs(AllowablePulsations2dFor
             "title" : title,
             "data_information" : legend_label_upper,
             "legend" : legend_label_upper,
-            "unit" : "kPa (a)",
+            "units" : "kPa (a)",
             "color" : [0.7, 0, 0],
             "linestyle" : "-",
             }
@@ -407,7 +407,7 @@ class AllowablePulsations2DPlotForScrewCompressorInputs(AllowablePulsations2dFor
             "title" : title,
             "data_information" : legend_label_lower,
             "legend" : legend_label_lower,
-            "unit" : "kPa (a)",
+            "units" : "kPa (a)",
             "color" : [1, 0, 0],
             "linestyle" : "-"  
             }

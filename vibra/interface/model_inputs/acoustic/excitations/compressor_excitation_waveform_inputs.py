@@ -845,7 +845,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
             "title" : title,
             "data_type" : plot_type.lower(),
             "legend" : legend_label,
-            "unit" : unit_label,
+            "units" : unit_label,
             "color" : (0,0,1),
             "linestyle" : "-"  
             }
@@ -869,7 +869,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
             "title" : title,
             "data_type" : plot_type.lower(),
             "legend" : legend_label,
-            "unit" : unit_label,
+            "units" : unit_label,
             "color" : (0,0,1),
             "linestyle" : "-" ,
             }

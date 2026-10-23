@@ -184,7 +184,7 @@ class AcousticPostprocessing:
 
         # cache the minimum and maximum values of the nodal pressure waveforms
         min_max_values = self.get_acoustic_waveforms_minimum_and_maximum_values(int(n), round(unit_factor, 10))
-        acoustic_pressures = unit_factor * self.nodal_solution_time[:, time_index].flatten()
+        acoustic_pressures = unit_factor * self.nodal_solution_time[:, time_index].ravel()
 
         match plot_type:
             case PressurePlotType.ABSOLUTE_ANIMATION:
@@ -230,7 +230,7 @@ class AcousticPostprocessing:
 
                 for vol_id in volume_ids:
                     elements = self.model.mesh.elements_from_volume.get(vol_id)
-                    node_ids = np.unique(self.model.mesh.solids_connectivity[elements, 4:].flatten()).astype(int)
+                    node_ids = np.unique(self.model.mesh.solids_connectivity[elements, 4:].ravel()).astype(int)
                     fluid_pressures[[node_ids]] = _fluid.pressure
 
         # avoid the division-by-zero error

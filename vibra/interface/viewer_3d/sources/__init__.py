@@ -47,4 +47,6 @@ from .complex_shapes import (
     create_dof_cone_source,
     create_nodal_loads_momentum_arrow_source,
     create_nodal_loads_force_arrow_source,
+    create_distributed_stiffness_source,
+    create_distributed_damping_source,
 )

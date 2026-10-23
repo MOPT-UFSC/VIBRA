@@ -243,7 +243,7 @@ class SurfaceAbsorptionCoefficientInputs(SurfaceAbsorptionCoefficientInputs_UI):
                 "title" : title,
                 "data_type" : "absorption coefficient",
                 "legend" : legend_label,
-                "unit" : self.unit_label,
+                "units" : self.unit_label,
                 "color" : self.get_color(i),
                 "linestyle" : "-"  
             }

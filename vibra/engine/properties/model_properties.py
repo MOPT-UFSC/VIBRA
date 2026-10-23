@@ -97,9 +97,11 @@ class ModelProperties:
             "surface_thickness",
             "prescribed_dof",
             "nodal_loads",
+            "normal_pressure_load",
             "distributed_loads",
             "distributed_mass",
-            "normal_pressure_load",
+            "distributed_stiffness",
+            "distributed_damping",
         ]
 
         # self.global_properties["material", "global"] = DEFAULT_MATERIAL
@@ -155,7 +157,7 @@ class ModelProperties:
                         if b is None:
                             values_list.append(a)
                         else:
-                            values_list.append(a + 1j*b)
+                            values_list.append(a + 1j * b)
 
             elif "amplitude_values" in data_keys and "phase_values" in data_keys:
                 for i, amp in enumerate(data.get("amplitude_values")):
