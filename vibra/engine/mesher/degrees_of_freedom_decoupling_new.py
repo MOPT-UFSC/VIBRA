@@ -16,6 +16,7 @@ class DegreesOfFreedomDecoupling:
     def __init__(self, model: "Model"):
         self.model = model
         self.mesh = model.mesh
+        self.geometry_info = model.geometry_info
         self.properties = model.properties
 
         self.initialize()
@@ -625,6 +626,15 @@ class DegreesOfFreedomDecoupling:
         self.mesh.volumes_from_surface = maps_values_to_keys(deepcopy(self.mesh.surfaces_from_volume))
         self.mesh.surfaces_from_line = maps_values_to_keys(deepcopy(self.mesh.lines_from_surface))
         self.mesh.lines_from_point = maps_values_to_keys(deepcopy(self.mesh.points_from_line))
+
+        if self.geometry_info is not None:
+            # TODO: this is a workaround, fix later
+            self.geometry_info._solids_to_surfaces = deepcopy(self.mesh.surfaces_from_volume)
+            self.geometry_info._surfaces_to_curves = deepcopy(self.mesh.lines_from_surface)
+            self.geometry_info._curves_to_points = deepcopy(self.mesh.points_from_line)
+            self.geometry_info._surfaces_to_solids = deepcopy(self.mesh.volumes_from_surface)
+            self.geometry_info._curves_to_surfaces = deepcopy(self.mesh.surfaces_from_line)
+            self.geometry_info._points_to_curves = deepcopy(self.mesh.lines_from_point)
 
 
     def process_degrees_of_freedom_decoupling(self):

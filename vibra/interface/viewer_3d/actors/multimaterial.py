@@ -25,7 +25,7 @@ from vtkmodules.vtkRenderingCore import (
 )
 
 from vibra import TEXTURE_DIR, app
-from vibra.engine.mesher.mesh import Mesh
+from vibra.engine.model import Model
 from vibra.utils.interface_utils import GeometryColorMode, VisualizationFilter
 from vibra.utils.vtk_utils import fill_array, read_texture
 
@@ -39,14 +39,16 @@ def get_first_visible_volume(volumes):
 class MultimaterialGeometryActor(vtkPropAssembly):
     def __init__(
         self,
-        mesh: Mesh,
+        model: Model,
         visualization_filter: VisualizationFilter | None = None,
     ):
         self.visualization_filter = visualization_filter
         if self.visualization_filter is None:
             self.visualization_filter = VisualizationFilter.all_true()
 
-        self.mesh = mesh
+        self.model = model
+        self.mesh = model.visual_mesh
+        self.geometry_info = model.geometry_info
         self.extractors: dict[str, vtkExtractCells] = {}
         self.create_geometry()
 
@@ -72,7 +74,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         self.clear_colors()
 
     def clear_colors(self):
-        properties = app().project.model.properties
+        properties = self.model.properties
         color_mode = self.visualization_filter.color_mode
 
         if color_mode == GeometryColorMode.EMPTY:
@@ -82,10 +84,9 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         color_to_surfaces = defaultdict(list)
         self.reload_composition()
         surfaces_with_perforated_plates = self._surfaces_with_perforated_plate()
-        surfaces = self.mesh.all_surface_ids()  # We don't have just "surfaces" yet
 
-        for surface in surfaces:
-            volumes = self.mesh.volumes_from_surface.get(surface, ())
+        for surface in self.geometry_info.surfaces:
+            volumes = self.geometry_info._surfaces_to_solids.get(surface, ())
             volume = get_first_visible_volume(volumes)
 
             fluid = properties._get_property("fluid", surface=surface, volume=volume)
@@ -113,9 +114,9 @@ class MultimaterialGeometryActor(vtkPropAssembly):
             self.paint_surfaces(color, surfaces)
 
     def reload_composition(self):
-        properties = app().project.model.properties
+        properties = self.model.properties
         color_mode = self.visualization_filter.color_mode
-        surfaces = self.mesh.lines_from_surface.keys()  # We don't have just "surfaces" yet
+        surfaces = self.geometry_info.surfaces
         visible_surfaces = app().main_window.entity_visibility.get_visible_surfaces()
 
         if color_mode == GeometryColorMode.EMPTY:
@@ -129,7 +130,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
         surfaces_with_perforated_plates = self._surfaces_with_perforated_plate()
 
         for surface in surfaces:
-            volumes = self.mesh.volumes_from_surface.get(surface, ())
+            volumes = self.geometry_info._surfaces_to_solids.get(surface, ())
             volume = get_first_visible_volume(volumes)
 
             if surface in visible_surfaces:
@@ -247,7 +248,7 @@ class MultimaterialGeometryActor(vtkPropAssembly):
             data.SetPoints(points)
             data.SetPolys(cells)
 
-            volumes = self.mesh.volumes_from_surface.get(surface)
+            volumes = self.geometry_info._surfaces_to_solids.get(surface)
 
             # Every surface have its own plane defining
             # how to project the texture coordinates on it
@@ -424,10 +425,10 @@ class MultimaterialGeometryActor(vtkPropAssembly):
 
     def _surfaces_with_perforated_plate(self):
         # Find both surfaces of a perforated plate
-        properties = app().project.model.properties
+        properties = self.model.properties
 
         surfaces_with_perforated_plates = set()
-        for surface, _ in self.mesh.volumes_from_surface.items():
+        for surface, _ in self.geometry_info._surfaces_to_solids.items():
             perforated = properties._get_property("perforated_plate_model", surface=surface)
             decoupling = properties._get_property("degrees_of_freedom_decoupling", surface=surface)
             if (perforated is not None) and (decoupling is not None):

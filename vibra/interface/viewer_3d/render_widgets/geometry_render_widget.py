@@ -158,6 +158,10 @@ class GeometryRenderWidget(CommonRenderWidget):
         scale_bar_label_property.SetFontSize(font_size_px)
 
     def update_plot(self, reset_camera=True):
+        model = app().project.model
+        if model is None:
+            return
+
         mesh = app().project.model.visual_mesh
         if mesh is None:
             return
@@ -167,7 +171,7 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         self.points_actor = PointsActor(mesh)
         self.lines_actor = LinesActor(mesh)
-        self.multimaterial = MultimaterialGeometryActor(mesh, visualization_filter=self.visualization_filter)
+        self.multimaterial = MultimaterialGeometryActor(model, visualization_filter=self.visualization_filter)
 
         self.selection_spheres_actor = SelectionSpheres()
         self.symbols_actor_structural = SymbolsActorStructural(app().project.model, self.renderer.GetActiveCamera())
@@ -275,7 +279,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
 
         self.remove_actors(self.multimaterial)
-        self.multimaterial = MultimaterialGeometryActor(mesh, visualization_filter=self.visualization_filter)
+        self.multimaterial = MultimaterialGeometryActor(model, visualization_filter=self.visualization_filter)
         self.add_actors(self.multimaterial)
 
         self.update_selection()

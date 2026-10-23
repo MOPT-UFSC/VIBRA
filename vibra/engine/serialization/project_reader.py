@@ -78,7 +78,6 @@ class ProjectReader:
         if self.project_paths.fem_mesh_filepath.exists():
             model.mesh = self.read_mesh()
             model.geometry_info = self.read_geometry_info()
-            print(model.geometry_info)
 
         if self.project_paths.visual_mesh_filepath.exists():
             model.visual_mesh = self.read_visual_mesh()
@@ -335,6 +334,8 @@ class ProjectReader:
             mesh.lines_connectivity = np.array(file["connectivity/lines_connectivity"])
             mesh.faces_connectivity = np.array(file["connectivity/faces_connectivity"])
 
+        mesh.process_mesh_related_mappings("Loading visual")
+
         return mesh
 
     def read_geometry_info(self) -> GeometryInfo:
@@ -345,8 +346,11 @@ class ProjectReader:
             raise FileNotFoundError("The geometry file is missing.")
 
         with h5py.File(geometry_data_path, "r") as file:
-            # for key, value in file.get("entities", dict()).items():
-            #     mesh.geometry_information[key] = [int(val) for val in value]
+            entities = file.get("entities", {})
+            geometry_info.points = list(entities.get("points", []))
+            geometry_info.curves = list(entities.get("lines", []))
+            geometry_info.surfaces = list(entities.get("surfaces", []))
+            geometry_info.solids = list(entities.get("volumes", []))
 
             # if "properties" in file:
             #     properties = file["properties"]

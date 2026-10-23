@@ -25,6 +25,11 @@ class MeshReader(GmshCommon):
         mesh = self.read_mesh()
         geometry_info = GeometryInfo()
 
+        # TODO: this is a workaround, fix later
+        geometry_info.points = list(mesh.geometry_information.get("points", []))
+        geometry_info.curves = list(mesh.geometry_information.get("lines", []))
+        geometry_info.surfaces = list(mesh.geometry_information.get("surfaces", []))
+        geometry_info.solids = list(mesh.geometry_information.get("volumes", []))
         geometry_info._solids_to_surfaces = mesh.surfaces_from_volume
         geometry_info._surfaces_to_curves = mesh.lines_from_surface
         geometry_info._curves_to_points = mesh.points_from_line
