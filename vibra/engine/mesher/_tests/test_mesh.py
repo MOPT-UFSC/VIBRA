@@ -9,6 +9,7 @@ from vibra.engine.mesher.gmsh_constants import GMSH_HEX8, GMSH_HEX20, GMSH_TET4,
 from vibra.engine.mesher.gmsh_mesher import GmshMesher
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.mesh_setup import ElementTopology, LocalMeshSizeControlSetup
+from vibra.engine.serialization.file_helpers import NumpyCompatibleEncoder, read_json, write_json
 
 
 def test_tetrahedron_4_mesh():
@@ -136,22 +137,22 @@ def _mean_edge_length_per_volume(mesh: Mesh) -> dict[int, float]:
 def _compare_mesh(mesh: Mesh, mesh_path: Path | str):
     mesh_path = Path(mesh_path)
     mappings = {
-        "face_to_solid_element": mesh.face_to_solid_element.items(),
-        "line_from_element": mesh.elements_from_line.items(),
-        "surface_from_element": mesh.elements_from_surface.items(),
-        "volume_from_element": mesh.elements_from_volume.items(),
+        "face_to_solid_element": dict(mesh.face_to_solid_element),
+        "line_from_element": dict(mesh.elements_from_line),
+        "surface_from_element": dict(mesh.elements_from_surface),
+        "volume_from_element": dict(mesh.elements_from_volume),
     }
     geometry = {
-        "surfaces_from_volume": mesh.surfaces_from_volume.items(),
-        "lines_from_surface": mesh.lines_from_surface.items(),
-        "points_from_line": mesh.points_from_line.items(),
-        "volumes_from_surface": mesh.volumes_from_surface.items(),
-        "surfaces_from_line": mesh.surfaces_from_line.items(),
-        "lines_from_point": mesh.lines_from_point.items(),
-        "face_elements_connected_to_nodes": mesh.face_elements_connected_to_nodes.items(),
-        "length_from_lines": mesh.length_from_lines.items(),
-        "area_from_surfaces": mesh.area_from_surfaces.items(),
-        "volume_from_bodies": mesh.volume_from_bodies.items(),
+        "surfaces_from_volume": dict(mesh.surfaces_from_volume),
+        "lines_from_surface": dict(mesh.lines_from_surface),
+        "points_from_line": dict(mesh.points_from_line),
+        "volumes_from_surface": dict(mesh.volumes_from_surface),
+        "surfaces_from_line": dict(mesh.surfaces_from_line),
+        "lines_from_point": dict(mesh.lines_from_point),
+        "face_elements_connected_to_nodes": dict(mesh.face_elements_connected_to_nodes),
+        "length_from_lines": dict(mesh.length_from_lines),
+        "area_from_surfaces": dict(mesh.area_from_surfaces),
+        "volume_from_bodies": dict(mesh.volume_from_bodies),
     }
 
     if not mesh_path.exists():
@@ -160,8 +161,8 @@ def _compare_mesh(mesh: Mesh, mesh_path: Path | str):
         mesh.export_line_elements_connectivity(mesh_path / "lines_connectivity.dat")
         mesh.export_face_elements_connectivity(mesh_path / "faces_connectivity.dat")
         mesh.export_solid_elements_connectivity(mesh_path / "solids_connectivity.dat")
-        (mesh_path / "mappings.dat").write_text(str(mappings))  # saving the str of the dict
-        (mesh_path / "geometry.dat").write_text(str(geometry))  # saving the str of the dict
+        write_json(mesh_path / "mappings.json", mappings)
+        write_json(mesh_path / "geometry.json", geometry)
         assert False
 
     expected_nodal_coordinates = np.loadtxt(
@@ -184,8 +185,8 @@ def _compare_mesh(mesh: Mesh, mesh_path: Path | str):
         delimiter=",",
         skiprows=1,
     )
-    expected_mappings = (mesh_path / "mappings.dat").read_text()
-    expected_geometry = (mesh_path / "geometry.dat").read_text()
+    expected_mappings = read_json(mesh_path / "mappings.json")
+    expected_geometry = read_json(mesh_path / "geometry.json")
 
     if gmsh.isInitialized():
         gmsh.finalize()
@@ -194,8 +195,26 @@ def _compare_mesh(mesh: Mesh, mesh_path: Path | str):
     assert np.allclose(expected_lines_connectivity, mesh.lines_connectivity)
     assert np.allclose(expected_faces_connectivity, mesh.faces_connectivity)
     assert np.allclose(expected_solids_connectivity, mesh.solids_connectivity)
-    assert expected_mappings == str(mappings)
-    assert expected_geometry == str(geometry)
+
+    assert expected_mappings == _normalize(mappings)
+    assert expected_geometry == _normalize(geometry)
 
     if (expected_solids_connectivity.size != 0) and (mesh.solids_connectivity.size != 0):
         assert np.allclose(expected_solids_connectivity, mesh.solids_connectivity)
+
+
+def _normalize(obj):
+    """
+    JSON converts all keys to strings. To compare dicts we need to match this behaviour.
+    """
+    if isinstance(obj, dict):
+        return {str(k): _normalize(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_normalize(item) for item in obj]
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()
+    if isinstance(obj, np.integer):
+        return int(obj)
+    if isinstance(obj, np.floating):
+        return float(obj)
+    return obj

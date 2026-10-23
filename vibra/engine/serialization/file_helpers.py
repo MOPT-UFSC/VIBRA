@@ -1,8 +1,8 @@
 import json
+from collections.abc import Generator
 from configparser import ConfigParser
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Generator
 
 import numpy as np
 from PIL import Image
@@ -75,11 +75,27 @@ def update_json(
 
 
 class NumpyCompatibleEncoder(json.JSONEncoder):
-    def default(self, obj):
+    @staticmethod
+    def _to_json_key(k):
+        if isinstance(k, np.integer):
+            return int(k)
+        if isinstance(k, np.floating):
+            return float(k)
+        return k
+
+    @classmethod
+    def _normalize(cls, obj):
+        if isinstance(obj, dict):
+            return {cls._to_json_key(k): cls._normalize(v) for k, v in obj.items()}
+        if isinstance(obj, (list, tuple)):
+            return [cls._normalize(item) for item in obj]
         if isinstance(obj, np.ndarray):
             return obj.tolist()
-        elif isinstance(obj, np.integer):
+        if isinstance(obj, np.integer):
             return int(obj)
-        elif isinstance(obj, np.floating):
+        if isinstance(obj, np.floating):
             return float(obj)
-        return json.JSONEncoder.default(self, obj)
+        return obj
+
+    def iterencode(self, o, _one_shot=False):
+        return super().iterencode(self._normalize(o), _one_shot)

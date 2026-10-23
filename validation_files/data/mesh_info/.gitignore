@@ -1,2 +1,3 @@
 # Files that should not be ignored
 !*.dat
+!*.json
