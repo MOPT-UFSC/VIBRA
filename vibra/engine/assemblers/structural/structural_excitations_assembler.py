@@ -91,7 +91,7 @@ class StructuralExcitationsAssembler:
         Kr_add = Kr @ values
         Mr_add = Mr @ values
 
-        if not isinstance(Cr, csr_matrix):
+        if isinstance(Cr, csr_matrix):
             Cr_add = Cr @ values
         else:
             Cr_add = 0.
