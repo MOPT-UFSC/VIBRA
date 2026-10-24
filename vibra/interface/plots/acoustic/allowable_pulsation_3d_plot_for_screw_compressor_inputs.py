@@ -151,7 +151,7 @@ class AllowablePulsations3DPlotForScrewCompressorInputs(AllowablePulsations3dPlo
                 plot_setup=self.plot_setup,
             )
 
-        LoadingWindow(plot_callback).run()
+        LoadingWindow(plot_callback, delayed=False).run()
 
         self.show_results_render()
         self.pushButton_plot_criterion.setDisabled(True)

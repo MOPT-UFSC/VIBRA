@@ -272,7 +272,7 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
 
             return acoustic_impedance
 
-        return LoadingWindow(function_callback).run()
+        return LoadingWindow(function_callback, delayed=False).run()
 
     def join_model_data(self):
 

@@ -118,7 +118,7 @@ class StructuralModeShapeInputs(StructuralModeShapeInputs_UI):
             index=self.mode_index,
             plot_type=self.get_plot_type(),
         )
-        LoadingWindow(app().main_window.results_widget.update_plot).run(
+        LoadingWindow(app().main_window.results_widget.update_plot, delayed=False).run(
             reset_camera=False,
             plot_setup=plot_setup,
         )

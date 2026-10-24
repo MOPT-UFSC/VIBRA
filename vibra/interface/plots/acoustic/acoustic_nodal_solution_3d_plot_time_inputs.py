@@ -224,7 +224,7 @@ class AcousticNodalSolution3dPlotTimeInputs(AcousticNodalSolution3dPlotTimeInput
                 plot_setup=self.plot_setup,
             )
 
-        LoadingWindow(plot_callback).run()
+        LoadingWindow(plot_callback, delayed=False).run()
 
         self.set_frames_disabled(False)
         self.show_results_render()

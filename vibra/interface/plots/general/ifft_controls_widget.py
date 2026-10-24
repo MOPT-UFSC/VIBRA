@@ -9,8 +9,6 @@ from vibra.utils.signal_processing import process_ifft_from_one_sided_spectrum_s
 
 
 class IfftControlsWidget(IfftControlsWidget_UI):
-
-
     ifft_controls_changed = Signal()
 
     def __init__(self):

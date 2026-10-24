@@ -223,7 +223,7 @@ class SurfaceAbsorptionCoefficientInputs(SurfaceAbsorptionCoefficientInputs_UI):
             logging.info("Processing surface absorption coefficient... [95/100]")
             return absorption_coefficient
 
-        return LoadingWindow(function_callback).run()
+        return LoadingWindow(function_callback, delayed=False).run()
 
     def join_model_data(self):
 

@@ -77,9 +77,9 @@ class StructuralStress3dPlotFrequencyInputs(StructuralStress3dPlotFrequencyInput
     def _create_connections(self):
 
         # QComboBox connections
-        self.comboBox_plot_type.currentIndexChanged.connect(self.update_plot)
-        self.comboBox_plotting_results.currentIndexChanged.connect(self.update_plot)
-        self.comboBox_stress_units.currentIndexChanged.connect(self.update_plot)
+        self.comboBox_plot_type.currentIndexChanged.connect(self.plot_data_callback)
+        self.comboBox_plotting_results.currentIndexChanged.connect(self.plot_data_callback)
+        self.comboBox_stress_units.currentIndexChanged.connect(self.plot_data_callback)
 
         # QPushButton connection
         self.pushButton_process_nodal_stresses.clicked.connect(self.process_stress_field)
@@ -138,12 +138,12 @@ class StructuralStress3dPlotFrequencyInputs(StructuralStress3dPlotFrequencyInput
                 dt = perf_counter() - t0
                 print(f"Time to compute all nodal stresses: {dt} s")
 
-            LoadingWindow(recover_stresses).run()
+            LoadingWindow(recover_stresses, delayed=False).run()
 
         self.set_frames_disabled(False)
         self.load_frequencies()
 
-    def update_plot(self):
+    def plot_data_callback(self):
 
         stress_index = self.comboBox_plotting_results.currentIndex()
         plot_type = self.get_plot_type()
@@ -234,8 +234,8 @@ class StructuralStress3dPlotFrequencyInputs(StructuralStress3dPlotFrequencyInput
 
     def on_click_item(self, item: QTreeWidgetItem):
         self.lineEdit_selected_frequency.setText(item.text(1))
-        self.update_plot()
+        self.plot_data_callback()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            self.update_plot()
+            self.plot_data_callback()

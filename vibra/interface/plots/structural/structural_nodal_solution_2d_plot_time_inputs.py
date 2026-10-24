@@ -30,6 +30,7 @@ class StructuralNodalSolution2dPlotTimeInputs(StructuralNodalSolution2dPlotTimeI
         app().main_window.show_geometry_render_widget()
 
         self._add_ifft_controls_widget()
+
         self._initialize()
         self._configure_validator()
         self._create_connections()

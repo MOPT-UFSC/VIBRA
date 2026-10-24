@@ -142,7 +142,7 @@ class StructuralNodalSolution3dPlotFrequencyInputs(StructuralNodalSolution3dPlot
             unit_factor=self.get_unit_factor()
         )
 
-        LoadingWindow(app().main_window.results_widget.update_plot).run(
+        LoadingWindow(app().main_window.results_widget.update_plot, delayed=False).run(
             reset_camera=False,
             plot_setup=plot_setup,
         )

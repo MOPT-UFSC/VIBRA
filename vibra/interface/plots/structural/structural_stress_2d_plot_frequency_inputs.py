@@ -163,7 +163,7 @@ class StructuralStress2dPlotFrequencyInputs(StructuralStress2dPlotFrequencyInput
                 dt = perf_counter() - t0
                 print(f"Time to compute all nodal stresses: {dt} s")
 
-            LoadingWindow(recover_stresses).run()
+            LoadingWindow(recover_stresses, delayed=False).run()
 
         self.set_frames_disabled(False)
 

@@ -447,7 +447,7 @@ class StructuralPostprocessing:
                 _, self.nodal_solution_time = self.compute_multiple_ifft_for_structural_nodal_solution(
                     n_div=n_div,
                     spectral_lines=spectral_lines,
-                    )
+                )
 
             self.nodal_averaged_stresses_time = self.recover_nodal_averaged_structural_stresses(time_domain=True)
 
@@ -586,7 +586,11 @@ class StructuralPostprocessing:
     ):
 
         # compute the structural nodal solution iffts
-        time_vector, self.nodal_solution_time = self.compute_multiple_ifft_for_structural_nodal_solution(n_diff=n_diff, n_div=n_div, spectral_lines=spectral_lines)
+        time_vector, self.nodal_solution_time = self.compute_multiple_ifft_for_structural_nodal_solution(
+            n_diff=n_diff,
+            n_div=n_div,
+            spectral_lines=spectral_lines,
+            )
 
         if reduced_loop_time is None:
             n = time_vector.size
