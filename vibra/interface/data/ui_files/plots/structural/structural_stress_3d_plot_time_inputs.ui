@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>384</width>
-    <height>781</height>
+    <width>410</width>
+    <height>807</height>
    </rect>
   </property>
   <property name="maximumSize">
@@ -48,8 +48,8 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>380</width>
-        <height>777</height>
+        <width>406</width>
+        <height>803</height>
        </rect>
       </property>
       <layout class="QGridLayout" name="gridLayout_6">
@@ -71,7 +71,7 @@
        <property name="verticalSpacing">
         <number>4</number>
        </property>
-       <item row="3" column="0">
+       <item row="4" column="0">
         <widget class="QFrame" name="frame_color">
          <property name="minimumSize">
           <size>
@@ -171,18 +171,18 @@
          </layout>
         </widget>
        </item>
-       <item row="1" column="0">
+       <item row="2" column="0">
         <widget class="QFrame" name="frame_main">
          <property name="minimumSize">
           <size>
            <width>0</width>
-           <height>260</height>
+           <height>180</height>
           </size>
          </property>
          <property name="maximumSize">
           <size>
            <width>16777215</width>
-           <height>260</height>
+           <height>180</height>
           </size>
          </property>
          <property name="sizeIncrement">
@@ -219,7 +219,7 @@
           <property name="spacing">
            <number>4</number>
           </property>
-          <item row="1" column="0">
+          <item row="0" column="0">
            <widget class="QFrame" name="frame_plot_controls">
             <property name="minimumSize">
              <size>
@@ -673,8 +673,75 @@
             </layout>
            </widget>
           </item>
-          <item row="0" column="0">
-           <widget class="QFrame" name="frame_3">
+         </layout>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QFrame" name="frame_animation">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>228</height>
+          </size>
+         </property>
+         <property name="frameShape">
+          <enum>QFrame::Shape::Box</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Shadow::Raised</enum>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QFrame" name="frame_signal_processing">
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>160</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>180</height>
+          </size>
+         </property>
+         <property name="sizeIncrement">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="baseSize">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="frameShape">
+          <enum>QFrame::Shape::Box</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Shadow::Raised</enum>
+         </property>
+         <layout class="QGridLayout" name="gridLayout_8">
+          <property name="leftMargin">
+           <number>4</number>
+          </property>
+          <property name="topMargin">
+           <number>4</number>
+          </property>
+          <property name="rightMargin">
+           <number>4</number>
+          </property>
+          <property name="bottomMargin">
+           <number>4</number>
+          </property>
+          <property name="spacing">
+           <number>4</number>
+          </property>
+          <item row="1" column="0">
+           <widget class="QFrame" name="frame_4">
             <property name="minimumSize">
              <size>
               <width>0</width>
@@ -693,7 +760,7 @@
             <property name="frameShadow">
              <enum>QFrame::Shadow::Raised</enum>
             </property>
-            <layout class="QGridLayout" name="gridLayout_47">
+            <layout class="QGridLayout" name="gridLayout_48">
              <property name="leftMargin">
               <number>2</number>
              </property>
@@ -742,23 +809,29 @@
             </layout>
            </widget>
           </item>
+          <item row="0" column="0">
+           <widget class="QFrame" name="frame_ifft_controls">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>120</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="frameShape">
+             <enum>QFrame::Shape::NoFrame</enum>
+            </property>
+            <property name="frameShadow">
+             <enum>QFrame::Shadow::Raised</enum>
+            </property>
+           </widget>
+          </item>
          </layout>
-        </widget>
-       </item>
-       <item row="2" column="0">
-        <widget class="QFrame" name="frame_animation">
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>228</height>
-          </size>
-         </property>
-         <property name="frameShape">
-          <enum>QFrame::Shape::Box</enum>
-         </property>
-         <property name="frameShadow">
-          <enum>QFrame::Shadow::Raised</enum>
-         </property>
         </widget>
        </item>
       </layout>
