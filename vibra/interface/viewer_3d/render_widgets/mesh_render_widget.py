@@ -290,6 +290,9 @@ class MeshRenderWidget(CommonRenderWidget):
         self.edges_actor.configure_appearance()
 
         mesh = app().project.model.mesh
+        if mesh is None:
+            return
+
         mesh_error = mesh.collapsed_elements_data or mesh.disconnected_nodes
         if mesh_error:
             self.add_problematic_mesh_legend()

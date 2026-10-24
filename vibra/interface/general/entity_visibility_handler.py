@@ -29,22 +29,22 @@ class EntityVisibilityHandler(QObject):
         return _visible_surfaces
 
     def get_hidden_surfaces(self) -> set[int]:
-        mesh = self.project.mesh
-        if mesh is None:
+        geometry_info = self.project.model.geometry_info
+        if geometry_info is None:
             return set()
 
-        all_surfaces = mesh.all_surface_ids()
+        all_surfaces = geometry_info.all_surface_ids()
         return all_surfaces - self.get_visible_surfaces()
 
     def get_hidden_volumes(self) -> set[int]:
         return set(self._volumes_to_hide)
 
     def get_visible_volumes(self) -> set[int]:
-        mesh = self.project.mesh
-        if mesh is None:
+        geometry_info = self.project.model.geometry_info
+        if geometry_info is None:
             return set()
 
-        all_volumes = mesh.all_volume_ids()
+        all_volumes = geometry_info.all_volume_ids()
         return all_volumes - self.get_hidden_volumes()
 
     def hide_surfaces(self, surfaces: Iterable[int]):

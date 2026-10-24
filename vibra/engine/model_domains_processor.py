@@ -63,7 +63,7 @@ class ModelDomainsProcessor:
         self.lines_of_domain.clear()
         self.points_of_domain.clear()
 
-        for vol_id in self.mesh.all_volume_ids():
+        for vol_id in self.geometry_info.all_volume_ids():
             fluid = self.properties._get_property("fluid", volume=vol_id)
             if isinstance(fluid, Fluid):
                 self.volumes_of_domain["acoustic"].append(int(vol_id))
@@ -251,12 +251,12 @@ class ModelDomainsProcessor:
     def get_dofs_offset(self, domain: str) -> int:
         """
         This method returns, for a specific domain, the dofs shift.
-        
+
         Parameter
         ---------
         domain: str
             The domain label (acoustic or structural)
-        
+
         Return
         ------
         dofs_offset: int
@@ -319,7 +319,7 @@ class ModelDomainsProcessor:
         Return
         ------
         entities_mapping: dict
-            A dictionary mapping each entity type to its corresponding 
+            A dictionary mapping each entity type to its corresponding
             index list.
         """
         entities_mapping = {}
@@ -342,10 +342,10 @@ class ModelDomainsProcessor:
             entities_mapping[key] = np.unique(values)
 
         return entities_mapping
-        
+
     def is_there_a_property_assigned_to_a_domain(self, domain: str, volume_ids: list[int]):
         """
-        This method checks whether a valid property assigned to a domain 
+        This method checks whether a valid property assigned to a domain
         exists, returning `True` if it does and `False` otherwise.
 
         Parameter

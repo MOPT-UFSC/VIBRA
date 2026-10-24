@@ -154,6 +154,28 @@ class GeometryInfo:
         self.length_unit = length_unit
         self.length_unit_factor = new_factor
 
+    def geometry_information_dict(self) -> dict:
+        # TODO: Just doing it to keep the previous interface
+        # refactor the methods using it when possible
+        return {
+            "points": list(self.points),
+            "lines": list(self.curves),
+            "surfaces": list(self.surfaces),
+            "volumes": list(self.solids),
+        }
+
+    def all_point_ids(self) -> set[int]:
+        return set(self.points)
+
+    def all_line_ids(self) -> set[int]:
+        return set(self.curves)
+
+    def all_surface_ids(self) -> set[int]:
+        return set(self.surfaces)
+
+    def all_volume_ids(self) -> set[int]:
+        return set(self.solids)
+
     def points_to_curves(self, *point_ids: int) -> set[int]:
         """Get all curves connected to the given points."""
         curves_set = set()
@@ -414,13 +436,15 @@ class GeometryInfo:
 
     def process_center_element(self, dim: int, tag: int) -> tuple[np.ndarray, np.ndarray | None]:
         """Process the center of an element based on its dimension."""
+        center = None
+
         if dim != 3:
             uv_min, uv_max = gmsh.model.get_parametrization_bounds(dim, tag)
             uv_min, uv_max = np.asarray(uv_min), np.asarray(uv_max)
             uv_mid = (uv_min + uv_max) / 2
             center = np.asarray(gmsh.model.get_value(dim, tag, uv_mid)) * self.length_unit_factor
 
-        else:
+        if center is None:
             center = np.asarray(gmsh.model.occ.getCenterOfMass(dim, tag)) * self.length_unit_factor
             uv_mid = None
 

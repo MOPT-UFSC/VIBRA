@@ -26,6 +26,7 @@ class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
 
         self.model = app().project.model
         self.mesh = app().project.model.mesh
+        self.geometry_info = app().project.model.geometry_info
         self.properties = app().project.model.properties
 
         self._config_window()
@@ -125,7 +126,7 @@ class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
     def apply_callback(self, close_window: bool = False):
 
         if self.comboBox_attribution_type.currentIndex() == AssignmentType.ALL_SURFACES:
-            surface_ids = self.model.mesh.geometry_information["surfaces"]
+            surface_ids = self.geometry_info.surfaces
         
         else:
             input_ids = self.lineEdit_selection_id.text()
@@ -265,7 +266,7 @@ class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
     def process_surfaces_according_with_thickness_setup(self):
 
         surfaces_to_hide = list()
-        surface_ids = self.model.mesh.geometry_information["surfaces"]
+        surface_ids = self.geometry_info.surfaces
 
         for surface_id in surface_ids:
             surface_data = self.properties._get_property("surface_thickness", surface=surface_id)

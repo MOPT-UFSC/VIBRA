@@ -107,7 +107,20 @@ class SymbolsActorAcoustic(SymbolsActor):
         return surface_symbol_totals
 
     def _get_symbol_coords_and_normal(self, surface_id: int) -> tuple[np.ndarray, np.ndarray]:
+        if self.model is None:
+            return np.array([0, 0, 0]), np.array([0, 0, 0])
+
         mesh = self.model.mesh
+        geometry_info = self.model.geometry_info
+
+        if mesh is None:
+            if geometry_info is None:
+                return np.array([0, 0, 0]), np.array([0, 0, 0])
+
+            center = geometry_info.surface_center(surface_id)
+            normal = geometry_info.surface_normal(surface_id)
+
+            return center, normal
 
         surface_nodes = mesh.get_nodes_from_surface(surface_id)
         surface_coordinates = mesh.nodal_coordinates[surface_nodes, 1:]

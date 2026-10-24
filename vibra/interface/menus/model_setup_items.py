@@ -181,6 +181,7 @@ class ModelSetupItems(CommonMenuItems):
 
         model = app().project.model
         mesh = app().project.model.mesh
+        geometry_info = app().project.model.geometry_info
         properties = app().project.model.properties
 
         property_dicts = [
@@ -198,8 +199,7 @@ class ModelSetupItems(CommonMenuItems):
 
         if property_name == "material":
             if mesh.are_there_volumes_in_geometry():
-                volume_ids = mesh.geometry_information.get("volumes")
-                volume_ids.sort()
+                volume_ids = sorted(geometry_info.solids)
                 volumes_with_material, volumes_without_material = properties.get_entities_with_and_without_property("material", volumes=volume_ids)
 
                 if not volumes_with_material:
@@ -217,14 +217,13 @@ class ModelSetupItems(CommonMenuItems):
                         return False
 
             else:
-                surface_ids = mesh.geometry_information.get("surfaces")
+                surface_ids = sorted(geometry_info.surfaces)
                 _, surfaces_without_material = properties.get_entities_with_and_without_property("material", surfaces=surface_ids)
                 return not bool(len(surfaces_without_material))
 
         if property_name == "fluid":
             if mesh.are_there_volumes_in_geometry():
-                volume_ids = mesh.geometry_information.get("volumes")
-                volume_ids.sort()
+                volume_ids = sorted(geometry_info.solids)
                 volumes_with_fluid, volumes_without_fluid = properties.get_entities_with_and_without_property("fluid", volumes=volume_ids)
                 if not volumes_with_fluid:
                     return False

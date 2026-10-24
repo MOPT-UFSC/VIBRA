@@ -59,7 +59,7 @@ def test_hexahedron_8_mesh():
     mesher.setup.maximum_element_size = 80
     mesher.setup.custom_element_setup = GMSH_HEX8
 
-    mesh, _ = mesher.generate(threads=1)
+    mesh, geometry_info = mesher.generate(threads=1)
     assert mesh.element_topology == ElementTopology("hexahedral", "linear")
 
 
@@ -71,7 +71,7 @@ def test_hexahedron_20_mesh():
     mesher.setup.maximum_element_size = 300
     mesher.setup.custom_element_setup = GMSH_HEX20
 
-    mesh, _ = mesher.generate(threads=1)
+    mesh, geometry_info = mesher.generate(threads=1)
     assert mesh.element_topology == ElementTopology("hexahedral", "quadratic")
 
 
@@ -84,9 +84,9 @@ def test_local_mesh_size_control_coarsening():
     mesher.setup.local_mesh_size_control_parameters = [LocalMeshSizeControlSetup("volumes", 40, [1])]
     mesher.setup.custom_element_setup = GMSH_TET4
 
-    mesh, _ = mesher.generate(threads=1)
+    mesh, geometry_info = mesher.generate(threads=1)
 
-    mean_edges = _mean_edge_length_per_volume(mesh)
+    mean_edges = _mean_edge_length_per_volume(mesh, geometry_info)
     assert mean_edges[1] > mean_edges[2] * 1.2
     assert mean_edges[2] < 30
 
@@ -99,9 +99,9 @@ def test_local_mesh_size_control_coarsening_connected():
     mesher.setup.local_mesh_size_control_parameters = [LocalMeshSizeControlSetup("volumes", 40, [1])]
     mesher.setup.custom_element_setup = GMSH_TET4
 
-    mesh, _ = mesher.generate(threads=1)
+    mesh, geometry_info = mesher.generate(threads=1)
 
-    mean_edges = _mean_edge_length_per_volume(mesh)
+    mean_edges = _mean_edge_length_per_volume(mesh, geometry_info)
     assert mean_edges[1] > mean_edges[2] * 1.2
     assert mean_edges[2] < 30
 
@@ -115,18 +115,18 @@ def test_local_mesh_size_control_refines():
     mesher.setup.local_mesh_size_control_parameters = [LocalMeshSizeControlSetup("volumes", 5, [2])]
     mesher.setup.custom_element_setup = GMSH_TET4
 
-    mesh, _ = mesher.generate(threads=1)
+    mesh, geometry_info = mesher.generate(threads=1)
 
-    mean_edges = _mean_edge_length_per_volume(mesh)
+    mean_edges = _mean_edge_length_per_volume(mesh, geometry_info)
     assert mean_edges[2] < mean_edges[1] * 0.9
 
 
-def _mean_edge_length_per_volume(mesh: Mesh) -> dict[int, float]:
+def _mean_edge_length_per_volume(mesh: Mesh, geometry_info: GeometryInfo) -> dict[int, float]:
     node_index = {int(node): i for i, node in enumerate(mesh.nodal_coordinates[:, 0])}
     coords = mesh.nodal_coordinates[:, 1:]
 
     mean_edges = {}
-    for volume_id in mesh.all_volume_ids():
+    for volume_id in geometry_info.all_volume_ids():
         rows = mesh.solids_connectivity[mesh.solids_connectivity[:, 1] == volume_id]
         lengths = []
         for connect in rows[:, 4:]:

@@ -1,4 +1,6 @@
 
+from vibra.engine.mesher.geometry_info import GeometryInfo
+from vibra.engine.mesher.mesh import Mesh
 import logging
 from collections import defaultdict
 from copy import deepcopy
@@ -30,8 +32,6 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
         app().main_window.workspace_updating_for_model_setup()
 
         self.model = app().project.model
-        self.mesh = app().project.model.mesh
-        self.geometry_info = app().project.model.geometry_info
         self.properties = app().project.model.properties
 
         self._initialize()
@@ -44,6 +44,14 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
 
         while self.keep_window_open:
             self.exec()
+
+    @property
+    def mesh(self) -> Mesh | None:
+        return self.model.mesh
+
+    @property
+    def geometry_info(self) -> GeometryInfo | None:
+        return self.model.geometry_info
 
     def _config_window(self):
         self.setWindowIcon(app().main_window.vibra_icon)

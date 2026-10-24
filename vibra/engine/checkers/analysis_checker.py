@@ -10,6 +10,8 @@ from vibra.engine.analysis_info import (
     HarmonicAnalysisSetup,
     ModalAnalysisSetup,
 )
+from vibra.engine.mesher.geometry_info import GeometryInfo
+from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 
 
@@ -18,8 +20,12 @@ class AnalysisChecker:
         self.model = model
 
     @property
-    def mesh(self):
+    def mesh(self) -> Mesh:
         return self.model.mesh
+
+    @property
+    def geometry_info(self) -> GeometryInfo | None:
+        return self.model.geometry_info
 
     def check_analysis_requirements(self, is_resume: bool = False, update_domain_mappings: bool = True):
 
@@ -149,7 +155,7 @@ class AnalysisChecker:
 
     def invalid_model_setup_for_fluids(self, surfaces: list[int] | None = None, volumes: list[int] | None = None):
         if isinstance(surfaces, Iterable):
-            message = f"You should assign one fluid for surfaces {surfaces} "           
+            message = f"You should assign one fluid for surfaces {surfaces} "
         elif isinstance(volumes, Iterable):
             message = f"You should assign one fluid for volumes {volumes} "
         else:
@@ -161,7 +167,7 @@ class AnalysisChecker:
 
     def invalid_model_setup_for_materials(self, surfaces: list[int] | None = None, volumes: list[int] | None = None):
         if isinstance(surfaces, Iterable):
-            message = f"You should assign one material for surfaces {surfaces} "           
+            message = f"You should assign one material for surfaces {surfaces} "
         elif isinstance(volumes, Iterable):
             message = f"You should assign one material for volumes {volumes} "
         else:
@@ -188,7 +194,7 @@ class AnalysisChecker:
             for vol_id in volumes_without_fluid:
                 if vol_id in structural_domain_volumes:
                     continue
-    
+
                 self.invalid_model_setup_for_fluids(volumes=volumes_without_fluid)
 
     def check_fluids_surfaces(self):
@@ -331,14 +337,18 @@ class AnalysisChecker:
         return False
 
     def _entities_with_and_without_property(self, property_name: str, entity_name: str):
-        properties = self.model.properties
-        geometry_information = self.mesh.geometry_information
+
+        if self.geometry_info is None:
+            return
+
+        geometry_information = self.geometry_info.geometry_information_dict()
         entities = geometry_information.get(entity_name, [])
 
         kwargs = {
             entity_name: entities,
         }
 
+        properties = self.model.properties
         return properties.get_entities_with_and_without_property(
             property_name,
             **kwargs,

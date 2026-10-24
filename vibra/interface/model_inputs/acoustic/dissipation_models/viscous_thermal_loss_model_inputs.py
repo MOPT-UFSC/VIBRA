@@ -700,8 +700,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             if assignment_type == AttributionBodiesType.ALL_BODIES:
                 self.models = []
 
-                if "volumes" in self.mesh.geometry_information:
-                    volume_ids = self.mesh.geometry_information["volumes"]
+                volume_ids = self.geometry_info.solids
 
             else:
                 input_ids = self.lineEdit_selection_id.text()

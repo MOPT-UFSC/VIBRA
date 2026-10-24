@@ -336,9 +336,7 @@ class MaterialInputs(SetMaterial_UI):
 
         if "surfaces" in current_text:
             if "All" in current_text:
-                surface_ids = []
-                if "surfaces" in self.mesh.geometry_information:
-                    surface_ids = self.mesh.geometry_information["surfaces"]
+                surface_ids = self.geometry_info.surfaces
 
             else:
                 input_ids = self.lineEdit_selection_id.text()
@@ -357,9 +355,7 @@ class MaterialInputs(SetMaterial_UI):
 
         if "volumes" in current_text:
             if "All" in current_text:
-                volume_ids = []
-                if "volumes" in self.mesh.geometry_information:
-                    volume_ids = self.mesh.geometry_information["volumes"]
+                volume_ids = self.geometry_info.solids
 
             else:
                 input_ids = self.lineEdit_selection_id.text()

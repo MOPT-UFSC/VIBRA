@@ -283,8 +283,7 @@ class SetFluidInputs(SetFluidInputs_UI):
         attribution_type = self.comboBox_attribution_type.currentIndex()
 
         if attribution_type == AttributionType.ALL_BODIES:
-            if "volumes" in self.mesh.geometry_information:
-                volume_ids = self.mesh.geometry_information["volumes"]
+            volume_ids = self.geometry_info.solids
 
         else:
             input_ids = self.lineEdit_selection_id.text()

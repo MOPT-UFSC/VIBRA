@@ -28,8 +28,8 @@ class AnalysisActor(SolidsActor):
         self.SetMapper(self.cutter_mapper)
 
     def get_hidden_volumes(self):
-        mesh = app().project.mesh
-        if mesh is None:
+        geometry_info = app().project.model.geometry_info
+        if geometry_info is None:
             return set()
 
         match self.physial_domain:
@@ -38,11 +38,11 @@ class AnalysisActor(SolidsActor):
             case PhysicalDomain.STRUCTURAL:
                 domain_specific_volumes = app().project.model.volumes_of_domain.get("structural", set())
             case _:
-                domain_specific_volumes = mesh.all_volume_ids()
+                domain_specific_volumes = geometry_info.all_volume_ids()
 
         visible_volumes = set(domain_specific_volumes)
         visible_volumes &= app().main_window.entity_visibility.get_visible_volumes()
-        return mesh.all_surface_ids() - visible_volumes
+        return geometry_info.all_surface_ids() - visible_volumes
 
     def apply_deformation(self, deformed_coordinates: np.ndarray):
         self.update_coordinates(deformed_coordinates)
