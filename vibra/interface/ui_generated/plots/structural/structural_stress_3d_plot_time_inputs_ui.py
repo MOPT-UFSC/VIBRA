@@ -23,7 +23,7 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(410, 807)
+        Form.resize(410, 837)
         Form.setMaximumSize(QSize(16777215, 16777215))
         self.gridLayout_2 = QGridLayout(Form)
         self.gridLayout_2.setSpacing(2)
@@ -35,7 +35,7 @@ class Ui_Form(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 406, 803))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 406, 833))
         self.gridLayout_6 = QGridLayout(self.scrollAreaWidgetContents)
         self.gridLayout_6.setObjectName(u"gridLayout_6")
         self.gridLayout_6.setHorizontalSpacing(2)
@@ -253,7 +253,7 @@ class Ui_Form(object):
 
         self.frame_signal_processing = QFrame(self.scrollAreaWidgetContents)
         self.frame_signal_processing.setObjectName(u"frame_signal_processing")
-        self.frame_signal_processing.setMinimumSize(QSize(0, 160))
+        self.frame_signal_processing.setMinimumSize(QSize(0, 180))
         self.frame_signal_processing.setMaximumSize(QSize(16777215, 180))
         self.frame_signal_processing.setSizeIncrement(QSize(0, 0))
         self.frame_signal_processing.setBaseSize(QSize(0, 0))
@@ -265,8 +265,8 @@ class Ui_Form(object):
         self.gridLayout_8.setContentsMargins(4, 4, 4, 4)
         self.frame_4 = QFrame(self.frame_signal_processing)
         self.frame_4.setObjectName(u"frame_4")
-        self.frame_4.setMinimumSize(QSize(0, 52))
-        self.frame_4.setMaximumSize(QSize(16777215, 52))
+        self.frame_4.setMinimumSize(QSize(0, 48))
+        self.frame_4.setMaximumSize(QSize(16777215, 48))
         self.frame_4.setFrameShape(QFrame.Shape.NoFrame)
         self.frame_4.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_48 = QGridLayout(self.frame_4)

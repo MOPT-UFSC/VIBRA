@@ -32,35 +32,6 @@ class Ui_Form(object):
         self.gridLayout_4.setSpacing(4)
         self.gridLayout_4.setObjectName(u"gridLayout_4")
         self.gridLayout_4.setContentsMargins(4, 4, 4, 4)
-        self.frame = QFrame(Form)
-        self.frame.setObjectName(u"frame")
-        self.frame.setMinimumSize(QSize(0, 40))
-        self.frame.setMaximumSize(QSize(520, 48))
-        self.frame.setFrameShape(QFrame.Shape.Box)
-        self.frame.setFrameShadow(QFrame.Shadow.Raised)
-        self.frame.setLineWidth(1)
-        self.gridLayout_2 = QGridLayout(self.frame)
-        self.gridLayout_2.setSpacing(0)
-        self.gridLayout_2.setObjectName(u"gridLayout_2")
-        self.gridLayout_2.setContentsMargins(0, 0, 0, 0)
-        self.label = QLabel(self.frame)
-        self.label.setObjectName(u"label")
-        self.label.setMinimumSize(QSize(0, 30))
-        self.label.setMaximumSize(QSize(452, 30))
-        font = QFont()
-        font.setFamilies([u"Segoe UI"])
-        font.setPointSize(10)
-        font.setBold(False)
-        font.setItalic(False)
-        self.label.setFont(font)
-        self.label.setTextFormat(Qt.TextFormat.AutoText)
-        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.gridLayout_2.addWidget(self.label, 0, 0, 1, 1)
-
-
-        self.gridLayout_4.addWidget(self.frame, 0, 0, 1, 1)
-
         self.frame_2 = QFrame(Form)
         self.frame_2.setObjectName(u"frame_2")
         self.frame_2.setMinimumSize(QSize(0, 0))
@@ -86,9 +57,9 @@ class Ui_Form(object):
         self.pushButton_plot_data.setObjectName(u"pushButton_plot_data")
         self.pushButton_plot_data.setMinimumSize(QSize(100, 32))
         self.pushButton_plot_data.setMaximumSize(QSize(100, 32))
-        font1 = QFont()
-        font1.setPointSize(10)
-        self.pushButton_plot_data.setFont(font1)
+        font = QFont()
+        font.setPointSize(10)
+        self.pushButton_plot_data.setFont(font)
         self.pushButton_plot_data.setStyleSheet(u"")
         self.pushButton_plot_data.setFlat(False)
 
@@ -115,10 +86,10 @@ class Ui_Form(object):
         self.label_linear_2.setObjectName(u"label_linear_2")
         self.label_linear_2.setMinimumSize(QSize(110, 0))
         self.label_linear_2.setMaximumSize(QSize(110, 16777215))
-        font2 = QFont()
-        font2.setPointSize(10)
-        font2.setBold(False)
-        self.label_linear_2.setFont(font2)
+        font1 = QFont()
+        font1.setPointSize(10)
+        font1.setBold(False)
+        self.label_linear_2.setFont(font1)
         self.label_linear_2.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout.addWidget(self.label_linear_2, 3, 1, 1, 1)
@@ -131,7 +102,7 @@ class Ui_Form(object):
         self.comboBox_selector_filter.setObjectName(u"comboBox_selector_filter")
         self.comboBox_selector_filter.setMinimumSize(QSize(180, 28))
         self.comboBox_selector_filter.setMaximumSize(QSize(180, 28))
-        self.comboBox_selector_filter.setFont(font1)
+        self.comboBox_selector_filter.setFont(font)
         self.comboBox_selector_filter.setStyleSheet(u"")
 
         self.gridLayout.addWidget(self.comboBox_selector_filter, 1, 2, 1, 1)
@@ -152,7 +123,7 @@ class Ui_Form(object):
         self.comboBox_plotting_results.setMinimumSize(QSize(180, 28))
         self.comboBox_plotting_results.setMaximumSize(QSize(180, 28))
         self.comboBox_plotting_results.setSizeIncrement(QSize(0, 0))
-        self.comboBox_plotting_results.setFont(font1)
+        self.comboBox_plotting_results.setFont(font)
 
         self.gridLayout.addWidget(self.comboBox_plotting_results, 2, 2, 1, 1)
 
@@ -170,7 +141,7 @@ class Ui_Form(object):
         self.comboBox_stress_units.setObjectName(u"comboBox_stress_units")
         self.comboBox_stress_units.setMinimumSize(QSize(180, 28))
         self.comboBox_stress_units.setMaximumSize(QSize(180, 28))
-        self.comboBox_stress_units.setFont(font1)
+        self.comboBox_stress_units.setFont(font)
         self.comboBox_stress_units.setStyleSheet(u"")
 
         self.gridLayout.addWidget(self.comboBox_stress_units, 3, 2, 1, 1)
@@ -179,7 +150,7 @@ class Ui_Form(object):
         self.lineEdit_selection_id.setObjectName(u"lineEdit_selection_id")
         self.lineEdit_selection_id.setMinimumSize(QSize(180, 28))
         self.lineEdit_selection_id.setMaximumSize(QSize(180, 28))
-        self.lineEdit_selection_id.setFont(font1)
+        self.lineEdit_selection_id.setFont(font)
         self.lineEdit_selection_id.setStyleSheet(u"")
         self.lineEdit_selection_id.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
@@ -189,7 +160,7 @@ class Ui_Form(object):
         self.label_2.setObjectName(u"label_2")
         self.label_2.setMinimumSize(QSize(110, 30))
         self.label_2.setMaximumSize(QSize(110, 30))
-        self.label_2.setFont(font1)
+        self.label_2.setFont(font)
         self.label_2.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout.addWidget(self.label_2, 1, 1, 1, 1)
@@ -198,7 +169,7 @@ class Ui_Form(object):
         self.label_linear.setObjectName(u"label_linear")
         self.label_linear.setMinimumSize(QSize(110, 0))
         self.label_linear.setMaximumSize(QSize(110, 16777215))
-        self.label_linear.setFont(font2)
+        self.label_linear.setFont(font1)
         self.label_linear.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout.addWidget(self.label_linear, 2, 1, 1, 1)
@@ -207,12 +178,12 @@ class Ui_Form(object):
         self.label_10.setObjectName(u"label_10")
         self.label_10.setMinimumSize(QSize(110, 30))
         self.label_10.setMaximumSize(QSize(110, 30))
-        font3 = QFont()
-        font3.setFamilies([u"MS Shell Dlg 2"])
-        font3.setPointSize(10)
-        font3.setBold(False)
-        font3.setItalic(False)
-        self.label_10.setFont(font3)
+        font2 = QFont()
+        font2.setFamilies([u"MS Shell Dlg 2"])
+        font2.setPointSize(10)
+        font2.setBold(False)
+        font2.setItalic(False)
+        self.label_10.setFont(font2)
         self.label_10.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout.addWidget(self.label_10, 0, 1, 1, 1)
@@ -221,12 +192,12 @@ class Ui_Form(object):
         self.pushButton_export_data.setObjectName(u"pushButton_export_data")
         self.pushButton_export_data.setMinimumSize(QSize(40, 28))
         self.pushButton_export_data.setMaximumSize(QSize(40, 28))
-        font4 = QFont()
-        font4.setFamilies([u"MS Shell Dlg 2"])
-        font4.setPointSize(11)
-        font4.setBold(True)
-        font4.setItalic(False)
-        self.pushButton_export_data.setFont(font4)
+        font3 = QFont()
+        font3.setFamilies([u"MS Shell Dlg 2"])
+        font3.setPointSize(11)
+        font3.setBold(True)
+        font3.setItalic(False)
+        self.pushButton_export_data.setFont(font3)
         self.pushButton_export_data.setStyleSheet(u"")
         icon = Icon(u":/icons/save_as.png")
         self.pushButton_export_data.setIcon(icon)
@@ -240,8 +211,8 @@ class Ui_Form(object):
 
         self.frame_5 = QFrame(self.frame_2)
         self.frame_5.setObjectName(u"frame_5")
-        self.frame_5.setMinimumSize(QSize(0, 52))
-        self.frame_5.setMaximumSize(QSize(16777215, 52))
+        self.frame_5.setMinimumSize(QSize(0, 48))
+        self.frame_5.setMaximumSize(QSize(16777215, 48))
         self.frame_5.setFrameShape(QFrame.Shape.NoFrame)
         self.frame_5.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_48 = QGridLayout(self.frame_5)
@@ -252,7 +223,7 @@ class Ui_Form(object):
         self.pushButton_process_nodal_stresses.setObjectName(u"pushButton_process_nodal_stresses")
         self.pushButton_process_nodal_stresses.setMinimumSize(QSize(160, 32))
         self.pushButton_process_nodal_stresses.setMaximumSize(QSize(180, 32))
-        self.pushButton_process_nodal_stresses.setFont(font1)
+        self.pushButton_process_nodal_stresses.setFont(font)
         self.pushButton_process_nodal_stresses.setStyleSheet(u"")
         self.pushButton_process_nodal_stresses.setFlat(False)
 
@@ -261,16 +232,45 @@ class Ui_Form(object):
 
         self.gridLayout_3.addWidget(self.frame_5, 0, 0, 1, 1)
 
-        self.frame_ifft_controls = QFrame(self.frame_2)
+
+        self.gridLayout_4.addWidget(self.frame_2, 2, 0, 1, 1)
+
+        self.frame = QFrame(Form)
+        self.frame.setObjectName(u"frame")
+        self.frame.setMinimumSize(QSize(0, 40))
+        self.frame.setMaximumSize(QSize(520, 48))
+        self.frame.setFrameShape(QFrame.Shape.Box)
+        self.frame.setFrameShadow(QFrame.Shadow.Raised)
+        self.frame.setLineWidth(1)
+        self.gridLayout_2 = QGridLayout(self.frame)
+        self.gridLayout_2.setSpacing(0)
+        self.gridLayout_2.setObjectName(u"gridLayout_2")
+        self.gridLayout_2.setContentsMargins(0, 0, 0, 0)
+        self.label = QLabel(self.frame)
+        self.label.setObjectName(u"label")
+        self.label.setMinimumSize(QSize(0, 30))
+        self.label.setMaximumSize(QSize(452, 30))
+        font4 = QFont()
+        font4.setFamilies([u"Segoe UI"])
+        font4.setPointSize(10)
+        font4.setBold(False)
+        font4.setItalic(False)
+        self.label.setFont(font4)
+        self.label.setTextFormat(Qt.TextFormat.AutoText)
+        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_2.addWidget(self.label, 0, 0, 1, 1)
+
+
+        self.gridLayout_4.addWidget(self.frame, 0, 0, 1, 1)
+
+        self.frame_ifft_controls = QFrame(Form)
         self.frame_ifft_controls.setObjectName(u"frame_ifft_controls")
         self.frame_ifft_controls.setMinimumSize(QSize(0, 120))
-        self.frame_ifft_controls.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_ifft_controls.setFrameShape(QFrame.Shape.Box)
         self.frame_ifft_controls.setFrameShadow(QFrame.Shadow.Raised)
 
-        self.gridLayout_3.addWidget(self.frame_ifft_controls, 2, 0, 1, 1)
-
-
-        self.gridLayout_4.addWidget(self.frame_2, 1, 0, 1, 1)
+        self.gridLayout_4.addWidget(self.frame_ifft_controls, 1, 0, 1, 1)
 
 
         self.retranslateUi(Form)
@@ -284,7 +284,6 @@ class Ui_Form(object):
 
     def retranslateUi(self, Form):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Form", None))
-        self.label.setText(QCoreApplication.translate("Form", u"Stress plot (time domain)", None))
         self.pushButton_plot_data.setText(QCoreApplication.translate("Form", u"Plot data", None))
         self.label_linear_2.setText(QCoreApplication.translate("Form", u"Stress units:", None))
         self.comboBox_selector_filter.setItemText(0, QCoreApplication.translate("Form", u"Surfaces", None))
@@ -320,6 +319,7 @@ class Ui_Form(object):
 #endif // QT_CONFIG(tooltip)
         self.pushButton_export_data.setText("")
         self.pushButton_process_nodal_stresses.setText(QCoreApplication.translate("Form", u"Process nodal stresses", None))
+        self.label.setText(QCoreApplication.translate("Form", u"Stress plot (time domain)", None))
     # retranslateUi
 
 
@@ -329,9 +329,6 @@ class StructuralStress2dPlotTimeInputs_UI(QWidget, Ui_Form):
     Component Hierarchy:
     - Form: QWidget
         - (Layout): QGridLayout
-                - frame: QFrame
-                    - (Layout): QGridLayout
-                            - label: QLabel
                 - frame_2: QFrame
                     - (Layout): QGridLayout
                             - frame_plot: QFrame
@@ -351,7 +348,10 @@ class StructuralStress2dPlotTimeInputs_UI(QWidget, Ui_Form):
                             - frame_5: QFrame
                                 - (Layout): QGridLayout
                                         - pushButton_process_nodal_stresses: QPushButton
-                            - frame_ifft_controls: QFrame
+                - frame: QFrame
+                    - (Layout): QGridLayout
+                            - label: QLabel
+                - frame_ifft_controls: QFrame
     """
 
     def __init__(self, *args, **kwargs):

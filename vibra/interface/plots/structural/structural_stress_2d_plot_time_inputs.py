@@ -31,6 +31,8 @@ class StructuralStress2dPlotTimeInputs(StructuralStress2dPlotTimeInputs_UI):
 
         app().main_window.show_geometry_render_widget()
 
+        self._add_ifft_controls_widget()
+
         self._initialize()
         self._configure_validator()
         self._create_connections()
@@ -156,9 +158,16 @@ class StructuralStress2dPlotTimeInputs(StructuralStress2dPlotTimeInputs_UI):
         if not self.is_stress_data_cached:
             def recover_stresses():
                 self.structural_post.compute_structural_stresses_frequency()
-                self.structural_post.compute_structural_stresses_time()
 
-            LoadingWindow(recover_stresses).run()
+                if self.validation_mode:
+                    n_div = self.ifft_controls_widget.get_number_of_fstep_divisions()
+                    spectral_lines=self.ifft_controls_widget.get_ifft_number_of_spectral_lines()
+                    self.structural_post.compute_structural_stresses_time(
+                        n_div=n_div,
+                        spectral_lines=spectral_lines,
+                        )
+
+            LoadingWindow(recover_stresses, delayed=False).run()
 
         self.set_frames_disabled(False)
 

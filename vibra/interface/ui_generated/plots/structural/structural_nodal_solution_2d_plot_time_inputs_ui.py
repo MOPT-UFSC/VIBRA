@@ -227,16 +227,16 @@ class Ui_Form(object):
 
         self.gridLayout_3.addWidget(self.frame_plot_controls, 0, 0, 1, 1)
 
-        self.frame_ifft_controls = QFrame(self.frame_2)
+
+        self.gridLayout_4.addWidget(self.frame_2, 2, 0, 1, 1)
+
+        self.frame_ifft_controls = QFrame(Form)
         self.frame_ifft_controls.setObjectName(u"frame_ifft_controls")
         self.frame_ifft_controls.setMinimumSize(QSize(0, 120))
-        self.frame_ifft_controls.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_ifft_controls.setFrameShape(QFrame.Shape.Box)
         self.frame_ifft_controls.setFrameShadow(QFrame.Shadow.Raised)
 
-        self.gridLayout_3.addWidget(self.frame_ifft_controls, 1, 0, 1, 1)
-
-
-        self.gridLayout_4.addWidget(self.frame_2, 1, 0, 1, 1)
+        self.gridLayout_4.addWidget(self.frame_ifft_controls, 1, 0, 1, 1)
 
 
         self.retranslateUi(Form)
@@ -302,7 +302,7 @@ class StructuralNodalSolution2dPlotTimeInputs_UI(QWidget, Ui_Form):
                                         - comboBox_output_units: QComboBox
                                         - pushButton_export_data: QPushButton
                                         - label_linear: QLabel
-                            - frame_ifft_controls: QFrame
+                - frame_ifft_controls: QFrame
     """
 
     def __init__(self, *args, **kwargs):
