@@ -333,7 +333,7 @@
           <number>2</number>
          </property>
          <item row="1" column="0">
-          <widget class="QPushButton" name="pushButton_plot_data">
+          <widget class="QPushButton" name="pushButton_plot_criterion">
            <property name="minimumSize">
             <size>
              <width>100</width>
@@ -355,7 +355,7 @@
             <string notr="true"/>
            </property>
            <property name="text">
-            <string>Check criterion</string>
+            <string>Plot criterion</string>
            </property>
            <property name="flat">
             <bool>false</bool>

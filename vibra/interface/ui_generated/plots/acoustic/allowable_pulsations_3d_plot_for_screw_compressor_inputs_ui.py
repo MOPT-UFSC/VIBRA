@@ -128,15 +128,15 @@ class Ui_Form(object):
         self.gridLayout_47.setSpacing(2)
         self.gridLayout_47.setObjectName(u"gridLayout_47")
         self.gridLayout_47.setContentsMargins(2, 2, 2, 2)
-        self.pushButton_plot_data = QPushButton(self.frame_3)
-        self.pushButton_plot_data.setObjectName(u"pushButton_plot_data")
-        self.pushButton_plot_data.setMinimumSize(QSize(100, 32))
-        self.pushButton_plot_data.setMaximumSize(QSize(140, 32))
-        self.pushButton_plot_data.setFont(font1)
-        self.pushButton_plot_data.setStyleSheet(u"")
-        self.pushButton_plot_data.setFlat(False)
+        self.pushButton_plot_criterion = QPushButton(self.frame_3)
+        self.pushButton_plot_criterion.setObjectName(u"pushButton_plot_criterion")
+        self.pushButton_plot_criterion.setMinimumSize(QSize(100, 32))
+        self.pushButton_plot_criterion.setMaximumSize(QSize(140, 32))
+        self.pushButton_plot_criterion.setFont(font1)
+        self.pushButton_plot_criterion.setStyleSheet(u"")
+        self.pushButton_plot_criterion.setFlat(False)
 
-        self.gridLayout_47.addWidget(self.pushButton_plot_data, 1, 0, 1, 1)
+        self.gridLayout_47.addWidget(self.pushButton_plot_criterion, 1, 0, 1, 1)
 
 
         self.gridLayout_8.addWidget(self.frame_3, 2, 1, 1, 1)
@@ -176,7 +176,7 @@ class Ui_Form(object):
         self.label.setText(QCoreApplication.translate("Form", u"Allowable pulsations field plot for screw compressors", None))
         self.label_8.setText(QCoreApplication.translate("Form", u"[%]", None))
         self.label_penalization_factor.setText(QCoreApplication.translate("Form", u"Penalization factor:", None))
-        self.pushButton_plot_data.setText(QCoreApplication.translate("Form", u"Check criterion", None))
+        self.pushButton_plot_criterion.setText(QCoreApplication.translate("Form", u"Plot criterion", None))
     # retranslateUi
 
 
@@ -198,7 +198,7 @@ class AllowablePulsations3dPlotForScrewCompressorInputs_UI(QWidget, Ui_Form):
                                         - comboBox_penalization_factor: QComboBox
                             - frame_3: QFrame
                                 - (Layout): QGridLayout
-                                        - pushButton_plot_data: QPushButton
+                                        - pushButton_plot_criterion: QPushButton
                 - frame_color: QFrame
                 - frame_ifft_controls: QFrame
     """
