@@ -212,6 +212,7 @@ class AcousticNodalSolution3dPlotTimeInputs(AcousticNodalSolution3dPlotTimeInput
         )
 
         if plot_setup == self.plot_setup:
+            self.pushButton_process_nodal_solution_iffts.setDisabled(True)
             return
 
         self.plot_setup = plot_setup

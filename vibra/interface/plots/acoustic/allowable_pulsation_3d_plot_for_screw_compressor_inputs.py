@@ -140,6 +140,7 @@ class AllowablePulsations3DPlotForScrewCompressorInputs(AllowablePulsations3dPlo
         )
 
         if plot_setup == self.plot_setup:
+            self.pushButton_plot_criterion.setDisabled(True)
             return
 
         self.plot_setup = plot_setup
@@ -153,6 +154,7 @@ class AllowablePulsations3DPlotForScrewCompressorInputs(AllowablePulsations3dPlo
         LoadingWindow(plot_callback).run()
 
         self.show_results_render()
+        self.pushButton_plot_criterion.setDisabled(True)
 
     def get_plot_type(self) -> PressurePlotType:
         return PressurePlotType("non_absolute_animation")
