@@ -115,6 +115,7 @@ class StructuralNodalSolution3dPlotTimeInputs(StructuralNodalSolution3dPlotTimeI
         # QPushButton connections
         self.pushButton_process_nodal_solution_iffts.clicked.connect(self.plot_data_callback)
 
+        self.ifft_controls_widget.ifft_controls_changed.connect(self.enable_process_ifft_button)
         self.results_display_widget.colormap_changed.connect(self.animation_widget.update_color_and_deformation)
         self.results_display_widget.min_max_value_changed.connect(self.animation_widget.update_color_and_deformation)
 
@@ -188,6 +189,9 @@ class StructuralNodalSolution3dPlotTimeInputs(StructuralNodalSolution3dPlotTimeI
             case _:
                 return None
 
+    def enable_process_ifft_button(self):
+        self.pushButton_process_nodal_solution_iffts.setEnabled(True)
+
     def plot_data_callback(self):
 
         plot_setup = DisplacementFieldPlotSetupTime(
@@ -198,6 +202,7 @@ class StructuralNodalSolution3dPlotTimeInputs(StructuralNodalSolution3dPlotTimeI
             unit_factor=self.get_unit_factor(),
             n_diff=self.get_number_of_differentiations(),
             n_div=self.ifft_controls_widget.get_number_of_fstep_divisions(),
+            spectral_lines=self.ifft_controls_widget.get_ifft_number_of_spectral_lines(),
             reduced_loop_time=self.get_reduced_loop_time(),
         )
 

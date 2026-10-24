@@ -118,6 +118,7 @@ class AcousticNodalSolution3dPlotTimeInputs(AcousticNodalSolution3dPlotTimeInput
         self.frame_animation.setDisabled(disabled)
         self.frame_color.setDisabled(disabled)
         self.frame_plot_controls.setDisabled(disabled)
+        self.pushButton_process_nodal_solution_iffts.setEnabled(disabled)
 
     def _create_connections(self):
 
@@ -132,6 +133,7 @@ class AcousticNodalSolution3dPlotTimeInputs(AcousticNodalSolution3dPlotTimeInput
         # QPushButton connections
         self.pushButton_process_nodal_solution_iffts.clicked.connect(self.plot_data_callback)
 
+        self.ifft_controls_widget.ifft_controls_changed.connect(self.enable_process_ifft_button)
         self.results_display_widget.colormap_changed.connect(self.animation_widget.update_color_and_deformation)
         self.results_display_widget.min_max_value_changed.connect(self.animation_widget.update_color_and_deformation)
 
@@ -191,6 +193,9 @@ class AcousticNodalSolution3dPlotTimeInputs(AcousticNodalSolution3dPlotTimeInput
             case _:
                 return None
 
+    def enable_process_ifft_button(self):
+        self.pushButton_process_nodal_solution_iffts.setEnabled(True)
+
     def plot_data_callback(self):
 
         pressure_units = self.comboBox_pressure_units.currentText()
@@ -202,6 +207,7 @@ class AcousticNodalSolution3dPlotTimeInputs(AcousticNodalSolution3dPlotTimeInput
             unit=pressure_units,
             unit_factor=unit_factor,
             n_div=self.ifft_controls_widget.get_number_of_fstep_divisions(),
+            spectral_lines=self.ifft_controls_widget.get_ifft_number_of_spectral_lines(),
             reduced_loop_time=self.get_reduced_loop_time(),
         )
 

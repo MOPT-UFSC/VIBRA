@@ -1,4 +1,5 @@
 import numpy as np
+from PySide6.QtCore import Signal
 
 from vibra import app
 from vibra.engine.analysis_info import FrequencySpacing
@@ -8,19 +9,26 @@ from vibra.utils.signal_processing import process_ifft_from_one_sided_spectrum_s
 
 
 class IfftControlsWidget(IfftControlsWidget_UI):
+
+
+    ifft_controls_changed = Signal()
+
     def __init__(self):
         super().__init__()
 
         self._configure_validators()
         self._create_connections()
 
+
     @property
     def model(self):
         return app().project.model
 
+
     def _configure_validators(self):
         f_max = self.model.analysis_setup.f_max
         self.lineEdit_maximum_frequency.setValidator(StrictDoubleValidator(f_max, 2e4, 8))
+
 
     def _create_connections(self):
 
@@ -30,7 +38,11 @@ class IfftControlsWidget(IfftControlsWidget_UI):
         # QSpinBox connection
         self.spinBox_intervals_number.valueChanged.connect(self.intervals_changed_callback)
 
+        # QLineEdit connection
+        self.lineEdit_maximum_frequency.editingFinished.connect(self.maximum_frequency_changed_callback)
+
         self.intervals_changed_callback()
+
 
     def frequency_resolution_control_callback(self):
         controlled_resolution = self.checkBox_control_frequency_resolution.isChecked()
@@ -70,10 +82,14 @@ class IfftControlsWidget(IfftControlsWidget_UI):
             self.lineEdit_maximum_frequency.setText(str(f_max))
 
         self.lineEdit_frequency_resolution.setText(str(df))
+        self.ifft_controls_changed.emit()
+
+
+    def maximum_frequency_changed_callback(self):
+        self.ifft_controls_changed.emit()
 
 
     def reset_fmax_value_for_ifft_processing(self):
-
         if not self.checkBox_control_frequency_resolution.isChecked():
             return
 
@@ -84,7 +100,6 @@ class IfftControlsWidget(IfftControlsWidget_UI):
 
 
     def get_fmax_for_ifft_processing(self) -> float | None:
-
         if not self.checkBox_control_frequency_resolution.isChecked():
             return
 
@@ -99,7 +114,20 @@ class IfftControlsWidget(IfftControlsWidget_UI):
         if self.checkBox_control_frequency_resolution.isChecked():
             return self.spinBox_intervals_number.value()
 
-        return None
+        return
+
+
+    def get_ifft_number_of_spectral_lines(self):
+        if self.checkBox_control_frequency_resolution.isChecked():
+            f_step = self.model.analysis_setup.f_step
+            f_max = self.get_fmax_for_ifft_processing()
+            N_div = self.get_number_of_fstep_divisions()
+
+            N_lines = round(f_max / (f_step / N_div))
+
+            return N_lines
+
+        return
 
 
     def get_ifft_processing_function(self, multiple_iffts: bool = False):

@@ -140,6 +140,7 @@ class StructuralStress3dPlotTimeInputs(StructuralStress3dPlotTimeInputs_UI):
         # QPushButton connection
         self.pushButton_process_nodal_stresses.clicked.connect(self.plot_data_callback)
 
+        self.ifft_controls_widget.ifft_controls_changed.connect(self.enable_process_ifft_button)
         self.results_display_widget.colormap_changed.connect(self.animation_widget.update_color_and_deformation)
         self.results_display_widget.min_max_value_changed.connect(self.animation_widget.update_color_and_deformation)
 
@@ -152,6 +153,9 @@ class StructuralStress3dPlotTimeInputs(StructuralStress3dPlotTimeInputs_UI):
             self.animation_widget.setDisabled(True)
         else:
             self.animation_widget.setDisabled(False)
+
+    def enable_process_ifft_button(self):
+        self.pushButton_process_nodal_stresses.setEnabled(True)
 
     def plot_data_callback(self):
 
@@ -178,9 +182,10 @@ class StructuralStress3dPlotTimeInputs(StructuralStress3dPlotTimeInputs_UI):
             magnification_factor=self.animation_widget.magnification_factor,
             stress_type=stress_index,
             plot_type=plot_type,
-            n_div=self.ifft_controls_widget.get_number_of_fstep_divisions(),
             unit=stress_units,
             unit_factor=unit_factor,
+            n_div=self.ifft_controls_widget.get_number_of_fstep_divisions(),
+            spectral_lines=self.ifft_controls_widget.get_ifft_number_of_spectral_lines(),
             reduced_loop_time=self.get_reduced_loop_time(),
         )
 
