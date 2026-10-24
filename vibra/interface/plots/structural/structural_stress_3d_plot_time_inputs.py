@@ -9,6 +9,7 @@ from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
 from vibra.interface.numeric_checks.unit_utilities import convert_stress_unit
 from vibra.interface.plots.general.animation_widget import AnimationWidget
+from vibra.interface.plots.general.ifft_controls_widget import IfftControlsWidget
 from vibra.interface.plots.general.results_display_widget import ResultsDisplayWidget
 from vibra.interface.ui_generated.plots.structural.structural_stress_3d_plot_time_inputs_ui import StructuralStress3dPlotTimeInputs_UI
 from vibra.interface.viewer_3d.plot_setup import StressDataType, StressFieldPlotSetupTime
@@ -29,6 +30,7 @@ class StructuralStress3dPlotTimeInputs(StructuralStress3dPlotTimeInputs_UI):
 
         app().main_window.show_geometry_render_widget()
 
+        self._add_ifft_controls_widget()
         self._add_animation_widget()
         self._add_color_widget()
         self._initialize()
@@ -58,6 +60,16 @@ class StructuralStress3dPlotTimeInputs(StructuralStress3dPlotTimeInputs_UI):
     @property
     def is_stress_data_computed(self):
         return isinstance(self.structural_post.nodal_averaged_stresses_time, np.ndarray)
+
+    def _add_ifft_controls_widget(self):
+
+        grid_layout = QGridLayout()
+        grid_layout.setContentsMargins(0, 0, 0, 0)
+        self.frame_ifft_controls.setLayout(grid_layout)
+
+        self.ifft_controls_widget = IfftControlsWidget()
+        grid_layout.addWidget(self.ifft_controls_widget)
+        self.frame_ifft_controls.adjustSize()
 
     def _add_animation_widget(self):
 
@@ -166,12 +178,14 @@ class StructuralStress3dPlotTimeInputs(StructuralStress3dPlotTimeInputs_UI):
             magnification_factor=self.animation_widget.magnification_factor,
             stress_type=stress_index,
             plot_type=plot_type,
+            n_div=self.ifft_controls_widget.get_number_of_fstep_divisions(),
             unit=stress_units,
             unit_factor=unit_factor,
             reduced_loop_time=self.get_reduced_loop_time(),
         )
 
         if plot_setup == self.plot_setup:
+            self.pushButton_process_nodal_stresses.setDisabled(True)
             return
 
         self.plot_setup = plot_setup

@@ -6,11 +6,11 @@ from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QGridLayout
 
 from vibra import app
-from vibra.engine import AnalysisID
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
 from vibra.interface.numeric_checks.unit_utilities import convert_pressure_unit
 from vibra.interface.plots.general.animation_widget import AnimationWidget
+from vibra.interface.plots.general.ifft_controls_widget import IfftControlsWidget
 from vibra.interface.plots.general.results_display_widget import ResultsDisplayWidget
 from vibra.interface.ui_generated.plots.acoustic.acoustic_nodal_solution_3d_plot_time_inputs_ui import (
     AcousticNodalSolution3dPlotTimeInputs_UI,
@@ -28,8 +28,10 @@ class AcousticNodalSolution3dPlotTimeInputs(AcousticNodalSolution3dPlotTimeInput
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self._add_ifft_controls_widget()
         self._add_animation_widget()
         self._add_color_widget()
+
         self._initialize()
         self._create_connections()
         self._configure_validators()
@@ -54,6 +56,41 @@ class AcousticNodalSolution3dPlotTimeInputs(AcousticNodalSolution3dPlotTimeInput
     def is_data_cached(self):
         cache_info = self.acoustic_post.compute_multiple_ifft_for_acoustic_nodal_solution.cache_info()
         return cache_info.currsize != 0
+
+    def _add_ifft_controls_widget(self):
+
+        self.grid_layout_ifft = QGridLayout()
+        self.grid_layout_ifft.setContentsMargins(0, 0, 0, 0)
+        self.frame_ifft_controls.setLayout(self.grid_layout_ifft)
+
+        self.ifft_controls_widget = IfftControlsWidget()
+        self.grid_layout_ifft.addWidget(self.ifft_controls_widget)
+        self.frame_ifft_controls.adjustSize()
+
+    def _add_animation_widget(self):
+
+        self.grid_layout = QGridLayout()
+        self.grid_layout.setContentsMargins(0, 0, 0, 0)
+        self.frame_animation.setLayout(self.grid_layout)
+
+        self.animation_widget = AnimationWidget()
+        self.grid_layout.addWidget(self.animation_widget)
+        self.frame_animation.adjustSize()
+
+        self.animation_widget.label_animation_phase.setText("Time step:")
+        self.animation_widget.label_phase_angle.setText(f"{0: .4e}s")
+
+        self.update_slider_configuration()
+
+    def _add_color_widget(self):
+
+        grid_layout = QGridLayout()
+        grid_layout.setContentsMargins(0, 0, 0, 0)
+        self.frame_color.setLayout(grid_layout)
+
+        self.results_display_widget = ResultsDisplayWidget()
+        grid_layout.addWidget(self.results_display_widget)
+        self.frame_color.adjustSize()
 
     def show_results_render(self):
         curent_render_widget = app().main_window.get_current_render_widget()
@@ -81,7 +118,6 @@ class AcousticNodalSolution3dPlotTimeInputs(AcousticNodalSolution3dPlotTimeInput
         self.frame_animation.setDisabled(disabled)
         self.frame_color.setDisabled(disabled)
         self.frame_plot_controls.setDisabled(disabled)
-        self.pushButton_process_nodal_solution_iffts.setEnabled(disabled)
 
     def _create_connections(self):
 
@@ -100,30 +136,6 @@ class AcousticNodalSolution3dPlotTimeInputs(AcousticNodalSolution3dPlotTimeInput
         self.results_display_widget.min_max_value_changed.connect(self.animation_widget.update_color_and_deformation)
 
         self.reduced_loop_time_type_callback()
-
-    def _add_animation_widget(self):
-
-        self.grid_layout = QGridLayout()
-        self.grid_layout.setContentsMargins(0, 0, 0, 0)
-        self.frame_animation.setLayout(self.grid_layout)
-
-        self.animation_widget = AnimationWidget()
-        self.grid_layout.addWidget(self.animation_widget)
-        self.frame_animation.adjustSize()
-
-        self.animation_widget.label_animation_phase.setText("Time step:")
-        self.animation_widget.label_phase_angle.setText(f"{0: .4e}s")
-
-        self.update_slider_configuration()
-
-    def _add_color_widget(self):
-        grid_layout = QGridLayout()
-        grid_layout.setContentsMargins(0, 0, 0, 0)
-        self.frame_color.setLayout(grid_layout)
-
-        self.results_display_widget = ResultsDisplayWidget()
-        grid_layout.addWidget(self.results_display_widget)
-        self.frame_color.adjustSize()
 
     def update_slider_configuration(self):
         frequencies = self.model.frequencies
@@ -189,6 +201,7 @@ class AcousticNodalSolution3dPlotTimeInputs(AcousticNodalSolution3dPlotTimeInput
             plot_type=self.get_plot_type(),
             unit=pressure_units,
             unit_factor=unit_factor,
+            n_div=self.ifft_controls_widget.get_number_of_fstep_divisions(),
             reduced_loop_time=self.get_reduced_loop_time(),
         )
 

@@ -3,7 +3,7 @@ from enum import IntEnum
 import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
-from PySide6.QtWidgets import QDialog, QLineEdit
+from PySide6.QtWidgets import QDialog, QGridLayout, QLineEdit
 
 from vibra import app
 from vibra.engine import AnalysisID
@@ -14,10 +14,10 @@ from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.fluid.set_fluid_inputs_simplified import SetFluidInputsSimplified
 from vibra.interface.plots.general.frequency_response_plotter import DataFormat, FrequencyResponsePlotter
+from vibra.interface.plots.general.ifft_controls_widget import IfftControlsWidget
 from vibra.interface.ui_generated.plots.acoustic.allowable_pulsations_2d_for_screw_compressor_inputs_ui import (
     AllowablePulsations2dForScrewCompressorInputs_UI,
 )
-from vibra.utils.signal_processing import process_ifft_from_one_sided_spectrum_signal
 
 
 class SelectionType(IntEnum):
@@ -33,10 +33,11 @@ class AllowablePulsations2DPlotForScrewCompressorInputs(AllowablePulsations2dFor
 
         app().main_window.show_geometry_render_widget()
 
-        self._reset_variables()
+        self._add_ifft_controls_widget()
         self._add_penalization_values_to_combo_box()
-        self._create_connections()
 
+        self._reset_variables()
+        self._create_connections()
         self._load_analysis_setup_and_solution()
 
     @property
@@ -54,6 +55,15 @@ class AllowablePulsations2DPlotForScrewCompressorInputs(AllowablePulsations2dFor
     @property
     def nodal_solution(self):
         return app().project.model.solution.acoustic_solution
+
+    def _add_ifft_controls_widget(self):
+        grid_layout = QGridLayout()
+        grid_layout.setContentsMargins(0, 0, 0, 0)
+        self.frame_ifft_controls.setLayout(grid_layout)
+
+        self.ifft_controls_widget = IfftControlsWidget()
+        grid_layout.addWidget(self.ifft_controls_widget)
+        self.frame_ifft_controls.adjustSize()
 
     def _load_analysis_setup_and_solution(self):
         self.analysis_method = ""
@@ -339,11 +349,7 @@ class AllowablePulsations2DPlotForScrewCompressorInputs(AllowablePulsations2dFor
             legend_label = f"Acoustic pressure at {selection_type} [{selected_id}]"
 
             acoustic_pressure = self.get_response(index, selected_id)
-            time_vector, acoustic_pressure = process_ifft_from_one_sided_spectrum_signal(
-                self.model.frequencies, 
-                acoustic_pressure, 
-                dc_included=False
-                )
+            time_vector, acoustic_pressure = self.ifft_controls_widget.process_ifft_for_spectrum(acoustic_pressure)
 
             self.model_results[key] = { 
                 "x_data" : time_vector,
