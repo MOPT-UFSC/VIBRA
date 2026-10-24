@@ -7,6 +7,7 @@ from time import perf_counter
 
 import numpy as np
 
+from vibra.engine.analysis_info import FrequencySpacing
 from vibra.engine.model import Model
 from vibra.engine.postprocessing.structural.minimum_and_maximum_values_processor import MinimumAndMaximumValuesProcessor
 from vibra.engine.properties.material import Material
@@ -308,8 +309,50 @@ class StructuralPostprocessing:
         return element_stress_data
 
 
+    def process_multiple_iffts(
+            self,
+            f_max: float,
+            nodal_solution: np.ndarray[complex],
+            n_div: int | None = None,
+            spectral_lines: int | None = None,
+            ):
+
+        if n_div is None:
+            time_vector, nodal_solution_time = process_multiple_iffts_from_one_sided_spectrum_signals(f_max, nodal_solution)
+
+        else:
+            if self.model.analysis_setup.frequency_spacing != FrequencySpacing.EQUALLY_DISTRIBUTED:
+                raise ValueError("Invalid frequency spacing detected.")
+
+            f_step = self.model.analysis_setup.f_step
+            df = f_step / n_div
+
+            # initialize the frequencies vector for ifft
+            freqs_ifft = np.arange(1, spectral_lines + 1, dtype=float) * df
+
+            # process mask for solution steps
+            mask = np.round(freqs_ifft % f_step, 8) == 0
+            mask *= freqs_ifft < f_max + f_step / 100
+
+            # initialize the temporary solution array
+            nodal_solution_ifft = np.zeros((len(nodal_solution), freqs_ifft.size), dtype=complex)
+
+            # fill the temporary solution array with the solution data
+            nodal_solution_ifft[:, mask] = nodal_solution
+
+            time_vector, nodal_solution_time = process_multiple_iffts_from_one_sided_spectrum_signals(freqs_ifft[-1], nodal_solution_ifft)
+
+        return time_vector, nodal_solution_time
+
+
     @cache
-    def compute_multiple_ifft_for_structural_nodal_solution(self, n_diff: int = 0) -> tuple[np.ndarray, np.ndarray]:
+    def compute_multiple_ifft_for_structural_nodal_solution(
+        self,
+        n_diff: int = 0,
+        n_div: int | None = None,
+        spectral_lines: int | None = None,
+    ) -> tuple[np.ndarray, np.ndarray]:
+
         assert isinstance(self.solution, HarmonicSolution)
         assert self.solution.structural_solution is not None
         assert self.solution.analysis_id.is_structural() or self.solution.analysis_id.is_coupled()
@@ -321,13 +364,15 @@ class StructuralPostprocessing:
             freqs = self.model.frequencies
             nodal_solution *= (1j * 2 * np.pi * freqs)**n_diff
 
-        t0 = perf_counter()
         logging.info("Computing the iffts for structural nodal solution... [25/100]")
-        time_vector, nodal_solution_time = process_multiple_iffts_from_one_sided_spectrum_signals(
-            self.solution.frequencies,
+        t0 = perf_counter()
+
+        time_vector, nodal_solution_time = self.process_multiple_iffts(
+            self.model.analysis_setup.f_max,
             nodal_solution,
-            dc_included=False,
-        )
+            n_div=n_div,
+            spectral_lines=spectral_lines,
+            )
 
         logging.info("Computing the iffts for structural nodal solution... [100/100]")
 
@@ -339,7 +384,12 @@ class StructuralPostprocessing:
 
 
     @cache
-    def compute_multiple_ifft_for_structural_stresses(self) -> tuple[np.ndarray, np.ndarray]:
+    def compute_multiple_ifft_for_structural_stresses(
+        self,
+        n_div: int | None = None,
+        spectral_lines: int | None = None,
+    ) -> tuple[np.ndarray, np.ndarray]:
+
         assert isinstance(self.solution, HarmonicSolution)
         assert self.solution.structural_solution is not None
         assert self.solution.analysis_id.is_structural() or self.solution.analysis_id.is_coupled()
@@ -348,11 +398,12 @@ class StructuralPostprocessing:
         logging.info("Computing the iffts for nodal stresses... [25/100]")
         n_nodes, n_stress, n_freq = self.nodal_averaged_stresses_frequency.shape
 
-        time_vector, waveforms = process_multiple_iffts_from_one_sided_spectrum_signals(
-            self.solution.frequencies,
+        time_vector, nodal_stresses_time = self.process_multiple_iffts(
+            self.model.analysis_setup.f_max,
             self.nodal_averaged_stresses_frequency.reshape(-1, n_freq),
-            dc_included=False,
-        )
+            n_div=n_div,
+            spectral_lines=spectral_lines,
+            )
 
         logging.info("Computing the iffts for nodal stresses... [100/100]")
 
@@ -360,7 +411,7 @@ class StructuralPostprocessing:
         if dt > 0.5:
             print(f"Time to process the iffts for stresses: {dt: .6f} s")
 
-        return time_vector, waveforms.reshape(n_nodes, n_stress, waveforms.shape[1])
+        return time_vector, nodal_stresses_time.reshape(n_nodes, n_stress, nodal_stresses_time.shape[1])
 
 
     def compute_structural_stresses_frequency(self):
@@ -374,17 +425,29 @@ class StructuralPostprocessing:
             print(f"Time to process nodal stresses (frequency): {dt} s")
 
 
-    def compute_structural_stresses_time(self, stress_iffts: bool = True):
+    def compute_structural_stresses_time(
+            self,
+            n_div: int | None = None,
+            spectral_lines: int | None = None,
+            stress_iffts: bool = True,
+            ):
+
         t0 = perf_counter()
         if stress_iffts:
             if self.nodal_averaged_stresses_frequency is None:
                 self.compute_structural_stresses_frequency()
 
-            _, self.nodal_averaged_stresses_time = self.compute_multiple_ifft_for_structural_stresses()
+            _, self.nodal_averaged_stresses_time = self.compute_multiple_ifft_for_structural_stresses(
+                n_div=n_div,
+                spectral_lines=spectral_lines,
+                )
 
         else:
             if self.nodal_solution_time is None:
-                _, self.nodal_solution_time = self.compute_multiple_ifft_for_structural_nodal_solution()
+                _, self.nodal_solution_time = self.compute_multiple_ifft_for_structural_nodal_solution(
+                    n_div=n_div,
+                    spectral_lines=spectral_lines,
+                    )
 
             self.nodal_averaged_stresses_time = self.recover_nodal_averaged_structural_stresses(time_domain=True)
 
@@ -516,12 +579,14 @@ class StructuralPostprocessing:
         plot_type: DisplacementDataType,
         unit_factor: float = 1.0,
         n_diff: int = 0,
+        n_div: int | None = None,
+        spectral_lines: int | None = None,
         reduced_loop_time: float | None = None,
         stress_plot: bool = False,
     ):
 
         # compute the structural nodal solution iffts
-        time_vector, self.nodal_solution_time = self.compute_multiple_ifft_for_structural_nodal_solution(n_diff=n_diff)
+        time_vector, self.nodal_solution_time = self.compute_multiple_ifft_for_structural_nodal_solution(n_diff=n_diff, n_div=n_div, spectral_lines=spectral_lines)
 
         if reduced_loop_time is None:
             n = time_vector.size
@@ -601,10 +666,12 @@ class StructuralPostprocessing:
         stress_type: StressType,
         data_type: StressDataType,
         unit_factor: float = 1.0,
+        n_div: int | None = None,
+        spectral_lines: int | None = None,
     ):
 
         # compute the structural stresses (time domain)
-        self.compute_structural_stresses_time()
+        self.compute_structural_stresses_time(n_div=n_div, spectral_lines=spectral_lines)
         if self.nodal_averaged_stresses_time is None:
             return
 
@@ -715,10 +782,12 @@ class StructuralPostprocessing:
         stress_type: StressType,
         data_type: StressDataType,
         unit_factor: float = 1.0,
+        n_div: int | None = None,
+        spectral_lines: int | None = None,
     ):
 
         # compute structural stress field (time domain)
-        self.compute_structural_stresses_time()
+        self.compute_structural_stresses_time(n_div=n_div, spectral_lines=spectral_lines)
 
         # evaluate the stresses at a specific time
         stresses = unit_factor * self.nodal_averaged_stresses_time[:, :, time_index]
