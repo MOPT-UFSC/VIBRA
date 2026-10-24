@@ -113,9 +113,11 @@ class DisplacementFieldPlotSetupTime:
     time_index: int
     magnification_factor: float
     plot_type: DisplacementDataType
+    n_diff: int = 0
+    n_div: int | None = None
+    spectral_lines: int | None = None
     unit: str = "--"
     unit_factor: float = 1.0
-    n_diff: int = 0
     reduced_loop_time: float | None = None
 
 
@@ -137,8 +139,10 @@ class StressFieldPlotSetupTime:
     magnification_factor: float
     stress_type: StressType
     plot_type: StressDataType
-    unit: str = "--"
     n_diff: int = 0
+    n_div: int | None = None
+    spectral_lines: int | None = None
+    unit: str = "--"
     unit_factor: float = 1.0
     reduced_loop_time: float | None = None
 
@@ -156,6 +160,8 @@ class PressureFieldPlotSetupFrequency:
 class PressureFieldPlotSetupTime:
     time_index: int
     plot_type: PressurePlotType
+    n_div: int | None = None
+    spectral_lines: int | None = None
     unit: str = "--"
     unit_factor: float = 1.0
     reduced_loop_time: float | None = None
@@ -165,6 +171,8 @@ class PressureFieldPlotSetupTime:
 class AllowablePulsationForScrewCompressorsPlotSetup:
     plot_type: PressurePlotType
     unit: str = "--"
+    n_div: int | None = None
+    spectral_lines: int | None = None
     penalization_factor: int = 0
 
 

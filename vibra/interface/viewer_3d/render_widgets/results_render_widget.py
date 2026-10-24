@@ -512,6 +512,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.plot_setup.plot_type,
             unit_factor=self.plot_setup.unit_factor,
             n_diff=self.plot_setup.n_diff,
+            n_div=self.plot_setup.n_div,
+            spectral_lines=self.plot_setup.spectral_lines,
             reduced_loop_time=self.plot_setup.reduced_loop_time,
             stress_plot=True,
         )
@@ -531,6 +533,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
                 self.plot_setup.stress_type,
                 self.plot_setup.plot_type,
                 unit_factor=self.plot_setup.unit_factor,
+                n_div=self.plot_setup.n_div,
+                spectral_lines=self.plot_setup.spectral_lines,
             )
 
         else:
@@ -539,6 +543,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
                 self.plot_setup.stress_type,
                 self.plot_setup.plot_type,
                 unit_factor=self.plot_setup.unit_factor,
+                n_div=self.plot_setup.n_div,
+                spectral_lines=self.plot_setup.spectral_lines,
             )
 
         color_scalars, self.min_value, self.max_value, self.is_animation_symetric = stress_data
@@ -597,6 +603,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             self.plot_setup.plot_type,
             unit_factor=self.plot_setup.unit_factor,
             n_diff=self.plot_setup.n_diff,
+            n_div=self.plot_setup.n_div,
+            spectral_lines=self.plot_setup.spectral_lines,
             reduced_loop_time=self.plot_setup.reduced_loop_time,
         )
 
@@ -661,6 +669,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
             time_index,
             self.plot_setup.plot_type,
             unit_factor=self.plot_setup.unit_factor,
+            n_div=self.plot_setup.n_div,
+            spectral_lines=self.plot_setup.spectral_lines,
             reduced_loop_time=self.plot_setup.reduced_loop_time,
         )
 
@@ -705,7 +715,10 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         postprocessing = app().project.get_acoustic_postprocessing()
         assert isinstance(postprocessing, AcousticPostprocessing)
 
-        data = postprocessing.compute_allowable_pulsation_field_for_screw_compressor()
+        data = postprocessing.compute_allowable_pulsation_field_for_screw_compressor(
+            n_div=self.plot_setup.n_div,
+            spectral_lines=self.plot_setup.spectral_lines,
+        )
 
         if data is None:
             return
