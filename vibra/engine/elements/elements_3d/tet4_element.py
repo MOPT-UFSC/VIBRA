@@ -145,4 +145,4 @@ class Tetrahedron4(Element3D):
         Reordering connectivity matrix to adequate 
         the GMSH connectivity to the FE model
         """
-        self.connectivities = self.model.mesh.solids_connectivity[:, [6, 4, 5, 7]]
+        self.connectivities = self.model.fe_mesh.solids_connectivity[:, [6, 4, 5, 7]]

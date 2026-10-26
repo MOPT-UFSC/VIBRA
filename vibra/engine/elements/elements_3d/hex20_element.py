@@ -228,6 +228,6 @@ class Hexahedron20(Element3D):
         Reordering connectivity matrix to adequate 
         the GMSH connectivity to the FE model
         """
-        self.connectivities = self.model.mesh.solids_connectivity[
+        self.connectivities = self.model.fe_mesh.solids_connectivity[
                 :, [4, 5, 6, 7, 8, 9, 10, 11, 12, 15, 17, 13, 20, 22, 23, 21, 14, 16, 18, 19]
             ]

@@ -44,7 +44,7 @@ class ModelDomainsProcessor:
 
     @property
     def mesh(self):
-        return self.model.mesh
+        return self.model.fe_mesh
 
     @property
     def geometry_info(self):
@@ -209,7 +209,7 @@ class ModelDomainsProcessor:
         This method processes the DOFs indices arrays of each domain.
         """
 
-        if self.model.mesh is None:
+        if self.model.fe_mesh is None:
             return  # We don't know the elements before having a FE mesh
 
         if self.model.acoustic_element_3d is None:

@@ -183,7 +183,7 @@ class StructuralHexahedron20(Structural3DElement, Hexahedron20):
         elem_nodes = self.connectivities[element_id, :]
 
         # element nodal coords
-        coords = self.model.mesh.nodal_coordinates[elem_nodes, 1:4]
+        coords = self.model.fe_mesh.nodal_coordinates[elem_nodes, 1:4]
 
         # Jacobian matrix
         jac_K = self.dphi_K @ coords
@@ -280,7 +280,7 @@ class StructuralHexahedron20(Structural3DElement, Hexahedron20):
             Ue = solution[indices.flatten(), :]
 
         # get the material ID of the element
-        material = self.get_material(self.model.mesh.solids_connectivity[element_id, 1])
+        material = self.get_material(self.model.fe_mesh.solids_connectivity[element_id, 1])
 
         # constitutive material law
         D, _ = self.get_constitutive_model(material.identifier, model_type="linear-isotropic")

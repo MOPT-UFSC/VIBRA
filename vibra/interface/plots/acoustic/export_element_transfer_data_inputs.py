@@ -41,7 +41,7 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
 
     @property
     def mesh(self):
-        return app().project.model.mesh
+        return app().project.model.fe_mesh
 
     @property
     def properties(self):
@@ -239,7 +239,7 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
                 real_values = np.array(data["real_values"])
                 imag_values = np.array(data["imag_values"])
                 surface_velocity = real_values + 1j * imag_values
-                area = self.model.mesh.surface_area_from_element_integration[surface_id]
+                area = self.model.fe_mesh.surface_area_from_element_integration[surface_id]
                 return area, surface_velocity
         return None, None
 

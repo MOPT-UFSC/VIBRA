@@ -19,7 +19,7 @@ def _acoustic_model_nastran(path: str, fluid: Fluid) -> Model:
     # mesh_setup = dict(minimum_element_size=50, maximum_element_size=50)
 
     model = Model()
-    model.mesh, model.geometry_info = MeshReader(path).read_mesh_and_info()
+    model.fe_mesh, model.geometry_info = MeshReader(path).read_mesh_and_info()
 
     for vol_id in [1, 2]:
         model.properties._set_property("fluid", fluid, volume=vol_id)
@@ -84,7 +84,7 @@ def _solve_harmonic_problem(datadir, model: "Model", path: str):
     model.solution = harmonic_solver.solve_direct(print_log=True)
     nodal_solution = model.solution.acoustic_solution
 
-    output_surface_nodes = model.mesh.get_nodes_from_surface(11)
+    output_surface_nodes = model.fe_mesh.get_nodes_from_surface(11)
     average_solution = np.average(nodal_solution[output_surface_nodes, :], axis=0)
 
     results_path = dirname(path) + "/acoustic_pressures_reference.xlsx"

@@ -180,7 +180,7 @@ class ModelSetupItems(CommonMenuItems):
     def _contains_property(self, property_name: str) -> bool:
 
         model = app().project.model
-        mesh = app().project.model.mesh
+        mesh = app().project.model.fe_mesh
         geometry_info = app().project.model.geometry_info
         properties = app().project.model.properties
 
@@ -306,8 +306,8 @@ class ModelSetupItems(CommonMenuItems):
 
         if property_name == "surface_thickness":
             if physical_domain == "structural":
-                if app().project.model.mesh is not None:
-                    volume_exists = app().project.model.mesh.are_there_volumes_in_geometry()
+                if app().project.model.fe_mesh is not None:
+                    volume_exists = app().project.model.fe_mesh.are_there_volumes_in_geometry()
                     if not volume_exists:
                         return True
 
@@ -325,7 +325,7 @@ class ModelSetupItems(CommonMenuItems):
         """
 
         volume_exists = None
-        mesh = app().project.model.mesh
+        mesh = app().project.model.fe_mesh
         toolbar = app().main_window.analysis_toolbar
 
         if mesh is not None:
@@ -381,7 +381,7 @@ class ModelSetupItems(CommonMenuItems):
 
     def _are_there_collapsed_elements(self, item_child) -> bool:
         if item_child.property_name == "mesh_setup":
-            mesh = app().project.model.mesh
+            mesh = app().project.model.fe_mesh
             if mesh is not None:
                 collapsed_elements = bool(mesh.collapsed_elements_data)
                 item_child.set_error(collapsed_elements)
@@ -391,7 +391,7 @@ class ModelSetupItems(CommonMenuItems):
 
     def _are_there_disconnected_nodes(self, item_child):
         if item_child.property_name == "mesh_setup":
-            mesh = app().project.model.mesh
+            mesh = app().project.model.fe_mesh
             if mesh is not None:
                 disconnected_nodes = bool(mesh.disconnected_nodes)
                 item_child.set_error(disconnected_nodes)
@@ -414,7 +414,7 @@ class ModelSetupItems(CommonMenuItems):
         physical_domain = physical_domain.lower()
         self.filter_items_according_to_analysis(analysis_type, physical_domain)
 
-        if app().project.model.mesh is None:
+        if app().project.model.fe_mesh is None:
             return
 
         for top_level_items in self.top_level_items:
@@ -468,7 +468,7 @@ class ModelSetupItems(CommonMenuItems):
                                     item_child.set_icon("other_compressor")
 
                 elif item_child.property_name == "volume_suppression":
-                    mesh = app().project.model.mesh
+                    mesh = app().project.model.fe_mesh
                     mesh_setup = app().project.model.mesh_setup
                     configured = bool(mesh_setup is not None and mesh_setup.suppressed_volume_ids)
                     applied = bool(mesh is not None and mesh.suppressed_volumes)

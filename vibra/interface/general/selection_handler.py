@@ -145,7 +145,7 @@ class SelectionHandler(QObject):
             self.set_geometry_selection(**new_geometry_selection)
 
     def invert_mesh_selection(self):
-        mesh = self.project.model.mesh
+        mesh = self.project.model.fe_mesh
 
         new_mesh_selection = {}
         if self.mesh_nodes:
@@ -199,28 +199,28 @@ class SelectionHandler(QObject):
         )
 
     def select_all_nodes(self):
-        mesh = self.project.model.mesh
+        mesh = self.project.model.fe_mesh
         if mesh is None:
             return
 
         self.set_mesh_selection(nodes=mesh.all_node_ids())
 
     def select_all_faces(self):
-        mesh = self.project.model.mesh
+        mesh = self.project.model.fe_mesh
         if mesh is None:
             return
 
         self.set_mesh_selection(faces=mesh.all_face_element_ids())
 
     def select_all_solids(self):
-        mesh = self.project.model.mesh
+        mesh = self.project.model.fe_mesh
         if mesh is None:
             return
 
         self.set_mesh_selection(solids=mesh.all_solid_element_ids())
 
     def select_all_mesh(self):
-        mesh = self.project.model.mesh
+        mesh = self.project.model.fe_mesh
         if mesh is None:
             return
 

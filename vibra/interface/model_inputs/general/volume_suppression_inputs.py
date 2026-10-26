@@ -21,7 +21,7 @@ class VolumeSuppressionInputs(VolumeSuppressionDialog_UI):
         self.complete = False
         self.keep_window_open = True
 
-        mesh = app().project.model.mesh
+        mesh = app().project.model.fe_mesh
         mesh_setup = app().project.model.mesh_setup
         configured = set(mesh_setup.suppressed_volume_ids) if mesh_setup else set()
         applied = set(mesh.suppressed_volumes) if mesh else set()
@@ -111,7 +111,7 @@ class VolumeSuppressionInputs(VolumeSuppressionDialog_UI):
             return
 
         model = app().project.model
-        if model.mesh is None:
+        if model.fe_mesh is None:
             return
 
         _, error_data = model.check_selected_ids(new_ids, selection_label="volumes")
@@ -227,7 +227,7 @@ class VolumeSuppressionInputs(VolumeSuppressionDialog_UI):
         )
 
     def _confirm(self, close: bool=True):
-        mesh = app().project.model.mesh
+        mesh = app().project.model.fe_mesh
         if mesh is None:
             return
 
@@ -294,7 +294,7 @@ class VolumeSuppressionInputs(VolumeSuppressionDialog_UI):
             self._refresh_after_regeneration()
 
     def _refresh_after_regeneration(self):
-        mesh = app().project.model.mesh
+        mesh = app().project.model.fe_mesh
         mesh_setup = app().project.model.mesh_setup
 
         applied = set(mesh.suppressed_volumes) if mesh else set()

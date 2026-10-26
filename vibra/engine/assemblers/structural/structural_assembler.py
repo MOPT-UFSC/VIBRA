@@ -105,7 +105,7 @@ class StructuralAssembler:
             if property == "nodal_loads" and element_integration:
                 continue
 
-            nodes = self.model.mesh.get_nodes_from_surface(surface_id)
+            nodes = self.model.fe_mesh.get_nodes_from_surface(surface_id)
             if nodes is None:
                 continue
 
@@ -123,7 +123,7 @@ class StructuralAssembler:
             if property == "nodal_loads" and element_integration:
                 continue
 
-            nodes = self.model.mesh.get_nodes_from_line(line_id)
+            nodes = self.model.fe_mesh.get_nodes_from_line(line_id)
             if nodes is None:
                 continue
 
@@ -137,7 +137,7 @@ class StructuralAssembler:
             if property != selected_property:
                 continue
 
-            node_id = self.model.mesh.nodes_from_points.get(point_id)
+            node_id = self.model.fe_mesh.nodes_from_points.get(point_id)
             if node_id is None:
                 continue
 
@@ -234,11 +234,11 @@ class StructuralAssembler:
         3d solid elements if there is any volume or
         the 2d face elements, otherwise.
         """
-        if self.model.mesh.solids_connectivity.size:
+        if self.model.fe_mesh.solids_connectivity.size:
             return self.structural_dofs_indices
 
         else:
-            nodes_from_2d_elements = np.array([*set(self.model.mesh.faces_connectivity[:, 4:].flatten())], dtype=int)
+            nodes_from_2d_elements = np.array([*set(self.model.fe_mesh.faces_connectivity[:, 4:].flatten())], dtype=int)
 
             dof = self.element_2d.dof_per_node
             local_dof_2d = np.arange(self.element_2d.dof_per_node, dtype=int)            
@@ -303,7 +303,7 @@ class StructuralAssembler:
         """
         self.material_from_volume.clear()
 
-        for vol_id in self.model.mesh.elements_from_volume:
+        for vol_id in self.model.fe_mesh.elements_from_volume:
             material = self.properties._get_property("material", volume=vol_id)
             if isinstance(material, Material):
                 self.material_from_volume[vol_id] = material
@@ -334,8 +334,8 @@ class StructuralAssembler:
             data: dict
             mass = np.real(data.get("values"))
 
-            surf_elements = list(self.model.mesh.elements_from_surface.get(surface_id))
-            surf_connect = self.model.mesh.get_connectivity_from_surface(surface_id)
+            surf_elements = list(self.model.fe_mesh.elements_from_surface.get(surface_id))
+            surf_connect = self.model.fe_mesh.get_connectivity_from_surface(surface_id)
             surface_area = self.element_2d.integrate_area(surf_connect)
 
             # calculate the surface density
@@ -389,8 +389,8 @@ class StructuralAssembler:
             data: dict
             mass = np.real(data.get("values"))
 
-            line_elements = list(self.model.mesh.elements_from_line.get(line_id))
-            line_connect = self.model.mesh.get_connectivity_from_line(line_id)
+            line_elements = list(self.model.fe_mesh.elements_from_line.get(line_id))
+            line_connect = self.model.fe_mesh.get_connectivity_from_line(line_id)
             line_length = self.element_1d.integrate_length(line_connect)
 
             # calculate the line density
@@ -417,7 +417,7 @@ class StructuralAssembler:
         """
         self.surface_data_for_shell_elements.clear()
 
-        for surf_id in self.model.mesh.elements_from_surface:
+        for surf_id in self.model.fe_mesh.elements_from_surface:
             
             material = self.properties._get_property("material", surface=surf_id)
             if material is None:
@@ -456,7 +456,7 @@ class StructuralAssembler:
 
         # loop for 2d elements
         with tqdm(
-            self.model.mesh.faces_connectivity,
+            self.model.fe_mesh.faces_connectivity,
             desc="Processing the elementary matrices data for face elements",
             unit="element",
             file=sys.stderr,
@@ -503,7 +503,7 @@ class StructuralAssembler:
         last_progress = 0
 
         # with tqdm(
-        #     self.model.mesh.solids_connectivity,
+        #     self.model.fe_mesh.solids_connectivity,
         #     desc="Processing the elementary matrices data for solid elements",
         #     unit="element",
         #     file=sys.stderr,
@@ -523,7 +523,7 @@ class StructuralAssembler:
             last_progress = progress
 
             # get the volume of the 3D element
-            vol_id = self.model.mesh.solids_connectivity[element_id, 1]
+            vol_id = self.model.fe_mesh.solids_connectivity[element_id, 1]
 
             # material from volume
             material = self.material_from_volume.get(vol_id)
@@ -540,7 +540,7 @@ class StructuralAssembler:
         """
         This method preprocesses all the required data to assemble the global matrices.
         """
-        if self.model.mesh.solids_connectivity.size:
+        if self.model.fe_mesh.solids_connectivity.size:
             self.process_material_from_volumes()
             self.compute_data_to_process_global_matrices_for_solid_elements(reorder=reorder, print_log=print_log)
 

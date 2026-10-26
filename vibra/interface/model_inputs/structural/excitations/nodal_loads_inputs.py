@@ -42,7 +42,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         app().main_window.workspace_updating_for_model_setup()
 
         self.model = app().project.model
-        self.mesh = app().project.model.mesh
+        self.mesh = app().project.model.fe_mesh
         self.geometry_info = app().project.model.geometry_info
         self.properties = app().project.model.properties
 
@@ -985,7 +985,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
             if selection == "surfaces":
 
-                nodes_from_surface = self.model.mesh.get_nodes_from_surface(selected_id)
+                nodes_from_surface = self.model.fe_mesh.get_nodes_from_surface(selected_id)
                 for (property, node_id) in self.properties.nodal_properties:
                     if property == "nodal_loads" and node_id in nodes_from_surface:
                         if node_id not in nodes_to_remove:
@@ -1003,7 +1003,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
             elif selection == "lines":
 
-                nodes_from_line = self.model.mesh.get_nodes_from_line(selected_id)
+                nodes_from_line = self.model.fe_mesh.get_nodes_from_line(selected_id)
                 for (property, node_id) in self.properties.nodal_properties:
                     if property == "nodal_loads" and node_id in nodes_from_line:
                         if node_id not in nodes_to_remove:
@@ -1021,7 +1021,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
             elif selection == "points":
 
-                nodes_from_point = self.model.mesh.nodes_from_points[selected_id]
+                nodes_from_point = self.model.fe_mesh.nodes_from_points[selected_id]
                 for (property, node_id) in self.properties.nodal_properties:
                     if property == "nodal_loads" and node_id in nodes_from_point:
                         if node_id not in nodes_to_remove:

@@ -99,7 +99,7 @@ class Model:
         self.acoustic_solution: Solution | None = None
         self.structural_solution: Solution | None = None
 
-        self.mesh: Mesh | None = None
+        self.fe_mesh: Mesh | None = None
         self.visual_mesh: Mesh | None = None
         self.geometry_info: GeometryInfo | None = None
 
@@ -149,13 +149,13 @@ class Model:
 
     @property
     def element_topology(self) -> ElementTopology | None:
-        if not isinstance(self.mesh, Mesh):
+        if not isinstance(self.fe_mesh, Mesh):
             return
 
-        if self.mesh.element_topology is None:
-            self.mesh.update_element_topology_based_on_connectivity()
+        if self.fe_mesh.element_topology is None:
+            self.fe_mesh.update_element_topology_based_on_connectivity()
 
-        return self.mesh.element_topology
+        return self.fe_mesh.element_topology
 
     @property
     def analysis_id(self) -> AnalysisID:
@@ -209,8 +209,8 @@ class Model:
             return False
 
     def get_mesh(self) -> Mesh | None:
-        if self.mesh is not None:
-            return self.mesh
+        if self.fe_mesh is not None:
+            return self.fe_mesh
         return self.visual_mesh
 
     def get_mapped_nodes(self, node_ids: list[int] | np.ndarray, domain: str) -> np.ndarray:
@@ -276,14 +276,14 @@ class Model:
         structural_domains = self.volumes_of_domain.get("structural", [])
         surface_ids = list(self.domains_processor.fluid_structure_interfaces.keys())
 
-        mask = np.isin(self.mesh.faces_connectivity[:, 1], surface_ids)
-        interface_connectivities = self.mesh.faces_connectivity[mask, :]
+        mask = np.isin(self.fe_mesh.faces_connectivity[:, 1], surface_ids)
+        interface_connectivities = self.fe_mesh.faces_connectivity[mask, :]
 
         # reorder the connectivities
         self.structural_element_2d.reorder_connect(interface_connectivities[:, 4:].copy())
 
         # clears the element normals data attribute
-        self.mesh.element_normals_data.clear()
+        self.fe_mesh.element_normals_data.clear()
 
         logging.info("Processing the fluid-structure interfaces connectivities... [2/3]")
 
@@ -297,19 +297,19 @@ class Model:
             if progress != last_progress:
                 logging.info(f"Processing the 2D elements connectivities... [{progress}/100]")
 
-            elem3d_ids = self.mesh.face_to_solid_element.get(elem2d_id, [])
+            elem3d_ids = self.fe_mesh.face_to_solid_element.get(elem2d_id, [])
 
             if len(elem3d_ids) != 2:
                 print(f"The element 2D {elem2d_id} touches the solid elements: {[int(elem_id) for elem_id in elem3d_ids]}")
                 continue
 
-            for elem3d_id in self.mesh.face_to_solid_element.get(elem2d_id, []):
-                vol_id = self.mesh.solids_connectivity[elem3d_id, 1]
-                face_coords = self.mesh.nodal_coordinates[self.structural_element_2d.connectivities[i, :], 1:]
-                solid_coords = self.mesh.nodal_coordinates[self.mesh.solids_connectivity[elem3d_id, 4:], 1:]
+            for elem3d_id in self.fe_mesh.face_to_solid_element.get(elem2d_id, []):
+                vol_id = self.fe_mesh.solids_connectivity[elem3d_id, 1]
+                face_coords = self.fe_mesh.nodal_coordinates[self.structural_element_2d.connectivities[i, :], 1:]
+                solid_coords = self.fe_mesh.nodal_coordinates[self.fe_mesh.solids_connectivity[elem3d_id, 4:], 1:]
 
                 if vol_id in structural_domains:
-                    is_inverted = self.mesh.is_element_normal_vector_inverted(
+                    is_inverted = self.fe_mesh.is_element_normal_vector_inverted(
                         elem2d_id, face_coords, solid_coords, plot_element_normals=plot_element_normals
                     )
                     if not is_inverted:
@@ -338,8 +338,8 @@ class Model:
 
         """
 
-        mask = np.sum(np.isin(self.mesh.solids_connectivity[:, 4:], node_ids), axis=1) >= 1
-        element_ids = self.mesh.solids_connectivity[mask, 0]
+        mask = np.sum(np.isin(self.fe_mesh.solids_connectivity[:, 4:], node_ids), axis=1) >= 1
+        element_ids = self.fe_mesh.solids_connectivity[mask, 0]
 
         element_ids_domain = self.domains_processor.elements_of_domain.get(domain, [])
         valid_element_ids = np.intersect1d(element_ids, element_ids_domain)
@@ -463,7 +463,7 @@ class Model:
         return analysis_setup
 
     def is_there_a_valid_mesh(self):
-        return self.mesh is not None
+        return self.fe_mesh is not None
 
     def is_there_a_geometry_imported(self):
         if self.geometry_path is None:
@@ -693,7 +693,7 @@ class Model:
         if self.analysis_id == AnalysisID.NO_ANALYSIS:
             raise errors.InvalidModelSetupError("An AnalysisID should be provided.")
 
-        for vol_id in self.mesh.elements_from_volume:
+        for vol_id in self.fe_mesh.elements_from_volume:
             pm_data = self.properties._get_property("porous_material_model", volume=vol_id)
             vt_data = self.properties._get_property("viscous_thermal_model", volume=vol_id)
             fluid = self.properties._get_property("fluid", volume=vol_id)
@@ -981,7 +981,7 @@ class Model:
             else:
                 P_inc = values
 
-            node_normals = self.mesh.get_stacked_normals_for_surface_elements(surface_id)
+            node_normals = self.fe_mesh.get_stacked_normals_for_surface_elements(surface_id)
             avg_normal = np.average(node_normals, axis=0).flatten()
 
             P_downstream = P_inc * (avg_normal @ s_vector)
@@ -1129,10 +1129,10 @@ class Model:
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key
             if property == "surface_thickness":
-                self.mesh.set_face_element_thickness(surface_id, data)
+                self.fe_mesh.set_face_element_thickness(surface_id, data)
 
     def is_surface_thickness_properly_applied_in_model(self):
-        volume_exists = self.mesh.are_there_volumes_in_geometry()
+        volume_exists = self.fe_mesh.are_there_volumes_in_geometry()
         if volume_exists:
             return None
 
@@ -1168,7 +1168,7 @@ class Model:
         if not self.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
             return
 
-        self.mesh.cache_mesh_information()
+        self.fe_mesh.cache_mesh_information()
         self.dof_decoupling = DegreesOfFreedomDecoupling(self)
         self.dof_decoupling.process_degrees_of_freedom_decoupling()
 

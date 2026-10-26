@@ -45,7 +45,7 @@ class Acoustic2DElement(Element2D):
         e_nodes = self.connectivities[el_index, :]
 
         # element nodal coordinates
-        coords = self.model.mesh.nodal_coordinates[e_nodes, 1:]
+        coords = self.model.fe_mesh.nodal_coordinates[e_nodes, 1:]
 
         # initialize the variable Fe
         Fe = 0.
@@ -86,7 +86,7 @@ class Acoustic2DElement(Element2D):
         """
 
         # element nodal coordinates
-        coords = self.model.mesh.nodal_coordinates[e_connect, 1:]
+        coords = self.model.fe_mesh.nodal_coordinates[e_connect, 1:]
 
         # initialize variable We
         We = 0.
@@ -129,7 +129,7 @@ class Acoustic2DElement(Element2D):
         Pe = pressures.transpose(1, 0, 2)
 
         # stack the element nodes coordinates for all elements
-        coords = self.model.mesh.nodal_coordinates[[connect for connect in self.connectivities], 1:]
+        coords = self.model.fe_mesh.nodal_coordinates[[connect for connect in self.connectivities], 1:]
 
         # initialize variable
         acoustic_load = 0.
@@ -160,7 +160,7 @@ class Acoustic2DElement(Element2D):
         """
 
         # stack the element nodes coordinates for all elements
-        coords = self.model.mesh.nodal_coordinates[[connect for connect in self.connectivities], 1:]
+        coords = self.model.fe_mesh.nodal_coordinates[[connect for connect in self.connectivities], 1:]
 
         # initialize variable
         int2d_NtN = 0.
@@ -197,7 +197,7 @@ class Acoustic2DElement(Element2D):
         # local_coords = self.get_stacked_local_coordinates()
 
         # stack the element nodes coordinates for all elements
-        coords = self.model.mesh.nodal_coordinates[[connect for connect in self.connectivities], 1:]
+        coords = self.model.fe_mesh.nodal_coordinates[[connect for connect in self.connectivities], 1:]
 
         # initialize variables
         int2d_NtN = 0.

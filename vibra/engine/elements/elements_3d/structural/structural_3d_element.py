@@ -43,7 +43,7 @@ class Structural3DElement(Element3D):
         elem_nodes = self.connectivities[element_id, :]
 
         # element nodal coords
-        coords = self.model.mesh.nodal_coordinates[elem_nodes, 1:4]
+        coords = self.model.fe_mesh.nodal_coordinates[elem_nodes, 1:4]
 
         # Jacobian matrix
         jac = self.dphi @ coords
@@ -131,7 +131,7 @@ class Structural3DElement(Element3D):
             Ue = solution[indices.flatten(), :]
 
         # get the material ID of the element
-        material = self.get_material(self.model.mesh.solids_connectivity[element_id, 1])
+        material = self.get_material(self.model.fe_mesh.solids_connectivity[element_id, 1])
 
         # constitutive material law
         D, _ = self.get_constitutive_model(material.identifier, model_type="linear-isotropic")
@@ -158,7 +158,7 @@ class Structural3DElement(Element3D):
         if reorder:
             self.reorder_connect()
         else:
-            self.connectivities = self.model.mesh.solids_connectivity[:, 4:]
+            self.connectivities = self.model.fe_mesh.solids_connectivity[:, 4:]
 
         dof_indexes = self.dof_indexes_processor("structural")
 

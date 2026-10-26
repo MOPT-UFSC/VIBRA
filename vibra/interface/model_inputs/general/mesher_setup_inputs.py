@@ -187,7 +187,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
     @property
     def mesh(self):
-        return app().project.model.mesh
+        return app().project.model.fe_mesh
 
     def _load_current_mesh_setup(self):
         mesh_setup = self.model.mesh_setup
@@ -418,7 +418,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
         def load_mesh_from_working_dir():
             logging.info("Loading generated mesh... [10/100]")
-            self.model.mesh = app().project.project_reader.read_mesh()
+            self.model.fe_mesh = app().project.project_reader.read_mesh()
 
             logging.info("Reading model properties... [65/100]")
             self.model.properties = app().project.project_reader.read_model_properties()
@@ -492,7 +492,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             )
 
     def update_mesh_quality_table(self):
-        mesh = self.model.mesh
+        mesh = self.model.fe_mesh
         if mesh is None:
             return
 
@@ -660,7 +660,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
         ## Temporarily highlights nodes from non-mapped 2D elements after mesh processing
 
-        # mesh = self.model.mesh
+        # mesh = self.model.fe_mesh
         # rows = np.isin(np.unique(mesh.faces_connectivity[:, 0].flatten()), list(mesh.face_to_solid_element.keys()), invert=True)
         # elements_2d = mesh.faces_connectivity[rows, 0]
         # if elements_2d.size:
@@ -695,7 +695,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             # raise NotImplementedError(f"Element type not defined!")
 
     def update_combo_boxes_according_to_geometry_info(self):
-        mesh = self.model.mesh
+        mesh = self.model.fe_mesh
         if mesh is None:
             return
 
@@ -722,7 +722,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
     def mesh_quality_item_clicked_callback(self, item):
         self.pushButton_show_bad_elements.setEnabled(False)
 
-        mesh = self.model.mesh
+        mesh = self.model.fe_mesh
         if mesh is None:
             return
 
@@ -742,7 +742,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.pushButton_plot_histogram.setEnabled(True)
 
     def plot_mesh_parameter_histogram(self):
-        mesh = self.model.mesh
+        mesh = self.model.fe_mesh
         if mesh is None:
             return
 
@@ -836,7 +836,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         plot_ui.exec_()
 
     def plot_bad_elements(self):
-        mesh = self.model.mesh
+        mesh = self.model.fe_mesh
         if mesh is None:
             return
 

@@ -60,7 +60,7 @@ class SymbolsActorStructural(SymbolsActor):
         super().build()
 
     def _get_center_coords_and_normals(self, surface_id: int) -> tuple[np.ndarray, np.ndarray]:
-        mesh = self.model.mesh
+        mesh = self.model.fe_mesh
         nodes = mesh.get_nodes_from_surface(surface_id)
         surface_coordinates = mesh.nodal_coordinates[nodes, 1:]
 
@@ -88,7 +88,7 @@ class SymbolsActorStructural(SymbolsActor):
         return center_coords, avg_normal
 
     def _get_center_coords_and_normals_line(self, line_id: int) -> tuple[np.ndarray, np.ndarray]:
-        mesh = self.model.mesh
+        mesh = self.model.fe_mesh
         nodes = mesh.get_nodes_from_line(line_id)
         line_coordinates = mesh.nodal_coordinates[nodes, 1:]
         center_coords = np.average(line_coordinates, axis=0)
@@ -99,7 +99,7 @@ class SymbolsActorStructural(SymbolsActor):
         return (line_coordinates[index - 1, :], line_coordinates[index, :], line_coordinates[index + 1, :])
 
     def _get_center_coords_and_normals_point(self, point_id: int) -> tuple[np.ndarray, np.ndarray]:
-        mesh = self.model.mesh
+        mesh = self.model.fe_mesh
         point_nodes = mesh.nodes_from_points.get(point_id)
         points_coordinates = mesh.nodal_coordinates[point_nodes, 1:]
 

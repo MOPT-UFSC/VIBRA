@@ -152,7 +152,7 @@ class FacesActor(vtkActor):
         if self.data is None:
             return
 
-        mesh = app().project.model.mesh
+        mesh = app().project.model.fe_mesh
         geometry_info = app().project.model.geometry_info
         properties = app().project.model.properties
         color_mode = self.visualization_filter.color_mode

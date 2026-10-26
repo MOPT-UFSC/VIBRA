@@ -57,7 +57,7 @@ def acoustic_model(fluid: Fluid) -> Model:
     model.fem_mesher.set_path(path)
     model.fem_mesher.setup.minimum_element_size = 50
     model.fem_mesher.setup.maximum_element_size = 50
-    model.mesh, model.geometry_info = model.fem_mesher.generate()
+    model.fe_mesh, model.geometry_info = model.fem_mesher.generate()
 
     return model
 
@@ -125,7 +125,7 @@ def structural_model(material: Material) -> Model:
     model.fem_mesher.set_path(path)
     model.fem_mesher.setup.minimum_element_size = 50
     model.fem_mesher.setup.maximum_element_size = 50
-    model.mesh, model.geometry_info = model.fem_mesher.generate()
+    model.fe_mesh, model.geometry_info = model.fem_mesher.generate()
 
     return model
 

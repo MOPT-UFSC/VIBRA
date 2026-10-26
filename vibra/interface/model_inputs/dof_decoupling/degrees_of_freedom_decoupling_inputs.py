@@ -47,7 +47,7 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
 
     @property
     def mesh(self) -> Mesh | None:
-        return self.model.mesh
+        return self.model.fe_mesh
 
     @property
     def geometry_info(self) -> GeometryInfo | None:

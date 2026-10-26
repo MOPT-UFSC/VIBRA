@@ -44,7 +44,7 @@ class Acoustic3DElement(Element3D):
         elem_nodes = self.connectivities[el_index, :]
 
         # element nodal coords
-        coords = self.model.mesh.nodal_coordinates[elem_nodes, 1:4]
+        coords = self.model.fe_mesh.nodal_coordinates[elem_nodes, 1:4]
 
         # initializing variables
         Ke, Me = 0., 0.
@@ -129,7 +129,7 @@ class Acoustic3DElement(Element3D):
         if reorder:
             self.reorder_connect()
         else:
-            self.connectivities = self.model.mesh.solids_connectivity[:, 4:]
+            self.connectivities = self.model.fe_mesh.solids_connectivity[:, 4:]
 
         dof_indexes = self.dof_indexes_processor("acoustic")
 

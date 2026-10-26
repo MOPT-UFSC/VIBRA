@@ -37,7 +37,7 @@ class StructuralExcitationsAssembler:
 
     @property
     def mesh(self):
-        return self.assembler.model.mesh
+        return self.assembler.model.fe_mesh
 
     @property
     def geometry_info(self):

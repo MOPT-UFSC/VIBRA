@@ -41,7 +41,7 @@ class StructuralStress2dPlotTimeInputs(StructuralStress2dPlotTimeInputs_UI):
 
     @property
     def mesh(self):
-        return app().project.model.mesh
+        return app().project.model.fe_mesh
 
     @property
     def geometry_info(self):

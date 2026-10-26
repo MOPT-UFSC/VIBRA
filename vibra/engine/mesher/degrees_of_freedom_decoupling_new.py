@@ -15,7 +15,7 @@ import numpy as np
 class DegreesOfFreedomDecoupling:
     def __init__(self, model: "Model"):
         self.model = model
-        self.mesh = model.mesh
+        self.mesh = model.fe_mesh
         self.geometry_info = model.geometry_info
         self.properties = model.properties
 

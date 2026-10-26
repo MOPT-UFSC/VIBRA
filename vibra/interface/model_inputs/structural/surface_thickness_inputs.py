@@ -25,7 +25,7 @@ class SurfaceThicknessInputs(SurfaceThicknessInputs_UI):
         app().main_window.workspace_updating_for_model_setup()
 
         self.model = app().project.model
-        self.mesh = app().project.model.mesh
+        self.mesh = app().project.model.fe_mesh
         self.geometry_info = app().project.model.geometry_info
         self.properties = app().project.model.properties
 

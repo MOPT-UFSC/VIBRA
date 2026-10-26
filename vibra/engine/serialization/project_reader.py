@@ -76,13 +76,13 @@ class ProjectReader:
             model.set_analysis_setup(analysis_setup)
 
         if self.project_paths.fem_mesh_filepath.exists():
-            model.mesh = self.read_mesh()
+            model.fe_mesh = self.read_mesh()
             model.geometry_info = self.read_geometry_info()
 
         if self.project_paths.visual_mesh_filepath.exists():
             model.visual_mesh = self.read_visual_mesh()
         else:
-            model.visual_mesh = copy(model.mesh)
+            model.visual_mesh = copy(model.fe_mesh)
             if model.visual_mesh is not None:
                 model.visual_mesh.solids_connectivity = np.zeros((0, 4), dtype=int)
 

@@ -63,7 +63,7 @@ class MeshActor(vtkPropAssembly):
         if self.model is None:
             return
 
-        return self.model.mesh
+        return self.model.fe_mesh
 
     @property
     def geometry_info(self):

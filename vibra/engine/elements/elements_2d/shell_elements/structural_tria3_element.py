@@ -226,8 +226,8 @@ class StructuralTriangle3(Element2D):
         self.connectivity = None
         self.element_label = "structural_triangular_3"
 
-        self.nodal_coordinates = self.model.mesh.nodal_coordinates
-        self.faces_connectivity = self.model.mesh.faces_connectivity
+        self.nodal_coordinates = self.model.fe_mesh.nodal_coordinates
+        self.faces_connectivity = self.model.fe_mesh.faces_connectivity
 
         self.number_of_nodes = len(self.nodal_coordinates)
         self.number_of_elements = self.faces_connectivity.shape[0]
@@ -742,7 +742,7 @@ class StructuralTriangle3(Element2D):
 
         # Local coordinate system definition
         nodal_coords = self.nodal_coordinates[connect, 1:]
-        normal_unit_vector = self.model.mesh.get_element_face_normal(connect)
+        normal_unit_vector = self.model.fe_mesh.get_element_face_normal(connect)
 
         number_of_frequencies = normal_pressure_load.shape[1]
         F_elem = np.zeros((self.dof_per_element, number_of_frequencies), dtype=complex)

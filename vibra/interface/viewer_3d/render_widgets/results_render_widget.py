@@ -164,7 +164,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         else:
             self.configure_plot(plot_setup)
 
-        mesh = app().project.model.mesh
+        mesh = app().project.model.fe_mesh
         if mesh is None:
             return
 
@@ -337,7 +337,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         model = postprocessing.model
         acoustic_nodes = model.domains_processor.nodes_of_domain.get("acoustic")
 
-        _color_scalars = np.zeros(len(model.mesh.nodal_coordinates), dtype=float)
+        _color_scalars = np.zeros(len(model.fe_mesh.nodal_coordinates), dtype=float)
         _color_scalars[acoustic_nodes] = color_scalars
 
         colormap = app().config.user_preferences.color_map
@@ -395,10 +395,10 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         model = postprocessing.model
         structural_nodes = model.domains_processor.nodes_of_domain.get("structural")
 
-        deformed_coords = model.mesh.nodal_coordinates[:, 1:].copy()
+        deformed_coords = model.fe_mesh.nodal_coordinates[:, 1:].copy()
         deformed_coords[structural_nodes, :] += (magnification_factor / (10 * max_value)) * displacements
 
-        _color_scalars = np.zeros(len(model.mesh.nodal_coordinates), dtype=float)
+        _color_scalars = np.zeros(len(model.fe_mesh.nodal_coordinates), dtype=float)
         _color_scalars[structural_nodes] = color_scalars
 
         colormap = app().config.user_preferences.color_map
@@ -474,10 +474,10 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         model = postprocessing.model
         structural_nodes = model.domains_processor.nodes_of_domain.get("structural")
 
-        deformed_coords = model.mesh.nodal_coordinates[:, 1:].copy()
+        deformed_coords = model.fe_mesh.nodal_coordinates[:, 1:].copy()
         deformed_coords[structural_nodes, :] += (magnification_factor / (10 * max_disp)) * displacements
 
-        _color_scalars = np.zeros(len(model.mesh.nodal_coordinates), dtype=float)
+        _color_scalars = np.zeros(len(model.fe_mesh.nodal_coordinates), dtype=float)
         _color_scalars[structural_nodes] = color_scalars
 
         colormap = app().config.user_preferences.color_map
@@ -559,10 +559,10 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         model = postprocessing.model
         structural_nodes = model.domains_processor.nodes_of_domain.get("structural")
 
-        deformed_coords = model.mesh.nodal_coordinates[:, 1:].copy()
+        deformed_coords = model.fe_mesh.nodal_coordinates[:, 1:].copy()
         deformed_coords[structural_nodes, :] += (magnification_factor / (10 * max_disp)) * displacements
 
-        _color_scalars = np.zeros(len(model.mesh.nodal_coordinates), dtype=float)
+        _color_scalars = np.zeros(len(model.fe_mesh.nodal_coordinates), dtype=float)
         _color_scalars[structural_nodes] = color_scalars
 
         colormap = app().config.user_preferences.color_map
@@ -626,10 +626,10 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         model = postprocessing.model
         structural_nodes = model.domains_processor.nodes_of_domain.get("structural")
 
-        deformed_coords = model.mesh.nodal_coordinates[:, 1:].copy()
+        deformed_coords = model.fe_mesh.nodal_coordinates[:, 1:].copy()
         deformed_coords[structural_nodes, :] += (magnification_factor / (10 * max_value)) * displacements
 
-        _color_scalars = np.zeros(len(model.mesh.nodal_coordinates), dtype=float)
+        _color_scalars = np.zeros(len(model.fe_mesh.nodal_coordinates), dtype=float)
         _color_scalars[structural_nodes] = color_scalars
 
         colormap = app().config.user_preferences.color_map
@@ -687,7 +687,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         model = postprocessing.model
         acoustic_nodes = model.domains_processor.nodes_of_domain.get("acoustic")
 
-        _color_scalars = np.zeros(len(model.mesh.nodal_coordinates), dtype=float)
+        _color_scalars = np.zeros(len(model.fe_mesh.nodal_coordinates), dtype=float)
         _color_scalars[acoustic_nodes] = color_scalars
 
         colormap = app().config.user_preferences.color_map
@@ -731,7 +731,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         model = postprocessing.model
         acoustic_nodes = model.domains_processor.nodes_of_domain.get("acoustic")
 
-        _color_scalars = np.zeros(len(model.mesh.nodal_coordinates), dtype=float)
+        _color_scalars = np.zeros(len(model.fe_mesh.nodal_coordinates), dtype=float)
         _color_scalars[acoustic_nodes] = color_scalars
 
         colormap = app().config.user_preferences.color_map
@@ -901,7 +901,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if not isinstance(self.analysis_actor, AnalysisActor):
             return
 
-        mesh = app().project.model.mesh
+        mesh = app().project.model.fe_mesh
         if mesh is None:
             return
 
@@ -924,7 +924,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if not isinstance(self.analysis_actor, HollowAnalysisActor):
             return
 
-        mesh = app().project.model.mesh
+        mesh = app().project.model.fe_mesh
         if mesh is None:
             return
 

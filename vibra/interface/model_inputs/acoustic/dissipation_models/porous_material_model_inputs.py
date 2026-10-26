@@ -68,7 +68,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         app().main_window.selection.volume_selection_mode = True
 
         self.model = app().project.model
-        self.mesh = app().project.model.mesh
+        self.mesh = app().project.model.fe_mesh
         self.geometry_info = app().project.model.geometry_info
         self.properties = app().project.model.properties
 

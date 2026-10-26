@@ -137,7 +137,7 @@ class MeshRenderWidget(CommonRenderWidget):
         scale_bar_label_property.SetFontSize(font_size_px)
 
     def update_plot(self, reset_camera=True):
-        mesh = app().project.model.mesh
+        mesh = app().project.model.fe_mesh
         if mesh is None:
             return
 
@@ -195,7 +195,7 @@ class MeshRenderWidget(CommonRenderWidget):
         # We hide them painting the cells as transparent.
         self.nodes_actor.SetVisibility(True)
 
-        mesh = app().project.model.mesh
+        mesh = app().project.model.fe_mesh
         mesh_error = mesh.collapsed_elements_data or mesh.disconnected_nodes
         distinguished_solids = app().main_window.distinguished_solids
 
@@ -289,7 +289,7 @@ class MeshRenderWidget(CommonRenderWidget):
         self.solids_actor.paint_solids(selection_faces_color, solids)
         self.edges_actor.configure_appearance()
 
-        mesh = app().project.model.mesh
+        mesh = app().project.model.fe_mesh
         if mesh is None:
             return
 
@@ -332,7 +332,7 @@ class MeshRenderWidget(CommonRenderWidget):
         if not isinstance(self.solids_actor, SolidsActor):
             return
 
-        mesh = app().project.model.mesh
+        mesh = app().project.model.fe_mesh
         if mesh is None:
             return
 
@@ -354,7 +354,7 @@ class MeshRenderWidget(CommonRenderWidget):
         if not isinstance(self.solids_actor, HollowSolidsActor):
             return
 
-        mesh = app().project.model.mesh
+        mesh = app().project.model.fe_mesh
         if mesh is None:
             return
 
@@ -466,10 +466,10 @@ class MeshRenderWidget(CommonRenderWidget):
     def add_problematic_mesh_legend(self):
         legend_actor = LegendActor()
 
-        if app().project.model.mesh.disconnected_nodes:
+        if app().project.model.fe_mesh.disconnected_nodes:
             legend_actor.add_item("Disconnected nodes", color_names.GREEN)
 
-        if app().project.model.mesh.collapsed_elements_data:
+        if app().project.model.fe_mesh.collapsed_elements_data:
             legend_actor.add_item("Collapsed element nodes", color_names.ORANGE)
 
         self.add_actors(legend_actor)

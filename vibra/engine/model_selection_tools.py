@@ -16,7 +16,7 @@ class ModelSelectionTools:
 
     @property
     def mesh(self):
-        return self.model.mesh
+        return self.model.fe_mesh
 
     @property
     def geometry_info(self):

@@ -63,8 +63,8 @@ class ProjectWriter:
             # update the path to point to the new location.
             model.set_geometry_path(self.write_geometry(model.geometry_path))
 
-        if model.mesh is not None:
-            self.write_mesh(model.mesh)
+        if model.fe_mesh is not None:
+            self.write_mesh(model.fe_mesh)
 
         if (model.visual_mesh is not None) and model.is_there_a_geometry_imported():
             self.write_visual_mesh(model.visual_mesh)

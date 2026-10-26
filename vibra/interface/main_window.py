@@ -1042,7 +1042,7 @@ class MainWindow(MainWindow_UI):
         self.action_show_fluid_structure_interface_normals.setText(new_name)
 
         def function_callback():
-            if not app().project.model.mesh.element_normals_data:
+            if not app().project.model.fe_mesh.element_normals_data:
                 app().project.model.process_connectivities_at_fluid_structure_interfaces(plot_element_normals=True)
 
             self.update_symbols()

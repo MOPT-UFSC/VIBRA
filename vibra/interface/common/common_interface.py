@@ -216,7 +216,7 @@ def check_structural_model_frequency_controls():
 def check_mesh_related_issues(run_analysis_button: QPushButton):
 
     # disable run_analysis button if there are disconnected nodes or collapsed elements
-    mesh = app().project.model.mesh
+    mesh = app().project.model.fe_mesh
 
     # TODO: check if this makes sense. We probably want to check
     # this before running the analysis, not during the setup.
@@ -271,7 +271,7 @@ def generate_mesh_and_finalize() -> bool:
 
     def _load_mesh_from_working_dir():
         logging.info("Loading generated mesh... [10/100]")
-        app().project.model.mesh = app().project.project_reader.read_mesh()
+        app().project.model.fe_mesh = app().project.project_reader.read_mesh()
 
         logging.info("Reading model properties... [65/100]")
         app().project.model.properties = app().project.project_reader.read_model_properties()
@@ -313,7 +313,7 @@ def generate_mesh_and_finalize() -> bool:
 
 
 def prompt_if_disconnected_nodes():
-    mesh = app().project.model.mesh
+    mesh = app().project.model.fe_mesh
     if mesh is None or not mesh.disconnected_nodes:
         return
 
@@ -365,7 +365,7 @@ def process_decoupling_actions():
         app().main_window.update_geometry_information()
 
         logging.info("Processing degress of freedom decoupling... [92/100]")
-        app().project.model.mesh.process_disconnected_nodes_criterion()
+        app().project.model.fe_mesh.process_disconnected_nodes_criterion()
 
         logging.info("Processing degress of freedom decoupling... [95/100]")
         app().main_window.update_plots()
@@ -408,7 +408,7 @@ def remove_all_properties_assigned_to_new_surfaces(new_surface_ids: list[int], r
 
 def restore_mesh_data_modified_by_decoupling():
 
-    mesh = app().project.model.mesh
+    mesh = app().project.model.fe_mesh
     if mesh.cache_nodal_coordinates is None:
         return
 

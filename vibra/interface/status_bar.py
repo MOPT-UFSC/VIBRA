@@ -108,7 +108,7 @@ class StatusBar(QStatusBar):
             self.selected_volumes_label.setText(f"Selected volume: {str_volumes}")
 
     def update_mesh_information(self):
-        mesh = app().project.model.mesh
+        mesh = app().project.model.fe_mesh
         if mesh is None:
             return
 
@@ -119,7 +119,7 @@ class StatusBar(QStatusBar):
         self.reset_mesh_info_visibility(key=True)
 
     def update_geometry_information(self):
-        mesh = app().project.model.mesh
+        mesh = app().project.model.fe_mesh
         if mesh is None:
             return
 

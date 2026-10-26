@@ -39,7 +39,7 @@ class StructuralNodalSolution2dPlotTimeInputs(StructuralNodalSolution2dPlotTimeI
 
     @property
     def mesh(self):
-        return app().project.model.mesh
+        return app().project.model.fe_mesh
 
     @property
     def properties(self):

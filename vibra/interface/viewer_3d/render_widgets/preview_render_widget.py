@@ -104,8 +104,8 @@ class PreviewRenderWidget(CommonRenderWidget):
                 self.postprocessed_data_3d = None
 
             case plot_setup.PressureFieldPlotSetupFrequency():
-                assert self.model.mesh is not None
-                assert self.model.mesh.nodal_coordinates is not None
+                assert self.model.fe_mesh is not None
+                assert self.model.fe_mesh.nodal_coordinates is not None
 
                 postprocessor = AcousticPostprocessing(self.model)
                 data = postprocessor.compute_acoustic_pressure_field(
@@ -122,7 +122,7 @@ class PreviewRenderWidget(CommonRenderWidget):
                 color_scalars, min_value, max_value, complex_result = data
                 acoustic_nodes = self.model.domains_processor.nodes_of_domain.get("acoustic")
 
-                _color_scalars = np.zeros(len(self.model.mesh.nodal_coordinates), dtype=float)
+                _color_scalars = np.zeros(len(self.model.fe_mesh.nodal_coordinates), dtype=float)
                 _color_scalars[acoustic_nodes] = color_scalars
                 self.postprocessed_data_3d = PostprocessedData3D(
                     color_scalars=_color_scalars,
@@ -132,8 +132,8 @@ class PreviewRenderWidget(CommonRenderWidget):
                 )
 
             case plot_setup.DisplacementFieldPlotSetupFrequency():
-                assert self.model.mesh is not None
-                assert self.model.mesh.nodal_coordinates is not None
+                assert self.model.fe_mesh is not None
+                assert self.model.fe_mesh.nodal_coordinates is not None
 
                 postprocessor = StructuralPostprocessing(self.model)
                 data = postprocessor.compute_structural_response_field(
@@ -150,9 +150,9 @@ class PreviewRenderWidget(CommonRenderWidget):
 
                 displacements, color_scalars, min_value, max_value, complex_result = data
                 structural_nodes = self.model.domains_processor.nodes_of_domain.get("structural")
-                deformed_coords = self.model.mesh.nodal_coordinates[:, 1:].copy()
+                deformed_coords = self.model.fe_mesh.nodal_coordinates[:, 1:].copy()
                 deformed_coords[structural_nodes, :] += (self.plot_setup.magnification_factor / (10 * max_value)) * displacements
-                _color_scalars = np.zeros(len(self.model.mesh.nodal_coordinates), dtype=float)
+                _color_scalars = np.zeros(len(self.model.fe_mesh.nodal_coordinates), dtype=float)
                 _color_scalars[structural_nodes] = color_scalars
                 self.postprocessed_data_3d = PostprocessedData3D(
                     deformed_coordinates=deformed_coords,
@@ -225,9 +225,9 @@ class PreviewRenderWidget(CommonRenderWidget):
     def _update_postprocessed_visualization(self):
         assert self.postprocessed_data_3d is not None
         assert self.model is not None
-        assert self.model.mesh is not None
+        assert self.model.fe_mesh is not None
 
-        all_nodes = self.model.mesh.all_node_ids()
+        all_nodes = self.model.fe_mesh.all_node_ids()
         pp = self.postprocessed_data_3d
 
         self.results_actor.show_results_mode()

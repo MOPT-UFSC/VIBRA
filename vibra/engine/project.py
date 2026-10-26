@@ -60,7 +60,7 @@ class Project:
 
     @property
     def mesh(self) -> Mesh | None:
-        return self.model.mesh
+        return self.model.fe_mesh
 
     @property
     def analysis_id(self):
@@ -239,7 +239,7 @@ class Project:
         """
 
         mesh, info = MeshReader(path).read_mesh_and_info()
-        self.model.mesh = mesh
+        self.model.fe_mesh = mesh
         self.model.geometry_info = info
         self.model.set_geometry_path(path)
         self.write_to_working_dir()
@@ -301,7 +301,7 @@ class Project:
                 solids=collapsed_3d_elements,
             )
 
-        self.model.mesh = mesh
+        self.model.fe_mesh = mesh
         self.model.geometry_info = geometry_info
 
         self.configure_mesh(mesh_setup)
@@ -332,10 +332,10 @@ class Project:
         """
         Copy the external parts of a visual mesh.
         """
-        if self.model.mesh is None:
+        if self.model.fe_mesh is None:
             return
 
-        self.model.visual_mesh = deepcopy(self.model.mesh)
+        self.model.visual_mesh = deepcopy(self.model.fe_mesh)
         self.model.visual_mesh.solids_connectivity = np.zeros((0, 4), dtype=int)
         self.project_writer.write_visual_mesh(self.model.visual_mesh)
         return self.model.visual_mesh
