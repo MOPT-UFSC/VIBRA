@@ -59,7 +59,7 @@ class OccMesher:
 
         loc = TopLoc_Location()
 
-        coordinates = []
+        nodal_coordinates = []
         edges_connectivity = []
         faces_connectivity = []
 
@@ -90,10 +90,12 @@ class OccMesher:
                 visited_faces.add(face_index)
 
                 triangulation = BRep_Tool.Triangulation_s(face, loc)
-                coordinate_shift = len(coordinates)
+                coordinate_shift = len(nodal_coordinates)
 
-                for i in range(triangulation.NbNodes()):
-                    coordinates.append(triangulation.Node(i + 1).Coord())
+                for index in range(triangulation.NbNodes()):
+                    i = len(nodal_coordinates)
+                    x, y, z = triangulation.Node(index + 1).Coord()
+                    nodal_coordinates.append((i, x, y, z))
 
                 for triangle in triangulation.Triangles():
                     triangle_indexes = np.array(triangle.Get())
@@ -120,12 +122,6 @@ class OccMesher:
                         line_to_points[edge_index].add(vertex_index)
 
         mesh = Mesh()
-        coordinates = np.array(coordinates) * mesh.get_length_unit_factor()
-        node_indices = np.arange(len(coordinates)).reshape(-1, 1)
-        nodal_coordinates = np.concatenate(
-            [node_indices, coordinates],
-            axis=1,
-        )
 
         edge_indices = np.arange(len(edges_connectivity)).reshape(-1, 1)
         line_indices = np.array(line_indices).reshape(-1, 1)
@@ -156,7 +152,7 @@ class OccMesher:
         )
 
         mesh.set_mesh_data(
-            nodal_coordinates,
+            np.array(nodal_coordinates),
             lines_connectivity,
             faces_connectivity,
             solids_connectivity=np.zeros((0, 4)),
