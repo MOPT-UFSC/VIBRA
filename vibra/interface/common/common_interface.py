@@ -217,7 +217,11 @@ def check_mesh_related_issues(run_analysis_button: QPushButton):
 
     # disable run_analysis button if there are disconnected nodes or collapsed elements
     mesh = app().project.model.mesh
-    assert mesh is not None
+
+    # TODO: check if this makes sense. We probably want to check
+    # this before running the analysis, not during the setup.
+    if mesh is None:
+        return
 
     disconnected_nodes = bool(mesh.disconnected_nodes)
     collapsed_elements = bool(mesh.collapsed_elements_data)

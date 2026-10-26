@@ -28,7 +28,6 @@ class AnalysisChecker:
         return self.model.geometry_info
 
     def check_analysis_requirements(self, is_resume: bool = False, update_domain_mappings: bool = True):
-
         # update the domains mappings
         if update_domain_mappings:
             self.model.domains_processor.update_domains_mappings()
@@ -134,12 +133,8 @@ class AnalysisChecker:
             raise errors.InvalidAnalysisSetupError("Analysis can not be resumed.")
 
     def check_mesh(self):
-
-        if self.mesh is None:
-            raise errors.InvalidMeshSetupError("There is no mesh available")
-
         if not self.model.is_there_a_valid_mesh():
-            raise errors.InvalidMeshSetupError("No mesh was provided")
+            raise errors.InvalidMeshSetupError("No FE mesh was provided.\nPlease generate a FE mesh before proceeding.")
 
         if self.mesh.disconnected_nodes:
             text = "Disconnected nodes have been detected during the mesh post-processing. \n"
