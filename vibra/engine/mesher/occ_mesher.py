@@ -60,8 +60,8 @@ class OccMesher:
 
         def duplicated(*args):
             if args in _visited:
-                _visited.add(args)
                 return True
+            _visited.add(args)
             return False
 
         WHATEVER = 0

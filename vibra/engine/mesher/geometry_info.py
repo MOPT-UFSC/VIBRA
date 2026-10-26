@@ -19,9 +19,9 @@ class GeometryInfo:
         self._surfaces_to_curves = defaultdict(list)
         self._curves_to_points = defaultdict(list)
 
-        self._surfaces_to_solids = {}
-        self._curves_to_surfaces = {}
-        self._points_to_curves = {}
+        self._surfaces_to_solids = defaultdict(list)
+        self._curves_to_surfaces = defaultdict(list)
+        self._points_to_curves = defaultdict(list)
 
         self._cache_solids_to_surfaces = defaultdict()
         self._cache_surfaces_to_curves = defaultdict()
@@ -308,7 +308,7 @@ class GeometryInfo:
 
             if dim == 3:
                 self._solids_volumes[tag] = mass * (self.length_unit_factor**3)
-                self._solids_to_surfaces[tag] = tuple(downwards)
+                self._solids_to_surfaces[tag] = sorted(downwards)
                 self.solids.append(tag)
 
                 center, _ = self.process_center_element(dim, tag)
@@ -319,7 +319,7 @@ class GeometryInfo:
 
             elif dim == 2:
                 self._surfaces_areas[tag] = mass * (self.length_unit_factor**2)
-                self._surfaces_to_curves[tag] = tuple(downwards)
+                self._surfaces_to_curves[tag] = sorted(downwards)
                 self.surfaces.append(tag)
 
                 center, uv_mid = self.process_center_element(dim, tag)
@@ -337,7 +337,7 @@ class GeometryInfo:
 
             elif dim == 1:
                 self._curves_lengths[tag] = mass * (self.length_unit_factor**1)
-                self._curves_to_points[tag] = tuple(downwards)
+                self._curves_to_points[tag] = sorted(downwards)
                 self.curves.append(tag)
 
                 center, uv_mid = self.process_center_element(dim, tag)
@@ -454,18 +454,21 @@ class GeometryInfo:
         surfaces_to_solids = defaultdict(list)
 
         for solid, surfaces in self._solids_to_surfaces.items():
+            surfaces.sort()
             for surface in surfaces:
                 surfaces_to_solids[surface].append(solid)
         self._surfaces_to_solids = {surf: tuple(sol) for surf, sol in surfaces_to_solids.items()}
 
         curves_to_surfaces = defaultdict(list)
         for surface, curves in self._surfaces_to_curves.items():
+            curves.sort()
             for curve in curves:
                 curves_to_surfaces[curve].append(surface)
         self._curves_to_surfaces = {curv: tuple(surf) for curv, surf in curves_to_surfaces.items()}
 
         points_to_curves = defaultdict(list)
         for curve, points in self._curves_to_points.items():
+            points.sort()
             for point in points:
                 points_to_curves[point].append(curve)
         self._points_to_curves = {point: tuple(curv) for point, curv in points_to_curves.items()}
