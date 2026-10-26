@@ -10,7 +10,94 @@ from vibra.engine.mesher.gmsh_constants import GMSH_HEX8, GMSH_HEX20, GMSH_TET4,
 from vibra.engine.mesher.gmsh_mesher import GmshMesher
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.mesh_setup import ElementTopology, LocalMeshSizeControlSetup
+from vibra.engine.mesher.occ_mesher import OccMesher
 from vibra.engine.serialization.file_helpers import read_json, write_json
+
+
+def test_geometry_info_equivalence():
+    geometry_path = str(PROJECT_DIR / "examples/geometry_files/cylinder.step")
+
+    _, gmsh_geometry_info = GmshMesher(geometry_path).generate()
+    _, occ_geometry_info = OccMesher(geometry_path).generate()
+
+    # Adjacencies (dict of iterables)
+    assert gmsh_geometry_info._solids_to_surfaces == occ_geometry_info._solids_to_surfaces
+    assert gmsh_geometry_info._surfaces_to_curves == occ_geometry_info._surfaces_to_curves
+    assert gmsh_geometry_info._curves_to_points == occ_geometry_info._curves_to_points
+
+    assert gmsh_geometry_info._surfaces_to_solids == occ_geometry_info._surfaces_to_solids
+    assert gmsh_geometry_info._curves_to_surfaces == occ_geometry_info._curves_to_surfaces
+    assert gmsh_geometry_info._points_to_curves == occ_geometry_info._points_to_curves
+
+    # Measures (scalar floats)
+    _assert_dict_of_scalars_equal(
+        gmsh_geometry_info._solids_volumes,
+        occ_geometry_info._solids_volumes,
+    )
+    _assert_dict_of_scalars_equal(
+        gmsh_geometry_info._surfaces_areas,
+        occ_geometry_info._surfaces_areas,
+    )
+    _assert_dict_of_scalars_equal(
+        gmsh_geometry_info._curves_lengths,
+        occ_geometry_info._curves_lengths,
+    )
+
+    # Centers (3-component vectors)
+    _assert_dict_of_vectors_equal(
+        gmsh_geometry_info._solids_centers,
+        occ_geometry_info._solids_centers,
+    )
+    _assert_dict_of_vectors_equal(
+        gmsh_geometry_info._surfaces_centers,
+        occ_geometry_info._surfaces_centers,
+    )
+    _assert_dict_of_vectors_equal(
+        gmsh_geometry_info._curves_centers,
+        occ_geometry_info._curves_centers,
+    )
+    _assert_dict_of_vectors_equal(
+        gmsh_geometry_info._points_centers,
+        occ_geometry_info._points_centers,
+    )
+
+    # Normals (unit vectors)
+    _assert_dict_of_vectors_equal(
+        gmsh_geometry_info._surfaces_normals,
+        occ_geometry_info._surfaces_normals,
+    )
+    _assert_dict_of_vectors_equal(
+        gmsh_geometry_info._curves_normals,
+        occ_geometry_info._curves_normals,
+    )
+    _assert_dict_of_vectors_equal(
+        gmsh_geometry_info._points_normals,
+        occ_geometry_info._points_normals,
+    )
+
+    # Bounding boxes (6-component vectors)
+    _assert_dict_of_vectors_equal(
+        gmsh_geometry_info._bounding_solids,
+        occ_geometry_info._bounding_solids,
+    )
+    _assert_dict_of_vectors_equal(
+        gmsh_geometry_info._bounding_surfaces,
+        occ_geometry_info._bounding_surfaces,
+    )
+    _assert_dict_of_vectors_equal(
+        gmsh_geometry_info._bounding_lines,
+        occ_geometry_info._bounding_lines,
+    )
+
+    # Straight-entity flags (sets)
+    assert gmsh_geometry_info._straight_surfaces == occ_geometry_info._straight_surfaces
+    assert gmsh_geometry_info._straight_curves == occ_geometry_info._straight_curves
+
+    # Entity id lists
+    assert sorted(gmsh_geometry_info.solids) == sorted(occ_geometry_info.solids)
+    assert sorted(gmsh_geometry_info.surfaces) == sorted(occ_geometry_info.surfaces)
+    assert sorted(gmsh_geometry_info.curves) == sorted(occ_geometry_info.curves)
+    assert sorted(gmsh_geometry_info.points) == sorted(occ_geometry_info.points)
 
 
 def test_tetrahedron_4_mesh():
@@ -221,3 +308,15 @@ def _normalize(obj):
     if isinstance(obj, np.floating):
         return float(obj)
     return obj
+
+
+def _assert_dict_of_vectors_equal(gmsh_dict, occ_dict):
+    assert gmsh_dict.keys() == occ_dict.keys()
+    for key in gmsh_dict:
+        assert np.allclose(np.asarray(gmsh_dict[key], dtype=float), np.asarray(occ_dict[key], dtype=float))
+
+
+def _assert_dict_of_scalars_equal(gmsh_dict, occ_dict):
+    assert gmsh_dict.keys() == occ_dict.keys()
+    for key in gmsh_dict:
+        assert np.allclose(gmsh_dict[key], occ_dict[key])
