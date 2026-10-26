@@ -94,7 +94,7 @@ class OccMesher:
 
                 for index in range(triangulation.NbNodes()):
                     i = len(nodal_coordinates)
-                    x, y, z = triangulation.Node(index + 1).Coord()
+                    x, y, z = (val * 1e-3 for val in triangulation.Node(index + 1).Coord())
                     nodal_coordinates.append((i, x, y, z))
 
                 for triangle in triangulation.Triangles():
