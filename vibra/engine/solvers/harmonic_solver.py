@@ -1,9 +1,10 @@
 from concurrent.futures import ThreadPoolExecutor
 import logging
 import sys
-import ctypes
+from threading import BoundedSemaphore
 from time import time
 from typing import Optional
+from queue import Empty, Queue
 
 import h5py
 import numpy as np
@@ -18,6 +19,7 @@ from vibra.engine.solution import HarmonicSolution
 from vibra.engine.solvers import ModalSolver
 from vibra.engine.solvers.linear_solver import LinearSolver, SolverType, initialize_solver
 from vibra.utils.time_utils import context_timer
+from vibra.utils.hardware_monitor.ram_monitor import RamMonitor
 
 
 class HarmonicSolver:
@@ -111,6 +113,7 @@ class HarmonicSolver:
 
         return self.solution
 
+    @RamMonitor()
     def compute_frequency_sweep(
         self,
         nodal_solution_buffer: np.ndarray,
@@ -118,11 +121,17 @@ class HarmonicSolver:
         is_resume: bool,
         eigenvectors=None,
     ):
-
         # frequencies vector [in hertz]
         frequencies = self.frequencies
+        queue = Queue(maxsize=1)
+        can_build = BoundedSemaphore(1)
 
-        # compute the solution for each frequency step
+        with ThreadPoolExecutor(max_workers=1) as executor:
+            future = executor.submit(self._build_frequencies, queue, frequencies, can_build, is_resume, print_log)
+            self._solve_frequencies(queue, nodal_solution_buffer, can_build, eigenvectors)
+            future.result()
+
+    def _build_frequencies(self, queue: Queue, frequencies: np.ndarray, can_build: BoundedSemaphore, is_resume: bool, print_log: bool):
         with tqdm(
             frequencies,
             desc="Computing frequency sweep",
@@ -137,19 +146,12 @@ class HarmonicSolver:
                 if is_resume and (i != 0) and isinstance(self._file_writer, LazyHDF5MatrixWriter) and self._file_writer.has_column(i):
                     continue
 
+                can_build.acquire()
+
                 # compute the load vector
                 f = self.assembler.compute_load_vector(freq, i)
-
+                Kd = None
                 if np.any(f):
-
-                    if freq == 0:
-                        # In case of freq=0, the matrix may differ from the non-zero frequencies,
-                        # so we solve it with a particular linear solver
-                        linear_solver = self._get_linear_solver(eigenvectors, new_instance=True)
-                    else:
-                        linear_solver = self._get_linear_solver(eigenvectors)
-
-                    # compute the dynamic stiffness matrix
                     Kd = self.assembler.compute_dynamic_stiffness_matrix(freq, i)
 
                     is_complex = np.any(np.iscomplex(Kd.data)) or np.any(np.iscomplex(f))
@@ -157,24 +159,53 @@ class HarmonicSolver:
                         Kd.data = np.real(Kd.data)
                         f = np.real(f)
 
+                queue.put((i, freq, f, Kd))
+                del f, Kd
+
+        # ends processing
+        queue.put(None)
+
+    def _solve_frequencies(self, queue: Queue, nodal_solution_buffer: np.ndarray, can_build: BoundedSemaphore, eigenvectors=None):
+        while True:
+            if self.assembler.model.stop_processing:
+                return
+
+            try:
+                item = queue.get(timeout=0.5)
+            except Empty:
+                continue
+
+            if item is None:
+                break
+
+            can_build.release()
+
+            i, freq, f, Kd = item
+            del item
+            if np.any(f):
+                if freq == 0:
+                    # In case of freq=0, the matrix may differ from the non-zero frequencies,
+                    # so we solve it with a particular linear solver
+                    linear_solver = self._get_linear_solver(eigenvectors, new_instance=True)
+                else:
+                    linear_solver = self._get_linear_solver(eigenvectors)
+
+                try:
                     # solve the linear system
                     solution_freq = linear_solver.solve(Kd, f)
-
+                finally:
                     # delete some variables and clear the memory to reduce the memory usage
                     linear_solver.clear_memory()
-                    del Kd
+            else:
+                # We will have the trivial solution whenever there is zero excitation
+                solution_freq = np.zeros_like(f, dtype=complex)
 
-                else:
-                    # We will have the trivial solution whenever there is zero excitation
-                    solution_freq = np.zeros_like(f, dtype=complex)
+            del f, Kd
 
-                del f
+            solution_freq = self.assembler.reinsert_the_prescribed_dof_into_solution_freq(solution_freq, i)
+            nodal_solution_buffer[:, i] = solution_freq
 
-                solution_freq = self.assembler.reinsert_the_prescribed_dof_into_solution_freq(solution_freq, i)
-                nodal_solution_buffer[:, i] = solution_freq
-
-                logging.info(f"Solution step {i + 1} and frequency {freq} Hz [{i + 1}/{len(frequencies)}]")
-
+            logging.info(f"Solution step {i + 1} and frequency {freq} Hz [{i + 1}/{len(self.frequencies)}]")
 
     def compute_structural_frequency_sweep(
         self,
@@ -183,7 +214,7 @@ class HarmonicSolver:
     ):
         # frequencies vector [in hertz]
         frequencies = self.frequencies
-        num_workers = 16
+        num_workers = 3
         chunk_size = (len(frequencies) + num_workers - 1) // num_workers
         with ThreadPoolExecutor(max_workers=num_workers) as executor:
             futures = []
@@ -233,11 +264,6 @@ class HarmonicSolver:
 
                 Kd = self.assembler.compute_dynamic_stiffness_matrix(freq, i)
 
-                set_threads = linear_solver.get_solver_instance(Kd, f).libmkl.MKL_Set_Num_Threads_Local
-                set_threads.argtypes = [ctypes.c_int]
-                set_threads.restype = ctypes.c_int
-                previous_limit = set_threads(1)
-
                 is_complex = np.any(np.iscomplex(Kd.data)) or np.any(np.iscomplex(f))
                 if not is_complex:
                     Kd.data = np.real(Kd.data)
@@ -246,7 +272,6 @@ class HarmonicSolver:
                 try:
                     solution_freq = linear_solver.solve(Kd, f)
                 finally:
-                    set_threads(previous_limit)
                     linear_solver.clear_memory()
                     del Kd
             else:
