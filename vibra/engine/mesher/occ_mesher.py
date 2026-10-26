@@ -42,10 +42,9 @@ class OccMesher:
             raise IncompleteSetupError(message, context=context)
 
         shape = self._read_geometry_file(self.path)
-
-        vertex_mapper = self._map_vertices(shape)
-        edge_mapper = self._map_edges(shape)
-        face_mapper = self._map_faces(shape)
+        point_mapper = self._map_vertices(shape)
+        curve_mapper = self._map_edges(shape)
+        surface_mapper = self._map_faces(shape)
         solid_mapper = self._map_solids(shape)
 
         # For some reason I can not use named args =(
@@ -56,69 +55,79 @@ class OccMesher:
             self.deflection,
             True,  # in parallel
         )
-
         loc = TopLoc_Location()
+        _visited = set()
 
+        def duplicated(*args):
+            if args in _visited:
+                _visited.add(args)
+                return True
+            return False
+
+        WHATEVER = 0
+        SOLID = 3
+        SURFACE = 2
+        CURVE = 1
+        POINT = 0
+
+        geometry_info = GeometryInfo()
         nodal_coordinates = []
         edges_connectivity = []
         faces_connectivity = []
 
-        visited_points = set()
-        visited_faces = set()
-        visited_edges = set()
-        visited_solids = set()
-
-        volume_to_surfaces = defaultdict(set)
-        surface_to_lines = defaultdict(set)
-        line_to_points = defaultdict(set)
-
-        WHATEVER = 0
-
         # TODO: update the nomenclature, it is very wrong
         for solid in self._iterate_solids(shape):
             solid_index = solid_mapper.FindIndex(solid)
-            if solid_index in visited_solids:
+            if duplicated(SOLID, solid_index):
                 continue
-            visited_solids.add(solid_index)
 
-            for face in self._iterate_faces(solid):
-                face_index = face_mapper.FindIndex(face)
-                volume_to_surfaces[solid_index].add(face_index)
-                if face_index in visited_faces:
+            geometry_info.solids.append(solid_index)
+
+            for surface in self._iterate_surfaces(solid):
+                surface_index = surface_mapper.FindIndex(surface)
+
+                if not duplicated(SOLID, SURFACE, solid_index, surface_index):
+                    geometry_info._solids_to_surfaces[solid_index].append(surface_index)
+
+                if duplicated(SURFACE, surface_index):
                     continue
-                visited_faces.add(face_index)
 
-                triangulation = BRep_Tool.Triangulation_s(face, loc)
+                geometry_info.surfaces.append(surface_index)
+
+                triangulation = BRep_Tool.Triangulation_s(surface, loc)
                 coordinate_shift = len(nodal_coordinates)
 
                 for index in range(triangulation.NbNodes()):
-                    i = len(nodal_coordinates)
                     x, y, z = (val * 1e-3 for val in triangulation.Node(index + 1).Coord())
-                    nodal_coordinates.append((i, x, y, z))
+                    nodal_coordinates.append((len(nodal_coordinates), x, y, z))
 
                 for triangle in triangulation.Triangles():
                     _connectivity = np.array(triangle.Get()) + coordinate_shift - 1
                     _row = (
                         len(faces_connectivity),
-                        face_index,
+                        surface_index,
                         WHATEVER,
                         WHATEVER,
                         *_connectivity,
                     )
                     faces_connectivity.append(_row)
 
-                for edge in self._iterate_edges(face):
-                    edge_index = edge_mapper.FindIndex(edge)
-                    surface_to_lines[face_index].add(edge_index)
-                    if edge_index in visited_edges:
-                        continue
-                    visited_edges.add(edge_index)
+                for curve in self._iterate_curves(surface):
+                    curve_index = curve_mapper.FindIndex(curve)
 
-                    polygon = BRep_Tool.PolygonOnTriangulation_s(edge, triangulation, loc)
+                    if not duplicated(SURFACE, CURVE, surface_index, curve_index):
+                        geometry_info._surfaces_to_curves[surface_index].append(curve_index)
+
+                    if duplicated(CURVE, curve_index):
+                        continue
+
+                    geometry_info.curves.append(curve_index)
+
+                    polygon = BRep_Tool.PolygonOnTriangulation_s(curve, triangulation, loc)
                     for a, b in pairwise(range(polygon.Nodes().Length())):
                         _row = (
                             len(edges_connectivity),
-                            edge_index,
+                            curve_index,
                             WHATEVER,
                             WHATEVER,
                             polygon.Node(a + 1) + coordinate_shift - 1,
@@ -126,10 +135,16 @@ class OccMesher:
                         )
                         edges_connectivity.append(_row)
 
-                    for vertex in self._iterate_vertices(edge):
-                        vertex_index = vertex_mapper.FindIndex(vertex)
-                        visited_points.add(vertex_index)
-                        line_to_points[edge_index].add(vertex_index)
+                    for point in self._iterate_points(curve):
+                        point_index = point_mapper.FindIndex(point)
+
+                        if not duplicated(CURVE, POINT, curve_index, point_index):
+                            geometry_info._curves_to_points[curve_index].append(point_index)
+
+                        if not duplicated(POINT, point_index):
+                            geometry_info.points.append(point_index)
+
+        geometry_info._create_inverse_maps()
 
         mesh = Mesh()
         mesh.set_mesh_data(
@@ -139,28 +154,7 @@ class OccMesher:
             solids_connectivity=np.zeros((0, 4)),
         )
 
-        mesh.geometry_information.update(
-            {
-                "points": list(visited_points),
-                "lines": list(visited_edges),
-                "surfaces": list(visited_faces),
-                "volumes": list(visited_solids),
-            }
-        )
-
-        mesh.surfaces_from_volume.update({i: list(j) for i, j in volume_to_surfaces.items()})
-        mesh.lines_from_surface.update({i: list(j) for i, j in surface_to_lines.items()})
-        mesh.points_from_line.update({i: list(j) for i, j in line_to_points.items()})
-        mesh.process_upwards_adjacencies()
-
-        # This is a temporary workaround.
-        # Since this information does not depend on a mesh we can store it in a separated class.
-        # But for now I am doing it the lazy way so I can get things to work.
-        gi = GeometryInfo().read_file(self.path)
-        mesh.area_from_surfaces = gi._surfaces_areas
-        mesh.volume_from_bodies = gi._solids_volumes
-
-        return mesh, gi
+        return mesh, GeometryInfo().read_file(self.path)
 
     def _iterate_entities(self, shape, entity_type):
         explorer = TopExp_Explorer(shape, entity_type)
@@ -209,11 +203,11 @@ class OccMesher:
         shape = reader.OneShape()
         return shape
 
-    def _iterate_edges(self, shape):
+    def _iterate_curves(self, shape):
         for i in self._iterate_entities(shape, TopAbs_EDGE):
             yield TopoDS.Edge(i)
 
-    def _iterate_faces(self, shape):
+    def _iterate_surfaces(self, shape):
         for i in self._iterate_entities(shape, TopAbs_FACE):
             yield TopoDS.Face(i)
 
@@ -221,7 +215,7 @@ class OccMesher:
         for i in self._iterate_entities(shape, TopAbs_SOLID):
             yield TopoDS.Solid(i)
 
-    def _iterate_vertices(self, shape):
+    def _iterate_points(self, shape):
         for i in self._iterate_entities(shape, TopAbs_VERTEX):
             yield TopoDS.Vertex(i)
 

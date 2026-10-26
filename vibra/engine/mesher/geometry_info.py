@@ -15,9 +15,9 @@ class GeometryInfo:
         path: str | Path | None = None,
         length_unit: LengthUnits = "millimeter",
     ):
-        self._solids_to_surfaces = defaultdict()
-        self._surfaces_to_curves = defaultdict()
-        self._curves_to_points = defaultdict()
+        self._solids_to_surfaces = defaultdict(list)
+        self._surfaces_to_curves = defaultdict(list)
+        self._curves_to_points = defaultdict(list)
 
         self._surfaces_to_solids = {}
         self._curves_to_surfaces = {}
