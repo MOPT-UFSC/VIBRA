@@ -198,7 +198,7 @@ class ModelSetupItems(CommonMenuItems):
         ]
 
         if property_name == "material":
-            if mesh.are_there_volumes_in_geometry():
+            if (geometry_info is not None) and geometry_info.solids:
                 volume_ids = sorted(geometry_info.solids)
                 volumes_with_material, volumes_without_material = properties.get_entities_with_and_without_property("material", volumes=volume_ids)
 
@@ -216,13 +216,13 @@ class ModelSetupItems(CommonMenuItems):
                     if vol_id not in acoustic_volumes:
                         return False
 
-            else:
+            elif (geometry_info is not None) and geometry_info.surfaces:
                 surface_ids = sorted(geometry_info.surfaces)
                 _, surfaces_without_material = properties.get_entities_with_and_without_property("material", surfaces=surface_ids)
                 return not bool(len(surfaces_without_material))
 
         if property_name == "fluid":
-            if mesh.are_there_volumes_in_geometry():
+            if (geometry_info is not None) and (geometry_info.solids):
                 volume_ids = sorted(geometry_info.solids)
                 volumes_with_fluid, volumes_without_fluid = properties.get_entities_with_and_without_property("fluid", volumes=volume_ids)
                 if not volumes_with_fluid:
@@ -247,6 +247,9 @@ class ModelSetupItems(CommonMenuItems):
 
         # test for mesh. Not ideal, but it works. Since the mesh config is not part of the properties, the necessary check is performed here
         if property_name == "mesh_setup":
+            if mesh is None:
+                return False
+
             disconnected_nodes = bool(mesh.disconnected_nodes)
             collapsed_elements = bool(mesh.collapsed_elements_data)
             if collapsed_elements or disconnected_nodes:
@@ -306,9 +309,10 @@ class ModelSetupItems(CommonMenuItems):
 
         if property_name == "surface_thickness":
             if physical_domain == "structural":
-                if app().project.model.fe_mesh is not None:
-                    volume_exists = app().project.model.fe_mesh.are_there_volumes_in_geometry()
-                    if not volume_exists:
+                geometry_info = app().project.model.geometry_info
+
+                if geometry_info is not None:
+                    if not geometry_info.solids:
                         return True
 
                     st_check = app().project.model.is_surface_thickness_properly_applied_in_model()
@@ -325,11 +329,11 @@ class ModelSetupItems(CommonMenuItems):
         """
 
         volume_exists = None
-        mesh = app().project.model.fe_mesh
+        geometry_info = app().project.model.geometry_info
         toolbar = app().main_window.analysis_toolbar
 
-        if mesh is not None:
-            volume_exists = mesh.are_there_volumes_in_geometry()
+        if geometry_info is not None:
+            volume_exists = bool(geometry_info.solids)
             self.item_child_surface_thickness.setHidden(volume_exists)
             # self.item_child_distributed_loads.setHidden(volume_exists)
             # self.item_child_normal_pressure_load.setHidden(volume_exists)
@@ -413,9 +417,6 @@ class ModelSetupItems(CommonMenuItems):
         analysis_type = analysis_type.lower()
         physical_domain = physical_domain.lower()
         self.filter_items_according_to_analysis(analysis_type, physical_domain)
-
-        if app().project.model.fe_mesh is None:
-            return
 
         for top_level_items in self.top_level_items:
             for index in range(top_level_items.childCount()):
@@ -605,7 +606,7 @@ class ModelSetupItems(CommonMenuItems):
             self.line_color = Color(107, 137, 185).to_qt()
             self.background_color = Color(230, 230, 230).to_qt()
 
-        border_role = Qt.UserRole + 1
+        border_role = Qt.ItemDataRole.UserRole + 1
         border_pen = QPen(self.line_color)
         border_pen.setWidth(1)
 
