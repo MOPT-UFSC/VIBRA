@@ -63,9 +63,6 @@ class OccMesher:
         edges_connectivity = []
         faces_connectivity = []
 
-        line_indices = []
-        surface_indices = []
-
         visited_points = set()
         visited_faces = set()
         visited_edges = set()
@@ -74,6 +71,8 @@ class OccMesher:
         volume_to_surfaces = defaultdict(set)
         surface_to_lines = defaultdict(set)
         line_to_points = defaultdict(set)
+
+        WHATEVER = 0
 
         # TODO: update the nomenclature, it is very wrong
         for solid in self._iterate_solids(shape):
@@ -98,9 +97,15 @@ class OccMesher:
                     nodal_coordinates.append((i, x, y, z))
 
                 for triangle in triangulation.Triangles():
-                    triangle_indexes = np.array(triangle.Get())
-                    faces_connectivity.append(triangle_indexes + coordinate_shift - 1)
-                    surface_indices.append(face_index)
+                    _connectivity = np.array(triangle.Get()) + coordinate_shift - 1
+                    _row = (
+                        len(faces_connectivity),
+                        face_index,
+                        WHATEVER,
+                        WHATEVER,
+                        *_connectivity,
+                    )
+                    faces_connectivity.append(_row)
 
                 for edge in self._iterate_edges(face):
                     edge_index = edge_mapper.FindIndex(edge)
@@ -111,10 +116,15 @@ class OccMesher:
 
                     polygon = BRep_Tool.PolygonOnTriangulation_s(edge, triangulation, loc)
                     for a, b in pairwise(range(polygon.Nodes().Length())):
-                        index_a = polygon.Node(a + 1) + coordinate_shift - 1
-                        index_b = polygon.Node(b + 1) + coordinate_shift - 1
-                        edges_connectivity.append((index_a, index_b))
-                        line_indices.append(edge_index)
+                        _row = (
+                            len(edges_connectivity),
+                            edge_index,
+                            WHATEVER,
+                            WHATEVER,
+                            polygon.Node(a + 1) + coordinate_shift - 1,
+                            polygon.Node(b + 1) + coordinate_shift - 1,
+                        )
+                        edges_connectivity.append(_row)
 
                     for vertex in self._iterate_vertices(edge):
                         vertex_index = vertex_mapper.FindIndex(vertex)
@@ -122,39 +132,10 @@ class OccMesher:
                         line_to_points[edge_index].add(vertex_index)
 
         mesh = Mesh()
-
-        edge_indices = np.arange(len(edges_connectivity)).reshape(-1, 1)
-        line_indices = np.array(line_indices).reshape(-1, 1)
-        whatever = np.zeros_like(line_indices)
-        lines_connectivity = np.concatenate(
-            [
-                edge_indices,
-                line_indices,
-                whatever,
-                whatever,
-                edges_connectivity,
-            ],
-            axis=1,
-        )
-
-        face_indices = np.arange(len(faces_connectivity)).reshape(-1, 1)
-        surface_indices = np.array(surface_indices).reshape(-1, 1)
-        whatever = np.zeros_like(surface_indices)
-        faces_connectivity = np.concatenate(
-            [
-                face_indices,
-                surface_indices,
-                whatever,
-                whatever,
-                faces_connectivity,
-            ],
-            axis=1,
-        )
-
         mesh.set_mesh_data(
             np.array(nodal_coordinates),
-            lines_connectivity,
-            faces_connectivity,
+            np.array(edges_connectivity),
+            np.array(faces_connectivity),
             solids_connectivity=np.zeros((0, 4)),
         )
 
