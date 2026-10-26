@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from pathlib import Path
 
 import h5py
@@ -5,6 +6,14 @@ import numpy as np
 
 from vibra.interface.user_input.data_handler.file_handlers.io_handler import IOHandler
 from vibra.interface.user_input.data_handler.imported_data import SimulationData
+
+
+@dataclass
+class AcousticImpedanceData:
+    path: str | Path | None = None
+    nodal_coordinates: np.ndarray | None = None
+    nodal_pressures: np.ndarray | None = None
+    normal_particle_velocities: np.ndarray | None = None
 
 
 class HDF5FileHandler(IOHandler):
@@ -44,3 +53,29 @@ class HDF5FileHandler(IOHandler):
                 setattr(simulation_data, key, values[:, -start:])
 
         return simulation_data
+
+
+    @staticmethod
+    def write_acoustic_impedance_data(acoustic_impedance_data: AcousticImpedanceData):
+
+        with h5py.File(acoustic_impedance_data.path, 'w') as file:
+
+            # write data in HDF file
+            for key, values in acoustic_impedance_data.__dict__.items():
+                if not isinstance(values, np.ndarray):
+                    continue
+
+                file[key] = values
+
+
+    @staticmethod
+    def read_acoustic_impedance_data(file_path: Path) -> SimulationData:
+        acoustic_impedance_data = AcousticImpedanceData(file_path)
+
+        with h5py.File(file_path, 'r') as file:
+
+            # read data from HDF file
+            for key, values in file.items():
+                setattr(acoustic_impedance_data, key, values)
+
+        return acoustic_impedance_data

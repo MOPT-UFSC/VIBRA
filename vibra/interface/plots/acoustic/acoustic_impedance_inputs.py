@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 
 import numpy as np
 from PySide6.QtCore import Qt
@@ -17,6 +18,7 @@ from vibra.interface.plots.general.frequency_response_plotter import (
 from vibra.interface.ui_generated.plots.acoustic.acoustic_impedance_inputs_ui import (
     AcousticImpedanceInputs_UI,
 )
+from vibra.interface.user_input.data_handler.file_handlers.hdf5_file_handler import AcousticImpedanceData, HDF5FileHandler
 
 
 class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
@@ -65,16 +67,18 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
         self.plotter = None
 
     def _create_connections(self):
-        #
+        
+        # QComboBox connections
         self.comboBox_selector_filter.currentIndexChanged.connect(self.update_render_according_to_selector)
         self.comboBox_volumes.currentIndexChanged.connect(self.volume_selector_callback)
         self.comboBox_nodal_normals.currentIndexChanged.connect(self.toggle_nodal_normals_symbols_visibility)
-        #
+        
+        # QPushButton connections
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
-        #
+        
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
-        #
+        
         self.geometry_selection_callback()
 
     def update_render_according_to_selector(self):
@@ -139,8 +143,8 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
 
     def check_volumes_from_surfaces(self, surface_ids: list[int]):
 
-        external_surfaces_map = dict()
-        internal_surfaces_map = dict()  
+        external_surfaces_map = {}
+        internal_surfaces_map = {}  
         self.comboBox_volumes.blockSignals(True) 
 
         for surface_id in surface_ids:
@@ -184,15 +188,14 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
 
         self.comboBox_volumes.blockSignals(False)
 
-    def check_inputs(self):
+    def check_inputs(self, single_id: bool = False):
 
         input_ids = self.lineEdit_selection_id.text()
-        # selection_type = self.comboBox_selector_filter.currentText().lower()
-
         self.selected_ids, error_data = self.model.check_selected_ids(
             input_ids,
             "surfaces",
             domain="acoustic",
+            single_id=single_id,
         )
 
         if error_data is not None:
@@ -200,8 +203,13 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
             PrintMessageInput(error_data)
             return True
 
+        if isinstance(self.selected_ids, int):
+            surface_ids = [self.selected_ids]
+        else:
+            surface_ids = self.selected_ids
+
         app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
-        update_entities_selection(self.lineEdit_selection_id, "surfaces", self.selected_ids)
+        update_entities_selection(self.lineEdit_selection_id, "surfaces", surface_ids)
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
     def plot_data_callback(self):
@@ -222,13 +230,21 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
         self.plotter._set_model_results_data_to_plot(self.model_results)
 
     def export_data_callback(self):
-        
-        if self.check_inputs():
+
+        if self.check_inputs(single_id=True):
             return
 
-        self.join_model_data()
         self.exporter = ExportModelResults()
-        self.exporter._set_data_to_export(self.model_results)
+        file_path = self.exporter.call_file_dialog()
+        if file_path is None:
+            return
+
+        acoustic_impedance_data = self.get_advanced_acoustic_impedance_data(file_path)
+        if not isinstance(acoustic_impedance_data, AcousticImpedanceData):
+            return
+
+        if file_path.suffix in HDF5FileHandler.EXTENSIONS:
+            HDF5FileHandler.write_acoustic_impedance_data(acoustic_impedance_data)
 
     def get_response(self, selection_type: str, selected_id: int):
 
@@ -274,11 +290,37 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
 
         return LoadingWindow(function_callback, delayed=False).run()
 
+    def get_advanced_acoustic_impedance_data(self, path: str | Path) -> AcousticImpedanceData:
+
+        volume_id = int(self.comboBox_volumes.currentText())
+
+        def process_impedance_data():
+            logging.info("Processing acoustic impedance nodal data...(25%)")
+
+            nodes = self.mesh.get_nodes_from_surface(self.selected_ids)
+            global_dofs = self.model.get_dof_indices_from_nodes(nodes, "acoustic")
+            rows = global_dofs[:, 0]
+
+            logging.info("Processing acoustic impedance nodal data...(50%)")
+            nodal_pressures = self.model.solution.acoustic_solution[rows, :]
+
+            logging.info("Processing acoustic impedance nodal data...(75%)")
+            particle_velocities_data = self.acoustic_post.get_particle_velocity_from_surface(self.selected_ids, volume_id=volume_id)
+
+            return AcousticImpedanceData(
+                path = path,
+                nodal_coordinates=self.mesh.nodal_coordinates[nodes, :],
+                nodal_pressures=nodal_pressures,
+                normal_particle_velocities=particle_velocities_data.Vn_array(),
+            )
+
+        return LoadingWindow(process_impedance_data, delayed=False).run()
+
     def join_model_data(self):
 
         selection_type = self.comboBox_selector_filter.currentText().lower()
 
-        self.model_results = dict()
+        self.model_results = {}
 
         if self.comboBox_normalized_impedance.currentText() == "Enabled":
             plot_type = "Normalized acoustic impedance"
@@ -292,18 +334,18 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
             key = (selection_type, (selected_id))
             legend_label = f"{plot_type} at {selection_type} [{selected_id}]"
 
-            self.model_results[key] = { 
-                                        "x_data" : self.frequencies,
-                                        "y_data" : self.get_response(selection_type, selected_id),
-                                        "x_label" : "Frequency [Hz]",
-                                        "y_label" : plot_type,
-                                        "title" : plot_type,
-                                        "data_type" : plot_type.lower(),
-                                        "legend" : legend_label,
-                                        "units" : unit_label,
-                                        "color" : self.get_color(i),
-                                        "linestyle" : "-"  
-                                      }
+            self.model_results[key] = {
+                "x_data": self.frequencies,
+                "y_data": self.get_response(selection_type, selected_id),
+                "x_label": "Frequency [Hz]",
+                "y_label": plot_type,
+                "title": plot_type,
+                "data_type": plot_type.lower(),
+                "legend": legend_label,
+                "units": unit_label,
+                "color": self.get_color(i),
+                "linestyle": "-",
+            }
 
     def get_color(self, index):
 
