@@ -19,6 +19,14 @@ class MeshQualityParams(StrEnum):
     ASPECT_RATIO = "aspectRatio"
 
 
+QUALITY_BINS = {
+    MeshQualityParams.GAMMA: (0.7, 0.15),
+    MeshQualityParams.VOLUME: (1e-3, 0),
+    MeshQualityParams.MIN_SJ: (0.3, 0.1),
+    MeshQualityParams.ASPECT_RATIO: (4, 1.5),
+}
+
+
 class GmshCommon:
     def _create_mesh_from_gmsh_state(self) -> Mesh:
         mesh = Mesh()
@@ -97,13 +105,6 @@ class GmshCommon:
         return mesh
 
     def _compute_gmsh_quality_parameters(self):
-        quality_bins = {
-            MeshQualityParams.GAMMA: (0.7, 0.15),
-            MeshQualityParams.VOLUME: (1e-3, 0),
-            MeshQualityParams.MIN_SJ: (0.3, 0.1),
-            MeshQualityParams.ASPECT_RATIO: (4, 1.5),
-        }
-
         logger.info("Computing mesh quality metrics... [10/100]")
         _, element_tags, _ = gmsh.model.mesh.get_elements(3, -1)
         if not element_tags:
@@ -142,7 +143,7 @@ class GmshCommon:
         logger.info("Computing mesh quality metrics... [85/100]")
         bad_elements: dict[MeshQualityParams, np.ndarray] = {}
         for j, parameter in enumerate(MeshQualityParams):
-            limit = quality_bins.get(parameter)
+            limit = QUALITY_BINS.get(parameter)
             if limit is None:
                 continue
 
