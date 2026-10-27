@@ -22,6 +22,7 @@ from vibra.engine.properties.model_properties import ModelProperties
 from vibra.engine.serialization.file_helpers import read_image, read_json
 from vibra.engine.solution import HarmonicSolution, ModalSolution, Solution
 from vibra.engine.solvers import HarmonicSolver, ModalSolver
+from vibra.utils.utils import group_by
 
 from .project_paths import ProjectPaths
 
@@ -77,7 +78,11 @@ class ProjectReader:
 
         if self.project_paths.fem_mesh_filepath.exists():
             model.fe_mesh = self.read_mesh()
+
+        if self.project_paths.geometry_info_filepath.exists():
             model.geometry_info = self.read_geometry_info()
+        else:
+            model.geometry_info = self.read_geometry_info_deprecated()
 
         if self.project_paths.visual_mesh_filepath.exists():
             model.visual_mesh = self.read_visual_mesh()
@@ -339,6 +344,70 @@ class ProjectReader:
         return mesh
 
     def read_geometry_info(self) -> GeometryInfo:
+        geometry_info = GeometryInfo()
+
+        with h5py.File(self.project_paths.geometry_info_filepath) as file:
+            geometry_info.points = list(file["entities/points"])
+            geometry_info.curves = list(file["entities/curves"])
+            geometry_info.surfaces = list(file["entities/surfaces"])
+            geometry_info.solids = list(file["entities/solids"])
+
+            arr = np.asarray(file["adjacencies/solids_to_surfaces"], dtype=int).reshape(-1, 2)
+            geometry_info._solids_to_surfaces.update({key: list(values) for key, values in group_by(arr[:, 0], arr[:, 1]).items()})
+
+            arr = np.asarray(file["adjacencies/surfaces_to_curves"], dtype=int).reshape(-1, 2)
+            geometry_info._surfaces_to_curves.update({key: list(values) for key, values in group_by(arr[:, 0], arr[:, 1]).items()})
+
+            arr = np.asarray(file["adjacencies/curves_to_points"], dtype=int).reshape(-1, 2)
+            geometry_info._curves_to_points.update({key: list(values) for key, values in group_by(arr[:, 0], arr[:, 1]).items()})
+
+            if "adjacencies/cache_solids_to_surfaces" in file:
+                arr = np.asarray(file["adjacencies/cache_solids_to_surfaces"], dtype=int).reshape(-1, 2)
+                geometry_info._cache_solids_to_surfaces.update({key: list(values) for key, values in group_by(arr[:, 0], arr[:, 1]).items()})
+
+            if "adjacencies/cache_surfaces_to_curves" in file:
+                arr = np.asarray(file["adjacencies/cache_surfaces_to_curves"], dtype=int).reshape(-1, 2)
+                geometry_info._cache_surfaces_to_curves.update({key: list(values) for key, values in group_by(arr[:, 0], arr[:, 1]).items()})
+
+            if "adjacencies/cache_curves_to_points" in file:
+                arr = np.asarray(file["adjacencies/cache_curves_to_points"], dtype=int).reshape(-1, 2)
+                geometry_info._cache_curves_to_points.update({key: list(values) for key, values in group_by(arr[:, 0], arr[:, 1]).items()})
+
+            for entity_id, center in zip(geometry_info.solids, file["centers/solids"]):
+                geometry_info._solids_centers[int(entity_id)] = np.asarray(center)
+            for entity_id, center in zip(geometry_info.surfaces, file["centers/surfaces"]):
+                geometry_info._surfaces_centers[int(entity_id)] = np.asarray(center)
+            for entity_id, center in zip(geometry_info.curves, file["centers/curves"]):
+                geometry_info._curves_centers[int(entity_id)] = np.asarray(center)
+            for entity_id, center in zip(geometry_info.points, file["centers/points"]):
+                geometry_info._points_centers[int(entity_id)] = np.asarray(center)
+
+            for entity_id, volume in zip(geometry_info.solids, file["mass/solids"]):
+                geometry_info._solids_volumes[int(entity_id)] = float(volume)
+            for entity_id, area in zip(geometry_info.surfaces, file["mass/surfaces"]):
+                geometry_info._surfaces_areas[int(entity_id)] = float(area)
+            for entity_id, length in zip(geometry_info.curves, file["mass/curves"]):
+                geometry_info._curves_lengths[int(entity_id)] = float(length)
+
+            for entity_id, bounding_box in zip(geometry_info.solids, file["bounding_box/solids"]):
+                geometry_info._bounding_solids[int(entity_id)] = np.asarray(bounding_box)
+            for entity_id, bounding_box in zip(geometry_info.surfaces, file["bounding_box/surfaces"]):
+                geometry_info._bounding_surfaces[int(entity_id)] = np.asarray(bounding_box)
+            for entity_id, bounding_box in zip(geometry_info.curves, file["bounding_box/curves"]):
+                geometry_info._bounding_curves[int(entity_id)] = np.asarray(bounding_box)
+
+            for entity_id, normal in zip(geometry_info.surfaces, file["normals/surfaces"]):
+                geometry_info._surfaces_normals[int(entity_id)] = np.asarray(normal)
+            geometry_info._straight_curves = {int(i) for i in file.get("is_straight/curves", [])}
+            geometry_info._straight_surfaces = {int(i) for i in file.get("is_straight/surfaces", [])}
+
+        geometry_info._create_inverse_maps()
+        geometry_info._process_curves_normals()
+        geometry_info._process_points_normals()
+        
+        return geometry_info
+
+    def read_geometry_info_deprecated(self) -> GeometryInfo:
         geometry_info = GeometryInfo()
 
         geometry_data_path = self.project_paths.geometry_data_filepath

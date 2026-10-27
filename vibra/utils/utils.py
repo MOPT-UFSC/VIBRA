@@ -1,4 +1,6 @@
+from collections.abc import Sequence
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 from numpy import ndarray
@@ -16,6 +18,12 @@ def group_by(keys: np.ndarray, values: np.ndarray):
     groups = np.split(values, unique_indices[1:])
 
     return dict(zip(unique, groups))
+
+
+def dict_mapped_arrays(data: dict[Any, Sequence[Any]]) -> tuple[np.ndarray, np.ndarray]:
+    keys = np.repeat(list(data.keys()), [len(i) for i in data.values()])
+    values = np.concatenate(list(data.values()))
+    return keys, values
 
 
 def get_list_of_values_from_string(input_string, int_values=True):

@@ -25,6 +25,7 @@ class ProjectPaths:
         self.model_properties_filepath = self.working_directory / "model_properties.json"
         self.fem_mesh_filepath = self.working_directory / "mesh_data.hdf5"
         self.visual_mesh_filepath = self.working_directory / "visual_mesh.hdf5"
+        self.geometry_info_filepath = self.working_directory / "geometry_info.hdf5"
         self.mesh_quality_data_filepath = self.working_directory / "mesh_quality_data.json"
         self.imported_table_data_filepath = self.working_directory / "imported_tables_data.hdf5"
         self.results_data_filepath = self.working_directory / "results_data.hdf5"

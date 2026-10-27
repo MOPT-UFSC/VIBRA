@@ -12,6 +12,7 @@ import numpy as np
 from PIL import Image
 
 from vibra.engine.analysis_info import AnalysisID, AnalysisSetup
+from vibra.engine.mesher.geometry_info import GeometryInfo
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.engine.properties.fluid import Fluid
@@ -23,6 +24,7 @@ from vibra.engine.serialization.file_helpers import read_json, update_json, writ
 from vibra.engine.serialization.lazy_hdf5_matrix import LazyHDF5MatrixWriter
 from vibra.engine.solution import HarmonicSolution, ModalSolution
 from vibra.engine.solution.lazy_harmonic_solution import LazyHarmonicSolution
+from vibra.utils.utils import dict_mapped_arrays
 
 from .project_hasher import HashEnum, ProjectHasher
 from .project_paths import ProjectPaths
@@ -68,6 +70,9 @@ class ProjectWriter:
 
         if (model.visual_mesh is not None) and model.is_there_a_geometry_imported():
             self.write_visual_mesh(model.visual_mesh)
+
+        if model.geometry_info is not None:
+            self.write_geometry_info(model.geometry_info)
 
         if model.solution is not None:
             self.write_solution(model.solution)
@@ -181,6 +186,54 @@ class ProjectWriter:
             file["connectivity/lines_connectivity"] = mesh.lines_connectivity
             file["connectivity/faces_connectivity"] = mesh.faces_connectivity
             file["nodal_data/nodal_coordinates"] = mesh.nodal_coordinates
+
+    def write_geometry_info(self, geometry_info: GeometryInfo):
+        with h5py.File(self.project_paths.geometry_info_filepath, "w") as file:
+            file["entities/points"] = geometry_info.points
+            file["entities/curves"] = geometry_info.curves
+            file["entities/surfaces"] = geometry_info.surfaces
+            file["entities/solids"] = geometry_info.solids
+
+            solids_to_surfaces = dict_mapped_arrays(dict(geometry_info._solids_to_surfaces))
+            surfaces_to_curves = dict_mapped_arrays(dict(geometry_info._surfaces_to_curves))
+            curves_to_points = dict_mapped_arrays(dict(geometry_info._curves_to_points))
+
+            file["adjacencies/solids_to_surfaces"] = np.stack(solids_to_surfaces, axis=1, dtype=int)
+            file["adjacencies/surfaces_to_curves"] = np.stack(surfaces_to_curves, axis=1, dtype=int)
+            file["adjacencies/curves_to_points"] = np.stack(curves_to_points, axis=1, dtype=int)
+
+            if geometry_info._cache_solids_to_surfaces:
+                cache_solids_to_surfaces = dict_mapped_arrays(dict(geometry_info._cache_solids_to_surfaces))
+                file["adjacencies/cache_solids_to_surfaces"] = np.stack(cache_solids_to_surfaces, axis=1)
+
+            if geometry_info._cache_surfaces_to_curves:
+                cache_surfaces_to_curves = dict_mapped_arrays(dict(geometry_info._cache_surfaces_to_curves))
+                file["adjacencies/cache_surfaces_to_curves"] = np.stack(cache_surfaces_to_curves, axis=1)
+
+            if geometry_info._cache_curves_to_points:
+                cache_curves_to_points = dict_mapped_arrays(dict(geometry_info._cache_curves_to_points))
+                file["adjacencies/cache_curves_to_points"] = np.stack(cache_curves_to_points, axis=1)
+
+            file["centers/solids"] = np.array([geometry_info.solid_center(i) for i in geometry_info.solids])
+            file["centers/surfaces"] = np.array([geometry_info.surface_center(i) for i in geometry_info.surfaces])
+            file["centers/curves"] = np.array([geometry_info.curve_center(i) for i in geometry_info.curves])
+            file["centers/points"] = np.array([geometry_info.point_center(i) for i in geometry_info.points])
+
+            file["normals/surfaces"] = np.array([geometry_info.surface_normal(i) for i in geometry_info.surfaces])
+
+            file["mass/solids"] = np.array([geometry_info.volume(i) for i in geometry_info.solids])
+            file["mass/surfaces"] = np.array([geometry_info.surface_area(i) for i in geometry_info.surfaces])
+            file["mass/curves"] = np.array([geometry_info.arc_length(i) for i in geometry_info.curves])
+
+            file["bounding_box/solids"] = np.array([geometry_info.solid_bounding_box(i) for i in geometry_info.solids])
+            file["bounding_box/surfaces"] = np.array([geometry_info.surface_bounding_box(i) for i in geometry_info.surfaces])
+            file["bounding_box/curves"] = np.array([geometry_info.curve_bounding_box(i) for i in geometry_info.curves])
+
+            if geometry_info._straight_surfaces:
+                file["is_straight/surfaces"] = np.array(list(geometry_info._straight_surfaces))
+
+            if geometry_info._straight_curves:
+                file["is_straight/curves"] = np.array(list(geometry_info._straight_curves))
 
     def write_geometry_related_mesh_parameters(self, mesh: Mesh):
         with h5py.File(self.project_paths.geometry_data_filepath, "w") as file:
