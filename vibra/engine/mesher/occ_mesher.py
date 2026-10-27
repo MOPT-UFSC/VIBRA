@@ -10,6 +10,7 @@ from OCP.BRepGProp import BRepGProp
 from OCP.BRepLProp import BRepLProp_SLProps
 from OCP.BRepMesh import BRepMesh_IncrementalMesh
 from OCP.collections import IndexedMap_TopoDS_Shape_TopTools_ShapeMapHasher as TopTools_IndexedMapOfShape
+from OCP.GeomAbs import GeomAbs_Line, GeomAbs_Plane
 from OCP.GProp import GProp_GProps
 from OCP.IFSelect import IFSelect_RetDone
 from OCP.TopAbs import TopAbs_EDGE, TopAbs_FACE, TopAbs_REVERSED, TopAbs_SOLID, TopAbs_VERTEX
@@ -105,6 +106,8 @@ class OccMesher:
                 geometry_info._surfaces_centers[surface_index] = self._surface_center(surface)
                 geometry_info._surfaces_normals[surface_index] = self._surface_normal(surface)
                 geometry_info._bounding_surfaces[surface_index] = self._bounding_box(surface)
+                if self._is_straight_surface(surface):
+                    geometry_info._straight_surfaces.add(surface_index)
 
                 triangulation = BRep_Tool.Triangulation_s(surface, loc)
                 coordinate_shift = len(nodal_coordinates)
@@ -137,6 +140,8 @@ class OccMesher:
                     geometry_info._curves_lengths[curve_index] = self._curve_length(curve)
                     geometry_info._curves_centers[curve_index] = self._curve_center(curve)
                     geometry_info._bounding_curves[curve_index] = self._bounding_box(curve)
+                    if self._is_straight_curve(curve):
+                        geometry_info._straight_curves.add(curve_index)
 
                     polygon = BRep_Tool.PolygonOnTriangulation_s(curve, triangulation, loc)
                     for a, b in pairwise(range(polygon.Nodes().Length())):
@@ -284,6 +289,12 @@ class OccMesher:
 
     def _point_center(self, shape) -> np.ndarray:
         return np.array(BRep_Tool.Pnt_s(shape).Coord()) * 1e-3
+
+    def _is_straight_surface(self, shape) -> bool:
+        return BRepAdaptor_Surface(shape).GetType() == GeomAbs_Plane
+
+    def _is_straight_curve(self, shape) -> bool:
+        return BRepAdaptor_Curve(shape).GetType() == GeomAbs_Line
 
     def _surface_normal(self, shape) -> np.ndarray:
         surface = BRepAdaptor_Surface(shape)
