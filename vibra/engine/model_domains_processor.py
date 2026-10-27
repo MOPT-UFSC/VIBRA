@@ -59,6 +59,9 @@ class ModelDomainsProcessor:
         This method maps all entities of each domain.
         """
 
+        if self.geometry_info is None:
+            return
+
         self.volumes_of_domain.clear()
         self.surfaces_of_domain.clear()
         self.lines_of_domain.clear()
@@ -99,6 +102,10 @@ class ModelDomainsProcessor:
         """
         This method maps the fluid-structure interfaces.
         """
+
+        if self.geometry_info is None:
+            return
+
         self.fluid_structure_interfaces.clear()
         for surface_id, vol_ids in self.geometry_info._surfaces_to_solids.items():
             if len(vol_ids) == 1:
@@ -336,20 +343,24 @@ class ModelDomainsProcessor:
             A dictionary mapping each entity type to its corresponding
             index list.
         """
+
+        if self.geometry_info is None:
+            return {}
+
         entities_mapping = {}
         aux_map = defaultdict(list)
         aux_map["volume"].extend(volume_ids)
 
         for vol_id in volume_ids:
-            surfaces = self.geometry_info._solids_to_surfaces.get(vol_id)
+            surfaces = self.geometry_info._solids_to_surfaces.get(vol_id, [])
             aux_map["surface"].extend(surfaces)
 
             for surf_id in surfaces:
-                lines = self.geometry_info._surfaces_to_curves.get(surf_id)
+                lines = self.geometry_info._surfaces_to_curves.get(surf_id, [])
                 aux_map["line"].extend(lines)
 
                 for line_id in lines:
-                    points = self.geometry_info._curves_to_points.get(line_id)
+                    points = self.geometry_info._curves_to_points.get(line_id, [])
                     aux_map["point"].extend(points)
 
         for key, values in aux_map.items():
