@@ -229,15 +229,15 @@ class ProjectWriter:
             model_properties.structural_imported_tables,
         )
 
-        data = dict(
-            volume_properties=self._normalize_property(model_properties.volume_properties),
-            surface_properties=self._normalize_property(model_properties.surface_properties),
-            line_properties=self._normalize_property(model_properties.line_properties),
-            point_properties=self._normalize_property(model_properties.point_properties),
-            element_properties=self._normalize_property(model_properties.element_properties),
-            nodal_properties=self._normalize_property(model_properties.nodal_properties),
-            group_properties=self._normalize_property(model_properties.group_properties),
-        )
+        data = {
+            "volume_properties": self._normalize_property(model_properties.volume_properties),
+            "surface_properties": self._normalize_property(model_properties.surface_properties),
+            "line_properties": self._normalize_property(model_properties.line_properties),
+            "point_properties": self._normalize_property(model_properties.point_properties),
+            "element_properties": self._normalize_property(model_properties.element_properties),
+            "nodal_properties": self._normalize_property(model_properties.nodal_properties),
+            "group_properties": self._normalize_property(model_properties.group_properties),
+        }
         write_json(self.project_paths.model_properties_filepath, data)
 
     def write_material_library(self, material_library: MaterialLibrary, export_path: Path | None = None):
@@ -293,7 +293,7 @@ class ProjectWriter:
 
         self._write_hash(HashEnum.TABLES, current_hash)
 
-    def write_thumbnail(self, thumbnail: Image):
+    def write_thumbnail(self, thumbnail: Image.Image):
         logger.info("Writing thumbnail")
         write_image(self.project_paths.thumbnail_filepath, thumbnail)
 
@@ -383,16 +383,18 @@ class ProjectWriter:
 
     def _write_hash(self, name: HashEnum, hash: str):
         with update_json(self.project_paths.hashes_filepath, dict) as file:
+            assert isinstance(file, dict)
             file[name] = hash
 
     def _remove_hash(self, name: HashEnum):
         with update_json(self.project_paths.hashes_filepath, dict) as file:
+            assert isinstance(file, dict)
             try:
                 file.pop(name)
             except Exception:
                 ...
 
-    def _property_key(self, property_name: str, tags: tuple[int] | int) -> Optional[str]:
+    def _property_key(self, property_name: str, tags: tuple[int] | int) -> str | None:
         """
         Turn the key (property_name, (tag_1, tag_2, tag_3)) into a string
         "property_name tag_1 tag_2 tag_3"

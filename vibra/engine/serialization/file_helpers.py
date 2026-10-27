@@ -48,7 +48,7 @@ def write_image(path: Path, image: Image.Image):
 @contextmanager
 def update_json(
     path: Path,
-    default_type: list | dict | None = None,
+    default_type: type[list] | type[dict] | None = None,
 ) -> Generator[list | dict | None, None, None]:
     """
     Utility function to read and write a file using "with" syntax.
