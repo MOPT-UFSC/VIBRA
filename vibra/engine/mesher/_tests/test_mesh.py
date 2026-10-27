@@ -85,8 +85,8 @@ def test_geometry_info_equivalence():
         occ_geometry_info._bounding_surfaces,
     )
     _assert_dict_of_vectors_equal(
-        gmsh_geometry_info._bounding_lines,
-        occ_geometry_info._bounding_lines,
+        gmsh_geometry_info._bounding_curves,
+        occ_geometry_info._bounding_curves,
     )
 
     # Straight-entity flags (sets)

@@ -2,8 +2,10 @@ from itertools import pairwise
 from pathlib import Path
 
 import numpy as np
+from OCP.Bnd import Bnd_Box
 from OCP.BRep import BRep_Tool
 from OCP.BRepAdaptor import BRepAdaptor_Curve, BRepAdaptor_Surface
+from OCP.BRepBndLib import BRepBndLib
 from OCP.BRepGProp import BRepGProp
 from OCP.BRepLProp import BRepLProp_SLProps
 from OCP.BRepMesh import BRepMesh_IncrementalMesh
@@ -87,6 +89,7 @@ class OccMesher:
             geometry_info.solids.append(solid_index)
             geometry_info._solids_volumes[solid_index] = self._solid_volume(solid)
             geometry_info._solids_centers[solid_index] = self._solid_center(solid)
+            geometry_info._bounding_solids[solid_index] = self._bounding_box(solid)
 
             for surface in self._iterate_surfaces(solid):
                 surface_index = surface_mapper.FindIndex(surface)
@@ -101,6 +104,7 @@ class OccMesher:
                 geometry_info._surfaces_areas[surface_index] = self._surface_area(surface)
                 geometry_info._surfaces_centers[surface_index] = self._surface_center(surface)
                 geometry_info._surfaces_normals[surface_index] = self._surface_normal(surface)
+                geometry_info._bounding_surfaces[surface_index] = self._bounding_box(surface)
 
                 triangulation = BRep_Tool.Triangulation_s(surface, loc)
                 coordinate_shift = len(nodal_coordinates)
@@ -132,6 +136,7 @@ class OccMesher:
                     geometry_info.curves.append(curve_index)
                     geometry_info._curves_lengths[curve_index] = self._curve_length(curve)
                     geometry_info._curves_centers[curve_index] = self._curve_center(curve)
+                    geometry_info._bounding_curves[curve_index] = self._bounding_box(curve)
 
                     polygon = BRep_Tool.PolygonOnTriangulation_s(curve, triangulation, loc)
                     for a, b in pairwise(range(polygon.Nodes().Length())):
@@ -292,3 +297,16 @@ class OccMesher:
             normal *= -1
 
         return normal
+
+    def _bounding_box(self, shape) -> tuple[float, float, float, float, float, float]:
+        bbox = Bnd_Box()
+        bbox.SetGap(1e-6)
+        BRepBndLib.Add_s(shape, bbox, True)
+        return (
+            bbox.GetXMin() * 1e-3,
+            bbox.GetYMin() * 1e-3,
+            bbox.GetZMin() * 1e-3,
+            bbox.GetXMax() * 1e-3,
+            bbox.GetYMax() * 1e-3,
+            bbox.GetZMax() * 1e-3,
+        )

@@ -40,7 +40,7 @@ class GeometryInfo:
         self._curves_lengths = defaultdict()
         self._solids_volumes = defaultdict()
 
-        self._bounding_lines = defaultdict()
+        self._bounding_curves = defaultdict()
         self._bounding_surfaces = defaultdict()
         self._bounding_solids = defaultdict()
 
@@ -110,7 +110,7 @@ class GeometryInfo:
         self._curves_lengths.clear()
         self._solids_volumes.clear()
 
-        self._bounding_lines.clear()
+        self._bounding_curves.clear()
         self._bounding_surfaces.clear()
         self._bounding_solids.clear()
 
@@ -288,7 +288,7 @@ class GeometryInfo:
         return sum(self._solids_volumes[volume_id] for volume_id in volume_ids)
 
     def line_bounding_box(self, line_id: int) -> np.ndarray | None:
-        return self._bounding_lines.get(line_id)
+        return self._bounding_curves.get(line_id)
 
     def surface_bounding_box(self, surface_id: int) -> np.ndarray | None:
         return self._bounding_surfaces.get(surface_id)
@@ -345,7 +345,7 @@ class GeometryInfo:
                 self._curves_centers[tag] = center
 
                 bounding_lines_coords = np.asarray(gmsh.model.getBoundingBox(dim, tag)) * self.length_unit_factor
-                self._bounding_lines[tag] = bounding_lines_coords
+                self._bounding_curves[tag] = bounding_lines_coords
 
                 if np.allclose(curvature, 0):
                     self._straight_curves.add(tag)
@@ -580,7 +580,7 @@ class GeometryInfo:
                 self._straight_curves.add(curve_id)
 
             if bouding_box is not None:
-                self._bounding_lines[curve_id] = bouding_box
+                self._bounding_curves[curve_id] = bouding_box
 
     def add_surface(
         self,
