@@ -102,7 +102,7 @@ def test_geometry_info_equivalence():
 
 def test_tetrahedron_4_mesh():
     geometry_path = str(PROJECT_DIR / "examples/geometry_files/cylinder.step")
-    mesh_test_path = str(PROJECT_DIR / "validation_files/data/mesh_info/cilinder_tet4/")
+    mesh_test_path = str(PROJECT_DIR / "validation_files/data/mesh_info/cylinder_tet4/")
 
     mesher = GmshMesher(geometry_path)
     mesher.setup.minimum_element_size = 30
