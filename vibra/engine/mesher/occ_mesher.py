@@ -1,20 +1,20 @@
-from collections import defaultdict
 from itertools import pairwise
 from pathlib import Path
 
 import numpy as np
 from OCP.BRep import BRep_Tool
+from OCP.BRepAdaptor import BRepAdaptor_Curve, BRepAdaptor_Surface
 from OCP.BRepGProp import BRepGProp
+from OCP.BRepLProp import BRepLProp_SLProps
 from OCP.BRepMesh import BRepMesh_IncrementalMesh
 from OCP.collections import IndexedMap_TopoDS_Shape_TopTools_ShapeMapHasher as TopTools_IndexedMapOfShape
 from OCP.GProp import GProp_GProps
 from OCP.IFSelect import IFSelect_RetDone
-from OCP.TopAbs import TopAbs_EDGE, TopAbs_FACE, TopAbs_SOLID, TopAbs_VERTEX
+from OCP.TopAbs import TopAbs_EDGE, TopAbs_FACE, TopAbs_REVERSED, TopAbs_SOLID, TopAbs_VERTEX
 from OCP.TopExp import TopExp, TopExp_Explorer
 from OCP.TopLoc import TopLoc_Location
 from OCP.TopoDS import TopoDS
 
-from vibra.engine.mesher import geometry_info
 from vibra.engine.mesher.geometry_info import GeometryInfo
 from vibra.engine.mesher.mesh import Mesh
 from vibra.errors import IncompleteSetupError
@@ -86,6 +86,7 @@ class OccMesher:
 
             geometry_info.solids.append(solid_index)
             geometry_info._solids_volumes[solid_index] = self._solid_volume(solid)
+            geometry_info._solids_centers[solid_index] = self._solid_center(solid)
 
             for surface in self._iterate_surfaces(solid):
                 surface_index = surface_mapper.FindIndex(surface)
@@ -98,6 +99,8 @@ class OccMesher:
 
                 geometry_info.surfaces.append(surface_index)
                 geometry_info._surfaces_areas[surface_index] = self._surface_area(surface)
+                geometry_info._surfaces_centers[surface_index] = self._surface_center(surface)
+                geometry_info._surfaces_normals[surface_index] = self._surface_normal(surface)
 
                 triangulation = BRep_Tool.Triangulation_s(surface, loc)
                 coordinate_shift = len(nodal_coordinates)
@@ -128,6 +131,7 @@ class OccMesher:
 
                     geometry_info.curves.append(curve_index)
                     geometry_info._curves_lengths[curve_index] = self._curve_length(curve)
+                    geometry_info._curves_centers[curve_index] = self._curve_center(curve)
 
                     polygon = BRep_Tool.PolygonOnTriangulation_s(curve, triangulation, loc)
                     for a, b in pairwise(range(polygon.Nodes().Length())):
@@ -147,10 +151,15 @@ class OccMesher:
                         if not duplicated(CURVE, POINT, curve_index, point_index):
                             geometry_info._curves_to_points[curve_index].append(point_index)
 
-                        if not duplicated(POINT, point_index):
-                            geometry_info.points.append(point_index)
+                        if duplicated(POINT, point_index):
+                            continue
+
+                        geometry_info.points.append(point_index)
+                        geometry_info._points_centers[point_index] = self._point_center(point)
 
         geometry_info._create_inverse_maps()
+        geometry_info._process_curves_normals()
+        geometry_info._process_points_normals()
 
         mesh = Mesh()
         mesh.set_mesh_data(
@@ -251,3 +260,35 @@ class OccMesher:
         props = GProp_GProps()
         BRepGProp.LinearProperties_s(shape, props)
         return props.Mass() * 1e-3
+
+    def _solid_center(self, shape) -> np.ndarray:
+        props = GProp_GProps()
+        BRepGProp.VolumeProperties_s(shape, props)
+        return np.array(props.CentreOfMass().Coord()) * 1e-3
+
+    def _surface_center(self, shape) -> np.ndarray:
+        surface = BRepAdaptor_Surface(shape)
+        u_mid = (surface.FirstUParameter() + surface.LastUParameter()) / 2
+        v_mid = (surface.FirstVParameter() + surface.LastVParameter()) / 2
+        return np.array(surface.Value(u_mid, v_mid).Coord()) * 1e-3
+
+    def _curve_center(self, shape) -> np.ndarray:
+        curve = BRepAdaptor_Curve(shape)
+        u_mid = (curve.FirstParameter() + curve.LastParameter()) / 2
+        return np.array(curve.Value(u_mid).Coord()) * 1e-3
+
+    def _point_center(self, shape) -> np.ndarray:
+        return np.array(BRep_Tool.Pnt_s(shape).Coord()) * 1e-3
+
+    def _surface_normal(self, shape) -> np.ndarray:
+        surface = BRepAdaptor_Surface(shape)
+        u_mid = (surface.FirstUParameter() + surface.LastUParameter()) / 2
+        v_mid = (surface.FirstVParameter() + surface.LastVParameter()) / 2
+
+        props = BRepLProp_SLProps(surface, u_mid, v_mid, 1, 1e-6)
+        normal = np.array(props.Normal().Coord())
+
+        if shape.Orientation() == TopAbs_REVERSED:
+            normal *= -1
+
+        return normal
