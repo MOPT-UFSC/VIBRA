@@ -287,7 +287,7 @@ class GeometryInfo:
     def volume(self, *volume_ids: int) -> float:
         return sum(self._solids_volumes[volume_id] for volume_id in volume_ids)
 
-    def line_bounding_box(self, line_id: int) -> np.ndarray | None:
+    def curve_bounding_box(self, line_id: int) -> np.ndarray | None:
         return self._bounding_curves.get(line_id)
 
     def surface_bounding_box(self, surface_id: int) -> np.ndarray | None:
