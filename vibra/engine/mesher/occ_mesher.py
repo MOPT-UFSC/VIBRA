@@ -301,7 +301,7 @@ class OccMesher:
     def _bounding_box(self, shape) -> tuple[float, float, float, float, float, float]:
         bbox = Bnd_Box()
         bbox.SetGap(1e-6)
-        BRepBndLib.Add_s(shape, bbox, True)
+        BRepBndLib.Add_s(shape, bbox, False)
         return (
             bbox.GetXMin() * 1e-3,
             bbox.GetYMin() * 1e-3,
