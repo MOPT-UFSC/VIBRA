@@ -374,37 +374,48 @@ class ProjectReader:
                 geometry_info._cache_curves_to_points.update({key: list(values) for key, values in group_by(arr[:, 0], arr[:, 1]).items()})
 
             for entity_id, center in zip(geometry_info.solids, file["centers/solids"]):
-                geometry_info._solids_centers[int(entity_id)] = np.asarray(center)
+                if np.isfinite(center).all():
+                    geometry_info._solids_centers[int(entity_id)] = np.asarray(center)
             for entity_id, center in zip(geometry_info.surfaces, file["centers/surfaces"]):
-                geometry_info._surfaces_centers[int(entity_id)] = np.asarray(center)
+                if np.isfinite(center).all():
+                    geometry_info._surfaces_centers[int(entity_id)] = np.asarray(center)
             for entity_id, center in zip(geometry_info.curves, file["centers/curves"]):
-                geometry_info._curves_centers[int(entity_id)] = np.asarray(center)
+                if np.isfinite(center).all():
+                    geometry_info._curves_centers[int(entity_id)] = np.asarray(center)
             for entity_id, center in zip(geometry_info.points, file["centers/points"]):
-                geometry_info._points_centers[int(entity_id)] = np.asarray(center)
+                if np.isfinite(center).all():
+                    geometry_info._points_centers[int(entity_id)] = np.asarray(center)
 
             for entity_id, volume in zip(geometry_info.solids, file["mass/solids"]):
-                geometry_info._solids_volumes[int(entity_id)] = float(volume)
+                if np.isfinite(volume):
+                    geometry_info._solids_volumes[int(entity_id)] = float(volume)
             for entity_id, area in zip(geometry_info.surfaces, file["mass/surfaces"]):
-                geometry_info._surfaces_areas[int(entity_id)] = float(area)
+                if np.isfinite(area):
+                    geometry_info._surfaces_areas[int(entity_id)] = float(area)
             for entity_id, length in zip(geometry_info.curves, file["mass/curves"]):
-                geometry_info._curves_lengths[int(entity_id)] = float(length)
+                if np.isfinite(length):
+                    geometry_info._curves_lengths[int(entity_id)] = float(length)
 
             for entity_id, bounding_box in zip(geometry_info.solids, file["bounding_box/solids"]):
-                geometry_info._bounding_solids[int(entity_id)] = np.asarray(bounding_box)
+                if np.isfinite(bounding_box).all():
+                    geometry_info._bounding_solids[int(entity_id)] = np.asarray(bounding_box)
             for entity_id, bounding_box in zip(geometry_info.surfaces, file["bounding_box/surfaces"]):
-                geometry_info._bounding_surfaces[int(entity_id)] = np.asarray(bounding_box)
+                if np.isfinite(bounding_box).all():
+                    geometry_info._bounding_surfaces[int(entity_id)] = np.asarray(bounding_box)
             for entity_id, bounding_box in zip(geometry_info.curves, file["bounding_box/curves"]):
-                geometry_info._bounding_curves[int(entity_id)] = np.asarray(bounding_box)
+                if np.isfinite(bounding_box).all():
+                    geometry_info._bounding_curves[int(entity_id)] = np.asarray(bounding_box)
 
             for entity_id, normal in zip(geometry_info.surfaces, file["normals/surfaces"]):
-                geometry_info._surfaces_normals[int(entity_id)] = np.asarray(normal)
+                if np.isfinite(normal).all():
+                    geometry_info._surfaces_normals[int(entity_id)] = np.asarray(normal)
             geometry_info._straight_curves = {int(i) for i in file.get("is_straight/curves", [])}
             geometry_info._straight_surfaces = {int(i) for i in file.get("is_straight/surfaces", [])}
 
         geometry_info._create_inverse_maps()
         geometry_info._process_curves_normals()
         geometry_info._process_points_normals()
-        
+
         return geometry_info
 
     def read_geometry_info_deprecated(self) -> GeometryInfo:

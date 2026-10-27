@@ -198,21 +198,21 @@ class ProjectWriter:
             surfaces_to_curves = dict_mapped_arrays(dict(geometry_info._surfaces_to_curves))
             curves_to_points = dict_mapped_arrays(dict(geometry_info._curves_to_points))
 
-            file["adjacencies/solids_to_surfaces"] = np.stack(solids_to_surfaces, axis=1, dtype=int)
-            file["adjacencies/surfaces_to_curves"] = np.stack(surfaces_to_curves, axis=1, dtype=int)
-            file["adjacencies/curves_to_points"] = np.stack(curves_to_points, axis=1, dtype=int)
+            file["adjacencies/solids_to_surfaces"] = np.column_stack(solids_to_surfaces).astype(int)
+            file["adjacencies/surfaces_to_curves"] = np.column_stack(surfaces_to_curves).astype(int)
+            file["adjacencies/curves_to_points"] = np.column_stack(curves_to_points).astype(int)
 
             if geometry_info._cache_solids_to_surfaces:
                 cache_solids_to_surfaces = dict_mapped_arrays(dict(geometry_info._cache_solids_to_surfaces))
-                file["adjacencies/cache_solids_to_surfaces"] = np.stack(cache_solids_to_surfaces, axis=1)
+                file["adjacencies/cache_solids_to_surfaces"] = np.column_stack(cache_solids_to_surfaces).astype(int)
 
             if geometry_info._cache_surfaces_to_curves:
                 cache_surfaces_to_curves = dict_mapped_arrays(dict(geometry_info._cache_surfaces_to_curves))
-                file["adjacencies/cache_surfaces_to_curves"] = np.stack(cache_surfaces_to_curves, axis=1)
+                file["adjacencies/cache_surfaces_to_curves"] = np.column_stack(cache_surfaces_to_curves).astype(int)
 
             if geometry_info._cache_curves_to_points:
                 cache_curves_to_points = dict_mapped_arrays(dict(geometry_info._cache_curves_to_points))
-                file["adjacencies/cache_curves_to_points"] = np.stack(cache_curves_to_points, axis=1)
+                file["adjacencies/cache_curves_to_points"] = np.column_stack(cache_curves_to_points).astype(int)
 
             file["centers/solids"] = np.array([geometry_info.solid_center(i) for i in geometry_info.solids])
             file["centers/surfaces"] = np.array([geometry_info.surface_center(i) for i in geometry_info.surfaces])
@@ -221,9 +221,9 @@ class ProjectWriter:
 
             file["normals/surfaces"] = np.array([geometry_info.surface_normal(i) for i in geometry_info.surfaces])
 
-            file["mass/solids"] = np.array([geometry_info.volume(i) for i in geometry_info.solids])
-            file["mass/surfaces"] = np.array([geometry_info.surface_area(i) for i in geometry_info.surfaces])
-            file["mass/curves"] = np.array([geometry_info.arc_length(i) for i in geometry_info.curves])
+            file["mass/solids"] = np.array([geometry_info._solids_volumes.get(i, np.nan) for i in geometry_info.solids])
+            file["mass/surfaces"] = np.array([geometry_info._surfaces_areas.get(i, np.nan) for i in geometry_info.surfaces])
+            file["mass/curves"] = np.array([geometry_info._curves_lengths.get(i, np.nan) for i in geometry_info.curves])
 
             file["bounding_box/solids"] = np.array([geometry_info.solid_bounding_box(i) for i in geometry_info.solids])
             file["bounding_box/surfaces"] = np.array([geometry_info.surface_bounding_box(i) for i in geometry_info.surfaces])

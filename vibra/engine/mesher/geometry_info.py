@@ -7,6 +7,11 @@ import gmsh
 import numpy as np
 
 LengthUnits = Literal["millimeter", "inch"]
+NAN_VEC3 = np.array([np.nan, np.nan, np.nan])
+NAN_VEC3.setflags(write=False)
+
+NAN_VEC6 = np.array([np.nan, np.nan, np.nan, np.nan, np.nan, np.nan])
+NAN_VEC6.setflags(write=False)
 
 
 class GeometryInfo:
@@ -257,26 +262,26 @@ class GeometryInfo:
     def contains_volumes(self) -> bool:
         return bool(self.solids)
 
-    def solid_center(self, solid_id: int) -> np.ndarray | None:
-        return self._solids_centers.get(solid_id)
+    def solid_center(self, solid_id: int) -> np.ndarray:
+        return self._solids_centers.get(solid_id, NAN_VEC3)
 
-    def surface_center(self, surface_id: int) -> np.ndarray | None:
-        return self._surfaces_centers.get(surface_id)
+    def surface_center(self, surface_id: int) -> np.ndarray:
+        return self._surfaces_centers.get(surface_id, NAN_VEC3)
 
-    def curve_center(self, curve_id: int) -> np.ndarray | None:
-        return self._curves_centers.get(curve_id)
+    def curve_center(self, curve_id: int) -> np.ndarray:
+        return self._curves_centers.get(curve_id, NAN_VEC3)
 
-    def point_center(self, point_id: int) -> np.ndarray | None:
-        return self._points_centers.get(point_id)
+    def point_center(self, point_id: int) -> np.ndarray:
+        return self._points_centers.get(point_id, NAN_VEC3)
 
-    def surface_normal(self, surface_id: int) -> np.ndarray | None:
-        return self._surfaces_normals.get(surface_id)
+    def surface_normal(self, surface_id: int) -> np.ndarray:
+        return self._surfaces_normals.get(surface_id, NAN_VEC3)
 
-    def curve_normal(self, curve_id: int) -> np.ndarray | None:
-        return self._curves_normals.get(curve_id)
+    def curve_normal(self, curve_id: int) -> np.ndarray:
+        return self._curves_normals.get(curve_id, NAN_VEC3)
 
-    def point_normal(self, point_id: int) -> np.ndarray | None:
-        return self._points_normals.get(point_id)
+    def point_normal(self, point_id: int) -> np.ndarray:
+        return self._points_normals.get(point_id, NAN_VEC3)
 
     def arc_length(self, *curve_ids: int) -> float:
         return sum(self._curves_lengths[curve_id] for curve_id in curve_ids)
@@ -287,14 +292,14 @@ class GeometryInfo:
     def volume(self, *volume_ids: int) -> float:
         return sum(self._solids_volumes[volume_id] for volume_id in volume_ids)
 
-    def curve_bounding_box(self, line_id: int) -> np.ndarray | None:
-        return self._bounding_curves.get(line_id)
+    def curve_bounding_box(self, line_id: int) -> np.ndarray:
+        return self._bounding_curves.get(line_id, NAN_VEC6)
 
-    def surface_bounding_box(self, surface_id: int) -> np.ndarray | None:
-        return self._bounding_surfaces.get(surface_id)
+    def surface_bounding_box(self, surface_id: int) -> np.ndarray:
+        return self._bounding_surfaces.get(surface_id, NAN_VEC6)
 
-    def solid_bounding_box(self, solid_id: int) -> np.ndarray | None:
-        return self._bounding_solids.get(solid_id)
+    def solid_bounding_box(self, solid_id: int) -> np.ndarray:
+        return self._bounding_solids.get(solid_id, NAN_VEC6)
 
     def _process_geometry_information(self):
         """Process and store geometry information (lenghts, areas, volumes, centers, etc.) from the Gmsh model."""
@@ -377,7 +382,7 @@ class GeometryInfo:
 
             # First try to get normals from the surfaces
             for surf_id in adjacent_surfaces:
-                normals_sum += self._surfaces_normals[surf_id]
+                normals_sum += self._surfaces_normals.get(surf_id, (0, 0, 0))
 
             if np.allclose(normals_sum, 0):
                 # If the sum of the surface normals is zero, estimate the "curve normal"
@@ -415,7 +420,7 @@ class GeometryInfo:
             normals_sum = np.zeros(3)
 
             for curve_id in adjacent_curves:
-                normals_sum += self._curves_normals[curve_id]
+                normals_sum += self._curves_normals.get(curve_id, (0, 0, 0))
 
             if np.allclose(normals_sum, 0):
                 # If the sum of the curve normals is zero, estimate the "point normal"
