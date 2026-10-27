@@ -4,14 +4,17 @@ from pathlib import Path
 
 import numpy as np
 from OCP.BRep import BRep_Tool
+from OCP.BRepGProp import BRepGProp
 from OCP.BRepMesh import BRepMesh_IncrementalMesh
 from OCP.collections import IndexedMap_TopoDS_Shape_TopTools_ShapeMapHasher as TopTools_IndexedMapOfShape
+from OCP.GProp import GProp_GProps
 from OCP.IFSelect import IFSelect_RetDone
 from OCP.TopAbs import TopAbs_EDGE, TopAbs_FACE, TopAbs_SOLID, TopAbs_VERTEX
 from OCP.TopExp import TopExp, TopExp_Explorer
 from OCP.TopLoc import TopLoc_Location
 from OCP.TopoDS import TopoDS
 
+from vibra.engine.mesher import geometry_info
 from vibra.engine.mesher.geometry_info import GeometryInfo
 from vibra.engine.mesher.mesh import Mesh
 from vibra.errors import IncompleteSetupError
@@ -82,6 +85,7 @@ class OccMesher:
                 continue
 
             geometry_info.solids.append(solid_index)
+            geometry_info._solids_volumes[solid_index] = self._solid_volume(solid)
 
             for surface in self._iterate_surfaces(solid):
                 surface_index = surface_mapper.FindIndex(surface)
@@ -93,6 +97,7 @@ class OccMesher:
                     continue
 
                 geometry_info.surfaces.append(surface_index)
+                geometry_info._surfaces_areas[surface_index] = self._surface_area(surface)
 
                 triangulation = BRep_Tool.Triangulation_s(surface, loc)
                 coordinate_shift = len(nodal_coordinates)
@@ -122,6 +127,7 @@ class OccMesher:
                         continue
 
                     geometry_info.curves.append(curve_index)
+                    geometry_info._curves_lengths[curve_index] = self._curve_length(curve)
 
                     polygon = BRep_Tool.PolygonOnTriangulation_s(curve, triangulation, loc)
                     for a, b in pairwise(range(polygon.Nodes().Length())):
@@ -154,7 +160,7 @@ class OccMesher:
             solids_connectivity=np.zeros((0, 4)),
         )
 
-        return mesh, GeometryInfo().read_file(self.path)
+        return mesh, geometry_info
 
     def _iterate_entities(self, shape, entity_type):
         explorer = TopExp_Explorer(shape, entity_type)
@@ -230,3 +236,18 @@ class OccMesher:
 
     def _map_vertices(self, shape):
         return self._map_repetitions(shape, TopAbs_VERTEX)
+
+    def _solid_volume(self, shape) -> float:
+        props = GProp_GProps()
+        BRepGProp.VolumeProperties_s(shape, props)
+        return props.Mass() * 1e-9
+
+    def _surface_area(self, shape) -> float:
+        props = GProp_GProps()
+        BRepGProp.SurfaceProperties_s(shape, props)
+        return props.Mass() * 1e-6
+
+    def _curve_length(self, shape) -> float:
+        props = GProp_GProps()
+        BRepGProp.LinearProperties_s(shape, props)
+        return props.Mass() * 1e-3
