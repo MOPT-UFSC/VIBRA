@@ -83,7 +83,6 @@ class ProjectReader:
             model.visual_mesh = self.read_visual_mesh()
             model.geometry_info = self.read_geometry_info()
         else:
-            print("Bonk")
             model.visual_mesh, model.geometry_info = model.visual_mesher.generate()
 
         model.mesh_setup = self.read_mesh_setup()
