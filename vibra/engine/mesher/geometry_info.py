@@ -284,13 +284,13 @@ class GeometryInfo:
         return self._points_normals.get(point_id, NAN_VEC3)
 
     def arc_length(self, *curve_ids: int) -> float:
-        return sum(self._curves_lengths[curve_id] for curve_id in curve_ids)
+        return sum(self._curves_lengths.get(curve_id, 0) for curve_id in curve_ids)
 
     def surface_area(self, *surface_ids: int) -> float:
-        return sum(self._surfaces_areas[surface_id] for surface_id in surface_ids)
+        return sum(self._surfaces_areas.get(surface_id, 0) for surface_id in surface_ids)
 
     def volume(self, *volume_ids: int) -> float:
-        return sum(self._solids_volumes[volume_id] for volume_id in volume_ids)
+        return sum(self._solids_volumes.get(volume_id, 0) for volume_id in volume_ids)
 
     def curve_bounding_box(self, line_id: int) -> np.ndarray:
         return self._bounding_curves.get(line_id, NAN_VEC6)
