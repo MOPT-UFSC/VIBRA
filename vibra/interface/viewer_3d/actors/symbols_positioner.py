@@ -1,3 +1,4 @@
+from vibra import app
 from collections import defaultdict
 
 import numpy as np
@@ -9,6 +10,7 @@ from vibra.engine.mesher.mesh import Mesh
 class SymbolsPositioner:
     def __init__(self, mesh, margin_factor: float = 0.25):
         self.mesh: Mesh = mesh
+        self.geometry_info = app().project.model.geometry_info  # should be passed as a parameter
 
         self.margin_factor = margin_factor # how close is from the border
 
@@ -45,7 +47,7 @@ class SymbolsPositioner:
         return center_coords + positions[symbol_index] * axis
 
     def get_surface_boundary_coordinates(self, surface_id: int) -> np.ndarray | None:
-        line_ids = self.mesh.lines_from_surface.get(surface_id, [])
+        line_ids = self.geometry_info.surfaces_to_curves(surface_id)
         boundary_nodes = set()
 
         for line_id in line_ids:
