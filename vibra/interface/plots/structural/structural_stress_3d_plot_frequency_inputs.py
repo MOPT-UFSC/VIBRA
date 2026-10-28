@@ -1,5 +1,3 @@
-from time import perf_counter
-
 import numpy as np
 from PySide6.QtCore import QSignalBlocker, Qt, Signal
 from PySide6.QtWidgets import QGridLayout, QTreeWidgetItem
@@ -11,6 +9,7 @@ from vibra.interface.plots.general.animation_widget import AnimationWidget
 from vibra.interface.plots.general.results_display_widget import ResultsDisplayWidget
 from vibra.interface.ui_generated.plots.structural.structural_stress_3d_plot_frequency_inputs_ui import StructuralStress3dPlotFrequencyInputs_UI
 from vibra.interface.viewer_3d.plot_setup import StressDataType, StressFieldPlotSetupFrequency
+from vibra.utils.subprocess.structural_stresses_handler import recover_structural_stresses_in_subprocess
 
 
 class StructuralStress3dPlotFrequencyInputs(StructuralStress3dPlotFrequencyInputs_UI):
@@ -129,16 +128,21 @@ class StructuralStress3dPlotFrequencyInputs(StructuralStress3dPlotFrequencyInput
             app().main_window.view_toolbar.disable_selection_tool()
 
     def process_stress_field(self):
-
         # recover the averaged structural stresses
-        if not self.is_stress_data_computed:    
-            def recover_stresses():
-                t0 = perf_counter()
-                self.structural_post.recover_nodal_averaged_structural_stresses()
-                dt = perf_counter() - t0
-                print(f"Time to compute all nodal stresses: {dt} s")
+        if not self.is_stress_data_computed:
+            if app().config.user_preferences.run_analysis_in_subprocess:
+                post = self.structural_post
+                stresses = recover_structural_stresses_in_subprocess(
+                    app().project.working_directory,
+                    post.get_nodal_stresses_frequency_shape(),
+                )
+                if stresses is None:
+                    return
 
-            LoadingWindow(recover_stresses).run()
+                post.nodal_averaged_stresses_frequency = stresses
+            else:
+                recover_stresses = self.structural_post.recover_nodal_averaged_structural_stresses
+                LoadingWindow(recover_stresses).run()
 
         self.set_frames_disabled(False)
         self.load_frequencies()
