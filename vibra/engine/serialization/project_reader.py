@@ -432,11 +432,11 @@ class ProjectReader:
             geometry_info.surfaces = list(entities.get("surfaces", []))
             geometry_info.solids = list(entities.get("volumes", []))
 
-            # if "properties" in file:
-            #     properties = file["properties"]
-            #     mesh.length_from_lines = {int(k): v for k, v in properties.get("length_from_lines", default=dict())}
-            #     mesh.area_from_surfaces = {int(k): v for k, v in properties.get("area_from_surfaces", default=dict())}
-            #     mesh.volume_from_bodies = {int(k): v for k, v in properties.get("volume_from_bodies", default=dict())}
+            if "properties" in file:
+                properties = file["properties"]
+                geometry_info._curves_lengths = {int(k): np.average(v) for k, v in properties.get("length_from_lines", default=dict())}
+                geometry_info._surfaces_areas = {int(k): v for k, v in properties.get("area_from_surfaces", default=dict())}
+                geometry_info._solids_volumes = {int(k): v for k, v in properties.get("volume_from_bodies", default=dict())}
 
             for key, value in file.get("adjacencies", dict()).items():
                 key: str

@@ -28,26 +28,26 @@ class GeometryInfo:
         self._curves_to_surfaces = defaultdict(list)
         self._points_to_curves = defaultdict(list)
 
-        self._cache_solids_to_surfaces = defaultdict()
-        self._cache_surfaces_to_curves = defaultdict()
-        self._cache_curves_to_points = defaultdict()
+        self._cache_solids_to_surfaces = {}
+        self._cache_surfaces_to_curves = {}
+        self._cache_curves_to_points = {}
 
-        self._solids_centers = defaultdict()
-        self._surfaces_centers = defaultdict()
-        self._curves_centers = defaultdict()
-        self._points_centers = defaultdict()
+        self._solids_centers = {}
+        self._surfaces_centers = {}
+        self._curves_centers = {}
+        self._points_centers = {}
 
-        self._surfaces_normals = defaultdict()
-        self._curves_normals = defaultdict()
-        self._points_normals = defaultdict()
+        self._surfaces_normals = {}
+        self._curves_normals = {}
+        self._points_normals = {}
 
-        self._surfaces_areas = defaultdict()
-        self._curves_lengths = defaultdict()
-        self._solids_volumes = defaultdict()
+        self._surfaces_areas = {}
+        self._curves_lengths = {}
+        self._solids_volumes = {}
 
-        self._bounding_curves = defaultdict()
-        self._bounding_surfaces = defaultdict()
-        self._bounding_solids = defaultdict()
+        self._bounding_curves = {}
+        self._bounding_surfaces = {}
+        self._bounding_solids = {}
 
         self._straight_curves = set()
         self._straight_surfaces = set()
