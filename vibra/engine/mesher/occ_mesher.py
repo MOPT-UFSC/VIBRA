@@ -3,6 +3,7 @@ from pathlib import Path
 
 import numpy as np
 from OCP.Bnd import Bnd_Box
+from OCP.BOPAlgo import BOPAlgo_Builder, BOPAlgo_GlueEnum
 from OCP.BRep import BRep_Tool
 from OCP.BRepAdaptor import BRepAdaptor_Curve, BRepAdaptor_Surface
 from OCP.BRepBndLib import BRepBndLib
@@ -213,7 +214,7 @@ class OccMesher:
 
         reader.TransferRoots()
         shape = reader.OneShape()
-        return shape
+        return self._fragment(shape)
 
     def _read_iges(self, path: str | Path):
         from OCP.IGESControl import IGESControl_Reader
@@ -226,7 +227,20 @@ class OccMesher:
 
         reader.TransferRoots()
         shape = reader.OneShape()
-        return shape
+        return self._fragment(shape)
+
+    def _fragment(self, shape):
+        builder = BOPAlgo_Builder()
+        for solid in self._iterate_solids(shape):
+            builder.AddArgument(solid)
+        builder.SetGlue(BOPAlgo_GlueEnum.BOPAlgo_GlueShift)
+        builder.Perform()
+
+        result = builder.Shape()
+        if builder.HasErrors():
+            return shape
+
+        return result
 
     def _iterate_curves(self, shape):
         for i in self._iterate_entities(shape, TopAbs_EDGE):
