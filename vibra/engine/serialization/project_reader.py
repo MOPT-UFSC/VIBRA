@@ -71,9 +71,7 @@ class ProjectReader:
         if (path := self.read_geometry_path()) is not None:
             model.set_geometry_path(path)
 
-        analysis_setup = self.read_analysis_setup()
-
-        if analysis_setup is not None:
+        if (analysis_setup := self.read_analysis_setup()) is not None:
             model.set_analysis_setup(analysis_setup)
 
         if self.project_paths.fem_mesh_filepath.exists():
@@ -88,7 +86,6 @@ class ProjectReader:
         model.mesh_setup = self.read_mesh_setup()
         model.properties = self.read_model_properties()
         model.solution = self.read_solution(model)
-
         model.domains_processor.update_domains_mappings()
 
         return model
