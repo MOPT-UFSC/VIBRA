@@ -300,7 +300,7 @@ class AcousticImpedanceInputs(AcousticImpedanceInputs_UI):
                                         "title" : plot_type,
                                         "data_type" : plot_type.lower(),
                                         "legend" : legend_label,
-                                        "unit" : unit_label,
+                                        "units" : unit_label,
                                         "color" : self.get_color(i),
                                         "linestyle" : "-"  
                                       }

@@ -293,7 +293,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
 
     def constant_values_attribution(self, selection: str, selected_ids: list[int]):
 
-        unit = "N/m²" if selection == "surfaces" else "N/m"
+        units = "N/m²" if selection == "surfaces" else "N/m"
 
         self.remove_conflicting_excitations(selected_ids, selection)
 
@@ -318,8 +318,8 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         for values in distributed_loads:
             all_values.extend(values)
 
-        condition_1 = element_type == "2d_element" and all_values.count(None) == 12
-        condition_2 = element_type == "3d_element" and all_values.count(None) == 6
+        condition_1 = element_type == "2d_element" and all_values.count(None) == 6
+        condition_2 = element_type == "3d_element" and all_values.count(None) == 3
 
         if condition_1 or condition_2:
             title = "Additional inputs required"
@@ -336,7 +336,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
                 "element_type": element_type,
                 "real_values" if real_imag_input else "amplitude_values": left_values,
                 "imag_values" if real_imag_input else "phase_values": right_values,
-                "unit": unit,
+                "units": units,
             }
 
             match selection:
@@ -452,7 +452,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
 
     def table_values_attribution(self, selection: str, selected_ids: list[int]):
 
-        unit = "N/m²" if selection == "surfaces" else "N/m"
+        units = "N/m²" if selection == "surfaces" else "N/m"
 
         self.remove_conflicting_excitations(selected_ids, selection)
 
@@ -501,7 +501,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
                 "element_type" : element_type,
                 "table_names" : table_names,
                 "table_paths" : table_paths,
-                "unit" : unit,
+                "units" : units,
             }
 
             match selection:

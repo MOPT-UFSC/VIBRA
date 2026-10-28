@@ -53,9 +53,11 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_distributed_loads = self.add_item("Distributed Loads")
         self.item_child_normal_pressure_load = self.add_item("Normal Pressure Load")
         self.item_child_distributed_mass = self.add_item("Distributed Mass")
-        self.item_top_acoustic_model_setup = self.add_top_item('Acoustic Model Setup')
+        self.item_child_distributed_stiffness = self.add_item("Distributed Stiffness")
+        self.item_child_distributed_dampings = self.add_item("Distributed Dampings")
 
         # acoustic model excitations
+        self.item_top_acoustic_model_setup = self.add_top_item('Acoustic Model Setup')
         self.item_child_acoustic_pressure = self.add_item('Acoustic Pressure')
         self.item_child_mass_source = self.add_item("Mass Source")
         self.item_child_surface_velocity = self.add_item("Surface Velocity")
@@ -106,6 +108,8 @@ class ModelSetupItems(CommonMenuItems):
             "item_child_distributed_loads": "distributed_loads",
             "item_child_normal_pressure_load": "normal_pressure_load",
             "item_child_distributed_mass": "distributed_mass",
+            "item_child_distributed_stiffness": "distributed_stiffness",
+            "item_child_distributed_dampings": "distributed_damping",
             "item_child_acoustic_pressure": "acoustic_pressure",
             "item_child_mass_source": "mass_source",
             "item_child_surface_velocity": "surface_velocity",
@@ -519,6 +523,12 @@ class ModelSetupItems(CommonMenuItems):
 
     def item_child_distributed_mass_callback(self):
         app().main_window.input_ui.set_distributed_mass()
+
+    def item_child_distributed_stiffness_callback(self):
+        app().main_window.input_ui.set_distributed_stiffness()
+
+    def item_child_distributed_dampings_callback(self):
+        app().main_window.input_ui.set_distributed_dampings()
 
     def item_child_normal_pressure_load_callback(self):
         app().main_window.input_ui.set_normal_pressure_load()

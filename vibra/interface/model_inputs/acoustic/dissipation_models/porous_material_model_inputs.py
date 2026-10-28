@@ -1071,7 +1071,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
                                     "title" : title,
                                     "data_type" : "porous material data",
                                     "legend" : legend_label,
-                                    "unit" : unit_label,
+                                    "units" : unit_label,
                                     "color" : [0,0,1],
                                     "linestyle" : "-"
                                    }

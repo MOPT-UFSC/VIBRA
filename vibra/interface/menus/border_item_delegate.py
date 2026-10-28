@@ -24,7 +24,7 @@ class BorderItemDelegate(QStyledItemDelegate):
         tree = index.model().parent()
         item = tree.itemFromIndex(index)
         if item and item.parent():
-            return QSize(default_size.width(), 22)
+            return QSize(default_size.width(), 28)
 
         if pen is not None:        
             # Make some room for the border
@@ -47,7 +47,7 @@ class BorderItemDelegate(QStyledItemDelegate):
 
         original_icon: QIcon = index.data(Qt.DecorationRole)
         if original_icon and not original_icon.isNull():
-            new_icon_size = QSize(20, 20)
+            new_icon_size = QSize(27, 27)
             scaled_pixmap: QPixmap = original_icon.pixmap(new_icon_size, QIcon.Normal, QIcon.On)
             
             x_offset = option.rect.left()

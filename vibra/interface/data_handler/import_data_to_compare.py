@@ -163,7 +163,7 @@ class ImportDataToCompare(ImportDataToCompare_UI):
                     "x_label": "Frequency [Hz]",
                     "y_label": y_label,
                     "legend": legend_label,
-                    "unit": "",
+                    "units": "",
                     "title": "",
                     "color": color,
                     "linestyle": "--",

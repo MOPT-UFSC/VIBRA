@@ -345,7 +345,7 @@ class AcousticShakingForcesInputs(AcousticShakingForcesInputs_UI):
                     "title" : self.title,
                     "data_type" : "acoustic loads",
                     "legend" : self.get_legend_label(load_label, surfaces),
-                    "unit" : self.unit_label,
+                    "units" : self.unit_label,
                     "color" : get_color(3 * i + j),
                     "linestyle" : "-",
                     }

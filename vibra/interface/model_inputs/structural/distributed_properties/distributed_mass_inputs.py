@@ -13,7 +13,7 @@ from vibra.interface.common.common_interface import update_entities_selection
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
-from vibra.interface.ui_generated.model.structural.excitations.distributed_mass_inputs_ui import DistributedMassInputs_UI
+from vibra.interface.ui_generated.model.structural.distributed_properties.distributed_mass_inputs_ui import DistributedMassInputs_UI
 
 
 class TabType(IntEnum):
@@ -34,10 +34,6 @@ class DistributedMassInputs(DistributedMassInputs_UI):
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
 
-        self.model = app().project.model
-        self.mesh = app().project.model.mesh
-        self.properties = app().project.model.properties
-
         self._config_window()
         self._initialize()
         self._configure_validators()
@@ -50,6 +46,18 @@ class DistributedMassInputs(DistributedMassInputs_UI):
         while self.keep_window_open:
             self.exec()
 
+    @property
+    def model(self):
+        return app().project.model
+
+    @property
+    def mesh(self):
+        return app().project.model.mesh
+
+    @property
+    def properties(self):
+        return app().project.model.properties
+
     def _config_window(self):
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
         self.setWindowModality(Qt.WindowModal)
@@ -61,7 +69,7 @@ class DistributedMassInputs(DistributedMassInputs_UI):
         self.element_types = ["2d_element", "3d_element"]
 
     def _configure_validators(self):
-        self.lineEdit_mass_to_distribute.setValidator(StrictDoubleValidator(1e-16, 1e16, 8))
+        self.lineEdit_constant_value.setValidator(StrictDoubleValidator(1e-16, 1e16, 8))
 
     def _config_widgets(self):
 
@@ -147,7 +155,7 @@ class DistributedMassInputs(DistributedMassInputs_UI):
         self.comboBox_element_type.setCurrentIndex(self.element_types.index(element_type))
 
         mass = np.real(data.get("values"))
-        self.lineEdit_mass_to_distribute.setText(f"{round(float(mass), 8)}")
+        self.lineEdit_constant_value.setText(f"{round(float(mass), 8)}")
 
     def update_formulation_callback(self, line_id: int | None = None, surface_id: int | None = None):
 
@@ -215,7 +223,7 @@ class DistributedMassInputs(DistributedMassInputs_UI):
         etype_index = self.comboBox_element_type.currentIndex()
         element_type = self.element_types[etype_index]
 
-        mass = self.check_input_value(self.lineEdit_mass_to_distribute.text())
+        mass = self.check_input_value(self.lineEdit_constant_value.text())
         if mass is None:
             title = "Additional inputs required"
             message = "You must to enter at least one distributed load value before confirming the assignment."
@@ -233,7 +241,7 @@ class DistributedMassInputs(DistributedMassInputs_UI):
                 "element_type": element_type,
                 "real_values": real_values,
                 "imag_values": imag_values,
-                "unit": "kg",
+                "units": "kg",
             }
 
             if surface_assignment:
@@ -316,7 +324,7 @@ class DistributedMassInputs(DistributedMassInputs_UI):
 
         self.tabWidget_main.setTabVisible(TabType.LIST, False)
         self.tabWidget_main.setCurrentIndex(TabType.CONSTANT_DATA)
-        self.lineEdit_mass_to_distribute.setFocus()
+        self.lineEdit_constant_value.setFocus()
 
         app().main_window.selection.set_geometry_selection()
 
@@ -434,7 +442,7 @@ class DistributedMassInputs(DistributedMassInputs_UI):
         if reset_all:
             self.lineEdit_selection_id.clear()
 
-        self.lineEdit_mass_to_distribute.clear()
+        self.lineEdit_constant_value.clear()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:

@@ -175,3 +175,21 @@ def create_nodal_loads_force_arrow_source():
         rotation=(90, 0, -90),
         scale=(.15, .15, .15),
     )
+
+def create_distributed_stiffness_source():
+    polydata = read_obj_file(SYMBOLS_DIR / "structural/lumped_spring.obj")
+    return transform_polydata(
+        polydata,
+        position=(0, 0, 0),
+        rotation=(0, 0, 0),
+        scale=(3, 3, 3),
+    )
+
+def create_distributed_damping_source():
+    polydata = read_obj_file(SYMBOLS_DIR / "structural/lumped_damper.obj")
+    return transform_polydata(
+        polydata,
+        position=(0, 0, 0),
+        rotation=(0, 0, 0),
+        scale=(2.6, 3, 3),
+    )

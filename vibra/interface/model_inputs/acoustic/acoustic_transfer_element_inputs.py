@@ -444,7 +444,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
                 "title": "Element transfer data",
                 "data_type": data_type,
                 "legend": "element transfer data",
-                "unit": unit_label,
+                "units": unit_label,
                 "color": (0, 0, 1),
                 "linestyle": "-",
             }
@@ -462,7 +462,7 @@ class AcousticTransferElementInputs(AcousticTransferElementInputs_UI):
                 selection_type, selection_id = key
                 sheet_name = f"{selection_type}_{selection_id}"
 
-                unit = data["unit"]
+                unit = data["units"]
                 x_data = data["x_data"]
                 y_data = data["y_data"]
                 x_label = data.get("x_label")
