@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from vibra.engine.mesher.geometry_info import GeometryInfo
+
 if TYPE_CHECKING:
     from vibra.engine.mesher.mesh import Mesh
 
@@ -14,8 +16,9 @@ from vibra import app
 
 
 class PointsActor(vtkActor):
-    def __init__(self, mesh: Mesh):
+    def __init__(self, mesh: Mesh, geometry_info: GeometryInfo):
         self.mesh = mesh
+        self.geometry_info = geometry_info
         self.point_to_cell = dict()
 
         self.create_geometry()
@@ -34,8 +37,8 @@ class PointsActor(vtkActor):
         cell_colors.SetNumberOfTuples(number_of_points)
 
         self.point_to_cell = dict()
-        for point_id, node_id in self.mesh.nodes_from_points.items():
-            _, x, y, z = self.mesh.nodal_coordinates[node_id]
+        for point_id in self.geometry_info.points:
+            x, y, z = self.geometry_info.point_center(point_id)
             i = points.InsertNextPoint(x, y, z)
             cell_id = data.InsertNextCell(VTK_VERTEX, 1, [i])
             self.point_to_cell[point_id] = cell_id

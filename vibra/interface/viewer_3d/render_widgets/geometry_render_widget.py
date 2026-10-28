@@ -166,10 +166,14 @@ class GeometryRenderWidget(CommonRenderWidget):
         if mesh is None:
             return
 
+        geometry_info = app().project.model.geometry_info
+        if geometry_info is None:
+            return
+
         logging.info("Updating the geometry render... [25/100]")
         self.remove_all_actors()
 
-        self.points_actor = PointsActor(mesh)
+        self.points_actor = PointsActor(mesh, geometry_info)
         self.lines_actor = LinesActor(mesh)
         self.multimaterial = MultimaterialGeometryActor(model, visualization_filter=self.visualization_filter)
 
