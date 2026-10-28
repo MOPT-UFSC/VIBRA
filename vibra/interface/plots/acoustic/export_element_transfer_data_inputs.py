@@ -277,7 +277,7 @@ class ExportElementTransferDataInputs(ExportElementTransferDataInputs_UI):
                                         "title" : "Element transfer data",
                                         "data_type" : data_type,
                                         "legend" : "element transfer data",
-                                        "unit" : unit_label,
+                                        "units" : unit_label,
                                         "color" : self.get_color(i),
                                         "linestyle" : "-"
                                         }

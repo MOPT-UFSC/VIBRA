@@ -84,7 +84,6 @@ class Element2D:
         weights for the numerical integration processing.
         """
         if integration_points == 4:
-
             a = 1 / np.sqrt(3)
             w1 = 1
 
@@ -96,11 +95,10 @@ class Element2D:
                 ], dtype=float)
 
         elif integration_points == 9:
-
-            a = np.sqrt(3/5)
-            w1 = 25/81
-            w2 = 40/81
-            w3 = 64/81
+            a = np.sqrt(3 / 5)
+            w1 = 25 / 81
+            w2 = 40 / 81
+            w3 = 64 / 81
 
             num_int_data = np.array([
                 [-a, -a, w1],
@@ -115,10 +113,8 @@ class Element2D:
                 ], dtype=float)
 
         elif integration_points == 16:
-
-            a = np.sqrt((3 + 2*np.sqrt(6/5)) / 7)
-            b = np.sqrt((3 - 2*np.sqrt(6/5)) / 7)
-
+            a = np.sqrt((3 + 2 * np.sqrt(6 / 5)) / 7)
+            b = np.sqrt((3 - 2 * np.sqrt(6 / 5)) / 7)
             w1 = 0.1210029932856020
             w2 = 0.4252933030106942
             w3 = 0.2268518518518519
@@ -152,17 +148,17 @@ class Element2D:
         """
 
         if integration_points == 1:
-            a = 1/3
-            w1 = 1/2
+            a = 1 / 3
+            w1 = 1 / 2
 
             num_int_data = np.array([
                 [a, w1]
                 ], dtype=float)
 
         if integration_points == 3:
-            a = 1/6
-            b = 2/3
-            w1 = 1/6
+            a = 1 / 6
+            b = 2 / 3
+            w1 = 1 / 6
 
             num_int_data = np.array([
                 [a, a, w1],
@@ -171,11 +167,11 @@ class Element2D:
                 ], dtype=float)
 
         elif integration_points == 4:
-            a = 1/3
-            b = 1/5
-            c = 3/5
-            w1 = -27/96
-            w2 = 25/96
+            a = 1 / 3
+            b = 1 / 5
+            c = 3 / 5
+            w1 = -27 / 96
+            w2 = 25 / 96
 
             num_int_data = np.array([
                 [a, a, w1],
@@ -187,8 +183,8 @@ class Element2D:
         elif integration_points == 6:
             a = 0.4459484909
             b = 0.091576213509771
-            c = 1 - 2*a
-            d = 1 - 2*b 
+            c = 1 - 2 * a
+            d = 1 - 2 * b
             w1 = 0.111690794839005
             w2 = 0.054975871827661
 
@@ -202,9 +198,9 @@ class Element2D:
                 ], dtype=float)
 
         elif integration_points == 7:
-            a = 1/3
+            a = 1 / 3
             b = (6 + np.sqrt(15)) / 21
-            c = 4/7 - b
+            c = 4 / 7 - b
             d = 1 - 2 * b
             e = 1 - 2 * c
             w1 = 9 / 80

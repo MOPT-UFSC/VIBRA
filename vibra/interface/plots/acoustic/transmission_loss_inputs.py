@@ -477,7 +477,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
             "title" : self.title,
             "data_type" : plot_type.lower(),
             "legend" : legend_label,
-            "unit" : self.unit_label,
+            "units" : self.unit_label,
             "color" : [0,0,1],
             "linestyle" : "-"  
             }

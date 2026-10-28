@@ -331,7 +331,7 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
                     "title": title,
                     "data_information": legend_label,
                     "legend": legend_label,
-                    "unit": "bar (a) (peak-to-peak)",
+                    "units": "bar (a) (peak-to-peak)",
                     "color": get_color(i),
                     "linestyle": "-",
                 }
@@ -362,7 +362,7 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
                 "title": title,
                 "data_information": legend_label,
                 "legend": legend_label,
-                "unit": "bar (a) (peak-to-peak)",
+                "units": "bar (a) (peak-to-peak)",
                 "color": [1, 0, 0],
                 "linestyle": "-",
             }
@@ -401,7 +401,7 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
                 "title" : title,
                 "data_information" : legend_label,
                 "legend" : legend_label,
-                "unit" : y_axis_label,
+                "units" : y_axis_label,
                 "color" : [0, 0, 1],
                 "linestyle" : "-" 
                 }
@@ -434,7 +434,7 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
                 "title" : title,
                 "data_information" : legend_label_upper,
                 "legend" : legend_label_upper,
-                "unit" : y_axis_label,
+                "units" : y_axis_label,
                 "color" : [0.7, 0, 0],
                 "linestyle" : "-",
                 }
@@ -450,7 +450,7 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
                 "title" : title,
                 "data_information" : legend_label_lower,
                 "legend" : legend_label_lower,
-                "unit" : y_axis_label,
+                "units" : y_axis_label,
                 "color" : [1, 0, 0],
                 "linestyle" : "-"  
                 }

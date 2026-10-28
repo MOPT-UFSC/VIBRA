@@ -1143,7 +1143,7 @@ class PerforatedPlateModelInputs(PerforatedPlateModelInputs_UI):
                                     "title" : title,
                                     "data_type" : f"effective fluid properties for {section_label}",
                                     "legend" : legend_label,
-                                    "unit" : unit_label,
+                                    "units" : unit_label,
                                     "color" : [0,0,1],
                                     "linestyle" : "-"
                                    }

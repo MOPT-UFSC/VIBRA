@@ -305,7 +305,7 @@ class StructuralStress2dPlotTimeInputs(StructuralStress2dPlotTimeInputs_UI):
                 "title": self.title,
                 "data_type": self.y_label,
                 "legend": legend_label,
-                "unit": stress_units,
+                "units": stress_units,
                 "color": get_color(i),
                 "linestyle": "-",
             }
@@ -323,7 +323,7 @@ class StructuralStress2dPlotTimeInputs(StructuralStress2dPlotTimeInputs_UI):
                 "title": self.title,
                 "data_type": self.y_label,
                 "legend": legend_label,
-                "unit": stress_units,
+                "units": stress_units,
                 "color": get_color(i+20),
                 "linestyle": "-",
             }

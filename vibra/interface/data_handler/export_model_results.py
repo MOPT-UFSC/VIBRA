@@ -29,7 +29,7 @@ class ExportModelResults(QFileDialog):
             if not isinstance(data, dict):
                 continue
 
-            unit = data["unit"]
+            unit = data["units"]
             x_data = data["x_data"]
             y_data = data["y_data"]
             x_label = data.get("x_label")
@@ -86,7 +86,7 @@ class ExportModelResults(QFileDialog):
                 count += 1
                 sheet_name = f"sheet_{count}"
 
-            unit = data.get("unit")
+            unit = data.get("units")
             x_data = data.get("x_data")
             y_data = data.get("y_data")
             x_label = data.get("x_label")

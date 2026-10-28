@@ -282,7 +282,7 @@ class StructuralStress2dPlotFrequencyInputs(StructuralStress2dPlotFrequencyInput
                 "title": self.title,
                 "data_type": self.y_label,
                 "legend": legend_label,
-                "unit": self.stress_units,
+                "units": self.stress_units,
                 "color": get_color(i),
                 "linestyle": "-",
             }

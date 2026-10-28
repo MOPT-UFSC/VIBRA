@@ -1405,7 +1405,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             "title": title,
             "data_type": "compressor excitation",
             "legend": legend_label,
-            "unit": unit,
+            "units": unit,
             "color": [0, 0, 1],
             "linestyle": "-",
         }

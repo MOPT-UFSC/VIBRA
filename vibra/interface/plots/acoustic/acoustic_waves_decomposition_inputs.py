@@ -249,7 +249,7 @@ class AcousticWavesDecompositionInputs(AcousticWavesDecompositionInputs_UI):
                 "title": title,
                 "data_type": "acoustic pressures waves",
                 "legend": legends[i],
-                "unit": self.unit_label,
+                "units": self.unit_label,
                 "color": colors[i],
                 "linestyle": "-",
             }

@@ -322,7 +322,7 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
                 "title" : f"{data_type} frequency response",
                 "data_type" : data_type.lower(),
                 "legend" : legend_label,
-                "unit" : unit_label,
+                "units" : unit_label,
                 "color" : self.get_color(i),
                 "linestyle" : "-"  
                 }

@@ -220,7 +220,7 @@ class AcousticNodalSolution2dPlotTimeInputs(AcousticNodalSolution2dPlotTimeInput
                 "title" : self.title,
                 "data_type" : "acoustic pressure",
                 "legend" : legend_label,
-                "unit" : self.pressure_units,
+                "units" : self.pressure_units,
                 "color" : self.get_color(i),
                 "linestyle" : "-"  
             }

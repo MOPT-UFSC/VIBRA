@@ -94,21 +94,21 @@ class Structural1DElement(Element1D):
         return Fe
 
 
-    def integrate_distributed_mass(self, el_index: int, distributed_mass: float) -> np.ndarray:
+    def integrate_distributed_property(self, el_index: int, value: np.ndarray, is_normal: bool = False) -> np.ndarray:
         """ 
-        This method computes the elementary load vector.
+        This method computes the elementary matrix for a distributed property.
 
         Parameters
         ----------
         el_index: int
             The element index.
 
-        distributed_mass: float
-            The mass density in kg/m².
+        value: float
+            The property value.
 
         Returns
         -------
-        Me: np.ndarray
+        Ke: np.ndarray
             The two-dimensional elementary consistent mass matrix.
         """
 
@@ -119,7 +119,7 @@ class Structural1DElement(Element1D):
         coords = self.model.fe_mesh.nodal_coordinates[e_nodes, 1:]
 
         # initialize the variable Fe
-        Me = 0.
+        Ke = 0.
 
         # integration loop
         for i in range(self.nint_M):
@@ -130,9 +130,9 @@ class Structural1DElement(Element1D):
             # matrix of shape functions for all DOF
             N = self.N_matrix[i, :, :]
 
-            Me += (N.T @ N) * distributed_mass * (det_jac * self.wps_M[i])
+            Ke += (N.T @ value @ N) * (det_jac * self.wps_M[i])
 
-        return Me
+        return Ke
 
 
     def get_rows_and_cols_indices_1D(self, index: int):

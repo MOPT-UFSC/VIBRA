@@ -34,6 +34,8 @@ class SymbolsActorStructural(SymbolsActor):
             "nodal_loads": self._build_nodal_loads,
             "distributed_loads": self._build_distributed_loads,
             "normal_pressure_load": self._build_normal_pressure_load,
+            "distributed_stiffness": self._build_distributed_stiffness,
+            "distributed_damping": self._build_distributed_damping,
         }
 
     def _call_build_functions(self, property_name: str, surface_id: int = -1, line_id: int = -1, point_id: int = -1):
@@ -268,3 +270,75 @@ class SymbolsActorStructural(SymbolsActor):
 
         shape = sources.create_outwards_normal_pressure_load if np.real(x) > 0 else sources.create_normal_pressure_load
         self.add_marker(shape, coords, normal, color=color_names.RED_2)
+
+    def _build_distributed_stiffness(self, property_name: str, surface_id: int = -1, line_id: int = -1, *args, **kwargs):
+
+        def add_symbol(coords: np.ndarray, normal: np.ndarray):
+            shape = sources.create_distributed_stiffness_source
+            self.add_marker(shape, coords, -normal, color=color_names.BLUE_2)
+
+        if surface_id != -1:
+            coords, normal = self._get_center_coords_and_normals(surface_id)
+            surface_properties = app().project.model.properties.surface_properties
+            property: dict = surface_properties[property_name, surface_id]
+
+            values = property.get("values", [])
+            if len(values) == 3:
+                e_xyz = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]], dtype=float)
+                for i, value in enumerate(values):
+                    if isinstance(value, np.ndarray | complex):
+                        add_symbol(coords, e_xyz[i, :])
+            else:
+                add_symbol(coords, normal)
+
+            return
+
+        if line_id != -1:
+            coords = self._get_center_coords_and_normals_line(line_id)
+            line_properties = app().project.model.properties.line_properties
+            property = line_properties[property_name, line_id]
+
+            values = property.get("values", [])
+            if len(values) != 3:
+                return
+
+            e_xyz = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]], dtype=float)
+            for i, value in enumerate(values):
+                if isinstance(value, np.ndarray | complex):
+                    add_symbol(coords[1], e_xyz[i, :])
+
+    def _build_distributed_damping(self, property_name: str, surface_id: int = -1, line_id: int = -1, *args, **kwargs):
+
+        def add_symbol(coords: np.ndarray, normal: np.ndarray):
+            shape = sources.create_distributed_damping_source
+            self.add_marker(shape, coords, -normal, color=color_names.PINK_6)
+
+        if surface_id != -1:
+            coords, normal = self._get_center_coords_and_normals(surface_id)
+            surface_properties = app().project.model.properties.surface_properties
+            property: dict = surface_properties[property_name, surface_id]
+
+            values = property.get("values", [])
+            if len(values) == 3:
+                e_xyz = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]], dtype=float)
+                for i, value in enumerate(values):
+                    if isinstance(value, np.ndarray | complex):
+                        add_symbol(coords, e_xyz[i, :])
+            else:
+                add_symbol(coords, normal)
+
+            return
+
+        if line_id != -1:
+            coords = self._get_center_coords_and_normals_line(line_id)
+            line_properties = app().project.model.properties.line_properties
+            property = line_properties[property_name, line_id]
+
+            values = property.get("values", [])
+            if len(values) != 3:
+                return
+
+            e_xyz = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]], dtype=float)
+            for i, value in enumerate(values):
+                if isinstance(value, np.ndarray | complex):
+                    add_symbol(coords[1], e_xyz[i, :])

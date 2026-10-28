@@ -695,61 +695,86 @@ def structural_boundary_conditions_info_text():
     if isinstance(normal_pressure_load, dict):
         values = normal_pressure_load.get("values")
         loaded_table = "table_names" in normal_pressure_load
-        text += structural_format("Normal pressure", values, ["P"], ["N/m²"], loaded_table)
+        text += structural_format("Normal pressure", values, ["P"], ["N/m²"], loaded_table, normal_suffix=True)
 
     return text
 
 
 def structural_additional_info_text():
+
     text = ""
     distributed_mass_1d = None
     distributed_mass_2d = None
+    distributed_stiffness_1d = None
+    distributed_stiffness_2d = None
+    distributed_damping_1d = None
+    distributed_damping_2d = None
 
     selected_faces = list(app().main_window.selection.geometry_surfaces)
     selected_lines = list(app().main_window.selection.geometry_lines)
 
     if len(selected_faces) == 1:
-        distributed_mass_2d = app().project.model.properties._get_property(
-            "distributed_mass", surface=selected_faces[0]
-        )
+        distributed_mass_2d = app().project.model.properties._get_property("distributed_mass", surface=selected_faces[0])
+        distributed_stiffness_2d = app().project.model.properties._get_property("distributed_stiffness", surface=selected_faces[0])
+        distributed_damping_2d = app().project.model.properties._get_property("distributed_damping", surface=selected_faces[0])
 
     elif len(selected_lines) == 1:
-        distributed_mass_1d = app().project.model.properties._get_property(
-            "distributed_mass", line=selected_lines[0]
-        )
+        distributed_mass_1d = app().project.model.properties._get_property("distributed_mass", line=selected_lines[0])
+        distributed_stiffness_1d = app().project.model.properties._get_property("distributed_stiffness", line=selected_lines[0])
+        distributed_damping_1d = app().project.model.properties._get_property("distributed_damping", line=selected_lines[0])
 
     else:
         return text
 
-    properties = [
-        distributed_mass_2d,
-        distributed_mass_1d,
-    ]
-
-    if all(prop_data is None for prop_data in properties):
-        return text
+    if isinstance(distributed_mass_1d, dict):
+        values = distributed_mass_1d.get("values")
+        units = distributed_mass_1d.get("units", "kg")
+        loaded_table = "table_names" in distributed_mass_1d
+        text += structural_format("Distributed mass (line)", values, ["Mdist_"], [units], loaded_table)
 
     if isinstance(distributed_mass_2d, dict):
-        real_value = [value.real for value in distributed_mass_2d.get("values")]
+        values = distributed_mass_2d.get("values")
+        units = distributed_mass_2d.get("units", "kg")
         loaded_table = "table_names" in distributed_mass_2d
-        text += structural_format("Distributed mass (area)", real_value, ["M"], ["kg"], loaded_table)
+        text += structural_format("Distributed mass (area)", values, ["Mdist_"], [units], loaded_table)
 
-    if isinstance(distributed_mass_1d, dict):
-        real_value = [value.real for value in distributed_mass_1d.get("values")]
-        loaded_table = "table_names" in distributed_mass_1d
-        text += structural_format("Distributed mass (line)", real_value, ["M"], ["kg"], loaded_table)
+    if isinstance(distributed_stiffness_1d, dict):
+        values = distributed_stiffness_1d.get("values")
+        units = distributed_stiffness_1d.get("units")
+        loaded_table = "table_names" in distributed_stiffness_1d
+        text += structural_format("Distributed stiffness (line)", values, ["Kdist_"], [units], loaded_table)
+
+    if isinstance(distributed_stiffness_2d, dict):
+        values = distributed_stiffness_2d.get("values")
+        units = distributed_stiffness_2d.get("units")
+        loaded_table = "table_names" in distributed_stiffness_2d
+        normal_suffix = distributed_stiffness_2d.get("normal", False)
+        text += structural_format("Distributed stiffness (area)", values, ["Kdist_"], [units], loaded_table, normal_suffix=normal_suffix)
+
+    if isinstance(distributed_damping_1d, dict):
+        values = distributed_damping_1d.get("values")
+        units = distributed_damping_1d.get("units")
+        loaded_table = "table_names" in distributed_damping_1d
+        text += structural_format("Distributed dampings (line)", values, ["Cdist_"], [units], loaded_table)
+
+    if isinstance(distributed_damping_2d, dict):
+        values = distributed_damping_2d.get("values")
+        units = distributed_damping_2d.get("units")
+        loaded_table = "table_names" in distributed_damping_2d
+        normal_suffix = distributed_damping_2d.get("normal", False)
+        text += structural_format("Distributed dampings (area)", values, ["Cdist_"], [units], loaded_table, normal_suffix=normal_suffix)
 
     return text
 
 
-def acoustic_format(property_name, value, label, unit, additional_labels=[]):
+def acoustic_format(property_name, value, label, unit, additional_labels: list | tuple | None = None):
     tree = TreeInfo(property_name)
     if isinstance(value, Number | str | float | complex):
         tree.add_item(label, np.round(value, 4), unit)
     else:
         tree.add_item(label, "Table")
 
-    if len(additional_labels) == 2:
+    if isinstance(additional_labels, list | tuple) and len(additional_labels) == 2:
         tree.add_item(additional_labels[0], additional_labels[1])
 
     return str(tree)
@@ -1074,11 +1099,11 @@ def allowable_pulsation_for_screw_compressor_info_text(value: float, penalizatio
     return str(tree)
 
 
-def structural_format(property_name, values, labels, units, has_table):
+def structural_format(property_name, values, labels, units, has_table, normal_suffix: bool = False):
     if all_none(values):
         return ""
 
-    if property_name == "Normal pressure":
+    if normal_suffix:
         sufix_labels = "n"
     elif "Distributed mass" in property_name:
         sufix_labels = "d"

@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 import numpy as np
+from scipy.sparse import csr_matrix
 
 from vibra.engine.analysis_info import HarmonicAnalysisSetup
 
@@ -86,13 +87,19 @@ class StructuralExcitationsAssembler:
         omega = 2 * np.pi * frequencies[index]
         values = self.assembler.array_prescribed_values[:, index]
 
-        self.Kr = self.assembler.stiffness_matrix_r
-        self.Mr = self.assembler.mass_matrix_r
+        Kr = self.assembler.stiffness_matrix_r + self.assembler.distributed_stiffness_matrix_r
+        Mr = self.assembler.mass_matrix_r + self.assembler.distributed_mass_matrix_r
+        Cr = self.assembler.distributed_damping_matrix_r
 
-        Kr_add = self.Kr @ values
-        Mr_add = self.Mr @ values
+        Kr_add = Kr @ values
+        Mr_add = Mr @ values
 
-        f_eq = (1 + 1j*(eta + omega * beta)) * Kr_add + (-(omega**2) + 1j*(omega * alpha)) * Mr_add
+        if isinstance(Cr, csr_matrix):
+            Cr_add = Cr @ values
+        else:
+            Cr_add = 0.
+
+        f_eq = (1 + 1j * (eta + omega * beta)) * Kr_add + (-(omega**2) + 1j * (omega * alpha)) * Mr_add + 1j * omega * Cr_add
 
         return f_eq[self.assembler.unprescribed_dof_indices]
 
@@ -167,56 +174,6 @@ class StructuralExcitationsAssembler:
             self.structural_load[indices, :] += np.array(list(nodal_loads.values()), dtype=complex)
 
 
-    def process_loads_arrays(self, values: list[np.ndarray | None]):
-        """
-        For a given list of values, this method returns an output list of two-dimensional
-        arrays whose columns have the same size as the frequencies vector.
-
-        Parameters
-        ----------
-        values: list
-            The input values list to be converted.
-
-        Returns
-        -------
-        array_of_values: np.ndarray
-            The output two-bidimensional array vector whose columns
-            have the same size as the frequencies vector.
-        """
-
-        try:
-
-            n_freq = self.assembler.number_frequencies
-
-            values_list = []
-            aux_ones = np.ones(n_freq, dtype=complex)
-            aux_zeros = np.zeros(n_freq, dtype=complex)
-
-            for value in values:
-
-                if value is None:
-                    values_list.append(aux_zeros)
-
-                elif isinstance(value, complex):
-                    values_list.append(aux_ones * value)
-
-                elif isinstance(value, np.ndarray):
-                    values_list.append(value[: n_freq])
-
-        except Exception as _error_log:
-            print(str(_error_log))
-            # TODO: check matrix dimensions for compatibility
-            return aux_ones
-
-        array_of_values = np.array(values_list, dtype=complex)
-
-        # filter values based on frequency mask
-        if array_of_values.shape[1] - n_freq:
-            return array_of_values[self.model.solution_steps_mask, :]
-
-        return array_of_values
-
-
     def get_excitation_data_for_1d_element_integration(self, property_label: str) -> StructuralExcitationData | None:
         """
         This method processes the excitation property data for element face
@@ -257,7 +214,7 @@ class StructuralExcitationsAssembler:
             complex_values = data.get("values")
 
             # normalize data type to array
-            complex_values_array = self.process_loads_arrays(complex_values)
+            complex_values_array = self.assembler.process_frequency_based_arrays(complex_values)
 
             elements = list(self.mesh.elements_from_line.get(line_id))
             connect = self.mesh.get_connectivity_from_line(line_id)
@@ -321,7 +278,7 @@ class StructuralExcitationsAssembler:
             complex_values = data.get("values")
 
             # normalize data type to array
-            complex_values_array = self.process_loads_arrays(complex_values)
+            complex_values_array = self.assembler.process_frequency_based_arrays(complex_values)
 
             elements = list(self.mesh.elements_from_surface.get(surface_id))
             connect = self.mesh.get_connectivity_from_surface(surface_id)
@@ -467,7 +424,7 @@ class StructuralExcitationsAssembler:
 
             connectivities_from_surface = self.mesh.get_connectivity_from_surface(surface_id)
             if property == "distributed_loads":
-                surface_load = self.process_loads_arrays(data["values"])
+                surface_load = self.assembler.process_frequency_based_arrays(data["values"])
                 if surface_load is None:
                     continue
 
@@ -476,7 +433,7 @@ class StructuralExcitationsAssembler:
                     self.structural_load[g_dof, :] += F_elem
 
             elif property == "normal_pressure_load":
-                normal_pressure = self.process_loads_arrays(data["values"])
+                normal_pressure = self.assembler.process_frequency_based_arrays(data["values"])
                 if normal_pressure is None:
                     continue
 
@@ -493,7 +450,7 @@ class StructuralExcitationsAssembler:
             if data.get("element_type") != "element_2d":
                 continue
 
-            line_load = self.process_loads_arrays(data["values"])
+            line_load = self.assembler.process_frequency_based_arrays(data["values"])
             if line_load is None:
                 continue
 

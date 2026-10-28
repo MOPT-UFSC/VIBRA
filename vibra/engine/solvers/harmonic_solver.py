@@ -132,7 +132,7 @@ class HarmonicSolver:
                 logging.info(f"Solution step {i + 1} and frequency {freq} Hz [{i + 1}/{len(frequencies)}]")
 
                 # compute the load vector
-                f = self.assembler.compute_load_vector(freq, i)
+                f = self.assembler.compute_load_vector(i)
 
                 if np.any(f):
 

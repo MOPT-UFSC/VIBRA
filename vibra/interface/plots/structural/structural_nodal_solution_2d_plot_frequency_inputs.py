@@ -285,7 +285,7 @@ class StructuralNodalSolution2dPlotFrequencytInputs(StructuralNodalSolution2dPlo
                 "title": self.title,
                 "data_type": self.y_label,
                 "legend": legend_label,
-                "unit": self.unit,
+                "units": self.unit,
                 "color": get_color(i),
                 "linestyle": "-",
             }

@@ -164,7 +164,7 @@ class AcousticImpedancesAssembler:
                 complex_values = data.get("values")[0]
 
             # normalize data type to array
-            complex_values_array = self.assembler.get_value_in_array_form(complex_values, flatten=True)
+            complex_values_array = self.assembler.get_value_in_array_form(complex_values, ravel=True)
 
             surf_elements = list(self.model.fe_mesh.elements_from_surface.get(surface_id))
             surf_connect = self.model.fe_mesh.get_connectivity_from_surface(surface_id)
@@ -232,8 +232,8 @@ class AcousticImpedancesAssembler:
             data: dict
 
             # normalize data type to array
-            p_inc = self.assembler.get_value_in_array_form(data.get("values")[0], flatten=True)
-            Z_ipw = self.assembler.get_value_in_array_form(density * speed_of_sound, flatten=True)
+            p_inc = self.assembler.get_value_in_array_form(data.get("values")[0], ravel=True)
+            Z_ipw = self.assembler.get_value_in_array_form(density * speed_of_sound, ravel=True)
 
             rows = self.model.fe_mesh.faces_connectivity[:, 1] == surface_id
             surface_elements_connectivities = self.model.fe_mesh.faces_connectivity[rows, :]
@@ -296,7 +296,7 @@ class AcousticImpedancesAssembler:
             if not isinstance(_complex_values, complex | float | np.ndarray):
                 continue
 
-            Z_tr = self.assembler.get_value_in_array_form(_complex_values, flatten=True)
+            Z_tr = self.assembler.get_value_in_array_form(_complex_values, ravel=True)
 
             # if isinstance(_complex_values, complex | float):
             #     Z_tr = _complex_values * aux_ones
@@ -670,10 +670,10 @@ class AcousticImpedancesAssembler:
         """
 
         data_C = self.assembler.int3d_BtB * factor_Cvsic
-        visc_damping_matrix = csr_matrix((data_C.flatten(), (self.assembler.ind_rows, self.assembler.ind_cols)), shape=self.model.gm_shape)
+        visc_damping_matrix = csr_matrix((data_C.ravel(), (self.assembler.ind_rows, self.assembler.ind_cols)), shape=self.model.gm_shape)
 
         data_f = self.assembler.int3d_BtB * factor_fvsic
-        visc_load_matrix = csr_matrix((data_f.flatten(), (self.assembler.ind_rows, self.assembler.ind_cols)), shape=self.model.gm_shape)
+        visc_load_matrix = csr_matrix((data_f.ravel(), (self.assembler.ind_rows, self.assembler.ind_cols)), shape=self.model.gm_shape)
 
         if self.model.drop_domain:
             acoustic_dofs_indices = self.assembler.acoustic_dofs_indices
@@ -708,25 +708,25 @@ class AcousticImpedancesAssembler:
         if self.integration_data_Zsi is not None:
             rows_Zout = self.rows_Zsi
             cols_Zout = self.cols_Zsi
-            data_Zout = self.data_Zsi[index].flatten()
+            data_Zout = self.data_Zsi[index].ravel()
             damping_matrix += csr_matrix((data_Zout, (rows_Zout, cols_Zout)), shape=self.model.gm_shape)
 
         if self.integration_data_Zat is not None:
             rows_Zout = self.rows_Zat
             cols_Zout = self.cols_Zat
-            data_Zout = self.data_Zat[index].flatten()
+            data_Zout = self.data_Zat[index].ravel()
             damping_matrix += csr_matrix((data_Zout, (rows_Zout, cols_Zout)), shape=self.model.gm_shape)
 
         if self.integration_data_ipw is not None:
             rows_Zout = self.rows_Zipw
             cols_Zout = self.cols_Zipw
-            data_Zout = self.data_Zipw[index].flatten()
+            data_Zout = self.data_Zipw[index].ravel()
             damping_matrix += csr_matrix((data_Zout, (rows_Zout, cols_Zout)), shape=self.model.gm_shape)
 
         if self.integration_data_Zas is not None:
             rows_Zout = self.rows_Zas
             cols_Zout = self.cols_Zas
-            data_Zout = self.data_Zas[index].flatten()
+            data_Zout = self.data_Zas[index].ravel()
             damping_matrix += csr_matrix((data_Zout, (rows_Zout, cols_Zout)), shape=self.model.gm_shape)
 
         if self.integration_data_Zpp is not None:
@@ -734,8 +734,8 @@ class AcousticImpedancesAssembler:
             rows_B = self.rows_Zpp_B
             cols_A = self.cols_Zpp_A
             cols_B = self.cols_Zpp_B
-            Zin_A = self.data_Zpp_A[index].flatten()
-            Zin_B = self.data_Zpp_B[index].flatten()
+            Zin_A = self.data_Zpp_A[index].ravel()
+            Zin_B = self.data_Zpp_B[index].ravel()
 
             values_Zin = np.concatenate((Zin_A, -Zin_A, -Zin_B, Zin_B))
             rows_Zin = np.concatenate((rows_A, rows_A, rows_B, rows_B))
@@ -748,8 +748,8 @@ class AcousticImpedancesAssembler:
             rows_B = self.rows_Zti_B
             cols_A = self.cols_Zti_A
             cols_B = self.cols_Zti_B
-            Zin_A = self.data_Zti_A[index].flatten()
-            Zin_B = self.data_Zti_B[index].flatten()
+            Zin_A = self.data_Zti_A[index].ravel()
+            Zin_B = self.data_Zti_B[index].ravel()
 
             values_Zin = np.concatenate((Zin_A, -Zin_A, -Zin_B, Zin_B))
             rows_Zin = np.concatenate((rows_A, rows_A, rows_B, rows_B))

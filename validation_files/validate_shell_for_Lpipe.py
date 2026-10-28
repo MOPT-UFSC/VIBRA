@@ -122,7 +122,7 @@ def load_external_mesh_and_solve():
         "element_type": "2d_element",
         "real_values": [100.0, None, None],
         "imag_values": [0.0, None, None],
-        "unit": "N/m²",
+        "units": "N/m²",
     }
 
     model.properties._set_property("distributed_loads", distributed_load_data, surface=3)
