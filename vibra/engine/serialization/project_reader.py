@@ -3,7 +3,6 @@ from __future__ import annotations
 import logging
 import typing
 import zipfile
-from copy import copy
 from pathlib import Path
 
 import h5py
@@ -20,6 +19,7 @@ from vibra.engine.model import Model
 from vibra.engine.properties import Fluid, FluidLibrary, Material, MaterialLibrary
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.engine.serialization.file_helpers import read_image, read_json
+from vibra.engine.serialization.mesh_reader import MeshReader
 from vibra.engine.solution import HarmonicSolution, ModalSolution, Solution
 from vibra.engine.solvers import HarmonicSolver, ModalSolver
 from vibra.utils.utils import group_by
@@ -80,8 +80,10 @@ class ProjectReader:
         if self.project_paths.visual_mesh_filepath.exists() and self.project_paths.geometry_info_filepath.exists():
             model.visual_mesh = self.read_visual_mesh()
             model.geometry_info = self.read_geometry_info()
-        else:
+        elif model.is_there_a_geometry_imported():
             model.visual_mesh, model.geometry_info = model.visual_mesher.generate()
+        else:
+            model.visual_mesh, model.geometry_info = MeshReader(path).read_mesh_and_info()
 
         model.mesh_setup = self.read_mesh_setup()
         model.properties = self.read_model_properties()
