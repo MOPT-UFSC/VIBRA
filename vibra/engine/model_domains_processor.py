@@ -21,7 +21,7 @@ class ModelDomainsProcessor:
         self.model = model
 
         # use this attribute to control when logs are printed to the terminal
-        self.auxiliar_logs = False
+        self.auxiliar_logs = True
 
         self.reset()
 

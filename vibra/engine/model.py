@@ -96,8 +96,6 @@ class Model:
         self.analysis_setup: Optional[AnalysisSetup] = None
 
         self.solution: Optional[Solution] = None
-        self.acoustic_solution: Optional[Solution] = None
-        self.structural_solution: Optional[Solution] = None
 
         # TODO: review these variables
         self.mesh: Optional[Mesh] = None
