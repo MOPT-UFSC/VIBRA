@@ -713,7 +713,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             return
 
         is_tetrahedral = self.comboBox_element_geometry.currentText() == "Tetrahedral"
-        enable_mesh_metrics = bool(self.model.geometry_info.solids) and is_tetrahedral
+        enable_mesh_metrics = self.model.geometry_info.contains_volumes() and is_tetrahedral
         self.comboBox_mesh_quality_metrics.setEnabled(enable_mesh_metrics)
 
         if not is_tetrahedral:
