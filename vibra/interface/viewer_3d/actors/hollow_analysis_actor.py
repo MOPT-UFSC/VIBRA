@@ -12,6 +12,7 @@ from .hollow_solids_actor import HollowSolidsActor
 class HollowAnalysisActor(HollowSolidsActor):
     def __init__(self, *args, physical_domain: PhysicalDomain | None = None, **kwargs):
         self.physial_domain = physical_domain
+        self.color_table = ColorTable()
         super().__init__(*args, **kwargs)
 
     def get_hidden_surfaces(self) -> set:

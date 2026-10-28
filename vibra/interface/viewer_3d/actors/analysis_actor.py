@@ -15,6 +15,7 @@ from ..coloring.color_table import ColorTable
 class AnalysisActor(SolidsActor):
     def __init__(self, *args, physical_domain: PhysicalDomain | None = None, **kwargs):
         self.physial_domain = physical_domain
+        self.color_table = ColorTable()
         super().__init__(*args, **kwargs)
 
     def create_geometry(self):
