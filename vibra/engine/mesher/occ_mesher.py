@@ -81,7 +81,7 @@ class OccMesher:
         edges_connectivity = []
         faces_connectivity = []
 
-        # TODO: update the nomenclature, it is very wrong
+        # TODO: improve the performance of these loops
         for solid in self._iterate_solids(shape):
             solid_index = solid_mapper.FindIndex(solid)
             if duplicated(SOLID, solid_index):
