@@ -82,7 +82,7 @@ class SymbolsActorAcoustic(SymbolsActor):
 
         surface_properties = self.model.properties.surface_properties
         dict_surface_id_total_symbols = self._count_symbols_foreach_surface(surface_properties)
-        self._surface_symbols_positioner = SymbolsPositioner(self.model.fe_mesh)
+        self._surface_symbols_positioner = SymbolsPositioner(self.model.visual_mesh)
         self._surface_symbols_positioner.reset_count(dict_surface_id_total_symbols)
 
         for property_name, surface_id in surface_properties.keys():
@@ -110,7 +110,7 @@ class SymbolsActorAcoustic(SymbolsActor):
         if self.model is None:
             return np.array([0, 0, 0]), np.array([0, 0, 0])
 
-        mesh = self.model.fe_mesh
+        mesh = self.model.visual_mesh
         geometry_info = self.model.geometry_info
 
         if mesh is None:
@@ -154,7 +154,7 @@ class SymbolsActorAcoustic(SymbolsActor):
         return target_coords, avg_normal
 
     def _get_center_coords_from_line(self, line_id: int) -> tuple[np.ndarray, np.ndarray]:
-        mesh = self.model.fe_mesh
+        mesh = self.model.visual_mesh
         nodes = mesh.get_nodes_from_line(line_id)
         line_coordinates = mesh.nodal_coordinates[nodes, 1:]
         center_coords = np.average(line_coordinates, axis=0)
@@ -165,14 +165,14 @@ class SymbolsActorAcoustic(SymbolsActor):
         return (line_coordinates[index - 1, :], line_coordinates[index, :], line_coordinates[index + 1, :])
 
     def _get_coords_from_point(self, point_id: int) -> tuple[np.ndarray, np.ndarray]:
-        mesh = self.model.fe_mesh
+        mesh = self.model.visual_mesh
         point_nodes = mesh.nodes_from_points.get(point_id)
         points_coordinates = mesh.nodal_coordinates[point_nodes, 1:]
 
         return points_coordinates
 
     def _get_coords_from_node(self, node_id: int):
-        mesh = self.model.fe_mesh
+        mesh = self.model.visual_mesh
         node = mesh.nodal_coordinates[node_id]
         return node
 
@@ -180,7 +180,7 @@ class SymbolsActorAcoustic(SymbolsActor):
         if not app().main_window.results_widget.visualization_filter.nodal_normal_symbols:
             return
 
-        mesh = self.model.fe_mesh
+        mesh = self.model.visual_mesh
         for (_, node_id), normal_vector in mesh.nodal_normals_data.items():
             coords = mesh.nodal_coordinates[node_id, 1:]
             self.add_marker(sources.create_outwards_arrow_source, coords, normal_vector, color=color_names.GRAY)
@@ -189,7 +189,7 @@ class SymbolsActorAcoustic(SymbolsActor):
         if not app().main_window.results_widget.visualization_filter.element_normal_symbols:
             return
 
-        mesh = self.model.fe_mesh
+        mesh = self.model.visual_mesh
         for normal, center in mesh.element_normals_data.values():
             self.add_marker(
                 sources.create_outwards_arrow_source,
