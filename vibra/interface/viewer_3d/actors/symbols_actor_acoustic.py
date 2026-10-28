@@ -333,8 +333,8 @@ class SymbolsActorAcoustic(SymbolsActor):
             return
 
         coords, normal = self._get_symbol_coords_and_normal(surface_id)
-        area = self.model.fe_mesh.area_from_surfaces.get(surface_id)
-        if area is None:
+        area = self.model.geometry_info.surface_area(surface_id)
+        if not area:
             scale = 1
         else:
             scale = np.sqrt(4 * area / np.pi)

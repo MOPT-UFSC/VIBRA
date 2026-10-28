@@ -66,12 +66,12 @@ def lines_info_text():
     if len(line_ids) == 0:
         return ""
 
-    length_from_lines = app().project.model.get_mesh().length_from_lines
+    geometry_info = app().project.model.geometry_info
 
     text = ""
     length = 0
     for line_id in line_ids:
-        length += length_from_lines.get(line_id, 0)
+        length += geometry_info.arc_length(line_id)
 
     if len(line_ids) == 1:
         tree = TreeInfo(f"LINE {line_ids[0]}")
@@ -100,12 +100,12 @@ def faces_info_text():
     if len(surface_ids) == 0:
         return ""
 
-    area_from_surfaces = app().project.model.get_mesh().area_from_surfaces
+    geometry_info = app().project.model.geometry_info
 
     text = ""
     area = 0
     for surface_id in surface_ids:
-        area += area_from_surfaces.get(surface_id, 0)
+        area += geometry_info.surface_area(surface_id)
 
     if len(surface_ids) == 1:
         tree = TreeInfo(f"SURFACE {surface_ids[0]}")
@@ -168,10 +168,10 @@ def process_volumes_and_masses(volume_ids: list):
     material_mass = 0.
     volume_compound = 0.
 
-    volume_from_bodies = app().project.model.get_mesh().volume_from_bodies
+    geometry_info = app().project.model.geometry_info
 
     for volume_id in volume_ids:
-        volume = volume_from_bodies.get(volume_id, 0)
+        volume = geometry_info.volume(volume_id)
         volume_compound += volume
 
         fluid = app().project.model.properties._get_property("fluid", volume=volume_id)
