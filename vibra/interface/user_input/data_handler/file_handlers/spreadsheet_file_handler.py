@@ -23,7 +23,7 @@ class SpreadsheetFileHandler(IOHandler):
         sheets_data = read_excel(
             file_path,
             sheet_id=0,
-            engine="calamine",
+            engine="openpyxl",
             has_header=False
         )
 
