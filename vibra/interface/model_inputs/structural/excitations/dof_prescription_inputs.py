@@ -778,12 +778,12 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         for selected_id in selected_ids:
 
             if selection == "surfaces":
-
-                nodes_from_surface = self.mesh.get_nodes_from_surface(selected_id)
-                for (property, node_id) in self.properties.nodal_properties.keys():
-                    if property == "prescribed_dof" and node_id in nodes_from_surface:
-                        if node_id not in nodes_to_remove:
-                            nodes_to_remove.append(node_id)
+                if self.mesh is not None:
+                    nodes_from_surface = self.mesh.get_nodes_from_surface(selected_id)
+                    for (property, node_id) in self.properties.nodal_properties.keys():
+                        if property == "prescribed_dof" and node_id in nodes_from_surface:
+                            if node_id not in nodes_to_remove:
+                                nodes_to_remove.append(node_id)
 
                 for line_id in self.geometry_info._surfaces_to_curves[selected_id]:
                     data = self.properties._get_property("prescribed_dof", line=line_id)
@@ -798,12 +798,12 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                             table_names.extend(self.properties.get_property_related_table_names("prescribed_dof", point_id, "points"))
 
             elif selection == "lines":
-
-                nodes_from_line = self.mesh.get_nodes_from_line(selected_id)
-                for (property, node_id) in self.properties.nodal_properties.keys():
-                    if property == "prescribed_dof" and node_id in nodes_from_line:
-                        if node_id not in nodes_to_remove:
-                            nodes_to_remove.append(node_id)
+                if self.mesh is not None:
+                    nodes_from_line = self.mesh.get_nodes_from_line(selected_id)
+                    for (property, node_id) in self.properties.nodal_properties.keys():
+                        if property == "prescribed_dof" and node_id in nodes_from_line:
+                            if node_id not in nodes_to_remove:
+                                nodes_to_remove.append(node_id)
 
                 for surface_id in self.geometry_info._curves_to_surfaces[selected_id]:
                     data = self.properties._get_property("prescribed_dof", surface=surface_id)
@@ -818,12 +818,12 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                         table_names.extend(self.properties.get_property_related_table_names("prescribed_dof", point_id, "points"))
 
             elif selection == "points":
-
-                nodes_from_point = self.mesh.nodes_from_points[selected_id]
-                for (property, node_id) in self.properties.nodal_properties.keys():
-                    if property == "prescribed_dof" and node_id in nodes_from_point:
-                        if node_id not in nodes_to_remove:
-                            nodes_to_remove.append(node_id)
+                if self.mesh is not None:
+                    nodes_from_point = self.mesh.nodes_from_points[selected_id]
+                    for (property, node_id) in self.properties.nodal_properties.keys():
+                        if property == "prescribed_dof" and node_id in nodes_from_point:
+                            if node_id not in nodes_to_remove:
+                                nodes_to_remove.append(node_id)
 
                 for line_id in self.geometry_info._points_to_curves[selected_id]:
                     data = self.properties._get_property("prescribed_dof", line=line_id)

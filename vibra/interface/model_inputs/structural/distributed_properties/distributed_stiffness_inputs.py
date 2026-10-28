@@ -50,7 +50,8 @@ class DistributedStiffnessInputs(DistributedStiffnessInputs_UI):
         app().main_window.workspace_updating_for_model_setup()
 
         self.model = app().project.model
-        self.mesh = app().project.model.mesh
+        self.mesh = app().project.model.fe_mesh
+        self.geometry_info = app().project.model.geometry_info
         self.properties = app().project.model.properties
 
         self._config_window()
@@ -228,7 +229,7 @@ class DistributedStiffnessInputs(DistributedStiffnessInputs_UI):
             table_path_line_edits = list(self.table_line_edits.values())
             for index, table_path in enumerate(table_paths):
                 line_edit = table_path_line_edits[index]
-                if table_path is not None:                   
+                if table_path is not None:
                     line_edit.setText(table_path)
 
             self.tabWidget_main.setCurrentIndex(StandardTabType.TABULAR_DATA)
@@ -269,7 +270,7 @@ class DistributedStiffnessInputs(DistributedStiffnessInputs_UI):
             if isinstance(data, dict):
                 self.comboBox_element_type.setCurrentIndex(0)
                 return
-            
+
         if isinstance(line_id, int):
             for node_id in self.mesh.get_nodes_from_line(line_id):
                 for surface_id in self.mesh.get_surfaces_from_node(node_id):
@@ -338,7 +339,7 @@ class DistributedStiffnessInputs(DistributedStiffnessInputs_UI):
         return "N/m²"
 
     def update_element_type_based_on_geometry_information(self):
-        volume_exists = self.mesh.are_there_volumes_in_geometry()
+        volume_exists = self.geometry_info.contains_solids()
         self.comboBox_element_type.setCurrentIndex(int(volume_exists))
 
     def constant_values_attribution(self, selection: str, selected_ids: list[int]):
@@ -452,7 +453,7 @@ class DistributedStiffnessInputs(DistributedStiffnessInputs_UI):
         self.Ky_table_values, self.Ky_table_path = self.load_table(self.lineEdit_path_table_Ky, "Ky")
         if self.Ky_table_path is None:
             self.lineEdit_reset(self.lineEdit_path_table_Ky)
-            
+
     def load_Kz_table(self):
         self.Kz_table_values, self.Kz_table_path = self.load_table(self.lineEdit_path_table_Kz, "Kz")
         if self.Kz_table_path is None:
@@ -523,7 +524,7 @@ class DistributedStiffnessInputs(DistributedStiffnessInputs_UI):
                 self.Kz_table_values, self.Kz_table_path = self.load_table(self.lineEdit_path_table_Kz, "Kz", direct_load = True)
 
         for selected_id in selected_ids:
-            
+
             if self.Kx_table_values is not None:
                 self.Kx_table_name, self.Kx_array = self.save_table_files("Kx", selected_id, selection, self.Kx_table_values)
                 if self.Kx_array is None:
@@ -556,7 +557,7 @@ class DistributedStiffnessInputs(DistributedStiffnessInputs_UI):
             if condition_1 or condition_2:
                 title = "Additional inputs required"
                 message = "You must to enter at leat one distributed load table path before confirming the assignment."
-                PrintMessageInput([error_title, title, message]) 
+                PrintMessageInput([error_title, title, message])
                 return True
 
             data = {

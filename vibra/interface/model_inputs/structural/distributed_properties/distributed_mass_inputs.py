@@ -34,14 +34,6 @@ class DistributedMassInputs(DistributedMassInputs_UI):
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
 
-<<<<<<< HEAD:vibra/interface/model_inputs/structural/excitations/distributed_mass_inputs.py
-        self.model = app().project.model
-        self.mesh = app().project.model.fe_mesh
-        self.geometry_info = app().project.model.geometry_info
-        self.properties = app().project.model.properties
-
-=======
->>>>>>> dev:vibra/interface/model_inputs/structural/distributed_properties/distributed_mass_inputs.py
         self._config_window()
         self._initialize()
         self._configure_validators()
@@ -60,7 +52,11 @@ class DistributedMassInputs(DistributedMassInputs_UI):
 
     @property
     def mesh(self):
-        return app().project.model.mesh
+        return app().project.model.fe_mesh
+
+    @property
+    def geometry_info(self):
+        return app().project.model.geometry_info
 
     @property
     def properties(self):
@@ -173,7 +169,7 @@ class DistributedMassInputs(DistributedMassInputs_UI):
                 self.comboBox_element_type.setCurrentIndex(0)
                 return
 
-        if isinstance(line_id, int):
+        if isinstance(line_id, int) and (self.mesh is not None):
             for node_id in self.mesh.get_nodes_from_line(line_id):
                 for _surface_id in self.mesh.get_surfaces_from_node(node_id):
                     data = self.properties._get_property("surface_thickness", surface=_surface_id)
