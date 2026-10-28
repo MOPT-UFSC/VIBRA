@@ -1,3 +1,4 @@
+from vibra.engine.mesher.geometry_info import GeometryInfo
 from typing import Optional
 
 from molde import Color
@@ -46,6 +47,7 @@ class FacesActor(vtkActor):
             self.visualization_filter = VisualizationFilter.all_true()
 
         self.mesh = mesh
+        self.geometry_info = app().project.model.geometry_info
         self.data = None
         self.update_normals = update_normals
 
@@ -96,7 +98,7 @@ class FacesActor(vtkActor):
         points.SetData(numpy_to_vtk(coordinates))
 
         surface_to_volume = dict()
-        for volume, surfaces in self.mesh.surfaces_from_volume.items():
+        for volume, surfaces in self.geometry_info._solids_to_surfaces.items():
             for surface in surfaces:
                 surface_to_volume[surface] = volume
 
