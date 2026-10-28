@@ -332,16 +332,21 @@ class AnalysisChecker:
         return False
 
     def _entities_with_and_without_property(self, property_name: str, entity_name: str):
-
         if self.geometry_info is None:
-            return
+            return [], []
 
-        geometry_information = self.geometry_info.geometry_information_dict()
-        entities = geometry_information.get(entity_name, [])
+        match entity_name:
+            case "points":
+                kwargs = {entity_name: list(self.geometry_info.points)}
+            case "lines":
+                kwargs = {entity_name: list(self.geometry_info.curves)}
+            case "surfaces":
+                kwargs = {entity_name: list(self.geometry_info.surfaces)}
+            case "volumes":
+                kwargs = {entity_name: list(self.geometry_info.solids)}
 
-        kwargs = {
-            entity_name: entities,
-        }
+            case _:
+                return [], []
 
         properties = self.model.properties
         return properties.get_entities_with_and_without_property(

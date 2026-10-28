@@ -159,16 +159,6 @@ class GeometryInfo:
         self.length_unit = length_unit
         self.length_unit_factor = new_factor
 
-    def geometry_information_dict(self) -> dict:
-        # TODO: Just doing it to keep the previous interface
-        # refactor the methods using it when possible
-        return {
-            "points": list(self.points),
-            "lines": list(self.curves),
-            "surfaces": list(self.surfaces),
-            "volumes": list(self.solids),
-        }
-
     def all_point_ids(self) -> set[int]:
         return set(self.points)
 
