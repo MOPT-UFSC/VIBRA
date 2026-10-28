@@ -79,17 +79,12 @@ class ProjectReader:
         if self.project_paths.fem_mesh_filepath.exists():
             model.fe_mesh = self.read_mesh()
 
-        if self.project_paths.geometry_info_filepath.exists():
+        if self.project_paths.visual_mesh_filepath.exists() and self.project_paths.geometry_info_filepath.exists():
+            model.visual_mesh = self.read_visual_mesh()
             model.geometry_info = self.read_geometry_info()
         else:
-            model.geometry_info = self.read_geometry_info_deprecated()
-
-        if self.project_paths.visual_mesh_filepath.exists():
-            model.visual_mesh = self.read_visual_mesh()
-        else:
-            model.visual_mesh = copy(model.fe_mesh)
-            if model.visual_mesh is not None:
-                model.visual_mesh.solids_connectivity = np.zeros((0, 4), dtype=int)
+            print("Bonk")
+            model.visual_mesh, model.geometry_info = model.visual_mesher.generate()
 
         model.mesh_setup = self.read_mesh_setup()
         model.properties = self.read_model_properties()
@@ -416,53 +411,6 @@ class ProjectReader:
         geometry_info._process_curves_normals()
         geometry_info._process_points_normals()
 
-        return geometry_info
-
-    def read_geometry_info_deprecated(self) -> GeometryInfo:
-        geometry_info = GeometryInfo()
-
-        geometry_data_path = self.project_paths.geometry_data_filepath
-        if not geometry_data_path.exists():
-            raise FileNotFoundError("The geometry file is missing.")
-
-        with h5py.File(geometry_data_path, "r") as file:
-            entities = file.get("entities", {})
-            geometry_info.points = list(entities.get("points", []))
-            geometry_info.curves = list(entities.get("lines", []))
-            geometry_info.surfaces = list(entities.get("surfaces", []))
-            geometry_info.solids = list(entities.get("volumes", []))
-
-            if "properties" in file:
-                properties = file["properties"]
-                geometry_info._curves_lengths = {int(k): np.average(v) for k, v in properties.get("length_from_lines", default=dict())}
-                geometry_info._surfaces_areas = {int(k): v for k, v in properties.get("area_from_surfaces", default=dict())}
-                geometry_info._solids_volumes = {int(k): v for k, v in properties.get("volume_from_bodies", default=dict())}
-
-            for key, value in file.get("adjacencies", dict()).items():
-                key: str
-                tag = int(key.split("_")[-1])
-                value = [int(i) for i in value]
-
-                # This "startswith" is very sad
-                if key.startswith("points_from_line"):
-                    geometry_info._curves_to_points[tag] = value
-
-                elif key.startswith("lines_from_surface"):
-                    geometry_info._surfaces_to_curves[tag] = value
-
-                elif key.startswith("surfaces_from_volume"):
-                    geometry_info._solids_to_surfaces[tag] = value
-
-                elif key.startswith("cache_points_from_line"):
-                    geometry_info._cache_curves_to_points[tag] = value
-
-                elif key.startswith("cache_lines_from_surface"):
-                    geometry_info._cache_surfaces_to_curves[tag] = value
-
-                elif key.startswith("cache_surfaces_from_volume"):
-                    geometry_info._cache_solids_to_surfaces[tag] = value
-
-        geometry_info._create_inverse_maps()
         return geometry_info
 
     def read_model_properties(self, model_properties: ModelProperties | None = None) -> ModelProperties:
