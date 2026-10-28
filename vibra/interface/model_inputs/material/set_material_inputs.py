@@ -197,7 +197,7 @@ class MaterialInputs(SetMaterial_UI):
         volumes = app().main_window.selection.geometry_volumes
         surfaces = app().main_window.selection.geometry_surfaces
 
-        volume_exists = self.mesh.are_there_volumes_in_geometry()
+        volume_exists = self.geometry_info.contains_solids()
         index = self.comboBox_attribution_type.currentIndex()
 
         selected_ids = set()
@@ -313,7 +313,7 @@ class MaterialInputs(SetMaterial_UI):
 
     def update_selection_combo_box_texts(self):
 
-        volumes_exists = self.mesh.are_there_volumes_in_geometry()
+        volumes_exists = self.geometry_info.contains_solids()
         if volumes_exists:
             labels = ["All volumes", "Selected volumes"]
         else:

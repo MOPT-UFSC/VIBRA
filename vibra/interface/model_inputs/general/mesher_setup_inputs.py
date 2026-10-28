@@ -695,11 +695,11 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             # raise NotImplementedError(f"Element type not defined!")
 
     def update_combo_boxes_according_to_geometry_info(self):
-        mesh = self.model.fe_mesh
-        if mesh is None:
+        geometry_info = self.model.geometry_info
+        if geometry_info is None:
             return
 
-        if not mesh.are_there_volumes_in_geometry():
+        if not geometry_info.contains_solids():
             self.comboBox_element_geometry.removeItem(1)
             self.comboBox_element_order.removeItem(1)
 
@@ -713,7 +713,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             return
 
         is_tetrahedral = self.comboBox_element_geometry.currentText() == "Tetrahedral"
-        enable_mesh_metrics = self.model.geometry_info.contains_volumes() and is_tetrahedral
+        enable_mesh_metrics = self.model.geometry_info.contains_solids() and is_tetrahedral
         self.comboBox_mesh_quality_metrics.setEnabled(enable_mesh_metrics)
 
         if not is_tetrahedral:

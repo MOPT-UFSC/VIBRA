@@ -1132,7 +1132,7 @@ class Model:
                 self.fe_mesh.set_face_element_thickness(surface_id, data)
 
     def is_surface_thickness_properly_applied_in_model(self):
-        volume_exists = self.fe_mesh.are_there_volumes_in_geometry()
+        volume_exists = self.geometry_info.contains_solids()
         if volume_exists:
             return None
 

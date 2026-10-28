@@ -41,6 +41,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
 
         self.model = app().project.model
         self.mesh = app().project.model.fe_mesh
+        self.geometry_info = app().project.model.geometry_info
         self.properties = app().project.model.properties
 
         self._config_window()
@@ -211,7 +212,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
             table_paths = data["table_paths"]
             for index, lineEdit_table in enumerate(self.table_line_edits.values()):
                 table_path = table_paths[index]
-                if table_path is not None:                   
+                if table_path is not None:
                     lineEdit_table.setText(table_path)
 
             self.tabWidget_main.setCurrentIndex(StandardTabType.TABULAR_DATA)
@@ -249,7 +250,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
             if isinstance(data, dict):
                 self.comboBox_element_type.setCurrentIndex(0)
                 return
-            
+
         if isinstance(line_id, int):
             for node_id in self.mesh.get_nodes_from_line(line_id):
                 for surface_id in self.mesh.get_surfaces_from_node(node_id):
@@ -288,7 +289,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
             widget.setText(label_text)
 
     def update_element_type_based_on_geometry_information(self):
-        volume_exists = self.mesh.are_there_volumes_in_geometry()
+        volume_exists = self.geometry_info.contains_solids()
         self.comboBox_element_type.setCurrentIndex(int(volume_exists))
 
     def constant_values_attribution(self, selection: str, selected_ids: list[int]):
@@ -398,7 +399,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         self.Fy_table_values, self.Fy_table_path = self.load_table(self.lineEdit_path_table_Fy, "Fy")
         if self.Fy_table_path is None:
             self.lineEdit_reset(self.lineEdit_path_table_Fy)
-            
+
     def load_Fz_table(self):
         self.Fz_table_values, self.Fz_table_path = self.load_table(self.lineEdit_path_table_Fz, "Fz")
         if self.Fz_table_path is None:
@@ -469,7 +470,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
             self.Fz_table_values, self.Fz_table_path = self.load_table(self.lineEdit_path_table_Fz, "Fz", direct_load = True)
 
         for selected_id in selected_ids:
-            
+
             if self.Fx_table_values is not None:
                 self.Fx_table_name, self.Fx_array = self.save_table_files("Fx", selected_id, selection, self.Fx_table_values)
                 if self.Fx_array is None:
@@ -494,7 +495,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
             if condition_1 or condition_2:
                 title = "Additional inputs required"
                 message = "You must to enter at leat one distributed load table path before confirming the assignment."
-                PrintMessageInput([error_title, title, message]) 
+                PrintMessageInput([error_title, title, message])
                 return True
 
             data = {

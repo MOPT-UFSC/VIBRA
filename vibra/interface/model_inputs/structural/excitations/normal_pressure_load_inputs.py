@@ -35,6 +35,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
 
         self.model = app().project.model
         self.mesh = app().project.model.fe_mesh
+        self.geometry_info = app().project.model.geometry_info
         self.properties = app().project.model.properties
 
         self._config_window()
@@ -165,7 +166,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         self.label_unit.setText(label_text)
 
     def update_element_type_based_on_geometry_information(self):
-        volume_exists = self.mesh.are_there_volumes_in_geometry()
+        volume_exists = self.geometry_info.contains_solids()
         self.comboBox_element_type.setCurrentIndex(int(volume_exists))
 
     def constant_values_attribution(self, surface_ids: list[int]):
@@ -307,7 +308,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
             self.pressure_table_values, self.pressure_table_path = self.load_table(self.lineEdit_table_path, "Pressure load", direct_load = True)
 
         for surface_id in surface_ids:
-            
+
             if self.pressure_table_values is not None:
                 self.pressure_table_name, self.pressure_array = self.save_table_files(surface_id, self.pressure_table_values)
                 if self.pressure_array is None:
@@ -323,7 +324,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
             if condition_1 or condition_2:
                 title = "Additional inputs required"
                 message = "You must enter the normal pressure load table path before confirming the assignment."
-                PrintMessageInput([error_title, title, message]) 
+                PrintMessageInput([error_title, title, message])
                 return True
 
             data = {

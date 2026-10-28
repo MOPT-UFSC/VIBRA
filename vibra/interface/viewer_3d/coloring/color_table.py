@@ -14,7 +14,8 @@ class ColorTable(vtkLookupTable):
         max_value=None,
         colormap="jet",
     ):
-        self.set_data(values_vector, min_value, max_value)
+        if values_vector is not None:
+            self.set_data(values_vector, min_value, max_value)
         self.set_colormap(colormap)
 
     def set_data(

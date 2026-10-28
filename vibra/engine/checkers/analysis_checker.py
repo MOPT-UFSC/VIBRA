@@ -77,7 +77,7 @@ class AnalysisChecker:
         self.check_can_resume(is_resume)
         self.check_mesh()
 
-        if self.mesh.are_there_volumes_in_geometry():
+        if self.geometry_info.contains_solids():
             self.check_materials_volumes()
         else:
             self.check_materials_surfaces()
@@ -122,7 +122,7 @@ class AnalysisChecker:
         self.check_can_resume(is_resume)
         self.check_mesh()
 
-        if self.mesh.are_there_volumes_in_geometry():
+        if self.geometry_info.contains_solids():
             self.check_materials_volumes()
         else:
             self.check_materials_surfaces()
@@ -245,7 +245,7 @@ class AnalysisChecker:
 
     def check_contains_volumes(self):
 
-        if not self.mesh.are_there_volumes_in_geometry():
+        if not self.geometry_info.contains_solids():
             raise errors.InvalidGeometryError(
                 "The selected geometry does not contain volumes, "
                 "therefore, it is invalid for the current analysis."

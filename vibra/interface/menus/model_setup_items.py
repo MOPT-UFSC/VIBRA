@@ -198,7 +198,7 @@ class ModelSetupItems(CommonMenuItems):
         ]
 
         if property_name == "material":
-            if (geometry_info is not None) and geometry_info.contains_volumes():
+            if (geometry_info is not None) and geometry_info.contains_solids():
                 volume_ids = sorted(geometry_info.solids)
                 volumes_with_material, volumes_without_material = properties.get_entities_with_and_without_property("material", volumes=volume_ids)
 
@@ -222,7 +222,7 @@ class ModelSetupItems(CommonMenuItems):
                 return not bool(len(surfaces_without_material))
 
         if property_name == "fluid":
-            if (geometry_info is not None) and geometry_info.contains_volumes():
+            if (geometry_info is not None) and geometry_info.contains_solids():
                 volume_ids = sorted(geometry_info.solids)
                 volumes_with_fluid, volumes_without_fluid = properties.get_entities_with_and_without_property("fluid", volumes=volume_ids)
                 if not volumes_with_fluid:
@@ -312,7 +312,7 @@ class ModelSetupItems(CommonMenuItems):
                 geometry_info = app().project.model.geometry_info
 
                 if geometry_info is not None:
-                    if not geometry_info.contains_volumes():
+                    if not geometry_info.contains_solids():
                         return True
 
                     st_check = app().project.model.is_surface_thickness_properly_applied_in_model()
@@ -333,7 +333,7 @@ class ModelSetupItems(CommonMenuItems):
         toolbar = app().main_window.analysis_toolbar
 
         if geometry_info is not None:
-            volume_exists = geometry_info.contains_volumes()
+            volume_exists = geometry_info.contains_solids()
             self.item_child_surface_thickness.setHidden(volume_exists)
             # self.item_child_distributed_loads.setHidden(volume_exists)
             # self.item_child_normal_pressure_load.setHidden(volume_exists)

@@ -170,14 +170,14 @@ class DistributedMassInputs(DistributedMassInputs_UI):
         return
 
     def update_element_type_based_on_geometry_information(self):
-        volume_exists = self.mesh.are_there_volumes_in_geometry()
+        volume_exists = self.geometry_info.contains_solids()
         self.comboBox_element_type.setCurrentIndex(int(volume_exists))
 
     def check_input_value(self, str_value: str):
 
         if str_value == "":
             return None
-    
+
         try:
             str_value = str_value.replace(",", ".")
             return float(str_value)
@@ -208,7 +208,7 @@ class DistributedMassInputs(DistributedMassInputs_UI):
 
         app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
         update_entities_selection(self.lineEdit_selection_id, selection, selected_ids)
-        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)       
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
         self.remove_duplicated_attributions(selected_ids, selection)
         self.remove_conflicting_excitations(selected_ids, selection)
@@ -287,7 +287,7 @@ class DistributedMassInputs(DistributedMassInputs_UI):
 
                 if prop_label != "distributed_mass":
                     continue
-            
+
                 value = np.real(data["values"])[0]
                 str_value = f"{value}"
 
@@ -333,7 +333,7 @@ class DistributedMassInputs(DistributedMassInputs_UI):
             app().main_window.selection.set_geometry_selection()
             self.lineEdit_selection_id.setText("")
         else:
-            view = self.comboBox_assignment_type.view() 
+            view = self.comboBox_assignment_type.view()
             view.setRowHidden(2, True)
             self.comboBox_assignment_type.setCurrentIndex(AssignmentType.SURFACES)
             self.treeWidget_distributed_mass.clearSelection()

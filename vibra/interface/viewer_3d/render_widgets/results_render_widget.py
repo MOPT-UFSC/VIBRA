@@ -158,7 +158,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         *,
         plot_setup: PlotSetup | None = None,
     ):
-        
+
         if plot_setup is None:
             self.reset_plot_setup()
         else:
@@ -740,7 +740,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.colorbar_actor.SetLookupTable(self.analysis_actor.color_table)
         self.update()
 
-    def update_animation_parameters(self, time_vector: np.ndarray):   
+    def update_animation_parameters(self, time_vector: np.ndarray):
         animation_widget = app().main_window.results_viewer_widget.animation_widget
         if animation_widget is None:
             return
@@ -928,7 +928,11 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if mesh is None:
             return
 
-        if not mesh.are_there_volumes_in_geometry():
+        geometry_info = app().project.model.geometry_info
+        if geometry_info is None:
+            return
+
+        if not geometry_info.contains_solids():
             return
 
         if not isinstance(self._cache_full_solids_actor, AnalysisActor):
