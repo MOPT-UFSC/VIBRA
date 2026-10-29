@@ -280,7 +280,7 @@ class SymbolsActor(vtkActor):
         """
         target = np.asarray(orientation, dtype=float)
         norm = np.linalg.norm(target)
-        if norm == 0:
+        if not np.isfinite(norm) or (norm == 0):
             return (1, 0, 0, 0)
 
         reference = np.array([1.0, 0.0, 0.0])
