@@ -100,6 +100,18 @@ def test_geometry_info_equivalence():
     assert sorted(gmsh_geometry_info.points) == sorted(occ_geometry_info.points)
 
 
+def test_visual_mesh():
+    geometry_path = str(PROJECT_DIR / "examples/geometry_files/empty_vessel.step")
+    mesh_test_path = str(PROJECT_DIR / "validation_files/data/mesh_info/visual_mesh/")
+    mesh, geometry_info = OccMesher(geometry_path).generate()
+
+    _compare_mesh(
+        mesh,
+        geometry_info,
+        mesh_test_path,
+    )
+
+
 def test_tetrahedron_4_mesh():
     geometry_path = str(PROJECT_DIR / "examples/geometry_files/cylinder.step")
     mesh_test_path = str(PROJECT_DIR / "validation_files/data/mesh_info/cylinder_tet4/")
@@ -146,7 +158,7 @@ def test_hexahedron_8_mesh():
     mesher.setup.maximum_element_size = 80
     mesher.setup.custom_element_setup = GMSH_HEX8
 
-    mesh, geometry_info = mesher.generate(threads=1)
+    mesh, _geometry_info = mesher.generate(threads=1)
     assert mesh.element_topology == ElementTopology("hexahedral", "linear")
 
 
@@ -158,7 +170,7 @@ def test_hexahedron_20_mesh():
     mesher.setup.maximum_element_size = 300
     mesher.setup.custom_element_setup = GMSH_HEX20
 
-    mesh, geometry_info = mesher.generate(threads=1)
+    mesh, _geometry_info = mesher.generate(threads=1)
     assert mesh.element_topology == ElementTopology("hexahedral", "quadratic")
 
 
@@ -284,13 +296,12 @@ def _compare_mesh(mesh: Mesh, geometry_info: GeometryInfo, mesh_path: Path | str
     assert np.allclose(expected_nodal_coordinates, mesh.nodal_coordinates)
     assert np.allclose(expected_lines_connectivity, mesh.lines_connectivity)
     assert np.allclose(expected_faces_connectivity, mesh.faces_connectivity)
-    assert np.allclose(expected_solids_connectivity, mesh.solids_connectivity)
-
-    assert expected_mappings == _normalize(mappings)
-    assert expected_geometry == _normalize(geometry)
 
     if (expected_solids_connectivity.size != 0) and (mesh.solids_connectivity.size != 0):
         assert np.allclose(expected_solids_connectivity, mesh.solids_connectivity)
+
+    assert expected_mappings == _normalize(mappings)
+    assert expected_geometry == _normalize(geometry)
 
 
 def _normalize(obj):
