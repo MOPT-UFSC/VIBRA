@@ -11,8 +11,7 @@ from vibra.interface.user_input.data_handler.imported_data import (
 
 
 class SpreadsheetFileHandler(IOHandler):
-    READ_EXTENSIONS = [".xls", ".xlsx"]
-    WRITE_EXTENSIONS = [".xlsx"]
+    EXTENSIONS = [".xlsx"]
 
     @staticmethod
     def read(file_path: Path) -> SpreadsheetData:
