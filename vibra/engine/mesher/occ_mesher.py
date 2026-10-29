@@ -114,7 +114,9 @@ class OccMesher:
                 coordinate_shift = len(nodal_coordinates)
 
                 for index in range(triangulation.NbNodes()):
-                    x, y, z = (val * 1e-3 for val in triangulation.Node(index + 1).Coord())
+                    node = triangulation.Node(index + 1)
+                    node.Transform(loc.Transformation())
+                    x, y, z = (val * 1e-3 for val in node.Coord())
                     nodal_coordinates.append((len(nodal_coordinates), x, y, z))
 
                 for triangle in triangulation.Triangles():
