@@ -8,10 +8,10 @@ from vibra import app
 from vibra.interface.common.common_interface import update_entities_selection
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.numeric_checks.int_list_validator import IntListValidator
 from vibra.interface.numeric_checks.unit_utilities import convert_stress_unit
 from vibra.interface.plots.general.frequency_response_plotter import DataFormat, FrequencyResponsePlotter
+from vibra.interface.plots.structural.stress_processing import process_structural_stresses
 from vibra.interface.ui_generated.plots.structural.structural_stress_2d_plot_time_inputs_ui import StructuralStress2dPlotTimeInputs_UI
 from vibra.interface.viewer_3d.plot_setup import StressType
 from vibra.utils.signal_processing import process_ifft_from_one_sided_spectrum_signal, process_multiple_iffts_from_one_sided_spectrum_signals
@@ -66,8 +66,7 @@ class StructuralStress2dPlotTimeInputs(StructuralStress2dPlotTimeInputs_UI):
 
     @property
     def is_stress_data_cached(self):
-        cache_info = self.structural_post.recover_nodal_averaged_structural_stresses.cache_info()
-        return cache_info.currsize != 0
+        return isinstance(self.structural_post.nodal_averaged_stresses_time, np.ndarray)
 
     def set_frames_disabled(self, disabled: bool):
         self.frame_selection_controls.setDisabled(disabled)
@@ -145,14 +144,9 @@ class StructuralStress2dPlotTimeInputs(StructuralStress2dPlotTimeInputs_UI):
             app().main_window.show_geometry_render_widget()
 
     def process_stress_field(self):
-
         # recover the averaged structural stresses
-        if not self.is_stress_data_cached:
-            def recover_stresses():
-                self.structural_post.compute_structural_stresses_frequency()
-                self.structural_post.compute_structural_stresses_time()
-
-            LoadingWindow(recover_stresses).run()
+        if not self.is_stress_data_cached and not process_structural_stresses(time_domain=True):
+            return
 
         self.set_frames_disabled(False)
 

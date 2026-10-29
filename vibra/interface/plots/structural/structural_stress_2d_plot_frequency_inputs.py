@@ -1,5 +1,4 @@
 from enum import IntEnum
-from time import perf_counter
 
 import numpy as np
 from PySide6.QtCore import Qt
@@ -10,13 +9,12 @@ from vibra.engine.analysis_info import HarmonicAnalysisSetup
 from vibra.interface.common.common_interface import update_entities_selection
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.general.print_message_input import PrintMessageInput
-from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.numeric_checks.unit_utilities import convert_stress_unit
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
+from vibra.interface.plots.structural.stress_processing import process_structural_stresses
 from vibra.interface.ui_generated.plots.structural.structural_stress_2d_plot_frequency_inputs_ui import (
     StructuralStress2dPlotFrequencyInputs_UI,
 )
-from vibra.utils.subprocess.structural_stresses_handler import recover_structural_stresses_in_subprocess
 
 
 class SelectionType(IntEnum):
@@ -54,15 +52,7 @@ class StructuralStress2dPlotFrequencyInputs(StructuralStress2dPlotFrequencyInput
 
     @property
     def nodal_averaged_stresses(self):
-        stresses = self.structural_post.nodal_averaged_stresses_frequency
-        if isinstance(stresses, np.ndarray):
-            return stresses
-        
-        t0 = perf_counter()
-        nodal_averaged_stresses = self.structural_post.recover_nodal_averaged_structural_stresses()
-        dt = perf_counter() - t0
-        print(f"Time to compute all nodal stresses: {dt} s")
-        return nodal_averaged_stresses
+        return self.structural_post.nodal_averaged_stresses_frequency
 
     @property
     def structural_post(self):
@@ -70,11 +60,7 @@ class StructuralStress2dPlotFrequencyInputs(StructuralStress2dPlotFrequencyInput
 
     @property
     def is_stress_data_cached(self):
-        if isinstance(self.structural_post.nodal_averaged_stresses_frequency, np.ndarray):
-            return True
-        
-        cache_info = self.structural_post.recover_nodal_averaged_structural_stresses.cache_info()
-        return cache_info.currsize != 0
+        return isinstance(self.structural_post.nodal_averaged_stresses_frequency, np.ndarray)
 
     def set_frames_disabled(self, disabled: bool):
         self.frame_selection_controls.setDisabled(disabled)
@@ -160,20 +146,8 @@ class StructuralStress2dPlotFrequencyInputs(StructuralStress2dPlotFrequencyInput
 
     def process_stress_field(self):
         # recover the averaged structural stresses
-        if not self.is_stress_data_cached:
-            if app().config.user_preferences.run_analysis_in_subprocess:
-                post = self.structural_post
-                stresses = recover_structural_stresses_in_subprocess(
-                    app().project.working_directory,
-                    post.get_nodal_stresses_frequency_shape(),
-                )
-                if stresses is None:
-                    return
-
-                post.nodal_averaged_stresses_frequency = stresses
-
-            else:
-                LoadingWindow(self.structural_post.recover_nodal_averaged_structural_stresses).run()
+        if not self.is_stress_data_cached and not process_structural_stresses():
+            return
 
         self.set_frames_disabled(False)
 

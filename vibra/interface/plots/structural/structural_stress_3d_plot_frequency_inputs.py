@@ -7,9 +7,9 @@ from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.numeric_checks.unit_utilities import convert_stress_unit
 from vibra.interface.plots.general.animation_widget import AnimationWidget
 from vibra.interface.plots.general.results_display_widget import ResultsDisplayWidget
+from vibra.interface.plots.structural.stress_processing import process_structural_stresses
 from vibra.interface.ui_generated.plots.structural.structural_stress_3d_plot_frequency_inputs_ui import StructuralStress3dPlotFrequencyInputs_UI
 from vibra.interface.viewer_3d.plot_setup import StressDataType, StressFieldPlotSetupFrequency
-from vibra.utils.subprocess.structural_stresses_handler import recover_structural_stresses_in_subprocess
 
 
 class StructuralStress3dPlotFrequencyInputs(StructuralStress3dPlotFrequencyInputs_UI):
@@ -129,20 +129,8 @@ class StructuralStress3dPlotFrequencyInputs(StructuralStress3dPlotFrequencyInput
 
     def process_stress_field(self):
         # recover the averaged structural stresses
-        if not self.is_stress_data_computed:
-            if app().config.user_preferences.run_analysis_in_subprocess:
-                post = self.structural_post
-                stresses = recover_structural_stresses_in_subprocess(
-                    app().project.working_directory,
-                    post.get_nodal_stresses_frequency_shape(),
-                )
-                if stresses is None:
-                    return
-
-                post.nodal_averaged_stresses_frequency = stresses
-            else:
-                recover_stresses = self.structural_post.recover_nodal_averaged_structural_stresses
-                LoadingWindow(recover_stresses).run()
+        if not self.is_stress_data_computed and not process_structural_stresses():
+            return
 
         self.set_frames_disabled(False)
         self.load_frequencies()
