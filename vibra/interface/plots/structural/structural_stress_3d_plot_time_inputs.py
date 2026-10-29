@@ -10,6 +10,7 @@ from vibra.interface.numeric_checks.double_validator import StrictDoubleValidato
 from vibra.interface.numeric_checks.unit_utilities import convert_stress_unit
 from vibra.interface.plots.general.animation_widget import AnimationWidget
 from vibra.interface.plots.general.results_display_widget import ResultsDisplayWidget
+from vibra.interface.plots.structural.stress_processing import process_structural_stresses
 from vibra.interface.ui_generated.plots.structural.structural_stress_3d_plot_time_inputs_ui import StructuralStress3dPlotTimeInputs_UI
 from vibra.interface.viewer_3d.plot_setup import StressDataType, StressFieldPlotSetupTime
 
@@ -116,7 +117,6 @@ class StructuralStress3dPlotTimeInputs(StructuralStress3dPlotTimeInputs_UI):
             app().main_window.view_toolbar.disable_selection_tool()
 
     def _create_connections(self):
-
         # QComboBox connections
         self.comboBox_plot_type.currentIndexChanged.connect(self.plot_data_callback)
         self.comboBox_plotting_results.currentIndexChanged.connect(self.plot_data_callback)
@@ -126,7 +126,7 @@ class StructuralStress3dPlotTimeInputs(StructuralStress3dPlotTimeInputs_UI):
         self.lineEdit_animation_time.editingFinished.connect(self.plot_data_callback)
 
         # QPushButton connection
-        self.pushButton_process_nodal_stresses.clicked.connect(self.plot_data_callback)
+        self.pushButton_process_nodal_stresses.clicked.connect(self.process_stress_field)
 
         self.results_display_widget.colormap_changed.connect(self.animation_widget.update_color_and_deformation)
         self.results_display_widget.min_max_value_changed.connect(self.animation_widget.update_color_and_deformation)
@@ -140,6 +140,12 @@ class StructuralStress3dPlotTimeInputs(StructuralStress3dPlotTimeInputs_UI):
             self.animation_widget.setDisabled(True)
         else:
             self.animation_widget.setDisabled(False)
+
+    def process_stress_field(self):
+        if not self.is_stress_data_computed and not process_structural_stresses(time_domain=True):
+            return
+        
+        self.plot_data_callback()
 
     def plot_data_callback(self):
 
