@@ -15,6 +15,7 @@ from vibra.interface.plots.structural.stress_processing import process_structura
 from vibra.interface.ui_generated.plots.structural.structural_stress_2d_plot_frequency_inputs_ui import (
     StructuralStress2dPlotFrequencyInputs_UI,
 )
+from vibra.utils.hardware_monitor.ram_monitor import RamMonitor
 
 
 class SelectionType(IntEnum):
@@ -144,6 +145,7 @@ class StructuralStress2dPlotFrequencyInputs(StructuralStress2dPlotFrequencyInput
 
         self.frequencies = self.model.frequencies
 
+    @RamMonitor()
     def process_stress_field(self):
         # recover the averaged structural stresses
         if not self.is_stress_data_cached and not process_structural_stresses():
