@@ -32,7 +32,7 @@ class BorderItemDelegate(QStyledItemDelegate):
             # will be 1 pixel anyways, so set it to 1
             width = max(pen.width(), 1)            
             size = size + QSize(2 * width, 2 * width)
-            size.setHeight(size.height() + 4)
+            # size.setHeight(size.height() + 2)
         return size
     
     def size(self, item):
@@ -47,7 +47,7 @@ class BorderItemDelegate(QStyledItemDelegate):
 
         original_icon: QIcon = index.data(Qt.DecorationRole)
         if original_icon and not original_icon.isNull():
-            new_icon_size = QSize(27, 27)
+            new_icon_size = QSize(22, 22)
             scaled_pixmap: QPixmap = original_icon.pixmap(new_icon_size, QIcon.Normal, QIcon.On)
             
             x_offset = option.rect.left()
