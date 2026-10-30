@@ -205,7 +205,8 @@ class AnimationWidget(AnimationWidget_UI):
 
     def magnification_state_changed(self):
         is_checked = self.checkBox_magnification.isChecked()
-        self.magnification_factor_slider.setEnabled(is_checked)
+        if not is_checked:
+            self.magnification_factor_slider.setValue(16)
 
     def frames_value_changed(self):
         self.frames = self.spinBox_frames.value()

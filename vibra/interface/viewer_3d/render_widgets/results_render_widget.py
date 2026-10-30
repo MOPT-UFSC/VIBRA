@@ -397,7 +397,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         magnification_factor = self.plot_setup.magnification_factor
 
         if magnification_factor is None:
-            mult_factor = 1.0
+            mult_factor = magnification_factor
         else:
             mult_factor = magnification_factor / (10 * max_value)
 
@@ -485,7 +485,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         magnification_factor = self.plot_setup.magnification_factor
 
         if magnification_factor is None:
-            mult_factor = 1.0
+            mult_factor = magnification_factor
         else:
             mult_factor = magnification_factor / (10 * max_disp)
 
@@ -585,7 +585,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         magnification_factor = self.plot_setup.magnification_factor
 
         if magnification_factor is None:
-            mult_factor = 1.0
+            mult_factor = magnification_factor
         else:
             mult_factor = magnification_factor / (10 * max_disp)
 
@@ -663,7 +663,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         magnification_factor = self.plot_setup.magnification_factor
 
         if magnification_factor is None:
-            mult_factor = 1.0
+            mult_factor = magnification_factor
         else:
             mult_factor = magnification_factor / (10 * max_value)
 
