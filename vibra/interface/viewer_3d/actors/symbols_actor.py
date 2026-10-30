@@ -248,8 +248,11 @@ class SymbolsActor(vtkActor):
             distances = 0.015 * np.linalg.norm(diff, axis=1)
             scale_view[screen_size_mask] = distances[screen_size_mask]
 
-        rotation = self._get_camera_facing_rotation()
-        rotation_view[billboards] = rotation
+        try:
+            rotation = self._get_camera_facing_rotation()
+            rotation_view[billboards] = rotation
+        except Exception:
+            ...
 
         self.symbol_scales.Modified()
         self.symbol_data.Modified()
