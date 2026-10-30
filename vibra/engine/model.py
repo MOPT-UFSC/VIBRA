@@ -344,9 +344,10 @@ class Model:
     def get_harmonic_analysis_setup(self, **kwargs) -> HarmonicAnalysisSetup:
         analysis_setup = HarmonicAnalysisSetup(**kwargs)
         if isinstance(self.analysis_setup, ModalAnalysisSetup | HarmonicAnalysisSetup):
-            analysis_setup.global_damping = self.analysis_setup.global_damping
             analysis_setup.sigma_factor = self.analysis_setup.sigma_factor
             analysis_setup.modes_number = self.analysis_setup.modes_number
+            if isinstance(self.analysis_setup, HarmonicAnalysisSetup):
+                analysis_setup.global_damping = self.analysis_setup.global_damping
 
         analysis_setup.solution_steps_mask = self.get_solution_steps_mask(frequencies=analysis_setup.get_frequencies())
         return analysis_setup
