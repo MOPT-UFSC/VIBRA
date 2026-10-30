@@ -226,8 +226,7 @@ class AcousticPostprocessing:
             freqs_ifft = np.arange(1, spectral_lines + 1, dtype=float) * df
 
             # process mask for solution steps
-            mask = np.round(freqs_ifft % f_step, 8) == 0
-            mask *= freqs_ifft < f_max + f_step / 100
+            mask = (np.round(freqs_ifft % f_step, 8) == 0) & (freqs_ifft < f_max + f_step / 100)
 
             # initialize the temporary solution array
             nodal_solution_ifft = np.zeros((len(nodal_solution), freqs_ifft.size), dtype=complex)

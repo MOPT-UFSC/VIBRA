@@ -162,8 +162,7 @@ class IfftControlsWidget(IfftControlsWidget_UI):
             freqs_ifft = np.arange(1, N + 1, dtype=float) * df
 
             # process mask for solution steps
-            mask = np.round(freqs_ifft % f_step, 8) == 0
-            mask *= freqs_ifft < f_max + f_step/ 100
+            mask = (np.round(freqs_ifft % f_step, 8) == 0) & (freqs_ifft < f_max + f_step / 100)
 
             # initialize the temporary solution array
             if multiple_iffts:
