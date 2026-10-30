@@ -60,7 +60,7 @@ class ExportModelResults(QFileDialog):
 
         if Path(existing_path).exists():
             ext = Path(existing_path).suffix.lower()
-            if ext in [".xls", ".xlsx"]:
+            if ext == ".xlsx":
                 for sheet_name, df in read_excel(existing_path, sheet_id=0, engine="calamine").items():
                     existing_data_frames[sheet_name] = df.select(df.columns[:4])
 
@@ -155,7 +155,7 @@ class ExportModelResults(QFileDialog):
             return
 
         logging.info("Exporting data... (50%)")
-        if file_path.suffix.lower() in [".xls", ".xlsx"]:
+        if file_path.suffix.lower() == ".xlsx":
             self.export_data_in_spreadsheet_format(str(file_path), **kwargs)
         else:
             self.export_data_in_text_format(str(file_path))
