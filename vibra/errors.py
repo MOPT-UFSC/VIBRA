@@ -32,7 +32,7 @@ class ModelException(VibraException):
         volumes: Optional[Sequence] = None,
         **kwargs,
     ):
-        super().__init__(*args, **kwargs)
+        super().__init__(*args)
         self.points = points if (points is not None) else set()
         self.lines = lines if (lines is not None) else set()
         self.surfaces = surfaces if (surfaces is not None) else set()

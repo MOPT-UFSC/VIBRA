@@ -39,7 +39,11 @@ class StructuralNodalSolution2dPlotTimeInputs(StructuralNodalSolution2dPlotTimeI
 
     @property
     def mesh(self):
-        return app().project.model.mesh
+        return app().project.model.fe_mesh
+
+    @property
+    def geometry_info(self):
+        return app().project.model.geometry_info
 
     @property
     def properties(self):
@@ -87,7 +91,7 @@ class StructuralNodalSolution2dPlotTimeInputs(StructuralNodalSolution2dPlotTimeI
             # data_types = ["{}<sub>{}</sub>", "d{}<sub>{}</sub>/dt", "d²{}<sub>{}</sub>/dt²"]
             return data_types[n_int].format(dof_type, directions[dof_index])
 
-        volume_exists = self.mesh.are_there_volumes_in_geometry()
+        volume_exists = self.geometry_info.contains_solids()
         n_dofs = 3 if volume_exists else 6
 
         for j, results_label in enumerate(["Displacement", "Velocity", "Acceleration"]):
@@ -187,7 +191,7 @@ class StructuralNodalSolution2dPlotTimeInputs(StructuralNodalSolution2dPlotTimeI
         self.plotter._set_model_results_data_to_plot(self.model_results)
 
     def export_data_callback(self):
-        
+
         if self.check_selected_ids():
             return
 
@@ -244,7 +248,7 @@ class StructuralNodalSolution2dPlotTimeInputs(StructuralNodalSolution2dPlotTimeI
 
             Xf = self.get_response(selected_id, dof_index)
             x_data, y_data = process_ifft_from_one_sided_spectrum_signal(
-                self.frequencies, 
+                self.frequencies,
                 Xf,
                 dc_included = False,
                 )
@@ -264,10 +268,10 @@ class StructuralNodalSolution2dPlotTimeInputs(StructuralNodalSolution2dPlotTimeI
 
     def get_structure_data_index(self) -> int:
         """
-        This method returns an integer corresponding to the structural data, where 0 represents 
+        This method returns an integer corresponding to the structural data, where 0 represents
         displacement, 1 represents velocity, and 2 represents acceleration.
         """
-        volume_exists = self.mesh.are_there_volumes_in_geometry()
+        volume_exists = self.geometry_info.contains_solids()
         n_dofs = 3 if volume_exists else 6
         index = self.comboBox_structural_results.currentIndex()
         return index // n_dofs
@@ -276,7 +280,7 @@ class StructuralNodalSolution2dPlotTimeInputs(StructuralNodalSolution2dPlotTimeI
         """
         This method returns an integer corresponding to the structural local dof index.
         """
-        volume_exists = self.mesh.are_there_volumes_in_geometry()
+        volume_exists = self.geometry_info.contains_solids()
         n_dofs = 3 if volume_exists else 6
         index = self.comboBox_structural_results.currentIndex()
         return index % n_dofs
@@ -315,7 +319,7 @@ class StructuralNodalSolution2dPlotTimeInputs(StructuralNodalSolution2dPlotTimeI
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
             self.plot_data_callback()
-        
+
     def closeEvent(self, a0: QCloseEvent | None) -> None:
 
         if self.exporter is not None:
@@ -325,15 +329,15 @@ class StructuralNodalSolution2dPlotTimeInputs(StructuralNodalSolution2dPlotTimeI
             self.plotter.close()
 
         return super().closeEvent(a0)
-    
+
 def get_color(index: int):
 
-    colors = [  
-        (0,0,1), 
-        (0,0,0), 
+    colors = [
+        (0,0,1),
+        (0,0,0),
         (1,0,0),
-        (0,1,1), 
-        (1,0,1), 
+        (0,1,1),
+        (1,0,1),
         (1,1,0),
         (0.25,0.25,0.25),
         ]

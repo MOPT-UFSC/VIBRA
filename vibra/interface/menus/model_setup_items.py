@@ -1,4 +1,3 @@
-
 from molde import Color
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIcon, QPen
@@ -26,23 +25,23 @@ class ModelSetupItems(CommonMenuItems):
 
     def _create_items(self):
         """Creates all TreeWidgetItems."""
-        self.item_top_general_settings = self.add_top_item('General Settings')
+        self.item_top_general_settings = self.add_top_item("General Settings")
         self.item_child_material = self.add_item("Material")
-        self.item_child_fluid = self.add_item('Fluid')
+        self.item_child_fluid = self.add_item("Fluid")
         self.item_child_mesh_setup = self.add_item("Mesh Setup")
         self.item_child_element_options = self.add_item("Element Options")
         self.item_child_degrees_of_freedom_decoupling = self.add_item("DOF Decoupling")
         self.item_child_volume_suppression = self.add_item("Volumes Suppression")
 
-        self.item_top_structural_model_setup = self.add_top_item('Structural Model Setup (Beta)')
+        self.item_top_structural_model_setup = self.add_top_item("Structural Model Setup (Beta)")
 
-        tooltip_html = '''
+        tooltip_html = """
                         <p><b>Structural Properties</b></p>
                         <p><span style="color:red;">
                         <b>Note:</b> The calculations for these structural properties are currently undergoing refinement.</span>
                         While we are actively working to ensure complete accuracy, please be aware that simulation results may
                         exhibit minor variations. We appreciate your understanding as we continue to improve the precision of our models.</p>
-                        '''
+                        """
         self.item_top_structural_model_setup.setToolTip(0, tooltip_html)
         path_image = str(ICON_DIR / "model_setup_items/structural_help.png")
         self.item_top_structural_model_setup.setIcon(0, QIcon(path_image))
@@ -185,7 +184,8 @@ class ModelSetupItems(CommonMenuItems):
     def _contains_property(self, property_name: str) -> bool:
 
         model = app().project.model
-        mesh = app().project.model.mesh
+        mesh = app().project.model.fe_mesh
+        geometry_info = app().project.model.geometry_info
         properties = app().project.model.properties
 
         property_dicts = [
@@ -202,9 +202,8 @@ class ModelSetupItems(CommonMenuItems):
         ]
 
         if property_name == "material":
-            if mesh.are_there_volumes_in_geometry():
-                volume_ids = mesh.geometry_information.get("volumes")
-                volume_ids.sort()
+            if (geometry_info is not None) and geometry_info.contains_solids():
+                volume_ids = sorted(geometry_info.solids)
                 volumes_with_material, volumes_without_material = properties.get_entities_with_and_without_property("material", volumes=volume_ids)
 
                 if not volumes_with_material:
@@ -212,7 +211,7 @@ class ModelSetupItems(CommonMenuItems):
 
                 if not volumes_without_material:
                     return True
-                
+
                 if volumes_without_material == volume_ids:
                     return False
 
@@ -221,15 +220,14 @@ class ModelSetupItems(CommonMenuItems):
                     if vol_id not in acoustic_volumes:
                         return False
 
-            else:
-                surface_ids = mesh.geometry_information.get("surfaces")
+            elif (geometry_info is not None) and geometry_info.surfaces:
+                surface_ids = sorted(geometry_info.surfaces)
                 _, surfaces_without_material = properties.get_entities_with_and_without_property("material", surfaces=surface_ids)
                 return not bool(len(surfaces_without_material))
 
         if property_name == "fluid":
-            if mesh.are_there_volumes_in_geometry():
-                volume_ids = mesh.geometry_information.get("volumes")
-                volume_ids.sort()
+            if (geometry_info is not None) and geometry_info.contains_solids():
+                volume_ids = sorted(geometry_info.solids)
                 volumes_with_fluid, volumes_without_fluid = properties.get_entities_with_and_without_property("fluid", volumes=volume_ids)
                 if not volumes_with_fluid:
                     return False
@@ -253,6 +251,9 @@ class ModelSetupItems(CommonMenuItems):
 
         # test for mesh. Not ideal, but it works. Since the mesh config is not part of the properties, the necessary check is performed here
         if property_name == "mesh_setup":
+            if mesh is None:
+                return False
+
             disconnected_nodes = bool(mesh.disconnected_nodes)
             collapsed_elements = bool(mesh.collapsed_elements_data)
             if collapsed_elements or disconnected_nodes:
@@ -312,9 +313,10 @@ class ModelSetupItems(CommonMenuItems):
 
         if property_name == "surface_thickness":
             if physical_domain == "structural":
-                if app().project.model.mesh is not None:
-                    volume_exists = app().project.model.mesh.are_there_volumes_in_geometry()
-                    if not volume_exists:
+                geometry_info = app().project.model.geometry_info
+
+                if geometry_info is not None:
+                    if not geometry_info.contains_solids():
                         return True
 
                     st_check = app().project.model.is_surface_thickness_properly_applied_in_model()
@@ -331,11 +333,11 @@ class ModelSetupItems(CommonMenuItems):
         """
 
         volume_exists = None
-        mesh = app().project.model.mesh
+        geometry_info = app().project.model.geometry_info
         toolbar = app().main_window.analysis_toolbar
 
-        if mesh is not None:
-            volume_exists = mesh.are_there_volumes_in_geometry()
+        if geometry_info is not None:
+            volume_exists = geometry_info.contains_solids()
             self.item_child_surface_thickness.setHidden(volume_exists)
             # self.item_child_distributed_loads.setHidden(volume_exists)
             # self.item_child_normal_pressure_load.setHidden(volume_exists)
@@ -387,7 +389,7 @@ class ModelSetupItems(CommonMenuItems):
 
     def _are_there_collapsed_elements(self, item_child) -> bool:
         if item_child.property_name == "mesh_setup":
-            mesh = app().project.model.mesh
+            mesh = app().project.model.fe_mesh
             if mesh is not None:
                 collapsed_elements = bool(mesh.collapsed_elements_data)
                 item_child.set_error(collapsed_elements)
@@ -397,7 +399,7 @@ class ModelSetupItems(CommonMenuItems):
 
     def _are_there_disconnected_nodes(self, item_child):
         if item_child.property_name == "mesh_setup":
-            mesh = app().project.model.mesh
+            mesh = app().project.model.fe_mesh
             if mesh is not None:
                 disconnected_nodes = bool(mesh.disconnected_nodes)
                 item_child.set_error(disconnected_nodes)
@@ -420,11 +422,7 @@ class ModelSetupItems(CommonMenuItems):
         physical_domain = physical_domain.lower()
         self.filter_items_according_to_analysis(analysis_type, physical_domain)
 
-        if app().project.model.mesh is None:
-            return
-
         for top_level_items in self.top_level_items:
-
             for index in range(top_level_items.childCount()):
                 item_child: ChildTreeWidgetItem = top_level_items.child(index)
                 item_child_name = self._find_qtree_widget_item_name(item_child)
@@ -475,7 +473,7 @@ class ModelSetupItems(CommonMenuItems):
                                     item_child.set_icon("other_compressor")
 
                 elif item_child.property_name == "volume_suppression":
-                    mesh = app().project.model.mesh
+                    mesh = app().project.model.fe_mesh
                     mesh_setup = app().project.model.mesh_setup
                     configured = bool(mesh_setup is not None and mesh_setup.suppressed_volume_ids)
                     applied = bool(mesh is not None and mesh.suppressed_volumes)
@@ -516,7 +514,7 @@ class ModelSetupItems(CommonMenuItems):
         app().main_window.input_ui.prescribe_structural_dof()
 
     def item_child_nodal_loads_callback(self):
-       app().main_window.input_ui.set_nodal_loads()
+        app().main_window.input_ui.set_nodal_loads()
 
     def item_child_distributed_loads_callback(self):
         app().main_window.input_ui.set_distributed_loads()
@@ -618,7 +616,7 @@ class ModelSetupItems(CommonMenuItems):
             self.line_color = Color(107, 137, 185).to_qt()
             self.background_color = Color(230, 230, 230).to_qt()
 
-        border_role = Qt.UserRole + 1
+        border_role = Qt.ItemDataRole.UserRole + 1
         border_pen = QPen(self.line_color)
         border_pen.setWidth(1)
 

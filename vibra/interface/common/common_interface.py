@@ -60,7 +60,7 @@ def check_input_entries(input_left: str, input_right: str, label: str):
     if value_right is None and isinstance(value_left, Number):
         value_right = 0.0
 
-    output = [value_left, value_right] 
+    output = [value_left, value_right]
 
     return output
 
@@ -100,7 +100,7 @@ def filter_outside_surfaces(surface_ids: list[int], bc_label: str) -> tuple[list
     inside_surfaces = list()
     outside_surfaces = list()
     for surf_id in surface_ids:
-        volume_ids = app().project.model.mesh.volumes_from_surface.get(surf_id)
+        volume_ids = app().project.model.geometry_info._surfaces_to_solids.get(surf_id)
         if len(volume_ids) == 1:
             outside_surfaces.append(surf_id)
         elif len(volume_ids) > 1:
@@ -216,8 +216,12 @@ def check_structural_model_frequency_controls():
 def check_mesh_related_issues(run_analysis_button: QPushButton):
 
     # disable run_analysis button if there are disconnected nodes or collapsed elements
-    mesh = app().project.model.mesh
-    assert mesh is not None
+    mesh = app().project.model.fe_mesh
+
+    # TODO: check if this makes sense. We probably want to check
+    # this before running the analysis, not during the setup.
+    if mesh is None:
+        return
 
     disconnected_nodes = bool(mesh.disconnected_nodes)
     collapsed_elements = bool(mesh.collapsed_elements_data)
@@ -267,7 +271,7 @@ def generate_mesh_and_finalize() -> bool:
 
     def _load_mesh_from_working_dir():
         logging.info("Loading generated mesh... [10/100]")
-        app().project.model.mesh = app().project.project_reader.read_mesh()
+        app().project.model.fe_mesh = app().project.project_reader.read_mesh()
 
         logging.info("Reading model properties... [65/100]")
         app().project.model.properties = app().project.project_reader.read_model_properties()
@@ -309,7 +313,7 @@ def generate_mesh_and_finalize() -> bool:
 
 
 def prompt_if_disconnected_nodes():
-    mesh = app().project.model.mesh
+    mesh = app().project.model.fe_mesh
     if mesh is None or not mesh.disconnected_nodes:
         return
 
@@ -361,7 +365,7 @@ def process_decoupling_actions():
         app().main_window.update_geometry_information()
 
         logging.info("Processing degress of freedom decoupling... [92/100]")
-        app().project.model.mesh.process_disconnected_nodes_criterion()
+        app().project.model.fe_mesh.process_disconnected_nodes_criterion()
 
         logging.info("Processing degress of freedom decoupling... [95/100]")
         app().main_window.update_plots()
@@ -388,13 +392,13 @@ def remove_all_properties_assigned_to_new_surfaces(new_surface_ids: list[int], r
         if not remove_adjacencies:
             continue
 
-        for line_from_surface in model.mesh.lines_from_surface.get(new_surface_id, []):
+        for line_from_surface in model.geometry_info._surfaces_to_curves.get(new_surface_id, []):
             for (property, line_id) in line_properties:
                 if line_from_surface != line_id:
                     continue
 
                 model.properties._remove_line_property(property, line_id)
-                for point_from_line in model.mesh.points_from_line.get(line_from_surface, []):
+                for point_from_line in model.geometry_info._curves_to_points.get(line_from_surface, []):
                     for (property, point_id) in point_properties:
                         if point_from_line != point_id:
                             continue
@@ -404,12 +408,12 @@ def remove_all_properties_assigned_to_new_surfaces(new_surface_ids: list[int], r
 
 def restore_mesh_data_modified_by_decoupling():
 
-    mesh = app().project.model.mesh
+    mesh = app().project.model.fe_mesh
     if mesh.cache_nodal_coordinates is None:
         return
 
     mesh.restore_data_from_cache()
-    mesh.process_upwards_adjacencies_from_entities()
+    mesh.process_upwards_adjacencies()
 
     # if self.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
     #     self.mesh.cache_mesh_information()
@@ -419,7 +423,7 @@ def restore_mesh_data_modified_by_decoupling():
 
 def check_conflicting_model_properties(volume_ids: list[int], domain: str):
     """
-    Use this function to map and remove the model properties that will 
+    Use this function to map and remove the model properties that will
     cause conflicts if the domain is changed.
 
     Parameters
@@ -474,7 +478,7 @@ def check_conflicting_model_properties(volume_ids: list[int], domain: str):
             case "point":
                 properties._remove_point_property(prop_name, point_id=entity_id)
             case "node":
-                properties._remove_nodal_property(prop_name, node_id=entity_id)
+                properties._remove_nodal_property(prop_name, nodal_id=entity_id)
 
     if not surfaces_with_decoupling:
         return False

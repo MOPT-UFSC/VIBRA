@@ -37,7 +37,11 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
 
     @property
     def mesh(self):
-        return app().project.model.mesh
+        return app().project.model.fe_mesh
+
+    @property
+    def geometry_info(self):
+        return app().project.model.geometry_info
 
     @property
     def properties(self):
@@ -178,7 +182,7 @@ class AnechoicTerminationInputs(AnechoicTerminationInputs_UI):
 
         for surface_id in surface_ids:
 
-            volume_ids = self.model.mesh.volumes_from_surface[surface_ids[0]]
+            volume_ids = self.geometry_info._surfaces_to_solids.get(surface_ids[0], [])
             if len(surface_ids) > 1 and len(volume_ids) > 1:
 
                 title = "Undefined volume"

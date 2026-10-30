@@ -20,7 +20,8 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
         app().main_window.selection.volume_selection_mode = True
 
         self.model = app().project.model
-        self.mesh = app().project.model.mesh
+        self.mesh = app().project.model.fe_mesh
+        self.geometry_info = app().project.model.geometry_info
         self.properties = app().project.model.properties
 
         self._config_window()
@@ -200,8 +201,7 @@ class ProportionalDampingInput(ProportionalDampingInputs_UI):
             
         volume_ids = list()
         if attribute_type == AttributionBodiesType.ALL_BODIES:
-            if "volumes" in self.mesh.geometry_information:
-                volume_ids = self.mesh.geometry_information["volumes"]
+            volume_ids = self.geometry_info.solids
 
         elif attribute_type == AttributionBodiesType.SELECTED_BODIES:
             input_ids = self.lineEdit_selection_id.text()

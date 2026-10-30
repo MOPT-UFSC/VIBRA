@@ -15,7 +15,8 @@ import numpy as np
 class DegreesOfFreedomDecoupling:
     def __init__(self, model: "Model"):
         self.model = model
-        self.mesh = model.mesh
+        self.mesh = model.fe_mesh
+        self.geometry_info = model.geometry_info
         self.properties = model.properties
 
         self.initialize()
@@ -28,7 +29,7 @@ class DegreesOfFreedomDecoupling:
         self.volume_to_surfaces_map = defaultdict(list)
 
     def gathering_decoupling_information(self):
-        """ This method gathers all existing decoupling 
+        """ This method gathers all existing decoupling
             information from surface properties.
         """
         self.decouple_info.clear()
@@ -49,7 +50,7 @@ class DegreesOfFreedomDecoupling:
                 max_surface_id += 1
                 vol_id =  data.get("volume_to_decouple")
 
-                if isinstance(vol_id, int):    
+                if isinstance(vol_id, int):
                     self.decouple_info[surface_id] = vol_id
                     self.volume_to_surfaces_map[vol_id].append(surface_id)
 
@@ -122,7 +123,7 @@ class DegreesOfFreedomDecoupling:
 
 
     def get_new_surfaces_mapping(self):
-        """ 
+        """
         This method returns a dictionary that maps all surface IDs from decoupling
         surfaces in relation to the new surface IDs that will be created.
 
@@ -143,7 +144,7 @@ class DegreesOfFreedomDecoupling:
 
     def update_nodal_coordinates(self):
         """ This method processes the indices and nodal coordinates relative to
-            the new nodes, modifying the nodal_coordinates, nodes_from_surface, 
+            the new nodes, modifying the nodal_coordinates, nodes_from_surface,
             and nodes_from_volume attributes.
         """
         self.gathering_decoupling_information()
@@ -279,7 +280,7 @@ class DegreesOfFreedomDecoupling:
 
 
     def get_line_element_tag_and_nodes_number(self, input_line_id: int):
-        """ Returns the 1D element tag and the number of 
+        """ Returns the 1D element tag and the number of
             nodes per element.
 
             Parameters
@@ -294,14 +295,14 @@ class DegreesOfFreedomDecoupling:
 
             n_nodes: int
                 The number of nodes from 1D element.
-        """        
+        """
         for _, line_id, tag, n_nodes, *_ in self.mesh.lines_connectivity:
             if line_id == input_line_id:
                 return tag, n_nodes
 
 
     def get_surface_element_tag_and_nodes_number(self, input_surface_id: int):
-        """ Returns the 2D element tag and the number of 
+        """ Returns the 2D element tag and the number of
             nodes per element.
 
             Parameters
@@ -438,7 +439,7 @@ class DegreesOfFreedomDecoupling:
             for surf_id in self.mesh.cache_surfaces_from_volume.get(vol_id, []):
                 if surf_id == surface_id:
                     continue
-                
+
                 line_ids |= set(self.mesh.cache_lines_from_surface.get(surf_id))
 
             line_ids -= set(lines_from_surface)
@@ -533,7 +534,7 @@ class DegreesOfFreedomDecoupling:
             new_node_id = self.nodes_mapping.get(node_from_point)
             if new_node_id is None:
                 continue
-        
+
             self.mesh.nodes_from_points[new_point_id] = int(new_node_id)
             self.mesh.points_from_nodes[int(new_node_id)] = new_point_id
 
@@ -559,7 +560,7 @@ class DegreesOfFreedomDecoupling:
 
     def update_geometry_related_information(self):
         """ This method updates the geometry-related information,
-            precisely, the number of each entity and the properties 
+            precisely, the number of each entity and the properties
             associated with them, beyond the upward and downward
             adjacencies from entities.
         """
@@ -609,7 +610,7 @@ class DegreesOfFreedomDecoupling:
             for i, line_id in enumerate(lines_from_surface[surf_id]):
 
                 new_line_id = int(new_line_ids[i])
-                line_ids |= set({new_line_id})               
+                line_ids |= set({new_line_id})
 
                 new_point_ids = [self.points_mapping[point_id] for point_id in points_from_line[line_id]]
                 self.mesh.points_from_line[new_line_id] = new_point_ids
@@ -626,6 +627,16 @@ class DegreesOfFreedomDecoupling:
         self.mesh.surfaces_from_line = maps_values_to_keys(deepcopy(self.mesh.lines_from_surface))
         self.mesh.lines_from_point = maps_values_to_keys(deepcopy(self.mesh.points_from_line))
 
+        if self.geometry_info is not None:
+            # TODO: this is a workaround, fix later
+
+            self.geometry_info.points = list(point_ids)
+            self.geometry_info.curves = list(line_ids)
+            self.geometry_info.surfaces = list(surface_ids)
+            self.geometry_info._solids_to_surfaces = deepcopy(self.mesh.surfaces_from_volume)
+            self.geometry_info._surfaces_to_curves = deepcopy(self.mesh.lines_from_surface)
+            self.geometry_info._curves_to_points = deepcopy(self.mesh.points_from_line)
+            self.geometry_info._create_inverse_maps()
 
     def process_degrees_of_freedom_decoupling(self):
         """ This method processes all required actions to decouple
@@ -649,7 +660,7 @@ class DegreesOfFreedomDecoupling:
         self.mesh.export_face_elements_connectivity("face_connectivities.dat")
 
 def maps_values_to_keys(input_data: dict):
-    """ This function returns a dictionary that maps the 
+    """ This function returns a dictionary that maps the
         values of the original dictionary to its keys.
 
         Parameters

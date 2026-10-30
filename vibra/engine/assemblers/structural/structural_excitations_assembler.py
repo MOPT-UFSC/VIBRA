@@ -38,8 +38,11 @@ class StructuralExcitationsAssembler:
 
     @property
     def mesh(self):
-        return self.assembler.model.mesh
+        return self.assembler.model.fe_mesh
 
+    @property
+    def geometry_info(self):
+        return self.assembler.model.geometry_info
 
     @property
     def properties(self):
@@ -455,7 +458,8 @@ class StructuralExcitationsAssembler:
             if nodes is None:
                 continue
 
-            for surface_id in self.mesh.surfaces_from_line[line_id]:
+            assert self.geometry_info is not None
+            for surface_id in self.geometry_info._curves_to_surfaces.get(line_id, []):
                 connectivities_from_surface = self.mesh.get_connectivity_from_surface(surface_id)
                 rows = np.sum(np.isin(connectivities_from_surface, nodes), axis=1) == 2
 

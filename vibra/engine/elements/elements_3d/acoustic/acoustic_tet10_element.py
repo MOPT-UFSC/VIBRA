@@ -101,7 +101,7 @@ class AcousticTetrahedron10(Acoustic3DElement, Tetrahedron10):
         _, dphi = self.get_shape_functions_and_derivatives(ssx, ttx, rrx)
 
         # nodal coordinates from element
-        coords = self.model.mesh.nodal_coordinates[node_ids, 1:]
+        coords = self.model.fe_mesh.nodal_coordinates[node_ids, 1:]
 
         # Jacobian matrix
         jac = dphi @ coords

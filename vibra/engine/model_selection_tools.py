@@ -16,7 +16,11 @@ class ModelSelectionTools:
 
     @property
     def mesh(self):
-        return self.model.mesh
+        return self.model.fe_mesh
+
+    @property
+    def geometry_info(self):
+        return self.model.geometry_info
 
     @property
     def domains_processor(self):
@@ -102,16 +106,16 @@ class ModelSelectionTools:
                     all_ids = list(self.mesh.solids_connectivity[:, 0])
 
                 case "points":
-                    all_ids = self.mesh.all_point_ids()
+                    all_ids = self.geometry_info.points
                     
                 case "lines":
-                    all_ids = self.mesh.all_line_ids()
+                    all_ids = self.geometry_info.curves
 
                 case "surfaces":
-                    all_ids = self.mesh.all_surface_ids()
+                    all_ids = self.geometry_info.surfaces
 
                 case "volumes":
-                    all_ids = self.mesh.all_volume_ids()
+                    all_ids = self.geometry_info.solids
 
                 case _:
                     return None, None

@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import pytest
-from typing_extensions import TYPE_CHECKING
 
 from vibra.engine.assemblers.structural.structural_assembler import StructuralAssembler
 from vibra.engine.serialization.project_paths import ProjectPaths

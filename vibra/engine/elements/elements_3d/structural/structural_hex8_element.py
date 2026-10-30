@@ -274,7 +274,7 @@ class StructuralHexahedron8(Structural3DElement, Hexahedron8):
         elem_nodes = self.connectivities[element_id, :]
 
         # element nodal coords
-        coords = self.model.mesh.nodal_coordinates[elem_nodes, 1:4]
+        coords = self.model.fe_mesh.nodal_coordinates[elem_nodes, 1:4]
 
         # Jacobian matrix
         jac = self.dphi @ coords
@@ -489,7 +489,7 @@ class StructuralHexahedron8(Structural3DElement, Hexahedron8):
             elem_nodes = self.connectivities[element_id, :]
 
             # element nodal coords
-            coords = self.model.mesh.nodal_coordinates[elem_nodes, 1:4]
+            coords = self.model.fe_mesh.nodal_coordinates[elem_nodes, 1:4]
 
             # obtain the analytical B_mean and volume
             B_mean, V = get_B_analytic(coords)
@@ -508,7 +508,7 @@ class StructuralHexahedron8(Structural3DElement, Hexahedron8):
             # hourglass stabilization matrix K_hg
             K_hg = compute_hourglass_stiffness(K_unif, coords, dphi_t_an, material, e_vol[0])
             # K_hg = calcular_k_stab_corrigido(coords, material.elasticity_modulus, material.poisson_ratio, 0.1)
-            # K_hg = matricesH8S_FB(element_id, self.model.mesh.nodal_coordinates, self.connectivities, material.elasticity_modulus, material.poisson_ratio, material.material_density, 0, kappa=0.125)
+            # K_hg = matricesH8S_FB(element_id, self.model.fe_mesh.nodal_coordinates, self.connectivities, material.elasticity_modulus, material.poisson_ratio, material.material_density, 0, kappa=0.125)
 
             ## PATCH TEST FOR ORTHOGONAL STABILIZATION ()
             
@@ -571,7 +571,7 @@ class StructuralHexahedron8(Structural3DElement, Hexahedron8):
         # elem_nodes = self.connectivities[element_id, :]
 
         # # element nodal coords
-        # coords = self.model.mesh.nodal_coordinates[elem_nodes, 1:4]
+        # coords = self.model.fe_mesh.nodal_coordinates[elem_nodes, 1:4]
 
 
         # if element_id < 2:
@@ -639,7 +639,7 @@ class StructuralHexahedron8(Structural3DElement, Hexahedron8):
             Ue = solution[indices.flatten(), :]
 
         # get the material ID of the element
-        material = self.get_material(self.model.mesh.solids_connectivity[element_id, 1])
+        material = self.get_material(self.model.fe_mesh.solids_connectivity[element_id, 1])
 
         # constitutive material law
         D, _ = self.get_constitutive_model(material.identifier, model_type="linear-isotropic")

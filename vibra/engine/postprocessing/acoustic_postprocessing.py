@@ -27,12 +27,16 @@ class AcousticPostprocessing:
 
         self.model = model
 
-        self.reset_attributes()        
+        self.reset_attributes()
 
 
     @property
     def mesh(self) -> Optional[Mesh]:
-        return self.model.mesh
+        return self.model.fe_mesh
+
+    @property
+    def geometry_info(self):
+        return self.model.geometry_info
 
 
     @property
@@ -208,7 +212,7 @@ class AcousticPostprocessing:
 
         volumes_to_fluid_map: dict[Fluid, list[int]] = defaultdict(list)
 
-        for vol_id, elements in self.model.mesh.elements_from_volume.items():
+        for vol_id, elements in self.model.fe_mesh.elements_from_volume.items():
             fluid = self.model.properties._get_property("fluid", volume=vol_id)
             if not isinstance(fluid, Fluid):
                 continue
@@ -230,7 +234,7 @@ class AcousticPostprocessing:
 
                 for vol_id in volume_ids:
                     elements = self.model.mesh.elements_from_volume.get(vol_id)
-                    node_ids = np.unique(self.model.mesh.solids_connectivity[elements, 4:].ravel()).astype(int)
+                    node_ids = np.unique(self.model.fe_mesh.solids_connectivity[elements, 4:].ravel()).astype(int)
                     fluid_pressures[[node_ids]] = _fluid.pressure
 
         # avoid the division-by-zero error
@@ -447,7 +451,7 @@ class AcousticPostprocessing:
         # output_data[:, 0] = ordered_nodes
 
         # for row, node_id in enumerate(ordered_nodes):
-        #     output_data[row, 1:] =  self.assembler.model.mesh.nodal_normals_data[node_id]
+        #     output_data[row, 1:] =  self.assembler.model.fe_mesh.nodal_normals_data[node_id]
 
         # fname = f"nodal_normals_data_surface_{surface_id}.dat"
         # header = "Node index || x-axis component [m] || y-axis component [m] || z-axis component [m]"
@@ -553,18 +557,18 @@ class AcousticPostprocessing:
             # Aeff_in = np.ones((nodes_input.size, 1), dtype=float) * (A_in / nodes_input.size)
             # Aeff_out = np.ones((nodes_output.size, 1), dtype=float) * (A_out / nodes_output.size)
 
-            volumes_in = self.mesh.volumes_from_surface.get(input_surface_id)
+            volumes_in = self.geometry_info._surfaces_to_solids.get(input_surface_id)
             if volumes_in is None:
                 return None, None
 
-            volumes_out = self.mesh.volumes_from_surface.get(output_surface_id)
+            volumes_out = self.geometry_info._surfaces_to_solids.get(output_surface_id)
             if volumes_out is None:
                 return None, None
 
             # if isinstance(volumes_in, list) and len(volumes_in) == 1:
             #     volume_in = volumes_in[0]
 
-            if isinstance(volumes_out, list) and len(volumes_out) == 1:
+            if isinstance(volumes_out, (list, tuple)) and len(volumes_out) == 1:
                 volume_out = volumes_out[0]
 
             # logging.info("Processing the transmission loss... [50/100]")
@@ -745,18 +749,18 @@ class AcousticPostprocessing:
         acoustic_loads = 0.0
 
         if surface_ids is None:
-            surface_ids = np.unique(self.model.mesh.faces_connectivity[:, 1]).astype(int)
+            surface_ids = np.unique(self.model.fe_mesh.faces_connectivity[:, 1]).astype(int)
 
         t0 = perf_counter()
 
         for surface_id in surface_ids:
-            if len(self.model.mesh.volumes_from_surface.get(surface_id)) != 1:
+            if len(self.model.geometry_info._surfaces_to_solids.get(surface_id)) != 1:
                 continue
 
-            rows = self.model.mesh.faces_connectivity[:, 1] == surface_id
+            rows = self.model.fe_mesh.faces_connectivity[:, 1] == surface_id
 
-            surface_elements_connectivities = self.model.mesh.faces_connectivity[rows, :]
-            surface_elements_normals = self.model.mesh.get_element_face_normal_batched(surface_elements_connectivities)
+            surface_elements_connectivities = self.model.fe_mesh.faces_connectivity[rows, :]
+            surface_elements_normals = self.model.fe_mesh.get_element_face_normal_batched(surface_elements_connectivities)
 
             element_2d.reorder_connect(surface_elements_connectivities[:, 4:])
             acoustic_loads += element_2d.acoustic_pressure_load(nodal_solution)

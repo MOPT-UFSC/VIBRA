@@ -34,7 +34,7 @@ class StructuralStress3dPlotFrequencyInputs(StructuralStress3dPlotFrequencyInput
 
     @property
     def mesh(self):
-        return app().project.model.mesh
+        return app().project.model.fe_mesh
 
     @property
     def properties(self):

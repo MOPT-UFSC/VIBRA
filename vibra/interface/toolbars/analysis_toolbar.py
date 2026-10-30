@@ -40,7 +40,7 @@ class AnalysisToolbar(QToolBar):
 
     @property
     def mesh(self):
-        return app().project.model.mesh
+        return app().project.model.fe_mesh
 
     def _load_icons(self):
         self.configure_analysis_icon = Icon(":/icons/settings.png")

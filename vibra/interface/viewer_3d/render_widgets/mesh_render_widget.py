@@ -76,10 +76,10 @@ class MeshRenderWidget(CommonRenderWidget):
     def get_logo_for_current_theme(self) -> str:
         if app().config.user_preferences.interface_theme == "light":
             return "vibra_colored_light_background.png"
-        
-        
+
+
         return "vibra_colored_dark_background.png"
-    
+
     def set_theme(self, *args, **kwargs):
         self.update_theme()
 
@@ -137,7 +137,7 @@ class MeshRenderWidget(CommonRenderWidget):
         scale_bar_label_property.SetFontSize(font_size_px)
 
     def update_plot(self, reset_camera=True):
-        mesh = app().project.model.mesh
+        mesh = app().project.model.fe_mesh
         if mesh is None:
             return
 
@@ -195,7 +195,7 @@ class MeshRenderWidget(CommonRenderWidget):
         # We hide them painting the cells as transparent.
         self.nodes_actor.SetVisibility(True)
 
-        mesh = app().project.model.mesh
+        mesh = app().project.model.fe_mesh
         mesh_error = mesh.collapsed_elements_data or mesh.disconnected_nodes
         distinguished_solids = app().main_window.distinguished_solids
 
@@ -289,7 +289,10 @@ class MeshRenderWidget(CommonRenderWidget):
         self.solids_actor.paint_solids(selection_faces_color, solids)
         self.edges_actor.configure_appearance()
 
-        mesh = app().project.model.mesh
+        mesh = app().project.model.fe_mesh
+        if mesh is None:
+            return
+
         mesh_error = mesh.collapsed_elements_data or mesh.disconnected_nodes
         if mesh_error:
             self.add_problematic_mesh_legend()
@@ -329,7 +332,7 @@ class MeshRenderWidget(CommonRenderWidget):
         if not isinstance(self.solids_actor, SolidsActor):
             return
 
-        mesh = app().project.model.mesh
+        mesh = app().project.model.fe_mesh
         if mesh is None:
             return
 
@@ -351,11 +354,15 @@ class MeshRenderWidget(CommonRenderWidget):
         if not isinstance(self.solids_actor, HollowSolidsActor):
             return
 
-        mesh = app().project.model.mesh
+        mesh = app().project.model.fe_mesh
         if mesh is None:
             return
 
-        if not mesh.are_there_volumes_in_geometry():
+        geometry_info = app().project.model.geometry_info
+        if geometry_info is None:
+            return
+
+        if not geometry_info.contains_solids():
             return
 
         if not isinstance(self._cache_full_solids_actor, SolidsActor):
@@ -375,7 +382,7 @@ class MeshRenderWidget(CommonRenderWidget):
     def _distinguished_cells(self, distinguished_solids):
         cells = []
         for i in distinguished_solids:
-            visible_index = self.solids_actor.visible_indexes.get(i, -1)
+            visible_index = self.solids_actor.visible_indices.get(i, -1)
             if visible_index >= 0:
                 cells.append(visible_index)
         return cells
@@ -463,10 +470,10 @@ class MeshRenderWidget(CommonRenderWidget):
     def add_problematic_mesh_legend(self):
         legend_actor = LegendActor()
 
-        if app().project.model.mesh.disconnected_nodes:
+        if app().project.model.fe_mesh.disconnected_nodes:
             legend_actor.add_item("Disconnected nodes", color_names.GREEN)
 
-        if app().project.model.mesh.collapsed_elements_data:
+        if app().project.model.fe_mesh.collapsed_elements_data:
             legend_actor.add_item("Collapsed element nodes", color_names.ORANGE)
 
         self.add_actors(legend_actor)

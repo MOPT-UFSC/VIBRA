@@ -12,7 +12,7 @@ class GetSphereSelectionInformation(GetSphereSelectionInformation_UI):
         app().main_window.set_input_widget(self)
 
         self.model = app().project.model
-        self.mesh = app().project.model.mesh
+        self.mesh = app().project.model.fe_mesh
         self.properties = app().project.model.properties
 
         self.selection_id = selection_id

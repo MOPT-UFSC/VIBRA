@@ -45,7 +45,7 @@ class Line2(Element1D):
 
         self.connectivities = None
         self.element_label = ""
-        self.nodal_coordinates = self.model.mesh.nodal_coordinates
+        self.nodal_coordinates = self.model.fe_mesh.nodal_coordinates
 
         self.define_integration_points()
         self.process_shape_functions_and_derivatives()

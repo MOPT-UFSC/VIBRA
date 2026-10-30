@@ -53,7 +53,11 @@ class SetFluidInputs(SetFluidInputs_UI):
 
     @property
     def mesh(self):
-        return app().project.model.mesh
+        return app().project.model.fe_mesh
+
+    @property
+    def geometry_info(self):
+        return app().project.model.geometry_info
 
     @property
     def properties(self):
@@ -279,8 +283,7 @@ class SetFluidInputs(SetFluidInputs_UI):
         attribution_type = self.comboBox_attribution_type.currentIndex()
 
         if attribution_type == AttributionType.ALL_BODIES:
-            if "volumes" in self.mesh.geometry_information:
-                volume_ids = self.mesh.geometry_information["volumes"]
+            volume_ids = self.geometry_info.solids
 
         else:
             input_ids = self.lineEdit_selection_id.text()
@@ -305,7 +308,7 @@ class SetFluidInputs(SetFluidInputs_UI):
             self.properties._remove_volume_property("material", volume_id)
             self.properties._set_property("fluid", selected_fluid, volume=volume_id)
 
-            for surface_id in self.mesh.surfaces_from_volume[volume_id]:
+            for surface_id in self.geometry_info._solids_to_surfaces[volume_id]:
                 self.properties._set_property("fluid", selected_fluid, surface=surface_id)
 
         self.actions_to_finalize(close_window)
@@ -323,7 +326,7 @@ class SetFluidInputs(SetFluidInputs_UI):
                 elif selection_type == "volumes":
                     self.properties._remove_volume_property("fluid", id)
                     self.properties._remove_volume_property("fluid_id", id)
-                    for surface_id in self.mesh.surfaces_from_volume[id]:
+                    for surface_id in self.geometry_info._solids_to_surfaces[id]:
                         self.properties._remove_surface_property("fluid", surface_id)
                         self.properties._remove_surface_property("fluid_id", surface_id)
     

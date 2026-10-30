@@ -62,7 +62,11 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
 
     @property
     def mesh(self):
-        return app().project.model.mesh
+        return app().project.model.fe_mesh
+
+    @property
+    def geometry_info(self):
+        return app().project.model.geometry_info
 
     @property
     def properties(self):
@@ -563,7 +567,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
     def get_surfaces_from_selected_volumes(self, volume_ids: list[int]):
         surfaces_from_volumes = []
         for volume_id in volume_ids:
-            for surface_id in self.mesh.surfaces_from_volume.get(volume_id):
+            for surface_id in self.geometry_info._solids_to_surfaces.get(volume_id):
                 if surface_id is None:
                     continue
 
@@ -696,8 +700,7 @@ class ViscousThermalLossModelInputs(ViscousThermalModelInputs_UI):
             if assignment_type == AttributionBodiesType.ALL_BODIES:
                 self.models = []
 
-                if "volumes" in self.mesh.geometry_information:
-                    volume_ids = self.mesh.geometry_information["volumes"]
+                volume_ids = self.geometry_info.solids
 
             else:
                 input_ids = self.lineEdit_selection_id.text()

@@ -114,7 +114,7 @@ class AcousticAssembler:
                 imag_values = np.array(data["imag_values"])
                 complex_values = real_values + 1j * imag_values
 
-            nodes = self.model.mesh.get_nodes_from_surface(surface_id)
+            nodes = self.model.fe_mesh.get_nodes_from_surface(surface_id)
             if nodes is None:
                 continue
 
@@ -154,7 +154,7 @@ class AcousticAssembler:
             if property != "acoustic_pressure":
                 continue
 
-            nodes = self.model.mesh.get_nodes_from_surface(surface_id)
+            nodes = self.model.fe_mesh.get_nodes_from_surface(surface_id)
             if nodes is None:
                 continue
 
@@ -180,7 +180,7 @@ class AcousticAssembler:
 
     def get_fluid_properties_from_surface(self, surface_id: int):
 
-        volumes_from_surface = self.model.mesh.volumes_from_surface[surface_id]
+        volumes_from_surface = self.model.geometry_info._surfaces_to_solids.get(surface_id, [])
         if len(volumes_from_surface) != 1:
             return None, None
         
@@ -361,7 +361,7 @@ class AcousticAssembler:
             C_0 = fluid_data.get("C_0")
 
             # 3D elements of the volume
-            element_ids = self.model.mesh.elements_from_volume.get(vol_id)
+            element_ids = self.model.fe_mesh.elements_from_volume.get(vol_id)
 
             # auxiliar vector
             aux_ones = np.ones(len(element_ids), dtype=float)

@@ -166,8 +166,8 @@ class AcousticImpedancesAssembler:
             # normalize data type to array
             complex_values_array = self.assembler.get_value_in_array_form(complex_values, ravel=True)
 
-            surf_elements = list(self.model.mesh.elements_from_surface.get(surface_id))
-            surf_connect = self.model.mesh.get_connectivity_from_surface(surface_id)
+            surf_elements = list(self.model.fe_mesh.elements_from_surface.get(surface_id))
+            surf_connect = self.model.fe_mesh.get_connectivity_from_surface(surface_id)
 
             for i, el in enumerate(surf_elements):
                 aux_connect[el] = surf_connect[i]
@@ -235,15 +235,15 @@ class AcousticImpedancesAssembler:
             p_inc = self.assembler.get_value_in_array_form(data.get("values")[0], ravel=True)
             Z_ipw = self.assembler.get_value_in_array_form(density * speed_of_sound, ravel=True)
 
-            rows = self.model.mesh.faces_connectivity[:, 1] == surface_id
-            surface_elements_connectivities = self.model.mesh.faces_connectivity[rows, :]
-            surface_elements_normals = self.model.mesh.get_element_face_normal_batched(surface_elements_connectivities)
+            rows = self.model.fe_mesh.faces_connectivity[:, 1] == surface_id
+            surface_elements_connectivities = self.model.fe_mesh.faces_connectivity[rows, :]
+            surface_elements_normals = self.model.fe_mesh.get_element_face_normal_batched(surface_elements_connectivities)
 
             # elements_connectivities.extend(surface_elements_connectivities[:, 4:])
             # elements_normals.extend(surface_elements_normals)
 
-            surf_elements = list(self.model.mesh.elements_from_surface.get(surface_id))
-            surf_connect = self.model.mesh.get_connectivity_from_surface(surface_id) 
+            surf_elements = list(self.model.fe_mesh.elements_from_surface.get(surface_id))
+            surf_connect = self.model.fe_mesh.get_connectivity_from_surface(surface_id) 
 
             for i, el in enumerate(surf_elements):
                 connectivities[el] = self.model.get_mapped_nodes(surf_connect[i], "acoustic")
@@ -320,17 +320,17 @@ class AcousticImpedancesAssembler:
             if new_surface_id is None:
                 continue
 
-            surf_elements_A = list(self.model.mesh.elements_from_surface.get(surface_ids))
-            surf_elements_B = list(self.model.mesh.elements_from_surface.get(new_surface_id))
+            surf_elements_A = list(self.model.fe_mesh.elements_from_surface.get(surface_ids))
+            surf_elements_B = list(self.model.fe_mesh.elements_from_surface.get(new_surface_id))
 
             for i, el in enumerate(surf_elements_A):
-                nodes_from_element = self.model.mesh.faces_connectivity[el, 4:]
+                nodes_from_element = self.model.fe_mesh.faces_connectivity[el, 4:]
                 connectivity_surface_A[el] = nodes_from_element
 
                 surface_data_A[el] = Z_tr
 
             for i, el in enumerate(surf_elements_B):
-                nodes_from_element = self.model.mesh.faces_connectivity[el, 4:]
+                nodes_from_element = self.model.fe_mesh.faces_connectivity[el, 4:]
                 connectivity_surface_B[el] = nodes_from_element
 
                 surface_data_B[el] = Z_tr
@@ -396,13 +396,13 @@ class AcousticImpedancesAssembler:
                 if new_surface_id is None:
                     continue
 
-                surf_elements_A = list(self.model.mesh.elements_from_surface.get(surface_ids))
-                surf_elements_B = list(self.model.mesh.elements_from_surface.get(new_surface_id))
+                surf_elements_A = list(self.model.fe_mesh.elements_from_surface.get(surface_ids))
+                surf_elements_B = list(self.model.fe_mesh.elements_from_surface.get(new_surface_id))
 
                 for i, el in enumerate(surf_elements_A):
 
                     U_rms = 0
-                    nodes_from_element = self.model.mesh.faces_connectivity[el, 4:]
+                    nodes_from_element = self.model.fe_mesh.faces_connectivity[el, 4:]
                     connectivity_surface_A[el] = nodes_from_element
 
                     # if solution is not None:
@@ -417,7 +417,7 @@ class AcousticImpedancesAssembler:
                 for i, el in enumerate(surf_elements_B):
 
                     U_rms = 0
-                    nodes_from_element = self.model.mesh.faces_connectivity[el, 4:]
+                    nodes_from_element = self.model.fe_mesh.faces_connectivity[el, 4:]
                     connectivity_surface_B[el] = nodes_from_element
 
                     # if solution is not None:

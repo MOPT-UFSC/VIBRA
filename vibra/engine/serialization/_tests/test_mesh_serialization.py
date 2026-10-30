@@ -15,7 +15,7 @@ from vibra.engine.solution.modal_solution import ModalSolution
 
 
 def test_write_and_read_mesh_project(fluid, datadir: Path):
-    mesh_path = PROJECT_DIR / "data/examples/mesh_files/cavities_60mm_large.nas"
+    mesh_path = PROJECT_DIR / "examples/mesh_files/cavities_60mm_large.nas"
     project_path = datadir / "project.vibra"
 
     project_a = Project()
@@ -52,7 +52,7 @@ def test_write_and_read_mesh_project(fluid, datadir: Path):
 
 def test_compare_interface_based_mesh_project():
     project_path = PROJECT_DIR / "validation_files/test_projects/cavities.vibra"
-    mesh_path = PROJECT_DIR / "data/examples/mesh_files/cavities_60mm_large.nas"
+    mesh_path = PROJECT_DIR / "examples/mesh_files/cavities_60mm_large.nas"
 
     project_interface = Project().load_project(project_path)
 

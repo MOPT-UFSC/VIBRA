@@ -8,6 +8,7 @@ from vibra import PROJECT_DIR
 from vibra.engine.assemblers.acoustic.acoustic_assembler import AcousticAssembler
 from vibra.engine.model import Model
 from vibra.engine.properties.fluid import Fluid
+from vibra.engine.serialization.mesh_reader import MeshReader
 from vibra.engine.serialization.project_paths import ProjectPaths
 from vibra.engine.solvers import HarmonicSolver
 from vibra.interface.user_input.data_handler.file_handlers.file_handler import FileHandler
@@ -18,16 +19,11 @@ def _acoustic_model_nastran(path: str, fluid: Fluid) -> Model:
     # mesh_setup = dict(minimum_element_size=50, maximum_element_size=50)
 
     model = Model()
-    model.set_geometry_path(path)
-    model.set_length_unit()
-    model.set_geometry_quality_factor()
-    model.initialize_mesh()
-    # model.set_mesh_setup(mesh_setup)
-    model.process_mesh_data(path)
+    model.fe_mesh, model.geometry_info = MeshReader(path).read_mesh_and_info()
 
     for vol_id in [1, 2]:
         model.properties._set_property("fluid", fluid, volume=vol_id)
-        for surf_id in model.mesh.surfaces_from_volume.get(vol_id):
+        for surf_id in model.geometry_info._solids_to_surfaces.get(vol_id, []):
             model.properties._set_property("fluid", fluid, surface=surf_id)
 
     # # Normal surface velocity data
@@ -88,7 +84,7 @@ def _solve_harmonic_problem(datadir, model: "Model", path: str):
     model.solution = harmonic_solver.solve_direct(print_log=True)
     nodal_solution = model.solution.acoustic_solution
 
-    output_surface_nodes = model.mesh.get_nodes_from_surface(11)
+    output_surface_nodes = model.fe_mesh.get_nodes_from_surface(11)
     average_solution = np.average(nodal_solution[output_surface_nodes, :], axis=0)
 
     results_path = dirname(path) + "/acoustic_pressures_reference.xlsx"

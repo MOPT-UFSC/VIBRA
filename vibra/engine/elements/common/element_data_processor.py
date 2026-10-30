@@ -42,7 +42,7 @@ class ElementDataProcessor:
 
         stacked_coords = np.zeros((nel, self.dof_per_element, 3), dtype=float)
         for j in range(self.dof_per_element):
-            stacked_coords[:, j, :] = self.model.mesh.nodal_coordinates[reduced_connect[:, j], 1:4]
+            stacked_coords[:, j, :] = self.model.fe_mesh.nodal_coordinates[reduced_connect[:, j], 1:4]
 
         return stacked_coords
 

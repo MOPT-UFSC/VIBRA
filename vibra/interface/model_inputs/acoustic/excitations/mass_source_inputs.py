@@ -41,11 +41,12 @@ class MassSourceInputs(MassSourceInputs_UI):
 
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
-        
+
         self.model = app().project.model
-        self.mesh = app().project.model.mesh
+        self.mesh = app().project.model.fe_mesh
+        self.geometry_info = app().project.model.geometry_info
         self.properties = app().project.model.properties
-        
+
         self._config_window()
         self._initialize()
         self._configure_qt_variables()
@@ -195,7 +196,7 @@ class MassSourceInputs(MassSourceInputs_UI):
                 self.tabWidget_main.setCurrentIndex(TabIndex.CONSTANT_DATA)
                 self.lineEdit_real_value.setText(str(data["real_values"][0]))
                 self.lineEdit_imag_value.setText(str(data["imag_values"][0]))
-    
+
     def verify_if_selected_items_are_in_tree_mass_source_inputs(self):
         if self.tree_item_clicked:
             return
@@ -252,7 +253,7 @@ class MassSourceInputs(MassSourceInputs_UI):
             map_id_to_model_index[(selected_id, selected_type)] = index
 
             index = self.treeWidget_mass_source.indexBelow(index)
-        
+
         return map_id_to_model_index
 
 
@@ -305,17 +306,17 @@ class MassSourceInputs(MassSourceInputs_UI):
             if len(vol_ids) == 1:
                 non_repeated_volume_ids |= set(vol_ids)
 
-            sorted_vol_ids = list(np.sort(vol_ids))               
+            sorted_vol_ids = list(np.sort(vol_ids))
             if sorted_vol_ids in volume_ids_sets:
                continue
-            
+
             current_size = len(sorted_vol_ids)
             volume_ids_sets.append(sorted_vol_ids)
             if last_size:
                 if last_size != current_size:
-                    multiple_selection = True    
+                    multiple_selection = True
 
-            last_size = current_size      
+            last_size = current_size
 
         if not multiple_selection:
             try:
@@ -392,30 +393,33 @@ class MassSourceInputs(MassSourceInputs_UI):
             selection, selection_ids = selection_data
 
         match selection:
-            case "points":
-                volumes_from_points = self.mesh.get_volumes_from_selected_points(selection_ids)
-                return self.update_inheritance_combo_box_data(volumes_from_points, print_message)
-
             case "nodes":
                 volumes_from_nodes = self.mesh.get_volumes_from_selected_nodes(selection_ids)
                 return self.update_inheritance_combo_box_data(volumes_from_nodes, print_message)
 
+            case "points":
+                # volumes_from_points = self.mesh.get_volumes_from_selected_points(selection_ids)
+                volumes_from_points = {i:list(self.geometry_info.points_to_solids(i)) for i in selection_ids}
+                return self.update_inheritance_combo_box_data(volumes_from_points, print_message)
+
             case "lines":
-                volumes_from_lines = self.mesh.get_volumes_from_selected_lines(selection_ids)
+                # volumes_from_lines = self.mesh.get_volumes_from_selected_lines(selection_ids)
+                volumes_from_lines = {i:list(self.geometry_info.curves_to_solids(i)) for i in selection_ids}
                 return self.update_inheritance_combo_box_data(volumes_from_lines, print_message)
 
             case "surfaces":
-                volumes_from_surfaces = self.mesh.get_volumes_from_selected_surfaces(selection_ids)
+                # volumes_from_surfaces = self.mesh.get_volumes_from_selected_surfaces(selection_ids)
+                volumes_from_surfaces = {i:list(self.geometry_info.surfaces_to_solids(i)) for i in selection_ids}
                 return self.update_inheritance_combo_box_data(volumes_from_surfaces, print_message)
 
         return False
 
     def check_inputs(
-                     self, 
-                     lineEdit: QLineEdit, 
-                     label: str, 
-                     _float: bool=True, 
-                     only_positive: bool=False, 
+                     self,
+                     lineEdit: QLineEdit,
+                     label: str,
+                     _float: bool=True,
+                     only_positive: bool=False,
                      zero_included: bool=True
                      ):
 
@@ -499,7 +503,7 @@ class MassSourceInputs(MassSourceInputs_UI):
         if tab_list:
             self.pushButton_remove.setDisabled(True)
             self.treeWidget_mass_source.clearSelection()
-    
+
         self.comboBox_attribution_type.setDisabled(tab_list)
         self.lineEdit_selection_id.setDisabled(tab_list)
         self.pushButton_apply.setDisabled(tab_list)
@@ -508,7 +512,7 @@ class MassSourceInputs(MassSourceInputs_UI):
         self.comboBox_attribution_type.setVisible(not tab_list)
         self.comboBox_inherit_fluid_from.setVisible(not tab_list)
         self.label_10.setVisible(not tab_list)
-        
+
         self.last_tab = current_tab
 
     def apply_callback(self, close_window: bool = False):
@@ -593,7 +597,7 @@ class MassSourceInputs(MassSourceInputs_UI):
             return real_F + 1j * imag_F
 
     def constant_data_assignment(self, selection: str, selection_ids: list[int]):
-        
+
         mass_source = self.check_complex_entries(self.lineEdit_real_value, self.lineEdit_imag_value)
 
         if mass_source is None:
@@ -605,7 +609,7 @@ class MassSourceInputs(MassSourceInputs_UI):
 
         real_values = [np.real(mass_source)]
         imag_values = [np.imag(mass_source)]
-        
+
         if selection in ["points", "nodes", "lines", "surfaces"]:
             current_text = self.comboBox_inherit_fluid_from.currentText()
             vol_id = int(current_text.split(" - ")[1])
@@ -864,7 +868,7 @@ class MassSourceInputs(MassSourceInputs_UI):
                 self.tabWidget_main.setTabVisible(TabIndex.LIST, True)
                 return
 
-        self.tabWidget_main.setCurrentIndex(TabIndex.CONSTANT_DATA)    
+        self.tabWidget_main.setCurrentIndex(TabIndex.CONSTANT_DATA)
         self.tabWidget_main.setTabVisible(TabIndex.LIST, False)
 
     def on_click_item(self, item):
@@ -887,7 +891,7 @@ class MassSourceInputs(MassSourceInputs_UI):
 
     def on_doubleclick_item(self, item):
         self.on_click_item(item)
-    
+
     def get_selected_items_from_tree_widget_mass_source(self) -> dict:
         _selected_items = self.treeWidget_mass_source.selectedItems()
 
@@ -901,9 +905,9 @@ class MassSourceInputs(MassSourceInputs_UI):
             selected_type = item.text(1) + "s"
 
             selected_items[selected_type].add(int(selected_id))
-        
+
         return selected_items
-    
+
     def set_selection_text(self, selected_items: dict):
         selection_text = ""
 
@@ -918,7 +922,7 @@ class MassSourceInputs(MassSourceInputs_UI):
 
         self.lineEdit_selection_id.setText(selection_text)
         self.lineEdit_selection_id.setToolTip(selection_text)
-    
+
     def clear_line_edit_selection_id(self):
         self.lineEdit_selection_id.clear()
         self.lineEdit_selection_id.setToolTip("")

@@ -10,6 +10,8 @@ from vibra.engine.analysis_info import (
     HarmonicAnalysisSetup,
     ModalAnalysisSetup,
 )
+from vibra.engine.mesher.geometry_info import GeometryInfo
+from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 
 
@@ -18,11 +20,14 @@ class AnalysisChecker:
         self.model = model
 
     @property
-    def mesh(self):
-        return self.model.mesh
+    def mesh(self) -> Mesh:
+        return self.model.fe_mesh
+
+    @property
+    def geometry_info(self) -> GeometryInfo | None:
+        return self.model.geometry_info
 
     def check_analysis_requirements(self, is_resume: bool = False, update_domain_mappings: bool = True):
-
         # update the domains mappings
         if update_domain_mappings:
             self.model.domains_processor.update_domains_mappings()
@@ -72,7 +77,7 @@ class AnalysisChecker:
         self.check_can_resume(is_resume)
         self.check_mesh()
 
-        if self.mesh.are_there_volumes_in_geometry():
+        if self.geometry_info.contains_solids():
             self.check_materials_volumes()
         else:
             self.check_materials_surfaces()
@@ -117,7 +122,7 @@ class AnalysisChecker:
         self.check_can_resume(is_resume)
         self.check_mesh()
 
-        if self.mesh.are_there_volumes_in_geometry():
+        if self.geometry_info.contains_solids():
             self.check_materials_volumes()
         else:
             self.check_materials_surfaces()
@@ -128,12 +133,8 @@ class AnalysisChecker:
             raise errors.InvalidAnalysisSetupError("Analysis can not be resumed.")
 
     def check_mesh(self):
-
-        if self.mesh is None:
-            raise errors.InvalidMeshSetupError("There is no mesh available")
-
         if not self.model.is_there_a_valid_mesh():
-            raise errors.InvalidMeshSetupError("No mesh was provided")
+            raise errors.InvalidMeshSetupError("No FE mesh was provided.\nPlease generate a FE mesh before proceeding.")
 
         if self.mesh.disconnected_nodes:
             text = "Disconnected nodes have been detected during the mesh post-processing. \n"
@@ -149,7 +150,7 @@ class AnalysisChecker:
 
     def invalid_model_setup_for_fluids(self, surfaces: list[int] | None = None, volumes: list[int] | None = None):
         if isinstance(surfaces, Iterable):
-            message = f"You should assign one fluid for surfaces {surfaces} "           
+            message = f"You should assign one fluid for surfaces {surfaces} "
         elif isinstance(volumes, Iterable):
             message = f"You should assign one fluid for volumes {volumes} "
         else:
@@ -161,7 +162,7 @@ class AnalysisChecker:
 
     def invalid_model_setup_for_materials(self, surfaces: list[int] | None = None, volumes: list[int] | None = None):
         if isinstance(surfaces, Iterable):
-            message = f"You should assign one material for surfaces {surfaces} "           
+            message = f"You should assign one material for surfaces {surfaces} "
         elif isinstance(volumes, Iterable):
             message = f"You should assign one material for volumes {volumes} "
         else:
@@ -188,7 +189,7 @@ class AnalysisChecker:
             for vol_id in volumes_without_fluid:
                 if vol_id in structural_domain_volumes:
                     continue
-    
+
                 self.invalid_model_setup_for_fluids(volumes=volumes_without_fluid)
 
     def check_fluids_surfaces(self):
@@ -244,7 +245,7 @@ class AnalysisChecker:
 
     def check_contains_volumes(self):
 
-        if not self.mesh.are_there_volumes_in_geometry():
+        if not self.geometry_info.contains_solids():
             raise errors.InvalidGeometryError(
                 "The selected geometry does not contain volumes, "
                 "therefore, it is invalid for the current analysis."
@@ -331,14 +332,23 @@ class AnalysisChecker:
         return False
 
     def _entities_with_and_without_property(self, property_name: str, entity_name: str):
+        if self.geometry_info is None:
+            return [], []
+
+        match entity_name:
+            case "points":
+                kwargs = {entity_name: list(self.geometry_info.points)}
+            case "lines":
+                kwargs = {entity_name: list(self.geometry_info.curves)}
+            case "surfaces":
+                kwargs = {entity_name: list(self.geometry_info.surfaces)}
+            case "volumes":
+                kwargs = {entity_name: list(self.geometry_info.solids)}
+
+            case _:
+                return [], []
+
         properties = self.model.properties
-        geometry_information = self.mesh.geometry_information
-        entities = geometry_information.get(entity_name, [])
-
-        kwargs = {
-            entity_name: entities,
-        }
-
         return properties.get_entities_with_and_without_property(
             property_name,
             **kwargs,

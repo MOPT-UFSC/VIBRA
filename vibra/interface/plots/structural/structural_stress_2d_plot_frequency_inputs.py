@@ -45,7 +45,11 @@ class StructuralStress2dPlotFrequencyInputs(StructuralStress2dPlotFrequencyInput
 
     @property
     def mesh(self):
-        return app().project.model.mesh
+        return app().project.model.fe_mesh
+
+    @property
+    def geometry_info(self):
+        return app().project.model.geometry_info
 
     @property
     def properties(self):
@@ -217,7 +221,7 @@ class StructuralStress2dPlotFrequencyInputs(StructuralStress2dPlotFrequencyInput
             nodes = self.mesh.get_nodes_from_surface(selected_id)
 
         elif selection_type == "line":           
-            surface_ids = self.mesh.surfaces_from_line[selected_id]
+            surface_ids = self.geometry_info._curves_to_surfaces[selected_id]
             nodes = self.mesh.get_nodes_from_line(selected_id)
 
         elif selection_type == "point":

@@ -248,8 +248,11 @@ class SymbolsActor(vtkActor):
             distances = 0.015 * np.linalg.norm(diff, axis=1)
             scale_view[screen_size_mask] = distances[screen_size_mask]
 
-        rotation = self._get_camera_facing_rotation()
-        rotation_view[billboards] = rotation
+        try:
+            rotation = self._get_camera_facing_rotation()
+            rotation_view[billboards] = rotation
+        except Exception:
+            ...
 
         self.symbol_scales.Modified()
         self.symbol_data.Modified()
@@ -280,7 +283,7 @@ class SymbolsActor(vtkActor):
         """
         target = np.asarray(orientation, dtype=float)
         norm = np.linalg.norm(target)
-        if norm == 0:
+        if not np.isfinite(norm) or (norm == 0):
             return (1, 0, 0, 0)
 
         reference = np.array([1.0, 0.0, 0.0])
@@ -295,8 +298,8 @@ class SymbolsActor(vtkActor):
         If the object should never be hidden, the parameters should be set to
         factor = 1 and offset = -66000.
         """
-        self.mapper.SetResolveCoincidentTopologyToPolygonOffset()
-        self.mapper.SetRelativeCoincidentTopologyLineOffsetParameters(factor, units)
-        self.mapper.SetRelativeCoincidentTopologyPolygonOffsetParameters(factor, units)
-        self.mapper.SetRelativeCoincidentTopologyPointOffsetParameter(units)
-        self.mapper.Update()
+        self.symbol_mapper.SetResolveCoincidentTopologyToPolygonOffset()
+        self.symbol_mapper.SetRelativeCoincidentTopologyLineOffsetParameters(factor, units)
+        self.symbol_mapper.SetRelativeCoincidentTopologyPolygonOffsetParameters(factor, units)
+        self.symbol_mapper.SetRelativeCoincidentTopologyPointOffsetParameter(units)
+        self.symbol_mapper.Update()

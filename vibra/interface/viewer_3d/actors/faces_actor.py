@@ -1,3 +1,4 @@
+from vibra.engine.mesher.geometry_info import GeometryInfo
 from typing import Optional
 
 from molde import Color
@@ -46,6 +47,7 @@ class FacesActor(vtkActor):
             self.visualization_filter = VisualizationFilter.all_true()
 
         self.mesh = mesh
+        self.geometry_info = app().project.model.geometry_info
         self.data = None
         self.update_normals = update_normals
 
@@ -96,7 +98,7 @@ class FacesActor(vtkActor):
         points.SetData(numpy_to_vtk(coordinates))
 
         surface_to_volume = dict()
-        for volume, surfaces in self.mesh.surfaces_from_volume.items():
+        for volume, surfaces in self.geometry_info._solids_to_surfaces.items():
             for surface in surfaces:
                 surface_to_volume[surface] = volume
 
@@ -152,7 +154,8 @@ class FacesActor(vtkActor):
         if self.data is None:
             return
 
-        mesh = app().project.model.mesh
+        mesh = app().project.model.fe_mesh
+        geometry_info = app().project.model.geometry_info
         properties = app().project.model.properties
         color_mode = self.visualization_filter.color_mode
         no_info_color = Color(20, 20, 20)
@@ -161,8 +164,8 @@ class FacesActor(vtkActor):
             for surface, face_elements in mesh.elements_from_surface.items():
                 material: Material | None = properties._get_property("material", surface=surface)
 
-                if (material is None) and (surface in mesh.volumes_from_surface):
-                    volume = mesh.volumes_from_surface[surface][0]
+                if (material is None) and (surface in geometry_info._surfaces_to_solids):
+                    volume = geometry_info._surfaces_to_solids[surface][0]
                     material = properties._get_property("material", volume=volume)
 
                 color = Color(*material.color) if (material is not None) else no_info_color
@@ -172,8 +175,8 @@ class FacesActor(vtkActor):
             for surface, face_elements in mesh.elements_from_surface.items():
                 fluid: Fluid | None = properties._get_property("fluid", surface=surface)
 
-                if (fluid is None) and (surface in mesh.volumes_from_surface):
-                    volume = mesh.volumes_from_surface[surface][0]
+                if (fluid is None) and (surface in geometry_info._surfaces_to_solids):
+                    volume = geometry_info._surfaces_to_solids[surface][0]
                     fluid = properties._get_property("fluid", volume=volume)
 
                 color = Color(*fluid.color) if (fluid is not None) else no_info_color

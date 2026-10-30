@@ -20,13 +20,14 @@ class SelectionHandler(QObject):
 
     @property
     def surface_of_selected_volumes(self):
-        mesh = self.project.mesh
+        mesh = self.project.model.get_mesh()
         if mesh is None:
             return set()
 
         surfaces = set()
+        geometry_info = self.project.model.geometry_info
         for volume in self.geometry_volumes:
-            surfaces |= set(mesh.surfaces_from_volume.get(volume, []))
+            surfaces |= set(geometry_info._solids_to_surfaces.get(volume, []))
 
         return surfaces
 
@@ -106,8 +107,6 @@ class SelectionHandler(QObject):
         self.selection_changed.emit()
 
     def invert_selection(self):
-        mesh = self.project.model.mesh
-
         geometry_selection_active = any(
             [
                 self.geometry_points,
@@ -124,96 +123,104 @@ class SelectionHandler(QObject):
             ]
         )
 
-        if not geometry_selection_active and not mesh_selection_active:
-            return
-
         if geometry_selection_active:
-            new_geometry_selection = {}
-            if self.geometry_points:
-                new_geometry_selection["points"] = mesh.all_point_ids() - self.geometry_points
-            if self.geometry_lines:
-                new_geometry_selection["lines"] = mesh.all_line_ids() - self.geometry_lines
-            if self.geometry_surfaces:
-                new_geometry_selection["surfaces"] = mesh.all_surface_ids() - self.geometry_surfaces
-            if self.geometry_volumes:
-                new_geometry_selection["volumes"] = mesh.all_volume_ids() - self.geometry_volumes
-            if new_geometry_selection:
-                self.set_geometry_selection(**new_geometry_selection)
-
+            self.invert_geometry_selection()
         elif mesh_selection_active:
-            new_mesh_selection = {}
-            if self.mesh_nodes:
-                new_mesh_selection["nodes"] = mesh.all_node_ids() - self.mesh_nodes
-            if self.mesh_faces:
-                new_mesh_selection["faces"] = mesh.all_face_element_ids() - self.mesh_faces
-            if self.mesh_solids:
-                new_mesh_selection["solids"] = mesh.all_solid_element_ids() - self.mesh_solids
-            if new_mesh_selection:
-                self.set_mesh_selection(**new_mesh_selection)
+            self.invert_mesh_selection()
+
+    def invert_geometry_selection(self):
+        geometry_info = self.project.model.geometry_info
+
+        new_geometry_selection = {}
+        if self.geometry_points:
+            new_geometry_selection["points"] = geometry_info.all_point_ids() - self.geometry_points
+        if self.geometry_lines:
+            new_geometry_selection["lines"] = geometry_info.all_line_ids() - self.geometry_lines
+        if self.geometry_surfaces:
+            new_geometry_selection["surfaces"] = geometry_info.all_surface_ids() - self.geometry_surfaces
+        if self.geometry_volumes:
+            new_geometry_selection["volumes"] = geometry_info.all_volume_ids() - self.geometry_volumes
+
+        if new_geometry_selection:
+            self.set_geometry_selection(**new_geometry_selection)
+
+    def invert_mesh_selection(self):
+        mesh = self.project.model.fe_mesh
+
+        new_mesh_selection = {}
+        if self.mesh_nodes:
+            new_mesh_selection["nodes"] = mesh.all_node_ids() - self.mesh_nodes
+        if self.mesh_faces:
+            new_mesh_selection["faces"] = mesh.all_face_element_ids() - self.mesh_faces
+        if self.mesh_solids:
+            new_mesh_selection["solids"] = mesh.all_solid_element_ids() - self.mesh_solids
+
+        if new_mesh_selection:
+            self.set_mesh_selection(**new_mesh_selection)
 
     def select_all_points(self):
-        mesh = self.project.model.mesh
-        if mesh is None:
+        geometry_info = self.project.model.geometry_info
+        if geometry_info is None:
             return
 
-        self.set_geometry_selection(points=mesh.all_point_ids())
+        self.set_geometry_selection(points=geometry_info.all_point_ids())
 
     def select_all_lines(self):
-        mesh = self.project.model.mesh
-        if mesh is None:
+        geometry_info = self.project.model.geometry_info
+        if geometry_info is None:
             return
 
-        self.set_geometry_selection(lines=mesh.all_line_ids())
+        self.set_geometry_selection(lines=geometry_info.all_line_ids())
 
     def select_all_surfaces(self):
-        mesh = self.project.model.mesh
-        if mesh is None:
+        geometry_info = self.project.model.geometry_info
+        if geometry_info is None:
             return
 
-        self.set_geometry_selection(surfaces=mesh.all_surface_ids())
+        self.set_geometry_selection(surfaces=geometry_info.all_surface_ids())
 
     def select_all_volumes(self):
-        mesh = self.project.model.mesh
-        if mesh is None:
+        geometry_info = self.project.model.geometry_info
+        if geometry_info is None:
             return
 
-        self.set_geometry_selection(volumes=mesh.all_volume_ids())
+        self.set_geometry_selection(volumes=geometry_info.all_volume_ids())
 
     def select_all_geometry(self):
-        mesh = self.project.model.mesh
-        if mesh is None:
+        geometry_info = self.project.model.geometry_info
+        if geometry_info is None:
             return
 
         self.set_geometry_selection(
-            points=mesh.all_point_ids(),
-            lines=mesh.all_line_ids(),
-            surfaces=mesh.all_surface_ids(),
-            volumes=mesh.all_volume_ids(),
+            points=geometry_info.all_point_ids(),
+            lines=geometry_info.all_line_ids(),
+            surfaces=geometry_info.all_surface_ids(),
+            volumes=geometry_info.all_volume_ids(),
         )
 
     def select_all_nodes(self):
-        mesh = self.project.model.mesh
+        mesh = self.project.model.fe_mesh
         if mesh is None:
             return
 
         self.set_mesh_selection(nodes=mesh.all_node_ids())
 
     def select_all_faces(self):
-        mesh = self.project.model.mesh
+        mesh = self.project.model.fe_mesh
         if mesh is None:
             return
 
         self.set_mesh_selection(faces=mesh.all_face_element_ids())
 
     def select_all_solids(self):
-        mesh = self.project.model.mesh
+        mesh = self.project.model.fe_mesh
         if mesh is None:
             return
 
         self.set_mesh_selection(solids=mesh.all_solid_element_ids())
 
     def select_all_mesh(self):
-        mesh = self.project.model.mesh
+        mesh = self.project.model.fe_mesh
         if mesh is None:
             return
 

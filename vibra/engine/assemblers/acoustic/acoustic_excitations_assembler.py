@@ -157,8 +157,8 @@ class AcousticExcitationsAssembler:
                 if excitation_type in ["mass flow rate", "volumetric flow rate"]:
 
                     # compute the nozzle area
-                    self.model.mesh.process_face_elements_connected_to_nodes(surface_id)
-                    area = self.model.mesh.surface_area_from_element_integration.get(surface_id, 0)
+                    self.model.fe_mesh.process_face_elements_connected_to_nodes(surface_id)
+                    area = self.model.fe_mesh.surface_area_from_element_integration.get(surface_id, 0)
 
                     if excitation_type == "mass flow rate":
                         # get the fluid density
@@ -174,8 +174,8 @@ class AcousticExcitationsAssembler:
             # normalize data type to array
             complex_values_array = self.assembler.get_value_in_array_form(complex_values, ravel=True)
 
-            surf_elements = list(self.model.mesh.elements_from_surface.get(surface_id))
-            surf_connect = self.model.mesh.get_connectivity_from_surface(surface_id)
+            surf_elements = list(self.model.fe_mesh.elements_from_surface.get(surface_id))
+            surf_connect = self.model.fe_mesh.get_connectivity_from_surface(surface_id)
 
             for i, el in enumerate(surf_elements):
                 connectivities[el] = surf_connect[i]
@@ -193,7 +193,7 @@ class AcousticExcitationsAssembler:
 
     def get_fluid_properties_from_surface(self, surface_id: int):
 
-        volumes_from_surface = self.model.mesh.volumes_from_surface[surface_id]
+        volumes_from_surface = self.model.geometry_info._surfaces_to_solids.get(surface_id, [])
         if len(volumes_from_surface) != 1:
             return None, None
 
@@ -256,8 +256,8 @@ class AcousticExcitationsAssembler:
             _factor_Qms1 = 1 / _rho_f
             _factor_Qms2 = (4 * mu_0) / (3 * _rho_f**2)
 
-            line_elements = list(self.model.mesh.elements_from_line[line_id])
-            line_connect = self.model.mesh.get_connectivity_from_line(line_id)
+            line_elements = list(self.model.fe_mesh.elements_from_line[line_id])
+            line_connect = self.model.fe_mesh.get_connectivity_from_line(line_id)
 
             for i, el in enumerate(line_elements):
                 aux_connect[el] = line_connect[i]
@@ -310,8 +310,8 @@ class AcousticExcitationsAssembler:
             _factor_Qms1 = 1 / _rho_f
             _factor_Qms2 = (4 * mu_0) / (3 * _rho_f**2)
 
-            surf_elements = list(self.model.mesh.elements_from_surface.get(surface_id))
-            surf_connect = self.model.mesh.get_connectivity_from_surface(surface_id)
+            surf_elements = list(self.model.fe_mesh.elements_from_surface.get(surface_id))
+            surf_connect = self.model.fe_mesh.get_connectivity_from_surface(surface_id)
 
             for i, el in enumerate(surf_elements):
                 aux_connect[el] = surf_connect[i]
@@ -378,7 +378,7 @@ class AcousticExcitationsAssembler:
                     node_id = args[0]
                 else:
                     point_id = args[0]
-                    node_id = self.model.mesh.nodes_from_points.get(point_id)
+                    node_id = self.model.fe_mesh.nodes_from_points.get(point_id)
 
                 # normalize data type to array
                 complex_values_array = self.assembler.get_value_in_array_form(values[0], ravel=True)
@@ -417,7 +417,7 @@ class AcousticExcitationsAssembler:
             if values is None:
                 continue
 
-            nodes = self.model.mesh.get_nodes_from_line(args[0])
+            nodes = self.model.fe_mesh.get_nodes_from_line(args[0])
             if nodes is None:
                 continue
 
@@ -460,7 +460,7 @@ class AcousticExcitationsAssembler:
             if values is None:
                 continue
 
-            nodes = self.model.mesh.get_nodes_from_surface(args[0])
+            nodes = self.model.fe_mesh.get_nodes_from_surface(args[0])
             if nodes is None:
                 continue
 
@@ -503,7 +503,7 @@ class AcousticExcitationsAssembler:
             if values is None:
                 continue
 
-            nodes = self.model.mesh.get_nodes_from_volume(args[0])
+            nodes = self.model.fe_mesh.get_nodes_from_volume(args[0])
             if nodes is None:
                 continue
 
@@ -581,7 +581,7 @@ class AcousticExcitationsAssembler:
         factor_Qms1 = np.zeros(self.assembler.number_3d_elements, complex)
         factor_Qms2 = np.zeros(self.assembler.number_3d_elements, complex)
 
-        for vol_id, elements_from_volume in self.model.mesh.elements_from_volume.items():
+        for vol_id, elements_from_volume in self.model.fe_mesh.elements_from_volume.items():
             fluid_data = self.assembler.fluid_properties_from_volume.get(vol_id)
             if not isinstance(fluid_data, dict):
                 continue
@@ -777,14 +777,14 @@ class AcousticExcitationsAssembler:
                     else:
                         complex_values = _complex_values
 
-                nodes = self.model.mesh.get_nodes_from_surface(surface_id)
+                nodes = self.model.fe_mesh.get_nodes_from_surface(surface_id)
                 if nodes is None:
                     continue
 
                 _nodes = self.model.get_mapped_nodes(nodes, "acoustic")
 
-                self.model.mesh.process_face_elements_connected_to_nodes(surface_id)
-                area = self.model.mesh.surface_area_from_element_integration[surface_id]
+                self.model.fe_mesh.process_face_elements_connected_to_nodes(surface_id)
+                area = self.model.fe_mesh.surface_area_from_element_integration[surface_id]
 
                 for global_dof in self.model.get_acoustic_global_dof_from_nodes(_nodes):
                     acoustic_excitation[global_dof] += complex_values * area

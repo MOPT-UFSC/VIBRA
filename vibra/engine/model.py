@@ -4,7 +4,6 @@ from copy import deepcopy
 from enum import IntEnum
 from numbers import Number
 from pathlib import Path
-from typing import Optional
 
 import numpy as np
 from PIL.Image import Image
@@ -52,24 +51,21 @@ from vibra.engine.elements.elements_3d import (
     StructuralTetrahedron4,
     StructuralTetrahedron10,
 )
-from vibra.engine.geometry.geometry import LengthUnits
 from vibra.engine.mesher.degrees_of_freedom_decoupling_new import DegreesOfFreedomDecoupling
-from vibra.engine.mesher.element_setup import GMSH_VISUAL_MESH
+from vibra.engine.mesher.geometry_info import GeometryInfo, LengthUnits
+from vibra.engine.mesher.gmsh_mesher import GmshMesher
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.mesh_setup import ElementTopology, Hexahedron8, Hexahedron20, MeshSetup, Tetrahedron4, Tetrahedron10
+from vibra.engine.mesher.occ_mesher import OccMesher
 from vibra.engine.model_domains_processor import ModelDomainsProcessor
 from vibra.engine.model_selection_tools import ModelSelectionTools
 from vibra.engine.properties.fluid import Fluid
-from vibra.engine.properties.material import Material
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.engine.solution import HarmonicSolution, Solution
 from vibra.engine.transfer_impedances.perforated_plate_models import (
     PerforatedPlateModels,
 )
-from vibra.errors import IncompleteSetupError
 from vibra.extensions import SUPPORTED_GEOMETRY_EXTENSIONS
-from vibra.interface import error_title
-from vibra.interface.general.print_message_input import PrintMessageInput
 
 
 class CouplingType(IntEnum):
@@ -79,7 +75,7 @@ class CouplingType(IntEnum):
 
 
 class Model:
-    def __init__(self, disable_resume_callback: Optional[Callable] = None):
+    def __init__(self, disable_resume_callback: Callable | None = None):
 
         self.disable_resume_callback = disable_resume_callback
         self.reset_variables()
@@ -89,21 +85,28 @@ class Model:
 
     def reset_variables(self):
         self.name: str = "Model"
-        self.thumbnail: Optional[Image] = None
+        self.thumbnail: Image | None = None
+
+        # I think these must be moved to Project
+        self.fem_mesher = GmshMesher()
+        self.visual_mesher = OccMesher()
 
         self.length_unit: LengthUnits = "millimeter"
-        self.mesh_setup: Optional[MeshSetup] = None
-        self.analysis_setup: Optional[AnalysisSetup] = None
+        self.mesh_setup: MeshSetup | None = None
+        self.analysis_setup: AnalysisSetup | None = None
 
-        self.solution: Optional[Solution] = None
-        self.acoustic_solution: Optional[Solution] = None
-        self.structural_solution: Optional[Solution] = None
+        self.solution: Solution | None = None
+        self.acoustic_solution: Solution | None = None
+        self.structural_solution: Solution | None = None
+
+        self.fe_mesh: Mesh | None = None
+        self.visual_mesh: Mesh | None = None
+        self.geometry_info: GeometryInfo | None = None
 
         # TODO: review these variables
-        self.mesh: Optional[Mesh] = None
         self.stop_processing = False
-        self.geometry_path: Optional[Path | str] = None
-        self.initial_element_size = None
+        self.geometry_path: Path | str | None = None
+        self.initial_element_size: float | None = None
         self.geometry_qf = 1.0
 
         self.coupling_type = CouplingType.WEAK
@@ -146,13 +149,13 @@ class Model:
 
     @property
     def element_topology(self) -> ElementTopology | None:
-        if not isinstance(self.mesh, Mesh):
+        if not isinstance(self.fe_mesh, Mesh):
             return
 
-        if self.mesh.element_topology is None:
-            self.mesh.update_element_topology_based_on_connectivity()
+        if self.fe_mesh.element_topology is None:
+            self.fe_mesh.update_element_topology_based_on_connectivity()
 
-        return self.mesh.element_topology
+        return self.fe_mesh.element_topology
 
     @property
     def analysis_id(self) -> AnalysisID:
@@ -162,7 +165,7 @@ class Model:
         return AnalysisID.NO_ANALYSIS
 
     @property
-    def frequencies(self) -> Optional[np.ndarray]:
+    def frequencies(self) -> np.ndarray | None:
         """
         This property was created for retro compatibility.
         """
@@ -179,7 +182,7 @@ class Model:
         return []
 
     @property
-    def global_damping(self) -> Optional[np.ndarray]:
+    def global_damping(self) -> np.ndarray | None:
         """
         This property was created for retro compatibility.
         """
@@ -204,6 +207,11 @@ class Model:
             return not np.all(self.solution.status)
         except Exception:
             return False
+
+    def get_mesh(self) -> Mesh | None:
+        if self.fe_mesh is not None:
+            return self.fe_mesh
+        return self.visual_mesh
 
     def get_mapped_nodes(self, node_ids: list[int] | np.ndarray, domain: str) -> np.ndarray:
         """
@@ -268,14 +276,14 @@ class Model:
         structural_domains = self.volumes_of_domain.get("structural", [])
         surface_ids = list(self.domains_processor.fluid_structure_interfaces.keys())
 
-        mask = np.isin(self.mesh.faces_connectivity[:, 1], surface_ids)
-        interface_connectivities = self.mesh.faces_connectivity[mask, :]
+        mask = np.isin(self.fe_mesh.faces_connectivity[:, 1], surface_ids)
+        interface_connectivities = self.fe_mesh.faces_connectivity[mask, :]
 
         # reorder the connectivities
         self.structural_element_2d.reorder_connect(interface_connectivities[:, 4:].copy())
 
         # clears the element normals data attribute
-        self.mesh.element_normals_data.clear()
+        self.fe_mesh.element_normals_data.clear()
 
         logging.info("Processing the fluid-structure interfaces connectivities... [2/3]")
 
@@ -285,24 +293,25 @@ class Model:
 
         # correct the connectivities order
         for i, elem2d_id in enumerate(interface_connectivities[:, 0]):
-
             progress = int((100 * (i / n_el) // 5) * 5)
             if progress != last_progress:
                 logging.info(f"Processing the 2D elements connectivities... [{progress}/100]")
 
-            elem3d_ids = self.mesh.face_to_solid_element.get(elem2d_id, [])
+            elem3d_ids = self.fe_mesh.face_to_solid_element.get(elem2d_id, [])
 
             if len(elem3d_ids) != 2:
                 print(f"The element 2D {elem2d_id} touches the solid elements: {[int(elem_id) for elem_id in elem3d_ids]}")
                 continue
 
-            for elem3d_id in self.mesh.face_to_solid_element.get(elem2d_id, []):
-                vol_id = self.mesh.solids_connectivity[elem3d_id, 1]
-                face_coords = self.mesh.nodal_coordinates[self.structural_element_2d.connectivities[i, :], 1:]
-                solid_coords = self.mesh.nodal_coordinates[self.mesh.solids_connectivity[elem3d_id, 4:], 1:]
-                
+            for elem3d_id in self.fe_mesh.face_to_solid_element.get(elem2d_id, []):
+                vol_id = self.fe_mesh.solids_connectivity[elem3d_id, 1]
+                face_coords = self.fe_mesh.nodal_coordinates[self.structural_element_2d.connectivities[i, :], 1:]
+                solid_coords = self.fe_mesh.nodal_coordinates[self.fe_mesh.solids_connectivity[elem3d_id, 4:], 1:]
+
                 if vol_id in structural_domains:
-                    is_inverted = self.mesh.is_element_normal_vector_inverted(elem2d_id, face_coords, solid_coords, plot_element_normals=plot_element_normals)
+                    is_inverted = self.fe_mesh.is_element_normal_vector_inverted(
+                        elem2d_id, face_coords, solid_coords, plot_element_normals=plot_element_normals
+                    )
                     if not is_inverted:
                         continue
 
@@ -329,8 +338,8 @@ class Model:
 
         """
 
-        mask = np.sum(np.isin(self.mesh.solids_connectivity[:, 4:], node_ids), axis=1) >= 1
-        element_ids = self.mesh.solids_connectivity[mask, 0]
+        mask = np.sum(np.isin(self.fe_mesh.solids_connectivity[:, 4:], node_ids), axis=1) >= 1
+        element_ids = self.fe_mesh.solids_connectivity[mask, 0]
 
         element_ids_domain = self.domains_processor.elements_of_domain.get(domain, [])
         valid_element_ids = np.intersect1d(element_ids, element_ids_domain)
@@ -356,107 +365,15 @@ class Model:
     def set_length_unit(self, length_unit: str = "millimeter"):
         self.length_unit = length_unit
 
-    def set_geometry_quality_factor(self, geometry_qf: float = 1.0):
-        self.geometry_qf = geometry_qf
-
     def set_geometry_path(self, path: Path | str):
         self.geometry_path = path
-
-    def check_path_for_geometry_file(self, path: Path | str):
-        """
-        This method returns True if a CAD extension file is detected
-        in the input path, otherwise, it returns False.
-        """
-
-        if isinstance(path, Path):
-            path = str(path)
-
-        ext = path.split(".")[-1].lower()
-        return ext in SUPPORTED_GEOMETRY_EXTENSIONS
+        self.fem_mesher.set_path(path)
+        self.visual_mesher.set_path(path)
 
     def set_properties(self, properties):
         self.properties = properties
 
-    def set_mesh_setup(self, mesh_setup: MeshSetup | None):
-        self.mesh_setup = mesh_setup
-
-    def initialize_mesh(self):
-        self.mesh = Mesh(length_unit=self.length_unit, geometry_qf=self.geometry_qf)
-
-    def process_visual_geometry_mesh(self, path: str):
-        self.mesh = Mesh(length_unit=self.length_unit, geometry_qf=self.geometry_qf)
-
-        try:
-            try:
-                element_size = self.mesh.compute_initial_mesh_size(path)
-                mesh_setup = MeshSetup(
-                    minimum_element_size=element_size * 0.4,
-                    maximum_element_size=element_size,
-                    custom_element_setup=GMSH_VISUAL_MESH,
-                )
-                self.mesh.load_cad(path, mesh_setup)
-
-            except Exception:
-                element_size = 10
-                mesh_setup = MeshSetup(
-                    minimum_element_size=element_size * 0.5,
-                    maximum_element_size=element_size,
-                    custom_element_setup=GMSH_VISUAL_MESH,
-                )
-
-            self.initial_element_size = element_size
-
-        except Exception as error_log:
-            from traceback import print_exception
-
-            print_exception(error_log)
-            title = "Error while processing geometry"
-            message = str(error_log)
-            PrintMessageInput([error_title, title, message])
-            return -1
-
-    def process_mesh_data(self, path: str):
-        self.initialize_mesh()
-
-        try:
-            logging.info("Processing mesh... [15/100]")
-
-            self.mesh.geometry_imported = False
-            self.mesh.load_mesh(path)
-
-        except Exception as error_log:
-            from traceback import print_exception
-
-            print_exception(error_log)
-            title = "Error while processing geometry"
-            message = str(error_log)
-            PrintMessageInput([error_title, title, message])
-            return -1
-
-    def process_mesh(self):
-        if self.geometry_path is None:
-            message = "Geometry not defined"
-            context = (
-                "The geometry file has not been defined yet."
-                "You should to import a supported CAD file format to proceed."
-                "\n\n"
-                "Suported file formats: *.iges and *.step"
-            )
-            raise IncompleteSetupError(message, context=context)
-
-        if self.mesh_setup is None:
-            message = "Mesh setup not defined"
-            context = "The mesh setup has not been defined yet.You should to configure the mesher to proceed."
-            raise IncompleteSetupError(message, context=context)
-
-        logging.info("Processing mesh [80/100]")
-        self.mesh = Mesh(length_unit=self.length_unit, geometry_qf=self.geometry_qf)
-        self.mesh.load_cad(self.geometry_path, self.mesh_setup)
-
-        if self.disable_resume_callback is not None:
-            self.disable_resume_callback()
-
-    def set_analysis_setup(self, analysis_setup: Optional[AnalysisSetup]):
+    def set_analysis_setup(self, analysis_setup: AnalysisSetup | None):
         if not isinstance(analysis_setup, AnalysisSetup | None):
             raise ValueError("Invalid analysis setup")
 
@@ -545,37 +462,13 @@ class Model:
 
         return analysis_setup
 
-    def is_the_mesh_setup_defined(self):
-        if isinstance(self.geometry_path, str | Path):
-            if self.is_there_a_geometry_imported():
-                if not isinstance(self.mesh_setup, MeshSetup):
-                    return True
-
-        return False
-
     def is_there_a_valid_mesh(self):
-        if isinstance(self.geometry_path, str | Path):
-            if self.is_there_a_geometry_imported():
-                if not isinstance(self.mesh_setup, MeshSetup):
-                    return False
-
-        assert self.mesh is not None
-
-        disconnected_nodes = bool(self.mesh.disconnected_nodes)
-        collapsed_elements = bool(self.mesh.collapsed_elements_data)
-
-        if disconnected_nodes or collapsed_elements:
-            return False
-
-        if self.mesh.surfaces_from_volume:
-            return self.mesh.solids_connectivity.any()
-
-        if self.mesh.lines_from_surface:
-            return self.mesh.faces_connectivity.any()
-
-        return False
+        return self.fe_mesh is not None
 
     def is_there_a_geometry_imported(self):
+        if self.geometry_path is None:
+            return False
+
         suffix = Path(self.geometry_path).suffix.strip(".").lower()
         return suffix in SUPPORTED_GEOMETRY_EXTENSIONS
 
@@ -770,7 +663,7 @@ class Model:
                     avg_value = values
 
                 if n_int and isinstance(self.frequencies, np.ndarray):
-                    output_data[gdof] = avg_value / ((1j * 2 * np.pi * self.frequencies)**n_int)
+                    output_data[gdof] = avg_value / ((1j * 2 * np.pi * self.frequencies) ** n_int)
                 else:
                     output_data[gdof] = avg_value
 
@@ -800,7 +693,7 @@ class Model:
         if self.analysis_id == AnalysisID.NO_ANALYSIS:
             raise errors.InvalidModelSetupError("An AnalysisID should be provided.")
 
-        for vol_id in self.mesh.elements_from_volume:
+        for vol_id in self.fe_mesh.elements_from_volume:
             pm_data = self.properties._get_property("porous_material_model", volume=vol_id)
             vt_data = self.properties._get_property("viscous_thermal_model", volume=vol_id)
             fluid = self.properties._get_property("fluid", volume=vol_id)
@@ -859,7 +752,7 @@ class Model:
 
         """
         fluid = None
-        volumes_from_surface = self.mesh.volumes_from_surface[surface_id]
+        volumes_from_surface = self.geometry_info._surfaces_to_solids.get(surface_id, [])
 
         if len(volumes_from_surface) == 1:
             for key in self.properties.volume_properties:
@@ -1037,7 +930,7 @@ class Model:
         frequency-dependent, returning True if positive and False otherwise.
         """
         properties = ["porous_material_model", "viscous_thermal_model", "proportional_damping"]
-        for volume_id in self.mesh.volumes_from_surface.get(surface_id):
+        for volume_id in self.geometry_info._surfaces_to_solids.get(surface_id):
             for _property in properties:
                 prop_data = self.properties._get_property(_property, volume=volume_id)
                 if isinstance(prop_data, dict):
@@ -1088,7 +981,7 @@ class Model:
             else:
                 P_inc = values
 
-            node_normals = self.mesh.get_stacked_normals_for_surface_elements(surface_id)
+            node_normals = self.fe_mesh.get_stacked_normals_for_surface_elements(surface_id)
             avg_normal = np.average(node_normals, axis=0).flatten()
 
             P_downstream = P_inc * (avg_normal @ s_vector)
@@ -1144,10 +1037,10 @@ class Model:
             if prop != "porous_material_model":
                 continue
 
-            if volume_id not in self.mesh.surfaces_from_volume:
+            if volume_id not in self.geometry_info._solids_to_surfaces:
                 continue
 
-            if surface_id in self.mesh.surfaces_from_volume.get(volume_id):
+            if surface_id in self.geometry_info._solids_to_surfaces.get(volume_id):
                 if not self.porous_material_properties:
                     self.process_porous_material_properties()
 
@@ -1196,10 +1089,10 @@ class Model:
             if prop != "viscous_thermal_model":
                 continue
 
-            if volume_id not in self.mesh.surfaces_from_volume:
+            if volume_id not in self.geometry_info._solids_to_surfaces:
                 continue
 
-            if surface_id in self.mesh.surfaces_from_volume.get(volume_id):
+            if surface_id in self.geometry_info._solids_to_surfaces.get(volume_id):
                 if not self.viscous_thermal_model_properties:
                     self.process_viscous_thermal_model_properties()
 
@@ -1236,14 +1129,14 @@ class Model:
         for key, data in self.properties.surface_properties.items():
             property, surface_id = key
             if property == "surface_thickness":
-                self.mesh.set_face_element_thickness(surface_id, data)
+                self.fe_mesh.set_face_element_thickness(surface_id, data)
 
     def is_surface_thickness_properly_applied_in_model(self):
-        volume_exists = self.mesh.are_there_volumes_in_geometry()
+        volume_exists = self.geometry_info.contains_solids()
         if volume_exists:
             return None
 
-        surface_ids = self.mesh.geometry_information.get("surfaces")
+        surface_ids = self.geometry_info.surfaces
         _, surface_without_thickness = self.properties.get_entities_with_and_without_property("surface_thickness", surfaces=surface_ids)
 
         return surface_without_thickness
@@ -1275,7 +1168,7 @@ class Model:
         if not self.properties.is_the_surface_property_present_in_the_model("degrees_of_freedom_decoupling"):
             return
 
-        self.mesh.cache_mesh_information()
+        self.fe_mesh.cache_mesh_information()
         self.dof_decoupling = DegreesOfFreedomDecoupling(self)
         self.dof_decoupling.process_degrees_of_freedom_decoupling()
 

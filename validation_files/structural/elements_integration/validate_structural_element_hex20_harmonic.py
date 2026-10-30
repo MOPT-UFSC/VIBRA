@@ -104,7 +104,7 @@ def load_external_mesh_and_solve(support_type: str, load_type: str, distributed_
 
     ## intialize the model
     model = Model()
-    model.mesh = mesh
+    model.fe_mesh = mesh
 
     ## assign the created fluid
     model.properties._set_property("material", material, volume=1)

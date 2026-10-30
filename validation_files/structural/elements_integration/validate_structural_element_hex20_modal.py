@@ -74,7 +74,7 @@ def load_external_mesh_and_solve(support_type: str, distributed_mass: bool = Fal
     poisson_ratio = 0.30
     thermal_expansion_coefficient = 1.1e-5
 
-    material = Material(   
+    material = Material(
         name = "Carbon steel",
         identifier = 1,
         color = (200, 200, 200),
@@ -86,11 +86,11 @@ def load_external_mesh_and_solve(support_type: str, distributed_mass: bool = Fal
 
     ## intialize the model
     model = Model()
-    model.mesh = mesh
+    model.fe_mesh = mesh
 
     ## assign the created fluid
     model.properties._set_property("material", material, volume=1)
-    
+
     for _surf_id in [1, 2]:
         model.properties._set_property("material", material, surface=_surf_id)
 

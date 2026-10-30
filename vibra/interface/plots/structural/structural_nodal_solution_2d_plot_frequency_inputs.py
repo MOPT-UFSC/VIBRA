@@ -42,7 +42,11 @@ class StructuralNodalSolution2dPlotFrequencytInputs(StructuralNodalSolution2dPlo
 
     @property
     def mesh(self):
-        return app().project.model.mesh
+        return app().project.model.fe_mesh
+
+    @property
+    def geometry_info(self):
+        return app().project.model.geometry_info
 
     @property
     def properties(self):
@@ -91,7 +95,7 @@ class StructuralNodalSolution2dPlotFrequencytInputs(StructuralNodalSolution2dPlo
             # data_types = ["{}<sub>{}</sub>", "d{}<sub>{}</sub>/dt", "d²{}<sub>{}</sub>/dt²"]
             return data_types[n_int].format(dof_type, directions[dof_index])
 
-        volume_exists = self.mesh.are_there_volumes_in_geometry()
+        volume_exists = self.geometry_info.contains_solids()
         n_dofs = 3 if volume_exists else 6
 
         for j, results_label in enumerate(["Displacement", "Velocity", "Acceleration"]):
@@ -167,7 +171,7 @@ class StructuralNodalSolution2dPlotFrequencytInputs(StructuralNodalSolution2dPlo
         selection = self.selection_types[index]
 
         input_ids = self.lineEdit_selection_id.text()
-        self.selected_ids, error_data = self.model.check_selected_ids(  
+        self.selected_ids, error_data = self.model.check_selected_ids(
             input_ids,
             selection,
             domain="structural",
@@ -194,7 +198,7 @@ class StructuralNodalSolution2dPlotFrequencytInputs(StructuralNodalSolution2dPlo
         self.plotter._set_model_results_data_to_plot(self.model_results)
 
     def export_data_callback(self):
-        
+
         if self.check_inputs():
             return
 
@@ -210,8 +214,8 @@ class StructuralNodalSolution2dPlotFrequencytInputs(StructuralNodalSolution2dPlo
             surface_ids = [selected_id]
             nodes = self.mesh.get_nodes_from_surface(selected_id)
 
-        elif selection_type == "line":           
-            surface_ids = self.mesh.surfaces_from_line[selected_id]
+        elif selection_type == "line":
+            surface_ids = self.geometry_info._curves_to_surfaces[selected_id]
             nodes = self.mesh.get_nodes_from_line(selected_id)
 
         elif selection_type == "point":
@@ -220,8 +224,8 @@ class StructuralNodalSolution2dPlotFrequencytInputs(StructuralNodalSolution2dPlo
 
         else:
             nodes = np.array([selected_id], dtype=int)
-        
-        if selection_type in ["point", "node"]:   
+
+        if selection_type in ["point", "node"]:
             mask = np.sum(np.isin(self.mesh.faces_connectivity[:, 4:], nodes), axis=1) == 1
             surface_ids = [int(surf_id) for surf_id in np.unique(self.mesh.faces_connectivity[:, 1][mask])]
 
@@ -288,10 +292,10 @@ class StructuralNodalSolution2dPlotFrequencytInputs(StructuralNodalSolution2dPlo
 
     def get_structure_data_index(self) -> int:
         """
-        This method returns an integer corresponding to the structural data, where 0 represents 
+        This method returns an integer corresponding to the structural data, where 0 represents
         displacement, 1 represents velocity, and 2 represents acceleration.
         """
-        volume_exists = self.mesh.are_there_volumes_in_geometry()
+        volume_exists = self.geometry_info.contains_solids()
         n_dofs = 3 if volume_exists else 6
         index = self.comboBox_structural_results.currentIndex()
         return index // n_dofs
@@ -300,7 +304,7 @@ class StructuralNodalSolution2dPlotFrequencytInputs(StructuralNodalSolution2dPlo
         """
         This method returns an integer corresponding to the structural local dof index.
         """
-        volume_exists = self.mesh.are_there_volumes_in_geometry()
+        volume_exists = self.geometry_info.contains_solids()
         n_dofs = 3 if volume_exists else 6
         index = self.comboBox_structural_results.currentIndex()
         return index % n_dofs
@@ -339,7 +343,7 @@ class StructuralNodalSolution2dPlotFrequencytInputs(StructuralNodalSolution2dPlo
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
             self.plot_data_callback()
-        
+
     def closeEvent(self, a0: QCloseEvent | None) -> None:
 
         if self.exporter is not None:
@@ -349,15 +353,15 @@ class StructuralNodalSolution2dPlotFrequencytInputs(StructuralNodalSolution2dPlo
             self.plotter.close()
 
         return super().closeEvent(a0)
-    
+
 def get_color(index: int):
 
-    colors = [  
-        (0,0,1), 
-        (0,0,0), 
+    colors = [
+        (0,0,1),
+        (0,0,0),
         (1,0,0),
-        (0,1,1), 
-        (1,0,1), 
+        (0,1,1),
+        (1,0,1),
         (1,1,0),
         (0.25,0.25,0.25),
         ]

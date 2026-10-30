@@ -12,6 +12,7 @@ import numpy as np
 from PIL import Image
 
 from vibra.engine.analysis_info import AnalysisID, AnalysisSetup
+from vibra.engine.mesher.geometry_info import GeometryInfo
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.engine.properties.fluid import Fluid
@@ -23,6 +24,7 @@ from vibra.engine.serialization.file_helpers import read_json, update_json, writ
 from vibra.engine.serialization.lazy_hdf5_matrix import LazyHDF5MatrixWriter
 from vibra.engine.solution import HarmonicSolution, ModalSolution
 from vibra.engine.solution.lazy_harmonic_solution import LazyHarmonicSolution
+from vibra.utils.utils import dict_mapped_arrays
 
 from .project_hasher import HashEnum, ProjectHasher
 from .project_paths import ProjectPaths
@@ -61,10 +63,16 @@ class ProjectWriter:
         if model.geometry_path is not None:
             # Copy geometry file to the working dir and
             # update the path to point to the new location.
-            model.geometry_path = self.write_geometry(model.geometry_path)
+            model.set_geometry_path(self.write_geometry(model.geometry_path))
 
-        if model.mesh is not None:
-            self.write_mesh(model.mesh)
+        if model.fe_mesh is not None:
+            self.write_mesh(model.fe_mesh)
+
+        if (model.visual_mesh is not None) and model.is_there_a_geometry_imported():
+            self.write_visual_mesh(model.visual_mesh)
+
+        if model.geometry_info is not None:
+            self.write_geometry_info(model.geometry_info)
 
         if model.solution is not None:
             self.write_solution(model.solution)
@@ -134,7 +142,7 @@ class ProjectWriter:
         current_hash = ProjectHasher.hash_mesh(mesh)
         previous_hash = self._read_hash(HashEnum.MESH)
         required_paths = [
-            self.project_paths.mesh_data_filepath,
+            self.project_paths.fem_mesh_filepath,
             self.project_paths.mesh_quality_data_filepath,
             self.project_paths.hashes_filepath,
             self.project_paths.geometry_data_filepath,
@@ -145,7 +153,7 @@ class ProjectWriter:
             logger.info("Mesh was not written since it did not changed.")
             return
 
-        with h5py.File(self.project_paths.mesh_data_filepath, "w") as file:
+        with h5py.File(self.project_paths.fem_mesh_filepath, "w") as file:
             file["connectivity/lines_connectivity"] = mesh.lines_connectivity
             file["connectivity/faces_connectivity"] = mesh.faces_connectivity
             file["connectivity/solids_connectivity"] = mesh.solids_connectivity
@@ -170,6 +178,62 @@ class ProjectWriter:
         self.write_geometry_related_mesh_parameters(mesh)
         self.write_mesh_quality_data_in_file(mesh)
         previous_hash = self._write_hash(HashEnum.MESH, current_hash)
+
+    def write_visual_mesh(self, mesh: Mesh):
+        logger.info("Writing Mesh.")
+
+        with h5py.File(self.project_paths.visual_mesh_filepath, "w") as file:
+            file["connectivity/lines_connectivity"] = mesh.lines_connectivity
+            file["connectivity/faces_connectivity"] = mesh.faces_connectivity
+            file["nodal_data/nodal_coordinates"] = mesh.nodal_coordinates
+
+    def write_geometry_info(self, geometry_info: GeometryInfo):
+        with h5py.File(self.project_paths.geometry_info_filepath, "w") as file:
+            file["entities/points"] = geometry_info.points
+            file["entities/curves"] = geometry_info.curves
+            file["entities/surfaces"] = geometry_info.surfaces
+            file["entities/solids"] = geometry_info.solids
+
+            solids_to_surfaces = dict_mapped_arrays(dict(geometry_info._solids_to_surfaces))
+            surfaces_to_curves = dict_mapped_arrays(dict(geometry_info._surfaces_to_curves))
+            curves_to_points = dict_mapped_arrays(dict(geometry_info._curves_to_points))
+
+            file["adjacencies/solids_to_surfaces"] = np.column_stack(solids_to_surfaces).astype(int)
+            file["adjacencies/surfaces_to_curves"] = np.column_stack(surfaces_to_curves).astype(int)
+            file["adjacencies/curves_to_points"] = np.column_stack(curves_to_points).astype(int)
+
+            if geometry_info._cache_solids_to_surfaces:
+                cache_solids_to_surfaces = dict_mapped_arrays(dict(geometry_info._cache_solids_to_surfaces))
+                file["adjacencies/cache_solids_to_surfaces"] = np.column_stack(cache_solids_to_surfaces).astype(int)
+
+            if geometry_info._cache_surfaces_to_curves:
+                cache_surfaces_to_curves = dict_mapped_arrays(dict(geometry_info._cache_surfaces_to_curves))
+                file["adjacencies/cache_surfaces_to_curves"] = np.column_stack(cache_surfaces_to_curves).astype(int)
+
+            if geometry_info._cache_curves_to_points:
+                cache_curves_to_points = dict_mapped_arrays(dict(geometry_info._cache_curves_to_points))
+                file["adjacencies/cache_curves_to_points"] = np.column_stack(cache_curves_to_points).astype(int)
+
+            file["centers/solids"] = np.array([geometry_info.solid_center(i) for i in geometry_info.solids])
+            file["centers/surfaces"] = np.array([geometry_info.surface_center(i) for i in geometry_info.surfaces])
+            file["centers/curves"] = np.array([geometry_info.curve_center(i) for i in geometry_info.curves])
+            file["centers/points"] = np.array([geometry_info.point_center(i) for i in geometry_info.points])
+
+            file["normals/surfaces"] = np.array([geometry_info.surface_normal(i) for i in geometry_info.surfaces])
+
+            file["mass/solids"] = np.array([geometry_info._solids_volumes.get(i, np.nan) for i in geometry_info.solids])
+            file["mass/surfaces"] = np.array([geometry_info._surfaces_areas.get(i, np.nan) for i in geometry_info.surfaces])
+            file["mass/curves"] = np.array([geometry_info._curves_lengths.get(i, np.nan) for i in geometry_info.curves])
+
+            file["bounding_box/solids"] = np.array([geometry_info.solid_bounding_box(i) for i in geometry_info.solids])
+            file["bounding_box/surfaces"] = np.array([geometry_info.surface_bounding_box(i) for i in geometry_info.surfaces])
+            file["bounding_box/curves"] = np.array([geometry_info.curve_bounding_box(i) for i in geometry_info.curves])
+
+            if geometry_info._straight_surfaces:
+                file["is_straight/surfaces"] = np.array(list(geometry_info._straight_surfaces))
+
+            if geometry_info._straight_curves:
+                file["is_straight/curves"] = np.array(list(geometry_info._straight_curves))
 
     def write_geometry_related_mesh_parameters(self, mesh: Mesh):
         with h5py.File(self.project_paths.geometry_data_filepath, "w") as file:
@@ -218,15 +282,15 @@ class ProjectWriter:
             model_properties.structural_imported_tables,
         )
 
-        data = dict(
-            volume_properties=self._normalize_property(model_properties.volume_properties),
-            surface_properties=self._normalize_property(model_properties.surface_properties),
-            line_properties=self._normalize_property(model_properties.line_properties),
-            point_properties=self._normalize_property(model_properties.point_properties),
-            element_properties=self._normalize_property(model_properties.element_properties),
-            nodal_properties=self._normalize_property(model_properties.nodal_properties),
-            group_properties=self._normalize_property(model_properties.group_properties),
-        )
+        data = {
+            "volume_properties": self._normalize_property(model_properties.volume_properties),
+            "surface_properties": self._normalize_property(model_properties.surface_properties),
+            "line_properties": self._normalize_property(model_properties.line_properties),
+            "point_properties": self._normalize_property(model_properties.point_properties),
+            "element_properties": self._normalize_property(model_properties.element_properties),
+            "nodal_properties": self._normalize_property(model_properties.nodal_properties),
+            "group_properties": self._normalize_property(model_properties.group_properties),
+        }
         write_json(self.project_paths.model_properties_filepath, data)
 
     def write_material_library(self, material_library: MaterialLibrary, export_path: Path | None = None):
@@ -282,7 +346,7 @@ class ProjectWriter:
 
         self._write_hash(HashEnum.TABLES, current_hash)
 
-    def write_thumbnail(self, thumbnail: Image):
+    def write_thumbnail(self, thumbnail: Image.Image):
         logger.info("Writing thumbnail")
         write_image(self.project_paths.thumbnail_filepath, thumbnail)
 
@@ -361,7 +425,7 @@ class ProjectWriter:
 
     def delete_mesh_data(self):
         logger.info("Deleting mesh data")
-        self.project_paths.mesh_data_filepath.unlink(missing_ok=True)
+        self.project_paths.fem_mesh_filepath.unlink(missing_ok=True)
         self._remove_hash(HashEnum.MESH)
 
     def _read_hash(self, name: HashEnum) -> str | None:
@@ -372,16 +436,18 @@ class ProjectWriter:
 
     def _write_hash(self, name: HashEnum, hash: str):
         with update_json(self.project_paths.hashes_filepath, dict) as file:
+            assert isinstance(file, dict)
             file[name] = hash
 
     def _remove_hash(self, name: HashEnum):
         with update_json(self.project_paths.hashes_filepath, dict) as file:
+            assert isinstance(file, dict)
             try:
                 file.pop(name)
             except Exception:
                 ...
 
-    def _property_key(self, property_name: str, tags: tuple[int] | int) -> Optional[str]:
+    def _property_key(self, property_name: str, tags: tuple[int] | int) -> str | None:
         """
         Turn the key (property_name, (tag_1, tag_2, tag_3)) into a string
         "property_name tag_1 tag_2 tag_3"

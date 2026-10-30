@@ -49,7 +49,11 @@ class AcousticWavesDecompositionInputs(AcousticWavesDecompositionInputs_UI):
 
     @property
     def mesh(self):
-        return app().project.model.mesh
+        return app().project.model.fe_mesh
+
+    @property
+    def geometry_info(self):
+        return app().project.model.geometry_info
 
     @property
     def properties(self):
@@ -209,7 +213,7 @@ class AcousticWavesDecompositionInputs(AcousticWavesDecompositionInputs_UI):
         x_1 = np.average(self.mesh.nodal_coordinates[rows_1, 1])
 
         omega = 2 * np.pi * self.model.frequencies
-        vol_ids = self.mesh.volumes_from_surface.get(self.input_selection_id)
+        vol_ids = self.geometry_info._surfaces_to_solids.get(self.input_selection_id)
    
         fluid: Fluid = self.properties._get_property("fluid", volume=vol_ids[0])
 

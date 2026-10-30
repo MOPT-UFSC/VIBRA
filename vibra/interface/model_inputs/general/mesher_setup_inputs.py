@@ -12,13 +12,13 @@ from PySide6.QtGui import QColor, QKeyEvent
 from PySide6.QtWidgets import QDoubleSpinBox, QTableWidgetItem, QVBoxLayout
 
 from vibra import app
-from vibra.engine.mesher import gmsh_constants
-from vibra.engine.mesher.element_setup import (
+from vibra.engine.mesher.gmsh_common import QUALITY_BINS, MeshQualityParams
+from vibra.engine.mesher.gmsh_constants import (
     GMSH_HEX8,
     GMSH_HEX20,
     GMSH_TET4,
     GMSH_TET10,
-    ElementSetup,
+    GmshElementSetup,
     MeshAlgorithms2D,
     MeshAlgorithms3D,
     SubdivisionAlgorithms,
@@ -113,8 +113,8 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         }
 
     def _config_window(self):
-        self.setWindowFlags(Qt.WindowStaysOnTopHint)
-        self.setWindowModality(Qt.WindowModal)
+        self.setWindowFlags(Qt.WindowType.WindowStaysOnTopHint)
+        self.setWindowModality(Qt.WindowModality.WindowModal)
         self.setWindowIcon(app().main_window.vibra_icon)
         self.setWindowTitle("Vibra")
 
@@ -139,7 +139,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
         # QTableWidget connection
         # self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
-        
+
         # QTableWidget connections
         self.tableWidget_local_mesh_size_control_data.itemClicked.connect(self.local_mesh_size_control_item_clicked_callback)
         self.tableWidget_mesh_quality.itemClicked.connect(self.mesh_quality_item_clicked_callback)
@@ -187,7 +187,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
     @property
     def mesh(self):
-        return app().project.model.mesh
+        return app().project.model.fe_mesh
 
     def _load_current_mesh_setup(self):
         mesh_setup = self.model.mesh_setup
@@ -205,7 +205,6 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.lineEdit_geometry_tolerance.setText(str(mesh_setup.geometry_tolerance))
         self.comboBox_volumes_interface_behavior.setCurrentIndex(int(mesh_setup.merge_connected_volumes))
         self.comboBox_mesh_quality_metrics.setCurrentIndex(int(mesh_setup.compute_quality_metrics))
-
 
         self.update_local_mesh_size_control_table()
         self.update_mesh_quality_table()
@@ -265,7 +264,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         text = ", ".join(str(i) for i in sorted(merged_ids))
         self.lineEdit_selected_ids.setText(text)
 
-    def get_selected_entity_type(self) -> str:
+    def get_selected_entity_type(self):
         volumes_selection = self.comboBox_local_mesh_size_control_entity_type.currentText() == "Volumes"
         return "volumes" if volumes_selection else "surfaces"
 
@@ -279,19 +278,28 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         if not isinstance(row, int):
             return
 
-        str_element_size = self.tableWidget_local_mesh_size_control_data.item(row, LocalMeshSizeControlTableColumns.ELEMENT_SIZE).text()
-        selection_type = self.tableWidget_local_mesh_size_control_data.item(row, LocalMeshSizeControlTableColumns.SELECTION_TYPE).text()
-        str_selected_ids = self.tableWidget_local_mesh_size_control_data.item(row, LocalMeshSizeControlTableColumns.SELECTION_IDS).text()
+        element_size_item = self.tableWidget_local_mesh_size_control_data.item(row, LocalMeshSizeControlTableColumns.ELEMENT_SIZE)
+        selection_type_item = self.tableWidget_local_mesh_size_control_data.item(row, LocalMeshSizeControlTableColumns.SELECTION_TYPE)
+        selection_ids_item = self.tableWidget_local_mesh_size_control_data.item(row, LocalMeshSizeControlTableColumns.SELECTION_IDS)
 
-        if str_element_size != "":
-            element_size = float(str_element_size)
+        if element_size_item is None:
+            return
+
+        if selection_type_item is None:
+            return
+
+        if selection_ids_item is None:
+            return
+
+        if element_size_item.text() != "":
+            element_size = float(element_size_item.text())
             self.doubleSpinBox_local_mesh_size_control_element_size.setValue(element_size)
 
-        selected_ids = [int(_id) for _id in str_selected_ids.split(",")]
+        selected_ids = [int(_id) for _id in selection_ids_item.text().split(",")]
         if not selected_ids:
             return
 
-        if selection_type == "volumes":
+        if selection_type_item.text() == "volumes":
             self.comboBox_local_mesh_size_control_entity_type.setCurrentText("Volumes")
             app().main_window.selection.set_geometry_selection(volumes=selected_ids)
         else:
@@ -326,7 +334,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         _, error_data = self.model.check_selected_ids(
             selected_ids,
             selected_type,
-            )
+        )
 
         if error_data is not None:
             PrintMessageInput(error_data)
@@ -360,7 +368,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.tmp_local_mesh_size_control_parameters.pop(current_row)
         self.update_local_mesh_size_control_table()
 
-    def update_interface_controls(self, element_setup: ElementSetup):
+    def update_interface_controls(self, element_setup: GmshElementSetup):
 
         match element_setup.element_order:
             case 1:
@@ -410,7 +418,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
         def load_mesh_from_working_dir():
             logging.info("Loading generated mesh... [10/100]")
-            self.model.mesh = app().project.project_reader.read_mesh()
+            self.model.fe_mesh = app().project.project_reader.read_mesh()
 
             logging.info("Reading model properties... [65/100]")
             self.model.properties = app().project.project_reader.read_model_properties()
@@ -470,7 +478,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             self.tableWidget_local_mesh_size_control_data.setItem(
                 row,
                 LocalMeshSizeControlTableColumns.ELEMENT_SIZE,
-                self._item(setup.element_size),
+                self._item(str(setup.element_size)),
             )
             self.tableWidget_local_mesh_size_control_data.setItem(
                 row,
@@ -484,7 +492,9 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             )
 
     def update_mesh_quality_table(self):
-        mesh = self.model.mesh
+        mesh = self.model.fe_mesh
+        if mesh is None:
+            return
 
         if mesh.mesh_quality_data:
             self._show_quality_table(True)
@@ -513,7 +523,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
                 has_bad_elements = has_bad_elements or broken
 
             worst, mean, std = statistics
-            high, low = mesh.quality_bins[gmsh_label]
+            high, low = QUALITY_BINS[MeshQualityParams(gmsh_label)]
 
             for col in QualityTableColumns:
                 match col:
@@ -530,7 +540,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
                     case QualityTableColumns.BAD_ELEMENTS:
                         n_bad_elements = len(bad_elements.get(gmsh_label, []))
-                        item = self._item(n_bad_elements)
+                        item = self._item(str(n_bad_elements))
 
                     case _:
                         raise ValueError("Invalid column index")
@@ -608,7 +618,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             local_mesh_size_control_parameters=self._get_local_mesh_size_control_parameters(),
         )
 
-    def _get_custom_element_setup(self) -> ElementSetup:
+    def _get_custom_element_setup(self) -> GmshElementSetup:
         element_geometry = self.comboBox_element_geometry.currentText().lower()  # not great
         assert element_geometry in ("tetrahedral", "hexahedral")
 
@@ -629,11 +639,11 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         assert custom_element_setup is not None
         match self.comboBox_3d_algorithm.currentIndex():
             case GMSHAlgorithms_3D.DELAUNAY_3D:
-                custom_element_setup.algorithm_3d = gmsh_constants.DELAUNAY_3D
+                custom_element_setup.algorithm_3d = MeshAlgorithms3D.DELAUNAY_3D
             case GMSHAlgorithms_3D.FRONTAL_3D:
-                custom_element_setup.algorithm_3d = gmsh_constants.FRONTAL_3D
+                custom_element_setup.algorithm_3d = MeshAlgorithms3D.FRONTAL_3D
             case GMSHAlgorithms_3D.HXT_3D:
-                custom_element_setup.algorithm_3d = gmsh_constants.HXT_3D
+                custom_element_setup.algorithm_3d = MeshAlgorithms3D.HXT_3D
 
         return custom_element_setup
 
@@ -650,7 +660,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
         ## Temporarily highlights nodes from non-mapped 2D elements after mesh processing
 
-        # mesh = self.model.mesh
+        # mesh = self.model.fe_mesh
         # rows = np.isin(np.unique(mesh.faces_connectivity[:, 0].flatten()), list(mesh.face_to_solid_element.keys()), invert=True)
         # elements_2d = mesh.faces_connectivity[rows, 0]
         # if elements_2d.size:
@@ -668,8 +678,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         app().main_window.analysis_toolbar.check_analysis_setup_callback()
         app().main_window.action_export_element_transfer_data.setDisabled(True)
 
-
-    def get_element_setup(self) -> ElementSetup | None:
+    def get_element_setup(self) -> GmshElementSetup | None:
         element_geometry = self.comboBox_element_geometry.currentText().lower()
         element_order = self.comboBox_element_order.currentText().lower()
 
@@ -686,22 +695,25 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             # raise NotImplementedError(f"Element type not defined!")
 
     def update_combo_boxes_according_to_geometry_info(self):
-        mesh = self.model.mesh
-        if mesh is None:
+        geometry_info = self.model.geometry_info
+        if geometry_info is None:
             return
 
-        if not mesh.are_there_volumes_in_geometry():
+        if not geometry_info.contains_solids():
             self.comboBox_element_geometry.removeItem(1)
             self.comboBox_element_order.removeItem(1)
 
     def element_topology_changed_callback(self):
         element_setup = self.get_element_setup()
-        self.update_interface_controls(element_setup)
+        if element_setup is not None:
+            self.update_interface_controls(element_setup)
 
     def update_mesh_quality_metric_buttons_accessibility(self):
-        volume_exists = self.model.mesh.are_there_volumes_in_geometry()
+        if self.model.geometry_info is None:
+            return
+
         is_tetrahedral = self.comboBox_element_geometry.currentText() == "Tetrahedral"
-        enable_mesh_metrics = volume_exists and is_tetrahedral
+        enable_mesh_metrics = self.model.geometry_info.contains_solids() and is_tetrahedral
         self.comboBox_mesh_quality_metrics.setEnabled(enable_mesh_metrics)
 
         if not is_tetrahedral:
@@ -710,7 +722,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
     def mesh_quality_item_clicked_callback(self, item):
         self.pushButton_show_bad_elements.setEnabled(False)
 
-        mesh = self.model.mesh
+        mesh = self.model.fe_mesh
         if mesh is None:
             return
 
@@ -730,7 +742,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.pushButton_plot_histogram.setEnabled(True)
 
     def plot_mesh_parameter_histogram(self):
-        mesh = self.model.mesh
+        mesh = self.model.fe_mesh
         if mesh is None:
             return
 
@@ -738,15 +750,18 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             return
 
         current_index = self.tableWidget_mesh_quality.currentIndex().row()
-        gmsh_label = self.gmsh_labels.get(current_index)
+        gmsh_label = MeshQualityParams(self.gmsh_labels.get(current_index))
 
         histograms_data = mesh.mesh_quality_data.get("histograms_data")
+        if histograms_data is None:
+            return
+
         hist, bin_edges, percentile_5, percentile_95 = histograms_data[gmsh_label]
 
         bin_edges = np.array(bin_edges)
         bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
-        bin_min = mesh.quality_bins[gmsh_label][1]
-        bin_max = mesh.quality_bins[gmsh_label][0]
+        bin_min = QUALITY_BINS[gmsh_label][1]
+        bin_max = QUALITY_BINS[gmsh_label][0]
         bin_med = (bin_min + bin_max) / 2
 
         if gmsh_label == "aspectRatio":
@@ -816,12 +831,12 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
         canvas.draw()
         plot_ui.setWindowTitle("Mesh quality histogram plotter")
-        plot_ui.setWindowFlag(Qt.WindowStaysOnTopHint)
+        plot_ui.setWindowFlag(Qt.WindowType.WindowStaysOnTopHint)
         plot_ui.setWindowIcon(app().main_window.vibra_icon)
         plot_ui.exec_()
 
     def plot_bad_elements(self):
-        mesh = self.model.mesh
+        mesh = self.model.fe_mesh
         if mesh is None:
             return
 
@@ -880,7 +895,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         match event.key():
             case Qt.Key.Key_Enter | Qt.Key.Key_Return:
                 self.apply_callback()
-            case Qt.Key_Delete:
+            case Qt.Key.Key_Delete:
                 self.remove_callback()
             case Qt.Key_Escape:
                 self.close()

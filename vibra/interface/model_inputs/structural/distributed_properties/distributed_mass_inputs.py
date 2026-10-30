@@ -52,7 +52,11 @@ class DistributedMassInputs(DistributedMassInputs_UI):
 
     @property
     def mesh(self):
-        return app().project.model.mesh
+        return app().project.model.fe_mesh
+
+    @property
+    def geometry_info(self):
+        return app().project.model.geometry_info
 
     @property
     def properties(self):
@@ -165,7 +169,7 @@ class DistributedMassInputs(DistributedMassInputs_UI):
                 self.comboBox_element_type.setCurrentIndex(0)
                 return
 
-        if isinstance(line_id, int):
+        if isinstance(line_id, int) and (self.mesh is not None):
             for node_id in self.mesh.get_nodes_from_line(line_id):
                 for _surface_id in self.mesh.get_surfaces_from_node(node_id):
                     data = self.properties._get_property("surface_thickness", surface=_surface_id)
@@ -177,14 +181,14 @@ class DistributedMassInputs(DistributedMassInputs_UI):
         return
 
     def update_element_type_based_on_geometry_information(self):
-        volume_exists = self.mesh.are_there_volumes_in_geometry()
+        volume_exists = self.geometry_info.contains_solids()
         self.comboBox_element_type.setCurrentIndex(int(volume_exists))
 
     def check_input_value(self, str_value: str):
 
         if str_value == "":
             return None
-    
+
         try:
             str_value = str_value.replace(",", ".")
             return float(str_value)
@@ -215,7 +219,7 @@ class DistributedMassInputs(DistributedMassInputs_UI):
 
         app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
         update_entities_selection(self.lineEdit_selection_id, selection, selected_ids)
-        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)       
+        app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
         self.remove_duplicated_attributions(selected_ids, selection)
         self.remove_conflicting_excitations(selected_ids, selection)
@@ -259,13 +263,13 @@ class DistributedMassInputs(DistributedMassInputs_UI):
         for selected_id in selected_ids:
 
             if selection == "surfaces":
-                for line_id in self.mesh.lines_from_surface[selected_id]:
+                for line_id in self.geometry_info._surfaces_to_curves[selected_id]:
                     data = self.properties._get_property("distributed_mass", line=line_id)
                     if isinstance(data, dict):
                         self.properties._remove_line_property("distributed_mass", line_id)
 
             elif selection == "lines":
-                for surface_id in self.mesh.surfaces_from_line[selected_id]:
+                for surface_id in self.geometry_info._curves_to_surfaces[selected_id]:
                     data = self.properties._get_property("distributed_mass", surface=surface_id)
                     if isinstance(data, dict):
                         self.properties._remove_surface_property("distributed_mass", surface_id)
@@ -294,7 +298,7 @@ class DistributedMassInputs(DistributedMassInputs_UI):
 
                 if prop_label != "distributed_mass":
                     continue
-            
+
                 value = np.real(data["values"])[0]
                 str_value = f"{value}"
 
@@ -340,7 +344,7 @@ class DistributedMassInputs(DistributedMassInputs_UI):
             app().main_window.selection.set_geometry_selection()
             self.lineEdit_selection_id.setText("")
         else:
-            view = self.comboBox_assignment_type.view() 
+            view = self.comboBox_assignment_type.view()
             view.setRowHidden(2, True)
             self.comboBox_assignment_type.setCurrentIndex(AssignmentType.SURFACES)
             self.treeWidget_distributed_mass.clearSelection()

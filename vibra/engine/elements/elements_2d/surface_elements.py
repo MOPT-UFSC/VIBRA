@@ -48,7 +48,7 @@ class Element2D:
 
     @property
     def nodal_coordinates(self):
-        return self.model.mesh.nodal_coordinates
+        return self.model.fe_mesh.nodal_coordinates
 
 
     def dof_indexes_processor(self, domain: str) -> DOFIndexesProcessor:

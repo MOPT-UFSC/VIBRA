@@ -461,7 +461,7 @@ class MaterialWidget(MaterialWidget_UI):
             was_updated = True
             self.properties._set_property("material", material_to_update, volume=vol_id)
 
-            for surf_id in app().project.model.mesh.surfaces_from_volume.get(vol_id):
+            for surf_id in app().project.model.geometry_info._solids_to_surfaces.get(vol_id):
                 self.properties._set_property("material", material_to_update, surface=surf_id)
 
         if was_updated:
@@ -484,7 +484,7 @@ class MaterialWidget(MaterialWidget_UI):
                 continue
 
             volumes_to_remove_material.append(volume_id)
-            surface_ids = app().project.model.mesh.surfaces_from_volume[volume_id]
+            surface_ids = app().project.model.geometry_info._solids_to_surfaces[volume_id]
             for surface_id in surface_ids:
                 surfaces_to_remove_material.append(surface_id)
 

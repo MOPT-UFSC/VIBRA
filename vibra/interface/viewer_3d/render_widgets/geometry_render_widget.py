@@ -81,7 +81,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.update_logo()
         self.create_axes()
         self.create_scale_bar()
-        self.create_camera_light(0.1, 0.1)
+        # self.create_camera_light(0.1, 0.1)
         self.update_plot()
 
     def update_logo(self):
@@ -158,20 +158,28 @@ class GeometryRenderWidget(CommonRenderWidget):
         scale_bar_label_property.SetFontSize(font_size_px)
 
     def update_plot(self, reset_camera=True):
-        mesh = app().project.model.mesh
+        model = app().project.model
+        if model is None:
+            return
+
+        mesh = app().project.model.visual_mesh
         if mesh is None:
+            return
+
+        geometry_info = app().project.model.geometry_info
+        if geometry_info is None:
             return
 
         logging.info("Updating the geometry render... [25/100]")
         self.remove_all_actors()
 
-        self.points_actor = PointsActor(mesh)
+        self.points_actor = PointsActor(mesh, geometry_info)
         self.lines_actor = LinesActor(mesh)
-        self.multimaterial = MultimaterialGeometryActor(mesh, visualization_filter=self.visualization_filter)
+        self.multimaterial = MultimaterialGeometryActor(model, visualization_filter=self.visualization_filter)
 
         self.selection_spheres_actor = SelectionSpheres()
-        self.symbols_actor_structural = SymbolsActorStructural(self.renderer.GetActiveCamera())
-        self.symbols_actor_acoustic = SymbolsActorAcoustic(self.renderer.GetActiveCamera())
+        self.symbols_actor_structural = SymbolsActorStructural(app().project.model, self.renderer.GetActiveCamera())
+        self.symbols_actor_acoustic = SymbolsActorAcoustic(app().project.model, self.renderer.GetActiveCamera())
 
         self.ghost_actor = GhostActor(mesh)
         self.ghost_actor.SetVisibility(app().main_window.has_hidden_part())
@@ -263,7 +271,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         if model is None:
             return
 
-        mesh = model.mesh
+        mesh = model.visual_mesh
         if mesh is None:
             return
 
@@ -275,7 +283,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
 
         self.remove_actors(self.multimaterial)
-        self.multimaterial = MultimaterialGeometryActor(mesh, visualization_filter=self.visualization_filter)
+        self.multimaterial = MultimaterialGeometryActor(model, visualization_filter=self.visualization_filter)
         self.add_actors(self.multimaterial)
 
         self.update_selection()
@@ -289,8 +297,8 @@ class GeometryRenderWidget(CommonRenderWidget):
         # but for some reason that I can't understand
         # it causes segmentation fault
         self.remove_actors(self.symbols_actor_structural, self.symbols_actor_acoustic)
-        self.symbols_actor_structural = SymbolsActorStructural(self.renderer.GetActiveCamera())
-        self.symbols_actor_acoustic = SymbolsActorAcoustic(self.renderer.GetActiveCamera())
+        self.symbols_actor_structural = SymbolsActorStructural(app().project.model, self.renderer.GetActiveCamera())
+        self.symbols_actor_acoustic = SymbolsActorAcoustic(app().project.model, self.renderer.GetActiveCamera())
         self.add_actors(self.symbols_actor_structural, self.symbols_actor_acoustic)
         self.visualization_changed_callback()
         self.update()

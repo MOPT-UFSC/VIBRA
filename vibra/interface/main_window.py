@@ -512,7 +512,7 @@ class MainWindow(MainWindow_UI):
 
         self.view_toolbar.enable_selection_tool()
 
-        if app().project.model.is_the_mesh_setup_defined():
+        if not app().project.model.is_there_a_valid_mesh():
             obj = MesherSetupInputs(close_after_generate=True)
             if not obj.complete:
                 self.action_model_workspace_callback()
@@ -583,23 +583,13 @@ class MainWindow(MainWindow_UI):
         self.import_geometry_dialog()
 
     def action_hide_selection_callback(self):
-        mesh = app().project.model.mesh
-
-        if not mesh.are_there_volumes_in_geometry():
-            PrintMessageInput(
-                [
-                    "Warning",
-                    "No volumes were found in the geometry",
-                    "Since the current geometry does not contains volumes, the operation can not be performed.",
-                ]
-            )
-
         self.entity_visibility.hide_surfaces(self.selection.geometry_surfaces)
         self.entity_visibility.hide_volumes(self.selection.geometry_volumes)
         self.selection.clear_selection()
 
     def has_hidden_part(self) -> bool:
-        mesh = app().project.model.mesh
+        mesh = app().project.model.get_mesh()
+
         assert mesh is not None
         return any(
             [
@@ -674,7 +664,7 @@ class MainWindow(MainWindow_UI):
             file_extensions=extensions,
             caption="Select a geometry or mesh file to start your project.",
             last_folder="geometry_mesh_folder",
-            )
+        )
 
         if imported_path is None:
             return True
@@ -812,9 +802,9 @@ class MainWindow(MainWindow_UI):
 
     def open_project_dialog(self):
         project_path = FileDialogService.open_file(file_extensions=["vibra", "vibra.zip"],
-                                    caption="Open Project", 
+                                    caption="Open Project",
                                     last_folder="project_folder")
-        
+
         if project_path is None:
             return
 
@@ -841,6 +831,7 @@ class MainWindow(MainWindow_UI):
 
         path = Path(path)
         app().project.import_mesh(path)
+        app().project.extract_visual_mesh_from_fem_mesh()
 
         # Interface update
         self.geometry_widget.update_plot()
@@ -1065,7 +1056,7 @@ class MainWindow(MainWindow_UI):
         self.action_show_fluid_structure_interface_normals.setText(new_name)
 
         def function_callback():
-            if not app().project.model.mesh.element_normals_data:
+            if not app().project.model.fe_mesh.element_normals_data:
                 app().project.model.process_connectivities_at_fluid_structure_interfaces(plot_element_normals=True)
 
             self.update_symbols()

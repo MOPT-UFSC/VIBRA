@@ -82,7 +82,7 @@ def load_external_mesh_and_solve():
 
     ## intialize the model
     model = Model()
-    model.mesh = mesh
+    model.fe_mesh = mesh
 
     thickness_data = {
         "surface_thickness": 0.008,

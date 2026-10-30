@@ -51,7 +51,11 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
 
     @property
     def mesh(self):
-        return app().project.model.mesh
+        return app().project.model.fe_mesh
+
+    @property
+    def geometry_info(self):
+        return app().project.model.geometry_info
 
     @property
     def properties(self):
@@ -126,7 +130,7 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
         if len(surfaces) == 1:
             surface_id = list(surfaces)[0]
 
-            volumes_from_surface = self.mesh.volumes_from_surface.get(surface_id)
+            volumes_from_surface = self.geometry_info._surfaces_to_solids.get(surface_id)
             if len(volumes_from_surface) == 1:
                 selected_fluid = self.properties._get_property("fluid", volume=volumes_from_surface[0])
                 self.get_selected_fluid(selected_fluid=selected_fluid)
@@ -482,7 +486,7 @@ class AllowablePulsationsForReciprocatingCompressorInputs(AllowablePulsationsFor
         if self.check_selected_ids():
             return
 
-        area = self.mesh.area_from_surfaces.get(self.selected_ids[0])
+        area = self.geometry_info.surface_area(self.selected_ids[0])
         diameter = np.sqrt(4 * area / np.pi) * 1000
 
         self.lineEdit_inside_diameter.setText(f"{diameter : .4f}")

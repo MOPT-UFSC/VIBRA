@@ -51,7 +51,11 @@ class MaterialInputs(SetMaterial_UI):
 
     @property
     def mesh(self):
-        return app().project.model.mesh
+        return app().project.model.fe_mesh
+
+    @property
+    def geometry_info(self):
+        return app().project.model.geometry_info
 
     @property
     def properties(self):
@@ -193,7 +197,7 @@ class MaterialInputs(SetMaterial_UI):
         volumes = app().main_window.selection.geometry_volumes
         surfaces = app().main_window.selection.geometry_surfaces
 
-        volume_exists = self.mesh.are_there_volumes_in_geometry()
+        volume_exists = self.geometry_info.contains_solids()
         index = self.comboBox_attribution_type.currentIndex()
 
         selected_ids = set()
@@ -309,7 +313,7 @@ class MaterialInputs(SetMaterial_UI):
 
     def update_selection_combo_box_texts(self):
 
-        volumes_exists = self.mesh.are_there_volumes_in_geometry()
+        volumes_exists = self.geometry_info.contains_solids()
         if volumes_exists:
             labels = ["All volumes", "Selected volumes"]
         else:
@@ -332,9 +336,7 @@ class MaterialInputs(SetMaterial_UI):
 
         if "surfaces" in current_text:
             if "All" in current_text:
-                surface_ids = []
-                if "surfaces" in self.mesh.geometry_information:
-                    surface_ids = self.mesh.geometry_information["surfaces"]
+                surface_ids = self.geometry_info.surfaces
 
             else:
                 input_ids = self.lineEdit_selection_id.text()
@@ -353,9 +355,7 @@ class MaterialInputs(SetMaterial_UI):
 
         if "volumes" in current_text:
             if "All" in current_text:
-                volume_ids = []
-                if "volumes" in self.mesh.geometry_information:
-                    volume_ids = self.mesh.geometry_information["volumes"]
+                volume_ids = self.geometry_info.solids
 
             else:
                 input_ids = self.lineEdit_selection_id.text()
@@ -376,7 +376,7 @@ class MaterialInputs(SetMaterial_UI):
 
                 # we cannot have two physical domains active on the same volume
                 self.properties._remove_volume_property("fluid", volume_id)
-                for surface_id in self.mesh.surfaces_from_volume.get(volume_id):
+                for surface_id in self.geometry_info._solids_to_surfaces.get(volume_id):
                     if surface_id in app().project.model.domains_processor.fluid_structure_interfaces:
                         continue
 

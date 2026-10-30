@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import logging
+from copy import deepcopy
 from pathlib import Path
 from time import perf_counter
-from typing import Optional
 
 import numpy as np
 from PIL.Image import Image
@@ -17,6 +17,7 @@ from vibra.engine.mesher.mesh_setup import MeshSetup
 from vibra.engine.model import Model
 from vibra.engine.postprocessing import AcousticPostprocessing, StructuralPostprocessing
 from vibra.engine.properties import FluidLibrary, MaterialLibrary
+from vibra.engine.serialization.mesh_reader import MeshReader
 from vibra.engine.serialization.project_paths import ProjectPaths
 from vibra.engine.serialization.project_reader import ProjectReader
 from vibra.engine.serialization.project_writer import ProjectWriter
@@ -25,7 +26,7 @@ from vibra.engine.solvers import HarmonicSolver, ModalSolver
 
 
 class Project:
-    def __init__(self, working_directory: Optional[Path | str] = None):
+    def __init__(self, working_directory: Path | str | None = None):
         self.project_paths = ProjectPaths(working_directory)
         self.reset_variables()
 
@@ -34,15 +35,15 @@ class Project:
         self.project_reader = ProjectReader(self.project_paths)
         self.project_writer = ProjectWriter(self.project_paths)
 
-        self.save_path: Optional[Path] = None
+        self.save_path: Path | None = None
         self.needs_saving: bool = False
 
         # TODO: Store the Solution, not the solvers and assemblers.
         # Except if it is used to cache a few matrices somehow.
-        self.assembler: Optional[AcousticAssembler | StructuralAssembler] = None
-        self.solver: Optional[HarmonicSolver | ModalSolver] = None
-        self.acoustic_postprocessing: Optional[AcousticPostprocessing] = None
-        self.structural_postprocessing: Optional[StructuralPostprocessing] = None
+        self.assembler: AcousticAssembler | StructuralAssembler | None = None
+        self.solver: HarmonicSolver | ModalSolver | None = None
+        self.acoustic_postprocessing: AcousticPostprocessing | None = None
+        self.structural_postprocessing: StructuralPostprocessing | None = None
 
     def reset_solution(self):
         self.assembler = None
@@ -58,8 +59,8 @@ class Project:
         self.reset_variables()
 
     @property
-    def mesh(self) -> Optional[Mesh]:
-        return self.model.mesh
+    def mesh(self) -> Mesh | None:
+        return self.model.fe_mesh
 
     @property
     def analysis_id(self):
@@ -94,7 +95,7 @@ class Project:
         return self.project_paths.working_directory
 
     @working_directory.setter
-    def working_directory(self, path: Optional[Path | str]):
+    def working_directory(self, path: Path | str | None):
         if hasattr(self, "project_paths"):
             self.project_paths.set_working_directory(path)
         else:
@@ -169,7 +170,7 @@ class Project:
         Unpacks the vibra file into the working directory and reads data from it.
         """
         logging.info("Loading the project data... [25%]")
-        path = Path(path)
+        path = Path(path).expanduser()
         self.reset_project()
         self.reset_solution()
         self.project_reader.unpack_into_working_directory(path)
@@ -236,9 +237,11 @@ class Project:
             - *.nas
             - *.msh
         """
-        mesh = Mesh().load_mesh(path)
-        self.model.mesh = mesh
-        self.model.geometry_path = path  # keeping previous file organization
+
+        mesh, info = MeshReader(path).read_mesh_and_info()
+        self.model.fe_mesh = mesh
+        self.model.geometry_info = info
+        self.model.set_geometry_path(path)
         self.write_to_working_dir()
         return mesh
 
@@ -252,8 +255,7 @@ class Project:
             - *.iges
         """
         path = Path(path)
-        # self.model.geometry = Geometry(path)
-        self.model.geometry_path = path
+        self.model.set_geometry_path(path)
         self.write_to_working_dir()
 
     def configure_mesh(self, mesh_setup: MeshSetup):
@@ -261,10 +263,11 @@ class Project:
         Configures how to create a mesh from a geometry.
         This method might be called before or after loading a geometry.
         """
-        self.model.set_mesh_setup(mesh_setup)
+        self.model.mesh_setup = mesh_setup
+        self.model.fem_mesher.setup = mesh_setup
         self.update_project_setup_file()
 
-    def generate_mesh(self, mesh_setup: MeshSetup) -> Mesh:
+    def generate_mesh(self, mesh_setup: MeshSetup | None = None) -> Mesh:
         """
         Generates a mesh from the loaded geometry and the
         parameters set using the configure_mesh method.
@@ -275,15 +278,15 @@ class Project:
         if self.model.geometry_path is None:
             raise errors.InvalidMeshSetupError("The geometry has not been loaded yet.")
 
-        if not isinstance(mesh_setup, MeshSetup):
-            raise errors.InvalidMeshSetupError("The mesh setup has not been configured yet.")
+        if mesh_setup is not None:
+            self.configure_mesh(mesh_setup)
 
-        mesh = Mesh().load_cad(self.model.geometry_path, mesh_setup)
+        mesh, geometry_info = self.model.fem_mesher.generate()
 
         if mesh.collapsed_elements_data:
-            collapsed_1d_elements = mesh.collapsed_elements_data.get("collpased_1d_elements")
-            collapsed_2d_elements = mesh.collapsed_elements_data.get("collpased_2d_elements")
-            collapsed_3d_elements = mesh.collapsed_elements_data.get("collpased_3d_elements")
+            collapsed_1d_elements: list = mesh.collapsed_elements_data.get("collpased_1d_elements", [])
+            collapsed_2d_elements: list = mesh.collapsed_elements_data.get("collpased_2d_elements", [])
+            collapsed_3d_elements: list = mesh.collapsed_elements_data.get("collpased_3d_elements", [])
 
             message = "The generated mesh contains collapsed elements."
             message += "Please check the mesh setup and try again.\n"
@@ -298,7 +301,9 @@ class Project:
                 solids=collapsed_3d_elements,
             )
 
-        self.model.mesh = mesh
+        self.model.fe_mesh = mesh
+        self.model.geometry_info = geometry_info
+
         self.configure_mesh(mesh_setup)
         self.model.process_degrees_of_freedom_decoupling()
 
@@ -315,9 +320,25 @@ class Project:
         if self.model.geometry_path is None:
             raise errors.InvalidMeshSetupError("The geometry has not been loaded yet.")
 
-        self.model.process_visual_geometry_mesh(self.model.geometry_path)
-        self.project_writer.write_mesh(self.model.mesh)
-        return self.model.mesh
+        mesh, geometry_info = self.model.visual_mesher.generate()
+        self.model.visual_mesh = mesh
+        self.model.geometry_info = geometry_info
+
+        self.model.initial_element_size = 5
+        self.project_writer.write_visual_mesh(mesh)
+        return mesh
+
+    def extract_visual_mesh_from_fem_mesh(self) -> Mesh | None:
+        """
+        Copy the external parts of a visual mesh.
+        """
+        if self.model.fe_mesh is None:
+            return
+
+        self.model.visual_mesh = deepcopy(self.model.fe_mesh)
+        self.model.visual_mesh.solids_connectivity = np.zeros((0, 4), dtype=int)
+        self.project_writer.write_visual_mesh(self.model.visual_mesh)
+        return self.model.visual_mesh
 
     def generate_mesh_from_geometry(
         self,
@@ -333,7 +354,7 @@ class Project:
 
     def configure_analysis(
         self,
-        analysis_setup: Optional[AnalysisSetup],
+        analysis_setup: AnalysisSetup | None,
     ):
         """
         Defines the `AnalysisID` and the `AnalysisSetup` required to
@@ -370,11 +391,11 @@ class Project:
         return self.model.solution
 
     def solve_structural_harmonic_analysis(
-            self, 
-            is_resume: bool = False, 
-            print_log: bool = False, 
-            update_domain_mappings: bool = True,
-            ) -> HarmonicSolution:
+        self,
+        is_resume: bool = False,
+        print_log: bool = False,
+        update_domain_mappings: bool = True,
+    ) -> HarmonicSolution:
 
         self.update_project_setup_file()
 
@@ -491,7 +512,7 @@ class Project:
             is_resume=is_resume,
             print_log=print_log,
             update_domain_mappings=False,
-            )
+        )
 
         return HarmonicSolution(
             analysis_id=self.model.analysis_id,

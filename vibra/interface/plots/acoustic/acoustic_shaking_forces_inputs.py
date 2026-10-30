@@ -53,7 +53,11 @@ class AcousticShakingForcesInputs(AcousticShakingForcesInputs_UI):
 
     @property
     def mesh(self):
-        return app().project.model.mesh
+        return app().project.model.fe_mesh
+
+    @property
+    def geometry_info(self):
+        return app().project.model.geometry_info
 
     @property
     def properties(self):
@@ -151,7 +155,7 @@ class AcousticShakingForcesInputs(AcousticShakingForcesInputs_UI):
 
     def check_selected_surfaces(self):
         for surface_id in self.selected_ids:
-            if len(self.mesh.volumes_from_surface.get(surface_id)) == 1:
+            if len(self.geometry_info._surfaces_to_solids.get(surface_id, [])) == 1:
                 return False
 
         title = "Invalid surfaces selected"

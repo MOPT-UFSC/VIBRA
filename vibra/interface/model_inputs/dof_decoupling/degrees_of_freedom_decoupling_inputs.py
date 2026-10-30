@@ -1,4 +1,6 @@
 
+from vibra.engine.mesher.geometry_info import GeometryInfo
+from vibra.engine.mesher.mesh import Mesh
 import logging
 from collections import defaultdict
 from copy import deepcopy
@@ -30,7 +32,6 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
         app().main_window.workspace_updating_for_model_setup()
 
         self.model = app().project.model
-        self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
 
         self._initialize()
@@ -43,6 +44,14 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
 
         while self.keep_window_open:
             self.exec()
+
+    @property
+    def mesh(self) -> Mesh | None:
+        return self.model.fe_mesh
+
+    @property
+    def geometry_info(self) -> GeometryInfo | None:
+        return self.model.geometry_info
 
     def _config_window(self):
         self.setWindowIcon(app().main_window.vibra_icon)
@@ -61,7 +70,7 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
         for i, width in enumerate([140]):
             self.treeWidget_selection_info.setColumnWidth(i, width)
             self.treeWidget_dof_decoupling.setColumnWidth(i, width)
-            self.treeWidget_selection_info.headerItem().setTextAlignment(i, Qt.AlignCenter)           
+            self.treeWidget_selection_info.headerItem().setTextAlignment(i, Qt.AlignCenter)
             self.treeWidget_dof_decoupling.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def _create_connections(self):
@@ -98,7 +107,7 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
 
             surface_ids = [int(surf_id) for surf_id in surfaces]
             surface_ids.sort()
-            self.update_volumes_from_faces(surface_ids)  
+            self.update_volumes_from_faces(surface_ids)
             return
 
         self.lineEdit_selection_id.setText("")
@@ -108,7 +117,7 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
         self.treeWidget_selection_info.clear()
 
         for surface_id in surface_ids:
-            volumes_from_surface = self.model.mesh.volumes_from_surface[surface_id]
+            volumes_from_surface = self.geometry_info._surfaces_to_solids.get(surface_id, [])
             item = QTreeWidgetItem([str(surface_id), str(volumes_from_surface)])
             for i in range(2):
                 item.setTextAlignment(i, Qt.AlignCenter)
@@ -124,7 +133,7 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
         for surface_id in surface_ids:
 
             message = ""
-            volumes_from_surface = self.model.mesh.volumes_from_surface.get(surface_id)
+            volumes_from_surface = self.geometry_info._surfaces_to_solids.get(surface_id)
 
             if volumes_from_surface is None:
                 message = "The selected surface is not connected to any volume. "
@@ -132,7 +141,7 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
                 message += "with two volumes to proceed with dofs decoupling."
 
             elif len(volumes_from_surface) == 1:
-                message = "The selected surface is connected to one volume, this means that an external " 
+                message = "The selected surface is connected to one volume, this means that an external "
                 message += "surface has been selected. You must select an internal surface connected "
                 message += "with two volumes to proceed with dofs decoupling."
 
@@ -156,7 +165,7 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
 
         # select volumes with reduced number of solid elements to decouple the DOF
         for _surface_id in surface_ids:
-            volumes_from_surface = self.model.mesh.volumes_from_surface.get(_surface_id)
+            volumes_from_surface = self.geometry_info._surfaces_to_solids.get(_surface_id)
             if len(volumes_from_surface) != 2:
                 continue
 
@@ -235,7 +244,7 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
             for (property, _), data in self.properties.surface_properties.items():
                 if property != "degrees_of_freedom_decoupling":
                     continue
-            
+
                 data: dict
                 new_surface_id = data.get("new_surface_id")
                 if isinstance(new_surface_id, int):
@@ -295,7 +304,7 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
             else:
                 decouple_pair = [selected_surface, decouple_surface]
                 decouple_pair.sort()
-                       
+
             decouple_pair = tuple(decouple_pair)
             selected_surfaces_decoupled.append(str(decouple_pair))
 
@@ -400,7 +409,7 @@ class DegreesOfFreedomDecouplingInputs(DegreesOfFreedomDecouplingInputs_UI):
 
         else:
             self.mesh.restore_data_from_cache()
-            self.mesh.process_upwards_adjacencies_from_entities()
+            self.mesh.process_upwards_adjacencies()
             # self.mesh.cache_mesh_information()
 
         process_decoupling_actions()

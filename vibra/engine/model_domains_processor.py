@@ -1,5 +1,6 @@
-
 from typing import TYPE_CHECKING
+
+from vibra import errors
 
 if TYPE_CHECKING:
     from vibra.engine.model import Model
@@ -43,7 +44,11 @@ class ModelDomainsProcessor:
 
     @property
     def mesh(self):
-        return self.model.mesh
+        return self.model.fe_mesh
+
+    @property
+    def geometry_info(self):
+        return self.model.geometry_info
 
     @property
     def properties(self):
@@ -54,12 +59,15 @@ class ModelDomainsProcessor:
         This method maps all entities of each domain.
         """
 
+        if self.geometry_info is None:
+            return
+
         self.volumes_of_domain.clear()
         self.surfaces_of_domain.clear()
         self.lines_of_domain.clear()
         self.points_of_domain.clear()
 
-        for vol_id in self.mesh.all_volume_ids():
+        for vol_id in self.geometry_info.all_volume_ids():
             fluid = self.properties._get_property("fluid", volume=vol_id)
             if isinstance(fluid, Fluid):
                 self.volumes_of_domain["acoustic"].append(int(vol_id))
@@ -75,15 +83,15 @@ class ModelDomainsProcessor:
             points_of_domain = set()
 
             for vol_id in self.volumes_of_domain.get(domain, []):
-                surface_ids = self.mesh.surfaces_from_volume.get(vol_id, [])
+                surface_ids = self.geometry_info._solids_to_surfaces.get(vol_id, [])
                 surfaces_of_domain |= set(surface_ids)
 
                 for surf_id in surface_ids:
-                    line_ids = self.mesh.lines_from_surface.get(surf_id, [])
+                    line_ids = self.geometry_info._surfaces_to_curves.get(surf_id, [])
                     lines_of_domain |= set(line_ids)
 
                     for line_id in line_ids:
-                        point_ids = self.mesh.points_from_line.get(line_id, [])
+                        point_ids = self.geometry_info._curves_to_points.get(line_id, [])
                         points_of_domain |= set(point_ids)
 
             self.surfaces_of_domain[domain] = sorted(surfaces_of_domain)
@@ -94,8 +102,12 @@ class ModelDomainsProcessor:
         """
         This method maps the fluid-structure interfaces.
         """
+
+        if self.geometry_info is None:
+            return
+
         self.fluid_structure_interfaces.clear()
-        for surface_id, vol_ids in self.mesh.volumes_from_surface.items():
+        for surface_id, vol_ids in self.geometry_info._surfaces_to_solids.items():
             if len(vol_ids) == 1:
                 continue
 
@@ -115,14 +127,18 @@ class ModelDomainsProcessor:
                 continue
 
             self.fluid_structure_interfaces[surface_id] = {
-                "fluid_volume" : fluid_volume,
-                "structure_volume" : structure_volume,
-                }
+                "fluid_volume": fluid_volume,
+                "structure_volume": structure_volume,
+            }
 
     def map_nodes_and_elements_by_domain(self):
         """
         This method groups the nodes and elements for acoustic and structural domains.
         """
+
+        if self.mesh is None:
+            return  # Can't map it without a FE mesh
+
         self.nodes_of_domain.clear()
         self.elements_of_domain.clear()
         for domain, vol_ids in self.volumes_of_domain.items():
@@ -134,6 +150,9 @@ class ModelDomainsProcessor:
         """
         This method maps the nodes of each domain to a continuous list of indices.
         """
+
+        if self.mesh is None:
+            return  # Can't map it without a FE mesh
 
         acoustic_nodes: np.ndarray = self.nodes_of_domain.get("acoustic", [])
         structural_nodes: np.ndarray = self.nodes_of_domain.get("structural", [])
@@ -165,6 +184,9 @@ class ModelDomainsProcessor:
         This method maps the elements of each domain to a continuous list of indices.
         """
 
+        if self.mesh is None:
+            return  # Can't map it without a FE mesh
+
         acoustic_elements: np.ndarray = self.elements_of_domain.get("acoustic", [])
         structural_elements: np.ndarray = self.elements_of_domain.get("structural", [])
 
@@ -193,6 +215,9 @@ class ModelDomainsProcessor:
         """
         This method processes the DOFs indices arrays of each domain.
         """
+
+        if self.model.fe_mesh is None:
+            return  # We don't know the elements before having a FE mesh
 
         if self.model.acoustic_element_3d is None:
             self.model.set_acoustic_elements()
@@ -247,12 +272,12 @@ class ModelDomainsProcessor:
     def get_dofs_offset(self, domain: str) -> int:
         """
         This method returns, for a specific domain, the dofs shift.
-        
+
         Parameter
         ---------
         domain: str
             The domain label (acoustic or structural)
-        
+
         Return
         ------
         dofs_offset: int
@@ -295,12 +320,12 @@ class ModelDomainsProcessor:
 
         if self.auxiliar_logs:
             print()
-            print(f"Elapsed time to 'map_model_domains': {dt1 : .6f} s")
-            print(f"Elapsed time to 'map_fluid_structure_interfaces': {dt2 : .6f} s")
-            print(f"Elapsed time to 'map_nodes_and_elements_by_domain': {dt3 : .6f} s")
-            print(f"Elapsed time to 'process_nodes_mappings_by_domain': {dt4 : .6f} s")
-            print(f"Elapsed time to 'process_element_mappings_by_domain': {dt5 : .6f} s")
-            print(f"Elapsed time 'process_dof_by_domain': {dt6 : .6f} s")
+            print(f"Elapsed time to 'map_model_domains': {dt1: .6f} s")
+            print(f"Elapsed time to 'map_fluid_structure_interfaces': {dt2: .6f} s")
+            print(f"Elapsed time to 'map_nodes_and_elements_by_domain': {dt3: .6f} s")
+            print(f"Elapsed time to 'process_nodes_mappings_by_domain': {dt4: .6f} s")
+            print(f"Elapsed time to 'process_element_mappings_by_domain': {dt5: .6f} s")
+            print(f"Elapsed time 'process_dof_by_domain': {dt6: .6f} s")
 
     @cache
     def get_entities_mapping(self, volume_ids: tuple[int]) -> dict:
@@ -315,33 +340,37 @@ class ModelDomainsProcessor:
         Return
         ------
         entities_mapping: dict
-            A dictionary mapping each entity type to its corresponding 
+            A dictionary mapping each entity type to its corresponding
             index list.
         """
+
+        if self.geometry_info is None:
+            return {}
+
         entities_mapping = {}
         aux_map = defaultdict(list)
         aux_map["volume"].extend(volume_ids)
 
         for vol_id in volume_ids:
-            surfaces = self.mesh.surfaces_from_volume.get(vol_id)
+            surfaces = self.geometry_info._solids_to_surfaces.get(vol_id, [])
             aux_map["surface"].extend(surfaces)
 
             for surf_id in surfaces:
-                lines = self.mesh.lines_from_surface.get(surf_id)
+                lines = self.geometry_info._surfaces_to_curves.get(surf_id, [])
                 aux_map["line"].extend(lines)
 
                 for line_id in lines:
-                    points = self.mesh.points_from_line.get(line_id)
+                    points = self.geometry_info._curves_to_points.get(line_id, [])
                     aux_map["point"].extend(points)
 
         for key, values in aux_map.items():
             entities_mapping[key] = np.unique(values)
 
         return entities_mapping
-        
+
     def is_there_a_property_assigned_to_a_domain(self, domain: str, volume_ids: list[int]):
         """
-        This method checks whether a valid property assigned to a domain 
+        This method checks whether a valid property assigned to a domain
         exists, returning `True` if it does and `False` otherwise.
 
         Parameter
@@ -366,7 +395,7 @@ class ModelDomainsProcessor:
             if prop_name not in properties:
                 continue
 
-            if entity_name == "node" and not nodes_included:
+            if entity_name == "node" and not nodes_included and (self.mesh is not None):
                 mask = np.isin(self.mesh.solids_connectivity[:, 1], volume_ids)
                 entities_maping["node"] = np.unique(self.mesh.solids_connectivity[mask, 4:])
                 nodes_included = True
@@ -404,7 +433,7 @@ class ModelDomainsProcessor:
             if prop_name not in properties:
                 continue
 
-            if entity_name == "node" and not nodes_included:
+            if entity_name == "node" and not nodes_included and (self.mesh is not None):
                 mask = np.isin(self.mesh.solids_connectivity[:, 1], volume_ids)
                 entities_maping["node"] = np.unique(self.mesh.solids_connectivity[mask, 4:])
                 nodes_included = True

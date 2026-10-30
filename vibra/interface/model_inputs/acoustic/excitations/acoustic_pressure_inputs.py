@@ -26,7 +26,7 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
         app().main_window.workspace_updating_for_model_setup()
 
         self.model = app().project.model
-        self.mesh = app().project.model.mesh
+        self.mesh = app().project.model.fe_mesh
         self.properties = app().project.model.properties
 
         self._config_window()
@@ -551,4 +551,4 @@ class AcousticPressureInputs(AcousticPressureInputs_UI):
 
             index = self.treeWidget_acoustic_pressure.indexBelow(index)
         
-        return map_id_to_model_index  
+        return map_id_to_model_index

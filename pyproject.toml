@@ -29,6 +29,8 @@ dependencies = [
     "pint>=0.24.4",
     "psutil>=7.2.2",
     "tqdm>=4.67.1",
+    "cadquery-ocp-novtk>=8.0.1.1.0",
+    "cadquery-ocp-stubs>=8.0.1.1.0",
 ]
 
 [dependency-groups]
@@ -38,6 +40,7 @@ dev = [
     "invoke>=2.2.0,<3",
     "pyinstaller>=6.20.0",
     "tuna>=0.5.15",
+    "pyright>=1.1.411",
 ]
 
 [build-system]
@@ -53,6 +56,9 @@ markers = [
 [tool.ruff]
 exclude = ["__pycache__", "vibra/interface/ui_generated"]
 line-length = 150
+
+[tool.ruff.lint]
+ignore = ["BLE001", "SIM102", "S110"]
 
 [tool.ruff.lint.per-file-ignores]
 "vibra/__init__.py" = ["E402"] # Ignore import violations

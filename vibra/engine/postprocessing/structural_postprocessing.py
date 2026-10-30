@@ -30,7 +30,7 @@ class StructuralPostprocessing:
 
     @property
     def mesh(self):
-        return self.model.mesh
+        return self.model.fe_mesh
 
 
     @property

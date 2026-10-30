@@ -51,7 +51,8 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         app().main_window.workspace_updating_for_model_setup()
 
         self.model = app().project.model
-        self.mesh = app().project.model.mesh
+        self.mesh = app().project.model.fe_mesh
+        self.geometry_info = app().project.model.geometry_info
         self.properties = app().project.model.properties
 
         self._config_window()
@@ -606,7 +607,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             PrintMessageInput(error_data)
             return None
 
-        volumes_from_surface = self.model.mesh.volumes_from_surface.get(surface_id)
+        volumes_from_surface = self.model.geometry_info._surfaces_to_solids.get(surface_id, [])
         if len(volumes_from_surface) != 1:
             title = "Invalid surface selected"
             message = "The selected surface does not correspond to the piping endings. "
@@ -821,7 +822,7 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
         else:
             flow_label = "out_flow"
 
-        volume_id = self.model.mesh.volumes_from_surface[surface_id]
+        volume_id = self.model.geometry_info._surfaces_to_solids.get(surface_id, [])
         connection_type = self.comboBox_connection_type.currentText().lower()
 
         state_properties = self.get_state_properties()
@@ -852,8 +853,8 @@ class ReciprocatingCompressorInputs(ReciprocatingCompressorInputs_UI):
             self.selected_fluid.molar_mass,
             )
 
-        self.model.mesh.process_face_elements_connected_to_nodes(surface_id)
-        surface_area = self.model.mesh.surface_area_from_element_integration[surface_id]
+        self.model.fe_mesh.process_face_elements_connected_to_nodes(surface_id)
+        surface_area = self.model.fe_mesh.surface_area_from_element_integration[surface_id]
 
         # process the volumetric flow rate spectrum (per valve)
         frequencies, flow_rate = self.compressor.process_FFT_of_volumetric_flow_rate(self.N_rev, flow_label)

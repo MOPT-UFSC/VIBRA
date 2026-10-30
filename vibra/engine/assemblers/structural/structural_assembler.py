@@ -103,7 +103,7 @@ class StructuralAssembler:
 
     def get_property_data_for_selected_property(self, selected_property: str) -> dict[int, np.ndarray]:
         """
-        This method returns, for a given property, the integrated 
+        This method returns, for a given property, the integrated
         property-related data in array format.
         """
         output_data = defaultdict(int)
@@ -119,7 +119,7 @@ class StructuralAssembler:
             if property == "nodal_loads" and element_integration:
                 continue
 
-            nodes = self.model.mesh.get_nodes_from_surface(surface_id)
+            nodes = self.model.fe_mesh.get_nodes_from_surface(surface_id)
             if nodes is None:
                 continue
 
@@ -137,7 +137,7 @@ class StructuralAssembler:
             if property == "nodal_loads" and element_integration:
                 continue
 
-            nodes = self.model.mesh.get_nodes_from_line(line_id)
+            nodes = self.model.fe_mesh.get_nodes_from_line(line_id)
             if nodes is None:
                 continue
 
@@ -151,7 +151,7 @@ class StructuralAssembler:
             if property != selected_property:
                 continue
 
-            node_id = self.model.mesh.nodes_from_points.get(point_id)
+            node_id = self.model.fe_mesh.nodes_from_points.get(point_id)
             if node_id is None:
                 continue
 
@@ -230,7 +230,7 @@ class StructuralAssembler:
 
 
     def process_unprescribed_indices(self):
-        """ 
+        """
         Returns the unprescribed dof indices.
         """
         all_indices = np.arange(self.model.domains_processor.total_str_dofs, dtype=int)
@@ -248,14 +248,14 @@ class StructuralAssembler:
         3d solid elements if there is any volume or
         the 2d face elements, otherwise.
         """
-        if self.model.mesh.solids_connectivity.size:
+        if self.model.fe_mesh.solids_connectivity.size:
             return self.structural_dofs_indices
 
         else:
-            nodes_from_2d_elements = np.array([*set(self.model.mesh.faces_connectivity[:, 4:].ravel())], dtype=int)
+            nodes_from_2d_elements = np.array([*set(self.model.fe_mesh.faces_connectivity[:, 4:].ravel())], dtype=int)
 
             dof = self.element_2d.dof_per_node
-            local_dof_2d = np.arange(self.element_2d.dof_per_node, dtype=int)            
+            local_dof_2d = np.arange(self.element_2d.dof_per_node, dtype=int)
             displacement_ldof_2d = local_dof_2d[0 : int(self.element_2d.dof_per_node / 2)]
 
             displacement_dof_from_2d_elements = dof * nodes_from_2d_elements.reshape(-1, 1) + displacement_ldof_2d
@@ -323,14 +323,14 @@ class StructuralAssembler:
         """
         self.material_from_volume.clear()
 
-        for vol_id in self.model.mesh.elements_from_volume:
+        for vol_id in self.model.fe_mesh.elements_from_volume:
             material = self.properties._get_property("material", volume=vol_id)
             if isinstance(material, Material):
                 self.material_from_volume[vol_id] = material
 
 
     def get_distributed_data_for_1d_element_integration(self, property_label: str) -> DistributedPropertyData | None:
-        """ 
+        """
         This method processes the foundation stiffness data for element integration.
 
         Returns
@@ -356,8 +356,8 @@ class StructuralAssembler:
             normal = data.get("normal", False)
             direct_input = data.get("direct_input", True)
 
-            line_elements = list(self.model.mesh.elements_from_line.get(line_id))
-            line_connect = self.model.mesh.get_connectivity_from_line(line_id)
+            line_elements = list(self.model.fe_mesh.elements_from_line.get(line_id))
+            line_connect = self.model.fe_mesh.get_connectivity_from_line(line_id)
 
             if direct_input:
                 line_length = self.element_1d.integrate_length(line_connect)
@@ -383,7 +383,7 @@ class StructuralAssembler:
 
 
     def get_distributed_data_for_2d_element_integration(self, property_label: str) -> DistributedPropertyData | None:
-        """ 
+        """
         This method processes the foundation stiffness data for element integration.
 
         Returns
@@ -409,8 +409,8 @@ class StructuralAssembler:
             normal = data.get("normal", False)
             direct_input = data.get("direct_input", True)
 
-            surf_elements = list(self.model.mesh.elements_from_surface.get(surface_id))
-            surf_connect = self.model.mesh.get_connectivity_from_surface(surface_id)
+            surf_elements = list(self.model.fe_mesh.elements_from_surface.get(surface_id))
+            surf_connect = self.model.fe_mesh.get_connectivity_from_surface(surface_id)
 
             if direct_input:
                 surface_area = self.element_2d.integrate_area(surf_connect)
@@ -450,12 +450,12 @@ class StructuralAssembler:
         """
         self.surface_data_for_shell_elements.clear()
 
-        for surf_id in self.model.mesh.elements_from_surface:
-            
+        for surf_id in self.model.fe_mesh.elements_from_surface:
+
             material = self.properties._get_property("material", surface=surf_id)
             if material is None:
                 continue
-            
+
             surface_data = self.properties._get_property("surface_thickness", surface=surf_id)
             if surface_data is None:
                 continue
@@ -480,7 +480,7 @@ class StructuralAssembler:
         self.total_dof = self.element_2d.dof_per_node * len(self.element_2d.nodal_coordinates)
 
         self.displacement_dof = self.get_displacement_dof()
-    
+
         self.data_K = np.zeros((self.number_2d_elements, self.dof, self.dof), dtype=complex)
         self.data_M = np.zeros((self.number_2d_elements, self.dof, self.dof), dtype=complex)
 
@@ -489,7 +489,7 @@ class StructuralAssembler:
 
         # loop for 2d elements
         with tqdm(
-            self.model.mesh.faces_connectivity,
+            self.model.fe_mesh.faces_connectivity,
             desc="Processing the elementary matrices data for face elements",
             unit="element",
             file=sys.stderr,
@@ -507,7 +507,7 @@ class StructuralAssembler:
 
                 # material from surface
                 material = self.surface_data_for_shell_elements[surf_id]["material"]
-                
+
                 # material from volume
                 surface_data = self.surface_data_for_shell_elements[surf_id]["surface_data"]
 
@@ -536,7 +536,7 @@ class StructuralAssembler:
         last_progress = 0
 
         # with tqdm(
-        #     self.model.mesh.solids_connectivity,
+        #     self.model.fe_mesh.solids_connectivity,
         #     desc="Processing the elementary matrices data for solid elements",
         #     unit="element",
         #     file=sys.stderr,
@@ -556,7 +556,7 @@ class StructuralAssembler:
             last_progress = progress
 
             # get the volume of the 3D element
-            vol_id = self.model.mesh.solids_connectivity[element_id, 1]
+            vol_id = self.model.fe_mesh.solids_connectivity[element_id, 1]
 
             # material from volume
             material = self.material_from_volume.get(vol_id)
@@ -573,7 +573,7 @@ class StructuralAssembler:
         """
         This method preprocesses all the required data to assemble the global matrices.
         """
-        if self.model.mesh.solids_connectivity.size:
+        if self.model.fe_mesh.solids_connectivity.size:
             self.process_material_from_volumes()
             self.compute_data_to_process_global_matrices_for_solid_elements(reorder=reorder, print_log=print_log)
             self.process_data_to_assemble_distributed_global_matrices()
@@ -648,7 +648,7 @@ class StructuralAssembler:
         element: Structural1DElement | Structural2DElement,
     ):
         """
-        For a distributed property, this method processes data from the global 
+        For a distributed property, this method processes data from the global
         matrix in order to assemble the sparse matrix.
 
         Parameters
@@ -660,7 +660,7 @@ class StructuralAssembler:
             The structural element type.
 
         is_vectorial: bool, optional
-            This argument determines whether the distributed property is vectorial or not. 
+            This argument determines whether the distributed property is vectorial or not.
 
         Return
         ------
@@ -701,7 +701,7 @@ class StructuralAssembler:
 
             else:
                 x_density = get_3d_diagonal_matrix(value.T)
-            
+
             data[:, i, :, :] = element.integrate_distributed_property(i, x_density, is_normal=_normal)
 
         sp_data = SparseMatrixData(data, rows, cols)
@@ -711,7 +711,7 @@ class StructuralAssembler:
 
     def assemble_distributed_mass_global_matrix(self, index: int = 0):
         """
-        This method assembles the distributed mass global matrix by 
+        This method assembles the distributed mass global matrix by
         accounting for the contributions of 1D and 2D elements.
 
         Parameter
@@ -737,7 +737,7 @@ class StructuralAssembler:
 
         if not isinstance(self.distributed_mass_matrix, csr_matrix):
             return
- 
+
         if self.model.drop_domain:
             self.distributed_mass_matrix = self.distributed_mass_matrix[self.structural_dofs_indices, :][:, self.structural_dofs_indices]
 
@@ -749,7 +749,7 @@ class StructuralAssembler:
 
     def assemble_distributed_stiffness_global_matrix(self, index: int = 0):
         """
-        This method assembles the distributed stiffness global matrix by 
+        This method assembles the distributed stiffness global matrix by
         accounting for the contributions of 1D and 2D elements.
 
         Parameter
@@ -787,7 +787,7 @@ class StructuralAssembler:
 
     def assemble_distributed_damping_global_matrix(self, index: int = 0):
         """
-        This method assembles the distributed damping global matrix by 
+        This method assembles the distributed damping global matrix by
         accounting for the contributions of 1D and 2D elements.
 
         Parameter
@@ -813,7 +813,7 @@ class StructuralAssembler:
 
         if not isinstance(self.distributed_damping_matrix, csr_matrix):
             return
- 
+
         if self.model.drop_domain:
             self.distributed_damping_matrix = self.distributed_damping_matrix[self.structural_dofs_indices, :][:, self.structural_dofs_indices]
 
@@ -878,7 +878,7 @@ class StructuralAssembler:
         Use this method to compute the structural load vector {f}.
 
         Parameters
-        ----------       
+        ----------
         index: int
             The solution step index.
 
@@ -978,7 +978,7 @@ class StructuralAssembler:
         full_solution[self.unprescribed_dof_indices, :] = solution
 
         return full_solution
-    
+
 
     def reinsert_the_prescribed_dof_into_solution_freq(self, solution: np.ndarray, freq_index: int):
 

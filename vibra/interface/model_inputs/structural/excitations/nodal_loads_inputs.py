@@ -42,7 +42,8 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         app().main_window.workspace_updating_for_model_setup()
 
         self.model = app().project.model
-        self.mesh = app().project.model.mesh
+        self.mesh = app().project.model.fe_mesh
+        self.geometry_info = app().project.model.geometry_info
         self.properties = app().project.model.properties
 
         self._config_window()
@@ -153,7 +154,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             line_edit_imag.setValidator(StrictDoubleValidator(-1e16, 1e16, 8))
 
     def _create_connections(self):
-    
+
         # QComboBox connections
         self.comboBox_assignment_type.currentIndexChanged.connect(self.assignment_type_callback)
         self.comboBox_data_type.currentIndexChanged.connect(self.data_type_callback)
@@ -285,7 +286,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                     continue
 
                 table_path = table_paths[index]
-                if table_path is not None:                   
+                if table_path is not None:
                     lineEdit_table.setText(table_path)
 
             self.tabWidget_main.setCurrentIndex(StandardTabType.TABULAR_DATA)
@@ -363,11 +364,11 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             widget.setText(label_text)
 
     def update_element_type_based_on_geometry_information(self):
-        volume_exists = self.mesh.are_there_volumes_in_geometry()
+        volume_exists = self.geometry_info.contains_solids()
         self.comboBox_element_type.setCurrentIndex(int(volume_exists))
 
     def constant_values_assignment(self, selection: str, selected_ids: list[int]):
- 
+
         element_type = self.element_types[self.comboBox_element_type.currentIndex()]
         real_imag_input = self.comboBox_data_type.currentIndex() == InputDataType.REAL_IMAGINARY
 
@@ -386,7 +387,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         nodal_loads = [Fx, Fy, Fz]
 
         if element_type == "2d_element":
-            
+
             Mx = check_input_entries(self.lineEdit_left_Mx.text(), self.lineEdit_right_Mx.text(), "rx")
             if Mx is None:
                 return True
@@ -435,7 +436,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                 case "lines":
                     self.properties._set_property("nodal_loads", data, line=selected_id)
 
-                case "points": 
+                case "points":
                     self.properties._set_property("nodal_loads", data, point=selected_id)
 
                 case "nodes":
@@ -471,7 +472,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                 PrintMessageInput([error_title, title, message])
                 lineEdit.setFocus()
                 return None, None
-        
+
             return imported_values, imported_table_path
 
         except Exception as log_error:
@@ -493,22 +494,22 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         self.Fy_table_values, self.Fy_table_path = self.load_table(self.lineEdit_path_table_Fy, "Fy")
         if self.Fy_table_path is None:
             self.lineEdit_reset(self.lineEdit_path_table_Fy)
-            
+
     def load_Fz_table(self):
         self.Fz_table_values, self.Fz_table_path = self.load_table(self.lineEdit_path_table_Fz, "Fz")
         if self.Fz_table_path is None:
             self.lineEdit_reset(self.lineEdit_path_table_Fz)
-            
+
     def load_Mx_table(self):
         self.Mx_table_values, self.Mx_table_path = self.load_table(self.lineEdit_path_table_Mx, "Mx")
         if self.Mx_table_path is None:
             self.lineEdit_reset(self.lineEdit_path_table_Mx)
-            
+
     def load_My_table(self):
         self.My_table_values, self.My_table_path = self.load_table(self.lineEdit_path_table_My, "My")
         if self.My_table_path is None:
             self.lineEdit_reset(self.lineEdit_path_table_My)
-            
+
     def load_Mz_table(self):
         self.Mz_table_values, self.Mz_table_path = self.load_table(self.lineEdit_path_table_Mz, "Mz")
         if self.Mz_table_path is None:
@@ -631,9 +632,9 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             if condition_1 or condition_2:
                 title = "Additional inputs required"
                 message = "You must enter at least one nodal loads table path before confirming the assignment."
-                PrintMessageInput([error_title, title, message]) 
+                PrintMessageInput([error_title, title, message])
                 return True
-           
+
             # self.remove_duplicated_assignments(selected_ids, selection)
             self.remove_conflicting_excitations(selected_ids, selection)
 
@@ -651,7 +652,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                 case "lines":
                     self.properties._set_property("nodal_loads", data, line=selected_id)
 
-                case "points": 
+                case "points":
                     self.properties._set_property("nodal_loads", data, point=selected_id)
 
                 case "nodes":
@@ -730,7 +731,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
         }
 
         self.treeWidget_nodal_loads.clear()
-       
+
         for key, property in properties.items():
             for (prop_label, *args), data in property.items():
 
@@ -949,7 +950,7 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
             if isinstance(data, dict):
                 self.comboBox_element_type.setCurrentIndex(ElementFormulation.ELEMENT_2D)
                 return
-            
+
         if isinstance(line_id, int):
             for node_id in self.mesh.get_nodes_from_line(line_id):
                 for surface_id in self.mesh.get_surfaces_from_node(node_id):
@@ -984,54 +985,54 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
 
             if selection == "surfaces":
 
-                nodes_from_surface = self.model.mesh.get_nodes_from_surface(selected_id)
+                nodes_from_surface = self.model.fe_mesh.get_nodes_from_surface(selected_id)
                 for (property, node_id) in self.properties.nodal_properties:
                     if property == "nodal_loads" and node_id in nodes_from_surface:
                         if node_id not in nodes_to_remove:
                             nodes_to_remove.append(node_id)
 
-                for line_id in self.mesh.lines_from_surface[selected_id]:
+                for line_id in self.geometry_info._surfaces_to_curves[selected_id]:
                     data = self.properties._get_property("nodal_loads", line=line_id)
                     if isinstance(data, dict):
                         self.properties._remove_line_property("nodal_loads", line_id)
 
-                    for point_id in self.mesh.points_from_line[line_id]:
+                    for point_id in self.geometry_info._curves_to_points[line_id]:
                         data = self.properties._get_property("nodal_loads", point=point_id)
                         if isinstance(data, dict):
                             self.properties._remove_point_property("nodal_loads", point_id)
 
             elif selection == "lines":
 
-                nodes_from_line = self.model.mesh.get_nodes_from_line(selected_id)
+                nodes_from_line = self.model.fe_mesh.get_nodes_from_line(selected_id)
                 for (property, node_id) in self.properties.nodal_properties:
                     if property == "nodal_loads" and node_id in nodes_from_line:
                         if node_id not in nodes_to_remove:
                             nodes_to_remove.append(node_id)
 
-                for surface_id in self.mesh.surfaces_from_line[selected_id]:
+                for surface_id in self.geometry_info._curves_to_surfaces[selected_id]:
                     data = self.properties._get_property("nodal_loads", surface=surface_id)
                     if isinstance(data, dict):
                         self.properties._remove_surface_property("nodal_loads", surface_id)
 
-                for point_id in self.mesh.points_from_line[selected_id]:
+                for point_id in self.geometry_info._curves_to_points[selected_id]:
                     data = self.properties._get_property("nodal_loads", point=point_id)
                     if isinstance(data, dict):
                         self.properties._remove_point_property("nodal_loads", point_id)
 
             elif selection == "points":
 
-                nodes_from_point = self.model.mesh.nodes_from_points[selected_id]
+                nodes_from_point = self.model.fe_mesh.nodes_from_points[selected_id]
                 for (property, node_id) in self.properties.nodal_properties:
                     if property == "nodal_loads" and node_id in nodes_from_point:
                         if node_id not in nodes_to_remove:
                             nodes_to_remove.append(node_id)
 
-                for line_id in self.mesh.lines_from_point[selected_id]:
+                for line_id in self.geometry_info._points_to_curves[selected_id]:
                     data = self.properties._get_property("nodal_loads", line=line_id)
                     if isinstance(data, dict):
                         self.properties._remove_line_property("nodal_loads", line_id)
 
-                    for surface_id in self.model.mesh.surfaces_from_line[line_id]:
+                    for surface_id in self.geometry_info._curves_to_surfaces[line_id]:
                         data = self.properties._get_property("nodal_loads", surface=surface_id)
                         if isinstance(data, dict):
                             self.properties._remove_surface_property("nodal_loads", surface_id)
@@ -1042,13 +1043,13 @@ class NodalLoadsInputs(NodalLoadsInputs_UI):
                 data = self.properties._get_property("nodal_loads", point=point_id)
                 if isinstance(data, dict):
                     self.properties._remove_point_property("nodal_loads", point_id)
- 
-                for line_id in self.mesh.lines_from_point[point_id]:
+
+                for line_id in self.geometry_info._points_to_curves[point_id]:
                     data = self.properties._get_property("nodal_loads", line=line_id)
                     if isinstance(data, dict):
                         self.properties._remove_line_property("nodal_loads", line_id)
 
-                    for surface_id in self.model.mesh.surfaces_from_line[line_id]:
+                    for surface_id in self.geometry_info._curves_to_surfaces[line_id]:
                         data = self.properties._get_property("nodal_loads", surface=surface_id)
                         if isinstance(data, dict):
                             self.properties._remove_surface_property("nodal_loads", surface_id)

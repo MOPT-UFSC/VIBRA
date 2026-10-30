@@ -37,7 +37,7 @@ class Structural1DElement(Element1D):
         self.connectivities = connectivities
 
         # stack the element nodes coordinates for all elements
-        coords = self.model.mesh.nodal_coordinates[[connect for connect in connectivities], 1:]
+        coords = self.model.fe_mesh.nodal_coordinates[[connect for connect in connectivities], 1:]
 
         # initialize variable
         dL = 0.
@@ -75,7 +75,7 @@ class Structural1DElement(Element1D):
         e_nodes = self.connectivities[el_index, :]
 
         # element nodal coordinates
-        coords = self.model.mesh.nodal_coordinates[e_nodes, 1:]
+        coords = self.model.fe_mesh.nodal_coordinates[e_nodes, 1:]
 
         # initialize the variable Fe
         Fe = 0.
@@ -116,7 +116,7 @@ class Structural1DElement(Element1D):
         e_nodes = self.connectivities[el_index, :]
 
         # element nodal coordinates
-        coords = self.model.mesh.nodal_coordinates[e_nodes, 1:]
+        coords = self.model.fe_mesh.nodal_coordinates[e_nodes, 1:]
 
         # initialize the variable Fe
         Ke = 0.

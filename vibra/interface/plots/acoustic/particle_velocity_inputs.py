@@ -36,7 +36,11 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
 
     @property
     def mesh(self):
-        return app().project.model.mesh
+        return app().project.model.fe_mesh
+
+    @property
+    def geometry_info(self):
+        return app().project.model.geometry_info
 
     @property
     def properties(self):
@@ -157,8 +161,9 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
         internal_surfaces_map = {}  
         self.comboBox_volumes.blockSignals(True)
 
+        assert self.geometry_info is not None
         for surface_id in surface_ids:
-            volumes_from_surface = self.mesh.volumes_from_surface.get(surface_id, list())
+            volumes_from_surface = self.geometry_info._surfaces_to_solids.get(surface_id, list())
             if len(volumes_from_surface) == 1:
                 external_surfaces_map[surface_id] = volumes_from_surface[0]
 
@@ -255,10 +260,10 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
 
         if self.comboBox_volumes.currentText() == "Multiple":
             if selection_type == "surfaces":
-                volume_id = self.mesh.volumes_from_surface.get(selected_id)[0]
+                volume_id = self.geometry_info._surfaces_to_solids.get(selected_id)[0]
             else:
                 surfaces_from_node = self.mesh.get_surfaces_from_node(selected_id)
-                volume_id = self.mesh.volumes_from_surface.get(surfaces_from_node[0])[0]
+                volume_id = self.geometry_info._surfaces_to_solids.get(surfaces_from_node[0])[0]
         else:
             volume_id = int(self.comboBox_volumes.currentText())
 

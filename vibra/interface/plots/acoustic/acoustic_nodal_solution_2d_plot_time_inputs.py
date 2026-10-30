@@ -43,7 +43,7 @@ class AcousticNodalSolution2dPlotTimeInputs(AcousticNodalSolution2dPlotTimeInput
 
     @property
     def mesh(self):
-        return app().project.model.mesh
+        return app().project.model.fe_mesh
 
     @property
     def properties(self):

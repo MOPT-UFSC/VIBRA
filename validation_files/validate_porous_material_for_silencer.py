@@ -88,7 +88,7 @@ def load_external_mesh_and_solve():
 
     ## intialize the model
     model = Model()
-    model.mesh = mesh
+    model.fe_mesh = mesh
 
     ## assign the created fluid
     for vol_id in [1, 2, 3]:

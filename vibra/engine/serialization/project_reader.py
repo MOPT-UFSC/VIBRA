@@ -4,7 +4,6 @@ import logging
 import typing
 import zipfile
 from pathlib import Path
-from typing import Optional
 
 import h5py
 import numpy as np
@@ -12,15 +11,18 @@ from PIL.Image import Image
 
 from vibra.engine.analysis_info import AnalysisID, AnalysisSetup, HarmonicAnalysisSetup, ModalAnalysisSetup
 from vibra.engine.assemblers import AcousticAssembler, StructuralAssembler
-from vibra.engine.mesher.element_setup import ElementSetup
+from vibra.engine.mesher.geometry_info import GeometryInfo
+from vibra.engine.mesher.gmsh_constants import GmshElementSetup
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.mesher.mesh_setup import LocalMeshSizeControlSetup, MeshSetup
 from vibra.engine.model import Model
 from vibra.engine.properties import Fluid, FluidLibrary, Material, MaterialLibrary
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.engine.serialization.file_helpers import read_image, read_json
+from vibra.engine.serialization.mesh_reader import MeshReader
 from vibra.engine.solution import HarmonicSolution, ModalSolution, Solution
 from vibra.engine.solvers import HarmonicSolver, ModalSolver
+from vibra.utils.utils import group_by
 
 from .project_paths import ProjectPaths
 
@@ -57,7 +59,7 @@ class ProjectReader:
         with zipfile.ZipFile(vibra_path, "r") as file:
             file.extractall(path=self.project_paths.working_directory)
 
-    def read_model(self, model: Optional[Model] = None) -> Model:
+    def read_model(self, model: Model | None = None) -> Model:
         if model is None:
             model = Model()
 
@@ -65,22 +67,27 @@ class ProjectReader:
 
         model.reset_variables()
         model.thumbnail = self.read_thumbnail()
-        model.geometry_path = self.read_geometry_path()
 
-        analysis_setup = self.read_analysis_setup()
+        if (path := self.read_geometry_path()) is not None:
+            model.set_geometry_path(path)
 
-        if analysis_setup is not None:
+        if (analysis_setup := self.read_analysis_setup()) is not None:
             model.set_analysis_setup(analysis_setup)
 
-        if self.project_paths.mesh_data_filepath.exists():
-            model.mesh = self.read_mesh()
+        if self.project_paths.fem_mesh_filepath.exists():
+            model.fe_mesh = self.read_mesh()
 
-        mesh_setup = self.read_mesh_setup()
-        model.set_mesh_setup(mesh_setup)
+        if self.project_paths.visual_mesh_filepath.exists() and self.project_paths.geometry_info_filepath.exists():
+            model.visual_mesh = self.read_visual_mesh()
+            model.geometry_info = self.read_geometry_info()
+        elif model.is_there_a_geometry_imported():
+            model.visual_mesh, model.geometry_info = model.visual_mesher.generate()
+        else:
+            model.visual_mesh, model.geometry_info = MeshReader(path).read_mesh_and_info()
 
+        model.mesh_setup = self.read_mesh_setup()
         model.properties = self.read_model_properties()
         model.solution = self.read_solution(model)
-
         model.domains_processor.update_domains_mappings()
 
         return model
@@ -99,7 +106,7 @@ class ProjectReader:
         analysis_id = analysis_setup.get("analysis_id", AnalysisID.NO_ANALYSIS)
         return AnalysisID(analysis_id)
 
-    def read_analysis_setup(self) -> Optional[AnalysisSetup]:
+    def read_analysis_setup(self) -> AnalysisSetup | None:
         logger.info("Reading AnalysisSetup")
 
         project_setup = read_json(self.project_paths.project_setup_filepath)
@@ -122,7 +129,7 @@ class ProjectReader:
         else:
             return None
 
-    def read_mesh_setup(self) -> Optional[MeshSetup]:
+    def read_mesh_setup(self) -> MeshSetup | None:
         logger.info("Reading MeshSetup.")
 
         project_setup = read_json(self.project_paths.project_setup_filepath)
@@ -141,14 +148,14 @@ class ProjectReader:
 
         custom_element = mesh_setup_dict.get("custom_element_setup")
         if custom_element is not None:
-            custom_element = ElementSetup(**custom_element)
+            custom_element = GmshElementSetup(**custom_element)
 
-        if "element_type" in mesh_setup_dict.keys():
+        if "element_type" in mesh_setup_dict:
             element_geometry = mesh_setup_dict.get("element_type")
         else:
             element_geometry = mesh_setup_dict.get("element_geometry", "tetrahedral")
 
-        if "shape_function" in mesh_setup_dict.keys():
+        if "shape_function" in mesh_setup_dict:
             element_order = mesh_setup_dict.get("shape_function")
         else:
             element_order = mesh_setup_dict.get("element_order", "linear")
@@ -170,7 +177,7 @@ class ProjectReader:
 
         return mesh_setup
 
-    def read_geometry_path(self) -> Optional[Path]:
+    def read_geometry_path(self) -> Path | None:
         logger.info("Reading geometry path.")
 
         project_setup = read_json(self.project_paths.project_setup_filepath)
@@ -185,9 +192,9 @@ class ProjectReader:
 
     def read_mesh(
         self,
-        mesh: Optional[Mesh] = None,
+        mesh: Mesh | None = None,
     ) -> Mesh:
-        mesh_data_path = self.project_paths.mesh_data_filepath
+        mesh_data_path = self.project_paths.fem_mesh_filepath
         if not mesh_data_path.exists():
             raise FileNotFoundError("The mesh file is missing.")
 
@@ -270,7 +277,7 @@ class ProjectReader:
                 elif key.startswith("cache_surfaces_from_volume"):
                     mesh.cache_surfaces_from_volume[tag] = value
 
-        mesh.process_upwards_adjacencies_from_entities()
+        mesh.process_upwards_adjacencies()
         mesh.process_mesh_related_mappings()
         mesh.update_element_topology_based_on_connectivity()
         mesh.process_disconnected_nodes_criterion()
@@ -304,7 +311,107 @@ class ProjectReader:
 
         return mesh_quality_data
 
-    def read_model_properties(self, model_properties: Optional[ModelProperties] = None) -> ModelProperties:
+    def read_visual_mesh(
+        self,
+        mesh: Mesh | None = None,
+    ) -> Mesh:
+
+        if self.project_paths.visual_mesh_filepath.exists():
+            mesh_data_path = self.project_paths.visual_mesh_filepath
+        elif self.project_paths.fem_mesh_filepath.exists():
+            mesh_data_path = self.project_paths.fem_mesh_filepath
+        else:
+            raise FileNotFoundError("The mesh file is missing.")
+
+        if mesh is None:
+            mesh = Mesh()
+
+        logger.info("Reading visual sMesh")
+        with h5py.File(mesh_data_path, "r") as file:
+            mesh.nodal_coordinates = np.array(file["nodal_data/nodal_coordinates"])
+            mesh.lines_connectivity = np.array(file["connectivity/lines_connectivity"])
+            mesh.faces_connectivity = np.array(file["connectivity/faces_connectivity"])
+
+        mesh.process_mesh_related_mappings("Loading visual")
+
+        return mesh
+
+    def read_geometry_info(self) -> GeometryInfo:
+        geometry_info = GeometryInfo()
+
+        with h5py.File(self.project_paths.geometry_info_filepath) as file:
+            geometry_info.points = list(file["entities/points"])
+            geometry_info.curves = list(file["entities/curves"])
+            geometry_info.surfaces = list(file["entities/surfaces"])
+            geometry_info.solids = list(file["entities/solids"])
+
+            arr = np.asarray(file["adjacencies/solids_to_surfaces"], dtype=int).reshape(-1, 2)
+            geometry_info._solids_to_surfaces.update({key: list(values) for key, values in group_by(arr[:, 0], arr[:, 1]).items()})
+
+            arr = np.asarray(file["adjacencies/surfaces_to_curves"], dtype=int).reshape(-1, 2)
+            geometry_info._surfaces_to_curves.update({key: list(values) for key, values in group_by(arr[:, 0], arr[:, 1]).items()})
+
+            arr = np.asarray(file["adjacencies/curves_to_points"], dtype=int).reshape(-1, 2)
+            geometry_info._curves_to_points.update({key: list(values) for key, values in group_by(arr[:, 0], arr[:, 1]).items()})
+
+            if "adjacencies/cache_solids_to_surfaces" in file:
+                arr = np.asarray(file["adjacencies/cache_solids_to_surfaces"], dtype=int).reshape(-1, 2)
+                geometry_info._cache_solids_to_surfaces.update({key: list(values) for key, values in group_by(arr[:, 0], arr[:, 1]).items()})
+
+            if "adjacencies/cache_surfaces_to_curves" in file:
+                arr = np.asarray(file["adjacencies/cache_surfaces_to_curves"], dtype=int).reshape(-1, 2)
+                geometry_info._cache_surfaces_to_curves.update({key: list(values) for key, values in group_by(arr[:, 0], arr[:, 1]).items()})
+
+            if "adjacencies/cache_curves_to_points" in file:
+                arr = np.asarray(file["adjacencies/cache_curves_to_points"], dtype=int).reshape(-1, 2)
+                geometry_info._cache_curves_to_points.update({key: list(values) for key, values in group_by(arr[:, 0], arr[:, 1]).items()})
+
+            for entity_id, center in zip(geometry_info.solids, file["centers/solids"]):
+                if np.isfinite(center).all():
+                    geometry_info._solids_centers[int(entity_id)] = np.asarray(center)
+            for entity_id, center in zip(geometry_info.surfaces, file["centers/surfaces"]):
+                if np.isfinite(center).all():
+                    geometry_info._surfaces_centers[int(entity_id)] = np.asarray(center)
+            for entity_id, center in zip(geometry_info.curves, file["centers/curves"]):
+                if np.isfinite(center).all():
+                    geometry_info._curves_centers[int(entity_id)] = np.asarray(center)
+            for entity_id, center in zip(geometry_info.points, file["centers/points"]):
+                if np.isfinite(center).all():
+                    geometry_info._points_centers[int(entity_id)] = np.asarray(center)
+
+            for entity_id, volume in zip(geometry_info.solids, file["mass/solids"]):
+                if np.isfinite(volume):
+                    geometry_info._solids_volumes[int(entity_id)] = float(volume)
+            for entity_id, area in zip(geometry_info.surfaces, file["mass/surfaces"]):
+                if np.isfinite(area):
+                    geometry_info._surfaces_areas[int(entity_id)] = float(area)
+            for entity_id, length in zip(geometry_info.curves, file["mass/curves"]):
+                if np.isfinite(length):
+                    geometry_info._curves_lengths[int(entity_id)] = float(length)
+
+            for entity_id, bounding_box in zip(geometry_info.solids, file["bounding_box/solids"]):
+                if np.isfinite(bounding_box).all():
+                    geometry_info._bounding_solids[int(entity_id)] = np.asarray(bounding_box)
+            for entity_id, bounding_box in zip(geometry_info.surfaces, file["bounding_box/surfaces"]):
+                if np.isfinite(bounding_box).all():
+                    geometry_info._bounding_surfaces[int(entity_id)] = np.asarray(bounding_box)
+            for entity_id, bounding_box in zip(geometry_info.curves, file["bounding_box/curves"]):
+                if np.isfinite(bounding_box).all():
+                    geometry_info._bounding_curves[int(entity_id)] = np.asarray(bounding_box)
+
+            for entity_id, normal in zip(geometry_info.surfaces, file["normals/surfaces"]):
+                if np.isfinite(normal).all():
+                    geometry_info._surfaces_normals[int(entity_id)] = np.asarray(normal)
+            geometry_info._straight_curves = {int(i) for i in file.get("is_straight/curves", [])}
+            geometry_info._straight_surfaces = {int(i) for i in file.get("is_straight/surfaces", [])}
+
+        geometry_info._create_inverse_maps()
+        geometry_info._process_curves_normals()
+        geometry_info._process_points_normals()
+
+        return geometry_info
+
+    def read_model_properties(self, model_properties: ModelProperties | None = None) -> ModelProperties:
         if model_properties is None:
             model_properties = ModelProperties()
         model_properties._reset_variables()
@@ -420,7 +527,7 @@ class ProjectReader:
 
         return tables
 
-    def read_thumbnail(self) -> Optional[Image]:
+    def read_thumbnail(self) -> Image | None:
         if not self.project_paths.thumbnail_filepath.exists():
             return None
 
@@ -428,7 +535,7 @@ class ProjectReader:
 
         return read_image(self.project_paths.thumbnail_filepath)
 
-    def read_solution(self, model: Model) -> Optional[Solution]:
+    def read_solution(self, model: Model) -> Solution | None:
         if model.analysis_id.is_harmonic():
             return self.read_harmonic_solution(model)
         elif model.analysis_id.is_modal():
@@ -436,7 +543,7 @@ class ProjectReader:
         else:
             return None
 
-    def read_harmonic_solution(self, model: Model) -> Optional[HarmonicSolution]:
+    def read_harmonic_solution(self, model: Model) -> HarmonicSolution | None:
         if not self.project_paths.harmonic_solution_filepath.exists():
             return None
 
@@ -500,7 +607,7 @@ class ProjectReader:
                     displacement_dof=displacement_dof,
                 )
 
-    def read_modal_solution(self, model: Model) -> Optional[ModalSolution]:
+    def read_modal_solution(self, model: Model) -> ModalSolution | None:
         if not self.project_paths.modal_solution_filepath.exists():
             return None
 

@@ -1,4 +1,4 @@
-from typing import Sequence
+from collections.abc import Iterable
 
 from PySide6.QtCore import QObject, Signal
 
@@ -17,12 +17,11 @@ class EntityVisibilityHandler(QObject):
         self._volumes_to_hide = set()
 
     def get_visible_surfaces(self) -> set[int]:
-        mesh = self.project.mesh
-        if mesh is None:
-            return set()
+        mesh = self.project.model.get_mesh()
+        geometry_info = self.project.model.geometry_info
 
         _visible_surfaces = set()
-        for volume, surfaces in mesh.surfaces_from_volume.items():
+        for volume, surfaces in geometry_info._solids_to_surfaces.items():
             if volume not in self._volumes_to_hide:
                 _visible_surfaces |= set(surfaces)
 
@@ -30,30 +29,30 @@ class EntityVisibilityHandler(QObject):
         return _visible_surfaces
 
     def get_hidden_surfaces(self) -> set[int]:
-        mesh = self.project.mesh
-        if mesh is None:
+        geometry_info = self.project.model.geometry_info
+        if geometry_info is None:
             return set()
 
-        all_surfaces = mesh.all_surface_ids()
+        all_surfaces = geometry_info.all_surface_ids()
         return all_surfaces - self.get_visible_surfaces()
 
     def get_hidden_volumes(self) -> set[int]:
         return set(self._volumes_to_hide)
 
     def get_visible_volumes(self) -> set[int]:
-        mesh = self.project.mesh
-        if mesh is None:
+        geometry_info = self.project.model.geometry_info
+        if geometry_info is None:
             return set()
 
-        all_volumes = mesh.all_volume_ids()
+        all_volumes = geometry_info.all_volume_ids()
         return all_volumes - self.get_hidden_volumes()
 
-    def hide_surfaces(self, surfaces: Sequence[int]):
+    def hide_surfaces(self, surfaces: Iterable[int]):
         self._surfaces_to_hide |= set(surfaces)
         if surfaces:
             self.changed.emit()
 
-    def hide_volumes(self, volumes: Sequence[int]):
+    def hide_volumes(self, volumes: Iterable[int]):
         self._volumes_to_hide |= set(volumes)
         if volumes:
             self.changed.emit()
