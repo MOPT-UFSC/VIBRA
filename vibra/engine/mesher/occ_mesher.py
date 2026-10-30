@@ -17,11 +17,12 @@ from OCP.IFSelect import IFSelect_RetDone
 from OCP.TopAbs import TopAbs_EDGE, TopAbs_FACE, TopAbs_REVERSED, TopAbs_SOLID, TopAbs_VERTEX
 from OCP.TopExp import TopExp, TopExp_Explorer
 from OCP.TopLoc import TopLoc_Location
-from OCP.TopoDS import TopoDS
+from OCP.TopoDS import TopoDS, TopoDS_Face
 
 from vibra.engine.mesher.geometry_info import GeometryInfo
 from vibra.engine.mesher.mesh import Mesh
 from vibra.errors import IncompleteSetupError
+from vibra.utils.time_utils import context_timer, function_timer
 
 
 class OccMesher:
@@ -37,7 +38,119 @@ class OccMesher:
     def set_path(self, path: str | Path):
         self.path = Path(path).expanduser()
 
+    @function_timer
     def generate(self, threads: int = 0) -> tuple[Mesh, GeometryInfo]:
+        if self.path is None:
+            message = "Geometry not defined"
+            context = (
+                "The geometry file has not been defined yet."
+                "Import a supported CAD file format to proceed."
+                "\n\n"
+                "Suported file formats: *.iges and *.step"
+            )
+            raise IncompleteSetupError(message, context=context)
+
+        geometry_info = GeometryInfo(self.path)
+        shape = self._read_geometry_file(self.path)
+
+        indices_map = TopTools_IndexedMapOfShape()
+        TopExp.MapShapes_s(shape, TopAbs_EDGE, indices_map)
+        TopExp.MapShapes_s(shape, TopAbs_FACE, indices_map)
+        TopExp.MapShapes_s(shape, TopAbs_VERTEX, indices_map)
+
+        BRepMesh_IncrementalMesh(
+            shape,
+            self.deflection,
+            False,  # is relative
+            self.deflection,
+            True,  # in parallel
+        )
+        location = TopLoc_Location()
+
+        WHATEVER = 0
+        visited_indices = set()
+        occ_surface_keys = {}
+
+        nodal_coordinates = []
+        edges_connectivity = [[0, 0, 0, 0, 0, 1]]
+        faces_connectivity = []
+
+        for surface in self._iterate_surfaces(shape):
+            surface_index = indices_map.FindIndex(surface)
+            if surface_index in visited_indices:
+                continue
+            visited_indices.add(surface_index)
+
+            triangulation = BRep_Tool.Triangulation_s(surface, location)
+            coordinate_shift = len(nodal_coordinates)
+            occ_surface_keys[surface_index] = self._surface_key_occ(surface)
+
+            for index in range(triangulation.NbNodes()):
+                node = triangulation.Node(index + 1)
+                node.Transform(location.Transformation())
+                x, y, z = (val * 1e-3 for val in node.Coord())
+                nodal_coordinates.append((len(nodal_coordinates), x, y, z))
+
+            for triangle in triangulation.Triangles():
+                _connectivity = np.array(triangle.Get()) + coordinate_shift - 1
+                _row = [len(faces_connectivity), surface_index, WHATEVER, WHATEVER, *_connectivity]
+                faces_connectivity.append(_row)
+
+        gmsh_surface_keys = {}
+        for surface_index in geometry_info.surfaces:
+            area = geometry_info.surface_area(surface_index)
+            x, y, z = geometry_info.surface_center(surface_index)
+            key = (area, x, y, z)
+            gmsh_surface_keys[surface_index] = key
+
+        column_factor = np.random.random(4) + 1
+
+        def get_sort_indices(data):
+            data = np.array(data)
+            minimum = np.min(data, axis=0)
+            maximum = np.max(data, axis=0)
+            normalized = 1 + (data - minimum) / (maximum - minimum)
+            hashed = np.sum(normalized * column_factor, axis=1)
+            return np.argsort(hashed)
+
+        gmsh_argsort = get_sort_indices(list(gmsh_surface_keys.values()))
+        occ_argsort = get_sort_indices(list(occ_surface_keys.values()))
+        occ_to_gmsh = dict(
+            zip(
+                np.array(list(occ_surface_keys.keys()))[occ_argsort],
+                np.array(list(gmsh_surface_keys.keys()))[gmsh_argsort],
+            )
+        )
+
+        for i in faces_connectivity:
+            i[1] = occ_to_gmsh[i[1]]
+
+        mesh = Mesh()
+        mesh.set_mesh_data(
+            np.array(nodal_coordinates),
+            np.array(edges_connectivity),
+            np.array(faces_connectivity),
+            solids_connectivity=np.zeros((0, 4)),
+        )
+
+        return mesh, geometry_info
+
+    def _surface_key_occ(self, surface: TopoDS_Face):
+        brep_surface = BRepAdaptor_Surface(surface)
+        u_mid = (brep_surface.FirstUParameter() + brep_surface.LastUParameter()) / 2
+        v_mid = (brep_surface.FirstVParameter() + brep_surface.LastVParameter()) / 2
+
+        surface_property = GProp_GProps()
+        BRepGProp.SurfaceProperties_s(surface, surface_property, SkipShared=False, UseTriangulation=True)
+
+        surface_center = 1e-3 * np.array(brep_surface.Value(u_mid, v_mid).Coord())
+        area = surface_property.Mass() * 1e-6
+        x, y, z = surface_center
+
+        return (area, x, y, z)
+
+    @function_timer
+    def generate_old(self, threads: int = 0) -> tuple[Mesh, GeometryInfo]:
         if self.path is None:
             message = "Geometry not defined"
             context = (
@@ -195,6 +308,7 @@ class OccMesher:
         TopExp.MapShapes_s(shape, entity_type, indexed_map)
         return indexed_map
 
+    @function_timer
     def _read_geometry_file(self, path: Path):
         match path.suffix.lower():
             case ".step" | ".stp":
