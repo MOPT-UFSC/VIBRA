@@ -23,7 +23,7 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(384, 781)
+        Form.resize(410, 837)
         Form.setMaximumSize(QSize(16777215, 16777215))
         self.gridLayout_2 = QGridLayout(Form)
         self.gridLayout_2.setSpacing(2)
@@ -35,7 +35,7 @@ class Ui_Form(object):
         self.scrollArea.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 380, 777))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 406, 833))
         self.gridLayout_6 = QGridLayout(self.scrollAreaWidgetContents)
         self.gridLayout_6.setObjectName(u"gridLayout_6")
         self.gridLayout_6.setHorizontalSpacing(2)
@@ -48,7 +48,7 @@ class Ui_Form(object):
         self.frame_color.setFrameShape(QFrame.Shape.Box)
         self.frame_color.setFrameShadow(QFrame.Shadow.Raised)
 
-        self.gridLayout_6.addWidget(self.frame_color, 3, 0, 1, 1)
+        self.gridLayout_6.addWidget(self.frame_color, 4, 0, 1, 1)
 
         self.frame_title = QFrame(self.scrollAreaWidgetContents)
         self.frame_title.setObjectName(u"frame_title")
@@ -83,8 +83,8 @@ class Ui_Form(object):
 
         self.frame_main = QFrame(self.scrollAreaWidgetContents)
         self.frame_main.setObjectName(u"frame_main")
-        self.frame_main.setMinimumSize(QSize(0, 260))
-        self.frame_main.setMaximumSize(QSize(16777215, 260))
+        self.frame_main.setMinimumSize(QSize(0, 180))
+        self.frame_main.setMaximumSize(QSize(16777215, 180))
         self.frame_main.setSizeIncrement(QSize(0, 0))
         self.frame_main.setBaseSize(QSize(0, 0))
         self.frame_main.setFrameShape(QFrame.Shape.Box)
@@ -238,33 +238,10 @@ class Ui_Form(object):
         self.gridLayout_4.addWidget(self.comboBox_plot_type, 2, 2, 1, 1)
 
 
-        self.gridLayout_5.addWidget(self.frame_plot_controls, 1, 0, 1, 1)
-
-        self.frame_3 = QFrame(self.frame_main)
-        self.frame_3.setObjectName(u"frame_3")
-        self.frame_3.setMinimumSize(QSize(0, 52))
-        self.frame_3.setMaximumSize(QSize(16777215, 52))
-        self.frame_3.setFrameShape(QFrame.Shape.NoFrame)
-        self.frame_3.setFrameShadow(QFrame.Shadow.Raised)
-        self.gridLayout_47 = QGridLayout(self.frame_3)
-        self.gridLayout_47.setSpacing(2)
-        self.gridLayout_47.setObjectName(u"gridLayout_47")
-        self.gridLayout_47.setContentsMargins(2, 2, 2, 2)
-        self.pushButton_process_nodal_stresses = QPushButton(self.frame_3)
-        self.pushButton_process_nodal_stresses.setObjectName(u"pushButton_process_nodal_stresses")
-        self.pushButton_process_nodal_stresses.setMinimumSize(QSize(160, 32))
-        self.pushButton_process_nodal_stresses.setMaximumSize(QSize(180, 32))
-        self.pushButton_process_nodal_stresses.setFont(font2)
-        self.pushButton_process_nodal_stresses.setStyleSheet(u"")
-        self.pushButton_process_nodal_stresses.setFlat(False)
-
-        self.gridLayout_47.addWidget(self.pushButton_process_nodal_stresses, 0, 0, 1, 1)
+        self.gridLayout_5.addWidget(self.frame_plot_controls, 0, 0, 1, 1)
 
 
-        self.gridLayout_5.addWidget(self.frame_3, 0, 0, 1, 1)
-
-
-        self.gridLayout_6.addWidget(self.frame_main, 1, 0, 1, 1)
+        self.gridLayout_6.addWidget(self.frame_main, 2, 0, 1, 1)
 
         self.frame_animation = QFrame(self.scrollAreaWidgetContents)
         self.frame_animation.setObjectName(u"frame_animation")
@@ -272,7 +249,54 @@ class Ui_Form(object):
         self.frame_animation.setFrameShape(QFrame.Shape.Box)
         self.frame_animation.setFrameShadow(QFrame.Shadow.Raised)
 
-        self.gridLayout_6.addWidget(self.frame_animation, 2, 0, 1, 1)
+        self.gridLayout_6.addWidget(self.frame_animation, 3, 0, 1, 1)
+
+        self.frame_signal_processing = QFrame(self.scrollAreaWidgetContents)
+        self.frame_signal_processing.setObjectName(u"frame_signal_processing")
+        self.frame_signal_processing.setMinimumSize(QSize(0, 180))
+        self.frame_signal_processing.setMaximumSize(QSize(16777215, 180))
+        self.frame_signal_processing.setSizeIncrement(QSize(0, 0))
+        self.frame_signal_processing.setBaseSize(QSize(0, 0))
+        self.frame_signal_processing.setFrameShape(QFrame.Shape.Box)
+        self.frame_signal_processing.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_8 = QGridLayout(self.frame_signal_processing)
+        self.gridLayout_8.setSpacing(4)
+        self.gridLayout_8.setObjectName(u"gridLayout_8")
+        self.gridLayout_8.setContentsMargins(4, 4, 4, 4)
+        self.frame_4 = QFrame(self.frame_signal_processing)
+        self.frame_4.setObjectName(u"frame_4")
+        self.frame_4.setMinimumSize(QSize(0, 48))
+        self.frame_4.setMaximumSize(QSize(16777215, 48))
+        self.frame_4.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_4.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_48 = QGridLayout(self.frame_4)
+        self.gridLayout_48.setSpacing(2)
+        self.gridLayout_48.setObjectName(u"gridLayout_48")
+        self.gridLayout_48.setContentsMargins(2, 2, 2, 2)
+        self.pushButton_process_nodal_stresses = QPushButton(self.frame_4)
+        self.pushButton_process_nodal_stresses.setObjectName(u"pushButton_process_nodal_stresses")
+        self.pushButton_process_nodal_stresses.setMinimumSize(QSize(160, 32))
+        self.pushButton_process_nodal_stresses.setMaximumSize(QSize(180, 32))
+        self.pushButton_process_nodal_stresses.setFont(font2)
+        self.pushButton_process_nodal_stresses.setStyleSheet(u"")
+        self.pushButton_process_nodal_stresses.setFlat(False)
+
+        self.gridLayout_48.addWidget(self.pushButton_process_nodal_stresses, 0, 0, 1, 1)
+
+
+        self.gridLayout_8.addWidget(self.frame_4, 1, 0, 1, 1)
+
+        self.frame_ifft_controls = QFrame(self.frame_signal_processing)
+        self.frame_ifft_controls.setObjectName(u"frame_ifft_controls")
+        self.frame_ifft_controls.setMinimumSize(QSize(0, 120))
+        self.frame_ifft_controls.setMaximumSize(QSize(16777215, 16777215))
+        self.frame_ifft_controls.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_ifft_controls.setFrameShadow(QFrame.Shadow.Raised)
+
+        self.gridLayout_8.addWidget(self.frame_ifft_controls, 0, 0, 1, 1)
+
+
+        self.gridLayout_6.addWidget(self.frame_signal_processing, 1, 0, 1, 1)
 
         self.scrollArea.setWidget(self.scrollAreaWidgetContents)
 
@@ -354,10 +378,13 @@ class StructuralStress3dPlotTimeInputs_UI(QWidget, Ui_Form):
                                                         - comboBox_stress_units: QComboBox
                                                         - label: QLabel
                                                         - comboBox_plot_type: QComboBox
-                                            - frame_3: QFrame
+                                - frame_animation: QFrame
+                                - frame_signal_processing: QFrame
+                                    - (Layout): QGridLayout
+                                            - frame_4: QFrame
                                                 - (Layout): QGridLayout
                                                         - pushButton_process_nodal_stresses: QPushButton
-                                - frame_animation: QFrame
+                                            - frame_ifft_controls: QFrame
     """
 
     def __init__(self, *args, **kwargs):

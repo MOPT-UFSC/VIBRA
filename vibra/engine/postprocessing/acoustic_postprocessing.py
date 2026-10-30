@@ -8,6 +8,7 @@ from typing import Optional
 
 import numpy as np
 
+from vibra.engine.analysis_info import FrequencySpacing
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.engine.postprocessing.acoustic_post_solution_dataclass import NodalParticleVelocities
@@ -171,11 +172,16 @@ class AcousticPostprocessing:
         time_index: int,
         plot_type: PressurePlotType,
         unit_factor: float = 1.0,
+        n_div: int | None = None,
+        spectral_lines: int | None = None,
         reduced_loop_time: float | None = None,
     ):
 
         # compute the iffts for acoustic nodal solution
-        time_vector, self.nodal_solution_time = self.compute_multiple_ifft_for_acoustic_nodal_solution()
+        time_vector, self.nodal_solution_time = self.compute_multiple_ifft_for_acoustic_nodal_solution(
+            n_div=n_div,
+            spectral_lines=spectral_lines,
+            )
 
         if reduced_loop_time is None:
             n = time_vector.size
@@ -198,11 +204,53 @@ class AcousticPostprocessing:
         return time_vector[:n], acoustic_pressures, min_value, max_value
 
 
+    def process_multiple_iffts(
+            self,
+            f_max: float,
+            nodal_solution: np.ndarray[complex],
+            n_div: int | None = None,
+            spectral_lines: int | None = None,
+            ):
+
+        if n_div is None:
+            time_vector, nodal_solution_time = process_multiple_iffts_from_one_sided_spectrum_signals(f_max, nodal_solution)
+
+        else:
+            if self.model.analysis_setup.frequency_spacing != FrequencySpacing.EQUALLY_DISTRIBUTED:
+                raise ValueError("Invalid frequency spacing detected.")
+
+            f_step = self.model.analysis_setup.f_step
+            df = f_step / n_div
+
+            # initialize the frequencies vector for ifft
+            freqs_ifft = np.arange(1, spectral_lines + 1, dtype=float) * df
+
+            # process mask for solution steps
+            mask = (np.round(freqs_ifft % f_step, 8) == 0) & (freqs_ifft < f_max + f_step / 100)
+
+            # initialize the temporary solution array
+            nodal_solution_ifft = np.zeros((len(nodal_solution), freqs_ifft.size), dtype=complex)
+
+            # fill the temporary solution array with the solution data
+            nodal_solution_ifft[:, mask] = nodal_solution
+
+            time_vector, nodal_solution_time = process_multiple_iffts_from_one_sided_spectrum_signals(freqs_ifft[-1], nodal_solution_ifft)
+
+        return time_vector, nodal_solution_time
+
+
     @cache
-    def compute_allowable_pulsation_field_for_screw_compressor(self):
+    def compute_allowable_pulsation_field_for_screw_compressor(
+        self,
+        n_div: int | None = None,
+        spectral_lines: int | None = None,
+        ):
 
         # compute the iffts for acoustic nodal solution
-        _, self.nodal_solution_time = self.compute_multiple_ifft_for_acoustic_nodal_solution()
+        _, self.nodal_solution_time = self.compute_multiple_ifft_for_acoustic_nodal_solution(
+            n_div=n_div,
+            spectral_lines=spectral_lines,
+            )
 
         delta_pressure = np.max(self.nodal_solution_time, axis=1) - np.min(self.nodal_solution_time, axis=1)
 
@@ -248,18 +296,25 @@ class AcousticPostprocessing:
 
 
     @cache
-    def compute_multiple_ifft_for_acoustic_nodal_solution(self) -> tuple[np.ndarray, np.ndarray]:
+    def compute_multiple_ifft_for_acoustic_nodal_solution(
+        self,
+        n_div: int | None = None,
+        spectral_lines: int | None = None,
+    ) -> tuple[np.ndarray, np.ndarray]:
+
         assert isinstance(self.solution, HarmonicSolution)
         assert self.solution.acoustic_solution is not None
         assert self.solution.analysis_id.is_acoustic() or self.solution.analysis_id.is_coupled()
 
         t0 = perf_counter()
         logging.info("Computing the iffts for acoustic nodal solution... [25/100]")
-        time_vector, nodal_solution_time = process_multiple_iffts_from_one_sided_spectrum_signals(
-            self.solution.frequencies,
+
+        time_vector, nodal_solution_time = self.process_multiple_iffts(
+            self.model.analysis_setup.f_max,
             self.solution.acoustic_solution,
-            dc_included=False,
-        )
+            n_div=n_div,
+            spectral_lines=spectral_lines,
+            )
 
         logging.info("Computing the iffts for acoustic nodal solution... [100/100]")
 

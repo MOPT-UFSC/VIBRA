@@ -6,6 +6,7 @@ from vibra import app
 from vibra.engine import AnalysisID
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.plots.general.animation_widget import AnimationWidget
+from vibra.interface.plots.general.ifft_controls_widget import IfftControlsWidget
 from vibra.interface.plots.general.results_display_widget import ResultsDisplayWidget
 from vibra.interface.ui_generated.plots.acoustic.allowable_pulsations_3d_plot_for_screw_compressor_inputs_ui import (
     AllowablePulsations3dPlotForScrewCompressorInputs_UI,
@@ -18,6 +19,8 @@ class AllowablePulsations3DPlotForScrewCompressorInputs(AllowablePulsations3dPlo
         super().__init__(*args, **kwargs)
 
         app().main_window.show_geometry_render_widget()
+
+        self._add_ifft_controls_widget()
         self.animation_widget = AnimationWidget()
 
         self._reset_variables()
@@ -43,6 +46,16 @@ class AllowablePulsations3DPlotForScrewCompressorInputs(AllowablePulsations3dPlo
     @property
     def nodal_solution(self):
         return app().project.model.solution.acoustic_solution
+
+    def _add_ifft_controls_widget(self):
+
+        grid_layout = QGridLayout()
+        grid_layout.setContentsMargins(0, 0, 0, 0)
+        self.frame_ifft_controls.setLayout(grid_layout)
+
+        self.ifft_controls_widget = IfftControlsWidget()
+        grid_layout.addWidget(self.ifft_controls_widget)
+        self.frame_ifft_controls.adjustSize()
 
     def show_results_render(self):
         curent_render_widget = app().main_window.get_current_render_widget()
@@ -97,11 +110,12 @@ class AllowablePulsations3DPlotForScrewCompressorInputs(AllowablePulsations3dPlo
     def _create_connections(self):
 
         # QPushButton connection
-        self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
+        self.pushButton_plot_criterion.clicked.connect(self.plot_data_callback)
 
         # QSpinBox connection
         self.comboBox_penalization_factor.currentIndexChanged.connect(self.penalize_allowable_pulsation_callback)
 
+        self.ifft_controls_widget.ifft_controls_changed.connect(self.enable_process_ifft_button)
         self.results_display_widget.colormap_changed.connect(self.animation_widget.update_color_and_deformation)
         self.results_display_widget.min_max_value_changed.connect(self.animation_widget.update_color_and_deformation)
 
@@ -112,15 +126,21 @@ class AllowablePulsations3DPlotForScrewCompressorInputs(AllowablePulsations3dPlo
         if curent_render_widget == results_render_widget:
             self.plot_data_callback()
 
+    def enable_process_ifft_button(self):
+        self.pushButton_plot_criterion.setEnabled(True)
+
     def plot_data_callback(self):
 
         plot_setup = AllowablePulsationForScrewCompressorsPlotSetup(
             plot_type=self.get_plot_type(),
             unit="kPa",
+            n_div=self.ifft_controls_widget.get_number_of_fstep_divisions(),
+            spectral_lines=self.ifft_controls_widget.get_ifft_number_of_spectral_lines(),
             penalization_factor=int(self.comboBox_penalization_factor.currentText()),
         )
 
         if plot_setup == self.plot_setup:
+            self.pushButton_plot_criterion.setDisabled(True)
             return
 
         self.plot_setup = plot_setup
@@ -131,9 +151,10 @@ class AllowablePulsations3DPlotForScrewCompressorInputs(AllowablePulsations3dPlo
                 plot_setup=self.plot_setup,
             )
 
-        LoadingWindow(plot_callback).run()
+        LoadingWindow(plot_callback, delayed=False).run()
 
         self.show_results_render()
+        self.pushButton_plot_criterion.setDisabled(True)
 
     def get_plot_type(self) -> PressurePlotType:
         return PressurePlotType("non_absolute_animation")

@@ -391,7 +391,7 @@ class StructuralExcitationsAssembler:
         self.model.process_connectivities_at_fluid_structure_interfaces()
 
         # acoustic solution data
-        nodal_solution = self.model.acoustic_solution.acoustic_solution
+        nodal_solution = self.model.solution.acoustic_solution
 
         # initialize logging variables
         last_progress = 0

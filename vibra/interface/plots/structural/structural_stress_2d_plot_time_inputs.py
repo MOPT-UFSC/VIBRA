@@ -3,6 +3,7 @@ from enum import IntEnum
 import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import QGridLayout
 
 from vibra import app
 from vibra.interface.common.common_interface import update_entities_selection
@@ -12,9 +13,9 @@ from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.numeric_checks.int_list_validator import IntListValidator
 from vibra.interface.numeric_checks.unit_utilities import convert_stress_unit
 from vibra.interface.plots.general.frequency_response_plotter import DataFormat, FrequencyResponsePlotter
+from vibra.interface.plots.general.ifft_controls_widget import IfftControlsWidget
 from vibra.interface.ui_generated.plots.structural.structural_stress_2d_plot_time_inputs_ui import StructuralStress2dPlotTimeInputs_UI
 from vibra.interface.viewer_3d.plot_setup import StressType
-from vibra.utils.signal_processing import process_ifft_from_one_sided_spectrum_signal, process_multiple_iffts_from_one_sided_spectrum_signals
 
 
 class SelectionType(IntEnum):
@@ -29,6 +30,8 @@ class StructuralStress2dPlotTimeInputs(StructuralStress2dPlotTimeInputs_UI):
         super().__init__(*args, **kwargs)
 
         app().main_window.show_geometry_render_widget()
+
+        self._add_ifft_controls_widget()
 
         self._initialize()
         self._configure_validator()
@@ -68,6 +71,16 @@ class StructuralStress2dPlotTimeInputs(StructuralStress2dPlotTimeInputs_UI):
     def is_stress_data_cached(self):
         cache_info = self.structural_post.recover_nodal_averaged_structural_stresses.cache_info()
         return cache_info.currsize != 0
+
+    def _add_ifft_controls_widget(self):
+
+        self.grid_layout_ifft = QGridLayout()
+        self.grid_layout_ifft.setContentsMargins(0, 0, 0, 0)
+        self.frame_ifft_controls.setLayout(self.grid_layout_ifft)
+
+        self.ifft_controls_widget = IfftControlsWidget()
+        self.grid_layout_ifft.addWidget(self.ifft_controls_widget)
+        self.frame_ifft_controls.adjustSize()
 
     def set_frames_disabled(self, disabled: bool):
         self.frame_selection_controls.setDisabled(disabled)
@@ -145,9 +158,16 @@ class StructuralStress2dPlotTimeInputs(StructuralStress2dPlotTimeInputs_UI):
         if not self.is_stress_data_cached:
             def recover_stresses():
                 self.structural_post.compute_structural_stresses_frequency()
-                self.structural_post.compute_structural_stresses_time()
 
-            LoadingWindow(recover_stresses).run()
+                if self.validation_mode:
+                    n_div = self.ifft_controls_widget.get_number_of_fstep_divisions()
+                    spectral_lines=self.ifft_controls_widget.get_ifft_number_of_spectral_lines()
+                    self.structural_post.compute_structural_stresses_time(
+                        n_div=n_div,
+                        spectral_lines=spectral_lines,
+                        )
+
+            LoadingWindow(recover_stresses, delayed=False).run()
 
         self.set_frames_disabled(False)
 
@@ -244,11 +264,7 @@ class StructuralStress2dPlotTimeInputs(StructuralStress2dPlotTimeInputs_UI):
                 if self.validation_mode:
                     stress_vector_ifft = np.average(self.structural_post.nodal_averaged_stresses_time[_node_ids, stress_type_index, :], axis=0)
 
-            time_vector, stress_vector = process_ifft_from_one_sided_spectrum_signal(
-            self.model.frequencies, 
-            stress_freq,
-            dc_included = False,
-            )
+            time_vector, stress_vector = self.ifft_controls_widget.process_ifft_for_spectrum(stress_freq)
 
         else:
             if isinstance(_node_ids, int):
@@ -260,11 +276,7 @@ class StructuralStress2dPlotTimeInputs(StructuralStress2dPlotTimeInputs_UI):
                 if self.validation_mode:
                     stresses_ifft = np.average(self.structural_post.nodal_averaged_stresses_time[_node_ids, :, :], axis=0)
 
-            time_vector, stresses_time = process_multiple_iffts_from_one_sided_spectrum_signals(
-            self.model.frequencies, 
-            stresses_freq,
-            dc_included = False,
-            )
+            time_vector, stresses_time = self.ifft_controls_widget.process_ifft_for_spectrum(stresses_freq, multiple_iffts=True)
 
             stress_vector = self.structural_post.compute_advanced_structural_stresses(stresses_time.T, stress_type_index)
             if self.validation_mode:

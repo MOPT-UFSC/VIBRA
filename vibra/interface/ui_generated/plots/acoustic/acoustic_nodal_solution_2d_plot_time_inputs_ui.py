@@ -25,9 +25,9 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(368, 260)
-        Form.setMinimumSize(QSize(0, 200))
-        Form.setMaximumSize(QSize(16777215, 260))
+        Form.resize(393, 360)
+        Form.setMinimumSize(QSize(0, 300))
+        Form.setMaximumSize(QSize(16777215, 360))
         self.gridLayout_4 = QGridLayout(Form)
         self.gridLayout_4.setObjectName(u"gridLayout_4")
         self.gridLayout_4.setVerticalSpacing(4)
@@ -94,7 +94,7 @@ class Ui_Form(object):
         self.gridLayout_47.addWidget(self.pushButton_plot_data, 0, 0, 1, 1)
 
 
-        self.gridLayout_3.addWidget(self.frame_3, 1, 0, 1, 1)
+        self.gridLayout_3.addWidget(self.frame_3, 2, 0, 1, 1)
 
         self.frame_4 = QFrame(self.frame_2)
         self.frame_4.setObjectName(u"frame_4")
@@ -105,22 +105,39 @@ class Ui_Form(object):
         self.gridLayout = QGridLayout(self.frame_4)
         self.gridLayout.setObjectName(u"gridLayout")
         self.gridLayout.setHorizontalSpacing(6)
-        self.gridLayout.setVerticalSpacing(2)
+        self.gridLayout.setVerticalSpacing(4)
         self.gridLayout.setContentsMargins(2, 2, 2, 2)
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        self.label_2 = QLabel(self.frame_4)
+        self.label_2.setObjectName(u"label_2")
+        self.label_2.setMinimumSize(QSize(0, 30))
+        self.label_2.setMaximumSize(QSize(16777215, 30))
+        self.label_2.setFont(font1)
+        self.label_2.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
-        self.gridLayout.addItem(self.horizontalSpacer, 0, 0, 1, 1)
+        self.gridLayout.addWidget(self.label_2, 1, 1, 1, 1)
+
+        self.label_linear_2 = QLabel(self.frame_4)
+        self.label_linear_2.setObjectName(u"label_linear_2")
+        self.label_linear_2.setMinimumSize(QSize(0, 30))
+        self.label_linear_2.setMaximumSize(QSize(16777215, 30))
+        font2 = QFont()
+        font2.setPointSize(10)
+        font2.setBold(False)
+        self.label_linear_2.setFont(font2)
+        self.label_linear_2.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+
+        self.gridLayout.addWidget(self.label_linear_2, 3, 1, 1, 1)
 
         self.pushButton_export_data = QPushButton(self.frame_4)
         self.pushButton_export_data.setObjectName(u"pushButton_export_data")
         self.pushButton_export_data.setMinimumSize(QSize(40, 30))
         self.pushButton_export_data.setMaximumSize(QSize(40, 30))
-        font2 = QFont()
-        font2.setFamilies([u"MS Shell Dlg 2"])
-        font2.setPointSize(11)
-        font2.setBold(True)
-        font2.setItalic(False)
-        self.pushButton_export_data.setFont(font2)
+        font3 = QFont()
+        font3.setFamilies([u"MS Shell Dlg 2"])
+        font3.setPointSize(11)
+        font3.setBold(True)
+        font3.setItalic(False)
+        self.pushButton_export_data.setFont(font3)
         self.pushButton_export_data.setStyleSheet(u"")
         icon = Icon(u":/icons/save_as.png")
         self.pushButton_export_data.setIcon(icon)
@@ -129,24 +146,19 @@ class Ui_Form(object):
 
         self.gridLayout.addWidget(self.pushButton_export_data, 0, 3, 1, 1)
 
-        self.label_2 = QLabel(self.frame_4)
-        self.label_2.setObjectName(u"label_2")
-        self.label_2.setMinimumSize(QSize(110, 30))
-        self.label_2.setMaximumSize(QSize(110, 30))
-        self.label_2.setFont(font1)
-        self.label_2.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+        self.label_10 = QLabel(self.frame_4)
+        self.label_10.setObjectName(u"label_10")
+        self.label_10.setMinimumSize(QSize(0, 30))
+        self.label_10.setMaximumSize(QSize(16777215, 30))
+        font4 = QFont()
+        font4.setFamilies([u"MS Shell Dlg 2"])
+        font4.setPointSize(10)
+        font4.setBold(False)
+        font4.setItalic(False)
+        self.label_10.setFont(font4)
+        self.label_10.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
-        self.gridLayout.addWidget(self.label_2, 1, 1, 1, 1)
-
-        self.lineEdit_selection_id = QLineEdit(self.frame_4)
-        self.lineEdit_selection_id.setObjectName(u"lineEdit_selection_id")
-        self.lineEdit_selection_id.setMinimumSize(QSize(140, 30))
-        self.lineEdit_selection_id.setMaximumSize(QSize(140, 30))
-        self.lineEdit_selection_id.setFont(font1)
-        self.lineEdit_selection_id.setStyleSheet(u"")
-        self.lineEdit_selection_id.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.gridLayout.addWidget(self.lineEdit_selection_id, 0, 2, 1, 1)
+        self.gridLayout.addWidget(self.label_10, 0, 1, 1, 1)
 
         self.comboBox_selector_filter = QComboBox(self.frame_4)
         self.comboBox_selector_filter.addItem("")
@@ -161,35 +173,15 @@ class Ui_Form(object):
 
         self.gridLayout.addWidget(self.comboBox_selector_filter, 1, 2, 1, 1)
 
-        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        self.lineEdit_selection_id = QLineEdit(self.frame_4)
+        self.lineEdit_selection_id.setObjectName(u"lineEdit_selection_id")
+        self.lineEdit_selection_id.setMinimumSize(QSize(140, 30))
+        self.lineEdit_selection_id.setMaximumSize(QSize(140, 30))
+        self.lineEdit_selection_id.setFont(font1)
+        self.lineEdit_selection_id.setStyleSheet(u"")
+        self.lineEdit_selection_id.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.gridLayout.addItem(self.horizontalSpacer_2, 0, 4, 1, 1)
-
-        self.label_10 = QLabel(self.frame_4)
-        self.label_10.setObjectName(u"label_10")
-        self.label_10.setMinimumSize(QSize(110, 30))
-        self.label_10.setMaximumSize(QSize(110, 30))
-        font3 = QFont()
-        font3.setFamilies([u"MS Shell Dlg 2"])
-        font3.setPointSize(10)
-        font3.setBold(False)
-        font3.setItalic(False)
-        self.label_10.setFont(font3)
-        self.label_10.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
-
-        self.gridLayout.addWidget(self.label_10, 0, 1, 1, 1)
-
-        self.label_linear_2 = QLabel(self.frame_4)
-        self.label_linear_2.setObjectName(u"label_linear_2")
-        self.label_linear_2.setMinimumSize(QSize(0, 30))
-        self.label_linear_2.setMaximumSize(QSize(16777215, 30))
-        font4 = QFont()
-        font4.setPointSize(10)
-        font4.setBold(False)
-        self.label_linear_2.setFont(font4)
-        self.label_linear_2.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
-
-        self.gridLayout.addWidget(self.label_linear_2, 2, 1, 1, 1)
+        self.gridLayout.addWidget(self.lineEdit_selection_id, 0, 2, 1, 1)
 
         self.comboBox_pressure_units = QComboBox(self.frame_4)
         self.comboBox_pressure_units.addItem("")
@@ -207,13 +199,29 @@ class Ui_Form(object):
         self.comboBox_pressure_units.setFont(font1)
         self.comboBox_pressure_units.setStyleSheet(u"")
 
-        self.gridLayout.addWidget(self.comboBox_pressure_units, 2, 2, 1, 1)
+        self.gridLayout.addWidget(self.comboBox_pressure_units, 3, 2, 1, 1)
+
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout.addItem(self.horizontalSpacer, 0, 0, 1, 1)
+
+        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout.addItem(self.horizontalSpacer_2, 0, 4, 1, 1)
 
 
         self.gridLayout_3.addWidget(self.frame_4, 0, 0, 1, 1)
 
 
-        self.gridLayout_4.addWidget(self.frame_2, 1, 0, 1, 1)
+        self.gridLayout_4.addWidget(self.frame_2, 2, 0, 1, 1)
+
+        self.frame_ifft_controls = QFrame(Form)
+        self.frame_ifft_controls.setObjectName(u"frame_ifft_controls")
+        self.frame_ifft_controls.setMinimumSize(QSize(0, 120))
+        self.frame_ifft_controls.setFrameShape(QFrame.Shape.Box)
+        self.frame_ifft_controls.setFrameShadow(QFrame.Shadow.Raised)
+
+        self.gridLayout_4.addWidget(self.frame_ifft_controls, 1, 0, 1, 1)
 
 
         self.retranslateUi(Form)
@@ -229,19 +237,19 @@ class Ui_Form(object):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Form", None))
         self.label.setText(QCoreApplication.translate("Form", u"Plot the acoustic pressure (time domain)", None))
         self.pushButton_plot_data.setText(QCoreApplication.translate("Form", u"Plot data", None))
+        self.label_2.setText(QCoreApplication.translate("Form", u"Selector filter: ", None))
+        self.label_linear_2.setText(QCoreApplication.translate("Form", u"Pressure units:", None))
 #if QT_CONFIG(tooltip)
         self.pushButton_export_data.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p><span style=\" font-size:10pt; font-weight:400;\">Press to export the current response function</span></p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.pushButton_export_data.setText("")
-        self.label_2.setText(QCoreApplication.translate("Form", u"Selector filter: ", None))
-        self.lineEdit_selection_id.setText("")
+        self.label_10.setText(QCoreApplication.translate("Form", u"Selected ID: ", None))
         self.comboBox_selector_filter.setItemText(0, QCoreApplication.translate("Form", u"Surfaces", None))
         self.comboBox_selector_filter.setItemText(1, QCoreApplication.translate("Form", u"Line", None))
         self.comboBox_selector_filter.setItemText(2, QCoreApplication.translate("Form", u"Points", None))
         self.comboBox_selector_filter.setItemText(3, QCoreApplication.translate("Form", u"Nodes", None))
 
-        self.label_10.setText(QCoreApplication.translate("Form", u"Selected ID: ", None))
-        self.label_linear_2.setText(QCoreApplication.translate("Form", u"Pressure units:", None))
+        self.lineEdit_selection_id.setText("")
         self.comboBox_pressure_units.setItemText(0, QCoreApplication.translate("Form", u"Pa", None))
         self.comboBox_pressure_units.setItemText(1, QCoreApplication.translate("Form", u"kPa", None))
         self.comboBox_pressure_units.setItemText(2, QCoreApplication.translate("Form", u"MPa", None))
@@ -271,13 +279,14 @@ class AcousticNodalSolution2dPlotTimeInputs_UI(QWidget, Ui_Form):
                                         - pushButton_plot_data: QPushButton
                             - frame_4: QFrame
                                 - (Layout): QGridLayout
-                                        - pushButton_export_data: QPushButton
                                         - label_2: QLabel
-                                        - lineEdit_selection_id: QLineEdit
-                                        - comboBox_selector_filter: QComboBox
-                                        - label_10: QLabel
                                         - label_linear_2: QLabel
+                                        - pushButton_export_data: QPushButton
+                                        - label_10: QLabel
+                                        - comboBox_selector_filter: QComboBox
+                                        - lineEdit_selection_id: QLineEdit
                                         - comboBox_pressure_units: QComboBox
+                - frame_ifft_controls: QFrame
     """
 
     def __init__(self, *args, **kwargs):

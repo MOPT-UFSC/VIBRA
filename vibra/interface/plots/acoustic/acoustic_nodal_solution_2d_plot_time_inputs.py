@@ -1,21 +1,22 @@
-import logging
 from enum import IntEnum
 
 import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import QGridLayout
 
 from vibra import app
 from vibra.engine import AnalysisID
 from vibra.interface.common.common_interface import update_entities_selection
 from vibra.interface.data_handler.export_model_results import ExportModelResults
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.numeric_checks.int_list_validator import IntListValidator
 from vibra.interface.numeric_checks.unit_utilities import convert_pressure_unit
 from vibra.interface.plots.general.frequency_response_plotter import DataFormat, FrequencyResponsePlotter
+from vibra.interface.plots.general.ifft_controls_widget import IfftControlsWidget
 from vibra.interface.ui_generated.plots.acoustic.acoustic_nodal_solution_2d_plot_time_inputs_ui import (
     AcousticNodalSolution2dPlotTimeInputs_UI,
 )
-from vibra.utils.signal_processing import process_ifft_from_one_sided_spectrum_signal
 
 
 class SelectionType(IntEnum):
@@ -31,6 +32,8 @@ class AcousticNodalSolution2dPlotTimeInputs(AcousticNodalSolution2dPlotTimeInput
 
         app().main_window.show_geometry_render_widget()
 
+        self._add_ifft_controls_widget()
+        self._configure_validator()
         self._reset_variables()
         self._create_connections()
 
@@ -52,6 +55,19 @@ class AcousticNodalSolution2dPlotTimeInputs(AcousticNodalSolution2dPlotTimeInput
     @property
     def nodal_solution(self):
         return app().project.model.solution.acoustic_solution
+
+    def _add_ifft_controls_widget(self):
+        grid_layout = QGridLayout()
+        grid_layout.setContentsMargins(0, 0, 0, 0)
+        self.frame_ifft_controls.setLayout(grid_layout)
+
+        self.ifft_controls_widget = IfftControlsWidget()
+        grid_layout.addWidget(self.ifft_controls_widget)
+        self.frame_ifft_controls.adjustSize()
+
+    def _configure_validator(self):
+        validator = IntListValidator()
+        self.lineEdit_selection_id.setValidator(validator)
 
     def showEvent(self, event):
         super().showEvent(event)
@@ -78,9 +94,9 @@ class AcousticNodalSolution2dPlotTimeInputs(AcousticNodalSolution2dPlotTimeInput
         # QPushButton conenctions
         self.pushButton_export_data.clicked.connect(self.export_data_callback)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
-
+        
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
-    
+
     def geometry_selection_callback(self):
 
         if not app().main_window.action_results_workspace.isChecked():
@@ -206,11 +222,7 @@ class AcousticNodalSolution2dPlotTimeInputs(AcousticNodalSolution2dPlotTimeInput
             legend_label = f"Acoustic pressure at {selection_type} [{selected_id}]"
 
             Xf = self.get_response(selected_id)
-            time_vector, acoustic_pressure = process_ifft_from_one_sided_spectrum_signal(
-                self.frequencies, 
-                Xf,
-                dc_included = False,
-                )
+            time_vector, acoustic_pressure = self.ifft_controls_widget.process_ifft_for_spectrum(Xf)
 
             self.model_results[key] = { 
                 "x_data" : time_vector,
@@ -222,7 +234,7 @@ class AcousticNodalSolution2dPlotTimeInputs(AcousticNodalSolution2dPlotTimeInput
                 "legend" : legend_label,
                 "units" : self.pressure_units,
                 "color" : self.get_color(i),
-                "linestyle" : "-"  
+                "linestyle" : "-",
             }
 
     def process_units_data(self) -> str:
