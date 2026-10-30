@@ -134,7 +134,7 @@ class MainWindow(MainWindow_UI):
 
     def _config_window(self):
         self.setMinimumHeight(768)
-        self.showMinimized()
+        # self.showMinimized()
         self.vibra_icon = get_vibra_icon()
         self.setWindowIcon(self.vibra_icon)
         self.setWindowTitle("Vibra")
@@ -621,6 +621,16 @@ class MainWindow(MainWindow_UI):
         self.reload_visualization_filter()
         self.visualization_changed.emit()
 
+    def set_refinement_detection_lines(self, line_ids):
+        from time import perf_counter
+
+        t_start = perf_counter()
+        self.geometry_widget.set_refinement_detection_lines(line_ids)
+        print(f"[RefinementDetection] render red lines: {perf_counter() - t_start:.3f}s", flush=True)
+
+    def clear_refinement_detection_lines(self):
+        self.geometry_widget.set_refinement_detection_lines([])
+
     def action_unhide_all_callback(self):
         self.entity_visibility.unhide_all()
 
@@ -812,9 +822,9 @@ class MainWindow(MainWindow_UI):
 
     def open_project_dialog(self):
         project_path = FileDialogService.open_file(file_extensions=["vibra", "vibra.zip"],
-                                    caption="Open Project", 
+                                    caption="Open Project",
                                     last_folder="project_folder")
-        
+
         if project_path is None:
             return
 
@@ -1222,15 +1232,22 @@ class MainWindow(MainWindow_UI):
         ExportElementTransferDataInputs()
 
     def update_hidden_plots(self):
+        from time import perf_counter
+
+        t_start = perf_counter()
+
         def update_plot_callback():
             N = self.render_widgets_stack.count()
             for i in range(self.render_widgets_stack.count()):
                 widget = self.render_widgets_stack.widget(i)
                 if hasattr(widget, "update_hidden_plot"):
                     logging.info(f"Updating render... [{i + 1}/{N}]")
+                    t_widget = perf_counter()
                     widget.update_hidden_plot()
+                    print(f"[RefinementDetection] update_hidden_plot widget {i + 1}/{N}: {perf_counter() - t_widget:.3f}s", flush=True)
 
         LoadingWindow(update_plot_callback).run()
+        print(f"[RefinementDetection] update_hidden_plots total: {perf_counter() - t_start:.3f}s", flush=True)
 
     def eventFilter(self, obj, event: QEvent):
         if event.type() == QEvent.Type.ShortcutOverride:

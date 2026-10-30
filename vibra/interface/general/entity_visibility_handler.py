@@ -58,6 +58,18 @@ class EntityVisibilityHandler(QObject):
         if volumes:
             self.changed.emit()
 
+    def show_only_surfaces(self, surfaces: Sequence[int]):
+        mesh = self.project.mesh
+        all_surfaces = mesh.all_surface_ids() if mesh is not None else set()
+
+        hidden_surfaces = all_surfaces - set(surfaces)
+        if self._surfaces_to_hide == hidden_surfaces and not self._volumes_to_hide:
+            return
+
+        self._surfaces_to_hide = hidden_surfaces
+        self._volumes_to_hide.clear()
+        self.changed.emit()
+
     def has_hidden_entity(self) -> bool:
         return bool(self._surfaces_to_hide) or bool(self._volumes_to_hide)
 

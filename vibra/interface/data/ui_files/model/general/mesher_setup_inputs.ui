@@ -978,6 +978,33 @@
                   </property>
                  </widget>
                 </item>
+                <item row="0" column="2">
+                 <widget class="QPushButton" name="pushButton_detect_refinement">
+                  <property name="minimumSize">
+                   <size>
+                    <width>140</width>
+                    <height>28</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>180</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="font">
+                   <font>
+                    <pointsize>10</pointsize>
+                   </font>
+                  </property>
+                  <property name="text">
+                   <string>Refinement detection</string>
+                  </property>
+                  <property name="autoDefault">
+                   <bool>false</bool>
+                  </property>
+                 </widget>
+                </item>
                </layout>
               </widget>
              </item>
@@ -1022,6 +1049,11 @@
                  <string>Selection ID</string>
                 </property>
                </column>
+               <column>
+                <property name="text">
+                 <string>Transition band [x size]</string>
+                </property>
+               </column>
               </widget>
              </item>
              <item row="0" column="1">
@@ -1029,7 +1061,7 @@
                <property name="minimumSize">
                 <size>
                  <width>0</width>
-                 <height>68</height>
+                 <height>96</height>
                 </size>
                </property>
                <property name="frameShape">
@@ -1215,6 +1247,90 @@
                   </property>
                  </spacer>
                 </item>
+                <item row="3" column="1">
+                 <widget class="QLabel" name="label_transition_band">
+                  <property name="minimumSize">
+                   <size>
+                    <width>160</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>16777215</width>
+                    <height>160</height>
+                   </size>
+                  </property>
+                  <property name="font">
+                   <font>
+                    <pointsize>10</pointsize>
+                   </font>
+                  </property>
+                  <property name="text">
+                   <string>Transition band:</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="2">
+                 <widget class="QDoubleSpinBox" name="doubleSpinBox_local_mesh_size_control_transition_band">
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>28</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>200</width>
+                    <height>16777215</height>
+                   </size>
+                  </property>
+                  <property name="font">
+                   <font>
+                    <pointsize>10</pointsize>
+                   </font>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignmentFlag::AlignCenter</set>
+                  </property>
+                  <property name="decimals">
+                   <number>2</number>
+                  </property>
+                  <property name="minimum">
+                   <double>0.100000000000000</double>
+                  </property>
+                  <property name="maximum">
+                   <double>50.000000000000000</double>
+                  </property>
+                  <property name="singleStep">
+                   <double>0.500000000000000</double>
+                  </property>
+                  <property name="value">
+                   <double>20.000000000000000</double>
+                  </property>
+                 </widget>
+                </item>
+                <item row="3" column="3">
+                 <widget class="QLabel" name="label_transition_band_unit">
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                  <property name="font">
+                   <font>
+                    <pointsize>10</pointsize>
+                   </font>
+                  </property>
+                  <property name="text">
+                   <string>[x size]</string>
+                  </property>
+                 </widget>
+                </item>
                 <item row="1" column="3" colspan="2">
                  <widget class="QComboBox" name="comboBox_local_mesh_size_control_entity_type">
                   <property name="sizePolicy">
@@ -1254,6 +1370,16 @@
                   <item>
                    <property name="text">
                     <string>Volumes</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Lines</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Points</string>
                    </property>
                   </item>
                  </widget>

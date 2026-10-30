@@ -62,15 +62,17 @@ class MeshSetup:
 
 @dataclass
 class LocalMeshSizeControlSetup:
-    entity_type: Literal["lines", "surfaces", "volumes"]
+    entity_type: Literal["points", "lines", "surfaces", "volumes"]
     element_size: float
     entity_ids: list[int]
+    transition_ratio: float = 20.0
 
     def as_dict(self) -> dict:
         return {
             "entity_type": self.entity_type,
             "element_size": self.element_size,
             "entity_ids": self.entity_ids,
+            "transition_ratio": self.transition_ratio,
         }
     
     def remove_ids(self, ids: list[int], entity_type: str):

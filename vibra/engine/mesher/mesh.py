@@ -349,6 +349,7 @@ class Mesh:
             self._apply_local_mesh_size_control(
                 mesh_setup.maximum_element_size,
                 mesh_setup.local_mesh_size_control_parameters,
+                mesh_setup.minimum_element_size,
             )
         else:
             gmsh.option.setNumber("Mesh.MeshSizeMin", mesh_setup.minimum_element_size)
@@ -973,13 +974,315 @@ class Mesh:
         writer.SetInputData(vtk_dataset)
         writer.Write()
 
-    def _apply_local_mesh_size_control(self, global_size: float, size_control_setups: list[LocalMeshSizeControlSetup]):
-        setup_sizes = [setup.element_size for setup in size_control_setups]
+    def _build_refinement_group(self, line_id: int, line_length: float, surface_areas: dict[int, float], area_factor: float) -> dict:
+        connected_surfaces = [
+            surface_id
+            for surface_id in self.surfaces_from_line.get(line_id, [])
+            if surface_id in surface_areas
+        ]
+
+        if connected_surfaces:
+            smallest_surface_id = min(connected_surfaces, key=surface_areas.get)
+            smallest_area = surface_areas[smallest_surface_id]
+            max_area = area_factor * smallest_area
+            target_surfaces = sorted(
+                surface_id
+                for surface_id, area in surface_areas.items()
+                if area <= max_area
+            )
+        else:
+            smallest_surface_id = None
+            target_surfaces = []
+
+        return {
+            "line_id": line_id,
+            "line_length": line_length,
+            "smallest_surface_id": smallest_surface_id,
+            "surface_ids": target_surfaces,
+        }
+
+    def detect_refinement_need(
+        self,
+        minimum_element_size: float,
+        length_factor: float = 1.0,
+        area_factor: float = 1.5,
+        adjacent_factor: float | None = None,
+    ) -> dict:
+        """
+        Finds geometric lines shorter than the minimum element size and the
+        surfaces that should be refined together with them.
+
+        The line lengths are stored in meters, while the minimum element size
+        is given in the mesh length unit. The length factor is applied to the
+        minimum element size to obtain the detection threshold. When
+        ``adjacent_factor`` is provided, lines connected to the detected lines
+        are included if their length does not exceed the smallest detected
+        line length multiplied by this factor.
+        """
+        from time import perf_counter
+
+        t_start = perf_counter()
+        minimum_length = length_factor * convert_length_unit(minimum_element_size, self.length_unit, "meter")
+
+        t_areas = perf_counter()
+        surface_areas = {
+            surface_id: area
+            for surface_id, area in self.area_from_surfaces.items()
+            if area > 0
+        }
+        print(
+            f"[RefinementDetection] surfaces prepared: {len(surface_areas)} surfaces in {perf_counter() - t_areas:.3f}s",
+            flush=True,
+        )
+
+        groups = []
+        line_ids = set()
+        surface_ids = set()
+        candidate_lines = 0
+        scanned_lines = 0
+        total_lines = len(self.length_from_lines)
+        last_progress = perf_counter()
+
+        t_loop = perf_counter()
+        for line_id, line_length in self.length_from_lines.items():
+            scanned_lines += 1
+
+            if perf_counter() - last_progress >= 1.0:
+                print(
+                    f"[RefinementDetection] line scan progress: {scanned_lines}/{total_lines} lines "
+                    f"({candidate_lines} candidates)...",
+                    flush=True,
+                )
+                last_progress = perf_counter()
+            if line_length <= 0 or line_length > minimum_length:
+                continue
+
+            group = self._build_refinement_group(line_id, line_length, surface_areas, area_factor)
+            groups.append(group)
+            line_ids.add(line_id)
+            surface_ids.update(group["surface_ids"])
+            candidate_lines += 1
+
+        print(
+            f"[RefinementDetection] line scan: {candidate_lines} candidate lines from {len(self.length_from_lines)} lines "
+            f"in {perf_counter() - t_loop:.3f}s",
+            flush=True,
+        )
+
+        if adjacent_factor is not None and groups:
+            reference_length = min(group["line_length"] for group in groups)
+            max_adjacent_length = reference_length * max(1.0, float(adjacent_factor))
+
+            t_adjacent = perf_counter()
+            initial_line_ids = set(line_ids)
+            adjacent_line_ids = set()
+            for line_id in initial_line_ids:
+                for point_id in self.points_from_line.get(line_id, []):
+                    adjacent_line_ids.update(self.lines_from_point.get(point_id, []))
+
+            adjacent_line_ids -= initial_line_ids
+            added_lines = 0
+            for line_id in sorted(adjacent_line_ids):
+                line_length = self.length_from_lines.get(line_id, 0.0)
+                if line_length <= 0 or line_length > max_adjacent_length:
+                    continue
+
+                group = self._build_refinement_group(line_id, line_length, surface_areas, area_factor)
+                groups.append(group)
+                line_ids.add(line_id)
+                surface_ids.update(group["surface_ids"])
+                added_lines += 1
+
+            print(
+                f"[RefinementDetection] adjacent lines: {added_lines} added "
+                f"(max length {max_adjacent_length:.6g} m) in {perf_counter() - t_adjacent:.3f}s",
+                flush=True,
+            )
+
+        refinement_length = min((group["line_length"] for group in groups), default=None)
+
+        print(
+            f"[RefinementDetection] detect_refinement_need total: {perf_counter() - t_start:.3f}s "
+            f"({len(surface_ids)} surfaces selected)",
+            flush=True,
+        )
+
+        return {
+            "line_ids": sorted(line_ids),
+            "surface_ids": sorted(surface_ids),
+            "surface_areas": {surface_id: surface_areas[surface_id] for surface_id in surface_ids},
+            "groups": groups,
+            "refinement_length": refinement_length,
+        }
+
+    def group_refinement_sizes(
+        self,
+        groups: list[dict],
+        max_bins: int = 5,
+        merge_ratio: float = 1.5,
+        representative: str = "median",
+        size_multiplier: float = 1.0,
+    ) -> list[dict]:
+        """
+        Groups the detected line lengths into a limited number of element sizes.
+
+        Lines whose lengths differ by at most ``merge_ratio`` stay in the same
+        group. If the number of groups exceeds ``max_bins``, the closest groups
+        are merged until the limit is respected. A surface targeted by lines
+        from different groups is assigned to the finest group. The final element
+        size is the group representative multiplied by ``size_multiplier``.
+        """
+        from time import perf_counter
+
+        t_start = perf_counter()
+        valid_groups = [
+            group
+            for group in groups
+            if group["line_length"] > 0 and group["surface_ids"]
+        ]
+
+        if not valid_groups:
+            print("[RefinementDetection] group_refinement_sizes: no valid groups", flush=True)
+            return []
+
+        max_bins = max(1, int(max_bins))
+        merge_ratio = max(1.0, float(merge_ratio))
+
+        sorted_groups = sorted(valid_groups, key=lambda group: group["line_length"])
+
+        bins = []
+        for group in sorted_groups:
+            length = group["line_length"]
+
+            if not bins or length > bins[-1]["min_length"] * merge_ratio:
+                bins.append({
+                    "groups": [group],
+                    "min_length": length,
+                    "max_length": length,
+                })
+            else:
+                bins[-1]["groups"].append(group)
+                bins[-1]["max_length"] = length
+
+        while len(bins) > max_bins:
+            gaps = [
+                bins[index + 1]["min_length"] / bins[index]["max_length"]
+                for index in range(len(bins) - 1)
+            ]
+            index = int(np.argmin(gaps))
+
+            merged_bin = {
+                "groups": bins[index]["groups"] + bins[index + 1]["groups"],
+                "min_length": bins[index]["min_length"],
+                "max_length": bins[index + 1]["max_length"],
+            }
+            bins[index : index + 2] = [merged_bin]
+
+        output_bins = []
+        for bin_data in bins:
+            lengths = [group["line_length"] for group in bin_data["groups"]]
+
+            if representative == "max":
+                element_size = max(lengths)
+            elif representative == "min":
+                element_size = min(lengths)
+            else:
+                element_size = float(np.median(lengths))
+
+            element_size *= max(1e-12, float(size_multiplier))
+
+            line_ids = sorted({group["line_id"] for group in bin_data["groups"]})
+            surface_ids = sorted({
+                surface_id
+                for group in bin_data["groups"]
+                for surface_id in group["surface_ids"]
+            })
+
+            output_bins.append({
+                "element_size": element_size,
+                "min_length": bin_data["min_length"],
+                "max_length": bin_data["max_length"],
+                "line_ids": line_ids,
+                "surface_ids": surface_ids,
+                "line_length_sum": sum(group["line_length"] for group in bin_data["groups"]),
+            })
+
+        output_bins.sort(key=lambda bin_data: bin_data["element_size"])
+
+        assigned_surfaces = set()
+        for bin_data in output_bins:
+            bin_data["surface_ids"] = [
+                surface_id
+                for surface_id in bin_data["surface_ids"]
+                if surface_id not in assigned_surfaces
+            ]
+            assigned_surfaces.update(bin_data["surface_ids"])
+
+        result = [bin_data for bin_data in output_bins if bin_data["surface_ids"]]
+        print(
+            f"[RefinementDetection] group_refinement_sizes: {len(valid_groups)} groups -> {len(result)} bins "
+            f"in {perf_counter() - t_start:.3f}s",
+            flush=True,
+        )
+        return result
+
+    def _apply_local_mesh_size_control(
+        self,
+        global_size: float,
+        size_control_setups: list[LocalMeshSizeControlSetup],
+        minimum_size: float = 0.0,
+    ):
+        coarsening_setups = [
+            setup for setup in size_control_setups
+            if setup.entity_type in ("surfaces", "volumes")
+        ]
+        setup_sizes = [setup.element_size for setup in coarsening_setups]
         max_size = max([global_size, *setup_sizes])
 
+        far_size = max_size if max_size > global_size else global_size
         fields_list = []
+        has_line_fields = False
 
         for setup in size_control_setups:
+            if setup.entity_type in ("lines", "points"):
+                if setup.element_size >= far_size or not setup.entity_ids:
+                    continue
+
+                transition_ratio = max(1.0, float(setup.transition_ratio))
+                entity_list_name = "CurvesList" if setup.entity_type == "lines" else "PointsList"
+
+                distance_field = gmsh.model.mesh.field.add("Distance")
+                gmsh.model.mesh.field.setNumbers(distance_field, entity_list_name, setup.entity_ids)
+                gmsh.model.mesh.field.setNumber(distance_field, "Sampling", 50)
+
+                threshold_field = gmsh.model.mesh.field.add("Threshold")
+                gmsh.model.mesh.field.setNumber(threshold_field, "InField", distance_field)
+                gmsh.model.mesh.field.setNumber(threshold_field, "SizeMin", setup.element_size)
+                gmsh.model.mesh.field.setNumber(threshold_field, "SizeMax", far_size)
+                gmsh.model.mesh.field.setNumber(threshold_field, "DistMin", 0)
+                gmsh.model.mesh.field.setNumber(threshold_field, "DistMax", transition_ratio * setup.element_size)
+                fields_list.append(threshold_field)
+                has_line_fields = True
+                continue
+
+            if setup.entity_type == "surfaces" and setup.element_size < far_size:
+                transition_ratio = max(1.0, float(setup.transition_ratio))
+                band_reference = minimum_size if minimum_size > 0 else setup.element_size
+
+                distance_field = gmsh.model.mesh.field.add("Distance")
+                gmsh.model.mesh.field.setNumbers(distance_field, "SurfacesList", setup.entity_ids)
+                gmsh.model.mesh.field.setNumber(distance_field, "Sampling", 50)
+
+                threshold_field = gmsh.model.mesh.field.add("Threshold")
+                gmsh.model.mesh.field.setNumber(threshold_field, "InField", distance_field)
+                gmsh.model.mesh.field.setNumber(threshold_field, "SizeMin", setup.element_size)
+                gmsh.model.mesh.field.setNumber(threshold_field, "SizeMax", far_size)
+                gmsh.model.mesh.field.setNumber(threshold_field, "DistMin", 0)
+                gmsh.model.mesh.field.setNumber(threshold_field, "DistMax", transition_ratio * band_reference)
+                fields_list.append(threshold_field)
+                has_line_fields = True
+                continue
+
             match setup.entity_type:
                 case "surfaces":
                     entity_type = "SurfacesList"
@@ -993,6 +1296,9 @@ class Mesh:
             gmsh.model.mesh.field.setNumbers(setup_size_control_field, entity_type, setup.entity_ids)
             gmsh.model.mesh.field.setNumber(setup_size_control_field, "VIn", setup.element_size)
             fields_list.append(setup_size_control_field)
+
+        if has_line_fields:
+            gmsh.option.setNumber("Mesh.MeshSizeFromPoints", 0)
 
         # this is the complementary set of entities size control part
         if max_size > global_size:

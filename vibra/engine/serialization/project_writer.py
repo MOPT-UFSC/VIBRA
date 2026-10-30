@@ -94,9 +94,8 @@ class ProjectWriter:
                 asdict(mesh_setup),
             )
             project_setup["mesh_setup"]["local_mesh_size_control_parameters"] = [
-                (i.entity_type, i.element_size, i.entity_ids)
-                for i in mesh_setup.local_mesh_size_control_parameters
-            ]  # fmt: skip
+                i.as_dict() for i in mesh_setup.local_mesh_size_control_parameters
+            ]
 
         write_json(self.project_paths.project_setup_filepath, project_setup)
 

@@ -61,6 +61,7 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.selection_faces_color = app().config.user_preferences.selection_faces_color
         self.selection_nodes_points_color = app().config.user_preferences.selection_nodes_points_color
         self.selection_lines_color = app().config.user_preferences.selection_lines_color
+        self.refinement_detection_lines: set[int] = set()
 
         self.set_default_render_tool()
 
@@ -378,10 +379,18 @@ class GeometryRenderWidget(CommonRenderWidget):
 
         self.update()
 
+    def set_refinement_detection_lines(self, line_ids):
+        self.refinement_detection_lines = set(line_ids)
+        self.update_selection()
+        self.update()
+
     def update_selection(self):
         if not self.actors_exists():
             return
 
+        from time import perf_counter
+
+        t_start = perf_counter()
         self.points_actor.clear_colors()
         self.lines_actor.clear_colors()
         self.multimaterial.clear_colors()
@@ -394,11 +403,15 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.lines_actor.paint_lines(self.selection_lines_color, lines)
         self.multimaterial.paint_surfaces(self.selection_faces_color, surfaces)
 
+        if self.refinement_detection_lines:
+            self.lines_actor.paint_lines(Color(255, 0, 0), self.refinement_detection_lines)
+
         self.selection_nodes_points_color = app().config.user_preferences.selection_nodes_points_color
         self.selection_faces_color = app().config.user_preferences.selection_faces_color
         self.selection_lines_color = app().config.user_preferences.selection_lines_color
 
         self.update_info_text()
+        print(f"[RefinementDetection] geometry update_selection: {perf_counter() - t_start:.3f}s", flush=True)
 
     def clear_selection_spheres(self):
         if self.selection_spheres_actor is None:

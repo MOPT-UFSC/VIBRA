@@ -137,7 +137,12 @@ class ProjectReader:
             "local_mesh_size_control_parameters",
             mesh_setup_dict.get("mesh_refinement_parameters", []),
         )
-        size_control_parameters = [LocalMeshSizeControlSetup(*refinement) for refinement in size_controls]
+        size_control_parameters = []
+        for refinement in size_controls:
+            if isinstance(refinement, dict):
+                size_control_parameters.append(LocalMeshSizeControlSetup(**refinement))
+            else:
+                size_control_parameters.append(LocalMeshSizeControlSetup(*refinement))
 
         custom_element = mesh_setup_dict.get("custom_element_setup")
         if custom_element is not None:

@@ -116,6 +116,62 @@ def test_local_mesh_size_control_refines():
     assert mean_edges[2] < mean_edges[1] * 0.9
 
 
+def test_detect_refinement_need():
+    mesh = Mesh(length_unit="millimeter")
+    mesh.length_from_lines = {1: 0.002, 2: 0.02, 3: 0.001}
+    mesh.area_from_surfaces = {10: 1e-6, 11: 1.4e-6, 12: 5e-6, 13: 0.0}
+    mesh.surfaces_from_line = {1: [10, 12], 2: [12], 3: [10, 11, 12]}
+
+    result = mesh.detect_refinement_need(5)
+
+    assert result["line_ids"] == [1, 3]
+    assert result["surface_ids"] == [10, 11]
+    assert result["surface_areas"] == {10: 1e-6, 11: 1.4e-6}
+    assert result["refinement_length"] == 0.001
+    assert [group["line_id"] for group in result["groups"]] == [1, 3]
+
+
+def test_detect_refinement_need_with_adjacent_lines():
+    mesh = Mesh(length_unit="millimeter")
+    mesh.length_from_lines = {1: 0.001, 2: 0.002, 3: 0.02, 4: 0.01}
+    mesh.area_from_surfaces = {10: 1e-6, 11: 2e-6, 12: 3e-6}
+    mesh.surfaces_from_line = {1: [10], 2: [10], 3: [11], 4: [12]}
+    mesh.points_from_line = {1: [1, 2], 2: [2, 3], 3: [3, 4], 4: [5, 6]}
+    mesh.lines_from_point = {1: [1], 2: [1, 2], 3: [2, 3], 4: [3], 5: [4], 6: [4]}
+
+    result_without_adjacent = mesh.detect_refinement_need(5, adjacent_factor=None)
+    assert result_without_adjacent["line_ids"] == [1, 2]
+
+    result_with_adjacent = mesh.detect_refinement_need(5, adjacent_factor=25)
+    assert result_with_adjacent["line_ids"] == [1, 2, 3]
+
+
+def test_group_refinement_sizes():
+    mesh = Mesh(length_unit="millimeter")
+    groups = [
+        {"line_id": 1, "line_length": 0.00008, "surface_ids": [10]},
+        {"line_id": 2, "line_length": 0.00009, "surface_ids": [10, 11]},
+        {"line_id": 3, "line_length": 0.002, "surface_ids": [10, 20]},
+        {"line_id": 4, "line_length": 0.004, "surface_ids": [21]},
+    ]
+
+    bins = mesh.group_refinement_sizes(groups, max_bins=5, merge_ratio=1.5)
+
+    assert [bin_data["surface_ids"] for bin_data in bins] == [[10, 11], [20], [21]]
+    assert [bin_data["element_size"] for bin_data in bins] == [0.000085, 0.002, 0.004]
+    assert bins[0]["line_length_sum"] == 0.00017
+
+    merged_bins = mesh.group_refinement_sizes(groups, max_bins=2, merge_ratio=1.5)
+
+    assert len(merged_bins) == 2
+    assert [bin_data["surface_ids"] for bin_data in merged_bins] == [[10, 11], [20, 21]]
+    assert merged_bins[1]["element_size"] == 0.003
+
+    multiplied_bins = mesh.group_refinement_sizes(groups, max_bins=5, merge_ratio=1.5, size_multiplier=2.0)
+
+    assert [bin_data["element_size"] for bin_data in multiplied_bins] == [0.00017, 0.004, 0.008]
+
+
 def _mean_edge_length_per_volume(mesh: Mesh) -> dict[int, float]:
     node_index = {int(node): i for i, node in enumerate(mesh.nodal_coordinates[:, 0])}
     coords = mesh.nodal_coordinates[:, 1:]

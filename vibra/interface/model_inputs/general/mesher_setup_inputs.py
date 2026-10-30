@@ -9,7 +9,7 @@ from matplotlib.figure import Figure
 from molde.colors import Color, color_names
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QKeyEvent
-from PySide6.QtWidgets import QDoubleSpinBox, QTableWidgetItem, QVBoxLayout
+from PySide6.QtWidgets import QDoubleSpinBox, QPushButton, QTableWidgetItem, QVBoxLayout
 
 from vibra import app
 from vibra.engine.mesher import gmsh_constants
@@ -24,9 +24,10 @@ from vibra.engine.mesher.element_setup import (
     SubdivisionAlgorithms,
 )
 from vibra.engine.mesher.mesh_setup import LocalMeshSizeControlSetup, MeshSetup
-from vibra.errors import InvalidMeshSetupError
+from vibra.errors import InvalidMeshSetupError, SolverSubprocessError
 from vibra.interface import error_title
 from vibra.interface.formatters.icons import Icon
+from vibra.interface.numeric_checks.unit_utilities import convert_length_unit
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
@@ -69,6 +70,7 @@ class LocalMeshSizeControlTableColumns(IntEnum):
     ELEMENT_SIZE = 0
     SELECTION_TYPE = 1
     SELECTION_IDS = 2
+    TRANSITION_BAND = 3
 
 
 class MeshSetupTabs(IntEnum):
@@ -104,6 +106,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.synchronize_sizes = False
         self.tmp_local_mesh_size_control_parameters: list[LocalMeshSizeControlSetup] = []
         self.last_synced_ids: set[int] = set()
+        self.refinement_detection_dialog = None
 
         self.gmsh_labels = {
             0: "gamma",
@@ -119,6 +122,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.setWindowTitle("Vibra")
 
     def _create_connections(self):
+        self._create_detect_refinement_button()
 
         # QComboBox connections
         self.comboBox_element_geometry.currentIndexChanged.connect(self.element_topology_changed_callback)
@@ -143,6 +147,9 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         # QTableWidget connections
         self.tableWidget_local_mesh_size_control_data.itemClicked.connect(self.local_mesh_size_control_item_clicked_callback)
         self.tableWidget_mesh_quality.itemClicked.connect(self.mesh_quality_item_clicked_callback)
+        self.comboBox_local_mesh_size_control_entity_type.currentIndexChanged.connect(
+            self.update_local_mesh_size_control_band_accessibility
+        )
 
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
@@ -162,6 +169,12 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
         self.doubleSpinBox_maximum_element_size.setKeyboardTracking(False)
         self.doubleSpinBox_minimum_element_size.setKeyboardTracking(False)
+        self.doubleSpinBox_local_mesh_size_control_transition_band.setKeyboardTracking(False)
+        self.doubleSpinBox_local_mesh_size_control_transition_band.setToolTip(
+            "Transition distance: line controls use the line element size; "
+            "surface controls use the minimum element size."
+        )
+        self.update_local_mesh_size_control_band_accessibility()
 
         minimum_spinbox = self.doubleSpinBox_minimum_element_size
         maximum_spinbox = self.doubleSpinBox_maximum_element_size
@@ -180,6 +193,19 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             QDoubleSpinBox.stepBy(spinbox, steps)
 
         minimum_spinbox.stepBy = step_by.__get__(minimum_spinbox)
+
+    def _create_detect_refinement_button(self):
+        if not hasattr(self, "pushButton_detect_refinement"):
+            button = QPushButton("Refinement detection", self.frame_11)
+            button.setObjectName("pushButton_detect_refinement")
+            button.setFont(self.pushButton_add.font())
+            button.setAutoDefault(False)
+            button.setToolTip("Open the refinement detection assistant")
+            self.gridLayout_12.addWidget(button, 0, 2, 1, 1)
+            self.pushButton_detect_refinement = button
+
+        self.pushButton_detect_refinement.setAutoDefault(False)
+        self.pushButton_detect_refinement.clicked.connect(self.detect_refinement_callback)
 
     @property
     def model(self):
@@ -240,6 +266,8 @@ class MesherSetupInputs(MesherSetupInputs_UI):
     def geometry_selection_callback(self):
         volumes = app().main_window.selection.geometry_volumes
         surfaces = app().main_window.selection.geometry_surfaces
+        lines = app().main_window.selection.geometry_lines
+        points = app().main_window.selection.geometry_points
 
         if volumes:
             self.comboBox_local_mesh_size_control_entity_type.setCurrentText("Volumes")
@@ -247,6 +275,12 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         elif surfaces:
             self.comboBox_local_mesh_size_control_entity_type.setCurrentText("Surfaces")
             selection = set(surfaces)
+        elif lines:
+            self.comboBox_local_mesh_size_control_entity_type.setCurrentText("Lines")
+            selection = set(lines)
+        elif points:
+            self.comboBox_local_mesh_size_control_entity_type.setCurrentText("Points")
+            selection = set(points)
         else:
             self.lineEdit_selected_ids.setText("")
             self.last_synced_ids = set()
@@ -266,8 +300,11 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.lineEdit_selected_ids.setText(text)
 
     def get_selected_entity_type(self) -> str:
-        volumes_selection = self.comboBox_local_mesh_size_control_entity_type.currentText() == "Volumes"
-        return "volumes" if volumes_selection else "surfaces"
+        return self.comboBox_local_mesh_size_control_entity_type.currentText().lower()
+
+    def update_local_mesh_size_control_band_accessibility(self):
+        supports_transition_band = self.get_selected_entity_type() in ("points", "lines", "surfaces")
+        self.doubleSpinBox_local_mesh_size_control_transition_band.setEnabled(supports_transition_band)
 
     def tab_event_callback(self):
         mesh_quality_tab = self.tabWidget_main.currentIndex() == MeshSetupTabs.MESH_QUALITY
@@ -282,10 +319,16 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         str_element_size = self.tableWidget_local_mesh_size_control_data.item(row, LocalMeshSizeControlTableColumns.ELEMENT_SIZE).text()
         selection_type = self.tableWidget_local_mesh_size_control_data.item(row, LocalMeshSizeControlTableColumns.SELECTION_TYPE).text()
         str_selected_ids = self.tableWidget_local_mesh_size_control_data.item(row, LocalMeshSizeControlTableColumns.SELECTION_IDS).text()
+        str_transition_band = self.tableWidget_local_mesh_size_control_data.item(row, LocalMeshSizeControlTableColumns.TRANSITION_BAND).text()
 
         if str_element_size != "":
             element_size = float(str_element_size)
             self.doubleSpinBox_local_mesh_size_control_element_size.setValue(element_size)
+
+        try:
+            self.doubleSpinBox_local_mesh_size_control_transition_band.setValue(float(str_transition_band))
+        except ValueError:
+            pass
 
         selected_ids = [int(_id) for _id in str_selected_ids.split(",")]
         if not selected_ids:
@@ -294,6 +337,12 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         if selection_type == "volumes":
             self.comboBox_local_mesh_size_control_entity_type.setCurrentText("Volumes")
             app().main_window.selection.set_geometry_selection(volumes=selected_ids)
+        elif selection_type == "lines":
+            self.comboBox_local_mesh_size_control_entity_type.setCurrentText("Lines")
+            app().main_window.selection.set_geometry_selection(lines=selected_ids)
+        elif selection_type == "points":
+            self.comboBox_local_mesh_size_control_entity_type.setCurrentText("Points")
+            app().main_window.selection.set_geometry_selection(points=selected_ids)
         else:
             self.comboBox_local_mesh_size_control_entity_type.setCurrentText("Surfaces")
             app().main_window.selection.set_geometry_selection(surfaces=selected_ids)
@@ -309,6 +358,130 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             return []
 
         return selected_ids
+
+    def detect_refinement_callback(self):
+        logging.info("Opening refinement detection window...")
+        try:
+            from vibra.interface.model_inputs.general.refinement_detection_input import RefinementDetectionInput
+
+            if self.refinement_detection_dialog is not None:
+                self.refinement_detection_dialog.close()
+
+            dialog = RefinementDetectionInput(self)
+            dialog.accepted.connect(self._refinement_detection_accepted_callback)
+            dialog.rejected.connect(self._refinement_detection_rejected_callback)
+            self.refinement_detection_dialog = dialog
+            dialog.show()
+            dialog_rect = dialog.frameGeometry()
+            dialog_rect.moveCenter(self.frameGeometry().center())
+            dialog.move(dialog_rect.topLeft())
+            dialog.raise_()
+            dialog.activateWindow()
+
+        except Exception as error:
+            from traceback import print_exception
+
+            print_exception(error)
+            self._show_refinement_detection_fallback(str(error))
+
+    def _show_refinement_detection_fallback(self, error_message: str):
+        from PySide6.QtWidgets import QDialog, QLabel, QPushButton, QVBoxLayout
+
+        dialog = QDialog()
+        dialog.setWindowTitle("Refinement detection")
+        dialog.setWindowIcon(app().main_window.vibra_icon)
+        dialog.setWindowFlags(Qt.Window | Qt.WindowStaysOnTopHint)
+        dialog.setWindowModality(Qt.NonModal)
+
+        layout = QVBoxLayout(dialog)
+        layout.addWidget(QLabel("Refinement detection placeholder"))
+        layout.addWidget(QLabel(error_message))
+
+        close_button = QPushButton("Close")
+        close_button.clicked.connect(dialog.accept)
+        layout.addWidget(close_button)
+
+        dialog.show()
+        dialog.raise_()
+        dialog.activateWindow()
+
+    def _refinement_detection_accepted_callback(self):
+        dialog = self.refinement_detection_dialog
+        if dialog is not None and dialog.detection_result is not None:
+            self._apply_refinement_detection_result(dialog.detection_result)
+
+        self.refinement_detection_dialog = None
+        self.show()
+
+    def _refinement_detection_rejected_callback(self):
+        self.refinement_detection_dialog = None
+        self.show()
+
+    def _apply_refinement_detection_result(self, result: dict):
+        from time import perf_counter
+
+        t_start = perf_counter()
+        print("[RefinementDetection] applying result in mesh setup...", flush=True)
+
+        mesh = self.model.mesh
+        line_ids = result["line_ids"]
+        surface_ids = result["surface_ids"]
+        bins = result.get("bins") or []
+        refine_whole_faces = result.get("refine_whole_faces", False)
+        transition_band = result.get("transition_band", self.doubleSpinBox_local_mesh_size_control_transition_band.value())
+
+        if mesh is None or not surface_ids:
+            return
+
+        t_bins = perf_counter()
+        if bins:
+            for bin_data in bins:
+                refinement_size = convert_length_unit(bin_data["element_size"], "meter", mesh.length_unit)
+                self.doubleSpinBox_local_mesh_size_control_element_size.setValue(refinement_size)
+                refinement_size = self.doubleSpinBox_local_mesh_size_control_element_size.value()
+
+                if refine_whole_faces:
+                    self._add_local_mesh_size_control("surfaces", refinement_size, bin_data["surface_ids"], transition_band)
+                else:
+                    self._add_local_mesh_size_control("lines", refinement_size, bin_data["line_ids"], transition_band)
+
+            refinement_size = convert_length_unit(bins[0]["element_size"], "meter", mesh.length_unit)
+            self.doubleSpinBox_local_mesh_size_control_element_size.setValue(refinement_size)
+
+        else:
+            refinement_length = result["refinement_length"]
+            if refinement_length is None:
+                return
+
+            refinement_size = convert_length_unit(refinement_length, "meter", mesh.length_unit)
+            self.doubleSpinBox_local_mesh_size_control_element_size.setValue(refinement_size)
+            refinement_size = self.doubleSpinBox_local_mesh_size_control_element_size.value()
+            self._add_local_mesh_size_control("surfaces", refinement_size, surface_ids, transition_band)
+        print(f"[RefinementDetection] add refinement rows: {perf_counter() - t_bins:.3f}s", flush=True)
+
+        self.doubleSpinBox_local_mesh_size_control_transition_band.setValue(transition_band)
+        self.comboBox_local_mesh_size_control_entity_type.setCurrentText("Lines" if not refine_whole_faces else "Surfaces")
+
+        t_selection = perf_counter()
+        app().main_window.selection.set_geometry_selection(lines=line_ids, surfaces=surface_ids)
+        self.lineEdit_selected_ids.setText("")
+        self.last_synced_ids = set()
+        print(f"[RefinementDetection] apply selection: {perf_counter() - t_selection:.3f}s", flush=True)
+
+        app().main_window.entity_visibility.unhide_all()
+        print(f"[RefinementDetection] apply result total: {perf_counter() - t_start:.3f}s", flush=True)
+
+    def ghost_surfaces_except(self, surface_ids: list[int]):
+        from time import perf_counter
+
+        t_start = perf_counter()
+        main_window = app().main_window
+        if not main_window.action_ghost_view.isChecked():
+            main_window.action_ghost_view.setChecked(True)
+            main_window.action_ghost_view_callback()
+
+        main_window.entity_visibility.show_only_surfaces(surface_ids)
+        print(f"[RefinementDetection] ghost_surfaces_except total: {perf_counter() - t_start:.3f}s", flush=True)
 
     def add_button_callback(self):
         if self.lineEdit_selected_ids.text() == "":
@@ -334,15 +507,18 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             return
 
         controlled_size = self.doubleSpinBox_local_mesh_size_control_element_size.value()
+        transition_band = self.doubleSpinBox_local_mesh_size_control_transition_band.value()
         self.lineEdit_selected_ids.setText("")
         self.last_synced_ids = set()
+        self._add_local_mesh_size_control(selected_type, controlled_size, selected_ids, transition_band)
 
-        setup = LocalMeshSizeControlSetup(
-            selected_type,
-            controlled_size,
-            selected_ids,
-        )
-
+    def _add_local_mesh_size_control(
+        self,
+        selected_type: str,
+        controlled_size: float,
+        selected_ids: list[int],
+        transition_band: float = 3.0,
+    ):
         new_size_controls = []
         for control in self.tmp_local_mesh_size_control_parameters:
             control.remove_ids(selected_ids, selected_type)
@@ -351,6 +527,13 @@ class MesherSetupInputs(MesherSetupInputs_UI):
                 new_size_controls.append(control)
 
         self.tmp_local_mesh_size_control_parameters = new_size_controls
+
+        setup = LocalMeshSizeControlSetup(
+            selected_type,
+            controlled_size,
+            selected_ids,
+            transition_band,
+        )
 
         self.tmp_local_mesh_size_control_parameters.append(setup)
         self.update_local_mesh_size_control_table()
@@ -455,6 +638,19 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             PrintMessageInput([error_title, "Invalid mesh setup", str(e)])
             self.show()
             return
+        except SolverSubprocessError as e:
+            logging.error(str(e))
+            message = "The mesh generation subprocess failed.\n\n"
+            message += f"Return code: {e.returncode}\n\n"
+            message += str(e) if e.stderr else "No child traceback was captured."
+            PrintMessageInput([error_title, "Mesh generation failed", message])
+            self.show()
+            return
+        except Exception as e:
+            logging.error(str(e))
+            PrintMessageInput([error_title, "Mesh generation failed", str(e)])
+            self.show()
+            return
 
         if close_window:
             self.close()
@@ -481,6 +677,14 @@ class MesherSetupInputs(MesherSetupInputs_UI):
                 row,
                 LocalMeshSizeControlTableColumns.SELECTION_IDS,
                 self._item(ids),
+            )
+            transition_band = getattr(setup, "transition_ratio", 3.0)
+            supports_transition_band = setup.entity_type in ("points", "lines", "surfaces")
+            transition_band_text = f"{transition_band:.2f}" if supports_transition_band else "-"
+            self.tableWidget_local_mesh_size_control_data.setItem(
+                row,
+                LocalMeshSizeControlTableColumns.TRANSITION_BAND,
+                self._item(transition_band_text),
             )
 
     def update_mesh_quality_table(self):
