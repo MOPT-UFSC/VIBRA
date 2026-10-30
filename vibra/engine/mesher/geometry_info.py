@@ -79,10 +79,12 @@ class GeometryInfo:
         return self
 
     def update_from_gmsh_state(self) -> Self:
-        gmsh.model.occ.synchronize()
         volumes_list = gmsh.model.getEntities(3)
-        gmsh.model.occ.fragment(volumes_list, volumes_list)
-        gmsh.model.occ.synchronize()
+
+        if len(volumes_list) >= 2:
+            gmsh.model.occ.synchronize()
+            gmsh.model.occ.fragment(volumes_list, volumes_list)
+            gmsh.model.occ.synchronize()
 
         self._process_geometry_information()
         self._process_curves_normals()
