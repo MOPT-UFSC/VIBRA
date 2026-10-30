@@ -52,10 +52,18 @@ class AnimationWidget(AnimationWidget_UI):
 
     @property
     def magnification_factor(self):
-        if self.checkBox_magnification.isChecked():
-            return self.magnification_factor_slider.value() / 16
+        value = self.magnification_factor_slider.value()
+        if value == 0:
+            return 0
 
-        return
+        if value >= 17:
+            return (3 / 16) * value - 35 / 16
+        else:
+            return (7 / 128) * value + 9 / 128
+
+    @property
+    def true_scale(self):
+        return not self.checkBox_magnification.isChecked()
 
     def _initialize(self):
         self.animating = False
@@ -113,8 +121,8 @@ class AnimationWidget(AnimationWidget_UI):
         self.magnification_factor_slider.setOrientation(Qt.Orientation.Horizontal)
         self.magnification_factor_slider.setCursor(Qt.PointingHandCursor)
         self.magnification_factor_slider.setMinimum(0)
-        self.magnification_factor_slider.setMaximum(32)
-        self.magnification_factor_slider.setValue(16)
+        self.magnification_factor_slider.setMaximum(33)
+        self.magnification_factor_slider.setValue(17)
         self.magnification_factor_slider.setSingleStep(1)
 
         # QSpinBox
@@ -206,7 +214,7 @@ class AnimationWidget(AnimationWidget_UI):
     def magnification_state_changed(self):
         is_checked = self.checkBox_magnification.isChecked()
         if not is_checked:
-            self.magnification_factor_slider.setValue(16)
+            self.magnification_factor_slider.setValue(17)
 
     def frames_value_changed(self):
         self.frames = self.spinBox_frames.value()
@@ -321,12 +329,12 @@ class AnimationWidget(AnimationWidget_UI):
         self.label_phase_angle.setText(f"{self.time: .4e}s")
 
     def update_factor_label(self, max_value=None):
-        value = self.magnification_factor_slider.value() / 16
+        value = self.magnification_factor
         if isinstance(max_value, float | int):
             if max_value:
                 value /= 10 * max_value
             else:
-                value = 1
+                value = 1.0
         self.label_factor.setText(f"{value: .2e}x")
 
     def update_phase_slider_steps(self):

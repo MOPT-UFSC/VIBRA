@@ -396,7 +396,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         max_value = max_value if max_value != 0 else 1.0
         magnification_factor = self.plot_setup.magnification_factor
 
-        if magnification_factor is None:
+        if self.plot_setup.true_scale:
             mult_factor = magnification_factor
         else:
             mult_factor = magnification_factor / (10 * max_value)
@@ -484,7 +484,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         max_value = max_value if max_value != 0 else 1.0
         magnification_factor = self.plot_setup.magnification_factor
 
-        if magnification_factor is None:
+        if self.plot_setup.true_scale:
             mult_factor = magnification_factor
         else:
             mult_factor = magnification_factor / (10 * max_disp)
@@ -584,7 +584,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         max_value = max_value if max_value != 0 else 1.0
         magnification_factor = self.plot_setup.magnification_factor
 
-        if magnification_factor is None:
+        if self.plot_setup.true_scale:
             mult_factor = magnification_factor
         else:
             mult_factor = magnification_factor / (10 * max_disp)
@@ -662,7 +662,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         max_value = max_value if max_value != 0 else 1.0
         magnification_factor = self.plot_setup.magnification_factor
 
-        if magnification_factor is None:
+        if self.plot_setup.true_scale:
             mult_factor = magnification_factor
         else:
             mult_factor = magnification_factor / (10 * max_value)

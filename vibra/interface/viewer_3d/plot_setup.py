@@ -101,7 +101,8 @@ class NoPlotSetup:
 class DisplacementFieldPlotSetupFrequency:
     phase: float
     index: int
-    magnification_factor: float | None
+    true_scale: bool
+    magnification_factor: float
     plot_type: DisplacementDataType
     unit: str = "--"
     n_diff: int = 0
@@ -111,7 +112,8 @@ class DisplacementFieldPlotSetupFrequency:
 @dataclass(slots=True)
 class DisplacementFieldPlotSetupTime:
     time_index: int
-    magnification_factor: float | None
+    true_scale: bool
+    magnification_factor: float
     plot_type: DisplacementDataType
     n_diff: int = 0
     n_div: int | None = None
@@ -125,6 +127,7 @@ class DisplacementFieldPlotSetupTime:
 class StressFieldPlotSetupFrequency:
     phase: float
     index: int
+    true_scale: bool
     magnification_factor: float
     stress_type: StressType
     plot_type: StressDataType
@@ -136,6 +139,7 @@ class StressFieldPlotSetupFrequency:
 @dataclass(slots=True)
 class StressFieldPlotSetupTime:
     time_index: int
+    true_scale: bool
     magnification_factor: float
     stress_type: StressType
     plot_type: StressDataType

@@ -197,6 +197,7 @@ class StructuralNodalSolution3dPlotTimeInputs(StructuralNodalSolution3dPlotTimeI
 
         plot_setup = DisplacementFieldPlotSetupTime(
             time_index=0,
+            true_scale=self.animation_widget.true_scale,
             magnification_factor=self.animation_widget.magnification_factor,
             plot_type=self.get_plot_type(),
             unit=self.get_plot_units(),

@@ -136,6 +136,7 @@ class StructuralNodalSolution3dPlotFrequencyInputs(StructuralNodalSolution3dPlot
 
         plot_setup = DisplacementFieldPlotSetupFrequency(
             phase=self.animation_widget.phase_in_radians,
+            true_scale=self.animation_widget.true_scale,
             magnification_factor=self.animation_widget.magnification_factor,
             index=self.selected_frequency_index,
             plot_type=self.get_plot_type(),

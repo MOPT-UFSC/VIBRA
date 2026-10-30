@@ -180,6 +180,7 @@ class StructuralStress3dPlotTimeInputs(StructuralStress3dPlotTimeInputs_UI):
 
         plot_setup = StressFieldPlotSetupTime(
             time_index=0,
+            true_scale=self.animation_widget.true_scale,
             magnification_factor=self.animation_widget.magnification_factor,
             stress_type=stress_index,
             plot_type=plot_type,

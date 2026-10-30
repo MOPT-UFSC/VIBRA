@@ -178,6 +178,7 @@ class StructuralStress3dPlotFrequencyInputs(StructuralStress3dPlotFrequencyInput
         plot_setup = StressFieldPlotSetupFrequency(
             phase=self.animation_widget.phase_in_radians,
             index=self.selected_frequency_index,
+            true_scale=self.animation_widget.true_scale,
             magnification_factor=self.animation_widget.magnification_factor,
             stress_type=stress_index,
             plot_type=plot_type,
