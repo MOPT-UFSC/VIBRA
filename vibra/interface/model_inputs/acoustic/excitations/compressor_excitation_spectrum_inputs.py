@@ -50,24 +50,28 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
         self.keep_window_open = True
 
     def _config_widgets(self):
-        #
+
         for i, w in enumerate([120]):
             self.treeWidget_compressor_excitation_spectrum.setColumnWidth(i, w)
             self.treeWidget_compressor_excitation_spectrum.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
     def _create_connections(self):
-        #
+
+        # QPushButton connections
         self.pushButton_apply.clicked.connect(self.apply_callback)
         self.pushButton_apply_and_close.clicked.connect(lambda: self.apply_callback(True))
         self.pushButton_cancel.clicked.connect(self.close)
         self.pushButton_load_table.clicked.connect(self.load_compressor_excitation_spectrum_data)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
-        #
+        
+        # QTabWidget connection
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
+        
+        # QTreeWidget connections
         self.treeWidget_compressor_excitation_spectrum.itemClicked.connect(self.on_click_item)
         self.treeWidget_compressor_excitation_spectrum.itemDoubleClicked.connect(self.on_doubleclick_item)
-        #
+        
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
     def geometry_selection_callback(self):
