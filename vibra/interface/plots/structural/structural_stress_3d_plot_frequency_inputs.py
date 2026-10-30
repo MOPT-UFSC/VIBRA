@@ -88,6 +88,7 @@ class StructuralStress3dPlotFrequencyInputs(StructuralStress3dPlotFrequencyInput
         self.treeWidget_frequencies.itemClicked.connect(self.on_click_item)
         self.treeWidget_frequencies.itemDoubleClicked.connect(self.on_click_item)
 
+        self.animation_widget.checkBox_magnification.stateChanged.connect(self.plot_data_callback)
         self.results_display_widget.colormap_changed.connect(self.animation_widget.update_color_and_deformation)
         self.results_display_widget.min_max_value_changed.connect(self.animation_widget.update_color_and_deformation)
 

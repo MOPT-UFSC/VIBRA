@@ -140,6 +140,7 @@ class StructuralStress3dPlotTimeInputs(StructuralStress3dPlotTimeInputs_UI):
         # QPushButton connection
         self.pushButton_process_nodal_stresses.clicked.connect(self.plot_data_callback)
 
+        self.animation_widget.checkBox_magnification.stateChanged.connect(self.plot_data_callback)
         self.ifft_controls_widget.ifft_controls_changed.connect(self.enable_process_ifft_button)
         self.results_display_widget.colormap_changed.connect(self.animation_widget.update_color_and_deformation)
         self.results_display_widget.min_max_value_changed.connect(self.animation_widget.update_color_and_deformation)

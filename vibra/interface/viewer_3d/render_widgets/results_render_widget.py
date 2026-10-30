@@ -13,6 +13,7 @@ from vibra.engine.postprocessing import AcousticPostprocessing, StructuralPostpr
 from vibra.extensions import SUPPORTED_ANIMATION_EXTENSIONS, SUPPORTED_VIDEO_EXTENSIONS
 from vibra.interface.enums import Workspaces
 from vibra.interface.loading_window import LoadingWindow
+from vibra.interface.plots.general.animation_widget import AnimationWidget
 from vibra.interface.user_input.data_handler.file_dialog_service import FileDialogService
 from vibra.interface.viewer_3d.plot_setup import (
     AcousticPlotSetups,
@@ -109,6 +110,10 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.create_scale_bar()
         self.colorbar_actor.SetLabelFormat("%+0.1e")
         self.update_plot()
+
+    @property
+    def animation_widget(self) -> AnimationWidget | None:
+        return app().main_window.results_viewer_widget.animation_widget
 
     def showEvent(self, event):
         super().showEvent(event)
@@ -391,12 +396,21 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         max_value = max_value if max_value != 0 else 1.0
         magnification_factor = self.plot_setup.magnification_factor
 
+        if magnification_factor is None:
+            mult_factor = 1.0
+        else:
+            mult_factor = magnification_factor / (10 * max_value)
+
+        # update the multiplifcation factor viewer
+        if self.animation_widget is not None:
+            self.animation_widget.update_multiplication_factor(mult_factor)
+
         # filter structural nodes
         model = postprocessing.model
         structural_nodes = model.domains_processor.nodes_of_domain.get("structural")
 
         deformed_coords = model.mesh.nodal_coordinates[:, 1:].copy()
-        deformed_coords[structural_nodes, :] += (magnification_factor / (10 * max_value)) * displacements
+        deformed_coords[structural_nodes, :] += mult_factor * displacements
 
         _color_scalars = np.zeros(len(model.mesh.nodal_coordinates), dtype=float)
         _color_scalars[structural_nodes] = color_scalars
@@ -470,12 +484,21 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         max_value = max_value if max_value != 0 else 1.0
         magnification_factor = self.plot_setup.magnification_factor
 
+        if magnification_factor is None:
+            mult_factor = 1.0
+        else:
+            mult_factor = magnification_factor / (10 * max_disp)
+
+        # update the multiplifcation factor viewer
+        if self.animation_widget is not None:
+            self.animation_widget.update_multiplication_factor(mult_factor)
+
         # filter structural nodes
         model = postprocessing.model
         structural_nodes = model.domains_processor.nodes_of_domain.get("structural")
 
         deformed_coords = model.mesh.nodal_coordinates[:, 1:].copy()
-        deformed_coords[structural_nodes, :] += (magnification_factor / (10 * max_disp)) * displacements
+        deformed_coords[structural_nodes, :] += mult_factor * displacements
 
         _color_scalars = np.zeros(len(model.mesh.nodal_coordinates), dtype=float)
         _color_scalars[structural_nodes] = color_scalars
@@ -561,12 +584,21 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         max_value = max_value if max_value != 0 else 1.0
         magnification_factor = self.plot_setup.magnification_factor
 
+        if magnification_factor is None:
+            mult_factor = 1.0
+        else:
+            mult_factor = magnification_factor / (10 * max_disp)
+
+        # update the multiplifcation factor viewer
+        if self.animation_widget is not None:
+            self.animation_widget.update_multiplication_factor(mult_factor)
+
         # filter structural nodes
         model = postprocessing.model
         structural_nodes = model.domains_processor.nodes_of_domain.get("structural")
 
         deformed_coords = model.mesh.nodal_coordinates[:, 1:].copy()
-        deformed_coords[structural_nodes, :] += (magnification_factor / (10 * max_disp)) * displacements
+        deformed_coords[structural_nodes, :] += mult_factor * displacements
 
         _color_scalars = np.zeros(len(model.mesh.nodal_coordinates), dtype=float)
         _color_scalars[structural_nodes] = color_scalars
@@ -630,12 +662,21 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         max_value = max_value if max_value != 0 else 1.0
         magnification_factor = self.plot_setup.magnification_factor
 
+        if magnification_factor is None:
+            mult_factor = 1.0
+        else:
+            mult_factor = magnification_factor / 10 * max_value
+
+        # update the multiplifcation factor viewer
+        if self.animation_widget is not None:
+            self.animation_widget.update_multiplication_factor(mult_factor)
+
         # filter structural nodes
         model = postprocessing.model
         structural_nodes = model.domains_processor.nodes_of_domain.get("structural")
 
         deformed_coords = model.mesh.nodal_coordinates[:, 1:].copy()
-        deformed_coords[structural_nodes, :] += (magnification_factor / (10 * max_value)) * displacements
+        deformed_coords[structural_nodes, :] += mult_factor * displacements
 
         _color_scalars = np.zeros(len(model.mesh.nodal_coordinates), dtype=float)
         _color_scalars[structural_nodes] = color_scalars
@@ -754,12 +795,11 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.update()
 
     def update_animation_parameters(self, time_vector: np.ndarray):   
-        animation_widget = app().main_window.results_viewer_widget.animation_widget
-        if animation_widget is None:
+        if self.animation_widget is None:
             return
 
         sampling_time = time_vector[-1] - time_vector[0]
-        animation_widget.update_animation_parameters(sampling_time, time_vector.size)
+        self.animation_widget.update_animation_parameters(sampling_time, time_vector.size)
 
     def enable_scale_bar(self):
         self.scale_bar_actor.VisibilityOn()
@@ -824,10 +864,9 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         super().start_animation(*args, **kwargs)
 
     def stop_animation(self, *args, **kwargs):
-        animation_widget = app().main_window.results_viewer_widget.animation_widget
-        if animation_widget is not None:
-            animation_widget.pushButton_animate.setChecked(False)
-            animation_widget.update_animate_button_icons(False)
+        if self.animation_widget is not None:
+            self.animation_widget.pushButton_animate.setChecked(False)
+            self.animation_widget.update_animate_button_icons(False)
         super().stop_animation(*args, **kwargs)
 
     def update_animation(self, frame):

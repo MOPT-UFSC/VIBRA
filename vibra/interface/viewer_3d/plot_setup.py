@@ -101,7 +101,7 @@ class NoPlotSetup:
 class DisplacementFieldPlotSetupFrequency:
     phase: float
     index: int
-    magnification_factor: float
+    magnification_factor: float | None
     plot_type: DisplacementDataType
     unit: str = "--"
     n_diff: int = 0
@@ -111,7 +111,7 @@ class DisplacementFieldPlotSetupFrequency:
 @dataclass(slots=True)
 class DisplacementFieldPlotSetupTime:
     time_index: int
-    magnification_factor: float
+    magnification_factor: float | None
     plot_type: DisplacementDataType
     n_diff: int = 0
     n_div: int | None = None

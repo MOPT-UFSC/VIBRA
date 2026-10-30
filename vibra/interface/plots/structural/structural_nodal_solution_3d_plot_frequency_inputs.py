@@ -47,15 +47,17 @@ class StructuralNodalSolution3dPlotFrequencyInputs(StructuralNodalSolution3dPlot
     def _create_connections(self):
 
         # QComboBox connections
-        self.comboBox_plot_type.currentIndexChanged.connect(self.update_plot)
+        self.comboBox_plot_type.currentIndexChanged.connect(self.plot_data_callback)
         self.comboBox_plotting_results.currentIndexChanged.connect(self.update_plotting_results_combo_box_items)
 
         # QTreeWidget connections
         self.treeWidget_frequencies.itemClicked.connect(self.on_click_item)
         self.treeWidget_frequencies.itemDoubleClicked.connect(self.on_click_item)
 
+        self.animation_widget.checkBox_magnification.stateChanged.connect(self.plot_data_callback)
         self.results_display_widget.colormap_changed.connect(self.animation_widget.update_color_and_deformation)
         self.results_display_widget.min_max_value_changed.connect(self.animation_widget.update_color_and_deformation)
+
         self.update_animation_widget_visibility()
 
     def _add_animation_widget(self):
@@ -88,7 +90,7 @@ class StructuralNodalSolution3dPlotFrequencyInputs(StructuralNodalSolution3dPlot
             self.comboBox_plot_type.addItem(f"{prefix}_{suffix}")
 
         self.comboBox_plot_type.blockSignals(False)
-        self.update_plot()
+        self.plot_data_callback()
 
     def update_animation_widget_visibility(self):
         return
@@ -115,7 +117,7 @@ class StructuralNodalSolution3dPlotFrequencyInputs(StructuralNodalSolution3dPlot
         unit_factors = [1.0, 1e3, 1e6]
         return unit_factors[self.comboBox_plotting_results.currentIndex() // 3]
 
-    def update_plot(self):
+    def plot_data_callback(self):
         self.update_animation_widget_visibility()
         if self.lineEdit_selected_frequency.text() == "":
             return
@@ -183,10 +185,10 @@ class StructuralNodalSolution3dPlotFrequencyInputs(StructuralNodalSolution3dPlot
 
     def on_click_item(self, item: QTreeWidgetItem):
         self.lineEdit_selected_frequency.setText(item.text(1))
-        self.update_plot()
+        self.plot_data_callback()
 
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
-            self.update_plot()
+            self.plot_data_callback()
         elif event.key() == Qt.Key_Escape:
             self.close()
