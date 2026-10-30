@@ -665,7 +665,7 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         if magnification_factor is None:
             mult_factor = 1.0
         else:
-            mult_factor = magnification_factor / 10 * max_value
+            mult_factor = magnification_factor / (10 * max_value)
 
         # update the multiplifcation factor viewer
         if self.animation_widget is not None:
