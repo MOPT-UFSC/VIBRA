@@ -21,6 +21,11 @@ from vibra.interface.user_input.data_handler.file_dialog_service import FileDial
 from vibra.interface.user_input.data_handler.file_handlers.file_handler import FileHandler
 
 
+class SelectionMode(IntEnum):
+    SELECT_ALL = 0
+    SELECT_BY_SIDE = 1
+
+
 class SelectionFilter(IntEnum):
     VOLUMES = 0
     SURFACES = 1
@@ -72,7 +77,7 @@ class GroupingToolInputs(GroupingToolInputs_UI):
         self.keep_window_open = True
 
     def _configure_widgets(self):
-        self.pushButton_select_by_size.setDisabled(True)
+        pass
 
     def _configure_validators(self):
         pass
@@ -84,8 +89,7 @@ class GroupingToolInputs(GroupingToolInputs_UI):
         self.comboBox_selector_filter.currentIndexChanged.connect(self.selection_filter_callback)
 
         # QPushButton connections
-        self.pushButton_select_all.clicked.connect(self.select_all_callback)
-        self.pushButton_select_by_size.clicked.connect(self.select_by_size_callback)
+        self.pushButton_select.clicked.connect(self.select_entities_callback)
 
         # QTabWidget connection
         # self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
@@ -103,8 +107,10 @@ class GroupingToolInputs(GroupingToolInputs_UI):
         surfaces = app().main_window.selection.geometry_surfaces
         lines = app().main_window.selection.geometry_lines
 
+        select_all = self.comboBox_mode.currentIndex() == SelectionMode.SELECT_ALL
         single_selection = len(volumes) + len(surfaces) + len(lines) == 1
-        self.pushButton_select_by_size.setEnabled(single_selection)
+
+        self.pushButton_select.setEnabled(select_all or single_selection)
 
         # if surfaces:
         #     text = ", ".join([str(i) for i in surfaces])
@@ -115,6 +121,16 @@ class GroupingToolInputs(GroupingToolInputs_UI):
     
     def selection_filter_callback(self):
         pass
+
+    def select_entities_callback(self):
+        mode = self.comboBox_mode.currentIndex()
+        match mode:
+            case  SelectionMode.SELECT_ALL:
+                self.select_all_callback()
+            case SelectionMode.SELECT_BY_SIDE:
+                self.select_by_size_callback()
+            case _:
+                pass
 
     def select_by_size_callback(self):
 
