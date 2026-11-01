@@ -46,14 +46,14 @@ class ModelSelectionTools:
     def all_structural_lines(self) -> list[int] | None:
         return self.model.domains_processor.lines_of_domain.get("structural")
 
-    def select_volumes_by_size(self, volume: float, domain_filter: str | None = None):
+    def select_volumes_by_size(self, volume_id: float, domain_filter: str | None = None):
         """
         Selects the volume IDs with the same size.
 
         Parameters
         ----------
-        volume: float
-            The volume in cubic-meters.
+        volume_id: int
+            The selected volume ID.
 
         domain_filter: str, optional
             A string used to control when the domain filter is active. Use 'acoustic' 
@@ -62,6 +62,8 @@ class ModelSelectionTools:
         """
 
         volume_ids = []
+        volume = self.model.mesh.volume_from_bodies.get(volume_id)
+
         for vol_id, value in self.model.mesh.volume_from_bodies.items():
             if not np.allclose(value, volume, atol=1e-8):
                 continue
@@ -80,14 +82,14 @@ class ModelSelectionTools:
         if domain_filter == "structural":
             return [item for item in volume_ids if item in self.all_structural_domains]
 
-    def select_surfaces_by_size(self, area: float | None = None, domain_filter: str | None = None):
+    def select_surfaces_by_size(self, surface_id: int, domain_filter: str | None = None):
         """
         Selects the surface IDs with the same size.
 
         Parameters
         ----------
-        area: float
-            The area in square-meters.
+        surface_id: int
+            The selected surface ID.
 
         domain_filter: str, optional
             A string used to control when the domain filter is active. Use 'acoustic' 
@@ -96,6 +98,8 @@ class ModelSelectionTools:
         """
 
         surfaces = []
+        area = self.model.mesh.area_from_surfaces.get(surface_id)
+
         for surf_id, value in self.model.mesh.area_from_surfaces.items():
             if not np.allclose(value, area, atol=1e-8):
                 continue
@@ -114,14 +118,14 @@ class ModelSelectionTools:
         if domain_filter == "structural":
             return [item for item in surfaces if item in self.all_structural_surfaces]
 
-    def select_lines_by_size(self, length: float | None = None, domain_filter: str | None = None):
+    def select_lines_by_size(self, line_id: int, domain_filter: str | None = None):
         """
         Selects the line IDs with the same size.
 
         Parameters
         ----------
-        lenght: float
-            The lenght in meters.
+        line_id: int
+            The selected line ID.
 
         domain_filter: str, optional
             A string used to control when the domain filter is active. Use 'acoustic' 
@@ -129,6 +133,8 @@ class ModelSelectionTools:
             None to bypass filtering and return all lines from both domains.
         """
         lines = []
+        length = self.model.mesh.length_from_lines.get(line_id)
+
         for line_id, value in self.model.mesh.length_from_lines.items():
             if not np.allclose(value, length, atol=1e-8):
                 continue

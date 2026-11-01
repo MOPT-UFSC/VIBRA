@@ -29,6 +29,7 @@ class ModelSetupItems(CommonMenuItems):
         self.item_top_general_settings = self.add_top_item('General Settings')
         self.item_child_material = self.add_item("Material")
         self.item_child_fluid = self.add_item('Fluid')
+        self.item_child_grouping_tool = self.add_item("Grouping Tool")
         self.item_child_mesh_setup = self.add_item("Mesh Setup")
         self.item_child_element_options = self.add_item("Element Options")
         self.item_child_degrees_of_freedom_decoupling = self.add_item("DOF Decoupling")
@@ -94,6 +95,7 @@ class ModelSetupItems(CommonMenuItems):
             "item_child_element_options": "element_options",
             "item_child_degrees_of_freedom_decoupling": "degrees_of_freedom_decoupling",
             "item_child_volume_suppression": "volume_suppression",
+            "item_child_grouping_tool": "grouping_tool",
             "item_child_surface_thickness": "surface_thickness",
             "item_child_prescribed_dof": "prescribed_dof",
             "item_child_nodal_loads": "nodal_loads",
@@ -570,6 +572,9 @@ class ModelSetupItems(CommonMenuItems):
     def item_child_volume_suppression_callback(self):
         app().main_window.input_ui.set_volume_suppression()
 
+    def item_child_grouping_tool_callback(self):
+        app().main_window.input_ui.set_grouping_tool()
+
     def item_child_viscous_thermal_model_callback(self):
         app().main_window.input_ui.set_viscous_thermal_model()
 
@@ -587,6 +592,7 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_mesh_setup.setDisabled(not imported_geometry)
         self.item_child_element_options.setDisabled(not imported_geometry)
         self.item_child_volume_suppression.setDisabled(not imported_geometry)
+        self.item_child_grouping_tool.setDisabled(not imported_geometry)
 
     def hide_all_top_items(self):
         self.item_top_general_settings.setHidden(True)

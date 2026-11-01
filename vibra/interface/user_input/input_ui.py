@@ -21,6 +21,7 @@ from vibra.interface.model_inputs.acoustic.internal_impedances.transfer_impedanc
 from vibra.interface.model_inputs.dof_decoupling.degrees_of_freedom_decoupling_inputs import DegreesOfFreedomDecouplingInputs
 from vibra.interface.model_inputs.fluid.set_fluid_inputs import SetFluidInputs
 from vibra.interface.model_inputs.general.element_options_inputs import ElementOptionsInputs
+from vibra.interface.model_inputs.general.grouping_tool_inputs import GroupingToolInputs
 from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
 from vibra.interface.model_inputs.general.volume_suppression_inputs import VolumeSuppressionInputs
 from vibra.interface.model_inputs.material.set_material_inputs import MaterialInputs
@@ -143,6 +144,9 @@ class InputUi:
     def set_volume_suppression(self):
         if not self.model_setup_items.item_child_volume_suppression.isDisabled():
             self.process_input(VolumeSuppressionInputs)
+
+    def set_grouping_tool(self):
+        self.process_input(GroupingToolInputs)
 
     def set_acoustic_properties_grandient(self):
         self.process_input(AcousticPropertiesGradientInputs)
