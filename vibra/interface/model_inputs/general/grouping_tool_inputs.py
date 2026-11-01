@@ -119,21 +119,20 @@ class GroupingToolInputs(GroupingToolInputs_UI):
     def select_by_size_callback(self):
 
         volumes = app().main_window.selection.geometry_volumes
-        surfaces = app().main_window.selection.geometry_surfaces
-        lines = app().main_window.selection.geometry_lines
-
-        if volumes == 1:
-            equal_volumes = self.model.model_selection_tools.select_volumes_by_size(volumes[0]) 
+        if len(volumes) == 1:
+            equal_volumes = self.model.model_selection_tools.select_volumes_by_size(next(iter(volumes))) 
             app().main_window.selection.set_geometry_selection(volumes=equal_volumes)
 
-        if surfaces == 1:
-            equal_surfaces = self.model.model_selection_tools.select_surfaces_by_size(surfaces[0]) 
+        surfaces = app().main_window.selection.geometry_surfaces
+        if len(surfaces) == 1:
+            equal_surfaces = self.model.model_selection_tools.select_surfaces_by_size(next(iter(surfaces))) 
             app().main_window.selection.set_geometry_selection(surfaces=equal_surfaces)
 
-        if lines == 1:
-            equal_lines = self.model.model_selection_tools.select_lines_by_size(lines[0]) 
+        lines = app().main_window.selection.geometry_lines
+        if len(lines) == 1:
+            equal_lines = self.model.model_selection_tools.select_lines_by_size(next(iter(lines)))
             app().main_window.selection.set_geometry_selection(lines=equal_lines)
-        
+
     def select_all_callback(self):
         selection_filter = self.comboBox_selector_filter.currentIndex()
         domain_filter = self.comboBox_domain_filter.currentIndex()
