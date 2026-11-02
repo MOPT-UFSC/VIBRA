@@ -22,6 +22,137 @@ class ModelSelectionTools:
     def domains_processor(self):
         return self.model.domains_processor
 
+    @property
+    def all_acoustic_domains(self) -> list[int] | None:
+        return self.model.domains_processor.volumes_of_domain.get("acoustic")
+
+    @property
+    def all_structural_domains(self) -> list[int] | None:
+        return self.model.domains_processor.volumes_of_domain.get("structural")
+
+    @property
+    def all_acoustic_surfaces(self) -> list[int] | None:
+        return self.model.domains_processor.surfaces_of_domain.get("acoustic")
+
+    @property
+    def all_structural_surfaces(self) -> list[int] | None:
+        return self.model.domains_processor.surfaces_of_domain.get("structural")
+
+    @property
+    def all_acoustic_lines(self) -> list[int] | None:
+        return self.model.domains_processor.lines_of_domain.get("acoustic")
+
+    @property
+    def all_structural_lines(self) -> list[int] | None:
+        return self.model.domains_processor.lines_of_domain.get("structural")
+
+    def select_volumes_by_size(self, volume_id: float, domain_filter: str | None = None):
+        """
+        Selects the volume IDs with the same size.
+
+        Parameters
+        ----------
+        volume_id: int
+            The selected volume ID.
+
+        domain_filter: str, optional
+            A string used to control when the domain filter is active. Use 'acoustic' 
+            or 'structural' to filter for volumes related to the specified domain, or 
+            None to bypass filtering and return all volumes from both domains.
+        """
+
+        volume_ids = []
+        volume = self.model.mesh.volume_from_bodies.get(volume_id)
+
+        for vol_id, value in self.model.mesh.volume_from_bodies.items():
+            if not np.allclose(value, volume, atol=1e-8):
+                continue
+
+            volume_ids.append(vol_id)
+
+        if not volume_ids:
+            return []
+
+        if domain_filter is None:
+            return volume_ids
+
+        if domain_filter == "acoustic":
+            return [item for item in volume_ids if item in self.all_acoustic_domains]
+
+        if domain_filter == "structural":
+            return [item for item in volume_ids if item in self.all_structural_domains]
+
+    def select_surfaces_by_size(self, surface_id: int, domain_filter: str | None = None):
+        """
+        Selects the surface IDs with the same size.
+
+        Parameters
+        ----------
+        surface_id: int
+            The selected surface ID.
+
+        domain_filter: str, optional
+            A string used to control when the domain filter is active. Use 'acoustic' 
+            or 'structural' to filter for surfaces related to the specified domain, or 
+            None to bypass filtering and return all surfaces from both domains.
+        """
+
+        surfaces = []
+        area = self.model.mesh.area_from_surfaces.get(surface_id)
+
+        for surf_id, value in self.model.mesh.area_from_surfaces.items():
+            if not np.allclose(value, area, atol=1e-8):
+                continue
+
+            surfaces.append(surf_id)
+
+        if not surfaces:
+            return []
+
+        if domain_filter is None:
+            return surfaces
+
+        if domain_filter == "acoustic":
+            return [item for item in surfaces if item in self.all_acoustic_surfaces]
+
+        if domain_filter == "structural":
+            return [item for item in surfaces if item in self.all_structural_surfaces]
+
+    def select_lines_by_size(self, line_id: int, domain_filter: str | None = None):
+        """
+        Selects the line IDs with the same size.
+
+        Parameters
+        ----------
+        line_id: int
+            The selected line ID.
+
+        domain_filter: str, optional
+            A string used to control when the domain filter is active. Use 'acoustic' 
+            or 'structural' to filter for lines related to the specified domain, or 
+            None to bypass filtering and return all lines from both domains.
+        """
+        lines = []
+        length = self.model.mesh.length_from_lines.get(line_id)
+
+        for line_id, value in self.model.mesh.length_from_lines.items():
+            if not np.allclose(value, length, atol=1e-8):
+                continue
+
+            lines.append(line_id)
+
+        if not lines:
+            return []
+
+        if domain_filter is None:
+            return lines
+
+        if domain_filter == "acoustic":
+            return [item for item in lines if item in self.all_acoustic_surfaces]
+
+        if domain_filter == "structural":
+            return [item for item in lines if item in self.all_structural_surfaces]
+
     def filter_selected_entities_based_on_domain(self, selected_ids: list[int] | np.ndarray, selection_label: str, domain: str):
         """
         This method filters the selected entities from the available ones for a specific domain.

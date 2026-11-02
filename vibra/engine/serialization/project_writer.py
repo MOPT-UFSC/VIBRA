@@ -209,7 +209,7 @@ class ProjectWriter:
         )
 
     def write_model_properties(self, model_properties: ModelProperties):
-        logger.info("Writing ModelProperties.")
+        logger.info("Writing the Model Properties.")
 
         self.write_fluid_library(model_properties.fluid_library)
         self.write_material_library(model_properties.material_library)
@@ -227,10 +227,11 @@ class ProjectWriter:
             nodal_properties=self._normalize_property(model_properties.nodal_properties),
             group_properties=self._normalize_property(model_properties.group_properties),
         )
+
         write_json(self.project_paths.model_properties_filepath, data)
 
     def write_material_library(self, material_library: MaterialLibrary, export_path: Path | None = None):
-        logger.info("Writing MaterialLibrary.")
+        logger.info("Writing the Material Library.")
 
         material_library_dict = {}
         for material_id, material in material_library.items():
@@ -242,7 +243,7 @@ class ProjectWriter:
         write_json(export_path, material_library_dict)
 
     def write_fluid_library(self, fluid_library: FluidLibrary, export_path: Path | None = None):
-        logger.info("Writing FluidLibrary.")
+        logger.info("Writing the Fluid Library.")
 
         fluid_library_dict = {}
         for fluid_id, fluid in fluid_library.items():
