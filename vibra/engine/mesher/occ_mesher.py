@@ -18,6 +18,7 @@ from OCP.TopAbs import TopAbs_EDGE, TopAbs_FACE, TopAbs_REVERSED, TopAbs_SOLID, 
 from OCP.TopExp import TopExp, TopExp_Explorer
 from OCP.TopLoc import TopLoc_Location
 from OCP.TopoDS import TopoDS, TopoDS_Edge, TopoDS_Face
+from scipy.spatial.distance import cdist
 
 from vibra.engine.mesher.geometry_info import GeometryInfo
 from vibra.engine.mesher.mesh import Mesh
@@ -126,24 +127,50 @@ class OccMesher:
         )
         return mesh, geometry_info
 
-    def _map_identifiers(self, origin_identifier: IdentifierMap, target_identifier: IdentifierMap) -> dict[int, int]:
-        column_factor = np.random.random(4) + 1
+    @function_timer
+    def _map_identifiers(
+        self,
+        origin_features: IdentifierMap,
+        target_features: IdentifierMap,
+    ) -> dict[int, int]:
+        """
+        This method is used to map the keys of two dicionaries according to their values.
+        Both origin and target are dictionaries mapping an entity index to a tuple of features,
+        such as surface area, center point, etc.
 
-        def sort_by_identifier(data: np.ndarray):
-            minimum = np.min(data, axis=0)
-            maximum = np.max(data, axis=0)
-            normalized = 1 + (data - minimum) / (maximum - minimum)
-            hashed = np.sum(normalized * column_factor, axis=1)
-            return np.argsort(hashed)
+        These features are normalized column-wise, to avoid making one entity more important than
+        the others. Then they are treated like vectors for the actual mapping step.
 
-        origin_keys = np.array(list(origin_identifier.keys()), int)
-        target_keys = np.array(list(target_identifier.keys()), int)
-        origin_values = np.array(list(origin_identifier.values()), float)
-        target_values = np.array(list(target_identifier.values()), float)
+        If the number of keys is the same in both sets, the values are sorted based on how similar
+        they are to a reference almost random vector.
+        If the number of keys is different, the distances between all pairs of vectors is taken and
+        they are mapped depending on the best match.
+        """
 
-        origin_indices = sort_by_identifier(origin_values)
-        target_indices = sort_by_identifier(target_values)
-        return dict(zip(origin_keys[origin_indices], target_keys[target_indices]))
+        origin_keys = np.array(list(origin_features.keys()), int)
+        target_keys = np.array(list(target_features.keys()), int)
+
+        origin_values = np.array(list(origin_features.values()), float)
+        target_values = np.array(list(target_features.values()), float)
+
+        minimum = np.min(np.vstack([origin_values, target_values]), axis=0)
+        maximum = np.max(np.vstack([origin_values, target_values]), axis=0)
+        span = maximum - minimum
+        span[span == 0] = 1
+
+        origin_normalized = (origin_values - minimum) / span
+        target_normalized = (target_values - minimum) / span
+
+        if origin_normalized.shape == target_normalized.shape:
+            reference_vector = 3 ** np.arange(origin_normalized.shape[1])
+            origin_indices = np.argsort(np.linalg.norm(origin_normalized - reference_vector, axis=1))
+            target_indices = np.argsort(np.linalg.norm(target_normalized - reference_vector, axis=1))
+            return dict(zip(origin_keys[origin_indices], target_keys[target_indices]))
+
+        else:
+            distance_matrix = cdist(origin_normalized, target_normalized, metric="euclidean")
+            target_indices = np.argmin(distance_matrix, axis=1).ravel()
+            return dict(zip(origin_keys, target_keys[target_indices]))
 
     def _get_occ_curve_identifier(self, curve: TopoDS_Edge):
         brep_curve = BRepAdaptor_Curve(curve)
@@ -156,7 +183,9 @@ class OccMesher:
         length = curve_property.Mass() * 1e-3
         x, y, z = curve_center
 
-        return (length, x, y, z)
+        xmin, ymin, zmin, xmax, ymax, zmax = self._bounding_box(curve)
+
+        return (length, x, y, z, xmin, ymin, zmin, xmax, ymax, zmax)
 
     def _get_occ_surface_identifier(self, surface: TopoDS_Face):
         brep_surface = BRepAdaptor_Surface(surface)
@@ -170,14 +199,17 @@ class OccMesher:
         area = surface_property.Mass() * 1e-6
         x, y, z = surface_center
 
-        return (area, x, y, z)
+        xmin, ymin, zmin, xmax, ymax, zmax = self._bounding_box(surface)
+
+        return (area, x, y, z, xmin, ymin, zmin, xmax, ymax, zmax)
 
     def _get_geometry_info_curve_identifiers(self, geometry_info: GeometryInfo) -> IdentifierMap:
         curve_identifiers = {}
         for curve_index in geometry_info.curves:
             length = geometry_info.arc_length(curve_index)
             x, y, z = geometry_info.curve_center(curve_index)
-            curve_identifiers[curve_index] = (length, x, y, z)
+            xmin, ymin, zmin, xmax, ymax, zmax = geometry_info.curve_bounding_box(curve_index)
+            curve_identifiers[curve_index] = (length, x, y, z, xmin, ymin, zmin, xmax, ymax, zmax)
         return curve_identifiers
 
     def _get_geometry_info_surface_identifiers(self, geometry_info: GeometryInfo) -> IdentifierMap:
@@ -185,7 +217,8 @@ class OccMesher:
         for surface_index in geometry_info.surfaces:
             area = geometry_info.surface_area(surface_index)
             x, y, z = geometry_info.surface_center(surface_index)
-            surface_identifiers[surface_index] = (area, x, y, z)
+            xmin, ymin, zmin, xmax, ymax, zmax = geometry_info.surface_bounding_box(surface_index)
+            surface_identifiers[surface_index] = (area, x, y, z, xmin, ymin, zmin, xmax, ymax, zmax)
         return surface_identifiers
 
     def _generate_visual_mesh(self, shape):
