@@ -27,7 +27,7 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
-        Dialog.resize(596, 603)
+        Dialog.resize(596, 616)
         self.gridLayout = QGridLayout(Dialog)
         self.gridLayout.setObjectName(u"gridLayout")
         self.gridLayout.setVerticalSpacing(4)
@@ -348,21 +348,6 @@ class Ui_Dialog(object):
         self.gridLayout_8.setObjectName(u"gridLayout_8")
         self.gridLayout_8.setHorizontalSpacing(6)
         self.gridLayout_8.setContentsMargins(4, 4, 12, 4)
-        self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_8.addItem(self.horizontalSpacer_4, 1, 5, 1, 1)
-
-        self.label_8 = QLabel(self.frame_13)
-        self.label_8.setObjectName(u"label_8")
-        self.label_8.setMinimumSize(QSize(0, 20))
-        self.label_8.setFont(font1)
-
-        self.gridLayout_8.addWidget(self.label_8, 2, 4, 1, 1)
-
-        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_8.addItem(self.horizontalSpacer_3, 1, 0, 1, 1)
-
         self.label_selected_ids = QLabel(self.frame_13)
         self.label_selected_ids.setObjectName(u"label_selected_ids")
         self.label_selected_ids.setMinimumSize(QSize(160, 20))
@@ -381,28 +366,12 @@ class Ui_Dialog(object):
 
         self.gridLayout_8.addWidget(self.label_7, 2, 1, 1, 1)
 
-        self.lineEdit_selected_ids = QLineEdit(self.frame_13)
-        self.lineEdit_selected_ids.setObjectName(u"lineEdit_selected_ids")
-        self.lineEdit_selected_ids.setMinimumSize(QSize(0, 28))
-        self.lineEdit_selected_ids.setMaximumSize(QSize(200, 16777215))
-        self.lineEdit_selected_ids.setFont(font1)
-        self.lineEdit_selected_ids.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.label_8 = QLabel(self.frame_13)
+        self.label_8.setObjectName(u"label_8")
+        self.label_8.setMinimumSize(QSize(0, 20))
+        self.label_8.setFont(font1)
 
-        self.gridLayout_8.addWidget(self.lineEdit_selected_ids, 1, 3, 1, 1)
-
-        self.doubleSpinBox_local_mesh_size_control_element_size = QDoubleSpinBox(self.frame_13)
-        self.doubleSpinBox_local_mesh_size_control_element_size.setObjectName(u"doubleSpinBox_local_mesh_size_control_element_size")
-        self.doubleSpinBox_local_mesh_size_control_element_size.setMinimumSize(QSize(0, 28))
-        self.doubleSpinBox_local_mesh_size_control_element_size.setMaximumSize(QSize(200, 16777215))
-        self.doubleSpinBox_local_mesh_size_control_element_size.setFont(font1)
-        self.doubleSpinBox_local_mesh_size_control_element_size.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.doubleSpinBox_local_mesh_size_control_element_size.setDecimals(2)
-        self.doubleSpinBox_local_mesh_size_control_element_size.setMinimum(0.010000000000000)
-        self.doubleSpinBox_local_mesh_size_control_element_size.setMaximum(2000.000000000000000)
-        self.doubleSpinBox_local_mesh_size_control_element_size.setSingleStep(1.000000000000000)
-        self.doubleSpinBox_local_mesh_size_control_element_size.setValue(10.000000000000000)
-
-        self.gridLayout_8.addWidget(self.doubleSpinBox_local_mesh_size_control_element_size, 2, 3, 1, 1)
+        self.gridLayout_8.addWidget(self.label_8, 2, 4, 1, 1)
 
         self.comboBox_local_mesh_size_control_entity_type = QComboBox(self.frame_13)
         self.comboBox_local_mesh_size_control_entity_type.addItem("")
@@ -419,6 +388,56 @@ class Ui_Dialog(object):
         self.comboBox_local_mesh_size_control_entity_type.setMinimumContentsLength(0)
 
         self.gridLayout_8.addWidget(self.comboBox_local_mesh_size_control_entity_type, 1, 4, 1, 1)
+
+        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_8.addItem(self.horizontalSpacer_3, 1, 0, 1, 1)
+
+        self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_8.addItem(self.horizontalSpacer_4, 1, 6, 1, 1)
+
+        self.doubleSpinBox_local_mesh_size_control_element_size = QDoubleSpinBox(self.frame_13)
+        self.doubleSpinBox_local_mesh_size_control_element_size.setObjectName(u"doubleSpinBox_local_mesh_size_control_element_size")
+        self.doubleSpinBox_local_mesh_size_control_element_size.setMinimumSize(QSize(0, 28))
+        self.doubleSpinBox_local_mesh_size_control_element_size.setMaximumSize(QSize(200, 16777215))
+        self.doubleSpinBox_local_mesh_size_control_element_size.setFont(font1)
+        self.doubleSpinBox_local_mesh_size_control_element_size.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.doubleSpinBox_local_mesh_size_control_element_size.setDecimals(2)
+        self.doubleSpinBox_local_mesh_size_control_element_size.setMinimum(0.010000000000000)
+        self.doubleSpinBox_local_mesh_size_control_element_size.setMaximum(2000.000000000000000)
+        self.doubleSpinBox_local_mesh_size_control_element_size.setSingleStep(1.000000000000000)
+        self.doubleSpinBox_local_mesh_size_control_element_size.setValue(10.000000000000000)
+
+        self.gridLayout_8.addWidget(self.doubleSpinBox_local_mesh_size_control_element_size, 2, 3, 1, 1)
+
+        self.lineEdit_selected_ids = QLineEdit(self.frame_13)
+        self.lineEdit_selected_ids.setObjectName(u"lineEdit_selected_ids")
+        self.lineEdit_selected_ids.setMinimumSize(QSize(0, 28))
+        self.lineEdit_selected_ids.setMaximumSize(QSize(200, 16777215))
+        self.lineEdit_selected_ids.setFont(font1)
+        self.lineEdit_selected_ids.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_8.addWidget(self.lineEdit_selected_ids, 1, 3, 1, 1)
+
+        self.pushButton_select_group = QPushButton(self.frame_13)
+        self.pushButton_select_group.setObjectName(u"pushButton_select_group")
+        self.pushButton_select_group.setMinimumSize(QSize(40, 28))
+        self.pushButton_select_group.setMaximumSize(QSize(40, 28))
+        font3 = QFont()
+        font3.setFamilies([u"MS Shell Dlg 2"])
+        font3.setPointSize(11)
+        font3.setBold(True)
+        font3.setItalic(False)
+        self.pushButton_select_group.setFont(font3)
+        self.pushButton_select_group.setStyleSheet(u"")
+        icon1 = Icon(u":/icons/selection_icon.png")
+        self.pushButton_select_group.setIcon(icon1)
+        self.pushButton_select_group.setIconSize(QSize(20, 20))
+        self.pushButton_select_group.setAutoDefault(False)
+        self.pushButton_select_group.setFlat(False)
+
+        self.gridLayout_8.addWidget(self.pushButton_select_group, 1, 5, 1, 1)
 
 
         self.gridLayout_7.addWidget(self.frame_13, 0, 1, 1, 1)
@@ -689,11 +708,11 @@ class Ui_Dialog(object):
         self.pushButton_apply_and_close.setObjectName(u"pushButton_apply_and_close")
         self.pushButton_apply_and_close.setMinimumSize(QSize(72, 30))
         self.pushButton_apply_and_close.setMaximumSize(QSize(72, 30))
-        font3 = QFont()
-        font3.setPointSize(10)
-        font3.setBold(False)
-        font3.setItalic(False)
-        self.pushButton_apply_and_close.setFont(font3)
+        font4 = QFont()
+        font4.setPointSize(10)
+        font4.setBold(False)
+        font4.setItalic(False)
+        self.pushButton_apply_and_close.setFont(font4)
         self.pushButton_apply_and_close.setStyleSheet(u"")
         self.pushButton_apply_and_close.setAutoDefault(False)
         self.pushButton_apply_and_close.setFlat(False)
@@ -704,7 +723,7 @@ class Ui_Dialog(object):
         self.pushButton_apply.setObjectName(u"pushButton_apply")
         self.pushButton_apply.setMinimumSize(QSize(72, 30))
         self.pushButton_apply.setMaximumSize(QSize(72, 30))
-        self.pushButton_apply.setFont(font3)
+        self.pushButton_apply.setFont(font4)
         self.pushButton_apply.setStyleSheet(u"")
         self.pushButton_apply.setAutoDefault(False)
         self.pushButton_apply.setFlat(False)
@@ -715,7 +734,7 @@ class Ui_Dialog(object):
         self.pushButton_cancel.setObjectName(u"pushButton_cancel")
         self.pushButton_cancel.setMinimumSize(QSize(72, 30))
         self.pushButton_cancel.setMaximumSize(QSize(72, 30))
-        self.pushButton_cancel.setFont(font3)
+        self.pushButton_cancel.setFont(font4)
         self.pushButton_cancel.setStyleSheet(u"")
         self.pushButton_cancel.setAutoDefault(False)
         self.pushButton_cancel.setFlat(False)
@@ -804,13 +823,17 @@ class Ui_Dialog(object):
         self.pushButton_syncrhonize.setText("")
         self.label_34.setText(QCoreApplication.translate("Dialog", u"[mm]", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_global_settings), QCoreApplication.translate("Dialog", u"Global settings", None))
-        self.label_8.setText(QCoreApplication.translate("Dialog", u"[mm]", None))
         self.label_selected_ids.setText(QCoreApplication.translate("Dialog", u"Selected entities ID:", None))
         self.label_7.setText(QCoreApplication.translate("Dialog", u"Element size: ", None))
-        self.lineEdit_selected_ids.setText("")
+        self.label_8.setText(QCoreApplication.translate("Dialog", u"[mm]", None))
         self.comboBox_local_mesh_size_control_entity_type.setItemText(0, QCoreApplication.translate("Dialog", u"Surfaces", None))
         self.comboBox_local_mesh_size_control_entity_type.setItemText(1, QCoreApplication.translate("Dialog", u"Volumes", None))
 
+        self.lineEdit_selected_ids.setText("")
+#if QT_CONFIG(tooltip)
+        self.pushButton_select_group.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p><span style=\" font-size:10pt; font-weight:400;\">Process the entities selection.</span></p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButton_select_group.setText("")
         self.pushButton_add.setText(QCoreApplication.translate("Dialog", u"Add", None))
         self.pushButton_delete.setText(QCoreApplication.translate("Dialog", u"Delete", None))
         ___qtablewidgetitem = self.tableWidget_local_mesh_size_control_data.horizontalHeaderItem(0)
@@ -923,12 +946,13 @@ class MesherSetupInputs_UI(QDialog, Ui_Dialog):
                                                 - (Layout): QGridLayout
                                                         - frame_13: QFrame
                                                             - (Layout): QGridLayout
-                                                                    - label_8: QLabel
                                                                     - label_selected_ids: QLabel
                                                                     - label_7: QLabel
-                                                                    - lineEdit_selected_ids: QLineEdit
-                                                                    - doubleSpinBox_local_mesh_size_control_element_size: QDoubleSpinBox
+                                                                    - label_8: QLabel
                                                                     - comboBox_local_mesh_size_control_entity_type: QComboBox
+                                                                    - doubleSpinBox_local_mesh_size_control_element_size: QDoubleSpinBox
+                                                                    - lineEdit_selected_ids: QLineEdit
+                                                                    - pushButton_select_group: QPushButton
                                                         - frame_11: QFrame
                                                             - (Layout): QGridLayout
                                                                     - pushButton_add: QPushButton

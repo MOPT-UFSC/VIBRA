@@ -137,6 +137,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.pushButton_cancel.clicked.connect(self.close)
         self.pushButton_delete.clicked.connect(self.remove_callback)
         self.pushButton_plot_histogram.clicked.connect(self.plot_mesh_parameter_histogram)
+        self.pushButton_select_group.clicked.connect(self.group_assistant_callback)
         self.pushButton_show_bad_elements.clicked.connect(self.plot_bad_elements)
         self.pushButton_syncrhonize.clicked.connect(self.synchronize_button_callback)
 
@@ -287,30 +288,37 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             return
 
         for property, _ in self.model.properties.group_properties:
-            if property == "selection_group":
-                menu = QMenu(self)
-                right_click_action = menu.addAction("Show Selection Groups")
-                right_click_action.triggered.connect(self.group_assistant_callback)
+            if property != "selection_group":
+                continue
 
-                menu.setStyleSheet("""
-                QMenu::item {
-                    padding: 10px 30px 10px 30px;
-                    text-align: center;
-                    min-width: 130px;
-                }
-                QMenu::item:selected {
-                    background-color: #3498db;
-                    color: white;
-                }
-                """)
+            menu = QMenu(self)
+            right_click_action = menu.addAction("Show Selection Groups")
+            right_click_action.triggered.connect(self.group_assistant_callback)
 
-                menu.exec(self.mapToGlobal(pos))
-                break
+            menu.setStyleSheet("""
+            QMenu::item {
+                padding: 10px 30px 10px 30px;
+                text-align: center;
+                min-width: 130px;
+            }
+            QMenu::item:selected {
+                background-color: #3498db;
+                color: white;
+            }
+            """)
+
+            menu.exec(self.mapToGlobal(pos))
+            break
 
     def group_assistant_callback(self):
+
         self.group_assistant_active = True
+        self.pushButton_select_group.setDisabled(True)
+
         GroupingAssistantInputs(mesher_mode=True)
+
         self.group_assistant_active = False
+        self.pushButton_select_group.setEnabled(True)
 
     def tab_event_callback(self):
         mesh_quality_tab = self.tabWidget_main.currentIndex() == MeshSetupTabs.MESH_QUALITY
