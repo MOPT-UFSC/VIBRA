@@ -5,6 +5,7 @@ if TYPE_CHECKING:
     from vibra.engine.model import Model
 
 from collections import defaultdict
+from dataclasses import dataclass
 from functools import cache
 from time import perf_counter
 
@@ -13,6 +14,20 @@ import numpy as np
 from vibra.engine.properties.fluid import Fluid
 from vibra.engine.properties.material import Material
 from vibra.errors import InvalidDomainError
+
+
+@dataclass
+class GroupData:
+    group_label: str
+    entity_type: str
+    entities_id: list[int]
+
+    def as_dict(self):
+        return {
+            "group_label": self.group_label,
+            "entity_type": self.entity_type,
+            "entities_id": self.entities_id,
+        }
 
 
 class ModelDomainsProcessor:

@@ -7,9 +7,9 @@ import numpy as np
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from molde.colors import Color, color_names
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QPoint, Qt
 from PySide6.QtGui import QColor, QKeyEvent
-from PySide6.QtWidgets import QDoubleSpinBox, QTableWidgetItem, QVBoxLayout
+from PySide6.QtWidgets import QDoubleSpinBox, QMenu, QTableWidgetItem, QVBoxLayout
 
 from vibra import app
 from vibra.engine.mesher import gmsh_constants
@@ -30,6 +30,7 @@ from vibra.interface.formatters.icons import Icon
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
+from vibra.interface.model_inputs.general.grouping_assistant_inputs import GroupingAssistantInputs
 from vibra.interface.ui_generated.model.general.mesher_setup_inputs_ui import MesherSetupInputs_UI
 from vibra.interface.ui_generated.plots.general.mesh_quality_histogram_plot_ui import MeshQualityHistogramPlot_UI
 from vibra.utils.interface_utils import block_signals
@@ -102,6 +103,8 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.keep_window_open = True
         self.bad_elements_showed = False
         self.synchronize_sizes = False
+        self.group_assistant_active = False
+
         self.tmp_local_mesh_size_control_parameters: list[LocalMeshSizeControlSetup] = []
         self.last_synced_ids: set[int] = set()
 
@@ -144,9 +147,14 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.tableWidget_local_mesh_size_control_data.itemClicked.connect(self.local_mesh_size_control_item_clicked_callback)
         self.tableWidget_mesh_quality.itemClicked.connect(self.mesh_quality_item_clicked_callback)
 
+        # right-click connection
+        self.customContextMenuRequested.connect(self.on_right_click_callback)
+
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
     def _config_widgets(self):
+
+        self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
 
         self.comboBox_2d_algorithm.setDisabled(True)
         self.comboBox_2d_algorithm.setDisabled(True)
@@ -206,7 +214,6 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.comboBox_volumes_interface_behavior.setCurrentIndex(int(mesh_setup.merge_connected_volumes))
         self.comboBox_mesh_quality_metrics.setCurrentIndex(int(mesh_setup.compute_quality_metrics))
 
-
         self.update_local_mesh_size_control_table()
         self.update_mesh_quality_table()
 
@@ -244,9 +251,11 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         if volumes:
             self.comboBox_local_mesh_size_control_entity_type.setCurrentText("Volumes")
             selection = set(volumes)
+
         elif surfaces:
             self.comboBox_local_mesh_size_control_entity_type.setCurrentText("Surfaces")
             selection = set(surfaces)
+
         else:
             self.lineEdit_selected_ids.setText("")
             self.last_synced_ids = set()
@@ -269,10 +278,49 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         volumes_selection = self.comboBox_local_mesh_size_control_entity_type.currentText() == "Volumes"
         return "volumes" if volumes_selection else "surfaces"
 
+    def on_right_click_callback(self, pos: QPoint):
+
+        if self.tabWidget_main.currentIndex() != MeshSetupTabs.LOCAL_MESH_SIZE_CONTROL:
+            return
+
+        if self.group_assistant_active:
+            return
+
+        for property, _ in self.model.properties.group_properties:
+            if property == "selection_group":
+                menu = QMenu(self)
+                right_click_action = menu.addAction("Show Selection Groups")
+                right_click_action.triggered.connect(self.group_assistant_callback)
+
+                menu.setStyleSheet("""
+                QMenu::item {
+                    padding: 10px 30px 10px 30px;
+                    text-align: center;
+                    min-width: 130px;
+                }
+                QMenu::item:selected {
+                    background-color: #3498db;
+                    color: white;
+                }
+                """)
+
+                menu.exec(self.mapToGlobal(pos))
+                break
+
+    def group_assistant_callback(self):
+        self.group_assistant_active = True
+        GroupingAssistantInputs(mesher_mode=True)
+        self.group_assistant_active = False
+
     def tab_event_callback(self):
         mesh_quality_tab = self.tabWidget_main.currentIndex() == MeshSetupTabs.MESH_QUALITY
+        local_size_tab = self.tabWidget_main.currentIndex() == MeshSetupTabs.LOCAL_MESH_SIZE_CONTROL
+
         self.pushButton_apply.setDisabled(mesh_quality_tab)
         self.pushButton_apply_and_close.setDisabled(mesh_quality_tab)
+
+        if local_size_tab:
+            self.geometry_selection_callback()
 
     def local_mesh_size_control_item_clicked_callback(self, item: QTableWidgetItem):
         row = item.row()
