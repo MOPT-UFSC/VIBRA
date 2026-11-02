@@ -71,6 +71,7 @@ class OccMesher:
 
             triangulation = BRep_Tool.Triangulation_s(surface, location)
             transformation = location.Transformation()
+            shift = len(nodal_coordinates) - 1
 
             for index in range(triangulation.NbNodes()):
                 node = triangulation.Node(index + 1)
@@ -79,7 +80,6 @@ class OccMesher:
                 x, y, z = node.Coord()
                 nodal_coordinates.append((i, x, y, z))
 
-            shift = len(nodal_coordinates) - 1
             for triangle in triangulation.Triangles():
                 i = len(faces_connectivity)
                 p0, p1, p2 = (node + shift for node in triangle.Get())
