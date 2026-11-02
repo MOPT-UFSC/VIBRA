@@ -352,7 +352,7 @@
                </item>
                <item>
                 <property name="text">
-                 <string>Select by side</string>
+                 <string>Select by size</string>
                 </property>
                </item>
               </widget>

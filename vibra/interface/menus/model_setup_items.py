@@ -27,9 +27,9 @@ class ModelSetupItems(CommonMenuItems):
     def _create_items(self):
         """Creates all QTreeWidgetItems."""
         self.item_top_general_settings = self.add_top_item('General Settings')
+        self.item_child_grouping_assistant = self.add_item("Grouping Assistant")
         self.item_child_material = self.add_item("Material")
         self.item_child_fluid = self.add_item('Fluid')
-        self.item_child_grouping_assistant = self.add_item("Grouping Assistant")
         self.item_child_mesh_setup = self.add_item("Mesh Setup")
         self.item_child_element_options = self.add_item("Element Options")
         self.item_child_degrees_of_freedom_decoupling = self.add_item("DOF Decoupling")

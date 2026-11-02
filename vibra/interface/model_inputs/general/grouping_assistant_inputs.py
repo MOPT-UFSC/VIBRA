@@ -231,8 +231,20 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
 
             return new_id
 
+    def is_group_label_valid(self, group_label: str):
+        for (property, _), data in self.properties.group_properties.items():
+            if property != "selection_group":
+                continue
+
+            if not isinstance(data, dict):
+                continue
+
+            if group_label == data.get("group_label"):
+                return False
+
+        return True
+
     def apply_callback(self, close_window: bool = False):
-        self.select_entities_callback()
 
         group_label = self.lineEdit_group_label.text()
         if group_label == "":
@@ -242,12 +254,26 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
             self.lineEdit_group_label.setFocus()
             return
 
+        if not self.is_group_label_valid(group_label):
+            title = "Invalid group label"
+            message = f"The group label '{group_label}' already exists. Please, enter a different "
+            message += "valid group label to proceed with creating the group selection."
+            PrintMessageInput([error_title, title, message])
+            self.lineEdit_group_label.setFocus()
+            self.lineEdit_group_label.selectAll()
+            return
+
+        self.select_entities_callback()
+
         group_id = self.get_new_group_id()
         entity_type = self.comboBox_selector_filter.currentText()
         entities_id = [int(text) for text in self.lineEdit_selected_ids.text().replace(" ", "").split(",")]
 
         data = GroupData(group_label, entity_type, entities_id)
         self.properties._set_property("selection_group", data.as_dict(), group=group_id)
+
+        self.lineEdit_group_label.clear()
+        self.lineEdit_selected_ids.clear()
 
         self.actions_to_finalize(close_window)
 
@@ -357,6 +383,7 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
         self.load_model_info()
         app().project.update_model_properties_file()
         app().main_window.update_symbols()
+        app().main_window.selection.clear_selection()
 
         if close_window:
             self.close()

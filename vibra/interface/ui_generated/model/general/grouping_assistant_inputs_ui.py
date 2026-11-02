@@ -378,7 +378,7 @@ class Ui_Dialog(object):
         self.lineEdit_group_label.setText("")
         self.label_3.setText(QCoreApplication.translate("Dialog", u"Domain filter: ", None))
         self.comboBox_mode.setItemText(0, QCoreApplication.translate("Dialog", u"Select all", None))
-        self.comboBox_mode.setItemText(1, QCoreApplication.translate("Dialog", u"Select by side", None))
+        self.comboBox_mode.setItemText(1, QCoreApplication.translate("Dialog", u"Select by size", None))
 
 #if QT_CONFIG(tooltip)
         self.pushButton_select.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p><span style=\" font-size:10pt; font-weight:400;\">Process the entities selection.</span></p></body></html>", None))
