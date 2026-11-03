@@ -281,7 +281,7 @@ class AcousticPostprocessing:
                     continue
 
                 for vol_id in volume_ids:
-                    elements = self.model.mesh.elements_from_volume.get(vol_id)
+                    elements = self.model.fe_mesh.elements_from_volume.get(vol_id)
                     node_ids = np.unique(self.model.fe_mesh.solids_connectivity[elements, 4:].ravel()).astype(int)
                     fluid_pressures[[node_ids]] = _fluid.pressure
 

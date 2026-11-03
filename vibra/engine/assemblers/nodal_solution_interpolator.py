@@ -17,14 +17,14 @@ class NodalSolutionInterpolator:
 
 
     def interpolate_nodal_solution_data(self, surface_id: int, acoustic_impedance_data: AcousticImpedanceData):
-        nodes = self.model.mesh.get_nodes_from_surface(surface_id)
-        coords = self.model.mesh.nodal_coordinates[nodes, 1:]
+        nodes = self.model.fe_mesh.get_nodes_from_surface(surface_id)
+        coords = self.model.fe_mesh.nodal_coordinates[nodes, 1:]
 
         nodes_res = acoustic_impedance_data.nodal_coordinates[:, 0]
         coords_res = acoustic_impedance_data.nodal_coordinates[:, 1:]
 
         for node_id in nodes:
-            coords = self.model.mesh.nodal_coordinates[node_id, 1:]
+            coords = self.model.fe_mesh.nodal_coordinates[node_id, 1:]
             sorted_ind = np.linalg.norm(coords_res-coords, axis=1).argsort()
             for near_node in np.flip(nodes_res[sorted_ind]):
                 pass

@@ -19,18 +19,18 @@ from vibra.external_mesh.external_mesh_data import ExternalMeshData
 from vibra.interface.user_input.data_handler.file_handlers.file_handler import FileHandler
 
 udof_labels = [
-    "ux", 
-    "uy", 
+    "ux",
+    "uy",
     "uz",
     ]
 
 stresses_labels = [
-    "sigma_x", 
-    "sigma_y", 
-    "sigma_z", 
-    "tau_xy", 
+    "sigma_x",
+    "sigma_y",
+    "sigma_z",
+    "tau_xy",
     "tau_xz",
-    "tau_yz", 
+    "tau_yz",
     ]
 
 
@@ -52,7 +52,7 @@ def load_external_mesh_and_solve():
     }
 
     # define surfaces from each volume
-    surfaces_from_volume = { 
+    surfaces_from_volume = {
         1 : [1, 2, 6],
         2 : [3, 4, 5, 6],
         }
@@ -92,7 +92,7 @@ def load_external_mesh_and_solve():
     poisson_ratio = 0.30
     thermal_expansion_coefficient = 1.1e-5
 
-    material = Material(   
+    material = Material(
         name = "Carbon steel",
         identifier = 1,
         color = (200, 200, 200),
@@ -130,7 +130,7 @@ def load_external_mesh_and_solve():
 
     ## intialize the model
     model = Model()
-    model.mesh = mesh
+    model.fe_mesh = mesh
 
     ## assign the created fluid
     model.properties._set_property("fluid", fluid, volume=2)
@@ -227,7 +227,7 @@ def load_external_mesh_and_solve():
         prefix = act_label.split("_")[0]
 
         print()
-        nodes_act = model.mesh.get_nodes_from_surface(surface_id)
+        nodes_act = model.fe_mesh.get_nodes_from_surface(surface_id)
         dofs_act = model.get_dof_indices_from_nodes(nodes_act, "acoustic")
 
         solution_act = np.average(model.solution.acoustic_solution[dofs_act.ravel(), :], axis=0)
@@ -261,7 +261,7 @@ def load_external_mesh_and_solve():
         dof_index = dof_labels.index(prefix)
 
         print()
-        nodes_struct = model.mesh.get_nodes_from_surface(surface_id)
+        nodes_struct = model.fe_mesh.get_nodes_from_surface(surface_id)
         dofs_struct = model.get_dof_indices_from_nodes(nodes_struct, "structural")
 
         solution_struct = np.average(model.solution.structural_solution[dofs_struct[:, dof_index], :], axis=0)
@@ -289,14 +289,14 @@ def load_external_mesh_and_solve():
         ]
 
     surface_id = named_selection_map.get("curved_face_struct")
-    
+
     for stress_index, stress_label in enumerate(stresses_labels):
 
         reference_data = imported_results.get(stress_label)
         if reference_data is None:
             continue
 
-        nodes_struct = model.mesh.get_nodes_from_surface(surface_id)
+        nodes_struct = model.fe_mesh.get_nodes_from_surface(surface_id)
         nodes_struct_mapped = model.get_mapped_nodes(nodes_struct, "structural")
         avg_surface_stress = np.average(avg_nodal_stresses[nodes_struct_mapped, stress_index, :], axis=0)
 
@@ -313,8 +313,8 @@ def load_external_mesh_and_solve():
     plt.show()
 
 def compare_averaged_nodal_results(
-        surface_id: int, 
-        frequencies: np.ndarray, 
+        surface_id: int,
+        frequencies: np.ndarray,
         solution: np.ndarray,
         solution_reference: np.ndarray,
         plot_type: str = "absolute",
@@ -358,8 +358,8 @@ def compare_averaged_nodal_results(
 
 def compare_averaged_nodal_stresses_results(
     surface_id: int,
-    stress_label: str, 
-    frequencies: np.ndarray, 
+    stress_label: str,
+    frequencies: np.ndarray,
     avg_surface_stress: np.ndarray,
     solution_reference,
     plot_type: str = "absolute",

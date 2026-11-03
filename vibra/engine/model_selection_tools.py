@@ -60,15 +60,15 @@ class ModelSelectionTools:
             The selected volume ID.
 
         domain_filter: str, optional
-            A string used to control when the domain filter is active. Use 'acoustic' 
-            or 'structural' to filter for volumes related to the specified domain, or 
+            A string used to control when the domain filter is active. Use 'acoustic'
+            or 'structural' to filter for volumes related to the specified domain, or
             None to bypass filtering and return all volumes from both domains.
         """
 
         volume_ids = []
-        volume = self.model.mesh.volume_from_bodies.get(volume_id)
+        volume = self.model.fe_mesh.volume_from_bodies.get(volume_id)
 
-        for vol_id, value in self.model.mesh.volume_from_bodies.items():
+        for vol_id, value in self.model.fe_mesh.volume_from_bodies.items():
             if not np.allclose(value, volume, atol=1e-8):
                 continue
 
@@ -96,15 +96,15 @@ class ModelSelectionTools:
             The selected surface ID.
 
         domain_filter: str, optional
-            A string used to control when the domain filter is active. Use 'acoustic' 
-            or 'structural' to filter for surfaces related to the specified domain, or 
+            A string used to control when the domain filter is active. Use 'acoustic'
+            or 'structural' to filter for surfaces related to the specified domain, or
             None to bypass filtering and return all surfaces from both domains.
         """
 
         surfaces = []
-        area = self.model.mesh.area_from_surfaces.get(surface_id)
+        area = self.model.fe_mesh.area_from_surfaces.get(surface_id)
 
-        for surf_id, value in self.model.mesh.area_from_surfaces.items():
+        for surf_id, value in self.model.fe_mesh.area_from_surfaces.items():
             if not np.allclose(value, area, atol=1e-8):
                 continue
 
@@ -132,14 +132,14 @@ class ModelSelectionTools:
             The selected line ID.
 
         domain_filter: str, optional
-            A string used to control when the domain filter is active. Use 'acoustic' 
-            or 'structural' to filter for lines related to the specified domain, or 
+            A string used to control when the domain filter is active. Use 'acoustic'
+            or 'structural' to filter for lines related to the specified domain, or
             None to bypass filtering and return all lines from both domains.
         """
         lines = []
-        length = self.model.mesh.length_from_lines.get(line_id)
+        length = self.model.fe_mesh.length_from_lines.get(line_id)
 
-        for line_id, value in self.model.mesh.length_from_lines.items():
+        for line_id, value in self.model.fe_mesh.length_from_lines.items():
             if not np.allclose(value, length, atol=1e-8):
                 continue
 
@@ -175,7 +175,7 @@ class ModelSelectionTools:
         Return
         ------
         filtered_ids: list
-            A list with the filtered entities IDs accoring with the 
+            A list with the filtered entities IDs accoring with the
             available ones for a specific domain.
 
         """
@@ -216,11 +216,11 @@ class ModelSelectionTools:
         Return
         ------
         filtered_ids: list
-            A list with the filtered entities IDs accoring with the 
+            A list with the filtered entities IDs accoring with the
             available ones for a specific domain.
 
         """
-        
+
         try:
 
             all_ids = []
@@ -238,7 +238,7 @@ class ModelSelectionTools:
 
                 case "points":
                     all_ids = self.geometry_info.points
-                    
+
                 case "lines":
                     all_ids = self.geometry_info.curves
 
