@@ -418,7 +418,7 @@ class OccMesher:
 
         reader.TransferRoots()
         shape = reader.OneShape()
-        return self._fragment(shape)
+        return shape
 
     def _read_iges(self, path: str | Path):
         from OCP.IGESControl import IGESControl_Reader
@@ -431,7 +431,7 @@ class OccMesher:
 
         reader.TransferRoots()
         shape = reader.OneShape()
-        return self._fragment(shape)
+        return shape
 
     def _fragment(self, shape):
         builder = BOPAlgo_Builder()
