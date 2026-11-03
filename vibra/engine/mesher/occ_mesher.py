@@ -138,8 +138,9 @@ class OccMesher:
         Both origin and target are dictionaries mapping an entity index to a tuple of features,
         such as surface area, center point, etc.
 
-        These features are normalized column-wise, to avoid making one entity more important than
-        the others. Then they are treated like vectors for the actual mapping step.
+        These features could be normalized column-wise, to avoid making one entity more important than
+        the others. But area, for example, is actually more important, so I am skipping thi is.
+        Then they are treated like vectors for the actual mapping step.
 
         If the number of keys is the same in both sets, the values are sorted based on how similar
         they are to a reference almost random vector.
@@ -153,22 +154,22 @@ class OccMesher:
         origin_values = np.array(list(origin_features.values()), float)
         target_values = np.array(list(target_features.values()), float)
 
-        minimum = np.min(np.vstack([origin_values, target_values]), axis=0)
-        maximum = np.max(np.vstack([origin_values, target_values]), axis=0)
-        span = maximum - minimum
-        span[span == 0] = 1
+        # minimum = np.min(np.vstack([origin_values, target_values]), axis=0)
+        # maximum = np.max(np.vstack([origin_values, target_values]), axis=0)
+        # span = maximum - minimum
+        # span[span == 0] = 1
 
-        origin_normalized = (origin_values - minimum) / span
-        target_normalized = (target_values - minimum) / span
+        # origin_normalized = (origin_values - minimum) / span
+        # target_normalized = (target_values - minimum) / span
 
-        if origin_normalized.shape == target_normalized.shape:
-            reference_vector = 3 ** np.arange(origin_normalized.shape[1])
-            origin_indices = np.argsort(np.linalg.norm(origin_normalized - reference_vector, axis=1))
-            target_indices = np.argsort(np.linalg.norm(target_normalized - reference_vector, axis=1))
+        if origin_values.shape == target_values.shape:
+            reference_vector = 3 ** np.arange(origin_values.shape[1])
+            origin_indices = np.argsort(np.linalg.norm(origin_values - reference_vector, axis=1))
+            target_indices = np.argsort(np.linalg.norm(target_values - reference_vector, axis=1))
             return dict(zip(origin_keys[origin_indices], target_keys[target_indices]))
 
         else:
-            distance_matrix = cdist(origin_normalized, target_normalized, metric="euclidean")
+            distance_matrix = cdist(origin_values, target_values, metric="euclidean")
             target_indices = np.argmin(distance_matrix, axis=1).ravel()
             return dict(zip(origin_keys, target_keys[target_indices]))
 
