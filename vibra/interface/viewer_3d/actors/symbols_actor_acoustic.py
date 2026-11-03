@@ -172,7 +172,7 @@ class SymbolsActorAcoustic(SymbolsActor):
         return points_coordinates
 
     def _get_coords_from_node(self, node_id: int):
-        mesh = self.model.visual_mesh
+        mesh = self.model.fe_mesh
         node = mesh.nodal_coordinates[node_id]
         return node
 
