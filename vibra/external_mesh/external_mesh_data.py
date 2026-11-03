@@ -24,7 +24,7 @@ class ExternalMeshData():
         self.nodes_from_named_selection = defaultdict(list)
 
 
-    def set_named_selections(self, named_selections):
+    def set_named_selections(self, named_selections: dict[str, int]):
         self.named_selections = named_selections
 
 
@@ -383,7 +383,7 @@ class ExternalMeshData():
                         "element2d_indices": element2d_indices,
                         "element3d_indices": element3d_indices,
                         "connectivity": connect_data,
-                        "surface_id": surface_id,
+                        "surface_id": self.named_selections.get(ns_key),
                     }
 
                     if not export:

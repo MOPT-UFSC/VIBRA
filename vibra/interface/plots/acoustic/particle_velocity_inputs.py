@@ -289,7 +289,7 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
 
             return particle_velocity
 
-        return LoadingWindow(function_callback).run()
+        return LoadingWindow(function_callback, delayed=False).run()
 
     def join_model_data(self):
 

@@ -384,10 +384,13 @@ class FrequencyResponsePlotter(FrequencyResponsePlotter_UI):
         return f"{label} - {type_label} [{unit}]"
 
     def process_differentiation(self, data: np.ndarray):
-        frequencies = self.x_data
         n = self.comboBox_differentiate_data.currentIndex()
+        if n == 0:
+            return data
 
-        return data*((1j*2*np.pi*frequencies)**n)
+        else:
+            freq = self.x_data
+            return data * ((1j * 2 * np.pi * freq) ** n)
 
     def get_unit_considering_differentiation(self):
         index = self.comboBox_differentiate_data.currentIndex()

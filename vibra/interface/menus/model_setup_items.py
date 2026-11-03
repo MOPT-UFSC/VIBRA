@@ -24,8 +24,9 @@ class ModelSetupItems(CommonMenuItems):
         self.update_items_appearance()
 
     def _create_items(self):
-        """Creates all TreeWidgetItems."""
-        self.item_top_general_settings = self.add_top_item("General Settings")
+        """Creates all QTreeWidgetItems."""
+        self.item_top_general_settings = self.add_top_item('General Settings')
+        self.item_child_grouping_assistant = self.add_item("Grouping Assistant")
         self.item_child_material = self.add_item("Material")
         self.item_child_fluid = self.add_item("Fluid")
         self.item_child_mesh_setup = self.add_item("Mesh Setup")
@@ -33,24 +34,16 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_degrees_of_freedom_decoupling = self.add_item("DOF Decoupling")
         self.item_child_volume_suppression = self.add_item("Volumes Suppression")
 
-        self.item_top_structural_model_setup = self.add_top_item("Structural Model Setup (Beta)")
-
-        tooltip_html = """
-                        <p><b>Structural Properties</b></p>
-                        <p><span style="color:red;">
-                        <b>Note:</b> The calculations for these structural properties are currently undergoing refinement.</span>
-                        While we are actively working to ensure complete accuracy, please be aware that simulation results may
-                        exhibit minor variations. We appreciate your understanding as we continue to improve the precision of our models.</p>
-                        """
-        self.item_top_structural_model_setup.setToolTip(0, tooltip_html)
-        path_image = str(ICON_DIR / "model_setup_items/structural_help.png")
-        self.item_top_structural_model_setup.setIcon(0, QIcon(path_image))
-
+        self.item_top_structural_model_setup = self.add_top_item('Structural Model Setup')
         self.item_child_surface_thickness = self.add_item("Surface Thickness")
+
+        # structural model excitations
         self.item_child_prescribed_dof = self.add_item("Prescribed DOF")
         self.item_child_nodal_loads = self.add_item("Nodal Loads")
         self.item_child_distributed_loads = self.add_item("Distributed Loads")
         self.item_child_normal_pressure_load = self.add_item("Normal Pressure Load")
+
+        # structural distributed properties
         self.item_child_distributed_mass = self.add_item("Distributed Mass")
         self.item_child_distributed_stiffness = self.add_item("Distributed Stiffness")
         self.item_child_distributed_dampings = self.add_item("Distributed Dampings")
@@ -101,6 +94,7 @@ class ModelSetupItems(CommonMenuItems):
             "item_child_element_options": "element_options",
             "item_child_degrees_of_freedom_decoupling": "degrees_of_freedom_decoupling",
             "item_child_volume_suppression": "volume_suppression",
+            "item_child_grouping_assistant": "grouping_assistant",
             "item_child_surface_thickness": "surface_thickness",
             "item_child_prescribed_dof": "prescribed_dof",
             "item_child_nodal_loads": "nodal_loads",
@@ -576,6 +570,9 @@ class ModelSetupItems(CommonMenuItems):
     def item_child_volume_suppression_callback(self):
         app().main_window.input_ui.set_volume_suppression()
 
+    def item_child_grouping_assistant_callback(self):
+        app().main_window.input_ui.set_grouping_assistant()
+
     def item_child_viscous_thermal_model_callback(self):
         app().main_window.input_ui.set_viscous_thermal_model()
 
@@ -593,6 +590,7 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_mesh_setup.setDisabled(not imported_geometry)
         self.item_child_element_options.setDisabled(not imported_geometry)
         self.item_child_volume_suppression.setDisabled(not imported_geometry)
+        self.item_child_grouping_assistant.setDisabled(not imported_geometry)
 
     def hide_all_top_items(self):
         self.item_top_general_settings.setHidden(True)

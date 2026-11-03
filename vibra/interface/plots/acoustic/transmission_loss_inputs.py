@@ -446,7 +446,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
 
                 return x_data, y_data
 
-            x_data, y_data = LoadingWindow(transmission_loss_callback).run()
+            x_data, y_data = LoadingWindow(transmission_loss_callback, delayed=False).run()
 
         elif self.comboBox_processing_selector.currentIndex() == DataType.NOISE_REDUCTION:
 

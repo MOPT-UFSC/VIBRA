@@ -9,6 +9,7 @@ from vibra import app
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.numeric_checks.double_validator import StrictDoubleValidator
 from vibra.interface.plots.general.animation_widget import AnimationWidget
+from vibra.interface.plots.general.ifft_controls_widget import IfftControlsWidget
 from vibra.interface.plots.general.results_display_widget import ResultsDisplayWidget
 from vibra.interface.ui_generated.plots.structural.structural_nodal_solution_3d_plot_time_inputs_ui import StructuralNodalSolution3dPlotTimeInputs_UI
 from vibra.interface.viewer_3d.plot_setup import DisplacementDataType, DisplacementFieldPlotSetupTime
@@ -24,6 +25,7 @@ class StructuralNodalSolution3dPlotTimeInputs(StructuralNodalSolution3dPlotTimeI
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self._add_ifft_controls_widget()
         self._add_animation_widget()
         self._add_color_widget()
         self._initialize()
@@ -51,6 +53,16 @@ class StructuralNodalSolution3dPlotTimeInputs(StructuralNodalSolution3dPlotTimeI
         cache_info = self.structural_post.compute_multiple_ifft_for_structural_nodal_solution.cache_info()
         return cache_info.currsize != 0
 
+    def _add_ifft_controls_widget(self):
+
+        grid_layout = QGridLayout()
+        grid_layout.setContentsMargins(0, 0, 0, 0)
+        self.frame_ifft_controls.setLayout(grid_layout)
+
+        self.ifft_controls_widget = IfftControlsWidget()
+        grid_layout.addWidget(self.ifft_controls_widget)
+        self.frame_ifft_controls.adjustSize()
+
     def _add_animation_widget(self):
 
         self.grid_layout = QGridLayout()
@@ -67,6 +79,7 @@ class StructuralNodalSolution3dPlotTimeInputs(StructuralNodalSolution3dPlotTimeI
         self.update_slider_configuration()
 
     def _add_color_widget(self):
+
         grid_layout = QGridLayout()
         grid_layout.setContentsMargins(0, 0, 0, 0)
         self.frame_color.setLayout(grid_layout)
@@ -102,6 +115,8 @@ class StructuralNodalSolution3dPlotTimeInputs(StructuralNodalSolution3dPlotTimeI
         # QPushButton connections
         self.pushButton_process_nodal_solution_iffts.clicked.connect(self.plot_data_callback)
 
+        self.animation_widget.checkBox_magnification.stateChanged.connect(self.plot_data_callback)
+        self.ifft_controls_widget.ifft_controls_changed.connect(self.enable_process_ifft_button)
         self.results_display_widget.colormap_changed.connect(self.animation_widget.update_color_and_deformation)
         self.results_display_widget.min_max_value_changed.connect(self.animation_widget.update_color_and_deformation)
 
@@ -175,19 +190,26 @@ class StructuralNodalSolution3dPlotTimeInputs(StructuralNodalSolution3dPlotTimeI
             case _:
                 return None
 
+    def enable_process_ifft_button(self):
+        self.pushButton_process_nodal_solution_iffts.setEnabled(True)
+
     def plot_data_callback(self):
 
         plot_setup = DisplacementFieldPlotSetupTime(
             time_index=0,
+            true_scale=self.animation_widget.true_scale,
             magnification_factor=self.animation_widget.magnification_factor,
             plot_type=self.get_plot_type(),
             unit=self.get_plot_units(),
             unit_factor=self.get_unit_factor(),
             n_diff=self.get_number_of_differentiations(),
+            n_div=self.ifft_controls_widget.get_number_of_fstep_divisions(),
+            spectral_lines=self.ifft_controls_widget.get_ifft_number_of_spectral_lines(),
             reduced_loop_time=self.get_reduced_loop_time(),
         )
 
         if plot_setup == self.plot_setup:
+            self.pushButton_process_nodal_solution_iffts.setDisabled(True)
             return
 
         self.plot_setup = plot_setup
@@ -199,7 +221,7 @@ class StructuralNodalSolution3dPlotTimeInputs(StructuralNodalSolution3dPlotTimeI
                 plot_setup=self.plot_setup,
             )
 
-        LoadingWindow(plot_callback).run()
+        LoadingWindow(plot_callback, delayed=False).run()
 
         self.set_frames_disabled(False)
         self.show_results_render()

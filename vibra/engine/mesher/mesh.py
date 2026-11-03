@@ -467,6 +467,15 @@ class Mesh:
 
         self.geometry_information["surfaces"] = [int(_id) for _id in np.unique(surfaces)]
 
+    def map_surfaces_to_volumes(self, surfaces_from_volume: dict[int, list[int]]):
+        self.volumes_from_surface.clear()
+        self.surfaces_from_volume.clear()
+        for vol_id, surf_ids in surfaces_from_volume.items():
+            for surf_id in surf_ids:
+                self.volumes_from_surface[surf_id].append(vol_id)
+
+            self.surfaces_from_volume[vol_id] = surf_ids
+
     def export_nodal_coordinates(self, filename):
         fmt = ["%i", "%.16f", "%.16f", "%.16f"]
         header = "Node index || Coordinate x [m] || Coordinate y [m] || Coordinate z [m]"

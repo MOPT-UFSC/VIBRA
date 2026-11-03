@@ -122,7 +122,7 @@ class AcousticNodalSolution3dPlotFrequencyInputs(AcousticNodalSolution3dPlotFreq
         )
 
         self.animation_widget.reset_sliders()
-        LoadingWindow(app().main_window.results_widget.update_plot).run(
+        LoadingWindow(app().main_window.results_widget.update_plot, delayed=False).run(
             reset_camera=False,
             plot_setup=plot_setup,
         )

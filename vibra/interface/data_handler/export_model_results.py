@@ -16,12 +16,14 @@ class ExportModelResults(QFileDialog):
         self._initialize()
 
     def _initialize(self):
-        self.data = dict()
+        self.data = {}
 
     def _set_data_to_export(self, data: dict, **kwargs):
         self.data = data
-        if data:
-            self.call_file_dialog_and_export_data(**kwargs)
+        if not data:
+            return
+
+        self.call_file_dialog_and_export_data(**kwargs)
 
     def export_data_in_text_format(self, export_path: str, delimiter: str = ","):
         for data in self.data.values():
@@ -53,12 +55,12 @@ class ExportModelResults(QFileDialog):
 
         logging.info("Exporting data... (75%)")
 
-        existing_data_frames = dict()
+        existing_data_frames = {}
         existing_path = kwargs.get("existing_path", "")
 
         if Path(existing_path).exists():
             ext = Path(existing_path).suffix.lower()
-            if ext in [".xls", ".xlsx"]:
+            if ext == ".xlsx":
                 for sheet_name, df in read_excel(existing_path, sheet_id=0, engine="calamine").items():
                     existing_data_frames[sheet_name] = df.select(df.columns[:4])
 
@@ -105,7 +107,7 @@ class ExportModelResults(QFileDialog):
             FileHandler.save_spreadsheet_file(export_path, sheet_name, df, append=append)
             append = True
 
-    def call_file_dialog_and_export_data(self, **kwargs):
+    def call_file_dialog(self, **kwargs) -> Path:
 
         existing_path = kwargs.get("existing_path", "")
 
@@ -121,12 +123,14 @@ class ExportModelResults(QFileDialog):
             else:
                 directory_path = path
 
-            if len(self.data) == 1:
+            if len(self.data) == 0:
+                _filter = "HDF file (*.hdf5)"
+            elif len(self.data) == 1:
                 _filter = "Spreadsheet (*.xlsx);; Text file (*.dat);; Text file (*.txt);; Text file (*.csv)"
             else:
                 _filter = "Spreadsheet (*.xlsx)"
 
-            kwargs = dict()
+            kwargs = {}
             if platform.system() == "Linux":
                 kwargs["options"] = QFileDialog.Option.DontUseNativeDialog
 
@@ -142,9 +146,17 @@ class ExportModelResults(QFileDialog):
 
         app().config.write_last_folder_path_in_file("exported_data_folder", file_path)
 
+        return file_path
+
+    def call_file_dialog_and_export_data(self, **kwargs) -> Path:
+
+        file_path = self.call_file_dialog(**kwargs)
+        if file_path is None:
+            return
+
         logging.info("Exporting data... (50%)")
-        if file_path.suffix.lower() in [".xls", ".xlsx"]:
-            self.export_data_in_spreadsheet_format(str(file_path), existing_path=existing_path)
+        if file_path.suffix.lower() == ".xlsx":
+            self.export_data_in_spreadsheet_format(str(file_path), **kwargs)
         else:
             self.export_data_in_text_format(str(file_path))
 
