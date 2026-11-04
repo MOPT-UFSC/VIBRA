@@ -7,18 +7,15 @@ import xxhash
 from vtkmodules.util.numpy_support import numpy_to_vtk, vtk_to_numpy
 from vtkmodules.vtkCommonCore import vtkDataArray, vtkUnsignedCharArray
 
-from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.engine.properties.model_properties import ModelProperties
 from vibra.interface.viewer_3d.coloring.color_table import ColorTable
-from vibra.utils.interface_utils import SectionPlane
-from vibra.utils.time_utils import function_timer
 
-from .mesh_actor import MeshActor
+from .mesh_actor import MeshActor, MeshCachedInfo
 
 
 @dataclass
-class CachedInfo:
+class ResultsCachedInfo(MeshCachedInfo):
     mesh_id: int = 0
     result_colors_hash: str = ""
     node_colors_hash: str = ""
@@ -42,7 +39,7 @@ class VisualizationMode(Enum):
 class ResultsActor(MeshActor):
     def __init__(self, model: Model | None):
         super().__init__(model)
-        self.cached_info = CachedInfo()
+        self.cached_info = ResultsCachedInfo()
 
     @property
     def properties(self) -> ModelProperties | None:
@@ -54,7 +51,7 @@ class ResultsActor(MeshActor):
     def clear_data(self):
         super().clear_data()
 
-        self.cached_info = CachedInfo()
+        self.cached_info = ResultsCachedInfo()
         self.result_colors.SetNumberOfTuples(0)
         self.result_colors.Modified()
 
@@ -99,7 +96,7 @@ class ResultsActor(MeshActor):
     def update_caches(self):
         super().update_caches()
 
-        result_colors_hash = CachedInfo.array_hash(self.result_colors)
+        result_colors_hash = ResultsCachedInfo.array_hash(self.result_colors)
         if result_colors_hash != self.cached_info.result_colors_hash:
             self.cached_info.result_colors_hash = result_colors_hash
             self.result_colors.Modified()

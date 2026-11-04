@@ -20,7 +20,7 @@ from vibra.utils.math_functions import inside_plane
 
 
 @dataclass
-class CachedInfo:
+class MeshCachedInfo:
     mesh_id: int = 0
     node_colors_hash: str = ""
     surface_colors_hash: str = ""
@@ -53,7 +53,7 @@ class MeshActor(vtkPropAssembly):
 
         self.model = model
         self.section_plane: SectionPlane | None = None
-        self.cached_info = CachedInfo()
+        self.cached_info = MeshCachedInfo()
 
         self._create_variables()
         self._configure_actors_parameters()
@@ -78,7 +78,7 @@ class MeshActor(vtkPropAssembly):
         self.update_caches()
 
     def clear_data(self):
-        self.cached_info = CachedInfo()
+        self.cached_info = MeshCachedInfo()
 
         self.node_data.SetVerts(vtkCellArray())
         self.node_colors.SetNumberOfTuples(0)
@@ -281,17 +281,17 @@ class MeshActor(vtkPropAssembly):
         vtk_to_numpy(self.volume_ids)[:] = solids_triangulated[:, 0]
 
     def update_caches(self):
-        node_colors_hash = CachedInfo.array_hash(self.node_colors)
+        node_colors_hash = MeshCachedInfo.array_hash(self.node_colors)
         if node_colors_hash != self.cached_info.node_colors_hash:
             self.cached_info.node_colors_hash = node_colors_hash
             self.node_colors.Modified()
 
-        surface_colors_hash = CachedInfo.array_hash(self.surface_colors)
+        surface_colors_hash = MeshCachedInfo.array_hash(self.surface_colors)
         if surface_colors_hash != self.cached_info.surface_colors_hash:
             self.cached_info.surface_colors_hash = surface_colors_hash
             self.surface_colors.Modified()
 
-        section_colors_hash = CachedInfo.array_hash(self.volume_colors)
+        section_colors_hash = MeshCachedInfo.array_hash(self.volume_colors)
         if section_colors_hash != self.cached_info.section_colors_hash:
             self.cached_info.section_colors_hash = section_colors_hash
             self.volume_colors.Modified()
