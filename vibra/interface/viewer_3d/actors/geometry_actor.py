@@ -1,6 +1,3 @@
-from vtkmodules.vtkCommonDataModel import vtkCellData
-from vtkmodules.vtkFiltersCore import vtkPolyDataTangents
-from vtkmodules.vtkFiltersCore import vtkPolyDataNormals
 from collections.abc import Iterable
 
 import numpy as np
@@ -82,14 +79,6 @@ class GeometryActor(vtkPropAssembly):
         self.surface_ids.SetNumberOfTuples(len(faces_triangulated))
         vtk_to_numpy(self.surface_ids)[:] = faces_triangulated[:, 0]
 
-        add_normals = vtkPolyDataNormals()
-        add_normals.SplittingOff()
-        add_normals.
-        add_normals.SetInputData(self.surface_data)
-        add_normals.Update()
-
-        self.surface_data.DeepCopy(add_normals.GetOutput())
-        
     def _create_cells(self, connectivity: np.ndarray) -> vtkCellArray:
         if connectivity.ndim == 1:
             connectivity = connectivity.reshape(-1, 1)
