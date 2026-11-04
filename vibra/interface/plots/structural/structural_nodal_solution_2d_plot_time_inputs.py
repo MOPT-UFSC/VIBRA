@@ -199,7 +199,7 @@ class StructuralNodalSolution2dPlotTimeInputs(StructuralNodalSolution2dPlotTimeI
         self.plotter._set_model_results_data_to_plot(self.model_results)
 
     def export_data_callback(self):
-        
+
         if self.check_selected_ids():
             return
 
@@ -225,14 +225,14 @@ class StructuralNodalSolution2dPlotTimeInputs(StructuralNodalSolution2dPlotTimeI
         rows = gdof[:, dof_index]
 
         if isinstance(rows, int):
-            response = self.nodal_solution[rows,:]
+            response = self.nodal_solution[rows, :]
         else:
-            response = np.average(self.nodal_solution[rows,:], axis=0)
+            response = np.average(self.nodal_solution[rows, :], axis=0)
 
         # differentiate the structural nodal solution (if required)
         n_int = self.get_structure_data_index()
         if n_int:
-            response *= (1j * 2 * np.pi * self.frequencies)**n_int
+            response *= (1j * 2 * np.pi * self.frequencies) ** n_int
 
         return response
 
@@ -250,7 +250,6 @@ class StructuralNodalSolution2dPlotTimeInputs(StructuralNodalSolution2dPlotTimeI
         unit_factor = self.get_unit_factor()
 
         for i, selected_id in enumerate(self.selected_ids):
-
             key = (selection_type, (selected_id))
             legend_label = f"Structural response {self.y_label.lower()} at {selection_type} [{selected_id}]"
 
@@ -272,7 +271,7 @@ class StructuralNodalSolution2dPlotTimeInputs(StructuralNodalSolution2dPlotTimeI
 
     def get_structure_data_index(self) -> int:
         """
-        This method returns an integer corresponding to the structural data, where 0 represents 
+        This method returns an integer corresponding to the structural data, where 0 represents
         displacement, 1 represents velocity, and 2 represents acceleration.
         """
         volume_exists = self.mesh.are_there_volumes_in_geometry()
@@ -329,7 +328,7 @@ class StructuralNodalSolution2dPlotTimeInputs(StructuralNodalSolution2dPlotTimeI
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
             self.plot_data_callback()
-        
+
     def closeEvent(self, a0: QCloseEvent | None) -> None:
 
         if self.exporter is not None:
@@ -339,18 +338,19 @@ class StructuralNodalSolution2dPlotTimeInputs(StructuralNodalSolution2dPlotTimeI
             self.plotter.close()
 
         return super().closeEvent(a0)
-    
+
+
 def get_color(index: int):
 
-    colors = [  
-        (0,0,1), 
-        (0,0,0), 
-        (1,0,0),
-        (0,1,1), 
-        (1,0,1), 
-        (1,1,0),
-        (0.25,0.25,0.25),
-        ]
+    colors = [
+        (0, 0, 1),
+        (0, 0, 0),
+        (1, 0, 0),
+        (0, 1, 1),
+        (1, 0, 1),
+        (1, 1, 0),
+        (0.25, 0.25, 0.25),
+    ]
 
     if index <= 6:
         return colors[index]

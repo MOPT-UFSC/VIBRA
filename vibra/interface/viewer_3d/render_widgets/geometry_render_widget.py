@@ -170,8 +170,8 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.multimaterial = MultimaterialGeometryActor(mesh, visualization_filter=self.visualization_filter)
 
         self.selection_spheres_actor = SelectionSpheres()
-        self.symbols_actor_structural = SymbolsActorStructural(self.renderer.GetActiveCamera())
-        self.symbols_actor_acoustic = SymbolsActorAcoustic(self.renderer.GetActiveCamera())
+        self.symbols_actor_structural = SymbolsActorStructural(app().project.model, self.renderer.GetActiveCamera())
+        self.symbols_actor_acoustic = SymbolsActorAcoustic(app().project.model, self.renderer.GetActiveCamera())
 
         self.ghost_actor = GhostActor(mesh)
         self.ghost_actor.SetVisibility(app().main_window.has_hidden_part())
@@ -289,8 +289,8 @@ class GeometryRenderWidget(CommonRenderWidget):
         # but for some reason that I can't understand
         # it causes segmentation fault
         self.remove_actors(self.symbols_actor_structural, self.symbols_actor_acoustic)
-        self.symbols_actor_structural = SymbolsActorStructural(self.renderer.GetActiveCamera())
-        self.symbols_actor_acoustic = SymbolsActorAcoustic(self.renderer.GetActiveCamera())
+        self.symbols_actor_structural = SymbolsActorStructural(app().project.model, self.renderer.GetActiveCamera())
+        self.symbols_actor_acoustic = SymbolsActorAcoustic(app().project.model, self.renderer.GetActiveCamera())
         self.add_actors(self.symbols_actor_structural, self.symbols_actor_acoustic)
         self.visualization_changed_callback()
         self.update()

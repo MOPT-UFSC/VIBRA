@@ -1,4 +1,3 @@
-
 import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
@@ -64,14 +63,14 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
         self.pushButton_load_table.clicked.connect(self.load_compressor_excitation_spectrum_data)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
-        
+
         # QTabWidget connection
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
-        
+
         # QTreeWidget connections
         self.treeWidget_compressor_excitation_spectrum.itemClicked.connect(self.on_click_item)
         self.treeWidget_compressor_excitation_spectrum.itemDoubleClicked.connect(self.on_doubleclick_item)
-        
+
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
     def geometry_selection_callback(self):
@@ -153,7 +152,7 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
 
         self.update_tabs_visibility()
 
-    def load_table(self, lineEdit : QLineEdit, direct_load=False):
+    def load_table(self, lineEdit: QLineEdit, direct_load=False):
         title = "Error reached while loading compressor excitation data"
 
         try:
@@ -164,9 +163,7 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
                 extensions = SUPPORTED_SPREADSHEET_EXTENSIONS + SUPPORTED_TEXT_EXTENSIONS
                 caption = "Choose a table to import the compressor excitation spectrum data"
 
-                imported_path = FileDialogService.open_file(file_extensions=extensions,
-                                            caption=caption,
-                                            last_folder="imported_table_folder")
+                imported_path = FileDialogService.open_file(file_extensions=extensions, caption=caption, last_folder="imported_table_folder")
 
             imported_data = FileHandler.read(imported_path)
 
@@ -175,7 +172,7 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
 
             if not direct_load:
                 lineEdit.setText(str(imported_data.path))
-                
+
             imported_values = imported_data.data
 
             if imported_values.shape[1] < 3:
@@ -197,7 +194,7 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
             return None
 
     def save_table_values(self, table_name: str, imported_values: np.ndarray):
-        
+
         # define the frequencies vector
         frequencies = imported_values[:, 0]
 
@@ -214,7 +211,7 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
 
         # real values vector
         real_values = imported_values[:, 1]
-        
+
         # imaginary values vector
         imag_values = imported_values[:, 2]
 
@@ -262,13 +259,11 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
         connection_type = self.comboBox_connection_type.currentText()
 
         if self.imported_values is None:
-            self.imported_values = self.load_table(self.lineEdit_table_path, direct_load = True)
+            self.imported_values = self.load_table(self.lineEdit_table_path, direct_load=True)
 
         for surface_id in surface_ids:
-
             if isinstance(self.imported_values, np.ndarray):
                 if self.imported_values.shape[1] >= 3:
-
                     table_name = f"compressor_excitation_spectrum_at_surface_{surface_id}"
                     if self.save_table_values(table_name, self.imported_values):
                         self.lineEdit_table_path.setFocus()
@@ -287,15 +282,15 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
             table_path = self.lineEdit_table_path.text()
 
             data = {
-                "compressor_type" : compressor_type,
-                "excitation_type" : excitation_type,
-                "excitation_units" : excitation_units,
-                "connection_type" : connection_type,
-                "table_paths" : [table_path],
-                "table_names" : [table_name],
-                "values" : [complex_values],
+                "compressor_type": compressor_type,
+                "excitation_type": excitation_type,
+                "excitation_units": excitation_units,
+                "connection_type": connection_type,
+                "table_paths": [table_path],
+                "table_names": [table_name],
+                "values": [complex_values],
                 "element_integration": True,
-                }
+            }
 
             self.properties._set_property("compressor_excitation_spectrum", data, surface=surface_id)
 
@@ -314,7 +309,7 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
             "compressor_excitation_waveform",
             "reciprocating_compressor_excitation",
             "mass_source",
-            ]
+        ]
 
         for surface_id in surface_ids:
             for label in labels:
@@ -332,7 +327,7 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
         title = "Compressor excitation reseting"
         message = "Would you like to remove the all compressor excitations in frequency domain from model?"
 
-        buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
+        buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
         read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
 
         if read._cancel:

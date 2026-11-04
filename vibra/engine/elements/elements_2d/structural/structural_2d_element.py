@@ -1,4 +1,3 @@
-
 from typing import TYPE_CHECKING
 
 from vibra.engine.elements.elements_2d.surface_elements import Element2D
@@ -10,7 +9,6 @@ import numpy as np
 
 
 class Structural2DElement(Element2D):
-
     def __init__(self, model: "Model", dof_per_node: int, nodes_per_element: int):
         super().__init__(model, dof_per_node, nodes_per_element)
 
@@ -23,7 +21,6 @@ class Structural2DElement(Element2D):
         self.process_N_matrix()
         self.dof_indexes_proc = self.dof_indexes_processor("structural")
 
-
     def process_N_matrix(self):
         N = np.zeros((self.nint, 3, self.dof_per_element), dtype=float)
 
@@ -34,7 +31,6 @@ class Structural2DElement(Element2D):
 
         self.N_matrix = N
 
-
     def integrate_area(self, connectivities: np.ndarray):
 
         self.connectivities = connectivities
@@ -43,11 +39,10 @@ class Structural2DElement(Element2D):
         coords = self.model.mesh.nodal_coordinates[[connect for connect in connectivities], 1:]
 
         # initialize variable
-        dA = 0.
+        dA = 0.0
 
         # integration loop
         for i in range(self.nint):
-
             # determinant of Jacobian for the i-th integration point
             det_jacs = self.get_jacobian_determinant_2d(self.dphi[i, :, :], coords)
 
@@ -56,9 +51,8 @@ class Structural2DElement(Element2D):
 
         return np.sum(dA)
 
-
     def integrate_normal_pressure_load(self, el_index: int, element_pressure: np.ndarray, acoustic_excitation: bool = False) -> np.ndarray:
-        """ 
+        """
         This method computes the elementary load vector.
 
         Parameters
@@ -86,11 +80,10 @@ class Structural2DElement(Element2D):
         coords = self.model.mesh.nodal_coordinates[e_nodes, 1:]
 
         # initialize the variable Fe
-        Fe = 0.
+        Fe = 0.0
 
         # integration loop
         for i in range(self.nint):
-
             # determinant of Jacobian and normal vector for the i-th integration point
             det_jac, normal_vector = self.get_jacobian_determinant_2d(self.dphi[i, :, :], coords, return_normal=True)
 
@@ -112,9 +105,8 @@ class Structural2DElement(Element2D):
 
         return Fe
 
-
     def integrate_distributed_load(self, el_index: int, distributed_load: np.ndarray) -> np.ndarray:
-        """ 
+        """
         This method computes the elementary load vector.
 
         Parameters
@@ -138,11 +130,10 @@ class Structural2DElement(Element2D):
         coords = self.model.mesh.nodal_coordinates[e_nodes, 1:]
 
         # initialize the variable Fe
-        Fe = 0.
+        Fe = 0.0
 
         # integration loop
         for i in range(self.nint):
-
             # determinant of Jacobian for the i-th integration point
             det_jac = self.get_jacobian_determinant_2d(self.dphi[i, :, :], coords)
 
@@ -153,9 +144,8 @@ class Structural2DElement(Element2D):
 
         return Fe
 
-
     def integrate_distributed_property(self, el_index: int, value: np.ndarray, is_normal: bool = False) -> np.ndarray:
-        """ 
+        """
         This method computes the elementary matrix for a distributed property.
 
         Parameters
@@ -179,11 +169,10 @@ class Structural2DElement(Element2D):
         coords = self.model.mesh.nodal_coordinates[e_nodes, 1:]
 
         # initialize the variable Fe
-        Ke = 0.
+        Ke = 0.0
 
         # integration loop
         for i in range(self.nint):
-
             # determinant of Jacobian for the i-th integration point
             det_jac, normal = self.get_jacobian_determinant_2d(self.dphi[i, :, :], coords, return_normal=True)
 
@@ -199,24 +188,22 @@ class Structural2DElement(Element2D):
 
         return Ke
 
-
     def get_rows_and_cols_indices_1D(self, index: int):
         """
-        This method returns, for a selected element, the row 
+        This method returns, for a selected element, the row
         and column indices for 1D element integration.
-        
+
         index: int
             The element index.
         """
 
         return self.dof_indexes_proc.get_rows_and_cols_indices_1D(index, self.connectivities)
 
-
     def get_rows_and_cols_indices_2D(self, connectivities: np.ndarray):
         """
-        This method returns the row and column indices for 2D element 
+        This method returns the row and column indices for 2D element
         integration for all elements related to the connectivities.
-        
+
         connectivities: np.ndarray
             A 2D array containing all element connectivities.
         """

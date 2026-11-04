@@ -10,7 +10,7 @@ from vibra.engine.project import Project
 
 
 def test_harmonic_structural():
-    mesh_path = PROJECT_DIR / "data/examples/mesh_files/branch_cylinders.msh"
+    mesh_path = PROJECT_DIR / "examples/mesh_files/branch_cylinders.msh"
     reference_project = PROJECT_DIR / "validation_files/test_projects/branch_cylinders_harmonic_structural.vibra"
 
     project = Project()

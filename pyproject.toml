@@ -38,6 +38,7 @@ dev = [
     "invoke>=2.2.0,<3",
     "pyinstaller>=6.20.0",
     "tuna>=0.5.15",
+    "pyright>=1.1.411",
 ]
 
 [build-system]

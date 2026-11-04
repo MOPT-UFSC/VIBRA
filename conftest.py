@@ -42,7 +42,7 @@ def material() -> Material:
 
 @pytest.fixture(scope="module")
 def acoustic_model(fluid: Fluid) -> Model:
-    path = str(PROJECT_DIR / "data/examples/geometry_files/cylinder.step")
+    path = str(PROJECT_DIR / "examples/geometry_files/cylinder.step")
     mesh_setup = MeshSetup(minimum_element_size=50, maximum_element_size=50)
 
     model = Model()
@@ -102,7 +102,7 @@ def material() -> Material:
 
 @pytest.fixture(scope="module")
 def structural_model(material: Material) -> Model:
-    path = path = str(PROJECT_DIR / "data/examples/geometry_files/curve_L_3D.step")
+    path = path = str(PROJECT_DIR / "examples/geometry_files/curve_L_3D.step")
     mesh_setup = MeshSetup(minimum_element_size=50, maximum_element_size=50)
 
     model = Model()

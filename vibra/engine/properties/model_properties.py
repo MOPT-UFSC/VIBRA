@@ -58,7 +58,7 @@ class ModelProperties:
     def __init__(self, disable_resume_callback: Optional[Callable] = None):
         self.disable_resume_callback = disable_resume_callback
         self._reset_variables()
-    
+
     def _reset_variables(self):
         self.material_library = MaterialLibrary.default()
         self.fluid_library = FluidLibrary.default()
@@ -141,19 +141,17 @@ class ModelProperties:
 
         """
         if isinstance(data, dict):
-
             values_list = []
             data_keys = list(data)
             group_label = self.get_data_group_label(property)
 
             if "real_values" in data_keys and "imag_values" in data_keys:
                 for i, a in enumerate(data.get("real_values")):
-
                     if a is None:
                         values_list.append(None)
 
                     else:
-                        b = data["imag_values"][i]  
+                        b = data["imag_values"][i]
                         if b is None:
                             values_list.append(a)
                         else:
@@ -161,7 +159,6 @@ class ModelProperties:
 
             elif "amplitude_values" in data_keys and "phase_values" in data_keys:
                 for i, amp in enumerate(data.get("amplitude_values")):
-
                     if amp is None:
                         values_list.append(None)
 
@@ -201,7 +198,7 @@ class ModelProperties:
             elif "values" in data_keys:
                 values_list = data.get("values")
 
-            data["values"] =  values_list
+            data["values"] = values_list
 
         elif isinstance(data, Material) and (data not in self.material_library):
             self.material_library.add(data)
@@ -298,9 +295,9 @@ class ModelProperties:
                 continue
 
             if isinstance(tags, Iterable):
-                removal_map[entity_name].extend(tags)                   
+                removal_map[entity_name].extend(tags)
             else:
-                removal_map[entity_name].append(tags)          
+                removal_map[entity_name].append(tags)
 
         for entity_label, entity_ids in removal_map.items():
             for entity_id in entity_ids:
@@ -455,14 +452,14 @@ class ModelProperties:
 
     # TODO: group_label argument is used on calls across the program. Need to remove later
     def remove_imported_tables(self, group_label: str, table_name: str):
-        #TODO: is it possible both have the same table_names? I am counting with this, need to check for problems
+        # TODO: is it possible both have the same table_names? I am counting with this, need to check for problems
         if table_name in self.acoustic_imported_tables:
             self.acoustic_imported_tables.pop(table_name)
 
         if table_name in self.structural_imported_tables:
             self.structural_imported_tables.pop(table_name)
 
-    def get_data_group_label(self, property : str) -> str:
+    def get_data_group_label(self, property: str) -> str:
 
         if property in self.acoustic_labels:
             return "acoustic"
@@ -471,7 +468,7 @@ class ModelProperties:
         else:
             return "general"
 
-    def get_property_related_table_names(self, property : str, selected_ids : int | list | tuple, selection: str) -> list:
+    def get_property_related_table_names(self, property: str, selected_ids: int | list | tuple, selection: str) -> list:
         """
         Returns the table names associated with a particular property and selected IDs.
         """
@@ -505,7 +502,7 @@ class ModelProperties:
                     table_names.append(table_name)
 
         return table_names
-    
+
     def process_all_tables_frequencies_vectors(self) -> list:
         """
         This method process the frequencies vectors from all imported tables.
@@ -514,7 +511,6 @@ class ModelProperties:
         frequencies_from_tables = []
 
         for _, _, _, prop_data in self.iterate_properties():
-
             if not isinstance(prop_data, dict):
                 continue
 
@@ -535,7 +531,7 @@ class ModelProperties:
 
     def is_the_volume_property_present_in_the_model(self, property_to_check: str):
 
-        for (property, _) in self.volume_properties:
+        for property, _ in self.volume_properties:
             if property == property_to_check:
                 return True
 
@@ -543,12 +539,12 @@ class ModelProperties:
 
     def is_the_surface_property_present_in_the_model(self, property_to_check: str):
 
-        for (property, _) in self.surface_properties:
+        for property, _ in self.surface_properties:
             if property == property_to_check:
                 return True
 
         return False
-    
+
     def is_there_a_prescribed_velocity_or_acceleration_in_the_model(self) -> bool:
         for _, property_name, _, data in self.iterate_properties():
             if property_name != "prescribed_dof":
@@ -558,7 +554,7 @@ class ModelProperties:
                 return True
 
         return False
-    
+
     def get_entities_with_and_without_property(self, property: str, **kwargs):
 
         entities_with_property = []
@@ -585,9 +581,9 @@ class ModelProperties:
 
         entities_without_property.sort()
         entities_with_property.sort()
-    
+
         return entities_with_property, entities_without_property
-    
+
     def iterate_properties(self):
         property_dicts = {
             "volume": self.volume_properties,
@@ -607,7 +603,7 @@ class ModelProperties:
 
     def get_properties_from_points(self, point_ids: set[int]) -> list[tuple[str, int]]:
         return self._get_properties_from_entities(point_ids, self.point_properties)
-    
+
     def get_properties_from_lines(self, line_ids: set[int]) -> list[tuple[str, int]]:
         return self._get_properties_from_entities(line_ids, self.line_properties)
 
@@ -623,8 +619,9 @@ class ModelProperties:
         for property_name, entity_id in entity_properties:
             if entity_id in entity_ids:
                 properties_found.append((property_name, entity_id))
-        
+
         return properties_found
+
 
 if __name__ == "__main__":
     p = ModelProperties()

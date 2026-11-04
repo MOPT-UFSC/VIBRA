@@ -27,7 +27,6 @@ class ExportModelResults(QFileDialog):
 
     def export_data_in_text_format(self, export_path: str, delimiter: str = ","):
         for data in self.data.values():
-
             if not isinstance(data, dict):
                 continue
 
@@ -74,7 +73,6 @@ class ExportModelResults(QFileDialog):
 
         count = 0
         for key, data in self.data.items():
-
             if not isinstance(data, dict):
                 continue
 
@@ -134,7 +132,7 @@ class ExportModelResults(QFileDialog):
             if platform.system() == "Linux":
                 kwargs["options"] = QFileDialog.Option.DontUseNativeDialog
 
-            file_path, selected_filter = self.getSaveFileName(app().main_window, caption, str(directory_path), filter=_filter,**kwargs)
+            file_path, selected_filter = self.getSaveFileName(app().main_window, caption, str(directory_path), filter=_filter, **kwargs)
             if not file_path:
                 return
 

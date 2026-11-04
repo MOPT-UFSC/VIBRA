@@ -6,7 +6,7 @@ import pytest
 
 @pytest.fixture(scope="module")
 def geometry() -> Geometry:
-    path = str(PROJECT_DIR / "data/examples/geometry_files/cylinder.step")
+    path = str(PROJECT_DIR / "examples/geometry_files/cylinder.step")
     return Geometry(path)
 
 
@@ -116,7 +116,7 @@ def test_entities_relactions(geometry: Geometry):
     assert (set2 == {1, 3})
     assert (set3 == {1})
     assert (set4 == {1, 2, 3, 4})
-    assert (set5 == {1, 2, 3, 4}) 
+    assert (set5 == {1, 2, 3, 4})
     assert (set6 == {1})
     assert (set7 == {1, 2, 3, 4})
     assert (set8 == {1, 2, 3, 4, 5, 6})

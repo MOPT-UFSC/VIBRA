@@ -28,18 +28,15 @@ class AcousticPostprocessing:
 
         self.model = model
 
-        self.reset_attributes()        
-
+        self.reset_attributes()
 
     @property
     def mesh(self) -> Optional[Mesh]:
         return self.model.mesh
 
-
     @property
     def solution(self) -> Optional[Solution]:
         return self.model.solution
-
 
     @property
     def acoustic_element_2d(self):
@@ -47,17 +44,14 @@ class AcousticPostprocessing:
             self.model.set_acoustic_elements()
         return self.model.acoustic_element_2d
 
-
     @property
     def acoustic_element_3d(self):
         if self.model.acoustic_element_3d is None:
             self.model.set_acoustic_elements()
         return self.model.acoustic_element_3d
 
-
     def reset_attributes(self):
         self.nodal_solution_time = None
-
 
     @cache
     def get_min_max_values_of_pressures(self, column: int, unit_factor: float, plot_type: str, is_modal: bool = False):
@@ -122,7 +116,6 @@ class AcousticPostprocessing:
 
         return p_min, p_max
 
-
     def compute_acoustic_pressures_for_3d_plot_frequency(
         self,
         index: int,
@@ -166,7 +159,6 @@ class AcousticPostprocessing:
 
         return acoustic_pressures, min_value, max_value, np.imag(_nodal_solution).any()
 
-
     def compute_acoustic_pressures_for_3d_plot_time(
         self,
         time_index: int,
@@ -181,7 +173,7 @@ class AcousticPostprocessing:
         time_vector, self.nodal_solution_time = self.compute_multiple_ifft_for_acoustic_nodal_solution(
             n_div=n_div,
             spectral_lines=spectral_lines,
-            )
+        )
 
         if reduced_loop_time is None:
             n = time_vector.size
@@ -203,14 +195,13 @@ class AcousticPostprocessing:
 
         return time_vector[:n], acoustic_pressures, min_value, max_value
 
-
     def process_multiple_iffts(
-            self,
-            f_max: float,
-            nodal_solution: np.ndarray[complex],
-            n_div: int | None = None,
-            spectral_lines: int | None = None,
-            ):
+        self,
+        f_max: float,
+        nodal_solution: np.ndarray[complex],
+        n_div: int | None = None,
+        spectral_lines: int | None = None,
+    ):
 
         if n_div is None:
             time_vector, nodal_solution_time = process_multiple_iffts_from_one_sided_spectrum_signals(f_max, nodal_solution)
@@ -238,19 +229,18 @@ class AcousticPostprocessing:
 
         return time_vector, nodal_solution_time
 
-
     @cache
     def compute_allowable_pulsation_field_for_screw_compressor(
         self,
         n_div: int | None = None,
         spectral_lines: int | None = None,
-        ):
+    ):
 
         # compute the iffts for acoustic nodal solution
         _, self.nodal_solution_time = self.compute_multiple_ifft_for_acoustic_nodal_solution(
             n_div=n_div,
             spectral_lines=spectral_lines,
-            )
+        )
 
         delta_pressure = np.max(self.nodal_solution_time, axis=1) - np.min(self.nodal_solution_time, axis=1)
 
@@ -294,7 +284,6 @@ class AcousticPostprocessing:
 
         return delta_pressure, 0, np.min(allowable_limits * avg_pressures)
 
-
     @cache
     def compute_multiple_ifft_for_acoustic_nodal_solution(
         self,
@@ -314,7 +303,7 @@ class AcousticPostprocessing:
             self.solution.acoustic_solution,
             n_div=n_div,
             spectral_lines=spectral_lines,
-            )
+        )
 
         logging.info("Computing the iffts for acoustic nodal solution... [100/100]")
 
@@ -324,12 +313,10 @@ class AcousticPostprocessing:
 
         return time_vector, nodal_solution_time
 
-
     @cache
     def get_acoustic_waveforms_minimum_and_maximum_values(self, N: float, unit_factor: float):
         _waveforms = unit_factor * self.nodal_solution_time[:, :N]
         return (_waveforms.min(), _waveforms.max())
-
 
     def compute_particle_velocity(
         self,
@@ -355,7 +342,6 @@ class AcousticPostprocessing:
         else:
             array_particle_velocities_Vj = np.array(list(particle_velocities_Vj.values()), dtype=complex)
             return np.average(array_particle_velocities_Vj, axis=0)
-
 
     def compute_acoustic_impedance(self, node_id: int | None = None, surface_id: int | None = None, volume_id: int | None = None):
         assert isinstance(self.solution, HarmonicSolution)
@@ -395,7 +381,6 @@ class AcousticPostprocessing:
 
             return np.average(surface_impedance, axis=0)
 
-
     def compute_surface_absorption_coefficient(self, surface_id: int | None = None, volume_id: int | None = None):
 
         frequencies = self.model.frequencies
@@ -416,7 +401,6 @@ class AcousticPostprocessing:
         alpha = 1 - (np.abs(R)) ** 2
 
         return alpha
-
 
     def get_particle_velocity_from_surface(
         self,
@@ -510,7 +494,6 @@ class AcousticPostprocessing:
 
         return self.nodal_particle_velocity_post_process(pv_data, data_normals)
 
-
     def nodal_particle_velocity_post_process(self, input_particle_velocity_data: dict, nodal_normals: np.ndarray):
 
         nodal_particle_velocities = NodalParticleVelocities()
@@ -528,7 +511,6 @@ class AcousticPostprocessing:
         nodal_particle_velocities.nodal_normals = nodal_normals
 
         return nodal_particle_velocities
-
 
     def compute_transmission_loss(
         self,
@@ -682,7 +664,6 @@ class AcousticPostprocessing:
 
         return frequencies, transmission_loss
 
-
     def integrate_surface_sound_power(
         self,
         surface_id: int,
@@ -742,7 +723,6 @@ class AcousticPostprocessing:
 
         return sound_power
 
-
     def compute_noise_reduction(self, input_surface_id: int, output_surface_id: int):
         """
         This method compute the acoustic noise reduction between two selected surfaces.
@@ -789,7 +769,6 @@ class AcousticPostprocessing:
             noise_reduction = noise_reduction[1:]
 
         return frequencies, noise_reduction
-
 
     def calculate_loads_caused_by_acoustic_pressure_field(self, nodal_solution: np.ndarray, surface_ids: list[int] | None = None):
 
@@ -838,7 +817,7 @@ def compute_shifted_values(data: np.ndarray, phase_rad: float):
 
 
 def compute_phase_shifted_values(values: np.ndarray, phase_rad: float, absolute: bool = False) -> np.ndarray:
-    shifted_values = values.real * np.cos(phase_rad) -  values.imag * np.sin(phase_rad)
+    shifted_values = values.real * np.cos(phase_rad) - values.imag * np.sin(phase_rad)
     if absolute:
         return np.absolute(shifted_values)
 
