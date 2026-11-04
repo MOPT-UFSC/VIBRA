@@ -1,7 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor
 import logging
 import sys
-from threading import BoundedSemaphore
+from threading import BoundedSemaphore, Event
 from time import time
 from typing import Optional
 from queue import Empty, Queue
@@ -125,47 +125,57 @@ class HarmonicSolver:
         frequencies = self.frequencies
         queue = Queue(maxsize=1)
         can_build = BoundedSemaphore(1)
+        stop_processing = Event()
 
         with ThreadPoolExecutor(max_workers=1) as executor:
-            future = executor.submit(self._build_frequencies, queue, frequencies, can_build, is_resume, print_log)
-            self._solve_frequencies(queue, nodal_solution_buffer, can_build, eigenvectors)
+            future = executor.submit(self._build_frequencies, queue, frequencies, can_build, is_resume, print_log, stop_processing)
+            try:
+                self._solve_frequencies(queue, nodal_solution_buffer, can_build, stop_processing, eigenvectors)
+            finally:
+                stop_processing.set()
+
             future.result()
 
-    def _build_frequencies(self, queue: Queue, frequencies: np.ndarray, can_build: BoundedSemaphore, is_resume: bool, print_log: bool):
-        with tqdm(
-            frequencies,
-            desc="Computing frequency sweep",
-            unit="frequency",
-            file=sys.stderr,
-            disable=not print_log,
-        ) as progress_bar:
-            for i, freq in enumerate(progress_bar):
-                if self.assembler.model.stop_processing:
-                    return
+    def _build_frequencies(self, queue: Queue, frequencies: np.ndarray, can_build: BoundedSemaphore, is_resume: bool, print_log: bool, stop_processing: Event):
+        try:
+            with tqdm(
+                frequencies,
+                desc="Computing frequency sweep",
+                unit="frequency",
+                file=sys.stderr,
+                disable=not print_log,
+            ) as progress_bar:
+                for i, freq in enumerate(progress_bar):
+                    if self.assembler.model.stop_processing:
+                        return
 
-                if is_resume and (i != 0) and isinstance(self._file_writer, LazyHDF5MatrixWriter) and self._file_writer.has_column(i):
-                    continue
+                    if is_resume and (i != 0) and isinstance(self._file_writer, LazyHDF5MatrixWriter) and self._file_writer.has_column(i):
+                        continue
 
-                can_build.acquire()
+                    while not can_build.acquire(timeout=0.1):
+                        # Use just one stop processing maybe
+                        if stop_processing.is_set() or self.model.stop_processing:
+                            return
 
-                # compute the load vector
-                f = self.assembler.compute_load_vector(freq, i)
-                Kd = None
-                if np.any(f):
-                    Kd = self.assembler.compute_dynamic_stiffness_matrix(freq, i)
+                    # compute the load vector
+                    f = self.assembler.compute_load_vector(freq, i)
+                    Kd = None
+                    if np.any(f):
+                        Kd = self.assembler.compute_dynamic_stiffness_matrix(freq, i)
 
-                    is_complex = np.any(np.iscomplex(Kd.data)) or np.any(np.iscomplex(f))
-                    if not is_complex:
-                        Kd.data = np.real(Kd.data)
-                        f = np.real(f)
+                        is_complex = np.any(np.iscomplex(Kd.data)) or np.any(np.iscomplex(f))
+                        if not is_complex:
+                            Kd.data = np.real(Kd.data)
+                            f = np.real(f)
 
-                queue.put((i, freq, f, Kd))
-                del f, Kd
+                    queue.put((i, freq, f, Kd))
+                    del f, Kd
 
-        # ends processing
-        queue.put(None)
+        finally:
+            # ends processing
+            stop_processing.set()
 
-    def _solve_frequencies(self, queue: Queue, nodal_solution_buffer: np.ndarray, can_build: BoundedSemaphore, eigenvectors=None):
+    def _solve_frequencies(self, queue: Queue, nodal_solution_buffer: np.ndarray, can_build: BoundedSemaphore, stop_processing: Event, eigenvectors=None):
         while True:
             if self.assembler.model.stop_processing:
                 return
@@ -173,10 +183,9 @@ class HarmonicSolver:
             try:
                 item = queue.get(timeout=0.5)
             except Empty:
+                if stop_processing.is_set():
+                    break
                 continue
-
-            if item is None:
-                break
 
             can_build.release()
 
