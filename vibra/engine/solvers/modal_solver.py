@@ -48,7 +48,7 @@ class ModalSolver:
             total=100,
             desc="Solving eigenproblem",
             unit="%",
-            file=sys.stdout,
+            file=sys.stderr,
             disable=not print_log,
         )
         def update_progress(percentage: int):

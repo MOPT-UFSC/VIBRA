@@ -3,6 +3,7 @@ from enum import IntEnum
 import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import QGridLayout
 
 from vibra import app
 from vibra.interface.common.common_interface import update_entities_selection
@@ -11,8 +12,8 @@ from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.numeric_checks.int_list_validator import IntListValidator
 from vibra.interface.numeric_checks.unit_utilities import convert_angle_unit, convert_length_unit
 from vibra.interface.plots.general.frequency_response_plotter import DataFormat, FrequencyResponsePlotter
+from vibra.interface.plots.general.ifft_controls_widget import IfftControlsWidget
 from vibra.interface.ui_generated.plots.structural.structural_nodal_solution_2d_plot_time_inputs_ui import StructuralNodalSolution2dPlotTimeInputs_UI
-from vibra.utils.signal_processing import process_ifft_from_one_sided_spectrum_signal
 
 
 class SelectionType(IntEnum):
@@ -27,6 +28,8 @@ class StructuralNodalSolution2dPlotTimeInputs(StructuralNodalSolution2dPlotTimeI
         super().__init__(*args, **kwargs)
 
         app().main_window.show_geometry_render_widget()
+
+        self._add_ifft_controls_widget()
 
         self._initialize()
         self._configure_validator()
@@ -53,16 +56,20 @@ class StructuralNodalSolution2dPlotTimeInputs(StructuralNodalSolution2dPlotTimeI
     def nodal_solution(self):
         return app().project.model.solution.structural_solution
 
+    def _add_ifft_controls_widget(self):
+        grid_layout = QGridLayout()
+        grid_layout.setContentsMargins(0, 0, 0, 0)
+        self.frame_ifft_controls.setLayout(grid_layout)
+
+        self.ifft_controls_widget = IfftControlsWidget()
+        grid_layout.addWidget(self.ifft_controls_widget)
+        self.frame_ifft_controls.adjustSize()
+
     def _initialize(self):
         self.exporter = None
         self.plotter = None
         self.model_results = {}
-        self.selection_types = [
-            "surfaces",
-            "lines",
-            "points",
-            "nodes",
-            ]
+        self.selection_types = ["surfaces", "lines", "points", "nodes"]
 
     def _configure_validator(self):
         validator = IntListValidator()
@@ -192,7 +199,7 @@ class StructuralNodalSolution2dPlotTimeInputs(StructuralNodalSolution2dPlotTimeI
         self.plotter._set_model_results_data_to_plot(self.model_results)
 
     def export_data_callback(self):
-        
+
         if self.check_selected_ids():
             return
 
@@ -218,14 +225,14 @@ class StructuralNodalSolution2dPlotTimeInputs(StructuralNodalSolution2dPlotTimeI
         rows = gdof[:, dof_index]
 
         if isinstance(rows, int):
-            response = self.nodal_solution[rows,:]
+            response = self.nodal_solution[rows, :]
         else:
-            response = np.average(self.nodal_solution[rows,:], axis=0)
+            response = np.average(self.nodal_solution[rows, :], axis=0)
 
         # differentiate the structural nodal solution (if required)
         n_int = self.get_structure_data_index()
         if n_int:
-            response *= (1j * 2 * np.pi * self.frequencies)**n_int
+            response *= (1j * 2 * np.pi * self.frequencies) ** n_int
 
         return response
 
@@ -243,16 +250,11 @@ class StructuralNodalSolution2dPlotTimeInputs(StructuralNodalSolution2dPlotTimeI
         unit_factor = self.get_unit_factor()
 
         for i, selected_id in enumerate(self.selected_ids):
-
             key = (selection_type, (selected_id))
             legend_label = f"Structural response {self.y_label.lower()} at {selection_type} [{selected_id}]"
 
             Xf = self.get_response(selected_id, dof_index)
-            x_data, y_data = process_ifft_from_one_sided_spectrum_signal(
-                self.frequencies, 
-                Xf,
-                dc_included = False,
-                )
+            x_data, y_data = self.ifft_controls_widget.process_ifft_for_spectrum(Xf)
 
             self.model_results[key] = {
                 "x_data": x_data,
@@ -262,14 +264,14 @@ class StructuralNodalSolution2dPlotTimeInputs(StructuralNodalSolution2dPlotTimeI
                 "title": self.title,
                 "data_type": self.y_label,
                 "legend": legend_label,
-                "unit": self.unit,
+                "units": self.unit,
                 "color": get_color(i),
                 "linestyle": "-",
             }
 
     def get_structure_data_index(self) -> int:
         """
-        This method returns an integer corresponding to the structural data, where 0 represents 
+        This method returns an integer corresponding to the structural data, where 0 represents
         displacement, 1 represents velocity, and 2 represents acceleration.
         """
         volume_exists = self.mesh.are_there_volumes_in_geometry()
@@ -317,10 +319,16 @@ class StructuralNodalSolution2dPlotTimeInputs(StructuralNodalSolution2dPlotTimeI
 
         return unit_factor
 
+    def get_number_of_fstep_divisions(self):
+        if self.checkBox_control_frequency_resolution.isChecked():
+            return self.spinBox_intervals_number.value()
+
+        return None
+
     def keyPressEvent(self, event):
         if event.key() == Qt.Key_Enter or event.key() == Qt.Key_Return:
             self.plot_data_callback()
-        
+
     def closeEvent(self, a0: QCloseEvent | None) -> None:
 
         if self.exporter is not None:
@@ -330,18 +338,19 @@ class StructuralNodalSolution2dPlotTimeInputs(StructuralNodalSolution2dPlotTimeI
             self.plotter.close()
 
         return super().closeEvent(a0)
-    
+
+
 def get_color(index: int):
 
-    colors = [  
-        (0,0,1), 
-        (0,0,0), 
-        (1,0,0),
-        (0,1,1), 
-        (1,0,1), 
-        (1,1,0),
-        (0.25,0.25,0.25),
-        ]
+    colors = [
+        (0, 0, 1),
+        (0, 0, 0),
+        (1, 0, 0),
+        (0, 1, 1),
+        (1, 0, 1),
+        (1, 1, 0),
+        (0.25, 0.25, 0.25),
+    ]
 
     if index <= 6:
         return colors[index]

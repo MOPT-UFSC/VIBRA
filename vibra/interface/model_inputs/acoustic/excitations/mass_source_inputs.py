@@ -8,7 +8,7 @@ from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QAbstractItemView, QLineEdit, QTreeWidgetItem
 
 from vibra import app
-from vibra.extensions import SUPPORTED_SPREADSHEET_READ_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
+from vibra.extensions import SUPPORTED_SPREADSHEET_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
 from vibra.interface import error_title
 from vibra.interface.common.common_interface import update_analysis_setup_in_file, update_entities_selection
 from vibra.interface.data.data_manager import get_spectral_data_from_array
@@ -41,11 +41,11 @@ class MassSourceInputs(MassSourceInputs_UI):
 
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
-        
+
         self.model = app().project.model
         self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
-        
+
         self._config_window()
         self._initialize()
         self._configure_qt_variables()
@@ -66,13 +66,7 @@ class MassSourceInputs(MassSourceInputs_UI):
     def _initialize(self):
         self.imported_values = None
         self.keep_window_open = True
-        self.selection_type = {
-                               0 : "nodes",
-                               1 : "points",
-                               2 : "lines",
-                               3 : "surfaces",
-                               4 : "volumes"
-                               }
+        self.selection_type = {0: "nodes", 1: "points", 2: "lines", 3: "surfaces", 4: "volumes"}
         self.last_tab = self.treeWidget_mass_source.currentIndex()
         self.tree_item_clicked = False
 
@@ -186,7 +180,6 @@ class MassSourceInputs(MassSourceInputs_UI):
             data = self.model.properties._get_property("mass_source", node=selection_id)
 
         if isinstance(data, dict):
-
             if "table_paths" in data.keys():
                 self.tabWidget_main.setCurrentIndex(TabIndex.TABULAR_DATA)
                 self.lineEdit_table_path.setText(data["table_paths"][0])
@@ -195,15 +188,15 @@ class MassSourceInputs(MassSourceInputs_UI):
                 self.tabWidget_main.setCurrentIndex(TabIndex.CONSTANT_DATA)
                 self.lineEdit_real_value.setText(str(data["real_values"][0]))
                 self.lineEdit_imag_value.setText(str(data["imag_values"][0]))
-    
+
     def verify_if_selected_items_are_in_tree_mass_source_inputs(self):
         if self.tree_item_clicked:
             return
 
         selected_volumes = {(volume_id, "volume") for volume_id in app().main_window.selection.geometry_volumes}
         selected_surfaces = {(surface_id, "surface") for surface_id in app().main_window.selection.geometry_surfaces}
-        selected_points = {(point_id, "point") for point_id  in app().main_window.selection.geometry_points}
-        selected_nodes = {(node_id, "node")  for node_id in app().main_window.selection.mesh_nodes}
+        selected_points = {(point_id, "point") for point_id in app().main_window.selection.geometry_points}
+        selected_nodes = {(node_id, "node") for node_id in app().main_window.selection.mesh_nodes}
         selected_lines = {(line_id, "line") for line_id in app().main_window.selection.geometry_lines}
         selected_items = [selected_volumes, selected_surfaces, selected_points, selected_nodes, selected_lines]
 
@@ -252,9 +245,8 @@ class MassSourceInputs(MassSourceInputs_UI):
             map_id_to_model_index[(selected_id, selected_type)] = index
 
             index = self.treeWidget_mass_source.indexBelow(index)
-        
-        return map_id_to_model_index
 
+        return map_id_to_model_index
 
     def attribution_type_callback(self):
 
@@ -305,17 +297,17 @@ class MassSourceInputs(MassSourceInputs_UI):
             if len(vol_ids) == 1:
                 non_repeated_volume_ids |= set(vol_ids)
 
-            sorted_vol_ids = list(np.sort(vol_ids))               
+            sorted_vol_ids = list(np.sort(vol_ids))
             if sorted_vol_ids in volume_ids_sets:
-               continue
-            
+                continue
+
             current_size = len(sorted_vol_ids)
             volume_ids_sets.append(sorted_vol_ids)
             if last_size:
                 if last_size != current_size:
-                    multiple_selection = True    
+                    multiple_selection = True
 
-            last_size = current_size      
+            last_size = current_size
 
         if not multiple_selection:
             try:
@@ -410,14 +402,7 @@ class MassSourceInputs(MassSourceInputs_UI):
 
         return False
 
-    def check_inputs(
-                     self, 
-                     lineEdit: QLineEdit, 
-                     label: str, 
-                     _float: bool=True, 
-                     only_positive: bool=False, 
-                     zero_included: bool=True
-                     ):
+    def check_inputs(self, lineEdit: QLineEdit, label: str, _float: bool = True, only_positive: bool = False, zero_included: bool = True):
 
         message = ""
 
@@ -425,7 +410,6 @@ class MassSourceInputs(MassSourceInputs_UI):
         input_str = lineEdit.text()
 
         if input_str != "":
-
             input_str = input_str.replace(",", ".")
 
             try:
@@ -482,9 +466,9 @@ class MassSourceInputs(MassSourceInputs_UI):
             return
 
         self.lineEdit_nearest_node_id.setText(f"{nearest_node}")
-        self.lineEdit_node_coord_x.setText(f"{nearest_coords[0] : .6f}")
-        self.lineEdit_node_coord_y.setText(f"{nearest_coords[1] : .6f}")
-        self.lineEdit_node_coord_z.setText(f"{nearest_coords[2] : .6f}")
+        self.lineEdit_node_coord_x.setText(f"{nearest_coords[0]: .6f}")
+        self.lineEdit_node_coord_y.setText(f"{nearest_coords[1]: .6f}")
+        self.lineEdit_node_coord_z.setText(f"{nearest_coords[2]: .6f}")
 
         app().main_window.selection.set_mesh_selection(nodes=[nearest_node])
 
@@ -499,7 +483,7 @@ class MassSourceInputs(MassSourceInputs_UI):
         if tab_list:
             self.pushButton_remove.setDisabled(True)
             self.treeWidget_mass_source.clearSelection()
-    
+
         self.comboBox_attribution_type.setDisabled(tab_list)
         self.lineEdit_selection_id.setDisabled(tab_list)
         self.pushButton_apply.setDisabled(tab_list)
@@ -508,7 +492,7 @@ class MassSourceInputs(MassSourceInputs_UI):
         self.comboBox_attribution_type.setVisible(not tab_list)
         self.comboBox_inherit_fluid_from.setVisible(not tab_list)
         self.label_10.setVisible(not tab_list)
-        
+
         self.last_tab = current_tab
 
     def apply_callback(self, close_window: bool = False):
@@ -546,7 +530,7 @@ class MassSourceInputs(MassSourceInputs_UI):
             input_ids,
             selection,
             domain="acoustic",
-            )
+        )
 
         if error_data is not None:
             if print_message:
@@ -593,7 +577,7 @@ class MassSourceInputs(MassSourceInputs_UI):
             return real_F + 1j * imag_F
 
     def constant_data_assignment(self, selection: str, selection_ids: list[int]):
-        
+
         mass_source = self.check_complex_entries(self.lineEdit_real_value, self.lineEdit_imag_value)
 
         if mass_source is None:
@@ -605,7 +589,7 @@ class MassSourceInputs(MassSourceInputs_UI):
 
         real_values = [np.real(mass_source)]
         imag_values = [np.imag(mass_source)]
-        
+
         if selection in ["points", "nodes", "lines", "surfaces"]:
             current_text = self.comboBox_inherit_fluid_from.currentText()
             vol_id = int(current_text.split(" - ")[1])
@@ -630,7 +614,7 @@ class MassSourceInputs(MassSourceInputs_UI):
                 case "nodes":
                     self.properties._set_property("mass_source", data, node=selection_id)
 
-    def load_table(self, lineEdit : QLineEdit, direct_load=False):
+    def load_table(self, lineEdit: QLineEdit, direct_load=False):
         title = "Error reached while loading 'mass source' table"
 
         try:
@@ -638,10 +622,10 @@ class MassSourceInputs(MassSourceInputs_UI):
                 imported_path = lineEdit.text()
 
             else:
-                extensions = SUPPORTED_SPREADSHEET_READ_EXTENSIONS + SUPPORTED_TEXT_EXTENSIONS
-                imported_path = FileDialogService.open_file(file_extensions=extensions,
-                                                            caption="Choose a table to import the mass source",
-                                                            last_folder="imported_table_folder")
+                extensions = SUPPORTED_SPREADSHEET_EXTENSIONS + SUPPORTED_TEXT_EXTENSIONS
+                imported_path = FileDialogService.open_file(
+                    file_extensions=extensions, caption="Choose a table to import the mass source", last_folder="imported_table_folder"
+                )
 
             imported_data = FileHandler.read(imported_path)
 
@@ -771,7 +755,7 @@ class MassSourceInputs(MassSourceInputs_UI):
             "compressor_excitation_waveform",
             "reciprocating_compressor_excitation",
             "mass_source",
-            ]
+        ]
 
         for label in labels:
             for selection_id in selection_ids:
@@ -793,7 +777,6 @@ class MassSourceInputs(MassSourceInputs_UI):
             return
 
         for selected_type, selected_ids in selected_items.items():
-
             for selected_id in selected_ids:
                 if selected_type == "nodes":
                     self.properties._remove_nodal_property("mass_source", selected_id)
@@ -802,7 +785,7 @@ class MassSourceInputs(MassSourceInputs_UI):
                     self.properties._remove_point_property("mass_source", selected_id)
 
                 elif selected_type == "lines":
-                        self.properties._remove_line_property("mass_source", selected_id)
+                    self.properties._remove_line_property("mass_source", selected_id)
 
                 elif selected_type == "surfaces":
                     self.properties._remove_surface_property("mass_source", selected_id)
@@ -819,7 +802,7 @@ class MassSourceInputs(MassSourceInputs_UI):
         title = "Mass source reset"
         message = "Would you like to remove the all applied mass sources from model?"
 
-        buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
+        buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
         read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
 
         if read._cancel:
@@ -864,7 +847,7 @@ class MassSourceInputs(MassSourceInputs_UI):
                 self.tabWidget_main.setTabVisible(TabIndex.LIST, True)
                 return
 
-        self.tabWidget_main.setCurrentIndex(TabIndex.CONSTANT_DATA)    
+        self.tabWidget_main.setCurrentIndex(TabIndex.CONSTANT_DATA)
         self.tabWidget_main.setTabVisible(TabIndex.LIST, False)
 
     def on_click_item(self, item):
@@ -887,7 +870,7 @@ class MassSourceInputs(MassSourceInputs_UI):
 
     def on_doubleclick_item(self, item):
         self.on_click_item(item)
-    
+
     def get_selected_items_from_tree_widget_mass_source(self) -> dict:
         _selected_items = self.treeWidget_mass_source.selectedItems()
 
@@ -901,9 +884,9 @@ class MassSourceInputs(MassSourceInputs_UI):
             selected_type = item.text(1) + "s"
 
             selected_items[selected_type].add(int(selected_id))
-        
+
         return selected_items
-    
+
     def set_selection_text(self, selected_items: dict):
         selection_text = ""
 
@@ -918,7 +901,7 @@ class MassSourceInputs(MassSourceInputs_UI):
 
         self.lineEdit_selection_id.setText(selection_text)
         self.lineEdit_selection_id.setToolTip(selection_text)
-    
+
     def clear_line_edit_selection_id(self):
         self.lineEdit_selection_id.clear()
         self.lineEdit_selection_id.setToolTip("")
@@ -926,12 +909,12 @@ class MassSourceInputs(MassSourceInputs_UI):
     def load_model_info(self):
 
         model_properties = {
-                            "node" : self.properties.nodal_properties,
-                            "point" : self.properties.point_properties,
-                            "line" : self.properties.line_properties,
-                            "surface" : self.properties.surface_properties,
-                            "volume" : self.properties.volume_properties,
-                            }
+            "node": self.properties.nodal_properties,
+            "point": self.properties.point_properties,
+            "line": self.properties.line_properties,
+            "surface": self.properties.surface_properties,
+            "volume": self.properties.volume_properties,
+        }
 
         self.treeWidget_mass_source.clear()
         for selection_label, m_property in model_properties.items():

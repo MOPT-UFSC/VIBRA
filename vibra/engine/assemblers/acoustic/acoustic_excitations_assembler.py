@@ -89,9 +89,8 @@ class AcousticExcitationsAssembler:
             The equivalent acoustic load vector of complex numbers in which
             each column corresponds to a frequency step of analysis.
         """
-        _, prescribed_values = self.assembler.get_prescribed_dof_values()
 
-        if prescribed_values.size == 0:
+        if self.assembler.prescribed_values.size == 0:
             return 0.
 
         analysis_setup = self.model.analysis_setup
@@ -100,7 +99,7 @@ class AcousticExcitationsAssembler:
         frequencies = analysis_setup.get_frequencies()
         omega = 2 * np.pi * frequencies[index]
 
-        values = prescribed_values[:, index]
+        values = self.assembler.prescribed_values[:, index]
 
         Kr = self.assembler.stiffness_matrix_r
         Mr = self.assembler.mass_matrix_r
@@ -173,7 +172,7 @@ class AcousticExcitationsAssembler:
                         complex_values /= area
 
             # normalize data type to array
-            complex_values_array = self.assembler.get_value_in_array_form(complex_values, flatten=True)
+            complex_values_array = self.assembler.get_value_in_array_form(complex_values, ravel=True)
 
             surf_elements = list(self.model.mesh.elements_from_surface.get(surface_id))
             surf_connect = self.model.mesh.get_connectivity_from_surface(surface_id)
@@ -252,7 +251,7 @@ class AcousticExcitationsAssembler:
 
             mu_0 = fluid_properties.get("mu_0")
             rho_f = fluid_properties.get("rho_f")
-            _rho_f = self.assembler.get_value_in_array_form(rho_f, flatten=True)
+            _rho_f = self.assembler.get_value_in_array_form(rho_f, ravel=True)
 
             _factor_Qms1 = 1 / _rho_f
             _factor_Qms2 = (4 * mu_0) / (3 * _rho_f**2)
@@ -306,7 +305,7 @@ class AcousticExcitationsAssembler:
 
             mu_0 = fluid_properties.get("mu_0")
             rho_f = fluid_properties.get("rho_f")
-            _rho_f = self.assembler.get_value_in_array_form(rho_f, flatten=True)
+            _rho_f = self.assembler.get_value_in_array_form(rho_f, ravel=True)
 
             _factor_Qms1 = 1 / _rho_f
             _factor_Qms2 = (4 * mu_0) / (3 * _rho_f**2)
@@ -382,7 +381,7 @@ class AcousticExcitationsAssembler:
                     node_id = self.model.mesh.nodes_from_points.get(point_id)
 
                 # normalize data type to array
-                complex_values_array = self.assembler.get_value_in_array_form(values[0], flatten=True)
+                complex_values_array = self.assembler.get_value_in_array_form(values[0], ravel=True)
 
                 self.mass_source_vector_points[node_id, :] += complex_values_array / fluid.fluid_density
 
@@ -623,10 +622,10 @@ class AcousticExcitationsAssembler:
         factor_Qms2 = self.integration_data_Qms_1d.factor_Qms2
 
         data_Qms1: np.ndarray = factor_Qms1[:, index].reshape(-1, 1, 1) * self.int1d_NtN
-        self.Qms1_1d = csr_matrix((data_Qms1.flatten(), (self.ind_rows_Qmsf_1d, self.ind_cols_Qmsf_1d)), shape=self.model.gm_shape)
+        self.Qms1_1d = csr_matrix((data_Qms1.ravel(), (self.ind_rows_Qmsf_1d, self.ind_cols_Qmsf_1d)), shape=self.model.gm_shape)
 
         data_Qms2: np.ndarray = factor_Qms2[:, index].reshape(-1, 1, 1) * self.int1d_BtB
-        self.Qms2_1d = csr_matrix((data_Qms2.flatten(), (self.ind_rows_Qmsf_1d, self.ind_cols_Qmsf_1d)), shape=self.model.gm_shape)
+        self.Qms2_1d = csr_matrix((data_Qms2.ravel(), (self.ind_rows_Qmsf_1d, self.ind_cols_Qmsf_1d)), shape=self.model.gm_shape)
 
         if self.model.drop_domain:
             acoustic_dofs_indices = self.assembler.acoustic_dofs_indices
@@ -657,10 +656,10 @@ class AcousticExcitationsAssembler:
         factor_Qms2 = self.integration_data_Qms_2d.factor_Qms2
 
         data_Qms1: np.ndarray = factor_Qms1[:, index].reshape(-1, 1, 1) * self.int2d_NtN
-        self.Qms1_2d = csr_matrix((data_Qms1.flatten(), (self.ind_rows_Qmsf_2d, self.ind_cols_Qmsf_2d)), shape=self.model.gm_shape)
+        self.Qms1_2d = csr_matrix((data_Qms1.ravel(), (self.ind_rows_Qmsf_2d, self.ind_cols_Qmsf_2d)), shape=self.model.gm_shape)
 
         data_Qms2: np.ndarray = factor_Qms2[:, index].reshape(-1, 1, 1) * self.int2d_BtB
-        self.Qms2_2d = csr_matrix((data_Qms2.flatten(), (self.ind_rows_Qmsf_2d, self.ind_cols_Qmsf_2d)), shape=self.model.gm_shape)
+        self.Qms2_2d = csr_matrix((data_Qms2.ravel(), (self.ind_rows_Qmsf_2d, self.ind_cols_Qmsf_2d)), shape=self.model.gm_shape)
 
         if self.model.drop_domain:
             acoustic_dofs_indices = self.assembler.acoustic_dofs_indices
@@ -690,10 +689,10 @@ class AcousticExcitationsAssembler:
         factor_Qms1, factor_Qms2 = self.compute_mass_source_load_factors_for_volumes(index=index)
 
         data_Qms1: np.ndarray = factor_Qms1 * self.int3d_NtN
-        self.Qms1_3d = csr_matrix((data_Qms1.flatten(), (self.ind_rows, self.ind_cols)), shape=self.model.gm_shape)
+        self.Qms1_3d = csr_matrix((data_Qms1.ravel(), (self.ind_rows, self.ind_cols)), shape=self.model.gm_shape)
 
         data_Qms2: np.ndarray = factor_Qms2 * self.int3d_BtB
-        self.Qms2_3d = csr_matrix((data_Qms2.flatten(), (self.ind_rows, self.ind_cols)), shape=self.model.gm_shape)
+        self.Qms2_3d = csr_matrix((data_Qms2.ravel(), (self.ind_rows, self.ind_cols)), shape=self.model.gm_shape)
 
         if self.model.drop_domain:
             acoustic_dofs_indices = self.assembler.acoustic_dofs_indices
@@ -820,10 +819,6 @@ class AcousticExcitationsAssembler:
 
             connectivities_sv = integration_data_sv.connectivities
             surface_data_sv = integration_data_sv.surface_data
-
-            # from vibra import app
-            # surf_connect = self.model.mesh.get_connectivity_from_surface(4)
-            # app().main_window.selection.set_mesh_selection(nodes=surf_connect.flatten())
 
             self.element_2d.reorder_connect(connectivities_sv)
             for i, complex_values in enumerate(surface_data_sv):

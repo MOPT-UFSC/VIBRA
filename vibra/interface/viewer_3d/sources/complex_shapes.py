@@ -25,6 +25,7 @@ def create_mass_source():
         rotation=(0, -90, 0),
     )
 
+
 def create_perforated_plate_source():
     polydata = read_obj_file(SYMBOLS_DIR / "acoustic/perforated_plate_many_holes.obj")
     return transform_polydata(
@@ -32,6 +33,7 @@ def create_perforated_plate_source():
         rotation=(0, 0, 90),
         scale=(0.1, 1, 1),
     )
+
 
 def create_impedance_source():
     polydata = read_stl_file(SYMBOLS_DIR / "stl_files/specific_impedance_symbol.stl")
@@ -41,6 +43,7 @@ def create_impedance_source():
         scale=(1, 1, 1),
     )
 
+
 def create_anechoic_termination_source():
     polydata = read_stl_file(SYMBOLS_DIR / "stl_files/anechoic_termination_symbol.stl")
     return transform_polydata(
@@ -48,6 +51,7 @@ def create_anechoic_termination_source():
         rotation=(0, 90, 180),
         scale=(1, 1, 1),
     )
+
 
 def create_transfer_impedance_source():
     polydata = read_stl_file(SYMBOLS_DIR / "stl_files/transfer_impedance_symbol.stl")
@@ -57,6 +61,7 @@ def create_transfer_impedance_source():
         scale=(1, 1, 1),
     )
 
+
 def create_mass_flow_rate_source():
     polydata = read_stl_file(SYMBOLS_DIR / "stl_files/mass_flow_rate_symbol.stl")
     return transform_polydata(
@@ -65,13 +70,15 @@ def create_mass_flow_rate_source():
         scale=(2, 2, 2),
     )
 
+
 def create_degrees_of_freedom_decoupling_source():
     polydata = read_stl_file(SYMBOLS_DIR / "stl_files/degrees_of_freedom_decoupling_symbol.stl")
     return transform_polydata(
         polydata,
         rotation=(0, 90, 0),
-        scale=(.5, .5, .5),
+        scale=(0.5, 0.5, 0.5),
     )
+
 
 def create_absorption_surface_source():
     polydata = read_stl_file(SYMBOLS_DIR / "stl_files/absorption_surface_symbol.stl")
@@ -81,13 +88,15 @@ def create_absorption_surface_source():
         scale=(2.3, 2.3, 2.3),
     )
 
+
 def create_acoustic_pressure_source():
     polydata = read_stl_file(SYMBOLS_DIR / "stl_files/acoustic_pressure_symbol.stl")
     return transform_polydata(
         polydata,
         rotation=(0, 90, 180),
-        scale=(.03, .03, .03),
+        scale=(0.03, 0.03, 0.03),
     )
+
 
 def create_discharge_reciprocating_compressor_source():
     polydata = read_stl_file(SYMBOLS_DIR / "stl_files/reciprocating_compressor_discharge.stl")
@@ -98,39 +107,29 @@ def create_discharge_reciprocating_compressor_source():
         position=(0, 0, 0),
     )
 
+
 def create_suction_reciprocating_compressor_source():
     polydata = read_stl_file(SYMBOLS_DIR / "stl_files/reciprocating_compressor_suction.stl")
-    return transform_polydata(
-        polydata,
-        rotation=(0, 180, 0),
-        scale=(1, 1, 1),
-        position=(0, 0, 0)
-    )
+    return transform_polydata(polydata, rotation=(0, 180, 0), scale=(1, 1, 1), position=(0, 0, 0))
+
 
 def create_discharge_screw_compressor_source():
     polydata = read_stl_file(SYMBOLS_DIR / "stl_files/screw_compressor_discharge.stl")
-    return transform_polydata(
-        polydata,
-        rotation=(0, 180, 90),
-        scale=(1, 1, 1),
-        position=(0, 0, 0)
-    )
+    return transform_polydata(polydata, rotation=(0, 180, 90), scale=(1, 1, 1), position=(0, 0, 0))
+
 
 def create_suction_screw_compressor_source():
     polydata = read_stl_file(SYMBOLS_DIR / "stl_files/screw_compressor_suction.stl")
-    return transform_polydata(
-        polydata,
-        rotation=(0, 0, 90),
-        scale=(1, 1, 1),
-        position=(0, 0, 0)
-    )
+    return transform_polydata(polydata, rotation=(0, 0, 90), scale=(1, 1, 1), position=(0, 0, 0))
+
 
 def create_dissipation_model_source():
     polydata = read_stl_file(SYMBOLS_DIR / "stl_files/dissipation_model_symbol.stl")
     return transform_polydata(
         polydata,
-        scale=(.5, .5, .5),
+        scale=(0.5, 0.5, 0.5),
     )
+
 
 def create_acoustic_transfer_element_data_source():
     polydata = read_stl_file(SYMBOLS_DIR / "stl_files/acoustic_transfer_element_data_symbol.stl")
@@ -140,14 +139,16 @@ def create_acoustic_transfer_element_data_source():
         scale=(1, 1, 1),
     )
 
+
 def create_dof_cone_rotation_source():
     polydata = read_stl_file(SYMBOLS_DIR / "stl_files/dof_cone_rotation.stl")
     return transform_polydata(
         polydata,
         position=(0, 0, 0),
         rotation=(0, 0, -90),
-        scale=(.4, .4, .4),
+        scale=(0.4, 0.4, 0.4),
     )
+
 
 def create_dof_cone_source():
     polydata = read_stl_file(SYMBOLS_DIR / "stl_files/dof_cone.stl")
@@ -155,8 +156,9 @@ def create_dof_cone_source():
         polydata,
         position=(0, 0, 0),
         rotation=(0, 0, -90),
-        scale=(.4, .4, .4),
+        scale=(0.4, 0.4, 0.4),
     )
+
 
 def create_nodal_loads_momentum_arrow_source():
     polydata = read_stl_file(SYMBOLS_DIR / "stl_files/momentum_double_arrow.stl")
@@ -164,8 +166,9 @@ def create_nodal_loads_momentum_arrow_source():
         polydata,
         position=(0, 0, 0),
         rotation=(90, 0, -90),
-        scale=(.15, .15, .15),
+        scale=(0.15, 0.15, 0.15),
     )
+
 
 def create_nodal_loads_force_arrow_source():
     polydata = read_stl_file(SYMBOLS_DIR / "stl_files/force_arrow.stl")
@@ -173,5 +176,25 @@ def create_nodal_loads_force_arrow_source():
         polydata,
         position=(0, 0, 0),
         rotation=(90, 0, -90),
-        scale=(.15, .15, .15),
+        scale=(0.15, 0.15, 0.15),
+    )
+
+
+def create_distributed_stiffness_source():
+    polydata = read_obj_file(SYMBOLS_DIR / "structural/lumped_spring.obj")
+    return transform_polydata(
+        polydata,
+        position=(0, 0, 0),
+        rotation=(0, 0, 0),
+        scale=(3, 3, 3),
+    )
+
+
+def create_distributed_damping_source():
+    polydata = read_obj_file(SYMBOLS_DIR / "structural/lumped_damper.obj")
+    return transform_polydata(
+        polydata,
+        position=(0, 0, 0),
+        rotation=(0, 0, 0),
+        scale=(2.6, 3, 3),
     )

@@ -50,7 +50,6 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
         self.keep_window_open = True
         self.exporter = None
         self.plotter = None
-
         self.model_results = {}
 
     def _config_window(self):
@@ -105,7 +104,7 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
             app().main_window.selection.set_geometry_selection(volumes=[volume_id])
 
     def toggle_nodal_normals_symbols_visibility(self):
-        show_normals = (self.comboBox_nodal_normals.currentText() == "Show")
+        show_normals = self.comboBox_nodal_normals.currentText() == "Show"
         app().main_window.results_widget.visualization_filter.nodal_normal_symbols = show_normals
         app().main_window.update_symbols()
 
@@ -133,7 +132,7 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
         if surfaces and index == 0:
             text = ", ".join([str(i) for i in surfaces])
             self.lineEdit_selection_id.setText(text)
-            
+
             self.check_volumes_from_surfaces(surfaces)
 
         elif nodes and index == 1:
@@ -151,11 +150,10 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
 
         self.check_volumes_from_surfaces(list(surfaces_from_nodes))
 
-
     def check_volumes_from_surfaces(self, surface_ids: list[int]):
 
         external_surfaces_map = {}
-        internal_surfaces_map = {}  
+        internal_surfaces_map = {}
         self.comboBox_volumes.blockSignals(True)
 
         for surface_id in surface_ids:
@@ -228,7 +226,7 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
 
         self.join_model_data()
 
-        show_normals = (self.comboBox_nodal_normals.currentText() == "Show")
+        show_normals = self.comboBox_nodal_normals.currentText() == "Show"
         app().main_window.results_widget.visualization_filter.nodal_normal_symbols = show_normals
         if show_normals:
             app().main_window.update_symbols()
@@ -237,7 +235,7 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
         self.plotter._set_model_results_data_to_plot(self.model_results)
 
     def export_data_callback(self):
-        
+
         if self.check_inputs():
             return
 
@@ -269,23 +267,23 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
 
             if selection_type == "surfaces":
                 particle_velocity = self.acoustic_post.compute_particle_velocity(
-                    component_label, 
-                    surface_id = selected_id, 
-                    volume_id = volume_id,
-                    )
+                    component_label,
+                    surface_id=selected_id,
+                    volume_id=volume_id,
+                )
 
             else:
                 particle_velocity = self.acoustic_post.compute_particle_velocity(
-                    component_label, 
-                    node_id = selected_id, 
-                    volume_id = volume_id,
-                    )
+                    component_label,
+                    node_id=selected_id,
+                    volume_id=volume_id,
+                )
 
             logging.info("Processing particle velocity... [95/100]")
 
             return particle_velocity
 
-        return LoadingWindow(function_callback).run()
+        return LoadingWindow(function_callback, delayed=False).run()
 
     def join_model_data(self):
 
@@ -294,7 +292,6 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
         selection_type = self.comboBox_selector_filter.currentText().lower()
 
         for i, selected_id in enumerate(self.selected_ids):
-
             factor = 1.0
             unit_label = "m/s"
             data_type = "Particle velocity"
@@ -310,30 +307,30 @@ class ParticleVelocityInputs(ParticleVelocityInputs_UI):
             y_data = self.get_response(selection_type, selected_id)
             legend_label = f"{data_type} at {selection_type[:-1]} [{selected_id}]"
 
-            self.model_results[key] = { 
-                "x_data" : self.frequencies,
-                "y_data" : y_data * factor,
-                "x_label" : "Frequency [Hz]",
-                "y_label" : f"{data_type} {component_label}",
-                "title" : f"{data_type} frequency response",
-                "data_type" : data_type.lower(),
-                "legend" : legend_label,
-                "unit" : unit_label,
-                "color" : self.get_color(i),
-                "linestyle" : "-"  
-                }
+            self.model_results[key] = {
+                "x_data": self.frequencies,
+                "y_data": y_data * factor,
+                "x_label": "Frequency [Hz]",
+                "y_label": f"{data_type} {component_label}",
+                "title": f"{data_type} frequency response",
+                "data_type": data_type.lower(),
+                "legend": legend_label,
+                "units": unit_label,
+                "color": self.get_color(i),
+                "linestyle": "-",
+            }
 
     def get_color(self, index):
 
-        colors = [  
-            (0,0,1),
-            (0,0,0),
-            (1,0,0),
-            (0,1,1),
-            (1,0,1),
-            (1,1,0),
-            (0.25,0.25,0.25),
-            ]
+        colors = [
+            (0, 0, 1),
+            (0, 0, 0),
+            (1, 0, 0),
+            (0, 1, 1),
+            (1, 0, 1),
+            (1, 1, 0),
+            (0.25, 0.25, 0.25),
+        ]
 
         if index <= 6:
             return colors[index]

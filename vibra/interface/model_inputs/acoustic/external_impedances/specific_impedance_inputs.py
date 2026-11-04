@@ -7,7 +7,7 @@ from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QAbstractItemView, QLineEdit, QTreeWidgetItem
 
 from vibra import app
-from vibra.extensions import SUPPORTED_SPREADSHEET_READ_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
+from vibra.extensions import SUPPORTED_SPREADSHEET_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
 from vibra.interface import error_title
 from vibra.interface.common.common_interface import InputDataType, check_input_entries, update_analysis_setup_in_file, update_entities_selection
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
@@ -30,7 +30,7 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
         self.model = app().project.model
         self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
-        
+
         self._config_window()
         self._initialize()
         self._configure_widgets()
@@ -100,7 +100,7 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
         # if self.tabWidget_main.currentIndex() == StandardTabType.LIST:
         #     self.verify_if_selected_surfaces_are_in_tree_widget_specific_impedance()
         #     return
-        
+
         surfaces = app().main_window.selection.geometry_surfaces
 
         if surfaces:
@@ -127,7 +127,6 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
             self.tabWidget_main.setCurrentIndex(StandardTabType.TABULAR_DATA)
 
         else:
-
             if "real_values" in data:
                 left_value = data.get("real_values")[0]
                 right_value = data.get("imag_values")[0]
@@ -141,15 +140,15 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
             self.lineEdit_left_value.setText(str(left_value))
             self.lineEdit_right_value.setText(str(right_value))
             self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)
-    
+
     def get_selected_surfaces_from_tree_widget_specific_impedance(self) -> list:
         selected_items = self.treeWidget_specific_impedance.selectedItems()
 
         if not selected_items:
             return []
-        
+
         return [int(item.text(0)) for item in selected_items]
-    
+
     def set_selection_text(self, selected_surfaces: list | set):
         selected_surfaces = list(selected_surfaces)
         selected_surfaces.sort()
@@ -159,7 +158,7 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
 
         self.lineEdit_selection_id.setText(selection_text)
         self.lineEdit_selection_id.setToolTip(selection_text)
-    
+
     def clear_line_edit_selection_id(self):
         self.lineEdit_selection_id.clear()
         self.lineEdit_selection_id.setToolTip("")
@@ -179,7 +178,7 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
         if self.last_tab == StandardTabType.LIST or list_tab:
             app().main_window.selection.clear_selection()
             self.clear_line_edit_selection_id()
-        
+
         self.comboBox_data_type.setDisabled(list_tab)
         self.lineEdit_selection_id.setDisabled(list_tab)
         self.pushButton_apply.setDisabled(list_tab)
@@ -188,7 +187,7 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
 
         self.last_tab = current_tab
         self.treeWidget_specific_impedance.clearSelection()
-    
+
     def load_model_info(self):
         self.treeWidget_specific_impedance.clear()
         for key, data in self.properties.surface_properties.items():
@@ -203,7 +202,7 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
                 str_value = "Table"
             else:
                 values = data["values"][0]
-                str_value = f"{values : .6e}"
+                str_value = f"{values: .6e}"
 
             new = QTreeWidgetItem([str(surface_id), "surface", str_value])
             for i in range(3):
@@ -220,10 +219,10 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
 
         input_ids = self.lineEdit_selection_id.text()
         surface_ids, error_data = self.model.check_selected_ids(
-            input_ids, 
+            input_ids,
             "surfaces",
             domain="acoustic",
-            )
+        )
 
         if error_data is not None:
             self.lineEdit_selection_id.setFocus()
@@ -243,7 +242,7 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
         if tab_index == StandardTabType.TABULAR_DATA:
             if self.tabular_data_assignment(surface_ids):
                 return
-            
+
         self.actions_to_finalize(close_window)
 
     def constant_data_assignment(self, surface_ids: list[int]):
@@ -252,7 +251,7 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
             self.lineEdit_left_value.text(),
             self.lineEdit_right_value.text(),
             "Specific impedance",
-            )
+        )
 
         if specific_impedance is None:
             return True
@@ -276,7 +275,7 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
         for surface_id in surface_ids:
             self.properties._set_property("specific_impedance", data, surface=surface_id)
 
-    def load_table(self, lineEdit : QLineEdit, direct_load=False):
+    def load_table(self, lineEdit: QLineEdit, direct_load=False):
         title = "Error reached while loading 'specific impedance' table"
 
         try:
@@ -284,13 +283,13 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
                 imported_path = lineEdit.text()
 
             else:
-                extensions = SUPPORTED_SPREADSHEET_READ_EXTENSIONS + SUPPORTED_TEXT_EXTENSIONS
-                imported_path = FileDialogService.open_file(file_extensions=extensions,
-                                                            caption="Choose a table to import the specific impedance",
-                                                            last_folder="imported_table_folder")
-            
+                extensions = SUPPORTED_SPREADSHEET_EXTENSIONS + SUPPORTED_TEXT_EXTENSIONS
+                imported_path = FileDialogService.open_file(
+                    file_extensions=extensions, caption="Choose a table to import the specific impedance", last_folder="imported_table_folder"
+                )
+
             imported_data = FileHandler.read(imported_path)
-                                
+
             if imported_data is None:
                 return None
 
@@ -363,13 +362,11 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
             return True
 
         if self.imported_values is None:
-            self.imported_values = self.load_table(self.lineEdit_table_path, direct_load = True)
+            self.imported_values = self.load_table(self.lineEdit_table_path, direct_load=True)
 
         for surface_id in surface_ids:
-
             if isinstance(self.imported_values, np.ndarray):
                 if self.imported_values.shape[1] >= 3:
-
                     table_name = f"specific_impedance_at_surface_{surface_id}"
                     if self.save_table_values(table_name, self.imported_values):
                         self.lineEdit_table_path.setFocus()
@@ -386,9 +383,9 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
             table_path = self.lineEdit_table_path.text()
 
             data = {
-                "table_names" : [table_name],
-                "table_paths" : [table_path],
-                }
+                "table_names": [table_name],
+                "table_paths": [table_path],
+            }
 
             self.properties._set_property("specific_impedance", data, surface=surface_id)
 
@@ -401,7 +398,7 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
             "absorption_surface",
             "specific_impedance",
             "incident_plane_wave",
-            ]
+        ]
 
         for surface_id in surface_ids:
             for label in labels:
@@ -431,7 +428,7 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
         title = "Specific impedance reset"
         message = "Would you like to remove the all applied specific impedances from model?"
 
-        buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
+        buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
         read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
 
         if read._cancel:
@@ -479,7 +476,7 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
             return
 
         self.tabWidget_main.setTabVisible(StandardTabType.LIST, False)
-        self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)    
+        self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)
         self.lineEdit_left_value.setFocus()
 
     def item_clicked_callback(self, item):
@@ -501,8 +498,8 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
             return
 
         app().main_window.selection.set_geometry_selection(
-            surfaces = entities_mapping.get("surface"),
-            )
+            surfaces=entities_mapping.get("surface"),
+        )
 
     def item_double_clicked_callback(self, item):
         self.item_clicked_callback(item)
@@ -517,7 +514,7 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
             self.remove_callback()
         elif event.key() == Qt.Key_Escape:
             self.close()
-    
+
     # def keyReleaseEvent(self, event):
     #     if event.key() == Qt.Key_Control:
     #         self.treeWidget_specific_impedance.setSelectionMode(QAbstractItemView.SingleSelection)
@@ -527,8 +524,7 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
         app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
         return super().closeEvent(a0)
 
-
-    #TODO: remove if deprecated
+    # TODO: remove if deprecated
 
     def verify_if_selected_surfaces_are_in_tree_widget_specific_impedance(self):
         if self.tree_item_clicked:
@@ -549,9 +545,9 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
 
         if not selected_surfaces_in_tree_widget:
             return
-        
+
         self.pushButton_remove.setEnabled(True)
-        
+
         model_selector = self.treeWidget_specific_impedance.selectionModel()
 
         for surface_id in selected_surfaces_in_tree_widget:
@@ -573,5 +569,5 @@ class SpecificImpedanceInputs(SpecificImpedanceInputs_UI):
             map_id_to_model_index[int(surface_id)] = index
 
             index = self.treeWidget_specific_impedance.indexBelow(index)
-        
+
         return map_id_to_model_index

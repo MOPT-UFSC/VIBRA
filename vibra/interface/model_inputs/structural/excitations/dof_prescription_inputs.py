@@ -1,4 +1,3 @@
-
 from collections import defaultdict
 from enum import IntEnum
 from pathlib import Path
@@ -10,7 +9,7 @@ from PySide6.QtWidgets import QAbstractItemView, QLabel, QLineEdit, QTreeWidgetI
 
 from vibra import app
 from vibra.engine.analysis_info import AnalysisID
-from vibra.extensions import SUPPORTED_SPREADSHEET_READ_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
+from vibra.extensions import SUPPORTED_SPREADSHEET_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
 from vibra.interface import error_title
 from vibra.interface.common.common_interface import save_table_values, update_entities_selection
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
@@ -89,10 +88,10 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         self.keep_window_open = True
         self.element_types = ["2d_element", "3d_element"]
         self.assignment_types = {
-            0 : "surfaces",
-            1 : "lines",
-            2 : "points",
-            3 : "nodes",
+            0: "surfaces",
+            1: "lines",
+            2: "points",
+            3: "nodes",
         }
         self.reset_table_variables()
 
@@ -283,7 +282,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
         line_edit_real.setText("")
         line_edit_imag.setText("")
-        line_edit_real.setEnabled(value_based)   
+        line_edit_real.setEnabled(value_based)
         line_edit_imag.setEnabled(value_based)
 
         if value_based:
@@ -353,7 +352,6 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
             return
 
         if surfaces:
-
             text = ", ".join([str(i) for i in surfaces])
             self.lineEdit_selection_id.setText(text)
             self.comboBox_assignment_type.setCurrentIndex(AssignmentType.SURFACES)
@@ -369,7 +367,6 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                     self.update_formulation_callback(surface_id=surface_id)
 
         elif lines:
-
             text = ", ".join([str(i) for i in lines])
             self.lineEdit_selection_id.setText(text)
             self.comboBox_assignment_type.setCurrentIndex(AssignmentType.LINES)
@@ -385,7 +382,6 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                     self.update_formulation_callback(line_id=line_id)
 
         elif points:
-            
             text = ", ".join([str(i) for i in points])
             self.lineEdit_selection_id.setText(text)
             self.comboBox_assignment_type.setCurrentIndex(AssignmentType.POINTS)
@@ -401,7 +397,6 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                     self.update_formulation_callback(point_id=point_id)
 
         elif nodes:
-            
             text = ", ".join([str(i) for i in nodes])
             self.lineEdit_selection_id.setText(text)
             self.comboBox_assignment_type.setCurrentIndex(AssignmentType.NODES)
@@ -435,7 +430,6 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         self.comboBox_data_type.setCurrentIndex(data.get("integrate", 0))
 
         if "table_paths" in data.keys():
-    
             self.tabWidget_main.setCurrentIndex(StandardTabType.TABULAR_DATA)
             table_paths = data["table_paths"]
             for index, lineEdit_table in enumerate(self.table_line_edits.values()):
@@ -443,17 +437,15 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                     continue
 
                 table_path = table_paths[index]
-                if table_path is not None:                   
+                if table_path is not None:
                     lineEdit_table.setText(table_path)
                     lineEdit_table.setToolTip(table_path)
 
         else:
-
             values = data.get("values", [])
             self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)
 
             for index, (unit_label, (lineEdit_real, lineEdit_imag)) in enumerate(self.constant_values_line_edits.items()):
-    
                 if element_type == "3d_element" and index >= 3:
                     continue
 
@@ -484,7 +476,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
         if input_real != "":
             if input_real == "fixed":
-                _real = 0.
+                _real = 0.0
 
             elif input_real != "free":
                 try:
@@ -503,7 +495,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
         if input_imag != "":
             if input_imag == "fixed":
-                _imag = 0.
+                _imag = 0.0
 
             elif input_imag != "free":
                 try:
@@ -559,7 +551,6 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         prescribed_dof = [ux, uy, uz]
 
         if element_type == "2d_element":
-
             stop, rx = self.check_complex_entries(self.lineEdit_real_rx, self.lineEdit_imag_rx, "rx")
             if stop:
                 return True
@@ -573,7 +564,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                 return True
 
             prescribed_dof.extend([rx, ry, rz])
-                
+
         condition_1 = element_type == "2d_element" and prescribed_dof.count(None) == 6
         condition_2 = element_type == "3d_element" and prescribed_dof.count(None) == 3
         all_dof_free = condition_1 or condition_2
@@ -588,12 +579,11 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         imag_values = [value if value is None else np.imag(value) for value in prescribed_dof]
 
         for selected_id in selected_ids:
-
             data = {
-                "element_type" : element_type,
-                "real_values" : real_values,
-                "imag_values" : imag_values,
-                "integrate" : self.comboBox_data_type.currentIndex(),
+                "element_type": element_type,
+                "real_values": real_values,
+                "imag_values": imag_values,
+                "integrate": self.comboBox_data_type.currentIndex(),
             }
 
             match selection:
@@ -603,7 +593,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                 case "lines":
                     self.properties._set_property("prescribed_dof", data, line=selected_id)
 
-                case "points": 
+                case "points":
                     self.properties._set_property("prescribed_dof", data, point=selected_id)
 
                 case "nodes":
@@ -617,16 +607,16 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
             analysis_setup = self.model.modify_analysis_setup_to_filter_zero_frequency(self.model.analysis_setup)
             app().project.configure_analysis(analysis_setup)
 
-    def load_table(self, lineEdit : QLineEdit, dof_label : str, direct_load = False):
+    def load_table(self, lineEdit: QLineEdit, dof_label: str, direct_load=False):
         try:
             if direct_load:
                 imported_path = lineEdit.text()
 
             else:
-                extensions = SUPPORTED_SPREADSHEET_READ_EXTENSIONS + SUPPORTED_TEXT_EXTENSIONS
-                imported_path = FileDialogService.open_file(file_extensions=extensions,
-                                                            caption=f"Choose a table to import the {dof_label} data",
-                                                            last_folder="imported_table_folder")
+                extensions = SUPPORTED_SPREADSHEET_EXTENSIONS + SUPPORTED_TEXT_EXTENSIONS
+                imported_path = FileDialogService.open_file(
+                    file_extensions=extensions, caption=f"Choose a table to import the {dof_label} data", last_folder="imported_table_folder"
+                )
 
             imported_data = FileHandler.read(imported_path)
 
@@ -662,29 +652,29 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
 
     def load_ux_table(self):
         self.ux_table_values, self.ux_table_path = self.load_table(self.lineEdit_path_table_ux, "Ux")
-        if  self.ux_table_path is None:
+        if self.ux_table_path is None:
             self.lineEdit_reset(self.lineEdit_path_table_ux)
 
     def load_uy_table(self):
         self.uy_table_values, self.uy_table_path = self.load_table(self.lineEdit_path_table_uy, "Uy")
         if self.uy_table_path is None:
             self.lineEdit_reset(self.lineEdit_path_table_uy)
-            
+
     def load_uz_table(self):
         self.uz_table_values, self.uz_table_path = self.load_table(self.lineEdit_path_table_uz, "Uz")
         if self.uz_table_path is None:
             self.lineEdit_reset(self.lineEdit_path_table_uz)
-            
+
     def load_rx_table(self):
         self.rx_table_values, self.rx_table_path = self.load_table(self.lineEdit_path_table_rx, "Rx")
         if self.rx_table_path is None:
             self.lineEdit_reset(self.lineEdit_path_table_rx)
-            
+
     def load_ry_table(self):
         self.ry_table_values, self.ry_table_path = self.load_table(self.lineEdit_path_table_ry, "Ry")
         if self.ry_table_path is None:
             self.lineEdit_reset(self.lineEdit_path_table_ry)
-            
+
     def load_rz_table(self):
         self.rz_table_values, self.rz_table_path = self.load_table(self.lineEdit_path_table_rz, "Rz")
         if self.rz_table_path is None:
@@ -706,13 +696,12 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                 if Path(line_edit.text()).exists:
                     _table_path = self.__getattribute__(f"{label}_table_path")
                     _table_values = self.__getattribute__(f"{label}_table_values")
-                    _table_values, _table_path = self.load_table(line_edit, label.capitalize(), direct_load = True)
+                    _table_values, _table_path = self.load_table(line_edit, label.capitalize(), direct_load=True)
 
         table_names = []
         table_paths = []
 
         for selected_id in selected_ids:
-
             for i, label in enumerate(["ux", "uy", "uz", "rx", "ry", "rz"]):
                 _table_name = None
                 if element_type == "3d_element" and i >= 3:
@@ -736,17 +725,17 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                 app().main_window.hide_dialogs()
                 title = "Additional inputs required"
                 message = "You must enter at least one prescribed dof table path before confirming the assignment."
-                PrintMessageInput([error_title, title, message]) 
+                PrintMessageInput([error_title, title, message])
                 return True
 
             self.remove_duplicated_attributions(selected_ids, selection)
             self.remove_conflicting_excitations(selected_ids, selection)
 
             data = {
-                "element_type" : element_type,
-                "table_names" : table_names,
-                "table_paths" : table_paths,
-                "integrate" : self.comboBox_data_type.currentIndex(),
+                "element_type": element_type,
+                "table_names": table_names,
+                "table_paths": table_paths,
+                "integrate": self.comboBox_data_type.currentIndex(),
             }
 
             match selection:
@@ -756,12 +745,12 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                 case "lines":
                     self.properties._set_property("prescribed_dof", data, line=selected_id)
 
-                case "points": 
+                case "points":
                     self.properties._set_property("prescribed_dof", data, point=selected_id)
 
                 case "nodes":
                     self.properties._set_property("prescribed_dof", data, node=selected_id)
-                
+
         if self.comboBox_data_type.currentIndex() != DataType.DISPLACEMENT:
             self.update_analysis_setup_to_filter_zero_frequency()
 
@@ -772,11 +761,9 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         table_names = []
         nodes_to_remove = []
         for selected_id in selected_ids:
-
             if selection == "surfaces":
-
                 nodes_from_surface = self.mesh.get_nodes_from_surface(selected_id)
-                for (property, node_id) in self.properties.nodal_properties.keys():
+                for property, node_id in self.properties.nodal_properties.keys():
                     if property == "prescribed_dof" and node_id in nodes_from_surface:
                         if node_id not in nodes_to_remove:
                             nodes_to_remove.append(node_id)
@@ -794,9 +781,8 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                             table_names.extend(self.properties.get_property_related_table_names("prescribed_dof", point_id, "points"))
 
             elif selection == "lines":
-
                 nodes_from_line = self.mesh.get_nodes_from_line(selected_id)
-                for (property, node_id) in self.properties.nodal_properties.keys():
+                for property, node_id in self.properties.nodal_properties.keys():
                     if property == "prescribed_dof" and node_id in nodes_from_line:
                         if node_id not in nodes_to_remove:
                             nodes_to_remove.append(node_id)
@@ -814,9 +800,8 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                         table_names.extend(self.properties.get_property_related_table_names("prescribed_dof", point_id, "points"))
 
             elif selection == "points":
-
                 nodes_from_point = self.mesh.nodes_from_points[selected_id]
-                for (property, node_id) in self.properties.nodal_properties.keys():
+                for property, node_id in self.properties.nodal_properties.keys():
                     if property == "prescribed_dof" and node_id in nodes_from_point:
                         if node_id not in nodes_to_remove:
                             nodes_to_remove.append(node_id)
@@ -834,7 +819,6 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                             table_names.extend(self.properties.get_property_related_table_names("prescribed_dof", surface_id, "surfaces"))
 
             elif selection == "nodes":
-
                 point_id = selected_id + 1
                 data = self.properties._get_property("prescribed_dof", point=point_id)
                 if isinstance(data, dict):
@@ -857,7 +841,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                 self.properties._remove_nodal_property("prescribed_dof", node_id)
                 table_names.extend(self.properties.get_property_related_table_names("prescribed_dof", node_id, "nodes"))
 
-    def apply_callback(self, close_window: bool=False):
+    def apply_callback(self, close_window: bool = False):
 
         tab_index = self.tabWidget_main.currentIndex()
         if tab_index == StandardTabType.LIST:
@@ -954,13 +938,11 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         }
 
         self.treeWidget_prescribed_dof.clear()
-       
+
         for key, property in properties.items():
             for (prop_label, *args), data in property.items():
-
                 if prop_label != "prescribed_dof":
                     continue
-
 
                 if not isinstance(data, dict):
                     continue
@@ -979,12 +961,14 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
                 element_type = data.get("element_type")
                 dof_labels = str(self.get_dofs_labels(dofs_mask, n_int))
 
-                new = QTreeWidgetItem([
-                    f"{args[0]}", 
-                    key, 
-                    element_type, 
-                    dof_labels, 
-                    ])
+                new = QTreeWidgetItem(
+                    [
+                        f"{args[0]}",
+                        key,
+                        element_type,
+                        dof_labels,
+                    ]
+                )
 
                 for i in range(4):
                     new.setTextAlignment(i, Qt.AlignCenter)
@@ -1003,7 +987,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         ]
 
         for current_property in properties_to_check:
-            for (property, _) in current_property:
+            for property, _ in current_property:
                 if property != "prescribed_dof":
                     continue
 
@@ -1058,10 +1042,10 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
             return
 
         app().main_window.selection.set_geometry_selection(
-            surfaces = entities_mapping.get("surface"),
-            lines = entities_mapping.get("line"),
-            points = entities_mapping.get("point"),
-            )
+            surfaces=entities_mapping.get("surface"),
+            lines=entities_mapping.get("line"),
+            points=entities_mapping.get("point"),
+        )
 
         # app().main_window.selection.set_mesh_selection(
         #     nodes = entities_mapping.get("node"),
@@ -1070,7 +1054,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
     def item_double_clicked_callback(self, item):
         self.item_clicked_callback(item)
 
-    def remove_conflicting_excitations(self, selected_ids: int | list, selection: str, all_dof_free: bool=False):
+    def remove_conflicting_excitations(self, selected_ids: int | list, selection: str, all_dof_free: bool = False):
 
         if isinstance(selected_ids, int):
             selected_ids = [selected_ids]
@@ -1136,7 +1120,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
         title = "DOF prescription reset"
         message = "Would you like to remove the all prescribed DOF from model?"
 
-        buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
+        buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
         obj = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
 
         if obj._cancel:
@@ -1200,7 +1184,7 @@ class DofPrescriptionInputs(DofPrescriptionInputs_UI):
             if isinstance(data, dict):
                 self.comboBox_element_type.setCurrentIndex(ElementFormulation.ELEMENT_2D)
                 return
-            
+
         if isinstance(line_id, int):
             for node_id in self.mesh.get_nodes_from_line(line_id):
                 for surface_id in self.mesh.get_surfaces_from_node(node_id):

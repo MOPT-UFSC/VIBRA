@@ -288,7 +288,7 @@ class Ui_Form(object):
         self.comboBox_normalized_impedance.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Set 'Enabled' to normalize the calculated specific impedance by the impedance of medium, whether real or complex.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.label_5.setText(QCoreApplication.translate("Form", u"Normalized impedance:", None))
-        self.pushButton_plot_data.setText(QCoreApplication.translate("Form", u"  Plot data", None))
+        self.pushButton_plot_data.setText(QCoreApplication.translate("Form", u"Plot data", None))
     # retranslateUi
 
 

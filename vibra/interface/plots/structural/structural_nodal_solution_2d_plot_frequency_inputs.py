@@ -65,12 +65,7 @@ class StructuralNodalSolution2dPlotFrequencytInputs(StructuralNodalSolution2dPlo
         self.plotter = None
         self.exporter = None
         self.model_results = {}
-        self.selection_types = [
-            "surfaces",
-            "lines",
-            "points",
-            "nodes",
-            ]
+        self.selection_types = ["surfaces", "lines", "points", "nodes"]
 
     def _create_connections(self):
 
@@ -286,7 +281,7 @@ class StructuralNodalSolution2dPlotFrequencytInputs(StructuralNodalSolution2dPlo
                 "title": self.title,
                 "data_type": self.y_label,
                 "legend": legend_label,
-                "unit": self.unit,
+                "units": self.unit,
                 "color": get_color(i),
                 "linestyle": "-",
             }

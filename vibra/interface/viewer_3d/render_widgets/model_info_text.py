@@ -1,4 +1,3 @@
-
 from numbers import Number
 
 import numpy as np
@@ -44,19 +43,19 @@ def points_info_text():
         distance = np.linalg.norm(coord_A - coord_B)
 
         tree = TreeInfo(f"2 POINTS IN SELECTION: {point_ids[0]}, {point_ids[1]}")
-        tree.add_item("Total distance", f"{distance : .6f}", "m")
-        tree.add_item("Distance dx", f"{dx : .6f}", "m")
-        tree.add_item("Distance dy", f"{dy : .6f}", "m")
-        tree.add_item("Distance dz", f"{dz : .6f}", "m")
+        tree.add_item("Total distance", f"{distance: .6f}", "m")
+        tree.add_item("Distance dx", f"{dx: .6f}", "m")
+        tree.add_item("Distance dy", f"{dy: .6f}", "m")
+        tree.add_item("Distance dz", f"{dz: .6f}", "m")
         text += str(tree)
 
     else:
         sequence = ", ".join(str(i) for i in point_ids)
         if len(sequence) > 20:
-            sequence = sequence[:20 - 4] + " ..."
+            sequence = sequence[: 20 - 4] + " ..."
 
         text += f"{len(point_ids)} POINTS IN SELECTION: {sequence}\n\n"
-    
+
     return text
 
 
@@ -65,7 +64,7 @@ def lines_info_text():
 
     if len(line_ids) == 0:
         return ""
-    
+
     length_from_lines = app().project.model.mesh.length_from_lines
 
     text = ""
@@ -75,15 +74,15 @@ def lines_info_text():
 
     if len(line_ids) == 1:
         tree = TreeInfo(f"LINE {line_ids[0]}")
-        tree.add_item("Length", f"{length : .6e}", "m")
+        tree.add_item("Length", f"{length: .6e}", "m")
 
     else:
         sequence = ", ".join(str(i) for i in line_ids)
         if len(sequence) > 20:
-            sequence = sequence[:20 - 4] + " ..."
+            sequence = sequence[: 20 - 4] + " ..."
 
         tree = TreeInfo(f"{len(line_ids)} LINES IN SELECTION: {sequence}")
-        tree.add_item("Length (compound)", f"{length : .6e}", "m")
+        tree.add_item("Length (compound)", f"{length: .6e}", "m")
 
     text += str(tree)
     return text
@@ -94,7 +93,7 @@ def faces_info_text():
 
     if len(volumes) != 0:
         return ""
-    
+
     surface_ids = list(app().main_window.selection.geometry_surfaces)
 
     if len(surface_ids) == 0:
@@ -109,7 +108,7 @@ def faces_info_text():
 
     if len(surface_ids) == 1:
         tree = TreeInfo(f"SURFACE {surface_ids[0]}")
-        tree.add_item("Area", f"{area : .6e}", "m²")
+        tree.add_item("Area", f"{area: .6e}", "m²")
 
         surface_data = app().project.model.properties._get_property("surface_thickness", surface=surface_ids[0])
         if isinstance(surface_data, dict):
@@ -118,15 +117,15 @@ def faces_info_text():
 
         diameter = app().project.model.mesh.cylindrical_surfaces_data.get(surface_ids[0])
         if isinstance(diameter, float):
-            tree.add_item("Diameter", f"{diameter : .6e}", "m")
+            tree.add_item("Diameter", f"{diameter: .6e}", "m")
 
     else:
         sequence = ", ".join(str(i) for i in surface_ids)
         if len(sequence) > 20:
-            sequence = sequence[:20 - 4] + " ..."
+            sequence = sequence[: 20 - 4] + " ..."
 
         tree = TreeInfo(f"{len(surface_ids)} SURFACES IN SELECTION: {sequence}")
-        tree.add_item("Area (compound)", f"{area : .6e}", "m²")
+        tree.add_item("Area (compound)", f"{area: .6e}", "m²")
 
     text += str(tree)
 
@@ -143,30 +142,30 @@ def volumes_info_text():
 
     if len(volume_ids) == 1:
         tree = TreeInfo(f"VOLUME {volume_ids[0]}")
-        tree.add_item("Volume", f"{volume : .6e}", "m³")
+        tree.add_item("Volume", f"{volume: .6e}", "m³")
 
     else:
         sequence = ", ".join(str(i) for i in volume_ids)
         if len(sequence) > 20:
-            sequence = sequence[:20 - 4] + " ..."
+            sequence = sequence[: 20 - 4] + " ..."
 
         tree = TreeInfo(f"{len(volume_ids)} VOLUMES IN SELECTION: {sequence}")
-        tree.add_item("Volume (compound)", f"{volume : .6e}", "m³")
+        tree.add_item("Volume (compound)", f"{volume: .6e}", "m³")
 
     if fluid_mass:
-        tree.add_item("Fluid mass", f"{fluid_mass : .6e}", "kg")
+        tree.add_item("Fluid mass", f"{fluid_mass: .6e}", "kg")
 
     if material_mass:
-        tree.add_item("Material mass", f"{material_mass : .6e}", "kg")
+        tree.add_item("Material mass", f"{material_mass: .6e}", "kg")
 
     text += str(tree)
     return text
 
 
 def process_volumes_and_masses(volume_ids: list):
-    fluid_mass = 0.
-    material_mass = 0.
-    volume_compound = 0.
+    fluid_mass = 0.0
+    material_mass = 0.0
+    volume_compound = 0.0
 
     volume_from_bodies = app().project.model.mesh.volume_from_bodies
 
@@ -183,7 +182,7 @@ def process_volumes_and_masses(volume_ids: list):
         if isinstance(material, Material):
             material_density = material.material_density
             material_mass += volume * material_density
-    
+
     return volume_compound, fluid_mass, material_mass
 
 
@@ -261,9 +260,7 @@ def proportional_damping_info_text():
     if len(volumes) != 1:
         return text
 
-    pd_data = app().project.model.properties._get_property(
-        "proportional_damping", volume=volumes[0]
-    )
+    pd_data = app().project.model.properties._get_property("proportional_damping", volume=volumes[0])
     if not isinstance(pd_data, dict):
         return text
 
@@ -287,9 +284,7 @@ def porous_material_info_text():
     if len(volumes) != 1:
         return text
 
-    pm_model = app().project.model.properties._get_property(
-        "porous_material_model", volume=volumes[0]
-    )
+    pm_model = app().project.model.properties._get_property("porous_material_model", volume=volumes[0])
     if not isinstance(pm_model, dict):
         return text
 
@@ -307,9 +302,7 @@ def viscous_thermal_info_text():
     if len(volumes) != 1:
         return text
 
-    vt_model = app().project.model.properties._get_property(
-        "viscous_thermal_model", volume=volumes[0]
-    )
+    vt_model = app().project.model.properties._get_property("viscous_thermal_model", volume=volumes[0])
     if not isinstance(vt_model, dict):
         return text
 
@@ -366,7 +359,7 @@ def acoustic_boundary_conditions_info_text():
 
     if len(selected_faces) != 1:
         return text
-    
+
     surface_id = selected_faces[0]
     properties = app().project.model.properties
 
@@ -388,7 +381,7 @@ def acoustic_boundary_conditions_info_text():
         incident_plane_wave,
         absorption_surface,
         specific_impedance,
-        ]
+    ]
 
     if all(condition is None for condition in properties_data):
         return text
@@ -440,6 +433,7 @@ def get_incident_plane_wave_text(ipw_data: dict):
 
     return str(tree_pw)
 
+
 def get_compressor_excitation_spectrum(data: dict):
     tree_ec = TreeInfo("Compressor excitation")
     tree_ec.add_item("Data domain", "frequency")
@@ -485,7 +479,7 @@ def get_reciprocating_compressor_text(rc_data: dict):
         elif isinstance(value, str):
             acting_label = value
             break
-    
+
     acting_label = acting_label.replace("_", " ")
     pressure_unit = rc_parameters.get("pressure_unit", "")
     temperature_unit = rc_parameters.get("temperature_unit", "")
@@ -529,7 +523,7 @@ def get_reciprocating_compressor_text(rc_data: dict):
     suction_pressure = ""
     for key in ["suction_pressure", "pressure_at_suction"]:
         suction_pressure = rc_parameters.get(key)
-    
+
     suction_temperature = ""
     for key in ["suction_temperature", "temperature_at_suction"]:
         suction_temperature = rc_parameters.get(key)
@@ -623,23 +617,13 @@ def structural_boundary_conditions_info_text():
     selected_lines = list(app().main_window.selection.geometry_lines)
 
     if len(selected_faces) == 1:
-        prescribed_dof = app().project.model.properties._get_property(
-            "prescribed_dof", surface=selected_faces[0]
-        )
-        nodal_loads = app().project.model.properties._get_property(
-            "nodal_loads", surface=selected_faces[0]
-        )
-        distributed_loads_area = app().project.model.properties._get_property(
-            "distributed_loads", surface=selected_faces[0]
-        )
-        normal_pressure_load = app().project.model.properties._get_property(
-            "normal_pressure_load", surface=selected_faces[0]
-        )
+        prescribed_dof = app().project.model.properties._get_property("prescribed_dof", surface=selected_faces[0])
+        nodal_loads = app().project.model.properties._get_property("nodal_loads", surface=selected_faces[0])
+        distributed_loads_area = app().project.model.properties._get_property("distributed_loads", surface=selected_faces[0])
+        normal_pressure_load = app().project.model.properties._get_property("normal_pressure_load", surface=selected_faces[0])
 
     elif len(selected_lines) == 1:
-        distributed_loads_line = app().project.model.properties._get_property(
-            "distributed_loads", line=selected_lines[0]
-        )
+        distributed_loads_line = app().project.model.properties._get_property("distributed_loads", line=selected_lines[0])
 
     else:
         return text
@@ -670,7 +654,7 @@ def structural_boundary_conditions_info_text():
         dtypes = (prefix_dtype, f"{prefixes_dtype}r")
 
         unit_suffixes = ["", "/s", "/s²"]
-        suffix_unit = unit_suffixes[n_int]        
+        suffix_unit = unit_suffixes[n_int]
         units = (f"m{suffix_unit}", f"rad{suffix_unit}")
 
         text += structural_format(property_label, values, dtypes, units, loaded_table)
@@ -678,9 +662,7 @@ def structural_boundary_conditions_info_text():
     if isinstance(nodal_loads, dict):
         values = nodal_loads.get("values")
         loaded_table = "table_names" in nodal_loads
-        text += structural_format(
-            "Nodal loads", values, ("F", "M"), ("N", "N.m"), loaded_table
-        )
+        text += structural_format("Nodal loads", values, ("F", "M"), ("N", "N.m"), loaded_table)
 
     if isinstance(distributed_loads_area, dict):
         values = distributed_loads_area.get("values")
@@ -695,67 +677,93 @@ def structural_boundary_conditions_info_text():
     if isinstance(normal_pressure_load, dict):
         values = normal_pressure_load.get("values")
         loaded_table = "table_names" in normal_pressure_load
-        text += structural_format("Normal pressure", values, ["P"], ["N/m²"], loaded_table)
+        text += structural_format("Normal pressure", values, ["P"], ["N/m²"], loaded_table, normal_suffix=True)
 
     return text
 
 
 def structural_additional_info_text():
+
     text = ""
     distributed_mass_1d = None
     distributed_mass_2d = None
+    distributed_stiffness_1d = None
+    distributed_stiffness_2d = None
+    distributed_damping_1d = None
+    distributed_damping_2d = None
 
     selected_faces = list(app().main_window.selection.geometry_surfaces)
     selected_lines = list(app().main_window.selection.geometry_lines)
 
     if len(selected_faces) == 1:
-        distributed_mass_2d = app().project.model.properties._get_property(
-            "distributed_mass", surface=selected_faces[0]
-        )
+        distributed_mass_2d = app().project.model.properties._get_property("distributed_mass", surface=selected_faces[0])
+        distributed_stiffness_2d = app().project.model.properties._get_property("distributed_stiffness", surface=selected_faces[0])
+        distributed_damping_2d = app().project.model.properties._get_property("distributed_damping", surface=selected_faces[0])
 
     elif len(selected_lines) == 1:
-        distributed_mass_1d = app().project.model.properties._get_property(
-            "distributed_mass", line=selected_lines[0]
-        )
+        distributed_mass_1d = app().project.model.properties._get_property("distributed_mass", line=selected_lines[0])
+        distributed_stiffness_1d = app().project.model.properties._get_property("distributed_stiffness", line=selected_lines[0])
+        distributed_damping_1d = app().project.model.properties._get_property("distributed_damping", line=selected_lines[0])
 
     else:
         return text
 
-    properties = [
-        distributed_mass_2d,
-        distributed_mass_1d,
-    ]
-
-    if all(prop_data is None for prop_data in properties):
-        return text
+    if isinstance(distributed_mass_1d, dict):
+        values = distributed_mass_1d.get("values")
+        units = distributed_mass_1d.get("units", "kg")
+        loaded_table = "table_names" in distributed_mass_1d
+        text += structural_format("Distributed mass (line)", values, ["Mdist_"], [units], loaded_table)
 
     if isinstance(distributed_mass_2d, dict):
-        real_value = [value.real for value in distributed_mass_2d.get("values")]
+        values = distributed_mass_2d.get("values")
+        units = distributed_mass_2d.get("units", "kg")
         loaded_table = "table_names" in distributed_mass_2d
-        text += structural_format("Distributed mass (area)", real_value, ["M"], ["kg"], loaded_table)
+        text += structural_format("Distributed mass (area)", values, ["Mdist_"], [units], loaded_table)
 
-    if isinstance(distributed_mass_1d, dict):
-        real_value = [value.real for value in distributed_mass_1d.get("values")]
-        loaded_table = "table_names" in distributed_mass_1d
-        text += structural_format("Distributed mass (line)", real_value, ["M"], ["kg"], loaded_table)
+    if isinstance(distributed_stiffness_1d, dict):
+        values = distributed_stiffness_1d.get("values")
+        units = distributed_stiffness_1d.get("units")
+        loaded_table = "table_names" in distributed_stiffness_1d
+        text += structural_format("Distributed stiffness (line)", values, ["Kdist_"], [units], loaded_table)
+
+    if isinstance(distributed_stiffness_2d, dict):
+        values = distributed_stiffness_2d.get("values")
+        units = distributed_stiffness_2d.get("units")
+        loaded_table = "table_names" in distributed_stiffness_2d
+        normal_suffix = distributed_stiffness_2d.get("normal", False)
+        text += structural_format("Distributed stiffness (area)", values, ["Kdist_"], [units], loaded_table, normal_suffix=normal_suffix)
+
+    if isinstance(distributed_damping_1d, dict):
+        values = distributed_damping_1d.get("values")
+        units = distributed_damping_1d.get("units")
+        loaded_table = "table_names" in distributed_damping_1d
+        text += structural_format("Distributed dampings (line)", values, ["Cdist_"], [units], loaded_table)
+
+    if isinstance(distributed_damping_2d, dict):
+        values = distributed_damping_2d.get("values")
+        units = distributed_damping_2d.get("units")
+        loaded_table = "table_names" in distributed_damping_2d
+        normal_suffix = distributed_damping_2d.get("normal", False)
+        text += structural_format("Distributed dampings (area)", values, ["Cdist_"], [units], loaded_table, normal_suffix=normal_suffix)
 
     return text
 
 
-def acoustic_format(property_name, value, label, unit, additional_labels=[]):
+def acoustic_format(property_name, value, label, unit, additional_labels: list | tuple | None = None):
     tree = TreeInfo(property_name)
     if isinstance(value, Number | str | float | complex):
         tree.add_item(label, np.round(value, 4), unit)
     else:
         tree.add_item(label, "Table")
 
-    if len(additional_labels) == 2:
+    if isinstance(additional_labels, list | tuple) and len(additional_labels) == 2:
         tree.add_item(additional_labels[0], additional_labels[1])
 
     return str(tree)
 
 
 # MESH RENDER WIDGET INFO TEXTS
+
 
 def nodes_info_text():
     text = ""
@@ -778,10 +786,10 @@ def nodes_info_text():
         distance = np.linalg.norm(coord_A - coord_B)
 
         tree = TreeInfo(f"2 NODES IN SELECTION: {node_ids[0]}, {node_ids[1]}")
-        tree.add_item("Total distance", f"{distance : .6f}", "m")
-        tree.add_item("Distance dx", f"{dx : .6f}", "m")
-        tree.add_item("Distance dy", f"{dy : .6f}", "m")
-        tree.add_item("Distance dz", f"{dz : .6f}", "m")
+        tree.add_item("Total distance", f"{distance: .6f}", "m")
+        tree.add_item("Distance dx", f"{dx: .6f}", "m")
+        tree.add_item("Distance dy", f"{dy: .6f}", "m")
+        tree.add_item("Distance dz", f"{dz: .6f}", "m")
         text += str(tree)
 
     else:
@@ -841,9 +849,7 @@ def mesh_material_info_text():
         tree.add_item("Density", material.material_density, "kg/m³")
         tree.add_item("Elasticity Modulus", material.elasticity_modulus / 1e9, "GPa")
         tree.add_item("Poisson Ratio", material.poisson_ratio, "--")
-        tree.add_item(
-            "Thermal Expasion Coefficient", material.thermal_expansion_coefficient, "1/K"
-        )
+        tree.add_item("Thermal Expasion Coefficient", material.thermal_expansion_coefficient, "1/K")
 
         text += str(tree)
 
@@ -884,12 +890,8 @@ def mesh_structural_boundary_conditions_info_text():
     if len(selected_nodes) != 1:
         return text
 
-    prescribed_dof = app().project.model.properties._get_property(
-        "prescribed_dof", node=selected_nodes[0]
-    )
-    nodal_loads = app().project.model.properties._get_property(
-        "nodal_loads", node=selected_nodes[0]
-    )
+    prescribed_dof = app().project.model.properties._get_property("prescribed_dof", node=selected_nodes[0])
+    nodal_loads = app().project.model.properties._get_property("nodal_loads", node=selected_nodes[0])
     boundary_conditions_list = [prescribed_dof, nodal_loads]
 
     if all(condition is None for condition in boundary_conditions_list):
@@ -910,7 +912,7 @@ def mesh_structural_boundary_conditions_info_text():
         dtypes = (prefix_dtype, f"{prefixes_dtype}r")
 
         unit_suffixes = ["", "/s", "/s²"]
-        suffix_unit = unit_suffixes[n_int]        
+        suffix_unit = unit_suffixes[n_int]
         units = (f"m{suffix_unit}", f"rad{suffix_unit}")
 
         text += structural_format(property_label, values, dtypes, units, loaded_table)
@@ -918,9 +920,7 @@ def mesh_structural_boundary_conditions_info_text():
     if nodal_loads is not None:
         values = nodal_loads["values"]
         loaded_table = "table_names" in nodal_loads
-        text += structural_format(
-            "Nodal loads", values, ("F", "M"), ("N", "N.m"), loaded_table
-        )
+        text += structural_format("Nodal loads", values, ("F", "M"), ("N", "N.m"), loaded_table)
 
     return text
 
@@ -968,10 +968,12 @@ def mesh_structural_format(property_name, values, labels, units, has_table):
 
     return str(tree)
 
-def problematic_nodes_info_text(self):
-    ...
-    
+
+def problematic_nodes_info_text(self): ...
+
+
 # RESULTS RENDER WIDGET INFO TEXTS
+
 
 def analysis_info_text(plot_setup: PlotSetup):
 
@@ -986,19 +988,18 @@ def analysis_info_text(plot_setup: PlotSetup):
         return ""
 
     display_name = {
-        AnalysisID.ACOUSTIC_MODAL : "Acoustic Modal Analysis",
-        AnalysisID.STRUCTURAL_MODAL : "Structural Modal Analysis",
-        AnalysisID.ACOUSTIC_HARMONIC : "Acoustic Harmonic Analysis",
-        AnalysisID.STRUCTURAL_HARMONIC : "Structural Harmonic Analysis",
-        AnalysisID.COUPLED_HARMONIC : "Coupled Harmonic Analysis",
-        }
+        AnalysisID.ACOUSTIC_MODAL: "Acoustic Modal Analysis",
+        AnalysisID.STRUCTURAL_MODAL: "Structural Modal Analysis",
+        AnalysisID.ACOUSTIC_HARMONIC: "Acoustic Harmonic Analysis",
+        AnalysisID.STRUCTURAL_HARMONIC: "Structural Harmonic Analysis",
+        AnalysisID.COUPLED_HARMONIC: "Coupled Harmonic Analysis",
+    }
 
     frequency_index = plot_setup.index
 
     tree = TreeInfo(display_name.get(analysis_id))
 
     if AnalysisID(analysis_id).is_modal():
-
         ## modal analysis info texts
 
         solution = project.model.solution
@@ -1030,15 +1031,14 @@ def analysis_info_text(plot_setup: PlotSetup):
             value = frequencies[frequency_index]
             damping_ratio = -np.real(value) / np.abs(value)
             damped_frequency = np.abs(value) * np.sqrt(1 - damping_ratio**2)
-            tree.add_item("Damped Natural Frequency", f"{damped_frequency : .4f}", "Hz")
-            tree.add_item("Damping Ratio", f"{damping_ratio : .4e}", "--")
+            tree.add_item("Damped Natural Frequency", f"{damped_frequency: .4f}", "Hz")
+            tree.add_item("Damping Ratio", f"{damping_ratio: .4e}", "--")
 
         else:
             frequency = frequencies[frequency_index]
-            tree.add_item("Natural Frequency", f"{frequency : .4f}", "Hz")
+            tree.add_item("Natural Frequency", f"{frequency: .4f}", "Hz")
 
     else:
-
         ## harmonic analysis info texts
 
         frequencies = project.model.solution.frequencies
@@ -1074,11 +1074,11 @@ def allowable_pulsation_for_screw_compressor_info_text(value: float, penalizatio
     return str(tree)
 
 
-def structural_format(property_name, values, labels, units, has_table):
+def structural_format(property_name, values, labels, units, has_table, normal_suffix: bool = False):
     if all_none(values):
         return ""
 
-    if property_name == "Normal pressure":
+    if normal_suffix:
         sufix_labels = "n"
     elif "Distributed mass" in property_name:
         sufix_labels = "d"
@@ -1127,9 +1127,9 @@ def structural_format(property_name, values, labels, units, has_table):
 
     return str(tree)
 
+
 # OTHER FUNCTIONS
+
 
 def all_none(sequence) -> bool:
     return all(i is None for i in sequence)
-
-

@@ -908,7 +908,7 @@ class Mesh:
         self.surfaces_from_volume.clear()
         for vol_id, surf_ids in surfaces_from_volume.items():
             for surf_id in surf_ids:
-                self.volumes_from_surface[surf_id] = [vol_id]
+                self.volumes_from_surface[surf_id].append(vol_id)
 
             self.surfaces_from_volume[vol_id] = surf_ids
 

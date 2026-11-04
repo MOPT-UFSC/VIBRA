@@ -25,9 +25,9 @@ class Ui_Form(object):
     def setupUi(self, Form):
         if not Form.objectName():
             Form.setObjectName(u"Form")
-        Form.resize(408, 480)
+        Form.resize(408, 563)
         Form.setMinimumSize(QSize(0, 480))
-        Form.setMaximumSize(QSize(16777215, 480))
+        Form.setMaximumSize(QSize(16777215, 563))
         self.gridLayout_4 = QGridLayout(Form)
         self.gridLayout_4.setObjectName(u"gridLayout_4")
         self.gridLayout_4.setVerticalSpacing(4)
@@ -71,31 +71,6 @@ class Ui_Form(object):
         self.gridLayout_3.setSpacing(4)
         self.gridLayout_3.setObjectName(u"gridLayout_3")
         self.gridLayout_3.setContentsMargins(4, 4, 4, 4)
-        self.frame_3 = QFrame(self.frame_2)
-        self.frame_3.setObjectName(u"frame_3")
-        self.frame_3.setMinimumSize(QSize(0, 52))
-        self.frame_3.setMaximumSize(QSize(16777215, 52))
-        self.frame_3.setFrameShape(QFrame.Shape.NoFrame)
-        self.frame_3.setFrameShadow(QFrame.Shadow.Raised)
-        self.gridLayout_47 = QGridLayout(self.frame_3)
-        self.gridLayout_47.setSpacing(2)
-        self.gridLayout_47.setObjectName(u"gridLayout_47")
-        self.gridLayout_47.setContentsMargins(2, 2, 2, 2)
-        self.pushButton_plot_data = QPushButton(self.frame_3)
-        self.pushButton_plot_data.setObjectName(u"pushButton_plot_data")
-        self.pushButton_plot_data.setMinimumSize(QSize(100, 32))
-        self.pushButton_plot_data.setMaximumSize(QSize(100, 32))
-        font1 = QFont()
-        font1.setPointSize(10)
-        self.pushButton_plot_data.setFont(font1)
-        self.pushButton_plot_data.setStyleSheet(u"")
-        self.pushButton_plot_data.setFlat(False)
-
-        self.gridLayout_47.addWidget(self.pushButton_plot_data, 0, 0, 1, 1)
-
-
-        self.gridLayout_3.addWidget(self.frame_3, 5, 0, 1, 1)
-
         self.frame_4 = QFrame(self.frame_2)
         self.frame_4.setObjectName(u"frame_4")
         self.frame_4.setMinimumSize(QSize(0, 110))
@@ -115,6 +90,8 @@ class Ui_Form(object):
         self.comboBox_selector_filter.setObjectName(u"comboBox_selector_filter")
         self.comboBox_selector_filter.setMinimumSize(QSize(130, 28))
         self.comboBox_selector_filter.setMaximumSize(QSize(130, 28))
+        font1 = QFont()
+        font1.setPointSize(10)
         self.comboBox_selector_filter.setFont(font1)
         self.comboBox_selector_filter.setStyleSheet(u"")
 
@@ -215,18 +192,28 @@ class Ui_Form(object):
 
         self.gridLayout_3.addWidget(self.frame_4, 0, 0, 1, 1)
 
-        self.frame_5 = QFrame(self.frame_2)
-        self.frame_5.setObjectName(u"frame_5")
-        self.frame_5.setMaximumSize(QSize(16777215, 40))
-        self.frame_5.setFrameShape(QFrame.Shape.NoFrame)
-        self.frame_5.setFrameShadow(QFrame.Shadow.Raised)
-        self.gridLayout_6 = QGridLayout(self.frame_5)
-        self.gridLayout_6.setObjectName(u"gridLayout_6")
-        self.gridLayout_6.setHorizontalSpacing(6)
-        self.gridLayout_6.setVerticalSpacing(2)
-        self.gridLayout_6.setContentsMargins(2, 2, 2, 2)
+        self.frame_3 = QFrame(self.frame_2)
+        self.frame_3.setObjectName(u"frame_3")
+        self.frame_3.setMinimumSize(QSize(0, 52))
+        self.frame_3.setMaximumSize(QSize(16777215, 52))
+        self.frame_3.setFrameShape(QFrame.Shape.NoFrame)
+        self.frame_3.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_47 = QGridLayout(self.frame_3)
+        self.gridLayout_47.setSpacing(2)
+        self.gridLayout_47.setObjectName(u"gridLayout_47")
+        self.gridLayout_47.setContentsMargins(2, 2, 2, 2)
+        self.pushButton_plot_data = QPushButton(self.frame_3)
+        self.pushButton_plot_data.setObjectName(u"pushButton_plot_data")
+        self.pushButton_plot_data.setMinimumSize(QSize(100, 32))
+        self.pushButton_plot_data.setMaximumSize(QSize(100, 32))
+        self.pushButton_plot_data.setFont(font1)
+        self.pushButton_plot_data.setStyleSheet(u"")
+        self.pushButton_plot_data.setFlat(False)
 
-        self.gridLayout_3.addWidget(self.frame_5, 2, 0, 1, 1)
+        self.gridLayout_47.addWidget(self.pushButton_plot_data, 0, 0, 1, 1)
+
+
+        self.gridLayout_3.addWidget(self.frame_3, 4, 0, 1, 1)
 
         self.tabWidget_main = QTabWidget(self.frame_2)
         self.tabWidget_main.setObjectName(u"tabWidget_main")
@@ -377,10 +364,18 @@ class Ui_Form(object):
 
         self.tabWidget_main.addTab(self.tab_allowable_pulsation, "")
 
-        self.gridLayout_3.addWidget(self.tabWidget_main, 3, 0, 1, 1)
+        self.gridLayout_3.addWidget(self.tabWidget_main, 2, 0, 1, 1)
 
 
-        self.gridLayout_4.addWidget(self.frame_2, 1, 0, 1, 1)
+        self.gridLayout_4.addWidget(self.frame_2, 2, 0, 1, 1)
+
+        self.frame_ifft_controls = QFrame(Form)
+        self.frame_ifft_controls.setObjectName(u"frame_ifft_controls")
+        self.frame_ifft_controls.setMinimumSize(QSize(0, 120))
+        self.frame_ifft_controls.setFrameShape(QFrame.Shape.Box)
+        self.frame_ifft_controls.setFrameShadow(QFrame.Shadow.Raised)
+
+        self.gridLayout_4.addWidget(self.frame_ifft_controls, 1, 0, 1, 1)
 
 
         self.retranslateUi(Form)
@@ -395,7 +390,6 @@ class Ui_Form(object):
     def retranslateUi(self, Form):
         Form.setWindowTitle(QCoreApplication.translate("Form", u"Form", None))
         self.label.setText(QCoreApplication.translate("Form", u"Allowable pulsations for screw compressor", None))
-        self.pushButton_plot_data.setText(QCoreApplication.translate("Form", u"Plot data", None))
         self.comboBox_selector_filter.setItemText(0, QCoreApplication.translate("Form", u"Surfaces", None))
         self.comboBox_selector_filter.setItemText(1, QCoreApplication.translate("Form", u"Lines", None))
         self.comboBox_selector_filter.setItemText(2, QCoreApplication.translate("Form", u"Points", None))
@@ -414,6 +408,7 @@ class Ui_Form(object):
 #endif // QT_CONFIG(tooltip)
         self.pushButton_get_fluid.setText("")
         self.label_31.setText(QCoreApplication.translate("Form", u"Selected fluid:", None))
+        self.pushButton_plot_data.setText(QCoreApplication.translate("Form", u"Plot data", None))
 #if QT_CONFIG(tooltip)
         self.label_12.setToolTip(QCoreApplication.translate("Form", u"<html><head/><body><p>Allowable peak-to-peak pulsation levels as a percentage of the absolute mean line pressure in kPa.</p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
@@ -441,9 +436,6 @@ class AllowablePulsations2dForScrewCompressorInputs_UI(QWidget, Ui_Form):
                             - label: QLabel
                 - frame_2: QFrame
                     - (Layout): QGridLayout
-                            - frame_3: QFrame
-                                - (Layout): QGridLayout
-                                        - pushButton_plot_data: QPushButton
                             - frame_4: QFrame
                                 - (Layout): QGridLayout
                                         - comboBox_selector_filter: QComboBox
@@ -454,8 +446,9 @@ class AllowablePulsations2dForScrewCompressorInputs_UI(QWidget, Ui_Form):
                                         - lineEdit_selected_fluid: QLineEdit
                                         - pushButton_get_fluid: QPushButton
                                         - label_31: QLabel
-                            - frame_5: QFrame
+                            - frame_3: QFrame
                                 - (Layout): QGridLayout
+                                        - pushButton_plot_data: QPushButton
                             - tabWidget_main: QTabWidget
                                 - tab_allowable_pulsation: QWidget
                                     - (Layout): QGridLayout
@@ -473,6 +466,7 @@ class AllowablePulsations2dForScrewCompressorInputs_UI(QWidget, Ui_Form):
                                                         - comboBox_penalization_factor: QComboBox
                                                         - label_penalization_factor: QLabel
                                                         - label_8: QLabel
+                - frame_ifft_controls: QFrame
     """
 
     def __init__(self, *args, **kwargs):

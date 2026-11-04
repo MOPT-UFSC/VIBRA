@@ -27,3 +27,4 @@
 !mesh_info/*/*
 
 /structural/elements_integration/**
+/structural/elastic_support/**

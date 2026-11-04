@@ -1,4 +1,3 @@
-
 from enum import IntEnum
 
 import numpy as np
@@ -7,7 +6,7 @@ from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
 
 from vibra import app
-from vibra.extensions import SUPPORTED_SPREADSHEET_READ_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
+from vibra.extensions import SUPPORTED_SPREADSHEET_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
 from vibra.interface import error_title
 from vibra.interface.common.common_interface import InputDataType, update_analysis_setup_in_file, update_entities_selection
 from vibra.interface.data.data_manager import get_spectral_data_from_array
@@ -32,7 +31,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
 
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
-       
+
         self.model = app().project.model
         self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
@@ -113,7 +112,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
         self.pushButton_remove.setDisabled(True)
         self.lineEdit_selection_id.setDisabled(tab_list)
         self.pushButton_apply.setDisabled(tab_list)
-        self.pushButton_apply_and_close.setDisabled(tab_list)        
+        self.pushButton_apply_and_close.setDisabled(tab_list)
 
     def on_click_item(self, item):
         if item.text(0) != "":
@@ -129,7 +128,6 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
 
         self.treeWidget_incident_plane_wave.clear()
         for key, data in self.properties.surface_properties.items():
-
             property, surface_id = key
             if property != "incident_plane_wave":
                 continue
@@ -170,9 +168,9 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
                 return
 
             normal_vector = self.get_average_surface_normal(surface_ids[0])
-            self.lineEdit_normal_x.setText(f"{normal_vector[0] : .4f}".replace(" ", ""))
-            self.lineEdit_normal_y.setText(f"{normal_vector[1] : .4f}".replace(" ", ""))
-            self.lineEdit_normal_z.setText(f"{normal_vector[2] : .4f}".replace(" ", ""))
+            self.lineEdit_normal_x.setText(f"{normal_vector[0]: .4f}".replace(" ", ""))
+            self.lineEdit_normal_y.setText(f"{normal_vector[1]: .4f}".replace(" ", ""))
+            self.lineEdit_normal_z.setText(f"{normal_vector[2]: .4f}".replace(" ", ""))
 
             data = self.properties._get_property("incident_plane_wave", surface=surface_ids[0])
             if isinstance(data, dict):
@@ -181,9 +179,9 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
             else:
                 if self.comboBox_wave_direction.currentIndex() == WaveDirection.NORMAL:
                     ipw_vector = -normal_vector
-                    self.lineEdit_component_x.setText(f"{ipw_vector[0] : .4f}".replace(" ", ""))
-                    self.lineEdit_component_y.setText(f"{ipw_vector[1] : .4f}".replace(" ", ""))
-                    self.lineEdit_component_z.setText(f"{ipw_vector[2] : .4f}".replace(" ", ""))
+                    self.lineEdit_component_x.setText(f"{ipw_vector[0]: .4f}".replace(" ", ""))
+                    self.lineEdit_component_y.setText(f"{ipw_vector[1]: .4f}".replace(" ", ""))
+                    self.lineEdit_component_z.setText(f"{ipw_vector[2]: .4f}".replace(" ", ""))
 
     def load_property_data(self, data: dict):
 
@@ -201,9 +199,9 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
         if ipw_vector is None:
             return
 
-        self.lineEdit_component_x.setText(f"{ipw_vector[0] : .4f}".replace(" ", ""))
-        self.lineEdit_component_y.setText(f"{ipw_vector[1] : .4f}".replace(" ", ""))
-        self.lineEdit_component_z.setText(f"{ipw_vector[2] : .4f}".replace(" ", ""))
+        self.lineEdit_component_x.setText(f"{ipw_vector[0]: .4f}".replace(" ", ""))
+        self.lineEdit_component_y.setText(f"{ipw_vector[1]: .4f}".replace(" ", ""))
+        self.lineEdit_component_z.setText(f"{ipw_vector[2]: .4f}".replace(" ", ""))
 
     def apply_callback(self, close_window: bool = False):
         tab_index = self.tabWidget_main.currentIndex()
@@ -212,7 +210,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
 
         input_ids = self.lineEdit_selection_id.text()
         surface_ids, error_data = self.model.check_selected_ids(
-            input_ids, 
+            input_ids,
             "surfaces",
             domain="acoustic",
         )
@@ -271,7 +269,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
                 message += "incident wave amplitude."
                 PrintMessageInput([error_title, title, message])
                 return
-            
+
         if not any((value_a, value_b)):
             line_edit_fieldA.setFocus()
             title = "Invalid value detected"
@@ -293,7 +291,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
         connectivity_from_surfaces = self.mesh.faces_connectivity[mask]
         normals = self.mesh.get_element_face_normal_batched(connectivity_from_surfaces)
         return np.sum(normals, axis=0) / len(connectivity_from_surfaces)
-    
+
     def get_input_ipw_vector(self, surface_id: int):
 
         if self.comboBox_wave_direction.currentIndex() == WaveDirection.NORMAL:
@@ -301,7 +299,6 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
             ipw_vector = [float(value) for value in -normal_vector]
 
         else:
-
             ipw_vector = list()
             for line_edit in [self.lineEdit_component_x, self.lineEdit_component_y, self.lineEdit_component_z]:
                 if line_edit.text() == "":
@@ -317,7 +314,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
                 return None
 
         return ipw_vector
-    
+
     def check_for_inside_surfaces(self, surface_ids: list[int]):
 
         for surface_id in surface_ids:
@@ -328,26 +325,25 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
         return False
 
     def check_incident_plane_wave_vector(self, surface_ids: list[int], P_inc: complex | np.ndarray):
-        
+
         if isinstance(P_inc, complex):
             P_inc = np.array([P_inc], dtype=complex)
 
         for surface_id in surface_ids:
-
             ipw_vector = self.get_input_ipw_vector(surface_id)
             if ipw_vector is None:
                 return
 
             ipw_vector = np.array(ipw_vector, dtype=float)
             ns_vector = self.get_average_surface_normal(surface_id)
-            
+
             values = P_inc * (ns_vector @ ipw_vector)
 
             for value in np.real(values):
                 if np.real(value) < 0:
                     continue
 
-                title = 'Invalid setup detected'
+                title = "Invalid setup detected"
                 message = "The plane wave should be incident, i.e., directed inwards of the domain. "
                 message += "We recommend to verify the entered values of the incident pressure amplitude "
                 message += "and of the wave vector."
@@ -386,7 +382,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
             data.update({"ipw_vector": ipw_vector})
             self.properties._set_property("incident_plane_wave", data, surface=surface_id)
 
-    def load_table(self, lineEdit : QLineEdit, direct_load=False):
+    def load_table(self, lineEdit: QLineEdit, direct_load=False):
         title = "Error reached while loading 'incident plane wave' table"
 
         try:
@@ -394,10 +390,10 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
                 imported_path = lineEdit.text()
 
             else:
-                extensions = SUPPORTED_SPREADSHEET_READ_EXTENSIONS + SUPPORTED_TEXT_EXTENSIONS
-                imported_path = FileDialogService.open_file(file_extensions=extensions,
-                                            caption="Choose a table to import the absorption surface",
-                                            last_folder="imported_table_folder")
+                extensions = SUPPORTED_SPREADSHEET_EXTENSIONS + SUPPORTED_TEXT_EXTENSIONS
+                imported_path = FileDialogService.open_file(
+                    file_extensions=extensions, caption="Choose a table to import the absorption surface", last_folder="imported_table_folder"
+                )
 
             imported_data = FileHandler.read(imported_path)
 
@@ -414,7 +410,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
                 message += " data must have two columns in the form: frequencies real values, and imaginary values."
                 PrintMessageInput([error_title, title, message])
                 return None
-            
+
             # filter the zero-frequency component
             mask = imported_values[:, 0] > 0
             _imported_values = imported_values[mask, :]
@@ -469,7 +465,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
             return True
 
         if self.imported_values is None:
-            self.imported_values = self.load_table(self.lineEdit_table_path, direct_load = True)
+            self.imported_values = self.load_table(self.lineEdit_table_path, direct_load=True)
 
             if isinstance(self.imported_values, np.ndarray):
                 if self.imported_values.shape[1] < 3:
@@ -477,7 +473,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
 
             else:
                 return True
-        
+
         # complex values computed from tabular data
         complex_values = get_spectral_data_from_array(self.imported_values)
 
@@ -486,9 +482,8 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
 
         if self.check_incident_plane_wave_vector(surface_ids, complex_values):
             return True
-        
-        for surface_id in surface_ids:
 
+        for surface_id in surface_ids:
             ipw_vector = self.get_input_ipw_vector(surface_id)
             if ipw_vector is None:
                 return True
@@ -522,14 +517,14 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
             "compressor_excitation_waveform",
             "reciprocating_compressor_excitation",
             "mass_source",
-            ]
+        ]
 
         for surface_id in surface_ids:
             for label in labels:
                 self.properties._remove_surface_property(label, surface_id)
 
     def remove_callback(self):
-        
+
         str_selection_id = self.lineEdit_selection_id.text()
         if str_selection_id == "":
             return
@@ -544,7 +539,7 @@ class IncidentPlaneWaveInputs(IncidentPlaneWaveInputs_UI):
         title = "Incident pressure wave reset"
         message = "Would you like to remove the all applied incident pressure waves from model?"
 
-        buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
+        buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
         read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
 
         if read._cancel:

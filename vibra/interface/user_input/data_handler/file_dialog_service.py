@@ -131,7 +131,7 @@ class FileDialogService:
         extension = extension.lower()
 
         match extension:
-            case "xlsx" | "xls":
+            case "xlsx":
                 return "Spreadsheet files"
             case "dat" | "csv" | "txt":
                 return "Text files"
@@ -167,7 +167,7 @@ class FileDialogService:
         extension = extension.lower()
 
         match extension:
-            case "xlsx" | "xls":
+            case "xlsx":
                 return 0
             case "dat" | "txt" | "csv":
                 return 1

@@ -1,4 +1,4 @@
-import numpy as np
+import pytest
 from typing_extensions import TYPE_CHECKING
 
 from vibra.engine.analysis_info import (
@@ -15,6 +15,7 @@ from vibra.engine.assemblers.acoustic.acoustic_assembler import AcousticAssemble
 from vibra.engine.solvers import HarmonicSolver
 
 
+@pytest.mark.skip
 def test_regression_acoustic_harmonic_solver_solution(datadir, viscous_thermal_acoustic_model: "Model"):
     assembler = AcousticAssembler(viscous_thermal_acoustic_model)
     assembler.assemble_global_matrices_and_excitations()

@@ -408,7 +408,7 @@ class AcousticPressureFRFInputs(AcousticPressureFrfInputs_UI):
             "title": title,
             "data_type": "acoustic pressures ratio",
             "legend": legend_label,
-            "unit": self.unit_label,
+            "units": self.unit_label,
             "color": [0, 0, 1],
             "linestyle": "-",
         }

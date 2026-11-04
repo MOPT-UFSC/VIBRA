@@ -25,8 +25,9 @@ class ModelSetupItems(CommonMenuItems):
         self.update_items_appearance()
 
     def _create_items(self):
-        """Creates all TreeWidgetItems."""
+        """Creates all QTreeWidgetItems."""
         self.item_top_general_settings = self.add_top_item('General Settings')
+        self.item_child_grouping_assistant = self.add_item("Grouping Assistant")
         self.item_child_material = self.add_item("Material")
         self.item_child_fluid = self.add_item('Fluid')
         self.item_child_mesh_setup = self.add_item("Mesh Setup")
@@ -34,28 +35,22 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_degrees_of_freedom_decoupling = self.add_item("DOF Decoupling")
         self.item_child_volume_suppression = self.add_item("Volumes Suppression")
 
-        self.item_top_structural_model_setup = self.add_top_item('Structural Model Setup (Beta)')
-
-        tooltip_html = '''
-                        <p><b>Structural Properties</b></p>
-                        <p><span style="color:red;">
-                        <b>Note:</b> The calculations for these structural properties are currently undergoing refinement.</span>
-                        While we are actively working to ensure complete accuracy, please be aware that simulation results may
-                        exhibit minor variations. We appreciate your understanding as we continue to improve the precision of our models.</p>
-                        '''
-        self.item_top_structural_model_setup.setToolTip(0, tooltip_html)
-        path_image = str(ICON_DIR / "model_setup_items/structural_help.png")
-        self.item_top_structural_model_setup.setIcon(0, QIcon(path_image))
-
+        self.item_top_structural_model_setup = self.add_top_item('Structural Model Setup')
         self.item_child_surface_thickness = self.add_item("Surface Thickness")
+        
+        # structural model excitations
         self.item_child_prescribed_dof = self.add_item("Prescribed DOF")
         self.item_child_nodal_loads = self.add_item("Nodal Loads")
         self.item_child_distributed_loads = self.add_item("Distributed Loads")
         self.item_child_normal_pressure_load = self.add_item("Normal Pressure Load")
+        
+        # structural distributed properties
         self.item_child_distributed_mass = self.add_item("Distributed Mass")
-        self.item_top_acoustic_model_setup = self.add_top_item('Acoustic Model Setup')
+        self.item_child_distributed_stiffness = self.add_item("Distributed Stiffness")
+        self.item_child_distributed_dampings = self.add_item("Distributed Dampings")
 
         # acoustic model excitations
+        self.item_top_acoustic_model_setup = self.add_top_item('Acoustic Model Setup')
         self.item_child_acoustic_pressure = self.add_item('Acoustic Pressure')
         self.item_child_mass_source = self.add_item("Mass Source")
         self.item_child_surface_velocity = self.add_item("Surface Velocity")
@@ -100,12 +95,15 @@ class ModelSetupItems(CommonMenuItems):
             "item_child_element_options": "element_options",
             "item_child_degrees_of_freedom_decoupling": "degrees_of_freedom_decoupling",
             "item_child_volume_suppression": "volume_suppression",
+            "item_child_grouping_assistant": "grouping_assistant",
             "item_child_surface_thickness": "surface_thickness",
             "item_child_prescribed_dof": "prescribed_dof",
             "item_child_nodal_loads": "nodal_loads",
             "item_child_distributed_loads": "distributed_loads",
             "item_child_normal_pressure_load": "normal_pressure_load",
             "item_child_distributed_mass": "distributed_mass",
+            "item_child_distributed_stiffness": "distributed_stiffness",
+            "item_child_distributed_dampings": "distributed_damping",
             "item_child_acoustic_pressure": "acoustic_pressure",
             "item_child_mass_source": "mass_source",
             "item_child_surface_velocity": "surface_velocity",
@@ -201,41 +199,50 @@ class ModelSetupItems(CommonMenuItems):
             if mesh.are_there_volumes_in_geometry():
                 volume_ids = mesh.geometry_information.get("volumes")
                 volume_ids.sort()
-                volumes_without_material = properties.get_entities_without_property("material", volumes=volume_ids)
-                if volumes_without_material:
-                    acoustic_volumes = model.volumes_of_domain.get("acoustic", [])
-                    if volumes_without_material == volume_ids:
+                volumes_with_material, volumes_without_material = properties.get_entities_with_and_without_property("material", volumes=volume_ids)
+
+                if not volumes_with_material:
+                    return False
+
+                if not volumes_without_material:
+                    return True
+                
+                if volumes_without_material == volume_ids:
+                    return False
+
+                acoustic_volumes = model.volumes_of_domain.get("acoustic", [])
+                for vol_id in volumes_without_material:
+                    if vol_id not in acoustic_volumes:
                         return False
-
-                    for vol_id in volumes_without_material:
-                        if vol_id not in acoustic_volumes:
-                            return False
-
-                return True
 
             else:
                 surface_ids = mesh.geometry_information.get("surfaces")
-                surfaces_without_material = properties.get_entities_without_property("material", surfaces=surface_ids)
+                _, surfaces_without_material = properties.get_entities_with_and_without_property("material", surfaces=surface_ids)
                 return not bool(len(surfaces_without_material))
 
         if property_name == "fluid":
             if mesh.are_there_volumes_in_geometry():
                 volume_ids = mesh.geometry_information.get("volumes")
                 volume_ids.sort()
-                volumes_without_fluid = properties.get_entities_without_property("fluid", volumes=volume_ids)
-                if volumes_without_fluid:
-                    structural_volumes = model.volumes_of_domain.get("structural", [])
-                    if volumes_without_fluid == volume_ids:
+                volumes_with_fluid, volumes_without_fluid = properties.get_entities_with_and_without_property("fluid", volumes=volume_ids)
+                if not volumes_with_fluid:
+                    return False
+
+                if not volumes_without_fluid:
+                    return True
+
+                structural_volumes = model.volumes_of_domain.get("structural", [])
+                if volumes_without_fluid == volume_ids:
+                    return False
+
+                for vol_id in volumes_without_fluid:
+                    if vol_id not in structural_volumes:
                         return False
 
-                    for vol_id in volumes_without_fluid:
-                        if vol_id not in structural_volumes:
-                            return False
-
-                return True
-            # else:
+            else:
+                pass
             #     surface_ids = mesh.geometry_information.get("surfaces")
-            #     surfaces_without_fluid = properties.get_entities_without_property("fluid", surfaces=surface_ids)
+            #     _, surfaces_without_fluid = properties.get_entities_with_and_without_property("fluid", surfaces=surface_ids)
             #     return not bool(len(surfaces_without_fluid))
 
         # test for mesh. Not ideal, but it works. Since the mesh config is not part of the properties, the necessary check is performed here
@@ -511,6 +518,12 @@ class ModelSetupItems(CommonMenuItems):
     def item_child_distributed_mass_callback(self):
         app().main_window.input_ui.set_distributed_mass()
 
+    def item_child_distributed_stiffness_callback(self):
+        app().main_window.input_ui.set_distributed_stiffness()
+
+    def item_child_distributed_dampings_callback(self):
+        app().main_window.input_ui.set_distributed_dampings()
+
     def item_child_normal_pressure_load_callback(self):
         app().main_window.input_ui.set_normal_pressure_load()
 
@@ -559,6 +572,9 @@ class ModelSetupItems(CommonMenuItems):
     def item_child_volume_suppression_callback(self):
         app().main_window.input_ui.set_volume_suppression()
 
+    def item_child_grouping_assistant_callback(self):
+        app().main_window.input_ui.set_grouping_assistant()
+
     def item_child_viscous_thermal_model_callback(self):
         app().main_window.input_ui.set_viscous_thermal_model()
 
@@ -576,6 +592,7 @@ class ModelSetupItems(CommonMenuItems):
         self.item_child_mesh_setup.setDisabled(not imported_geometry)
         self.item_child_element_options.setDisabled(not imported_geometry)
         self.item_child_volume_suppression.setDisabled(not imported_geometry)
+        self.item_child_grouping_assistant.setDisabled(not imported_geometry)
 
     def hide_all_top_items(self):
         self.item_top_general_settings.setHidden(True)

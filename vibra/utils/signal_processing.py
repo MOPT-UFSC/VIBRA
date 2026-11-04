@@ -14,7 +14,7 @@ def plt():
     return matplotlib.pyplot
 
 
-def process_ifft_from_one_sided_spectrum_signal(frequencies: np.ndarray, Xf_data: np.ndarray, dc_included: bool = False):
+def process_ifft_from_one_sided_spectrum_signal(f_max: float, Xf_data: np.ndarray, dc_included: bool = False):
     """
     If n is even, the length of the transformed axis is (n/2)+1. If n is odd, the length is (n+1)/2.
     """
@@ -32,7 +32,6 @@ def process_ifft_from_one_sided_spectrum_signal(frequencies: np.ndarray, Xf_data
     Xf[1:] = Xf_data / 2
 
     # process the sampling frequency and time increment
-    f_max = np.max(frequencies)
     f_s = 2 * f_max
     dt = 1 / f_s
 
@@ -49,7 +48,7 @@ def process_ifft_from_one_sided_spectrum_signal(frequencies: np.ndarray, Xf_data
     return time, x_t
 
 
-def process_multiple_iffts_from_one_sided_spectrum_signals(frequencies: np.ndarray, Xf_data: np.ndarray, dc_included: bool = False):
+def process_multiple_iffts_from_one_sided_spectrum_signals(f_max: np.ndarray, Xf_data: np.ndarray, dc_included: bool = False):
     """
     If n is even, the length of the transformed axis is (n/2)+1. If n is odd, the length is (n+1)/2.
     """
@@ -67,7 +66,6 @@ def process_multiple_iffts_from_one_sided_spectrum_signals(frequencies: np.ndarr
     Xf[:, 1:] = Xf_data / 2
 
     # process the sampling frequency and time increment
-    f_max = np.max(frequencies)
     f_s = 2 * f_max
     dt = 1 / f_s
 

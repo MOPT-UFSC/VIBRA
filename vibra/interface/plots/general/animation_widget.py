@@ -52,7 +52,18 @@ class AnimationWidget(AnimationWidget_UI):
 
     @property
     def magnification_factor(self):
-        return self.magnification_factor_slider.value() / 16
+        value = self.magnification_factor_slider.value()
+        if value == 0:
+            return 0
+
+        if value >= 17:
+            return (3 / 16) * value - 35 / 16
+        else:
+            return (7 / 128) * value + 9 / 128
+
+    @property
+    def true_scale(self):
+        return not self.checkBox_magnification.isChecked()
 
     def _initialize(self):
         self.animating = False
@@ -70,6 +81,18 @@ class AnimationWidget(AnimationWidget_UI):
         # QLabel
         self.label_phase_angle.setFixedWidth(72)
         self.label_factor.setFixedWidth(72)
+
+        # QCheckButton
+        self.checkBox_magnification.setChecked(True)
+        self.checkBox_magnification.setStyleSheet("""
+            QCheckBox {
+                spacing: 4px;
+                padding-left: 4px;
+                padding-right: 0px;
+                margin: 0px;
+            }
+        """)
+        self.checkBox_magnification.setToolTip("Controls when the scale factor is active.")
 
         # QPushButton
         # self.pushButton_animate.setFixedSize(50, 30)
@@ -98,8 +121,8 @@ class AnimationWidget(AnimationWidget_UI):
         self.magnification_factor_slider.setOrientation(Qt.Orientation.Horizontal)
         self.magnification_factor_slider.setCursor(Qt.PointingHandCursor)
         self.magnification_factor_slider.setMinimum(0)
-        self.magnification_factor_slider.setMaximum(32)
-        self.magnification_factor_slider.setValue(16)
+        self.magnification_factor_slider.setMaximum(33)
+        self.magnification_factor_slider.setValue(17)
         self.magnification_factor_slider.setSingleStep(1)
 
         # QSpinBox
@@ -122,16 +145,23 @@ class AnimationWidget(AnimationWidget_UI):
         self.update_phase_slider_steps()
 
     def _create_connections(self):
-        self.spinBox_frames.valueChanged.connect(self.frames_value_changed)
 
+        # QCheckBox connection
+        self.checkBox_magnification.stateChanged.connect(self.magnification_state_changed)
+
+        # QPushButton connections
+        self.pushButton_animate.clicked.connect(self.process_animation)
+        self.pushButton_export_video.clicked.connect(self.save_animation)
+        self.pushButton_animation_loop.clicked.connect(self.animation_loop_callback)
+
+        # QSlider connections
         self.phase_slider.sliderPressed.connect(self.pause_animation)
         self.phase_slider.valueChanged.connect(self.phase_slider_callback)
         self.magnification_factor_slider.sliderPressed.connect(self.pause_animation)
         self.magnification_factor_slider.valueChanged.connect(self.magnification_factor_slider_callback)
 
-        self.pushButton_animate.clicked.connect(self.process_animation)
-        self.pushButton_export_video.clicked.connect(self.save_animation)
-        self.pushButton_animation_loop.clicked.connect(self.animation_loop_callback)
+        # QSpinBox connection
+        self.spinBox_frames.valueChanged.connect(self.frames_value_changed)
 
         app().main_window.render_widget_changed.connect(self.update_current_render_widget)
         app().main_window.render_widget_changed.connect(self.update_toolbar)
@@ -140,7 +170,8 @@ class AnimationWidget(AnimationWidget_UI):
         current_domain = app().main_window.analysis_toolbar.combo_box_physical_domain.currentText()
         structural_domain = current_domain.lower() in [PhysicalDomain.STRUCTURAL, PhysicalDomain.COUPLED]
         self.magnification_factor_slider.setEnabled(structural_domain)
-        self.label_magnification_factor.setEnabled(structural_domain)
+
+        self.checkBox_magnification.setEnabled(structural_domain)
         self.label_factor.setEnabled(structural_domain)
 
     def update_current_render_widget(self):
@@ -180,6 +211,11 @@ class AnimationWidget(AnimationWidget_UI):
         self.setStyleSheet(stylesheet)
         self.setMovable(visible)
 
+    def magnification_state_changed(self):
+        is_checked = self.checkBox_magnification.isChecked()
+        if not is_checked:
+            self.magnification_factor_slider.setValue(17)
+
     def frames_value_changed(self):
         self.frames = self.spinBox_frames.value()
         self.update_phase_slider_steps()
@@ -198,6 +234,9 @@ class AnimationWidget(AnimationWidget_UI):
         self.phase_slider.valueChanged.disconnect(self.phase_slider_callback)
         self.update_animation_parameters(sampling_time, frames_number)
         self.phase_slider.valueChanged.connect(self.time_frame_slider_callback)
+
+    def update_multiplication_factor(self, value: float):
+        self.lineEdit_multiplication_factor.setText(f"{value : .6e}")
 
     def update_animation_parameters(self, sampling_time: float, frames_number: int):
         self.sampling_time = sampling_time
@@ -290,12 +329,12 @@ class AnimationWidget(AnimationWidget_UI):
         self.label_phase_angle.setText(f"{self.time: .4e}s")
 
     def update_factor_label(self, max_value=None):
-        value = self.magnification_factor_slider.value() / 16
+        value = self.magnification_factor
         if isinstance(max_value, float | int):
             if max_value:
                 value /= 10 * max_value
             else:
-                value = 1
+                value = 1.0
         self.label_factor.setText(f"{value: .2e}x")
 
     def update_phase_slider_steps(self):

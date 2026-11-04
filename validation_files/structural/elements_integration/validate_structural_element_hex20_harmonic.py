@@ -1,4 +1,8 @@
-from typing import TYPE_CHECKING
+import os
+from time import time
+
+import matplotlib.pyplot as plt
+import numpy as np
 
 from validation_files.data.WB.load_external_data import LoadExternalData
 from vibra import PROJECT_DIR
@@ -7,55 +11,50 @@ from vibra.engine.assemblers.structural.structural_assembler import StructuralAs
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.engine.postprocessing import StructuralPostprocessing
-from vibra.engine.postprocessing.structural_post_solution_dataclass import NodalStresses
 from vibra.engine.properties.material import Material
 from vibra.engine.solvers.harmonic_solver import HarmonicSolver
 from vibra.external_mesh.external_mesh_data import ExternalMeshData
 
-if TYPE_CHECKING:
-    from vibra.engine.model import Model
-
-import os
-from time import time
-
-import matplotlib.pyplot as plt
-import numpy as np
-
 udof_labels = [
-    "ux", 
-    "uy", 
+    "ux",
+    "uy",
     "uz",
-    ]
+]
 
 
 stresses_labels = [
-    "sigma_x", 
-    "sigma_y", 
-    "sigma_z", 
-    "tau_xy", 
+    "sigma_x",
+    "sigma_y",
+    "sigma_z",
+    "tau_xy",
     "tau_xz",
-    "tau_yz", 
-    ]
+    "tau_yz",
+]
 
 
-def load_external_mesh_and_solve(load_position, load_type: str, distributed_mass: bool = False, element_integration: bool = True):
+def load_external_mesh_and_solve(support_type: str, load_type: str, distributed_mass: bool = False):
 
     # start decoding the Ansys script file (ds.dat file or input file)
-    mesh_path = PROJECT_DIR / "validation_files/data/WB/structural/elements_integration/hex20/mesh/twisted_rectangular_section_hex20.dat"
+    mesh_path = PROJECT_DIR / "validation_files/data/WB/structural/elements_integration/hex20/mesh/normal_rectangular_section_hex20.dat"
+    # mesh_path = PROJECT_DIR / "validation_files/data/WB/structural/elements_integration/hex20/mesh/twisted_rectangular_section_hex20.dat"
     if not os.path.exists(mesh_path):
         return
-    
+
+    print()
+    print("SOLVING STRUCTURAL HARMONIC ANALYSIS FOR:")
+    print(f"Support type: {support_type}")
+    print(f"load type: {load_type}")
+    print(f"Distributed mass: {distributed_mass}")
+
     # define the known 'Named selections' from model
     named_selecion_to_tag = {
         "input_face": 1,
         "output_face": 2,
-        "mdist_face1": 3,
-        "mdist_face2": 4,
-        "side_face": 5,
+        "side_face": 3,
     }
 
     # define surfaces from each volume
-    surfaces_from_volume = { 1 : [1, 2, 3, 4, 5]}
+    surfaces_from_volume = {1: [1, 2, 3]}
 
     t0 = time()
     external_mesh = ExternalMeshData()
@@ -92,15 +91,15 @@ def load_external_mesh_and_solve(load_position, load_type: str, distributed_mass
     poisson_ratio = 0.30
     thermal_expansion_coefficient = 1.1e-5
 
-    material = Material(   
-        name = "Carbon steel",
-        identifier = 1,
-        color = (200, 200, 200),
-        material_density = density,
-        elasticity_modulus = elasticity_modulus,
-        poisson_ratio = poisson_ratio,
-        thermal_expansion_coefficient = thermal_expansion_coefficient
-        )
+    material = Material(
+        name="Carbon steel",
+        identifier=1,
+        color=(200, 200, 200),
+        material_density=density,
+        elasticity_modulus=elasticity_modulus,
+        poisson_ratio=poisson_ratio,
+        thermal_expansion_coefficient=thermal_expansion_coefficient,
+    )
 
     ## intialize the model
     model = Model()
@@ -108,71 +107,74 @@ def load_external_mesh_and_solve(load_position, load_type: str, distributed_mass
 
     ## assign the created fluid
     model.properties._set_property("material", material, volume=1)
-    
+
     for _surf_id in [1, 2]:
         model.properties._set_property("material", material, surface=_surf_id)
 
-    ## boundary condition
-
-    # dof prescription data
-    dof_prescription_data = {
-        "element_type": "3d_element",
-        "real_values": [0.0, 0.0, 0.0],
-        "imag_values": [0.0, 0.0, 0.0],
+    ## process the support boundary condition
+    if support_type == "fixed_support":
+        # dof prescription data
+        dof_prescription_data = {
+            "element_type": "3d_element",
+            "real_values": [0.0, 0.0, 0.0],
+            "imag_values": [0.0, 0.0, 0.0],
         }
 
-    model.properties._set_property("prescribed_dof", dof_prescription_data, surface=1)
+        model.properties._set_property("prescribed_dof", dof_prescription_data, surface=named_selecion_to_tag.get("input_face"))
 
-    load_surface = named_selecion_to_tag.get(load_position, 2)
+    else:
+        # elastic support data
+        elastic_support_data = {
+            "element_type": "3d_element",
+            "real_values": [1e12, 0.0, 0.0],
+            "imag_values": [0.0, 0.0, 0.0],
+            "normal": False,
+            "direct_input": False,
+            "units": "N/m³",
+        }
+
+        model.properties._set_property("distributed_stiffness", elastic_support_data, surface=named_selecion_to_tag.get("input_face"))
 
     if load_type == "nodal_loads":
-
         load_data = {
             "element_type": "3d_element",
-            "real_values": [0.0, -100.0, -50.0],
+            "real_values": [346.0, -100.0, -250.0],
             "imag_values": [0.0, 0.0, 0.0],
-            "element_integration": element_integration,
-            }
+            "element_integration": True,
+        }
 
-        model.properties._set_property("nodal_loads", load_data, surface=load_surface)
+        model.properties._set_property("nodal_loads", load_data, surface=named_selecion_to_tag.get("output_face"))
 
     elif load_type == "normal_pressure_load":
-
         load_data = {
             "element_type": "3d_element",
             "real_values": [15000.0],
             "imag_values": [0.0],
-            }
-
-        model.properties._set_property("normal_pressure_load", load_data, surface=3)
-
-    elif load_type == "distributed_loads":
-
-        load_data = {
-            "element_type": "3d_element",
-            "real_values": [0.0, 1250.0, -200.0],
-            "imag_values": [0.0, 0.0, 0.0],
-            }
-
-        model.properties._set_property("distributed_loads", load_data, surface=load_surface)
-
-    if distributed_mass:
-        mass_data = {
-            "element_type": "3d_element",
-            "real_values": [100.0],
-            "imag_values": [0.0],
-            "unit": "kg"
         }
 
-        model.properties._set_property("distributed_mass", mass_data, surface=3)
+        model.properties._set_property("normal_pressure_load", load_data, surface=named_selecion_to_tag.get("side_face"))
+
+    elif load_type == "distributed_loads":
+        load_data = {
+            "element_type": "3d_element",
+            "real_values": [1400.0, -2750.0, -987.0],
+            "imag_values": [0.0, 0.0, 0.0],
+        }
+
+        model.properties._set_property("distributed_loads", load_data, surface=named_selecion_to_tag.get("output_face"))
+
+    if distributed_mass:
+        mass_data = {"element_type": "3d_element", "real_values": [100.0], "imag_values": [0.0], "units": "kg"}
+
+        model.properties._set_property("distributed_mass", mass_data, surface=named_selecion_to_tag.get("side_face"))
 
     ## Define the analysis frequency setup
     analysis_setup = model.get_harmonic_analysis_setup(
-        frequency_spacing = FrequencySpacing.EQUALLY_DISTRIBUTED,
-        analysis_id = AnalysisID.STRUCTURAL_HARMONIC,
-        f_min = 60,
-        f_max = 1200,
-        f_step = 60,
+        frequency_spacing=FrequencySpacing.EQUALLY_DISTRIBUTED,
+        analysis_id=AnalysisID.STRUCTURAL_HARMONIC,
+        f_min=60,
+        f_max=1200,
+        f_step=60,
     )
 
     frequencies = analysis_setup.get_frequencies()
@@ -192,9 +194,10 @@ def load_external_mesh_and_solve(load_position, load_type: str, distributed_mass
     dt = time() - t0
     print(f"Elapsed time to solve structural harmonic analysis: {round(dt, 4)}s")
 
-    folder_name = "distributed_mass" if distributed_mass else load_type
+    results_path = PROJECT_DIR / f"validation_files/data/WB/structural/elements_integration/hex20/results/{support_type}/harmonic/{load_type}"
+    if distributed_mass:
+        results_path = results_path / "distributed_mass"
 
-    results_path = PROJECT_DIR / f"validation_files/data/WB/structural/elements_integration/hex20/results/harmonic/{folder_name}"
     ext_data = LoadExternalData(results_path)
 
     WB_displacements_data = ext_data.load_displacements(entire_solution=True)
@@ -207,7 +210,7 @@ def load_external_mesh_and_solve(load_position, load_type: str, distributed_mass
     dt = time() - t0
     print(f"Time to compute nodal stresses: {dt} s")
 
-   # Nodal results comparisons
+    # Nodal results comparisons
     dofs_per_node = assembler.element_3d.dof_per_node
 
     # define the plot type
@@ -215,9 +218,9 @@ def load_external_mesh_and_solve(load_position, load_type: str, distributed_mass
 
     # displacements plots
     for node_id in [1388, 1402, 143]:
-    # for node_id in [373, 281, 143]:
+        # for node_id in [373, 281, 143]:
 
-        mapped_node_id = model.get_mapped_nodes(node_id-1, "structural")
+        mapped_node_id = model.get_mapped_nodes(node_id - 1, "structural")
 
         print()
         # plots for displacements
@@ -231,49 +234,49 @@ def load_external_mesh_and_solve(load_position, load_type: str, distributed_mass
                 False,
                 WB_displacements_data,
                 plot_type=plot_type,
-                )
+            )
 
         # plots for stresses
         for stress_label in stresses_labels[0:3]:
             compare_averaged_nodal_stresses_results(
                 node_id,
                 mapped_node_id,
-                stress_label, 
-                frequencies, 
-                avg_nodal_stresses, 
-                False, 
+                stress_label,
+                frequencies,
+                avg_nodal_stresses,
+                False,
                 WB_stresses_data,
                 plot_type=plot_type,
-                )
+            )
 
     plt.show()
 
 
 def compare_nodal_displacements_results(
-        node_id: int, 
-        dofs_per_node: int, 
-        dof_label: str, 
-        frequencies: np.ndarray, 
-        solution: np.ndarray,
-        esf: bool,
-        solution_reference: dict,
-        named_selection: str = "all_solutions",
-        plot_type: str = "absolute",
-        ):
+    node_id: int,
+    dofs_per_node: int,
+    dof_label: str,
+    frequencies: np.ndarray,
+    solution: np.ndarray,
+    esf: bool,
+    solution_reference: dict,
+    named_selection: str = "all_solutions",
+    plot_type: str = "absolute",
+):
 
     response_vibra = get_model_response(
-        node_id, 
-        dof_label, 
-        dofs_per_node, 
+        node_id,
+        dof_label,
+        dofs_per_node,
         solution,
-        )
+    )
 
     freq_ref, response_ref = get_reference_nodal_response(
-        node_id, 
-        dof_label, 
-        named_selection, 
+        node_id,
+        dof_label,
+        named_selection,
         solution_reference,
-        )
+    )
 
     if response_ref is None:
         return
@@ -281,7 +284,7 @@ def compare_nodal_displacements_results(
     text = "(ESF included)" if esf else "(ESF excluded)"
     title = f"Harmonic response at node {node_id} - {text}"
     x_label = "Frequency [Hz]"
-    y_label = f'Structural response {dof_label.capitalize()} [m] - {plot_type.capitalize()}'
+    y_label = f"Structural response {dof_label.capitalize()} [m] - {plot_type.capitalize()}"
 
     fig, ax = plt.subplots()
     if plot_type == "real":
@@ -296,8 +299,8 @@ def compare_nodal_displacements_results(
         plot_data = np.abs
         plot = ax.semilogy
 
-    plot(frequencies, plot_data(response_vibra), 'r', label='Vibra')
-    plot(freq_ref, plot_data(response_ref), 'k--', label='APDL')
+    plot(frequencies, plot_data(response_vibra), "r", label="Vibra")
+    plot(freq_ref, plot_data(response_ref), "k--", label="APDL")
 
     ax.set(xlabel=x_label, ylabel=y_label, title=title)
     ax.grid()
@@ -323,23 +326,23 @@ def compare_averaged_nodal_stresses_results(
     solution_reference,
     named_selection: str = "all_solutions",
     plot_type: str = "absolute",
-    ):
+):
 
     stress_index = stresses_labels.index(stress_label)
     response_vibra = avg_nodal_stresses[mapped_node_id, stress_index, :]
 
     freq_ref, response_ref = get_reference_nodal_response(
-        node_id, 
-        stress_label, 
-        named_selection, 
+        node_id,
+        stress_label,
+        named_selection,
         solution_reference,
-        )
+    )
 
     text = "(ESF included)" if esf else "(ESF excluded)"
     title = f"Harmonic response at node {node_id} - {text}"
 
     x_label = "Frequency [Hz]"
-    y_label = f'Structural stress {stress_label} [Pa] - {plot_type.capitalize()}'
+    y_label = f"Structural stress {stress_label} [Pa] - {plot_type.capitalize()}"
 
     fig, ax = plt.subplots()
     if plot_type == "real":
@@ -354,10 +357,10 @@ def compare_averaged_nodal_stresses_results(
         plot_data = np.abs
         plot = ax.semilogy
 
-    plot(frequencies, plot_data(response_vibra), 'r', label='Vibra')
+    plot(frequencies, plot_data(response_vibra), "r", label="Vibra")
 
     if isinstance(response_ref, np.ndarray):
-        plot(freq_ref, plot_data(response_ref), 'k--', label='APDL')
+        plot(freq_ref, plot_data(response_ref), "k--", label="APDL")
 
     ax.set(xlabel=x_label, ylabel=y_label, title=title)
     ax.grid()
@@ -373,11 +376,7 @@ def compare_averaged_nodal_stresses_results(
     print(f"Maximum difference for averaged {stress_label.capitalize()} @ node {node_id}: {max_abs_diff} [%] @ {freq_max_diff} [Hz]")
 
 
-def get_model_response(
-        apdl_node_id: int, 
-        dof_label: str, 
-        dofs_per_node: int, 
-        solution: np.ndarray) -> np.ndarray:
+def get_model_response(apdl_node_id: int, dof_label: str, dofs_per_node: int, solution: np.ndarray) -> np.ndarray:
 
     local_dof = udof_labels.index(dof_label)
 
@@ -391,7 +390,7 @@ def get_reference_nodal_response(
     _label: str,
     named_selection: str,
     solution_reference: dict,
-    ):
+):
 
     key = (_label, named_selection)
     freq_ref, _, nodal_solution_ref = solution_reference.get(key, (None, None, None))
@@ -408,12 +407,8 @@ def get_reference_nodal_response(
 
 
 if __name__ == "__main__":
-
-    load_position = "output_face"
-
     load_external_mesh_and_solve(
-        load_position,
-        load_type="distributed_loads",
-        # distributed_mass=True,
-        element_integration=True,
-        )
+        "fixed_support",
+        "normal_pressure_load",
+        distributed_mass=True,
+    )

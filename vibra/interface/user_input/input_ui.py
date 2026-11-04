@@ -21,11 +21,14 @@ from vibra.interface.model_inputs.acoustic.internal_impedances.transfer_impedanc
 from vibra.interface.model_inputs.dof_decoupling.degrees_of_freedom_decoupling_inputs import DegreesOfFreedomDecouplingInputs
 from vibra.interface.model_inputs.fluid.set_fluid_inputs import SetFluidInputs
 from vibra.interface.model_inputs.general.element_options_inputs import ElementOptionsInputs
+from vibra.interface.model_inputs.general.grouping_assistant_inputs import GroupingAssistantInputs
 from vibra.interface.model_inputs.general.mesher_setup_inputs import MesherSetupInputs
 from vibra.interface.model_inputs.general.volume_suppression_inputs import VolumeSuppressionInputs
 from vibra.interface.model_inputs.material.set_material_inputs import MaterialInputs
+from vibra.interface.model_inputs.structural.distributed_properties.distributed_dampings_inputs import DistributedDampingsInputs
+from vibra.interface.model_inputs.structural.distributed_properties.distributed_mass_inputs import DistributedMassInputs
+from vibra.interface.model_inputs.structural.distributed_properties.distributed_stiffness_inputs import DistributedStiffnessInputs
 from vibra.interface.model_inputs.structural.excitations.distributed_loads_inputs import DistributedLoadsInputs
-from vibra.interface.model_inputs.structural.excitations.distributed_mass_inputs import DistributedMassInputs
 from vibra.interface.model_inputs.structural.excitations.dof_prescription_inputs import DofPrescriptionInputs
 from vibra.interface.model_inputs.structural.excitations.nodal_loads_inputs import NodalLoadsInputs
 from vibra.interface.model_inputs.structural.excitations.normal_pressure_load_inputs import NormalPressureLoadInputs
@@ -81,6 +84,12 @@ class InputUi:
     def set_distributed_mass(self):
         self.process_input(DistributedMassInputs)
 
+    def set_distributed_stiffness(self):
+        self.process_input(DistributedStiffnessInputs)
+
+    def set_distributed_dampings(self):
+        self.process_input(DistributedDampingsInputs)
+
     def set_normal_pressure_load(self):
         self.process_input(NormalPressureLoadInputs)
 
@@ -135,6 +144,9 @@ class InputUi:
     def set_volume_suppression(self):
         if not self.model_setup_items.item_child_volume_suppression.isDisabled():
             self.process_input(VolumeSuppressionInputs)
+
+    def set_grouping_assistant(self):
+        self.process_input(GroupingAssistantInputs)
 
     def set_acoustic_properties_grandient(self):
         self.process_input(AcousticPropertiesGradientInputs)

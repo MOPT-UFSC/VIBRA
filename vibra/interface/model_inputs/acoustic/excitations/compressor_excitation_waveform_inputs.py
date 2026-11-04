@@ -10,7 +10,7 @@ from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
 from scipy.signal.windows import hann
 
 from vibra import app
-from vibra.extensions import SUPPORTED_SIMULATION_DATA, SUPPORTED_SPREADSHEET_READ_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
+from vibra.extensions import SUPPORTED_SIMULATION_DATA, SUPPORTED_SPREADSHEET_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
 from vibra.interface import error_title
 from vibra.interface.common.common_interface import update_analysis_setup_in_file, update_entities_selection
 from vibra.interface.data.data_manager import get_spectral_data_from_array
@@ -58,7 +58,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         self.setWindowTitle("Vibra")
 
     def _initialize(self):
-        
+
         self.T_audio = 5
         self.fading_samples = 4096
 
@@ -126,10 +126,10 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         self.pushButton_spectrum_data.setDisabled(True)
         self.pushButton_waveform_data.setDisabled(True)
 
-        if not cfd_source:           
+        if not cfd_source:
             self.comboBox_single_revolution.setCurrentText("yes")
             if self.comboBox_data_source.currentText() == "SCORG":
-                if self.comboBox_excitation_type.currentText() =="surface velocity -> m/s":
+                if self.comboBox_excitation_type.currentText() == "surface velocity -> m/s":
                     self.comboBox_excitation_type.setCurrentText("mass flow rate -> kg/s")
                 self.comboBox_compressor_type.setCurrentText("screw")
                 self.comboBox_compressor_type.setDisabled(True)
@@ -187,7 +187,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
 
         message = ""
         str_value = line_edit.text()
-        
+
         if str_value in ["", "0", "0.", "0,"]:
             return None
 
@@ -223,12 +223,12 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
 
         self.update_data_to_plot_combo_box()
 
-    def load_non_cfd_data(self, direct_load: bool=False):
+    def load_non_cfd_data(self, direct_load: bool = False):
         self.imported_values = self.load_table(self.lineEdit_table_path, direct_load=direct_load)
         spectrum_data = self.process_signal_spectrum_for_non_cfd_data()
         if spectrum_data is None:
             return
-        
+
         self.pushButton_spectrum_data.setEnabled(True)
         self.pushButton_waveform_data.setEnabled(True)
 
@@ -261,11 +261,8 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         self.comboBox_single_revolution.blockSignals(False)
         self.lineEdit_angular_resolution.blockSignals(False)
 
-        data_label, invert_signal  = self.get_velocity_label_and_signal()
-        spectrum_data = self.process_signal_spectrum_for_cfd_data(
-            data_label, 
-            invert_signal = invert_signal
-            )
+        data_label, invert_signal = self.get_velocity_label_and_signal()
+        spectrum_data = self.process_signal_spectrum_for_cfd_data(data_label, invert_signal=invert_signal)
 
         if spectrum_data is None:
             return
@@ -280,7 +277,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
     def update_velocity_axis_by_coordinates(self):
         if self.imported_values is None:
             return
-        
+
         coords = self.imported_values.get("nodal_coordinates")
         if isinstance(coords, np.ndarray):
             min_coords = np.min(coords, axis=0)
@@ -312,11 +309,8 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
             self.lineEdit_frequency_resolution.setText(f"{df}")
 
         else:
-            data_label, invert_signal  = self.get_velocity_label_and_signal()
-            self.normal_surface_velocity_sdata = self.process_signal_spectrum_for_cfd_data(
-                data_label, 
-                invert_signal = invert_signal
-                )
+            data_label, invert_signal = self.get_velocity_label_and_signal()
+            self.normal_surface_velocity_sdata = self.process_signal_spectrum_for_cfd_data(data_label, invert_signal=invert_signal)
 
             if self.normal_surface_velocity_sdata is None:
                 return True
@@ -327,10 +321,10 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
     def get_velocity_label_and_signal(self):
 
         keys_map_cfd = {
-            "x" : "velocity_u",
-            "y" : "velocity_v",
-            "z" : "velocity_w",
-            }
+            "x": "velocity_u",
+            "y": "velocity_v",
+            "z": "velocity_w",
+        }
 
         axis_label = self.comboBox_normal_velocity_axis.currentText()
         str_values = axis_label.split("-axis")
@@ -340,7 +334,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
 
         return keys_map_cfd.get(direction), invert_signal
 
-    def process_signal_spectrum_for_cfd_data(self, data_label: str, invert_signal: bool=False):
+    def process_signal_spectrum_for_cfd_data(self, data_label: str, invert_signal: bool = False):
         if not isinstance(self.imported_values, dict):
             return None
 
@@ -452,7 +446,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
 
         # apply correction factor
         Xf[1:] *= correction_factor
-        
+
         # update attributes for spectrum plot
         self.frequencies_vector = freq
         self.Xf_data = Xf
@@ -472,10 +466,10 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
 
         # update the signal processing parameters
         self.update_signal_processing_parameters(
-            time_increment = dt,
-            revolution_time = T_rev,
-            number_of_revolutions = N_rep,
-            frequency_resolution = df,
+            time_increment=dt,
+            revolution_time=T_rev,
+            number_of_revolutions=N_rep,
+            frequency_resolution=df,
         )
 
         return output_data[mask_min * mask_max, :]
@@ -489,8 +483,8 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         self.lineEdit_time_increment.setText(f"{dt}")
         self.lineEdit_revolution_time.setText(f"{T_rev}")
         self.lineEdit_number_of_revolutions.setText(f"{N_rev}")
-        self.lineEdit_sampling_time_block.setText(f"{N_rev*T_rev}")
-        self.lineEdit_sampling_frequency.setText(f"{1/dt}")
+        self.lineEdit_sampling_time_block.setText(f"{N_rev * T_rev}")
+        self.lineEdit_sampling_frequency.setText(f"{1 / dt}")
         self.lineEdit_frequency_resolution_plot.setText(f"{df}")
 
     def tab_event_callback(self):
@@ -513,16 +507,14 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
     def load_hdf_file(self):
         caption = "Choose the HDF file to import the external compressor excitation data"
 
-        imported_path = FileDialogService.open_file(file_extensions=SUPPORTED_SIMULATION_DATA, 
-                                    caption=caption,
-                                    last_folder="imported_table_folder")
+        imported_path = FileDialogService.open_file(file_extensions=SUPPORTED_SIMULATION_DATA, caption=caption, last_folder="imported_table_folder")
 
         if imported_path is None:
             return None
 
         return imported_path
-    
-    def load_table(self, line_edit : QLineEdit, direct_load: bool=False):
+
+    def load_table(self, line_edit: QLineEdit, direct_load: bool = False):
         title = "Error reached while loading 'surface velocity' table"
 
         try:
@@ -530,12 +522,10 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
                 imported_path = line_edit.text()
 
             else:
-                extensions = SUPPORTED_SPREADSHEET_READ_EXTENSIONS + SUPPORTED_TEXT_EXTENSIONS
+                extensions = SUPPORTED_SPREADSHEET_EXTENSIONS + SUPPORTED_TEXT_EXTENSIONS
                 caption = "Choose a table to import the compressor excitation waveform data"
 
-                imported_path = FileDialogService.open_file(file_extensions=extensions,
-                                                            caption=caption,
-                                                            last_folder="imported_table_folder")
+                imported_path = FileDialogService.open_file(file_extensions=extensions, caption=caption, last_folder="imported_table_folder")
 
             imported_data = FileHandler.read(imported_path)
 
@@ -545,7 +535,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
             if not direct_load:
                 line_edit.setText(str(imported_data.path))
 
-            imported_values = imported_data.data 
+            imported_values = imported_data.data
 
             if imported_values.shape[1] < 2:
                 message = "The imported table has insufficient number of columns. The mass flow data signal "
@@ -615,10 +605,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
             return
 
         if self.imported_values is None:
-            self.imported_values = self.load_table( 
-                self.lineEdit_table_path, 
-                direct_load = True 
-                )
+            self.imported_values = self.load_table(self.lineEdit_table_path, direct_load=True)
 
         if self.compute_compressor_excitation_spectrum():
             return
@@ -634,7 +621,6 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         frequency_resolution_req = float(self.lineEdit_frequency_resolution_required.text())
 
         for surface_id in surface_ids:
-
             if data_source == "CFD":
                 if not isinstance(self.normal_surface_velocity_sdata, np.ndarray):
                     return
@@ -665,20 +651,20 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
             table_path = self.lineEdit_table_path.text()
 
             data = {
-                "data_source" : data_source,
-                "compressor_type" : compressor_type,
-                "excitation_type" : excitation_type,
-                "excitation_units" : excitation_units,
-                "connection_type" : connection_type,
-                "excitation_mapping" : excitation_mapping,
-                "single_revolution" : single_revolution,
-                "angular_resolution" : angular_resolution,
-                "frequency_resolution_req" : frequency_resolution_req,
-                "table_names" : [table_name],
-                "table_paths" : [table_path],
-                "values" : [complex_values],
+                "data_source": data_source,
+                "compressor_type": compressor_type,
+                "excitation_type": excitation_type,
+                "excitation_units": excitation_units,
+                "connection_type": connection_type,
+                "excitation_mapping": excitation_mapping,
+                "single_revolution": single_revolution,
+                "angular_resolution": angular_resolution,
+                "frequency_resolution_req": frequency_resolution_req,
+                "table_names": [table_name],
+                "table_paths": [table_path],
+                "values": [complex_values],
                 "element_integration": True,
-                }
+            }
 
             self.properties._set_property("compressor_excitation_waveform", data, surface=surface_id)
 
@@ -697,7 +683,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
             "compressor_excitation_waveform",
             "reciprocating_compressor_excitation",
             "mass_source",
-            ]
+        ]
 
         for surface_id in surface_ids:
             for label in labels:
@@ -718,7 +704,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         title = "External comrpressor excitation reset"
         message = "Would you like to remove the all external compressor excitations from model?"
 
-        buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
+        buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
         read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
 
         if read._cancel:
@@ -796,7 +782,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
             "velocity_u",
             "velocity_v",
             "velocity_w",
-            ]
+        ]
 
         self.comboBox_data_to_plot.clear()
 
@@ -837,18 +823,18 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         legend_label = "compressor excitation signal"
         title = f"{excitation_type} spectrum".capitalize()
 
-        self.model_results[key] = { 
-            "x_data" : self.frequencies_vector[mask],
-            "y_data" : self.Xf_data[mask],
-            "x_label" : "Frequency [Hz]",
-            "y_label" : plot_type,
-            "title" : title,
-            "data_type" : plot_type.lower(),
-            "legend" : legend_label,
-            "unit" : unit_label,
-            "color" : (0,0,1),
-            "linestyle" : "-"  
-            }
+        self.model_results[key] = {
+            "x_data": self.frequencies_vector[mask],
+            "y_data": self.Xf_data[mask],
+            "x_label": "Frequency [Hz]",
+            "y_label": plot_type,
+            "title": title,
+            "data_type": plot_type.lower(),
+            "legend": legend_label,
+            "units": unit_label,
+            "color": (0, 0, 1),
+            "linestyle": "-",
+        }
 
     def join_waveform_data(self):
 
@@ -861,23 +847,23 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         legend_label = "compressor excitation signal"
         title = f"{excitation_type} waveform".capitalize()
 
-        self.model_results[key] = { 
-            "x_data" : self.time_vector,
-            "y_data" : self.x_data,
-            "x_label" : "Time [s]",
-            "y_label" : plot_type,
-            "title" : title,
-            "data_type" : plot_type.lower(),
-            "legend" : legend_label,
-            "unit" : unit_label,
-            "color" : (0,0,1),
-            "linestyle" : "-" ,
-            }
+        self.model_results[key] = {
+            "x_data": self.time_vector,
+            "y_data": self.x_data,
+            "x_label": "Time [s]",
+            "y_label": plot_type,
+            "title": title,
+            "data_type": plot_type.lower(),
+            "legend": legend_label,
+            "units": unit_label,
+            "color": (0, 0, 1),
+            "linestyle": "-",
+        }
 
     def plot_spectrum_data_callback(self):
         if self.imported_values is None:
             return
-        
+
         if isinstance(self.spectrum_plotter, FrequencyResponsePlotter):
             self.spectrum_plotter.close()
 
@@ -886,7 +872,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
 
         self.spectrum_plotter = FrequencyResponsePlotter(close_dialogs=True)
         self.spectrum_plotter._set_model_results_data_to_plot(self.model_results)
-        
+
     def plot_waveform_data_callback(self):
         if self.imported_values is None:
             return
@@ -919,9 +905,9 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         self.auralize_signal = True
         self.process_signals_to_plot()
 
-        time_vector_audio = np.arange(0, self.T_audio, 1/fs_audio)
+        time_vector_audio = np.arange(0, self.T_audio, 1 / fs_audio)
         audio_signal = np.interp(time_vector_audio, self.time_vector, self.x_data)
-        
+
         # remove dc component
         audio_signal -= np.average(audio_signal)
 
@@ -933,7 +919,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         # wavfile.write(file_name, fs_audio, (audio_signal * 32767).astype(np.int16)) # Scale for 16-bit PCM
 
         # create a hann window for fading purposes
-        hann_window = hann(2*self.fading_samples)
+        hann_window = hann(2 * self.fading_samples)
 
         # deepcopy the audio signal
         audio_signal_faded = deepcopy(audio_signal)
@@ -941,7 +927,7 @@ class CompressorExcitationWaveformInputs(CompressorExcitationWaveformInputs_UI):
         # apply the fade-in to audio signal
         N_ws = self.fading_samples
         audio_signal_faded[:N_ws] = audio_signal_faded[:N_ws] * hann_window[:N_ws]
-        
+
         # apply the fade-out to audio signal
         N_fout = audio_signal_faded.size - N_ws
         audio_signal_faded[N_fout:] = audio_signal_faded[N_fout:] * hann_window[N_ws:]

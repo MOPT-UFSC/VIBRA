@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 
 
-class ExternalMeshData():
+class ExternalMeshData:
     def __init__(self):
 
         self.file_path = ""
@@ -23,10 +23,8 @@ class ExternalMeshData():
         self.connectivities_data = defaultdict(list)
         self.nodes_from_named_selection = defaultdict(list)
 
-
-    def set_named_selections(self, named_selections):
+    def set_named_selections(self, named_selections: dict[str, int]):
         self.named_selections = named_selections
-
 
     def read_file(self, path):
 
@@ -37,11 +35,9 @@ class ExternalMeshData():
         with open(self.file_path, "r", encoding="latin-1") as self.file:
             self.lines = self.file.readlines()
 
-
     def decode_mesh_data_from_file(self):
 
-        for row, line in enumerate(self.lines[0: ]):
-
+        for row, line in enumerate(self.lines[0:]):
             if not line:
                 continue
 
@@ -66,9 +62,8 @@ class ExternalMeshData():
                 self.skip_format_row = True
                 self.modo = "connectivity"
                 continue
-            
-            elif "CMBLOCK" in line or "cmblock" in line:
 
+            elif "CMBLOCK" in line or "cmblock" in line:
                 if self.modo is None:
                     if self.nodal_coordinates and self.connectivities_data:
                         for named_selection in self.named_selections:
@@ -80,7 +75,6 @@ class ExternalMeshData():
                         continue
 
             if self.modo == "coordinates":
-                
                 if self.skip_format_row:
                     self.skip_format_row = False
                     start_col, spacing_cols = self.get_coordinates_format_info(line)
@@ -88,14 +82,13 @@ class ExternalMeshData():
                     continue
 
                 try:
-
                     size = len(line)
-                    N_int = int((size-start_col)/(spacing_cols))
+                    N_int = int((size - start_col) / (spacing_cols))
 
                     coordinates = []
                     coordinates.append(int(line[:start_col]))
                     for j in range(N_int):
-                        start = start_col + j*spacing_cols
+                        start = start_col + j * spacing_cols
                         end = start + spacing_cols
                         coordinates.append(float(line[start:end]))
 
@@ -106,7 +99,6 @@ class ExternalMeshData():
                     self.modo = None
 
             elif self.modo == "connectivity":
-                
                 if self.skip_format_row:
                     self.skip_format_row = False
                     number_of_cols, spacing_cols = self.get_connectivity_format_info(line)
@@ -114,7 +106,6 @@ class ExternalMeshData():
                     continue
 
                 try:
-                    
                     connect_data = [int(value) for value in line.split()]
 
                     if connect_data:
@@ -197,7 +188,6 @@ class ExternalMeshData():
                     self.modo = None
 
             elif self.modo == "named_selection":
-
                 if self.skip_format_row:
                     self.skip_format_row = False
                     number_of_cols, spacing_cols = self.get_named_selection_format_info(line)
@@ -216,23 +206,20 @@ class ExternalMeshData():
         self.process_named_selection_elements(export=False)
         self.post_process_faces_connectivities()
 
-
     def get_named_selection_format_info(self, line):
         str_format = line[1:-2].split(",")
         num_cols = int(str_format[0].split("i")[0])
         space_cols = int(str_format[0].split("i")[1])
         return num_cols, space_cols
 
-
     def get_coordinates_format_info(self, line):
         str_format = line[1:-2].split(",")
         num_cols = int(str_format[0].split("i")[0])
         space_cols = int(str_format[0].split("i")[1])
-        start_col = num_cols*space_cols
+        start_col = num_cols * space_cols
         fmt_coords = str_format[1].split("e")[1]
         spacing_cols = int(fmt_coords.split(".")[0])
         return start_col, spacing_cols
-
 
     def get_connectivity_format_info(self, line):
         str_format = line[1:-2].split("i")
@@ -240,12 +227,10 @@ class ExternalMeshData():
         spacing_cols = int(str_format[1])
         return number_of_cols, spacing_cols
 
-
     def post_process_connectivities(self):
         self.solids_connectivities.clear()
         for key, data in self.connectivities_data.items():
             self.solids_connectivities[key] = np.array(data, dtype=int)
-
 
     def export_nodal_coordinates(self):
         self.create_output_data_folder()
@@ -253,8 +238,7 @@ class ExternalMeshData():
             header = "Node ID || Coordinate x [m] || Coordinate y [m] || Coordinate z [m]"
             filename = f"{self.folder_name}/nodal_coordinates.dat"
             data = np.array(self.nodal_coordinates)
-            np.savetxt(filename, data, delimiter=",", header=header)#, fmt="%i %18.12e %18.12e %18.12e")
-
+            np.savetxt(filename, data, delimiter=",", header=header)  # , fmt="%i %18.12e %18.12e %18.12e")
 
     def export_connectivities(self):
         self.create_output_data_folder()
@@ -265,49 +249,71 @@ class ExternalMeshData():
                 filename = f"{self.folder_name}/connectivity_matrix.dat"
                 np.savetxt(filename, data, header=header, fmt="%i", delimiter=",")
 
-
     def get_face_connectivity_indices(self, element_type: str):
 
         indices = np.array([])
 
         if element_type == "solid285_tet4":
-            indices = np.array([
-                [2, 1, 3],
-                [1, 2, 4],
-                [2, 3, 4],
-                [3, 1, 4],
-                ], dtype=int) - 1
+            indices = (
+                np.array(
+                    [
+                        [2, 1, 3],
+                        [1, 2, 4],
+                        [2, 3, 4],
+                        [3, 1, 4],
+                    ],
+                    dtype=int,
+                )
+                - 1
+            )
 
         elif element_type == "solid187_tet10":
-            indices = np.array([
-                [2, 1, 3, 5,  7,  6],
-                [1, 2, 4, 5,  9,  8],
-                [2, 3, 4, 6, 10,  9],
-                [3, 1, 4, 7,  8, 10],
-                ], dtype=int) - 1
+            indices = (
+                np.array(
+                    [
+                        [2, 1, 3, 5, 7, 6],
+                        [1, 2, 4, 5, 9, 8],
+                        [2, 3, 4, 6, 10, 9],
+                        [3, 1, 4, 7, 8, 10],
+                    ],
+                    dtype=int,
+                )
+                - 1
+            )
 
         if element_type == "solid185_hex8":
-            indices = np.array([
-                [2, 1, 4, 3],
-                [1, 2, 6, 5],
-                [2, 3, 7, 6],
-                [3, 4, 8, 7],
-                [4, 1, 5, 8],
-                [5, 6, 7, 8],
-                ], dtype=int) - 1
-            
+            indices = (
+                np.array(
+                    [
+                        [2, 1, 4, 3],
+                        [1, 2, 6, 5],
+                        [2, 3, 7, 6],
+                        [3, 4, 8, 7],
+                        [4, 1, 5, 8],
+                        [5, 6, 7, 8],
+                    ],
+                    dtype=int,
+                )
+                - 1
+            )
+
         elif element_type == "solid186_hex20":
-            indices = np.array([
-                [2, 1, 4, 3,  9, 12, 11, 10],
-                [1, 2, 6, 5,  9, 18, 13, 17],
-                [2, 3, 7, 6, 10, 19, 14, 18],
-                [3, 4, 8, 7, 11, 20, 15, 19],
-                [4, 1, 5, 8, 12, 17, 16, 20],
-                [5, 6, 7, 8, 13, 14, 15, 16],
-                ], dtype=int) - 1
+            indices = (
+                np.array(
+                    [
+                        [2, 1, 4, 3, 9, 12, 11, 10],
+                        [1, 2, 6, 5, 9, 18, 13, 17],
+                        [2, 3, 7, 6, 10, 19, 14, 18],
+                        [3, 4, 8, 7, 11, 20, 15, 19],
+                        [4, 1, 5, 8, 12, 17, 16, 20],
+                        [5, 6, 7, 8, 13, 14, 15, 16],
+                    ],
+                    dtype=int,
+                )
+                - 1
+            )
 
         return indices
-
 
     def get_nodes_from_face_and_solid_element(self, element_type: str):
 
@@ -319,13 +325,12 @@ class ExternalMeshData():
 
         if element_type == "solid285_tet4":
             return 3, 4
-        
+
         if element_type == "solid185_hex8":
             return 4, 8
 
         if element_type == "solid186_hex20":
             return 8, 20
-
 
     def process_named_selection_elements(self, export: bool = False):
 
@@ -343,7 +348,6 @@ class ExternalMeshData():
             connect = np.array(data, dtype=int)
 
             for ns_key, ns_nodes in self.nodes_from_named_selection.items():
-
                 surface_id += 1
                 face_connectivity = []
 
@@ -355,9 +359,8 @@ class ExternalMeshData():
                 element3d_indices = connect[mask, 0]
 
                 for jj, connect_data in enumerate(connect[mask, :]):
-
                     elem3d_connectivity = connect_data[3:]
- 
+
                     if nodes_solid_element:
                         indices = aux_indices[np.isin(elem3d_connectivity, ns_nodes)]
                         row = np.sum(np.isin(faces_connect_indices, indices), axis=1) == nodes_face_element
@@ -383,7 +386,7 @@ class ExternalMeshData():
                         "element2d_indices": element2d_indices,
                         "element3d_indices": element3d_indices,
                         "connectivity": connect_data,
-                        "surface_id": surface_id,
+                        "surface_id": self.named_selections.get(ns_key),
                     }
 
                     if not export:
@@ -400,7 +403,6 @@ class ExternalMeshData():
                     header = "Surface element ID || Nodes"
                     filename = f"{self.folder_name}/elements_from_{ns_key}.dat"
                     np.savetxt(filename, exp_data, header=header, fmt="%i", delimiter=",")
-
 
     def post_process_faces_connectivities(self):
 
@@ -424,11 +426,9 @@ class ExternalMeshData():
 
         np.savetxt("teste.dat", faces_connectivity, delimiter=",", fmt="%i")
 
-
-    def export_named_selection_nodes(self, folder_path : str):
+    def export_named_selection_nodes(self, folder_path: str):
 
         for ns_key, ns_nodes in self.nodes_from_named_selection.items():
-
             indices = np.arange(1, len(ns_nodes) + 1)
             data = np.array([indices, ns_nodes], dtype=int).T
 
@@ -436,15 +436,12 @@ class ExternalMeshData():
             filename = f"{folder_path}/nodes_from_{ns_key}.dat"
             np.savetxt(filename, data, header=header, fmt="%i", delimiter=",")
 
-
     def process_named_selection_data(self, export=False):
         self.process_named_selection_elements(export=export)
-
 
     def create_output_data_folder(self):
         if not os.path.exists(self.folder_name):
             os.makedirs(self.folder_name)
-
 
     def post_process_nodal_coordinates(self, index_zero=True):
 
@@ -452,14 +449,13 @@ class ExternalMeshData():
 
         rows, cols = data.shape
 
-        indices = data[:,0]
+        indices = data[:, 0]
         if index_zero:
             indices -= 1
 
         self.array_nodal_coordinates = np.zeros((rows, cols), dtype=float)
-        self.array_nodal_coordinates[ :, 0 ] = indices
-        self.array_nodal_coordinates[ :, 1:] = data[:, 1:]
-
+        self.array_nodal_coordinates[:, 0] = indices
+        self.array_nodal_coordinates[:, 1:] = data[:, 1:]
 
     def get_element_face_normal(self, connect):
 
@@ -478,13 +474,12 @@ class ExternalMeshData():
 
         return normal
 
-
     def get_edge_vector(self, connect, outer_node):
 
         connect = np.array(connect) - 1
 
         P1 = self.array_nodal_coordinates[connect[0], 1:]
-        P4 = self.array_nodal_coordinates[outer_node-1, 1:]
+        P4 = self.array_nodal_coordinates[outer_node - 1, 1:]
 
         P4P1 = np.array(P4 - P1)
 
@@ -493,9 +488,9 @@ class ExternalMeshData():
 
 def filter_collapsed_nodes(input_nodes: list[int]):
     """
-    This function filters the element connectivity while maintaining the original order. 
-    Be careful, although NumPy's "unique" function performs a similar removal, it 
-    reorders the elements in the array. This reordering should be avoided as it 
+    This function filters the element connectivity while maintaining the original order.
+    Be careful, although NumPy's "unique" function performs a similar removal, it
+    reorders the elements in the array. This reordering should be avoided as it
     compromises the finite element integration rules.
     """
     connectivity = []

@@ -9,7 +9,7 @@ from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QAbstractItemView, QHeaderView, QLineEdit, QTreeWidgetItem
 
 from vibra import app
-from vibra.extensions import SUPPORTED_SPREADSHEET_READ_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
+from vibra.extensions import SUPPORTED_SPREADSHEET_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
 from vibra.interface import error_title, warning_title
 from vibra.interface.common.common_interface import (
     process_decoupling_actions,
@@ -88,14 +88,14 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
         #
         self.geometry_selection_callback()
-    
+
     def geometry_selection_callback(self):
         current_tab = self.tabWidget_main.currentIndex()
 
         if current_tab == StandardTabType.LIST:
             self.verify_if_selected_surfaces_are_in_tree_widget_transfer_impedance()
             return
-        
+
         if current_tab != StandardTabType.CONSTANT_DATA:
             return
 
@@ -118,10 +118,10 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
         if self.tabWidget_main.currentIndex() == StandardTabType.LIST:
             return
-        
+
         if not isinstance(pp_data, dict):
             return
-        
+
         if "table_paths" in pp_data.keys():
             self.tabWidget_main.setCurrentIndex(StandardTabType.TABULAR_DATA)
             self.lineEdit_table_path.setText(pp_data["table_paths"][0])
@@ -129,7 +129,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
             self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)
             self.lineEdit_real_value.setText(str(pp_data["real_values"][0]))
             self.lineEdit_imag_value.setText(str(pp_data["imag_values"][0]))
-        
+
     def verify_if_selected_surfaces_are_in_tree_widget_transfer_impedance(self):
         if self.tree_item_clicked:
             return
@@ -149,9 +149,9 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
         if not selected_surfaces_in_tree_widget:
             return
-        
+
         self.pushButton_remove.setEnabled(True)
-        
+
         model_selector = self.treeWidget_transfer_impedance.selectionModel()
 
         for surface_id in selected_surfaces_in_tree_widget:
@@ -180,7 +180,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
                 self.decoupling_map[surface_id] = new_surface_id
 
             index = self.treeWidget_transfer_impedance.indexBelow(index)
-        
+
         return map_id_to_model_index
 
     def check_selected_surfaces(self):
@@ -213,7 +213,6 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         surfaces_from_volume = defaultdict(list)
 
         for surface_id in surface_ids:
-
             message = ""
             volumes_from_surface = self.model.mesh.volumes_from_surface.get(surface_id)
 
@@ -223,7 +222,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
                 message += "with two volumes to proceed with dofs decoupling."
 
             elif len(volumes_from_surface) == 1:
-                message = "The selected surface is connected to one volume, this means that an external " 
+                message = "The selected surface is connected to one volume, this means that an external "
                 message += "surface has been selected. You must select an internal surface connected "
                 message += "with two volumes to proceed with dofs decoupling."
 
@@ -241,7 +240,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         # check if there is a common volume touching the selected surfaces
         for vol_id, surf_ids in surfaces_from_volume.items():
             if len(surf_ids) == len(surface_ids):
-                return {surf_id : vol_id for surf_id in surface_ids}
+                return {surf_id: vol_id for surf_id in surface_ids}
 
         surface_to_volume_map = {}
 
@@ -284,7 +283,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         self.actions_to_finalize(close_window)
 
     def constant_data_assignment(self, surface_ids: int | tuple[int]):
-        
+
         real_value = self.check_inputs(self.lineEdit_real_value, "Real part of transfer impedance", only_positive=False)
         imag_value = self.check_inputs(self.lineEdit_imag_value, "Imaginary part of transfer impedance", only_positive=False)
 
@@ -312,7 +311,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
             if volume_id is None:
                 continue
 
-            data = {"volume_to_decouple" : volume_id}
+            data = {"volume_to_decouple": volume_id}
 
             self.properties._set_property("transfer_impedance", deepcopy(self.ti_data), surface=surface_id)
             self.properties._set_property("degrees_of_freedom_decoupling", data, surface=surface_id)
@@ -320,7 +319,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         self.assignment_complete = True
         self.clear_line_edit_selection_id()
 
-    def load_table(self, lineEdit : QLineEdit, direct_load=False):
+    def load_table(self, lineEdit: QLineEdit, direct_load=False):
         title = "Error reached while loading 'transfer impedance' table"
 
         try:
@@ -328,10 +327,10 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
                 imported_path = lineEdit.text()
 
             else:
-                extensions = SUPPORTED_SPREADSHEET_READ_EXTENSIONS + SUPPORTED_TEXT_EXTENSIONS
-                imported_path = FileDialogService.open_file(file_extensions=extensions,
-                                                            caption="Choose a table to import the transfer impedance",
-                                                            last_folder="imported_table_folder")
+                extensions = SUPPORTED_SPREADSHEET_EXTENSIONS + SUPPORTED_TEXT_EXTENSIONS
+                imported_path = FileDialogService.open_file(
+                    file_extensions=extensions, caption="Choose a table to import the transfer impedance", last_folder="imported_table_folder"
+                )
 
             imported_data = FileHandler.read(imported_path)
 
@@ -403,7 +402,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
             return True
 
         if self.imported_values is None:
-            self.imported_values = self.load_table(self.lineEdit_table_path, direct_load = True)
+            self.imported_values = self.load_table(self.lineEdit_table_path, direct_load=True)
 
         if self.imported_values is None:
             return True
@@ -415,7 +414,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
             if volume_id is None:
                 continue
 
-            data = {"volume_to_decouple" : volume_id}
+            data = {"volume_to_decouple": volume_id}
 
             self.include_transfer_impedance_table_data(surface_id)
             self.properties._set_property("transfer_impedance", deepcopy(self.ti_data), surface=surface_id)
@@ -475,9 +474,9 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         selected_items = self.treeWidget_transfer_impedance.selectedItems()
         if not selected_items:
             return []
-        
+
         return [int(item.text(0)) for item in selected_items]
-    
+
     def set_selection_text(self, selected_surfaces: list | set):
         selected_surfaces_decoupled = []
 
@@ -489,7 +488,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
             else:
                 decouple_pair = [selected_surface, decouple_surface]
                 decouple_pair.sort()
-                       
+
             decouple_pair = tuple(decouple_pair)
             selected_surfaces_decoupled.append(str(decouple_pair))
 
@@ -497,11 +496,11 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
         self.lineEdit_selection_id.setText(selection_text)
         self.lineEdit_selection_id.setToolTip(selection_text)
-    
+
     def clear_line_edit_selection_id(self):
         self.lineEdit_selection_id.clear()
         self.lineEdit_selection_id.setToolTip("")
-                
+
     def clear_all_inputs(self):
         self.lineEdit_real_value.clear()
         self.lineEdit_imag_value.clear()
@@ -588,9 +587,9 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
             surface_ids = [surface_ids]
 
         labels = [
-            "perforated_plate_model", 
+            "perforated_plate_model",
             "interior_impedance",
-            ]
+        ]
 
         for surface_id in surface_ids:
             for label in labels:
@@ -618,9 +617,8 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
 
             data = self.properties._get_property("degrees_of_freedom_decoupling", surface=surface_id)
             if isinstance(data, dict):
-
                 new_surface_id = data.get("new_surface_id")
-                if isinstance(new_surface_id, int):   
+                if isinstance(new_surface_id, int):
                     remove_all_properties_assigned_to_new_surfaces([new_surface_id])
 
                 self.properties._remove_surface_property("degrees_of_freedom_decoupling", surface_id)
@@ -703,20 +701,19 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         if close_window:
             self.close()
 
-    def check_inputs(self, line_edit: QLineEdit, label: str, only_positive: bool=True):
+    def check_inputs(self, line_edit: QLineEdit, label: str, only_positive: bool = True):
 
         title = "Invalid value typed"
         message = ""
-        
+
         input_str = line_edit.text()
 
         if input_str == "":
-            return 0.
+            return 0.0
 
         input_str = input_str.replace(",", ".")
 
         try:
-
             out = float(input_str)
 
             if only_positive and out < 0:
@@ -772,7 +769,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
             self.treeWidget_transfer_impedance.setSelectionMode(QAbstractItemView.MultiSelection)
         elif event.key() == Qt.Key_Shift:
             self.treeWidget_transfer_impedance.setSelectionMode(QAbstractItemView.ContiguousSelection)
-    
+
     def keyReleaseEvent(self, event):
         if event.key() == Qt.Key_Control:
             self.treeWidget_transfer_impedance.setSelectionMode(QAbstractItemView.SingleSelection)
@@ -782,7 +779,7 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         self.hide()
 
         try:
-            warnings.filterwarnings('default')
+            warnings.filterwarnings("default")
         except TypeError:
             pass
 
@@ -793,5 +790,6 @@ class TransferImpedanceInputs(TransferImpedanceInputs_UI):
         app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
 
         return super().closeEvent(a0)
+
 
 # fmt: on

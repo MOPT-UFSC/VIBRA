@@ -4,7 +4,7 @@ from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QAbstractItemView, QLineEdit, QTreeWidgetItem
 
 from vibra import app
-from vibra.extensions import SUPPORTED_SPREADSHEET_READ_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
+from vibra.extensions import SUPPORTED_SPREADSHEET_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
 from vibra.interface import error_title
 from vibra.interface.common.common_interface import update_analysis_setup_in_file, update_entities_selection
 from vibra.interface.data.data_manager import get_spectral_data_from_array
@@ -26,7 +26,7 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
         self.model = app().project.model
         self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
-        
+
         self._config_window()
         self._initialize()
         self._configure_qt_variables()
@@ -96,7 +96,7 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
 
         if not surface_ids:
             return
-            
+
         app().main_window.selection.set_geometry_selection(surfaces=surface_ids)
 
         self.pushButton_remove.setEnabled(True)
@@ -106,15 +106,15 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
 
     def on_doubleclick_item(self, item):
         self.on_click_item(item)
-    
+
     def get_selected_surfaces_from_tree_widget_absorption_surface(self) -> list:
         selected_items = self.treeWidget_absorption_surface.selectedItems()
 
         if not selected_items:
             return list()
-        
+
         return [int(item.text(0)) for item in selected_items]
-    
+
     def set_selection_text(self, selected_surfaces: list | set):
         selected_surfaces = list(selected_surfaces)
         selected_surfaces.sort()
@@ -124,7 +124,7 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
 
         self.lineEdit_selection_id.setText(selection_text)
         self.lineEdit_selection_id.setToolTip(selection_text)
-    
+
     def clear_line_edit_selection_id(self):
         self.lineEdit_selection_id.clear()
         self.lineEdit_selection_id.setToolTip("")
@@ -155,7 +155,7 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
         else:
             self.tabWidget_main.setCurrentIndex(StandardTabType.CONSTANT_DATA)
             self.lineEdit_real_value.setText(f"{data.get('real_values')[0]}")
-    
+
     def verify_if_selected_surfaces_are_in_tree_widget_absorption_surface(self):
         if self.tree_item_clicked:
             return
@@ -175,9 +175,9 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
 
         if not selected_surfaces_in_tree_widget:
             return
-        
+
         self.pushButton_remove.setEnabled(True)
-        
+
         model_selector = self.treeWidget_absorption_surface.selectionModel()
 
         for surface_id in selected_surfaces_in_tree_widget:
@@ -199,7 +199,7 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
             map_id_to_model_index[int(surface_id)] = index
 
             index = self.treeWidget_absorption_surface.indexBelow(index)
-        
+
         return map_id_to_model_index
 
     def load_model_info(self):
@@ -230,7 +230,7 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
 
         input_ids = self.lineEdit_selection_id.text()
         surface_ids, error_data = self.model.check_selected_ids(
-            input_ids, 
+            input_ids,
             "surfaces",
             domain="acoustic",
         )
@@ -253,7 +253,7 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
         elif tab_index == StandardTabType.TABULAR_DATA:
             if self.tabular_data_assignment(surface_ids):
                 return
-            
+
         self.actions_to_finalize(close_window)
 
     def check_inputs(self, lineEdit: QLineEdit, label: str, zero_included: bool = True, only_positive: bool = True):
@@ -265,11 +265,9 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
         input_str = lineEdit.text()
 
         if input_str != "":
-
             input_str = input_str.replace(",", ".")
 
             try:
-
                 value = float(input_str)
 
                 if zero_included:
@@ -295,7 +293,11 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
 
     def constant_data_assignment(self, surface_ids: list[int]):
 
-        absorption_coefficient = self.check_inputs(self.lineEdit_real_value, "Absorption coefficient", zero_included=False,)
+        absorption_coefficient = self.check_inputs(
+            self.lineEdit_real_value,
+            "Absorption coefficient",
+            zero_included=False,
+        )
 
         if absorption_coefficient is None:
             title = "Additional inputs required"
@@ -308,14 +310,14 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
         imag_values = [None]
 
         data = {
-            "real_values" : real_values,
-            "imag_values" : imag_values,
-            }
+            "real_values": real_values,
+            "imag_values": imag_values,
+        }
 
         for surface_id in surface_ids:
-            self.properties._set_property("absorption_surface", data, surface=surface_id)      
+            self.properties._set_property("absorption_surface", data, surface=surface_id)
 
-    def load_table(self, lineEdit : QLineEdit, direct_load=False):
+    def load_table(self, lineEdit: QLineEdit, direct_load=False):
         title = "Error reached while loading 'absorption surface' table"
 
         try:
@@ -323,13 +325,13 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
                 imported_path = lineEdit.text()
 
             else:
-                extensions = SUPPORTED_SPREADSHEET_READ_EXTENSIONS + SUPPORTED_TEXT_EXTENSIONS
-                imported_path = FileDialogService.open_file(file_extensions=extensions,
-                                            caption="Choose a table to import the absorption surface",
-                                            last_folder="imported_table_folder")
-            
+                extensions = SUPPORTED_SPREADSHEET_EXTENSIONS + SUPPORTED_TEXT_EXTENSIONS
+                imported_path = FileDialogService.open_file(
+                    file_extensions=extensions, caption="Choose a table to import the absorption surface", last_folder="imported_table_folder"
+                )
+
             imported_data = FileHandler.read(imported_path)
-                
+
             if imported_data is None:
                 return None
 
@@ -402,10 +404,8 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
             self.imported_values = self.load_table(self.lineEdit_table_path, direct_load=True)
 
         for surface_id in surface_ids:
-
             if isinstance(self.imported_values, np.ndarray):
                 if self.imported_values.shape[1] >= 3:
-
                     table_name = f"specific_impedance_at_surface_{surface_id}"
                     if self.save_table_values(table_name, self.imported_values):
                         self.lineEdit_table_path.setFocus()
@@ -426,8 +426,8 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
 
             data = {
                 "table_names": [table_name],
-                "table_paths" : [table_path],
-                "values" : [complex_values],
+                "table_paths": [table_path],
+                "values": [complex_values],
             }
 
             self.properties._set_property("absorption_surface", data, surface=surface_id)
@@ -441,7 +441,7 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
             "absorption_surface",
             "specific_impedance",
             "incident_plane_wave",
-            ]
+        ]
 
         for surface_id in surface_ids:
             for label in labels:
@@ -449,10 +449,10 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
 
     def remove_callback(self):
         selected_surfaces = self.get_selected_surfaces_from_tree_widget_absorption_surface()
-    
+
         if not selected_surfaces:
             return
-        
+
         for surface_id in selected_surfaces:
             self.properties._remove_surface_property("absorption_surface", surface_id)
 
@@ -467,7 +467,7 @@ class AbsorptionSurfaceInputs(AbsorptionSurfaceInputs_UI):
         title = "Absorption surface reset"
         message = "Would you like to remove the all applied absorption surfaces from model?"
 
-        buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
+        buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
         read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
 
         if read._cancel:

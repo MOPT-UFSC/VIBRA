@@ -96,8 +96,6 @@ class Model:
         self.analysis_setup: Optional[AnalysisSetup] = None
 
         self.solution: Optional[Solution] = None
-        self.acoustic_solution: Optional[Solution] = None
-        self.structural_solution: Optional[Solution] = None
 
         # TODO: review these variables
         self.mesh: Optional[Mesh] = None
@@ -345,6 +343,12 @@ class Model:
 
     def get_harmonic_analysis_setup(self, **kwargs) -> HarmonicAnalysisSetup:
         analysis_setup = HarmonicAnalysisSetup(**kwargs)
+        if isinstance(self.analysis_setup, ModalAnalysisSetup | HarmonicAnalysisSetup):
+            analysis_setup.sigma_factor = self.analysis_setup.sigma_factor
+            analysis_setup.modes_number = self.analysis_setup.modes_number
+            if isinstance(self.analysis_setup, HarmonicAnalysisSetup):
+                analysis_setup.global_damping = self.analysis_setup.global_damping
+
         analysis_setup.solution_steps_mask = self.get_solution_steps_mask(frequencies=analysis_setup.get_frequencies())
         return analysis_setup
 
@@ -1244,7 +1248,7 @@ class Model:
             return None
 
         surface_ids = self.mesh.geometry_information.get("surfaces")
-        surface_without_thickness = self.properties.get_entities_without_property("surface_thickness", surfaces=surface_ids)
+        _, surface_without_thickness = self.properties.get_entities_with_and_without_property("surface_thickness", surfaces=surface_ids)
 
         return surface_without_thickness
 

@@ -1,4 +1,3 @@
-
 from collections import defaultdict
 from enum import IntEnum
 from os.path import basename
@@ -9,7 +8,7 @@ from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QAbstractItemView, QLineEdit, QTreeWidgetItem
 
 from vibra import app
-from vibra.extensions import SUPPORTED_SPREADSHEET_READ_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
+from vibra.extensions import SUPPORTED_SPREADSHEET_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
 from vibra.interface import error_title
 from vibra.interface.common.common_interface import InputDataType, check_input_entries, update_analysis_setup_in_file, update_entities_selection
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
@@ -65,8 +64,8 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         self.keep_window_open = True
         self.element_types = ["2d_element", "3d_element"]
         self.assignment_types = {
-            0 : "surfaces",
-            1 : "lines",
+            0: "surfaces",
+            1: "lines",
         }
         self.reset_table_variables()
 
@@ -211,13 +210,12 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
             table_paths = data["table_paths"]
             for index, lineEdit_table in enumerate(self.table_line_edits.values()):
                 table_path = table_paths[index]
-                if table_path is not None:                   
+                if table_path is not None:
                     lineEdit_table.setText(table_path)
 
             self.tabWidget_main.setCurrentIndex(StandardTabType.TABULAR_DATA)
 
         else:
-
             if "real_values" in data:
                 left_values = data.get("real_values")
                 right_values = data.get("imag_values")
@@ -229,7 +227,6 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
                 self.comboBox_data_type.setCurrentIndex(InputDataType.MAGNITUDE_PHASE)
 
             for index, [line_edit_left, line_edit_right] in enumerate(self.constant_values_line_edits):
-
                 if element_type == "3d_element" and index >= 3:
                     continue
 
@@ -249,7 +246,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
             if isinstance(data, dict):
                 self.comboBox_element_type.setCurrentIndex(0)
                 return
-            
+
         if isinstance(line_id, int):
             for node_id in self.mesh.get_nodes_from_line(line_id):
                 for surface_id in self.mesh.get_surfaces_from_node(node_id):
@@ -293,7 +290,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
 
     def constant_values_attribution(self, selection: str, selected_ids: list[int]):
 
-        unit = "N/m²" if selection == "surfaces" else "N/m"
+        units = "N/m²" if selection == "surfaces" else "N/m"
 
         self.remove_conflicting_excitations(selected_ids, selection)
 
@@ -318,8 +315,8 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         for values in distributed_loads:
             all_values.extend(values)
 
-        condition_1 = element_type == "2d_element" and all_values.count(None) == 12
-        condition_2 = element_type == "3d_element" and all_values.count(None) == 6
+        condition_1 = element_type == "2d_element" and all_values.count(None) == 6
+        condition_2 = element_type == "3d_element" and all_values.count(None) == 3
 
         if condition_1 or condition_2:
             title = "Additional inputs required"
@@ -331,12 +328,11 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         right_values = [value_b for (_, value_b) in distributed_loads]
 
         for selected_id in selected_ids:
-
             data = {
                 "element_type": element_type,
                 "real_values" if real_imag_input else "amplitude_values": left_values,
                 "imag_values" if real_imag_input else "phase_values": right_values,
-                "unit": unit,
+                "units": units,
             }
 
             match selection:
@@ -346,7 +342,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
                 case "lines":
                     self.properties._set_property("distributed_loads", data, line=selected_id)
 
-    def load_table(self, lineEdit : QLineEdit, load_label: str, direct_load = False):
+    def load_table(self, lineEdit: QLineEdit, load_label: str, direct_load=False):
         title = "Error while loading table"
 
         try:
@@ -354,10 +350,10 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
                 imported_path = lineEdit.text()
 
             else:
-                extensions = SUPPORTED_SPREADSHEET_READ_EXTENSIONS + SUPPORTED_TEXT_EXTENSIONS
-                imported_path = FileDialogService.open_file(file_extensions=extensions,
-                                                            caption=f"Choose a table to import the {load_label} data",
-                                                            last_folder="imported_table_folder")
+                extensions = SUPPORTED_SPREADSHEET_EXTENSIONS + SUPPORTED_TEXT_EXTENSIONS
+                imported_path = FileDialogService.open_file(
+                    file_extensions=extensions, caption=f"Choose a table to import the {load_label} data", last_folder="imported_table_folder"
+                )
 
             imported_data = FileHandler.read(imported_path)
 
@@ -391,14 +387,14 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
 
     def load_Fx_table(self):
         self.Fx_table_values, self.Fx_table_path = self.load_table(self.lineEdit_path_table_Fx, "Fx")
-        if  self.Fx_table_path is None:
+        if self.Fx_table_path is None:
             self.lineEdit_reset(self.lineEdit_path_table_Fx)
 
     def load_Fy_table(self):
         self.Fy_table_values, self.Fy_table_path = self.load_table(self.lineEdit_path_table_Fy, "Fy")
         if self.Fy_table_path is None:
             self.lineEdit_reset(self.lineEdit_path_table_Fy)
-            
+
     def load_Fz_table(self):
         self.Fz_table_values, self.Fz_table_path = self.load_table(self.lineEdit_path_table_Fz, "Fz")
         if self.Fz_table_path is None:
@@ -415,7 +411,6 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
             frequencies[0] = 0
 
         if self.model.change_analysis_frequency_setup(list(frequencies)):
-
             lineEdit = self.table_line_edits[load_label]
             imported_filename = basename(lineEdit.text())
             self.lineEdit_reset(lineEdit)
@@ -452,7 +447,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
 
     def table_values_attribution(self, selection: str, selected_ids: list[int]):
 
-        unit = "N/m²" if selection == "surfaces" else "N/m"
+        units = "N/m²" if selection == "surfaces" else "N/m"
 
         self.remove_conflicting_excitations(selected_ids, selection)
 
@@ -460,16 +455,15 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         element_type = self.element_types[index]
 
         if self.Fx_table_path is None:
-            self.Fx_table_values, self.Fx_table_path = self.load_table(self.lineEdit_path_table_Fx, "Fx", direct_load = True)
+            self.Fx_table_values, self.Fx_table_path = self.load_table(self.lineEdit_path_table_Fx, "Fx", direct_load=True)
 
         if self.Fy_table_path is None:
-            self.Fy_table_values, self.Fy_table_path = self.load_table(self.lineEdit_path_table_Fy, "Fy", direct_load = True)
+            self.Fy_table_values, self.Fy_table_path = self.load_table(self.lineEdit_path_table_Fy, "Fy", direct_load=True)
 
         if self.Fz_table_path is None:
-            self.Fz_table_values, self.Fz_table_path = self.load_table(self.lineEdit_path_table_Fz, "Fz", direct_load = True)
+            self.Fz_table_values, self.Fz_table_path = self.load_table(self.lineEdit_path_table_Fz, "Fz", direct_load=True)
 
         for selected_id in selected_ids:
-            
             if self.Fx_table_values is not None:
                 self.Fx_table_name, self.Fx_array = self.save_table_files("Fx", selected_id, selection, self.Fx_table_values)
                 if self.Fx_array is None:
@@ -494,14 +488,14 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
             if condition_1 or condition_2:
                 title = "Additional inputs required"
                 message = "You must to enter at leat one distributed load table path before confirming the assignment."
-                PrintMessageInput([error_title, title, message]) 
+                PrintMessageInput([error_title, title, message])
                 return True
 
             data = {
-                "element_type" : element_type,
-                "table_names" : table_names,
-                "table_paths" : table_paths,
-                "unit" : unit,
+                "element_type": element_type,
+                "table_names": table_names,
+                "table_paths": table_paths,
+                "units": units,
             }
 
             match selection:
@@ -513,7 +507,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
 
         self.reset_table_variables()
 
-    def apply_callback(self, close_window: bool=False):
+    def apply_callback(self, close_window: bool = False):
 
         tab_index = self.tabWidget_main.currentIndex()
         if tab_index == StandardTabType.LIST:
@@ -550,7 +544,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
 
     def text_label(self, mask):
 
-        load_labels = np.array(['Fx','Fy','Fz'])
+        load_labels = np.array(["Fx", "Fy", "Fz"])
         labels = load_labels[mask]
 
         if list(mask).count(True) == 3:
@@ -563,15 +557,14 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
     def load_model_info(self):
 
         properties = {
-            "line" : self.properties.line_properties,
-            "surface" : self.properties.surface_properties,
+            "line": self.properties.line_properties,
+            "surface": self.properties.surface_properties,
         }
 
         self.treeWidget_distributed_loads.clear()
 
         for key, property in properties.items():
             for (prop_label, *args), data in property.items():
-
                 if prop_label != "distributed_loads":
                     continue
 
@@ -601,7 +594,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         ]
 
         for current_property in properties_to_check:
-            for (property, _) in current_property:
+            for property, _ in current_property:
                 if property != "distributed_loads":
                     continue
 
@@ -652,9 +645,9 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
             return
 
         app().main_window.selection.set_geometry_selection(
-            surfaces = entities_mapping.get("surface"),
-            lines = entities_mapping.get("line"),
-            )
+            surfaces=entities_mapping.get("surface"),
+            lines=entities_mapping.get("line"),
+        )
 
     def item_double_clicked_callback(self, item):
         self.item_clicked_callback(item)
@@ -702,7 +695,7 @@ class DistributedLoadsInputs(DistributedLoadsInputs_UI):
         title = "Distributed loads reset"
         message = "Would you like to remove the all distributed loads from model?"
 
-        buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
+        buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
         obj = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
 
         if obj._cancel:

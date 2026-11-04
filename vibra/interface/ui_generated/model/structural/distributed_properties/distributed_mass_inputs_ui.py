@@ -169,15 +169,15 @@ class Ui_Dialog(object):
         self.gridLayout.setSpacing(6)
         self.gridLayout.setObjectName(u"gridLayout")
         self.gridLayout.setContentsMargins(4, 4, 4, 4)
-        self.lineEdit_mass_to_distribute = QLineEdit(self.frame_8)
-        self.lineEdit_mass_to_distribute.setObjectName(u"lineEdit_mass_to_distribute")
-        self.lineEdit_mass_to_distribute.setMinimumSize(QSize(100, 26))
-        self.lineEdit_mass_to_distribute.setMaximumSize(QSize(120, 26))
-        self.lineEdit_mass_to_distribute.setFont(font1)
-        self.lineEdit_mass_to_distribute.setStyleSheet(u"")
-        self.lineEdit_mass_to_distribute.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.lineEdit_constant_value = QLineEdit(self.frame_8)
+        self.lineEdit_constant_value.setObjectName(u"lineEdit_constant_value")
+        self.lineEdit_constant_value.setMinimumSize(QSize(100, 26))
+        self.lineEdit_constant_value.setMaximumSize(QSize(120, 26))
+        self.lineEdit_constant_value.setFont(font1)
+        self.lineEdit_constant_value.setStyleSheet(u"")
+        self.lineEdit_constant_value.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.gridLayout.addWidget(self.lineEdit_mass_to_distribute, 2, 2, 1, 1)
+        self.gridLayout.addWidget(self.lineEdit_constant_value, 2, 2, 1, 1)
 
         self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
@@ -390,7 +390,7 @@ class Ui_Dialog(object):
         self.comboBox_assignment_type.setItemText(1, QCoreApplication.translate("Dialog", u"Selected lines", None))
         self.comboBox_assignment_type.setItemText(2, QCoreApplication.translate("Dialog", u"Multiple", None))
 
-        self.lineEdit_mass_to_distribute.setText("")
+        self.lineEdit_constant_value.setText("")
         self.label_mass_to_distribute.setText(QCoreApplication.translate("Dialog", u"Mass to distribute:", None))
         self.label_mass_unit.setText(QCoreApplication.translate("Dialog", u"[kg]", None))
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_constant_data), QCoreApplication.translate("Dialog", u"Constant data", None))
@@ -433,7 +433,7 @@ class DistributedMassInputs_UI(QDialog, Ui_Dialog):
                                                 - (Layout): QGridLayout
                                                         - frame_8: QFrame
                                                             - (Layout): QGridLayout
-                                                                    - lineEdit_mass_to_distribute: QLineEdit
+                                                                    - lineEdit_constant_value: QLineEdit
                                                                     - label_mass_to_distribute: QLabel
                                                                     - label_mass_unit: QLabel
                                             - tab_list: QWidget

@@ -1,10 +1,10 @@
-
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from vibra.engine.model import Model
 
 from collections import defaultdict
+from dataclasses import dataclass
 from functools import cache
 from time import perf_counter
 
@@ -15,13 +15,27 @@ from vibra.engine.properties.material import Material
 from vibra.errors import InvalidDomainError
 
 
+@dataclass
+class GroupData:
+    group_label: str
+    entity_type: str
+    entities_id: list[int]
+
+    def as_dict(self):
+        return {
+            "group_label": self.group_label,
+            "entity_type": self.entity_type,
+            "entities_id": self.entities_id,
+        }
+
+
 class ModelDomainsProcessor:
     def __init__(self, model: "Model"):
 
         self.model = model
 
         # use this attribute to control when logs are printed to the terminal
-        self.auxiliar_logs = False
+        self.auxiliar_logs = True
 
         self.reset()
 
@@ -115,9 +129,9 @@ class ModelDomainsProcessor:
                 continue
 
             self.fluid_structure_interfaces[surface_id] = {
-                "fluid_volume" : fluid_volume,
-                "structure_volume" : structure_volume,
-                }
+                "fluid_volume": fluid_volume,
+                "structure_volume": structure_volume,
+            }
 
     def map_nodes_and_elements_by_domain(self):
         """
@@ -247,12 +261,12 @@ class ModelDomainsProcessor:
     def get_dofs_offset(self, domain: str) -> int:
         """
         This method returns, for a specific domain, the dofs shift.
-        
+
         Parameter
         ---------
         domain: str
             The domain label (acoustic or structural)
-        
+
         Return
         ------
         dofs_offset: int
@@ -295,12 +309,12 @@ class ModelDomainsProcessor:
 
         if self.auxiliar_logs:
             print()
-            print(f"Elapsed time to 'map_model_domains': {dt1 : .6f} s")
-            print(f"Elapsed time to 'map_fluid_structure_interfaces': {dt2 : .6f} s")
-            print(f"Elapsed time to 'map_nodes_and_elements_by_domain': {dt3 : .6f} s")
-            print(f"Elapsed time to 'process_nodes_mappings_by_domain': {dt4 : .6f} s")
-            print(f"Elapsed time to 'process_element_mappings_by_domain': {dt5 : .6f} s")
-            print(f"Elapsed time 'process_dof_by_domain': {dt6 : .6f} s")
+            print(f"Elapsed time to 'map_model_domains': {dt1: .6f} s")
+            print(f"Elapsed time to 'map_fluid_structure_interfaces': {dt2: .6f} s")
+            print(f"Elapsed time to 'map_nodes_and_elements_by_domain': {dt3: .6f} s")
+            print(f"Elapsed time to 'process_nodes_mappings_by_domain': {dt4: .6f} s")
+            print(f"Elapsed time to 'process_element_mappings_by_domain': {dt5: .6f} s")
+            print(f"Elapsed time 'process_dof_by_domain': {dt6: .6f} s")
 
     @cache
     def get_entities_mapping(self, volume_ids: tuple[int]) -> dict:
@@ -315,7 +329,7 @@ class ModelDomainsProcessor:
         Return
         ------
         entities_mapping: dict
-            A dictionary mapping each entity type to its corresponding 
+            A dictionary mapping each entity type to its corresponding
             index list.
         """
         entities_mapping = {}
@@ -338,10 +352,10 @@ class ModelDomainsProcessor:
             entities_mapping[key] = np.unique(values)
 
         return entities_mapping
-        
+
     def is_there_a_property_assigned_to_a_domain(self, domain: str, volume_ids: list[int]):
         """
-        This method checks whether a valid property assigned to a domain 
+        This method checks whether a valid property assigned to a domain
         exists, returning `True` if it does and `False` otherwise.
 
         Parameter

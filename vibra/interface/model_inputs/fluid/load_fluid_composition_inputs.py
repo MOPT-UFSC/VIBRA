@@ -3,7 +3,7 @@ import os
 from PySide6.QtCore import Qt
 
 from vibra import app
-from vibra.extensions import SUPPORTED_SPREADSHEET_READ_EXTENSIONS
+from vibra.extensions import SUPPORTED_SPREADSHEET_EXTENSIONS
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.ui_generated.model.fluid.load_fluid_composition_ui import LoadFluidComposition_UI
 from vibra.interface.user_input.data_handler.file_dialog_service import FileDialogService
@@ -16,7 +16,7 @@ class LoadFluidCompositionInputs(LoadFluidComposition_UI):
         app().main_window.set_input_widget(self)
 
         self.file_path = file_path
-       
+
         self._initialize()
         self._config_window()
         self._create_connections()
@@ -54,9 +54,9 @@ class LoadFluidCompositionInputs(LoadFluidComposition_UI):
             self.load_composition_data_from_file()
 
     def search_button_callback(self):
-        file_path = FileDialogService.open_file(file_extensions=SUPPORTED_SPREADSHEET_READ_EXTENSIONS,
-                                                caption="Open file",
-                                                last_folder="fluid_composition_folder")
+        file_path = FileDialogService.open_file(
+            file_extensions=SUPPORTED_SPREADSHEET_EXTENSIONS, caption="Open file", last_folder="fluid_composition_folder"
+        )
 
         if file_path is None:
             return True
@@ -83,7 +83,6 @@ class LoadFluidCompositionInputs(LoadFluidComposition_UI):
         wb = load_workbook(self.file_path)
 
         for sheetname in wb.sheetnames:
-
             try:
                 sheet_data = read_excel(
                     self.file_path,
@@ -96,7 +95,7 @@ class LoadFluidCompositionInputs(LoadFluidComposition_UI):
                     self.comboBox_state_properties.addItem(sheetname)
                     if not self.comboBox_state_properties.isEnabled():
                         self.comboBox_state_properties.setDisabled(False)
-                    
+
                 else:
                     self.comboBox_sheet_names.addItem(sheetname)
                     if not self.comboBox_sheet_names.isEnabled():

@@ -118,11 +118,11 @@ class AcousticNodalSolution3dPlotFrequencyInputs(AcousticNodalSolution3dPlotFreq
             index=self.selected_frequency_index,
             plot_type=self.get_plot_type(),
             unit=pressure_units,
-            unit_factor=unit_factor
+            unit_factor=unit_factor,
         )
 
         self.animation_widget.reset_sliders()
-        LoadingWindow(app().main_window.results_widget.update_plot).run(
+        LoadingWindow(app().main_window.results_widget.update_plot, delayed=False).run(
             reset_camera=False,
             plot_setup=plot_setup,
         )
