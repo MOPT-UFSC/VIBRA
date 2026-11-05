@@ -1,11 +1,11 @@
 from collections.abc import Iterable
 
 import numpy as np
+from scipy.linalg import svd
 from vtkmodules.util.numpy_support import numpy_to_vtk, numpy_to_vtkIdTypeArray, vtk_to_numpy
 from vtkmodules.vtkCommonCore import vtkFloatArray, vtkIntArray, vtkPoints, vtkUnsignedCharArray
 from vtkmodules.vtkCommonDataModel import vtkCellArray, vtkPolyData
 from vtkmodules.vtkFiltersCore import vtkPolyDataNormals, vtkPolyDataTangents
-from vtkmodules.vtkFiltersTexture import vtkTextureMapToSphere
 from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper, vtkPropAssembly
 
 from vibra import TEXTURE_DIR
@@ -88,12 +88,15 @@ class GeometryActor(vtkPropAssembly):
                 self.mesh.nodal_coordinates,
                 self.mesh.faces_connectivity[surface_elements],
             )
+            tcoords = self._generate_tcoords(nodes)
             nodal_coordinates.append(nodes)
             faces_connectivity.append(connectivity + bias)
+            texture_coordinates.append(tcoords)
             bias += len(nodes)
 
         nodal_coordinates = np.vstack(nodal_coordinates)
         faces_connectivity = np.vstack(faces_connectivity)
+        texture_coordinates = np.vstack(texture_coordinates)
 
         self.points.SetData(numpy_to_vtk(nodal_coordinates[:, 1:]))
         self.points.Modified()
@@ -111,22 +114,20 @@ class GeometryActor(vtkPropAssembly):
         add_normals.SplittingOff()
         add_normals.SetInputData(self.surface_data)
         add_normals.Update()
+        normals = add_normals.GetOutput().GetPointData().GetNormals()
+        self.surface_data.GetPointData().SetNormals(normals)
 
-        add_tcoords = vtkTextureMapToSphere()
-        add_tcoords.AutomaticSphereGenerationOn()
-        add_tcoords.SetInputData(add_normals.GetOutput())
-        add_tcoords.Update()
+        texture_coordinates = np.interp(
+            texture_coordinates,
+            (0, 1),
+            (texture_coordinates.min(), texture_coordinates.max()),
+        )
+        self.surface_data.GetPointData().SetTCoords(numpy_to_vtk(texture_coordinates))
 
         add_tangents = vtkPolyDataTangents()
-        add_tangents.SetInputData(add_tcoords.GetOutput())
+        add_tangents.SetInputData(self.surface_data)
         add_tangents.Update()
-
-        normals = add_normals.GetOutput().GetPointData().GetNormals()
-        tcoords = add_tcoords.GetOutput().GetPointData().GetTCoords()
         tangents = add_tangents.GetOutput().GetPointData().GetTangents()
-
-        self.surface_data.GetPointData().SetNormals(normals)
-        self.surface_data.GetPointData().SetTCoords(tcoords)
         self.surface_data.GetPointData().SetTangents(tangents)
 
         self.surface_mapper.Modified()
@@ -150,6 +151,13 @@ class GeometryActor(vtkPropAssembly):
         new_connectivity[:, 4:] = mapping[surface_connectivity[:, 4:]]
 
         return new_coordinates, new_connectivity
+
+    def _generate_tcoords(self, nodal_coordinates: np.ndarray):
+        coords = nodal_coordinates[:, 1:]
+        centered = coords - coords.mean(axis=0)
+        _, _, Vh = svd(centered, full_matrices=False)
+        uv = centered @ np.asarray(Vh)[:2].T
+        return uv
 
     def _create_cells(self, connectivity: np.ndarray) -> vtkCellArray:
         if connectivity.ndim == 1:
