@@ -117,11 +117,12 @@ class GeometryActor(vtkPropAssembly):
         normals = add_normals.GetOutput().GetPointData().GetNormals()
         self.surface_data.GetPointData().SetNormals(normals)
 
-        texture_coordinates = np.interp(
-            texture_coordinates,
-            (0, 1),
-            (texture_coordinates.min(), texture_coordinates.max()),
-        )
+        mint = texture_coordinates.min()
+        maxt = texture_coordinates.max()
+        if mint == maxt:
+            texture_coordinates *= 0
+        else:
+            texture_coordinates = (texture_coordinates - mint) / (maxt - mint)
         self.surface_data.GetPointData().SetTCoords(numpy_to_vtk(texture_coordinates))
 
         add_tangents = vtkPolyDataTangents()

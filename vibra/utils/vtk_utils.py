@@ -91,7 +91,7 @@ def create_vtk_id_list(id_list: Sequence[int]) -> vtkIdList:
     return vtk_id_list
 
 
-def read_texture(path: str | Path | None):
+def read_texture(path: str | Path):
     path = Path(path)
 
     if not path.exists():
@@ -104,7 +104,7 @@ def read_texture(path: str | Path | None):
     else:
         raise ValueError(f"Unsupported image format {path.suffix}")
 
-    reader.SetFileName(path)
+    reader.SetFileName(str(path))
     reader.Update()
 
     texture = vtkTexture()
