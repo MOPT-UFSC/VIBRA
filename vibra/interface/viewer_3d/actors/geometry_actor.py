@@ -110,6 +110,15 @@ class GeometryActor(vtkPropAssembly):
         self.surface_ids.SetNumberOfTuples(len(faces_triangulated))
         vtk_to_numpy(self.surface_ids)[:] = faces_triangulated[:, 0]
 
+        min_t = texture_coordinates.min()
+        max_t = texture_coordinates.max()
+        if min_t == max_t:
+            texture_coordinates *= 0
+        else:
+            texture_coordinates = (texture_coordinates - min_t) / (max_t - min_t)
+        self.surface_data.GetPointData().SetTCoords(numpy_to_vtk(texture_coordinates))
+
+        self.surface_data.GetPointData().RemoveArray("Normals")
         add_normals = vtkPolyDataNormals()
         add_normals.SplittingOff()
         add_normals.SetInputData(self.surface_data)
@@ -117,20 +126,14 @@ class GeometryActor(vtkPropAssembly):
         normals = add_normals.GetOutput().GetPointData().GetNormals()
         self.surface_data.GetPointData().SetNormals(normals)
 
-        mint = texture_coordinates.min()
-        maxt = texture_coordinates.max()
-        if mint == maxt:
-            texture_coordinates *= 0
-        else:
-            texture_coordinates = (texture_coordinates - mint) / (maxt - mint)
-        self.surface_data.GetPointData().SetTCoords(numpy_to_vtk(texture_coordinates))
-
+        self.surface_data.GetPointData().RemoveArray("Tangents")
         add_tangents = vtkPolyDataTangents()
         add_tangents.SetInputData(self.surface_data)
         add_tangents.Update()
         tangents = add_tangents.GetOutput().GetPointData().GetTangents()
         self.surface_data.GetPointData().SetTangents(tangents)
 
+        self.surface_data.Modified()
         self.surface_mapper.Modified()
 
     def _reduce_connectivity(
