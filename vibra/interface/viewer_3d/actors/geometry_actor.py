@@ -70,14 +70,22 @@ class GeometryActor(vtkPropAssembly):
         assert self.mesh.nodal_coordinates is not None
         assert self.mesh.faces_connectivity is not None
 
-        mapping = self._remap_nodes_per_surface()
-        valid_nodes = np.arange(len(mapping))
+        bias = 0
+        nodal_coordinates = []
+        faces_connectivity = []
+        nodes_tcoord = []
 
-        nodal_coordinates = np.zeros((np.max(mapping) + 1, 4), dtype=float)
-        nodal_coordinates[mapping] = self.mesh.nodal_coordinates[valid_nodes]
+        for surface_elements in self.mesh.elements_from_surface.values():
+            nodes, connectivity = self._reduce_connectivity(
+                self.mesh.nodal_coordinates,
+                self.mesh.faces_connectivity[surface_elements],
+            )
+            nodal_coordinates.append(nodes)
+            faces_connectivity.append(connectivity + bias)
+            bias += len(nodes)
 
-        faces_connectivity = self.mesh.faces_connectivity.copy()
-        faces_connectivity[:, 4:] = mapping[faces_connectivity[:, 4:]]
+        nodal_coordinates = np.vstack(nodal_coordinates)
+        faces_connectivity = np.vstack(faces_connectivity)
 
         self.points.SetData(numpy_to_vtk(nodal_coordinates[:, 1:]))
         self.points.Modified()
@@ -92,29 +100,31 @@ class GeometryActor(vtkPropAssembly):
         vtk_to_numpy(self.surface_ids)[:] = faces_triangulated[:, 0]
 
         add_normals = vtkPolyDataNormals()
-        add_normals.SplittingOff()
         add_normals.SetInputData(self.surface_data)
         add_normals.Update()
 
         normals = add_normals.GetOutput().GetPointData().GetArray("Normals")
         self.surface_data.GetPointData().SetNormals(normals)
 
-    def _remap_nodes_per_surface(self) -> tuple[np.ndarray, np.ndarray]:
-        assert self.mesh is not None
+    def _reduce_connectivity(
+        self,
+        nodal_coordinates: np.ndarray,
+        surface_connectivity: np.ndarray,
+        mapping: np.ndarray | None = None,
+    ) -> tuple[np.ndarray, np.ndarray]:
 
-        highest_node_index = np.max(self.mesh.faces_connectivity[:, 4:])
-        mapping = np.zeros(shape=highest_node_index + 1, dtype=np.int32)
+        old_indices = np.unique(surface_connectivity[:, 4:])
+        new_indices = np.arange(len(old_indices))
 
-        start = 0
-        end = 0
-        for surface, elements in self.mesh.elements_from_surface.items():
-            old_indices = np.unique(self.mesh.faces_connectivity[elements, 4:])
-            end = start + len(old_indices)
-            new_indices = np.arange(start, end)
-            mapping[old_indices] = new_indices
-            start = end
+        if mapping is None:
+            mapping = np.zeros(np.max(surface_connectivity[:, 4:]) + 1, dtype=int)
+        mapping[old_indices] = new_indices
 
-        return mapping
+        new_coordinates = nodal_coordinates[old_indices]
+        new_connectivity = surface_connectivity.copy()
+        new_connectivity[:, 4:] = mapping[surface_connectivity[:, 4:]]
+
+        return new_coordinates, new_connectivity
 
     def _create_cells(self, connectivity: np.ndarray) -> vtkCellArray:
         if connectivity.ndim == 1:
