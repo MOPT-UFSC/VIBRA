@@ -4,11 +4,13 @@ import numpy as np
 from vtkmodules.util.numpy_support import numpy_to_vtk, numpy_to_vtkIdTypeArray, vtk_to_numpy
 from vtkmodules.vtkCommonCore import vtkFloatArray, vtkIntArray, vtkPoints, vtkUnsignedCharArray
 from vtkmodules.vtkCommonDataModel import vtkCellArray, vtkPolyData
+from vtkmodules.vtkFiltersCore import vtkPolyDataNormals
 from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper, vtkPropAssembly
 
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.utils.interface_utils import SectionPlane
+from vibra.utils.time_utils import function_timer
 
 
 class GeometryActor(vtkPropAssembly):
@@ -62,15 +64,25 @@ class GeometryActor(vtkPropAssembly):
         self.surface_actor.SetMapper(self.surface_mapper)
         self.AddPart(self.surface_actor)
 
+    @function_timer
     def build_mesh(self):
         assert self.mesh is not None
         assert self.mesh.nodal_coordinates is not None
         assert self.mesh.faces_connectivity is not None
 
-        self.points.SetData(numpy_to_vtk(self.mesh.nodal_coordinates[:, 1:]))
+        mapping = self._remap_nodes_per_surface()
+        valid_nodes = np.arange(len(mapping))
+
+        nodal_coordinates = np.zeros((np.max(mapping) + 1, 4), dtype=float)
+        nodal_coordinates[mapping] = self.mesh.nodal_coordinates[valid_nodes]
+
+        faces_connectivity = self.mesh.faces_connectivity.copy()
+        faces_connectivity[:, 4:] = mapping[faces_connectivity[:, 4:]]
+
+        self.points.SetData(numpy_to_vtk(nodal_coordinates[:, 1:]))
         self.points.Modified()
 
-        faces_triangulated = self._triangulate_2d_cells(self.mesh.faces_connectivity)
+        faces_triangulated = self._triangulate_2d_cells(faces_connectivity)
         face_cells = self._create_cells(faces_triangulated[:, 4:])
         self.surface_data.SetPolys(face_cells)
         self.surface_colors.SetNumberOfTuples(len(faces_triangulated))
@@ -78,6 +90,31 @@ class GeometryActor(vtkPropAssembly):
         self.surface_colors.Fill(255)
         self.surface_ids.SetNumberOfTuples(len(faces_triangulated))
         vtk_to_numpy(self.surface_ids)[:] = faces_triangulated[:, 0]
+
+        add_normals = vtkPolyDataNormals()
+        add_normals.SplittingOff()
+        add_normals.SetInputData(self.surface_data)
+        add_normals.Update()
+
+        normals = add_normals.GetOutput().GetPointData().GetArray("Normals")
+        self.surface_data.GetPointData().SetNormals(normals)
+
+    def _remap_nodes_per_surface(self) -> tuple[np.ndarray, np.ndarray]:
+        assert self.mesh is not None
+
+        highest_node_index = np.max(self.mesh.faces_connectivity[:, 4:])
+        mapping = np.zeros(shape=highest_node_index + 1, dtype=np.int32)
+
+        start = 0
+        end = 0
+        for surface, elements in self.mesh.elements_from_surface.items():
+            old_indices = np.unique(self.mesh.faces_connectivity[elements, 4:])
+            end = start + len(old_indices)
+            new_indices = np.arange(start, end)
+            mapping[old_indices] = new_indices
+            start = end
+
+        return mapping
 
     def _create_cells(self, connectivity: np.ndarray) -> vtkCellArray:
         if connectivity.ndim == 1:
