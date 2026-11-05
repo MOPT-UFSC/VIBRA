@@ -590,6 +590,8 @@ class MeshActor(vtkPropAssembly):
     def _linearize_2d_cells(self, connectivity: np.ndarray) -> np.ndarray:
         n_nodes = connectivity[:, 4:].shape[1]
         match n_nodes:
+            case 0:
+                return np.zeros(shape=(0, 4 + 2), dtype=int)
             case 3 | 4:
                 reorderings = list(pairwise(range(n_nodes)))
             case 6:
@@ -612,6 +614,8 @@ class MeshActor(vtkPropAssembly):
     def _linearize_3d_cells(self, connectivity: np.ndarray) -> np.ndarray:
         n_nodes = connectivity[:, 4:].shape[1]
         match n_nodes:
+            case 0:
+                return np.zeros(shape=(0, 4 + 2), dtype=int)
             case 4:
                 reorderings = list(combinations(range(n_nodes), 2))
             case 8:
@@ -647,6 +651,8 @@ class MeshActor(vtkPropAssembly):
     def _triangulate_2d_cells(self, connectivity: np.ndarray) -> np.ndarray:
         n_nodes = connectivity[:, 4:].shape[1]
         match n_nodes:
+            case 0:
+                return np.zeros(shape=(0, 4 + 3), dtype=int)
             case 3:
                 return connectivity
             case 4:
@@ -665,6 +671,8 @@ class MeshActor(vtkPropAssembly):
         n_nodes = connectivity[:, 4:].shape[1]
 
         match n_nodes:
+            case 0:
+                return np.zeros(shape=(0, 4 + 3), dtype=int)
             case 4:  # Tetrahedron Linear
                 reorderings = list(combinations(range(n_nodes), 3))
             case 8:
