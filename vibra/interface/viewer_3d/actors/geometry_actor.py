@@ -56,10 +56,11 @@ class GeometryActor(vtkPropAssembly):
         self.surface_mapper = vtkPolyDataMapper()
         self.surface_actor = vtkActor()
 
-        self.chess_texture = read_texture(TEXTURE_DIR / "chess_texture.jpg")
+        self.diffuse_texture = read_texture(TEXTURE_DIR / "diffuse.jpg")
 
     def _configure_actors_parameters(self):
         self.surface_colors.SetName("color")
+        self.surface_colors.SetNumberOfComponents(4)
         self.texture_coords.SetName("tcoords")
         self.surface_ids.SetName("ids")
         self.surface_data.SetPoints(self.points)
@@ -67,7 +68,7 @@ class GeometryActor(vtkPropAssembly):
         self.surface_data.GetCellData().AddArray(self.surface_ids)
         self.surface_mapper.SetInputData(self.surface_data)
         self.surface_actor.SetMapper(self.surface_mapper)
-        self.surface_actor.SetTexture(self.chess_texture)
+        self.surface_actor.SetTexture(self.diffuse_texture)
         self.AddPart(self.surface_actor)
 
     @function_timer
@@ -98,6 +99,8 @@ class GeometryActor(vtkPropAssembly):
         faces_connectivity = np.vstack(faces_connectivity)
         texture_coordinates = np.vstack(texture_coordinates)
 
+        nodal_coordinates[:, 1] += 5
+
         self.points.SetData(numpy_to_vtk(nodal_coordinates[:, 1:]))
         self.points.Modified()
 
@@ -107,6 +110,7 @@ class GeometryActor(vtkPropAssembly):
         self.surface_colors.SetNumberOfTuples(len(faces_triangulated))
         self.surface_mapper.Modified()
         self.surface_colors.Fill(255)
+
         self.surface_ids.SetNumberOfTuples(len(faces_triangulated))
         vtk_to_numpy(self.surface_ids)[:] = faces_triangulated[:, 0]
 
@@ -116,6 +120,8 @@ class GeometryActor(vtkPropAssembly):
             texture_coordinates *= 0
         else:
             texture_coordinates = (texture_coordinates - min_t) / (max_t - min_t)
+        texture_coordinates[:, 0] /= 4
+        texture_coordinates[:, 0] += 0.25 * 0
         self.surface_data.GetPointData().SetTCoords(numpy_to_vtk(texture_coordinates))
 
         self.surface_data.GetPointData().RemoveArray("Normals")
