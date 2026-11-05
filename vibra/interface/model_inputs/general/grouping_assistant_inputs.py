@@ -16,8 +16,9 @@ from vibra.interface.ui_generated.model.general.grouping_assistant_inputs_ui imp
 
 
 class SelectionMode(IntEnum):
-    SELECT_ALL = 0
-    SELECT_BY_SIDE = 1
+    MANUAL = 0
+    SELECT_ALL = 1
+    SELECT_BY_SIDE = 2
 
 
 class SelectionFilter(IntEnum):
@@ -113,42 +114,58 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
 
     def geometry_selection_callback(self):
 
+        mode_index = self.comboBox_mode.currentIndex()
+        selection_filter = self.comboBox_selector_filter.currentIndex()
+
         volumes = app().main_window.selection.geometry_volumes
         surfaces = app().main_window.selection.geometry_surfaces
         lines = app().main_window.selection.geometry_lines
 
         single_selection = len(volumes) + len(surfaces) + len(lines) == 1
-        select_all = self.comboBox_mode.currentIndex() == SelectionMode.SELECT_ALL
-
-        self.pushButton_select.setEnabled(select_all or single_selection)
+        if mode_index == SelectionMode.SELECT_BY_SIDE:
+            self.pushButton_select.setEnabled(single_selection)
+            if not single_selection:
+                self.lineEdit_selected_ids.clear()
+                app().main_window.selection.clear_selection()
 
         def update_text_ids(entity_label: str, entities_ids: set[int]):
             text = ", ".join([str(i) for i in entities_ids])
             self.lineEdit_selected_ids.setText(text)
             self.label_selected_ids.setText(f"{entity_label.capitalize()} IDs:")
 
-        if volumes:
+        if volumes and selection_filter == SelectionFilter.VOLUMES:
             update_text_ids("volume", volumes)
-        elif surfaces:
+        elif surfaces and selection_filter == SelectionFilter.SURFACES:
             update_text_ids("surface", surfaces)
-        elif lines:
+        elif lines and selection_filter == SelectionFilter.LINES:
             update_text_ids("line", lines)
 
     def domain_filter_callback(self):
-        pass
+        manual = self.comboBox_mode.currentIndex() == SelectionMode.MANUAL
+        self.pushButton_apply.setEnabled(manual)
 
     def selection_filter_callback(self):
-        pass
+        manual = self.comboBox_mode.currentIndex() == SelectionMode.MANUAL
+        self.pushButton_apply.setEnabled(manual)
 
     def select_entities_callback(self):
-        mode = self.comboBox_mode.currentIndex()
-        match mode:
+        selection_mode = self.comboBox_mode.currentIndex()
+        match selection_mode:
+            case  SelectionMode.MANUAL:
+                self.manual_selection_callback()
             case  SelectionMode.SELECT_ALL:
                 self.select_all_callback()
             case SelectionMode.SELECT_BY_SIDE:
                 self.select_by_size_callback()
             case _:
                 pass
+
+        entities_id = [int(text) for text in self.lineEdit_selected_ids.text().replace(" ", "").split(",")]
+        if not entities_id:
+            return
+
+    def manual_selection_callback(self):
+        pass
 
     def select_by_size_callback(self):
 
@@ -262,8 +279,6 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
             self.lineEdit_group_label.setFocus()
             self.lineEdit_group_label.selectAll()
             return
-
-        self.select_entities_callback()
 
         group_id = self.get_new_group_id()
         entity_type = self.comboBox_selector_filter.currentText()

@@ -346,10 +346,11 @@ class Model:
         if isinstance(self.analysis_setup, ModalAnalysisSetup | HarmonicAnalysisSetup):
             analysis_setup.sigma_factor = self.analysis_setup.sigma_factor
             analysis_setup.modes_number = self.analysis_setup.modes_number
-            if isinstance(self.analysis_setup, HarmonicAnalysisSetup):
+            if isinstance(self.analysis_setup, HarmonicAnalysisSetup) and not any(analysis_setup.global_damping):
                 analysis_setup.global_damping = self.analysis_setup.global_damping
 
         analysis_setup.solution_steps_mask = self.get_solution_steps_mask(frequencies=analysis_setup.get_frequencies())
+
         return analysis_setup
 
     def reset_dissipation_model_properties(self):
@@ -809,6 +810,8 @@ class Model:
             vt_data = self.properties._get_property("viscous_thermal_model", volume=vol_id)
             fluid = self.properties._get_property("fluid", volume=vol_id)
 
+            print(vol_id, pm_data)
+
             if isinstance(pm_data, dict) and is_harmonic:
                 pm_data = self.porous_material_properties.get(vol_id)
                 rho_f = pm_data["rho_eff"]
@@ -1120,6 +1123,7 @@ class Model:
         pm_model = PorousMaterialModels(self)
         pm_model.process_effective_properties()
         self.porous_material_properties = deepcopy(pm_model.effective_properties)
+        print(self.porous_material_properties)
 
     def get_porous_material_model_effective_properties(self, surface_id: int):
         """
