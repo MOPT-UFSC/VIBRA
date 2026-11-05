@@ -4,13 +4,16 @@ import numpy as np
 from vtkmodules.util.numpy_support import numpy_to_vtk, numpy_to_vtkIdTypeArray, vtk_to_numpy
 from vtkmodules.vtkCommonCore import vtkFloatArray, vtkIntArray, vtkPoints, vtkUnsignedCharArray
 from vtkmodules.vtkCommonDataModel import vtkCellArray, vtkPolyData
-from vtkmodules.vtkFiltersCore import vtkPolyDataNormals
+from vtkmodules.vtkFiltersCore import vtkPolyDataNormals, vtkPolyDataTangents
+from vtkmodules.vtkFiltersTexture import vtkTextureMapToSphere
 from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper, vtkPropAssembly
 
+from vibra import TEXTURE_DIR
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.utils.interface_utils import SectionPlane
 from vibra.utils.time_utils import function_timer
+from vibra.utils.vtk_utils import read_texture
 
 
 class GeometryActor(vtkPropAssembly):
@@ -53,6 +56,8 @@ class GeometryActor(vtkPropAssembly):
         self.surface_mapper = vtkPolyDataMapper()
         self.surface_actor = vtkActor()
 
+        self.chess_texture = read_texture(TEXTURE_DIR / "chess_texture.jpg")
+
     def _configure_actors_parameters(self):
         self.surface_colors.SetName("color")
         self.texture_coords.SetName("tcoords")
@@ -62,6 +67,7 @@ class GeometryActor(vtkPropAssembly):
         self.surface_data.GetCellData().AddArray(self.surface_ids)
         self.surface_mapper.SetInputData(self.surface_data)
         self.surface_actor.SetMapper(self.surface_mapper)
+        self.surface_actor.SetTexture(self.chess_texture)
         self.AddPart(self.surface_actor)
 
     @function_timer
@@ -73,8 +79,10 @@ class GeometryActor(vtkPropAssembly):
         bias = 0
         nodal_coordinates = []
         faces_connectivity = []
-        nodes_tcoord = []
+        texture_coordinates = []
 
+        # remaps the connectivity for each surface to keep a single
+        # normal and tcoord for each point in the visual mesh
         for surface_elements in self.mesh.elements_from_surface.values():
             nodes, connectivity = self._reduce_connectivity(
                 self.mesh.nodal_coordinates,
@@ -100,11 +108,28 @@ class GeometryActor(vtkPropAssembly):
         vtk_to_numpy(self.surface_ids)[:] = faces_triangulated[:, 0]
 
         add_normals = vtkPolyDataNormals()
+        add_normals.SplittingOff()
         add_normals.SetInputData(self.surface_data)
         add_normals.Update()
 
-        normals = add_normals.GetOutput().GetPointData().GetArray("Normals")
+        add_tcoords = vtkTextureMapToSphere()
+        add_tcoords.AutomaticSphereGenerationOn()
+        add_tcoords.SetInputData(add_normals.GetOutput())
+        add_tcoords.Update()
+
+        add_tangents = vtkPolyDataTangents()
+        add_tangents.SetInputData(add_tcoords.GetOutput())
+        add_tangents.Update()
+
+        normals = add_normals.GetOutput().GetPointData().GetNormals()
+        tcoords = add_tcoords.GetOutput().GetPointData().GetTCoords()
+        tangents = add_tangents.GetOutput().GetPointData().GetTangents()
+
         self.surface_data.GetPointData().SetNormals(normals)
+        self.surface_data.GetPointData().SetTCoords(tcoords)
+        self.surface_data.GetPointData().SetTangents(tangents)
+
+        self.surface_mapper.Modified()
 
     def _reduce_connectivity(
         self,
