@@ -34,7 +34,7 @@ class DomainFilter(IntEnum):
 
 
 class GroupingAssistantInputs(GroupingAssistantInputs_UI):
-    def __init__(self, mesher_mode: bool = False, *args, **kwargs):
+    def __init__(self, selector_mode: bool = False, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
         app().main_window.set_input_widget(self)
@@ -47,8 +47,9 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
         self._configure_validators()
         self.load_model_info()
 
-        if mesher_mode:
-            self.change_to_mesher_mode()
+        if selector_mode:
+            self.change_to_selector_mode()
+            return
 
         while self.keep_window_open:
             self.exec()
@@ -171,8 +172,10 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
 
         selected_volumes = []
         for volume in app().main_window.selection.geometry_volumes:
-            equal_volumes = self.model.model_selection_tools.select_volumes_by_size(volume)
-            selected_volumes.extend(equal_volumes)
+            for vol_id in self.model.model_selection_tools.select_volumes_by_size(volume):
+                if vol_id in selected_volumes:
+                    continue
+                selected_volumes.extend(vol_id)
 
         if selected_volumes:
             app().main_window.selection.set_geometry_selection(volumes=selected_volumes)
@@ -181,8 +184,10 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
 
         selected_surfaces = []
         for surface in app().main_window.selection.geometry_surfaces:
-            equal_surfaces = self.model.model_selection_tools.select_surfaces_by_size(surface)
-            selected_surfaces.extend(equal_surfaces)
+            for surf_id in self.model.model_selection_tools.select_surfaces_by_size(surface):
+                if surf_id in selected_surfaces:
+                    continue
+                selected_surfaces.extend(surf_id)
 
         if selected_surfaces:
             app().main_window.selection.set_geometry_selection(surfaces=selected_surfaces)
@@ -191,8 +196,10 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
 
         selected_lines = []
         for line in app().main_window.selection.geometry_lines:
-            equal_lines = self.model.model_selection_tools.select_lines_by_size(line)
-            selected_lines.extend(equal_lines)
+            for line_id in self.model.model_selection_tools.select_lines_by_size(line):
+                if line_id in selected_lines:
+                    continue
+                selected_lines.extend(line_id)
 
         if selected_lines:
             app().main_window.selection.set_geometry_selection(lines=selected_lines)
@@ -412,7 +419,7 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
         if close_window:
             self.close()
 
-    def change_to_mesher_mode(self):
+    def change_to_selector_mode(self):
         self.frame_apply_buttons.setVisible(False)
         self.frame_reset_remove_buttons.setVisible(False)
         self.tabWidget_main.setTabVisible(SetupTabType.SETUP, False)
