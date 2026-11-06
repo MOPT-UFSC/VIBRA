@@ -209,7 +209,7 @@ class GeometryActor(vtkPropAssembly):
     ):
         coords = nodal_coordinates[:, 1:]
         centered = coords - coords.mean(axis=0)
-        _, s, Vh = svd(centered, full_matrices=False)
+        _, s, Vh = svd(centered, full_matrices=False, check_finite=False)
 
         if normal is not None:
             n = np.asarray(normal, dtype=float)
@@ -218,7 +218,7 @@ class GeometryActor(vtkPropAssembly):
 
         uv = centered @ np.asarray(Vh)[:2].T
 
-        if s[2] > 1e-6:  # it is probably a cylinder, so stretch it
+        if s[2] > 1e-6:  # it is probably a cylinder, so use cylindrical projection
             max_v = np.abs(uv[:, 1]).max()
             normalized_v = uv[:, 1] / max_v
             uv[:, 1] = max_v * np.arcsin(normalized_v)
