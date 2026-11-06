@@ -120,7 +120,7 @@ class GeometryActor(vtkPropAssembly):
         texture_coordinates = np.vstack(texture_coordinates)
         self._nodal_surface_ids = np.concatenate(nodal_surface_ids)
 
-        nodal_coordinates[:, 1] += 5
+        nodal_coordinates[:, 1] += 2
 
         self.points.SetData(numpy_to_vtk(nodal_coordinates[:, 1:]))
         self.points.Modified()
@@ -202,8 +202,15 @@ class GeometryActor(vtkPropAssembly):
     def _generate_tcoords(self, nodal_coordinates: np.ndarray):
         coords = nodal_coordinates[:, 1:]
         centered = coords - coords.mean(axis=0)
-        _, _, Vh = svd(centered, full_matrices=False)
+        _, s, Vh = svd(centered, full_matrices=False)
         uv = centered @ np.asarray(Vh)[:2].T
+
+        if s[2] < 1e-6:  # it is probably a cylinder, so stretch it
+            max_v = np.abs(uv[:, 1]).max()
+            normalized_v = uv[:, 1] / max_v
+            angle = np.arcsin(normalized_v)
+            uv[:, 1] = angle * max_v * 2 / np.pi
+
         return uv
 
     def _create_cells(self, connectivity: np.ndarray) -> vtkCellArray:
