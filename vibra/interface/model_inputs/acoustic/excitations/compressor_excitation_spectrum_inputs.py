@@ -1,4 +1,6 @@
 
+from enum import IntEnum
+
 import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
@@ -17,6 +19,11 @@ from vibra.interface.user_input.data_handler.file_dialog_service import FileDial
 from vibra.interface.user_input.data_handler.file_handlers.file_handler import FileHandler
 
 
+class DistributeLoad(IntEnum):
+    NO = 0
+    YES = 1
+
+
 class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -25,7 +32,6 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
         app().main_window.workspace_updating_for_model_setup()
 
         self.model = app().project.model
-        self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
 
         self._initialize()
@@ -83,7 +89,7 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
         self.lineEdit_selection_id.setText(text)
 
         if len(surfaces) == 1:
-            surface_id = list(surfaces)[0]
+            surface_id = next(iter(surfaces))
             self.load_property_data(surface_id)
 
     def load_property_data(self, surface_id: int):
@@ -102,7 +108,7 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
         self.comboBox_excitation_type.setCurrentText(excitation_type_label)
         self.comboBox_compressor_type.setCurrentText(data.get("compressor_type", "screw"))
 
-        if "table_paths" in data.keys():
+        if "table_paths" in data:
             table_path = data.get("table_paths")[0]
             self.lineEdit_table_path.setText(table_path)
             self.tabWidget_main.setCurrentIndex(SetupTabType.SETUP)
@@ -264,26 +270,22 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
         if self.imported_values is None:
             self.imported_values = self.load_table(self.lineEdit_table_path, direct_load = True)
 
-        for surface_id in surface_ids:
+        if not isinstance(self.imported_values, np.ndarray):
+            return
 
-            if isinstance(self.imported_values, np.ndarray):
-                if self.imported_values.shape[1] >= 3:
+        # complex values computed from tabular data
+        complex_values = get_spectral_data_from_array(self.imported_values)
 
-                    table_name = f"compressor_excitation_spectrum_at_surface_{surface_id}"
-                    if self.save_table_values(table_name, self.imported_values):
-                        self.lineEdit_table_path.setFocus()
-                        self.imported_values = None
-                        return
+        if self.comboBox_distribute_load.currentIndex() == DistributeLoad.YES:
 
-            else:
-                return
-
-            # complex values computed from tabular data
-            complex_values = get_spectral_data_from_array(self.imported_values)
+            if self.imported_values.shape[1] >= 3:
+                table_name = f"compressor_excitation_spectrum_at_surface_{surface_ids[1:-1]}"
+                if self.save_table_values(table_name, self.imported_values):
+                    self.lineEdit_table_path.setFocus()
+                    self.imported_values = None
+                    return
 
             # table path from imported tabular data
-            table_path = self.lineEdit_table_path.text()
-
             table_path = self.lineEdit_table_path.text()
 
             data = {
@@ -297,7 +299,34 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
                 "element_integration": True,
                 }
 
-            self.properties._set_property("compressor_excitation_spectrum", data, surface=surface_id)
+            self.properties._set_property("compressor_excitation_spectrum", data, surface=tuple(surface_ids))
+
+        else:
+
+            for surface_id in surface_ids:
+
+                if self.imported_values.shape[1] >= 3:
+                    table_name = f"compressor_excitation_spectrum_at_surface_{surface_id}"
+                    if self.save_table_values(table_name, self.imported_values):
+                        self.lineEdit_table_path.setFocus()
+                        self.imported_values = None
+                        return
+
+                # table path from imported tabular data
+                table_path = self.lineEdit_table_path.text()
+
+                data = {
+                    "compressor_type" : compressor_type,
+                    "excitation_type" : excitation_type,
+                    "excitation_units" : excitation_units,
+                    "connection_type" : connection_type,
+                    "table_paths" : [table_path],
+                    "table_names" : [table_name],
+                    "values" : [complex_values],
+                    "element_integration": True,
+                    }
+
+                self.properties._set_property("compressor_excitation_spectrum", data, surface=surface_id)
 
         self.actions_to_finalize(close_window)
 

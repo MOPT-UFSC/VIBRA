@@ -45,7 +45,7 @@ class SymbolsActorAcoustic(SymbolsActor):
         }
 
     def _call_build_functions(self, property_name: str, surface_id: int = -1, line_id: int = -1, point_id: int = -1, node_id: int = -1):
-        if property_name in self.prop_name_to_build_func.keys():
+        if property_name in self.prop_name_to_build_func:
             self.prop_name_to_build_func[property_name](
                 property_name=property_name,
                 surface_id=surface_id,
@@ -305,7 +305,7 @@ class SymbolsActorAcoustic(SymbolsActor):
         color_fourth_sphere = color_names.BLUE.with_rgba(a=50)
         self.add_billboard(sources.create_mass_load_fourth_layer_source, coords, color=color_fourth_sphere)
 
-    def _build_compressor_excitation_symbol(self, property_name: str, surface_id: int = -1, *args, **kwargs):
+    def _build_compressor_excitation_symbol(self, property_name: str, surface_id: int | tuple[int] = -1, *args, **kwargs):
         if surface_id == -1:
             return
 
@@ -313,12 +313,31 @@ class SymbolsActorAcoustic(SymbolsActor):
         if not isinstance(property_data, dict):
             return
 
-        coords, normal = self._get_symbol_coords_and_normal(surface_id)
-        area = app().project.model.mesh.area_from_surfaces.get(surface_id)
-        if area is None:
-            scale = 1
+        if isinstance(surface_id, tuple):
+            area = 0
+            coords = 0
+            normal = 0
+            for surf_id in surface_id:
+                _area = app().project.model.mesh.area_from_surfaces.get(surf_id)
+                if isinstance(_area, float):
+                    area += _area
+
+                _coords, _normal = self._get_symbol_coords_and_normal(surf_id)
+                coords += _coords
+                normal += _normal
+
+            coords /= len(surface_id)
+            normal /= len(surface_id)
+
+        elif isinstance(surface_id, int):
+            coords, normal = self._get_symbol_coords_and_normal(surface_id)
+            area = app().project.model.mesh.area_from_surfaces.get(surface_id)
+
         else:
-            scale = np.sqrt(4 * area / np.pi)
+            return
+
+        # compute the area-based scale factor
+        scale = 1 if area == 0 else np.sqrt(4 * area / np.pi)
 
         compressor_type_shape = None
         compressor_type = property_data.get("compressor_type", "reciprocating")
