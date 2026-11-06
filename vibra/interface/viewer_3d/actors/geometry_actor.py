@@ -205,11 +205,10 @@ class GeometryActor(vtkPropAssembly):
         _, s, Vh = svd(centered, full_matrices=False)
         uv = centered @ np.asarray(Vh)[:2].T
 
-        if s[2] < 1e-6:  # it is probably a cylinder, so stretch it
+        if s[2] > 1e-6:  # it is probably a cylinder, so stretch it
             max_v = np.abs(uv[:, 1]).max()
             normalized_v = uv[:, 1] / max_v
-            angle = np.arcsin(normalized_v)
-            uv[:, 1] = angle * max_v * 2 / np.pi
+            uv[:, 1] = max_v * np.arcsin(normalized_v)
 
         return uv
 
