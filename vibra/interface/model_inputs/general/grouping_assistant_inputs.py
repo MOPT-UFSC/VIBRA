@@ -175,7 +175,7 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
             for vol_id in self.model.model_selection_tools.select_volumes_by_size(volume):
                 if vol_id in selected_volumes:
                     continue
-                selected_volumes.extend(vol_id)
+                selected_volumes.append(vol_id)
 
         if selected_volumes:
             app().main_window.selection.set_geometry_selection(volumes=selected_volumes)
@@ -187,7 +187,7 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
             for surf_id in self.model.model_selection_tools.select_surfaces_by_size(surface):
                 if surf_id in selected_surfaces:
                     continue
-                selected_surfaces.extend(surf_id)
+                selected_surfaces.append(surf_id)
 
         if selected_surfaces:
             app().main_window.selection.set_geometry_selection(surfaces=selected_surfaces)
@@ -199,7 +199,7 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
             for line_id in self.model.model_selection_tools.select_lines_by_size(line):
                 if line_id in selected_lines:
                     continue
-                selected_lines.extend(line_id)
+                selected_lines.append(line_id)
 
         if selected_lines:
             app().main_window.selection.set_geometry_selection(lines=selected_lines)
