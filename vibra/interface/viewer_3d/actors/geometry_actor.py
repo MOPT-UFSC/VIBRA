@@ -1,9 +1,10 @@
 from collections.abc import Iterable
+from enum import IntEnum, auto
 
 import numpy as np
 from scipy.linalg import svd
 from vtkmodules.util.numpy_support import numpy_to_vtk, numpy_to_vtkIdTypeArray, vtk_to_numpy
-from vtkmodules.vtkCommonCore import vtkFloatArray, vtkIntArray, vtkPoints, vtkUnsignedCharArray
+from vtkmodules.vtkCommonCore import vtkFloatArray, vtkPoints, vtkUnsignedCharArray
 from vtkmodules.vtkCommonDataModel import vtkCellArray, vtkPolyData
 from vtkmodules.vtkFiltersCore import vtkPolyDataNormals, vtkPolyDataTangents
 from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper, vtkPropAssembly
@@ -14,6 +15,20 @@ from vibra.engine.model import Model
 from vibra.utils.interface_utils import SectionPlane
 from vibra.utils.time_utils import function_timer
 from vibra.utils.vtk_utils import read_texture
+
+
+class GeometryTextures(IntEnum):
+    WHITE_TEXTURE = auto()
+    CHESS_TEXTURE = auto()
+    SPONGE_TEXTURE = auto()
+    HOLES_TEXTURE = auto()
+
+    def bias(self):
+        return (float(self) - 1) * self.span()
+
+    @classmethod
+    def span(cls):
+        return 1 / len(cls)
 
 
 class GeometryActor(vtkPropAssembly):
@@ -43,18 +58,21 @@ class GeometryActor(vtkPropAssembly):
     def clear_data(self):
         self.surface_data.SetPolys(vtkCellArray())
         self.surface_colors.SetNumberOfTuples(0)
-        self.surface_ids.SetNumberOfTuples(0)
         self.surface_colors.Modified()
+        self._node_surface_ids = np.array([], dtype=int)
+        self._cell_surface_ids = np.array([], dtype=int)
 
     def _create_variables(self):
         self.points = vtkPoints()
 
         self.surface_colors = vtkUnsignedCharArray()
         self.texture_coords = vtkFloatArray()
-        self.surface_ids = vtkIntArray()
         self.surface_data = vtkPolyData()
         self.surface_mapper = vtkPolyDataMapper()
         self.surface_actor = vtkActor()
+
+        self._node_surface_ids = np.array([], dtype=int)
+        self._cell_surface_ids = np.array([], dtype=int)
 
         self.diffuse_texture = read_texture(TEXTURE_DIR / "diffuse.jpg")
 
@@ -62,10 +80,8 @@ class GeometryActor(vtkPropAssembly):
         self.surface_colors.SetName("color")
         self.surface_colors.SetNumberOfComponents(4)
         self.texture_coords.SetName("tcoords")
-        self.surface_ids.SetName("ids")
         self.surface_data.SetPoints(self.points)
         self.surface_data.GetCellData().SetScalars(self.surface_colors)
-        self.surface_data.GetCellData().AddArray(self.surface_ids)
         self.surface_mapper.SetInputData(self.surface_data)
         self.surface_actor.SetMapper(self.surface_mapper)
         self.surface_actor.SetTexture(self.diffuse_texture)
@@ -81,23 +97,28 @@ class GeometryActor(vtkPropAssembly):
         nodal_coordinates = []
         faces_connectivity = []
         texture_coordinates = []
+        nodal_surface_ids = []
 
         # remaps the connectivity for each surface to keep a single
         # normal and tcoord for each point in the visual mesh
-        for surface_elements in self.mesh.elements_from_surface.values():
+        for surface_id, surface_elements in self.mesh.elements_from_surface.items():
             nodes, connectivity = self._reduce_connectivity(
                 self.mesh.nodal_coordinates,
                 self.mesh.faces_connectivity[surface_elements],
             )
+            connectivity[:, 4:] += bias
             tcoords = self._generate_tcoords(nodes)
+
             nodal_coordinates.append(nodes)
-            faces_connectivity.append(connectivity + bias)
+            faces_connectivity.append(connectivity)
             texture_coordinates.append(tcoords)
+            nodal_surface_ids.append(np.full(len(nodes), surface_id))
             bias += len(nodes)
 
         nodal_coordinates = np.vstack(nodal_coordinates)
         faces_connectivity = np.vstack(faces_connectivity)
         texture_coordinates = np.vstack(texture_coordinates)
+        self._nodal_surface_ids = np.concatenate(nodal_surface_ids)
 
         nodal_coordinates[:, 1] += 5
 
@@ -111,8 +132,7 @@ class GeometryActor(vtkPropAssembly):
         self.surface_mapper.Modified()
         self.surface_colors.Fill(255)
 
-        self.surface_ids.SetNumberOfTuples(len(faces_triangulated))
-        vtk_to_numpy(self.surface_ids)[:] = faces_triangulated[:, 0]
+        self._cell_surface_ids = faces_triangulated[:, 1]
 
         min_t = texture_coordinates.min()
         max_t = texture_coordinates.max()
@@ -121,7 +141,6 @@ class GeometryActor(vtkPropAssembly):
         else:
             texture_coordinates = (texture_coordinates - min_t) / (max_t - min_t)
         texture_coordinates[:, 0] /= 4
-        texture_coordinates[:, 0] += 0.25 * 0
         self.surface_data.GetPointData().SetTCoords(numpy_to_vtk(texture_coordinates))
 
         self.surface_data.GetPointData().RemoveArray("Normals")
@@ -141,6 +160,24 @@ class GeometryActor(vtkPropAssembly):
 
         self.surface_data.Modified()
         self.surface_mapper.Modified()
+
+    def clear_textures(self):
+        uv = vtk_to_numpy(self.surface_data.GetPointData().GetTCoords())
+        uv[:] = uv % GeometryTextures.span()
+
+    @function_timer
+    def set_surface_texture(self, texture: GeometryTextures, surfaces: Iterable[int]):
+        surfaces = list(surfaces)
+        if not surfaces:
+            return
+
+        texture = GeometryTextures(texture)
+        uv = vtk_to_numpy(self.surface_data.GetPointData().GetTCoords())
+        u = uv[:, 0]
+        mask = np.isin(self._nodal_surface_ids, surfaces)
+        if mask.size:
+            u[mask] = u[mask] % GeometryTextures.span() + texture.bias()
+            self.surface_data.GetPointData().GetTCoords().Modified()  # move it to update cache
 
     def _reduce_connectivity(
         self,
@@ -207,4 +244,4 @@ class GeometryActor(vtkPropAssembly):
             connect = connectivity[:, order]
             stacked.append(connect)
 
-        return np.concatenate(stacked)
+        return np.vstack(stacked)
