@@ -55,3 +55,9 @@ class AnalysisID(IntEnum):
             AnalysisID.STRUCTURAL_HARMONIC,
             AnalysisID.COUPLED_HARMONIC,
         ]
+
+    def is_harmonic_acoustic_or_coupled(self):
+        return self in [
+            AnalysisID.ACOUSTIC_HARMONIC,
+            AnalysisID.COUPLED_HARMONIC,
+        ]
