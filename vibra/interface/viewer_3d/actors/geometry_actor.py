@@ -107,7 +107,10 @@ class GeometryActor(vtkPropAssembly):
                 self.mesh.faces_connectivity[surface_elements],
             )
             connectivity[:, 4:] += bias
-            tcoords = self._generate_tcoords(nodes)
+
+            surface_normals = self.mesh.normals_surface.get(surface_id)
+            normal = np.average(surface_normals, axis=0).round(6) if (surface_normals is not None) else None
+            tcoords = self._generate_tcoords(nodes, normal)
 
             nodal_coordinates.append(nodes)
             faces_connectivity.append(connectivity)
@@ -199,10 +202,20 @@ class GeometryActor(vtkPropAssembly):
 
         return new_coordinates, new_connectivity
 
-    def _generate_tcoords(self, nodal_coordinates: np.ndarray):
+    def _generate_tcoords(
+        self,
+        nodal_coordinates: np.ndarray,
+        normal: np.ndarray | None = None,
+    ):
         coords = nodal_coordinates[:, 1:]
         centered = coords - coords.mean(axis=0)
         _, s, Vh = svd(centered, full_matrices=False)
+
+        if normal is not None:
+            n = np.asarray(normal, dtype=float)
+            n = n / np.linalg.norm(n)
+            Vh = Vh[np.argsort(np.abs(Vh @ n))]
+
         uv = centered @ np.asarray(Vh)[:2].T
 
         if s[2] > 1e-6:  # it is probably a cylinder, so stretch it
