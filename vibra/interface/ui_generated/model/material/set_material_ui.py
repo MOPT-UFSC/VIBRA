@@ -21,11 +21,13 @@ from PySide6.QtWidgets import (QAbstractScrollArea, QApplication, QComboBox, QDi
     QSpacerItem, QTabWidget, QTableWidget, QTableWidgetItem,
     QWidget)
 
+from vibra.interface.formatters.icons import Icon
+
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
-        Dialog.resize(878, 500)
+        Dialog.resize(867, 500)
         Dialog.setMinimumSize(QSize(600, 500))
         Dialog.setMaximumSize(QSize(900, 600))
         self.gridLayout = QGridLayout(Dialog)
@@ -43,7 +45,7 @@ class Ui_Dialog(object):
         self.frame = QFrame(self.frame_main_widget)
         self.frame.setObjectName(u"frame")
         self.frame.setMinimumSize(QSize(400, 0))
-        self.frame.setMaximumSize(QSize(800, 80))
+        self.frame.setMaximumSize(QSize(16777215, 80))
         font = QFont()
         font.setPointSize(10)
         self.frame.setFont(font)
@@ -53,9 +55,17 @@ class Ui_Dialog(object):
         self.gridLayout_2 = QGridLayout(self.frame)
         self.gridLayout_2.setObjectName(u"gridLayout_2")
         self.gridLayout_2.setContentsMargins(6, 6, 6, 6)
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        self.lineEdit_selection_id = QLineEdit(self.frame)
+        self.lineEdit_selection_id.setObjectName(u"lineEdit_selection_id")
+        self.lineEdit_selection_id.setEnabled(True)
+        self.lineEdit_selection_id.setMinimumSize(QSize(180, 28))
+        self.lineEdit_selection_id.setMaximumSize(QSize(180, 28))
+        self.lineEdit_selection_id.setFont(font)
+        self.lineEdit_selection_id.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
+        self.lineEdit_selection_id.setStyleSheet(u"")
+        self.lineEdit_selection_id.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.gridLayout_2.addItem(self.horizontalSpacer, 0, 4, 1, 1)
+        self.gridLayout_2.addWidget(self.lineEdit_selection_id, 0, 2, 1, 1)
 
         self.comboBox_attribution_type = QComboBox(self.frame)
         self.comboBox_attribution_type.addItem("")
@@ -65,11 +75,27 @@ class Ui_Dialog(object):
         self.comboBox_attribution_type.addItem("")
         self.comboBox_attribution_type.addItem("")
         self.comboBox_attribution_type.setObjectName(u"comboBox_attribution_type")
-        self.comboBox_attribution_type.setMinimumSize(QSize(140, 26))
-        self.comboBox_attribution_type.setMaximumSize(QSize(16777215, 26))
+        self.comboBox_attribution_type.setMinimumSize(QSize(140, 28))
+        self.comboBox_attribution_type.setMaximumSize(QSize(16777215, 28))
         self.comboBox_attribution_type.setFont(font)
 
         self.gridLayout_2.addWidget(self.comboBox_attribution_type, 0, 3, 1, 1)
+
+        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_2.addItem(self.horizontalSpacer_2, 0, 0, 1, 1)
+
+        self.lineEdit_selected_material_name = QLineEdit(self.frame)
+        self.lineEdit_selected_material_name.setObjectName(u"lineEdit_selected_material_name")
+        self.lineEdit_selected_material_name.setEnabled(False)
+        self.lineEdit_selected_material_name.setMinimumSize(QSize(180, 28))
+        self.lineEdit_selected_material_name.setMaximumSize(QSize(180, 28))
+        self.lineEdit_selected_material_name.setFont(font)
+        self.lineEdit_selected_material_name.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
+        self.lineEdit_selected_material_name.setStyleSheet(u"")
+        self.lineEdit_selected_material_name.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_2.addWidget(self.lineEdit_selected_material_name, 1, 2, 1, 1)
 
         self.label = QLabel(self.frame)
         self.label.setObjectName(u"label")
@@ -83,41 +109,38 @@ class Ui_Dialog(object):
 
         self.gridLayout_2.addWidget(self.label, 0, 1, 1, 1)
 
-        self.lineEdit_selection_id = QLineEdit(self.frame)
-        self.lineEdit_selection_id.setObjectName(u"lineEdit_selection_id")
-        self.lineEdit_selection_id.setEnabled(True)
-        self.lineEdit_selection_id.setMinimumSize(QSize(180, 26))
-        self.lineEdit_selection_id.setMaximumSize(QSize(180, 26))
-        self.lineEdit_selection_id.setFont(font)
-        self.lineEdit_selection_id.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
-        self.lineEdit_selection_id.setStyleSheet(u"")
-        self.lineEdit_selection_id.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gridLayout_2.addWidget(self.lineEdit_selection_id, 0, 2, 1, 1)
+        self.gridLayout_2.addItem(self.horizontalSpacer, 0, 5, 1, 1)
 
         self.label_selected_material = QLabel(self.frame)
         self.label_selected_material.setObjectName(u"label_selected_material")
+        self.label_selected_material.setMinimumSize(QSize(0, 28))
+        self.label_selected_material.setMaximumSize(QSize(16777215, 28))
         self.label_selected_material.setFont(font1)
         self.label_selected_material.setTextFormat(Qt.TextFormat.AutoText)
         self.label_selected_material.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_2.addWidget(self.label_selected_material, 1, 1, 1, 1)
 
-        self.lineEdit_selected_material_name = QLineEdit(self.frame)
-        self.lineEdit_selected_material_name.setObjectName(u"lineEdit_selected_material_name")
-        self.lineEdit_selected_material_name.setEnabled(False)
-        self.lineEdit_selected_material_name.setMinimumSize(QSize(180, 26))
-        self.lineEdit_selected_material_name.setMaximumSize(QSize(180, 26))
-        self.lineEdit_selected_material_name.setFont(font)
-        self.lineEdit_selected_material_name.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
-        self.lineEdit_selected_material_name.setStyleSheet(u"")
-        self.lineEdit_selected_material_name.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.pushButton_select_group = QPushButton(self.frame)
+        self.pushButton_select_group.setObjectName(u"pushButton_select_group")
+        self.pushButton_select_group.setMinimumSize(QSize(40, 30))
+        self.pushButton_select_group.setMaximumSize(QSize(40, 30))
+        font2 = QFont()
+        font2.setFamilies([u"MS Shell Dlg 2"])
+        font2.setPointSize(11)
+        font2.setBold(True)
+        font2.setItalic(False)
+        self.pushButton_select_group.setFont(font2)
+        self.pushButton_select_group.setStyleSheet(u"")
+        icon = Icon(u":/icons/selection_icon.png")
+        self.pushButton_select_group.setIcon(icon)
+        self.pushButton_select_group.setIconSize(QSize(20, 20))
+        self.pushButton_select_group.setAutoDefault(False)
+        self.pushButton_select_group.setFlat(False)
 
-        self.gridLayout_2.addWidget(self.lineEdit_selected_material_name, 1, 2, 1, 1)
-
-        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_2.addItem(self.horizontalSpacer_2, 0, 0, 1, 1)
+        self.gridLayout_2.addWidget(self.pushButton_select_group, 0, 4, 1, 1)
 
 
         self.gridLayout_4.addWidget(self.frame, 0, 0, 1, 1)
@@ -136,7 +159,7 @@ class Ui_Dialog(object):
         self.scrollArea_table_of_materials.setWidgetResizable(True)
         self.scrollAreaWidgetContents = QWidget()
         self.scrollAreaWidgetContents.setObjectName(u"scrollAreaWidgetContents")
-        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 848, 322))
+        self.scrollAreaWidgetContents.setGeometry(QRect(0, 0, 837, 316))
         self.scrollArea_table_of_materials.setWidget(self.scrollAreaWidgetContents)
 
         self.gridLayout_5.addWidget(self.scrollArea_table_of_materials, 0, 0, 1, 1)
@@ -160,12 +183,12 @@ class Ui_Dialog(object):
         self.pushButton_reset.setObjectName(u"pushButton_reset")
         self.pushButton_reset.setMinimumSize(QSize(100, 28))
         self.pushButton_reset.setMaximumSize(QSize(100, 28))
-        font2 = QFont()
-        font2.setFamilies([u"MS Shell Dlg 2"])
-        font2.setPointSize(10)
-        font2.setBold(False)
-        font2.setItalic(False)
-        self.pushButton_reset.setFont(font2)
+        font3 = QFont()
+        font3.setFamilies([u"MS Shell Dlg 2"])
+        font3.setPointSize(10)
+        font3.setBold(False)
+        font3.setItalic(False)
+        self.pushButton_reset.setFont(font3)
         self.pushButton_reset.setStyleSheet(u"")
         self.pushButton_reset.setAutoDefault(False)
 
@@ -175,7 +198,7 @@ class Ui_Dialog(object):
         self.pushButton_remove.setObjectName(u"pushButton_remove")
         self.pushButton_remove.setMinimumSize(QSize(100, 28))
         self.pushButton_remove.setMaximumSize(QSize(100, 28))
-        self.pushButton_remove.setFont(font2)
+        self.pushButton_remove.setFont(font3)
         self.pushButton_remove.setStyleSheet(u"")
         self.pushButton_remove.setAutoDefault(False)
 
@@ -224,11 +247,11 @@ class Ui_Dialog(object):
         self.gridLayout_3.setContentsMargins(4, 4, 4, 4)
         self.label_2 = QLabel(self.frame_title)
         self.label_2.setObjectName(u"label_2")
-        font3 = QFont()
-        font3.setFamilies([u"MS Shell Dlg 2"])
-        font3.setPointSize(11)
-        font3.setBold(False)
-        self.label_2.setFont(font3)
+        font4 = QFont()
+        font4.setFamilies([u"MS Shell Dlg 2"])
+        font4.setPointSize(11)
+        font4.setBold(False)
+        self.label_2.setFont(font4)
         self.label_2.setTextFormat(Qt.TextFormat.AutoText)
         self.label_2.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
@@ -248,6 +271,7 @@ class Ui_Dialog(object):
 
     def retranslateUi(self, Dialog):
         Dialog.setWindowTitle(QCoreApplication.translate("Dialog", u"Dialog", None))
+        self.lineEdit_selection_id.setText("")
         self.comboBox_attribution_type.setItemText(0, QCoreApplication.translate("Dialog", u"All bodies/faces", None))
         self.comboBox_attribution_type.setItemText(1, QCoreApplication.translate("Dialog", u"All bodies", None))
         self.comboBox_attribution_type.setItemText(2, QCoreApplication.translate("Dialog", u"All faces", None))
@@ -255,10 +279,13 @@ class Ui_Dialog(object):
         self.comboBox_attribution_type.setItemText(4, QCoreApplication.translate("Dialog", u"Selected faces", None))
         self.comboBox_attribution_type.setItemText(5, QCoreApplication.translate("Dialog", u"Selected bodies/faces", None))
 
-        self.label.setText(QCoreApplication.translate("Dialog", u"Selection:", None))
-        self.lineEdit_selection_id.setText("")
-        self.label_selected_material.setText(QCoreApplication.translate("Dialog", u"Selected material:", None))
         self.lineEdit_selected_material_name.setText("")
+        self.label.setText(QCoreApplication.translate("Dialog", u"Selection:", None))
+        self.label_selected_material.setText(QCoreApplication.translate("Dialog", u"Selected material:", None))
+#if QT_CONFIG(tooltip)
+        self.pushButton_select_group.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p><span style=\" font-size:10pt; font-weight:400;\">Show the created groups</span></p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButton_select_group.setText("")
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_setup), QCoreApplication.translate("Dialog", u"Setup", None))
         self.pushButton_reset.setText(QCoreApplication.translate("Dialog", u"Reset", None))
         self.pushButton_remove.setText(QCoreApplication.translate("Dialog", u"Remove", None))
@@ -289,11 +316,12 @@ class SetMaterial_UI(QDialog, Ui_Dialog):
                     - (Layout): QGridLayout
                             - frame: QFrame
                                 - (Layout): QGridLayout
-                                        - comboBox_attribution_type: QComboBox
-                                        - label: QLabel
                                         - lineEdit_selection_id: QLineEdit
-                                        - label_selected_material: QLabel
+                                        - comboBox_attribution_type: QComboBox
                                         - lineEdit_selected_material_name: QLineEdit
+                                        - label: QLabel
+                                        - label_selected_material: QLabel
+                                        - pushButton_select_group: QPushButton
                             - tabWidget_main: QTabWidget
                                 - tab_setup: QWidget
                                     - (Layout): QGridLayout

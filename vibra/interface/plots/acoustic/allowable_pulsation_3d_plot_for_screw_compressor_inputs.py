@@ -30,6 +30,15 @@ class AllowablePulsations3DPlotForScrewCompressorInputs(AllowablePulsations3dPlo
 
         self._load_analysis_setup_and_solution()
 
+    def showEvent(self, event=None):
+        super().showEvent(event)
+
+        app().main_window.render_widget_changed.emit()
+        app().main_window.view_toolbar.disable_selection_tool()
+
+        if self.is_data_cached:
+            render_widget = app().main_window.results_widget
+            app().main_window.render_widgets_stack.setCurrentWidget(render_widget)
 
     @property
     def model(self):
@@ -47,6 +56,15 @@ class AllowablePulsations3DPlotForScrewCompressorInputs(AllowablePulsations3dPlo
     def nodal_solution(self):
         return app().project.model.solution.acoustic_solution
 
+    @property
+    def acoustic_post(self):
+        return app().project.get_acoustic_postprocessing()
+
+    @property
+    def is_data_cached(self):
+        cache_info = self.acoustic_post.compute_allowable_pulsation_field_for_screw_compressor.cache_info()
+        return cache_info.currsize != 0
+
     def _add_ifft_controls_widget(self):
 
         grid_layout = QGridLayout()
@@ -56,15 +74,6 @@ class AllowablePulsations3DPlotForScrewCompressorInputs(AllowablePulsations3dPlo
         self.ifft_controls_widget = IfftControlsWidget()
         grid_layout.addWidget(self.ifft_controls_widget)
         self.frame_ifft_controls.adjustSize()
-
-    def show_results_render(self):
-        curent_render_widget = app().main_window.get_current_render_widget()
-        results_render_widget = app().main_window.results_widget
-
-        if curent_render_widget != results_render_widget:
-            app().main_window.render_widgets_stack.setCurrentWidget(results_render_widget)
-            app().main_window.render_widget_changed.emit()
-            app().main_window.view_toolbar.disable_selection_tool()
 
     def _load_analysis_setup_and_solution(self):
         self.analysis_method = ""
@@ -153,8 +162,8 @@ class AllowablePulsations3DPlotForScrewCompressorInputs(AllowablePulsations3dPlo
 
         LoadingWindow(plot_callback, delayed=False).run()
 
-        self.show_results_render()
         self.pushButton_plot_criterion.setDisabled(True)
+        self.showEvent()
 
     def get_plot_type(self) -> PressurePlotType:
         return PressurePlotType("non_absolute_animation")

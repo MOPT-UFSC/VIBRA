@@ -346,10 +346,11 @@ class Model:
         if isinstance(self.analysis_setup, ModalAnalysisSetup | HarmonicAnalysisSetup):
             analysis_setup.sigma_factor = self.analysis_setup.sigma_factor
             analysis_setup.modes_number = self.analysis_setup.modes_number
-            if isinstance(self.analysis_setup, HarmonicAnalysisSetup):
+            if isinstance(self.analysis_setup, HarmonicAnalysisSetup) and not any(analysis_setup.global_damping):
                 analysis_setup.global_damping = self.analysis_setup.global_damping
 
         analysis_setup.solution_steps_mask = self.get_solution_steps_mask(frequencies=analysis_setup.get_frequencies())
+
         return analysis_setup
 
     def reset_dissipation_model_properties(self):
@@ -786,9 +787,6 @@ class Model:
         to calculate the global matrices factors.
         """
 
-        frequency_dependent = False
-        fluid_properties_from_volume = {}
-
         if self.frequencies is None:
             number_frequencies = 1
         elif isinstance(self.frequencies, np.ndarray):
@@ -796,29 +794,33 @@ class Model:
         else:
             return {}, False
 
-        aux_ones = np.ones(number_frequencies, dtype=float)
-
-        # prevent frequency-varying fluid properties
-        # while solving acoustic modal analysis
-        is_harmonic = self.analysis_id == AnalysisID.ACOUSTIC_HARMONIC
         if self.analysis_id == AnalysisID.NO_ANALYSIS:
             raise errors.InvalidModelSetupError("An AnalysisID should be provided.")
 
+        # auxiliar vector of ones
+        aux_ones = np.ones(number_frequencies, dtype=float)
+
+        # prevent frequency-varying fluid properties while solving acoustic modal analysis
+        is_harmonic = AnalysisID(self.analysis_id).is_harmonic_acoustic_or_coupled()
+
+        frequency_dependent = False
+        fluid_properties_from_volume = {}
+
         for vol_id in self.mesh.elements_from_volume:
-            pm_data = self.properties._get_property("porous_material_model", volume=vol_id)
-            vt_data = self.properties._get_property("viscous_thermal_model", volume=vol_id)
+            pm_data = self.porous_material_properties.get(vol_id)
+            vt_data = self.viscous_thermal_model_properties.get(vol_id)
+            # pm_data = self.properties._get_property("porous_material_model", volume=vol_id)
+            # vt_data = self.properties._get_property("viscous_thermal_model", volume=vol_id)
             fluid = self.properties._get_property("fluid", volume=vol_id)
 
             if isinstance(pm_data, dict) and is_harmonic:
-                pm_data = self.porous_material_properties.get(vol_id)
-                rho_f = pm_data["rho_eff"]
-                C_f = pm_data["C_eff"]
+                rho_f = pm_data.get("rho_eff")
+                C_f = pm_data.get("C_eff")
                 frequency_dependent = True
 
             elif isinstance(vt_data, dict) and is_harmonic:
-                vt_data = self.viscous_thermal_model_properties.get(vol_id)
-                rho_f = vt_data["rho_eff"]
-                C_f = vt_data["C_eff"]
+                rho_f = vt_data.get("rho_eff")
+                C_f = vt_data.get("C_eff")
                 frequency_dependent = True
 
             elif isinstance(fluid, Fluid):

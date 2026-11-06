@@ -1,10 +1,11 @@
 from collections import defaultdict
 from enum import IntEnum
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QSignalBlocker, Qt
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
     QAbstractItemView,
+    QDialog,
     QGridLayout,
     QHeaderView,
     QTableWidget,
@@ -17,6 +18,7 @@ from vibra.interface import error_title
 from vibra.interface.common.common_interface import check_conflicting_model_properties
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
+from vibra.interface.model_inputs.general.grouping_assistant_inputs import GroupingAssistantInputs
 from vibra.interface.model_inputs.material.material_widget import MaterialWidget
 from vibra.interface.ui_generated.model.material.set_material_ui import SetMaterial_UI
 
@@ -58,8 +60,9 @@ class MaterialInputs(SetMaterial_UI):
         return app().project.model.properties
 
     def _initialize(self):
-        self.keep_window_open = True
         self.material = None
+        self.group_assistant = None
+        self.keep_window_open = True
         self.selected_items = defaultdict(list)
         self.table_model_materials_cell_clicked = False
 
@@ -106,6 +109,7 @@ class MaterialInputs(SetMaterial_UI):
         self.material_widget.pushButton_import_library.clicked.connect(self.import_material_library_callback)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
+        self.pushButton_select_group.clicked.connect(self.group_assistant_callback)
 
         # QTableWidget connections
         self.tableWidget_material_data.currentCellChanged.connect(self.current_cell_changed)
@@ -424,6 +428,11 @@ class MaterialInputs(SetMaterial_UI):
 
             app().main_window.selection.set_geometry_selection()
 
+    def group_assistant_callback(self):
+        with QSignalBlocker(self.pushButton_select_group):
+            self.group_assistant = GroupingAssistantInputs(selector_mode=True)
+            self.group_assistant.exec()
+
     def actions_to_finalize(self, close_window: bool = False):
         self.clear_line_edit_seletction_id()
         self.lineEdit_selected_material_name.clear()
@@ -540,5 +549,10 @@ class MaterialInputs(SetMaterial_UI):
             self.tableWidget_model_materials.setSelectionMode(QAbstractItemView.SingleSelection)
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
+        if isinstance(self.group_assistant, QDialog):
+            self.group_assistant.close()
+
         self.keep_window_open = False
+        app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
+
         return super().closeEvent(a0)

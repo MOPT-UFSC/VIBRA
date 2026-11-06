@@ -906,16 +906,6 @@ class Ui_Dialog(object):
         self.gridLayout_8 = QGridLayout(self.frame_6)
         self.gridLayout_8.setObjectName(u"gridLayout_8")
         self.gridLayout_8.setContentsMargins(6, 6, 6, 6)
-        self.comboBox_attribution_type = QComboBox(self.frame_6)
-        self.comboBox_attribution_type.addItem("")
-        self.comboBox_attribution_type.addItem("")
-        self.comboBox_attribution_type.setObjectName(u"comboBox_attribution_type")
-        self.comboBox_attribution_type.setMinimumSize(QSize(0, 28))
-        self.comboBox_attribution_type.setMaximumSize(QSize(16777215, 28))
-        self.comboBox_attribution_type.setFont(font1)
-
-        self.gridLayout_8.addWidget(self.comboBox_attribution_type, 0, 3, 1, 1)
-
         self.lineEdit_selection_id = QLineEdit(self.frame_6)
         self.lineEdit_selection_id.setObjectName(u"lineEdit_selection_id")
         self.lineEdit_selection_id.setEnabled(True)
@@ -941,13 +931,42 @@ class Ui_Dialog(object):
 
         self.gridLayout_8.addWidget(self.label_12, 0, 1, 1, 1)
 
-        self.horizontalSpacer_6 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_8.addItem(self.horizontalSpacer_6, 0, 4, 1, 1)
-
         self.horizontalSpacer_7 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.gridLayout_8.addItem(self.horizontalSpacer_7, 0, 0, 1, 1)
+
+        self.horizontalSpacer_6 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_8.addItem(self.horizontalSpacer_6, 0, 5, 1, 1)
+
+        self.comboBox_attribution_type = QComboBox(self.frame_6)
+        self.comboBox_attribution_type.addItem("")
+        self.comboBox_attribution_type.addItem("")
+        self.comboBox_attribution_type.setObjectName(u"comboBox_attribution_type")
+        self.comboBox_attribution_type.setMinimumSize(QSize(0, 28))
+        self.comboBox_attribution_type.setMaximumSize(QSize(16777215, 28))
+        self.comboBox_attribution_type.setFont(font1)
+
+        self.gridLayout_8.addWidget(self.comboBox_attribution_type, 0, 3, 1, 1)
+
+        self.pushButton_select_group = QPushButton(self.frame_6)
+        self.pushButton_select_group.setObjectName(u"pushButton_select_group")
+        self.pushButton_select_group.setMinimumSize(QSize(40, 30))
+        self.pushButton_select_group.setMaximumSize(QSize(40, 30))
+        font5 = QFont()
+        font5.setFamilies([u"MS Shell Dlg 2"])
+        font5.setPointSize(11)
+        font5.setBold(True)
+        font5.setItalic(False)
+        self.pushButton_select_group.setFont(font5)
+        self.pushButton_select_group.setStyleSheet(u"")
+        icon1 = Icon(u":/icons/selection_icon.png")
+        self.pushButton_select_group.setIcon(icon1)
+        self.pushButton_select_group.setIconSize(QSize(20, 20))
+        self.pushButton_select_group.setAutoDefault(False)
+        self.pushButton_select_group.setFlat(False)
+
+        self.gridLayout_8.addWidget(self.pushButton_select_group, 0, 4, 1, 1)
 
 
         self.gridLayout_3.addWidget(self.frame_6, 0, 0, 1, 1)
@@ -1001,11 +1020,11 @@ class Ui_Dialog(object):
         self.pushButton_apply_and_close.setObjectName(u"pushButton_apply_and_close")
         self.pushButton_apply_and_close.setMinimumSize(QSize(72, 30))
         self.pushButton_apply_and_close.setMaximumSize(QSize(72, 30))
-        font5 = QFont()
-        font5.setPointSize(10)
-        font5.setBold(False)
-        font5.setItalic(False)
-        self.pushButton_apply_and_close.setFont(font5)
+        font6 = QFont()
+        font6.setPointSize(10)
+        font6.setBold(False)
+        font6.setItalic(False)
+        self.pushButton_apply_and_close.setFont(font6)
         self.pushButton_apply_and_close.setStyleSheet(u"")
         self.pushButton_apply_and_close.setAutoDefault(False)
         self.pushButton_apply_and_close.setFlat(False)
@@ -1016,7 +1035,7 @@ class Ui_Dialog(object):
         self.pushButton_apply.setObjectName(u"pushButton_apply")
         self.pushButton_apply.setMinimumSize(QSize(72, 30))
         self.pushButton_apply.setMaximumSize(QSize(72, 30))
-        self.pushButton_apply.setFont(font5)
+        self.pushButton_apply.setFont(font6)
         self.pushButton_apply.setStyleSheet(u"")
         self.pushButton_apply.setAutoDefault(False)
         self.pushButton_apply.setFlat(False)
@@ -1027,7 +1046,7 @@ class Ui_Dialog(object):
         self.pushButton_cancel.setObjectName(u"pushButton_cancel")
         self.pushButton_cancel.setMinimumSize(QSize(72, 30))
         self.pushButton_cancel.setMaximumSize(QSize(72, 30))
-        self.pushButton_cancel.setFont(font5)
+        self.pushButton_cancel.setFont(font6)
         self.pushButton_cancel.setStyleSheet(u"")
         self.pushButton_cancel.setAutoDefault(False)
         self.pushButton_cancel.setFlat(False)
@@ -1188,11 +1207,15 @@ class Ui_Dialog(object):
         self.treeWidget_porous_material_model.setToolTip(QCoreApplication.translate("Dialog", u"Select a face to remove the previously attributed boundary condition.", None))
 #endif // QT_CONFIG(tooltip)
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_list), QCoreApplication.translate("Dialog", u"List", None))
+        self.lineEdit_selection_id.setText("")
+        self.label_12.setText(QCoreApplication.translate("Dialog", u"Selected bodies:", None))
         self.comboBox_attribution_type.setItemText(0, QCoreApplication.translate("Dialog", u" All bodies", None))
         self.comboBox_attribution_type.setItemText(1, QCoreApplication.translate("Dialog", u" Selected bodies", None))
 
-        self.lineEdit_selection_id.setText("")
-        self.label_12.setText(QCoreApplication.translate("Dialog", u"Selected bodies:", None))
+#if QT_CONFIG(tooltip)
+        self.pushButton_select_group.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p><span style=\" font-size:10pt; font-weight:400;\">Show the created groups</span></p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButton_select_group.setText("")
         self.checkBox_load_material_data_from_selection.setText(QCoreApplication.translate("Dialog", u"Load porous material data from selection", None))
         self.checkBox_advanced_porous_material_plots.setText(QCoreApplication.translate("Dialog", u"Enable the advanced porous material plots", None))
         self.pushButton_apply_and_close.setText(QCoreApplication.translate("Dialog", u"Ok", None))
@@ -1309,9 +1332,10 @@ class PorousMaterialModelInputs_UI(QDialog, Ui_Dialog):
                                                             - treeWidget_porous_material_model: QTreeWidget
                             - frame_6: QFrame
                                 - (Layout): QGridLayout
-                                        - comboBox_attribution_type: QComboBox
                                         - lineEdit_selection_id: QLineEdit
                                         - label_12: QLabel
+                                        - comboBox_attribution_type: QComboBox
+                                        - pushButton_select_group: QPushButton
                             - frame_7: QFrame
                                 - (Layout): QGridLayout
                                         - checkBox_load_material_data_from_selection: QCheckBox
