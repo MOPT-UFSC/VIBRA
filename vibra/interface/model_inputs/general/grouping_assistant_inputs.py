@@ -79,6 +79,7 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
     def _configure_widgets(self):
 
         self.lineEdit_selected_ids.setDisabled(True)
+        self.pushButton_select.setDisabled(True)
         self.treeWidget_group_info.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
 
         for i, w in enumerate([60, 120, 120, 180]):
@@ -93,6 +94,7 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
         # QComboBox connection
         self.comboBox_domain_filter.currentIndexChanged.connect(self.domain_filter_callback)
         self.comboBox_selector_filter.currentIndexChanged.connect(self.selection_filter_callback)
+        self.comboBox_mode.currentIndexChanged.connect(self.selection_mode_callback)
 
         # QPushButton connections
         self.pushButton_apply.clicked.connect(self.apply_callback)
@@ -114,19 +116,15 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
 
     def geometry_selection_callback(self):
 
-        mode_index = self.comboBox_mode.currentIndex()
-        selection_filter = self.comboBox_selector_filter.currentIndex()
-
         volumes = app().main_window.selection.geometry_volumes
         surfaces = app().main_window.selection.geometry_surfaces
         lines = app().main_window.selection.geometry_lines
 
-        single_selection = len(volumes) + len(surfaces) + len(lines) == 1
-        if mode_index == SelectionMode.SELECT_BY_SIDE:
-            self.pushButton_select.setEnabled(single_selection)
-            if not single_selection:
-                self.lineEdit_selected_ids.clear()
-                app().main_window.selection.clear_selection()
+        if len(volumes) + len(surfaces) + len(lines) == 0:
+            self.lineEdit_selected_ids.clear()
+            return
+
+        selection_filter = self.comboBox_selector_filter.currentIndex()
 
         def update_text_ids(entity_label: str, entities_ids: set[int]):
             text = ", ".join([str(i) for i in entities_ids])
@@ -135,18 +133,23 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
 
         if volumes and selection_filter == SelectionFilter.VOLUMES:
             update_text_ids("volume", volumes)
+
         elif surfaces and selection_filter == SelectionFilter.SURFACES:
             update_text_ids("surface", surfaces)
+
         elif lines and selection_filter == SelectionFilter.LINES:
             update_text_ids("line", lines)
 
     def domain_filter_callback(self):
-        manual = self.comboBox_mode.currentIndex() == SelectionMode.MANUAL
-        self.pushButton_apply.setEnabled(manual)
+        pass
 
     def selection_filter_callback(self):
-        manual = self.comboBox_mode.currentIndex() == SelectionMode.MANUAL
-        self.pushButton_apply.setEnabled(manual)
+        pass
+
+    def selection_mode_callback(self):
+        selection_mode = self.comboBox_mode.currentIndex()
+        manual_selection = selection_mode == SelectionMode.MANUAL 
+        self.pushButton_select.setDisabled(manual_selection)
 
     def select_entities_callback(self):
         selection_mode = self.comboBox_mode.currentIndex()
@@ -160,33 +163,39 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
             case _:
                 pass
 
-        entities_id = [int(text) for text in self.lineEdit_selected_ids.text().replace(" ", "").split(",")]
-        if not entities_id:
-            return
 
     def manual_selection_callback(self):
         pass
 
     def select_by_size_callback(self):
 
-        volumes = app().main_window.selection.geometry_volumes
-        if len(volumes) == 1:
-            equal_volumes = self.model.model_selection_tools.select_volumes_by_size(next(iter(volumes))) 
-            app().main_window.selection.set_geometry_selection(volumes=equal_volumes)
+        selected_volumes = []
+        for volume in app().main_window.selection.geometry_volumes:
+            equal_volumes = self.model.model_selection_tools.select_volumes_by_size(volume)
+            selected_volumes.extend(equal_volumes)
+
+        if selected_volumes:
+            app().main_window.selection.set_geometry_selection(volumes=selected_volumes)
             with QSignalBlocker(self.comboBox_selector_filter):
                 self.comboBox_selector_filter.setCurrentIndex(SelectionFilter.VOLUMES)
 
-        surfaces = app().main_window.selection.geometry_surfaces
-        if len(surfaces) == 1:
-            equal_surfaces = self.model.model_selection_tools.select_surfaces_by_size(next(iter(surfaces))) 
-            app().main_window.selection.set_geometry_selection(surfaces=equal_surfaces)
+        selected_surfaces = []
+        for surface in app().main_window.selection.geometry_surfaces:
+            equal_surfaces = self.model.model_selection_tools.select_surfaces_by_size(surface)
+            selected_surfaces.extend(equal_surfaces)
+
+        if selected_surfaces:
+            app().main_window.selection.set_geometry_selection(surfaces=selected_surfaces)
             with QSignalBlocker(self.comboBox_selector_filter):
                 self.comboBox_selector_filter.setCurrentIndex(SelectionFilter.SURFACES)
 
-        lines = app().main_window.selection.geometry_lines
-        if len(lines) == 1:
-            equal_lines = self.model.model_selection_tools.select_lines_by_size(next(iter(lines)))
-            app().main_window.selection.set_geometry_selection(lines=equal_lines)
+        selected_lines = []
+        for line in app().main_window.selection.geometry_lines:
+            equal_lines = self.model.model_selection_tools.select_lines_by_size(line)
+            selected_lines.extend(equal_lines)
+
+        if selected_lines:
+            app().main_window.selection.set_geometry_selection(lines=selected_lines)
             with QSignalBlocker(self.comboBox_selector_filter):
                 self.comboBox_selector_filter.setCurrentIndex(SelectionFilter.LINES)
 
