@@ -62,7 +62,7 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
 
         self.treeWidget_surface_velocity.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
 
-        for i, w in enumerate([100, 120, 140]):
+        for i, w in enumerate([140, 240]):
             self.treeWidget_surface_velocity.setColumnWidth(i, w)
             self.treeWidget_surface_velocity.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
