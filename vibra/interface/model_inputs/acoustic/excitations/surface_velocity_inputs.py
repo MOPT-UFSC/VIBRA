@@ -62,7 +62,7 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
 
         self.treeWidget_surface_velocity.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
 
-        for i, w in enumerate([140, 240]):
+        for i, w in enumerate([160, 240]):
             self.treeWidget_surface_velocity.setColumnWidth(i, w)
             self.treeWidget_surface_velocity.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
@@ -491,7 +491,7 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
             elif isinstance(tags, tuple):
                 str_tags = str(tags)[1:-1]
 
-            new = QTreeWidgetItem([str_tags, "surface", str_value])
+            new = QTreeWidgetItem([str_tags, str_value])
             for i in range(3):
                 new.setTextAlignment(i, Qt.AlignCenter)
 
