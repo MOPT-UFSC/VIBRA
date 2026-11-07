@@ -583,9 +583,7 @@ def get_mass_source_text(**kwargs):
         unit_label = "kg/m².s"
     elif isinstance(kwargs.get("line"), Number):
         unit_label = "kg/m.s"
-    elif isinstance(kwargs.get("point"), Number):
-        unit_label = "kg/s"
-    elif isinstance(kwargs.get("node"), Number):
+    elif isinstance(kwargs.get("point"), Number) or isinstance(kwargs.get("node"), Number):
         unit_label = "kg/s"
     else:
         return ""
