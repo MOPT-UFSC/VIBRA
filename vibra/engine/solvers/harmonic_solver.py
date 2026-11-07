@@ -18,8 +18,6 @@ from vibra.engine.serialization.project_paths import ProjectPaths
 from vibra.engine.solution import HarmonicSolution
 from vibra.engine.solvers import ModalSolver
 from vibra.engine.solvers.linear_solver import LinearSolver, SolverType, initialize_solver
-from vibra.utils.time_utils import context_timer
-from vibra.utils.hardware_monitor.ram_monitor import RamMonitor
 
 
 class HarmonicSolver:
@@ -73,11 +71,7 @@ class HarmonicSolver:
 
         nodal_solution_buffer = self._get_nodal_solution_buffer(is_resume)
 
-        with context_timer("freq comp"):
-            if isinstance(self.assembler, StructuralAssembler):
-                self.compute_structural_frequency_sweep(nodal_solution_buffer, is_resume)
-            else:
-                self.compute_frequency_sweep(nodal_solution_buffer, print_log, is_resume)
+        self.compute_frequency_sweep(nodal_solution_buffer, print_log, is_resume)
 
         logging.info("Solving harmonic analysis (direct method)... [99/100]")
 
@@ -113,7 +107,6 @@ class HarmonicSolver:
 
         return self.solution
 
-    @RamMonitor()
     def compute_frequency_sweep(
         self,
         nodal_solution_buffer: np.ndarray,
@@ -153,8 +146,7 @@ class HarmonicSolver:
                         continue
 
                     while not can_build.acquire(timeout=0.1):
-                        # Use just one stop processing maybe
-                        if stop_processing.is_set() or self.model.stop_processing:
+                        if stop_processing.is_set() or self.assembler.model.stop_processing:
                             return
 
                     # compute the load vector
@@ -183,7 +175,7 @@ class HarmonicSolver:
             try:
                 item = queue.get(timeout=0.5)
             except Empty:
-                if stop_processing.is_set():
+                if stop_processing.is_set() and queue.empty():
                     break
                 continue
 
@@ -213,6 +205,7 @@ class HarmonicSolver:
 
             solution_freq = self.assembler.reinsert_the_prescribed_dof_into_solution_freq(solution_freq, i)
             nodal_solution_buffer[:, i] = solution_freq
+            del solution_freq
 
             logging.info(f"Solution step {i + 1} and frequency {freq} Hz [{i + 1}/{len(self.frequencies)}]")
 
