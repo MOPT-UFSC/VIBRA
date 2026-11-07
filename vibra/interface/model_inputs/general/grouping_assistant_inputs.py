@@ -1,7 +1,7 @@
 
 from enum import IntEnum
 
-from PySide6.QtCore import QSignalBlocker, Qt
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QAbstractItemView, QTreeWidgetItem
 
@@ -170,41 +170,48 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
 
     def select_by_size_callback(self):
 
-        selected_volumes = []
-        for volume in app().main_window.selection.geometry_volumes:
-            for vol_id in self.model.model_selection_tools.select_volumes_by_size(volume):
-                if vol_id in selected_volumes:
-                    continue
-                selected_volumes.append(vol_id)
+        selection_filter = self.comboBox_selector_filter.currentIndex()
 
-        if selected_volumes:
-            app().main_window.selection.set_geometry_selection(volumes=selected_volumes)
-            with QSignalBlocker(self.comboBox_selector_filter):
-                self.comboBox_selector_filter.setCurrentIndex(SelectionFilter.VOLUMES)
+        match selection_filter:
 
-        selected_surfaces = []
-        for surface in app().main_window.selection.geometry_surfaces:
-            for surf_id in self.model.model_selection_tools.select_surfaces_by_size(surface):
-                if surf_id in selected_surfaces:
-                    continue
-                selected_surfaces.append(surf_id)
+            case SelectionFilter.VOLUMES:
+                selected_volumes = []
+                for volume in app().main_window.selection.geometry_volumes:
+                    for vol_id in self.model.model_selection_tools.select_volumes_by_size(volume):
+                        if vol_id in selected_volumes:
+                            continue
+                        selected_volumes.append(vol_id)
 
-        if selected_surfaces:
-            app().main_window.selection.set_geometry_selection(surfaces=selected_surfaces)
-            with QSignalBlocker(self.comboBox_selector_filter):
-                self.comboBox_selector_filter.setCurrentIndex(SelectionFilter.SURFACES)
+                if not selected_volumes:
+                    return
 
-        selected_lines = []
-        for line in app().main_window.selection.geometry_lines:
-            for line_id in self.model.model_selection_tools.select_lines_by_size(line):
-                if line_id in selected_lines:
-                    continue
-                selected_lines.append(line_id)
+                app().main_window.selection.set_geometry_selection(volumes=selected_volumes)
 
-        if selected_lines:
-            app().main_window.selection.set_geometry_selection(lines=selected_lines)
-            with QSignalBlocker(self.comboBox_selector_filter):
-                self.comboBox_selector_filter.setCurrentIndex(SelectionFilter.LINES)
+            case SelectionFilter.SURFACES:
+                selected_surfaces = []
+                for surface in app().main_window.selection.geometry_surfaces:
+                    for surf_id in self.model.model_selection_tools.select_surfaces_by_size(surface):
+                        if surf_id in selected_surfaces:
+                            continue
+                        selected_surfaces.append(surf_id)
+
+                if not selected_surfaces:
+                    return
+
+                app().main_window.selection.set_geometry_selection(surfaces=selected_surfaces)
+
+            case SelectionFilter.LINES:
+                selected_lines = []
+                for line in app().main_window.selection.geometry_lines:
+                    for line_id in self.model.model_selection_tools.select_lines_by_size(line):
+                        if line_id in selected_lines:
+                            continue
+                        selected_lines.append(line_id)
+
+                if not selected_lines:
+                    return
+
+                app().main_window.selection.set_geometry_selection(lines=selected_lines)
 
     def select_all_callback(self):
         selection_filter = self.comboBox_selector_filter.currentIndex()
@@ -352,8 +359,6 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
             group_id = int(item.text(0))
             self.properties._remove_group_property("selection_group", group_id)
 
-        self.pushButton_remove.setDisabled(True)
-
         app().main_window.selection.clear_selection()
         self.actions_to_finalize()
 
@@ -373,7 +378,6 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
             self.actions_to_finalize()
 
     def item_clicked_callback(self):
-        self.pushButton_remove.setEnabled(True)
         selected_items = self.treeWidget_group_info.selectedItems()
         if len(selected_items) != 1:
             return
@@ -406,7 +410,6 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
 
         self.pushButton_apply.setDisabled(list_tab)
         self.pushButton_apply_and_close.setDisabled(list_tab)
-        self.pushButton_remove.setDisabled(True)
 
         self.last_tab = current_tab
 
