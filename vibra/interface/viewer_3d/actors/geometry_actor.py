@@ -14,7 +14,7 @@ from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.utils.interface_utils import SectionPlane
 from vibra.utils.time_utils import function_timer
-from vibra.utils.vtk_utils import create_cells, read_texture
+from vibra.utils.vtk_utils import create_cells, linearize_1d_cells, read_texture, triangulate_2d_cells
 
 
 class GeometryTextures(IntEnum):
@@ -155,14 +155,14 @@ class GeometryActor(vtkPropAssembly):
         self.point_colors.Fill(0)
         self._point_ids = np.array(self.mesh.nodes_from_points.keys())
 
-        lines_linearized = self._linearize_1d_cells(self.mesh.lines_connectivity)
+        lines_linearized = linearize_1d_cells(self.mesh.lines_connectivity)
         line_cells = create_cells(lines_linearized[:, 4:])
         self.line_data.SetLines(line_cells)
         self.line_colors.SetNumberOfTuples(len(lines_linearized))
         self.line_colors.Fill(0)
         self._line_ids = lines_linearized[:, 1].flatten()
 
-        faces_triangulated = self._triangulate_2d_cells(faces_connectivity)
+        faces_triangulated = triangulate_2d_cells(faces_connectivity)
         face_cells = create_cells(faces_triangulated[:, 4:])
         self.surface_data.SetPolys(face_cells)
         self.surface_colors.SetNumberOfTuples(len(faces_triangulated))
@@ -305,46 +305,3 @@ class GeometryActor(vtkPropAssembly):
             uv[:, 1] = max_v * np.arcsin(normalized_v)
 
         return uv
-
-    def _triangulate_2d_cells(self, connectivity: np.ndarray) -> np.ndarray:
-        n_nodes = connectivity[:, 4:].shape[1]
-        match n_nodes:
-            case 3:
-                return connectivity
-            case 4:
-                reorderings = [[0, 3, 1], [1, 3, 2]]
-            case 6:
-                reorderings = [[0, 3, 5], [1, 4, 3], [2, 5, 4], [3, 4, 5]]
-            case 8:
-                reorderings = [
-                    [0, 4, 7], [1, 5, 4], [2, 6, 5], [3, 7, 6], [4, 5, 6], [4, 6, 7],
-                ]  # fmt: skip
-            case _:
-                raise NotImplementedError(f"Exploding to 2D cells is not supported for {n_nodes}-node cells")
-        return self._explode_cells(connectivity, reorderings)
-
-    def _linearize_1d_cells(self, connectivity: np.ndarray) -> np.ndarray:
-        n_nodes = connectivity[:, 4:].shape[1]
-        match n_nodes:
-            case 0:
-                return np.zeros(shape=(0, 4 + 2), dtype=int)
-            case 2:
-                return connectivity
-            case 3:
-                reorderings = [[0, 2], [2, 1]]
-            case _:
-                raise NotImplementedError(f"Exploding to 1D cells is not supported for {n_nodes}-node cells")
-        return self._explode_cells(connectivity, reorderings)
-
-    def _explode_cells(self, connectivity: np.ndarray, reorderings: Iterable[Iterable[int]]) -> np.ndarray:
-        column_order = [
-            [0, 1, 2, 3] + [i + 4 for i in reordering]
-            for reordering in reorderings
-        ]  # fmt: skip
-
-        stacked = []
-        for order in column_order:
-            connect = connectivity[:, order]
-            stacked.append(connect)
-
-        return np.vstack(stacked)

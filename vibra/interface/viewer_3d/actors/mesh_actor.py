@@ -17,7 +17,7 @@ from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.utils.interface_utils import SectionPlane
 from vibra.utils.math_functions import inside_plane
-from vibra.utils.vtk_utils import create_cells
+from vibra.utils.vtk_utils import create_cells, linearize_2d_cells, linearize_3d_cells, triangulate_2d_cells, triangulate_3d_cells
 
 
 @dataclass
@@ -207,11 +207,11 @@ class MeshActor(vtkPropAssembly):
         self.node_ids.SetNumberOfTuples(len(node_indexes))
         vtk_to_numpy(self.node_ids)[:] = node_indexes
 
-        edges_linearized = self._linearize_2d_cells(self.mesh.faces_connectivity)
+        edges_linearized = linearize_2d_cells(self.mesh.faces_connectivity)
         edge_cells = create_cells(edges_linearized[:, 4:])
         self.edge_data.SetLines(edge_cells)
 
-        faces_triangulated = self._triangulate_2d_cells(self.mesh.faces_connectivity)
+        faces_triangulated = triangulate_2d_cells(self.mesh.faces_connectivity)
         face_cells = create_cells(faces_triangulated[:, 4:])
         self.surface_data.SetPolys(face_cells)
         self.surface_colors.SetNumberOfTuples(len(faces_triangulated))
@@ -257,13 +257,13 @@ class MeshActor(vtkPropAssembly):
         vtk_to_numpy(self.node_ids)[:] = node_indexes
 
         edges_linearized = np.vstack((
-            self._linearize_2d_cells(faces_before_plane),
-            self._linearize_3d_cells(solids_in_middle),
+            linearize_2d_cells(faces_before_plane),
+            linearize_3d_cells(solids_in_middle),
         ))  # fmt: skip
         cells = create_cells(edges_linearized[:, 4:])
         self.edge_data.SetLines(cells)
 
-        faces_triangulated = self._triangulate_2d_cells(faces_before_plane)
+        faces_triangulated = triangulate_2d_cells(faces_before_plane)
         face_cells = create_cells(faces_triangulated[:, 4:])
         self.surface_data.SetPolys(face_cells)
         self.surface_colors.SetNumberOfTuples(len(faces_triangulated))
@@ -272,7 +272,7 @@ class MeshActor(vtkPropAssembly):
         self.surface_ids.SetNumberOfTuples(len(faces_triangulated))
         vtk_to_numpy(self.surface_ids)[:] = faces_triangulated[:, 0]
 
-        solids_triangulated = self._triangulate_3d_cells(solids_in_middle)
+        solids_triangulated = triangulate_3d_cells(solids_in_middle)
         solid_cells = create_cells(solids_triangulated[:, 4:])
         self.volume_data.SetPolys(solid_cells)
         self.volume_colors.SetNumberOfTuples(len(solids_triangulated))
@@ -576,138 +576,7 @@ class MeshActor(vtkPropAssembly):
         section_colors[paint_position_mask, 3] = alpha
 
     def _get_parts(self) -> list[vtkActor]:
-        return list(self.GetParts())  # pyright: ignore[reportArgumentType]
-
-    def _linearize_2d_cells(self, connectivity: np.ndarray) -> np.ndarray:
-        n_nodes = connectivity[:, 4:].shape[1]
-        match n_nodes:
-            case 0:
-                return np.zeros(shape=(0, 4 + 2), dtype=int)
-            case 3 | 4:
-                reorderings = list(pairwise(range(n_nodes)))
-            case 6:
-                reorderings = [
-                    [0, 3], [3, 1],
-                    [1, 4], [4, 2],
-                    [2, 5], [5, 0],
-                ]  # fmt: skip
-            case 8:
-                reorderings = [
-                    [0, 4], [4, 1],
-                    [1, 5], [5, 2],
-                    [2, 6], [6, 3],
-                    [3, 7], [7, 0],
-                ]  # fmt: skip
-            case _:
-                raise NotImplementedError(f"Exploding to 2D cells is not supported for {n_nodes}-node cells")
-        return self._explode_cells(connectivity, reorderings)
-
-    def _linearize_3d_cells(self, connectivity: np.ndarray) -> np.ndarray:
-        n_nodes = connectivity[:, 4:].shape[1]
-        match n_nodes:
-            case 0:
-                return np.zeros(shape=(0, 4 + 2), dtype=int)
-            case 4:
-                reorderings = list(combinations(range(n_nodes), 2))
-            case 8:
-                reorderings = [
-                    [0, 1], [1, 2], [2, 3], [3, 0],
-                    [4, 5], [5, 6], [6, 7], [7, 4],
-                    [0, 4], [1, 5], [2, 6], [3, 7],
-                ]  # fmt: skip
-            case 10:
-                reorderings = [
-                    [0, 4], [4, 1], [1, 5], [5, 2], [0, 6], [6, 2],
-                    [0, 7], [7, 3], [2, 8], [8, 3], [1, 9], [9, 3],
-                ]  # fmt: skip
-            case 20:
-                reorderings = [
-                    [0, 8], [8, 1],
-                    [1, 11], [11, 2],
-                    [2, 13], [13, 3],
-                    [3, 9], [9, 0],
-                    [4, 16], [16, 5],
-                    [5, 18], [18, 6],
-                    [6, 19], [19, 7],
-                    [7, 17], [17, 4],
-                    [0, 10], [10, 4],
-                    [1, 12], [12, 5],
-                    [2, 14], [14, 6],
-                    [3, 15], [15, 7],
-                ]  # fmt: skip
-            case _:
-                raise NotImplementedError(f"Exploding to 2D cells is not supported for {n_nodes}-node cells")
-        return self._explode_cells(connectivity, reorderings)
-
-    def _triangulate_2d_cells(self, connectivity: np.ndarray) -> np.ndarray:
-        n_nodes = connectivity[:, 4:].shape[1]
-        match n_nodes:
-            case 0:
-                return np.zeros(shape=(0, 4 + 3), dtype=int)
-            case 3:
-                return connectivity
-            case 4:
-                reorderings = [[0, 3, 1], [1, 3, 2]]
-            case 6:
-                reorderings = [[0, 3, 5], [1, 4, 3], [2, 5, 4], [3, 4, 5]]
-            case 8:
-                reorderings = [
-                    [0, 4, 7], [1, 5, 4], [2, 6, 5], [3, 7, 6], [4, 5, 6], [4, 6, 7],
-                ]  # fmt: skip
-            case _:
-                raise NotImplementedError(f"Exploding to 2D cells is not supported for {n_nodes}-node cells")
-        return self._explode_cells(connectivity, reorderings)
-
-    def _triangulate_3d_cells(self, connectivity: np.ndarray) -> np.ndarray:
-        n_nodes = connectivity[:, 4:].shape[1]
-
-        match n_nodes:
-            case 0:
-                return np.zeros(shape=(0, 4 + 3), dtype=int)
-            case 4:  # Tetrahedron Linear
-                reorderings = list(combinations(range(n_nodes), 3))
-            case 8:
-                reorderings = [
-                    [0, 1, 2], [0, 2, 3],
-                    [4, 5, 6], [4, 6, 7],
-                    [0, 1, 5], [0, 5, 4],
-                    [3, 2, 6], [3, 6, 7],
-                    [0, 3, 7], [0, 7, 4],
-                    [1, 2, 6], [1, 6, 5],
-                ]  # fmt: skip
-            case 10:  # Tetrahedron Quadratic
-                reorderings = [
-                    [0, 4, 6], [1, 5, 4], [2, 6, 5], [4, 5, 6],
-                    [0, 7, 4], [3, 9, 7], [1, 4, 9], [7, 9, 4],
-                    [0, 6, 7], [2, 8, 6], [3, 7, 8], [6, 8, 7],
-                    [1, 9, 5], [3, 8, 9], [2, 5, 8], [9, 8, 5],
-                ]  # fmt: skip
-            case 20:
-                reorderings = [
-                    [0, 8, 9], [1, 11, 8], [2, 13, 11], [3, 9, 13], [8, 11, 13], [8, 13, 9],
-                    [4, 16, 17], [5, 18, 16], [6, 19, 18], [7, 17, 19], [16, 18, 19], [16, 19, 17],
-                    [0, 8, 10], [1, 12, 8], [5, 16, 12], [4, 10, 16], [8, 12, 16], [8, 16, 10],
-                    [2, 13, 14], [3, 15, 13], [7, 19, 15], [6, 14, 19], [13, 15, 19], [13, 19, 14],
-                    [0, 9, 10], [3, 15, 9], [7, 17, 15], [4, 10, 17], [9, 15, 17], [9, 17, 10],
-                    [1, 11, 12], [2, 14, 11], [6, 18, 14], [5, 12, 18], [11, 14, 18], [11, 18, 12],
-                ]  # fmt: skip
-            case _:
-                raise NotImplementedError(f"Exploding to 2D cells is not supported for {n_nodes}-node cells")
-
-        return self._explode_cells(connectivity, reorderings)
-
-    def _explode_cells(self, connectivity: np.ndarray, reorderings: Sequence[Sequence[int]]) -> np.ndarray:
-        column_order = [
-            [0, 1, 2, 3] + [i + 4 for i in reordering]
-            for reordering in reorderings
-        ]  # fmt: skip
-
-        stacked = []
-        for order in column_order:
-            connect = connectivity[:, order]
-            stacked.append(connect)
-
-        return np.concatenate(stacked)
+        return list(self.GetParts())  # pyrefly: ignore[bad-argument-type]
 
     def _find_masked_nodes(self) -> np.ndarray:
         if self.mesh is None:
