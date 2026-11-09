@@ -95,6 +95,8 @@ class GeometryActor(vtkPropAssembly):
 
         nodal_coordinates, faces_connectivity = self._decouple_faces_connectivity()
         nodal_coordinates[:, 1] += 2
+        self._nodal_surface_ids = np.zeros(shape=len(nodal_coordinates), dtype=int)
+        self._nodal_surface_ids[faces_connectivity[:, 4:]] = faces_connectivity[:, 1, None]
         self.points.SetData(numpy_to_vtk(nodal_coordinates[:, 1:]))
         self.points.Modified()
 
@@ -143,21 +145,26 @@ class GeometryActor(vtkPropAssembly):
         assert self.mesh is not None
 
         texture_coordinates = np.zeros(shape=(len(nodal_coordinates), 2))
-        self._nodal_surface_ids = np.zeros(shape=len(nodal_coordinates))
         for surface_id, surface_elements in self.mesh.elements_from_surface.items():
             node_indices = np.unique(faces_connectivity[surface_elements, 4:])
             surface_normals = self.mesh.normals_surface.get(surface_id)
-            normal = np.average(surface_normals, axis=0).round(6) if (surface_normals is not None) else None
-            texture_coordinates[node_indices] = self._generate_tcoords(nodal_coordinates[node_indices, 1:], normal)
-            self._nodal_surface_ids[node_indices] = surface_id
+
+            if surface_normals is not None:
+                normal = np.average(surface_normals, axis=0).round(6)
+            else:
+                normal = None
+
+            texture_coordinates[node_indices] = self._generate_tcoords(
+                nodal_coordinates[node_indices, 1:],
+                normal=normal,
+            )
 
         min_t = texture_coordinates.min()
         max_t = texture_coordinates.max()
-        if min_t == max_t:
-            texture_coordinates *= 0
-        else:
-            texture_coordinates = (texture_coordinates - min_t) / (max_t - min_t)
-        texture_coordinates[:, 0] /= 4
+        texture_coordinates -= min_t
+        if min_t != max_t:
+            texture_coordinates /= max_t - min_t
+        texture_coordinates[:, 0] /= len(GeometryTextures)
         self.surface_data.GetPointData().SetTCoords(numpy_to_vtk(texture_coordinates))
 
         self.surface_data.GetPointData().RemoveArray("Normals")
