@@ -1792,7 +1792,7 @@ class Mesh:
             element_ids.extend(self.lines_connectivity[rows, 0])
         return element_ids
 
-    def process_face_elements_connected_to_nodes(self, selected_ids: int | list):
+    def process_face_elements_connected_to_nodes(self, selected_ids: int | list[int] | tuple[int]):
 
         self.face_elements_connected_to_nodes.clear()
         self.surface_area_from_element_integration.clear()

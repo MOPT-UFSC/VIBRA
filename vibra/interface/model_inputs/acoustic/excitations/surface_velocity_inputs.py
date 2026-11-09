@@ -1,7 +1,8 @@
-from collections import defaultdict
+from copy import deepcopy
+from enum import IntEnum
 
 import numpy as np
-from PySide6.QtCore import QItemSelectionModel, QPoint, Qt
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QAbstractItemView, QLineEdit, QTreeWidgetItem
 
@@ -16,6 +17,11 @@ from vibra.interface.numeric_checks.double_validator import StrictDoubleValidato
 from vibra.interface.ui_generated.model.acoustic.excitations.surface_velocity_inputs_ui import SurfaceVelocityInputs_UI
 from vibra.interface.user_input.data_handler.file_dialog_service import FileDialogService
 from vibra.interface.user_input.data_handler.file_handlers.file_handler import FileHandler
+
+
+class DistributeLoad(IntEnum):
+    NO = 0
+    YES = 1
 
 
 class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
@@ -56,7 +62,7 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
 
         self.treeWidget_surface_velocity.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
 
-        for i, w in enumerate([100, 120, 140]):
+        for i, w in enumerate([160, 240]):
             self.treeWidget_surface_velocity.setColumnWidth(i, w)
             self.treeWidget_surface_velocity.headerItem().setTextAlignment(i, Qt.AlignCenter)
 
@@ -83,16 +89,12 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         # QTreeWidget connection
         self.treeWidget_surface_velocity.itemClicked.connect(self.item_clicked_callback)
         self.treeWidget_surface_velocity.itemDoubleClicked.connect(self.item_double_clicked_callback)
-        self.treeWidget_surface_velocity.itemSelectionChanged.connect(self.item_selection_clicked_callback)
 
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
         self.geometry_selection_callback()
 
     def geometry_selection_callback(self):
-        # if self.tabWidget_main.currentIndex() == StandardTabType.LIST:
-        #     self.verify_if_selected_surfaces_are_in_tree_widget_surface_velocity()
-        #     return
         
         faces = app().main_window.selection.geometry_surfaces
 
@@ -153,7 +155,6 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         self.lineEdit_selection_id.setDisabled(list_tab)
         self.pushButton_apply.setDisabled(list_tab)
         self.pushButton_apply_and_close.setDisabled(list_tab)
-        self.pushButton_remove.setDisabled(True)
 
         self.last_tab = current_tab
         self.treeWidget_surface_velocity.clearSelection()
@@ -219,8 +220,12 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
             "element_integration": True,
         }
 
-        for surface_id in surface_ids:
-            self.properties._set_property("surface_velocity", data, surface=surface_id)
+        if self.comboBox_distribute_load.currentIndex() == DistributeLoad.YES:
+            self.properties._set_property("surface_velocity", data, surface=tuple(surface_ids))
+
+        else:
+            for surface_id in surface_ids:
+                self.properties._set_property("surface_velocity", data, surface=surface_id)
 
     def load_table(self, lineEdit : QLineEdit, direct_load=False):
         title = "Error reached while loading 'surface velocity' table"
@@ -314,33 +319,49 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         if self.imported_values is None:
             self.imported_values = self.load_table(self.lineEdit_table_path, direct_load = True)
 
-        for surface_id in surface_ids:
+        if not isinstance(self.imported_values, np.ndarray):
+            return True
 
-            if isinstance(self.imported_values, np.ndarray):
+        if self.comboBox_distribute_load.currentIndex() == DistributeLoad.YES:
+            if self.imported_values.shape[1] >= 3:
+                table_name = f"surface_velocity_at_surfaces_{surface_ids[1:-1]}"
+                if self.save_table_values(table_name, self.imported_values):
+                    self.lineEdit_table_path.setFocus()
+                    self.imported_values = None
+                    return True
+
+                # table path from imported tabular data
+                table_path = self.lineEdit_table_path.text()
+
+                data = {
+                    "table_names" : [table_name],
+                    "table_paths" : [table_path],
+                    "element_integration" : True,
+                    }
+
+            self.properties._set_property("surface_velocity", data, surface=tuple(surface_ids))
+
+        else:
+
+            for surface_id in surface_ids:
+
                 if self.imported_values.shape[1] >= 3:
-
-                    table_name = f"surface_velocity_at_surface_{surface_id}"
+                    table_name = f"surface_velocity_at_surface_{surface_ids}"
                     if self.save_table_values(table_name, self.imported_values):
                         self.lineEdit_table_path.setFocus()
                         self.imported_values = None
-                        return
+                        return True
 
-            else:
-                return True
+                # table path from imported tabular data
+                table_path = self.lineEdit_table_path.text()
 
-            if self.imported_values is None:
-                return True
+                data = {
+                    "table_names" : [table_name],
+                    "table_paths" : [table_path],
+                    "element_integration" : True,
+                    }
 
-            # table path from imported tabular data
-            table_path = self.lineEdit_table_path.text()
-
-            data = {
-                "table_names" : [table_name],
-                "table_paths" : [table_path],
-                "element_integration" : True,
-                }
-
-            self.properties._set_property("surface_velocity", data, surface=surface_id)
+                self.properties._set_property("surface_velocity", data, surface=surface_id)
 
     def remove_conflicting_excitations(self, surface_ids: int | list):
 
@@ -357,9 +378,18 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
             "mass_source",
             ]
 
-        for surface_id in surface_ids:
-            for label in labels:
-                self.properties._remove_surface_property(label, surface_id)
+        if isinstance(surface_ids, int):
+            surface_ids = [surface_ids]
+
+        for (property, tags) in deepcopy(self.properties.surface_properties):
+            if property not in labels:
+                continue
+
+            if isinstance(tags, int):
+                self.properties._remove_surface_property(property, tags)
+            elif isinstance(tags, tuple):
+                if not set(surface_ids).isdisjoint(tags):
+                    self.properties._remove_surface_property(property, tags)
 
     def remove_callback(self):
 
@@ -368,14 +398,18 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
             return
 
         for item in selected_items:
-            selected_id = int(item.text(0))
-            selection = item.text(1)
+            text = item.text(0).replace(" ", "")
+            surface_ids = [int(value) for value in text.split(",")]
 
-            if selection == "surface":
-                self.properties._remove_surface_property("surface_velocity", selected_id)
+            for (property, tags) in deepcopy(self.properties.surface_properties):
+                if property != "surface_velocity":
+                    continue
 
-        self.clear_line_edit_selection_id()
-        self.pushButton_remove.setDisabled(True)
+                if isinstance(tags, int):
+                    self.properties._remove_surface_property(property, tags)
+                elif isinstance(tags, tuple):
+                    if not set(surface_ids).isdisjoint(tags):
+                        self.properties._remove_surface_property(property, tags)
 
         app().main_window.selection.clear_selection()
         self.actions_to_finalize()
@@ -396,6 +430,10 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
             self.actions_to_finalize()
 
     def actions_to_finalize(self, close_window: bool = False):
+
+        self.lineEdit_selection_id.clear()
+        self.lineEdit_table_path.clear()
+
         self.load_model_info()
         app().project.update_model_properties_file()
         app().main_window.update_info_text()
@@ -411,8 +449,7 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
 
     def update_tabs_visibility(self):
 
-        for key in self.properties.surface_properties:
-            property, *args = key
+        for (property, *_) in self.properties.surface_properties:
             if property != "surface_velocity":
                 continue
 
@@ -424,33 +461,11 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         self.lineEdit_left_value.setFocus()
 
     def item_clicked_callback(self, item):
-
-        self.pushButton_remove.setEnabled(True)
-
-        selected_items = self.treeWidget_surface_velocity.selectedItems()
-        if not selected_items:
-            self.lineEdit_selection_id.clear()
-            self.pushButton_remove.setDisabled(True)
-            return
-
-        entities_mapping = defaultdict(list)
-        for _item in selected_items:
-            entity = _item.text(1)
-            entities_mapping[entity].append(int(_item.text(0)))
-
-        if not entities_mapping:
-            return
-
-        app().main_window.selection.set_geometry_selection(
-            surfaces = entities_mapping.get("surface"),
-            )
+        self.lineEdit_selection_id.setText(item.text(0))
 
     def item_double_clicked_callback(self, item):
-        self.item_clicked_callback(item)
+        self.lineEdit_selection_id.setText(item.text(0))
 
-    def item_selection_clicked_callback(self):
-        self.item_clicked_callback(None)
-    
     def clear_line_edit_selection_id(self):
         self.lineEdit_selection_id.clear()
         self.lineEdit_selection_id.setToolTip("")
@@ -458,7 +473,7 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
     def load_model_info(self):
         self.treeWidget_surface_velocity.clear()
         for key, data in self.properties.surface_properties.items():
-            property, surface_id = key
+            property, tags = key
             if property != "surface_velocity":
                 continue
 
@@ -471,7 +486,12 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
                 values = data["values"][0]
                 str_value = f"{values : .6e}"
 
-            new = QTreeWidgetItem([str(surface_id), "surface", str_value])
+            if isinstance(tags, int):
+                str_tags = str(tags)
+            elif isinstance(tags, tuple):
+                str_tags = str(tags)[1:-1]
+
+            new = QTreeWidgetItem([str_tags, str_value])
             for i in range(3):
                 new.setTextAlignment(i, Qt.AlignCenter)
 
@@ -495,64 +515,3 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         self.keep_window_open = False
         app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
         return super().closeEvent(a0)
-
-
-    ## TODO: remove if deprecated
-
-    def set_selection_text(self, selected_surfaces: list | set):
-        selected_surfaces = list(selected_surfaces)
-        selected_surfaces.sort()
-
-        selected_surfaces = map(str, selected_surfaces)
-        selection_text = ", ".join(selected_surfaces)
-
-        self.lineEdit_selection_id.setText(selection_text)
-        self.lineEdit_selection_id.setToolTip(selection_text)
-
-
-    def verify_if_selected_surfaces_are_in_tree_widget_surface_velocity(self):
-        if self.tree_item_clicked:
-            return
-
-        selected_surfaces = app().main_window.selection.geometry_surfaces
-
-        if not selected_surfaces:
-            return
-
-        self.clear_line_edit_selection_id()
-        self.treeWidget_surface_velocity.clearSelection()
-        self.pushButton_remove.setDisabled(True)
-
-        map_id_to_model_index = self.get_tree_widget_surface_velocity_items_map()
-        selected_ids = set(map_id_to_model_index.keys())
-        selected_surfaces_in_tree_widget = selected_surfaces.intersection(selected_ids)
-
-        if not selected_surfaces_in_tree_widget:
-            return
-        
-        self.pushButton_remove.setEnabled(True)
-        
-        model_selector = self.treeWidget_surface_velocity.selectionModel()
-
-        for surface_id in selected_surfaces_in_tree_widget:
-            model_index = map_id_to_model_index[surface_id]
-
-            model_selector.select(model_index, QItemSelectionModel.SelectionFlag.Select | QItemSelectionModel.SelectionFlag.Rows)
-
-        self.treeWidget_surface_velocity.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.set_selection_text(selected_surfaces_in_tree_widget)
-
-
-    def get_tree_widget_surface_velocity_items_map(self) -> dict:
-        map_id_to_model_index = dict()
-
-        index = self.treeWidget_surface_velocity.indexAt(QPoint(0, 0))
-        while index.isValid():
-            item = self.treeWidget_surface_velocity.itemFromIndex(index)
-            surface_id = item.text(0)
-
-            map_id_to_model_index[int(surface_id)] = index
-
-            index = self.treeWidget_surface_velocity.indexBelow(index)
-        
-        return map_id_to_model_index

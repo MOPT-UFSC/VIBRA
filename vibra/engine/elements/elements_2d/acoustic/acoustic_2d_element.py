@@ -23,6 +23,28 @@ class Acoustic2DElement(Element2D):
         self.dof_indexes_proc = self.dof_indexes_processor("acoustic")
 
 
+    def integrate_area(self, connectivities: np.ndarray):
+
+        self.connectivities = connectivities
+
+        # stack the element nodes coordinates for all elements
+        coords = self.model.mesh.nodal_coordinates[[connect for connect in connectivities], 1:]
+
+        # initialize variable
+        dA = 0.
+
+        # integration loop
+        for i in range(self.nint):
+
+            # determinant of Jacobian for the i-th integration point
+            det_jacs = self.get_jacobian_determinant_2d(self.dphi[i, :, :], coords)
+
+            # integrate all elementary areas
+            dA += det_jacs * self.wps[i]
+
+        return np.sum(dA)
+
+
     def load_vector(self, el_index: int, load: float = 1.0) -> np.ndarray:
         """ 
         This method computes the elementary load vector.

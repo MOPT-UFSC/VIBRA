@@ -36,6 +36,16 @@ class AcousticNodalSolution3dPlotTimeInputs(AcousticNodalSolution3dPlotTimeInput
         self._create_connections()
         self._configure_validators()
 
+    def showEvent(self, event=None):
+        super().showEvent(event)
+
+        app().main_window.render_widget_changed.emit()
+        app().main_window.view_toolbar.disable_selection_tool()
+
+        if self.is_data_cached:
+            render_widget = app().main_window.results_widget
+            app().main_window.render_widgets_stack.setCurrentWidget(render_widget)
+
     @property
     def model(self):
         return app().project.model
@@ -91,15 +101,6 @@ class AcousticNodalSolution3dPlotTimeInputs(AcousticNodalSolution3dPlotTimeInput
         self.results_display_widget = ResultsDisplayWidget()
         grid_layout.addWidget(self.results_display_widget)
         self.frame_color.adjustSize()
-
-    def show_results_render(self):
-        curent_render_widget = app().main_window.get_current_render_widget()
-        results_render_widget = app().main_window.results_widget
-
-        if curent_render_widget != results_render_widget:
-            app().main_window.render_widgets_stack.setCurrentWidget(results_render_widget)
-            app().main_window.render_widget_changed.emit()
-            app().main_window.view_toolbar.disable_selection_tool()
 
     def _configure_validators(self):
         self.lineEdit_animation_time.setValidator(StrictDoubleValidator(1e-5, 1e8, 8))
@@ -227,7 +228,7 @@ class AcousticNodalSolution3dPlotTimeInputs(AcousticNodalSolution3dPlotTimeInput
         LoadingWindow(plot_callback, delayed=False).run()
 
         self.set_frames_disabled(False)
-        self.show_results_render()
+        self.showEvent()
 
     def get_plot_type(self) -> PressurePlotType:
         plot_types = [

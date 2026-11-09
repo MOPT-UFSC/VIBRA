@@ -2243,37 +2243,6 @@
          <property name="bottomMargin">
           <number>6</number>
          </property>
-         <item row="0" column="3">
-          <widget class="QComboBox" name="comboBox_attribution_type">
-           <property name="minimumSize">
-            <size>
-             <width>0</width>
-             <height>28</height>
-            </size>
-           </property>
-           <property name="maximumSize">
-            <size>
-             <width>16777215</width>
-             <height>28</height>
-            </size>
-           </property>
-           <property name="font">
-            <font>
-             <pointsize>10</pointsize>
-            </font>
-           </property>
-           <item>
-            <property name="text">
-             <string> All bodies</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string> Selected bodies</string>
-            </property>
-           </item>
-          </widget>
-         </item>
          <item row="0" column="2">
           <widget class="QLineEdit" name="lineEdit_selection_id">
            <property name="enabled">
@@ -2339,19 +2308,6 @@
            </property>
           </widget>
          </item>
-         <item row="0" column="4">
-          <spacer name="horizontalSpacer_6">
-           <property name="orientation">
-            <enum>Qt::Orientation::Horizontal</enum>
-           </property>
-           <property name="sizeHint" stdset="0">
-            <size>
-             <width>40</width>
-             <height>20</height>
-            </size>
-           </property>
-          </spacer>
-         </item>
          <item row="0" column="0">
           <spacer name="horizontalSpacer_7">
            <property name="orientation">
@@ -2364,6 +2320,99 @@
             </size>
            </property>
           </spacer>
+         </item>
+         <item row="0" column="5">
+          <spacer name="horizontalSpacer_6">
+           <property name="orientation">
+            <enum>Qt::Orientation::Horizontal</enum>
+           </property>
+           <property name="sizeHint" stdset="0">
+            <size>
+             <width>40</width>
+             <height>20</height>
+            </size>
+           </property>
+          </spacer>
+         </item>
+         <item row="0" column="3">
+          <widget class="QComboBox" name="comboBox_attribution_type">
+           <property name="minimumSize">
+            <size>
+             <width>0</width>
+             <height>28</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>28</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>10</pointsize>
+            </font>
+           </property>
+           <item>
+            <property name="text">
+             <string> All bodies</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string> Selected bodies</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item row="0" column="4">
+          <widget class="QPushButton" name="pushButton_select_group">
+           <property name="minimumSize">
+            <size>
+             <width>40</width>
+             <height>30</height>
+            </size>
+           </property>
+           <property name="maximumSize">
+            <size>
+             <width>40</width>
+             <height>30</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <family>MS Shell Dlg 2</family>
+             <pointsize>11</pointsize>
+             <italic>false</italic>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="toolTip">
+            <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt; font-weight:400;&quot;&gt;Show the created groups&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           </property>
+           <property name="styleSheet">
+            <string notr="true"/>
+           </property>
+           <property name="text">
+            <string/>
+           </property>
+           <property name="icon">
+            <iconset resource="../../../../icons/dark_theme/resources.qrc">
+             <normaloff>:/icons/selection_icon.png</normaloff>:/icons/selection_icon.png</iconset>
+           </property>
+           <property name="iconSize">
+            <size>
+             <width>20</width>
+             <height>20</height>
+            </size>
+           </property>
+           <property name="autoDefault">
+            <bool>false</bool>
+           </property>
+           <property name="flat">
+            <bool>false</bool>
+           </property>
+          </widget>
          </item>
         </layout>
        </widget>

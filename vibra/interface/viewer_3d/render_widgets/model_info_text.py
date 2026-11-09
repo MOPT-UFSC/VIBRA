@@ -361,64 +361,69 @@ def perforated_plate_info_text():
 
 
 def acoustic_boundary_conditions_info_text():
-    text = ""
-    selected_faces = list(app().main_window.selection.geometry_surfaces)
-
-    if len(selected_faces) != 1:
-        return text
-    
-    surface_id = selected_faces[0]
     properties = app().project.model.properties
+    selected_faces = tuple(app().main_window.selection.geometry_surfaces)
 
-    acoustic_pressure = properties._get_property("acoustic_pressure", surface=surface_id)
-    surface_velocity = properties._get_property("surface_velocity", surface=surface_id)
-    compressor_excitation_spectrum = properties._get_property("compressor_excitation_spectrum", surface=surface_id)
-    compressor_excitation_waveform = properties._get_property("compressor_excitation_waveform", surface=surface_id)
-    recip_compressor_excitation = properties._get_property("reciprocating_compressor_excitation", surface=surface_id)
-    incident_plane_wave = properties._get_property("incident_plane_wave", surface=surface_id)
-    absorption_surface = properties._get_property("absorption_surface", surface=surface_id)
-    specific_impedance = properties._get_property("specific_impedance", surface=surface_id)
+    properties_labels = [
+        "acoustic_pressure",
+        "surface_velocity",
+        "compressor_excitation_spectrum",
+        "compressor_excitation_waveform",
+        "reciprocating_compressor_excitation",
+        "incident_plane_wave",
+        "absorption_surface",
+        "specific_impedance",
+    ]
 
-    properties_data = [
-        acoustic_pressure,
-        surface_velocity,
-        compressor_excitation_spectrum,
-        compressor_excitation_waveform,
-        recip_compressor_excitation,
-        incident_plane_wave,
-        absorption_surface,
-        specific_impedance,
-        ]
+    existing_properties = {}
 
-    if all(condition is None for condition in properties_data):
-        return text
+    for (_property, surface_ids), data in properties.surface_properties.items():
+        if _property not in properties_labels:
+            continue
 
-    if acoustic_pressure is not None:
-        values = acoustic_pressure["values"][0]
-        text += acoustic_format("Acoustic pressure", values, "P", "Pa")
+        if isinstance(surface_ids, int):
+            is_valid = surface_ids in selected_faces
+        elif isinstance(surface_ids, tuple):
+            is_valid = not set(surface_ids).isdisjoint(selected_faces)
+        else:
+            continue
 
-    if surface_velocity is not None:
-        values = surface_velocity["values"][0]
-        text += acoustic_format("Surface velocity", values, "Vn", "m/s")
+        if is_valid:
+            existing_properties[_property] = data
 
-    if isinstance(compressor_excitation_spectrum, dict):
-        text += get_compressor_excitation_spectrum(compressor_excitation_spectrum)
+    if not existing_properties:
+        return ""
 
-    if isinstance(compressor_excitation_waveform, dict):
-        text += get_compressor_excitation_waveform(compressor_excitation_waveform)
+    text = ""
 
-    if isinstance(recip_compressor_excitation, dict):
-        text += get_reciprocating_compressor_text(recip_compressor_excitation)
+    for _prop, data in existing_properties.items():
+        match _prop:
+            case "acoustic_pressure":
+                values = data["values"][0]
+                text += acoustic_format("Acoustic pressure", values, "P", "Pa")
+    
+            case "surface_velocity":
+                values = data["values"][0]
+                text += acoustic_format("Surface velocity", values, "Vn", "m/s")
 
-    if isinstance(incident_plane_wave, dict):
-        text += get_incident_plane_wave_text(incident_plane_wave)
+            case "absorption_surface":
+                values = data["values"][0]
+                text += acoustic_format("Absorption surface", values, "alpha", "--")
 
-    if absorption_surface is not None:
-        values = absorption_surface["values"][0]
-        text += acoustic_format("Absorption surface", values, "alpha", "--")
+            case "compressor_excitation_spectrum":
+                text += get_compressor_excitation_spectrum(data)
 
-    if isinstance(specific_impedance, dict):
-        text += get_specific_and_anechoic_impedance_text(selected_faces[0], specific_impedance)
+            case "compressor_excitation_waveform":
+                text += get_compressor_excitation_waveform(data)
+
+            case "reciprocating_compressor_excitation":
+                text += get_reciprocating_compressor_text(data)
+
+            case "incident_plane_wave":
+                text += get_incident_plane_wave_text(data)
+
+            case "specific_impedance":
+                text += get_specific_and_anechoic_impedance_text(selected_faces[0], data)
 
     return text
 
@@ -578,9 +583,7 @@ def get_mass_source_text(**kwargs):
         unit_label = "kg/m².s"
     elif isinstance(kwargs.get("line"), Number):
         unit_label = "kg/m.s"
-    elif isinstance(kwargs.get("point"), Number):
-        unit_label = "kg/s"
-    elif isinstance(kwargs.get("node"), Number):
+    elif isinstance(kwargs.get("point"), Number) or isinstance(kwargs.get("node"), Number):
         unit_label = "kg/s"
     else:
         return ""
