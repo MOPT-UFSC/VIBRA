@@ -424,8 +424,15 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.update_local_mesh_size_control_table()
 
     def remove_callback(self):
-        current_row = self.tableWidget_local_mesh_size_control_data.currentRow()
-        self.tmp_local_mesh_size_control_parameters.pop(current_row)
+        selected_rows = self.tableWidget_local_mesh_size_control_data.selectionModel().selectedRows()
+        rows = sorted({index.row() for index in selected_rows}, reverse=True)
+
+        if not rows:
+            return
+
+        for row in rows:
+            self.tmp_local_mesh_size_control_parameters.pop(row)
+
         self.update_local_mesh_size_control_table()
 
     def update_interface_controls(self, element_setup: ElementSetup):
