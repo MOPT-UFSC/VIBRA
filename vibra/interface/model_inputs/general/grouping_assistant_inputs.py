@@ -1,7 +1,7 @@
 
 from enum import IntEnum
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QSignalBlocker, Qt
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QAbstractItemView, QTreeWidgetItem
 
@@ -82,6 +82,7 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
         self.lineEdit_selected_ids.setDisabled(True)
         self.pushButton_select.setDisabled(True)
         self.treeWidget_group_info.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+        self.treeWidget_group_info.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
 
         for i, w in enumerate([60, 120, 120, 180]):
             self.treeWidget_group_info.setColumnWidth(i, w)
@@ -111,6 +112,8 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
 
         # QTreeWidget connections
         self.treeWidget_group_info.itemClicked.connect(self.item_clicked_callback)
+        self.treeWidget_group_info.itemDoubleClicked.connect(self.group_item_double_clicked_callback)
+        self.treeWidget_group_info.itemChanged.connect(self.group_item_changed_callback)
 
         app().main_window.selection.selection_changed.connect(self.geometry_selection_callback)
 
@@ -390,25 +393,27 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
         self.actions_to_finalize(close_window)
 
     def load_model_info(self):
-        self.treeWidget_group_info.clear()
+        with QSignalBlocker(self.treeWidget_group_info):
+            self.treeWidget_group_info.clear()
 
-        for (property, group_id), data in self.properties.group_properties.items():
-            if property != "selection_group":
-                continue
+            for (property, group_id), data in self.properties.group_properties.items():
+                if property != "selection_group":
+                    continue
 
-            if not isinstance(data, dict):
-                continue
+                if not isinstance(data, dict):
+                    continue
 
-            group_label = data.get("group_label")
-            entity_type = data.get("entity_type")
-            entities_id = ", ".join([str(i) for i in data.get("entities_id")])
+                group_label = data.get("group_label")
+                entity_type = data.get("entity_type")
+                entities_id = ", ".join([str(i) for i in data.get("entities_id")])
 
-            item = QTreeWidgetItem([str(group_id), group_label, entity_type, entities_id])
+                item = QTreeWidgetItem([str(group_id), group_label, entity_type, entities_id])
+                item.setFlags(item.flags() | Qt.ItemFlag.ItemIsEditable)
 
-            for i in range(4):
-                item.setTextAlignment(i, Qt.AlignCenter)
+                for i in range(4):
+                    item.setTextAlignment(i, Qt.AlignCenter)
 
-            self.treeWidget_group_info.addTopLevelItem(item)
+                self.treeWidget_group_info.addTopLevelItem(item)
 
         self.update_tabs_visibility()
 
@@ -474,6 +479,38 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
 
             case "Lines":
                 app().main_window.selection.set_geometry_selection(lines=entities_id)
+
+    def group_item_double_clicked_callback(self, item: QTreeWidgetItem, column: int):
+        self.treeWidget_group_info.editItem(item, 1)
+
+    def group_item_changed_callback(self, item: QTreeWidgetItem, column: int):
+        if column != 1:
+            return
+
+        group_id = int(item.text(0))
+        data = self.properties.group_properties.get(("selection_group", group_id))
+
+        if not isinstance(data, dict):
+            return
+
+        old_label = data.get("group_label")
+        new_label = item.text(1).strip()
+
+        if new_label == old_label:
+            return
+
+        if not new_label or not self.is_group_label_valid(new_label):
+            self._restore_group_label(item, old_label)
+            return
+
+        group_data = GroupData(new_label, data.get("entity_type"), data.get("entities_id"))
+        self.properties._set_property("selection_group", group_data.as_dict(), group=group_id)
+        app().project.update_model_properties_file()
+        app().main_window.update_symbols()
+
+    def _restore_group_label(self, item: QTreeWidgetItem, group_label: str):
+        with QSignalBlocker(self.treeWidget_group_info):
+            item.setText(1, group_label)
 
     def tab_event_callback(self):
         current_tab = self.tabWidget_main.currentIndex()
