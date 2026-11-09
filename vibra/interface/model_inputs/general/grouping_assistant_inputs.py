@@ -158,6 +158,9 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
         self.comboBox_domain_filter.setDisabled(select_by_size)
         self.label_domain_filter.setDisabled(select_by_size)
 
+    def manual_selection_callback(self):
+        pass
+
     def select_entities_callback(self):
         selection_mode = self.comboBox_selection_mode.currentIndex()
         match selection_mode:
@@ -169,10 +172,6 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
                 self.select_by_size_callback()
             case _:
                 pass
-
-
-    def manual_selection_callback(self):
-        pass
 
     def select_by_size_callback(self):
 
