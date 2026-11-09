@@ -94,56 +94,19 @@ class GeometryActor(vtkPropAssembly):
         assert self.mesh.faces_connectivity is not None
 
         nodal_coordinates, faces_connectivity = self._decouple_faces_connectivity()
-        texture_coordinates = np.zeros(shape=(len(nodal_coordinates), 2))
-        self._nodal_surface_ids = np.zeros(shape=len(nodal_coordinates))
-
-        for surface_id, surface_elements in self.mesh.elements_from_surface.items():
-            node_indices = np.unique(faces_connectivity[surface_elements, 4:])
-            surface_normals = self.mesh.normals_surface.get(surface_id)
-            normal = np.average(surface_normals, axis=0).round(6) if (surface_normals is not None) else None
-            texture_coordinates[node_indices] = self._generate_tcoords(nodal_coordinates[node_indices, 1:], normal)
-            self._nodal_surface_ids[node_indices] = surface_id
-
         nodal_coordinates[:, 1] += 2
-
         self.points.SetData(numpy_to_vtk(nodal_coordinates[:, 1:]))
         self.points.Modified()
 
         faces_triangulated = self._triangulate_2d_cells(faces_connectivity)
         face_cells = self._create_cells(faces_triangulated[:, 4:])
+        self._cell_surface_ids = faces_triangulated[:, 1]
         self.surface_data.SetPolys(face_cells)
         self.surface_colors.SetNumberOfTuples(len(faces_triangulated))
         self.surface_mapper.Modified()
         self.surface_colors.Fill(255)
 
-        self._cell_surface_ids = faces_triangulated[:, 1]
-
-        min_t = texture_coordinates.min()
-        max_t = texture_coordinates.max()
-        if min_t == max_t:
-            texture_coordinates *= 0
-        else:
-            texture_coordinates = (texture_coordinates - min_t) / (max_t - min_t)
-        texture_coordinates[:, 0] /= 4
-        self.surface_data.GetPointData().SetTCoords(numpy_to_vtk(texture_coordinates))
-
-        self.surface_data.GetPointData().RemoveArray("Normals")
-        add_normals = vtkPolyDataNormals()
-        add_normals.SplittingOff()
-        add_normals.SetInputData(self.surface_data)
-        add_normals.Update()
-        normals = add_normals.GetOutput().GetPointData().GetNormals()
-        self.surface_data.GetPointData().SetNormals(normals)
-
-        self.surface_data.GetPointData().RemoveArray("Tangents")
-        add_tangents = vtkPolyDataTangents()
-        add_tangents.SetInputData(self.surface_data)
-        add_tangents.Update()
-        tangents = add_tangents.GetOutput().GetPointData().GetTangents()
-        self.surface_data.GetPointData().SetTangents(tangents)
-
-        self.surface_data.Modified()
-        self.surface_mapper.Modified()
+        self._add_nodal_texture_info(nodal_coordinates, faces_connectivity)
 
     def _decouple_faces_connectivity(self):
         assert self.mesh is not None
@@ -175,6 +138,44 @@ class GeometryActor(vtkPropAssembly):
             seen[surface_nodes] = True
 
         return np.vstack(nodes_stack), connectivity
+
+    def _add_nodal_texture_info(self, nodal_coordinates: np.ndarray, faces_connectivity: np.ndarray):
+        assert self.mesh is not None
+
+        texture_coordinates = np.zeros(shape=(len(nodal_coordinates), 2))
+        self._nodal_surface_ids = np.zeros(shape=len(nodal_coordinates))
+        for surface_id, surface_elements in self.mesh.elements_from_surface.items():
+            node_indices = np.unique(faces_connectivity[surface_elements, 4:])
+            surface_normals = self.mesh.normals_surface.get(surface_id)
+            normal = np.average(surface_normals, axis=0).round(6) if (surface_normals is not None) else None
+            texture_coordinates[node_indices] = self._generate_tcoords(nodal_coordinates[node_indices, 1:], normal)
+            self._nodal_surface_ids[node_indices] = surface_id
+
+        min_t = texture_coordinates.min()
+        max_t = texture_coordinates.max()
+        if min_t == max_t:
+            texture_coordinates *= 0
+        else:
+            texture_coordinates = (texture_coordinates - min_t) / (max_t - min_t)
+        texture_coordinates[:, 0] /= 4
+        self.surface_data.GetPointData().SetTCoords(numpy_to_vtk(texture_coordinates))
+
+        self.surface_data.GetPointData().RemoveArray("Normals")
+        add_normals = vtkPolyDataNormals()
+        add_normals.SplittingOff()
+        add_normals.SetInputData(self.surface_data)
+        add_normals.Update()
+        normals = add_normals.GetOutput().GetPointData().GetNormals()
+        self.surface_data.GetPointData().SetNormals(normals)
+
+        self.surface_data.GetPointData().RemoveArray("Tangents")
+        add_tangents = vtkPolyDataTangents()
+        add_tangents.SetInputData(self.surface_data)
+        add_tangents.Update()
+        tangents = add_tangents.GetOutput().GetPointData().GetTangents()
+        self.surface_data.GetPointData().SetTangents(tangents)
+
+        self.surface_data.Modified()
 
     def clear_textures(self):
         uv = vtk_to_numpy(self.surface_data.GetPointData().GetTCoords())
