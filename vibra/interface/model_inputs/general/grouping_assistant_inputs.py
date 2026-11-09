@@ -361,6 +361,16 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
 
         return True
 
+    def get_selected_entities_ids(self) -> list[int]:
+        text = self.lineEdit_selected_ids.text().replace(" ", "").strip(",")
+        if not text:
+            return []
+
+        try:
+            return [int(value) for value in text.split(",")]
+        except ValueError:
+            return []
+
     def apply_callback(self, close_window: bool = False):
 
         group_label = self.lineEdit_group_label.text()
@@ -380,9 +390,15 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
             self.lineEdit_group_label.selectAll()
             return
 
+        entities_id = self.get_selected_entities_ids()
+        if not entities_id:
+            title = "Empty selection"
+            message = "Select at least one entity to proceed with creating the group."
+            PrintMessageInput([error_title, title, message])
+            return
+
         group_id = self.get_new_group_id()
         entity_type = self.comboBox_selector_filter.currentText()
-        entities_id = [int(text) for text in self.lineEdit_selected_ids.text().replace(" ", "").split(",")]
 
         data = GroupData(group_label, entity_type, entities_id)
         self.properties._set_property("selection_group", data.as_dict(), group=group_id)
