@@ -26,13 +26,18 @@ class SmallAreasDetectionTool(SmallAreasDetectionTool_UI):
     def __init__(self, mesher_inputs):
         super().__init__()
 
+        app().main_window.set_input_widget(self)
+
         self.mesher_inputs = mesher_inputs
         self.detection_result = None
 
-        self._config_window()
         self._initialize()
+        self._config_window()
         self._config_widgets()
         self._create_connections()
+
+        while self.keep_window_open:
+            self.exec()
 
     @property
     def length_unit_label(self) -> str:
@@ -42,12 +47,13 @@ class SmallAreasDetectionTool(SmallAreasDetectionTool_UI):
         return units_abreviations.get(self.mesh.length_unit, self.mesh.length_unit)
 
     def _config_window(self):
-        self.setWindowTitle("Small areas detection")
         self.setWindowIcon(app().main_window.vibra_icon)
-        self.setWindowFlags(Qt.Window | Qt.WindowStaysOnTopHint)
-        self.setWindowModality(Qt.NonModal)
+        self.setWindowTitle("Small areas detection")
+        self.setWindowFlags(Qt.WindowStaysOnTopHint)
+        self.setWindowModality(Qt.WindowModal)
 
     def _initialize(self):
+        self.keep_window_open = True
         self.mesh = self.mesher_inputs.model.mesh
 
     def _config_widgets(self):
@@ -109,7 +115,7 @@ class SmallAreasDetectionTool(SmallAreasDetectionTool_UI):
         self.pushButton_detect_small_areas.clicked.connect(self._detect_small_areas)
         self.tableWidget.itemClicked.connect(self._table_item_clicked)
         self.pushButton_send_to_local_size_control.clicked.connect(self._send_to_local_size_control)
-        self.pushButton_cancel.clicked.connect(self.reject)
+        self.pushButton_cancel.clicked.connect(self.close)
 
         minimum_size_spinbox = self.mesher_inputs.doubleSpinBox_minimum_element_size
         minimum_size_spinbox.valueChanged.connect(self._threshold_changed)
@@ -246,3 +252,7 @@ class SmallAreasDetectionTool(SmallAreasDetectionTool_UI):
         self.label_faces_detected.setText(
             f"Sent {len(surface_ids)} face(s) in {len(bins)} size group(s)."
         )
+
+    def closeEvent(self, event):
+        self.keep_window_open = False
+        super().closeEvent(event)

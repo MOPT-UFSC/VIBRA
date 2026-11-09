@@ -107,7 +107,6 @@ class MesherSetupInputs(MesherSetupInputs_UI):
 
         self.tmp_local_mesh_size_control_parameters: list[LocalMeshSizeControlSetup] = []
         self.last_synced_ids: set[int] = set()
-        self.small_areas_detection_dialog = None
 
         self.gmsh_labels = {
             0: "gamma",
@@ -192,8 +191,7 @@ class MesherSetupInputs(MesherSetupInputs_UI):
     def small_areas_detection_callback(self):
         from vibra.interface.model_inputs.general.small_areas_detection_tool import SmallAreasDetectionTool
 
-        self.small_areas_detection_dialog = SmallAreasDetectionTool(self)
-        self.small_areas_detection_dialog.show()
+        SmallAreasDetectionTool(self)
 
     def _apply_small_area_refinement_result(self, result: dict):
         mesh = self.model.mesh
