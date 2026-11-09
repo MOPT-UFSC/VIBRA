@@ -93,35 +93,16 @@ class GeometryActor(vtkPropAssembly):
         assert self.mesh.nodal_coordinates is not None
         assert self.mesh.faces_connectivity is not None
 
-        bias = 0
-        nodal_coordinates = []
-        faces_connectivity = []
-        texture_coordinates = []
-        nodal_surface_ids = []
+        nodal_coordinates, faces_connectivity = self._decouple_faces_connectivity()
+        texture_coordinates = np.zeros(shape=(len(nodal_coordinates), 2))
+        self._nodal_surface_ids = np.zeros(shape=len(nodal_coordinates))
 
-        # remaps the connectivity for each surface to keep a single
-        # normal and tcoord for each point in the visual mesh
         for surface_id, surface_elements in self.mesh.elements_from_surface.items():
-            nodes, connectivity = self._reduce_connectivity(
-                self.mesh.nodal_coordinates,
-                self.mesh.faces_connectivity[surface_elements],
-            )
-            connectivity[:, 4:] += bias
-
+            node_indices = np.unique(faces_connectivity[surface_elements, 4:])
             surface_normals = self.mesh.normals_surface.get(surface_id)
             normal = np.average(surface_normals, axis=0).round(6) if (surface_normals is not None) else None
-            tcoords = self._generate_tcoords(nodes, normal)
-
-            nodal_coordinates.append(nodes)
-            faces_connectivity.append(connectivity)
-            texture_coordinates.append(tcoords)
-            nodal_surface_ids.append(np.full(len(nodes), surface_id))
-            bias += len(nodes)
-
-        nodal_coordinates = np.vstack(nodal_coordinates)
-        faces_connectivity = np.vstack(faces_connectivity)
-        texture_coordinates = np.vstack(texture_coordinates)
-        self._nodal_surface_ids = np.concatenate(nodal_surface_ids)
+            texture_coordinates[node_indices] = self._generate_tcoords(nodal_coordinates[node_indices, 1:], normal)
+            self._nodal_surface_ids[node_indices] = surface_id
 
         nodal_coordinates[:, 1] += 2
 
@@ -164,6 +145,37 @@ class GeometryActor(vtkPropAssembly):
         self.surface_data.Modified()
         self.surface_mapper.Modified()
 
+    def _decouple_faces_connectivity(self):
+        assert self.mesh is not None
+        assert self.mesh.nodal_coordinates is not None
+        assert self.mesh.faces_connectivity is not None
+
+        seen = np.zeros(shape=len(self.mesh.nodal_coordinates), dtype=bool)
+        nodes_stack = [self.mesh.nodal_coordinates]
+        connectivity = self.mesh.faces_connectivity.copy()
+        existing_nodes = len(self.mesh.nodal_coordinates)
+
+        for surface_elements in self.mesh.elements_from_surface.values():
+            # Find the nodes that have already appeared in previous surfaces
+            surface_nodes = self.mesh.faces_connectivity[surface_elements, 4:]
+            repeated_mask = seen[surface_nodes]
+            repeated_nodes, inverse_indices = np.unique(
+                surface_nodes[repeated_mask],
+                return_inverse=True,
+            )
+            new_nodes = np.arange(len(repeated_nodes)) + existing_nodes
+
+            # Copy the repetitons in such a way that the surfaces do not share a common node
+            nodes_stack.append(self.mesh.nodal_coordinates[repeated_nodes])
+            rows, cols = np.where(repeated_mask)
+            connectivity[surface_elements[rows], 4 + cols] = new_nodes[inverse_indices]
+
+            # Update values for the next iterations
+            existing_nodes += len(repeated_nodes)
+            seen[surface_nodes] = True
+
+        return np.vstack(nodes_stack), connectivity
+
     def clear_textures(self):
         uv = vtk_to_numpy(self.surface_data.GetPointData().GetTCoords())
         uv[:] = uv % GeometryTextures.span()
@@ -204,10 +216,9 @@ class GeometryActor(vtkPropAssembly):
 
     def _generate_tcoords(
         self,
-        nodal_coordinates: np.ndarray,
+        coords: np.ndarray,
         normal: np.ndarray | None = None,
     ):
-        coords = nodal_coordinates[:, 1:]
         centered = coords - coords.mean(axis=0)
         _, s, Vh = svd(centered, full_matrices=False, check_finite=False)
 
