@@ -57,6 +57,8 @@ class GeometryActor(vtkPropAssembly):
 
     def clear_data(self):
         self.surface_data.SetPolys(vtkCellArray())
+        self.edge_colors.SetNumberOfTuples(0)
+        self.edge_colors.Modified()
         self.surface_colors.SetNumberOfTuples(0)
         self.surface_colors.Modified()
         self._node_surface_ids = np.array([], dtype=int)
@@ -64,22 +66,41 @@ class GeometryActor(vtkPropAssembly):
 
     def _create_variables(self):
         self.points = vtkPoints()
+        self.texture_coords = vtkFloatArray()
+
+        self.edge_colors = vtkUnsignedCharArray()
+        self.edge_data = vtkPolyData()
+        self.edge_mapper = vtkPolyDataMapper()
+        self.edge_actor = vtkActor()
 
         self.surface_colors = vtkUnsignedCharArray()
-        self.texture_coords = vtkFloatArray()
         self.surface_data = vtkPolyData()
         self.surface_mapper = vtkPolyDataMapper()
         self.surface_actor = vtkActor()
 
+        self._line_ids = np.array([], dtype=int)
         self._node_surface_ids = np.array([], dtype=int)
         self._cell_surface_ids = np.array([], dtype=int)
 
         self.diffuse_texture = read_texture(TEXTURE_DIR / "diffuse.jpg")
 
     def _configure_actors_parameters(self):
+        self.texture_coords.SetName("tcoords")
+
+        self.edge_colors.SetName("color")
+        self.edge_colors.SetNumberOfComponents(3)
+        self.edge_data.SetPoints(self.points)
+        self.edge_data.GetCellData().SetScalars(self.edge_colors)
+        self.edge_mapper.SetInputData(self.edge_data)
+        self.edge_mapper.SetResolveCoincidentTopologyToShiftZBuffer()
+        self.edge_actor.SetMapper(self.edge_mapper)
+        self.edge_actor.GetProperty().SetRepresentationToWireframe()
+        self.edge_actor.GetProperty().SetLineWidth(7)
+        self.edge_actor.GetProperty().SetColor(1, 1, 1)
+        self.AddPart(self.edge_actor)
+
         self.surface_colors.SetName("color")
         self.surface_colors.SetNumberOfComponents(4)
-        self.texture_coords.SetName("tcoords")
         self.surface_data.SetPoints(self.points)
         self.surface_data.GetCellData().SetScalars(self.surface_colors)
         self.surface_mapper.SetInputData(self.surface_data)
@@ -91,6 +112,7 @@ class GeometryActor(vtkPropAssembly):
     def build_mesh(self):
         assert self.mesh is not None
         assert self.mesh.nodal_coordinates is not None
+        assert self.mesh.lines_connectivity is not None
         assert self.mesh.faces_connectivity is not None
 
         nodal_coordinates, faces_connectivity = self._decouple_faces_connectivity()
@@ -99,6 +121,13 @@ class GeometryActor(vtkPropAssembly):
         self._nodal_surface_ids[faces_connectivity[:, 4:]] = faces_connectivity[:, 1, None]
         self.points.SetData(numpy_to_vtk(nodal_coordinates[:, 1:]))
         self.points.Modified()
+
+        lines_linearized = self._linearize_1d_cells(self.mesh.lines_connectivity)
+        line_cells = self._create_cells(lines_linearized[:, 4:])
+        self._line_ids = lines_linearized[:, 1].flatten()
+        self.edge_colors.SetNumberOfTuples(len(lines_linearized))
+        self.edge_colors.Fill(0)
+        self.edge_data.SetLines(line_cells)
 
         faces_triangulated = self._triangulate_2d_cells(faces_connectivity)
         face_cells = self._create_cells(faces_triangulated[:, 4:])
@@ -269,6 +298,19 @@ class GeometryActor(vtkPropAssembly):
                 ]  # fmt: skip
             case _:
                 raise NotImplementedError(f"Exploding to 2D cells is not supported for {n_nodes}-node cells")
+        return self._explode_cells(connectivity, reorderings)
+
+    def _linearize_1d_cells(self, connectivity: np.ndarray) -> np.ndarray:
+        n_nodes = connectivity[:, 4:].shape[1]
+        match n_nodes:
+            case 0:
+                return np.zeros(shape=(0, 4 + 2), dtype=int)
+            case 2:
+                return connectivity
+            case 3:
+                reorderings = [[0, 2], [2, 1]]
+            case _:
+                raise NotImplementedError(f"Exploding to 1D cells is not supported for {n_nodes}-node cells")
         return self._explode_cells(connectivity, reorderings)
 
     def _explode_cells(self, connectivity: np.ndarray, reorderings: Iterable[Iterable[int]]) -> np.ndarray:
