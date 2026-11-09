@@ -207,8 +207,8 @@ class MeshActor(vtkPropAssembly):
         vtk_to_numpy(self.node_ids)[:] = node_indexes
 
         edges_linearized = self._linearize_2d_cells(self.mesh.faces_connectivity)
-        cells = self._create_cells(edges_linearized[:, 4:])
-        self.edge_data.SetLines(cells)
+        edge_cells = self._create_cells(edges_linearized[:, 4:])
+        self.edge_data.SetLines(edge_cells)
 
         faces_triangulated = self._triangulate_2d_cells(self.mesh.faces_connectivity)
         face_cells = self._create_cells(faces_triangulated[:, 4:])
