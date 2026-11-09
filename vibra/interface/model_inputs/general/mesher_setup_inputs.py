@@ -191,7 +191,10 @@ class MesherSetupInputs(MesherSetupInputs_UI):
     def small_areas_detection_callback(self):
         from vibra.interface.model_inputs.general.small_areas_detection_tool import SmallAreasDetectionTool
 
+        self.hide()
         SmallAreasDetectionTool(self)
+        self.show()
+        app().main_window.set_input_widget(self)
 
     def _apply_small_area_refinement_result(self, result: dict):
         mesh = self.model.mesh
