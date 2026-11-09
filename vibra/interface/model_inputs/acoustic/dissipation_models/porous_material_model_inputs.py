@@ -4,7 +4,7 @@ from enum import IntEnum
 from typing import Dict, List
 
 import numpy as np
-from PySide6.QtCore import QItemSelectionModel, QPoint, QSignalBlocker, Qt
+from PySide6.QtCore import QItemSelectionModel, QPoint, Qt
 from PySide6.QtGui import QAction, QCloseEvent
 from PySide6.QtWidgets import QAbstractItemView, QDialog, QDoubleSpinBox, QMenu, QTableWidgetItem, QTreeWidgetItem
 
@@ -413,9 +413,14 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             self.actions_to_finalize()
 
     def group_assistant_callback(self):
-        with QSignalBlocker(self.pushButton_select_group):
+        if self.group_assistant is None:
             self.group_assistant = GroupingAssistantInputs(selector_mode=True)
             self.group_assistant.exec()
+            self.group_assistant = None
+            return
+
+        self.group_assistant.raise_()
+        self.group_assistant.activateWindow()
 
     def tab_event_porous_material_model(self):
         current_tab = self.tabWidget_main.currentIndex()

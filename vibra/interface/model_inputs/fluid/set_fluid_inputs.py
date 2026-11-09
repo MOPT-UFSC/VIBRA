@@ -1,7 +1,7 @@
 from collections import defaultdict
 from enum import IntEnum
 
-from PySide6.QtCore import QSignalBlocker, Qt
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import QAbstractItemView, QDialog, QGridLayout, QHeaderView, QTableWidgetItem
 
@@ -355,9 +355,14 @@ class SetFluidInputs(SetFluidInputs_UI):
             app().main_window.selection.set_geometry_selection()
 
     def group_assistant_callback(self):
-        with QSignalBlocker(self.pushButton_select_group):
+        if self.group_assistant is None:
             self.group_assistant = GroupingAssistantInputs(selector_mode=True)
             self.group_assistant.exec()
+            self.group_assistant = None
+            return
+
+        self.group_assistant.raise_()
+        self.group_assistant.activateWindow()
 
     def actions_to_finalize(self, close_window: bool = False):
         self.clear_line_edit_seletction_id()
