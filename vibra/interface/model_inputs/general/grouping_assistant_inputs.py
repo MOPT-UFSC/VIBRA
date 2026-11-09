@@ -95,7 +95,7 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
         # QComboBox connection
         self.comboBox_domain_filter.currentIndexChanged.connect(self.domain_filter_callback)
         self.comboBox_selector_filter.currentIndexChanged.connect(self.selection_filter_callback)
-        self.comboBox_mode.currentIndexChanged.connect(self.selection_mode_callback)
+        self.comboBox_selection_mode.currentIndexChanged.connect(self.selection_mode_callback)
 
         # QPushButton connections
         self.pushButton_apply.clicked.connect(self.apply_callback)
@@ -104,6 +104,7 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
         self.pushButton_select.clicked.connect(self.select_entities_callback)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
+        self.pushButton_invert_selection.clicked.connect(self.invert_selection_callback)
 
         # QTabWidget connection
         self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
@@ -148,12 +149,20 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
         pass
 
     def selection_mode_callback(self):
-        selection_mode = self.comboBox_mode.currentIndex()
+        selection_mode = self.comboBox_selection_mode.currentIndex()
+
         manual_selection = selection_mode == SelectionMode.MANUAL 
         self.pushButton_select.setDisabled(manual_selection)
 
+        select_by_size = selection_mode == SelectionMode.SELECT_BY_SIDE
+        self.comboBox_domain_filter.setDisabled(select_by_size)
+        self.label_domain_filter.setDisabled(select_by_size)
+
+    def manual_selection_callback(self):
+        pass
+
     def select_entities_callback(self):
-        selection_mode = self.comboBox_mode.currentIndex()
+        selection_mode = self.comboBox_selection_mode.currentIndex()
         match selection_mode:
             case  SelectionMode.MANUAL:
                 self.manual_selection_callback()
@@ -163,10 +172,6 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
                 self.select_by_size_callback()
             case _:
                 pass
-
-
-    def manual_selection_callback(self):
-        pass
 
     def select_by_size_callback(self):
 
@@ -255,6 +260,45 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
                 return
 
             app().main_window.selection.set_geometry_selection(lines=all_lines)
+
+    def invert_selection_callback(self):
+        selection_filter = self.comboBox_selector_filter.currentIndex()
+        match selection_filter:
+            case SelectionFilter.VOLUMES:
+                volumes = app().main_window.selection.geometry_volumes
+                if not volumes:
+                    return
+
+                all_volumes = self.mesh.all_volume_ids()
+                volumes_invert = all_volumes ^ volumes
+                if not volumes_invert:
+                    return
+
+                app().main_window.selection.set_geometry_selection(volumes=volumes_invert)
+
+            case SelectionFilter.SURFACES:
+                surfaces = app().main_window.selection.geometry_surfaces
+                if not surfaces:
+                    return
+
+                all_surfaces = self.mesh.all_surface_ids()
+                surfaces_invert = all_surfaces ^ surfaces
+                if not surfaces_invert:
+                    return
+
+                app().main_window.selection.set_geometry_selection(surfaces=surfaces_invert)
+
+            case SelectionFilter.LINES:
+                lines = app().main_window.selection.geometry_lines
+                if not lines:
+                    return
+
+                all_lines = self.mesh.all_line_ids()
+                lines_invert = all_lines ^ lines
+                if not lines_invert:
+                    return
+
+                app().main_window.selection.set_geometry_selection(lines=lines_invert)
 
     def get_new_group_id(self) -> int:
 

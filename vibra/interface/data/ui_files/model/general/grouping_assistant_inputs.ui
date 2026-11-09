@@ -299,16 +299,16 @@
               <number>2</number>
              </property>
              <item row="2" column="1">
-              <widget class="QLabel" name="label_3">
+              <widget class="QLabel" name="label_domain_filter">
                <property name="minimumSize">
                 <size>
-                 <width>110</width>
+                 <width>120</width>
                  <height>30</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
-                 <width>110</width>
+                 <width>120</width>
                  <height>30</height>
                 </size>
                </property>
@@ -326,7 +326,7 @@
               </widget>
              </item>
              <item row="3" column="2">
-              <widget class="QComboBox" name="comboBox_mode">
+              <widget class="QComboBox" name="comboBox_selection_mode">
                <property name="minimumSize">
                 <size>
                  <width>120</width>
@@ -459,16 +459,16 @@
               </widget>
              </item>
              <item row="3" column="1">
-              <widget class="QLabel" name="label_4">
+              <widget class="QLabel" name="label_selection_mode">
                <property name="minimumSize">
                 <size>
-                 <width>110</width>
+                 <width>120</width>
                  <height>30</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
-                 <width>110</width>
+                 <width>120</width>
                  <height>30</height>
                 </size>
                </property>
@@ -486,16 +486,16 @@
               </widget>
              </item>
              <item row="1" column="1">
-              <widget class="QLabel" name="label_2">
+              <widget class="QLabel" name="label_selector_filter">
                <property name="minimumSize">
                 <size>
-                 <width>110</width>
+                 <width>120</width>
                  <height>30</height>
                 </size>
                </property>
                <property name="maximumSize">
                 <size>
-                 <width>110</width>
+                 <width>120</width>
                  <height>30</height>
                 </size>
                </property>
@@ -579,6 +579,55 @@
                 </size>
                </property>
               </spacer>
+             </item>
+             <item row="1" column="3">
+              <widget class="QPushButton" name="pushButton_invert_selection">
+               <property name="minimumSize">
+                <size>
+                 <width>40</width>
+                 <height>30</height>
+                </size>
+               </property>
+               <property name="maximumSize">
+                <size>
+                 <width>40</width>
+                 <height>30</height>
+                </size>
+               </property>
+               <property name="font">
+                <font>
+                 <family>MS Shell Dlg 2</family>
+                 <pointsize>11</pointsize>
+                 <italic>false</italic>
+                 <bold>true</bold>
+                </font>
+               </property>
+               <property name="toolTip">
+                <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt; font-weight:400;&quot;&gt;Invert entities selection&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+               </property>
+               <property name="styleSheet">
+                <string notr="true"/>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+               <property name="icon">
+                <iconset resource="../../../icons/dark_theme/resources.qrc">
+                 <normaloff>:/icons/invert_icon.png</normaloff>:/icons/invert_icon.png</iconset>
+               </property>
+               <property name="iconSize">
+                <size>
+                 <width>22</width>
+                 <height>22</height>
+                </size>
+               </property>
+               <property name="autoDefault">
+                <bool>false</bool>
+               </property>
+               <property name="flat">
+                <bool>false</bool>
+               </property>
+              </widget>
              </item>
             </layout>
            </widget>
