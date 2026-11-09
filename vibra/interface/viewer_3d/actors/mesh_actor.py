@@ -17,6 +17,7 @@ from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.utils.interface_utils import SectionPlane
 from vibra.utils.math_functions import inside_plane
+from vibra.utils.vtk_utils import create_cells
 
 
 @dataclass
@@ -198,7 +199,7 @@ class MeshActor(vtkPropAssembly):
         self.points.Modified()
 
         node_indexes = np.unique(self.mesh.faces_connectivity[:, 4:])
-        node_cells = self._create_cells(node_indexes)
+        node_cells = create_cells(node_indexes)
         self.node_data.SetVerts(node_cells)
         self.node_colors.SetNumberOfTuples(len(node_indexes))
         self.node_colors.Fill(255)
@@ -207,11 +208,11 @@ class MeshActor(vtkPropAssembly):
         vtk_to_numpy(self.node_ids)[:] = node_indexes
 
         edges_linearized = self._linearize_2d_cells(self.mesh.faces_connectivity)
-        edge_cells = self._create_cells(edges_linearized[:, 4:])
+        edge_cells = create_cells(edges_linearized[:, 4:])
         self.edge_data.SetLines(edge_cells)
 
         faces_triangulated = self._triangulate_2d_cells(self.mesh.faces_connectivity)
-        face_cells = self._create_cells(faces_triangulated[:, 4:])
+        face_cells = create_cells(faces_triangulated[:, 4:])
         self.surface_data.SetPolys(face_cells)
         self.surface_colors.SetNumberOfTuples(len(faces_triangulated))
         self.surface_mapper.Modified()
@@ -247,7 +248,7 @@ class MeshActor(vtkPropAssembly):
         faces_before_plane = self.mesh.faces_connectivity[faces_before_plane_mask]
 
         node_indexes = np.unique(np.concatenate((solids_in_middle[:, 4:].ravel(), faces_before_plane[:, 4:].ravel())))
-        node_cells = self._create_cells(node_indexes)
+        node_cells = create_cells(node_indexes)
         self.node_data.SetVerts(node_cells)
         self.node_colors.SetNumberOfTuples(len(node_indexes))
         self.node_colors.Fill(255)
@@ -259,11 +260,11 @@ class MeshActor(vtkPropAssembly):
             self._linearize_2d_cells(faces_before_plane),
             self._linearize_3d_cells(solids_in_middle),
         ))  # fmt: skip
-        cells = self._create_cells(edges_linearized[:, 4:])
+        cells = create_cells(edges_linearized[:, 4:])
         self.edge_data.SetLines(cells)
 
         faces_triangulated = self._triangulate_2d_cells(faces_before_plane)
-        face_cells = self._create_cells(faces_triangulated[:, 4:])
+        face_cells = create_cells(faces_triangulated[:, 4:])
         self.surface_data.SetPolys(face_cells)
         self.surface_colors.SetNumberOfTuples(len(faces_triangulated))
         self.surface_mapper.Modified()
@@ -272,7 +273,7 @@ class MeshActor(vtkPropAssembly):
         vtk_to_numpy(self.surface_ids)[:] = faces_triangulated[:, 0]
 
         solids_triangulated = self._triangulate_3d_cells(solids_in_middle)
-        solid_cells = self._create_cells(solids_triangulated[:, 4:])
+        solid_cells = create_cells(solids_triangulated[:, 4:])
         self.volume_data.SetPolys(solid_cells)
         self.volume_colors.SetNumberOfTuples(len(solids_triangulated))
         self.volume_mapper.Modified()
@@ -576,16 +577,6 @@ class MeshActor(vtkPropAssembly):
 
     def _get_parts(self) -> list[vtkActor]:
         return list(self.GetParts())  # pyright: ignore[reportArgumentType]
-
-    def _create_cells(self, connectivity: np.ndarray) -> vtkCellArray:
-        if connectivity.ndim == 1:
-            connectivity = connectivity.reshape(-1, 1)
-
-        helper = np.insert(connectivity, 0, connectivity.shape[1], axis=1)
-        vtk_id_array = numpy_to_vtkIdTypeArray(helper.ravel())
-        cell_array = vtkCellArray()
-        cell_array.SetCells(connectivity.shape[0], vtk_id_array)
-        return cell_array
 
     def _linearize_2d_cells(self, connectivity: np.ndarray) -> np.ndarray:
         n_nodes = connectivity[:, 4:].shape[1]

@@ -3,7 +3,7 @@ from enum import IntEnum, auto
 
 import numpy as np
 from scipy.linalg import svd
-from vtkmodules.util.numpy_support import numpy_to_vtk, numpy_to_vtkIdTypeArray, vtk_to_numpy
+from vtkmodules.util.numpy_support import numpy_to_vtk, vtk_to_numpy
 from vtkmodules.vtkCommonCore import vtkFloatArray, vtkPoints, vtkUnsignedCharArray
 from vtkmodules.vtkCommonDataModel import vtkCellArray, vtkPolyData
 from vtkmodules.vtkFiltersCore import vtkPolyDataNormals, vtkPolyDataTangents
@@ -14,7 +14,7 @@ from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.utils.interface_utils import SectionPlane
 from vibra.utils.time_utils import function_timer
-from vibra.utils.vtk_utils import read_texture
+from vibra.utils.vtk_utils import create_cells, read_texture
 
 
 class GeometryTextures(IntEnum):
@@ -149,21 +149,21 @@ class GeometryActor(vtkPropAssembly):
         self.points.Modified()
 
         nodes = np.array(list(self.mesh.nodes_from_points.values()))
-        point_cells = self._create_cells(nodes)
+        point_cells = create_cells(nodes)
         self.point_data.SetVerts(point_cells)
         self.point_colors.SetNumberOfTuples(len(nodes))
         self.point_colors.Fill(0)
         self._point_ids = np.array(self.mesh.nodes_from_points.keys())
 
         lines_linearized = self._linearize_1d_cells(self.mesh.lines_connectivity)
-        line_cells = self._create_cells(lines_linearized[:, 4:])
+        line_cells = create_cells(lines_linearized[:, 4:])
         self.line_data.SetLines(line_cells)
         self.line_colors.SetNumberOfTuples(len(lines_linearized))
         self.line_colors.Fill(0)
         self._line_ids = lines_linearized[:, 1].flatten()
 
         faces_triangulated = self._triangulate_2d_cells(faces_connectivity)
-        face_cells = self._create_cells(faces_triangulated[:, 4:])
+        face_cells = create_cells(faces_triangulated[:, 4:])
         self.surface_data.SetPolys(face_cells)
         self.surface_colors.SetNumberOfTuples(len(faces_triangulated))
         self.surface_colors.Fill(255)
@@ -305,16 +305,6 @@ class GeometryActor(vtkPropAssembly):
             uv[:, 1] = max_v * np.arcsin(normalized_v)
 
         return uv
-
-    def _create_cells(self, connectivity: np.ndarray) -> vtkCellArray:
-        if connectivity.ndim == 1:
-            connectivity = connectivity.reshape(-1, 1)
-
-        helper = np.insert(connectivity, 0, connectivity.shape[1], axis=1)
-        vtk_id_array = numpy_to_vtkIdTypeArray(helper.ravel())
-        cell_array = vtkCellArray()
-        cell_array.SetCells(connectivity.shape[0], vtk_id_array)
-        return cell_array
 
     def _triangulate_2d_cells(self, connectivity: np.ndarray) -> np.ndarray:
         n_nodes = connectivity[:, 4:].shape[1]

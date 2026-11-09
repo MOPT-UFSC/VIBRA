@@ -1,6 +1,8 @@
 from pathlib import Path
 from typing import Sequence
 
+import numpy as np
+from vtkmodules.util.numpy_support import numpy_to_vtkIdTypeArray
 from vtkmodules.vtkCommonCore import (
     vtkFloatArray,
     vtkIdList,
@@ -8,6 +10,7 @@ from vtkmodules.vtkCommonCore import (
     vtkUnsignedCharArray,
 )
 from vtkmodules.vtkCommonDataModel import (
+    vtkCellArray,
     vtkPolyData,
 )
 from vtkmodules.vtkCommonTransforms import vtkTransform
@@ -17,7 +20,6 @@ from vtkmodules.vtkIOImage import vtkJPEGReader, vtkPNGReader
 from vtkmodules.vtkRenderingCore import (
     vtkTexture,
 )
-import numpy as np
 
 
 def read_obj_file(path: str | Path) -> vtkPolyData:
@@ -114,3 +116,14 @@ def read_texture(path: str | Path):
     texture.Update()
 
     return texture
+
+
+def create_cells(connectivity: np.ndarray) -> vtkCellArray:
+    if connectivity.ndim == 1:
+        connectivity = connectivity.reshape(-1, 1)
+
+    helper = np.insert(connectivity, 0, connectivity.shape[1], axis=1)
+    vtk_id_array = numpy_to_vtkIdTypeArray(helper.ravel())
+    cell_array = vtkCellArray()
+    cell_array.SetCells(connectivity.shape[0], vtk_id_array)
+    return cell_array
