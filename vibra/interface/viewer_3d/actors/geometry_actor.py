@@ -56,17 +56,32 @@ class GeometryActor(vtkPropAssembly):
         self.build_mesh()
 
     def clear_data(self):
-        self.surface_data.SetPolys(vtkCellArray())
+        self.point_data.SetPolys(vtkCellArray())
+        self.point_colors.SetNumberOfTuples(0)
+        self.point_colors.Modified()
+
+        self.line_data.SetPolys(vtkCellArray())
         self.line_colors.SetNumberOfTuples(0)
         self.line_colors.Modified()
+
+        self.surface_data.SetPolys(vtkCellArray())
         self.surface_colors.SetNumberOfTuples(0)
         self.surface_colors.Modified()
+
+        self._point_ids = np.array([], dtype=int)
+        self._line_ids = np.array([], dtype=int)
         self._node_surface_ids = np.array([], dtype=int)
         self._cell_surface_ids = np.array([], dtype=int)
 
     def _create_variables(self):
         self.points = vtkPoints()
         self.texture_coords = vtkFloatArray()
+
+        self.point_colors = vtkUnsignedCharArray()
+        self.point_data = vtkPolyData()
+        self.point_mapper = vtkPolyDataMapper()
+        self.point_mapper.SetResolveCoincidentTopologyToShiftZBuffer()
+        self.point_actor = vtkActor()
 
         self.line_colors = vtkUnsignedCharArray()
         self.line_data = vtkPolyData()
@@ -78,6 +93,7 @@ class GeometryActor(vtkPropAssembly):
         self.surface_mapper = vtkPolyDataMapper()
         self.surface_actor = vtkActor()
 
+        self._point_ids = np.array([], dtype=int)
         self._line_ids = np.array([], dtype=int)
         self._node_surface_ids = np.array([], dtype=int)
         self._cell_surface_ids = np.array([], dtype=int)
@@ -87,6 +103,17 @@ class GeometryActor(vtkPropAssembly):
     def _configure_actors_parameters(self):
         self.texture_coords.SetName("tcoords")
 
+        self.point_colors.SetName("color")
+        self.point_colors.SetNumberOfComponents(3)
+        self.point_data.SetPoints(self.points)
+        self.point_data.GetCellData().SetScalars(self.point_colors)
+        self.point_mapper.SetInputData(self.point_data)
+        self.point_actor.SetMapper(self.point_mapper)
+        self.point_actor.GetProperty().SetPointSize(15)
+        self.point_actor.GetProperty().RenderPointsAsSpheresOn()
+        self.point_actor.GetProperty().LightingOff()
+        self.AddPart(self.point_actor)
+
         self.line_colors.SetName("color")
         self.line_colors.SetNumberOfComponents(3)
         self.line_data.SetPoints(self.points)
@@ -95,7 +122,8 @@ class GeometryActor(vtkPropAssembly):
         self.line_mapper.SetResolveCoincidentTopologyToShiftZBuffer()
         self.line_actor.SetMapper(self.line_mapper)
         self.line_actor.GetProperty().SetRepresentationToWireframe()
-        self.line_actor.GetProperty().SetLineWidth(10)
+        self.line_actor.GetProperty().RenderLinesAsTubesOn()
+        self.line_actor.GetProperty().SetLineWidth(5)
         self.line_actor.GetProperty().SetColor(1, 1, 1)
         self.AddPart(self.line_actor)
 
@@ -117,25 +145,31 @@ class GeometryActor(vtkPropAssembly):
 
         nodal_coordinates, faces_connectivity = self._decouple_faces_connectivity()
         nodal_coordinates[:, 1] += 2
-        self._nodal_surface_ids = np.zeros(shape=len(nodal_coordinates), dtype=int)
-        self._nodal_surface_ids[faces_connectivity[:, 4:]] = faces_connectivity[:, 1, None]
         self.points.SetData(numpy_to_vtk(nodal_coordinates[:, 1:]))
         self.points.Modified()
 
+        nodes = np.array(list(self.mesh.nodes_from_points.values()))
+        point_cells = self._create_cells(nodes)
+        self.point_data.SetVerts(point_cells)
+        self.point_colors.SetNumberOfTuples(len(nodes))
+        self.point_colors.Fill(0)
+        self._point_ids = np.array(self.mesh.nodes_from_points.keys())
+
         lines_linearized = self._linearize_1d_cells(self.mesh.lines_connectivity)
         line_cells = self._create_cells(lines_linearized[:, 4:])
-        self._line_ids = lines_linearized[:, 1].flatten()
+        self.line_data.SetLines(line_cells)
         self.line_colors.SetNumberOfTuples(len(lines_linearized))
         self.line_colors.Fill(0)
-        self.line_data.SetLines(line_cells)
+        self._line_ids = lines_linearized[:, 1].flatten()
 
         faces_triangulated = self._triangulate_2d_cells(faces_connectivity)
         face_cells = self._create_cells(faces_triangulated[:, 4:])
-        self._cell_surface_ids = faces_triangulated[:, 1]
         self.surface_data.SetPolys(face_cells)
         self.surface_colors.SetNumberOfTuples(len(faces_triangulated))
-        self.surface_mapper.Modified()
         self.surface_colors.Fill(255)
+        self._cell_surface_ids = faces_triangulated[:, 1]
+        self._nodal_surface_ids = np.zeros(shape=len(nodal_coordinates), dtype=int)
+        self._nodal_surface_ids[faces_connectivity[:, 4:]] = faces_connectivity[:, 1, None]
 
         self._add_nodal_texture_info(nodal_coordinates, faces_connectivity)
 
@@ -217,7 +251,6 @@ class GeometryActor(vtkPropAssembly):
         uv = vtk_to_numpy(self.surface_data.GetPointData().GetTCoords())
         uv[:] = uv % GeometryTextures.span()
 
-    @function_timer
     def set_surface_texture(self, texture: GeometryTextures, surfaces: Iterable[int]):
         surfaces = list(surfaces)
         if not surfaces:
