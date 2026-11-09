@@ -7,7 +7,7 @@ import numpy as np
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from molde.colors import Color, color_names
-from PySide6.QtCore import QSignalBlocker, Qt
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QKeyEvent
 from PySide6.QtWidgets import QDialog, QDoubleSpinBox, QTableWidgetItem, QVBoxLayout
 
@@ -276,9 +276,14 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         return "volumes" if volumes_selection else "surfaces"
 
     def group_assistant_callback(self):
-        with QSignalBlocker(self.pushButton_select_group):
+        if self.group_assistant is None:
             self.group_assistant = GroupingAssistantInputs(selector_mode=True)
             self.group_assistant.exec()
+            self.group_assistant = None
+            return
+
+        self.group_assistant.raise_()
+        self.group_assistant.activateWindow()
 
     def tab_event_callback(self):
         mesh_quality_tab = self.tabWidget_main.currentIndex() == MeshSetupTabs.MESH_QUALITY
