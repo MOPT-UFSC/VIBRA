@@ -1,8 +1,11 @@
 
+from copy import deepcopy
+from enum import IntEnum
+
 import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QCloseEvent
-from PySide6.QtWidgets import QLineEdit, QTreeWidgetItem
+from PySide6.QtWidgets import QAbstractItemView, QLineEdit, QTreeWidgetItem
 
 from vibra import app
 from vibra.extensions import SUPPORTED_SPREADSHEET_EXTENSIONS, SUPPORTED_TEXT_EXTENSIONS
@@ -17,6 +20,11 @@ from vibra.interface.user_input.data_handler.file_dialog_service import FileDial
 from vibra.interface.user_input.data_handler.file_handlers.file_handler import FileHandler
 
 
+class DistributeLoad(IntEnum):
+    NO = 0
+    YES = 1
+
+
 class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -25,7 +33,6 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
         app().main_window.workspace_updating_for_model_setup()
 
         self.model = app().project.model
-        self.mesh = app().project.model.mesh
         self.properties = app().project.model.properties
 
         self._initialize()
@@ -50,6 +57,8 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
         self.keep_window_open = True
 
     def _config_widgets(self):
+
+        self.treeWidget_compressor_excitation_spectrum.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
 
         for i, w in enumerate([120]):
             self.treeWidget_compressor_excitation_spectrum.setColumnWidth(i, w)
@@ -83,7 +92,7 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
         self.lineEdit_selection_id.setText(text)
 
         if len(surfaces) == 1:
-            surface_id = list(surfaces)[0]
+            surface_id = next(iter(surfaces))
             self.load_property_data(surface_id)
 
     def load_property_data(self, surface_id: int):
@@ -102,7 +111,7 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
         self.comboBox_excitation_type.setCurrentText(excitation_type_label)
         self.comboBox_compressor_type.setCurrentText(data.get("compressor_type", "screw"))
 
-        if "table_paths" in data.keys():
+        if "table_paths" in data:
             table_path = data.get("table_paths")[0]
             self.lineEdit_table_path.setText(table_path)
             self.tabWidget_main.setCurrentIndex(SetupTabType.SETUP)
@@ -129,12 +138,11 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
 
     def on_doubleclick_item(self, item):
         self.lineEdit_selection_id.setText(item.text(0))
-        self.remove_callback()
 
     def load_model_info(self):
         self.treeWidget_compressor_excitation_spectrum.clear()
         for key, data in self.properties.surface_properties.items():
-            property, surface_id = key
+            property, tags = key
             if property != "compressor_excitation_spectrum":
                 continue
 
@@ -146,7 +154,12 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
                 complex_values = real_values + 1j * imag_values
                 str_value = str(complex_values)
 
-            new = QTreeWidgetItem([str(surface_id), str_value])
+            if isinstance(tags, int):
+                str_tags = str(tags)
+            elif isinstance(tags, tuple):
+                str_tags = str(tags)[1:-1]
+
+            new = QTreeWidgetItem([str_tags, str_value])
             new.setTextAlignment(0, Qt.AlignCenter)
             new.setTextAlignment(1, Qt.AlignCenter)
             self.treeWidget_compressor_excitation_spectrum.addTopLevelItem(new)
@@ -264,26 +277,22 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
         if self.imported_values is None:
             self.imported_values = self.load_table(self.lineEdit_table_path, direct_load = True)
 
-        for surface_id in surface_ids:
+        if not isinstance(self.imported_values, np.ndarray):
+            return
 
-            if isinstance(self.imported_values, np.ndarray):
-                if self.imported_values.shape[1] >= 3:
+        # complex values computed from tabular data
+        complex_values = get_spectral_data_from_array(self.imported_values)
 
-                    table_name = f"compressor_excitation_spectrum_at_surface_{surface_id}"
-                    if self.save_table_values(table_name, self.imported_values):
-                        self.lineEdit_table_path.setFocus()
-                        self.imported_values = None
-                        return
+        if self.comboBox_distribute_load.currentIndex() == DistributeLoad.YES:
 
-            else:
-                return
-
-            # complex values computed from tabular data
-            complex_values = get_spectral_data_from_array(self.imported_values)
+            if self.imported_values.shape[1] >= 3:
+                table_name = f"compressor_excitation_spectrum_at_surfaces_{surface_ids[1:-1]}"
+                if self.save_table_values(table_name, self.imported_values):
+                    self.lineEdit_table_path.setFocus()
+                    self.imported_values = None
+                    return
 
             # table path from imported tabular data
-            table_path = self.lineEdit_table_path.text()
-
             table_path = self.lineEdit_table_path.text()
 
             data = {
@@ -297,7 +306,34 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
                 "element_integration": True,
                 }
 
-            self.properties._set_property("compressor_excitation_spectrum", data, surface=surface_id)
+            self.properties._set_property("compressor_excitation_spectrum", data, surface=tuple(surface_ids))
+
+        else:
+
+            for surface_id in surface_ids:
+
+                if self.imported_values.shape[1] >= 3:
+                    table_name = f"compressor_excitation_spectrum_at_surface_{surface_id}"
+                    if self.save_table_values(table_name, self.imported_values):
+                        self.lineEdit_table_path.setFocus()
+                        self.imported_values = None
+                        return
+
+                # table path from imported tabular data
+                table_path = self.lineEdit_table_path.text()
+
+                data = {
+                    "compressor_type" : compressor_type,
+                    "excitation_type" : excitation_type,
+                    "excitation_units" : excitation_units,
+                    "connection_type" : connection_type,
+                    "table_paths" : [table_path],
+                    "table_names" : [table_name],
+                    "values" : [complex_values],
+                    "element_integration": True,
+                    }
+
+                self.properties._set_property("compressor_excitation_spectrum", data, surface=surface_id)
 
         self.actions_to_finalize(close_window)
 
@@ -316,16 +352,41 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
             "mass_source",
             ]
 
-        for surface_id in surface_ids:
-            for label in labels:
-                self.properties._remove_surface_property(label, surface_id)
+        if isinstance(surface_ids, int):
+            surface_ids = [surface_ids]
+
+        for (property, tags) in deepcopy(self.properties.surface_properties):
+            if property not in labels:
+                continue
+
+            if isinstance(tags, int):
+                self.properties._remove_surface_property(property, tags)
+            elif isinstance(tags, tuple):
+                if not set(surface_ids).isdisjoint(tags):
+                    self.properties._remove_surface_property(property, tags)
 
     def remove_callback(self):
 
-        if self.lineEdit_selection_id.text() != "":
-            surface_id = int(self.lineEdit_selection_id.text())
-            self.properties._remove_surface_property("compressor_excitation_spectrum", surface_id)
-            self.actions_to_finalize()
+        selected_items = self.treeWidget_compressor_excitation_spectrum.selectedItems()
+        if not selected_items:
+            return
+
+        for item in selected_items:
+            text = item.text(0).replace(" ", "")
+            surface_ids = [int(value) for value in text.split(",")]
+
+            for (property, tags) in deepcopy(self.properties.surface_properties):
+                if property != "compressor_excitation_spectrum":
+                    continue
+
+                if isinstance(tags, int):
+                    self.properties._remove_surface_property(property, tags)
+                elif isinstance(tags, tuple):
+                    if not set(surface_ids).isdisjoint(tags):
+                        self.properties._remove_surface_property(property, tags)
+
+        app().main_window.selection.clear_selection()
+        self.actions_to_finalize()
 
     def reset_callback(self):
 
@@ -343,6 +404,10 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
             self.actions_to_finalize()
 
     def actions_to_finalize(self, close_window: bool = False):
+
+        self.lineEdit_selection_id.clear()
+        self.lineEdit_table_path.clear()
+
         self.load_model_info()
         app().project.update_model_properties_file()
         app().main_window.update_info_text()
@@ -353,8 +418,7 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
 
     def update_tabs_visibility(self):
 
-        for key in self.properties.surface_properties:
-            property, *args = key
+        for (property, *_) in self.properties.surface_properties:
             if property != "compressor_excitation_spectrum":
                 continue
 

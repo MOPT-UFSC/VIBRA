@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>540</width>
+    <width>490</width>
     <height>440</height>
    </rect>
   </property>
@@ -67,6 +67,11 @@
       </property>
       <item row="0" column="0">
        <widget class="QTabWidget" name="tabWidget_main">
+        <property name="font">
+         <font>
+          <pointsize>10</pointsize>
+         </font>
+        </property>
         <property name="currentIndex">
          <number>0</number>
         </property>
@@ -122,7 +127,7 @@
               <widget class="QLineEdit" name="lineEdit_selected_ids">
                <property name="minimumSize">
                 <size>
-                 <width>200</width>
+                 <width>320</width>
                  <height>30</height>
                 </size>
                </property>
@@ -212,7 +217,7 @@
               <widget class="QLineEdit" name="lineEdit_group_label">
                <property name="minimumSize">
                 <size>
-                 <width>200</width>
+                 <width>320</width>
                  <height>30</height>
                 </size>
                </property>
@@ -345,6 +350,11 @@
                <property name="currentIndex">
                 <number>0</number>
                </property>
+               <item>
+                <property name="text">
+                 <string>Manual</string>
+                </property>
+               </item>
                <item>
                 <property name="text">
                  <string>Select all</string>
@@ -582,6 +592,11 @@
          <layout class="QGridLayout" name="gridLayout_7">
           <item row="0" column="0">
            <widget class="QTreeWidget" name="treeWidget_group_info">
+            <property name="font">
+             <font>
+              <pointsize>9</pointsize>
+             </font>
+            </property>
             <property name="indentation">
              <number>0</number>
             </property>

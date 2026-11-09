@@ -28,6 +28,16 @@ class StructuralStress3dPlotFrequencyInputs(StructuralStress3dPlotFrequencyInput
         self._add_color_widget()
         self._create_connections()
 
+    def showEvent(self, event=None):
+        super().showEvent(event)
+
+        app().main_window.render_widget_changed.emit()
+        app().main_window.view_toolbar.disable_selection_tool()
+
+        if self.is_stress_data_computed:
+            render_widget = app().main_window.results_widget
+            app().main_window.render_widgets_stack.setCurrentWidget(render_widget)
+
     @property
     def model(self):
         return app().project.model
@@ -120,15 +130,6 @@ class StructuralStress3dPlotFrequencyInputs(StructuralStress3dPlotFrequencyInput
         else:
             self.animation_widget.setDisabled(False)
 
-    def show_results_render(self):
-        curent_render_widget = app().main_window.get_current_render_widget()
-        results_render_widget = app().main_window.results_widget
-
-        if curent_render_widget != results_render_widget:
-            app().main_window.render_widgets_stack.setCurrentWidget(results_render_widget)
-            app().main_window.render_widget_changed.emit()
-            app().main_window.view_toolbar.disable_selection_tool()
-
     def process_stress_field(self):
 
         # recover the averaged structural stresses
@@ -192,8 +193,7 @@ class StructuralStress3dPlotFrequencyInputs(StructuralStress3dPlotFrequencyInput
             plot_setup=plot_setup,
         )
 
-        # update the results render
-        self.show_results_render()
+        self.showEvent()
 
     def get_plot_type(self) -> StressDataType:
         plot_types = [

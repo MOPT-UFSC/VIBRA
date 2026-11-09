@@ -1,9 +1,9 @@
 from collections import defaultdict
 from enum import IntEnum
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QSignalBlocker, Qt
 from PySide6.QtGui import QCloseEvent
-from PySide6.QtWidgets import QAbstractItemView, QGridLayout, QHeaderView, QTableWidgetItem
+from PySide6.QtWidgets import QAbstractItemView, QDialog, QGridLayout, QHeaderView, QTableWidgetItem
 
 from vibra import app
 from vibra.engine.properties.fluid import Fluid
@@ -12,6 +12,7 @@ from vibra.interface.common.common_interface import check_conflicting_model_prop
 from vibra.interface.general.get_user_confirmation_input import GetUserConfirmationInput
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.model_inputs.fluid.fluid_widget import FluidWidget
+from vibra.interface.model_inputs.general.grouping_assistant_inputs import GroupingAssistantInputs
 from vibra.interface.ui_generated.model.fluid.set_fluid_inputs_ui import SetFluidInputs_UI
 
 
@@ -61,6 +62,7 @@ class SetFluidInputs(SetFluidInputs_UI):
 
     def _initialize(self):
         self.fluid = None
+        self.group_assistant = None
         self.keep_window_open = True
         self.complete = False
         self.table_model_fluids_cell_clicked = False
@@ -106,6 +108,7 @@ class SetFluidInputs(SetFluidInputs_UI):
         self.fluid_widget.pushButton_import_library.clicked.connect(self.import_fluid_library_callback)
         self.pushButton_remove.clicked.connect(self.remove_callback)
         self.pushButton_reset.clicked.connect(self.reset_callback)
+        self.pushButton_select_group.clicked.connect(self.group_assistant_callback)
 
         # QTableWidget connections
         self.fluid_widget.tableWidget_fluid_data.currentCellChanged.connect(self.current_cell_changed)
@@ -351,6 +354,11 @@ class SetFluidInputs(SetFluidInputs_UI):
 
             app().main_window.selection.set_geometry_selection()
 
+    def group_assistant_callback(self):
+        with QSignalBlocker(self.pushButton_select_group):
+            self.group_assistant = GroupingAssistantInputs(selector_mode=True)
+            self.group_assistant.exec()
+
     def actions_to_finalize(self, close_window: bool = False):
         self.clear_line_edit_seletction_id()
         self.lineEdit_selected_fluid_name.clear()
@@ -509,6 +517,11 @@ class SetFluidInputs(SetFluidInputs_UI):
             self.tableWidget_model_fluids.setSelectionMode(QAbstractItemView.SingleSelection)
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
+        if isinstance(self.group_assistant, QDialog):
+            self.group_assistant.close()
+
         self.keep_window_open = False
         app().main_window.selection.volume_selection_mode = False
+        app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
+
         return super().closeEvent(a0)
