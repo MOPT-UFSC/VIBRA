@@ -1,10 +1,12 @@
 from collections.abc import Iterable
+from dataclasses import dataclass
 from enum import IntEnum, auto
 
 import numpy as np
+import xxhash
 from scipy.linalg import svd
 from vtkmodules.util.numpy_support import numpy_to_vtk, vtk_to_numpy
-from vtkmodules.vtkCommonCore import vtkFloatArray, vtkPoints, vtkUnsignedCharArray
+from vtkmodules.vtkCommonCore import vtkDataArray, vtkFloatArray, vtkPoints, vtkUnsignedCharArray
 from vtkmodules.vtkCommonDataModel import vtkCellArray, vtkPolyData
 from vtkmodules.vtkFiltersCore import vtkPolyDataNormals, vtkPolyDataTangents
 from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper, vtkPropAssembly
@@ -31,12 +33,29 @@ class GeometryTextures(IntEnum):
         return 1 / len(cls)
 
 
+@dataclass
+class GeometryCachedInfo:
+    mesh_id: int = 0
+    point_colors_hash: str = ""
+    line_colors_hash: str = ""
+    surface_colors_hash: str = ""
+    section_plane_hash: int = 0
+
+    @classmethod
+    def array_hash(cls, array: np.ndarray | vtkDataArray) -> str:
+        ndarray = vtk_to_numpy(array) if isinstance(array, vtkDataArray) else array
+        hasher = xxhash.xxh128()
+        hasher.update(ndarray)
+        return hasher.hexdigest()
+
+
 class GeometryActor(vtkPropAssembly):
     def __init__(self, model: Model | None):
         super().__init__()
 
         self.model = model
         self.section_plane: SectionPlane | None = None
+        self.cached_info = GeometryCachedInfo()
 
         self._create_variables()
         self._configure_actors_parameters()
@@ -54,6 +73,8 @@ class GeometryActor(vtkPropAssembly):
             return
 
         self.build_mesh()
+
+        self.update_caches()
 
     def clear_data(self):
         self.point_data.SetPolys(vtkCellArray())
@@ -143,6 +164,9 @@ class GeometryActor(vtkPropAssembly):
         assert self.mesh.lines_connectivity is not None
         assert self.mesh.faces_connectivity is not None
 
+        if not self._mesh_updated():
+            return
+
         nodal_coordinates, faces_connectivity = self._decouple_faces_connectivity()
         nodal_coordinates[:, 1] += 2
         self.points.SetData(numpy_to_vtk(nodal_coordinates[:, 1:]))
@@ -172,6 +196,31 @@ class GeometryActor(vtkPropAssembly):
         self._nodal_surface_ids[faces_connectivity[:, 4:]] = faces_connectivity[:, 1, None]
 
         self._add_nodal_texture_info(nodal_coordinates, faces_connectivity)
+
+    def update_caches(self):
+        point_colors_hash = GeometryCachedInfo.array_hash(self.point_colors)
+        if point_colors_hash != self.cached_info.point_colors_hash:
+            self.cached_info.point_colors_hash = point_colors_hash
+            self.point_colors.Modified()
+
+        line_colors_hash = GeometryCachedInfo.array_hash(self.line_colors)
+        if line_colors_hash != self.cached_info.line_colors_hash:
+            self.cached_info.line_colors_hash = line_colors_hash
+            self.line_colors.Modified()
+
+        surface_colors_hash = GeometryCachedInfo.array_hash(self.surface_colors)
+        if surface_colors_hash != self.cached_info.surface_colors_hash:
+            self.cached_info.surface_colors_hash = surface_colors_hash
+            self.surface_colors.Modified()
+
+        mesh_id = id(self.mesh)
+        if mesh_id != self.cached_info.mesh_id:
+            self.cached_info.mesh_id = mesh_id
+            # Don't need to modify anything, but might in the future
+
+        section_plane_hash = hash(self.section_plane)
+        if section_plane_hash != self.cached_info.section_plane_hash:
+            self.cached_info.section_plane_hash = section_plane_hash
 
     def _decouple_faces_connectivity(self):
         assert self.mesh is not None
@@ -264,26 +313,6 @@ class GeometryActor(vtkPropAssembly):
             u[mask] = u[mask] % GeometryTextures.span() + texture.bias()
             self.surface_data.GetPointData().GetTCoords().Modified()  # move it to update cache
 
-    def _reduce_connectivity(
-        self,
-        nodal_coordinates: np.ndarray,
-        surface_connectivity: np.ndarray,
-        mapping: np.ndarray | None = None,
-    ) -> tuple[np.ndarray, np.ndarray]:
-
-        old_indices = np.unique(surface_connectivity[:, 4:])
-        new_indices = np.arange(len(old_indices))
-
-        if mapping is None:
-            mapping = np.zeros(np.max(surface_connectivity[:, 4:]) + 1, dtype=int)
-        mapping[old_indices] = new_indices
-
-        new_coordinates = nodal_coordinates[old_indices]
-        new_connectivity = surface_connectivity.copy()
-        new_connectivity[:, 4:] = mapping[surface_connectivity[:, 4:]]
-
-        return new_coordinates, new_connectivity
-
     def _generate_tcoords(
         self,
         coords: np.ndarray,
@@ -305,3 +334,12 @@ class GeometryActor(vtkPropAssembly):
             uv[:, 1] = max_v * np.arcsin(normalized_v)
 
         return uv
+
+    def _mesh_updated(self):
+        if id(self.mesh) != self.cached_info.mesh_id:
+            return True
+
+        if hash(self.section_plane) != self.cached_info.section_plane_hash:  # noqa: SIM103
+            return True
+
+        return False

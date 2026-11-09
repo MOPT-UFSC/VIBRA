@@ -1,11 +1,11 @@
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
-from itertools import chain, combinations, pairwise
+from itertools import chain
 
 import numpy as np
 import xxhash
 from molde import Color
-from vtkmodules.util.numpy_support import numpy_to_vtk, numpy_to_vtkIdTypeArray, vtk_to_numpy
+from vtkmodules.util.numpy_support import numpy_to_vtk, vtk_to_numpy
 from vtkmodules.vtkCommonCore import vtkDataArray, vtkIntArray, vtkPoints, vtkUnsignedCharArray
 from vtkmodules.vtkCommonDataModel import (
     vtkCellArray,
@@ -24,8 +24,8 @@ from vibra.utils.vtk_utils import create_cells, linearize_2d_cells, linearize_3d
 class MeshCachedInfo:
     mesh_id: int = 0
     node_colors_hash: str = ""
-    surface_colors_hash: str = ""
-    section_colors_hash: str = ""
+    face_colors_hash: str = ""
+    volume_colors_hash: str = ""
     section_plane_hash: int = 0
 
     @classmethod
@@ -288,13 +288,13 @@ class MeshActor(vtkPropAssembly):
             self.node_colors.Modified()
 
         surface_colors_hash = MeshCachedInfo.array_hash(self.surface_colors)
-        if surface_colors_hash != self.cached_info.surface_colors_hash:
-            self.cached_info.surface_colors_hash = surface_colors_hash
+        if surface_colors_hash != self.cached_info.face_colors_hash:
+            self.cached_info.face_colors_hash = surface_colors_hash
             self.surface_colors.Modified()
 
         section_colors_hash = MeshCachedInfo.array_hash(self.volume_colors)
-        if section_colors_hash != self.cached_info.section_colors_hash:
-            self.cached_info.section_colors_hash = section_colors_hash
+        if section_colors_hash != self.cached_info.volume_colors_hash:
+            self.cached_info.volume_colors_hash = section_colors_hash
             self.volume_colors.Modified()
 
         mesh_id = id(self.mesh)
