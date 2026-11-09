@@ -256,6 +256,24 @@
        </spacer>
       </item>
       <item>
+       <widget class="QPushButton" name="pushButton_send_to_grouping_assistant_tool">
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>30</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>10</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>Send to Grouping Assistant Tool</string>
+        </property>
+       </widget>
+      </item>
+      <item>
        <widget class="QPushButton" name="pushButton_send_to_local_size_control">
         <property name="minimumSize">
          <size>

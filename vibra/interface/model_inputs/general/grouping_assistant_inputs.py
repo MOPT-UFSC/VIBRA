@@ -315,6 +315,36 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
 
             return new_id
 
+    def get_next_group_index(self, base_label: str) -> int:
+        prefix = f"{base_label}_"
+        next_index = 1
+
+        for (property, _), data in self.properties.group_properties.items():
+            if property != "selection_group" or not isinstance(data, dict):
+                continue
+
+            group_label = data.get("group_label", "")
+            if not group_label.startswith(prefix):
+                continue
+
+            suffix = group_label[len(prefix):]
+            if suffix.isdigit():
+                next_index = max(next_index, int(suffix) + 1)
+
+        return next_index
+
+    def add_selection_groups(self, base_label: str, entity_groups: list[list[int]], entity_type: str = "Surfaces"):
+        next_index = self.get_next_group_index(base_label)
+
+        for offset, entities_id in enumerate(entity_groups):
+            group_label = f"{base_label}_{next_index + offset}"
+            group_id = self.get_new_group_id()
+            data = GroupData(group_label, entity_type, entities_id)
+            self.properties._set_property("selection_group", data.as_dict(), group=group_id)
+
+        self.actions_to_finalize()
+        self.tabWidget_main.setCurrentIndex(SetupTabType.LIST)
+
     def is_group_label_valid(self, group_label: str):
         for (property, _), data in self.properties.group_properties.items():
             if property != "selection_group":

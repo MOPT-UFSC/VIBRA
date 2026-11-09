@@ -115,6 +115,7 @@ class SmallAreasDetectionTool(SmallAreasDetectionTool_UI):
         self.pushButton_detect_small_areas.clicked.connect(self._detect_small_areas)
         self.tableWidget.itemClicked.connect(self._table_item_clicked)
         self.pushButton_send_to_local_size_control.clicked.connect(self._send_to_local_size_control)
+        self.pushButton_send_to_grouping_assistant_tool.clicked.connect(self._send_to_grouping_assistant)
         self.pushButton_cancel.clicked.connect(self.close)
 
         minimum_size_spinbox = self.mesher_inputs.doubleSpinBox_minimum_element_size
@@ -131,6 +132,7 @@ class SmallAreasDetectionTool(SmallAreasDetectionTool_UI):
 
     def _set_send_buttons_enabled(self, enabled: bool):
         self.pushButton_send_to_local_size_control.setEnabled(enabled)
+        self.pushButton_send_to_grouping_assistant_tool.setEnabled(enabled)
 
     def _threshold_changed(self, *args):
         self._update_faces_area_label()
@@ -252,6 +254,21 @@ class SmallAreasDetectionTool(SmallAreasDetectionTool_UI):
         self.label_faces_detected.setText(
             f"Sent {len(surface_ids)} face(s) in {len(bins)} size group(s)."
         )
+
+    def _send_to_grouping_assistant(self):
+        bins = self._build_size_groups()
+        if not bins:
+            return
+
+        entity_groups = []
+        for bin_data in bins:
+            entity_groups.append(bin_data["surface_ids"])
+
+        from vibra.interface.model_inputs.general.grouping_assistant_inputs import GroupingAssistantInputs
+
+        grouping_assistant = GroupingAssistantInputs(selector_mode=True)
+        grouping_assistant.add_selection_groups("small_areas", entity_groups)
+        grouping_assistant.exec()
 
     def closeEvent(self, event):
         self.keep_window_open = False

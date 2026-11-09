@@ -155,6 +155,13 @@ class Ui_Dialog(object):
 
         self.horizontalLayout.addItem(self.horizontalSpacer)
 
+        self.pushButton_send_to_grouping_assistant_tool = QPushButton(self.frame_3)
+        self.pushButton_send_to_grouping_assistant_tool.setObjectName(u"pushButton_send_to_grouping_assistant_tool")
+        self.pushButton_send_to_grouping_assistant_tool.setMinimumSize(QSize(0, 30))
+        self.pushButton_send_to_grouping_assistant_tool.setFont(font)
+
+        self.horizontalLayout.addWidget(self.pushButton_send_to_grouping_assistant_tool)
+
         self.pushButton_send_to_local_size_control = QPushButton(self.frame_3)
         self.pushButton_send_to_local_size_control.setObjectName(u"pushButton_send_to_local_size_control")
         self.pushButton_send_to_local_size_control.setMinimumSize(QSize(0, 30))
@@ -186,6 +193,7 @@ class Ui_Dialog(object):
         ___qtablewidgetitem1 = self.tableWidget.horizontalHeaderItem(1)
         ___qtablewidgetitem1.setText(QCoreApplication.translate("Dialog", u"Area", None));
         self.pushButton_cancel.setText(QCoreApplication.translate("Dialog", u"Cancel", None))
+        self.pushButton_send_to_grouping_assistant_tool.setText(QCoreApplication.translate("Dialog", u"Send to Grouping Assistant Tool", None))
         self.pushButton_send_to_local_size_control.setText(QCoreApplication.translate("Dialog", u"Send to Local Size Control Tool", None))
     # retranslateUi
 
@@ -217,6 +225,7 @@ class SmallAreasDetectionTool_UI(QDialog, Ui_Dialog):
                 - frame_3: QFrame
                     - (Layout): QHBoxLayout
                             - pushButton_cancel: QPushButton
+                            - pushButton_send_to_grouping_assistant_tool: QPushButton
                             - pushButton_send_to_local_size_control: QPushButton
     """
 
