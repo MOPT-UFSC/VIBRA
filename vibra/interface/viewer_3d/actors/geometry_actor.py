@@ -422,6 +422,12 @@ class GeometryActor(vtkPropAssembly):
         for i in range(3):
             self.surface_colors.FillComponent(i, rgb[i])
 
+    def set_point_size(self, size: int):
+        self.point_actor.GetProperty().SetPointSize(size)
+
+    def set_line_thickness(self, thickness):
+        self.line_actor.GetProperty().SetLineWidth(thickness)
+
     def paint_points(self, color: Color, points: Iterable[int]):
         if self.mesh is None:
             return
