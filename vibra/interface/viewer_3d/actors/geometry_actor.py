@@ -9,7 +9,7 @@ from scipy.linalg import svd
 from vtkmodules.util.numpy_support import numpy_to_vtk, vtk_to_numpy
 from vtkmodules.vtkCommonCore import vtkDataArray, vtkFloatArray, vtkPoints, vtkUnsignedCharArray
 from vtkmodules.vtkCommonDataModel import vtkCellArray, vtkPlane, vtkPolyData
-from vtkmodules.vtkFiltersCore import vtkCutter, vtkPolyDataNormals, vtkPolyDataTangents, vtkStripper
+from vtkmodules.vtkFiltersCore import vtkAppendPolyData, vtkCutter, vtkPolyDataNormals, vtkPolyDataTangents, vtkStripper
 from vtkmodules.vtkFiltersGeneral import vtkContourTriangulator
 from vtkmodules.vtkRenderingCore import vtkActor, vtkAreaPicker, vtkHardwarePicker, vtkPolyDataMapper, vtkPropAssembly, vtkRenderer
 
@@ -18,6 +18,7 @@ from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.utils.interface_utils import SectionPlane
 from vibra.utils.math_functions import inside_plane
+from vibra.utils.time_utils import function_timer
 from vibra.utils.vtk_utils import create_cells, linearize_1d_cells, read_texture, triangulate_2d_cells
 
 
@@ -82,6 +83,7 @@ class GeometryActor(vtkPropAssembly):
 
         return self.model.mesh
 
+    @function_timer
     def update(self):
         if self.mesh is None:
             self.clear_data()
@@ -231,9 +233,10 @@ class GeometryActor(vtkPropAssembly):
 
         self._add_nodal_texture_info(nodal_coordinates, faces_connectivity)
 
+    @function_timer
     def update_section_plane(self):
-        if hash(self.section_plane) == self.cached_info.section_plane_hash:  # noqa: SIM103
-            return
+        # if hash(self.section_plane) == self.cached_info.section_plane_hash:  # noqa: SIM103
+        #     return
 
         mappers = [self.point_mapper, self.line_mapper, self.surface_mapper]
         for mapper in mappers:
@@ -253,33 +256,42 @@ class GeometryActor(vtkPropAssembly):
             mapper.AddClippingPlane(plane)
             mapper.Modified()
 
-        # Cut the original (welded) mesh, not the decoupled one, so that the
-        # intersection segments connect into a closed contour at shared edges.
         assert self.mesh is not None
         assert self.mesh.nodal_coordinates is not None
         assert self.mesh.faces_connectivity is not None
 
+        merged = vtkAppendPolyData()
+        triangular_faces = triangulate_2d_cells(self.mesh.faces_connectivity)
+
         welded = vtkPolyData()
-        welded_points = vtkPoints()
-        welded_points.SetData(numpy_to_vtk(self.mesh.nodal_coordinates[:, 1:]))
-        welded.SetPoints(welded_points)
-        welded_cells = create_cells(triangulate_2d_cells(self.mesh.faces_connectivity)[:, 4:])
-        welded.SetPolys(welded_cells)
+        welded.SetPoints(self.points)
 
-        cutter = vtkCutter()
-        cutter.SetCutFunction(plane)
-        cutter.SetInputData(welded)
-        cutter.Update()
+        all_points = 0
+        all_cells = 0
 
-        stripper = vtkStripper()
-        stripper.SetInputData(cutter.GetOutput())
-        stripper.Update()
+        for volume, surfaces in self.mesh.surfaces_from_volume.items():
+            mask = np.isin(triangular_faces[:, 1], surfaces).ravel()
+            volume_faces = triangular_faces[mask, 4:]
+            welded.SetPolys(create_cells(volume_faces))
 
-        triangulator = vtkContourTriangulator()
-        triangulator.SetInputData(stripper.GetOutput())
-        triangulator.Update()
+            cutter = vtkCutter()
+            cutter.SetCutFunction(plane)
+            cutter.SetInputData(welded)
 
-        self.section_data.DeepCopy(triangulator.GetOutput())
+            triangulator = vtkContourTriangulator()
+            triangulator.SetInputConnection(cutter.GetOutputPort())
+            triangulator.Update()
+
+            data: vtkPolyData = triangulator.GetOutput()
+
+            all_points += data.GetNumberOfPoints()
+            all_cells += data.GetNumberOfCells()
+
+            merged.AddInputData(data)
+
+        merged.Update()
+
+        self.section_data.ShallowCopy(merged.GetOutput())
         self.section_data.Modified()
 
     def update_caches(self):
