@@ -9,7 +9,8 @@ from scipy.linalg import svd
 from vtkmodules.util.numpy_support import numpy_to_vtk, vtk_to_numpy
 from vtkmodules.vtkCommonCore import vtkDataArray, vtkFloatArray, vtkPoints, vtkUnsignedCharArray
 from vtkmodules.vtkCommonDataModel import vtkCellArray, vtkPlane, vtkPolyData
-from vtkmodules.vtkFiltersCore import vtkPolyDataNormals, vtkPolyDataTangents
+from vtkmodules.vtkFiltersCore import vtkCutter, vtkPolyDataNormals, vtkPolyDataTangents, vtkStripper
+from vtkmodules.vtkFiltersGeneral import vtkContourTriangulator
 from vtkmodules.vtkRenderingCore import vtkActor, vtkAreaPicker, vtkHardwarePicker, vtkPolyDataMapper, vtkPropAssembly, vtkRenderer
 
 from vibra import TEXTURE_DIR
@@ -135,6 +136,10 @@ class GeometryActor(vtkPropAssembly):
         self.surface_mapper = vtkPolyDataMapper()
         self.surface_actor = vtkActor()
 
+        self.section_data = vtkPolyData()
+        self.section_mapper = vtkPolyDataMapper()
+        self.section_actor = vtkActor()
+
         self._point_ids = np.array([], dtype=int)
         self._line_ids = np.array([], dtype=int)
         self._node_surface_ids = np.array([], dtype=int)
@@ -179,6 +184,12 @@ class GeometryActor(vtkPropAssembly):
         self.surface_actor.SetMapper(self.surface_mapper)
         self.surface_actor.SetTexture(self.diffuse_texture)
         self.AddPart(self.surface_actor)
+
+        self.section_mapper.SetInputData(self.section_data)
+        self.section_actor.SetMapper(self.section_mapper)
+        self.section_actor.GetProperty().SetColor(1, 0, 0)
+        self.section_actor.GetProperty().SetLineWidth(3)
+        self.AddPart(self.section_actor)
 
     def build_mesh(self):
         assert self.mesh is not None
@@ -229,6 +240,9 @@ class GeometryActor(vtkPropAssembly):
             mapper.RemoveAllClippingPlanes()
 
         if self.section_plane is None:
+            self.section_data.SetPoints(vtkPoints())
+            self.section_data.SetLines(vtkCellArray())
+            self.section_data.Modified()
             return
 
         plane = vtkPlane()
@@ -238,6 +252,35 @@ class GeometryActor(vtkPropAssembly):
         for mapper in mappers:
             mapper.AddClippingPlane(plane)
             mapper.Modified()
+
+        # Cut the original (welded) mesh, not the decoupled one, so that the
+        # intersection segments connect into a closed contour at shared edges.
+        assert self.mesh is not None
+        assert self.mesh.nodal_coordinates is not None
+        assert self.mesh.faces_connectivity is not None
+
+        welded = vtkPolyData()
+        welded_points = vtkPoints()
+        welded_points.SetData(numpy_to_vtk(self.mesh.nodal_coordinates[:, 1:]))
+        welded.SetPoints(welded_points)
+        welded_cells = create_cells(triangulate_2d_cells(self.mesh.faces_connectivity)[:, 4:])
+        welded.SetPolys(welded_cells)
+
+        cutter = vtkCutter()
+        cutter.SetCutFunction(plane)
+        cutter.SetInputData(welded)
+        cutter.Update()
+
+        stripper = vtkStripper()
+        stripper.SetInputData(cutter.GetOutput())
+        stripper.Update()
+
+        triangulator = vtkContourTriangulator()
+        triangulator.SetInputData(stripper.GetOutput())
+        triangulator.Update()
+
+        self.section_data.DeepCopy(triangulator.GetOutput())
+        self.section_data.Modified()
 
     def update_caches(self):
         point_colors_hash = GeometryCachedInfo.array_hash(self.point_colors)
