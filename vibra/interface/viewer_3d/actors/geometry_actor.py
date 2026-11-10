@@ -576,7 +576,7 @@ class GeometryActor(vtkPropAssembly):
         is_cylinder = s_normals[2] < 1e-6
 
         if is_cylinder:
-            # Cylindrical projection
+            # Almost cylindrical projection
             cylinder_axis = Vh_normals[-1]
             cylinder_idx = np.argmax(np.abs(Vh_coords @ cylinder_axis))
             normal_idx = np.argmax(np.abs(Vh_coords @ avg_normal))
@@ -591,7 +591,7 @@ class GeometryActor(vtkPropAssembly):
             uv[:, 1] = max_v * np.arcsin(normalized_v)
             return uv
 
-        # Spherical projection
+        # Almost spherical projection
         uv = centered @ np.asarray(Vh_coords)[:2].T
 
         max_u = np.abs(uv[:, 0]).max()
