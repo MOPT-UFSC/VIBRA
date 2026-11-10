@@ -369,16 +369,9 @@ class GeometryActor(vtkPropAssembly):
         texture_coordinates = np.zeros(shape=(len(nodal_coordinates), 2))
         for surface_id, surface_elements in self.mesh.elements_from_surface.items():
             node_indices = np.unique(faces_connectivity[surface_elements, 4:])
-            surface_normals = self.mesh.normals_surface.get(surface_id)
-
-            if surface_normals is not None:
-                normal = np.average(surface_normals, axis=0).round(6)
-            else:
-                normal = None
-
             texture_coordinates[node_indices] = self._generate_tcoords(
                 nodal_coordinates[node_indices, 1:],
-                normal=normal,
+                surface_normals=self.mesh.normals_surface.get(surface_id),
             )
 
         min_t = texture_coordinates.min()
@@ -422,7 +415,6 @@ class GeometryActor(vtkPropAssembly):
         mask = np.isin(self._nodal_surface_ids, surfaces)
         if mask.size:
             u[mask] = u[mask] % GeometryTextures.span() + texture.bias()
-            self.surface_data.GetPointData().GetTCoords().Modified()  # move it to update cache
 
     def set_point_color(self, color: Color):
         rgb = color.to_rgb()
@@ -568,22 +560,47 @@ class GeometryActor(vtkPropAssembly):
     def _generate_tcoords(
         self,
         coords: np.ndarray,
-        normal: np.ndarray | None = None,
+        surface_normals: np.ndarray | None = None,
     ):
         centered = coords - coords.mean(axis=0)
-        _, s, Vh = svd(centered, full_matrices=False, check_finite=False)
+        _, s_coords, Vh_coords = svd(centered, full_matrices=False, check_finite=False)
+        is_plane = s_coords[2] < 1e-6
 
-        if normal is not None:
-            n = np.asarray(normal, dtype=float)
-            n = n / np.linalg.norm(n)
-            Vh = Vh[np.argsort(np.abs(Vh @ n))]
+        if is_plane or (surface_normals is None):
+            # Planar projection
+            return centered @ np.asarray(Vh_coords)[:2].T
 
-        uv = centered @ np.asarray(Vh)[:2].T
+        avg_normal = np.average(surface_normals, axis=0).round(6)
+        avg_normal /= np.linalg.norm(avg_normal)
+        _, s_normals, Vh_normals = svd(surface_normals, full_matrices=False, check_finite=False)
+        is_cylinder = s_normals[2] < 1e-6
 
-        if s[2] > 1e-6:  # it is probably a cylinder, so use cylindrical projection
+        if is_cylinder:
+            # Cylindrical projection
+            cylinder_axis = Vh_normals[-1]
+            cylinder_idx = np.argmax(np.abs(Vh_coords @ cylinder_axis))
+            normal_idx = np.argmax(np.abs(Vh_coords @ avg_normal))
+            middle_idx = 3 - cylinder_idx - normal_idx
+
+            order = [cylinder_idx, middle_idx, normal_idx]
+            Vh_coords = np.asarray(Vh_coords)[order]
+            uv = centered @ np.asarray(Vh_coords)[:2].T
+
             max_v = np.abs(uv[:, 1]).max()
             normalized_v = uv[:, 1] / max_v
             uv[:, 1] = max_v * np.arcsin(normalized_v)
+            return uv
+
+        # Spherical projection
+        uv = centered @ np.asarray(Vh_coords)[:2].T
+
+        max_u = np.abs(uv[:, 0]).max()
+        normalized_u = uv[:, 0] / max_u
+        uv[:, 0] = max_u * np.arcsin(normalized_u)
+
+        max_v = np.abs(uv[:, 1]).max()
+        normalized_v = uv[:, 1] / max_v
+        uv[:, 1] = max_v * np.arcsin(normalized_v)
 
         return uv
 
