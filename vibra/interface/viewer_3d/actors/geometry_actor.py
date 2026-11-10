@@ -8,7 +8,7 @@ from molde import Color
 from scipy.linalg import svd
 from vtkmodules.util.numpy_support import numpy_to_vtk, vtk_to_numpy
 from vtkmodules.vtkCommonCore import vtkDataArray, vtkFloatArray, vtkPoints, vtkUnsignedCharArray
-from vtkmodules.vtkCommonDataModel import vtkCellArray, vtkPolyData
+from vtkmodules.vtkCommonDataModel import vtkCellArray, vtkPlane, vtkPolyData
 from vtkmodules.vtkFiltersCore import vtkPolyDataNormals, vtkPolyDataTangents
 from vtkmodules.vtkRenderingCore import vtkActor, vtkAreaPicker, vtkHardwarePicker, vtkPolyDataMapper, vtkPropAssembly, vtkRenderer
 
@@ -87,6 +87,7 @@ class GeometryActor(vtkPropAssembly):
             return
 
         self.build_mesh()
+        self.update_section_plane()
 
         self.update_caches()
 
@@ -185,7 +186,7 @@ class GeometryActor(vtkPropAssembly):
         assert self.mesh.lines_connectivity is not None
         assert self.mesh.faces_connectivity is not None
 
-        if not self._mesh_updated():
+        if id(self.mesh) == self.cached_info.mesh_id:
             return
 
         nodal_coordinates, faces_connectivity = self._decouple_faces_connectivity()
@@ -219,6 +220,23 @@ class GeometryActor(vtkPropAssembly):
 
         self._add_nodal_texture_info(nodal_coordinates, faces_connectivity)
 
+    def update_section_plane(self):
+        if hash(self.section_plane) == self.cached_info.section_plane_hash:  # noqa: SIM103
+            return
+
+        mappers = [self.point_mapper, self.line_mapper, self.surface_mapper]
+        for mapper in mappers:
+            mapper.RemoveAllClippingPlanes()
+
+        if self.section_plane is not None:
+            plane = vtkPlane()
+            plane.SetOrigin(self.section_plane.origin)
+            plane.SetNormal(self.section_plane.normal)
+
+            for mapper in mappers:
+                mapper.AddClippingPlane(plane)
+                mapper.Modified()
+
     def update_caches(self):
         point_colors_hash = GeometryCachedInfo.array_hash(self.point_colors)
         if point_colors_hash != self.cached_info.point_colors_hash:
@@ -243,7 +261,6 @@ class GeometryActor(vtkPropAssembly):
         mesh_id = id(self.mesh)
         if mesh_id != self.cached_info.mesh_id:
             self.cached_info.mesh_id = mesh_id
-            # Don't need to modify anything, but might in the future
 
         section_plane_hash = hash(self.section_plane)
         if section_plane_hash != self.cached_info.section_plane_hash:
@@ -286,10 +303,11 @@ class GeometryActor(vtkPropAssembly):
         if self.section_plane is None:
             nodes_mask = np.ones(len(coordinates), dtype=bool)
         else:
-            nodes_mask = self._masked_nodes.copy()
-            visible_node_ids = self._node_ids
-            visible_nodes_mask = np.isin(self.mesh.nodal_coordinates[:, 0], visible_node_ids)
-            nodes_mask[visible_nodes_mask] = True
+            nodes_mask = inside_plane(
+                coordinates,
+                self.section_plane.origin,
+                self.section_plane.get_normal(),
+            ).ravel()
 
         self.area_picker.AreaPick(x0, y0, x1, y1, renderer)
         frustum = self.area_picker.GetFrustum()
