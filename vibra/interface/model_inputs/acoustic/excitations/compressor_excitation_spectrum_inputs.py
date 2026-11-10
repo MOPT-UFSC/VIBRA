@@ -359,7 +359,7 @@ class CompressorExcitationSpectrumInputs(CompressorExcitationSpectrumInputs_UI):
             if property not in labels:
                 continue
 
-            if isinstance(tags, int):
+            if isinstance(tags, int) and tags in surface_ids:
                 self.properties._remove_surface_property(property, tags)
             elif isinstance(tags, tuple):
                 if not set(surface_ids).isdisjoint(tags):
