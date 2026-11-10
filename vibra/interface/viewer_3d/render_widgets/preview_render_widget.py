@@ -12,12 +12,13 @@ from vibra.engine.model import Model
 from vibra.engine.postprocessing.acoustic_postprocessing import AcousticPostprocessing
 from vibra.engine.postprocessing.structural_postprocessing import StructuralPostprocessing
 from vibra.interface.viewer_3d import plot_setup
+from vibra.interface.viewer_3d.actors.geometry_actor import GeometryActor, PickedGeometry
 from vibra.interface.viewer_3d.actors.mesh_actor import MeshActor, PickedMesh
 from vibra.interface.viewer_3d.actors.results_actor import ResultsActor
 from vibra.interface.viewer_3d.actors.symbols_actor_acoustic import SymbolsActorAcoustic
 from vibra.interface.viewer_3d.actors.symbols_actor_structural import SymbolsActorStructural
-from vibra.utils.interface_utils import MeshRendererConfig, SectionPlane, VisualizationFilter
-from vibra.utils.time_utils import context_timer
+from vibra.utils.interface_utils import GeometryRendererConfig, MeshRendererConfig, SectionPlane, VisualizationFilter
+from vibra.utils.time_utils import function_timer
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -52,8 +53,10 @@ class PreviewRenderWidget(CommonRenderWidget):
         self.model: Model | None = None
         self.section_plane: SectionPlane | None = None
         self.mesh_config = MeshRendererConfig()
+        self.geometry_config = GeometryRendererConfig()
         self.visualization_filter = VisualizationFilter().all_true()
         self.picked_mesh = PickedMesh()
+        self.picked_geometry = PickedGeometry()
         self.create_actors()
 
     def create_actors(self):
@@ -67,12 +70,16 @@ class PreviewRenderWidget(CommonRenderWidget):
         self.add_actors(self.structural_symbols_actor)
 
         self.results_actor = ResultsActor(self.model)
-        self.add_actors(self.results_actor)
+        # self.add_actors(self.results_actor)
+
+        self.geometry_actor = GeometryActor(self.model)
+        self.add_actors(self.geometry_actor)
 
     def set_model(self, model: Model | None):
         self.model = model
         self.mesh_actor.model = model
         self.results_actor.model = model
+        self.geometry_actor.model = model
         self.acoustic_symbols_actor.model = model
         self.structural_symbols_actor.model = model
 
@@ -169,6 +176,7 @@ class PreviewRenderWidget(CommonRenderWidget):
     def update_plot(self, reset_camera: bool = False):
         self.mesh_actor.update()
         self.results_actor.update()
+        self.geometry_actor.update()
         self.acoustic_symbols_actor.build()
         self.structural_symbols_actor.build()
 
@@ -180,6 +188,7 @@ class PreviewRenderWidget(CommonRenderWidget):
 
         self.update()
 
+    @function_timer
     def update_visualization(self):
         self.renderer.SetBackground(self.mesh_config.background_bottom.to_rgb_f())
         self.renderer.SetBackground2(self.mesh_config.background_top.to_rgb_f())
@@ -189,7 +198,7 @@ class PreviewRenderWidget(CommonRenderWidget):
         self.mesh_actor.set_surface_color(self.mesh_config.surfaces_color)
         self.mesh_actor.set_volume_color(self.mesh_config.volumes_color)
         self.mesh_actor.set_nodes_size(self.mesh_config.nodes_size)
-        self.mesh_actor.set_edge_width(self.mesh_config.edges_thickness)
+        self.mesh_actor.set_edge_thickness(self.mesh_config.edges_thickness)
         self.mesh_actor.set_nodes_visibility(visible=self.visualization_filter.points)
         self.mesh_actor.set_edges_visibility(visible=self.visualization_filter.lines)
         self.mesh_actor.set_surfaces_visibility(visible=self.visualization_filter.faces)
@@ -204,7 +213,7 @@ class PreviewRenderWidget(CommonRenderWidget):
         self.results_actor.set_surface_color(self.mesh_config.surfaces_color)
         self.results_actor.set_volume_color(self.mesh_config.volumes_color)
         self.results_actor.set_nodes_size(self.mesh_config.nodes_size)
-        self.results_actor.set_edge_width(self.mesh_config.edges_thickness)
+        self.results_actor.set_edge_thickness(self.mesh_config.edges_thickness)
         self.results_actor.set_nodes_visibility(visible=self.visualization_filter.points)
         self.results_actor.set_edges_visibility(visible=self.visualization_filter.lines)
         self.results_actor.set_surfaces_visibility(visible=self.visualization_filter.faces)
@@ -214,6 +223,19 @@ class PreviewRenderWidget(CommonRenderWidget):
         else:
             self._update_postprocessed_visualization()
         self.results_actor.update_caches()
+
+        self.geometry_actor.set_point_color(self.geometry_config.points_color)
+        self.geometry_actor.set_line_color(self.geometry_config.lines_color)
+        self.geometry_actor.set_surface_color(self.geometry_config.surfaces_color)
+        self.geometry_actor.set_point_size(self.geometry_config.points_size)
+        self.geometry_actor.set_line_thickness(self.geometry_config.lines_thickness)
+        self.geometry_actor.set_points_visibility(visible=self.visualization_filter.points)
+        self.geometry_actor.set_lines_visibility(visible=self.visualization_filter.lines)
+        self.geometry_actor.set_surfaces_visibility(visible=self.visualization_filter.faces)
+        self.geometry_actor.paint_points(self.geometry_config.selected_points_color, self.picked_geometry.picked_points)
+        self.geometry_actor.paint_lines(self.geometry_config.selected_lines_color, self.picked_geometry.picked_lines)
+        self.geometry_actor.paint_surfaces(self.geometry_config.selected_surfaces_color, self.picked_geometry.picked_surfaces)
+        self.geometry_actor.update_caches()
 
     def _update_mesh_visualization(self):
         self.results_actor.show_entities_mode()
@@ -284,13 +306,16 @@ class PreviewRenderWidget(CommonRenderWidget):
         self.mouse_click = (x, y)
         self.last_click_time = click_time
 
+    @function_timer
     def click(self, x1: int, y1: int):
         x0, y0 = self.mouse_click
         dist = np.sqrt((x1 - x0) ** 2 + (y1 - y0) ** 2)
 
         if dist > 10:
-            self.picked_mesh = self.results_actor.area_pick(x0, y0, x1, y1, self.renderer)
+            # self.picked_mesh = self.results_actor.area_pick(x0, y0, x1, y1, self.renderer)
+            self.picked_geometry = self.geometry_actor.area_pick(x0, y0, x1, y1, self.renderer)
         else:
-            self.picked_mesh = self.results_actor.pick(x1, y1, self.renderer)
+            # self.picked_mesh = self.results_actor.pick(x1, y1, self.renderer)
+            self.picked_geometry = self.geometry_actor.pick(x1, y1, self.renderer)
 
         self.update_visualization()
