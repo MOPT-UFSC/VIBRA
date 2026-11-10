@@ -87,6 +87,7 @@ class PreviewRenderWidget(CommonRenderWidget):
         self.section_plane = section_plane
         self.mesh_actor.section_plane = section_plane
         self.results_actor.section_plane = section_plane
+        self.geometry_actor.section_plane = section_plane
 
     def set_visualization_filter(self, visualization_filter: VisualizationFilter | None):
         if visualization_filter is None:
