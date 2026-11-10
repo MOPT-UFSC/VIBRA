@@ -1,9 +1,10 @@
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from enum import IntEnum, auto
 
 import numpy as np
 import xxhash
+from molde import Color
 from scipy.linalg import svd
 from vtkmodules.util.numpy_support import numpy_to_vtk, vtk_to_numpy
 from vtkmodules.vtkCommonCore import vtkDataArray, vtkFloatArray, vtkPoints, vtkUnsignedCharArray
@@ -127,7 +128,7 @@ class GeometryActor(vtkPropAssembly):
         self.texture_coords.SetNumberOfComponents(2)
 
         self.point_colors.SetName("color")
-        self.point_colors.SetNumberOfComponents(3)
+        self.point_colors.SetNumberOfComponents(4)
         self.point_data.SetPoints(self.points)
         self.point_data.GetCellData().SetScalars(self.point_colors)
         self.point_mapper.SetInputData(self.point_data)
@@ -138,7 +139,7 @@ class GeometryActor(vtkPropAssembly):
         self.AddPart(self.point_actor)
 
         self.line_colors.SetName("color")
-        self.line_colors.SetNumberOfComponents(3)
+        self.line_colors.SetNumberOfComponents(4)
         self.line_data.SetPoints(self.points)
         self.line_data.GetCellData().SetScalars(self.line_colors)
         self.line_mapper.SetInputData(self.line_data)
@@ -180,6 +181,7 @@ class GeometryActor(vtkPropAssembly):
         self.point_data.SetVerts(point_cells)
         self.point_colors.SetNumberOfTuples(len(nodes))
         self.point_colors.Fill(0)
+        vtk_to_numpy(self.point_colors)[:, 3] = 255
         self._point_ids = np.array(self.mesh.nodes_from_points.keys())
 
         lines_linearized = linearize_1d_cells(self.mesh.lines_connectivity)
@@ -187,6 +189,7 @@ class GeometryActor(vtkPropAssembly):
         self.line_data.SetLines(line_cells)
         self.line_colors.SetNumberOfTuples(len(lines_linearized))
         self.line_colors.Fill(0)
+        vtk_to_numpy(self.line_colors)[:, 3] = 255
         self._line_ids = lines_linearized[:, 1].flatten()
 
         faces_triangulated = triangulate_2d_cells(faces_connectivity)
@@ -321,6 +324,126 @@ class GeometryActor(vtkPropAssembly):
         if mask.size:
             u[mask] = u[mask] % GeometryTextures.span() + texture.bias()
             self.surface_data.GetPointData().GetTCoords().Modified()  # move it to update cache
+
+    def paint_points(self, color: Color, points: Iterable[int]):
+        if self.mesh is None:
+            return
+
+        points = list(points)
+        if not points:
+            return
+
+        point_ids = self._point_ids
+        point_colors = vtk_to_numpy(self.point_colors)
+
+        mask = np.isin(point_ids, points)
+        point_colors[mask, :3] = color.to_rgb()
+
+    def paint_lines(self, color: Color, lines: Iterable[int]):
+        if self.mesh is None:
+            return
+
+        lines = list(lines)
+        if not lines:
+            return
+
+        line_ids = self._line_ids
+        line_colors = vtk_to_numpy(self.line_colors)
+
+        mask = np.isin(line_ids, lines)
+        line_colors[mask, :3] = color.to_rgb()
+
+    def paint_surfaces(self, color: Color, surfaces: Iterable[int]):
+        if self.mesh is None:
+            return
+
+        surfaces = list(surfaces)
+        if not surfaces:
+            return
+
+        surface_ids = self._cell_surface_ids
+        surface_colors = vtk_to_numpy(self.surface_colors)
+
+        mask = np.isin(surface_ids, surfaces)
+        surface_colors[mask, :3] = color.to_rgb()
+
+    def set_points_visibility(self, visible: bool):
+        self.point_actor.SetVisibility(visible)
+
+    def set_lines_visibility(self, visible: bool):
+        self.line_actor.SetVisibility(visible)
+
+    def set_surfaces_visibility(self, visible: bool):
+        self.surface_actor.SetVisibility(visible)
+
+    def hide_points(self, points: Sequence[int] | None = None):
+        if points is None:
+            vtk_to_numpy(self.point_colors)[:, 3] = 0
+        else:
+            self._set_point_cells_visibility(points, visible=False)
+
+    def show_points(self, points: Sequence[int] | None = None):
+        if points is None:
+            vtk_to_numpy(self.point_colors)[:, 3] = 255
+        else:
+            self._set_point_cells_visibility(points, visible=True)
+
+    def hide_lines(self, lines: Sequence[int] | None = None):
+        if lines is None:
+            vtk_to_numpy(self.line_colors)[:, 3] = 0
+        else:
+            self._set_line_cells_visibility(lines, visible=False)
+
+    def show_lines(self, lines: Sequence[int] | None = None):
+        if lines is None:
+            vtk_to_numpy(self.line_colors)[:, 3] = 255
+        else:
+            self._set_line_cells_visibility(lines, visible=True)
+
+    def hide_surfaces(self, surfaces: Sequence[int] | None = None):
+        if surfaces is None:
+            vtk_to_numpy(self.surface_colors)[:, 3] = 0
+        else:
+            self._set_surface_cells_visibility(surfaces, visible=False)
+
+    def show_surfaces(self, surfaces: Sequence[int] | None = None):
+        if surfaces is None:
+            vtk_to_numpy(self.surface_colors)[:, 3] = 255
+        else:
+            self._set_surface_cells_visibility(surfaces, visible=True)
+
+    def _set_point_cells_visibility(self, points: Sequence[int], *, visible: bool):
+        if self.mesh is None:
+            return
+
+        point_ids = self._point_ids
+        point_colors = vtk_to_numpy(self.point_colors)
+
+        alpha = 255 if visible else 0
+        mask = np.isin(point_ids, points)
+        point_colors[mask, 3] = alpha
+
+    def _set_line_cells_visibility(self, lines: Sequence[int], *, visible: bool):
+        if self.mesh is None:
+            return
+
+        line_ids = self._line_ids
+        line_colors = vtk_to_numpy(self.line_colors)
+
+        alpha = 255 if visible else 0
+        mask = np.isin(line_ids, lines)
+        line_colors[mask, 3] = alpha
+
+    def _set_surface_cells_visibility(self, surfaces: Sequence[int], *, visible: bool):
+        if self.mesh is None:
+            return
+
+        surface_ids = self._cell_surface_ids
+        surface_colors = vtk_to_numpy(self.surface_colors)
+
+        alpha = 255 if visible else 0
+        mask = np.isin(surface_ids, surfaces)
+        surface_colors[mask, 3] = alpha
 
     def _generate_tcoords(
         self,
