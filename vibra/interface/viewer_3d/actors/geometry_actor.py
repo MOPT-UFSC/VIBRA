@@ -17,7 +17,6 @@ from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.utils.interface_utils import SectionPlane
 from vibra.utils.math_functions import inside_plane
-from vibra.utils.time_utils import function_timer
 from vibra.utils.vtk_utils import create_cells, linearize_1d_cells, read_texture, triangulate_2d_cells
 
 
@@ -180,7 +179,6 @@ class GeometryActor(vtkPropAssembly):
         self.surface_actor.SetTexture(self.diffuse_texture)
         self.AddPart(self.surface_actor)
 
-    @function_timer
     def build_mesh(self):
         assert self.mesh is not None
         assert self.mesh.nodal_coordinates is not None
@@ -191,7 +189,6 @@ class GeometryActor(vtkPropAssembly):
             return
 
         nodal_coordinates, faces_connectivity = self._decouple_faces_connectivity()
-        nodal_coordinates[:, 1] += 2
         self.points.SetData(numpy_to_vtk(nodal_coordinates[:, 1:]))
         self.points.Modified()
 
@@ -307,7 +304,7 @@ class GeometryActor(vtkPropAssembly):
 
         lines_mask = nodes_mask[lines_only_connectivity].any(axis=1)
         faces_mask = nodes_mask[faces_only_connectivity].any(axis=1)
-        nodes = self.mesh.nodal_coordinates[nodes_mask, 1].astype(int)
+        nodes = self.mesh.nodal_coordinates[nodes_mask, 0].astype(int)
 
         return PickedGeometry(
             picked_points={self.mesh.points_from_nodes[i] for i in nodes if i in self.mesh.points_from_nodes},
