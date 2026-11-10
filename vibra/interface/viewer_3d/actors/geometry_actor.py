@@ -16,6 +16,7 @@ from vibra import TEXTURE_DIR
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.utils.interface_utils import SectionPlane
+from vibra.utils.math_functions import inside_plane
 from vibra.utils.time_utils import function_timer
 from vibra.utils.vtk_utils import create_cells, linearize_1d_cells, read_texture, triangulate_2d_cells
 
@@ -274,6 +275,45 @@ class GeometryActor(vtkPropAssembly):
                 ...
 
         return PickedGeometry()
+
+    def area_pick(self, x0: int, y0: int, x1: int, y1: int, renderer: vtkRenderer) -> PickedGeometry:
+        assert self.mesh is not None
+        assert self.mesh.nodal_coordinates is not None
+        assert self.mesh.faces_connectivity is not None
+        assert self.mesh.solids_connectivity is not None
+
+        coordinates = self.mesh.nodal_coordinates[:, 1:]
+        lines_only_connectivity = self.mesh.lines_connectivity[:, 4:]
+        faces_only_connectivity = self.mesh.faces_connectivity[:, 4:]
+
+        if self.section_plane is None:
+            nodes_mask = np.ones(len(coordinates), dtype=bool)
+        else:
+            nodes_mask = self._masked_nodes.copy()
+            visible_node_ids = self._node_ids
+            visible_nodes_mask = np.isin(self.mesh.nodal_coordinates[:, 0], visible_node_ids)
+            nodes_mask[visible_nodes_mask] = True
+
+        self.area_picker.AreaPick(x0, y0, x1, y1, renderer)
+        frustum = self.area_picker.GetFrustum()
+
+        for i in range(frustum.GetNumberOfPlanes()):
+            plane = frustum.GetPlane(i)
+            nodes_mask &= inside_plane(
+                coordinates,
+                plane.GetOrigin(),
+                [-i for i in plane.GetNormal()],
+            ).ravel()
+
+        lines_mask = nodes_mask[lines_only_connectivity].any(axis=1)
+        faces_mask = nodes_mask[faces_only_connectivity].any(axis=1)
+        nodes = self.mesh.nodal_coordinates[nodes_mask, 1].astype(int)
+
+        return PickedGeometry(
+            picked_points={self.mesh.points_from_nodes[i] for i in nodes if i in self.mesh.points_from_nodes},
+            picked_lines=set(self.mesh.lines_connectivity[lines_mask, 1]),
+            picked_surfaces=set(self.mesh.faces_connectivity[faces_mask, 1]),
+        )
 
     def _decouple_faces_connectivity(self):
         assert self.mesh is not None
