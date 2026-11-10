@@ -385,8 +385,8 @@ class MeshActor(vtkPropAssembly):
     def set_nodes_size(self, size: int):
         self.node_actor.GetProperty().SetPointSize(size)
 
-    def set_edge_width(self, size: int):
-        self.edge_actor.GetProperty().SetLineWidth(size)
+    def set_edge_thickness(self, thickness: int):
+        self.edge_actor.GetProperty().SetLineWidth(thickness)
 
     def paint_nodes(self, color: Color, nodes: Iterable[int]):
         if self.mesh is None:
