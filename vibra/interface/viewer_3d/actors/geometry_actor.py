@@ -407,9 +407,9 @@ class GeometryActor(vtkPropAssembly):
 
         self.surface_data.Modified()
 
-    def clear_textures(self):
+    def clear_textures(self, texture: GeometryTextures = GeometryTextures.WHITE_TEXTURE):
         uv = vtk_to_numpy(self.surface_data.GetPointData().GetTCoords())
-        uv[:] = uv % GeometryTextures.span()
+        uv[:, 0] = uv[:, 0] % GeometryTextures.span() + texture.bias()
 
     def set_surface_texture(self, texture: GeometryTextures, surfaces: Iterable[int]):
         surfaces = list(surfaces)
