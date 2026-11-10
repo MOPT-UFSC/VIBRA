@@ -407,6 +407,21 @@ class GeometryActor(vtkPropAssembly):
             u[mask] = u[mask] % GeometryTextures.span() + texture.bias()
             self.surface_data.GetPointData().GetTCoords().Modified()  # move it to update cache
 
+    def set_point_color(self, color: Color):
+        rgb = color.to_rgb()
+        for i in range(3):
+            self.point_colors.FillComponent(i, rgb[i])
+
+    def set_line_color(self, color: Color):
+        rgb = color.to_rgb()
+        for i in range(3):
+            self.line_colors.FillComponent(i, rgb[i])
+
+    def set_surface_color(self, color: Color):
+        rgb = color.to_rgb()
+        for i in range(3):
+            self.surface_colors.FillComponent(i, rgb[i])
+
     def paint_points(self, color: Color, points: Iterable[int]):
         if self.mesh is None:
             return
