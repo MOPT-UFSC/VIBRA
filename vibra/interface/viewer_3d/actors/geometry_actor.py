@@ -228,14 +228,16 @@ class GeometryActor(vtkPropAssembly):
         for mapper in mappers:
             mapper.RemoveAllClippingPlanes()
 
-        if self.section_plane is not None:
-            plane = vtkPlane()
-            plane.SetOrigin(self.section_plane.origin)
-            plane.SetNormal(self.section_plane.normal)
+        if self.section_plane is None:
+            return
 
-            for mapper in mappers:
-                mapper.AddClippingPlane(plane)
-                mapper.Modified()
+        plane = vtkPlane()
+        plane.SetOrigin(self.section_plane.origin)
+        plane.SetNormal(self.section_plane.normal)
+
+        for mapper in mappers:
+            mapper.AddClippingPlane(plane)
+            mapper.Modified()
 
     def update_caches(self):
         point_colors_hash = GeometryCachedInfo.array_hash(self.point_colors)
