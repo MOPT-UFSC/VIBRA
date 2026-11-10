@@ -6,7 +6,7 @@ import numpy as np
 import xxhash
 from molde import Color
 from vtkmodules.util.numpy_support import numpy_to_vtk, vtk_to_numpy
-from vtkmodules.vtkCommonCore import vtkDataArray, vtkIntArray, vtkPoints, vtkUnsignedCharArray
+from vtkmodules.vtkCommonCore import vtkDataArray, vtkPoints, vtkUnsignedCharArray
 from vtkmodules.vtkCommonDataModel import (
     vtkCellArray,
     vtkPolyData,
@@ -83,18 +83,19 @@ class MeshActor(vtkPropAssembly):
 
         self.node_data.SetVerts(vtkCellArray())
         self.node_colors.SetNumberOfTuples(0)
-        self.node_ids.SetNumberOfTuples(0)
         self.node_colors.Modified()
 
         self.surface_data.SetPolys(vtkCellArray())
         self.surface_colors.SetNumberOfTuples(0)
-        self.surface_ids.SetNumberOfTuples(0)
         self.surface_colors.Modified()
 
         self.volume_data.SetPolys(vtkCellArray())
         self.volume_colors.SetNumberOfTuples(0)
-        self.volume_ids.SetNumberOfTuples(0)
         self.volume_colors.Modified()
+
+        self._node_ids = np.array([], dtype=int)
+        self._face_ids = np.array([], dtype=int)
+        self._solid_ids = np.array([], dtype=int)
 
     def _create_variables(self):
         self.hardware_picker = vtkHardwarePicker()
@@ -107,35 +108,33 @@ class MeshActor(vtkPropAssembly):
         self._masked_nodes = np.array([], dtype=int)
 
         self.node_colors = vtkUnsignedCharArray()
-        self.node_ids = vtkIntArray()
         self.node_data = vtkPolyData()
         self.node_mapper = vtkPolyDataMapper()
         self.node_mapper.SetResolveCoincidentTopologyToShiftZBuffer()
         self.node_actor = vtkActor()
+        self._node_ids = np.array([], dtype=int)
 
         self.edge_data = vtkPolyData()
         self.edge_mapper = vtkPolyDataMapper()
         self.edge_actor = vtkActor()
 
         self.surface_colors = vtkUnsignedCharArray()
-        self.surface_ids = vtkIntArray()
         self.surface_data = vtkPolyData()
         self.surface_mapper = vtkPolyDataMapper()
         self.surface_actor = vtkActor()
+        self._face_ids = np.array([], dtype=int)
 
         self.volume_colors = vtkUnsignedCharArray()
-        self.volume_ids = vtkIntArray()
         self.volume_data = vtkPolyData()
         self.volume_mapper = vtkPolyDataMapper()
         self.volume_actor = vtkActor()
+        self._solid_ids = np.array([], dtype=int)
 
     def _configure_actors_parameters(self):
         self.node_colors.SetName("color")
         self.node_colors.SetNumberOfComponents(3)
-        self.node_ids.SetName("ids")
         self.node_data.SetPoints(self.points)
         self.node_data.GetCellData().SetScalars(self.node_colors)
-        self.node_data.GetCellData().AddArray(self.node_ids)
         self.node_mapper.SetInputData(self.node_data)
         self.node_actor.SetMapper(self.node_mapper)
         self.node_actor.GetProperty().SetPointSize(10)
@@ -154,10 +153,8 @@ class MeshActor(vtkPropAssembly):
 
         self.surface_colors.SetName("color")
         self.surface_colors.SetNumberOfComponents(4)
-        self.surface_ids.SetName("ids")
         self.surface_data.SetPoints(self.points)
         self.surface_data.GetCellData().SetScalars(self.surface_colors)
-        self.surface_data.GetCellData().AddArray(self.surface_ids)
         self.surface_mapper.SetInputData(self.surface_data)
         self.surface_actor.GetShaderProperty().AddFragmentShaderReplacement(
             "//VTK::Light::Impl",
@@ -171,10 +168,8 @@ class MeshActor(vtkPropAssembly):
 
         self.volume_colors.SetName("color")
         self.volume_colors.SetNumberOfComponents(4)
-        self.volume_ids.SetName("ids")
         self.volume_data.SetPoints(self.points)
         _ = self.volume_data.GetCellData().SetScalars(self.volume_colors)
-        _ = self.volume_data.GetCellData().AddArray(self.volume_ids)
         self.volume_mapper.SetInputData(self.volume_data)
         self.volume_actor.GetShaderProperty().AddFragmentShaderReplacement(
             "//VTK::Light::Impl",
@@ -198,14 +193,12 @@ class MeshActor(vtkPropAssembly):
         self.points.SetData(numpy_to_vtk(self.mesh.nodal_coordinates[:, 1:]))
         self.points.Modified()
 
-        node_indexes = np.unique(self.mesh.faces_connectivity[:, 4:])
-        node_cells = create_cells(node_indexes)
+        self._node_ids = np.unique(self.mesh.faces_connectivity[:, 4:])
+        node_cells = create_cells(self._node_ids)
         self.node_data.SetVerts(node_cells)
-        self.node_colors.SetNumberOfTuples(len(node_indexes))
+        self.node_colors.SetNumberOfTuples(len(self._node_ids))
         self.node_colors.Fill(255)
         self.node_mapper.Modified()
-        self.node_ids.SetNumberOfTuples(len(node_indexes))
-        vtk_to_numpy(self.node_ids)[:] = node_indexes
 
         edges_linearized = linearize_2d_cells(self.mesh.faces_connectivity)
         edge_cells = create_cells(edges_linearized[:, 4:])
@@ -217,13 +210,12 @@ class MeshActor(vtkPropAssembly):
         self.surface_colors.SetNumberOfTuples(len(faces_triangulated))
         self.surface_mapper.Modified()
         self.surface_colors.Fill(255)
-        self.surface_ids.SetNumberOfTuples(len(faces_triangulated))
-        vtk_to_numpy(self.surface_ids)[:] = faces_triangulated[:, 0]
+        self._face_ids = faces_triangulated[:, 0].copy()
 
         self.volume_data.SetPolys(vtkCellArray())
         self.volume_colors.SetNumberOfTuples(0)
-        self.volume_ids.SetNumberOfTuples(0)
         self.volume_colors.Modified()
+        self._solid_ids = np.array([], dtype=int)
 
     def build_mesh_with_section_plane(self):
         assert self.mesh is not None
@@ -253,8 +245,7 @@ class MeshActor(vtkPropAssembly):
         self.node_colors.SetNumberOfTuples(len(node_indexes))
         self.node_colors.Fill(255)
         self.node_mapper.Modified()
-        self.node_ids.SetNumberOfTuples(len(node_indexes))
-        vtk_to_numpy(self.node_ids)[:] = node_indexes
+        self._node_ids = node_indexes
 
         edges_linearized = np.vstack((
             linearize_2d_cells(faces_before_plane),
@@ -269,8 +260,7 @@ class MeshActor(vtkPropAssembly):
         self.surface_colors.SetNumberOfTuples(len(faces_triangulated))
         self.surface_mapper.Modified()
         self.surface_colors.Fill(255)
-        self.surface_ids.SetNumberOfTuples(len(faces_triangulated))
-        vtk_to_numpy(self.surface_ids)[:] = faces_triangulated[:, 0]
+        self._face_ids = faces_triangulated[:, 0].copy()
 
         solids_triangulated = triangulate_3d_cells(solids_in_middle)
         solid_cells = create_cells(solids_triangulated[:, 4:])
@@ -278,8 +268,7 @@ class MeshActor(vtkPropAssembly):
         self.volume_colors.SetNumberOfTuples(len(solids_triangulated))
         self.volume_mapper.Modified()
         self.volume_colors.Fill(255)
-        self.volume_ids.SetNumberOfTuples(len(solids_triangulated))
-        vtk_to_numpy(self.volume_ids)[:] = solids_triangulated[:, 0]
+        self._solid_ids = solids_triangulated[:, 0].copy()
 
     def update_caches(self):
         node_colors_hash = MeshCachedInfo.array_hash(self.node_colors)
@@ -312,17 +301,17 @@ class MeshActor(vtkPropAssembly):
 
         match self.hardware_picker.GetActor():
             case self.volume_actor:
-                ids = vtk_to_numpy(self.volume_ids)
+                ids = self._solid_ids
                 if 0 < cell_id < len(ids):
                     return PickedMesh(picked_solids={ids[cell_id]})
 
             case self.surface_actor:
-                ids = vtk_to_numpy(self.surface_ids)
+                ids = self._face_ids
                 if 0 < cell_id < len(ids):
                     return PickedMesh(picked_faces={ids[cell_id]})
 
             case self.node_actor:
-                ids = vtk_to_numpy(self.node_ids)
+                ids = self._node_ids
                 if 0 < cell_id < len(ids):
                     return PickedMesh(picked_nodes={ids[cell_id]})
             case _:
@@ -344,7 +333,7 @@ class MeshActor(vtkPropAssembly):
             nodes_mask = np.ones(len(coordinates), dtype=bool)
         else:
             nodes_mask = self._masked_nodes.copy()
-            visible_node_ids = vtk_to_numpy(self.node_ids)
+            visible_node_ids = self._node_ids
             visible_nodes_mask = np.isin(self.mesh.nodal_coordinates[:, 0], visible_node_ids)
             nodes_mask[visible_nodes_mask] = True
 
@@ -407,7 +396,7 @@ class MeshActor(vtkPropAssembly):
         if not nodes:
             return
 
-        node_ids = vtk_to_numpy(self.node_ids)
+        node_ids = self._node_ids
         node_colors = vtk_to_numpy(self.node_colors)
 
         paint_position_mask = np.isin(node_ids, nodes)
@@ -421,7 +410,7 @@ class MeshActor(vtkPropAssembly):
         if not face_elements:
             return
 
-        surface_ids = vtk_to_numpy(self.surface_ids)
+        surface_ids = self._face_ids
         surface_colors = vtk_to_numpy(self.surface_colors)
         paint_position_mask = np.isin(surface_ids, face_elements)
         surface_colors[paint_position_mask, :3] = color.to_rgb()
@@ -438,7 +427,7 @@ class MeshActor(vtkPropAssembly):
         if not solid_elements:
             return
 
-        section_ids = vtk_to_numpy(self.volume_ids)
+        section_ids = self._solid_ids
         section_colors = vtk_to_numpy(self.volume_colors)
         paint_position_mask = np.isin(section_ids, solid_elements)
         section_colors[paint_position_mask, :3] = color.to_rgb()
@@ -473,7 +462,7 @@ class MeshActor(vtkPropAssembly):
         if self.section_plane is None:
             return
 
-        section_ids = vtk_to_numpy(self.volume_ids)
+        section_ids = self._solid_ids
         section_colors = vtk_to_numpy(self.volume_colors)
 
         volumes = list(volumes)
@@ -533,7 +522,7 @@ class MeshActor(vtkPropAssembly):
         if self.mesh is None:
             return
 
-        node_ids = vtk_to_numpy(self.node_ids)
+        node_ids = self._node_ids
         node_colors = vtk_to_numpy(self.node_colors)
 
         alpha = 255 if visible else 0
@@ -546,7 +535,7 @@ class MeshActor(vtkPropAssembly):
 
         assert self.mesh.faces_connectivity is not None
 
-        surface_ids = vtk_to_numpy(self.surface_ids)
+        surface_ids = self._face_ids
         surface_colors = vtk_to_numpy(self.surface_colors)
 
         alpha = 255 if visible else 0
@@ -567,7 +556,7 @@ class MeshActor(vtkPropAssembly):
         if self.section_plane is None:
             return
 
-        section_ids = vtk_to_numpy(self.volume_ids)
+        section_ids = self._solid_ids
         section_colors = vtk_to_numpy(self.volume_colors)
 
         alpha = 255 if visible else 0
