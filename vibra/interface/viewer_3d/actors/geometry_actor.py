@@ -39,6 +39,7 @@ class GeometryCachedInfo:
     point_colors_hash: str = ""
     line_colors_hash: str = ""
     surface_colors_hash: str = ""
+    texture_coords_hash: str = ""
     section_plane_hash: int = 0
 
     @classmethod
@@ -123,6 +124,7 @@ class GeometryActor(vtkPropAssembly):
 
     def _configure_actors_parameters(self):
         self.texture_coords.SetName("tcoords")
+        self.texture_coords.SetNumberOfComponents(2)
 
         self.point_colors.SetName("color")
         self.point_colors.SetNumberOfComponents(3)
@@ -152,6 +154,7 @@ class GeometryActor(vtkPropAssembly):
         self.surface_colors.SetNumberOfComponents(4)
         self.surface_data.SetPoints(self.points)
         self.surface_data.GetCellData().SetScalars(self.surface_colors)
+        self.surface_data.GetPointData().SetTCoords(self.texture_coords)
         self.surface_mapper.SetInputData(self.surface_data)
         self.surface_actor.SetMapper(self.surface_mapper)
         self.surface_actor.SetTexture(self.diffuse_texture)
@@ -212,6 +215,11 @@ class GeometryActor(vtkPropAssembly):
         if surface_colors_hash != self.cached_info.surface_colors_hash:
             self.cached_info.surface_colors_hash = surface_colors_hash
             self.surface_colors.Modified()
+
+        texture_coords_hash = GeometryCachedInfo.array_hash(self.texture_coords)
+        if texture_coords_hash != self.cached_info.texture_coords_hash:
+            self.cached_info.texture_coords_hash = texture_coords_hash
+            self.texture_coords.Modified()
 
         mesh_id = id(self.mesh)
         if mesh_id != self.cached_info.mesh_id:
@@ -277,7 +285,8 @@ class GeometryActor(vtkPropAssembly):
         if min_t != max_t:
             texture_coordinates /= max_t - min_t
         texture_coordinates[:, 0] /= len(GeometryTextures)
-        self.surface_data.GetPointData().SetTCoords(numpy_to_vtk(texture_coordinates))
+        self.texture_coords.SetNumberOfTuples(len(texture_coordinates))
+        vtk_to_numpy(self.texture_coords)[:] = texture_coordinates
 
         self.surface_data.GetPointData().RemoveArray("Normals")
         add_normals = vtkPolyDataNormals()
