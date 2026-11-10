@@ -201,7 +201,7 @@ class GeometryActor(vtkPropAssembly):
         self.point_colors.SetNumberOfTuples(len(nodes))
         self.point_colors.Fill(0)
         vtk_to_numpy(self.point_colors)[:, 3] = 255
-        self._point_ids = np.array(self.mesh.nodes_from_points.keys())
+        self._point_ids = np.array(list(self.mesh.nodes_from_points.keys()))
 
         lines_linearized = linearize_1d_cells(self.mesh.lines_connectivity)
         line_cells = create_cells(lines_linearized[:, 4:])
