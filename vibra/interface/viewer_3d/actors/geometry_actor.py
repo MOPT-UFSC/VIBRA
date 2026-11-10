@@ -1,5 +1,5 @@
 from collections.abc import Iterable, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import IntEnum, auto
 
 import numpy as np
@@ -10,7 +10,7 @@ from vtkmodules.util.numpy_support import numpy_to_vtk, vtk_to_numpy
 from vtkmodules.vtkCommonCore import vtkDataArray, vtkFloatArray, vtkPoints, vtkUnsignedCharArray
 from vtkmodules.vtkCommonDataModel import vtkCellArray, vtkPolyData
 from vtkmodules.vtkFiltersCore import vtkPolyDataNormals, vtkPolyDataTangents
-from vtkmodules.vtkRenderingCore import vtkActor, vtkPolyDataMapper, vtkPropAssembly
+from vtkmodules.vtkRenderingCore import vtkActor, vtkAreaPicker, vtkHardwarePicker, vtkPolyDataMapper, vtkPropAssembly, vtkRenderer
 
 from vibra import TEXTURE_DIR
 from vibra.engine.mesher.mesh import Mesh
@@ -49,6 +49,18 @@ class GeometryCachedInfo:
         hasher = xxhash.xxh128()
         hasher.update(ndarray)
         return hasher.hexdigest()
+
+
+@dataclass
+class PickedGeometry:
+    picked_points: set[int] = field(default_factory=set)
+    picked_lines: set[int] = field(default_factory=set)
+    picked_surfaces: set[int] = field(default_factory=set)
+
+    def clear(self):
+        self.picked_points.clear()
+        self.picked_lines.clear()
+        self.picked_surfaces.clear()
 
 
 class GeometryActor(vtkPropAssembly):
@@ -97,6 +109,12 @@ class GeometryActor(vtkPropAssembly):
         self._cell_surface_ids = np.array([], dtype=int)
 
     def _create_variables(self):
+        self.hardware_picker = vtkHardwarePicker()
+        self.hardware_picker.SetPixelTolerance(0)
+        self.hardware_picker.SnapToMeshPointOff()
+        self.area_picker = vtkAreaPicker()
+        self.area_picker.PickFromListOn()
+
         self.points = vtkPoints()
         self.texture_coords = vtkFloatArray()
 
@@ -232,6 +250,30 @@ class GeometryActor(vtkPropAssembly):
         section_plane_hash = hash(self.section_plane)
         if section_plane_hash != self.cached_info.section_plane_hash:
             self.cached_info.section_plane_hash = section_plane_hash
+
+    def pick(self, x: int, y: int, renderer: vtkRenderer) -> PickedGeometry:
+        self.hardware_picker.Pick(x, y, 0, renderer)
+        cell_id = self.hardware_picker.GetCellId()
+
+        match self.hardware_picker.GetActor():
+            case self.surface_actor:
+                ids = self._cell_surface_ids
+                if 0 < cell_id < len(ids):
+                    return PickedGeometry(picked_surfaces={ids[cell_id]})
+
+            case self.line_actor:
+                ids = self._line_ids
+                if 0 < cell_id < len(ids):
+                    return PickedGeometry(picked_lines={ids[cell_id]})
+
+            case self.point_actor:
+                ids = self._point_ids
+                if 0 < cell_id < len(ids):
+                    return PickedGeometry(picked_points={ids[cell_id]})
+            case _:
+                ...
+
+        return PickedGeometry()
 
     def _decouple_faces_connectivity(self):
         assert self.mesh is not None
