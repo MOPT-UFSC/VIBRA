@@ -5,11 +5,12 @@ from enum import IntEnum, auto
 import numpy as np
 import xxhash
 from molde import Color
+from molde.colors import color_names
 from scipy.linalg import svd
 from vtkmodules.util.numpy_support import numpy_to_vtk, vtk_to_numpy
 from vtkmodules.vtkCommonCore import vtkDataArray, vtkFloatArray, vtkPoints, vtkUnsignedCharArray
 from vtkmodules.vtkCommonDataModel import vtkCellArray, vtkPlane, vtkPolyData
-from vtkmodules.vtkFiltersCore import vtkAppendPolyData, vtkCutter, vtkPolyDataNormals, vtkPolyDataTangents, vtkStripper
+from vtkmodules.vtkFiltersCore import vtkAppendPolyData, vtkCutter, vtkPolyDataNormals, vtkPolyDataTangents
 from vtkmodules.vtkFiltersGeneral import vtkContourTriangulator
 from vtkmodules.vtkRenderingCore import vtkActor, vtkAreaPicker, vtkHardwarePicker, vtkPolyDataMapper, vtkPropAssembly, vtkRenderer
 
@@ -18,7 +19,6 @@ from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
 from vibra.utils.interface_utils import SectionPlane
 from vibra.utils.math_functions import inside_plane
-from vibra.utils.time_utils import function_timer
 from vibra.utils.vtk_utils import create_cells, linearize_1d_cells, read_texture, triangulate_2d_cells
 
 
@@ -83,7 +83,6 @@ class GeometryActor(vtkPropAssembly):
 
         return self.model.mesh
 
-    @function_timer
     def update(self):
         if self.mesh is None:
             self.clear_data()
@@ -106,6 +105,9 @@ class GeometryActor(vtkPropAssembly):
         self.surface_data.SetPolys(vtkCellArray())
         self.surface_colors.SetNumberOfTuples(0)
         self.surface_colors.Modified()
+
+        self.section_data.SetLines(vtkCellArray())
+        self.section_data.Modified()
 
         self._point_ids = np.array([], dtype=int)
         self._line_ids = np.array([], dtype=int)
@@ -189,8 +191,7 @@ class GeometryActor(vtkPropAssembly):
 
         self.section_mapper.SetInputData(self.section_data)
         self.section_actor.SetMapper(self.section_mapper)
-        self.section_actor.GetProperty().SetColor(1, 0, 0)
-        self.section_actor.GetProperty().SetLineWidth(3)
+        self.section_actor.GetProperty().SetLineWidth(5)
         self.AddPart(self.section_actor)
 
     def build_mesh(self):
@@ -233,17 +234,19 @@ class GeometryActor(vtkPropAssembly):
 
         self._add_nodal_texture_info(nodal_coordinates, faces_connectivity)
 
-    @function_timer
     def update_section_plane(self):
-        # if hash(self.section_plane) == self.cached_info.section_plane_hash:  # noqa: SIM103
-        #     return
+        assert self.mesh is not None
+        assert self.mesh.nodal_coordinates is not None
+        assert self.mesh.faces_connectivity is not None
+
+        if not self._section_plane_modified():
+            return
 
         mappers = [self.point_mapper, self.line_mapper, self.surface_mapper]
         for mapper in mappers:
             mapper.RemoveAllClippingPlanes()
 
         if self.section_plane is None:
-            self.section_data.SetPoints(vtkPoints())
             self.section_data.SetLines(vtkCellArray())
             self.section_data.Modified()
             return
@@ -255,10 +258,6 @@ class GeometryActor(vtkPropAssembly):
         for mapper in mappers:
             mapper.AddClippingPlane(plane)
             mapper.Modified()
-
-        assert self.mesh is not None
-        assert self.mesh.nodal_coordinates is not None
-        assert self.mesh.faces_connectivity is not None
 
         merged = vtkAppendPolyData()
         triangular_faces = triangulate_2d_cells(self.mesh.faces_connectivity)
@@ -485,6 +484,7 @@ class GeometryActor(vtkPropAssembly):
         rgb = color.to_rgb()
         for i in range(3):
             self.surface_colors.FillComponent(i, rgb[i])
+        self.section_actor.GetProperty().SetColor(*color.to_rgb_f())
 
     def set_point_size(self, size: int):
         self.point_actor.GetProperty().SetPointSize(size)
@@ -659,7 +659,7 @@ class GeometryActor(vtkPropAssembly):
 
         return uv
 
-    def _mesh_updated(self):
+    def _section_plane_modified(self):
         if id(self.mesh) != self.cached_info.mesh_id:
             return True
 
