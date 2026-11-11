@@ -193,6 +193,7 @@ class GeometryActor(vtkPropAssembly):
         self.surface_actor.GetProperty().SetSpecular(1.2)
         self.surface_actor.GetProperty().SetDiffuse(0.6)
         self.surface_actor.GetProperty().SetNormalScale(0.2)
+        self.surface_actor.SetForceOpaque(True)
         self.AddPart(self.surface_actor)
 
         self.section_mapper.SetInputData(self.section_data)
