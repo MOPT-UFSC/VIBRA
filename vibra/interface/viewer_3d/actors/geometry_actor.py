@@ -26,6 +26,7 @@ class GeometryTextures(IntEnum):
     CHESS_TEXTURE = auto()
     SPONGE_TEXTURE = auto()
     HOLES_TEXTURE = auto()
+    METAL_TEXTURE = auto()
 
     def bias(self):
         return (float(self) - 1) * self.span()
@@ -148,7 +149,8 @@ class GeometryActor(vtkPropAssembly):
         self._node_surface_ids = np.array([], dtype=int)
         self._cell_surface_ids = np.array([], dtype=int)
 
-        self.diffuse_texture = read_texture(TEXTURE_DIR / "diffuse.jpg")
+        self.diffuse_texture = read_texture(TEXTURE_DIR / "diffuse.png")
+        self.normal_texture = read_texture(TEXTURE_DIR / "normals.png")
 
     def _configure_actors_parameters(self):
         self.texture_coords.SetName("tcoords")
@@ -186,6 +188,11 @@ class GeometryActor(vtkPropAssembly):
         self.surface_mapper.SetInputData(self.surface_data)
         self.surface_actor.SetMapper(self.surface_mapper)
         self.surface_actor.SetTexture(self.diffuse_texture)
+        self.surface_actor.GetProperty().SetNormalTexture(self.normal_texture)
+        self.surface_actor.GetProperty().SetSpecularPower(60)
+        self.surface_actor.GetProperty().SetSpecular(1.2)
+        self.surface_actor.GetProperty().SetDiffuse(0.6)
+        self.surface_actor.GetProperty().SetNormalScale(0.2)
         self.AddPart(self.surface_actor)
 
         self.section_mapper.SetInputData(self.section_data)
