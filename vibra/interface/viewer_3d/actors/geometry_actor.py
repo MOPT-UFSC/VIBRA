@@ -5,7 +5,6 @@ from enum import IntEnum, auto
 import numpy as np
 import xxhash
 from molde import Color
-from molde.colors import color_names
 from scipy.linalg import svd
 from vtkmodules.util.numpy_support import numpy_to_vtk, vtk_to_numpy
 from vtkmodules.vtkCommonCore import vtkDataArray, vtkFloatArray, vtkPoints, vtkUnsignedCharArray
