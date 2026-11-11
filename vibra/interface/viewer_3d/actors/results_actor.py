@@ -71,6 +71,12 @@ class ResultsActor(MeshActor):
 
         self.surface_data.GetPointData().SetScalars(self.result_colors)
         self.surface_mapper.SetScalarModeToUsePointData()
+        self.surface_actor.GetShaderProperty().AddFragmentShaderReplacement(
+            "//VTK::Light::Impl",
+            True,
+            "if (opacity < 1) { discard; }\n//VTK::Light::Impl",
+            False,
+        )
 
         self.volume_data.GetPointData().SetScalars(self.result_colors)
         self.volume_mapper.SetScalarModeToUsePointData()

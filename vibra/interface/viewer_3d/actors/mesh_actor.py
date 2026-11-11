@@ -156,12 +156,6 @@ class MeshActor(vtkPropAssembly):
         self.surface_data.SetPoints(self.points)
         self.surface_data.GetCellData().SetScalars(self.surface_colors)
         self.surface_mapper.SetInputData(self.surface_data)
-        self.surface_actor.GetShaderProperty().AddFragmentShaderReplacement(
-            "//VTK::Light::Impl",
-            True,
-            "if (opacity < 1) { discard; }\n//VTK::Light::Impl",
-            False,
-        )
         self.surface_actor.SetForceOpaque(True)
         self.surface_actor.SetMapper(self.surface_mapper)
         self.AddPart(self.surface_actor)
