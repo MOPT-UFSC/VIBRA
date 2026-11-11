@@ -98,7 +98,7 @@ class StructuralStress3dPlotFrequencyInputs(StructuralStress3dPlotFrequencyInput
         self.treeWidget_frequencies.itemClicked.connect(self.on_click_item)
         self.treeWidget_frequencies.itemDoubleClicked.connect(self.on_click_item)
 
-        self.animation_widget.checkBox_magnification.stateChanged.connect(self.plot_data_callback)
+        self.animation_widget.comboBox_multiplification_factor.currentIndexChanged.connect(self.plot_data_callback)
         self.results_display_widget.colormap_changed.connect(self.animation_widget.update_color_and_deformation)
         self.results_display_widget.min_max_value_changed.connect(self.animation_widget.update_color_and_deformation)
 
@@ -109,7 +109,7 @@ class StructuralStress3dPlotFrequencyInputs(StructuralStress3dPlotFrequencyInput
 
         self.animation_widget = AnimationWidget()
         self.grid_layout.addWidget(self.animation_widget)
-        self.frame_animation.adjustSize()
+        self.frame_animation.setFixedHeight(230)
 
     def _add_color_widget(self):
         grid_layout = QGridLayout()
@@ -118,7 +118,7 @@ class StructuralStress3dPlotFrequencyInputs(StructuralStress3dPlotFrequencyInput
 
         self.results_display_widget = ResultsDisplayWidget()
         grid_layout.addWidget(self.results_display_widget)
-        self.frame_color.adjustSize()
+        self.frame_color.setFixedHeight(140)
 
     def configure_results_display_widget(self):
         self.results_display_widget.configure_widget()
@@ -179,7 +179,6 @@ class StructuralStress3dPlotFrequencyInputs(StructuralStress3dPlotFrequencyInput
         plot_setup = StressFieldPlotSetupFrequency(
             phase=self.animation_widget.phase_in_radians,
             index=self.selected_frequency_index,
-            true_scale=self.animation_widget.true_scale,
             magnification_factor=self.animation_widget.magnification_factor,
             stress_type=stress_index,
             plot_type=plot_type,

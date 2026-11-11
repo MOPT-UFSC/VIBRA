@@ -85,7 +85,7 @@ class AcousticNodalSolution3dPlotTimeInputs(AcousticNodalSolution3dPlotTimeInput
 
         self.animation_widget = AnimationWidget()
         self.grid_layout.addWidget(self.animation_widget)
-        self.frame_animation.adjustSize()
+        self.frame_animation.setFixedHeight(180)
 
         self.animation_widget.label_animation_phase.setText("Time step:")
         self.animation_widget.label_phase_angle.setText(f"{0: .4e}s")
@@ -100,7 +100,7 @@ class AcousticNodalSolution3dPlotTimeInputs(AcousticNodalSolution3dPlotTimeInput
 
         self.results_display_widget = ResultsDisplayWidget()
         grid_layout.addWidget(self.results_display_widget)
-        self.frame_color.adjustSize()
+        self.frame_color.setFixedHeight(140)
 
     def _configure_validators(self):
         self.lineEdit_animation_time.setValidator(StrictDoubleValidator(1e-5, 1e8, 8))

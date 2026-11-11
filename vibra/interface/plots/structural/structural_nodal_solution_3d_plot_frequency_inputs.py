@@ -54,7 +54,7 @@ class StructuralNodalSolution3dPlotFrequencyInputs(StructuralNodalSolution3dPlot
         self.treeWidget_frequencies.itemClicked.connect(self.on_click_item)
         self.treeWidget_frequencies.itemDoubleClicked.connect(self.on_click_item)
 
-        self.animation_widget.checkBox_magnification.stateChanged.connect(self.plot_data_callback)
+        self.animation_widget.comboBox_multiplification_factor.currentIndexChanged.connect(self.plot_data_callback)
         self.results_display_widget.colormap_changed.connect(self.animation_widget.update_color_and_deformation)
         self.results_display_widget.min_max_value_changed.connect(self.animation_widget.update_color_and_deformation)
 
@@ -67,7 +67,7 @@ class StructuralNodalSolution3dPlotFrequencyInputs(StructuralNodalSolution3dPlot
 
         self.animation_widget = AnimationWidget()
         self.grid_layout.addWidget(self.animation_widget)
-        self.frame_animation.adjustSize()
+        self.frame_animation.setFixedHeight(230)
 
     def _add_color_widget(self):
         grid_layout = QGridLayout()
@@ -76,7 +76,7 @@ class StructuralNodalSolution3dPlotFrequencyInputs(StructuralNodalSolution3dPlot
 
         self.results_display_widget = ResultsDisplayWidget()
         grid_layout.addWidget(self.results_display_widget)
-        self.frame_color.adjustSize()
+        self.frame_color.setFixedHeight(140)
 
     def update_plotting_results_combo_box_items(self):
         prefixes = ["u", "v", "a"]
@@ -136,7 +136,6 @@ class StructuralNodalSolution3dPlotFrequencyInputs(StructuralNodalSolution3dPlot
 
         plot_setup = DisplacementFieldPlotSetupFrequency(
             phase=self.animation_widget.phase_in_radians,
-            true_scale=self.animation_widget.true_scale,
             magnification_factor=self.animation_widget.magnification_factor,
             index=self.selected_frequency_index,
             plot_type=self.get_plot_type(),
