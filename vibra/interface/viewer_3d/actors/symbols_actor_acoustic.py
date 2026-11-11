@@ -48,7 +48,7 @@ class SymbolsActorAcoustic(SymbolsActor):
         }
 
     def _call_build_functions(self, property_name: str, surface_id: int = -1, line_id: int = -1, point_id: int = -1, node_id: int = -1):
-        if property_name in self.prop_name_to_build_func.keys():
+        if property_name in self.prop_name_to_build_func:
             self.prop_name_to_build_func[property_name](
                 property_name=property_name,
                 surface_id=surface_id,
@@ -62,22 +62,19 @@ class SymbolsActorAcoustic(SymbolsActor):
         if self.model is None:
             return
 
-        # self._build_nodal_normals()
-        # self._build_element_normals()
-
         point_properties = self.model.properties.point_properties
-        for property_name, point_id in point_properties.keys():
-            if property_name in self.prop_name_to_build_func.keys():
+        for property_name, point_id in point_properties:
+            if property_name in self.prop_name_to_build_func:
                 self._call_build_functions(property_name, point_id=point_id)
 
         line_properties = self.model.properties.line_properties
-        for property_name, line_id in line_properties.keys():
-            if property_name in self.prop_name_to_build_func.keys():
+        for property_name, line_id in line_properties:
+            if property_name in self.prop_name_to_build_func:
                 self._call_build_functions(property_name, line_id=line_id)
 
         nodal_properties = self.model.properties.nodal_properties
-        for property_name, node_id in nodal_properties.keys():
-            if property_name in self.prop_name_to_build_func.keys():
+        for property_name, node_id in nodal_properties:
+            if property_name in self.prop_name_to_build_func:
                 self._call_build_functions(property_name, node_id=node_id)
 
         surface_properties = self.model.properties.surface_properties
@@ -85,21 +82,21 @@ class SymbolsActorAcoustic(SymbolsActor):
         self._surface_symbols_positioner = SymbolsPositioner(self.model.mesh)
         self._surface_symbols_positioner.reset_count(dict_surface_id_total_symbols)
 
-        for property_name, surface_id in surface_properties.keys():
+        for property_name, surface_id in surface_properties:
             self._call_build_functions(property_name, surface_id=surface_id)
 
         super().build()
 
     def _count_symbols_foreach_surface(self, surface_properties: dict) -> dict[int, int]:
         surface_symbol_totals: dict[int, int] = defaultdict(int)
-        for property_name, surface_id in surface_properties.keys():
-            if property_name not in self.prop_name_to_build_func.keys():
+        for property_name, surface_id in surface_properties:
+            if property_name not in self.prop_name_to_build_func:
                 continue
 
             if property_name == "degrees_of_freedom_decoupling":
-                if ("perforated_plate_model", surface_id) in surface_properties.keys():
+                if ("perforated_plate_model", surface_id) in surface_properties:
                     continue
-                if ("transfer_impedance", surface_id) in surface_properties.keys():
+                if ("transfer_impedance", surface_id) in surface_properties:
                     continue
 
             surface_symbol_totals[surface_id] += 1
@@ -185,13 +182,21 @@ class SymbolsActorAcoustic(SymbolsActor):
                 color=color_names.GRAY,
             )
 
-    def _build_surface_velocity(self, surface_id: int = -1, *args, **kwargs):
+    def _build_surface_velocity(self, surface_id: int | tuple[int] = -1, *args, **kwargs):
         # how to display this symbol without normal???
         if surface_id is None or surface_id == -1:
             return
 
-        coords, normal = self._get_symbol_coords_and_normal(surface_id)
-        self.add_marker(sources.create_surface_velocity_source, coords, normal, color=color_names.RED_6)
+        if isinstance(surface_id, int):
+            surface_ids = (surface_id,)
+        elif isinstance(surface_id, tuple):
+            surface_ids = surface_id
+        else:
+            return
+
+        for surf_id in surface_ids:
+            coords, normal = self._get_symbol_coords_and_normal(surf_id)
+            self.add_marker(sources.create_surface_velocity_source, coords, normal, color=color_names.RED_6)
 
     def _build_specific_impedance(self, property_name: str, surface_id: int = -1, *args, **kwargs):
         if surface_id == -1:
@@ -201,7 +206,7 @@ class SymbolsActorAcoustic(SymbolsActor):
         property = surface_properties[property_name, surface_id]
 
         coords, _ = self._get_symbol_coords_and_normal(surface_id)
-        shape = sources.create_anechoic_termination_source if "anechoic_termination" in property.keys() else sources.create_impedance_source
+        shape = sources.create_anechoic_termination_source if "anechoic_termination" in property else sources.create_impedance_source
         self.add_billboard(shape, coords, color=color_names.PURPLE_2)
 
     def _build_transfer_impedance(self, surface_id: int = -1, *args, **kwargs):
@@ -230,9 +235,9 @@ class SymbolsActorAcoustic(SymbolsActor):
             return
 
         surface_properties = self.model.properties.surface_properties
-        if ("perforated_plate_model", surface_id) in surface_properties.keys():
+        if ("perforated_plate_model", surface_id) in surface_properties:
             return
-        if ("transfer_impedance", surface_id) in surface_properties.keys():
+        if ("transfer_impedance", surface_id) in surface_properties:
             return
 
         coords, normal = self._get_symbol_coords_and_normal(surface_id)
@@ -311,7 +316,7 @@ class SymbolsActorAcoustic(SymbolsActor):
         color_fourth_sphere = color_names.BLUE.with_rgba(a=50)
         self.add_billboard(sources.create_mass_load_fourth_layer_source, coords, color=color_fourth_sphere)
 
-    def _build_compressor_excitation_symbol(self, property_name: str, surface_id: int = -1, *args, **kwargs):
+    def _build_compressor_excitation_symbol(self, property_name: str, surface_id: int | tuple[int] = -1, *args, **kwargs):
         if surface_id == -1:
             return
 
@@ -319,12 +324,31 @@ class SymbolsActorAcoustic(SymbolsActor):
         if not isinstance(property_data, dict):
             return
 
-        coords, normal = self._get_symbol_coords_and_normal(surface_id)
-        area = self.model.mesh.area_from_surfaces.get(surface_id)
-        if area is None:
-            scale = 1
+        if isinstance(surface_id, tuple):
+            area = 0
+            coords = 0
+            normal = 0
+            for surf_id in surface_id:
+                _area = self.model.mesh.area_from_surfaces.get(surf_id)
+                if isinstance(_area, float):
+                    area += _area
+
+                _coords, _normal = self._get_symbol_coords_and_normal(surf_id)
+                coords += _coords
+                normal += _normal
+
+            coords /= len(surface_id)
+            normal /= len(surface_id)
+
+        elif isinstance(surface_id, int):
+            coords, normal = self._get_symbol_coords_and_normal(surface_id)
+            area = self.model.mesh.area_from_surfaces.get(surface_id)
+
         else:
-            scale = np.sqrt(4 * area / np.pi)
+            return
+
+        # compute the area-based scale factor
+        scale = 1 if area == 0 else np.sqrt(4 * area / np.pi)
 
         compressor_type_shape = None
         compressor_type = property_data.get("compressor_type", "reciprocating")

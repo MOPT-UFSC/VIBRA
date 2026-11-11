@@ -59,6 +59,11 @@ class AcousticExcitationsAssembler:
 
 
     @property
+    def mesh(self):
+        return self.assembler.model.mesh
+
+
+    @property
     def properties(self):
         return self.assembler.model.properties
 
@@ -139,11 +144,12 @@ class AcousticExcitationsAssembler:
         connectivities = {}
         integration_data = {}
 
-        for key, data in self.properties.surface_properties.items():
+        for (prop, tags), data in self.properties.surface_properties.items():
 
-            prop, surface_id = key
             if prop != property_label:
                 continue
+
+            surface_ids = (tags,) if isinstance(tags, int) else tags
 
             data: dict
             if not data.get("element_integration", True):
@@ -151,35 +157,44 @@ class AcousticExcitationsAssembler:
 
             complex_values = data.get("values")[0]
 
-            if property_label in ["compressor_excitation_spectrum", "compressor_excitation_waveform"]:
-                excitation_type = data.get("excitation_type")
+            # compute the areas
+            self.model.mesh.process_face_elements_connected_to_nodes(surface_ids)
 
-                if excitation_type in ["mass flow rate", "volumetric flow rate"]:
+            area = 0
+            for surf_id in surface_ids:
+                connect = self.mesh.get_connectivity_from_surface(surf_id)
+                area += self.element_2d.integrate_area(connect)
 
-                    # compute the nozzle area
-                    self.model.mesh.process_face_elements_connected_to_nodes(surface_id)
-                    area = self.model.mesh.surface_area_from_element_integration.get(surface_id, 0)
+            for surf_id in surface_ids:
 
-                    if excitation_type == "mass flow rate":
-                        # get the fluid density
-                        density, _ = self.get_fluid_properties_from_surface(surface_id)
+                if property_label in ["compressor_excitation_spectrum", "compressor_excitation_waveform"]:
+                    excitation_type = data.get("excitation_type")
 
-                        # convert the mass flow rate to surface velocity (oscilatting flow)
-                        complex_values /= (density * area)
+                    if excitation_type in ["mass flow rate", "volumetric flow rate"]:
 
-                    else:
-                        # convert the volumetric flow rate to surface velocity (oscilatting flow)
-                        complex_values /= area
+                        if excitation_type == "mass flow rate":
+                            # get the fluid density
+                            density, _ = self.get_fluid_properties_from_surface(surf_id)
 
-            # normalize data type to array
-            complex_values_array = self.assembler.get_value_in_array_form(complex_values, ravel=True)
+                            # convert the mass flow rate to surface velocity (oscilatting flow)
+                            _complex_values = complex_values / (density * area)
 
-            surf_elements = list(self.model.mesh.elements_from_surface.get(surface_id))
-            surf_connect = self.model.mesh.get_connectivity_from_surface(surface_id)
+                        else:
+                            # convert the volumetric flow rate to surface velocity (oscilatting flow)
+                            _complex_values = complex_values / area
 
-            for i, el in enumerate(surf_elements):
-                connectivities[el] = surf_connect[i]
-                aux_data[el] = complex_values_array
+                else:
+                    _complex_values = complex_values
+
+                # normalize data type to array
+                complex_values_array = self.assembler.get_value_in_array_form(_complex_values, ravel=True)
+
+                surf_elements = list(self.model.mesh.elements_from_surface.get(surf_id))
+                surf_connect = self.model.mesh.get_connectivity_from_surface(surf_id)
+
+                for i, el in enumerate(surf_elements):
+                    connectivities[el] = surf_connect[i]
+                    aux_data[el] = complex_values_array
 
         if connectivities:
 

@@ -294,10 +294,7 @@ class ModelProperties:
             if prop_name != property_to_reset:
                 continue
 
-            if isinstance(tags, Iterable):
-                removal_map[entity_name].extend(tags)
-            else:
-                removal_map[entity_name].append(tags)
+            removal_map[entity_name].append(tags)
 
         for entity_label, entity_ids in removal_map.items():
             for entity_id in entity_ids:
