@@ -929,16 +929,6 @@ class ResultsRenderWidget(AnimatedRenderWidget):
 
         self.update()
 
-    def export_animation_to_file(self):
-        extensions = SUPPORTED_VIDEO_EXTENSIONS + SUPPORTED_ANIMATION_EXTENSIONS
-        file_path = FileDialogService.save_file(file_extensions=extensions,
-                                                caption="Save As")
-
-        if file_path is None:
-            return
-
-        self.save_video(file_path)
-
     def actors_exists(self):
         return len(self._widget_actors) > 0
 

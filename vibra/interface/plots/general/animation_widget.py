@@ -347,6 +347,7 @@ class AnimationWidget(AnimationWidget_UI):
         file_path = FileDialogService.save_file(
             file_extensions=extensions,
             caption="Save As",
+            last_folder="exported_animation_folder"
         )
 
         if file_path is None:
