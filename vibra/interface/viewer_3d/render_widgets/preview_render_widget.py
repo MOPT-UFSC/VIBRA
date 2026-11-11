@@ -242,9 +242,6 @@ class PreviewRenderWidget(CommonRenderWidget):
         self.geometry_actor.paint_lines(self.geometry_config.selected_lines_color, self.picked_geometry.picked_lines)
         self.geometry_actor.paint_surfaces(self.geometry_config.selected_surfaces_color, self.picked_geometry.picked_surfaces)
 
-        self.geometry_actor.clear_textures()
-        self.geometry_actor.set_surface_texture(GeometryTextures.SPONGE_TEXTURE, self.picked_geometry.picked_surfaces)
-
         self.geometry_actor.update_caches()
 
     def _update_mesh_visualization(self):
