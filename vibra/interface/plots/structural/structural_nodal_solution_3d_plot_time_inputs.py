@@ -32,6 +32,16 @@ class StructuralNodalSolution3dPlotTimeInputs(StructuralNodalSolution3dPlotTimeI
         self._configure_validators()
         self._create_connections()
 
+    def showEvent(self, event=None):
+        super().showEvent(event)
+
+        app().main_window.render_widget_changed.emit()
+        app().main_window.view_toolbar.disable_selection_tool()
+
+        if self.is_data_cached:
+            render_widget = app().main_window.results_widget
+            app().main_window.render_widgets_stack.setCurrentWidget(render_widget)
+
     @property
     def model(self):
         return app().project.model
@@ -128,16 +138,6 @@ class StructuralNodalSolution3dPlotTimeInputs(StructuralNodalSolution3dPlotTimeI
         self.frame_plot_controls.setDisabled(disabled)
         self.pushButton_process_nodal_solution_iffts.setEnabled(disabled)
 
-    def show_results_render(self):
-
-        curent_render_widget = app().main_window.get_current_render_widget()
-        results_render_widget = app().main_window.results_widget
-
-        if curent_render_widget != results_render_widget:
-            app().main_window.render_widgets_stack.setCurrentWidget(results_render_widget)
-            app().main_window.render_widget_changed.emit()
-            app().main_window.view_toolbar.disable_selection_tool()
-
     def update_slider_configuration(self):
         frequencies = self.model.frequencies
         if isinstance(frequencies, np.ndarray):
@@ -224,7 +224,7 @@ class StructuralNodalSolution3dPlotTimeInputs(StructuralNodalSolution3dPlotTimeI
         LoadingWindow(plot_callback, delayed=False).run()
 
         self.set_frames_disabled(False)
-        self.show_results_render()
+        self.showEvent()
 
     def get_number_of_differentiations(self):
         return self.comboBox_plotting_results.currentIndex() % 3

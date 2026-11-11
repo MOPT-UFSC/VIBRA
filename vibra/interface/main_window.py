@@ -134,7 +134,6 @@ class MainWindow(MainWindow_UI):
 
     def _config_window(self):
         self.setMinimumHeight(768)
-        self.showMinimized()
         self.vibra_icon = get_vibra_icon()
         self.setWindowIcon(self.vibra_icon)
         self.setWindowTitle("Vibra")

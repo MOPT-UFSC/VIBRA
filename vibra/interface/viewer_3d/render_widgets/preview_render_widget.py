@@ -121,7 +121,7 @@ class PreviewRenderWidget(CommonRenderWidget):
                 assert self.model.mesh.nodal_coordinates is not None
 
                 postprocessor = AcousticPostprocessing(self.model)
-                data = postprocessor.compute_acoustic_pressure_field(
+                data = postprocessor.compute_acoustic_pressures_for_3d_plot_frequency(
                     self.plot_setup.index,
                     self.plot_setup.phase,
                     self.plot_setup.plot_type,
@@ -149,7 +149,7 @@ class PreviewRenderWidget(CommonRenderWidget):
                 assert self.model.mesh.nodal_coordinates is not None
 
                 postprocessor = StructuralPostprocessing(self.model)
-                data = postprocessor.compute_structural_response_field(
+                data = postprocessor.compute_displacements_for_3d_plot_frequency(
                     self.plot_setup.index,
                     self.plot_setup.phase,
                     self.plot_setup.plot_type,

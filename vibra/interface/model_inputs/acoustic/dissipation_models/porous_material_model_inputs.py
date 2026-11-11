@@ -26,6 +26,7 @@ from vibra.interface.model_inputs.acoustic.dissipation_models.dbm_data import De
 from vibra.interface.model_inputs.acoustic.dissipation_models.jcal_data import JhonsonChampouxAllardLafargeData
 from vibra.interface.model_inputs.acoustic.dissipation_models.show_porous_material_model_equations import ShowPorousMaterialModelEquations
 from vibra.interface.model_inputs.fluid.set_fluid_inputs_simplified import SetFluidInputsSimplified
+from vibra.interface.model_inputs.general.grouping_assistant_inputs import GroupingAssistantInputs
 from vibra.interface.numeric_checks.int_list_validator import IntListValidator
 from vibra.interface.plots.general.frequency_response_plotter import FrequencyResponsePlotter
 from vibra.interface.ui_generated.model.acoustic.dissipation_models.porous_material_model_inputs_ui import PorousMaterialModelInputs_UI
@@ -99,6 +100,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
 
     def _initialize(self):
         self.selected_fluid = None
+        self.group_assistant = None
         self.auxiliar_dialog = None
         self.update_tabs = True
         self.keep_window_open = True
@@ -127,6 +129,7 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         self.pushButton_get_fluid.clicked.connect(self.get_fluid_callback)
         self.pushButton_plot_data.clicked.connect(self.plot_data_callback)
         self.pushButton_DB_equations.clicked.connect(self.show_equations_for_DBM_callback)
+        self.pushButton_select_group.clicked.connect(self.group_assistant_callback)
 
         # QTabWidget connection
         self.tabWidget_main.currentChanged.connect(self.tab_event_porous_material_model)
@@ -408,6 +411,16 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
         if read._continue:
             self.properties._reset_property("porous_material_model")
             self.actions_to_finalize()
+
+    def group_assistant_callback(self):
+        if self.group_assistant is None:
+            self.group_assistant = GroupingAssistantInputs(selector_mode=True)
+            self.group_assistant.exec()
+            self.group_assistant = None
+            return
+
+        self.group_assistant.raise_()
+        self.group_assistant.activateWindow()
 
     def tab_event_porous_material_model(self):
         current_tab = self.tabWidget_main.currentIndex()
@@ -1092,6 +1105,8 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             self.treeWidget_porous_material_model.setSelectionMode(QAbstractItemView.SingleSelection)
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
+        if isinstance(self.group_assistant, QDialog):
+            self.group_assistant.close()
 
         self.keep_window_open = False
         warnings.filterwarnings("default")
@@ -1100,5 +1115,6 @@ class PorousMaterialModelInputs(PorousMaterialModelInputs_UI):
             self.auxiliar_dialog.close()
 
         app().main_window.selection.volume_selection_mode = False
+        app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)
 
         return super().closeEvent(a0)

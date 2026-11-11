@@ -26,7 +26,7 @@ class Ui_Dialog(object):
     def setupUi(self, Dialog):
         if not Dialog.objectName():
             Dialog.setObjectName(u"Dialog")
-        Dialog.resize(540, 440)
+        Dialog.resize(490, 440)
         self.gridLayout = QGridLayout(Dialog)
         self.gridLayout.setSpacing(4)
         self.gridLayout.setObjectName(u"gridLayout")
@@ -43,6 +43,9 @@ class Ui_Dialog(object):
         self.gridLayout_3.setContentsMargins(4, 4, 4, 4)
         self.tabWidget_main = QTabWidget(self.frame_2)
         self.tabWidget_main.setObjectName(u"tabWidget_main")
+        font = QFont()
+        font.setPointSize(10)
+        self.tabWidget_main.setFont(font)
         self.tab_main = QWidget()
         self.tab_main.setObjectName(u"tab_main")
         self.gridLayout_5 = QGridLayout(self.tab_main)
@@ -62,10 +65,8 @@ class Ui_Dialog(object):
 
         self.lineEdit_selected_ids = QLineEdit(self.frame_4)
         self.lineEdit_selected_ids.setObjectName(u"lineEdit_selected_ids")
-        self.lineEdit_selected_ids.setMinimumSize(QSize(200, 30))
+        self.lineEdit_selected_ids.setMinimumSize(QSize(320, 30))
         self.lineEdit_selected_ids.setMaximumSize(QSize(16777215, 30))
-        font = QFont()
-        font.setPointSize(10)
         self.lineEdit_selected_ids.setFont(font)
         self.lineEdit_selected_ids.setStyleSheet(u"")
         self.lineEdit_selected_ids.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -97,7 +98,7 @@ class Ui_Dialog(object):
 
         self.lineEdit_group_label = QLineEdit(self.frame_4)
         self.lineEdit_group_label.setObjectName(u"lineEdit_group_label")
-        self.lineEdit_group_label.setMinimumSize(QSize(200, 30))
+        self.lineEdit_group_label.setMinimumSize(QSize(320, 30))
         self.lineEdit_group_label.setMaximumSize(QSize(16777215, 30))
         self.lineEdit_group_label.setFont(font)
         self.lineEdit_group_label.setStyleSheet(u"")
@@ -123,25 +124,26 @@ class Ui_Dialog(object):
         self.gridLayout_6.setHorizontalSpacing(6)
         self.gridLayout_6.setVerticalSpacing(2)
         self.gridLayout_6.setContentsMargins(2, 6, 2, 2)
-        self.label_3 = QLabel(self.frame_5)
-        self.label_3.setObjectName(u"label_3")
-        self.label_3.setMinimumSize(QSize(110, 30))
-        self.label_3.setMaximumSize(QSize(110, 30))
-        self.label_3.setFont(font)
-        self.label_3.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+        self.label_domain_filter = QLabel(self.frame_5)
+        self.label_domain_filter.setObjectName(u"label_domain_filter")
+        self.label_domain_filter.setMinimumSize(QSize(120, 30))
+        self.label_domain_filter.setMaximumSize(QSize(120, 30))
+        self.label_domain_filter.setFont(font)
+        self.label_domain_filter.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
-        self.gridLayout_6.addWidget(self.label_3, 2, 1, 1, 1)
+        self.gridLayout_6.addWidget(self.label_domain_filter, 2, 1, 1, 1)
 
-        self.comboBox_mode = QComboBox(self.frame_5)
-        self.comboBox_mode.addItem("")
-        self.comboBox_mode.addItem("")
-        self.comboBox_mode.setObjectName(u"comboBox_mode")
-        self.comboBox_mode.setMinimumSize(QSize(120, 30))
-        self.comboBox_mode.setMaximumSize(QSize(120, 30))
-        self.comboBox_mode.setFont(font)
-        self.comboBox_mode.setStyleSheet(u"")
+        self.comboBox_selection_mode = QComboBox(self.frame_5)
+        self.comboBox_selection_mode.addItem("")
+        self.comboBox_selection_mode.addItem("")
+        self.comboBox_selection_mode.addItem("")
+        self.comboBox_selection_mode.setObjectName(u"comboBox_selection_mode")
+        self.comboBox_selection_mode.setMinimumSize(QSize(120, 30))
+        self.comboBox_selection_mode.setMaximumSize(QSize(120, 30))
+        self.comboBox_selection_mode.setFont(font)
+        self.comboBox_selection_mode.setStyleSheet(u"")
 
-        self.gridLayout_6.addWidget(self.comboBox_mode, 3, 2, 1, 1)
+        self.gridLayout_6.addWidget(self.comboBox_selection_mode, 3, 2, 1, 1)
 
         self.pushButton_select = QPushButton(self.frame_5)
         self.pushButton_select.setObjectName(u"pushButton_select")
@@ -174,23 +176,23 @@ class Ui_Dialog(object):
 
         self.gridLayout_6.addWidget(self.comboBox_selector_filter, 1, 2, 1, 1)
 
-        self.label_4 = QLabel(self.frame_5)
-        self.label_4.setObjectName(u"label_4")
-        self.label_4.setMinimumSize(QSize(110, 30))
-        self.label_4.setMaximumSize(QSize(110, 30))
-        self.label_4.setFont(font)
-        self.label_4.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+        self.label_selection_mode = QLabel(self.frame_5)
+        self.label_selection_mode.setObjectName(u"label_selection_mode")
+        self.label_selection_mode.setMinimumSize(QSize(120, 30))
+        self.label_selection_mode.setMaximumSize(QSize(120, 30))
+        self.label_selection_mode.setFont(font)
+        self.label_selection_mode.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
-        self.gridLayout_6.addWidget(self.label_4, 3, 1, 1, 1)
+        self.gridLayout_6.addWidget(self.label_selection_mode, 3, 1, 1, 1)
 
-        self.label_2 = QLabel(self.frame_5)
-        self.label_2.setObjectName(u"label_2")
-        self.label_2.setMinimumSize(QSize(110, 30))
-        self.label_2.setMaximumSize(QSize(110, 30))
-        self.label_2.setFont(font)
-        self.label_2.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+        self.label_selector_filter = QLabel(self.frame_5)
+        self.label_selector_filter.setObjectName(u"label_selector_filter")
+        self.label_selector_filter.setMinimumSize(QSize(120, 30))
+        self.label_selector_filter.setMaximumSize(QSize(120, 30))
+        self.label_selector_filter.setFont(font)
+        self.label_selector_filter.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
-        self.gridLayout_6.addWidget(self.label_2, 1, 1, 1, 1)
+        self.gridLayout_6.addWidget(self.label_selector_filter, 1, 1, 1, 1)
 
         self.comboBox_domain_filter = QComboBox(self.frame_5)
         self.comboBox_domain_filter.addItem("")
@@ -212,6 +214,20 @@ class Ui_Dialog(object):
 
         self.gridLayout_6.addItem(self.horizontalSpacer_3, 3, 0, 1, 1)
 
+        self.pushButton_invert_selection = QPushButton(self.frame_5)
+        self.pushButton_invert_selection.setObjectName(u"pushButton_invert_selection")
+        self.pushButton_invert_selection.setMinimumSize(QSize(40, 30))
+        self.pushButton_invert_selection.setMaximumSize(QSize(40, 30))
+        self.pushButton_invert_selection.setFont(font2)
+        self.pushButton_invert_selection.setStyleSheet(u"")
+        icon1 = Icon(u":/icons/invert_icon.png")
+        self.pushButton_invert_selection.setIcon(icon1)
+        self.pushButton_invert_selection.setIconSize(QSize(22, 22))
+        self.pushButton_invert_selection.setAutoDefault(False)
+        self.pushButton_invert_selection.setFlat(False)
+
+        self.gridLayout_6.addWidget(self.pushButton_invert_selection, 1, 3, 1, 1)
+
 
         self.gridLayout_5.addWidget(self.frame_5, 0, 0, 1, 1)
 
@@ -228,6 +244,9 @@ class Ui_Dialog(object):
         __qtreewidgetitem.setTextAlignment(0, Qt.AlignCenter);
         self.treeWidget_group_info.setHeaderItem(__qtreewidgetitem)
         self.treeWidget_group_info.setObjectName(u"treeWidget_group_info")
+        font3 = QFont()
+        font3.setPointSize(9)
+        self.treeWidget_group_info.setFont(font3)
         self.treeWidget_group_info.setIndentation(0)
 
         self.gridLayout_7.addWidget(self.treeWidget_group_info, 0, 0, 1, 1)
@@ -287,12 +306,12 @@ class Ui_Dialog(object):
         self.label.setObjectName(u"label")
         self.label.setMinimumSize(QSize(0, 30))
         self.label.setMaximumSize(QSize(452, 30))
-        font3 = QFont()
-        font3.setFamilies([u"Segoe UI"])
-        font3.setPointSize(10)
-        font3.setBold(False)
-        font3.setItalic(False)
-        self.label.setFont(font3)
+        font4 = QFont()
+        font4.setFamilies([u"Segoe UI"])
+        font4.setPointSize(10)
+        font4.setBold(False)
+        font4.setItalic(False)
+        self.label.setFont(font4)
         self.label.setTextFormat(Qt.TextFormat.AutoText)
         self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
@@ -315,11 +334,11 @@ class Ui_Dialog(object):
         self.pushButton_apply_and_close.setObjectName(u"pushButton_apply_and_close")
         self.pushButton_apply_and_close.setMinimumSize(QSize(72, 30))
         self.pushButton_apply_and_close.setMaximumSize(QSize(72, 30))
-        font4 = QFont()
-        font4.setPointSize(10)
-        font4.setBold(False)
-        font4.setItalic(False)
-        self.pushButton_apply_and_close.setFont(font4)
+        font5 = QFont()
+        font5.setPointSize(10)
+        font5.setBold(False)
+        font5.setItalic(False)
+        self.pushButton_apply_and_close.setFont(font5)
         self.pushButton_apply_and_close.setStyleSheet(u"")
         self.pushButton_apply_and_close.setAutoDefault(False)
         self.pushButton_apply_and_close.setFlat(False)
@@ -330,7 +349,7 @@ class Ui_Dialog(object):
         self.pushButton_apply.setObjectName(u"pushButton_apply")
         self.pushButton_apply.setMinimumSize(QSize(72, 30))
         self.pushButton_apply.setMaximumSize(QSize(72, 30))
-        self.pushButton_apply.setFont(font4)
+        self.pushButton_apply.setFont(font5)
         self.pushButton_apply.setStyleSheet(u"")
         self.pushButton_apply.setAutoDefault(False)
         self.pushButton_apply.setFlat(False)
@@ -341,7 +360,7 @@ class Ui_Dialog(object):
         self.pushButton_cancel.setObjectName(u"pushButton_cancel")
         self.pushButton_cancel.setMinimumSize(QSize(72, 30))
         self.pushButton_cancel.setMaximumSize(QSize(72, 30))
-        self.pushButton_cancel.setFont(font4)
+        self.pushButton_cancel.setFont(font5)
         self.pushButton_cancel.setStyleSheet(u"")
         self.pushButton_cancel.setAutoDefault(False)
         self.pushButton_cancel.setFlat(False)
@@ -359,7 +378,7 @@ class Ui_Dialog(object):
         self.retranslateUi(Dialog)
 
         self.tabWidget_main.setCurrentIndex(0)
-        self.comboBox_mode.setCurrentIndex(0)
+        self.comboBox_selection_mode.setCurrentIndex(0)
         self.comboBox_selector_filter.setCurrentIndex(0)
         self.comboBox_domain_filter.setCurrentIndex(0)
         self.pushButton_apply_and_close.setDefault(False)
@@ -376,9 +395,10 @@ class Ui_Dialog(object):
         self.label_selected_ids.setText(QCoreApplication.translate("Dialog", u"Selected IDs: ", None))
         self.label_10.setText(QCoreApplication.translate("Dialog", u"Group label: ", None))
         self.lineEdit_group_label.setText("")
-        self.label_3.setText(QCoreApplication.translate("Dialog", u"Domain filter: ", None))
-        self.comboBox_mode.setItemText(0, QCoreApplication.translate("Dialog", u"Select all", None))
-        self.comboBox_mode.setItemText(1, QCoreApplication.translate("Dialog", u"Select by size", None))
+        self.label_domain_filter.setText(QCoreApplication.translate("Dialog", u"Domain filter: ", None))
+        self.comboBox_selection_mode.setItemText(0, QCoreApplication.translate("Dialog", u"Manual", None))
+        self.comboBox_selection_mode.setItemText(1, QCoreApplication.translate("Dialog", u"Select all", None))
+        self.comboBox_selection_mode.setItemText(2, QCoreApplication.translate("Dialog", u"Select by size", None))
 
 #if QT_CONFIG(tooltip)
         self.pushButton_select.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p><span style=\" font-size:10pt; font-weight:400;\">Process the entities selection.</span></p></body></html>", None))
@@ -388,12 +408,16 @@ class Ui_Dialog(object):
         self.comboBox_selector_filter.setItemText(1, QCoreApplication.translate("Dialog", u"Surfaces", None))
         self.comboBox_selector_filter.setItemText(2, QCoreApplication.translate("Dialog", u"Lines", None))
 
-        self.label_4.setText(QCoreApplication.translate("Dialog", u"Selection mode: ", None))
-        self.label_2.setText(QCoreApplication.translate("Dialog", u"Selector filter: ", None))
+        self.label_selection_mode.setText(QCoreApplication.translate("Dialog", u"Selection mode: ", None))
+        self.label_selector_filter.setText(QCoreApplication.translate("Dialog", u"Selector filter: ", None))
         self.comboBox_domain_filter.setItemText(0, QCoreApplication.translate("Dialog", u"None", None))
         self.comboBox_domain_filter.setItemText(1, QCoreApplication.translate("Dialog", u"Acoustic", None))
         self.comboBox_domain_filter.setItemText(2, QCoreApplication.translate("Dialog", u"Structural", None))
 
+#if QT_CONFIG(tooltip)
+        self.pushButton_invert_selection.setToolTip(QCoreApplication.translate("Dialog", u"<html><head/><body><p><span style=\" font-size:10pt; font-weight:400;\">Invert entities selection</span></p></body></html>", None))
+#endif // QT_CONFIG(tooltip)
+        self.pushButton_invert_selection.setText("")
         self.tabWidget_main.setTabText(self.tabWidget_main.indexOf(self.tab_main), QCoreApplication.translate("Dialog", u"Setup", None))
         ___qtreewidgetitem = self.treeWidget_group_info.headerItem()
         ___qtreewidgetitem.setText(3, QCoreApplication.translate("Dialog", u"Entities ID", None));
@@ -429,13 +453,14 @@ class GroupingAssistantInputs_UI(QDialog, Ui_Dialog):
                                                         - lineEdit_group_label: QLineEdit
                                             - frame_5: QFrame
                                                 - (Layout): QGridLayout
-                                                        - label_3: QLabel
-                                                        - comboBox_mode: QComboBox
+                                                        - label_domain_filter: QLabel
+                                                        - comboBox_selection_mode: QComboBox
                                                         - pushButton_select: QPushButton
                                                         - comboBox_selector_filter: QComboBox
-                                                        - label_4: QLabel
-                                                        - label_2: QLabel
+                                                        - label_selection_mode: QLabel
+                                                        - label_selector_filter: QLabel
                                                         - comboBox_domain_filter: QComboBox
+                                                        - pushButton_invert_selection: QPushButton
                                 - tab_list: QWidget
                                     - (Layout): QGridLayout
                                             - treeWidget_group_info: QTreeWidget

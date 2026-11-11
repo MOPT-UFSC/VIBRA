@@ -37,6 +37,16 @@ class StructuralStress3dPlotTimeInputs(StructuralStress3dPlotTimeInputs_UI):
         self._configure_validators()
         self._create_connections()
 
+    def showEvent(self, event=None):
+        super().showEvent(event)
+
+        app().main_window.render_widget_changed.emit()
+        app().main_window.view_toolbar.disable_selection_tool()
+
+        if self.is_nodal_solution_iffts_computed and self.is_nodal_solution_iffts_computed:
+            render_widget = app().main_window.results_widget
+            app().main_window.render_widgets_stack.setCurrentWidget(render_widget)
+
     @property
     def model(self):
         return app().project.model
@@ -103,7 +113,7 @@ class StructuralStress3dPlotTimeInputs(StructuralStress3dPlotTimeInputs_UI):
             self.plot_data_callback()
         else:
             self.set_frames_disabled(True)
-            self.show_results_render()
+            self.pushButton_process_nodal_stresses.setDisabled(self.is_stress_data_computed)
 
     def _configure_validators(self):
         self.lineEdit_animation_time.setValidator(StrictDoubleValidator(1e-5, 1e8, 8))
@@ -113,19 +123,6 @@ class StructuralStress3dPlotTimeInputs(StructuralStress3dPlotTimeInputs_UI):
         self.frame_color.setDisabled(disabled)
         self.frame_plot_controls.setDisabled(disabled)
         self.pushButton_process_nodal_stresses.setEnabled(disabled)
-
-    def show_results_render(self):
-        self.pushButton_process_nodal_stresses.setDisabled(self.is_stress_data_computed)
-        if not self.is_stress_data_computed:
-            return
-
-        curent_render_widget = app().main_window.get_current_render_widget()
-        results_render_widget = app().main_window.results_widget
-
-        if curent_render_widget != results_render_widget:
-            app().main_window.render_widgets_stack.setCurrentWidget(results_render_widget)
-            app().main_window.render_widget_changed.emit()
-            app().main_window.view_toolbar.disable_selection_tool()
 
     def _create_connections(self):
 
@@ -207,7 +204,8 @@ class StructuralStress3dPlotTimeInputs(StructuralStress3dPlotTimeInputs_UI):
         LoadingWindow(plot_callback, delayed=False).run()
 
         self.set_frames_disabled(False)
-        self.show_results_render()
+        self.pushButton_process_nodal_stresses.setDisabled(self.is_stress_data_computed)
+        self.showEvent()
 
     def get_plot_type(self) -> StressDataType:
         plot_types = [
