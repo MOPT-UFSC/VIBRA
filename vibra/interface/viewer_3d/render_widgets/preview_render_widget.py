@@ -12,7 +12,7 @@ from vibra.engine.model import Model
 from vibra.engine.postprocessing.acoustic_postprocessing import AcousticPostprocessing
 from vibra.engine.postprocessing.structural_postprocessing import StructuralPostprocessing
 from vibra.interface.viewer_3d import plot_setup
-from vibra.interface.viewer_3d.actors.geometry_actor import GeometryActor, PickedGeometry
+from vibra.interface.viewer_3d.actors.geometry_actor import GeometryActor, GeometryTextures, PickedGeometry
 from vibra.interface.viewer_3d.actors.mesh_actor import MeshActor, PickedMesh
 from vibra.interface.viewer_3d.actors.results_actor import ResultsActor
 from vibra.interface.viewer_3d.actors.symbols_actor_acoustic import SymbolsActorAcoustic
@@ -64,10 +64,10 @@ class PreviewRenderWidget(CommonRenderWidget):
         # self.add_actors(self.mesh_actor)
 
         self.acoustic_symbols_actor = SymbolsActorAcoustic(self.model, self.renderer.GetActiveCamera())
-        self.add_actors(self.acoustic_symbols_actor)
+        # self.add_actors(self.acoustic_symbols_actor)
 
         self.structural_symbols_actor = SymbolsActorStructural(self.model, self.renderer.GetActiveCamera())
-        self.add_actors(self.structural_symbols_actor)
+        # self.add_actors(self.structural_symbols_actor)
 
         self.results_actor = ResultsActor(self.model)
         # self.add_actors(self.results_actor)
@@ -98,6 +98,11 @@ class PreviewRenderWidget(CommonRenderWidget):
         if config is None:
             config = MeshRendererConfig()
         self.mesh_config = config
+
+    def set_geometry_render_config(self, config: GeometryRendererConfig | None):
+        if config is None:
+            config = GeometryRendererConfig()
+        self.geometry_config = config
 
     def set_plot_setup(self, setup: plot_setup.PlotSetup | None):
         if self.model is None:
@@ -236,6 +241,10 @@ class PreviewRenderWidget(CommonRenderWidget):
         self.geometry_actor.paint_points(self.geometry_config.selected_points_color, self.picked_geometry.picked_points)
         self.geometry_actor.paint_lines(self.geometry_config.selected_lines_color, self.picked_geometry.picked_lines)
         self.geometry_actor.paint_surfaces(self.geometry_config.selected_surfaces_color, self.picked_geometry.picked_surfaces)
+
+        self.geometry_actor.clear_textures()
+        self.geometry_actor.set_surface_texture(GeometryTextures.SPONGE_TEXTURE, self.picked_geometry.picked_surfaces)
+
         self.geometry_actor.update_caches()
 
     def _update_mesh_visualization(self):
