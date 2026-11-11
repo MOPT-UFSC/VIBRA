@@ -55,6 +55,8 @@ class StructuralModeShapeInputs(StructuralModeShapeInputs_UI):
         self.frame_animation.setLayout(self.grid_layout)
 
         self.animation_widget = AnimationWidget()
+        self.animation_widget.checkBox_magnification.setCheckable(False)
+
         self.grid_layout.addWidget(self.animation_widget)
         self.frame_animation.adjustSize()
 
@@ -70,7 +72,7 @@ class StructuralModeShapeInputs(StructuralModeShapeInputs_UI):
     def _configure_qt_variables(self):
         self.lineEdit_natural_frequency.setDisabled(True)
         self.lineEdit_natural_frequency.setProperty("status", "information")
-        #
+
         if app().project.solver.complex_natural_frequencies.size:
             widths = [60, 170]
             headers = ["Mode", "Damped frequency [Hz]", "Damping ratio [--]"]
@@ -116,7 +118,7 @@ class StructuralModeShapeInputs(StructuralModeShapeInputs_UI):
             phase=self.animation_widget.phase_in_radians,
             magnification_factor=self.animation_widget.magnification_factor,
             index=self.mode_index,
-            true_scale=self.animation_widget.true_scale,
+            true_scale=False,
             plot_type=self.get_plot_type(),
         )
         LoadingWindow(app().main_window.results_widget.update_plot, delayed=False).run(
