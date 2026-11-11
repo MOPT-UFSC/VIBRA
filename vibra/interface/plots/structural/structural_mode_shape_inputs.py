@@ -116,6 +116,7 @@ class StructuralModeShapeInputs(StructuralModeShapeInputs_UI):
             phase=self.animation_widget.phase_in_radians,
             magnification_factor=self.animation_widget.magnification_factor,
             index=self.mode_index,
+            true_scale=self.animation_widget.true_scale,
             plot_type=self.get_plot_type(),
         )
         LoadingWindow(app().main_window.results_widget.update_plot, delayed=False).run(
