@@ -507,10 +507,6 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
         elif event.key() == Qt.Key_Escape:
             self.close()
 
-    # def keyReleaseEvent(self, event):
-    #     if event.key() == Qt.Key_Control:
-    #         self.treeWidget_surface_velocity.setSelectionMode(QAbstractItemView.SingleSelection)
-
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
         app().main_window.selection.selection_changed.disconnect(self.geometry_selection_callback)

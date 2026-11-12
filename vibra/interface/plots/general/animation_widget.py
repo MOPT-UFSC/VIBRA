@@ -26,8 +26,10 @@ from vibra.interface.viewer_3d.plot_setup import (
 
 
 class AnimationWidget(AnimationWidget_UI):
-    def __init__(self):
+    def __init__(self, frame_factor_visible: bool = True):
         super().__init__()
+
+        self.set_frame_factor_visible(frame_factor_visible)
 
         self._initialize()
         self._configure_icons()
@@ -146,13 +148,9 @@ class AnimationWidget(AnimationWidget_UI):
         self.spinBox_frames.valueChanged.connect(self.frames_value_changed)
 
         app().main_window.render_widget_changed.connect(self.update_current_render_widget)
-        app().main_window.render_widget_changed.connect(self.update_toolbar)
 
-    def update_toolbar(self):
-        current_domain = app().main_window.analysis_toolbar.combo_box_physical_domain.currentText()
-        structural_domain = current_domain.lower() in [PhysicalDomain.STRUCTURAL, PhysicalDomain.COUPLED]
-
-        self.frame_factors.setVisible(structural_domain)
+    def set_frame_factor_visible(self, visible: bool = True):
+        self.frame_factors.setVisible(visible)
 
     def update_current_render_widget(self):
         self.current_render_widget = app().main_window.render_widgets_stack.currentWidget()

@@ -39,12 +39,13 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
 
         app().main_window.set_input_widget(self)
         app().main_window.workspace_updating_for_model_setup()
-        
+
         self._config_window()
-        self._initialize()
-        self._configure_widgets()
-        self._create_connections()
         self._configure_validators()
+        self._configure_widgets()
+        self._initialize()
+        self._create_connections()
+
         self.load_model_info()
 
         if selector_mode:
@@ -75,7 +76,6 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
     def _initialize(self):
         self.imported_values = None
         self.keep_window_open = True
-        self.last_tab = self.tabWidget_main.currentIndex()
 
     def _configure_widgets(self):
 
@@ -300,12 +300,15 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
 
                 app().main_window.selection.set_geometry_selection(lines=lines_invert)
 
-    def get_new_group_id(self) -> int:
+    def get_new_group_id(self, group_label: str) -> int:
 
         used_ids = []
-        for property, _id in self.properties.group_properties:
+        for (property, _id), data in self.properties.group_properties.items():
             if property != "selection_group":
                 continue
+
+            if data.get("group_label", "") == group_label:
+                return _id
 
             used_ids.append(_id)
 
@@ -314,19 +317,6 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
                 continue
 
             return new_id
-
-    def is_group_label_valid(self, group_label: str):
-        for (property, _), data in self.properties.group_properties.items():
-            if property != "selection_group":
-                continue
-
-            if not isinstance(data, dict):
-                continue
-
-            if group_label == data.get("group_label"):
-                return False
-
-        return True
 
     def apply_callback(self, close_window: bool = False):
 
@@ -338,16 +328,7 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
             self.lineEdit_group_label.setFocus()
             return
 
-        if not self.is_group_label_valid(group_label):
-            title = "Invalid group label"
-            message = f"The group label '{group_label}' already exists. Please, enter a different "
-            message += "valid group label to proceed with creating the group selection."
-            PrintMessageInput([error_title, title, message])
-            self.lineEdit_group_label.setFocus()
-            self.lineEdit_group_label.selectAll()
-            return
-
-        group_id = self.get_new_group_id()
+        group_id = self.get_new_group_id(group_label)
         entity_type = self.comboBox_selector_filter.currentText()
         entities_id = [int(text) for text in self.lineEdit_selected_ids.text().replace(" ", "").split(",")]
 
@@ -360,8 +341,8 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
         self.actions_to_finalize(close_window)
 
     def load_model_info(self):
-        self.treeWidget_group_info.clear()
 
+        self.treeWidget_group_info.clear()
         for (property, group_id), data in self.properties.group_properties.items():
             if property != "selection_group":
                 continue
@@ -432,8 +413,11 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
         if not isinstance(data, dict):
             return
 
+        group_label = data.get("group_label")
         entity_type = data.get("entity_type")
         entities_id = data.get("entities_id")
+
+        self.lineEdit_group_label.setText(group_label)
 
         match entity_type:
             case "Volumes":
@@ -446,16 +430,9 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
                 app().main_window.selection.set_geometry_selection(lines=entities_id)
 
     def tab_event_callback(self):
-        current_tab = self.tabWidget_main.currentIndex()
-        list_tab = current_tab == SetupTabType.LIST
-
-        if self.last_tab == SetupTabType.LIST or list_tab:
-            app().main_window.selection.clear_selection()
-
+        list_tab = self.tabWidget_main.currentIndex() == SetupTabType.LIST
         self.pushButton_apply.setDisabled(list_tab)
         self.pushButton_apply_and_close.setDisabled(list_tab)
-
-        self.last_tab = current_tab
 
     def actions_to_finalize(self, close_window: bool = False):
         self.load_model_info()
