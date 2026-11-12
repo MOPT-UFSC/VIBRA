@@ -83,7 +83,7 @@ class AcousticNodalSolution3dPlotTimeInputs(AcousticNodalSolution3dPlotTimeInput
         self.grid_layout.setContentsMargins(0, 0, 0, 0)
         self.frame_animation.setLayout(self.grid_layout)
 
-        self.animation_widget = AnimationWidget()
+        self.animation_widget = AnimationWidget(frame_factor_visible=False)
         self.grid_layout.addWidget(self.animation_widget)
         self.frame_animation.setFixedHeight(180)
 
