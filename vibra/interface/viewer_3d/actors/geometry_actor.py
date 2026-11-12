@@ -478,19 +478,13 @@ class GeometryActor(vtkPropAssembly):
             u[mask] = u[mask] % GeometryTextures.span() + texture.bias()
 
     def set_point_color(self, color: Color):
-        rgb = color.to_rgb()
-        for i in range(3):
-            self.point_colors.FillComponent(i, rgb[i])
+        vtk_to_numpy(self.point_colors)[:, :3] = color.to_rgb()
 
     def set_line_color(self, color: Color):
-        rgb = color.to_rgb()
-        for i in range(3):
-            self.line_colors.FillComponent(i, rgb[i])
+        vtk_to_numpy(self.line_colors)[:, :3] = color.to_rgb()
 
     def set_surface_color(self, color: Color):
-        rgb = color.to_rgb()
-        for i in range(3):
-            self.surface_colors.FillComponent(i, rgb[i])
+        vtk_to_numpy(self.surface_colors)[:, :3] = color.to_rgb()
         self.section_actor.GetProperty().SetColor(*color.to_rgb_f())
 
     def set_point_size(self, size: int):
