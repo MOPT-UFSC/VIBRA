@@ -116,6 +116,48 @@ def test_local_mesh_size_control_refines():
     assert mean_edges[2] < mean_edges[1] * 0.9
 
 
+def test_detect_small_areas():
+    mesh = Mesh(length_unit="millimeter")
+    mesh.area_from_surfaces = {10: 1e-6, 11: 2e-6, 12: 5e-6, 13: 0.0}
+
+    result = mesh.detect_small_areas(1.0, area_factor=2.0)
+
+    assert result["surface_ids"] == [10, 11]
+    assert result["surface_areas"] == {10: 1e-6, 11: 2e-6}
+    assert result["threshold_area"] == 2e-6
+
+
+def test_detect_small_areas_with_custom_threshold():
+    mesh = Mesh(length_unit="millimeter")
+    mesh.area_from_surfaces = {10: 1e-6, 11: 2e-6, 12: 5e-6}
+
+    result = mesh.detect_small_areas(1.0, area_threshold=3e-6)
+
+    assert result["surface_ids"] == [10, 11]
+    assert result["threshold_area"] == 3e-6
+
+
+def test_group_small_areas():
+    mesh = Mesh(length_unit="millimeter")
+    mesh.area_from_surfaces = {10: 1e-6, 11: 4e-6, 12: 9e-6, 13: 16e-6}
+
+    bins = mesh.group_small_areas([13, 11, 10, 12], max_groups=2)
+
+    assert len(bins) == 2
+    assert bins[0]["surface_ids"] == [10, 11]
+    assert bins[1]["surface_ids"] == [12, 13]
+    assert np.isclose(bins[0]["element_size"], 1.5e-3)
+    assert np.isclose(bins[1]["element_size"], 3.5e-3)
+
+    multiplied_bins = mesh.group_small_areas([10, 11], max_groups=2, size_multiplier=0.5)
+
+    assert len(multiplied_bins) == 2
+    assert np.isclose(multiplied_bins[0]["element_size"], 5e-4)
+    assert np.isclose(multiplied_bins[1]["element_size"], 1e-3)
+
+    assert mesh.group_small_areas([]) == []
+
+
 def _mean_edge_length_per_volume(mesh: Mesh) -> dict[int, float]:
     node_index = {int(node): i for i, node in enumerate(mesh.nodal_coordinates[:, 0])}
     coords = mesh.nodal_coordinates[:, 1:]

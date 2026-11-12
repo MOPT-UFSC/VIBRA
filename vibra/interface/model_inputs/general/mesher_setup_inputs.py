@@ -31,6 +31,7 @@ from vibra.interface.general.get_user_confirmation_input import GetUserConfirmat
 from vibra.interface.general.print_message_input import PrintMessageInput
 from vibra.interface.loading_window import LoadingWindow
 from vibra.interface.model_inputs.general.grouping_assistant_inputs import GroupingAssistantInputs
+from vibra.interface.numeric_checks.unit_utilities import convert_length_unit
 from vibra.interface.ui_generated.model.general.mesher_setup_inputs_ui import MesherSetupInputs_UI
 from vibra.interface.ui_generated.plots.general.mesh_quality_histogram_plot_ui import MeshQualityHistogramPlot_UI
 from vibra.utils.interface_utils import block_signals
@@ -139,10 +140,11 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.pushButton_select_group.clicked.connect(self.group_assistant_callback)
         self.pushButton_show_bad_elements.clicked.connect(self.plot_bad_elements)
         self.pushButton_syncrhonize.clicked.connect(self.synchronize_button_callback)
+        self.pushButton_small_areas_detection.clicked.connect(self.small_areas_detection_callback)
 
         # QTableWidget connection
         # self.tabWidget_main.currentChanged.connect(self.tab_event_callback)
-        
+
         # QTableWidget connections
         self.tableWidget_local_mesh_size_control_data.itemClicked.connect(self.local_mesh_size_control_item_clicked_callback)
         self.tableWidget_mesh_quality.itemClicked.connect(self.mesh_quality_item_clicked_callback)
@@ -185,6 +187,56 @@ class MesherSetupInputs(MesherSetupInputs_UI):
             QDoubleSpinBox.stepBy(spinbox, steps)
 
         minimum_spinbox.stepBy = step_by.__get__(minimum_spinbox)
+
+    def small_areas_detection_callback(self):
+        from vibra.interface.model_inputs.general.small_areas_detection_tool import SmallAreasDetectionTool
+
+        self.hide()
+        SmallAreasDetectionTool(self)
+        self.show()
+        app().main_window.set_input_widget(self)
+
+    def _apply_small_area_refinement_result(self, result: dict):
+        mesh = self.model.mesh
+        surface_ids = result["surface_ids"]
+
+        if mesh is None or not surface_ids:
+            return
+
+        for bin_data in result["bins"]:
+            if not bin_data["surface_ids"]:
+                continue
+
+            element_size = convert_length_unit(bin_data["element_size"], "meter", mesh.length_unit)
+            self.doubleSpinBox_local_mesh_size_control_element_size.setValue(element_size)
+
+            element_size = self.doubleSpinBox_local_mesh_size_control_element_size.value()
+            self._add_local_mesh_size_control("surfaces", element_size, bin_data["surface_ids"])
+
+        first_element_size = convert_length_unit(result["bins"][0]["element_size"], "meter", mesh.length_unit)
+        self.doubleSpinBox_local_mesh_size_control_element_size.setValue(first_element_size)
+        self.comboBox_local_mesh_size_control_entity_type.setCurrentText("Surfaces")
+
+        self.lineEdit_selected_ids.setText("")
+        self.last_synced_ids = set()
+
+        app().main_window.selection.set_geometry_selection(surfaces=surface_ids)
+        app().main_window.entity_visibility.unhide_all()
+
+    def _add_local_mesh_size_control(self, selected_type: str, controlled_size: float, selected_ids: list[int]):
+        remaining_controls = []
+
+        for control in self.tmp_local_mesh_size_control_parameters:
+            control.remove_ids(selected_ids, selected_type)
+
+            if not control.is_empty():
+                remaining_controls.append(control)
+
+        setup = LocalMeshSizeControlSetup(selected_type, controlled_size, selected_ids)
+        remaining_controls.append(setup)
+
+        self.tmp_local_mesh_size_control_parameters = remaining_controls
+        self.update_local_mesh_size_control_table()
 
     @property
     def model(self):
@@ -377,8 +429,15 @@ class MesherSetupInputs(MesherSetupInputs_UI):
         self.update_local_mesh_size_control_table()
 
     def remove_callback(self):
-        current_row = self.tableWidget_local_mesh_size_control_data.currentRow()
-        self.tmp_local_mesh_size_control_parameters.pop(current_row)
+        selected_rows = self.tableWidget_local_mesh_size_control_data.selectionModel().selectedRows()
+        rows = sorted({index.row() for index in selected_rows}, reverse=True)
+
+        if not rows:
+            return
+
+        for row in rows:
+            self.tmp_local_mesh_size_control_parameters.pop(row)
+
         self.update_local_mesh_size_control_table()
 
     def update_interface_controls(self, element_setup: ElementSetup):
