@@ -109,7 +109,6 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         faces = app().main_window.selection.geometry_surfaces
 
         if faces:
-
             text = ", ".join([str(i) for i in faces])
             self.lineEdit_selection_id.setText(text)
             self.comboBox_assignment_type.setCurrentIndex(AssignmentType.SURFACES)
@@ -135,7 +134,6 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
             self.tabWidget_main.setCurrentIndex(StandardTabType.TABULAR_DATA)
 
         else:
-
             if "real_values" in data:
                 left_value = data.get("real_values")[0]
                 right_value = data.get("imag_values")[0]
@@ -193,7 +191,6 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         right_values = [pressure_load[1]]
 
         for surface_id in surface_ids:
-
             data = {
                 "element_type": element_type,
                 "real_values" if real_imag_input else "amplitude_values": left_values,
@@ -202,7 +199,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
 
             self.properties._set_property("normal_pressure_load", data, surface=surface_id)
 
-    def load_table(self, lineEdit : QLineEdit, load_label : str, direct_load = False):
+    def load_table(self, lineEdit: QLineEdit, load_label: str, direct_load=False):
         title = "Error while loading table"
 
         try:
@@ -211,9 +208,9 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
 
             else:
                 extensions = SUPPORTED_SPREADSHEET_EXTENSIONS + SUPPORTED_TEXT_EXTENSIONS
-                imported_path = FileDialogService.open_file(file_extensions=extensions,
-                                                            caption=f"Choose a table to import the {load_label} data",
-                                                            last_folder="imported_table_folder")
+                imported_path = FileDialogService.open_file(
+                    file_extensions=extensions, caption=f"Choose a table to import the {load_label} data", last_folder="imported_table_folder"
+                )
 
             imported_data = FileHandler.read(imported_path)
 
@@ -247,7 +244,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
 
     def load_pressure_table(self):
         self.pressure_table_values, self.pressure_table_path = self.load_table(self.lineEdit_table_path, "Pressure load")
-        if  self.pressure_table_path is None:
+        if self.pressure_table_path is None:
             self.lineEdit_reset(self.lineEdit_table_path)
 
     def save_table_files(self, selected_id: int, imported_values: np.ndarray):
@@ -261,7 +258,6 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
             frequencies[0] = 0
 
         if app().project.model.change_analysis_frequency_setup(list(frequencies)):
-
             lineEdit = self.lineEdit_table_path
             imported_filename = basename(lineEdit.text())
             self.lineEdit_reset(lineEdit)
@@ -304,10 +300,9 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         element_type = self.element_types[index]
 
         if self.pressure_table_path is None:
-            self.pressure_table_values, self.pressure_table_path = self.load_table(self.lineEdit_table_path, "Pressure load", direct_load = True)
+            self.pressure_table_values, self.pressure_table_path = self.load_table(self.lineEdit_table_path, "Pressure load", direct_load=True)
 
         for surface_id in surface_ids:
-            
             if self.pressure_table_values is not None:
                 self.pressure_table_name, self.pressure_array = self.save_table_files(surface_id, self.pressure_table_values)
                 if self.pressure_array is None:
@@ -323,7 +318,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
             if condition_1 or condition_2:
                 title = "Additional inputs required"
                 message = "You must enter the normal pressure load table path before confirming the assignment."
-                PrintMessageInput([error_title, title, message]) 
+                PrintMessageInput([error_title, title, message])
                 return True
 
             data = {
@@ -336,7 +331,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
 
         self.reset_table_variables()
 
-    def apply_callback(self, close_window: bool=False):
+    def apply_callback(self, close_window: bool = False):
 
         tab_index = self.tabWidget_main.currentIndex()
         if tab_index == StandardTabType.LIST:
@@ -372,7 +367,6 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
 
         self.treeWidget_normal_pressure_loads.clear()
         for (property, *args), data in self.properties.surface_properties.items():
-
             if property != "normal_pressure_load":
                 continue
 
@@ -383,7 +377,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
                 str_value = "Table"
             else:
                 values = data["values"][0]
-                str_value = f"{values : .6e}"
+                str_value = f"{values: .6e}"
 
             new = QTreeWidgetItem([str(args[0]), "surface", str_value])
             for i in range(3):
@@ -398,10 +392,10 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         properties_to_check = [
             self.properties.surface_properties,
             self.properties.line_properties,
-            ]
+        ]
 
         for current_property in properties_to_check:
-            for (property, _) in current_property:
+            for property, _ in current_property:
                 if property != "normal_pressure_load":
                     continue
 
@@ -449,8 +443,8 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
             return
 
         app().main_window.selection.set_geometry_selection(
-            surfaces = entities_mapping.get("surface"),
-            )
+            surfaces=entities_mapping.get("surface"),
+        )
 
     def item_double_clicked_callback(self, item):
         self.item_clicked_callback(item)
@@ -492,7 +486,7 @@ class NormalPressureLoadInputs(NormalPressureLoadInputs_UI):
         title = "Normal pressure load reset"
         message = "Would you like to remove the all normal pressure loads from model?"
 
-        buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
+        buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
         obj = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
 
         if obj._cancel:

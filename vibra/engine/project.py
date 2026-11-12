@@ -169,7 +169,7 @@ class Project:
         Unpacks the vibra file into the working directory and reads data from it.
         """
         logging.info("Loading the project data... [25%]")
-        path = Path(path)
+        path = Path(path).expanduser()
         self.reset_project()
         self.reset_solution()
         self.project_reader.unpack_into_working_directory(path)
@@ -370,11 +370,11 @@ class Project:
         return self.model.solution
 
     def solve_structural_harmonic_analysis(
-            self, 
-            is_resume: bool = False, 
-            print_log: bool = False, 
-            update_domain_mappings: bool = True,
-            ) -> HarmonicSolution:
+        self,
+        is_resume: bool = False,
+        print_log: bool = False,
+        update_domain_mappings: bool = True,
+    ) -> HarmonicSolution:
 
         self.update_project_setup_file()
 
@@ -491,7 +491,7 @@ class Project:
             is_resume=is_resume,
             print_log=print_log,
             update_domain_mappings=False,
-            )
+        )
 
         return self.model.solution
 

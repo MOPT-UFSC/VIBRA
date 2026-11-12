@@ -140,7 +140,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
         else:
             self.lineEdit_input_clicked()
             self.lineEdit_input_surface_id.setFocus()
-    
+
     def geometry_selection_callback(self):
 
         if not app().main_window.action_results_workspace.isChecked():
@@ -161,7 +161,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
         input_surface_candidate = list()
         output_surface_candidate = list()
 
-        for (property, surf_id) in self.properties.surface_properties.keys():
+        for property, surf_id in self.properties.surface_properties.keys():
             if property == "incident_plane_wave":
                 if surf_id not in input_surface_candidate:
                     input_surface_candidate.append(surf_id)
@@ -258,7 +258,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
 
         f_cut = None
         if self.comboBox_cutoff_frequency_options.currentIndex() != CutoffFrequency.DISABLED:
-            f_cut = float(self.lineEdit_cutoff_frequency.text()) 
+            f_cut = float(self.lineEdit_cutoff_frequency.text())
 
         self.plotter.set_cutoff_frequency(f_cut)
         self.plotter._set_model_results_data_to_plot(self.model_results)
@@ -298,7 +298,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
             "surfaces",
             domain="acoustic",
             single_id=True,
-            )
+        )
 
         if error_data is not None:
             self.lineEdit_output_surface_id.setFocus()
@@ -353,7 +353,6 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
         self.comboBox_cutoff_frequency.blockSignals(True)
 
         for surface_id, diameter in self.mesh.cylindrical_surfaces_data.items():
-
             d_in = convert_length_unit(diameter, "meter", self.mesh.length_unit)
             dr_in = round(d_in, 4)
 
@@ -370,7 +369,7 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
                     if (dr_in, _fluid) not in self.map_curvatures_to_fluid.values():
                         self.map_curvatures_to_fluid[dr_in] = (dr_in, _fluid)
 
-        for (_d_in, fluid) in self.map_curvatures_to_fluid.values():
+        for _d_in, fluid in self.map_curvatures_to_fluid.values():
             self.comboBox_cutoff_frequency.addItem(str(_d_in))
 
         max_din = max(self.map_curvatures_to_fluid.keys())
@@ -380,10 +379,10 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
     def compute_pipe_cutoff_frequency_callback(self):
         if self.comboBox_cutoff_frequency.currentText() == "":
             return
-        
+
         if not self.map_curvatures_to_fluid:
             return
-        
+
         key = float(self.comboBox_cutoff_frequency.currentText())
         data = self.map_curvatures_to_fluid.get(key)
         if data is None:
@@ -410,7 +409,6 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
         self.model_results.clear()
 
         if self.comboBox_processing_selector.currentIndex() == DataType.TRANSMISSION_LOSS:
-
             plot_type = "Transmission loss"
 
             def transmission_loss_callback():
@@ -419,14 +417,13 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
                 output_surface_id = int(self.lineEdit_output_surface_id.text())
 
                 surface_ids = [
-                    input_surface_id, 
+                    input_surface_id,
                     output_surface_id,
-                    ]
+                ]
 
                 surface_integration = self.comboBox_integration_method.currentIndex() == TLCalculation.SURFACE_INTEGRATION
 
                 if not surface_integration:
-
                     logging.info("Processing the transmission loss... [10/100]")
                     self.mesh.process_face_elements_connected_to_nodes(surface_ids)
 
@@ -438,8 +435,8 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
                 x_data, y_data = self.acoustic_post.compute_transmission_loss(
                     input_surface_id,
                     output_surface_id,
-                    surface_integration = surface_integration,
-                    )
+                    surface_integration=surface_integration,
+                )
 
                 # dt = perf_counter() - t0
                 # print(f"Time to process TL: {dt}s")
@@ -449,13 +446,12 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
             x_data, y_data = LoadingWindow(transmission_loss_callback, delayed=False).run()
 
         elif self.comboBox_processing_selector.currentIndex() == DataType.NOISE_REDUCTION:
-
             plot_type = "Noise reduction"
-    
+
             x_data, y_data = self.acoustic_post.compute_noise_reduction(
-                self.input_surface_id, 
+                self.input_surface_id,
                 self.output_surface_id,
-                )
+            )
 
         if y_data is None:
             title = "Invalid input surface id"
@@ -469,18 +465,18 @@ class TransmissionLossInputs(TransmissionLossInputs_UI):
 
         key = ("surface", (self.input_surface_id, self.output_surface_id))
 
-        self.model_results[key] = { 
-            "x_data" : x_data,
-            "y_data" : y_data,
-            "x_label" : "Frequency [Hz]",
-            "y_label" : plot_type,
-            "title" : self.title,
-            "data_type" : plot_type.lower(),
-            "legend" : legend_label,
-            "units" : self.unit_label,
-            "color" : [0,0,1],
-            "linestyle" : "-"  
-            }
+        self.model_results[key] = {
+            "x_data": x_data,
+            "y_data": y_data,
+            "x_label": "Frequency [Hz]",
+            "y_label": plot_type,
+            "title": self.title,
+            "data_type": plot_type.lower(),
+            "legend": legend_label,
+            "units": self.unit_label,
+            "color": [0, 0, 1],
+            "linestyle": "-",
+        }
 
     def plot_nodal_normals(self, normals_data: dict):
         app().main_window.update_symbols()

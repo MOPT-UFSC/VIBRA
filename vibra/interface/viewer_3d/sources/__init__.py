@@ -12,11 +12,12 @@ from .arrows import (
     create_outwards_incident_plane_wave_source,
     create_surface_velocity_source,
     create_pencil_source,
-) 
+)
 
 from .simple_shapes import (
     create_cone_source,
     create_cube_source,
+    create_plane_source,
     create_axis_source,
     create_mass_load_first_layer_source,
     create_mass_load_second_layer_source,

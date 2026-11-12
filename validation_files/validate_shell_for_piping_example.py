@@ -135,12 +135,12 @@ def load_external_mesh_and_solve():
 
     # Define the analysis frequency setup
     analysis_setup = model.get_harmonic_analysis_setup(
-        analysis_id = AnalysisID.STRUCTURAL_HARMONIC,
-        frequency_spacing = FrequencySpacing.EQUALLY_DISTRIBUTED,
-        f_min = 2,
-        f_max = 300,
-        f_step = 2,
-        global_damping = (1e-3, 1e-7, 0),
+        analysis_id=AnalysisID.STRUCTURAL_HARMONIC,
+        frequency_spacing=FrequencySpacing.EQUALLY_DISTRIBUTED,
+        f_min=2,
+        f_max=300,
+        f_step=2,
+        global_damping=(1e-3, 1e-7, 0),
     )
 
     frequencies = analysis_setup.get_frequencies()

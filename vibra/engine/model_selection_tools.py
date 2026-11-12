@@ -1,5 +1,3 @@
-
-
 from collections.abc import Iterable
 from typing import TYPE_CHECKING
 
@@ -56,8 +54,8 @@ class ModelSelectionTools:
             The selected volume ID.
 
         domain_filter: str, optional
-            A string used to control when the domain filter is active. Use 'acoustic' 
-            or 'structural' to filter for volumes related to the specified domain, or 
+            A string used to control when the domain filter is active. Use 'acoustic'
+            or 'structural' to filter for volumes related to the specified domain, or
             None to bypass filtering and return all volumes from both domains.
         """
 
@@ -92,8 +90,8 @@ class ModelSelectionTools:
             The selected surface ID.
 
         domain_filter: str, optional
-            A string used to control when the domain filter is active. Use 'acoustic' 
-            or 'structural' to filter for surfaces related to the specified domain, or 
+            A string used to control when the domain filter is active. Use 'acoustic'
+            or 'structural' to filter for surfaces related to the specified domain, or
             None to bypass filtering and return all surfaces from both domains.
         """
 
@@ -128,8 +126,8 @@ class ModelSelectionTools:
             The selected line ID.
 
         domain_filter: str, optional
-            A string used to control when the domain filter is active. Use 'acoustic' 
-            or 'structural' to filter for lines related to the specified domain, or 
+            A string used to control when the domain filter is active. Use 'acoustic'
+            or 'structural' to filter for lines related to the specified domain, or
             None to bypass filtering and return all lines from both domains.
         """
         lines = []
@@ -171,7 +169,7 @@ class ModelSelectionTools:
         Return
         ------
         filtered_ids: list
-            A list with the filtered entities IDs accoring with the 
+            A list with the filtered entities IDs accoring with the
             available ones for a specific domain.
 
         """
@@ -212,13 +210,12 @@ class ModelSelectionTools:
         Return
         ------
         filtered_ids: list
-            A list with the filtered entities IDs accoring with the 
+            A list with the filtered entities IDs accoring with the
             available ones for a specific domain.
 
         """
-        
-        try:
 
+        try:
             all_ids = []
             selected_ids = check_input_values(input_ids)
 
@@ -234,7 +231,7 @@ class ModelSelectionTools:
 
                 case "points":
                     all_ids = self.mesh.all_point_ids()
-                    
+
                 case "lines":
                     all_ids = self.mesh.all_line_ids()
 
@@ -295,6 +292,7 @@ class ModelSelectionTools:
             return selected_ids[0], None
 
         return selected_ids, None
+
 
 def check_input_values(input_ids: str | list | tuple | np.ndarray):
 

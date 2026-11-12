@@ -1,4 +1,3 @@
-
 from enum import IntEnum
 
 from PySide6.QtCore import Qt
@@ -222,27 +221,27 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
         selection_filter = self.comboBox_selector_filter.currentIndex()
         domain_filter = self.comboBox_domain_filter.currentIndex()
 
-        if selection_filter == SelectionFilter.VOLUMES:    
+        if selection_filter == SelectionFilter.VOLUMES:
             if domain_filter == DomainFilter.NONE:
                 all_volumes = self.model.mesh.all_volume_ids()
             elif domain_filter == DomainFilter.ACOUSTIC:
                 all_volumes = self.model.model_selection_tools.all_acoustic_domains
             else:
                 all_volumes = self.model.model_selection_tools.all_structural_domains
-            
+
             if not all_volumes:
                 return
 
             app().main_window.selection.set_geometry_selection(volumes=all_volumes)
 
-        if selection_filter == SelectionFilter.SURFACES:    
+        if selection_filter == SelectionFilter.SURFACES:
             if domain_filter == DomainFilter.NONE:
                 all_surfaces = self.model.mesh.all_surface_ids()
             elif domain_filter == DomainFilter.ACOUSTIC:
                 all_surfaces = self.model.model_selection_tools.all_acoustic_surfaces
             else:
                 all_surfaces = self.model.model_selection_tools.all_structural_surfaces
-            
+
             if not all_surfaces:
                 return
 
@@ -255,7 +254,7 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
                 all_lines = self.model.model_selection_tools.all_acoustic_lines
             else:
                 all_lines = self.model.model_selection_tools.all_structural_lines
-            
+
             if not all_lines:
                 return
 
@@ -371,7 +370,7 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
 
             self.tabWidget_main.setTabVisible(SetupTabType.LIST, True)
             return
- 
+
         self.tabWidget_main.setTabVisible(SetupTabType.LIST, False)
 
     def remove_callback(self):
@@ -392,7 +391,7 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
         title = "Selection groups reset"
         message = "Would you like to remove all created selection groups from the model?"
 
-        buttons_config = {"left_button_label" : "Cancel", "right_button_label" : "Continue"}
+        buttons_config = {"left_button_label": "Cancel", "right_button_label": "Continue"}
         read = GetUserConfirmationInput(title, message, buttons_config=buttons_config)
 
         if read._cancel:

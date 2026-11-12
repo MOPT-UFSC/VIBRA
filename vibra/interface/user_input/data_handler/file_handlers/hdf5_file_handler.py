@@ -17,15 +17,13 @@ class AcousticImpedanceData:
 
 
 class HDF5FileHandler(IOHandler):
-
     EXTENSIONS = [".h5", ".hd5", ".hdf5"]
 
     @staticmethod
     def read(file_path: Path) -> SimulationData:
         simulation_data = SimulationData(file_path)
 
-        with h5py.File(file_path, 'r') as hf:
-
+        with h5py.File(file_path, "r") as hf:
             # Read key data
             nodal_data = hf.get("nodal_data")
             variables = hf.get("variables")
@@ -54,12 +52,10 @@ class HDF5FileHandler(IOHandler):
 
         return simulation_data
 
-
     @staticmethod
     def write_acoustic_impedance_data(acoustic_impedance_data: AcousticImpedanceData):
 
-        with h5py.File(acoustic_impedance_data.path, 'w') as file:
-
+        with h5py.File(acoustic_impedance_data.path, "w") as file:
             # write data in HDF file
             for key, values in acoustic_impedance_data.__dict__.items():
                 if not isinstance(values, np.ndarray):
@@ -67,13 +63,11 @@ class HDF5FileHandler(IOHandler):
 
                 file[key] = values
 
-
     @staticmethod
     def read_acoustic_impedance_data(file_path: Path) -> SimulationData:
         acoustic_impedance_data = AcousticImpedanceData(file_path)
 
-        with h5py.File(file_path, 'r') as file:
-
+        with h5py.File(file_path, "r") as file:
             # read data from HDF file
             for key, values in file.items():
                 setattr(acoustic_impedance_data, key, values)

@@ -83,7 +83,7 @@ class SurfaceAbsorptionCoefficientInputs(SurfaceAbsorptionCoefficientInputs_UI):
             app().main_window.selection.set_geometry_selection(volumes=[volume_id])
 
     def toggle_nodal_normals_symbols_visibility(self):
-        show_normals = (self.comboBox_nodal_normals.currentText() == "Show")
+        show_normals = self.comboBox_nodal_normals.currentText() == "Show"
         app().main_window.results_widget.visualization_filter.nodal_normal_symbols = show_normals
         app().main_window.update_symbols()
 
@@ -110,13 +110,13 @@ class SurfaceAbsorptionCoefficientInputs(SurfaceAbsorptionCoefficientInputs_UI):
         if surfaces and index == 0:
             text = ", ".join([str(i) for i in surfaces])
             self.lineEdit_selection_id.setText(text)
-            
+
             self.check_volumes_from_surfaces(surfaces)
 
     def check_volumes_from_surfaces(self, surface_ids: list[int]):
 
         external_surfaces_map = dict()
-        internal_surfaces_map = dict()  
+        internal_surfaces_map = dict()
         self.comboBox_volumes.blockSignals(True)
 
         for surface_id in surface_ids:
@@ -187,7 +187,7 @@ class SurfaceAbsorptionCoefficientInputs(SurfaceAbsorptionCoefficientInputs_UI):
 
         self.join_model_data()
 
-        show_normals = (self.comboBox_nodal_normals.currentText() == "Show")
+        show_normals = self.comboBox_nodal_normals.currentText() == "Show"
         app().main_window.results_widget.visualization_filter.nodal_normal_symbols = show_normals
         if show_normals:
             app().main_window.update_symbols()
@@ -197,7 +197,7 @@ class SurfaceAbsorptionCoefficientInputs(SurfaceAbsorptionCoefficientInputs_UI):
         self.plotter._set_model_results_data_to_plot(self.model_results)
 
     def export_data_callback(self):
-        
+
         if self.check_inputs():
             return
 
@@ -216,9 +216,9 @@ class SurfaceAbsorptionCoefficientInputs(SurfaceAbsorptionCoefficientInputs_UI):
 
             logging.info("Processing surface absorption coefficient... [15/100]")
             absorption_coefficient = self.acoustic_post.compute_surface_absorption_coefficient(
-                surface_id = selected_id,
-                volume_id = volume_id,
-                )
+                surface_id=selected_id,
+                volume_id=volume_id,
+            )
 
             logging.info("Processing surface absorption coefficient... [95/100]")
             return absorption_coefficient
@@ -231,34 +231,25 @@ class SurfaceAbsorptionCoefficientInputs(SurfaceAbsorptionCoefficientInputs_UI):
         title = "Surface absorption coefficient"
 
         for i, selected_id in enumerate(self.selected_ids):
-
             key = ("surface", (selected_id))
             legend_label = f"Absorption coefficient at surface [{selected_id}]"
 
-            self.model_results[key] = { 
-                "x_data" : self.frequencies,
-                "y_data" : self.get_response(selected_id),
-                "x_label" : "Frequency [Hz]",
-                "y_label" : "Absorption coefficient",
-                "title" : title,
-                "data_type" : "absorption coefficient",
-                "legend" : legend_label,
-                "units" : self.unit_label,
-                "color" : self.get_color(i),
-                "linestyle" : "-"  
+            self.model_results[key] = {
+                "x_data": self.frequencies,
+                "y_data": self.get_response(selected_id),
+                "x_label": "Frequency [Hz]",
+                "y_label": "Absorption coefficient",
+                "title": title,
+                "data_type": "absorption coefficient",
+                "legend": legend_label,
+                "units": self.unit_label,
+                "color": self.get_color(i),
+                "linestyle": "-",
             }
 
     def get_color(self, index: int) -> tuple:
 
-        colors = [  
-            (0,0,1), 
-            (0,0,0), 
-            (1,0,0),
-            (0,1,1), 
-            (1,0,1), 
-            (1,1,0),
-            (0.25,0.25,0.25)
-        ]
+        colors = [(0, 0, 1), (0, 0, 0), (1, 0, 0), (0, 1, 1), (1, 0, 1), (1, 1, 0), (0.25, 0.25, 0.25)]
 
         if index <= 6:
             return colors[index]

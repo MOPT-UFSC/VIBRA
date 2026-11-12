@@ -1,4 +1,3 @@
-
 import os
 from time import time
 
@@ -35,7 +34,7 @@ def load_external_mesh_and_solve(support_type: str, distributed_mass: bool = Fal
     }
 
     # define surfaces from each volume
-    surfaces_from_volume = { 1 : [1, 2, 3]}
+    surfaces_from_volume = {1: [1, 2, 3]}
 
     t0 = time()
     external_mesh = ExternalMeshData()
@@ -74,15 +73,15 @@ def load_external_mesh_and_solve(support_type: str, distributed_mass: bool = Fal
     poisson_ratio = 0.30
     thermal_expansion_coefficient = 1.1e-5
 
-    material = Material(   
-        name = "Carbon steel",
-        identifier = 1,
-        color = (200, 200, 200),
-        material_density = density,
-        elasticity_modulus = elasticity_modulus,
-        poisson_ratio = poisson_ratio,
-        thermal_expansion_coefficient = thermal_expansion_coefficient
-        )
+    material = Material(
+        name="Carbon steel",
+        identifier=1,
+        color=(200, 200, 200),
+        material_density=density,
+        elasticity_modulus=elasticity_modulus,
+        poisson_ratio=poisson_ratio,
+        thermal_expansion_coefficient=thermal_expansion_coefficient,
+    )
 
     ## intialize the model
     model = Model()
@@ -90,52 +89,45 @@ def load_external_mesh_and_solve(support_type: str, distributed_mass: bool = Fal
 
     ## assign the created fluid
     model.properties._set_property("material", material, volume=1)
-    
+
     for _surf_id in [1, 2]:
         model.properties._set_property("material", material, surface=_surf_id)
 
     ## process the support boundary condition
     if support_type == "fixed_support":
-
         # dof prescription data
         dof_prescription_data = {
             "element_type": "3d_element",
             "real_values": [0.0, 0.0, 0.0],
             "imag_values": [0.0, 0.0, 0.0],
-            }
+        }
 
         model.properties._set_property("prescribed_dof", dof_prescription_data, surface=named_selecion_to_tag.get("input_face"))
 
     else:
-
         # elastic support data
         elastic_support_data = {
             "element_type": "3d_element",
             "real_values": [1e12, 0.0, 0.0],
             "imag_values": [0.0, 0.0, 0.0],
             "normal": False,
-            "direct_input" : False,
+            "direct_input": False,
             "units": "N/m³",
-            }
+        }
 
         model.properties._set_property("distributed_stiffness", elastic_support_data, surface=named_selecion_to_tag.get("input_face"))
 
     if distributed_mass:
-        mass_data = {
-            "element_type": "3d_element",
-            "real_values": [100.0],
-            "imag_values": [0.0],
-            "units": "kg"
-        }
+        mass_data = {"element_type": "3d_element", "real_values": [100.0], "imag_values": [0.0], "units": "kg"}
 
         model.properties._set_property("distributed_mass", mass_data, surface=3)
 
     ## Define the analysis setup
     analysis_setup = ModalAnalysisSetup(
-        analysis_id = AnalysisID.STRUCTURAL_MODAL,
-        modes_number = 40,
-        sigma_factor = 0.01,
-        )
+        analysis_id=AnalysisID.STRUCTURAL_MODAL,
+        modes_number=40,
+        sigma_factor=0.01,
+    )
 
     # Set the analysis setup
     model.set_analysis_setup(analysis_setup)
@@ -172,13 +164,13 @@ def load_external_mesh_and_solve(support_type: str, distributed_mass: bool = Fal
     print()
     print(">>> RESULTS COMPARISON:")
     for i, nat_freq in enumerate(natural_frequencies):
-        print(f"Mode {i+1}: {nat_freq : .8f} Hz (Vibra) vs {natural_frequencies_ref[i]: .8f} Hz (Ansys)")
+        print(f"Mode {i + 1}: {nat_freq: .8f} Hz (Vibra) vs {natural_frequencies_ref[i]: .8f} Hz (Ansys)")
 
-    print(f"\nMaximum percentual difference: {np.max(fnat_diff) : .4e}")
+    print(f"\nMaximum percentual difference: {np.max(fnat_diff): .4e}")
+
 
 if __name__ == "__main__":
-
     load_external_mesh_and_solve(
         "fixed_support",
         # distributed_mass=True,
-        )
+    )

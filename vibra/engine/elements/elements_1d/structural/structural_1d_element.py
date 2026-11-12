@@ -9,7 +9,6 @@ import numpy as np
 
 
 class Structural1DElement(Element1D):
-
     def __init__(self, model: "Model", dof_per_node: int, nodes_per_element: int):
         super().__init__(model, dof_per_node, nodes_per_element)
 
@@ -19,7 +18,6 @@ class Structural1DElement(Element1D):
 
         self.process_N_matrix()
         self.dof_indexes_proc = self.dof_indexes_processor("structural")
-
 
     def process_N_matrix(self):
         N = np.zeros((self.nint_M, 3, self.dof_per_element), dtype=float)
@@ -31,7 +29,6 @@ class Structural1DElement(Element1D):
 
         self.N_matrix = N
 
-
     def integrate_length(self, connectivities: np.ndarray):
 
         self.connectivities = connectivities
@@ -40,11 +37,10 @@ class Structural1DElement(Element1D):
         coords = self.model.mesh.nodal_coordinates[[connect for connect in connectivities], 1:]
 
         # initialize variable
-        dL = 0.
+        dL = 0.0
 
         # integration loop
         for i in range(self.nint_M):
-
             det_jacs = self.get_jacobian_determinant_1d(self.dphi_M[i, :, :], coords)
 
             # integrate all elementary areas
@@ -52,9 +48,8 @@ class Structural1DElement(Element1D):
 
         return np.sum(dL)
 
-
     def integrate_distributed_load(self, el_index: int, distributed_load: np.ndarray) -> np.ndarray:
-        """ 
+        """
         This method computes the elementary load vector.
 
         Parameters
@@ -78,11 +73,10 @@ class Structural1DElement(Element1D):
         coords = self.model.mesh.nodal_coordinates[e_nodes, 1:]
 
         # initialize the variable Fe
-        Fe = 0.
+        Fe = 0.0
 
         # integration loop
         for i in range(self.nint_M):
-
             # determinant of Jacobian for the i-th integration point
             det_jac = self.get_jacobian_determinant_1d(self.dphi_M[i, :, :], coords)
 
@@ -93,9 +87,8 @@ class Structural1DElement(Element1D):
 
         return Fe
 
-
     def integrate_distributed_property(self, el_index: int, value: np.ndarray, is_normal: bool = False) -> np.ndarray:
-        """ 
+        """
         This method computes the elementary matrix for a distributed property.
 
         Parameters
@@ -119,11 +112,10 @@ class Structural1DElement(Element1D):
         coords = self.model.mesh.nodal_coordinates[e_nodes, 1:]
 
         # initialize the variable Fe
-        Ke = 0.
+        Ke = 0.0
 
         # integration loop
         for i in range(self.nint_M):
-
             # determinant of Jacobian for the i-th integration point
             det_jac = self.get_jacobian_determinant_1d(self.dphi_M[i, :, :], coords)
 
@@ -134,24 +126,22 @@ class Structural1DElement(Element1D):
 
         return Ke
 
-
     def get_rows_and_cols_indices_1D(self, index: int):
         """
-        This method returns, for a selected element, the row 
+        This method returns, for a selected element, the row
         and column indices for 1D element integration.
-        
+
         index: int
             The element index.
         """
 
         return self.dof_indexes_proc.get_rows_and_cols_indices_1D(index, self.connectivities)
 
-
     def get_rows_and_cols_indices_2D(self, connectivities: np.ndarray):
         """
-        This method returns the row and column indices for 2D element 
+        This method returns the row and column indices for 2D element
         integration for all elements related to the connectivities.
-        
+
         connectivities: np.ndarray
             A 2D array containing all element connectivities.
         """
