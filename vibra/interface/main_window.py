@@ -1021,7 +1021,7 @@ class MainWindow(MainWindow_UI):
         self.capture_image()
 
     def capture_image(self):
-        path = FileDialogService.save_file(file_extensions=["png"], caption="PNG")
+        path = FileDialogService.save_file(file_extensions=["png"], caption="PNG", last_folder="exported_image_folder")
 
         if path is None:
             return

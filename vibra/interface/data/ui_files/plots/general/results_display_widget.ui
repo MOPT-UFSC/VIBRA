@@ -7,13 +7,13 @@
     <x>0</x>
     <y>0</y>
     <width>368</width>
-    <height>160</height>
+    <height>138</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
     <width>0</width>
-    <height>160</height>
+    <height>0</height>
    </size>
   </property>
   <property name="maximumSize">
@@ -30,13 +30,13 @@
     <number>4</number>
    </property>
    <property name="topMargin">
-    <number>4</number>
+    <number>6</number>
    </property>
    <property name="rightMargin">
     <number>4</number>
    </property>
    <property name="bottomMargin">
-    <number>4</number>
+    <number>6</number>
    </property>
    <property name="spacing">
     <number>4</number>
@@ -77,24 +77,26 @@
       <property name="spacing">
        <number>6</number>
       </property>
-      <item row="3" column="4">
-       <widget class="QCheckBox" name="min_color_check_box">
-        <property name="text">
-         <string/>
+      <item row="3" column="2">
+       <widget class="QLineEdit" name="lineEdit_min_color_value">
+        <property name="enabled">
+         <bool>false</bool>
         </property>
-       </widget>
-      </item>
-      <item row="3" column="1">
-       <widget class="QLabel" name="label_2">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="minimumSize">
          <size>
-          <width>120</width>
+          <width>160</width>
           <height>26</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>120</width>
+          <width>160</width>
           <height>26</height>
          </size>
         </property>
@@ -103,72 +105,7 @@
           <pointsize>10</pointsize>
          </font>
         </property>
-        <property name="toolTip">
-         <string>Minimum colorbar value</string>
-        </property>
-        <property name="lineWidth">
-         <number>0</number>
-        </property>
-        <property name="text">
-         <string>Min. scale value:</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-        </property>
        </widget>
-      </item>
-      <item row="2" column="5">
-       <spacer name="horizontalSpacer_14">
-        <property name="orientation">
-         <enum>Qt::Orientation::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item row="1" column="1">
-       <widget class="QLabel" name="label_4">
-        <property name="minimumSize">
-         <size>
-          <width>120</width>
-          <height>26</height>
-         </size>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>120</width>
-          <height>26</height>
-         </size>
-        </property>
-        <property name="font">
-         <font>
-          <pointsize>10</pointsize>
-         </font>
-        </property>
-        <property name="text">
-         <string>Transparency:</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <spacer name="horizontalSpacer_15">
-        <property name="orientation">
-         <enum>Qt::Orientation::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
       </item>
       <item row="2" column="1">
        <widget class="QLabel" name="label">
@@ -200,17 +137,26 @@
         </property>
        </widget>
       </item>
-      <item row="0" column="1">
-       <widget class="QLabel" name="label_3">
+      <item row="2" column="2">
+       <widget class="QLineEdit" name="lineEdit_max_color_value">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="minimumSize">
          <size>
-          <width>120</width>
+          <width>160</width>
           <height>26</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>120</width>
+          <width>160</width>
           <height>26</height>
          </size>
         </property>
@@ -218,19 +164,6 @@
          <font>
           <pointsize>10</pointsize>
          </font>
-        </property>
-        <property name="text">
-         <string>Colormaps:</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="4">
-       <widget class="QCheckBox" name="max_color_check_box">
-        <property name="text">
-         <string/>
         </property>
        </widget>
       </item>
@@ -310,7 +243,107 @@
         </item>
        </widget>
       </item>
-      <item row="1" column="2">
+      <item row="2" column="5">
+       <spacer name="horizontalSpacer_14">
+        <property name="orientation">
+         <enum>Qt::Orientation::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLabel" name="label_3">
+        <property name="minimumSize">
+         <size>
+          <width>120</width>
+          <height>26</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>120</width>
+          <height>26</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>10</pointsize>
+         </font>
+        </property>
+        <property name="text">
+         <string>Colormaps:</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="4">
+       <widget class="QCheckBox" name="min_color_check_box">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="4">
+       <widget class="QCheckBox" name="max_color_check_box">
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="1">
+       <widget class="QLabel" name="label_2">
+        <property name="minimumSize">
+         <size>
+          <width>120</width>
+          <height>26</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>120</width>
+          <height>26</height>
+         </size>
+        </property>
+        <property name="font">
+         <font>
+          <pointsize>10</pointsize>
+         </font>
+        </property>
+        <property name="toolTip">
+         <string>Minimum colorbar value</string>
+        </property>
+        <property name="lineWidth">
+         <number>0</number>
+        </property>
+        <property name="text">
+         <string>Min. scale value:</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <spacer name="horizontalSpacer_15">
+        <property name="orientation">
+         <enum>Qt::Orientation::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="4" column="2">
        <widget class="QSlider" name="slider_transparency">
         <property name="minimumSize">
          <size>
@@ -329,26 +362,17 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="2">
-       <widget class="QLineEdit" name="lineEdit_max_color_value">
-        <property name="enabled">
-         <bool>false</bool>
-        </property>
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
+      <item row="4" column="1">
+       <widget class="QLabel" name="label_4">
         <property name="minimumSize">
          <size>
-          <width>160</width>
+          <width>120</width>
           <height>26</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>160</width>
+          <width>120</width>
           <height>26</height>
          </size>
         </property>
@@ -357,35 +381,11 @@
           <pointsize>10</pointsize>
          </font>
         </property>
-       </widget>
-      </item>
-      <item row="3" column="2">
-       <widget class="QLineEdit" name="lineEdit_min_color_value">
-        <property name="enabled">
-         <bool>false</bool>
+        <property name="text">
+         <string>Transparency:</string>
         </property>
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="minimumSize">
-         <size>
-          <width>160</width>
-          <height>26</height>
-         </size>
-        </property>
-        <property name="maximumSize">
-         <size>
-          <width>160</width>
-          <height>26</height>
-         </size>
-        </property>
-        <property name="font">
-         <font>
-          <pointsize>10</pointsize>
-         </font>
+        <property name="alignment">
+         <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
         </property>
        </widget>
       </item>

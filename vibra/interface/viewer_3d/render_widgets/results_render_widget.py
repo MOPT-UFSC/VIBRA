@@ -396,8 +396,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         max_value = max_value if max_value != 0 else 1.0
         magnification_factor = self.plot_setup.magnification_factor
 
-        if self.plot_setup.true_scale:
-            mult_factor = magnification_factor
+        if magnification_factor is None:
+            mult_factor = 1.0
         else:
             mult_factor = magnification_factor / (10 * max_value)
 
@@ -484,8 +484,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         max_value = max_value if max_value != 0 else 1.0
         magnification_factor = self.plot_setup.magnification_factor
 
-        if self.plot_setup.true_scale:
-            mult_factor = magnification_factor
+        if magnification_factor is None:
+            mult_factor = 1.0
         else:
             mult_factor = magnification_factor / (10 * max_disp)
 
@@ -584,8 +584,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         max_value = max_value if max_value != 0 else 1.0
         magnification_factor = self.plot_setup.magnification_factor
 
-        if self.plot_setup.true_scale:
-            mult_factor = magnification_factor
+        if magnification_factor is None:
+            mult_factor = 1.0
         else:
             mult_factor = magnification_factor / (10 * max_disp)
 
@@ -662,8 +662,8 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         max_value = max_value if max_value != 0 else 1.0
         magnification_factor = self.plot_setup.magnification_factor
 
-        if self.plot_setup.true_scale:
-            mult_factor = magnification_factor
+        if magnification_factor is None:
+            mult_factor = 1.0
         else:
             mult_factor = magnification_factor / (10 * max_value)
 
@@ -928,16 +928,6 @@ class ResultsRenderWidget(AnimatedRenderWidget):
         self.ghost_actor.SetVisibility(visualization.ghost and app().main_window.has_hidden_part())
 
         self.update()
-
-    def export_animation_to_file(self):
-        extensions = SUPPORTED_VIDEO_EXTENSIONS + SUPPORTED_ANIMATION_EXTENSIONS
-        file_path = FileDialogService.save_file(file_extensions=extensions,
-                                                caption="Save As")
-
-        if file_path is None:
-            return
-
-        self.save_video(file_path)
 
     def actors_exists(self):
         return len(self._widget_actors) > 0
