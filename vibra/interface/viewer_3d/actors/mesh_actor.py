@@ -368,16 +368,16 @@ class MeshActor(vtkPropAssembly):
         )
 
     def set_node_color(self, color: Color):
-        vtk_to_numpy(self.node_colors)[:3] = color.to_rgb()
+        vtk_to_numpy(self.node_colors)[:, :3] = color.to_rgb()
 
     def set_edge_color(self, color: Color):
         self.edge_actor.GetProperty().SetColor(*color.to_rgb_f())
 
     def set_surface_color(self, color: Color):
-        vtk_to_numpy(self.surface_colors)[:3] = color.to_rgb()
+        vtk_to_numpy(self.surface_colors)[:, :3] = color.to_rgb()
 
     def set_volume_color(self, color: Color):
-        vtk_to_numpy(self.volume_colors)[:3] = color.to_rgb()
+        vtk_to_numpy(self.volume_colors)[:, :3] = color.to_rgb()
 
     def set_nodes_size(self, size: int):
         self.node_actor.GetProperty().SetPointSize(size)
