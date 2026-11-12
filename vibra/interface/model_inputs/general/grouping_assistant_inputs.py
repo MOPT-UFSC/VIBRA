@@ -303,7 +303,7 @@ class GroupingAssistantInputs(GroupingAssistantInputs_UI):
     def get_new_group_id(self, group_label: str) -> int:
 
         used_ids = []
-        for property, _id, data in self.properties.group_properties.items():
+        for (property, _id), data in self.properties.group_properties.items():
             if property != "selection_group":
                 continue
 
