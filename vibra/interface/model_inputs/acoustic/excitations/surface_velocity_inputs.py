@@ -385,7 +385,7 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
             if property not in labels:
                 continue
 
-            if isinstance(tags, int):
+            if isinstance(tags, int) and tags in surface_ids:
                 self.properties._remove_surface_property(property, tags)
             elif isinstance(tags, tuple):
                 if not set(surface_ids).isdisjoint(tags):
@@ -506,10 +506,6 @@ class SurfaceVelocityInputs(SurfaceVelocityInputs_UI):
             self.remove_callback()
         elif event.key() == Qt.Key_Escape:
             self.close()
-
-    # def keyReleaseEvent(self, event):
-    #     if event.key() == Qt.Key_Control:
-    #         self.treeWidget_surface_velocity.setSelectionMode(QAbstractItemView.SingleSelection)
 
     def closeEvent(self, a0: QCloseEvent | None) -> None:
         self.keep_window_open = False
