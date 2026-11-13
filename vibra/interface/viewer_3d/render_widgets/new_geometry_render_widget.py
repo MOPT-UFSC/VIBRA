@@ -1,22 +1,22 @@
-from vibra.interface.user_preferences import UserPreferences
 from molde.interactor_styles import BoxSelectionInteractorStyle
 from molde.render_widgets import CommonRenderWidget
 
 from vibra.engine.model import Model
+from vibra.interface.user_preferences import UserPreferences
 from vibra.interface.viewer_3d.actors.geometry_actor import GeometryActor
 from vibra.interface.viewer_3d.actors.symbols_actor_acoustic import SymbolsActorAcoustic
 from vibra.interface.viewer_3d.actors.symbols_actor_structural import SymbolsActorStructural
-from vibra.utils.interface_utils import GeometryRendererConfig, SectionPlane, VisualizationFilter
+from vibra.utils.interface_utils import SectionPlane, VisualizationFilter
 
 
-class GeometryRenderWidget(CommonRenderWidget):
+class NewGeometryRenderWidget(CommonRenderWidget):
     def __init__(self):
         super().__init__()
         self.set_interactor_style(BoxSelectionInteractorStyle())
 
         self.model: Model | None = None
         self.section_plane: SectionPlane | None = None
-        self.user_preferences = GeometryRendererConfig()
+        self.user_preferences = UserPreferences()
         self.visualization_filter = VisualizationFilter(faces=True, symbols=True)
 
         self.create_actors()
@@ -44,11 +44,6 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.section_plane = section_plane
         self.geometry_actor.section_plane = section_plane
 
-    def set_user_preferences(self, preferences: UserPreferences | None):
-        if preferences is None:
-            preferences = UserPreferences()
-        self.user_preferences = preferences
-
     def set_visualization_filter(self, visualization_filter: VisualizationFilter | None):
         if visualization_filter is None:
             visualization_filter = VisualizationFilter(faces=True, symbols=True)
@@ -67,12 +62,12 @@ class GeometryRenderWidget(CommonRenderWidget):
         self.render()
 
     def update_visualization(self):
-        self.renderer.SetBackground(self.mesh_config.background_bottom.to_rgb_f())
-        self.renderer.SetBackground2(self.mesh_config.background_top.to_rgb_f())
+        self.renderer.SetBackground(self.user_preferences.renderer_background_color_1.to_rgb_f())
+        self.renderer.SetBackground2(self.user_preferences.renderer_background_color_2.to_rgb_f())
 
-        self.geometry_actor.set_point_color(self.user_preferences.points_color)
+        self.geometry_actor.set_point_color(self.user_preferences.nodes_points_color)
         self.geometry_actor.set_line_color(self.user_preferences.lines_color)
-        self.geometry_actor.set_surface_color(self.user_preferences.surfaces_color)
+        self.geometry_actor.set_surface_color(self.user_preferences.faces_color)
 
         self.geometry_actor.set_point_size(self.user_preferences.points_size)
         self.geometry_actor.set_line_thickness(self.user_preferences.lines_thickness)

@@ -1,3 +1,6 @@
 from .geometry_render_widget import GeometryRenderWidget
 from .mesh_render_widget import MeshRenderWidget
 from .results_render_widget import ResultsRenderWidget
+from .new_geometry_render_widget import NewGeometryRenderWidget
+from .new_mesh_render_widget import NewMeshRenderWidget
+from .new_results_render_widget import NewResultsRenderWidget

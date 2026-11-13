@@ -6,7 +6,7 @@ from vibra.interface.viewer_3d.actors.mesh_actor import MeshActor
 from vibra.utils.interface_utils import SectionPlane
 
 
-class PreviewRenderWidget(CommonRenderWidget):
+class NewMeshRenderWidget(CommonRenderWidget):
     def __init__(self):
         super().__init__()
         self.create_axes()
@@ -20,3 +20,5 @@ class PreviewRenderWidget(CommonRenderWidget):
     def create_actors(self):
         self.mesh_actor = MeshActor(self.model)
         self.add_actors(self.mesh_actor)
+
+    def update_plot(self, reset_camera: bool = False): ...

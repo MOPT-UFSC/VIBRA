@@ -42,7 +42,9 @@ from vibra.interface.user_input.about_vibra import AboutVibraInput
 from vibra.interface.user_input.data_handler.file_dialog_service import FileDialogService
 from vibra.interface.user_input.input_ui import InputUi
 from vibra.interface.user_input.user_preferences_window import UserPreferencesInput
-from vibra.interface.viewer_3d.render_widgets import GeometryRenderWidget, MeshRenderWidget, ResultsRenderWidget
+from vibra.interface.viewer_3d.render_widgets import GeometryRenderWidget, MeshRenderWidget, NewGeometryRenderWidget, ResultsRenderWidget
+from vibra.interface.viewer_3d.render_widgets.new_mesh_render_widget import NewMeshRenderWidget
+from vibra.interface.viewer_3d.render_widgets.new_results_render_widget import NewResultsRenderWidget
 from vibra.interface.welcome_widget import WelcomeWidget
 from vibra.utils.interface_utils import GeometryColorMode, VisualizationFilter, block_signals
 
@@ -105,6 +107,9 @@ class MainWindow(MainWindow_UI):
         self.render_widgets_stack.addWidget(self.mesh_widget)
         self.render_widgets_stack.addWidget(self.results_widget)
         self.render_widgets_stack.addWidget(self.welcome_widget)
+        self.render_widgets_stack.addWidget(self.geometry_render_widget)
+        # self.render_widgets_stack.addWidget(self.mesh_render_widget)
+        # self.render_widgets_stack.addWidget(self.results_render_widget)
         self.view_toolbar = ViewToolbar(self.render_widgets_stack)
 
         self.set_toolbars_visible(False)
@@ -268,9 +273,16 @@ class MainWindow(MainWindow_UI):
 
     def _load_render_widgets(self):
         self.section_plane = SectionPlaneWidget(self)
+
         self.geometry_widget = GeometryRenderWidget()
         self.mesh_widget = MeshRenderWidget()
         self.results_widget = ResultsRenderWidget()
+
+        self.geometry_render_widget = NewGeometryRenderWidget()
+        self.mesh_render_widget = NewMeshRenderWidget()
+        self.results_render_widget = NewResultsRenderWidget()
+
+        self.geometry_render_widget.set_model(app().project.model)
 
         self.welcome_widget = WelcomeWidget()
 
@@ -426,7 +438,8 @@ class MainWindow(MainWindow_UI):
         self.reload_visualization_filter()
 
     def show_geometry_render_widget(self):
-        self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
+        self.render_widgets_stack.setCurrentWidget(self.geometry_render_widget)
+        # self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
         self.view_toolbar.enable_selection_tool()
 
     def show_mesh_render_widget(self):
@@ -489,7 +502,7 @@ class MainWindow(MainWindow_UI):
         self.action_results_workspace.setEnabled(valid_solution)
 
         self.stacked_setup.setCurrentWidget(self.model_setup_widget)
-        self.render_widgets_stack.setCurrentWidget(self.geometry_widget)
+        self.render_widgets_stack.setCurrentWidget(self.geometry_render_widget)
         self.model_setup_widget.model_setup_items.expand_menu_items()
 
         self.splitter.widget(0).setVisible(True)
@@ -673,7 +686,7 @@ class MainWindow(MainWindow_UI):
             file_extensions=extensions,
             caption="Select a geometry or mesh file to start your project.",
             last_folder="geometry_mesh_folder",
-            )
+        )
 
         if imported_path is None:
             return True
@@ -713,7 +726,7 @@ class MainWindow(MainWindow_UI):
             file_extensions=SUPPORTED_GEOMETRY_EXTENSIONS,
             caption="Select a geometry file to import.",
             last_folder="geometry_mesh_folder",
-            )
+        )
 
         if imported_path is None:
             return
@@ -736,7 +749,7 @@ class MainWindow(MainWindow_UI):
             file_extensions=SUPPORTED_MESH_EXTENSIONS,
             caption="Select a mesh file to import.",
             last_folder="geometry_mesh_folder",
-            )
+        )
 
         if imported_path is None:
             return
@@ -767,9 +780,7 @@ class MainWindow(MainWindow_UI):
         if not obj.complete:
             return False
 
-        file_path = FileDialogService.save_file(file_extensions=["vibra", "vibra.zip"],
-                                    caption="Save As",
-                                    last_folder="project_folder")
+        file_path = FileDialogService.save_file(file_extensions=["vibra", "vibra.zip"], caption="Save As", last_folder="project_folder")
 
         if file_path is None:
             return False
@@ -810,10 +821,8 @@ class MainWindow(MainWindow_UI):
         print(message)
 
     def open_project_dialog(self):
-        project_path = FileDialogService.open_file(file_extensions=["vibra", "vibra.zip"],
-                                    caption="Open Project", 
-                                    last_folder="project_folder")
-        
+        project_path = FileDialogService.open_file(file_extensions=["vibra", "vibra.zip"], caption="Open Project", last_folder="project_folder")
+
         if project_path is None:
             return
 
@@ -827,7 +836,7 @@ class MainWindow(MainWindow_UI):
         app().project.generate_visual_mesh()
 
         # Interface update
-        self.geometry_widget.update_plot()
+        self.geometry_render_widget.update_plot()
         self.update_geometry_information()
         self.update_toolbar_and_menu_items_after_load_project()
         self.set_toolbars_visible(True)
@@ -842,7 +851,7 @@ class MainWindow(MainWindow_UI):
         app().project.import_mesh(path)
 
         # Interface update
-        self.geometry_widget.update_plot()
+        self.geometry_render_widget.update_plot()
         self.mesh_widget.update_plot()
         self.update_geometry_information()
         self.update_toolbar_and_menu_items_after_load_project()
@@ -1089,6 +1098,13 @@ class MainWindow(MainWindow_UI):
             return Workspaces.MESH
         elif isinstance(render_widget, ResultsRenderWidget):
             return Workspaces.RESULTS
+        elif isinstance(render_widget, NewGeometryRenderWidget):
+            return Workspaces.GEOMETRY
+        elif isinstance(render_widget, NewMeshRenderWidget):
+            return Workspaces.MESH
+        elif isinstance(render_widget, NewResultsRenderWidget):
+            return Workspaces.RESULTS
+
         return None
 
     def visualization_changed_callback(self):

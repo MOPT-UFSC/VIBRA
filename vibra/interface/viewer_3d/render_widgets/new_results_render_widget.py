@@ -6,7 +6,7 @@ from vibra.interface.viewer_3d.actors.results_actor import ResultsActor
 from vibra.utils.interface_utils import SectionPlane
 
 
-class PreviewRenderWidget(CommonRenderWidget):
+class NewResultsRenderWidget(CommonRenderWidget):
     def __init__(self):
         super().__init__()
         self.create_axes()
@@ -20,3 +20,5 @@ class PreviewRenderWidget(CommonRenderWidget):
     def create_actors(self):
         self.results_actor = ResultsActor(self.model)
         self.add_actors(self.results_actor)
+
+    def update_plot(self, reset_camera: bool = False): ...
