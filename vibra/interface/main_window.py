@@ -118,6 +118,10 @@ class MainWindow(MainWindow_UI):
         self.visualization_changed.connect(self.reload_visualization_filter)
         self.render_widget_changed.connect(self.reload_visualization_filter)
 
+        self.visualization_changed.connect(self.geometry_render_widget.update_visualization)
+        # self.visualization_changed.connect(self.mesh_render_widget.update_visualization)
+        # self.visualization_changed.connect(self.results_render_widget.update_visualization)
+
         self.stacked_setup.addWidget(self.model_setup_widget)
         self.stacked_setup.addWidget(self.results_viewer_widget)
 
@@ -451,6 +455,15 @@ class MainWindow(MainWindow_UI):
             widget = self.render_widgets_stack.widget(0)
             self.render_widgets_stack.removeWidget(widget)
 
+    def update_render_widgets_setup(self):        
+        self.geometry_render_widget.set_user_preferences(app().config.user_preferences)
+        # self.mesh_render_widget.set_user_preferences(app().config.user_preferences)
+        # self.results_render_widget.set_user_preferences(app().config.user_preferences)
+
+        self.geometry_render_widget.set_model(app().project.model)
+        # self.mesh_render_widget.set_model(app().project.model)
+        # self.results_render_widget.set_model(app().project.model)
+
     def update_plots(self, reset_camera=True):
         self.model_setup_widget.model_setup_items.update_items_appearance()
         renders_number = self.render_widgets_stack.count()
@@ -578,9 +591,14 @@ class MainWindow(MainWindow_UI):
         self.render_widgets_stack.setCurrentWidget(self.welcome_widget)
 
         self.selection.clear_selection()
-        self.results_widget.remove_all_actors()
-        self.mesh_widget.remove_all_actors()
         self.geometry_widget.remove_all_actors()
+        self.mesh_widget.remove_all_actors()
+        self.results_widget.remove_all_actors()
+
+        self.geometry_render_widget.remove_all_actors()
+        self.mesh_render_widget.remove_all_actors()
+        self.results_render_widget.remove_all_actors()
+
         app().project.reset_variables()
         app().project.clear_working_directory()
         self.action_unhide_all_callback()
@@ -836,6 +854,7 @@ class MainWindow(MainWindow_UI):
         app().project.generate_visual_mesh()
 
         # Interface update
+        self.update_render_widgets_setup()
         self.geometry_render_widget.update_plot()
         self.update_geometry_information()
         self.update_toolbar_and_menu_items_after_load_project()
@@ -851,6 +870,7 @@ class MainWindow(MainWindow_UI):
         app().project.import_mesh(path)
 
         # Interface update
+        self.update_render_widgets_setup()
         self.geometry_render_widget.update_plot()
         self.mesh_widget.update_plot()
         self.update_geometry_information()
@@ -907,6 +927,7 @@ class MainWindow(MainWindow_UI):
             self.analysis_toolbar.check_analysis_setup_callback()
             self.analysis_toolbar.update_reset_solution_button_accessibility()
 
+            self.update_render_widgets_setup()
             self.update_plots()
 
             self.action_model_workspace_callback()

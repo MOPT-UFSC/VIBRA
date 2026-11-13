@@ -7,6 +7,7 @@ from vibra.interface.viewer_3d.actors.geometry_actor import GeometryActor
 from vibra.interface.viewer_3d.actors.symbols_actor_acoustic import SymbolsActorAcoustic
 from vibra.interface.viewer_3d.actors.symbols_actor_structural import SymbolsActorStructural
 from vibra.utils.interface_utils import SectionPlane, VisualizationFilter
+from vibra.utils.time_utils import function_timer
 
 
 class NewGeometryRenderWidget(CommonRenderWidget):
@@ -49,6 +50,12 @@ class NewGeometryRenderWidget(CommonRenderWidget):
             visualization_filter = VisualizationFilter(faces=True, symbols=True)
         self.visualization_filter = visualization_filter
 
+    def set_user_preferences(self, user_preferences: UserPreferences | None):
+        if user_preferences is None:
+            user_preferences = UserPreferences()
+        self.user_preferences = user_preferences
+
+    @function_timer
     def update_plot(self, reset_camera: bool = False):
         self.geometry_actor.update()
         self.acoustic_symbols_actor.build()
@@ -61,6 +68,7 @@ class NewGeometryRenderWidget(CommonRenderWidget):
 
         self.render()
 
+    @function_timer
     def update_visualization(self):
         self.renderer.SetBackground(self.user_preferences.renderer_background_color_1.to_rgb_f())
         self.renderer.SetBackground2(self.user_preferences.renderer_background_color_2.to_rgb_f())
@@ -77,6 +85,7 @@ class NewGeometryRenderWidget(CommonRenderWidget):
         self.geometry_actor.set_surfaces_visibility(visible=self.visualization_filter.faces)
 
         self.geometry_actor.update_caches()
+        self.render()
 
     def render(self):
         # render is a better name for this action
