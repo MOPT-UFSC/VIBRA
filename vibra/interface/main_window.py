@@ -103,13 +103,13 @@ class MainWindow(MainWindow_UI):
         self.create_status_bar()
 
         self.clear_render_widgets_stack()
-        self.render_widgets_stack.addWidget(self.geometry_widget)
-        self.render_widgets_stack.addWidget(self.mesh_widget)
-        self.render_widgets_stack.addWidget(self.results_widget)
+        # self.render_widgets_stack.addWidget(self.geometry_widget)
+        # self.render_widgets_stack.addWidget(self.mesh_widget)
+        # self.render_widgets_stack.addWidget(self.results_widget)
         self.render_widgets_stack.addWidget(self.welcome_widget)
         self.render_widgets_stack.addWidget(self.geometry_render_widget)
-        # self.render_widgets_stack.addWidget(self.mesh_render_widget)
-        # self.render_widgets_stack.addWidget(self.results_render_widget)
+        self.render_widgets_stack.addWidget(self.mesh_render_widget)
+        self.render_widgets_stack.addWidget(self.results_render_widget)
         self.view_toolbar = ViewToolbar(self.render_widgets_stack)
 
         self.set_toolbars_visible(False)
