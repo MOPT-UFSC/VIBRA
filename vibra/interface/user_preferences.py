@@ -1,11 +1,13 @@
 from dataclasses import dataclass, fields
 
 from molde.colors import Color, color_names
+from typing_extensions import Literal
+
 
 @dataclass
 class UserPreferences:
-    interface_theme: str = "light"
-    renderer_background_color_1: Color =  Color("#8092A6")
+    interface_theme: Literal["light", "dark", "custom"] = "light"
+    renderer_background_color_1: Color = Color("#8092A6")
     renderer_background_color_2: Color = Color("#EEF2F3")
     nodes_points_color: Color = Color("#FFB432")
     lines_color: Color = color_names.BLACK
@@ -17,7 +19,7 @@ class UserPreferences:
     selection_nodes_points_color: Color = Color("#F52A14")
     selection_lines_color: Color = Color("#F52A14")
     renderer_font_color: Color = color_names.BLACK
-    renderer_font_size: int  = 11
+    renderer_font_size: int = 11
     points_size: int = 15
     nodes_size: int = 10
     lines_thickness: int = 3
@@ -61,7 +63,7 @@ class UserPreferences:
         theme = self.interface_theme
         for field in fields(UserPreferences):
             setattr(self, field.name, field.default)
-        
+
         if theme == "dark":
             self.set_dark_theme()
         else:
