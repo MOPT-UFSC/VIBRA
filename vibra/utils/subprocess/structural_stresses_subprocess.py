@@ -22,8 +22,6 @@ def main(working_dir: Path, shm_name: str):
     project = Project(working_dir)
     project.read_from_working_dir()
 
-    project.reload_solution_from_working_dir()
-
     structural_postprocessing = project.get_structural_postprocessing()
     stresses = structural_postprocessing.recover_nodal_averaged_structural_stresses()
 

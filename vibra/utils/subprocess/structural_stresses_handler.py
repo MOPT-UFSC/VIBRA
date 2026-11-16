@@ -20,8 +20,10 @@ def recover_structural_stresses_in_subprocess(working_dir: Path, shape: tuple[in
             "--recover-structural-stresses", str(working_dir),
             "--shm-name", shm.name,
         ]
+
         if SubProcessHandler(command).run() != SubProcessStatus.SUCCESS:
             return None
+
         return np.ndarray(shape, dtype=dtype, buffer=shm.buf).copy()
     finally:
         shm.close()
