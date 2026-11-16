@@ -153,11 +153,17 @@ class NewGeometryRenderWidget(CommonRenderWidget):
         shift_pressed = modifiers & Qt.KeyboardModifier.ShiftModifier
         alt_pressed = modifiers & Qt.KeyboardModifier.AltModifier
 
+        select_volume = any([self._is_double_click, shift_pressed, self.selection_handler.volume_selection_mode])
+        if select_volume:
+            self.picked_geometry.picked_surfaces.clear()
+        else:
+            self.picked_geometry.picked_volumes.clear()
+
         self.selection_handler.set_geometry_selection(
             points=self.picked_geometry.picked_points,
             lines=self.picked_geometry.picked_lines,
             surfaces=self.picked_geometry.picked_surfaces,
-            # volumes=picked_volumes,
+            volumes=self.picked_geometry.picked_volumes,
             join=ctrl_pressed,
             remove=alt_pressed,
         )

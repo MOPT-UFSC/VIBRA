@@ -1,6 +1,7 @@
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
 from enum import IntEnum, auto
+from itertools import chain
 
 import numpy as np
 import xxhash
@@ -58,11 +59,13 @@ class PickedGeometry:
     picked_points: set[int] = field(default_factory=set)
     picked_lines: set[int] = field(default_factory=set)
     picked_surfaces: set[int] = field(default_factory=set)
+    picked_volumes: set[int] = field(default_factory=set)
 
     def clear(self):
         self.picked_points.clear()
         self.picked_lines.clear()
         self.picked_surfaces.clear()
+        self.picked_volumes.clear()
 
 
 class GeometryActor(vtkPropAssembly):
@@ -337,7 +340,11 @@ class GeometryActor(vtkPropAssembly):
             case self.surface_actor:
                 ids = self._cell_surface_ids
                 if 0 <= cell_id < len(ids):
-                    return PickedGeometry(picked_surfaces={ids[cell_id]})
+                    surface = ids[cell_id]
+                    return PickedGeometry(
+                        picked_surfaces={surface},
+                        picked_volumes=set(self.mesh.volumes_from_surface.get(surface, [])),
+                    )
 
             case self.line_actor:
                 ids = self._line_ids
@@ -346,7 +353,6 @@ class GeometryActor(vtkPropAssembly):
 
             case self.point_actor:
                 ids = self._point_ids
-                print(ids, cell_id)
                 if 0 <= cell_id < len(ids):
                     return PickedGeometry(picked_points={ids[cell_id]})
             case _:
@@ -388,10 +394,16 @@ class GeometryActor(vtkPropAssembly):
         faces_mask = nodes_mask[faces_only_connectivity].any(axis=1)
         nodes = self.mesh.nodal_coordinates[nodes_mask, 0].astype(int)
 
+        picked_points = {self.mesh.points_from_nodes[i] for i in nodes if i in self.mesh.points_from_nodes}
+        picked_lines = set(self.mesh.lines_connectivity[lines_mask, 1])
+        picked_surfaces = set(self.mesh.faces_connectivity[faces_mask, 1])
+        picked_volumes = set(chain.from_iterable(self.mesh.volumes_from_surface.get(s, []) for s in picked_surfaces))
+
         return PickedGeometry(
-            picked_points={self.mesh.points_from_nodes[i] for i in nodes if i in self.mesh.points_from_nodes},
-            picked_lines=set(self.mesh.lines_connectivity[lines_mask, 1]),
-            picked_surfaces=set(self.mesh.faces_connectivity[faces_mask, 1]),
+            picked_points=picked_points,
+            picked_lines=picked_lines,
+            picked_surfaces=picked_surfaces,
+            picked_volumes=picked_volumes,
         )
 
     def _decouple_faces_connectivity(self):
