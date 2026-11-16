@@ -103,21 +103,21 @@ class NewGeometryRenderWidget(CommonRenderWidget):
         self.geometry_actor.set_surfaces_visibility(visible=self.visualization_filter.faces)
 
         if self.selection_handler is not None:
-            self.geometry_actor.paint_points(
-                self.user_preferences.selection_nodes_points_color,
-                self.selection_handler.geometry_points,
-            )
-            self.geometry_actor.paint_lines(
-                self.user_preferences.selection_lines_color,
-                self.selection_handler.geometry_lines,
+            self.geometry_actor.paint_volumes(
+                self.user_preferences.selection_volumes_color,
+                self.selection_handler.geometry_volumes,
             )
             self.geometry_actor.paint_surfaces(
                 self.user_preferences.selection_faces_color,
                 self.selection_handler.geometry_surfaces,
             )
-            self.geometry_actor.paint_volumes(
-                self.user_preferences.selection_faces_color,
-                self.selection_handler.geometry_volumes,
+            self.geometry_actor.paint_lines(
+                self.user_preferences.selection_lines_color,
+                self.selection_handler.geometry_lines,
+            )
+            self.geometry_actor.paint_points(
+                self.user_preferences.selection_nodes_points_color,
+                self.selection_handler.geometry_points,
             )
 
         self.geometry_actor.update_caches()
