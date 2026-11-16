@@ -296,17 +296,17 @@ class MeshActor(vtkPropAssembly):
         match self.hardware_picker.GetActor():
             case self.volume_actor:
                 ids = self._solid_ids
-                if 0 < cell_id < len(ids):
+                if 0 <= cell_id < len(ids):
                     return PickedMesh(picked_solids={ids[cell_id]})
 
             case self.surface_actor:
                 ids = self._face_ids
-                if 0 < cell_id < len(ids):
+                if 0 <= cell_id < len(ids):
                     return PickedMesh(picked_faces={ids[cell_id]})
 
             case self.node_actor:
                 ids = self._node_ids
-                if 0 < cell_id < len(ids):
+                if 0 <= cell_id < len(ids):
                     return PickedMesh(picked_nodes={ids[cell_id]})
             case _:
                 ...
