@@ -336,17 +336,18 @@ class GeometryActor(vtkPropAssembly):
         match self.hardware_picker.GetActor():
             case self.surface_actor:
                 ids = self._cell_surface_ids
-                if 0 < cell_id < len(ids):
+                if 0 <= cell_id < len(ids):
                     return PickedGeometry(picked_surfaces={ids[cell_id]})
 
             case self.line_actor:
                 ids = self._line_ids
-                if 0 < cell_id < len(ids):
+                if 0 <= cell_id < len(ids):
                     return PickedGeometry(picked_lines={ids[cell_id]})
 
             case self.point_actor:
                 ids = self._point_ids
-                if 0 < cell_id < len(ids):
+                print(ids, cell_id)
+                if 0 <= cell_id < len(ids):
                     return PickedGeometry(picked_points={ids[cell_id]})
             case _:
                 ...
