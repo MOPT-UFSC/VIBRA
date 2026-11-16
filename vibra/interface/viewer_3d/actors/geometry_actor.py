@@ -596,6 +596,10 @@ class GeometryActor(vtkPropAssembly):
         if self.mesh is None:
             return
 
+        points = list(points)
+        if not points:
+            return
+
         point_ids = self._point_ids
         point_colors = vtk_to_numpy(self.point_colors)
 
@@ -607,6 +611,10 @@ class GeometryActor(vtkPropAssembly):
         if self.mesh is None:
             return
 
+        lines = list(lines)
+        if not lines:
+            return
+
         line_ids = self._line_ids
         line_colors = vtk_to_numpy(self.line_colors)
 
@@ -616,6 +624,10 @@ class GeometryActor(vtkPropAssembly):
 
     def _set_surface_cells_visibility(self, surfaces: Sequence[int], *, visible: bool):
         if self.mesh is None:
+            return
+
+        surfaces = list(surfaces)
+        if not surfaces:
             return
 
         surface_ids = self._cell_surface_ids

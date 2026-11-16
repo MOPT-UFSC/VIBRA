@@ -7,6 +7,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication
 
 from vibra.engine.model import Model
+from vibra.interface.general.entity_visibility_handler import EntityVisibilityHandler
 from vibra.interface.general.selection_handler import SelectionHandler
 from vibra.interface.user_preferences import UserPreferences
 from vibra.interface.viewer_3d.actors.geometry_actor import GeometryActor
@@ -27,6 +28,7 @@ class NewGeometryRenderWidget(CommonRenderWidget):
         self.user_preferences = UserPreferences()
         self.visualization_filter = VisualizationFilter(faces=True, symbols=True)
         self.selection_handler: SelectionHandler | None = None
+        self.entity_visibility_handler: EntityVisibilityHandler | None = None
 
         self._last_click_time = None
         self._last_click_position = (0, 0)
@@ -67,6 +69,9 @@ class NewGeometryRenderWidget(CommonRenderWidget):
 
     def set_selection_handler(self, selection_handler: SelectionHandler | None):
         self.selection_handler = selection_handler
+
+    def set_entity_visibility_handler(self, entity_visibility_handler: EntityVisibilityHandler | None):
+        self.entity_visibility_handler = entity_visibility_handler
 
     def set_user_preferences(self, user_preferences: UserPreferences | None):
         if user_preferences is None:
@@ -119,6 +124,10 @@ class NewGeometryRenderWidget(CommonRenderWidget):
                 self.user_preferences.selection_nodes_points_color,
                 self.selection_handler.geometry_points,
             )
+
+        self.geometry_actor.show_surfaces()
+        if self.entity_visibility_handler is not None:
+            self.geometry_actor.hide_surfaces(self.entity_visibility_handler.get_hidden_surfaces())
 
         self.geometry_actor.update_caches()
         self.render()

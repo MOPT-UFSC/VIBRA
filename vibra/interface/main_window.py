@@ -288,6 +288,7 @@ class MainWindow(MainWindow_UI):
 
         self.geometry_render_widget.set_model(app().project.model)
         self.geometry_render_widget.set_selection_handler(self.selection)
+        self.geometry_render_widget.set_entity_visibility_handler(self.entity_visibility)
 
         self.welcome_widget = WelcomeWidget()
 
@@ -1264,6 +1265,8 @@ class MainWindow(MainWindow_UI):
         ExportElementTransferDataInputs()
 
     def update_hidden_plots(self):
+        self.geometry_render_widget.update_visualization()
+
         def update_plot_callback():
             N = self.render_widgets_stack.count()
             for i in range(self.render_widgets_stack.count()):
