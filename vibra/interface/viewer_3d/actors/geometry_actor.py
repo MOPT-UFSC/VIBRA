@@ -395,8 +395,8 @@ class GeometryActor(vtkPropAssembly):
         nodes = self.mesh.nodal_coordinates[nodes_mask, 0].astype(int)
 
         picked_points = {self.mesh.points_from_nodes[i] for i in nodes if i in self.mesh.points_from_nodes}
-        picked_lines = set(self.mesh.lines_connectivity[lines_mask, 1])
-        picked_surfaces = set(self.mesh.faces_connectivity[faces_mask, 1])
+        picked_lines = self.mesh.all_line_ids() - set(self.mesh.lines_connectivity[~lines_mask, 1])
+        picked_surfaces = self.mesh.all_surface_ids() - set(self.mesh.faces_connectivity[~faces_mask, 1])
         picked_volumes = set(chain.from_iterable(self.mesh.volumes_from_surface.get(s, []) for s in picked_surfaces))
 
         return PickedGeometry(
@@ -554,7 +554,7 @@ class GeometryActor(vtkPropAssembly):
 
         surfaces = set()
         for volume in volumes:
-            surfaces |= self.mesh.surfaces_from_volume.get(volumes, [])
+            surfaces.update(self.mesh.surfaces_from_volume.get(volume, []))
 
         self.paint_surfaces(color, surfaces)
 
