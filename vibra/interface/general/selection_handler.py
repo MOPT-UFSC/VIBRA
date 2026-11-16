@@ -42,21 +42,40 @@ class SelectionHandler(QObject):
         self.set_mesh_selection()
 
     def update_from(self, other: Self, join=False, remove=False):
-        self.set_geometry_selection(
-            points=other.geometry_points,
-            lines=other.geometry_lines,
-            surfaces=other.geometry_surfaces,
-            volumes=other.geometry_volumes,
-            join=join,
-            remove=remove,
-        )
-        self.set_mesh_selection(
-            nodes=other.mesh_nodes,
-            faces=other.mesh_faces,
-            solids=other.mesh_solids,
-            join=join,
-            remove=remove,
-        )
+        if join and remove:
+            self.geometry_points ^= other.geometry_points
+            self.geometry_lines ^= other.geometry_lines
+            self.geometry_surfaces ^= other.geometry_surfaces
+            self.geometry_volumes ^= other.geometry_volumes
+            self.mesh_nodes ^= other.mesh_nodes
+            self.mesh_faces ^= other.mesh_faces
+            self.mesh_solids ^= other.mesh_solids
+        elif join:
+            self.geometry_points |= other.geometry_points
+            self.geometry_lines |= other.geometry_lines
+            self.geometry_surfaces |= other.geometry_surfaces
+            self.geometry_volumes |= other.geometry_volumes
+            self.mesh_nodes |= other.mesh_nodes
+            self.mesh_faces |= other.mesh_faces
+            self.mesh_solids |= other.mesh_solids
+        elif remove:
+            self.geometry_points -= other.geometry_points
+            self.geometry_lines -= other.geometry_lines
+            self.geometry_surfaces -= other.geometry_surfaces
+            self.geometry_volumes -= other.geometry_volumes
+            self.mesh_nodes -= other.mesh_nodes
+            self.mesh_faces -= other.mesh_faces
+            self.mesh_solids -= other.mesh_solids
+        else:
+            self.geometry_points = set(other.geometry_points)
+            self.geometry_lines = set(other.geometry_lines)
+            self.geometry_surfaces = set(other.geometry_surfaces)
+            self.geometry_volumes = set(other.geometry_volumes)
+            self.mesh_nodes = set(other.mesh_nodes)
+            self.mesh_faces = set(other.mesh_faces)
+            self.mesh_solids = set(other.mesh_solids)
+
+        self.selection_changed.emit()
 
     def set_geometry_selection(self, *, points=None, lines=None, surfaces=None, volumes=None, join=False, remove=False):
         if points is None:
