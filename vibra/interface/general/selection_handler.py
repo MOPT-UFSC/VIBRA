@@ -222,3 +222,10 @@ class SelectionHandler(QObject):
             faces=mesh.all_face_element_ids(),
             solids=mesh.all_solid_element_ids(),
         )
+
+    def __str__(self) -> str:
+        cls = self.__class__
+        str = f"{cls.__name__}(\n"
+        str += f"  {self.mesh_nodes=}, {self.mesh_faces=}, {self.mesh_solids=},\n"
+        str += f"  {self.geometry_points=}, {self.geometry_lines=}, {self.geometry_surfaces=}, {self.geometry_volumes=}\n)"
+        return str
