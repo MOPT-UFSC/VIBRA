@@ -548,6 +548,16 @@ class GeometryActor(vtkPropAssembly):
         mask = np.isin(surface_ids, surfaces)
         surface_colors[mask, :3] = color.to_rgb()
 
+    def paint_volumes(self, color: Color, volumes: Iterable[int]):
+        if self.mesh is None:
+            return
+
+        surfaces = set()
+        for volume in volumes:
+            surfaces |= self.mesh.surfaces_from_volume.get(volumes, [])
+
+        self.paint_surfaces(color, surfaces)
+
     def set_points_visibility(self, visible: bool):
         self.point_actor.SetVisibility(visible)
 

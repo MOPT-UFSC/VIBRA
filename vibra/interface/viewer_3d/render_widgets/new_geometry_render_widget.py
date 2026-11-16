@@ -115,6 +115,10 @@ class NewGeometryRenderWidget(CommonRenderWidget):
                 self.user_preferences.selection_faces_color,
                 self.selection_handler.geometry_surfaces,
             )
+            self.geometry_actor.paint_volumes(
+                self.user_preferences.selection_faces_color,
+                self.selection_handler.geometry_volumes,
+            )
 
         self.geometry_actor.update_caches()
         self.render()
