@@ -1,14 +1,14 @@
 from PySide6.QtCore import QObject, Signal
 
-from vibra.engine.project import Project
+from vibra.engine.model import Model
 
 
 class SelectionHandler(QObject):
     selection_changed = Signal()
 
-    def __init__(self, project: Project):
+    def __init__(self, model: Model):
         super().__init__()
-        self.project = project
+        self.model = model
         self.mesh_nodes = set()
         self.mesh_faces = set()
         self.mesh_solids = set()
@@ -18,9 +18,12 @@ class SelectionHandler(QObject):
         self.geometry_volumes = set()
         self.volume_selection_mode = False
 
+    def set_model(self, model: Model):
+        self.model = model
+
     @property
     def surface_of_selected_volumes(self):
-        mesh = self.project.mesh
+        mesh = self.model.mesh
         if mesh is None:
             return set()
 
@@ -106,7 +109,9 @@ class SelectionHandler(QObject):
         self.selection_changed.emit()
 
     def invert_selection(self):
-        mesh = self.project.model.mesh
+        mesh = self.model.mesh
+        if mesh is None:
+            return
 
         geometry_selection_active = any(
             [
@@ -152,35 +157,35 @@ class SelectionHandler(QObject):
                 self.set_mesh_selection(**new_mesh_selection)
 
     def select_all_points(self):
-        mesh = self.project.model.mesh
+        mesh = self.model.mesh
         if mesh is None:
             return
 
         self.set_geometry_selection(points=mesh.all_point_ids())
 
     def select_all_lines(self):
-        mesh = self.project.model.mesh
+        mesh = self.model.mesh
         if mesh is None:
             return
 
         self.set_geometry_selection(lines=mesh.all_line_ids())
 
     def select_all_surfaces(self):
-        mesh = self.project.model.mesh
+        mesh = self.model.mesh
         if mesh is None:
             return
 
         self.set_geometry_selection(surfaces=mesh.all_surface_ids())
 
     def select_all_volumes(self):
-        mesh = self.project.model.mesh
+        mesh = self.model.mesh
         if mesh is None:
             return
 
         self.set_geometry_selection(volumes=mesh.all_volume_ids())
 
     def select_all_geometry(self):
-        mesh = self.project.model.mesh
+        mesh = self.model.mesh
         if mesh is None:
             return
 
@@ -192,28 +197,28 @@ class SelectionHandler(QObject):
         )
 
     def select_all_nodes(self):
-        mesh = self.project.model.mesh
+        mesh = self.model.mesh
         if mesh is None:
             return
 
         self.set_mesh_selection(nodes=mesh.all_node_ids())
 
     def select_all_faces(self):
-        mesh = self.project.model.mesh
+        mesh = self.model.mesh
         if mesh is None:
             return
 
         self.set_mesh_selection(faces=mesh.all_face_element_ids())
 
     def select_all_solids(self):
-        mesh = self.project.model.mesh
+        mesh = self.model.mesh
         if mesh is None:
             return
 
         self.set_mesh_selection(solids=mesh.all_solid_element_ids())
 
     def select_all_mesh(self):
-        mesh = self.project.model.mesh
+        mesh = self.model.mesh
         if mesh is None:
             return
 

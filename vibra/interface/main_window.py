@@ -57,8 +57,8 @@ class MainWindow(MainWindow_UI):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.selection = SelectionHandler(app().project)
-        self.entity_visibility = EntityVisibilityHandler(app().project)
+        self.selection = SelectionHandler(app().project.model)
+        self.entity_visibility = EntityVisibilityHandler(app().project.model)
 
         self.selection.selection_changed.connect(self.selection_changed_callback)
         self.entity_visibility.changed.connect(self.update_hidden_plots)
@@ -458,14 +458,17 @@ class MainWindow(MainWindow_UI):
             widget = self.render_widgets_stack.widget(0)
             self.render_widgets_stack.removeWidget(widget)
 
-    def update_render_widgets_setup(self):
+    def update_dependency_injection(self):
+        model = app().project.model
+        self.selection.set_model(model)
+        self.entity_visibility.set_model(model)
+        self.geometry_render_widget.set_model(model)
+        # self.mesh_render_widget.set_model(model)
+        # self.results_render_widget.set_model(model)
+
         self.geometry_render_widget.set_user_preferences(app().config.user_preferences)
         # self.mesh_render_widget.set_user_preferences(app().config.user_preferences)
         # self.results_render_widget.set_user_preferences(app().config.user_preferences)
-
-        self.geometry_render_widget.set_model(app().project.model)
-        # self.mesh_render_widget.set_model(app().project.model)
-        # self.results_render_widget.set_model(app().project.model)
 
     def update_plots(self, reset_camera=True):
         self.model_setup_widget.model_setup_items.update_items_appearance()
@@ -857,7 +860,7 @@ class MainWindow(MainWindow_UI):
         app().project.generate_visual_mesh()
 
         # Interface update
-        self.update_render_widgets_setup()
+        self.update_dependency_injection()
         self.geometry_render_widget.update_plot()
         self.update_geometry_information()
         self.update_toolbar_and_menu_items_after_load_project()
@@ -873,7 +876,7 @@ class MainWindow(MainWindow_UI):
         app().project.import_mesh(path)
 
         # Interface update
-        self.update_render_widgets_setup()
+        self.update_dependency_injection()
         self.geometry_render_widget.update_plot()
         self.mesh_widget.update_plot()
         self.update_geometry_information()
@@ -930,7 +933,7 @@ class MainWindow(MainWindow_UI):
             self.analysis_toolbar.check_analysis_setup_callback()
             self.analysis_toolbar.update_reset_solution_button_accessibility()
 
-            self.update_render_widgets_setup()
+            self.update_dependency_injection()
             self.update_plots()
 
             self.action_model_workspace_callback()

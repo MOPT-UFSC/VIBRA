@@ -1,23 +1,26 @@
-from typing import Sequence
+from collections.abc import Sequence
 
 from PySide6.QtCore import QObject, Signal
 
-from vibra.engine.project import Project
+from vibra.engine.model import Model
 
 
 class EntityVisibilityHandler(QObject):
     changed = Signal()
 
-    def __init__(self, project: Project):
+    def __init__(self, model: Model):
         super().__init__()
 
-        self.project = project
+        self.model = model
 
         self._surfaces_to_hide = set()
         self._volumes_to_hide = set()
 
+    def set_model(self, model: Model):
+        self.model = model
+
     def get_visible_surfaces(self) -> set[int]:
-        mesh = self.project.mesh
+        mesh = self.model.mesh
         if mesh is None:
             return set()
 
@@ -30,7 +33,7 @@ class EntityVisibilityHandler(QObject):
         return _visible_surfaces
 
     def get_hidden_surfaces(self) -> set[int]:
-        mesh = self.project.mesh
+        mesh = self.model.mesh
         if mesh is None:
             return set()
 
@@ -41,7 +44,7 @@ class EntityVisibilityHandler(QObject):
         return set(self._volumes_to_hide)
 
     def get_visible_volumes(self) -> set[int]:
-        mesh = self.project.mesh
+        mesh = self.model.mesh
         if mesh is None:
             return set()
 
