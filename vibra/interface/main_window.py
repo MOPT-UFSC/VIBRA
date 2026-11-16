@@ -287,6 +287,7 @@ class MainWindow(MainWindow_UI):
         self.results_render_widget = NewResultsRenderWidget()
 
         self.geometry_render_widget.set_model(app().project.model)
+        self.geometry_render_widget.set_selection_handler(self.selection)
 
         self.welcome_widget = WelcomeWidget()
 
@@ -455,7 +456,7 @@ class MainWindow(MainWindow_UI):
             widget = self.render_widgets_stack.widget(0)
             self.render_widgets_stack.removeWidget(widget)
 
-    def update_render_widgets_setup(self):        
+    def update_render_widgets_setup(self):
         self.geometry_render_widget.set_user_preferences(app().config.user_preferences)
         # self.mesh_render_widget.set_user_preferences(app().config.user_preferences)
         # self.results_render_widget.set_user_preferences(app().config.user_preferences)
