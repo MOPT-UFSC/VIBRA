@@ -1,3 +1,5 @@
+from typing import Self
+
 from PySide6.QtCore import QObject, Signal
 
 from vibra.engine.model import Model
@@ -38,6 +40,23 @@ class SelectionHandler(QObject):
     def clear_selection(self):
         self.set_geometry_selection()
         self.set_mesh_selection()
+
+    def update_from(self, other: Self, join=False, remove=False):
+        self.set_geometry_selection(
+            points=other.geometry_points,
+            lines=other.geometry_lines,
+            surfaces=other.geometry_surfaces,
+            volumes=other.geometry_volumes,
+            join=join,
+            remove=remove,
+        )
+        self.set_mesh_selection(
+            nodes=other.mesh_nodes,
+            faces=other.mesh_faces,
+            solids=other.mesh_solids,
+            join=join,
+            remove=remove,
+        )
 
     def set_geometry_selection(self, *, points=None, lines=None, surfaces=None, volumes=None, join=False, remove=False):
         if points is None:

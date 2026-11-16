@@ -142,15 +142,17 @@ class NewGeometryRenderWidget(CommonRenderWidget):
         self._last_click_position = click_position
 
     def click_end_callback(self, x1: int, y1: int):
+        # TODO: move this method to the tools
+
         x0, y0 = self._last_click_position
         moved_x = abs(x0 - x1) > self.user_preferences.click_dist_tolerance
         moved_y = abs(y0 - y1) > self.user_preferences.click_dist_tolerance
         mouse_moved = moved_x or moved_y
 
         if mouse_moved:
-            selection = self.geometry_actor.area_pick(x0, y0, x1, y1, self.renderer)
+            selection = self.area_pick(x0, y0, x1, y1)
         else:
-            selection = self.geometry_actor.pick(x1, y1, self.renderer)
+            selection = self.pick(x1, y1)
 
         modifiers = QApplication.keyboardModifiers()
         ctrl_pressed = modifiers & Qt.KeyboardModifier.ControlModifier
@@ -163,14 +165,17 @@ class NewGeometryRenderWidget(CommonRenderWidget):
         else:
             selection.geometry_volumes.clear()
 
-        self.selection_handler.set_geometry_selection(
-            points=selection.geometry_points,
-            lines=selection.geometry_lines,
-            surfaces=selection.geometry_surfaces,
-            volumes=selection.geometry_volumes,
+        self.selection_handler.update_from(
+            selection,
             join=ctrl_pressed,
             remove=alt_pressed,
         )
+
+    def pick(self, x: int, y: int) -> SelectionHandler:
+        return self.geometry_actor.pick(x, y, self.renderer)
+
+    def area_pick(self, x0: int, y0: int, x1: int, y1: int) -> SelectionHandler:
+        return self.geometry_actor.area_pick(x0, y0, x1, y1, self.renderer)
 
     def render(self):
         # render is a better name for this action
