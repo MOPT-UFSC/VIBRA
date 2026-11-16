@@ -17,6 +17,7 @@ from vtkmodules.vtkRenderingCore import vtkActor, vtkAreaPicker, vtkHardwarePick
 from vibra import TEXTURE_DIR
 from vibra.engine.mesher.mesh import Mesh
 from vibra.engine.model import Model
+from vibra.interface.general.selection_handler import SelectionHandler
 from vibra.utils.interface_utils import SectionPlane
 from vibra.utils.math_functions import inside_plane
 from vibra.utils.vtk_utils import create_cells, linearize_1d_cells, read_texture, triangulate_2d_cells
@@ -52,20 +53,6 @@ class GeometryCachedInfo:
         hasher = xxhash.xxh128()
         hasher.update(ndarray)
         return hasher.hexdigest()
-
-
-@dataclass
-class PickedGeometry:
-    picked_points: set[int] = field(default_factory=set)
-    picked_lines: set[int] = field(default_factory=set)
-    picked_surfaces: set[int] = field(default_factory=set)
-    picked_volumes: set[int] = field(default_factory=set)
-
-    def clear(self):
-        self.picked_points.clear()
-        self.picked_lines.clear()
-        self.picked_surfaces.clear()
-        self.picked_volumes.clear()
 
 
 class GeometryActor(vtkPropAssembly):
@@ -332,35 +319,35 @@ class GeometryActor(vtkPropAssembly):
         if section_plane_hash != self.cached_info.section_plane_hash:
             self.cached_info.section_plane_hash = section_plane_hash
 
-    def pick(self, x: int, y: int, renderer: vtkRenderer) -> PickedGeometry:
+    def pick(self, x: int, y: int, renderer: vtkRenderer) -> SelectionHandler:
         self.hardware_picker.Pick(x, y, 0, renderer)
         cell_id = self.hardware_picker.GetCellId()
+
+        selection = SelectionHandler(self.model)
 
         match self.hardware_picker.GetActor():
             case self.surface_actor:
                 ids = self._cell_surface_ids
                 if 0 <= cell_id < len(ids):
                     surface = ids[cell_id]
-                    return PickedGeometry(
-                        picked_surfaces={surface},
-                        picked_volumes=set(self.mesh.volumes_from_surface.get(surface, [])),
-                    )
+                    volumes = set(self.mesh.volumes_from_surface.get(surface, []))
+                    selection.set_geometry_selection(surfaces={surface}, volumes=volumes)
 
             case self.line_actor:
                 ids = self._line_ids
                 if 0 <= cell_id < len(ids):
-                    return PickedGeometry(picked_lines={ids[cell_id]})
+                    selection.set_geometry_selection(lines={ids[cell_id]})
 
             case self.point_actor:
                 ids = self._point_ids
                 if 0 <= cell_id < len(ids):
-                    return PickedGeometry(picked_points={ids[cell_id]})
+                    selection.set_geometry_selection(points={ids[cell_id]})
             case _:
                 ...
 
-        return PickedGeometry()
+        return selection
 
-    def area_pick(self, x0: int, y0: int, x1: int, y1: int, renderer: vtkRenderer) -> PickedGeometry:
+    def area_pick(self, x0: int, y0: int, x1: int, y1: int, renderer: vtkRenderer) -> SelectionHandler:
         assert self.mesh is not None
         assert self.mesh.nodal_coordinates is not None
         assert self.mesh.faces_connectivity is not None
@@ -399,12 +386,14 @@ class GeometryActor(vtkPropAssembly):
         picked_surfaces = self.mesh.all_surface_ids() - set(self.mesh.faces_connectivity[~faces_mask, 1])
         picked_volumes = set(chain.from_iterable(self.mesh.volumes_from_surface.get(s, []) for s in picked_surfaces))
 
-        return PickedGeometry(
-            picked_points=picked_points,
-            picked_lines=picked_lines,
-            picked_surfaces=picked_surfaces,
-            picked_volumes=picked_volumes,
+        selection = SelectionHandler(self.model)
+        selection.set_geometry_selection(
+            points=picked_points,
+            lines=picked_lines,
+            surfaces=picked_surfaces,
+            volumes=picked_volumes,
         )
+        return selection
 
     def _decouple_faces_connectivity(self):
         assert self.mesh is not None

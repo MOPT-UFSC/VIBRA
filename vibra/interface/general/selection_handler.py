@@ -3,6 +3,8 @@ from PySide6.QtCore import QObject, Signal
 from vibra.engine.model import Model
 
 
+# TODO: check the possibility of replacing these sets with numpy arrays.
+# It is way too expensive to convert the arrays into sets. Specially for meshes.
 class SelectionHandler(QObject):
     selection_changed = Signal()
 
