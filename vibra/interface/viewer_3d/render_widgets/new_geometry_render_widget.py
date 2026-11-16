@@ -1,5 +1,10 @@
+from vibra.interface.viewer_3d.render_tools.selection_tool import SelectionTool
+from datetime import datetime
+
 from molde.interactor_styles import BoxSelectionInteractorStyle
 from molde.render_widgets import CommonRenderWidget
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QApplication
 
 from vibra.engine.model import Model
 from vibra.interface.general.selection_handler import SelectionHandler
@@ -21,6 +26,10 @@ class NewGeometryRenderWidget(CommonRenderWidget):
         self.user_preferences = UserPreferences()
         self.visualization_filter = VisualizationFilter(faces=True, symbols=True)
         self.selection_handler: SelectionHandler | None = None
+
+        self._last_click_time = None
+        self._last_click_position = (0, 0)
+        self._is_double_click = False
 
         self.create_actors()
 
@@ -105,6 +114,36 @@ class NewGeometryRenderWidget(CommonRenderWidget):
 
         self.geometry_actor.update_caches()
         self.render()
+
+    def click_start_callback(self, x0: int, y0: int):
+        click_position = (x0, y0)
+        click_time = datetime.now()
+        self._is_double_click = False
+
+        if self._last_click_time is not None:
+            time_since_last_click = (click_time - self._last_click_time).total_seconds()
+
+            x1, y1 = self._last_click_position
+            moved_x = abs(x0 - x1) > self.user_preferences.click_dist_tolerance
+            moved_y = abs(y0 - y1) > self.user_preferences.click_dist_tolerance
+            mouse_moved = moved_x or moved_y
+
+            self._is_double_click = (time_since_last_click < self.user_preferences.click_time_tolerance) and not mouse_moved
+
+        self._last_click_time = click_time
+        self._last_click_position = click_position
+
+    def click_end_callback(self, x1: int, y1: int):
+        if not isinstance(self.interactor_style, SelectionTool):
+            return
+
+        if not self.interactor_style.is_selecting:
+            return
+
+        modifiers = QApplication.keyboardModifiers()
+        ctrl_pressed = modifiers & Qt.KeyboardModifier.ControlModifier
+        shift_pressed = modifiers & Qt.KeyboardModifier.ShiftModifier
+        alt_pressed = modifiers & Qt.KeyboardModifier.AltModifier
 
     def render(self):
         # render is a better name for this action

@@ -30,6 +30,8 @@ class UserPreferences:
     generate_mesh_in_subprocess: bool = True
     print_solution_log: bool = False
     color_map: str = "jet"
+    click_time_tolerance: float = 0.3
+    click_dist_tolerance: int = 10
 
     def set_light_theme(self):
         self.interface_theme = "light"
