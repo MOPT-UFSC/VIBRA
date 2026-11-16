@@ -336,6 +336,8 @@ class MainWindow(MainWindow_UI):
         self.last_render_index = new_index
 
     def selection_changed_callback(self):
+        self.geometry_render_widget.update_visualization()
+
         self.status_bar.set_selection(
             self.selection.geometry_points,
             self.selection.geometry_lines,
