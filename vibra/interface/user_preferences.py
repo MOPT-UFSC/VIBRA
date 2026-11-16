@@ -9,15 +9,16 @@ class UserPreferences:
     interface_theme: Literal["light", "dark", "custom"] = "light"
     renderer_background_color_1: Color = Color("#8092A6")
     renderer_background_color_2: Color = Color("#EEF2F3")
-    nodes_points_color: Color = Color("#FFB432")
+    nodes_points_color: Color = color_names.YELLOW_5
     lines_color: Color = color_names.BLACK
     edges_color: Color = color_names.BLACK
     faces_color: Color = color_names.WHITE
     volumes_color: Color = color_names.WHITE
-    selection_color: Color = Color("#146AF5")
-    selection_faces_color: Color = Color("#146AF5")
-    selection_nodes_points_color: Color = Color("#F52A14")
-    selection_lines_color: Color = Color("#F52A14")
+    selection_color: Color = color_names.BLUE
+    selection_faces_color: Color = color_names.BLUE
+    selection_volumes_color: Color = color_names.BLUE
+    selection_nodes_points_color: Color = color_names.RED
+    selection_lines_color: Color = color_names.RED
     renderer_font_color: Color = color_names.BLACK
     renderer_font_size: int = 11
     points_size: int = 15
@@ -38,28 +39,30 @@ class UserPreferences:
         self.renderer_background_color_1 = Color("#8092A6")
         self.renderer_background_color_2 = Color("#EEF2F3")
         self.renderer_font_color = color_names.BLACK
-        self.nodes_points_color = Color("#FFB432")
+        self.nodes_points_color = color_names.YELLOW_5
         self.lines_color = color_names.BLACK
         self.edges_color = color_names.BLACK
         self.faces_color = color_names.WHITE
         self.volumes_color = color_names.WHITE
-        self.selection_faces_color = Color("#146AF5")
-        self.selection_nodes_points_color = Color("#F52A14")
-        self.selection_lines_color = Color("#F52A14")
+        self.selection_faces_color = color_names.BLUE
+        self.selection_volumes_color = color_names.BLUE
+        self.selection_nodes_points_color = color_names.RED
+        self.selection_lines_color = color_names.RED
 
     def set_dark_theme(self):
         self.interface_theme = "dark"
         self.renderer_background_color_1 = Color("#0b0f17")
         self.renderer_background_color_2 = Color("#3e424d")
         self.renderer_font_color = color_names.WHITE
-        self.nodes_points_color = Color("#FFB432")
+        self.nodes_points_color = color_names.YELLOW_5
         self.lines_color = color_names.BLACK
         self.edges_color = color_names.BLACK
         self.faces_color = color_names.WHITE
         self.volumes_color = color_names.WHITE
-        self.selection_faces_color: Color = Color("#146AF5")
-        self.selection_nodes_points_color: Color = Color("#F52A14")
-        self.selection_lines_color = Color("#F52A14")
+        self.selection_faces_color = color_names.BLUE
+        self.selection_volumes_color = color_names.BLUE
+        self.selection_nodes_points_color: Color = color_names.RED
+        self.selection_lines_color = color_names.RED
 
     def reset_attributes(self):
         theme = self.interface_theme
